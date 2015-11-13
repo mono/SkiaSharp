@@ -13,21 +13,29 @@ namespace SkiaSharp
 		public SKSurface (SKImageInfo info)
 		{
 			handle = SkiaApi.sk_surface_new_raster (ref info, IntPtr.Zero);
+			if (handle == IntPtr.Zero)
+				throw new InvalidOperationException ();
 		}
 
 		public SKSurface (SKImageInfo info, SKSurfaceProps props)
 		{
 			handle = SkiaApi.sk_surface_new_raster (ref info, ref props);
+			if (handle == IntPtr.Zero)
+				throw new InvalidOperationException ();
 		}
 
 		public SKSurface (SKImageInfo info, IntPtr pixels, int rowBytes)
 		{
 			handle = SkiaApi.sk_surface_new_raster_direct (ref info, pixels, (IntPtr)rowBytes, IntPtr.Zero);
+			if (handle == IntPtr.Zero)
+				throw new InvalidOperationException ();
 		}
 
 		public SKSurface (SKImageInfo info, IntPtr pixels, int rowBytes, SKSurfaceProps props)
 		{
 			handle = SkiaApi.sk_surface_new_raster_direct (ref info, pixels, (IntPtr)rowBytes, ref props);
+			if (handle == IntPtr.Zero)
+				throw new InvalidOperationException ();
 		}
 
 		public void Dispose ()
@@ -55,6 +63,7 @@ namespace SkiaSharp
 
 		public SKCanvas Canvas {
 			get {
+				Console.WriteLine ("got: {0:x}", (long)handle);
 				if (canvas == null)
 					canvas = new SKCanvas (this, SkiaApi.sk_surface_get_canvas (handle));
 				return canvas;

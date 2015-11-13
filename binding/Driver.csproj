@@ -19,6 +19,7 @@
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
     <ConsolePause>false</ConsolePause>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <DebugType>full</DebugType>
@@ -28,6 +29,7 @@
     <WarningLevel>4</WarningLevel>
     <Externalconsole>true</Externalconsole>
     <PlatformTarget>x86</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -37,4 +39,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <ProjectReference Include="Desktop\Desktop.csproj">
+      <Project>{467FA6DC-C3FB-4EF8-8B8F-338C13CC8A71}</Project>
+      <Name>Desktop</Name>
+    </ProjectReference>
+  </ItemGroup>
 </Project>
