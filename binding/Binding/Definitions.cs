@@ -18,7 +18,12 @@ using System.Globalization;
  	
 namespace SkiaSharp
 {
-	public struct SKColor {
+	public partial struct SKColor {
+
+		internal SKColor (uint value)
+		{
+			color = value;
+		}
 
 		uint color;
 		public SKColor (byte red, byte green, byte blue, byte alpha)
@@ -28,7 +33,7 @@ namespace SkiaSharp
 
 		public SKColor (byte red, byte green, byte blue)
 		{
-			color = (uint)((red << 16) | (green << 8) | blue);
+			color = (uint)(0xff000000 | (red << 16) | (green << 8) | blue);
 		}
 
 		public byte Alpha => (byte)((color >> 24) & 0xff);

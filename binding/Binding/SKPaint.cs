@@ -1,4 +1,12 @@
-﻿using System;
+﻿//
+// Bindings for SKPaint
+//
+// Author:
+//   Miguel de Icaza
+//
+// Copyright 2015 Xamarin Inc
+//
+using System;
 
 namespace SkiaSharp
 {

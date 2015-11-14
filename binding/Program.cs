@@ -1,4 +1,13 @@
-﻿using System;
+﻿//
+// Shows the basics of using Skia from C#
+//
+// Author:
+//   Miguel de Icaza
+//
+// Copyright 2015 Xamarin Inc
+//
+
+using System;
 using SkiaSharp;
 using System.Runtime.InteropServices;
 using System.IO;
@@ -9,20 +18,29 @@ namespace Driver
 	{
 		public static void Main (string[] args)
 		{
-			var info = new SKImageInfo (1024, 768, SKColorType.Rgba_8888, SKAlphaType.Opaque);
-			var buffer = new byte [1024 * 768 * 4];
-
-			unsafe {
-				fixed (byte * f = &buffer[0]) {	
-					using (var surface = new SKSurface (info, (IntPtr) f, 1024 * 4)) {
-						var canvas = surface.Canvas;
-						var paint = new SKPaint ();
-						canvas.DrawRect (new SKRect (10, 10, 1024, 758), paint);
-					}
-				}
+			if (Marshal.SizeOf<IntPtr> () == 4) {
+				Console.Error.WriteLine ("Need 64 bit runtime");
+				return;
 			}
-			File.WriteAllBytes ("/tmp/path", buffer);
+			var info = new SKImageInfo (1024, 768, SKColorType.Rgba_8888, SKAlphaType.Opaque);
 
+			using (var surface = SKSurface.Create (info)) {
+				var canvas = surface.Canvas;
+				var paint = new SKPaint ();
+				var r = new SKRect (0, 0, 64, 768);
+					
+				for (int x = 0; x <= 1024; x += 16) {
+					
+					paint.Color = new SKColor ((byte)(x/16), 0, 0);
+					canvas.DrawRect (r, paint);
+					r.Left += 16;
+					r.Right += 16;
+				}
+			
+				using (var output = File.Create ("/tmp/file.png"))
+					surface.Snapshot ().Encode ().SaveTo (output);
+
+			}
 		}
 	}
 }

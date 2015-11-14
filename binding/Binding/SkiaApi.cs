@@ -1,4 +1,12 @@
-﻿using System;
+﻿//
+// Low-level P/Invoke declarations
+//
+// Author:
+//   Miguel de Icaza
+//
+// Copyright 2015 Xamarin Inc
+//
+using System;
 using System.Runtime.InteropServices;
 
 using sk_surface_t = System.IntPtr;
@@ -9,6 +17,8 @@ using sk_shader_t = System.IntPtr;
 using sk_maskfilter_t = System.IntPtr;
 using sk_path_t = System.IntPtr;
 using sk_picture_t = System.IntPtr;
+using sk_data_t = System.IntPtr;
+using sk_picture_recorder_t = System.IntPtr;
 
 namespace SkiaSharp
 {
@@ -65,6 +75,15 @@ namespace SkiaSharp
 		[DllImport (SKIA)] public extern static void         sk_paint_set_shader        (sk_paint_t t, sk_shader_t shader);
 		[DllImport (SKIA)] public extern static void         sk_paint_set_maskfilter    (sk_paint_t t, sk_maskfilter_t filt);
 		[DllImport (SKIA)] public extern static void         sk_paint_set_xfermode_mode (sk_paint_t t, SKXferMode mode);
+		
+		[DllImport (SKIA)] public extern static sk_image_t   sk_image_new_raster_copy   (ref SKImageInfo info, IntPtr pixels, IntPtr rowBytes);
+		[DllImport (SKIA)] public extern static sk_image_t   sk_image_new_from_encoded  (sk_data_t encoded, ref SKRectI subset);
+		[DllImport (SKIA)] public extern static sk_data_t    sk_image_encode            (sk_image_t t);
+		[DllImport (SKIA)] public extern static void         sk_image_unref             (sk_image_t t);
+		[DllImport (SKIA)] public extern static int          sk_image_get_width         (sk_image_t t);
+		[DllImport (SKIA)] public extern static int          sk_image_get_height        (sk_image_t t);
+		[DllImport (SKIA)] public extern static uint         sk_image_get_unique_id     (sk_image_t t);
+
 
 		[DllImport (SKIA)] public extern static sk_path_t    sk_path_new();
 		[DllImport (SKIA)] public extern static void         sk_path_delete     (sk_path_t t);
@@ -81,11 +100,35 @@ namespace SkiaSharp
 		[DllImport (SKIA)] public extern static void         sk_maskfilter_unref        (sk_maskfilter_t t);
 		[DllImport (SKIA)] public extern static sk_maskfilter_t sk_maskfilter_new_blur  (SKBlurStyle style, float sigma);
 
-		[DllImport (SKIA)] public extern static void         sk_shader_unref (sk_shader_t t);
-		[DllImport (SKIA)] public extern static void         sk_image_unref (sk_image_t t);
-		[DllImport (SKIA)] public extern static void         sk_picture_unref (sk_image_t t);
+		[DllImport (SKIA)] public extern static void         sk_shader_unref  (sk_shader_t t);
 
+		[DllImport (SKIA)] public extern static sk_data_t    sk_data_new_empty();
+		[DllImport (SKIA)] public extern static sk_data_t    sk_data_new_with_copy(IntPtr src, IntPtr length);
+		[DllImport (SKIA)] public extern static sk_data_t    sk_data_new_from_malloc(IntPtr malloc, IntPtr length);
+		[DllImport (SKIA)] public extern static sk_data_t    sk_data_new_subset(sk_data_t src, IntPtr offset, IntPtr length);
+		[DllImport (SKIA)] public extern static void         sk_data_unref(sk_data_t d);
+		[DllImport (SKIA)] public extern static IntPtr       sk_data_get_size(sk_data_t d);
+		[DllImport (SKIA)] public extern static IntPtr       sk_data_get_data(sk_data_t d);
+		
+		[DllImport (SKIA)] public extern static void                  sk_picture_recorder_delete (sk_picture_recorder_t r);
+		[DllImport (SKIA)] public extern static sk_picture_recorder_t sk_picture_recorder_new();
+		[DllImport (SKIA)] public extern static sk_canvas_t           sk_picture_recorder_begin_recording (sk_picture_recorder_t r, ref SKRect rect);
+		[DllImport (SKIA)] public extern static sk_picture_t          sk_picture_recorder_end_recording   (sk_picture_recorder_t r);
 
+		[DllImport (SKIA)] public extern static void   sk_picture_unref         (sk_image_t t);
+		[DllImport (SKIA)] public extern static uint   sk_picture_get_unique_id (sk_picture_t p);
+		[DllImport (SKIA)] public extern static SKRect sk_picture_get_bounds    (sk_picture_t p);
+
+		[DllImport (SKIA)] public extern static sk_shader_t sk_shader_new_linear_gradient ([In] SKPoint []points, [In] SKColor [] colors, float [] colorPos, int count, SKShaderTileMode mode, ref SKMatrix matrix);
+		[DllImport (SKIA)] public extern static sk_shader_t sk_shader_new_linear_gradient ([In] SKPoint []points, [In] SKColor [] colors, float [] colorPos, int count, SKShaderTileMode mode, IntPtr matrixZero);
+		[DllImport (SKIA)] public extern static sk_shader_t sk_shader_new_radial_gradient (ref SKPoint center, float radius, [In] SKColor [] colors, float [] colorPos, int count, SKShaderTileMode mode, ref SKMatrix matrix);
+		[DllImport (SKIA)] public extern static sk_shader_t sk_shader_new_radial_gradient (ref SKPoint center, float radius, [In] SKColor [] colors, float [] colorPos, int count, SKShaderTileMode mode, IntPtr matrixZero);
+		
+		[DllImport (SKIA)] public extern static sk_shader_t sk_shader_new_sweep_gradient (ref SKPoint center, [In] SKColor [] colors, float [] colorPos, int count, IntPtr matrixZero);
+		[DllImport (SKIA)] public extern static sk_shader_t sk_shader_new_sweep_gradient (ref SKPoint center, [In] SKColor [] colors, float [] colorPos, int count, ref SKMatrix matrixZero);
+
+		[DllImport (SKIA)] public extern static sk_shader_t sk_shader_new_two_point_conical_gradient (ref SKPoint start, float startRadius, ref SKPoint end, float endRadius, [In] SKColor [] colors, float [] colorPos, int count, SKShaderTileMode mode, ref SKMatrix matrix);
+		[DllImport (SKIA)] public extern static sk_shader_t sk_shader_new_two_point_conical_gradient (ref SKPoint start, float startRadius, ref SKPoint end, float endRadius, [In] SKColor [] colors, float [] colorPos, int count, SKShaderTileMode mode, IntPtr matrixZero);
 	}
 }
 

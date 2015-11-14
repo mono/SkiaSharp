@@ -1,15 +1,21 @@
-﻿using System;
+﻿//
+// Bindings for SKCanvas
+//
+// Author:
+//   Miguel de Icaza
+//
+// Copyright 2015 Xamarin Inc
+//
+using System;
 
 namespace SkiaSharp
 {
 	// No dispose, the Canvas is only valid while the Surface is valid.
 	public class SKCanvas
 	{
-		SKSurface s;
 		internal IntPtr handle;
-		internal SKCanvas (SKSurface s, IntPtr ptr)
+		internal SKCanvas (IntPtr ptr)
 		{
-			this.s = s;
 			handle = ptr;
 		}
 

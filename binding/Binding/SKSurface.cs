@@ -1,41 +1,54 @@
-﻿using System;
+﻿//
+// Bindings for SKSurface
+//
+// Author:
+//   Miguel de Icaza
+//
+// Copyright 2015 Xamarin Inc
+//
+
+using System;
 
 namespace SkiaSharp
 {
 	public class SKSurface : IDisposable
 	{
 		internal IntPtr handle;
-		public SKSurface (int width, int height, SKColorType colorType, SKAlphaType alphaType) : this (new SKImageInfo (width, height, colorType, alphaType)) {}
-		public SKSurface (int width, int height, SKColorType colorType, SKAlphaType alphaType, SKSurfaceProps props) : this (new SKImageInfo (width, height, colorType, alphaType), props) {}
-		public SKSurface (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes) : this (new SKImageInfo (width, height, colorType, alphaType), pixels, rowBytes) {}
-		public SKSurface (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes, SKSurfaceProps props) : this (new SKImageInfo (width, height, colorType, alphaType), pixels, rowBytes, props) {}
+		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType) => Create (new SKImageInfo (width, height, colorType, alphaType));
+		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, SKSurfaceProps props) => Create (new SKImageInfo (width, height, colorType, alphaType), props);
+		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes) => Create (new SKImageInfo (width, height, colorType, alphaType), pixels, rowBytes);
+		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes, SKSurfaceProps props) => Create (new SKImageInfo (width, height, colorType, alphaType), pixels, rowBytes, props);
 
-		public SKSurface (SKImageInfo info)
+		SKSurface (IntPtr h)
 		{
-			handle = SkiaApi.sk_surface_new_raster (ref info, IntPtr.Zero);
-			if (handle == IntPtr.Zero)
-				throw new InvalidOperationException ();
+			handle = h;
 		}
 
-		public SKSurface (SKImageInfo info, SKSurfaceProps props)
+		static SKSurface FromHandle (IntPtr h)
 		{
-			handle = SkiaApi.sk_surface_new_raster (ref info, ref props);
-			if (handle == IntPtr.Zero)
-				throw new InvalidOperationException ();
+			if (h == IntPtr.Zero)
+				return null;
+			return new SKSurface (h);
+		}
+		
+		public static SKSurface Create (SKImageInfo info)
+		{
+			return FromHandle (SkiaApi.sk_surface_new_raster (ref info, IntPtr.Zero));
 		}
 
-		public SKSurface (SKImageInfo info, IntPtr pixels, int rowBytes)
+		public static SKSurface Create (SKImageInfo info, SKSurfaceProps props)
 		{
-			handle = SkiaApi.sk_surface_new_raster_direct (ref info, pixels, (IntPtr)rowBytes, IntPtr.Zero);
-			if (handle == IntPtr.Zero)
-				throw new InvalidOperationException ();
+			return FromHandle (SkiaApi.sk_surface_new_raster (ref info, ref props));
 		}
 
-		public SKSurface (SKImageInfo info, IntPtr pixels, int rowBytes, SKSurfaceProps props)
+		public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes)
 		{
-			handle = SkiaApi.sk_surface_new_raster_direct (ref info, pixels, (IntPtr)rowBytes, ref props);
-			if (handle == IntPtr.Zero)
-				throw new InvalidOperationException ();
+			return (FromHandle (SkiaApi.sk_surface_new_raster_direct (ref info, pixels, (IntPtr)rowBytes, IntPtr.Zero)));
+		}
+
+		public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes, SKSurfaceProps props)
+		{
+			return (FromHandle (SkiaApi.sk_surface_new_raster_direct (ref info, pixels, (IntPtr)rowBytes, ref props)));
 		}
 
 		public void Dispose ()
@@ -63,11 +76,15 @@ namespace SkiaSharp
 
 		public SKCanvas Canvas {
 			get {
-				Console.WriteLine ("got: {0:x}", (long)handle);
 				if (canvas == null)
-					canvas = new SKCanvas (this, SkiaApi.sk_surface_get_canvas (handle));
+					canvas = new SKCanvas (SkiaApi.sk_surface_get_canvas (handle));
 				return canvas;
 			}
+		}
+
+		public SKImage Snapshot ()
+		{
+			return new SKImage (SkiaApi.sk_surface_new_image_snapshot (handle));
 		}
 	}
 }
