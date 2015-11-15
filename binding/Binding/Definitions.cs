@@ -61,6 +61,17 @@ namespace SkiaSharp
 		}
 	}
 
+	public enum SKTypefaceStyle {
+		Normal,
+		Bold,
+		Italic,
+		BoldItalic
+	}
+
+	public enum SKPointMode {
+		Points, Lines, Polygon
+	}
+
 	public enum SKPathDirection {
 		Clockwise,
 		CounterClockwise
@@ -129,6 +140,10 @@ namespace SkiaSharp
 		BgrHorizontal,
 		RgbVertical,
 		BgrVertical
+	}
+
+	public enum SKEncoding {
+		Utf8, Utf16, Utf32
 	}
 
 	public static class SkiaExtensions {

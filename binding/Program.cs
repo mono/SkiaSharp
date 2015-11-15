@@ -1,5 +1,5 @@
 ﻿//
-// Shows the basics of using Skia from C#
+// Shows the basics of using Skia from C# 	
 //
 // Author:
 //   Miguel de Icaza
@@ -36,7 +36,18 @@ namespace Driver
 					r.Left += 16;
 					r.Right += 16;
 				}
+
+				var tf = SKTypeface.FromFamilyName ("Consolas");
+				ushort[] glyphs;
+				var n = tf.CharsToGlyphs ("Hello world", out glyphs);
 			
+				canvas.DrawPoints (SKPointMode.Lines, new SKPoint[] { new SKPoint (0, 0), new SKPoint (1024, 768) }, paint);
+				canvas.DrawLine (0, 768, 1024, 0, paint);
+
+				paint.TextSize = 80;
+				canvas.DrawText ("Hello", 100, 100, paint);
+				paint.Typeface = tf;
+				canvas.DrawText ("Hello", 100, 150, paint);
 				using (var output = File.Create ("/tmp/file.png"))
 					surface.Snapshot ().Encode ().SaveTo (output);
 

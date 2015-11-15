@@ -36,6 +36,23 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_save_layer (handle, IntPtr.Zero, paint == null ? IntPtr.Zero : paint.handle);
 		}
 
+		public void DrawColor (SKColor color, SKXferMode mode = SKXferMode.Src)
+		{
+			SkiaApi.sk_canvas_draw_color (handle, color, mode);
+		}
+
+		public void DrawLine (float x0, float y0, float x1, float y1, SKPaint paint)
+		{
+			if (paint == null)
+				throw new ArgumentNullException ("paint");
+			SkiaApi.sk_canvas_draw_line (handle, x0, y0, x1, y1, paint.handle);
+		}
+
+		public void Clear ()
+		{
+			DrawColor (SKColors.Empty, SKXferMode.Src);
+		}
+
 		public void Restore ()
 		{
 			SkiaApi.sk_canvas_restore (handle);
@@ -113,6 +130,27 @@ namespace SkiaSharp
 				throw new ArgumentNullException ("path");
 			SkiaApi.sk_canvas_draw_path (handle, path.handle, paint.handle);
 		}
+
+		public void DrawPoints (SKPointMode mode, SKPoint [] points, SKPaint paint)
+		{
+			if (paint == null)
+				throw new ArgumentNullException ("paint");
+			if (points == null)
+				throw new ArgumentNullException ("points");
+			SkiaApi.sk_canvas_draw_points (handle, mode, (IntPtr)points.Length, points, paint.handle);
+		}
+
+		public void DrawPoint (float x, float y, SKPaint paint)
+		{
+			if (paint == null)
+				throw new ArgumentNullException ("paint");
+			SkiaApi.sk_canvas_draw_point (handle, x, y, paint.handle);
+		}
+
+		public void DrawPoint (float x, float y, SKColor color)
+		{
+			SkiaApi.sk_canvas_draw_point_color (handle, x, y, color);
+		}
 		
 		public void DrawImage (SKPath path, SKImage image, float x, float y, SKPaint paint)
 		{
@@ -160,7 +198,37 @@ namespace SkiaSharp
 				throw new ArgumentNullException ("picture");
 			SkiaApi.sk_canvas_draw_picture (handle, picture.handle, IntPtr.Zero, paint == null ? IntPtr.Zero : paint.handle);
 		}
-		
+
+		public void DrawText (string text, float x, float y, SKPaint paint)
+		{
+			if (text == null)
+				throw new ArgumentNullException ("text");
+			if (paint == null)
+				throw new ArgumentNullException ("paint");
+			SkiaApi.sk_canvas_draw_text (handle, text, text.Length, x, y, paint.handle);
+		}
+
+		public void DrawText (string text, SKPoint [] points, SKPaint paint)
+		{
+			if (text == null)
+				throw new ArgumentNullException ("text");
+			if (paint == null)
+				throw new ArgumentNullException ("paint");
+			if (points == null)
+				throw new ArgumentNullException ("points");
+			SkiaApi.sk_canvas_draw_pos_text (handle, text, text.Length, points, paint.handle);
+		}
+
+		public void DrawText (string text, SKPath path, float hOffset, float vOffset, SKPaint paint)
+		{
+			if (text == null)
+				throw new ArgumentNullException ("text");
+			if (paint == null)
+				throw new ArgumentNullException ("paint");
+			if (paint == null)
+				throw new ArgumentNullException ("paint");
+			SkiaApi.sk_canvas_draw_text_on_path (handle, text, text.Length, path.handle, hOffset, vOffset, paint.handle);
+		}
 	}
 }
 

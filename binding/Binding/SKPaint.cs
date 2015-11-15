@@ -135,6 +135,24 @@ namespace SkiaSharp
 				SkiaApi.sk_paint_set_xfermode_mode (handle, mode);
 			}
 		}
+
+		public SKTypeface Typeface {
+			get {
+				return new SKTypeface (SkiaApi.sk_paint_get_typeface (handle), owns: false);
+			}
+			set {
+				SkiaApi.sk_paint_set_typeface (handle, value == null ? IntPtr.Zero : value.handle);
+			}
+		}
+
+		public float TextSize {
+			get {
+				return SkiaApi.sk_paint_get_textsize (handle);
+			}
+			set {
+				SkiaApi.sk_paint_set_textsize (handle, value);
+			}
+		}
 	}
 }
 
