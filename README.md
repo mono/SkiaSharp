@@ -18,4 +18,10 @@ version of Skia:
 
 1d5127327111e00d0e4530adae73b11ad2ee3f42
 
-There are still many missing types from the C API, among those, text APIs
+It has been further updated to Xamarin's Skia fork, so up to:
+
+c25b614b7c17b9d865b0cafea8ba3203dc386d2e
+
+This fork contains many missing features, like font selection and text rendering.
+
+There are still many missing types from the C API.
