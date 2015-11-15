@@ -23,7 +23,7 @@ namespace Driver
 				return;
 			}
 			var info = new SKImageInfo (1024, 768, SKColorType.Rgba_8888, SKAlphaType.Opaque);
-
+			Console.WriteLine ("\u0750Here");
 			using (var surface = SKSurface.Create (info)) {
 				var canvas = surface.Canvas;
 				var paint = new SKPaint ();
@@ -39,15 +39,15 @@ namespace Driver
 
 				var tf = SKTypeface.FromFamilyName ("Consolas");
 				ushort[] glyphs;
-				var n = tf.CharsToGlyphs ("Hello world", out glyphs);
+				var n = tf.CharsToGlyphs ("Hello", out glyphs);
 			
 				canvas.DrawPoints (SKPointMode.Lines, new SKPoint[] { new SKPoint (0, 0), new SKPoint (1024, 768) }, paint);
 				canvas.DrawLine (0, 768, 1024, 0, paint);
 
 				paint.TextSize = 80;
-				canvas.DrawText ("Hello", 100, 100, paint);
+				canvas.DrawText ("\u0750Hello", 100, 150, paint);
 				paint.Typeface = tf;
-				canvas.DrawText ("Hello", 100, 150, paint);
+				canvas.DrawText ("Hello", 100, 100, paint);
 				using (var output = File.Create ("/tmp/file.png"))
 					surface.Snapshot ().Encode ().SaveTo (output);
 
