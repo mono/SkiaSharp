@@ -21,7 +21,7 @@ namespace Skia.Forms.Demo
 				BarTextColor = Xamarin.Forms.Color.White,
 			};
 
-			listView.ItemsSource = new [] {"Xamagon", "Text Sample"};
+			listView.ItemsSource = new [] {"Xamagon", "Text Sample", "Gradient Sample"};
 
 			listView.ItemSelected += (sender, e) => {
 				if (e.SelectedItem == null) return;
@@ -41,6 +41,8 @@ namespace Skia.Forms.Demo
 				return DrawHelpers.DrawXamagon;
 			case "Text Sample":
 				return DrawHelpers.TextSample;
+			case "Gradient Sample":
+				return DrawHelpers.DrawGradient;
 			}
 
 			throw new NotImplementedException ();

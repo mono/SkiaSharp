@@ -69,12 +69,12 @@ namespace SkiaSharp
 				return new SKShader (SkiaApi.sk_shader_new_sweep_gradient (ref center, colors, colorPos, colors.Length, ref localMatrix));
 		}
 
-		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, SKColor [] colors, float [] colorPos, int count, SKShaderTileMode mode)
+		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, SKColor [] colors, float [] colorPos, SKShaderTileMode mode)
 		{
 			return new SKShader (SkiaApi.sk_shader_new_two_point_conical_gradient (ref start, startRadius, ref end, endRadius, colors, colorPos, colors.Length, mode, IntPtr.Zero));
 		}
 		
-		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, SKColor [] colors, float [] colorPos, int count, SKShaderTileMode mode, SKMatrix localMatrix)
+		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, SKColor [] colors, float [] colorPos, SKShaderTileMode mode, SKMatrix localMatrix)
 		{
 			return new SKShader (SkiaApi.sk_shader_new_two_point_conical_gradient (ref start, startRadius, ref end, endRadius, colors, colorPos, colors.Length, mode, ref localMatrix));
 		}

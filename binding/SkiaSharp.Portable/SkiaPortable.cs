@@ -373,8 +373,8 @@
 		public static SkiaSharp.SKShader CreateRadialGradient(SkiaSharp.SKPoint center, float radius, SkiaSharp.SKColor[] colors, System.Single[] colorPos, SkiaSharp.SKShaderTileMode mode, SkiaSharp.SKMatrix localMatrix) { return default(SkiaSharp.SKShader); }
 		public static SkiaSharp.SKShader CreateSweepGradient(SkiaSharp.SKPoint center, SkiaSharp.SKColor[] colors, System.Single[] colorPos) { return default(SkiaSharp.SKShader); }
 		public static SkiaSharp.SKShader CreateSweepGradient(SkiaSharp.SKPoint center, SkiaSharp.SKColor[] colors, System.Single[] colorPos, SkiaSharp.SKMatrix localMatrix) { return default(SkiaSharp.SKShader); }
-		public static SkiaSharp.SKShader CreateTwoPointConicalGradient(SkiaSharp.SKPoint start, float startRadius, SkiaSharp.SKPoint end, float endRadius, SkiaSharp.SKColor[] colors, System.Single[] colorPos, int count, SkiaSharp.SKShaderTileMode mode) { return default(SkiaSharp.SKShader); }
-		public static SkiaSharp.SKShader CreateTwoPointConicalGradient(SkiaSharp.SKPoint start, float startRadius, SkiaSharp.SKPoint end, float endRadius, SkiaSharp.SKColor[] colors, System.Single[] colorPos, int count, SkiaSharp.SKShaderTileMode mode, SkiaSharp.SKMatrix localMatrix) { return default(SkiaSharp.SKShader); }
+		public static SkiaSharp.SKShader CreateTwoPointConicalGradient(SkiaSharp.SKPoint start, float startRadius, SkiaSharp.SKPoint end, float endRadius, SkiaSharp.SKColor[] colors, System.Single[] colorPos, SkiaSharp.SKShaderTileMode mode) { return default(SkiaSharp.SKShader); }
+		public static SkiaSharp.SKShader CreateTwoPointConicalGradient(SkiaSharp.SKPoint start, float startRadius, SkiaSharp.SKPoint end, float endRadius, SkiaSharp.SKColor[] colors, System.Single[] colorPos, SkiaSharp.SKShaderTileMode mode, SkiaSharp.SKMatrix localMatrix) { return default(SkiaSharp.SKShader); }
 		public void Dispose() { }
 		protected virtual void Dispose(bool disposing) { }
 		~SKShader() { }
