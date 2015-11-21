@@ -96,6 +96,41 @@ namespace Skia.Forms.Demo
 				}
 			}
 		}
+
+		// https://fiddle.skia.org/c/3523e95a9f8b96228b6b4bdd5409cb94
+		public static void TextSample (SKCanvas canvas, int width, int height)
+		{
+			canvas.DrawColor (SKColors.White);
+
+			using (var paint = new SKPaint ()) {
+				paint.TextSize = 64.0f;
+				paint.IsAntialias = true;
+				paint.Color = new SKColor (0x42, 0x81, 0xA4);
+				// paint1.setStyle(SkPaint::kFill_Style); missing
+
+				canvas.DrawText ("Skia", 20.0f, 64.0f, paint);
+			}
+
+			using (var paint = new SKPaint ()) {
+				paint.TextSize = 64.0f;
+				paint.IsAntialias = true;
+				paint.Color = new SKColor (0x9C, 0xAF, 0xB7);
+				paint.IsStroke = true; // paint2.setStyle(SkPaint::kStroke_Style); missing?
+				paint.StrokeWidth = 3;
+
+				canvas.DrawText ("Skia", 20.0f, 144.0f, paint);
+			}
+
+			using (var paint = new SKPaint ()) {
+				paint.TextSize = 64.0f;
+				paint.IsAntialias = true;
+				paint.Color = new SKColor (0xE6, 0xB8, 0x9C);
+				// paint3.setTextScaleX(SkFloatToScalar(1.5f)); missing
+
+				canvas.DrawText ("Skia", 20.0f, 224.0f, paint);
+			}
+
+		}
 	}
 }
 
