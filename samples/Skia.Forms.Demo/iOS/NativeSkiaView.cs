@@ -27,8 +27,12 @@ namespace Skia.Forms.Demo.iOS
 			try {
 
 				using (var surface = SKSurface.Create (width, height, SKColorType.Rgba_8888, SKAlphaType.Premul, buff, width * 4)) {
-					surface.Canvas.Scale (screenScale, screenScale);
-					skiaView.SendDraw (surface.Canvas);
+					var skcanvas = surface.Canvas;
+
+					// 2 for one here.  Scaling to the pixel size + moving the origin to the top left
+					skcanvas.Scale (screenScale, -screenScale);
+					skcanvas.Translate (0, (float)-Frame.Height);
+					skiaView.SendDraw (skcanvas);
 				}
 
 				using (var colorSpace = CoreGraphics.CGColorSpace.CreateDeviceRGB ()) {

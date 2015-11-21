@@ -14,10 +14,6 @@ namespace Skia.Forms.Demo
 
 		public static void DrawXamagon (SKCanvas canvas, int width, int height)
 		{
-			// Set the origin to the top left
-			canvas.Scale (1, -1);
-			canvas.Translate (0, -height);
-
 			// Width 41.6587026 => 144.34135
 			// Height 56 => 147
 
