@@ -1,19 +1,63 @@
 
-
+ANDROID_HOME ?= ${HOME}/Library/Developer/Xamarin/android-sdk-macosx
 
 DEPOT_TOOLS_REPO=https://chromium.googlesource.com/chromium/tools/depot_tools.git
 DEPOT_TOOLS_TAG=3add4b62b8fc420ba5a6cc0c8bddcf152c00a970
 
 NATIVE_SKIA_ROOT=../skia
 
-all: ios
+ANDROID_BUILD_ENV_VARS=PATH=${PATH}:${CURDIR}/depot_tools ANDROID_HOME=${ANDROID_HOME} ANDROID_SDK_ROOT=${ANDROID_HOME} BUILDTYPE=Release
+
+all: ios android
 
 ios: ios/libskia_core.a
 
+android: android/x86/libskia_android.so android/x86_64/libskia_android.so \
+	android/armeabi-v7a/libskia_android.so android/armeabi/libskia_android.so android/arm64-v8a/libskia_android.so
+
+android/x86/libskia_android.so: depot_tools/README
+	cd ${NATIVE_SKIA_ROOT} && \
+		env ${ANDROID_BUILD_ENV_VARS} \
+		./platform_tools/android/bin/android_ninja -d x86 "skia_lib"
+
+	mkdir -p android/x86
+	cp ${NATIVE_SKIA_ROOT}/out/config/android-x86/Release/lib/libskia_android.so $@
+
+android/x86_64/libskia_android.so: depot_tools/README
+	cd ${NATIVE_SKIA_ROOT} && \
+		env ${ANDROID_BUILD_ENV_VARS} \
+		./platform_tools/android/bin/android_ninja -d x86_64 "skia_lib"
+
+	mkdir -p android/x86_64
+	cp ${NATIVE_SKIA_ROOT}/out/config/android-x86_64/Release/lib/libskia_android.so $@
+
+android/armeabi/libskia_android.so: depot_tools/README
+	cd ${NATIVE_SKIA_ROOT} && \
+		env ${ANDROID_BUILD_ENV_VARS} \
+		./platform_tools/android/bin/android_ninja -d arm "skia_lib"
+
+	mkdir -p android/armeabi
+	cp ${NATIVE_SKIA_ROOT}/out/config/android-arm/Release/lib/libskia_android.so $@
+
+android/armeabi-v7a/libskia_android.so: depot_tools/README
+	cd ${NATIVE_SKIA_ROOT} && \
+		env ${ANDROID_BUILD_ENV_VARS} \
+		./platform_tools/android/bin/android_ninja -d arm_v7_neon "skia_lib"
+
+	mkdir -p android/armeabi-v7a
+	cp ${NATIVE_SKIA_ROOT}/out/config/android-arm_v7_neon/Release/lib/libskia_android.so $@
+
+android/arm64-v8a/libskia_android.so: depot_tools/README
+	cd ${NATIVE_SKIA_ROOT} && \
+		env ${ANDROID_BUILD_ENV_VARS} \
+		./platform_tools/android/bin/android_ninja -d arm64 "skia_lib"
+
+	mkdir -p android/arm64-v8a
+	cp ${NATIVE_SKIA_ROOT}/out/config/android-arm64/Release/lib/libskia_android.so $@
 
 
 ios/libskia_core.a: depot_tools/README
-	mkdir -p ios/i386
+	mkdir -p ios
 
 	cd ${NATIVE_SKIA_ROOT} && \
 		env PATH=${PATH}:${CURDIR}/depot_tools \
@@ -53,6 +97,6 @@ depot_tools/README:
 	touch $@
 
 clean :
-	rm -rf depot_tools ios
+	rm -rf depot_tools ios android
 
 .PHONY: all clean ios android
