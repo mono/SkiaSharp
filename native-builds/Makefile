@@ -6,7 +6,11 @@ DEPOT_TOOLS_TAG=3add4b62b8fc420ba5a6cc0c8bddcf152c00a970
 
 NATIVE_SKIA_ROOT=../skia
 
-all: ios/libskia_core.a
+all: ios
+
+ios: ios/libskia_core.a
+
+
 
 ios/libskia_core.a: depot_tools/README
 	mkdir -p ios/i386
@@ -50,3 +54,5 @@ depot_tools/README:
 
 clean :
 	rm -rf depot_tools ios
+
+.PHONY: all clean ios android
