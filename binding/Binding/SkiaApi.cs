@@ -28,7 +28,7 @@ namespace SkiaSharp
 		#if MONOTOUCH
 		const string SKIA = "__Internal";
 		#elif __ANDROID__
-		const string SKIA = "libskia.so";
+		const string SKIA = "libskia_android.so";
 		#else
 		const string SKIA = "/tmp/libskia.dylib";
 		#endif
