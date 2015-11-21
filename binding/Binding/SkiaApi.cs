@@ -25,7 +25,13 @@ namespace SkiaSharp
 {
 	internal static class SkiaApi
 	{
+		#if MONOTOUCH
+		const string SKIA = "__Internal";
+		#elif __ANDROID__
+		const string SKIA = "libskia_android.so";
+		#else
 		const string SKIA = "/tmp/libskia.dylib";
+		#endif
 
 		[DllImport (SKIA)] public extern static void         sk_surface_unref             (sk_surface_t t);
 		[DllImport (SKIA)] public extern static sk_surface_t sk_surface_new_raster        (ref SKImageInfo info, ref SKSurfaceProps pros);
