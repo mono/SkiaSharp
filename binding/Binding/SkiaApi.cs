@@ -26,7 +26,7 @@ namespace SkiaSharp
 	internal static class SkiaApi
 	{
 		#if MONOTOUCH
-		const string SKIA = "__Internal";
+		const string SKIA = "@rpath/libskia_ios.framework/libskia_ios";
 		#elif __ANDROID__
 		const string SKIA = "libskia_android.so";
 		#else
