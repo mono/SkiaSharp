@@ -3,6 +3,9 @@ ANDROID_HOME ?= ${HOME}/Library/Developer/Xamarin/android-sdk-macosx
 XCODEBUILD ?= /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild
 LIPO ?= lipo
 
+ANDROID_NDK_HOME ?= $(HOME)/Library/Developer/Xamarin/android-ndk
+NDK_BUILD ?= $(ANDROID_NDK_HOME)/ndk-build
+
 DEPOT_TOOLS_REPO=https://chromium.googlesource.com/chromium/tools/depot_tools.git
 DEPOT_TOOLS_TAG=3add4b62b8fc420ba5a6cc0c8bddcf152c00a970
 
@@ -14,8 +17,12 @@ all: ios android
 
 ios: ios/libskia_ios.framework/libskia_ios
 
-android: android/x86/libskia_android.so android/x86_64/libskia_android.so \
+
+android: libskia_android/libs/armeabi-v7a/libskia_android.so
+
+libskia_android/libs/armeabi-v7a/libskia_android.so: android/x86/libskia_android.so android/x86_64/libskia_android.so \
 	android/armeabi-v7a/libskia_android.so android/armeabi/libskia_android.so android/arm64-v8a/libskia_android.so
+	cd libskia_android && ${NDK_BUILD}
 
 android/x86/libskia_android.so: depot_tools/README
 	cd ${NATIVE_SKIA_ROOT} && \
@@ -99,6 +106,6 @@ depot_tools/README:
 	touch $@
 
 clean :
-	rm -rf depot_tools ios android
+	rm -rf depot_tools ios android libskia_android/obj libskia_android/libs
 
 .PHONY: all clean ios android
