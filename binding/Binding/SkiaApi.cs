@@ -29,6 +29,8 @@ namespace SkiaSharp
 		const string SKIA = "@rpath/libskia_ios.framework/libskia_ios";
 		#elif __ANDROID__
 		const string SKIA = "libskia_android.so";
+		#elif XAMARIN_MAC
+		const string SKIA = "liblibskia_osx.dylib";
 		#else
 		const string SKIA = "/tmp/libskia.dylib";
 		#endif
