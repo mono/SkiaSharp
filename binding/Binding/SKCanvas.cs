@@ -205,7 +205,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException ("text");
 			if (paint == null)
 				throw new ArgumentNullException ("paint");
-			SkiaApi.sk_canvas_draw_text (handle, text, text.Length, x, y, paint.handle);
+
+			var bytes = System.Text.Encoding.UTF8.GetBytes (text);
+			SkiaApi.sk_canvas_draw_text (handle, bytes, bytes.Length, x, y, paint.handle);
 		}
 
 		public void DrawText (string text, SKPoint [] points, SKPaint paint)
@@ -216,7 +218,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException ("paint");
 			if (points == null)
 				throw new ArgumentNullException ("points");
-			SkiaApi.sk_canvas_draw_pos_text (handle, text, text.Length, points, paint.handle);
+
+			var bytes = System.Text.Encoding.UTF8.GetBytes (text);
+			SkiaApi.sk_canvas_draw_pos_text (handle, bytes, bytes.Length, points, paint.handle);
 		}
 
 		public void DrawText (string text, SKPath path, float hOffset, float vOffset, SKPaint paint)
@@ -227,7 +231,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException ("paint");
 			if (paint == null)
 				throw new ArgumentNullException ("paint");
-			SkiaApi.sk_canvas_draw_text_on_path (handle, text, text.Length, path.handle, hOffset, vOffset, paint.handle);
+
+			var bytes = System.Text.Encoding.UTF8.GetBytes (text);
+			SkiaApi.sk_canvas_draw_text_on_path (handle, bytes, bytes.Length, path.handle, hOffset, vOffset, paint.handle);
 		}
 	}
 }

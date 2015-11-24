@@ -71,9 +71,9 @@ namespace SkiaSharp
 		[DllImport (SKIA)] public extern static void sk_canvas_draw_line         (sk_canvas_t t, float x0, float y0, float x1, float y1, sk_paint_t paint);
 
 		// These can be overloaded to take an IntPtr which points to some utf8 text.
-		[DllImport (SKIA)] public extern static void sk_canvas_draw_text         (sk_canvas_t t, string text, int len, float x, float y, sk_paint_t paint);
-		[DllImport (SKIA)] public extern static void sk_canvas_draw_pos_text     (sk_canvas_t t, string text, int len, [In] SKPoint [] points, sk_paint_t paint);
-		[DllImport (SKIA)] public extern static void sk_canvas_draw_text_on_path (sk_canvas_t t, string text, int len, sk_path_t path, float hOffset, float vOffset, sk_paint_t paint);
+		[DllImport (SKIA)] public extern static void sk_canvas_draw_text         (sk_canvas_t t, byte[] text, int len, float x, float y, sk_paint_t paint);
+		[DllImport (SKIA)] public extern static void sk_canvas_draw_pos_text     (sk_canvas_t t, byte[] text, int len, [In] SKPoint [] points, sk_paint_t paint);
+		[DllImport (SKIA)] public extern static void sk_canvas_draw_text_on_path (sk_canvas_t t, byte[] text, int len, sk_path_t path, float hOffset, float vOffset, sk_paint_t paint);
 
 		[DllImport (SKIA)] public extern static sk_paint_t    sk_paint_new               ();
 		[DllImport (SKIA)] public extern static void          sk_paint_delete            (sk_paint_t t);

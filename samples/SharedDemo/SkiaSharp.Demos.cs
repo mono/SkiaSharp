@@ -173,6 +173,32 @@ namespace SkiaSharp
 			}
 		}
 
+		public static void UnicodeText (SKCanvas canvas, int width, int height)
+		{
+			string text = "\u0750 Hello";
+
+			using (var paint = new SKPaint ()) {
+				canvas.DrawColor (SKColors.White);
+
+				using (var tf = SKTypeface.FromFamilyName ("Tahoma")) {
+
+					paint.TextSize = 60;
+					paint.Typeface = tf;
+					canvas.DrawText (text, 50, 100, paint);
+				}
+			}
+
+			using (var paint = new SKPaint ()) {
+				using (var tf = SKTypeface.FromFamilyName ("Arial")) {
+					paint.Color = XamDkBlue;
+
+					paint.TextSize = 60;
+					paint.Typeface = tf;
+					canvas.DrawText (text, 50, 200, paint);
+				}
+			}
+		}
+
 		[Flags]
 		public enum Platform
 		{
@@ -203,6 +229,7 @@ namespace SkiaSharp
 			new Sample {Title="Xamagon", Method = DrawXamagon, Platform = Platform.All},
 			new Sample {Title="Text Sample", Method = TextSample, Platform = Platform.All},
 			new Sample {Title="Gradient Sample", Method = DrawGradient, Platform = Platform.All},
+			new Sample {Title="Unicode Text", Method = UnicodeText, Platform = Platform.All},
 		};
 	}
 }
