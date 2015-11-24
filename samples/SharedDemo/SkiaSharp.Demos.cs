@@ -1,9 +1,10 @@
 ﻿using System;
 using SkiaSharp;
+using System.Linq;
 
-namespace Skia.Forms.Demo
+namespace SkiaSharp
 {
-	public class DrawHelpers
+	public class Demos
 	{
 		#pragma warning disable 414
 		static readonly SKColor XamLtBlue = new SKColor (0x34, 0x98, 0xdb);
@@ -171,6 +172,38 @@ namespace Skia.Forms.Demo
 				}
 			}
 		}
+
+		[Flags]
+		public enum Platform
+		{
+			iOS = 1,
+			Android = 2,
+			OSX = 4,
+			All = 0xFFFF,
+		}
+
+		class Sample 
+		{
+			public string Title { get; set; }
+			public Action <SKCanvas, int, int> Method { get; set; }
+			public Platform Platform { get; set; }
+		}
+
+		public static string [] SamplesForPlatform (Platform platform)
+		{
+			return sampleList.Where (s => 0 != (s.Platform & platform)).Select (s => s.Title).ToArray ();
+		}
+
+		public static Action <SKCanvas, int, int> MethodForSample (string title)
+		{
+			return sampleList.Where (s => s.Title == title).First ().Method;
+		}
+
+		static Sample [] sampleList = new Sample[] {
+			new Sample {Title="Xamagon", Method = DrawXamagon, Platform = Platform.All},
+			new Sample {Title="Text Sample", Method = TextSample, Platform = Platform.All},
+			new Sample {Title="Gradient Sample", Method = DrawGradient, Platform = Platform.All},
+		};
 	}
 }
 

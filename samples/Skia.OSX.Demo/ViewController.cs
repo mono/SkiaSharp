@@ -14,23 +14,14 @@ namespace Skia.OSX.Demo
 		public override void ViewDidLoad ()
 		{
 			base.ViewDidLoad ();
-			PopUpButton.AddItems (new [] {"Xamagon", "Text", "Gradient"});
+			PopUpButton.AddItems (SkiaSharp.Demos.SamplesForPlatform (SkiaSharp.Demos.Platform.OSX));
 			PopUpButton.SelectItem (0);
+			SkiaView.OnDrawCallback = SkiaSharp.Demos.MethodForSample (PopUpButton.SelectedItem.Title);
 		}
 
 		partial void PopUpButtonAction (NSObject sender)
 		{
-			switch (PopUpButton.SelectedItem.Title) {
-			case "Xamagon":
-				SkiaView.OnDrawCallback = Skia.Forms.Demo.DrawHelpers.DrawXamagon;
-				break;
-			case "Text":
-				SkiaView.OnDrawCallback = Skia.Forms.Demo.DrawHelpers.TextSample;
-				break;
-			case "Gradient":
-				SkiaView.OnDrawCallback = Skia.Forms.Demo.DrawHelpers.DrawGradient;
-				break;
-			}
+			SkiaView.OnDrawCallback = SkiaSharp.Demos.MethodForSample (PopUpButton.SelectedItem.Title);
 		}
 
 		public override NSObject RepresentedObject {

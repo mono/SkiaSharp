@@ -21,31 +21,16 @@ namespace Skia.Forms.Demo
 				BarTextColor = Xamarin.Forms.Color.White,
 			};
 
-			listView.ItemsSource = new [] {"Xamagon", "Text Sample", "Gradient Sample"};
+			listView.ItemsSource = Demos.SamplesForPlatform (Demos.Platform.iOS | Demos.Platform.Android);
 
 			listView.ItemSelected += (sender, e) => {
 				if (e.SelectedItem == null) return;
 				listView.SelectedItem = null;
 
 				navPage.PushAsync (new ContentPage {
-					Content = new SkiaView  (GetDrawHandler (e.SelectedItem.ToString ())),
+					Content = new SkiaView  (SkiaSharp.Demos.MethodForSample (e.SelectedItem.ToString ())),
 				});
 			};
-		}
-
-		Action <SKCanvas, int, int> GetDrawHandler (string selectedItem)
-		{
-			switch (selectedItem) {
-
-			case "Xamagon":
-				return DrawHelpers.DrawXamagon;
-			case "Text Sample":
-				return DrawHelpers.TextSample;
-			case "Gradient Sample":
-				return DrawHelpers.DrawGradient;
-			}
-
-			throw new NotImplementedException ();
 		}
 
 		protected override void OnStart ()

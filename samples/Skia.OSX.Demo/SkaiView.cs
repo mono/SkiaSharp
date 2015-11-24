@@ -14,12 +14,14 @@ namespace Skia.OSX.Demo
 
 		public SkaiView (IntPtr handle) : base (handle)
 		{
-			onDrawCallback = Skia.Forms.Demo.DrawHelpers.DrawXamagon;
 		}
 
 		public override void DrawRect (CoreGraphics.CGRect dirtyRect)
 		{
 			base.DrawRect (dirtyRect);
+
+			if (onDrawCallback == null)
+				return;
 
 			// Just not that sharp using the scale pixel scale only
 			// Going going 2x Pixel Scale
