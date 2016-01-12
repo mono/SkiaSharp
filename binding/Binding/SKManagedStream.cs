@@ -10,6 +10,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.IO;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 #if __IOS__
 using ObjCRuntime;
@@ -64,8 +65,6 @@ namespace SkiaSharp
 		public SKManagedStream (Stream managedStream)
 			: base (SkiaApi.sk_managedstream_new (), true)
 		{
-			Console.WriteLine ("Construct " + handle);
-
 			managedStreams.Add (handle, new WeakReference<SKManagedStream>(this));
 
 			stream = managedStream;
@@ -73,8 +72,6 @@ namespace SkiaSharp
 
 		protected override void Dispose (bool disposing)
 		{
-			Console.WriteLine ("Dispose " + handle);
-
 			if (managedStreams.ContainsKey(handle)) {
 				managedStreams.Remove (handle);
 			}
@@ -89,7 +86,6 @@ namespace SkiaSharp
 		#endif
 		private static IntPtr ReadInternal (IntPtr managedStreamPtr, IntPtr buffer, IntPtr size)
 		{
-			Console.WriteLine ("Read " + (long)size);
 			var managedStream = AsManagedStream (managedStreamPtr);
 			var count = (int)size;
 			var managedBuffer = new byte[count];
@@ -102,7 +98,6 @@ namespace SkiaSharp
 		#endif
 		private static bool IsAtEndInternal (IntPtr managedStreamPtr)
 		{
-			Console.WriteLine ("IsAtEnd");
 			var managedStream = AsManagedStream (managedStreamPtr);
 			return managedStream.stream.Position >= managedStream.stream.Length;
 		}
@@ -111,7 +106,6 @@ namespace SkiaSharp
 		#endif
 		private static bool RewindInternal (IntPtr managedStreamPtr)
 		{
-			Console.WriteLine ("Rewind");
 			var managedStream = AsManagedStream (managedStreamPtr);
 			managedStream.stream.Position = 0;
 			return true;
@@ -121,7 +115,6 @@ namespace SkiaSharp
 		#endif
 		private static IntPtr GetPositionInternal (IntPtr managedStreamPtr)
 		{
-			Console.WriteLine ("GetPosition");
 			var managedStream = AsManagedStream (managedStreamPtr);
 			return (IntPtr)managedStream.stream.Position;
 		}
@@ -130,7 +123,6 @@ namespace SkiaSharp
 		#endif
 		private static bool SeekInternal (IntPtr managedStreamPtr, IntPtr position)
 		{
-			Console.WriteLine ("Seek " + (long)position);
 			var managedStream = AsManagedStream (managedStreamPtr);
 			managedStream.stream.Position = (long)position;
 			return true;
@@ -140,7 +132,6 @@ namespace SkiaSharp
 		#endif
 		private static bool MoveInternal (IntPtr managedStreamPtr, long offset)
 		{
-			Console.WriteLine ("Move " + offset);
 			var managedStream = AsManagedStream (managedStreamPtr);
 			managedStream.stream.Position = managedStream.stream.Position + offset;
 			return true;
@@ -150,7 +141,6 @@ namespace SkiaSharp
 		#endif
 		private static IntPtr GetLengthInternal (IntPtr managedStreamPtr)
 		{
-			Console.WriteLine ("GetLength");
 			var managedStream = AsManagedStream (managedStreamPtr);
 			return (IntPtr)managedStream.stream.Length;
 		}
@@ -159,7 +149,6 @@ namespace SkiaSharp
 		#endif
 		private static IntPtr CreateNewInternal (IntPtr managedStreamPtr)
 		{
-			Console.WriteLine ("CreateNew");
 			var managedStream = AsManagedStream (managedStreamPtr);
 			var newStream = new SKManagedStream (managedStream.stream);
 			return newStream.handle;
@@ -173,7 +162,7 @@ namespace SkiaSharp
 			if (AsManagedStream (managedStreamPtr, out managedStream)) {
 				managedStream.Dispose ();
 			} else {
-				Console.WriteLine ("Destroying SKManagedStream: " + managedStreamPtr);
+				Debug.WriteLine ("Destroying disposed SKManagedStream: " + managedStreamPtr);
 			}
 		}
 		private static SKManagedStream AsManagedStream(IntPtr ptr)
