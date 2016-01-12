@@ -1,6 +1,8 @@
 ﻿using System;
 using SkiaSharp;
 using System.Linq;
+using System.IO;
+using System.Reflection;
 
 namespace SkiaSharp
 {
@@ -38,6 +40,9 @@ namespace SkiaSharp
 			using (var paint = new SKPaint ()) {
 				paint.Color = SKColors.White;
 				canvas.DrawPaint (paint);
+
+				paint.StrokeCap = SKStrokeCap.Round;
+				var t = paint.StrokeCap;
 
 
 				using (var path = new SKPath ()) {
@@ -107,28 +112,30 @@ namespace SkiaSharp
 				paint.TextSize = 64.0f;
 				paint.IsAntialias = true;
 				paint.Color = new SKColor (0x42, 0x81, 0xA4);
-				// paint1.setStyle(SkPaint::kFill_Style); missing
+				paint.IsStroke = false;
 
-				canvas.DrawText ("Skia", 20.0f, 64.0f, paint);
+				canvas.DrawText ("Skia", width / 2f, 64.0f, paint);
 			}
 
 			using (var paint = new SKPaint ()) {
 				paint.TextSize = 64.0f;
 				paint.IsAntialias = true;
 				paint.Color = new SKColor (0x9C, 0xAF, 0xB7);
-				paint.IsStroke = true; // paint2.setStyle(SkPaint::kStroke_Style); missing?
+				paint.IsStroke = true;
 				paint.StrokeWidth = 3;
+				paint.TextAlign = SKTextAlign.Center;
 
-				canvas.DrawText ("Skia", 20.0f, 144.0f, paint);
+				canvas.DrawText ("Skia", width / 2f, 144.0f, paint);
 			}
 
 			using (var paint = new SKPaint ()) {
 				paint.TextSize = 64.0f;
 				paint.IsAntialias = true;
 				paint.Color = new SKColor (0xE6, 0xB8, 0x9C);
-				// paint3.setTextScaleX(SkFloatToScalar(1.5f)); missing
+				paint.TextScaleX = 1.5f;
+				paint.TextAlign = SKTextAlign.Right;
 
-				canvas.DrawText ("Skia", 20.0f, 224.0f, paint);
+				canvas.DrawText ("Skia", width / 2f, 224.0f, paint);
 			}
 		}
 
@@ -175,26 +182,204 @@ namespace SkiaSharp
 
 		public static void UnicodeText (SKCanvas canvas, int width, int height)
 		{
-			string text = "\u0750 Hello";
+			// stops at 0x530 on Android
+			string text = "\u03A3 and \u0750";
 
-			using (var paint = new SKPaint ()) {
+			using (var paint = new SKPaint ())
+			using (var tf = SKTypeface.FromFamilyName ("Tahoma")) {
 				canvas.DrawColor (SKColors.White);
 
-				using (var tf = SKTypeface.FromFamilyName ("Tahoma")) {
-
-					paint.TextSize = 60;
-					paint.Typeface = tf;
-					canvas.DrawText (text, 50, 100, paint);
-				}
+				paint.TextSize = 60;
+				paint.Typeface = tf;
+				canvas.DrawText (text, 50, 100, paint);
 			}
 
-			using (var paint = new SKPaint ()) {
-				using (var tf = SKTypeface.FromFamilyName ("Arial")) {
-					paint.Color = XamDkBlue;
 
-					paint.TextSize = 60;
+			using (var paint = new SKPaint ())
+			using (var tf = SKTypeface.FromFamilyName ("Times New Roman")) {
+				paint.Color = XamDkBlue;
+
+				paint.TextSize = 60;
+				paint.Typeface = tf;
+				canvas.DrawText (text, 50, 200, paint);
+			}
+		}
+
+		public static void FilledHeptagram (SKCanvas canvas, int width, int height)
+		{
+			var size = ((float)height > width ? width : height) * 0.75f;
+			var R = 0.45f * size;
+			var TAU = 6.2831853f;
+
+			using (var path = new SKPath ()) {
+				path.MoveTo (R, 0.0f);
+				for (int i = 1; i < 7; ++i) {
+					var theta = 3f * i * TAU / 7f;
+					path.LineTo (R * (float)Math.Cos (theta), R * (float)Math.Sin (theta));
+				}
+				path.Close ();
+
+				using (var paint = new SKPaint ()) {
+					paint.IsAntialias = true;
+					canvas.Clear (SKColors.White);
+					canvas.Translate (width / 2f, height / 2f);
+					canvas.DrawPath (path, paint);
+				}
+			}
+		}
+
+		public static void ManageDrawMatrix (SKCanvas canvas, int width, int height)
+		{
+			var size = ((float)height > width ? width : height) * 0.5f;
+			var center = new SKPoint ((width - size) / 2f, (height - size) / 2f);
+
+			// draw these at specific locations
+			var leftRect = SKRect.Create (center.X - size / 2f, center.Y, size, size);
+			var rightRect = SKRect.Create (center.X + size / 2f, center.Y, size, size);
+
+			// draw this at the current location / transformation
+			var rotatedRect = SKRect.Create (0f, 0f, size, size);
+
+			using (var paint = new SKPaint ()) {
+				paint.IsAntialias = true;
+				canvas.Clear (XamPurple);
+
+				// draw
+				paint.Color = XamDkBlue;
+				canvas.DrawRect (leftRect, paint);
+
+				// save
+				canvas.Save();
+
+				// transform
+				canvas.Translate (width / 2f, center.Y);
+				canvas.RotateDegrees (45);
+
+				// draw
+				paint.Color = XamGreen;
+				canvas.DrawRect (rotatedRect, paint);
+
+				// undo transform / restore
+				canvas.Restore();
+
+				// draw
+				paint.Color = XamLtBlue;
+				canvas.DrawRect (rightRect, paint);
+			}
+		}
+
+		public static void CustomFonts (SKCanvas canvas, int width, int height)
+		{
+			string text = "\u03A3 and \u0750";
+
+			using (var paint = new SKPaint ()) {
+				canvas.Clear (SKColors.White);
+
+				using (var tf = SKTypeface.FromFile (CustomFontPath)) {
+					paint.TextSize = 40;
 					paint.Typeface = tf;
+
+					canvas.DrawText (text, 50, 50, paint);
+				}
+
+				using (var stream = new SKFileStream (CustomFontPath))
+				using (var tf = SKTypeface.FromStream (stream)) {
+					paint.Color = XamDkBlue;
+					paint.TextSize = 40;
+					paint.Typeface = tf;
+
+					canvas.DrawText (text, 50, 100, paint);
+				}
+
+				var assembly = typeof(Demos).GetTypeInfo ().Assembly;
+				var fontName = assembly.GetName ().Name + ".weblysleekuil.ttf";
+
+				using (var resource = assembly.GetManifestResourceStream (fontName))
+				using (var memory = new MemoryStream ()) {
+					resource.CopyTo (memory);
+					var bytes = memory.ToArray ();
+					using (var stream = new SKMemoryStream (bytes))
+					using (var tf = SKTypeface.FromStream (stream)) {
+						paint.Color = XamLtBlue;
+						paint.TextSize = 40;
+						paint.Typeface = tf;
+
+						canvas.DrawText (text, 50, 150, paint);
+					}
+				}
+
+				using (var resource = assembly.GetManifestResourceStream (fontName))
+				using (var stream = new SKManagedStream (resource))
+				using (var tf = SKTypeface.FromStream (stream)) {
+					paint.Color = XamLtBlue;
+					paint.TextSize = 40;
+					paint.Typeface = tf;
+
 					canvas.DrawText (text, 50, 200, paint);
+				}
+			}
+		}
+
+		public static void Xfermode (SKCanvas canvas, int width, int height)
+		{
+			var modes = Enum.GetValues (typeof(SKXferMode)).Cast<SKXferMode> ().ToArray ();
+
+			var cols = width < height ? 3 : 5;
+			var rows = (modes.Length - 1) / cols + 1;
+
+			var w = width / cols;
+			var h = (float)height / rows;
+			var rect = SKRect.Create (w, h);
+			var srcPoints = new[] {
+				new SKPoint (0.0f, 0.0f),
+				new SKPoint (w, 0.0f)
+			};
+			var srcColors = new [] {
+				SKColors.Magenta.WithAlpha (0),
+				SKColors.Magenta
+			};
+			var dstPoints = new [] {
+				new SKPoint (0.0f, 0.0f),
+				new SKPoint (0.0f, h)
+			};
+			var dstColors = new [] {
+				SKColors.Cyan.WithAlpha (0),
+				SKColors.Cyan
+			};
+
+			using (var text = new SKPaint ())
+			using (var stroke = new SKPaint ())
+			using (var src = new SKPaint ())
+			using (var dst = new SKPaint ())
+			using (var srcShader = SKShader.CreateLinearGradient (srcPoints [0], srcPoints [1], srcColors, null, SKShaderTileMode.Clamp))
+			using (var dstShader = SKShader.CreateLinearGradient (dstPoints [0], dstPoints [1], dstColors, null, SKShaderTileMode.Clamp)) {
+				text.TextSize = 12.0f;
+				text.IsAntialias = true;
+				text.TextAlign = SKTextAlign.Center;
+				stroke.IsStroke = true;
+				src.Shader = srcShader;
+				dst.Shader = dstShader;
+
+				canvas.Clear (SKColors.White);
+
+				for (var i = 0; i < modes.Length; ++i) {
+					using (new SKAutoCanvasRestore (canvas, true)) {
+						canvas.Translate (w * (i / rows), h * (i % rows));
+
+						canvas.ClipRect (rect);
+						canvas.DrawColor (SKColors.LightGray);
+
+						canvas.SaveLayer (null);
+						canvas.Clear (SKColors.Transparent);
+						canvas.DrawPaint (dst);
+
+						src.XferMode = modes [i];
+						canvas.DrawPaint (src);
+						canvas.DrawRect (rect, stroke);
+
+						var desc = modes [i].ToString ();
+						canvas.DrawText (desc, w / 2f, h / 2f, text);
+					}
 				}
 			}
 		}
@@ -225,11 +410,17 @@ namespace SkiaSharp
 			return sampleList.Where (s => s.Title == title).First ().Method;
 		}
 
+		public static string CustomFontPath { get; set; }
+
 		static Sample [] sampleList = new Sample[] {
 			new Sample {Title="Xamagon", Method = DrawXamagon, Platform = Platform.All},
 			new Sample {Title="Text Sample", Method = TextSample, Platform = Platform.All},
 			new Sample {Title="Gradient Sample", Method = DrawGradient, Platform = Platform.All},
 			new Sample {Title="Unicode Text", Method = UnicodeText, Platform = Platform.All},
+			new Sample {Title="Filled Heptagram", Method = FilledHeptagram, Platform = Platform.All},
+			new Sample {Title="Manage Draw Matrix", Method = ManageDrawMatrix, Platform = Platform.All},
+			new Sample {Title="Custom Fonts", Method = CustomFonts, Platform = Platform.All},
+			new Sample {Title="Xfermode", Method = Xfermode, Platform = Platform.All},
 		};
 	}
 }

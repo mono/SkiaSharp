@@ -2,6 +2,7 @@
 
 using AppKit;
 using Foundation;
+using System.IO;
 
 namespace Skia.OSX.Demo
 {
@@ -14,6 +15,11 @@ namespace Skia.OSX.Demo
 		public override void ViewDidLoad ()
 		{
 			base.ViewDidLoad ();
+
+			// set up resource paths
+			string fontName = "weblysleekuil.ttf";
+			SkiaSharp.Demos.CustomFontPath = NSBundle.MainBundle.PathForResource (Path.GetFileNameWithoutExtension (fontName), Path.GetExtension (fontName));
+
 			PopUpButton.AddItems (SkiaSharp.Demos.SamplesForPlatform (SkiaSharp.Demos.Platform.OSX));
 			PopUpButton.SelectItem (0);
 			SkiaView.OnDrawCallback = SkiaSharp.Demos.MethodForSample (PopUpButton.SelectedItem.Title);

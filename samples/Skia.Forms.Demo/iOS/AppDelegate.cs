@@ -4,6 +4,7 @@ using System.Linq;
 
 using Foundation;
 using UIKit;
+using System.IO;
 
 namespace Skia.Forms.Demo.iOS
 {
@@ -12,6 +13,10 @@ namespace Skia.Forms.Demo.iOS
 	{
 		public override bool FinishedLaunching (UIApplication app, NSDictionary options)
 		{
+			// set up resource paths
+			string fontName = "weblysleekuil.ttf";
+			SkiaSharp.Demos.CustomFontPath = NSBundle.MainBundle.PathForResource (Path.GetFileNameWithoutExtension (fontName), Path.GetExtension (fontName));
+
 			global::Xamarin.Forms.Forms.Init ();
 
 			LoadApplication (new App ());

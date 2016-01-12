@@ -7,6 +7,7 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using Android.OS;
+using System.IO;
 
 namespace Skia.Forms.Demo.Droid
 {
@@ -15,6 +16,16 @@ namespace Skia.Forms.Demo.Droid
 	{
 		protected override void OnCreate (Bundle bundle)
 		{
+			// set up resource paths
+			string fontName = "weblysleekuil.ttf";
+			string fontPath = Path.Combine (CacheDir.AbsolutePath, fontName);
+			using (var asset = Assets.Open (fontName))
+			using (var dest = File.Open (fontPath, FileMode.Create)) {
+				asset.CopyTo (dest);
+			}
+			SkiaSharp.Demos.CustomFontPath = fontPath;
+
+
 			base.OnCreate (bundle);
 
 			global::Xamarin.Forms.Forms.Init (this, bundle);
