@@ -153,6 +153,43 @@ namespace SkiaSharp
 				SkiaApi.sk_paint_set_textsize (handle, value);
 			}
 		}
+
+		public SKTextAlign TextAlign {
+			get {
+				return SkiaApi.sk_paint_get_text_align (handle);
+			}
+			set {
+				SkiaApi.sk_paint_set_text_align (handle, value);
+			}
+		}
+
+		public SKTextEncoding TextEncoding {
+			get {
+				return SkiaApi.sk_paint_get_text_encoding (handle);
+			}
+			set {
+				SkiaApi.sk_paint_set_text_encoding (handle, value);
+			}
+		}
+
+		public float TextScaleX {
+			get {
+				return SkiaApi.sk_paint_get_text_scale_x (handle);
+			}
+			set {
+				SkiaApi.sk_paint_set_text_scale_x (handle, value);
+			}
+		}
+
+		public float TextSkewX {
+			get {
+				return SkiaApi.sk_paint_get_text_skew_x (handle);
+			}
+			set {
+				SkiaApi.sk_paint_set_text_skew_x (handle, value);
+			}
+		}
+
 	}
 }
 

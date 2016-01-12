@@ -20,6 +20,11 @@ using sk_picture_t = System.IntPtr;
 using sk_data_t = System.IntPtr;
 using sk_picture_recorder_t = System.IntPtr;
 using sk_typeface_t = System.IntPtr;
+using sk_stream_t = System.IntPtr;
+using sk_stream_filestream_t = System.IntPtr;
+using sk_stream_memorystream_t = System.IntPtr;
+using sk_stream_assetstream_t = System.IntPtr;
+using sk_stream_managedstream_t = System.IntPtr;
 
 namespace SkiaSharp
 {
@@ -47,6 +52,8 @@ namespace SkiaSharp
 		[DllImport (SKIA)] public extern static void sk_canvas_save_layer        (sk_canvas_t t, ref SKRect rect, sk_paint_t paint);
 		[DllImport (SKIA)] public extern static void sk_canvas_save_layer        (sk_canvas_t t, IntPtr rectZero, sk_paint_t paint);
 		[DllImport (SKIA)] public extern static void sk_canvas_restore           (sk_canvas_t t);
+		[DllImport (SKIA)] public extern static int  sk_canvas_get_save_count    (sk_canvas_t t);
+		[DllImport (SKIA)] public extern static void sk_canvas_restore_to_count  (sk_canvas_t t, int saveCount);
 		[DllImport (SKIA)] public extern static void sk_canvas_translate         (sk_canvas_t t, float dx, float dy);
 		[DllImport (SKIA)] public extern static void sk_canvas_scale             (sk_canvas_t t, float sx, float sy);
 		[DllImport (SKIA)] public extern static void sk_canvas_rotate_degrees    (sk_canvas_t t, float degrees);
@@ -98,6 +105,15 @@ namespace SkiaSharp
 		[DllImport (SKIA)] public extern static void          sk_paint_set_typeface      (sk_paint_t t, sk_typeface_t typeface);
 		[DllImport (SKIA)] public extern static float         sk_paint_get_textsize      (sk_paint_t t);
 		[DllImport (SKIA)] public extern static void          sk_paint_set_textsize      (sk_paint_t t, float size);
+		[DllImport (SKIA)] public extern static SKTextAlign   sk_paint_get_text_align    (sk_paint_t t);
+		[DllImport (SKIA)] public extern static void          sk_paint_set_text_align    (sk_paint_t t, SKTextAlign align);
+		[DllImport (SKIA)] public extern static SKTextEncoding sk_paint_get_text_encoding (sk_paint_t t);
+		[DllImport (SKIA)] public extern static void           sk_paint_set_text_encoding (sk_paint_t t, SKTextEncoding encoding);
+		[DllImport (SKIA)] public extern static float         sk_paint_get_text_scale_x  (sk_paint_t t);
+		[DllImport (SKIA)] public extern static void          sk_paint_set_text_scale_x  (sk_paint_t t, float scale);
+		[DllImport (SKIA)] public extern static float         sk_paint_get_text_skew_x   (sk_paint_t t);
+		[DllImport (SKIA)] public extern static void          sk_paint_set_text_skew_x   (sk_paint_t t, float skew);
+
 
 		[DllImport (SKIA)] public extern static sk_image_t   sk_image_new_raster_copy   (ref SKImageInfo info, IntPtr pixels, IntPtr rowBytes);
 		[DllImport (SKIA)] public extern static sk_image_t   sk_image_new_from_encoded  (sk_data_t encoded, ref SKRectI subset);
@@ -156,8 +172,31 @@ namespace SkiaSharp
 		// Typeface
 		[DllImport (SKIA)] public extern static sk_typeface_t sk_typeface_create_from_name     (string str, SKTypefaceStyle style);
 		[DllImport (SKIA)] public extern static sk_typeface_t sk_typeface_create_from_typeface (IntPtr typeface, SKTypefaceStyle style);
+		[DllImport (SKIA)] public extern static sk_typeface_t sk_typeface_create_from_file     (string path, int index);
+		[DllImport (SKIA)] public extern static sk_typeface_t sk_typeface_create_from_stream   (sk_stream_assetstream_t stream, int index);
 		[DllImport (SKIA)] public extern static void          sk_typeface_unref                (sk_typeface_t t);
 		[DllImport (SKIA)] public extern static int           sk_typeface_chars_to_glyphs      (sk_typeface_t t, IntPtr chars, SKEncoding encoding, IntPtr glyphPtr, int glyphCount);
+
+		// Streams
+		[DllImport (SKIA)] public extern static bool                      sk_stream_is_at_end              (sk_stream_t stream);
+		[DllImport (SKIA)] public extern static SByte                     sk_stream_read_s8                (sk_stream_t stream);
+		[DllImport (SKIA)] public extern static Int16                     sk_stream_read_s16               (sk_stream_t stream);
+		[DllImport (SKIA)] public extern static Int32                     sk_stream_read_s32               (sk_stream_t stream);
+		[DllImport (SKIA)] public extern static Byte                      sk_stream_read_u8                (sk_stream_t stream);
+		[DllImport (SKIA)] public extern static UInt16                    sk_stream_read_u16               (sk_stream_t stream);
+		[DllImport (SKIA)] public extern static UInt32                    sk_stream_read_u32               (sk_stream_t stream);
+		[DllImport (SKIA)] public extern static bool                      sk_stream_read_bool              (sk_stream_t stream);
+		[DllImport (SKIA)] public extern static sk_stream_filestream_t    sk_filestream_new                (string path);
+		[DllImport (SKIA)] public extern static sk_stream_memorystream_t  sk_memorystream_new              ();
+		[DllImport (SKIA)] public extern static sk_stream_memorystream_t  sk_memorystream_new_with_length  (IntPtr length);
+		[DllImport (SKIA)] public extern static sk_stream_memorystream_t  sk_memorystream_new_with_data    (IntPtr data, IntPtr length, bool copyData);
+		[DllImport (SKIA)] public extern static sk_stream_memorystream_t  sk_memorystream_new_with_data    (byte[] data, IntPtr length, bool copyData);
+		[DllImport (SKIA)] public extern static sk_stream_memorystream_t  sk_memorystream_new_with_skdata  (SKData data);
+		[DllImport (SKIA)] public extern static void                      sk_memorystream_set_memory       (sk_stream_memorystream_t s, IntPtr data, IntPtr length, bool copyData);
+		[DllImport (SKIA)] public extern static void                      sk_memorystream_set_memory       (sk_stream_memorystream_t s, byte[] data, IntPtr length, bool copyData);
+
+		[DllImport (SKIA)] public extern static sk_stream_managedstream_t sk_managedstream_new             ();
+		[DllImport (SKIA)] public extern static void                      sk_managedstream_set_delegates   (IntPtr pRead, IntPtr pIsAtEnd, IntPtr pRewind, IntPtr pGetPosition, IntPtr pSeek, IntPtr pMove, IntPtr pGetLength, IntPtr pCreateNew, IntPtr pDestroy);
 	}
 }
 

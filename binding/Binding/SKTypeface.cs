@@ -55,6 +55,20 @@ namespace SkiaSharp
 			return new SKTypeface (SkiaApi.sk_typeface_create_from_typeface (typeface.handle, style), owns: true);
 		}
 
+		public static SKTypeface FromFile (string path, int index = 0)
+		{
+			if (path == null)
+				throw new ArgumentNullException ("path");
+			return new SKTypeface (SkiaApi.sk_typeface_create_from_file (path, index), owns: true);
+		}
+
+		public static SKTypeface FromStream (SKStreamAsset stream, int index = 0)
+		{
+			if (stream == null)
+				throw new ArgumentNullException ("stream");
+			return new SKTypeface (SkiaApi.sk_typeface_create_from_stream (stream.handle, index), owns: true);
+		}
+
 		public int CountGlyphs (string str)
 		{
 			if (str == null)

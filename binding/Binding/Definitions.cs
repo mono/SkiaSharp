@@ -36,6 +36,11 @@ namespace SkiaSharp
 			color = (uint)(0xff000000 | (red << 16) | (green << 8) | blue);
 		}
 
+		public SKColor WithAlpha (byte alpha)
+		{
+			return new SKColor (Red, Green, Blue, alpha);
+		}
+
 		public byte Alpha => (byte)((color >> 24) & 0xff);
 		public byte Red => (byte)((color >> 16) & 0xff);
 		public byte Green => (byte)((color >> 8) & 0xff);
@@ -176,6 +181,14 @@ namespace SkiaSharp
 		Mitter, Round, Bevel
 	}
 
+	public enum SKTextAlign {
+		Left, Center, Right
+	}
+
+	public enum SKTextEncoding {
+		Utf8, Utf16, Utf32, GlyphId
+	}
+
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKImageInfo {
 		public int Width;
@@ -217,6 +230,16 @@ namespace SkiaSharp
 			Top = top;
 			Bottom = bottom;
 		}
+
+		public static SKRectI Create (int width, int height)
+		{
+			return new SKRectI (0, 0, width, height);
+		}
+
+		public static SKRectI Create (int x, int y, int width, int height)
+		{
+			return new SKRectI (x, y, x + width, y + height);
+		}
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -228,6 +251,16 @@ namespace SkiaSharp
 			Right = right;
 			Top = top;
 			Bottom = bottom;
+		}
+
+		public static SKRect Create (float width, float height)
+		{
+			return new SKRect (0, 0, width, height);
+		}
+
+		public static SKRect Create (float x, float y, float width, float height)
+		{
+			return new SKRect (x, y, x + width, y + height);
 		}
 	}
 
@@ -245,7 +278,7 @@ namespace SkiaSharp
 			return new SKMatrix () { ScaleX = 1, ScaleY = 1, Persp2 = 1 };
 		}
 
-		public void SetScaleTransalte (float sx, float sy, float tx, float ty)
+		public void SetScaleTranslate (float sx, float sy, float tx, float ty)
 		{
 			ScaleX = sx;
 			SkewX = 0;

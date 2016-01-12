@@ -53,9 +53,19 @@ namespace SkiaSharp
 			DrawColor (SKColors.Empty, SKXferMode.Src);
 		}
 
+		public void Clear (SKColor color)
+		{
+			DrawColor (color, SKXferMode.Src);
+		}
+
 		public void Restore ()
 		{
 			SkiaApi.sk_canvas_restore (handle);
+		}
+
+		public void RestoreToCount (int count)
+		{
+			SkiaApi.sk_canvas_restore_to_count (handle, count);
 		}
 
 		public void Translate (float dx, float dy)
@@ -63,9 +73,19 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_translate (handle, dx, dy);
 		}
 
+		public void Translate (SKPoint point)
+		{
+			SkiaApi.sk_canvas_translate (handle, point.X, point.Y);
+		}
+
 		public void Scale (float sx, float sy)
 		{
 			SkiaApi.sk_canvas_scale (handle, sx, sy);
+		}
+
+		public void Scale (SKPoint size)
+		{
+			SkiaApi.sk_canvas_scale (handle, size.X, size.Y);
 		}
 
 		public void RotateDegrees (float degrees)
@@ -81,6 +101,11 @@ namespace SkiaSharp
 		public void Skew (float sx, float sy)
 		{
 			SkiaApi.sk_canvas_skew (handle, sx, sy);
+		}
+
+		public void Skew (SKPoint skew)
+		{
+			SkiaApi.sk_canvas_skew (handle, skew.X, skew.Y);
 		}
 
 		public void Concat (ref SKMatrix m)
@@ -234,6 +259,46 @@ namespace SkiaSharp
 
 			var bytes = System.Text.Encoding.UTF8.GetBytes (text);
 			SkiaApi.sk_canvas_draw_text_on_path (handle, bytes, bytes.Length, path.handle, hOffset, vOffset, paint.handle);
+		}
+
+		public int SaveCount => SkiaApi.sk_canvas_get_save_count (handle);
+	}
+
+	public class SKAutoCanvasRestore : IDisposable
+	{
+		private SKCanvas canvas;
+		private readonly int saveCount;
+
+		public SKAutoCanvasRestore (SKCanvas canvas, bool doSave)
+		{
+			this.canvas = canvas;
+			this.saveCount = 0;
+
+			if (canvas != null) {
+				saveCount = canvas.SaveCount;
+				if (doSave) {
+					canvas.Save ();
+				}
+			}
+		}
+
+		public void Dispose ()
+		{
+			if (canvas != null) {
+				canvas.RestoreToCount (saveCount);
+			}
+		}
+
+		/// <summary>
+		/// Perform the restore now, instead of waiting for the Dispose.
+		/// Will only do this once.
+		/// </summary>
+		public void Restore ()
+		{
+			if (canvas != null) {
+				canvas.RestoreToCount (saveCount);
+				canvas = null;
+			}
 		}
 	}
 }

@@ -13,6 +13,7 @@
 	public partial class SKCanvas {
 		internal SKCanvas() { }
 		public void Clear() { }
+		public void Clear (SKColor color) {} 
 		public void ClipPath(SkiaSharp.SKPath path) { }
 		public void ClipRect(SkiaSharp.SKRect rect) { }
 		public void Concat(ref SkiaSharp.SKMatrix m) { }
@@ -40,8 +41,17 @@
 		public void SaveLayer(SkiaSharp.SKPaint paint) { }
 		public void SaveLayer(SkiaSharp.SKRect limit, SkiaSharp.SKPaint paint) { }
 		public void Scale(float sx, float sy) { }
+		public void Scale(SKPoint size) { }
 		public void Skew(float sx, float sy) { }
+		public void Skew(SKPoint skew) { }
 		public void Translate(float dx, float dy) { }
+		public void Translate(SKPoint point) { }
+	}
+	public class SKAutoCanvasRestore : System.IDisposable
+	{
+		public SKAutoCanvasRestore (SKCanvas canvas, bool doSave) { }
+		public void Dispose () { }
+		public void Restore () { }
 	}
 	public enum SKClipType {
 		Difference = 1,
@@ -51,6 +61,7 @@
 	public partial struct SKColor {
 		public SKColor(byte red, byte green, byte blue) { throw new System.NotImplementedException(); }
 		public SKColor(byte red, byte green, byte blue, byte alpha) { throw new System.NotImplementedException(); }
+		public SKColor WithAlpha (byte alpha) { return default(SKColor); }
 		public byte Alpha { [System.Runtime.CompilerServices.CompilerGeneratedAttribute]get { return default(byte); } }
 		public byte Blue { [System.Runtime.CompilerServices.CompilerGeneratedAttribute]get { return default(byte); } }
 		public byte Green { [System.Runtime.CompilerServices.CompilerGeneratedAttribute]get { return default(byte); } }
@@ -227,6 +238,12 @@
 		Utf32 = 2,
 		Utf8 = 0,
 	}
+	public enum SKTextEncoding {
+		GlyphId = 3,
+		Utf16 = 1,
+		Utf32 = 2,
+		Utf8 = 0,
+	}
 	public static partial class SkiaExtensions {
 		public static bool IsBgr(this SkiaSharp.SKPixelGeometry pg) { return default(bool); }
 		public static bool IsHorizontal(this SkiaSharp.SKPixelGeometry pg) { return default(bool); }
@@ -276,7 +293,7 @@
 		public static SkiaSharp.SKMatrix MakeScale(float sx, float sy, float pivotX, float pivotY) { return default(SkiaSharp.SKMatrix); }
 		public static SkiaSharp.SKMatrix MakeSkew(float sx, float sy) { return default(SkiaSharp.SKMatrix); }
 		public static SkiaSharp.SKMatrix MakeTranslation(float dx, float dy) { return default(SkiaSharp.SKMatrix); }
-		public void SetScaleTransalte(float sx, float sy, float tx, float ty) { }
+		public void SetScaleTranslate(float sx, float sy, float tx, float ty) { }
 	}
 	public partial class SKPaint : System.IDisposable {
 		public SKPaint() { }
@@ -292,6 +309,10 @@
 		public float TextSize { get { return default(float); } set { } }
 		public SkiaSharp.SKTypeface Typeface { get { return default(SkiaSharp.SKTypeface); } set { } }
 		public SkiaSharp.SKXferMode XferMode { get { return default(SkiaSharp.SKXferMode); } set { } }
+		public SkiaSharp.SKTextAlign TextAlign { get { return default(SkiaSharp.SKTextAlign); } set { } }
+		public SkiaSharp.SKTextEncoding TextEncoding { get { return default(SkiaSharp.SKTextEncoding); } set { } }
+		public float TextScaleX { get { return default(float); } set { } }
+		public float TextSkewX { get { return default(float); } set { } }
 		public void Dispose() { }
 		protected virtual void Dispose(bool disposing) { }
 		~SKPaint() { }
@@ -356,6 +377,8 @@
 		public float Right;
 		public float Top;
 		public SKRect(float left, float top, float right, float bottom) { throw new System.NotImplementedException(); }
+		public static SKRect Create (float width, float height) { throw new System.NotImplementedException(); }
+		public static SKRect Create (float x, float y, float width, float height) { throw new System.NotImplementedException(); }
 	}
 	[System.Runtime.InteropServices.StructLayoutAttribute(System.Runtime.InteropServices.LayoutKind.Sequential)]
 	public partial struct SKRectI {
@@ -364,6 +387,8 @@
 		public int Right;
 		public int Top;
 		public SKRectI(int left, int top, int right, int bottom) { throw new System.NotImplementedException(); }
+		public static SKRectI Create (int width, int height) { throw new System.NotImplementedException(); }
+		public static SKRectI Create (int x, int y, int width, int height) { throw new System.NotImplementedException(); }
 	}
 	public partial class SKShader : System.IDisposable {
 		internal SKShader() { }
@@ -393,6 +418,11 @@
 		Bevel = 2,
 		Mitter = 0,
 		Round = 1,
+	}
+	public enum SKTextAlign {
+		Left = 0,
+		Center = 1,
+		Right = 2,
 	}
 	public partial class SKSurface : System.IDisposable {
 		internal SKSurface() { }
@@ -425,6 +455,54 @@
 		~SKTypeface() { }
 		public static SkiaSharp.SKTypeface FromFamilyName(string familyName, SkiaSharp.SKTypefaceStyle style=(SkiaSharp.SKTypefaceStyle)(0)) { return default(SkiaSharp.SKTypeface); }
 		public static SkiaSharp.SKTypeface FromTypeface(SkiaSharp.SKTypeface typeface, SkiaSharp.SKTypefaceStyle style=(SkiaSharp.SKTypefaceStyle)(0)) { return default(SkiaSharp.SKTypeface); }
+		public static SkiaSharp.SKTypeface FromFile(string path, int index = 0) { return default(SkiaSharp.SKTypeface); }
+		public static SkiaSharp.SKTypeface FromStream(SkiaSharp.SKStreamAsset stream, int index = 0) { return default(SkiaSharp.SKTypeface); }
+	}
+	public abstract class SKStream : System.IDisposable
+	{
+		internal SKStream (System.IntPtr handle, bool owns) { }
+		public void Dispose () { }
+		protected virtual void Dispose (bool disposing) { }
+		~SKStream () { }
+		public bool IsAtEnd { get { return default(bool); } }
+		public System.SByte ReadSByte () { return 0; }
+		public System.Int16 ReadInt16 () { return 0; }
+		public System.Int32 ReadInt32 () { return 0; }
+		public System.Byte ReadByte () { return 0; }
+		public System.UInt16 ReadUInt16 () { return 0; }
+		public System.UInt32 ReadUInt32 () { return 0; }
+	}
+	public abstract class SKStreamRewindable : SKStream
+	{
+		internal SKStreamRewindable (System.IntPtr handle, bool owns) : base (handle, owns) { }
+	}
+	public abstract class SKStreamSeekable : SKStreamRewindable
+	{
+		internal SKStreamSeekable (System.IntPtr handle, bool owns) : base (handle, owns) { }
+	}
+	public abstract class SKStreamAsset : SKStreamSeekable
+	{
+		internal SKStreamAsset (System.IntPtr handle, bool owns) : base (handle, owns) { }
+	}
+	public abstract class SKStreamMemory : SKStreamAsset
+	{
+		internal SKStreamMemory (System.IntPtr handle, bool owns) : base (handle, owns) { }
+	}
+	public class SKFileStream : SKStreamAsset
+	{
+		public SKFileStream (string path) : base (default(System.IntPtr), default(bool)) { }
+	}
+	public class SKMemoryStream : SKStreamMemory
+	{
+		public SKMemoryStream () : base (default(System.IntPtr), default(bool)) { }
+		public SKMemoryStream (long length) : base (default(System.IntPtr), default(bool)) { }
+		public SKMemoryStream (SKData data) : base (default(System.IntPtr), default(bool)) { }
+		public SKMemoryStream (byte[] data) : this () { }
+		public void SetMemory (byte[] data) { }
+	}
+	public class SKManagedStream : SKStreamAsset
+	{
+		public SKManagedStream (System.IO.Stream managedStream) : base (default(System.IntPtr), default(bool)) { }
 	}
 	public enum SKTypefaceStyle {
 		Bold = 1,
