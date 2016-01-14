@@ -13,7 +13,7 @@
 #include "sk_stream.h"
 #include "sk_managedstream.h"
 
-SK_API void** KeepSkiaCSymbols ();
+SK_X_API void** KeepSkiaCSymbols ();
 
 void** KeepSkiaCSymbols ()
 {

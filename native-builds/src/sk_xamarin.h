@@ -9,17 +9,8 @@
 // DO NOT USE -- FOR INTERNAL TESTING ONLY
 
 
-#if defined(SKIA_DLL)
-#  if defined(WIN32)
-#    if SKIA_IMPLEMENTATION
-#      define SK_API __declspec(dllexport)
-#    else
-#      define SK_API __declspec(dllimport)
-#    endif
-#  else
-#    define SK_API __attribute__((visibility("default")))
-#  endif
+#if defined(_WIN32)
+#  define SK_X_API __declspec(dllexport)
 #else
-#  define SK_API
+#  define SK_X_API __attribute__((visibility("default")))
 #endif
-

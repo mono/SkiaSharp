@@ -26,7 +26,7 @@ typedef SkManagedStream*  (*createNew_delegate)   (const SkManagedStream* manage
 typedef void              (*destroy_delegate)     (size_t managedStream);
 
 // managed stream wrapper
-class SK_API SkManagedStream : public SkStreamAsset {
+class SkManagedStream : public SkStreamAsset {
 public:
     SkManagedStream();
     

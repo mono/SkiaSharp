@@ -33,17 +33,17 @@ typedef void                       (*sk_managedstream_destroy_delegate)      (si
 
 
 // c API
-SK_API sk_stream_managedstream_t* sk_managedstream_new ();
+SK_X_API sk_stream_managedstream_t* sk_managedstream_new ();
 
-SK_API void sk_managedstream_set_delegates (const sk_managedstream_read_delegate pRead,
-                                            const sk_managedstream_isAtEnd_delegate pIsAtEnd,
-                                            const sk_managedstream_rewind_delegate pRewind,
-                                            const sk_managedstream_getPosition_delegate pGetPosition,
-                                            const sk_managedstream_seek_delegate pSeek,
-                                            const sk_managedstream_move_delegate pMove,
-                                            const sk_managedstream_getLength_delegate pGetLength,
-                                            const sk_managedstream_createNew_delegate pCreateNew,
-                                            const sk_managedstream_destroy_delegate pDestroy);
+SK_X_API void sk_managedstream_set_delegates (const sk_managedstream_read_delegate pRead,
+                                              const sk_managedstream_isAtEnd_delegate pIsAtEnd,
+                                              const sk_managedstream_rewind_delegate pRewind,
+                                              const sk_managedstream_getPosition_delegate pGetPosition,
+                                              const sk_managedstream_seek_delegate pSeek,
+                                              const sk_managedstream_move_delegate pMove,
+                                              const sk_managedstream_getLength_delegate pGetLength,
+                                              const sk_managedstream_createNew_delegate pCreateNew,
+                                              const sk_managedstream_destroy_delegate pDestroy);
 
 
 SK_C_PLUS_PLUS_END_GUARD

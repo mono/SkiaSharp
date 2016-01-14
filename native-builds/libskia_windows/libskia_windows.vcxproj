@@ -1,0 +1,223 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{22B9B540-CC67-43B3-9341-336DEA7FC0EB}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>libskia_windows</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup>
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;SK_INTERNAL;SK_GAMMA_SRGB;SK_GAMMA_APPLY_TO_A8;SK_ALLOW_STATIC_GLOBAL_INITIALIZERS=1;SK_SUPPORT_GPU=1;SK_SUPPORT_OPENCL=0;SK_FORCE_DISTANCE_FIELD_TEXT=0;SK_BUILD_FOR_WIN32;_CRT_SECURE_NO_WARNINGS;GR_GL_FUNCTION_TYPE=__stdcall;_HAS_EXCEPTIONS=0;SK_DEVELOPER=1;;WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBSKIA_WINDOWS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\skia\include\c;..\..\skia\include\config;..\..\skia\include\core;..\..\skia\include\pathops;..\..\skia\include\pipe;..\..\skia\include\ports;..\..\skia\include\private;..\..\skia\include\utils;..\..\skia\include\images;..\..\skia\src\c;..\..\skia\src\core;..\..\skia\src\sfnt;..\..\skia\src\image;..\..\skia\src\opts;..\..\skia\src\utils;..\..\gyp\config\win;..\..\skia\include\gpu;..\..\skia\src\gpu;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>OpenGL32.lib;usp10.lib;DelayImp.lib;;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;SK_INTERNAL;SK_GAMMA_SRGB;SK_GAMMA_APPLY_TO_A8;SK_ALLOW_STATIC_GLOBAL_INITIALIZERS=1;SK_SUPPORT_GPU=1;SK_SUPPORT_OPENCL=0;SK_FORCE_DISTANCE_FIELD_TEXT=0;SK_BUILD_FOR_WIN32;_CRT_SECURE_NO_WARNINGS;GR_GL_FUNCTION_TYPE=__stdcall;_HAS_EXCEPTIONS=0;SK_DEVELOPER=1;;_WINDOWS;_USRDLL;LIBSKIA_WINDOWS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\skia\include\c;..\..\skia\include\config;..\..\skia\include\core;..\..\skia\include\pathops;..\..\skia\include\pipe;..\..\skia\include\ports;..\..\skia\include\private;..\..\skia\include\utils;..\..\skia\include\images;..\..\skia\src\c;..\..\skia\src\core;..\..\skia\src\sfnt;..\..\skia\src\image;..\..\skia\src\opts;..\..\skia\src\utils;..\..\gyp\config\win;..\..\skia\include\gpu;..\..\skia\src\gpu;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>OpenGL32.lib;usp10.lib;DelayImp.lib;;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>SK_INTERNAL;SK_GAMMA_SRGB;SK_GAMMA_APPLY_TO_A8;SK_ALLOW_STATIC_GLOBAL_INITIALIZERS=1;SK_SUPPORT_GPU=1;SK_SUPPORT_OPENCL=0;SK_FORCE_DISTANCE_FIELD_TEXT=0;SK_BUILD_FOR_WIN32;_CRT_SECURE_NO_WARNINGS;GR_GL_FUNCTION_TYPE=__stdcall;_HAS_EXCEPTIONS=0;;WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBSKIA_WINDOWS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\skia\include\c;..\..\skia\include\config;..\..\skia\include\core;..\..\skia\include\pathops;..\..\skia\include\pipe;..\..\skia\include\ports;..\..\skia\include\private;..\..\skia\include\utils;..\..\skia\include\images;..\..\skia\src\c;..\..\skia\src\core;..\..\skia\src\sfnt;..\..\skia\src\image;..\..\skia\src\opts;..\..\skia\src\utils;..\..\gyp\config\win;..\..\skia\include\gpu;..\..\skia\src\gpu;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>OpenGL32.lib;usp10.lib;DelayImp.lib;;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>SK_INTERNAL;SK_GAMMA_SRGB;SK_GAMMA_APPLY_TO_A8;SK_ALLOW_STATIC_GLOBAL_INITIALIZERS=1;SK_SUPPORT_GPU=1;SK_SUPPORT_OPENCL=0;SK_FORCE_DISTANCE_FIELD_TEXT=0;SK_BUILD_FOR_WIN32;_CRT_SECURE_NO_WARNINGS;GR_GL_FUNCTION_TYPE=__stdcall;_HAS_EXCEPTIONS=0;;NDEBUG;_WINDOWS;_USRDLL;LIBSKIA_WINDOWS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>..\..\skia\include\c;..\..\skia\include\config;..\..\skia\include\core;..\..\skia\include\pathops;..\..\skia\include\pipe;..\..\skia\include\ports;..\..\skia\include\private;..\..\skia\include\utils;..\..\skia\include\images;..\..\skia\src\c;..\..\skia\src\core;..\..\skia\src\sfnt;..\..\skia\src\image;..\..\skia\src\opts;..\..\skia\src\utils;..\..\gyp\config\win;..\..\skia\include\gpu;..\..\skia\src\gpu;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>OpenGL32.lib;usp10.lib;DelayImp.lib;;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\SkiaKeeper.c" />
+    <ClCompile Include="..\src\SkManagedStream.cpp" />
+    <ClCompile Include="..\src\sk_managedstream.cpp" />
+    <ClCompile Include="..\src\sk_xamarin.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\SkManagedStream.h" />
+    <ClInclude Include="..\src\sk_managedstream.h" />
+    <ClInclude Include="..\src\sk_xamarin.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\skia\out\gyp\core.vcxproj">
+      <Project>{b7760b5e-bfa8-486b-acfd-49e3a6de8e76}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\skia\out\gyp\effects.vcxproj">
+      <Project>{200809b7-4c62-7592-f47e-bf262809fa50}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\skia\out\gyp\images.vcxproj">
+      <Project>{31057ac5-dc70-dea7-3e96-9c6fa063245e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\skia\out\gyp\libetc1.vcxproj">
+      <Project>{a3bcdeca-94f5-1729-484e-180b50c89ad6}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\skia\out\gyp\libjpeg-turbo-selector.vcxproj">
+      <Project>{6137ced9-8009-c4c3-7a63-4a524a1cdbc8}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\skia\out\gyp\libjpeg-turbo.vcxproj">
+      <Project>{bf42c422-f0ea-bd6c-5e01-abf4694803b5}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\skia\out\gyp\libSkKTX.vcxproj">
+      <Project>{c984027d-7bfe-3d92-8d87-082486d7334e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\skia\out\gyp\opts.vcxproj">
+      <Project>{babd1bbf-1c5a-9f6c-f3ee-1db4b6e5b1f6}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\skia\out\gyp\opts_avx.vcxproj">
+      <Project>{f85415a0-97b2-6b19-4e61-e4d5b0813084}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\skia\out\gyp\opts_sse41.vcxproj">
+      <Project>{f5fbfd59-3c8f-a017-be56-5b698c55e8f8}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\skia\out\gyp\opts_ssse3.vcxproj">
+      <Project>{5716a271-a36f-abb0-bdfd-776fd2fa1a41}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\skia\out\gyp\ports.vcxproj">
+      <Project>{b15878d6-6997-adc9-ac65-516a7f578db2}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\skia\out\gyp\sfnt.vcxproj">
+      <Project>{43c5db31-68d1-5452-4bf0-ad0ab84b2e52}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\skia\out\gyp\skgpu.vcxproj">
+      <Project>{13574ed5-427a-5ff2-e79d-092ab3ab24e2}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\skia\out\gyp\utils.vcxproj">
+      <Project>{0f11cc16-0734-803c-1c14-7a44fb13c2da}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\skia\out\gyp\yasm-win.vcxproj">
+      <Project>{79ae5c41-8c67-f7c0-8693-f259da7c914b}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
