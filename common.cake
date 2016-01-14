@@ -48,6 +48,35 @@ FilePath GetXamarinComponentToolPath ()
 	return GetFiles ("../../../**/xamarin-component.exe").FirstOrDefault ();
 }
 
+void CopyDirectory (DirectoryPath sourceDir, DirectoryPath destDir, bool overwrite = true, bool copySubDirs = true)
+{
+    var sourceDirName = MakeAbsolute(sourceDir).FullPath;
+    var destDirName = MakeAbsolute(destDir).FullPath;
+    var dir = new DirectoryInfo(sourceDirName);
+    
+    // If the source directory does not exist, throw an exception.
+    if (!dir.Exists) {
+        throw new DirectoryNotFoundException("Source directory does not exist or could not be found: " + sourceDirName);
+    }
+
+    // If the destination directory does not exist, create it.
+    if (!DirectoryExists(destDir)) {
+        CreateDirectory(destDir);
+    }
+
+    // Get the file contents of the directory to copy.
+    foreach (FileInfo file in dir.GetFiles()) {
+        file.CopyTo(destDir.CombineWithFilePath(file.Name).FullPath, false);
+    }
+
+    // If copySubDirs is true, copy the subdirectories.
+    if (copySubDirs) {
+        foreach (DirectoryInfo subdir in dir.GetDirectories()) {
+            CopyDirectory(subdir.FullName, destDir.Combine(subdir.Name).FullPath, copySubDirs);
+        }
+    }
+}
+
 // Get the target to run in subfolders
 var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")));
 
@@ -60,6 +89,15 @@ CakeStealer.CakeToolPath = GetCakeToolPath ();
 Information ("Cake.exe ToolPath: {0}", CakeStealer.CakeToolPath);
 Information ("NuGet.exe ToolPath: {0}", CakeStealer.NugetToolPath);
 Information ("Xamarin-Component.exe ToolPath: {0}", CakeStealer.XamarinComponentToolPath);
+
+void ListEnvironmentVariables ()
+{
+    Information ("Environment Variables:");
+    foreach (var envVar in EnvironmentVariables ()) {
+        Information ("\tKey: {0}\tValue: \"{1}\"", envVar.Key, envVar.Value);
+    }
+}
+ListEnvironmentVariables ();
 
 public class CakeStealer
 {
@@ -297,6 +335,14 @@ void RunMake (DirectoryPath directory, string target = "all")
 			Arguments = target,
 			WorkingDirectory = directory,
 		});
+}
+
+void RunInstallNameTool (DirectoryPath directory, string oldName, string newName, FilePath library)
+{
+	StartProcess ("install_name_tool", new ProcessSettings {
+		Arguments = string.Format("-change {0} {1} \"{2}\"", oldName, newName, library),
+		WorkingDirectory = directory,
+	});
 }
 
 void RunLipo (DirectoryPath directory, FilePath output, params FilePath[] inputs)
