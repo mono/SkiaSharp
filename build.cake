@@ -30,8 +30,6 @@ var AppendEnvironmentVariable = new Action<string, string> ((name, value) => {
 CakeSpec.Libs = new ISolutionBuilder [] {
 	new IOSSolutionBuilder {
 		SolutionPath = "binding/SkiaSharp.sln",
-        IsWindowsCompatible = false,
-        IsMacCompatible = true,
 		OutputFiles = new [] { 
 			new OutputFileCopy {
 				FromFile = "./binding/SkiaSharp.Android/bin/Release/SkiaSharp.dll",
@@ -66,13 +64,9 @@ CakeSpec.Libs = new ISolutionBuilder [] {
 
 CakeSpec.Samples = new ISolutionBuilder [] {
 	new IOSSolutionBuilder { 
-        IsWindowsCompatible = false,
-        IsMacCompatible = true,
         SolutionPath = "./samples/Skia.OSX.Demo/Skia.OSX.Demo.sln"
     },
 	new IOSSolutionBuilder { 
-        IsWindowsCompatible = false,
-        IsMacCompatible = true,
         SolutionPath = "./samples/Skia.Forms.Demo/Skia.Forms.Demo.sln" 
     },
 	new DefaultSolutionBuilder { 
