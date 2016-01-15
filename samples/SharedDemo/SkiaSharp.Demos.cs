@@ -38,6 +38,7 @@ namespace SkiaSharp
 
 
 			using (var paint = new SKPaint ()) {
+				paint.IsAntialias = true;
 				paint.Color = SKColors.White;
 				canvas.DrawPaint (paint);
 
@@ -145,6 +146,7 @@ namespace SkiaSharp
 			var dkColor = SKColors.Black;
 
 			using (var paint = new SKPaint ()) {
+				paint.IsAntialias = true;
 				using (var shader = SKShader.CreateLinearGradient (
 					new SKPoint (0, 0),
 					new SKPoint (0, height),
@@ -164,6 +166,7 @@ namespace SkiaSharp
 			canvas.Translate (-128, -128);
 
 			using (var paint = new SKPaint ()) {
+				paint.IsAntialias = true;
 				using (var shader = SKShader.CreateTwoPointConicalGradient (
 					new SKPoint (115.2f, 102.4f), 
 					25.6f,
@@ -189,6 +192,7 @@ namespace SkiaSharp
 			using (var tf = SKTypeface.FromFamilyName ("Tahoma")) {
 				canvas.DrawColor (SKColors.White);
 
+				paint.IsAntialias = true;
 				paint.TextSize = 60;
 				paint.Typeface = tf;
 				canvas.DrawText (text, 50, 100, paint);
@@ -199,6 +203,7 @@ namespace SkiaSharp
 			using (var tf = SKTypeface.FromFamilyName ("Times New Roman")) {
 				paint.Color = XamDkBlue;
 
+				paint.IsAntialias = true;
 				paint.TextSize = 60;
 				paint.Typeface = tf;
 				canvas.DrawText (text, 50, 200, paint);
@@ -274,8 +279,10 @@ namespace SkiaSharp
 
 			using (var paint = new SKPaint ()) {
 				canvas.Clear (SKColors.White);
+				paint.IsAntialias = true;
 
 				using (var tf = SKTypeface.FromFile (CustomFontPath)) {
+					paint.Color = XamGreen;
 					paint.TextSize = 40;
 					paint.Typeface = tf;
 
@@ -292,7 +299,7 @@ namespace SkiaSharp
 				}
 
 				var assembly = typeof(Demos).GetTypeInfo ().Assembly;
-				var fontName = assembly.GetName ().Name + ".weblysleekuil.ttf";
+				var fontName = assembly.GetName ().Name + ".embedded-font.ttf";
 
 				using (var resource = assembly.GetManifestResourceStream (fontName))
 				using (var memory = new MemoryStream ()) {
@@ -311,7 +318,7 @@ namespace SkiaSharp
 				using (var resource = assembly.GetManifestResourceStream (fontName))
 				using (var stream = new SKManagedStream (resource))
 				using (var tf = SKTypeface.FromStream (stream)) {
-					paint.Color = XamLtBlue;
+					paint.Color = XamPurple;
 					paint.TextSize = 40;
 					paint.Typeface = tf;
 
@@ -390,6 +397,7 @@ namespace SkiaSharp
 			iOS = 1,
 			Android = 2,
 			OSX = 4,
+			WindowsDesktop = 8,
 			All = 0xFFFF,
 		}
 

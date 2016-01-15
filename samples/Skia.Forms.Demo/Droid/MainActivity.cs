@@ -17,7 +17,7 @@ namespace Skia.Forms.Demo.Droid
 		protected override void OnCreate (Bundle bundle)
 		{
 			// set up resource paths
-			string fontName = "weblysleekuil.ttf";
+			string fontName = "content-font.ttf";
 			string fontPath = Path.Combine (CacheDir.AbsolutePath, fontName);
 			using (var asset = Assets.Open (fontName))
 			using (var dest = File.Open (fontPath, FileMode.Create)) {

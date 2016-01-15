@@ -17,7 +17,7 @@ namespace Skia.OSX.Demo
 			base.ViewDidLoad ();
 
 			// set up resource paths
-			string fontName = "weblysleekuil.ttf";
+			string fontName = "content-font.ttf";
 			SkiaSharp.Demos.CustomFontPath = NSBundle.MainBundle.PathForResource (Path.GetFileNameWithoutExtension (fontName), Path.GetExtension (fontName));
 
 			PopUpButton.AddItems (SkiaSharp.Demos.SamplesForPlatform (SkiaSharp.Demos.Platform.OSX));

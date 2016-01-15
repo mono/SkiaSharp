@@ -34,32 +34,40 @@ namespace SkiaSharp
 		internal delegate void    destroy_delegate      (IntPtr managedStreamPtr);
 
 		// delegate fields
-		private static readonly IntPtr fRead;
-		private static readonly IntPtr fIsAtEnd;
-		private static readonly IntPtr fRewind;
-		private static readonly IntPtr fGetPosition;
-		private static readonly IntPtr fSeek;
-		private static readonly IntPtr fMove;
-		private static readonly IntPtr fGetLength;
-		private static readonly IntPtr fCreateNew;
-		private static readonly IntPtr fDestroy;
+		private static readonly read_delegate fRead;
+		private static readonly isAtEnd_delegate fIsAtEnd;
+		private static readonly rewind_delegate fRewind;
+		private static readonly getPosition_delegate fGetPosition;
+		private static readonly seek_delegate fSeek;
+		private static readonly move_delegate fMove;
+		private static readonly getLength_delegate fGetLength;
+		private static readonly createNew_delegate fCreateNew;
+		private static readonly destroy_delegate fDestroy;
 
 		private readonly Stream stream;
 
 		static SKManagedStream()
 		{
-			fRead = Marshal.GetFunctionPointerForDelegate(new read_delegate(ReadInternal));
-			fIsAtEnd = Marshal.GetFunctionPointerForDelegate (new isAtEnd_delegate(IsAtEndInternal));
-			fRewind = Marshal.GetFunctionPointerForDelegate (new rewind_delegate(RewindInternal));
-			fGetPosition = Marshal.GetFunctionPointerForDelegate (new getPosition_delegate(GetPositionInternal));
-			fSeek = Marshal.GetFunctionPointerForDelegate (new seek_delegate(SeekInternal));
-			fMove = Marshal.GetFunctionPointerForDelegate (new move_delegate(MoveInternal));
-			fGetLength = Marshal.GetFunctionPointerForDelegate (new getLength_delegate(GetLengthInternal));
-			fGetLength = Marshal.GetFunctionPointerForDelegate (new getLength_delegate(GetLengthInternal));
-			fCreateNew = Marshal.GetFunctionPointerForDelegate (new createNew_delegate(CreateNewInternal));
-			fDestroy = Marshal.GetFunctionPointerForDelegate (new destroy_delegate(DestroyInternal));
+			fRead = new read_delegate(ReadInternal);
+			fIsAtEnd = new isAtEnd_delegate(IsAtEndInternal);
+			fRewind = new rewind_delegate(RewindInternal);
+			fGetPosition = new getPosition_delegate(GetPositionInternal);
+			fSeek = new seek_delegate(SeekInternal);
+			fMove = new move_delegate(MoveInternal);
+			fGetLength = new getLength_delegate(GetLengthInternal);
+			fCreateNew = new createNew_delegate(CreateNewInternal);
+			fDestroy = new destroy_delegate(DestroyInternal);
 
-			SkiaApi.sk_managedstream_set_delegates (fRead, fIsAtEnd, fRewind, fGetPosition, fSeek, fMove, fGetLength, fCreateNew, fDestroy);
+			SkiaApi.sk_managedstream_set_delegates(
+				Marshal.GetFunctionPointerForDelegate(fRead), 
+				Marshal.GetFunctionPointerForDelegate(fIsAtEnd), 
+				Marshal.GetFunctionPointerForDelegate(fRewind),
+				Marshal.GetFunctionPointerForDelegate(fGetPosition),
+				Marshal.GetFunctionPointerForDelegate(fSeek),
+				Marshal.GetFunctionPointerForDelegate(fMove),
+				Marshal.GetFunctionPointerForDelegate(fGetLength),
+				Marshal.GetFunctionPointerForDelegate(fCreateNew),
+				Marshal.GetFunctionPointerForDelegate(fDestroy));
 		}
 
 		public SKManagedStream (Stream managedStream)

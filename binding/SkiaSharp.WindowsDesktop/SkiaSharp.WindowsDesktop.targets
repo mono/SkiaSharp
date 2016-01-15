@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <ItemGroup Condition=" '$(Platform)' == 'x86' ">
+        <None Include="$(MSBuildThisFileDirectory)x86\libskia_windows.dll">
+            <Link>libskia_windows.dll</Link>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Include="$(MSBuildThisFileDirectory)x86\libskia_windows.lib">
+            <Link>libskia_windows.lib</Link>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Include="$(MSBuildThisFileDirectory)x86\libskia_windows.pdb">
+            <Link>libskia_windows.pdb</Link>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup Condition=" '$(Platform)' == 'x64' ">
+        <None Include="$(MSBuildThisFileDirectory)x64\libskia_windows.dll">
+            <Link>libskia_windows.dll</Link>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Include="$(MSBuildThisFileDirectory)x64\libskia_windows.lib">
+            <Link>libskia_windows.lib</Link>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Include="$(MSBuildThisFileDirectory)x64\libskia_windows.pdb">
+            <Link>libskia_windows.pdb</Link>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <Target Condition=" '$(Platform)' != 'x64' and '$(Platform)' != 'x86' " Name="CheckSkiaPlatforms" BeforeTargets="Build">
+        <Error Text="The Platform needs to be either x64 or x86 to support Skia." />
+    </Target>
+
+</Project>
