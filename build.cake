@@ -70,7 +70,12 @@ Task ("externals")
 {
 });
 
-Task ("externals-windows").WithCriteria (IsRunningOnWindows ()).Does (() => 
+Task ("externals-windows")
+    .WithCriteria (IsRunningOnWindows ())
+    .WithCriteria (
+        !FileExists ("native-builds/lib/windows/x86/libskia_windows.dll") ||
+        !FileExists ("native-builds/lib/windows/x64/libskia_windows.dll"))
+    .Does (() =>  
 {
     var fixup = new Action (() => {
         var props = SKIA_PATH.Combine ("out/gyp/libjpeg-turbo.props").FullPath;
@@ -122,7 +127,11 @@ Task ("externals-windows").WithCriteria (IsRunningOnWindows ()).Does (() =>
     CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.dll", "native-builds/lib/windows/x64");
     CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.pdb", "native-builds/lib/windows/x64");
 });
-Task ("externals-osx").WithCriteria (IsRunningOnUnix ()).Does (() => 
+Task ("externals-osx")
+    .WithCriteria (IsRunningOnUnix ())
+    .WithCriteria (
+        !FileExists ("native-builds/lib/osx/liblibskia_osx.dylib"))
+    .Does (() =>  
 {
     var buildArch = new Action<string> ((arch) => {
         XCodeBuild (new XCodeBuildSettings {
@@ -153,7 +162,11 @@ Task ("externals-osx").WithCriteria (IsRunningOnUnix ()).Does (() =>
         "i386/liblibskia_osx.dylib", 
         "x86_64/liblibskia_osx.dylib");
 });
-Task ("externals-ios").WithCriteria (IsRunningOnUnix ()).Does (() => 
+Task ("externals-ios")
+    .WithCriteria (IsRunningOnUnix ())
+    .WithCriteria (
+        !FileExists ("native-builds/lib/ios/libskia_ios.framework/libskia_ios"))
+    .Does (() => 
 {
     var buildArch = new Action<string, string> ((sdk, arch) => {
         XCodeBuild (new XCodeBuildSettings {
@@ -192,7 +205,15 @@ Task ("externals-ios").WithCriteria (IsRunningOnUnix ()).Does (() =>
         "armv7s/libskia_ios.framework/libskia_ios", 
         "arm64/libskia_ios.framework/libskia_ios");
 });
-Task ("externals-android").WithCriteria (IsRunningOnUnix ()).Does (() => 
+Task ("externals-android")
+    .WithCriteria (IsRunningOnUnix ())
+    .WithCriteria (
+        !FileExists ("native-builds/lib/android/x86/libskia_android.so") ||
+        !FileExists ("native-builds/lib/android/x86_64/libskia_android.so") ||
+        !FileExists ("native-builds/lib/android/armeabi/libskia_android.so") ||
+        !FileExists ("native-builds/lib/android/armeabi-v7a/libskia_android.so") ||
+        !FileExists ("native-builds/lib/android/arm64-v8a/libskia_android.so"))
+    .Does (() => 
 {
     var ANDROID_HOME = EnvironmentVariable ("ANDROID_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-sdk-macosx";
     var ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? ANDROID_HOME;
