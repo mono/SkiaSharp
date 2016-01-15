@@ -45,15 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Resources\Resource.designer.cs" />
-    <Compile Include="..\SharedProps\SkiaSharpAssemblyInfo.cs">
-      <Link>Properties\SkiaSharpAssemblyInfo.cs</Link>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\AboutResources.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <AndroidResource Include="Resources\values\Strings.xml" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="..\Binding\Binding.projitems" Label="Shared" Condition="Exists('..\Binding\Binding.projitems')" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
@@ -61,19 +53,19 @@
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedNativeLibrary Include="..\..\native-builds\libskia_android\libs\arm64-v8a\libskia_android.so">
+    <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\arm64-v8a\libskia_android.so">
       <Link>libs\arm64-v8a\libskia_android.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="..\..\native-builds\libskia_android\libs\armeabi\libskia_android.so">
+    <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\armeabi\libskia_android.so">
       <Link>libs\armeabi\libskia_android.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="..\..\native-builds\libskia_android\libs\armeabi-v7a\libskia_android.so">
+    <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\armeabi-v7a\libskia_android.so">
       <Link>libs\armeabi-v7a\libskia_android.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="..\..\native-builds\libskia_android\libs\x86\libskia_android.so">
+    <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\x86\libskia_android.so">
       <Link>libs\x86\libskia_android.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="..\..\native-builds\libskia_android\libs\x86_64\libskia_android.so">
+    <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\x86_64\libskia_android.so">
       <Link>libs\x86_64\libskia_android.so</Link>
     </EmbeddedNativeLibrary>
   </ItemGroup>

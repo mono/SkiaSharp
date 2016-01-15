@@ -42,9 +42,7 @@
     <Compile Include="AllLibs.linkwith.cs">
       <DependentUpon>libjpeg-turbo.a</DependentUpon>
     </Compile>
-    <Compile Include="..\SharedProps\SkiaSharpAssemblyInfo.cs">
-      <Link>Properties\SkiaSharpAssemblyInfo.cs</Link>
-    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ObjcBindingApiDefinition Include="ApiDefinition.cs" />
@@ -53,7 +51,7 @@
     <ObjcBindingCoreSource Include="StructsAndEnums.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ObjcBindingNativeFramework Include="..\..\native-builds\ios\libskia_ios.framework" />
+    <ObjcBindingNativeFramework Include="..\..\native-builds\lib\ios\libskia_ios.framework" />
   </ItemGroup>
   <Import Project="..\Binding\Binding.projitems" Label="Shared" Condition="Exists('..\Binding\Binding.projitems')" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.ObjCBinding.CSharp.targets" />

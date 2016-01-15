@@ -26,6 +26,41 @@ var AppendEnvironmentVariable = new Action<string, string> ((name, value) => {
     SetEnvironmentVariable (name, value);
 });
 
+
+CakeSpec.Libs = new ISolutionBuilder [] {
+	new IOSSolutionBuilder {
+		SolutionPath = "binding/SkiaSharp.sln",
+		OutputFiles = new [] { 
+			new OutputFileCopy {
+				FromFile = "./binding/SkiaSharp.Android/bin/Release/SkiaSharp.dll",
+				ToDirectory = "./output/android/"
+			},
+			new OutputFileCopy {
+				FromFile = "./binding/SkiaSharp.iOS/bin/Release/SkiaSharp.dll",
+				ToDirectory = "./output/ios/"
+			},
+			new OutputFileCopy {
+				FromFile = "./binding/SkiaSharp.OSX/bin/Release/SkiaSharp.dll",
+				ToDirectory = "./output/osx/"
+			},
+			new OutputFileCopy {
+				FromFile = "./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll",
+				ToDirectory = "./output/portable/"
+			},
+		}
+	},	
+};
+
+CakeSpec.Samples = new ISolutionBuilder [] {
+	new IOSSolutionBuilder { 
+        SolutionPath = "./samples/Skia.OSX.Demo/Skia.OSX.Demo.sln"
+    },
+	new IOSSolutionBuilder { 
+        SolutionPath = "./samples/Skia.Forms.Demo/Skia.Forms.Demo.sln" 
+    },
+};
+
+
 Task ("externals")
     .IsDependentOn ("externals-windows")
     .IsDependentOn ("externals-osx")
@@ -177,6 +212,8 @@ Task ("externals-android").WithCriteria (IsRunningOnUnix ()).Does (() =>
     
     // set up the gyp environment variables
     AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
+    SetEnvironmentVariable ("GYP_DEFINES", "");
+    SetEnvironmentVariable ("GYP_GENERATORS", "");
     SetEnvironmentVariable ("BUILDTYPE", "Release");
     SetEnvironmentVariable ("ANDROID_HOME", ANDROID_HOME);
     SetEnvironmentVariable ("ANDROID_SDK_ROOT", ANDROID_SDK_ROOT);
@@ -193,6 +230,32 @@ Task ("externals-android").WithCriteria (IsRunningOnUnix ()).Does (() =>
         Arguments = "",
         WorkingDirectory = ROOT_PATH.Combine ("native-builds/libskia_android").FullPath,
     }); 
+});
+
+Task ("clean")
+    .IsDependentOn ("clean-externals")
+    .Does (() => 
+{
+});
+
+Task ("clean-externals").Does (() =>
+{
+    // skia
+    CleanDirectories ("skia/out");
+    CleanDirectories ("skia/xcodebuild");
+
+    // all
+    CleanDirectories ("native-builds/lib");
+    // android
+    CleanDirectories ("native-builds/libskia_android/obj");
+    CleanDirectories ("native-builds/libskia_android/libs");
+    // ios
+    CleanDirectories ("native-builds/libskia_ios/build");
+    // osx
+    CleanDirectories ("native-builds/libskia_osx/build");
+    // windows
+    CleanDirectories ("native-builds/libskia_windows/Release");
+    CleanDirectories ("native-builds/libskia_windows/x64/Release");
 });
 
 
