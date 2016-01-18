@@ -46,6 +46,10 @@ CakeSpec.Libs = new ISolutionBuilder [] {
 				ToDirectory = "./output/osx/"
 			},
 			new OutputFileCopy {
+				FromFile = "./binding/SkiaSharp.OSX/bin/Release/SkiaSharp.OSX.targets",
+				ToDirectory = "./output/osx/"
+			},
+			new OutputFileCopy {
 				FromFile = "./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll",
 				ToDirectory = "./output/portable/"
 			},
@@ -109,6 +113,10 @@ CakeSpec.Samples = new ISolutionBuilder [] {
         IsMacCompatible = false,
         SolutionPath = "./samples/Skia.Windows.Demo/Skia.Windows.Demo.sln"
     },
+};
+
+CakeSpec.NuSpecs = new [] {
+	"./nuget/Xamarin.SkiaSharp.nuspec"
 };
 
 

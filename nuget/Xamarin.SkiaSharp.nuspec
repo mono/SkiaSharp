@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Xamarin.SkiaSharp</id>
+    <title>Skia for Xamarin and Windows</title>
+    <version>1.49.0.0-preview1</version>
+    <authors>Xamarin Inc.</authors>
+    <owners>Xamarin Inc.</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>C# bindings for Google's Skia library</description>
+    <copyright>Copyright (c) Xamarin Inc. 2016</copyright>
+  </metadata>
+  <files>
+    <!-- the platform specific -->
+    <file src="./output/android/SkiaSharp.dll" target="lib\MonoAndroid" />
+    <file src="./output/ios/SkiaSharp.dll" target="lib\XamariniOS" />
+    <file src="./output/osx/SkiaSharp.dll" target="lib\XamarinMac" />
+    
+    <!-- the PCL -->
+    <file src="./output/portable/SkiaSharp.dll" target="lib\portable-net45+xamarinmac+xamarinios+monotouch+monoandroid+win8+wpa81+wp8+xamarin.watchos+xamarin.tvos" />
+    
+    <!-- the build bits -->
+    <!-- OS X -->
+    <file src="./output/osx/SkiaSharp.OSX.targets" target="build\XamarinMac\Xamarin.SkiaSharp.targets" />
+    <file src="./native-builds/lib/osx/liblibskia_osx.dylib" target="build\XamarinMac\liblibskia_osx.dylib" />
+  </files>
+</package>
