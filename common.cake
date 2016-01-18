@@ -48,6 +48,18 @@ FilePath GetXamarinComponentToolPath ()
 	return GetFiles ("../../../**/xamarin-component.exe").FirstOrDefault ();
 }
 
+FilePath GetGenApiToolPath ()
+{
+	var appRoot = Context.Environment.GetApplicationRoot();
+
+	var nugetPath = appRoot.Combine ("../").CombineWithFilePath ("genapi.exe");
+
+	if (FileExists (nugetPath))
+		return nugetPath;
+
+	return GetFiles ("../../../**/genapi.exe").FirstOrDefault ();
+}
+
 void CopyDirectory (DirectoryPath sourceDir, DirectoryPath destDir, bool overwrite = true, bool copySubDirs = true)
 {
     var sourceDirName = MakeAbsolute(sourceDir).FullPath;
@@ -85,10 +97,12 @@ CakeStealer.NuGetSources = NUGET_RESTORE_SOURCES;
 CakeStealer.NugetToolPath = GetNugetToolPath ();
 CakeStealer.XamarinComponentToolPath = GetXamarinComponentToolPath ();
 CakeStealer.CakeToolPath = GetCakeToolPath ();
+CakeStealer.GenApiToolPath = GetGenApiToolPath ();
 
 Information ("Cake.exe ToolPath: {0}", CakeStealer.CakeToolPath);
 Information ("NuGet.exe ToolPath: {0}", CakeStealer.NugetToolPath);
 Information ("Xamarin-Component.exe ToolPath: {0}", CakeStealer.XamarinComponentToolPath);
+Information ("genapi.exe ToolPath: {0}", CakeStealer.GenApiToolPath);
 
 void ListEnvironmentVariables ()
 {
@@ -106,6 +120,7 @@ public class CakeStealer
 	static public FilePath NugetToolPath { get;set; }
 	static public FilePath XamarinComponentToolPath { get; set; }
 	static public FilePath CakeToolPath { get;set; }
+	static public FilePath GenApiToolPath { get;set; }
 }
 
 public interface ISolutionBuilder

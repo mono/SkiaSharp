@@ -29,7 +29,7 @@ var AppendEnvironmentVariable = new Action<string, string> ((name, value) => {
 
 CakeSpec.Libs = new ISolutionBuilder [] {
 	new IOSSolutionBuilder {
-		SolutionPath = "binding/SkiaSharp.sln",
+		SolutionPath = "binding/SkiaSharp.Mac.sln",
         IsWindowsCompatible = false,
         IsMacCompatible = true,
 		OutputFiles = new [] { 
@@ -119,6 +119,24 @@ Task ("externals")
     .IsDependentOn ("externals-android")
     .Does (() => 
 {
+    var generic = new DefaultSolutionBuilder {
+		SolutionPath = "binding/SkiaSharp.Generic.sln",
+        IsWindowsCompatible = true,
+        IsMacCompatible = true,
+	};
+	generic.BuildSolution ();
+    
+    FilePath input = "binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll";
+    var libPath = "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/4.5/,.";
+    if (IsRunningOnUnix ()) {
+        StartProcess ("mono", new ProcessSettings {
+            Arguments = string.Format("\"{0}\" -libPath:{3} -out \"{1}\" \"{2}\"", CakeStealer.GenApiToolPath, input.GetFilename () + ".cs", input.GetFilename (), libPath),
+            WorkingDirectory = input.GetDirectory ().FullPath,
+        });
+    } else {
+        throw new Exception ("TODO: Generate PCL source for Windows.");
+    }
+    CopyFile ("binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll.cs", "binding/SkiaSharp.Portable/SkiaPortable.cs");
 });
 
 Task ("externals-windows")
