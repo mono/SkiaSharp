@@ -266,7 +266,9 @@ public class IOSSolutionBuilder : DefaultSolutionBuilder
 		}
 
 		if (CakeContext.IsRunningOnUnix ()) { 
-			CakeContext.iOSBuild (solution, new MDToolSettings { Configuration = Configuration }); 
+			CakeContext.MDToolBuild (solution, c => {
+                c.Configuration = Configuration;
+            }); 
 		} else { 
 			base.RunBuild (solution); 
 		} 
