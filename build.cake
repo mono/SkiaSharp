@@ -53,12 +53,41 @@ CakeSpec.Libs = new ISolutionBuilder [] {
 	},	
 	new DefaultSolutionBuilder {
 		SolutionPath = "binding/SkiaSharp.Windows.sln",
+        Platform = "x86",
         IsWindowsCompatible = true,
         IsMacCompatible = false,
 		OutputFiles = new [] { 
 			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Windows/bin/Release/SkiaSharp.dll",
-				ToDirectory = "./output/windows/"
+				FromFile = "./binding/SkiaSharp.WindowsDesktop/bin/x86/Release/SkiaSharp.dll",
+				ToDirectory = "./output/windows/x86/"
+			},
+			new OutputFileCopy {
+				FromFile = "./binding/SkiaSharp.WindowsDesktop/bin/x86/Release/SkiaSharp.pdb",
+				ToDirectory = "./output/windows/x86/"
+			},
+			new OutputFileCopy {
+				FromFile = "./binding/SkiaSharp.WindowsDesktop/bin/x86/Release/SkiaSharp.WindowsDesktop.targets",
+				ToDirectory = "./output/windows/x86/"
+			},
+		}
+	},
+	new DefaultSolutionBuilder {
+		SolutionPath = "binding/SkiaSharp.Windows.sln",
+        Platform = "x64",
+        IsWindowsCompatible = true,
+        IsMacCompatible = false,
+		OutputFiles = new [] { 
+			new OutputFileCopy {
+				FromFile = "./binding/SkiaSharp.WindowsDesktop/bin/x64/Release/SkiaSharp.dll",
+				ToDirectory = "./output/windows/x64/"
+			},
+			new OutputFileCopy {
+				FromFile = "./binding/SkiaSharp.WindowsDesktop/bin/x64/Release/SkiaSharp.pdb",
+				ToDirectory = "./output/windows/x64/"
+			},
+			new OutputFileCopy {
+				FromFile = "./binding/SkiaSharp.WindowsDesktop/bin/x64/Release/SkiaSharp.WindowsDesktop.targets",
+				ToDirectory = "./output/windows/x64/"
 			},
 		}
 	},
