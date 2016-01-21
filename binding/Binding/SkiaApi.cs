@@ -25,6 +25,7 @@ using sk_stream_filestream_t = System.IntPtr;
 using sk_stream_memorystream_t = System.IntPtr;
 using sk_stream_assetstream_t = System.IntPtr;
 using sk_stream_managedstream_t = System.IntPtr;
+using sk_stream_streamrewindable_t = System.IntPtr;
 
 namespace SkiaSharp
 {

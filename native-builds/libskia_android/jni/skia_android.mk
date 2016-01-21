@@ -16,7 +16,7 @@ LOCAL_LDLIBS           := -llog -landroid -lEGL -lGLESv2 -lz
 
 LOCAL_MODULE           := skia_android
 
-LOCAL_C_INCLUDES       := ../../skia/src/c ../../skia/include/c ../../skia/include/core ../../skia/include/config
+LOCAL_C_INCLUDES       := ../../skia/src/c ../../skia/include/c ../../skia/include/core ../../skia/include/config ../../skia/include/images
 
 LOCAL_CFLAGS           := -DSK_INTERNAL -DSK_GAMMA_APPLY_TO_A8                                   \
                           -DSK_ALLOW_STATIC_GLOBAL_INITIALIZERS=0 -DSK_SUPPORT_GPU=1             \

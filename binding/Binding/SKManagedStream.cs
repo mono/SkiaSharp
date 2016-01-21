@@ -45,6 +45,7 @@ namespace SkiaSharp
 		private static readonly destroy_delegate fDestroy;
 
 		private readonly Stream stream;
+		private readonly bool disposeStream;
 
 		static SKManagedStream()
 		{
@@ -71,17 +72,27 @@ namespace SkiaSharp
 		}
 
 		public SKManagedStream (Stream managedStream)
+			: this (managedStream, false)
+		{
+		}
+
+		public SKManagedStream (Stream managedStream, bool disposeManagedStream)
 			: base (SkiaApi.sk_managedstream_new (), true)
 		{
 			managedStreams.Add (handle, new WeakReference<SKManagedStream>(this));
 
 			stream = managedStream;
+			disposeStream = disposeManagedStream;
 		}
 
 		protected override void Dispose (bool disposing)
 		{
 			if (managedStreams.ContainsKey(handle)) {
 				managedStreams.Remove (handle);
+			}
+
+			if (disposeStream && stream != null) {
+				stream.Dispose ();
 			}
 
 			base.Dispose (disposing);

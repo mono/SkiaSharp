@@ -48,7 +48,7 @@ namespace SkiaSharp
 
 		public override string ToString ()
 		{
-			return string.Format (CultureInfo.InvariantCulture, "#{0:x2}{0:x2}{0:x2}{0:x2}",  Alpha, Red, Green, Blue);
+			return string.Format (CultureInfo.InvariantCulture, "#{0:x2}{1:x2}{2:x2}{3:x2}",  Alpha, Red, Green, Blue);
 		}
 
 		public override bool Equals (object other)
@@ -86,7 +86,9 @@ namespace SkiaSharp
 		Unknown,
 		Rgba_8888,
 		Bgra_8888,
-		Alpha_8
+		Alpha_8,
+		Rgb_565,
+		N_32
 	}
 
 	public enum SKAlphaType {
@@ -203,6 +205,40 @@ namespace SkiaSharp
 			this.ColorType = colorType;
 			this.AlphaType = alphaType;
 		}
+
+		public int BytesPerPixel {
+			get {
+				switch (ColorType) {
+				case SKColorType.Unknown:
+					return 0;
+				case SKColorType.Alpha_8:
+					return 1;
+				case SKColorType.Rgb_565:
+					return 2;
+				case SKColorType.Bgra_8888:
+				case SKColorType.Rgba_8888:
+				case SKColorType.N_32:
+					return 4;
+				}
+				throw new ArgumentOutOfRangeException ("ColorType");
+			}
+		}
+
+		public bool IsEmpty {
+			get { return Width <= 0 || Height <= 0; }
+		}
+
+		public bool IsOpaque {
+			get { return AlphaType == SKAlphaType.Opaque; }
+		}
+
+		public SKPointI Size {
+			get { return new SKPointI (Width, Height); }
+		}
+
+		public SKRectI Rect {
+			get { return SKRectI.Create (Width, Height); }
+		}
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -214,6 +250,16 @@ namespace SkiaSharp
 	public struct SKPoint {
 		public float X, Y;
 		public SKPoint(float x, float y)
+		{
+			X = x;
+			Y = y;
+		}
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct SKPointI {
+		public int X, Y;
+		public SKPointI(int x, int y)
 		{
 			X = x;
 			Y = y;
