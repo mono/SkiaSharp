@@ -391,6 +391,50 @@ namespace SkiaSharp
 			}
 		}
 
+		public static void BitmapShader (SKCanvas canvas, int width, int height)
+		{
+			var assembly = typeof(Demos).GetTypeInfo ().Assembly;
+			var imageName = assembly.GetName ().Name + ".color-wheel.png";
+
+			// load the image from the embedded resource stream
+			using (var resource = assembly.GetManifestResourceStream (imageName))
+			using (var memory = new MemoryStream ()) {
+				resource.CopyTo (memory);
+				var bytes = memory.ToArray ();
+				using (var stream = new SKMemoryStream (bytes))
+				using (var source = SKBitmap.Decode (stream)) {
+					var b = source.Pixels;
+					var t = new SKColor[b.Length];
+					for (int i = 0; i < b.Length; i++) {
+						t [i] = new SKColor (
+							(byte)(255 - b [i].Red), 
+							(byte)(255 - b [i].Green), 
+							(byte)(255 - b [i].Blue), 
+							b [i].Alpha);
+					}
+
+					var source2 = new SKBitmap (source.Info);
+					source2.Pixels = t;
+
+					// create the shader and paint
+					//SkMatrix matrix;
+					//matrix.setScale(0.75f, 0.75f);
+					//matrix.preRotate(30.0f);
+					var matrix = SKMatrix.MakeRotation (30.0f);
+					using (var shader = SKShader.CreateBitmap (source2, SKShaderTileMode.Repeat, SKShaderTileMode.Repeat, matrix))
+					using (var paint = new SKPaint ()) {
+						paint.IsAntialias = true;
+						paint.Shader = shader;
+
+						// tile the bitmap
+						canvas.Clear (SKColors.White);
+						canvas.DrawPaint (paint);
+
+					}
+				}
+			}
+		}
+
 		[Flags]
 		public enum Platform
 		{
@@ -429,6 +473,7 @@ namespace SkiaSharp
 			new Sample {Title="Manage Draw Matrix", Method = ManageDrawMatrix, Platform = Platform.All},
 			new Sample {Title="Custom Fonts", Method = CustomFonts, Platform = Platform.All},
 			new Sample {Title="Xfermode", Method = Xfermode, Platform = Platform.All},
+			new Sample {Title="Bitmap Shader", Method = BitmapShader, Platform = Platform.All},
 		};
 	}
 }
