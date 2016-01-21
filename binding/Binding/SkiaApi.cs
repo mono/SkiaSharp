@@ -26,6 +26,7 @@ using sk_stream_memorystream_t = System.IntPtr;
 using sk_stream_assetstream_t = System.IntPtr;
 using sk_stream_managedstream_t = System.IntPtr;
 using sk_stream_streamrewindable_t = System.IntPtr;
+using sk_bitmap_t = System.IntPtr;
 
 namespace SkiaSharp
 {
@@ -266,6 +267,22 @@ namespace SkiaSharp
 		public extern static SKRect sk_picture_get_bounds(sk_picture_t p);
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_shader_t sk_shader_new_empty();
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_shader_t sk_shader_new_color(SKColor color);
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_shader_t sk_shader_new_local_matrix(sk_shader_t proxy, ref SKMatrix matrix);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_shader_t sk_shader_new_local_matrix(sk_shader_t proxy, IntPtr matrixZero);
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_shader_t sk_shader_new_bitmap(sk_bitmap_t src, SKShaderTileMode tmx, SKShaderTileMode tmy, ref SKMatrix matrix);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_shader_t sk_shader_new_bitmap(sk_bitmap_t src, SKShaderTileMode tmx, SKShaderTileMode tmy, IntPtr matrixZero);
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_linear_gradient([In] SKPoint[] points, [In] SKColor[] colors, float[] colorPos, int count, SKShaderTileMode mode, ref SKMatrix matrix);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_linear_gradient([In] SKPoint[] points, [In] SKColor[] colors, float[] colorPos, int count, SKShaderTileMode mode, IntPtr matrixZero);
@@ -336,6 +353,58 @@ namespace SkiaSharp
 		public extern static sk_stream_managedstream_t sk_managedstream_new();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_managedstream_set_delegates(IntPtr pRead, IntPtr pIsAtEnd, IntPtr pRewind, IntPtr pGetPosition, IntPtr pSeek, IntPtr pMove, IntPtr pGetLength, IntPtr pCreateNew, IntPtr pDestroy);
+
+		// Bitmap
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_bitmap_t sk_bitmap_new();
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_bitmap_destructor(sk_bitmap_t b);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKImageInfo sk_bitmap_get_info(sk_bitmap_t b);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)] 
+		public extern static IntPtr sk_bitmap_get_pixels(sk_bitmap_t b, out IntPtr length);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_bitmap_get_pixel_colors(sk_bitmap_t b, [Out] SKColor[] colors);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_bitmap_set_pixel_colors(sk_bitmap_t b, [In] SKColor[] colors);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_bitmap_reset(sk_bitmap_t b);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static IntPtr sk_bitmap_get_row_bytes(sk_bitmap_t b);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static IntPtr sk_bitmap_get_byte_count(sk_bitmap_t b);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_bitmap_is_null(sk_bitmap_t b);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_bitmap_is_immutable(sk_bitmap_t b);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_bitmap_set_immutable(sk_bitmap_t b);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_bitmap_is_volatile(sk_bitmap_t b);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_bitmap_set_volatile(sk_bitmap_t b, bool value);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_bitmap_erase(sk_bitmap_t cbitmap, SKColor color);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_bitmap_erase_rect(sk_bitmap_t cbitmap, SKColor color, ref SKRectI rect);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKColor sk_bitmap_get_pixel_color(sk_bitmap_t cbitmap, int x, int y);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_bitmap_set_pixel_color(sk_bitmap_t cbitmap, int x, int y, SKColor color);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_bitmap_copy(sk_bitmap_t cbitmap, sk_bitmap_t dst, SKColorType ct);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_bitmap_can_copy_to(sk_bitmap_t cbitmap, SKColorType ct);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_bitmap_lock_pixels(sk_bitmap_t b);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_bitmap_unlock_pixels(sk_bitmap_t b);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_bitmap_try_alloc_pixels(sk_bitmap_t cbitmap, ref SKImageInfo requestedInfo, IntPtr rowBytes);
+
+		// Image Decoder
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_imagedecoder_decode_stream(sk_stream_streamrewindable_t stream, sk_bitmap_t bitmap, SKColorType pref, SKImageDecoderMode mode, ref SKImageDecoderFormat format);
 	}
 }
 

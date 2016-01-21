@@ -18,6 +18,31 @@ using System.Globalization;
  	
 namespace SkiaSharp
 {
+	public enum SKImageDecoderResult {
+		Failure        = 0,
+		PartialSuccess = 1,
+		Success        = 2 
+	}
+
+	public enum SKImageDecoderMode {
+		DecodeBounds,
+		DecodePixels
+	}
+
+	public enum SKImageDecoderFormat {
+		Unknown,
+		Bmp,
+		Gif,
+		Ico,
+		Jpeg,
+		Png,
+		Wbmp,
+		Webp,
+		Pkm,
+		Ktx,
+		Astc,
+	}
+
 	public partial struct SKColor {
 
 		internal SKColor (uint value)
@@ -89,6 +114,11 @@ namespace SkiaSharp
 		Alpha_8,
 		Rgb_565,
 		N_32
+	}
+
+	public enum SKColorProfileType {
+		Linear,
+		SRGB
 	}
 
 	public enum SKAlphaType {
@@ -193,6 +223,8 @@ namespace SkiaSharp
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKImageInfo {
+		public static SKImageInfo Empty;
+
 		public int Width;
 		public int Height;
 		public SKColorType ColorType;
@@ -222,6 +254,10 @@ namespace SkiaSharp
 				}
 				throw new ArgumentOutOfRangeException ("ColorType");
 			}
+		}
+
+		public int RowBytes {
+			get { return Width * BytesPerPixel; }
 		}
 
 		public bool IsEmpty {

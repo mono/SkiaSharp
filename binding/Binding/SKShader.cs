@@ -39,6 +39,36 @@ namespace SkiaSharp
 			Dispose (false);
 		}
 
+		public static SKShader CreateEmpty ()
+		{
+			return new SKShader (SkiaApi.sk_shader_new_empty ());
+		}
+
+		public static SKShader CreateColor (SKColor color)
+		{
+			return new SKShader (SkiaApi.sk_shader_new_color (color));
+		}
+
+		public static SKShader CreateBitmap (SKBitmap src, SKShaderTileMode tmx, SKShaderTileMode tmy)
+		{
+			return new SKShader (SkiaApi.sk_shader_new_bitmap (src.handle, tmx, tmy, IntPtr.Zero));
+		}
+
+		public static SKShader CreateBitmap (SKBitmap src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix)
+		{
+			return new SKShader (SkiaApi.sk_shader_new_bitmap (src.handle, tmx, tmy, ref localMatrix));
+		}
+
+		public static SKShader CreateLocalMatrix (SKShader shader)
+		{
+			return new SKShader (SkiaApi.sk_shader_new_local_matrix (shader.handle, IntPtr.Zero));
+		}
+
+		public static SKShader CreateLocalMatrix (SKShader shader, SKMatrix localMatrix)
+		{
+			return new SKShader (SkiaApi.sk_shader_new_local_matrix (shader.handle, ref localMatrix));
+		}
+
 		public static SKShader CreateLinearGradient (SKPoint start, SKPoint end, SKColor [] colors, float [] colorPos, SKShaderTileMode mode)
 		{
 			return new SKShader (SkiaApi.sk_shader_new_linear_gradient (new SKPoint []{start, end}, colors, colorPos, colors.Length, mode, IntPtr.Zero));
