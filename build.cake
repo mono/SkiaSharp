@@ -142,7 +142,10 @@ Task ("externals")
             WorkingDirectory = input.GetDirectory ().FullPath,
         });
     } else {
-        throw new Exception ("TODO: Generate PCL source for Windows.");
+        StartProcess (CakeStealer.GenApiToolPath, new ProcessSettings {
+            Arguments = string.Format("-libPath:{2} -out \"{0}\" \"{1}\"", input.GetFilename () + ".cs", input.GetFilename (), libPath),
+            WorkingDirectory = input.GetDirectory ().FullPath,
+        });
     }
     CopyFile ("binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll.cs", "binding/SkiaSharp.Portable/SkiaPortable.cs");
 });
