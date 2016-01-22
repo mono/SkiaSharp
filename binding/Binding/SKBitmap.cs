@@ -129,7 +129,11 @@ namespace SkiaSharp
 		}
 
 		public SKImageInfo Info {
-			get { return SkiaApi.sk_bitmap_get_info (handle); }
+			get {
+				SKImageInfo info;
+				SkiaApi.sk_bitmap_get_info (handle, out info);
+				return info;
+			}
 		}
 
 		public int Width { 
@@ -177,7 +181,7 @@ namespace SkiaSharp
 
 		public SKColor[] Pixels {
 			get { 
-				var info = SkiaApi.sk_bitmap_get_info (handle);
+				var info = Info;
 				var pixels = new SKColor[info.Width * info.Height];
 				SkiaApi.sk_bitmap_get_pixel_colors (handle, pixels);
 				return pixels; 

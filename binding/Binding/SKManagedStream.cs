@@ -23,14 +23,23 @@ namespace SkiaSharp
 		private static readonly Dictionary<IntPtr, WeakReference<SKManagedStream>> managedStreams = new Dictionary<IntPtr, WeakReference<SKManagedStream>>();
 
 		// delegate declarations
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		internal delegate IntPtr  read_delegate         (IntPtr managedStreamPtr, IntPtr buffer, IntPtr size);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		internal delegate bool    isAtEnd_delegate      (IntPtr managedStreamPtr);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		internal delegate bool    rewind_delegate       (IntPtr managedStreamPtr);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		internal delegate IntPtr  getPosition_delegate  (IntPtr managedStreamPtr);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		internal delegate bool    seek_delegate         (IntPtr managedStreamPtr, IntPtr position);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		internal delegate bool    move_delegate         (IntPtr managedStreamPtr, long offset);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		internal delegate IntPtr  getLength_delegate    (IntPtr managedStreamPtr);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		internal delegate IntPtr  createNew_delegate    (IntPtr managedStreamPtr);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		internal delegate void    destroy_delegate      (IntPtr managedStreamPtr);
 
 		// delegate fields

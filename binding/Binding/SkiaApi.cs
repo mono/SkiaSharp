@@ -360,7 +360,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_bitmap_destructor(sk_bitmap_t b);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static SKImageInfo sk_bitmap_get_info(sk_bitmap_t b);
+		public extern static bool sk_bitmap_get_info(sk_bitmap_t b, out SKImageInfo info);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)] 
 		public extern static IntPtr sk_bitmap_get_pixels(sk_bitmap_t b, out IntPtr length);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
