@@ -12,6 +12,7 @@
 #include "sk_typeface.h"
 #include "sk_stream.h"
 #include "sk_managedstream.h"
+#include "sk_bitmap.h"
 
 SK_X_API void** KeepSkiaCSymbols ();
 
@@ -23,6 +24,7 @@ void** KeepSkiaCSymbols ()
         (void*)sk_typeface_unref,
         (void*)sk_filestream_new,
         (void*)sk_managedstream_new,
+        (void*)sk_bitmap_new,
     };
     return ret;
 }
