@@ -118,7 +118,9 @@ namespace SkiaSharp
 			var count = (int)size;
 			var managedBuffer = new byte[count];
 			var result = managedStream.stream.Read (managedBuffer, 0, count);
-			Marshal.Copy (managedBuffer, 0, buffer, count);
+			if (buffer != IntPtr.Zero) { 
+				Marshal.Copy (managedBuffer, 0, buffer, count);
+			}
 			return (IntPtr)result;
 		}
 		#if __IOS__
