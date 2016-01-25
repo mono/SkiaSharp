@@ -27,6 +27,7 @@ using sk_stream_assetstream_t = System.IntPtr;
 using sk_stream_managedstream_t = System.IntPtr;
 using sk_stream_streamrewindable_t = System.IntPtr;
 using sk_bitmap_t = System.IntPtr;
+using sk_imagedecoder_t = System.IntPtr;
 
 namespace SkiaSharp
 {
@@ -404,7 +405,51 @@ namespace SkiaSharp
 
 		// Image Decoder
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static bool sk_imagedecoder_decode_stream(sk_stream_streamrewindable_t stream, sk_bitmap_t bitmap, SKColorType pref, SKImageDecoderMode mode, ref SKImageDecoderFormat format);
+		public extern static void sk_imagedecoder_destructor(sk_imagedecoder_t cdecoder);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKImageDecoderFormat sk_imagedecoder_get_decoder_format(sk_imagedecoder_t cdecoder);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKImageDecoderFormat sk_imagedecoder_get_stream_format(sk_stream_streamrewindable_t cstream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static string sk_imagedecoder_get_format_name_from_format(SKImageDecoderFormat cformat);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static string sk_imagedecoder_get_format_name_from_decoder(sk_imagedecoder_t cdecoder);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_imagedecoder_get_skip_writing_zeros(sk_imagedecoder_t cdecoder);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_imagedecoder_set_skip_writing_zeros(sk_imagedecoder_t cdecoder, bool skip);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_imagedecoder_get_dither_image(sk_imagedecoder_t cdecoder);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_imagedecoder_set_dither_image(sk_imagedecoder_t cdecoder, bool dither);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_imagedecoder_get_prefer_quality_over_speed(sk_imagedecoder_t cdecoder);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_imagedecoder_set_prefer_quality_over_speed(sk_imagedecoder_t cdecoder, bool qualityOverSpeed);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_imagedecoder_get_require_unpremultiplied_colors(sk_imagedecoder_t cdecoder);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_imagedecoder_set_require_unpremultiplied_colors(sk_imagedecoder_t cdecoder, bool request);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_imagedecoder_get_sample_size(sk_imagedecoder_t cdecoder);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_imagedecoder_set_sample_size(sk_imagedecoder_t cdecoder, int size);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_imagedecoder_cancel_decode(sk_imagedecoder_t cdecoder);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_imagedecoder_should_cancel_decode(sk_imagedecoder_t cdecoder);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKImageDecoderResult sk_imagedecoder_decode(sk_imagedecoder_t cdecoder, sk_stream_t cstream, sk_bitmap_t bitmap, SKColorType pref, SKImageDecoderMode mode);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_imagedecoder_t sk_imagedecoder_factory(sk_stream_streamrewindable_t cstream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_imagedecoder_decode_file(string file, sk_bitmap_t bitmap, SKColorType pref, SKImageDecoderMode mode, ref SKImageDecoderFormat format);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_imagedecoder_decode_memory(byte[] buffer, IntPtr size, sk_bitmap_t bitmap, SKColorType pref, SKImageDecoderMode mode, ref SKImageDecoderFormat format);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_imagedecoder_decode_memory(IntPtr buffer, IntPtr size, sk_bitmap_t bitmap, SKColorType pref, SKImageDecoderMode mode, ref SKImageDecoderFormat format);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_imagedecoder_decode_stream(sk_stream_streamrewindable_t cstream, sk_bitmap_t bitmap, SKColorType pref, SKImageDecoderMode mode, ref SKImageDecoderFormat format);
 	}
 }
 
