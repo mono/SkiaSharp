@@ -37,9 +37,9 @@
 			this.comboBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.comboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.comboBox.FormattingEnabled = true;
-			this.comboBox.Location = new System.Drawing.Point(566, 504);
+			this.comboBox.Location = new System.Drawing.Point(466, 504);
 			this.comboBox.Name = "comboBox";
-			this.comboBox.Size = new System.Drawing.Size(200, 28);
+			this.comboBox.Size = new System.Drawing.Size(300, 28);
 			this.comboBox.TabIndex = 0;
 			this.comboBox.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
 			// 
