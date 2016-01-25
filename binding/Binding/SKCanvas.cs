@@ -177,51 +177,60 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_point_color (handle, x, y, color);
 		}
 		
-		public void DrawImage (SKPath path, SKImage image, float x, float y, SKPaint paint)
+		public void DrawImage (SKImage image, float x, float y, SKPaint paint = null)
 		{
-			if (paint == null)
-				throw new ArgumentNullException ("paint");
 			if (image == null)
 				throw new ArgumentNullException ("image");
-			if (path == null)
-				throw new ArgumentNullException ("path");
-			SkiaApi.sk_canvas_draw_image (handle, image.handle, x, y, paint.handle);
+			SkiaApi.sk_canvas_draw_image (handle, image.handle, x, y, paint == null ? IntPtr.Zero : paint.handle);
 		}
 
-		public void DrawImageScaled (SKPath path, SKImage image, SKRect dest, SKPaint paint)
+		public void DrawImageScaled (SKImage image, SKRect dest, SKPaint paint = null)
 		{
-			if (paint == null)
-				throw new ArgumentNullException ("paint");
 			if (image == null)
 				throw new ArgumentNullException ("image");
-			if (path == null)
-				throw new ArgumentNullException ("path");
-			SkiaApi.sk_canvas_draw_image_rect (handle, image.handle, IntPtr.Zero, ref dest, paint.handle);
+			SkiaApi.sk_canvas_draw_image_rect (handle, image.handle, IntPtr.Zero, ref dest, paint == null ? IntPtr.Zero : paint.handle);
 		}
 
-		public void DrawImageScaled (SKPath path, SKImage image, SKRect source, SKRect dest, SKPaint paint)
+		public void DrawImageScaled (SKImage image, SKRect source, SKRect dest, SKPaint paint = null)
 		{
-			if (paint == null)
-				throw new ArgumentNullException ("paint");
 			if (image == null)
 				throw new ArgumentNullException ("image");
-			if (path == null)
-				throw new ArgumentNullException ("path");
-			SkiaApi.sk_canvas_draw_image_rect (handle, image.handle, ref source, ref dest, paint.handle);
+			SkiaApi.sk_canvas_draw_image_rect (handle, image.handle, ref source, ref dest, paint == null ? IntPtr.Zero : paint.handle);
 		}
 
-		public void DrawPicture (SKPicture picture, ref SKMatrix matrix, SKPaint paint)
+		public void DrawPicture (SKPicture picture, ref SKMatrix matrix, SKPaint paint = null)
 		{
 			if (picture == null)
 				throw new ArgumentNullException ("picture");
 			SkiaApi.sk_canvas_draw_picture (handle, picture.handle, ref matrix, paint == null ? IntPtr.Zero : paint.handle);
 		}
 
-		public void DrawPicture (SKPicture picture, SKPaint paint)
+		public void DrawPicture (SKPicture picture, SKPaint paint = null)
 		{
 			if (picture == null)
 				throw new ArgumentNullException ("picture");
 			SkiaApi.sk_canvas_draw_picture (handle, picture.handle, IntPtr.Zero, paint == null ? IntPtr.Zero : paint.handle);
+		}
+
+		public void DrawBitmap (SKBitmap bitmap, float x, float y, SKPaint paint = null)
+		{
+			if (bitmap == null)
+				throw new ArgumentNullException ("bitmap");
+			SkiaApi.sk_canvas_draw_bitmap (handle, bitmap.handle, x, y, paint == null ? IntPtr.Zero : paint.handle);
+		}
+
+		public void DrawBitmapScaled (SKBitmap bitmap, SKRect dest, SKPaint paint = null)
+		{
+			if (bitmap == null)
+				throw new ArgumentNullException ("bitmap");
+			SkiaApi.sk_canvas_draw_bitmap_rect (handle, bitmap.handle, IntPtr.Zero, ref dest, paint == null ? IntPtr.Zero : paint.handle);
+		}
+
+		public void DrawBitmapScaled (SKBitmap bitmap, SKRect source, SKRect dest, SKPaint paint = null)
+		{
+			if (bitmap == null)
+				throw new ArgumentNullException ("bitmap");
+			SkiaApi.sk_canvas_draw_bitmap_rect (handle, bitmap.handle, ref source, ref dest, paint == null ? IntPtr.Zero : paint.handle);
 		}
 
 		public void DrawText (string text, float x, float y, SKPaint paint)
