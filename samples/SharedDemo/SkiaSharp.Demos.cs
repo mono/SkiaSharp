@@ -449,6 +449,56 @@ namespace SkiaSharp
 			}
 		}
 
+		public static void BitmapDecoder(SKCanvas canvas, int width, int height)
+		{
+			var assembly = typeof(Demos).GetTypeInfo().Assembly;
+			var imageName = assembly.GetName().Name + ".color-wheel.png";
+
+			canvas.Clear(SKColors.White);
+
+			// load the embedded resource stream
+			using (var resource = assembly.GetManifestResourceStream(imageName))
+			using (var stream = new SKManagedStream(resource))
+			using (var decoder = new SKImageDecoder(stream))
+			using (var paint = new SKPaint())
+			using (var tf = SKTypeface.FromFamilyName("Arial"))
+			{
+				paint.IsAntialias = true;
+				paint.TextSize = 14;
+				paint.Typeface = tf;
+				paint.Color = SKColors.Black;
+
+				// read / set decoder settings
+				decoder.DitherImage = true;
+				decoder.PreferQualityOverSpeed = true;
+				decoder.SampleSize = 2;
+
+				// decode the image
+				using (var bitmap = new SKBitmap())
+				{
+					var result = decoder.Decode(stream, bitmap);
+					if (result != SKImageDecoderResult.Failure)
+					{
+						var info = bitmap.Info;
+						var x = 25;
+						var y = 25;
+
+						canvas.DrawBitmap(bitmap, x, y);
+						x += info.Width + 25;
+						y += 14;
+
+						canvas.DrawText(string.Format("Result: {0}", result), x, y, paint);
+						y += 20;
+
+						canvas.DrawText(string.Format("Size: {0}px x {1}px", bitmap.Width, bitmap.Height), x, y, paint);
+						y += 20;
+
+						canvas.DrawText(string.Format("Pixels: {0} @ {1}b/px", bitmap.Pixels.Length, bitmap.BytesPerPixel), x, y, paint);
+					}
+				}
+			}
+		}
+
 		[Flags]
 		public enum Platform
 		{
@@ -488,7 +538,8 @@ namespace SkiaSharp
 			new Sample {Title="Custom Fonts", Method = CustomFonts, Platform = Platform.All},
 			new Sample {Title="Xfermode", Method = Xfermode, Platform = Platform.All},
 			new Sample {Title="Bitmap Shader", Method = BitmapShader, Platform = Platform.All},
-			new Sample {Title="Bitmap Shader Manipulated", Method = BitmapShaderManipulated, Platform = Platform.All},
+			new Sample {Title="Bitmap Shader (Manipulated)", Method = BitmapShaderManipulated, Platform = Platform.All},
+			new Sample {Title="Bitmap Decoder", Method = BitmapDecoder, Platform = Platform.All},
 		};
 	}
 }
