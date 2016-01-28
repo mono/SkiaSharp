@@ -334,7 +334,7 @@ namespace SkiaSharp
 			var cols = width < height ? 3 : 5;
 			var rows = (modes.Length - 1) / cols + 1;
 
-			var w = width / cols;
+			var w = (float)width / cols;
 			var h = (float)height / rows;
 			var rect = SKRect.Create (w, h);
 			var srcPoints = new[] {
@@ -499,6 +499,358 @@ namespace SkiaSharp
 			}
 		}
 
+		public static void SweepGradientShader(SKCanvas canvas, int width, int height)
+		{
+			var colors = new[] { SKColors.Cyan, SKColors.Magenta, SKColors.Yellow, SKColors.Cyan };
+			var center = new SKPoint(width / 2f, height / 2f);
+
+			using (var shader = SKShader.CreateSweepGradient(center, colors, null))
+			using (var paint = new SKPaint())
+			{
+				paint.Shader = shader;
+				canvas.DrawPaint(paint);
+			}
+		}
+
+		public static void FractalPerlinNoiseShader(SKCanvas canvas, int width, int height)
+		{
+			canvas.Clear(SKColors.White);
+
+			using (var shader = SKShader.CreatePerlinNoiseFractalNoise(0.05f, 0.05f, 4, 0.0f))
+			using (var paint = new SKPaint())
+			{
+				paint.Shader = shader;
+				canvas.DrawPaint(paint);
+			}
+		}
+
+		public static void TurbulencePerlinNoiseShader(SKCanvas canvas, int width, int height)
+		{
+			canvas.Clear(SKColors.White);
+
+			using (var shader = SKShader.CreatePerlinNoiseTurbulence(0.05f, 0.05f, 4, 0.0f))
+			using (var paint = new SKPaint())
+			{
+				paint.Shader = shader;
+				canvas.DrawPaint(paint);
+			}
+		}
+
+		public static void ComposeShader(SKCanvas canvas, int width, int height)
+		{
+			var colors = new [] { SKColors.Blue, SKColors.Yellow };
+			var center = new SKPoint(width / 2f, height / 2f);
+
+			using (var shader1 = SKShader.CreateRadialGradient(center, 180.0f, colors, null, SKShaderTileMode.Clamp))
+			using (var shader2 = SKShader.CreatePerlinNoiseTurbulence(0.025f, 0.025f, 2, 0.0f))
+			using (var shader = SKShader.CreateCompose(shader1, shader2))
+			using (var paint = new SKPaint())
+			{
+				paint.Shader = shader;
+				canvas.DrawPaint(paint);
+			}
+		}
+
+		public static void BlurMaskFilter(SKCanvas canvas, int width, int height)
+		{
+			canvas.DrawColor(SKColors.White);
+
+			using (var paint = new SKPaint())
+			using (var filter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 5.0f))
+			{
+				paint.IsAntialias = true;
+				paint.TextSize = 120;
+				paint.TextAlign = SKTextAlign.Center;
+				paint.MaskFilter = filter;
+
+				canvas.DrawText("Skia", width / 2f, height / 2f, paint);
+			}
+		}
+
+		public static void EmbossMaskFilter(SKCanvas canvas, int width, int height)
+		{
+			canvas.DrawColor(SKColors.White);
+
+			SKPoint3 direction = new SKPoint3(1.0f, 1.0f, 1.0f);
+
+			using (var paint = new SKPaint())
+			using (var filter = SKMaskFilter.CreateEmboss(2.0f, direction, 0.3f, 0.1f))
+			{
+				paint.IsAntialias = true;
+				paint.TextSize = 120;
+				paint.TextAlign = SKTextAlign.Center;
+				paint.MaskFilter = filter;
+
+				canvas.DrawText("Skia", width / 2f, height / 2f, paint);
+			}
+		}
+
+		public static void ColorMatrixColorFilter(SKCanvas canvas, int width, int height)
+		{
+			canvas.Clear(SKColors.White);
+
+			var assembly = typeof(Demos).GetTypeInfo().Assembly;
+			var imageName = assembly.GetName().Name + ".baboon.png";
+
+			// load the image from the embedded resource stream
+			using (var resource = assembly.GetManifestResourceStream(imageName))
+			using (var stream = new SKManagedStream(resource))
+			using (var bitmap = SKBitmap.Decode(stream))
+			{
+				var f = new Action<SKRect, float[]>((rect, colorMatrix) =>
+				{
+					using (var cf = SKColorFilter.CreateColorMatrix(colorMatrix))
+					using (var paint = new SKPaint())
+					{
+						paint.ColorFilter = cf;
+
+						canvas.DrawBitmap(bitmap, rect, paint);
+					}
+				});
+
+				var colorMatrix1 = new float[20] {
+					0f, 1f, 0f, 0f, 0f,
+					0f, 0f, 1f, 0f, 0f,
+					1f, 0f, 0f, 0f, 0f,
+					0f, 0f, 0f, 1f, 0f
+				};
+				var grayscale = new float[20] {
+					0.21f, 0.72f, 0.07f, 0.0f, 0.0f,
+					0.21f, 0.72f, 0.07f, 0.0f, 0.0f,
+					0.21f, 0.72f, 0.07f, 0.0f, 0.0f,
+					0.0f,  0.0f,  0.0f,  1.0f, 0.0f
+				};
+				var colorMatrix3 = new float[20] {
+					-1f,  1f,  1f, 0f, 0f,
+					 1f, -1f,  1f, 0f, 0f,
+					 1f,  1f, -1f, 0f, 0f,
+					 0f,  0f,  0f, 1f, 0f
+				};
+				var colorMatrix4 = new float[20] {
+					0.0f, 0.5f, 0.5f, 0f, 0f,
+					0.5f, 0.0f, 0.5f, 0f, 0f,
+					0.5f, 0.5f, 0.0f, 0f, 0f,
+					0.0f, 0.0f, 0.0f, 1f, 0f
+				};
+				var highContrast = new float[20] {
+					4.0f, 0.0f, 0.0f, 0.0f, -4.0f * 255f / (4.0f - 1f),
+					0.0f, 4.0f, 0.0f, 0.0f, -4.0f * 255f / (4.0f - 1f),
+					0.0f, 0.0f, 4.0f, 0.0f, -4.0f * 255f / (4.0f - 1f),
+					0.0f, 0.0f, 0.0f, 1.0f, 0.0f
+				};
+				var colorMatrix6 = new float[20] {
+					0f, 0f, 1f, 0f, 0f,
+					1f, 0f, 0f, 0f, 0f,
+					0f, 1f, 0f, 0f, 0f,
+					0f, 0f, 0f, 1f, 0f
+				};
+				var sepia = new float[20] {
+					0.393f, 0.769f, 0.189f, 0.0f, 0.0f,
+					0.349f, 0.686f, 0.168f, 0.0f, 0.0f,
+					0.272f, 0.534f, 0.131f, 0.0f, 0.0f,
+					0.0f,   0.0f,   0.0f,   1.0f, 0.0f
+				};
+				var inverter = new float[20] {
+					-1f,  0f,  0f, 0f, 255f,
+					0f, -1f,  0f, 0f, 255f,
+					0f,  0f, -1f, 0f, 255f,
+					0f,  0f,  0f, 1f, 0f
+				};
+
+				var matices = new[] {
+					colorMatrix1, grayscale, highContrast, sepia,
+					colorMatrix3, colorMatrix4, colorMatrix6, inverter
+				};
+
+				var cols = width < height ? 2 : 4;
+				var rows = (matices.Length - 1) / cols + 1;
+				var w = (float)width / cols;
+				var h = (float)height / rows;
+
+				for (int y = 0; y < rows; y++)
+				{
+					for (int x = 0; x < cols; x++)
+					{
+						f(SKRect.Create(x * w, y * h, w, h), matices[y * cols + x]);
+					}
+				}
+			}
+		}
+
+		public static void ColorTableColorFilter(SKCanvas canvas, int width, int height)
+		{
+			canvas.Clear(SKColors.White);
+
+			var assembly = typeof(Demos).GetTypeInfo().Assembly;
+			var imageName = assembly.GetName().Name + ".baboon.png";
+
+			var ct = new byte[256];
+			for (int i = 0; i < 256; ++i)
+			{
+				var x = (i - 96) * 255 / 64;
+				ct[i] = x < 0 ? (byte)0 : x > 255 ? (byte)255 : (byte)x;
+			}
+
+			// load the image from the embedded resource stream
+			using (var resource = assembly.GetManifestResourceStream(imageName))
+			using (var stream = new SKManagedStream(resource))
+			using (var bitmap = SKBitmap.Decode(stream))
+			using (var cf = SKColorFilter.CreateTable(null, ct, ct, ct))
+			using (var paint = new SKPaint())
+			{
+				paint.ColorFilter = cf;
+
+				canvas.DrawBitmap(bitmap, SKRect.Create(width, height), paint);
+			}
+		}
+
+		public static void LumaColorFilter(SKCanvas canvas, int width, int height)
+		{
+			canvas.Clear(SKColors.White);
+
+			var assembly = typeof(Demos).GetTypeInfo().Assembly;
+			var imageName = assembly.GetName().Name + ".baboon.png";
+			
+			// load the image from the embedded resource stream
+			using (var resource = assembly.GetManifestResourceStream(imageName))
+			using (var stream = new SKManagedStream(resource))
+			using (var bitmap = SKBitmap.Decode(stream))
+			using (var cf = SKColorFilter.CreateLumaColor())
+			using (var paint = new SKPaint())
+			{
+				paint.ColorFilter = cf;
+
+				canvas.DrawBitmap(bitmap, SKRect.Create(width, height), paint);
+			}
+		}
+
+		public static void XferModeColorFilter(SKCanvas canvas, int width, int height)
+		{
+			canvas.Clear(SKColors.White);
+
+			var assembly = typeof(Demos).GetTypeInfo().Assembly;
+			var imageName = assembly.GetName().Name + ".baboon.png";
+
+			// load the image from the embedded resource stream
+			using (var resource = assembly.GetManifestResourceStream(imageName))
+			using (var stream = new SKManagedStream(resource))
+			using (var bitmap = SKBitmap.Decode(stream))
+			using (var cf = SKColorFilter.CreateXferMode(SKColors.Red, SKXferMode.ColorDodge))
+			using (var paint = new SKPaint())
+			{
+				paint.ColorFilter = cf;
+
+				canvas.DrawBitmap(bitmap, SKRect.Create(width, height), paint);
+			}
+		}
+
+		public static void ErodeImageFilter(SKCanvas canvas, int width, int height)
+		{
+			canvas.Clear(SKColors.White);
+
+			var assembly = typeof(Demos).GetTypeInfo().Assembly;
+			var imageName = assembly.GetName().Name + ".baboon.png";
+
+			// load the image from the embedded resource stream
+			using (var resource = assembly.GetManifestResourceStream(imageName))
+			using (var stream = new SKManagedStream(resource))
+			using (var bitmap = SKBitmap.Decode(stream))
+			using (var filter = SKImageFilter.CreateErode(5, 5))
+			using (var paint = new SKPaint())
+			{
+				paint.ImageFilter = filter;
+
+				canvas.DrawBitmap(bitmap, SKRect.Create(width, height), paint);
+			}
+		}
+
+		public static void DilateImageFilter(SKCanvas canvas, int width, int height)
+		{
+			canvas.Clear(SKColors.White);
+
+			var assembly = typeof(Demos).GetTypeInfo().Assembly;
+			var imageName = assembly.GetName().Name + ".baboon.png";
+
+			// load the image from the embedded resource stream
+			using (var resource = assembly.GetManifestResourceStream(imageName))
+			using (var stream = new SKManagedStream(resource))
+			using (var bitmap = SKBitmap.Decode(stream))
+			using (var filter = SKImageFilter.CreateDilate(5, 5))
+			using (var paint = new SKPaint())
+			{
+				paint.ImageFilter = filter;
+
+				canvas.DrawBitmap(bitmap, SKRect.Create(width, height), paint);
+			}
+		}
+
+		public static void BlurImageFilter(SKCanvas canvas, int width, int height)
+		{
+			canvas.Clear(SKColors.White);
+
+			var assembly = typeof(Demos).GetTypeInfo().Assembly;
+			var imageName = assembly.GetName().Name + ".baboon.png";
+
+			// load the image from the embedded resource stream
+			using (var resource = assembly.GetManifestResourceStream(imageName))
+			using (var stream = new SKManagedStream(resource))
+			using (var bitmap = SKBitmap.Decode(stream))
+			using (var filter = SKImageFilter.CreateBlur(5, 5))
+			using (var paint = new SKPaint())
+			{
+				paint.ImageFilter = filter;
+
+				canvas.DrawBitmap(bitmap, SKRect.Create(width, height), paint);
+			}
+		}
+
+		public static void MagnifierImageFilter(SKCanvas canvas, int width, int height)
+		{
+			canvas.Clear(SKColors.White);
+
+			var assembly = typeof(Demos).GetTypeInfo().Assembly;
+			var imageName = assembly.GetName().Name + ".baboon.png";
+
+			var size = width > height ? height : width;
+			var small = size / 5;
+
+			// load the image from the embedded resource stream
+			using (var resource = assembly.GetManifestResourceStream(imageName))
+			using (var stream = new SKManagedStream(resource))
+			using (var bitmap = SKBitmap.Decode(stream))
+			using (var filter = SKImageFilter.CreateMagnifier(SKRect.Create(small*2, small*2, small*3, small*3), small))
+			using (var paint = new SKPaint())
+			{
+				paint.ImageFilter = filter;
+
+				canvas.DrawBitmap(bitmap, SKRect.Create(width, height), paint);
+			}
+		}
+
+		public static void ChainedImageFilter(SKCanvas canvas, int width, int height)
+		{
+			canvas.Clear(SKColors.White);
+
+			var assembly = typeof(Demos).GetTypeInfo().Assembly;
+			var imageName = assembly.GetName().Name + ".baboon.png";
+
+			var size = width > height ? height : width;
+			var small = size / 5;
+
+			// load the image from the embedded resource stream
+			using (var resource = assembly.GetManifestResourceStream(imageName))
+			using (var stream = new SKManagedStream(resource))
+			using (var bitmap = SKBitmap.Decode(stream))
+			using (var filterMag = SKImageFilter.CreateMagnifier(SKRect.Create(small*2, small*2, small*3, small*3), small))
+			using (var filterBlur = SKImageFilter.CreateBlur(5, 5, filterMag))
+			using (var paint = new SKPaint())
+			{
+				paint.ImageFilter = filterBlur;
+
+				canvas.DrawBitmap(bitmap, SKRect.Create(width, height), paint);
+			}
+		}
+
 		[Flags]
 		public enum Platform
 		{
@@ -540,6 +892,21 @@ namespace SkiaSharp
 			new Sample {Title="Bitmap Shader", Method = BitmapShader, Platform = Platform.All},
 			new Sample {Title="Bitmap Shader (Manipulated)", Method = BitmapShaderManipulated, Platform = Platform.All},
 			new Sample {Title="Bitmap Decoder", Method = BitmapDecoder, Platform = Platform.All},
+			new Sample {Title="Sweep Gradient Shader", Method = SweepGradientShader, Platform = Platform.All},
+			new Sample {Title="Fractal Perlin Noise Shader", Method = FractalPerlinNoiseShader, Platform = Platform.All},
+			new Sample {Title="Turbulence Perlin Noise Shader", Method = TurbulencePerlinNoiseShader, Platform = Platform.All},
+			new Sample {Title="Compose Shader", Method = ComposeShader, Platform = Platform.All},
+			new Sample {Title="Blur Mask Filter", Method = BlurMaskFilter, Platform = Platform.All},
+			new Sample {Title="Emboss Mask Filter", Method = EmbossMaskFilter, Platform = Platform.All},
+			new Sample {Title="Color Matrix Color Filter", Method = ColorMatrixColorFilter, Platform = Platform.All},
+			new Sample {Title="Color Table Color Filter", Method = ColorTableColorFilter, Platform = Platform.All},
+			new Sample {Title="Luma Color Filter", Method = LumaColorFilter, Platform = Platform.All},
+			new Sample {Title="XferMode Color Filter", Method = XferModeColorFilter, Platform = Platform.All},
+			new Sample {Title="Erode Image Filter", Method = ErodeImageFilter, Platform = Platform.All},
+			new Sample {Title="Dilate Image Filter", Method = DilateImageFilter, Platform = Platform.All},
+			new Sample {Title="Blur Image Filter", Method = BlurImageFilter, Platform = Platform.All},
+			new Sample {Title="Magnifier Image Filter", Method = MagnifierImageFilter, Platform = Platform.All},
+			new Sample {Title="Chained Image Filter", Method = ChainedImageFilter, Platform = Platform.All},
 		};
 	}
 }
