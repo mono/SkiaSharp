@@ -221,6 +221,46 @@ namespace SkiaSharp
 		Utf8, Utf16, Utf32, GlyphId
 	}
 
+	public enum SKFilterQuality
+	{
+		None,
+		Low,
+		Medium,
+		High
+	}
+
+	[Flags]
+	public enum SKCropRectFlags
+	{
+		HasLeft = 0x01,
+		HasTop = 0x02,
+		HasWidth = 0x04,
+		HasHeight = 0x08,
+		HasAll = 0x0F,
+	}
+
+	public enum SKDropShadowImageFilterShadowMode
+	{
+		DrawShadowAndForeground,
+		DawShadowOnly,
+	}
+
+	public enum SKDisplacementMapEffectChannelSelectorType
+	{
+		Unknown,
+		R,
+		G,
+		B,
+		A,
+	}
+
+	public enum SKMatrixConvolutionTileMode
+	{
+		Clamp,
+		Repeat,
+		ClampToBlack,
+	}
+
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKImageInfo {
 		public static SKImageInfo Empty;
@@ -299,6 +339,40 @@ namespace SkiaSharp
 		{
 			X = x;
 			Y = y;
+		}
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct SKPoint3
+	{
+		public float X, Y, Z;
+		public SKPoint3(float x, float y, float z)
+		{
+			X = x;
+			Y = y;
+			Z = z;
+		}
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct SKSize
+	{
+		public float Width, Height;
+		public SKSize(float width, float height)
+		{
+			Width = width;
+			Height = height;
+		}
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct SKSizeI
+	{
+		public int Width, Height;
+		public SKSizeI(int width, int height)
+		{
+			Width = width;
+			Height = height;
 		}
 	}
 

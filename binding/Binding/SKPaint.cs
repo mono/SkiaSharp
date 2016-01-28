@@ -101,38 +101,48 @@ namespace SkiaSharp
 			}
 		}
 
-		// C API does not surface getter, so emulate it 
-		SKShader shader = null;
 		public SKShader Shader {
 			get {
-				return shader;
+				return new SKShader(SkiaApi.sk_paint_get_shader(handle));
 			}
 			set {
-				shader = value;
-				SkiaApi.sk_paint_set_shader (handle, shader == null ? IntPtr.Zero : shader.handle);
+				SkiaApi.sk_paint_set_shader(handle, value == null ? IntPtr.Zero : value.handle);
 			}
 		}
 
-		// C API does not surface getter, so emulate it 
-		SKMaskFilter filter = null;
 		public SKMaskFilter MaskFilter {
 			get {
-				return filter;
+				return new SKMaskFilter(SkiaApi.sk_paint_get_maskfilter(handle));
 			}
 			set {
-				filter = value;
-				SkiaApi.sk_paint_set_maskfilter (handle, filter == null ? IntPtr.Zero : filter.handle);
+				SkiaApi.sk_paint_set_maskfilter (handle, value == null ? IntPtr.Zero : value.handle);
 			}
 		}
 
-		SKXferMode mode = SKXferMode.SrcOver;
-		public SKXferMode XferMode {
+		public SKColorFilter ColorFilter {
 			get {
-				return mode;
+				return new SKColorFilter(SkiaApi.sk_paint_get_colorfilter(handle));
 			}
 			set {
-				mode = value;
-				SkiaApi.sk_paint_set_xfermode_mode (handle, mode);
+				SkiaApi.sk_paint_set_colorfilter (handle, value == null ? IntPtr.Zero : value.handle);
+			}
+		}
+		
+		public SKImageFilter ImageFilter {
+			get {
+				return new SKImageFilter(SkiaApi.sk_paint_get_imagefilter(handle));
+			}
+			set {
+				SkiaApi.sk_paint_set_imagefilter(handle, value == null ? IntPtr.Zero : value.handle);
+			}
+		}
+
+		public SKXferMode XferMode {
+			get {
+				return SkiaApi.sk_paint_get_xfermode_mode(handle);
+			}
+			set {
+				SkiaApi.sk_paint_set_xfermode_mode (handle, value);
 			}
 		}
 

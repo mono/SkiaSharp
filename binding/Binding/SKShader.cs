@@ -14,7 +14,7 @@ namespace SkiaSharp
 	{
 		internal IntPtr handle;
 
-		SKShader (IntPtr handle)
+		internal SKShader (IntPtr handle)
 		{
 			this.handle = handle;
 		}
@@ -109,6 +109,35 @@ namespace SkiaSharp
 			return new SKShader (SkiaApi.sk_shader_new_two_point_conical_gradient (ref start, startRadius, ref end, endRadius, colors, colorPos, colors.Length, mode, ref localMatrix));
 		}
 		
+		public static SKShader CreatePerlinNoiseFractalNoise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed)
+		{
+			return new SKShader(SkiaApi.sk_shader_new_perlin_noise_fractal_noise(baseFrequencyX, baseFrequencyY, numOctaves, seed, IntPtr.Zero));
+		}
+
+		public static SKShader CreatePerlinNoiseFractalNoise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, SKPointI tileSize)
+		{
+			return new SKShader(SkiaApi.sk_shader_new_perlin_noise_fractal_noise(baseFrequencyX, baseFrequencyY, numOctaves, seed, ref tileSize));
+		}
+
+		public static SKShader CreatePerlinNoiseTurbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed)
+		{
+			return new SKShader(SkiaApi.sk_shader_new_perlin_noise_turbulence(baseFrequencyX, baseFrequencyY, numOctaves, seed, IntPtr.Zero));
+		}
+
+		public static SKShader CreatePerlinNoiseTurbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, SKPointI tileSize)
+		{
+			return new SKShader(SkiaApi.sk_shader_new_perlin_noise_turbulence(baseFrequencyX, baseFrequencyY, numOctaves, seed, ref tileSize));
+		}
+
+		public static SKShader CreateCompose(SKShader shaderA, SKShader shaderB)
+		{
+			return new SKShader(SkiaApi.sk_shader_new_compose(shaderA.handle, shaderB.handle));
+		}
+
+		public static SKShader CreateCompose(SKShader shaderA, SKShader shaderB, SKXferMode mode)
+		{
+			return new SKShader(SkiaApi.sk_shader_new_compose_with_mode(shaderA.handle, shaderB.handle, mode));
+		}
 	}
 }
 
