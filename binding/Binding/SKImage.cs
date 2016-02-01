@@ -4,38 +4,26 @@
 // Author:
 //   Miguel de Icaza
 //
-// Copyright 2015 Xamarin Inc
+// Copyright 2016 Xamarin Inc
 //
 using System;
 
 namespace SkiaSharp
 {
-	public class SKImage : IDisposable
+	public class SKImage : SKObject
 	{
-		internal IntPtr handle;
-
-		public void Dispose ()
+		protected override void Dispose (bool disposing)
 		{
-			Dispose (true);
-			GC.SuppressFinalize (this);
-		}
-
-		protected virtual void Dispose (bool disposing)
-		{
-			if (handle != IntPtr.Zero) {
-				SkiaApi.sk_image_unref (handle);
-				handle = IntPtr.Zero;
+			if (Handle != IntPtr.Zero) {
+				SkiaApi.sk_image_unref (Handle);
 			}
-		}
 
-		~SKImage()
-		{
-			Dispose (false);
+			base.Dispose (disposing);
 		}
 
 		internal SKImage (IntPtr x)
+			: base (x)
 		{
-			handle = x;
 		}
 		
 		public static SKImage FromPixels (SKImageInfo info, IntPtr pixels, int rowBytes)
@@ -51,7 +39,7 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException ("data");
 			
-			var handle = SkiaApi.sk_image_new_from_encoded (data.handle, ref subset);
+			var handle = SkiaApi.sk_image_new_from_encoded (data.Handle, ref subset);
 			if (handle == IntPtr.Zero)
 				return null;
 			return new SKImage (handle);
@@ -59,12 +47,12 @@ namespace SkiaSharp
 
 		public SKData Encode ()
 		{
-			return new SKData (SkiaApi.sk_image_encode (handle));
+			return new SKData (SkiaApi.sk_image_encode (Handle));
 		}
 
-		public int Width => SkiaApi.sk_image_get_width (handle);
-		public int Height => SkiaApi.sk_image_get_height (handle); 
-		public uint UniqueId => SkiaApi.sk_image_get_unique_id (handle);
+		public int Width => SkiaApi.sk_image_get_width (Handle);
+		public int Height => SkiaApi.sk_image_get_height (Handle); 
+		public uint UniqueId => SkiaApi.sk_image_get_unique_id (Handle);
 	}
 }
 

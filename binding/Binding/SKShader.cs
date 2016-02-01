@@ -4,39 +4,26 @@
 // Author:
 //   Miguel de Icaza
 //
-// Copyright 2015 Xamarin Inc
+// Copyright 2016 Xamarin Inc
 //
 using System;
 
 namespace SkiaSharp
 {
-	public class SKShader : IDisposable
+	public class SKShader : SKObject
 	{
-		internal IntPtr handle;
-
 		internal SKShader (IntPtr handle)
+			: base (handle)
 		{
-			this.handle = handle;
 		}
 
-		public void Dispose ()
+		protected override void Dispose (bool disposing)
 		{
-			Dispose (true);
-			GC.SuppressFinalize (this);
-		}
-
-		protected virtual void Dispose (bool disposing)
-		{
-			if (handle != IntPtr.Zero) {
-				SkiaApi.sk_shader_unref (handle);
-				// We set this in case the user tries to use the fetched Canvas (which depends on us) to perform some operations
-				handle = IntPtr.Zero;
+			if (Handle != IntPtr.Zero) {
+				SkiaApi.sk_shader_unref (Handle);
 			}
-		}
 
-		~SKShader()
-		{
-			Dispose (false);
+			base.Dispose (disposing);
 		}
 
 		public static SKShader CreateEmpty ()
@@ -51,22 +38,22 @@ namespace SkiaSharp
 
 		public static SKShader CreateBitmap (SKBitmap src, SKShaderTileMode tmx, SKShaderTileMode tmy)
 		{
-			return new SKShader (SkiaApi.sk_shader_new_bitmap (src.handle, tmx, tmy, IntPtr.Zero));
+			return new SKShader (SkiaApi.sk_shader_new_bitmap (src.Handle, tmx, tmy, IntPtr.Zero));
 		}
 
 		public static SKShader CreateBitmap (SKBitmap src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix)
 		{
-			return new SKShader (SkiaApi.sk_shader_new_bitmap (src.handle, tmx, tmy, ref localMatrix));
+			return new SKShader (SkiaApi.sk_shader_new_bitmap (src.Handle, tmx, tmy, ref localMatrix));
 		}
 
 		public static SKShader CreateLocalMatrix (SKShader shader)
 		{
-			return new SKShader (SkiaApi.sk_shader_new_local_matrix (shader.handle, IntPtr.Zero));
+			return new SKShader (SkiaApi.sk_shader_new_local_matrix (shader.Handle, IntPtr.Zero));
 		}
 
 		public static SKShader CreateLocalMatrix (SKShader shader, SKMatrix localMatrix)
 		{
-			return new SKShader (SkiaApi.sk_shader_new_local_matrix (shader.handle, ref localMatrix));
+			return new SKShader (SkiaApi.sk_shader_new_local_matrix (shader.Handle, ref localMatrix));
 		}
 
 		public static SKShader CreateLinearGradient (SKPoint start, SKPoint end, SKColor [] colors, float [] colorPos, SKShaderTileMode mode)
@@ -131,12 +118,12 @@ namespace SkiaSharp
 
 		public static SKShader CreateCompose(SKShader shaderA, SKShader shaderB)
 		{
-			return new SKShader(SkiaApi.sk_shader_new_compose(shaderA.handle, shaderB.handle));
+			return new SKShader(SkiaApi.sk_shader_new_compose(shaderA.Handle, shaderB.Handle));
 		}
 
 		public static SKShader CreateCompose(SKShader shaderA, SKShader shaderB, SKXferMode mode)
 		{
-			return new SKShader(SkiaApi.sk_shader_new_compose_with_mode(shaderA.handle, shaderB.handle, mode));
+			return new SKShader(SkiaApi.sk_shader_new_compose_with_mode(shaderA.Handle, shaderB.Handle, mode));
 		}
 	}
 }

@@ -4,108 +4,140 @@
 // Author:
 //   Matthew Leibowitz
 //
-// Copyright 2015 Xamarin Inc
+// Copyright 2016 Xamarin Inc
 //
 using System;
 
 namespace SkiaSharp
 {
-	public abstract class SKStream : IDisposable
+	public abstract class SKStream : SKObject
 	{
-		internal IntPtr handle;
-		internal bool owns;
-
-		internal SKStream (IntPtr handle, bool owns)
+		internal SKStream (IntPtr handle)
+			: base (handle)
 		{
-			this.owns = owns;
-			this.handle = handle;
 		}
-
-		public void Dispose ()
-		{
-			Dispose (true);
-			GC.SuppressFinalize (this);
-		}
-
-		protected virtual void Dispose (bool disposing)
-		{
-			if (handle != IntPtr.Zero) {
-				if (owns) {
-				}
-				handle = IntPtr.Zero;
-			}
-		}
-
-		~SKStream ()
-		{
-			Dispose (false);
-		}
-
+		
 		public bool IsAtEnd {
 			get {
-				return SkiaApi.sk_stream_is_at_end (handle);
+				return SkiaApi.sk_stream_is_at_end (Handle);
 			}
 		}
 
 		public SByte ReadSByte ()
 		{
-			return SkiaApi.sk_stream_read_s8 (handle);
+			return SkiaApi.sk_stream_read_s8 (Handle);
 		}
 
 		public Int16 ReadInt16 ()
 		{
-			return SkiaApi.sk_stream_read_s16 (handle);
+			return SkiaApi.sk_stream_read_s16 (Handle);
 		}
 
 		public Int32 ReadInt32 ()
 		{
-			return SkiaApi.sk_stream_read_s32 (handle);
+			return SkiaApi.sk_stream_read_s32 (Handle);
 		}
 
 		public Byte ReadByte ()
 		{
-			return SkiaApi.sk_stream_read_u8 (handle);
+			return SkiaApi.sk_stream_read_u8 (Handle);
 		}
 
 		public UInt16 ReadUInt16 ()
 		{
-			return SkiaApi.sk_stream_read_u16 (handle);
+			return SkiaApi.sk_stream_read_u16 (Handle);
 		}
 
 		public UInt32 ReadUInt32 ()
 		{
-			return SkiaApi.sk_stream_read_u32 (handle);
+			return SkiaApi.sk_stream_read_u32 (Handle);
+		}
+
+		public int Read (byte[] buffer, int size)
+		{
+			unsafe {
+				fixed (byte *b = &buffer [0]) {
+					return (int)SkiaApi.sk_stream_read (Handle, (IntPtr) b, (IntPtr)size);
+				}
+			}
+		}
+
+		public int Skip (int size)
+		{
+			return (int)SkiaApi.sk_stream_skip (Handle, (IntPtr)size);
+		}
+
+		public bool Rewind ()
+		{
+			return SkiaApi.sk_stream_rewind (Handle);
+		}
+
+		public bool Seek (int position)
+		{
+			return SkiaApi.sk_stream_seek (Handle, (IntPtr)position);
+		}
+
+		public bool Move (long offset)
+		{
+			return SkiaApi.sk_stream_move (Handle, offset);
+		}
+
+		public bool HasPosition {
+			get {
+				return SkiaApi.sk_stream_has_position (Handle);
+			}
+		}
+
+		public int Position {
+			get {
+				return (int)SkiaApi.sk_stream_get_position (Handle);
+			}
+			set { 
+				Seek (value);
+			}
+		}
+
+		public bool HasLength {
+			get {
+				return SkiaApi.sk_stream_has_length (Handle);
+			}
+		}
+
+		public int Length {
+			get {
+				return (int)SkiaApi.sk_stream_get_length (Handle);
+			}
 		}
 	}
 
 	public abstract class SKStreamRewindable : SKStream
 	{
-		internal SKStreamRewindable (IntPtr handle, bool owns)
-			: base (handle, owns)
+		internal SKStreamRewindable (IntPtr handle)
+			: base (handle)
 		{
 		}
 	}
 
 	public abstract class SKStreamSeekable : SKStreamRewindable
 	{
-		internal SKStreamSeekable (IntPtr handle, bool owns)
-			: base (handle, owns)
+		internal SKStreamSeekable (IntPtr handle)
+			: base (handle)
 		{
 		}
 	}
 
 	public abstract class SKStreamAsset : SKStreamSeekable
 	{
-		internal SKStreamAsset (IntPtr handle, bool owns)
-			: base (handle, owns)
+		internal SKStreamAsset (IntPtr handle)
+			: base (handle)
 		{
 		}
 	}
 
 	public abstract class SKStreamMemory : SKStreamAsset
 	{
-		internal SKStreamMemory (IntPtr handle, bool owns)
-			: base (handle, owns)
+		internal SKStreamMemory (IntPtr handle)
+			: base (handle)
 		{
 		}
 	}
@@ -113,30 +145,35 @@ namespace SkiaSharp
 	public class SKFileStream : SKStreamAsset
 	{
 		public SKFileStream (string path)
-			: base (SkiaApi.sk_filestream_new (path), true)
+			: base (SkiaApi.sk_filestream_new (path))
 		{
 		}
 	}
 
 	public class SKMemoryStream : SKStreamMemory
 	{
+		internal SKMemoryStream(IntPtr handle)
+			: base (handle)
+		{
+		}
+
 		public SKMemoryStream ()
-			: base (SkiaApi.sk_memorystream_new (), true)
+			: this (SkiaApi.sk_memorystream_new ())
 		{
 		}
 
 		public SKMemoryStream (ulong length)
-			: base (SkiaApi.sk_memorystream_new_with_length ((IntPtr)length), true)
+			: this(SkiaApi.sk_memorystream_new_with_length ((IntPtr)length))
 		{
 		}
 
 		internal SKMemoryStream (IntPtr data, IntPtr length, bool copyData = false)
-			: base (SkiaApi.sk_memorystream_new_with_data (data, length, copyData), true)
+			: this(SkiaApi.sk_memorystream_new_with_data (data, length, copyData))
 		{
 		}
 
 		public SKMemoryStream (SKData data)
-			: base (SkiaApi.sk_memorystream_new_with_skdata (data), true)
+			: this(SkiaApi.sk_memorystream_new_with_skdata (data))
 		{
 		}
 
@@ -148,12 +185,12 @@ namespace SkiaSharp
 
 		internal void SetMemory (IntPtr data, IntPtr length, bool copyData = false)
 		{
-			SkiaApi.sk_memorystream_set_memory (handle, data, length, copyData);
+			SkiaApi.sk_memorystream_set_memory (Handle, data, length, copyData);
 		}
 
 		internal void SetMemory (byte[] data, IntPtr length, bool copyData = false)
 		{
-			SkiaApi.sk_memorystream_set_memory (handle, data, length, copyData);
+			SkiaApi.sk_memorystream_set_memory (Handle, data, length, copyData);
 		}
 
 		public void SetMemory (byte[] data)

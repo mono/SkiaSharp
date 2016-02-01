@@ -4,7 +4,7 @@
 // Author:
 //   Miguel de Icaza
 //
-// Copyright 2015 Xamarin Inc
+// Copyright 2016 Xamarin Inc
 //
 
 using System;
@@ -13,49 +13,38 @@ using System.IO;
 
 namespace SkiaSharp
 {
-	public class SKData : IDisposable
+	public class SKData : SKObject
 	{
-		internal IntPtr handle;
-
-		public void Dispose ()
+		protected override void Dispose (bool disposing)
 		{
-			Dispose (true);
-			GC.SuppressFinalize (this);
-		}
-
-		protected virtual void Dispose (bool disposing)
-		{
-			if (handle != IntPtr.Zero) {
-				SkiaApi.sk_data_unref (handle);
-				handle = IntPtr.Zero;
+			if (Handle != IntPtr.Zero) {
+				SkiaApi.sk_data_unref (Handle);
 			}
-		}
 
-		~SKData()
-		{
-			Dispose (false);
+			base.Dispose (disposing);
 		}
 
 		internal SKData (IntPtr x)
+			: base (x)
 		{
-			handle = x;
 		}
 
 		public SKData ()
+			: this (SkiaApi.sk_data_new_empty ())
 		{
-			handle = SkiaApi.sk_data_new_empty ();
 		}
 			
 		public SKData (IntPtr bytes, ulong length)
+			: this (IntPtr.Zero)
 		{
 			if (Marshal.SizeOf<IntPtr> () == 4 && length > UInt32.MaxValue)
 				throw new ArgumentException ("length", "The lenght exceeds the size of pointers");
-			handle = SkiaApi.sk_data_new_with_copy (bytes, (IntPtr) length);
+			Handle = SkiaApi.sk_data_new_with_copy (bytes, (IntPtr) length);
 		}
 
 		public SKData (byte[] bytes)
+			: this (SkiaApi.sk_data_new_with_copy (bytes, (IntPtr) bytes.Length))
 		{
-			handle = SkiaApi.sk_data_new_with_copy (bytes, (IntPtr) bytes.Length);
 		}
 
 		public static SKData FromMallocMemory (IntPtr bytes, ulong length)
@@ -78,11 +67,11 @@ namespace SkiaSharp
 				if (offset > UInt32.MaxValue)
 					throw new ArgumentException ("offset", "The length exceeds the size of pointers");
 			}
-			return new SKData (SkiaApi.sk_data_new_subset (handle, (IntPtr) offset, (IntPtr) length));
+			return new SKData (SkiaApi.sk_data_new_subset (Handle, (IntPtr) offset, (IntPtr) length));
 		}
 
-		public long Size => (long)SkiaApi.sk_data_get_size (handle);
-		public IntPtr Data => SkiaApi.sk_data_get_data (handle);
+		public long Size => (long)SkiaApi.sk_data_get_size (Handle);
+		public IntPtr Data => SkiaApi.sk_data_get_data (Handle);
 
 		public void SaveTo (Stream target)
 		{

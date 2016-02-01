@@ -4,7 +4,7 @@
 // Author:
 //   Matthew Leibowitz
 //
-// Copyright 2015 Xamarin Inc
+// Copyright 2016 Xamarin Inc
 //
 
 using System;
@@ -12,18 +12,16 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	public class SKBitmap : IDisposable
+	public class SKBitmap : SKObject
 	{
-		internal IntPtr handle;
-
-		internal SKBitmap (IntPtr handle)
+		protected SKBitmap (IntPtr handle)
+			: base (handle)
 		{
-			this.handle = handle;
 		}
 
 		public SKBitmap ()
+			: this (SkiaApi.sk_bitmap_new ())
 		{
-			handle = SkiaApi.sk_bitmap_new ();
 		}
 
 		public SKBitmap (int width, int height, bool isOpaque = false)
@@ -44,63 +42,53 @@ namespace SkiaSharp
 		public SKBitmap (SKImageInfo info, int rowBytes)
 			: this ()
 		{
-			if (!SkiaApi.sk_bitmap_try_alloc_pixels (handle, ref info, (IntPtr)rowBytes)) {
+			if (!SkiaApi.sk_bitmap_try_alloc_pixels (Handle, ref info, (IntPtr)rowBytes)) {
 				throw new Exception ("Unable to allocate pixels for the bitmap.");
 			}
 		}
 
-		public void Dispose ()
+		protected override void Dispose (bool disposing)
 		{
-			Dispose (true);
-			GC.SuppressFinalize (this);
-		}
-
-		protected virtual void Dispose (bool disposing)
-		{
-			if (handle != IntPtr.Zero) {
-				SkiaApi.sk_bitmap_destructor (handle);
-				handle = IntPtr.Zero;
+			if (Handle != IntPtr.Zero) {
+				SkiaApi.sk_bitmap_destructor (Handle);
 			}
-		}
 
-		~SKBitmap ()
-		{
-			Dispose (false);
+			base.Dispose (disposing);
 		}
 
 		public void Reset ()
 		{
-			SkiaApi.sk_bitmap_reset (handle);
+			SkiaApi.sk_bitmap_reset (Handle);
 		}
 
 		public void SetImmutable ()
 		{
-			SkiaApi.sk_bitmap_set_immutable (handle);
+			SkiaApi.sk_bitmap_set_immutable (Handle);
 		}
 
 		public void Erase (SKColor color)
 		{
-			SkiaApi.sk_bitmap_erase (handle, color);
+			SkiaApi.sk_bitmap_erase (Handle, color);
 		}
 
 		public void Erase (SKColor color, SKRectI rect)
 		{
-			SkiaApi.sk_bitmap_erase_rect (handle, color, ref rect);
+			SkiaApi.sk_bitmap_erase_rect (Handle, color, ref rect);
 		}
 
 		public SKColor GetPixel (int x, int y)
 		{
-			return SkiaApi.sk_bitmap_get_pixel_color (handle, x, y);
+			return SkiaApi.sk_bitmap_get_pixel_color (Handle, x, y);
 		}
 
 		public void SetPixel (int x, int y, SKColor color)
 		{
-			SkiaApi.sk_bitmap_set_pixel_color (handle, x, y, color);
+			SkiaApi.sk_bitmap_set_pixel_color (Handle, x, y, color);
 		}
 
 		public bool CanCopyTo (SKColorType colorType)
 		{
-			return SkiaApi.sk_bitmap_can_copy_to (handle, colorType);
+			return SkiaApi.sk_bitmap_can_copy_to (Handle, colorType);
 		}
 
 		public SKBitmap Copy ()
@@ -111,7 +99,7 @@ namespace SkiaSharp
 		public SKBitmap Copy (SKColorType colorType)
 		{
 			var destination = new SKBitmap ();
-			if (!SkiaApi.sk_bitmap_copy (handle, destination.handle, colorType)) {
+			if (!SkiaApi.sk_bitmap_copy (Handle, destination.Handle, colorType)) {
 				destination.Dispose ();
 				destination = null;
 			}
@@ -120,31 +108,31 @@ namespace SkiaSharp
 
 		public bool CopyTo (SKBitmap destination)
 		{
-			return SkiaApi.sk_bitmap_copy (handle, destination.handle, ColorType);
+			return SkiaApi.sk_bitmap_copy (Handle, destination.Handle, ColorType);
 		}
 
 		public bool CopyTo (SKBitmap destination, SKColorType colorType)
 		{
-			return SkiaApi.sk_bitmap_copy (handle, destination.handle, colorType);
+			return SkiaApi.sk_bitmap_copy (Handle, destination.Handle, colorType);
 		}
 
 		public SKImageInfo Info {
 			get {
 				SKImageInfo info;
-				SkiaApi.sk_bitmap_get_info (handle, out info);
+				SkiaApi.sk_bitmap_get_info (Handle, out info);
 				return info;
 			}
 		}
 
-		public int Width { 
+		public int Width {
 			get { return Info.Width; }
 		}
 
-		public int Height { 
+		public int Height {
 			get { return Info.Height; }
 		}
 
-		public SKColorType ColorType { 
+		public SKColorType ColorType {
 			get { return Info.ColorType; }
 		}
 
@@ -157,24 +145,24 @@ namespace SkiaSharp
 		}
 
 		public int RowBytes {
-			get { return (int)SkiaApi.sk_bitmap_get_row_bytes (handle); }
+			get { return (int)SkiaApi.sk_bitmap_get_row_bytes (Handle); }
 		}
 
 		public int ByteCount {
-			get { return (int)SkiaApi.sk_bitmap_get_byte_count (handle); }
+			get { return (int)SkiaApi.sk_bitmap_get_byte_count (Handle); }
 		}
 
 		public byte[] Bytes {
 			get { 
-				SkiaApi.sk_bitmap_lock_pixels (handle);
+				SkiaApi.sk_bitmap_lock_pixels (Handle);
 				try {
 					IntPtr length;
-					var pixelsPtr = SkiaApi.sk_bitmap_get_pixels (handle, out length);
+					var pixelsPtr = SkiaApi.sk_bitmap_get_pixels (Handle, out length);
 					byte[] bytes = new byte[(int)length];
 					Marshal.Copy (pixelsPtr, bytes, 0, (int)length);
 					return bytes; 
 				} finally {
-					SkiaApi.sk_bitmap_unlock_pixels (handle);
+					SkiaApi.sk_bitmap_unlock_pixels (Handle);
 				}
 			}
 		}
@@ -183,11 +171,11 @@ namespace SkiaSharp
 			get { 
 				var info = Info;
 				var pixels = new SKColor[info.Width * info.Height];
-				SkiaApi.sk_bitmap_get_pixel_colors (handle, pixels);
-				return pixels; 
+				SkiaApi.sk_bitmap_get_pixel_colors (Handle, pixels);
+				return pixels;
 			}
-			set { 
-				SkiaApi.sk_bitmap_set_pixel_colors (handle, value);
+			set {
+				SkiaApi.sk_bitmap_set_pixel_colors (Handle, value);
 			}
 		}
 
@@ -196,20 +184,20 @@ namespace SkiaSharp
 		}
 
 		public bool IsNull {
-			get { return SkiaApi.sk_bitmap_is_null (handle); }
+			get { return SkiaApi.sk_bitmap_is_null (Handle); }
 		}
 
-		public bool DrawsNothing { 
+		public bool DrawsNothing {
 			get { return IsEmpty || IsNull; }
 		}
 
 		public bool IsImmutable {
-			get { return SkiaApi.sk_bitmap_is_immutable (handle); }
+			get { return SkiaApi.sk_bitmap_is_immutable (Handle); }
 		}
 
 		public bool IsVolatile {
-			get { return SkiaApi.sk_bitmap_is_volatile (handle); }
-			set { SkiaApi.sk_bitmap_set_volatile (handle, value); }
+			get { return SkiaApi.sk_bitmap_is_volatile (Handle); }
+			set { SkiaApi.sk_bitmap_set_volatile (Handle, value); }
 		}
 
 		public static SKImageInfo DecodeBounds (SKStreamRewindable stream, SKColorType pref = SKColorType.Unknown)

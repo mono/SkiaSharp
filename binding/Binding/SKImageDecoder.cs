@@ -4,105 +4,93 @@
 // Author:
 //   Matthew Leibowitz
 //
-// Copyright 2015 Xamarin Inc
+// Copyright 2016 Xamarin Inc
 //
 
 using System;
 
 namespace SkiaSharp
 {
-	public class SKImageDecoder : IDisposable
+	public class SKImageDecoder : SKObject
 	{
-		internal IntPtr handle;
-
 		public SKImageDecoder(SKStreamRewindable stream)
-			: this(SkiaApi.sk_imagedecoder_factory(stream.handle))
+			: this(SkiaApi.sk_imagedecoder_factory(stream.Handle))
 		{
 		}
 
 		internal SKImageDecoder(IntPtr handle)
+			: base(handle)
 		{
-			this.handle = handle;
 		}
 
-		public void Dispose()
+		protected override void Dispose(bool disposing)
 		{
-			Dispose(true);
-			GC.SuppressFinalize(this);
-		}
-
-		protected virtual void Dispose(bool disposing)
-		{
-			if (handle != IntPtr.Zero)
+			if (Handle != IntPtr.Zero)
 			{
-				SkiaApi.sk_imagedecoder_destructor(handle);
-				handle = IntPtr.Zero;
+				SkiaApi.sk_imagedecoder_destructor(Handle);
 			}
-		}
 
-		~SKImageDecoder()
-		{
-			Dispose(false);
+			base.Dispose(disposing);
 		}
-
+		
 		public SKImageDecoderFormat Format
 		{
-			get { return SkiaApi.sk_imagedecoder_get_decoder_format(handle); }
+			get { return SkiaApi.sk_imagedecoder_get_decoder_format(Handle); }
 		}
 
 		public string FormatName
 		{
-			get { return SkiaApi.sk_imagedecoder_get_format_name_from_decoder(handle); }
+			get { return SkiaApi.sk_imagedecoder_get_format_name_from_decoder(Handle); }
 		}
 
 		public bool SkipWritingZeros
 		{
-			get { return SkiaApi.sk_imagedecoder_get_skip_writing_zeros(handle); }
-			set { SkiaApi.sk_imagedecoder_set_skip_writing_zeros(handle, value); }
+			get { return SkiaApi.sk_imagedecoder_get_skip_writing_zeros(Handle); }
+			set { SkiaApi.sk_imagedecoder_set_skip_writing_zeros(Handle, value); }
 		}
 
 		public bool DitherImage
 		{
-			get { return SkiaApi.sk_imagedecoder_get_dither_image(handle); }
-			set { SkiaApi.sk_imagedecoder_set_dither_image(handle, value); }
+			get { return SkiaApi.sk_imagedecoder_get_dither_image(Handle); }
+			set { SkiaApi.sk_imagedecoder_set_dither_image(Handle, value); }
 		}
 
 		public bool PreferQualityOverSpeed
 		{
-			get { return SkiaApi.sk_imagedecoder_get_prefer_quality_over_speed(handle); }
-			set { SkiaApi.sk_imagedecoder_set_prefer_quality_over_speed(handle, value); }
+			get { return SkiaApi.sk_imagedecoder_get_prefer_quality_over_speed(Handle); }
+			set { SkiaApi.sk_imagedecoder_set_prefer_quality_over_speed(Handle, value); }
 		}
 
 		public bool RequireUnpremultipliedColors
 		{
-			get { return SkiaApi.sk_imagedecoder_get_require_unpremultiplied_colors(handle); }
-			set { SkiaApi.sk_imagedecoder_set_require_unpremultiplied_colors(handle, value); }
+			get { return SkiaApi.sk_imagedecoder_get_require_unpremultiplied_colors(Handle); }
+			set { SkiaApi.sk_imagedecoder_set_require_unpremultiplied_colors(Handle, value); }
 		}
 
 		public int SampleSize
 		{
-			get { return SkiaApi.sk_imagedecoder_get_sample_size(handle); }
-			set { SkiaApi.sk_imagedecoder_set_sample_size(handle, value); }
+			get { return SkiaApi.sk_imagedecoder_get_sample_size(Handle); }
+			set { SkiaApi.sk_imagedecoder_set_sample_size(Handle, value); }
 		}
 
 		public bool ShouldCancelDecode
 		{
-			get { return SkiaApi.sk_imagedecoder_should_cancel_decode(handle); }
+			get { return SkiaApi.sk_imagedecoder_should_cancel_decode(Handle); }
 		}
 
 		public void CancelDecode()
 		{
-			SkiaApi.sk_imagedecoder_cancel_decode(handle);
+			SkiaApi.sk_imagedecoder_cancel_decode(Handle);
 		}
 
 		public SKImageDecoderResult Decode(SKStream stream, SKBitmap bitmap, SKColorType pref = SKColorType.Unknown, SKImageDecoderMode mode = SKImageDecoderMode.DecodePixels)
 		{
-			return SkiaApi.sk_imagedecoder_decode(handle, stream.handle, bitmap.handle, pref, mode);
+			return SkiaApi.sk_imagedecoder_decode(Handle, stream.Handle, bitmap.Handle, pref, mode);
 		}
 
 		public static SKImageDecoderFormat GetFormat(SKStreamRewindable stream)
 		{
-			return SkiaApi.sk_imagedecoder_get_stream_format(stream.handle);
+			return SkiaApi.sk_imagedecoder_get_stream_format(stream.Handle);
 		}
 
 		public static string GetFormatName(SKImageDecoderFormat format)
@@ -178,7 +166,7 @@ namespace SkiaSharp
 
 		public static bool DecodeStream(SKStreamRewindable stream, SKBitmap bitmap, SKColorType pref, SKImageDecoderMode mode, ref SKImageDecoderFormat format)
 		{
-			return SkiaApi.sk_imagedecoder_decode_stream(stream.handle, bitmap.handle, pref, mode, ref format);
+			return SkiaApi.sk_imagedecoder_decode_stream(stream.Handle, bitmap.Handle, pref, mode, ref format);
 		}
 
 		public static bool DecodeFile(string filename, SKBitmap bitmap, SKColorType pref = SKColorType.Unknown, SKImageDecoderMode mode = SKImageDecoderMode.DecodePixels)
@@ -189,7 +177,7 @@ namespace SkiaSharp
 
 		public static bool DecodeFile(string filename, SKBitmap bitmap, SKColorType pref, SKImageDecoderMode mode, ref SKImageDecoderFormat format)
 		{
-			return SkiaApi.sk_imagedecoder_decode_file(filename, bitmap.handle, pref, mode, ref format);
+			return SkiaApi.sk_imagedecoder_decode_file(filename, bitmap.Handle, pref, mode, ref format);
 		}
 
 		public static bool DecodeMemory(byte[] buffer, SKBitmap bitmap, SKColorType pref = SKColorType.Unknown, SKImageDecoderMode mode = SKImageDecoderMode.DecodePixels)
@@ -200,7 +188,7 @@ namespace SkiaSharp
 
 		public static bool DecodeMemory(byte[] buffer, SKBitmap bitmap, SKColorType pref, SKImageDecoderMode mode, ref SKImageDecoderFormat format)
 		{
-			return SkiaApi.sk_imagedecoder_decode_memory(buffer, (IntPtr)buffer.Length, bitmap.handle, pref, mode, ref format);
+			return SkiaApi.sk_imagedecoder_decode_memory(buffer, (IntPtr)buffer.Length, bitmap.Handle, pref, mode, ref format);
 		}
 	}
 }

@@ -4,42 +4,30 @@
 // Author:
 //   Miguel de Icaza
 //
-// Copyright 2015 Xamarin Inc
+// Copyright 2016 Xamarin Inc
 //
 using System;
 
 namespace SkiaSharp
 {
-	public class SKMaskFilter : IDisposable
+	public class SKMaskFilter : SKObject
 	{
 		private const float BlurSigmaScale = 0.57735f;
-
-		internal IntPtr handle;
-
+		
 		internal SKMaskFilter (IntPtr handle)
+			: base (handle)
 		{
-			this.handle = handle;
 		}
-
-		public void Dispose ()
+		
+		protected override void Dispose (bool disposing)
 		{
-			Dispose (true);
-			GC.SuppressFinalize (this);
-		}
-
-		protected virtual void Dispose (bool disposing)
-		{
-			if (handle != IntPtr.Zero) {
-				SkiaApi.sk_maskfilter_unref (handle);
-				handle = IntPtr.Zero;
+			if (Handle != IntPtr.Zero) {
+				SkiaApi.sk_maskfilter_unref (Handle);
 			}
-		}
 
-		~SKMaskFilter()
-		{
-			Dispose (false);
+			base.Dispose (disposing);
 		}
-
+		
 		public static float ConvertRadiusToSigma(float radius)
 		{
 			return radius > 0 ? BlurSigmaScale * radius + 0.5f : 0.0f;

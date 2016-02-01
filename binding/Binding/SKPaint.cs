@@ -4,199 +4,192 @@
 // Author:
 //   Miguel de Icaza
 //
-// Copyright 2015 Xamarin Inc
+// Copyright 2016 Xamarin Inc
 //
 using System;
 
 namespace SkiaSharp
 {
-	public class SKPaint : IDisposable 
+	public class SKPaint : SKObject
 	{
-		internal IntPtr handle;
-
+		internal SKPaint (IntPtr handle)
+			: base (handle)
+		{
+		}
+		
 		public SKPaint ()
+			: this (SkiaApi.sk_paint_new ())
 		{
-			handle = SkiaApi.sk_paint_new ();
 		}
-
-		public void Dispose ()
+		
+		protected override void Dispose (bool disposing)
 		{
-			Dispose (true);
-			GC.SuppressFinalize (this);
-		}
-
-		protected virtual void Dispose (bool disposing)
-		{
-			if (handle != IntPtr.Zero) {
-				SkiaApi.sk_paint_delete (handle);
-				handle = IntPtr.Zero;
+			if (Handle != IntPtr.Zero) {
+				SkiaApi.sk_paint_delete (Handle);
 			}
-		}
 
-		~SKPaint()
-		{
-			Dispose (false);
+			base.Dispose (disposing);
 		}
-
+		
 		public bool IsAntialias {
 			get {
-				return SkiaApi.sk_paint_is_antialias (handle);
+				return SkiaApi.sk_paint_is_antialias (Handle);
 			}
 			set {
-				SkiaApi.sk_paint_set_antialias (handle, value);
+				SkiaApi.sk_paint_set_antialias (Handle, value);
 			}
 		}
 
 		public bool IsStroke {
 			get {
-				return SkiaApi.sk_paint_is_stroke (handle);
+				return SkiaApi.sk_paint_is_stroke (Handle);
 			}
 			set {
-				SkiaApi.sk_paint_set_stroke (handle, value);
+				SkiaApi.sk_paint_set_stroke (Handle, value);
 			}
 		}
 
 		public SKColor Color {
 			get {
-				return SkiaApi.sk_paint_get_color (handle);
+				return SkiaApi.sk_paint_get_color (Handle);
 			}
 			set {
-				SkiaApi.sk_paint_set_color (handle, value);
+				SkiaApi.sk_paint_set_color (Handle, value);
 			}
 		}
 		
 		public float StrokeWidth {
 			get {
-				return SkiaApi.sk_paint_get_stroke_width (handle);
+				return SkiaApi.sk_paint_get_stroke_width (Handle);
 			}
 			set {
-				SkiaApi.sk_paint_set_stroke_width (handle, value);
+				SkiaApi.sk_paint_set_stroke_width (Handle, value);
 			}
 		}
 
 		public float StrokeMiter {
 			get {
-				return SkiaApi.sk_paint_get_stroke_miter (handle);
+				return SkiaApi.sk_paint_get_stroke_miter (Handle);
 			}
 			set {
-				SkiaApi.sk_paint_set_stroke_miter (handle, value);
+				SkiaApi.sk_paint_set_stroke_miter (Handle, value);
 			}
 		}
 
 		public SKStrokeCap StrokeCap {
 			get {
-				return SkiaApi.sk_paint_get_stroke_cap (handle);
+				return SkiaApi.sk_paint_get_stroke_cap (Handle);
 			}
 			set {
-				SkiaApi.sk_paint_set_stroke_cap (handle, value);
+				SkiaApi.sk_paint_set_stroke_cap (Handle, value);
 			}
 		}
 
 		public SKStrokeJoin StrokeJoin {
 			get {
-				return SkiaApi.sk_paint_get_stroke_join (handle);
+				return SkiaApi.sk_paint_get_stroke_join (Handle);
 			}
 			set {
-				SkiaApi.sk_paint_set_stroke_join (handle, value);
+				SkiaApi.sk_paint_set_stroke_join (Handle, value);
 			}
 		}
 
 		public SKShader Shader {
 			get {
-				return new SKShader(SkiaApi.sk_paint_get_shader(handle));
+				return GetObject<SKShader>(SkiaApi.sk_paint_get_shader(Handle));
 			}
 			set {
-				SkiaApi.sk_paint_set_shader(handle, value == null ? IntPtr.Zero : value.handle);
+				SkiaApi.sk_paint_set_shader(Handle, value == null ? IntPtr.Zero : value.Handle);
 			}
 		}
 
 		public SKMaskFilter MaskFilter {
 			get {
-				return new SKMaskFilter(SkiaApi.sk_paint_get_maskfilter(handle));
+				return GetObject<SKMaskFilter>(SkiaApi.sk_paint_get_maskfilter(Handle));
 			}
 			set {
-				SkiaApi.sk_paint_set_maskfilter (handle, value == null ? IntPtr.Zero : value.handle);
+				SkiaApi.sk_paint_set_maskfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
 			}
 		}
 
 		public SKColorFilter ColorFilter {
 			get {
-				return new SKColorFilter(SkiaApi.sk_paint_get_colorfilter(handle));
+				return GetObject<SKColorFilter>(SkiaApi.sk_paint_get_colorfilter(Handle));
 			}
 			set {
-				SkiaApi.sk_paint_set_colorfilter (handle, value == null ? IntPtr.Zero : value.handle);
+				SkiaApi.sk_paint_set_colorfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
 			}
 		}
 		
 		public SKImageFilter ImageFilter {
 			get {
-				return new SKImageFilter(SkiaApi.sk_paint_get_imagefilter(handle));
+				return GetObject<SKImageFilter>(SkiaApi.sk_paint_get_imagefilter(Handle));
 			}
 			set {
-				SkiaApi.sk_paint_set_imagefilter(handle, value == null ? IntPtr.Zero : value.handle);
+				SkiaApi.sk_paint_set_imagefilter(Handle, value == null ? IntPtr.Zero : value.Handle);
 			}
 		}
 
 		public SKXferMode XferMode {
 			get {
-				return SkiaApi.sk_paint_get_xfermode_mode(handle);
+				return SkiaApi.sk_paint_get_xfermode_mode(Handle);
 			}
 			set {
-				SkiaApi.sk_paint_set_xfermode_mode (handle, value);
+				SkiaApi.sk_paint_set_xfermode_mode (Handle, value);
 			}
 		}
 
 		public SKTypeface Typeface {
 			get {
-				return new SKTypeface (SkiaApi.sk_paint_get_typeface (handle), owns: false);
+				return GetObject<SKTypeface> (SkiaApi.sk_paint_get_typeface (Handle));
 			}
 			set {
-				SkiaApi.sk_paint_set_typeface (handle, value == null ? IntPtr.Zero : value.handle);
+				SkiaApi.sk_paint_set_typeface (Handle, value == null ? IntPtr.Zero : value.Handle);
 			}
 		}
 
 		public float TextSize {
 			get {
-				return SkiaApi.sk_paint_get_textsize (handle);
+				return SkiaApi.sk_paint_get_textsize (Handle);
 			}
 			set {
-				SkiaApi.sk_paint_set_textsize (handle, value);
+				SkiaApi.sk_paint_set_textsize (Handle, value);
 			}
 		}
 
 		public SKTextAlign TextAlign {
 			get {
-				return SkiaApi.sk_paint_get_text_align (handle);
+				return SkiaApi.sk_paint_get_text_align (Handle);
 			}
 			set {
-				SkiaApi.sk_paint_set_text_align (handle, value);
+				SkiaApi.sk_paint_set_text_align (Handle, value);
 			}
 		}
 
 		public SKTextEncoding TextEncoding {
 			get {
-				return SkiaApi.sk_paint_get_text_encoding (handle);
+				return SkiaApi.sk_paint_get_text_encoding (Handle);
 			}
 			set {
-				SkiaApi.sk_paint_set_text_encoding (handle, value);
+				SkiaApi.sk_paint_set_text_encoding (Handle, value);
 			}
 		}
 
 		public float TextScaleX {
 			get {
-				return SkiaApi.sk_paint_get_text_scale_x (handle);
+				return SkiaApi.sk_paint_get_text_scale_x (Handle);
 			}
 			set {
-				SkiaApi.sk_paint_set_text_scale_x (handle, value);
+				SkiaApi.sk_paint_set_text_scale_x (Handle, value);
 			}
 		}
 
 		public float TextSkewX {
 			get {
-				return SkiaApi.sk_paint_get_text_skew_x (handle);
+				return SkiaApi.sk_paint_get_text_skew_x (Handle);
 			}
 			set {
-				SkiaApi.sk_paint_set_text_skew_x (handle, value);
+				SkiaApi.sk_paint_set_text_skew_x (Handle, value);
 			}
 		}
 

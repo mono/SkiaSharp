@@ -4,43 +4,31 @@
 // Author:
 //   Miguel de Icaza
 //
-// Copyright 2015 Xamarin Inc
+// Copyright 2016 Xamarin Inc
 //
 
 using System;
 
 namespace SkiaSharp
 {
-	public class SKPicture : IDisposable
+	public class SKPicture : SKObject
 	{
-		internal IntPtr handle;
-
 		internal SKPicture (IntPtr h)
+			: base (h)
 		{
-			handle = h;
 		}
-
-		public void Dispose ()
+		
+		protected override void Dispose (bool disposing)
 		{
-			Dispose (true);
-			GC.SuppressFinalize (this);
-		}
-
-		protected virtual void Dispose (bool disposing)
-		{
-			if (handle != IntPtr.Zero) {
-				SkiaApi.sk_picture_unref (handle);
-				handle = IntPtr.Zero;
+			if (Handle != IntPtr.Zero) {
+				SkiaApi.sk_picture_unref (Handle);
 			}
-		}
 
-		~SKPicture()
-		{
-			Dispose (false);
+			base.Dispose (disposing);
 		}
-
-		public uint UniqueId => SkiaApi.sk_picture_get_unique_id (handle);
-		public SKRect Bounds => SkiaApi.sk_picture_get_bounds (handle);
+		
+		public uint UniqueId => SkiaApi.sk_picture_get_unique_id (Handle);
+		public SKRect Bounds => SkiaApi.sk_picture_get_bounds (Handle);
 	}
 }
 

@@ -459,6 +459,10 @@ namespace SkiaSharp
 
 		// Streams
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static IntPtr sk_stream_read(sk_stream_t stream, IntPtr buffer, IntPtr size);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static IntPtr sk_stream_skip(sk_stream_t stream, IntPtr size);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static bool sk_stream_is_at_end(sk_stream_t stream);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SByte sk_stream_read_s8(sk_stream_t stream);
@@ -474,6 +478,20 @@ namespace SkiaSharp
 		public extern static UInt32 sk_stream_read_u32(sk_stream_t stream);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static bool sk_stream_read_bool(sk_stream_t stream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_stream_rewind(sk_stream_t stream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_stream_has_position(sk_stream_t stream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static IntPtr sk_stream_get_position(sk_stream_t stream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_stream_seek(sk_stream_t stream, IntPtr position);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_stream_move(sk_stream_t stream, long offset);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_stream_has_length(sk_stream_t stream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static IntPtr sk_stream_get_length(sk_stream_t stream);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_stream_filestream_t sk_filestream_new(string path);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]

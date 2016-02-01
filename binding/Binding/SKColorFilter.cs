@@ -4,13 +4,13 @@
 // Author:
 //   Matthew Leibowitz
 //
-// Copyright 2015 Xamarin Inc
+// Copyright 2016 Xamarin Inc
 //
 using System;
 
 namespace SkiaSharp
 {
-	public class SKColorFilter : IDisposable
+	public class SKColorFilter : SKObject
 	{
 		public const int MIN_CUBE_SIZE = 4;
 		public const int MAX_CUBE_SIZE = 64;
@@ -23,33 +23,21 @@ namespace SkiaSharp
 				(null != cubeData) && (cubeData.Size >= minMemorySize);
 		}
 
-		internal IntPtr handle;
-
 		internal SKColorFilter(IntPtr handle)
+			: base (handle)
 		{
-			this.handle = handle;
 		}
-
-		public void Dispose()
+		
+		protected override void Dispose(bool disposing)
 		{
-			Dispose(true);
-			GC.SuppressFinalize(this);
-		}
-
-		protected virtual void Dispose(bool disposing)
-		{
-			if (handle != IntPtr.Zero)
+			if (Handle != IntPtr.Zero)
 			{
-				SkiaApi.sk_colorfilter_unref(handle);
-				handle = IntPtr.Zero;
+				SkiaApi.sk_colorfilter_unref(Handle);
 			}
-		}
 
-		~SKColorFilter()
-		{
-			Dispose(false);
+			base.Dispose(disposing);
 		}
-
+		
 		public static SKColorFilter CreateXferMode(SKColor c, SKXferMode mode)
 		{
 			return new SKColorFilter(SkiaApi.sk_colorfilter_new_mode(c, mode));
@@ -66,7 +54,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException("outer");
 			if (inner == null)
 				throw new ArgumentNullException("inner");
-			return new SKColorFilter(SkiaApi.sk_colorfilter_new_compose(outer.handle, inner.handle));
+			return new SKColorFilter(SkiaApi.sk_colorfilter_new_compose(outer.Handle, inner.Handle));
 		}
 
 		public static SKColorFilter CreateColorCube(byte[] cubeData, int cubeDimension)
@@ -78,7 +66,7 @@ namespace SkiaSharp
 		{
 			if (!IsValid3DColorCube(cubeData, cubeDimension))
 				throw new ArgumentNullException("cubeData");
-			return new SKColorFilter(SkiaApi.sk_colorfilter_new_color_cube(cubeData.handle, cubeDimension));
+			return new SKColorFilter(SkiaApi.sk_colorfilter_new_color_cube(cubeData.Handle, cubeDimension));
 		}
 
 		public static SKColorFilter CreateColorMatrix(float[] matrix)

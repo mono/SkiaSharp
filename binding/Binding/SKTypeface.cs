@@ -4,69 +4,54 @@
 // Author:
 //   Miguel de Icaza
 //
-// Copyright 2015 Xamarin Inc
+// Copyright 2016 Xamarin Inc
 //
 using System;
 
 namespace SkiaSharp
 {
-	public class SKTypeface : IDisposable
+	public class SKTypeface : SKObject
 	{
-		internal IntPtr handle;
-		bool owns;
-
-		internal SKTypeface (IntPtr handle, bool owns)
+		internal SKTypeface (IntPtr handle)
+			: base (handle)
 		{
-			this.owns = owns;
-			this.handle = handle;
 		}
-
-		public void Dispose ()
+		
+		protected override void Dispose (bool disposing)
 		{
-			Dispose (true);
-			GC.SuppressFinalize (this);
-		}
-
-		protected virtual void Dispose (bool disposing)
-		{
-			if (handle != IntPtr.Zero) {
-				if (owns)
-					SkiaApi.sk_typeface_unref (handle);
-				handle = IntPtr.Zero;
+			if (Handle != IntPtr.Zero) {
+				SkiaApi.sk_typeface_unref (Handle);
 			}
-		}
 
-		~SKTypeface()
-		{
-			Dispose (false);
+			base.Dispose (disposing);
 		}
-
+		
 		public static SKTypeface FromFamilyName (string familyName, SKTypefaceStyle style = SKTypefaceStyle.Normal)
 		{
 			if (familyName == null)
 				throw new ArgumentNullException ("familyName");
-			return new SKTypeface (SkiaApi.sk_typeface_create_from_name (familyName, style), owns: true);
+			return new SKTypeface (SkiaApi.sk_typeface_create_from_name (familyName, style));
 		}
 
 		public static SKTypeface FromTypeface (SKTypeface typeface, SKTypefaceStyle style = SKTypefaceStyle.Normal)
 		{
 			if (typeface == null)
 				throw new ArgumentNullException ("typeface");
-			return new SKTypeface (SkiaApi.sk_typeface_create_from_typeface (typeface.handle, style), owns: true);
+			return new SKTypeface (SkiaApi.sk_typeface_create_from_typeface (typeface.Handle, style));
 		}
 
 		public static SKTypeface FromFile (string path, int index = 0)
 		{
 			if (path == null)
 				throw new ArgumentNullException ("path");
-			return new SKTypeface (SkiaApi.sk_typeface_create_from_file (path, index), owns: true);
+			return new SKTypeface (SkiaApi.sk_typeface_create_from_file (path, index));
 		}
 
 		public static SKTypeface FromStream (SKStreamAsset stream, int index = 0)
 		{
 			if (stream == null)
 				throw new ArgumentNullException ("stream");
-			return new SKTypeface (SkiaApi.sk_typeface_create_from_stream (stream.handle, index), owns: true);
+			return new SKTypeface (SkiaApi.sk_typeface_create_from_stream (stream.Handle, index));
 		}
 
 		public int CountGlyphs (string str)
@@ -76,7 +61,7 @@ namespace SkiaSharp
 			
 			unsafe {
 				fixed (char *p = str) {
-					return  SkiaApi.sk_typeface_chars_to_glyphs (handle, (IntPtr)p, SKEncoding.Utf16, IntPtr.Zero, str.Length);
+					return  SkiaApi.sk_typeface_chars_to_glyphs (Handle, (IntPtr)p, SKEncoding.Utf16, IntPtr.Zero, str.Length);
 				}
 			}
 		}
@@ -86,7 +71,7 @@ namespace SkiaSharp
 			if (str == IntPtr.Zero)
 				throw new ArgumentNullException ("str");
 
-			return  SkiaApi.sk_typeface_chars_to_glyphs (handle, str, encoding, IntPtr.Zero, strLen);
+			return  SkiaApi.sk_typeface_chars_to_glyphs (Handle, str, encoding, IntPtr.Zero, strLen);
 		}
 
 		public int CharsToGlyphs (string chars, out ushort [] glyphs)
@@ -97,11 +82,11 @@ namespace SkiaSharp
 
 			unsafe {
 				fixed (char *p = chars){
-					var n = SkiaApi.sk_typeface_chars_to_glyphs (handle, (IntPtr) p, SKEncoding.Utf16, IntPtr.Zero, chars.Length);
+					var n = SkiaApi.sk_typeface_chars_to_glyphs (Handle, (IntPtr) p, SKEncoding.Utf16, IntPtr.Zero, chars.Length);
 					glyphs = new ushort[n];
 
 					fixed (ushort *gp = &glyphs [0]){
-						return SkiaApi.sk_typeface_chars_to_glyphs (handle, (IntPtr) p, SKEncoding.Utf16, (IntPtr) gp, n);
+						return SkiaApi.sk_typeface_chars_to_glyphs (Handle, (IntPtr) p, SKEncoding.Utf16, (IntPtr) gp, n);
 					}
 				}
 			}
@@ -114,11 +99,11 @@ namespace SkiaSharp
 
 
 			unsafe {
-				var n = SkiaApi.sk_typeface_chars_to_glyphs (handle, str, encoding, IntPtr.Zero, strlen);
+				var n = SkiaApi.sk_typeface_chars_to_glyphs (Handle, str, encoding, IntPtr.Zero, strlen);
 				glyphs = new ushort[n];
 
 				fixed (ushort *gp = &glyphs [0]){
-					return SkiaApi.sk_typeface_chars_to_glyphs (handle, str, SKEncoding.Utf16, (IntPtr) gp, n);
+					return SkiaApi.sk_typeface_chars_to_glyphs (Handle, str, SKEncoding.Utf16, (IntPtr) gp, n);
 				}
 			}
 		}

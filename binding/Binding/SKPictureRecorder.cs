@@ -4,49 +4,42 @@
 // Author:
 //   Miguel de Icaza
 //
-// Copyright 2015 Xamarin Inc
+// Copyright 2016 Xamarin Inc
 //
 
 using System;
 
 namespace SkiaSharp
 {
-	public class SKPictureRecorder : IDisposable
-	{
-		internal IntPtr handle;
-
-		public void Dispose ()
+	public class SKPictureRecorder : SKObject
+	{		
+		protected override void Dispose (bool disposing)
 		{
-			Dispose (true);
-			GC.SuppressFinalize (this);
-		}
-
-		protected virtual void Dispose (bool disposing)
-		{
-			if (handle != IntPtr.Zero) {
-				SkiaApi.sk_picture_recorder_delete (handle);
-				handle = IntPtr.Zero;
+			if (Handle != IntPtr.Zero) {
+				SkiaApi.sk_picture_recorder_delete (Handle);
 			}
-		}
 
-		~SKPictureRecorder()
+			base.Dispose (disposing);
+		}
+		
+		public SKPictureRecorder (IntPtr handle)
+			: base (handle)
 		{
-			Dispose (false);
 		}
 
 		public SKPictureRecorder ()
-		{ 
-			handle = SkiaApi.sk_picture_recorder_new ();
+			: this (SkiaApi.sk_picture_recorder_new ())
+		{
 		}
 
 		public SKCanvas BeginRecording (SKRect rect)
 		{
-			return new SKCanvas (SkiaApi.sk_picture_recorder_begin_recording (handle, ref rect));
+			return GetObject<SKCanvas> (SkiaApi.sk_picture_recorder_begin_recording (Handle, ref rect));
 		}
 
 		public SKPicture EndRecording ()
 		{
-			return new SKPicture (SkiaApi.sk_picture_recorder_end_recording (handle));
+			return GetObject<SKPicture> (SkiaApi.sk_picture_recorder_end_recording (Handle));
 		}
 	}
 }

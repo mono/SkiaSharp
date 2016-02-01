@@ -4,7 +4,7 @@
 // Author:
 //   Matthew Leibowitz
 //
-// Copyright 2015 Xamarin Inc
+// Copyright 2016 Xamarin Inc
 //
 using System;
 using System.Runtime.InteropServices;
@@ -86,9 +86,9 @@ namespace SkiaSharp
 		}
 
 		public SKManagedStream (Stream managedStream, bool disposeManagedStream)
-			: base (SkiaApi.sk_managedstream_new (), true)
+			: base (SkiaApi.sk_managedstream_new ())
 		{
-			managedStreams.Add (handle, new WeakReference<SKManagedStream>(this));
+			managedStreams.Add (Handle, new WeakReference<SKManagedStream>(this));
 
 			stream = managedStream;
 			disposeStream = disposeManagedStream;
@@ -96,8 +96,8 @@ namespace SkiaSharp
 
 		protected override void Dispose (bool disposing)
 		{
-			if (managedStreams.ContainsKey(handle)) {
-				managedStreams.Remove (handle);
+			if (managedStreams.ContainsKey(Handle)) {
+				managedStreams.Remove (Handle);
 			}
 
 			if (disposeStream && stream != null) {
@@ -181,7 +181,7 @@ namespace SkiaSharp
 		{
 			var managedStream = AsManagedStream (managedStreamPtr);
 			var newStream = new SKManagedStream (managedStream.stream);
-			return newStream.handle;
+			return newStream.Handle;
 		}
 		#if __IOS__
 		[MonoPInvokeCallback(typeof(destroy_delegate))]
