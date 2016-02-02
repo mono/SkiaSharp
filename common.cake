@@ -617,6 +617,11 @@ void DefineDefaultTasks ()
 	{
 		Task ("Default").IsDependentOn ("libs");
 	}
+
+	if (!Tasks.Where (tsk => tsk.Name == "CI").Any ())
+	{
+		Task ("CI").IsDependentOn ("libs").IsDependentOn ("component").IsDependentOn ("tests").IsDependentOn ("samples");
+	}
 }
 
 
