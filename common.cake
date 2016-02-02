@@ -21,6 +21,18 @@ FilePath GetCakeToolPath ()
 	return new FilePath (p.Modules[0].FileName);
 }
 
+FilePath GetNUnitConsoleToolPath ()
+{
+	var appRoot = Context.Environment.GetApplicationRoot ();
+
+	var consolePath = appRoot.Combine ("../").CombineWithFilePath ("NUnit.Console/tools/nunit3-console.exe");
+
+	if (FileExists (consolePath))
+		return consolePath;
+
+	return GetFiles ("../../../**/nunit3-console.exe").FirstOrDefault ();
+}
+
 FilePath GetNugetToolPath ()
 {
 	if (IsRunningOnUnix ())
@@ -97,9 +109,11 @@ CakeStealer.NuGetSources = NUGET_RESTORE_SOURCES;
 CakeStealer.NugetToolPath = GetNugetToolPath ();
 CakeStealer.XamarinComponentToolPath = GetXamarinComponentToolPath ();
 CakeStealer.CakeToolPath = GetCakeToolPath ();
+CakeStealer.NUnitConsoleToolPath = GetNUnitConsoleToolPath ();
 CakeStealer.GenApiToolPath = GetGenApiToolPath ();
 
 Information ("Cake.exe ToolPath: {0}", CakeStealer.CakeToolPath);
+Information ("Cake.exe NUnitConsoleToolPath: {0}", CakeStealer.NUnitConsoleToolPath);
 Information ("NuGet.exe ToolPath: {0}", CakeStealer.NugetToolPath);
 Information ("Xamarin-Component.exe ToolPath: {0}", CakeStealer.XamarinComponentToolPath);
 Information ("genapi.exe ToolPath: {0}", CakeStealer.GenApiToolPath);
@@ -120,6 +134,7 @@ public class CakeStealer
 	static public FilePath NugetToolPath { get;set; }
 	static public FilePath XamarinComponentToolPath { get; set; }
 	static public FilePath CakeToolPath { get;set; }
+	static public FilePath NUnitConsoleToolPath { get;set; }
 	static public FilePath GenApiToolPath { get;set; }
 }
 
@@ -168,7 +183,7 @@ public class DefaultSolutionBuilder : CakeStealer, ISolutionBuilder
 	public Action PreBuildAction { get;set; }
 	public Action PostBuildAction { get;set; }
 
-	protected virtual bool CanBuildOnPlatform {
+	public virtual bool CanBuildOnPlatform {
 		get {
 			if (CakeContext.IsRunningOnWindows () && !IsWindowsCompatible)
 				return false;
@@ -332,16 +347,50 @@ public class WpSolutionBuilder : DefaultSolutionBuilder
 	}
 }
 
+public class SolutionTestRunner : CakeStealer
+{
+    public DefaultSolutionBuilder SolutionBuilder { get; set; }
+    
+    public FilePath TestAssembly { get; set; }
+    
+    public DirectoryPath TestDiectory { get; set; }
+    
+    public void BuildSolution ()
+    {
+        SolutionBuilder.BuildSolution ();
+		SolutionBuilder.CopyOutput ();
+    }
+    
+    public void RunTests ()
+    {
+		if (!SolutionBuilder.CanBuildOnPlatform) {
+			CakeContext.Information ("Solution is not configured to run test on this platform: {0}", SolutionBuilder.SolutionPath);
+			return;
+		}
+
+        var dir = TestDiectory == null ? TestAssembly.GetDirectory() : TestDiectory;
+        var result = CakeContext.StartProcess(NUnitConsoleToolPath, new ProcessSettings {
+            Arguments = string.Format ("\"{0}\" --work=\"{1}\"", TestAssembly, dir),
+        });
+        
+        if (result != 0) {
+            throw new Exception ("NUnit test failed with error: " + result);
+        }
+    }
+}
+
 class CakeSpec
 {
 	static CakeSpec ()
 	{
 		Libs = new ISolutionBuilder [] {};
+		Tests = new SolutionTestRunner [] {};
 		Samples = new ISolutionBuilder [] {};
 		NuSpecs = new string [] {};
 	}
 
 	static public ISolutionBuilder [] Libs { get; set; }
+	static public SolutionTestRunner [] Tests { get; set; }
 	static public ISolutionBuilder [] Samples { get; set; }
 	static public string [] NuSpecs { get; set; }
 }
@@ -480,6 +529,19 @@ void DefineDefaultTasks ()
 	if (!Tasks.Where (tsk => tsk.Name == "libs").Any ())
 	{
 		Task ("libs").IsDependentOn ("externals").IsDependentOn ("libs-base");
+	}
+
+	Task ("tests-base").Does (() => 
+	{
+		foreach (var t in CakeSpec.Tests) {
+			t.BuildSolution ();
+			t.RunTests ();
+		}	
+	});
+
+	if (!Tasks.Where (tsk => tsk.Name == "tests").Any ())
+	{
+		Task ("tests").IsDependentOn ("libs").IsDependentOn ("tests-base");
 	}
 
 	Task ("samples-base").Does (() => 

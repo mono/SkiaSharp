@@ -115,6 +115,27 @@ CakeSpec.Samples = new ISolutionBuilder [] {
     },
 };
 
+CakeSpec.Tests = new SolutionTestRunner [] {
+    new SolutionTestRunner {
+        SolutionBuilder = new DefaultSolutionBuilder { 
+            IsWindowsCompatible = true,
+            IsMacCompatible = false,
+            SolutionPath = "./tests/SkiaSharp.WindowsDesktop.Tests/SkiaSharp.WindowsDesktop.Tests.sln",
+            Platform = "x86",
+        },
+        TestAssembly = "./tests/SkiaSharp.WindowsDesktop.Tests/bin/x86/Release/SkiaSharp.WindowsDesktop.Tests.dll",
+    },
+    new SolutionTestRunner {
+        SolutionBuilder = new DefaultSolutionBuilder { 
+            IsWindowsCompatible = true,
+            IsMacCompatible = false,
+            SolutionPath = "./tests/SkiaSharp.WindowsDesktop.Tests/SkiaSharp.WindowsDesktop.Tests.sln",
+            Platform = "x64",
+        },
+        TestAssembly = "./tests/SkiaSharp.WindowsDesktop.Tests/bin/x64/Release/SkiaSharp.WindowsDesktop.Tests.dll",
+    },
+};
+
 CakeSpec.NuSpecs = new [] {
 	"./nuget/Xamarin.SkiaSharp.nuspec"
 };
@@ -136,17 +157,10 @@ Task ("externals")
     
     FilePath input = "binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll";
     var libPath = "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/4.5/,.";
-    if (IsRunningOnUnix ()) {
-        StartProcess ("mono", new ProcessSettings {
-            Arguments = string.Format("\"{0}\" -libPath:{3} -out \"{1}\" \"{2}\"", CakeStealer.GenApiToolPath, input.GetFilename () + ".cs", input.GetFilename (), libPath),
-            WorkingDirectory = input.GetDirectory ().FullPath,
-        });
-    } else {
-        StartProcess (CakeStealer.GenApiToolPath, new ProcessSettings {
-            Arguments = string.Format("-libPath:{2} -out \"{0}\" \"{1}\"", input.GetFilename () + ".cs", input.GetFilename (), libPath),
-            WorkingDirectory = input.GetDirectory ().FullPath,
-        });
-    }
+    StartProcess (CakeStealer.GenApiToolPath, new ProcessSettings {
+        Arguments = string.Format("-libPath:{2} -out \"{0}\" \"{1}\"", input.GetFilename () + ".cs", input.GetFilename (), libPath),
+        WorkingDirectory = input.GetDirectory ().FullPath,
+    });
     CopyFile ("binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll.cs", "binding/SkiaSharp.Portable/SkiaPortable.cs");
 });
 
