@@ -41,11 +41,9 @@ namespace SkiaSharp
 #elif __ANDROID__
 		const string SKIA = "libskia_android.so";
 #elif XAMARIN_MAC
-		const string SKIA = "liblibskia_osx.dylib";
-#elif WINDOWS_DESKTOP
-		const string SKIA = "libskia_windows.dll";
-#elif MAC_DESKTOP
-		const string SKIA = "liblibskia_osx.dylib";
+		const string SKIA = "libskia_osx.dylib";
+#elif DESKTOP
+		const string SKIA = "libskia_windows.dll"; // redirected using .dll.config to 'libskia_osx.dylib' on OS X
 #else
 		const string SKIA = "path_to_native.library";
 #endif

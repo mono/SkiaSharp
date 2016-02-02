@@ -54,11 +54,19 @@ CakeSpec.Libs = new ISolutionBuilder [] {
 				ToDirectory = "./output/portable/"
 			},
 			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.MacDesktop/bin/Release/SkiaSharp.dll",
+				FromFile = "./binding/SkiaSharp.Desktop/bin/AnyCPU/Release/SkiaSharp.dll",
 				ToDirectory = "./output/mac/"
 			},
 			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.MacDesktop/bin/Release/SkiaSharp.MacDesktop.targets",
+				FromFile = "./binding/SkiaSharp.Desktop/bin/AnyCPU/Release/SkiaSharp.Desktop.targets",
+				ToDirectory = "./output/mac/"
+			},
+			new OutputFileCopy {
+				FromFile = "./binding/SkiaSharp.Desktop/bin/AnyCPU/Release/SkiaSharp.dll.config",
+				ToDirectory = "./output/mac/"
+			},
+			new OutputFileCopy {
+				FromFile = "./binding/SkiaSharp.Desktop/bin/AnyCPU/Release/mac/libskia_osx.dylib",
 				ToDirectory = "./output/mac/"
 			},
 		}
@@ -70,15 +78,15 @@ CakeSpec.Libs = new ISolutionBuilder [] {
         IsMacCompatible = false,
 		OutputFiles = new [] { 
 			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.WindowsDesktop/bin/x86/Release/SkiaSharp.dll",
+				FromFile = "./binding/SkiaSharp.Desktop/bin/x86/Release/SkiaSharp.dll",
 				ToDirectory = "./output/windows/x86/"
 			},
 			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.WindowsDesktop/bin/x86/Release/SkiaSharp.pdb",
+				FromFile = "./binding/SkiaSharp.Desktop/bin/x86/Release/SkiaSharp.pdb",
 				ToDirectory = "./output/windows/x86/"
 			},
 			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.WindowsDesktop/bin/x86/Release/SkiaSharp.WindowsDesktop.targets",
+				FromFile = "./binding/SkiaSharp.Desktop/bin/x86/Release/SkiaSharp.Desktop.targets",
 				ToDirectory = "./output/windows/x86/"
 			},
 		}
@@ -90,15 +98,15 @@ CakeSpec.Libs = new ISolutionBuilder [] {
         IsMacCompatible = false,
 		OutputFiles = new [] { 
 			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.WindowsDesktop/bin/x64/Release/SkiaSharp.dll",
+				FromFile = "./binding/SkiaSharp.Desktop/bin/x64/Release/SkiaSharp.dll",
 				ToDirectory = "./output/windows/x64/"
 			},
 			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.WindowsDesktop/bin/x64/Release/SkiaSharp.pdb",
+				FromFile = "./binding/SkiaSharp.Desktop/bin/x64/Release/SkiaSharp.pdb",
 				ToDirectory = "./output/windows/x64/"
 			},
 			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.WindowsDesktop/bin/x64/Release/SkiaSharp.WindowsDesktop.targets",
+				FromFile = "./binding/SkiaSharp.Desktop/bin/x64/Release/SkiaSharp.Desktop.targets",
 				ToDirectory = "./output/windows/x64/"
 			},
 		}
@@ -124,31 +132,33 @@ CakeSpec.Samples = new ISolutionBuilder [] {
 };
 
 CakeSpec.Tests = new SolutionTestRunner [] {
+    // Windows (x86 and x64)
     new SolutionTestRunner {
         SolutionBuilder = new DefaultSolutionBuilder { 
             IsWindowsCompatible = true,
             IsMacCompatible = false,
-            SolutionPath = "./tests/SkiaSharp.WindowsDesktop.Tests/SkiaSharp.WindowsDesktop.Tests.sln",
+            SolutionPath = "./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln",
             Platform = "x86",
         },
-        TestAssembly = "./tests/SkiaSharp.WindowsDesktop.Tests/bin/x86/Release/SkiaSharp.WindowsDesktop.Tests.dll",
+        TestAssembly = "./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/SkiaSharp.Desktop.Tests.dll",
     },
     new SolutionTestRunner {
         SolutionBuilder = new DefaultSolutionBuilder { 
             IsWindowsCompatible = true,
             IsMacCompatible = false,
-            SolutionPath = "./tests/SkiaSharp.WindowsDesktop.Tests/SkiaSharp.WindowsDesktop.Tests.sln",
+            SolutionPath = "./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln",
             Platform = "x64",
         },
-        TestAssembly = "./tests/SkiaSharp.WindowsDesktop.Tests/bin/x64/Release/SkiaSharp.WindowsDesktop.Tests.dll",
+        TestAssembly = "./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Desktop.Tests.dll",
     },
+    // Mac OSX (Any CPU)
     new SolutionTestRunner {
         SolutionBuilder = new DefaultSolutionBuilder { 
             IsWindowsCompatible = false,
             IsMacCompatible = true,
-            SolutionPath = "./tests/SkiaSharp.MacDesktop.Tests/SkiaSharp.MacDesktop.Tests.sln",
+            SolutionPath = "./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln",
         },
-        TestAssembly = "./tests/SkiaSharp.MacDesktop.Tests/bin/Release/SkiaSharp.MacDesktop.Tests.dll",
+        TestAssembly = "./tests/SkiaSharp.Desktop.Tests/bin/Release/SkiaSharp.Desktop.Tests.dll",
     },
 };
 
@@ -162,8 +172,8 @@ Task ("libs")
     .Does (() => 
 {
     if (IsRunningOnUnix ()) {
-        CopyFileToDirectory ("./native-builds/lib/osx/liblibskia_osx.dylib", "./output/osx/");
-        CopyFileToDirectory ("./native-builds/lib/osx/liblibskia_osx.dylib", "./output/mac/");
+        CopyFileToDirectory ("./native-builds/lib/osx/libskia_osx.dylib", "./output/osx/");
+        CopyFileToDirectory ("./native-builds/lib/osx/libskia_osx.dylib", "./output/mac/");
     }
     if (IsRunningOnWindows ()) {
         CopyFileToDirectory ("./native-builds/lib/windows/x86/libskia_windows.dll", "./output/windows/x86/");
@@ -262,7 +272,7 @@ Task ("externals-windows")
 Task ("externals-osx")
     .WithCriteria (IsRunningOnUnix ())
     .WithCriteria (
-        !FileExists ("native-builds/lib/osx/liblibskia_osx.dylib"))
+        !FileExists ("native-builds/lib/osx/libskia_osx.dylib"))
     .Does (() =>  
 {
     var buildArch = new Action<string> ((arch) => {
@@ -277,7 +287,7 @@ Task ("externals-osx")
             CreateDirectory ("native-builds/lib/osx/" + arch);
         }
         CopyDirectory ("native-builds/libskia_osx/build/Release/", "native-builds/lib/osx/" + arch);
-        RunInstallNameTool ("native-builds/lib/osx/" + arch, "lib/liblibskia_osx.dylib", "@loader_path/liblibskia_osx.dylib", "liblibskia_osx.dylib");
+        RunInstallNameTool ("native-builds/lib/osx/" + arch, "lib/libskia_osx.dylib", "@loader_path/libskia_osx.dylib", "libskia_osx.dylib");
     });
     
     // set up the gyp environment variables
@@ -290,9 +300,9 @@ Task ("externals-osx")
     buildArch ("x86_64");
     
     // create the fat dylib
-    RunLipo ("native-builds/lib/osx/", "liblibskia_osx.dylib", 
-        "i386/liblibskia_osx.dylib", 
-        "x86_64/liblibskia_osx.dylib");
+    RunLipo ("native-builds/lib/osx/", "libskia_osx.dylib", 
+        "i386/libskia_osx.dylib", 
+        "x86_64/libskia_osx.dylib");
 });
 Task ("externals-ios")
     .WithCriteria (IsRunningOnUnix ())
