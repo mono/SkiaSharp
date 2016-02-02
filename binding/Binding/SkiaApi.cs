@@ -44,8 +44,10 @@ namespace SkiaSharp
 		const string SKIA = "liblibskia_osx.dylib";
 #elif WINDOWS_DESKTOP
 		const string SKIA = "libskia_windows.dll";
+#elif MAC_DESKTOP
+		const string SKIA = "liblibskia_osx.dylib";
 #else
-		const string SKIA = "/tmp/libskia.dylib";
+		const string SKIA = "path_to_native.library";
 #endif
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]

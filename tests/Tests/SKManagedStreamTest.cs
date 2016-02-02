@@ -1,14 +1,9 @@
-﻿using NUnit.Framework;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
+﻿using System;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using NUnit.Framework;
 
-namespace SkiaSharp.WindowsDesktop.Tests
+namespace SkiaSharp.Tests
 {
 	[TestFixture]
 	public class SKManagedStreamTest : SKTest

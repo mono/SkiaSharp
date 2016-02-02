@@ -53,6 +53,14 @@ CakeSpec.Libs = new ISolutionBuilder [] {
 				FromFile = "./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll",
 				ToDirectory = "./output/portable/"
 			},
+			new OutputFileCopy {
+				FromFile = "./binding/SkiaSharp.MacDesktop/bin/Release/SkiaSharp.dll",
+				ToDirectory = "./output/mac/"
+			},
+			new OutputFileCopy {
+				FromFile = "./binding/SkiaSharp.MacDesktop/bin/Release/SkiaSharp.MacDesktop.targets",
+				ToDirectory = "./output/mac/"
+			},
 		}
 	},	
 	new DefaultSolutionBuilder {
@@ -134,11 +142,36 @@ CakeSpec.Tests = new SolutionTestRunner [] {
         },
         TestAssembly = "./tests/SkiaSharp.WindowsDesktop.Tests/bin/x64/Release/SkiaSharp.WindowsDesktop.Tests.dll",
     },
+    new SolutionTestRunner {
+        SolutionBuilder = new DefaultSolutionBuilder { 
+            IsWindowsCompatible = false,
+            IsMacCompatible = true,
+            SolutionPath = "./tests/SkiaSharp.MacDesktop.Tests/SkiaSharp.MacDesktop.Tests.sln",
+        },
+        TestAssembly = "./tests/SkiaSharp.MacDesktop.Tests/bin/Release/SkiaSharp.MacDesktop.Tests.dll",
+    },
 };
 
 CakeSpec.NuSpecs = new [] {
 	"./nuget/Xamarin.SkiaSharp.nuspec"
 };
+
+Task ("libs")
+    .IsDependentOn ("externals")
+    .IsDependentOn ("libs-base")
+    .Does (() => 
+{
+    if (IsRunningOnUnix ()) {
+        CopyFileToDirectory ("./native-builds/lib/osx/liblibskia_osx.dylib", "./output/osx/");
+        CopyFileToDirectory ("./native-builds/lib/osx/liblibskia_osx.dylib", "./output/mac/");
+    }
+    if (IsRunningOnWindows ()) {
+        CopyFileToDirectory ("./native-builds/lib/windows/x86/libskia_windows.dll", "./output/windows/x86/");
+        CopyFileToDirectory ("./native-builds/lib/windows/x86/libskia_windows.pdb", "./output/windows/x86/");
+        CopyFileToDirectory ("./native-builds/lib/windows/x64/libskia_windows.dll", "./output/windows/x64/");
+        CopyFileToDirectory ("./native-builds/lib/windows/x64/libskia_windows.pdb", "./output/windows/x64/");
+    }
+});
 
 
 Task ("externals")
@@ -148,6 +181,10 @@ Task ("externals")
     .IsDependentOn ("externals-android")
     .Does (() => 
 {
+    // copy all the native files into the output
+    CopyDirectory ("./native-builds/lib/", "./output/native/");
+    
+    // build the dummy project
     var generic = new DefaultSolutionBuilder {
 		SolutionPath = "binding/SkiaSharp.Generic.sln",
         IsWindowsCompatible = true,
@@ -155,6 +192,7 @@ Task ("externals")
 	};
 	generic.BuildSolution ();
     
+    // generate the PCL
     FilePath input = "binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll";
     var libPath = "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/4.5/,.";
     StartProcess (CakeStealer.GenApiToolPath, new ProcessSettings {

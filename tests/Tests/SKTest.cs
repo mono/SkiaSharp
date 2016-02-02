@@ -1,13 +1,9 @@
-﻿using NUnit.Framework;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using NUnit.Framework;
 
-namespace SkiaSharp.WindowsDesktop.Tests
+namespace SkiaSharp.Tests
 {
 	[TestFixture]
 	public abstract class SKTest
@@ -34,7 +30,7 @@ namespace SkiaSharp.WindowsDesktop.Tests
 		{
 			var data = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
 
-			using (var surface = SKSurface.Create(width, height, SKColorType.Bgra_8888, SKAlphaType.Premul, data.Scan0, width * 4))
+			using (var surface = SKSurface.Create(width, height, SKColorType.N_32, SKAlphaType.Premul, data.Scan0, data.Stride))
 			{
 				draw(surface);
 			}
