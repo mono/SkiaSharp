@@ -25,6 +25,7 @@ void** KeepSkiaCSymbols ()
         (void*)sk_filestream_new,
         (void*)sk_managedstream_new,
         (void*)sk_bitmap_new,
+        (void*)sk_force_linking,
     };
     return ret;
 }

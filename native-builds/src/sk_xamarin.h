@@ -9,8 +9,21 @@
 // DO NOT USE -- FOR INTERNAL TESTING ONLY
 
 
+#ifndef sk_xamarin_DEFINED
+#define sk_xamarin_DEFINED
+
+#include "sk_types.h"
+
+SK_C_PLUS_PLUS_BEGIN_GUARD
+
 #if defined(_WIN32)
 #  define SK_X_API __declspec(dllexport)
 #else
 #  define SK_X_API __attribute__((visibility("default")))
+#endif
+
+SK_X_API void sk_force_linking ();
+
+SK_C_PLUS_PLUS_END_GUARD
+
 #endif

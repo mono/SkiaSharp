@@ -77,23 +77,13 @@ LOCAL_MODULE := libskia_sfnt
 LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_sfnt.a
 include $(PREBUILT_STATIC_LIBRARY)
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := libpng_static_neon
-LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libpng_static_neon.a
-include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := libcpu_features
 LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libcpu_features.a
 include $(PREBUILT_STATIC_LIBRARY)
 
-ifeq ($(TARGET_ARCH_ABI),x86)
-  BUILD_FOR_X86 = true
-else ifeq ($(TARGET_ARCH_ABI),x86_64)
-  BUILD_FOR_X86 = true
-endif
-
-ifeq ($(BUILD_FOR_X86),true)
+ifneq (,$(filter x86 x86_64,$(TARGET_ARCH_ABI)))
   include $(CLEAR_VARS)
   LOCAL_MODULE := libskia_opts_avx
   LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_avx.a
@@ -116,3 +106,57 @@ ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
   LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_neon.a
   include $(PREBUILT_STATIC_LIBRARY)
 endif
+
+ifneq (,$(filter armeabi-v7a arm64-v8a,$(TARGET_ARCH_ABI)))
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libpng_static_neon
+  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libpng_static_neon.a
+  include $(PREBUILT_STATIC_LIBRARY)
+  
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libwebp_dsp_neon
+  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libwebp_dsp_neon.a
+  include $(PREBUILT_STATIC_LIBRARY)
+endif
+
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libjpeg-turbo
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libjpeg-turbo.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libwebp_dec
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libwebp_dec.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libwebp_demux
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libwebp_demux.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libwebp_dsp
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libwebp_dsp.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libwebp_dsp_enc
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libwebp_dsp_enc.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libwebp_enc
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libwebp_enc.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libwebp_utils
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libwebp_utils.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libgiflib
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libgiflib.a
+include $(PREBUILT_STATIC_LIBRARY)
+

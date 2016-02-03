@@ -275,7 +275,10 @@ Task ("externals-osx")
         !FileExists ("native-builds/lib/osx/libskia_osx.dylib"))
     .Does (() =>  
 {
-    var buildArch = new Action<string> ((arch) => {
+    var buildArch = new Action<string, string> ((arch, skiaArch) => {
+        SetEnvironmentVariable ("GYP_DEFINES", "skia_arch_type='" + skiaArch + "'");
+        RunGyp ();
+        
         XCodeBuild (new XCodeBuildSettings {
             Project = "native-builds/libskia_osx/libskia_osx.xcodeproj",
             Target = "libskia_osx",
@@ -294,10 +297,8 @@ Task ("externals-osx")
     AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
     SetEnvironmentVariable ("GYP_GENERATORS", "ninja,xcode");
     
-    RunGyp ();
-    
-    buildArch ("i386");
-    buildArch ("x86_64");
+    buildArch ("i386", "x86");
+    buildArch ("x86_64", "x86_64");
     
     // create the fat dylib
     RunLipo ("native-builds/lib/osx/", "libskia_osx.dylib", 
@@ -366,11 +367,6 @@ Task ("externals-android")
             Arguments = "-d " + arch + " \"skia_lib\"",
             WorkingDirectory = SKIA_PATH.FullPath,
         });
-
-        if (!DirectoryExists ("native-builds/lib/android/" + folder)) {
-            CreateDirectory ("native-builds/lib/android/" + folder);
-        }
-        CopyFileToDirectory (SKIA_PATH.CombineWithFilePath ("out/config/android-" + arch + "/Release/lib/libskia_android.so"), "native-builds/lib/android/" + folder);
     });
     
     // set up the gyp environment variables
@@ -393,6 +389,13 @@ Task ("externals-android")
         Arguments = "",
         WorkingDirectory = ROOT_PATH.Combine ("native-builds/libskia_android").FullPath,
     }); 
+
+    foreach (var folder in new [] { "x86", "x86_64", "armeabi", "armeabi-v7a", "arm64-v8a" }) {
+        if (!DirectoryExists ("native-builds/lib/android/" + folder)) {
+            CreateDirectory ("native-builds/lib/android/" + folder);
+        }
+        CopyFileToDirectory ("native-builds/libskia_android/libs/" + folder + "/libskia_android.so", "native-builds/lib/android/" + folder);
+    }
 });
 
 Task ("clean")

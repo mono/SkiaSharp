@@ -1,6 +1,7 @@
 
 #include "sk_xamarin.h"
 
+#include "../images/SkForceLinking.h"
 
 #ifdef NEED_INIT_NEON
 
@@ -9,3 +10,7 @@ namespace SkOpts {
 }
 
 #endif
+
+void sk_force_linking () {
+    SkForceLinking(false);
+}
