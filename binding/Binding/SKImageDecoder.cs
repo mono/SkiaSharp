@@ -16,6 +16,9 @@ namespace SkiaSharp
 		public SKImageDecoder(SKStreamRewindable stream)
 			: this(SkiaApi.sk_imagedecoder_factory(stream.Handle))
 		{
+			if (Handle == IntPtr.Zero) {
+				throw new ArgumentException ("Unable to find a decoder for the sream.", "stream");
+			}
 		}
 
 		internal SKImageDecoder(IntPtr handle)
