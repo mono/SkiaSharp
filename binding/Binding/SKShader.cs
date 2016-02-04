@@ -46,9 +46,9 @@ namespace SkiaSharp
 			return new SKShader (SkiaApi.sk_shader_new_bitmap (src.Handle, tmx, tmy, ref localMatrix));
 		}
 
-		public static SKShader CreateLocalMatrix (SKShader shader)
+		public static SKShader CreateColorFilter (SKShader shader, SKColorFilter filter)
 		{
-			return new SKShader (SkiaApi.sk_shader_new_local_matrix (shader.Handle, IntPtr.Zero));
+			return new SKShader (SkiaApi.sk_shader_new_color_filter (shader.Handle, filter.Handle));
 		}
 
 		public static SKShader CreateLocalMatrix (SKShader shader, SKMatrix localMatrix)

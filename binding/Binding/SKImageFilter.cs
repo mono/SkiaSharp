@@ -169,13 +169,6 @@ namespace SkiaSharp
 			return new SKImageFilter(SkiaApi.sk_imagefilter_new_picture_for_localspace(picture.Handle, ref cropRect, filterQuality));
 		}
 
-		public static SKImageFilter CreateRectShader(SKShader shader, SKImageFilter.CropRect cropRect = null)
-		{
-			if (shader == null)
-				throw new ArgumentNullException("shader");
-			return new SKImageFilter(SkiaApi.sk_imagefilter_new_rect_shader(shader.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
-		}
-
 		public class CropRect : SKObject
 		{
 			internal CropRect(IntPtr handle)

@@ -12,6 +12,7 @@
 
 
 static sk_managedstream_read_delegate         gRead;
+static sk_managedstream_peek_delegate         gPeek;
 static sk_managedstream_isAtEnd_delegate      gIsAtEnd;
 static sk_managedstream_rewind_delegate       gRewind;
 static sk_managedstream_getPosition_delegate  gGetPosition;
@@ -30,6 +31,10 @@ static inline SkManagedStream* AsManagedStream(sk_stream_managedstream_t* cstrea
 size_t dRead(SkManagedStream* managedStream, void* buffer, size_t size)
 {
     return gRead((sk_stream_managedstream_t*)managedStream, buffer, size);
+}
+size_t dPeek(SkManagedStream* managedStream, void* buffer, size_t size)
+{
+    return gPeek((sk_stream_managedstream_t*)managedStream, buffer, size);
 }
 bool dIsAtEnd(const SkManagedStream* managedStream)
 {
@@ -71,6 +76,7 @@ sk_stream_managedstream_t* sk_managedstream_new ()
 }
 
 void sk_managedstream_set_delegates (const sk_managedstream_read_delegate pRead,
+                                     const sk_managedstream_peek_delegate pPeek,
                                      const sk_managedstream_isAtEnd_delegate pIsAtEnd,
                                      const sk_managedstream_rewind_delegate pRewind,
                                      const sk_managedstream_getPosition_delegate pGetPosition,
@@ -81,6 +87,7 @@ void sk_managedstream_set_delegates (const sk_managedstream_read_delegate pRead,
                                      const sk_managedstream_destroy_delegate pDestroy)
 {
     gRead = pRead;
+    gPeek = pPeek;
     gIsAtEnd = pIsAtEnd;
     gRewind = pRewind;
     gGetPosition = pGetPosition;
@@ -90,6 +97,6 @@ void sk_managedstream_set_delegates (const sk_managedstream_read_delegate pRead,
     gCreateNew = pCreateNew;
     gDestroy = pDestroy;
 
-    SkManagedStream::setDelegates(dRead, dIsAtEnd, dRewind, dGetPosition, dSeek, dMove, dGetLength, dCreateNew, dDestroy);
+    SkManagedStream::setDelegates(dRead, dPeek, dIsAtEnd, dRewind, dGetPosition, dSeek, dMove, dGetLength, dCreateNew, dDestroy);
 }
 

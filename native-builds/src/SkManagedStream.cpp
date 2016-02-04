@@ -9,6 +9,7 @@
 
 
 static read_delegate fRead = nullptr;
+static peek_delegate fPeek = nullptr;
 static isAtEnd_delegate fIsAtEnd = nullptr;
 static rewind_delegate fRewind = nullptr;
 static getPosition_delegate fGetPosition = nullptr;
@@ -28,6 +29,7 @@ SkManagedStream::~SkManagedStream() {
 }
 
 void SkManagedStream::setDelegates(const read_delegate pRead,
+                                   const peek_delegate pPeek,
                                    const isAtEnd_delegate pIsAtEnd,
                                    const rewind_delegate pRewind,
                                    const getPosition_delegate pGetPosition,
@@ -38,6 +40,7 @@ void SkManagedStream::setDelegates(const read_delegate pRead,
                                    const destroy_delegate pDestroy)
 {
     fRead = (pRead);
+    fPeek = (pPeek);
     fIsAtEnd = (pIsAtEnd);
     fRewind = (pRewind);
     fGetPosition = (pGetPosition);
@@ -53,8 +56,9 @@ size_t SkManagedStream::read(void* buffer, size_t size) {
     return fRead(this, buffer, size);
 }
 
-bool SkManagedStream::peek(void *buffer, size_t size) const {
-    return false;
+size_t SkManagedStream::peek(void *buffer, size_t size) const {
+    SkManagedStream* nonConstThis = const_cast<SkManagedStream*>(this);
+    return fPeek(nonConstThis, buffer, size);
 }
 
 bool SkManagedStream::isAtEnd() const {

@@ -326,8 +326,6 @@ namespace SkiaSharp
 		public extern static sk_imagefilter_t sk_imagefilter_new_picture_with_croprect(sk_picture_t picture, ref SKRect cropRect);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_imagefilter_t sk_imagefilter_new_picture_for_localspace(sk_picture_t picture, ref SKRect cropRect, SKFilterQuality filterQuality);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_imagefilter_t sk_imagefilter_new_rect_shader(sk_shader_t shader, sk_imagefilter_croprect_t cropRect /*NULL*/);
 
 		// SkColorFilter
 
@@ -403,7 +401,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_local_matrix(sk_shader_t proxy, ref SKMatrix matrix);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_shader_t sk_shader_new_local_matrix(sk_shader_t proxy, IntPtr matrixZero);
+		public extern static sk_shader_t sk_shader_new_color_filter(sk_shader_t proxy, sk_colorfilter_t filter);
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_bitmap(sk_bitmap_t src, SKShaderTileMode tmx, SKShaderTileMode tmy, ref SKMatrix matrix);
@@ -512,7 +510,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_stream_managedstream_t sk_managedstream_new();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_managedstream_set_delegates(IntPtr pRead, IntPtr pIsAtEnd, IntPtr pRewind, IntPtr pGetPosition, IntPtr pSeek, IntPtr pMove, IntPtr pGetLength, IntPtr pCreateNew, IntPtr pDestroy);
+		public extern static void sk_managedstream_set_delegates(IntPtr pRead, IntPtr pPeek, IntPtr pIsAtEnd, IntPtr pRewind, IntPtr pGetPosition, IntPtr pSeek, IntPtr pMove, IntPtr pGetLength, IntPtr pCreateNew, IntPtr pDestroy);
 
 		// Bitmap
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]

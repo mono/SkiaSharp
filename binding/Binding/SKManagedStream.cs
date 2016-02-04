@@ -26,6 +26,8 @@ namespace SkiaSharp
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		internal delegate IntPtr  read_delegate         (IntPtr managedStreamPtr, IntPtr buffer, IntPtr size);
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		internal delegate IntPtr  peek_delegate         (IntPtr managedStreamPtr, IntPtr buffer, IntPtr size);
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		internal delegate bool    isAtEnd_delegate      (IntPtr managedStreamPtr);
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		internal delegate bool    rewind_delegate       (IntPtr managedStreamPtr);
@@ -44,6 +46,7 @@ namespace SkiaSharp
 
 		// delegate fields
 		private static readonly read_delegate fRead;
+		private static readonly peek_delegate fPeek;
 		private static readonly isAtEnd_delegate fIsAtEnd;
 		private static readonly rewind_delegate fRewind;
 		private static readonly getPosition_delegate fGetPosition;
@@ -59,6 +62,7 @@ namespace SkiaSharp
 		static SKManagedStream()
 		{
 			fRead = new read_delegate(ReadInternal);
+			fPeek = new peek_delegate(PeekInternal);
 			fIsAtEnd = new isAtEnd_delegate(IsAtEndInternal);
 			fRewind = new rewind_delegate(RewindInternal);
 			fGetPosition = new getPosition_delegate(GetPositionInternal);
@@ -70,6 +74,7 @@ namespace SkiaSharp
 
 			SkiaApi.sk_managedstream_set_delegates(
 				Marshal.GetFunctionPointerForDelegate(fRead), 
+				Marshal.GetFunctionPointerForDelegate(fPeek), 
 				Marshal.GetFunctionPointerForDelegate(fIsAtEnd), 
 				Marshal.GetFunctionPointerForDelegate(fRewind),
 				Marshal.GetFunctionPointerForDelegate(fGetPosition),
@@ -124,11 +129,33 @@ namespace SkiaSharp
 			return (IntPtr)result;
 		}
 		#if __IOS__
+		[MonoPInvokeCallback(typeof(peek_delegate))]
+		#endif
+		private static IntPtr PeekInternal (IntPtr managedStreamPtr, IntPtr buffer, IntPtr size)
+		{
+			var managedStream = AsManagedStream (managedStreamPtr);
+			if (!managedStream.stream.CanSeek) {
+				return (IntPtr)0;
+			}
+			var oldPos = managedStream.stream.Position;
+			var count = (int)size;
+			var managedBuffer = new byte[count];
+			var result = managedStream.stream.Read (managedBuffer, 0, count);
+			if (buffer != IntPtr.Zero) { 
+				Marshal.Copy (managedBuffer, 0, buffer, count);
+			}
+			managedStream.stream.Position = oldPos;
+			return (IntPtr)result;
+		}
+		#if __IOS__
 		[MonoPInvokeCallback(typeof(isAtEnd_delegate))]
 		#endif
 		private static bool IsAtEndInternal (IntPtr managedStreamPtr)
 		{
 			var managedStream = AsManagedStream (managedStreamPtr);
+			if (!managedStream.stream.CanSeek) {
+				throw new NotSupportedException ("Unable to detect the End Of Stream if the stream is not seekable.");
+			}
 			return managedStream.stream.Position >= managedStream.stream.Length;
 		}
 		#if __IOS__
@@ -137,6 +164,9 @@ namespace SkiaSharp
 		private static bool RewindInternal (IntPtr managedStreamPtr)
 		{
 			var managedStream = AsManagedStream (managedStreamPtr);
+			if (!managedStream.stream.CanSeek) {
+				return false;
+			}
 			managedStream.stream.Position = 0;
 			return true;
 		}
@@ -146,6 +176,9 @@ namespace SkiaSharp
 		private static IntPtr GetPositionInternal (IntPtr managedStreamPtr)
 		{
 			var managedStream = AsManagedStream (managedStreamPtr);
+			if (!managedStream.stream.CanSeek) {
+				return (IntPtr)0;
+			}
 			return (IntPtr)managedStream.stream.Position;
 		}
 		#if __IOS__
@@ -154,6 +187,9 @@ namespace SkiaSharp
 		private static bool SeekInternal (IntPtr managedStreamPtr, IntPtr position)
 		{
 			var managedStream = AsManagedStream (managedStreamPtr);
+			if (!managedStream.stream.CanSeek) {
+				return false;
+			}
 			managedStream.stream.Position = (long)position;
 			return true;
 		}
@@ -163,6 +199,9 @@ namespace SkiaSharp
 		private static bool MoveInternal (IntPtr managedStreamPtr, long offset)
 		{
 			var managedStream = AsManagedStream (managedStreamPtr);
+			if (!managedStream.stream.CanSeek) {
+				return false;
+			}
 			managedStream.stream.Position = managedStream.stream.Position + offset;
 			return true;
 		}
@@ -172,6 +211,9 @@ namespace SkiaSharp
 		private static IntPtr GetLengthInternal (IntPtr managedStreamPtr)
 		{
 			var managedStream = AsManagedStream (managedStreamPtr);
+			if (!managedStream.stream.CanSeek) {
+				return (IntPtr)0;
+			}
 			return (IntPtr)managedStream.stream.Length;
 		}
 		#if __IOS__
