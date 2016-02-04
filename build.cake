@@ -54,60 +54,47 @@ CakeSpec.Libs = new ISolutionBuilder [] {
 				ToDirectory = "./output/portable/"
 			},
 			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Desktop/bin/AnyCPU/Release/SkiaSharp.dll",
+				FromFile = "./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll",
 				ToDirectory = "./output/mac/"
 			},
 			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Desktop/bin/AnyCPU/Release/SkiaSharp.Desktop.targets",
+				FromFile = "./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.Desktop.targets",
 				ToDirectory = "./output/mac/"
 			},
 			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Desktop/bin/AnyCPU/Release/SkiaSharp.dll.config",
+				FromFile = "./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll.config",
 				ToDirectory = "./output/mac/"
 			},
 			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Desktop/bin/AnyCPU/Release/mac/libskia_osx.dylib",
+				FromFile = "./binding/SkiaSharp.Desktop/bin/Release/mac/libskia_osx.dylib",
 				ToDirectory = "./output/mac/"
 			},
 		}
 	},	
 	new DefaultSolutionBuilder {
 		SolutionPath = "binding/SkiaSharp.Windows.sln",
-        Platform = "x86",
         IsWindowsCompatible = true,
         IsMacCompatible = false,
 		OutputFiles = new [] { 
 			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Desktop/bin/x86/Release/SkiaSharp.dll",
-				ToDirectory = "./output/windows/x86/"
+				FromFile = "./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll",
+				ToDirectory = "./output/portable/"
 			},
 			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Desktop/bin/x86/Release/SkiaSharp.pdb",
-				ToDirectory = "./output/windows/x86/"
+				FromFile = "./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll",
+				ToDirectory = "./output/windows/"
 			},
 			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Desktop/bin/x86/Release/SkiaSharp.Desktop.targets",
-				ToDirectory = "./output/windows/x86/"
-			},
-		}
-	},
-	new DefaultSolutionBuilder {
-		SolutionPath = "binding/SkiaSharp.Windows.sln",
-        Platform = "x64",
-        IsWindowsCompatible = true,
-        IsMacCompatible = false,
-		OutputFiles = new [] { 
-			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Desktop/bin/x64/Release/SkiaSharp.dll",
-				ToDirectory = "./output/windows/x64/"
+				FromFile = "./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.pdb",
+				ToDirectory = "./output/windows/"
 			},
 			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Desktop/bin/x64/Release/SkiaSharp.pdb",
-				ToDirectory = "./output/windows/x64/"
+				FromFile = "./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll.config",
+				ToDirectory = "./output/windows/"
 			},
 			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Desktop/bin/x64/Release/SkiaSharp.Desktop.targets",
-				ToDirectory = "./output/windows/x64/"
+				FromFile = "./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.Desktop.targets",
+				ToDirectory = "./output/windows/"
 			},
 		}
 	},
@@ -127,7 +114,8 @@ CakeSpec.Samples = new ISolutionBuilder [] {
 	new DefaultSolutionBuilder { 
         IsWindowsCompatible = true,
         IsMacCompatible = false,
-        SolutionPath = "./samples/Skia.Windows.Demo/Skia.Windows.Demo.sln"
+        Platform = "x86",
+        SolutionPath = "./samples/Skia.WindowsDesktop.Demo/Skia.WindowsDesktop.Demo.sln"
     },
 };
 
@@ -162,9 +150,18 @@ CakeSpec.Tests = new SolutionTestRunner [] {
     },
 };
 
-CakeSpec.NuSpecs = new [] {
-	"./nuget/Xamarin.SkiaSharp.nuspec"
-};
+if (IsRunningOnWindows ()) {
+    CakeSpec.NuSpecs = new [] {
+        "./nuget/Xamarin.SkiaSharp.Windows.nuspec",
+    };
+}
+
+if (IsRunningOnUnix ()) {
+    CakeSpec.NuSpecs = new [] {
+        "./nuget/Xamarin.SkiaSharp.Mac.nuspec",
+        "./nuget/Xamarin.SkiaSharp.nuspec",
+    };
+}
 
 Task ("libs")
     .IsDependentOn ("externals")
@@ -176,6 +173,12 @@ Task ("libs")
         CopyFileToDirectory ("./native-builds/lib/osx/libskia_osx.dylib", "./output/mac/");
     }
     if (IsRunningOnWindows ()) {
+        if (!DirectoryExists ("./output/windows/x86/")) {
+            CreateDirectory ("./output/windows/x86/");
+        }
+        if (!DirectoryExists ("./output/windows/x64/")) {
+            CreateDirectory ("./output/windows/x64/");
+        }
         CopyFileToDirectory ("./native-builds/lib/windows/x86/libskia_windows.dll", "./output/windows/x86/");
         CopyFileToDirectory ("./native-builds/lib/windows/x86/libskia_windows.pdb", "./output/windows/x86/");
         CopyFileToDirectory ("./native-builds/lib/windows/x64/libskia_windows.dll", "./output/windows/x64/");
