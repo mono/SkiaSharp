@@ -11,6 +11,10 @@ var DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("depot_tools"));
 var SKIA_PATH = MakeAbsolute(ROOT_PATH.Combine("skia"));
 
 var RunGyp = new Action (() => {
+    Information ("Running 'sync-and-gyp'...");
+    Information ("\tGYP_GENERATORS = " + EnvironmentVariable ("GYP_GENERATORS"));
+    Information ("\tGYP_DEFINES = " + EnvironmentVariable ("GYP_DEFINES"));
+    
     StartProcess ("python", new ProcessSettings {
         Arguments = SKIA_PATH.CombineWithFilePath("bin/sync-and-gyp").FullPath,
         WorkingDirectory = SKIA_PATH.FullPath,
