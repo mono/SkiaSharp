@@ -22,6 +22,7 @@ namespace SkiaSharp
 			base.Dispose (disposing);
 		}
 		
+		[Preserve]
 		public SKPictureRecorder (IntPtr handle)
 			: base (handle)
 		{

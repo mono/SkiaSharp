@@ -12,6 +12,7 @@ namespace SkiaSharp
 {
 	public class SKImageFilter : SKObject
 	{
+		[Preserve]
 		internal SKImageFilter(IntPtr handle)
 			: base(handle)
 		{

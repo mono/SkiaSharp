@@ -23,6 +23,7 @@ namespace SkiaSharp
 				(null != cubeData) && (cubeData.Size >= minMemorySize);
 		}
 
+		[Preserve]
 		internal SKColorFilter(IntPtr handle)
 			: base (handle)
 		{

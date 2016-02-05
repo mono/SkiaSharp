@@ -20,6 +20,7 @@ namespace SkiaSharp
 
 		private IntPtr handle;
 
+		[Preserve]
 		internal SKObject(IntPtr handle)
 		{
 			Handle = handle;

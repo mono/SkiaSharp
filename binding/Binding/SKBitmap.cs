@@ -14,7 +14,8 @@ namespace SkiaSharp
 {
 	public class SKBitmap : SKObject
 	{
-		protected SKBitmap (IntPtr handle)
+		[Preserve]
+		internal SKBitmap (IntPtr handle)
 			: base (handle)
 		{
 		}

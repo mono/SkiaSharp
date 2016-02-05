@@ -144,6 +144,19 @@ namespace SkiaSharp
 
 	public class SKFileStream : SKStreamAsset
 	{
+		internal static bool linkskip = true;
+		static SKFileStream ()
+		{
+			if (!linkskip) {
+				new SKFileStream (IntPtr.Zero);
+			}
+		}
+
+		internal SKFileStream (IntPtr handle)
+			: base (handle)
+		{
+		}
+
 		public SKFileStream (string path)
 			: base (SkiaApi.sk_filestream_new (path))
 		{
@@ -152,6 +165,7 @@ namespace SkiaSharp
 
 	public class SKMemoryStream : SKStreamMemory
 	{
+		[Preserve]
 		internal SKMemoryStream(IntPtr handle)
 			: base (handle)
 		{

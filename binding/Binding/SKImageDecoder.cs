@@ -21,6 +21,7 @@ namespace SkiaSharp
 			}
 		}
 
+		[Preserve]
 		internal SKImageDecoder(IntPtr handle)
 			: base(handle)
 		{

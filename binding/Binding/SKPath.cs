@@ -12,6 +12,7 @@ namespace SkiaSharp
 {
 	public class SKPath : SKObject
 	{
+		[Preserve]
 		internal SKPath (IntPtr handle)
 			: base (handle)
 		{

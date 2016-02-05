@@ -12,6 +12,7 @@ namespace SkiaSharp
 {
 	public class SKShader : SKObject
 	{
+		[Preserve]
 		internal SKShader (IntPtr handle)
 			: base (handle)
 		{

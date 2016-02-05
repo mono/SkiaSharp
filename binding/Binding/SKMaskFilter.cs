@@ -14,6 +14,7 @@ namespace SkiaSharp
 	{
 		private const float BlurSigmaScale = 0.57735f;
 		
+		[Preserve]
 		internal SKMaskFilter (IntPtr handle)
 			: base (handle)
 		{

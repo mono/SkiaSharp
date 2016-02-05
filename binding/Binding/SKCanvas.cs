@@ -13,6 +13,7 @@ namespace SkiaSharp
 	// No dispose, the Canvas is only valid while the Surface is valid.
 	public class SKCanvas : SKObject
 	{
+		[Preserve]
 		internal SKCanvas (IntPtr handle)
 			: base (handle)
 		{

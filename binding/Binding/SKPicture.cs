@@ -13,6 +13,7 @@ namespace SkiaSharp
 {
 	public class SKPicture : SKObject
 	{
+		[Preserve]
 		internal SKPicture (IntPtr h)
 			: base (h)
 		{

@@ -12,6 +12,7 @@ namespace SkiaSharp
 {
 	public class SKPaint : SKObject
 	{
+		[Preserve]
 		internal SKPaint (IntPtr handle)
 			: base (handle)
 		{

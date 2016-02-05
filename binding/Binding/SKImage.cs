@@ -21,6 +21,7 @@ namespace SkiaSharp
 			base.Dispose (disposing);
 		}
 
+		[Preserve]
 		internal SKImage (IntPtr x)
 			: base (x)
 		{

@@ -12,6 +12,7 @@ namespace SkiaSharp
 {
 	public class SKTypeface : SKObject
 	{
+		[Preserve]
 		internal SKTypeface (IntPtr handle)
 			: base (handle)
 		{
