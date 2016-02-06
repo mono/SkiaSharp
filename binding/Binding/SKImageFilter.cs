@@ -182,7 +182,7 @@ namespace SkiaSharp
 			{
 			}
 
-			public CropRect(SKRect rect, SKCropRectFlags flags)
+			public CropRect(SKRect rect, SKCropRectFlags flags = SKCropRectFlags.HasAll)
 				: this(SkiaApi.sk_imagefilter_croprect_new_with_rect(ref rect, flags))
 			{
 			}

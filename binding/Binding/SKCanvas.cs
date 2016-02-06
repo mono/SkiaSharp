@@ -270,6 +270,24 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_text_on_path (Handle, bytes, bytes.Length, path.Handle, hOffset, vOffset, paint.Handle);
 		}
 
+		public void ResetMatrix ()
+		{
+			SkiaApi.sk_canvas_reset_matrix (Handle);
+		}
+
+		public void SetMatrix (SKMatrix matrix)
+		{
+			SkiaApi.sk_canvas_set_matrix (Handle, ref matrix);
+		}
+
+		public SKMatrix TotalMatrix {
+			get {
+				SKMatrix matrix = new SKMatrix();
+				SkiaApi.sk_canvas_get_total_matrix (Handle, ref matrix);
+				return matrix;
+			}
+		}
+
 		public int SaveCount => SkiaApi.sk_canvas_get_save_count (Handle);
 	}
 
