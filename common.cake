@@ -221,7 +221,7 @@ public class DefaultSolutionBuilder : CakeStealer, ISolutionBuilder
 
 	public static void RunComponentRestore (FilePath solution)
 	{		 
-		CakeContext.RestoreComponents (solution, new XamarinComponentSettings {  
+		CakeContext.RestoreComponents (solution, new XamarinComponentRestoreSettings {  
 			ToolPath = XamarinComponentToolPath
 		}); 
 	}
