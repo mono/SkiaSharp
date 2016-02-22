@@ -510,8 +510,14 @@ Task ("clean")
     .IsDependentOn ("clean-externals")
     .Does (() => 
 {
-    CleanDirectories ("./**/bin");
-    CleanDirectories ("./**/obj");
+    CleanDirectories ("./binding/**/bin");
+    CleanDirectories ("./binding/**/obj");
+
+    CleanDirectories ("./samples/**/bin");
+    CleanDirectories ("./samples/**/obj");
+
+    CleanDirectories ("./tests/**/bin");
+    CleanDirectories ("./tests/**/obj");
 
     if (DirectoryExists ("./output"))
         DeleteDirectory ("./output", true);
