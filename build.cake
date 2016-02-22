@@ -46,6 +46,13 @@ FilePath GetToolPath (FilePath toolPath)
     throw new FileNotFoundException ("Unable to find tool: " + appRootExe); 
 }
 
+void RunNuGetRestore (FilePath solution)
+{
+    NuGetRestore (solution, new NuGetRestoreSettings { 
+        ToolPath = NugetToolPath
+    });
+}
+
 var RunGyp = new Action (() =>
 {
     Information ("Running 'sync-and-gyp'...");
@@ -373,10 +380,14 @@ Task ("libs-windows")
     .Does (() => 
 {
     // build
-    NuGetRestore ("binding/SkiaSharp.Windows.sln", new NuGetRestoreSettings { ToolPath = NugetToolPath });
+    RunNuGetRestore ("binding/SkiaSharp.Windows.sln");
     DotNetBuild ("binding/SkiaSharp.Windows.sln", c => { 
         c.Configuration = "Release"; 
     });
+    
+    if (!DirectoryExists ("./output/portable/")) {
+        CreateDirectory ("./output/portable/");
+    }
     
     // copy build output
     CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
@@ -391,7 +402,7 @@ Task ("libs-osx")
     .Does (() => 
 {
     // build
-    NuGetRestore ("binding/SkiaSharp.Mac.sln", new NuGetRestoreSettings { ToolPath = NugetToolPath });
+    RunNuGetRestore ("binding/SkiaSharp.Mac.sln");
     DotNetBuild ("binding/SkiaSharp.Mac.sln", c => { 
         c.Configuration = "Release"; 
     });
@@ -416,6 +427,8 @@ Task ("tests")
     .IsDependentOn ("libs")
     .Does (() => 
 {
+    RunNuGetRestore ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
+    
     // Windows (x86 and x64)
     if (IsRunningOnWindows ()) {
         DotNetBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", c => { 
@@ -448,15 +461,18 @@ Task ("samples")
     .Does (() => 
 {
     if (IsRunningOnUnix ()) {
+        RunNuGetRestore ("./samples/Skia.OSX.Demo/Skia.OSX.Demo.sln");
         DotNetBuild ("./samples/Skia.OSX.Demo/Skia.OSX.Demo.sln", c => { 
             c.Configuration = "Release"; 
         });
+        RunNuGetRestore ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.sln");
         DotNetBuild ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "iPhone" };
         });
     }
     
+    RunNuGetRestore ("./samples/Skia.WindowsDesktop.Demo/Skia.WindowsDesktop.Demo.sln");
     DotNetBuild ("./samples/Skia.WindowsDesktop.Demo/Skia.WindowsDesktop.Demo.sln", c => { 
         c.Configuration = "Release"; 
         c.Properties ["Platform"] = new [] { "x86" };
@@ -489,17 +505,19 @@ Task ("component")
     .IsDependentOn ("nuget")
     .Does (() => 
 {
-    if (!DirectoryExists ("./output/")) {
-        CreateDirectory ("./output/");
-    }
+    // TODO: Not yet ready
     
-    FilePath yaml = "./component/component.yaml";
-    var yamlDir = yaml.GetDirectory ();
-    PackageComponent (yamlDir, new XamarinComponentSettings { 
-        ToolPath = XamarinComponentToolPath
-    });
+    // if (!DirectoryExists ("./output/")) {
+    //     CreateDirectory ("./output/");
+    // }
+    
+    // FilePath yaml = "./component/component.yaml";
+    // var yamlDir = yaml.GetDirectory ();
+    // PackageComponent (yamlDir, new XamarinComponentSettings { 
+    //     ToolPath = XamarinComponentToolPath
+    // });
 
-    MoveFiles (yamlDir.FullPath.TrimEnd ('/') + "/*.xam", "./output/");
+    // MoveFiles (yamlDir.FullPath.TrimEnd ('/') + "/*.xam", "./output/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
