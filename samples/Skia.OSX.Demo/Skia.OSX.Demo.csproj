@@ -55,6 +55,9 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Xamarin.Mac" />
+    <Reference Include="SkiaSharp">
+      <HintPath>packages\SkiaSharp.1.49.0.0-preview1\lib\XamarinMac\SkiaSharp.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ImageAsset Include="Resources\Images.xcassets\AppIcons.appiconset\Contents.json" />
@@ -71,6 +74,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Info.plist" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Main.cs" />
@@ -93,28 +97,22 @@
   <ItemGroup>
     <InterfaceDefinition Include="Main.storyboard" />
   </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\..\binding\SkiaSharp.OSX\SkiaSharp.OSX.csproj">
-      <Project>{4588A759-3853-49B8-8A68-6C7917BE9220}</Project>
-      <Name>SkiaSharp.OSX</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="..\..\binding\SkiaSharp.OSX\bin\$(Configuration)\SkiaSharp.OSX.targets" />
-  <ItemGroup>
-    <BundleResource Include="..\content-font.ttf">
-      <Link>Resources\content-font.ttf</Link>
-    </BundleResource>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="..\embedded-font.ttf">
+    <EmbeddedResource Include="..\SharedDemo\embedded-font.ttf">
       <Link>embedded-font.ttf</Link>
     </EmbeddedResource>
-    <EmbeddedResource Include="..\baboon.png">
+    <EmbeddedResource Include="..\SharedDemo\baboon.png">
       <Link>baboon.png</Link>
     </EmbeddedResource>
-    <EmbeddedResource Include="..\color-wheel.png">
+    <EmbeddedResource Include="..\SharedDemo\color-wheel.png">
       <Link>color-wheel.png</Link>
     </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
+  <Import Project="packages\SkiaSharp.1.49.0.0-preview1\build\XamarinMac\SkiaSharp.targets" Condition="Exists('packages\SkiaSharp.1.49.0.0-preview1\build\XamarinMac\SkiaSharp.targets')" />
+  <ItemGroup>
+    <BundleResource Include="..\SharedDemo\content-font.ttf">
+      <Link>Resources\content-font.ttf</Link>
+    </BundleResource>
   </ItemGroup>
 </Project>
