@@ -10,8 +10,10 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>Compound geometric paths.</summary>
+    <remarks>
+      <para>The SkPath class encapsulates compound (multiple contour) geometric paths consisting of straight line segments, quadratic curves, and cubic curves.</para>
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -23,7 +25,7 @@
       </AssemblyInfo>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Creates an empty path.</summary>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -42,10 +44,12 @@
         <Parameter Name="direction" Type="SkiaSharp.SKPathDirection" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <param name="direction">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rect">The bounding oval to add as a closed contour to the path</param>
+        <param name="direction">The direction to wind the oval's contour.</param>
+        <summary>Adds an oval to the current path.</summary>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="AddRect">
@@ -63,10 +67,12 @@
         <Parameter Name="direction" Type="SkiaSharp.SKPathDirection" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <param name="direction">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rect">The rectangle to add as a closed contour to the path</param>
+        <param name="direction">The direction to wind the rectangle's contour.</param>
+        <summary>Add a closed rectangle contour to the path.</summary>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Close">
@@ -81,8 +87,10 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Closes the current contour.</summary>
+        <remarks>
+          <para>If the current point is not equal to the first point of the contour, a line segment is automatically added.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ConicTo">
@@ -108,7 +116,7 @@
         <param name="x1">To be added.</param>
         <param name="y1">To be added.</param>
         <param name="w">To be added.</param>
-        <summary>To be added.</summary>
+        <summary>Add a conic path from the last point.</summary>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -131,14 +139,17 @@
         <Parameter Name="y2" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="x0">To be added.</param>
-        <param name="y0">To be added.</param>
-        <param name="x1">To be added.</param>
-        <param name="y1">To be added.</param>
-        <param name="x2">To be added.</param>
-        <param name="y2">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="x0">The x-coordinate of the 1st control point on a cubic curve</param>
+        <param name="y0">The y-coordinate of the 1st control point on a cubic curve</param>
+        <param name="x1">The x-coordinate of the 2nd control point on a cubic curve</param>
+        <param name="y1">The y-coordinate of the 2nd control point on a cubic curve</param>
+        <param name="x2">The x-coordinate of the end point on a cubic curve</param>
+        <param name="y2">The y-coordinate of the end point on a cubic curve</param>
+        <summary>Add a cubic bezier from the last point</summary>
+        <remarks>
+          <para>Add a cubic bezier from the last point, approaching control points (x0,y0) and (x1,y1), and ending at (x2,y2). </para>
+          <para>If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -174,10 +185,16 @@
         <Parameter Name="rect" Type="SkiaSharp.SKRect&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="rect">
+          <para />
+        </param>
+        <summary>Returns the bounds of the path's points.</summary>
+        <returns>
+          <para>If the path contains zero points/verbs, this will return the "empty" rect [0, 0, 0, 0].</para>
+        </returns>
+        <remarks>
+          <para>Note: this bounds may be larger than the actual shape, since curves do not extend as far as their control points. Additionally this bound encompases all points, even isolated moveTos either preceeding or following the last non-degenerate contour.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="LineTo">
@@ -195,10 +212,12 @@
         <Parameter Name="y" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="x">The x-coordinate of the end of a line</param>
+        <param name="y">The y-coordinate of the end of a line</param>
+        <summary>Add a line from the last point to the specified point (x,y).</summary>
+        <remarks>
+          <para> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="MoveTo">
@@ -216,10 +235,12 @@
         <Parameter Name="y" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="x">The x-coordinate of the start of a new contour</param>
+        <param name="y">The y-coordinate of the start of a new contour</param>
+        <summary>Set the beginning of the next contour to the point.</summary>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="QuadTo">
@@ -239,12 +260,14 @@
         <Parameter Name="y1" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="x0">To be added.</param>
-        <param name="y0">To be added.</param>
-        <param name="x1">To be added.</param>
-        <param name="y1">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="x0">The x-coordinate of the control point on a quadratic curve</param>
+        <param name="y0">The y-coordinate of the control point on a quadratic curve</param>
+        <param name="x1">The x-coordinate of the end point on a quadratic curve</param>
+        <param name="y1">The y-coordinate of the end point on a quadratic curve</param>
+        <summary>Add a quadratic bezier from the last point.</summary>
+        <remarks>
+          <para>Add a quadratic bezier from the last point, approaching control point (x0,y0), and ending at (x1,y1). If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</para>
+        </remarks>
       </Docs>
     </Member>
   </Members>

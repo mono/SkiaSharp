@@ -10,8 +10,14 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>The SkTypeface class specifies the typeface and intrinsic style of a font.</summary>
+    <remarks>
+      <para>The SkTypeface class specifies the typeface and intrinsic style of a font.</para>
+      <para>This is used in the paint, along with optionally algorithmic settings like textSize, textSkewX, textScaleX, kFakeBoldText_Mask, to specifyhow text appears when drawn (and measured).</para>
+      <para />
+      <para>Typeface objects are immutable, and so they can be shared between threads.</para>
+      <para />
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName="CharsToGlyphs">
@@ -31,7 +37,9 @@
       <Docs>
         <param name="chars">To be added.</param>
         <param name="glyphs">To be added.</param>
-        <summary>To be added.</summary>
+        <summary>
+          <para>Given a string, optionally return their corresponding glyph IDs.</para>
+        </summary>
         <returns>To be added.</returns>
         <remarks>To be added.</remarks>
       </Docs>
@@ -57,7 +65,9 @@
         <param name="strlen">To be added.</param>
         <param name="encoding">To be added.</param>
         <param name="glyphs">To be added.</param>
-        <summary>To be added.</summary>
+        <summary>
+          <para>Given a buffer containing character codes, of the specified encoding, optionally return their corresponding glyph IDs.</para>
+        </summary>
         <returns>To be added.</returns>
         <remarks>To be added.</remarks>
       </Docs>
@@ -77,7 +87,7 @@
       </Parameters>
       <Docs>
         <param name="str">To be added.</param>
-        <summary>To be added.</summary>
+        <summary>Returns the number of glyphs on the string.</summary>
         <returns>To be added.</returns>
         <remarks>To be added.</remarks>
       </Docs>
@@ -101,7 +111,7 @@
         <param name="str">To be added.</param>
         <param name="strLen">To be added.</param>
         <param name="encoding">To be added.</param>
-        <summary>To be added.</summary>
+        <summary>Returns the number of glyphs on the specified buffer with the specified length and encoding.</summary>
         <returns>To be added.</returns>
         <remarks>To be added.</remarks>
       </Docs>
@@ -140,10 +150,12 @@
         <Parameter Name="style" Type="SkiaSharp.SKTypefaceStyle" />
       </Parameters>
       <Docs>
-        <param name="familyName">To be added.</param>
-        <param name="style">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
+        <param name="familyName">May be <paramref name="null" />. The name of the font family.</param>
+        <param name="style">The style (normal, bold, italic) of the typeface.</param>
+        <summary>
+          <para>Return a new reference to the typeface that most closely matches the requested family name and style. </para>
+        </summary>
+        <returns>Reference to the closest-matching typeface. </returns>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -206,10 +218,12 @@
         <Parameter Name="style" Type="SkiaSharp.SKTypefaceStyle" />
       </Parameters>
       <Docs>
-        <param name="typeface">To be added.</param>
-        <param name="style">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
+        <param name="typeface">May be <paramref name="null" />. The name of the existing type face.</param>
+        <param name="style">The style (normal, bold, italic) of the type face.</param>
+        <summary>
+          <para>Return a new reference to the typeface that most closely matches the requested typeface and specified Style</para>
+        </summary>
+        <returns>reference to the closest-matching typeface. </returns>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>

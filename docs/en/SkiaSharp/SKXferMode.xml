@@ -9,8 +9,20 @@
     <BaseTypeName>System.Enum</BaseTypeName>
   </Base>
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>Defines the transfer modes in the drawing pipeline.</summary>
+    <remarks>
+      <para>The algebra for the modes uses the following symbols:</para>
+      <list type="bullet">
+        <item>
+          <term>Sa, Sc  - source alpha and color</term>
+        </item>
+        <item>
+          <term>Da, Dc - destination alpha and color (before compositing)</term>
+        </item>
+      </list>
+      <para />
+      <para />
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName="Clear">
@@ -24,7 +36,7 @@
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Sets the color and alpha to zero.</summary>
       </Docs>
     </Member>
     <Member MemberName="Color">
@@ -38,7 +50,9 @@
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>
+          <para />
+        </summary>
       </Docs>
     </Member>
     <Member MemberName="ColorBurn">
@@ -52,7 +66,9 @@
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>
+          <para />
+        </summary>
       </Docs>
     </Member>
     <Member MemberName="ColorDodge">
@@ -66,7 +82,9 @@
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>
+          <para />
+        </summary>
       </Docs>
     </Member>
     <Member MemberName="Darken">
@@ -80,7 +98,9 @@
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>
+          <para />
+        </summary>
       </Docs>
     </Member>
     <Member MemberName="Difference">
@@ -108,7 +128,7 @@
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>[Da, Dc] Destination alpha and destination color are kept.</summary>
       </Docs>
     </Member>
     <Member MemberName="DstATop">
@@ -122,7 +142,7 @@
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>[Sa, Dc * Sa + Sc * (1 - Da)]</summary>
       </Docs>
     </Member>
     <Member MemberName="DstIn">
@@ -136,7 +156,7 @@
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>[Da * Sa, Dc * Sa]</summary>
       </Docs>
     </Member>
     <Member MemberName="DstOut">
@@ -150,7 +170,7 @@
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>[Da * (1 - Sa), Dc * (1 - Sa)]</summary>
       </Docs>
     </Member>
     <Member MemberName="DstOver">
@@ -164,7 +184,7 @@
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>[Da + Sa * (1 - Da), Dc + Sc * (1 - Da)]</summary>
       </Docs>
     </Member>
     <Member MemberName="Exclusion">
@@ -346,7 +366,7 @@
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>[Sa, Sc] Source alpha and source color are copied.</summary>
       </Docs>
     </Member>
     <Member MemberName="SrcATop">
@@ -360,7 +380,7 @@
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>[Da, Sc * Da + Dc * (1 - Sa)]</summary>
       </Docs>
     </Member>
     <Member MemberName="SrcIn">
@@ -374,7 +394,7 @@
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>[Sa * Da, Sc * Da]</summary>
       </Docs>
     </Member>
     <Member MemberName="SrcOut">
@@ -388,7 +408,7 @@
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>[Sa * (1 - Da), Sc * (1 - Da)]</summary>
       </Docs>
     </Member>
     <Member MemberName="SrcOver">
@@ -402,7 +422,7 @@
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>[Sa + Da * (1 - Sa), Sc + Dc * (1 - Sa)]</summary>
       </Docs>
     </Member>
     <Member MemberName="Xor">
@@ -416,7 +436,7 @@
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>[Sa + Da - 2 * Sa * Da, Sc * (1 - Da) + Dc * (1 - Sa)]</summary>
       </Docs>
     </Member>
   </Members>
