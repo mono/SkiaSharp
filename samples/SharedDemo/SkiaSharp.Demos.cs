@@ -283,7 +283,7 @@ namespace SkiaSharp
 
 				using (var tf = SKTypeface.FromFile (CustomFontPath)) {
 					paint.Color = XamGreen;
-					paint.TextSize = 40;
+					paint.TextSize = 60;
 					paint.Typeface = tf;
 
 					canvas.DrawText (text, 50, 50, paint);
@@ -292,7 +292,7 @@ namespace SkiaSharp
 				using (var stream = new SKFileStream (CustomFontPath))
 				using (var tf = SKTypeface.FromStream (stream)) {
 					paint.Color = XamDkBlue;
-					paint.TextSize = 40;
+					paint.TextSize = 60;
 					paint.Typeface = tf;
 
 					canvas.DrawText (text, 50, 100, paint);
@@ -308,7 +308,7 @@ namespace SkiaSharp
 					using (var stream = new SKMemoryStream (bytes))
 					using (var tf = SKTypeface.FromStream (stream)) {
 						paint.Color = XamLtBlue;
-						paint.TextSize = 40;
+						paint.TextSize = 60;
 						paint.Typeface = tf;
 
 						canvas.DrawText (text, 50, 150, paint);
@@ -319,7 +319,7 @@ namespace SkiaSharp
 				using (var stream = new SKManagedStream (resource))
 				using (var tf = SKTypeface.FromStream (stream)) {
 					paint.Color = XamPurple;
-					paint.TextSize = 40;
+					paint.TextSize = 60;
 					paint.Typeface = tf;
 
 					canvas.DrawText (text, 50, 200, paint);
