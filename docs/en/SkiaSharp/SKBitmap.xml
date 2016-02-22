@@ -10,8 +10,12 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>Raster bitmap.</summary>
+    <remarks>
+      <para>This class specifies a raster bitmap. A bitmap has an integer width and height, and a format (colortype), and a pointer to the actual pixels. Bitmaps can be drawn into a <see cref="T:SkiaSharp.SKCanvas" />, but they are also used to specify the target of a <see cref="T:SkiaSharp.SKCanvas" />' drawing operations.</para>
+      <para>    </para>
+      <para>An SkBitmap exposes, which lets a caller write its pixels; the constness is considered to apply to the bitmap's configuration, not its contents.</para>
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -23,8 +27,10 @@
       </AssemblyInfo>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Default construct creates a bitmap with zero width and height, and no pixels. Its colortype is set to <see cref="E:SkiaSharp.SKColorType.Unknown." /></summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -74,11 +80,13 @@
         <Parameter Name="isOpaque" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="width">To be added.</param>
-        <param name="height">To be added.</param>
-        <param name="isOpaque">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="width">Desired width in pixels.</param>
+        <param name="height">Desired height in pixels.</param>
+        <param name="isOpaque">If true, sets the <see cref="T:SkiaSharp.SKAlphaType" /> to Opaque, otherwise it sets it to Premul</param>
+        <summary>Creates a bitmap with the given width, height and opacity with color type set to <see cref="E:SkiaSharp.SKColorType.N_32" /></summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -95,11 +103,11 @@
         <Parameter Name="alphaType" Type="SkiaSharp.SKAlphaType" />
       </Parameters>
       <Docs>
-        <param name="width">To be added.</param>
-        <param name="height">To be added.</param>
-        <param name="colorType">To be added.</param>
-        <param name="alphaType">To be added.</param>
-        <summary>To be added.</summary>
+        <param name="width">Desired width in pixels.</param>
+        <param name="height">Desired height in pixels.</param>
+        <param name="colorType">The desired color type.</param>
+        <param name="alphaType">The desired alpha type.</param>
+        <summary>Creates a bitmap with the given width, height, color type and alpha type.</summary>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>

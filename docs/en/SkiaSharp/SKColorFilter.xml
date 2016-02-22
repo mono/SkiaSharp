@@ -10,8 +10,10 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>Color filters for use in an <see cref="T:SkiaSharp.SKPaint" />.</summary>
+    <remarks>
+      <para></para>
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName="CreateColorCube">
@@ -29,11 +31,14 @@
         <Parameter Name="cubeDimension" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="cubeData">To be added.</param>
-        <param name="cubeDimension">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="cubeData">must containt a 3D data in the form of cube of the size: cubeDimension * cubeDimension * cubeDimension * sizeof(SkColor)</param>
+        <param name="cubeDimension">Cube dimension.</param>
+        <summary>Creates a 3D Look-Up-Table Color filter.</summary>
+        <returns>Filter created with the specified lookup table.</returns>
+        <remarks>
+          <para>This cube contains a transform where (x,y,z) maps to the (r,g,b).</para>
+          <para>The alpha components of the colors must be 0xFF.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateColorCube">
@@ -51,11 +56,14 @@
         <Parameter Name="cubeDimension" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="cubeData">To be added.</param>
-        <param name="cubeDimension">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="cubeData">must containt a 3D data in the form of cube of the size: cubeDimension * cubeDimension * cubeDimension * sizeof(SkColor)</param>
+        <param name="cubeDimension">Cube dimension.</param>
+        <summary>Creates a 3D Look-Up-Table Color filter.</summary>
+        <returns>Filter created with the specified lookup table.</returns>
+        <remarks>
+          <para>This cube contains a transform where (x,y,z) maps to the (r,g,b).</para>
+          <para>The alpha components of the colors must be 0xFF.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateColorMatrix">
@@ -72,9 +80,9 @@
         <Parameter Name="matrix" Type="System.Single[]" />
       </Parameters>
       <Docs>
-        <param name="matrix">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
+        <param name="matrix">An array of 20 elements.</param>
+        <summary>Creates a color matrix filter.</summary>
+        <returns>Filter created with the specified color matrix.</returns>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -241,11 +249,13 @@
         <Parameter Name="cubeDimension" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="cubeData">To be added.</param>
-        <param name="cubeDimension">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="cubeData">must containt a 3D data in the form of cube of the size: cubeDimension * cubeDimension * cubeDimension * sizeof(SkColor).</param>
+        <param name="cubeDimension">Cube dimensions.</param>
+        <summary>Determines if the provided cube data and dimensions represent a valid color cube.</summary>
+        <returns>true if the cube data and dimensions represent a valid color cube.</returns>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="MAX_CUBE_SIZE">

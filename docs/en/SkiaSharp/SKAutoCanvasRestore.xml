@@ -14,8 +14,8 @@
     </Interface>
   </Interfaces>
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>Convenience class used to restore the canvas state in a using statement</summary>
+    <remarks>This class can be used in a using statement to save the state of the canvas (matrix, clip and draw filter) allowing you to change these components and have them automatically undone by virtue of having the Dispose method restore the canvas state to the state it was when this instance was created.</remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -30,10 +30,12 @@
         <Parameter Name="doSave" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="canvas">To be added.</param>
-        <param name="doSave">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="canvas">The canvas whose state will be preserved</param>
+        <param name="doSave">Determines whether you want the <see cref="M:SkiaSharp.SKCanvas.Save" /> method to be invoked on your behalf at this point.</param>
+        <summary>Creates a canvas restore point</summary>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -48,7 +50,7 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Disposes the canvas restore point, restoring the state of the canvas (matrix, clip and draw filter) to the state it was when the object was creatd.  This operation will not do anything if you had previously manually called the <see cref="M:SkiaSharp.SKAutoCanvasRestore.Restore" /> method.</summary>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -64,7 +66,7 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Restores the canvas restore point, restoring the state of the canvas (matrix, clip and draw filter) to the state it was when the object was creatd.</summary>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
