@@ -1,11 +1,11 @@
 # SkiaSharp
 
-Skia# is a cross-platform, managed binding for the 
+SkiaSharp is a cross-platform, managed binding for the 
 Skia Graphics Library (https://skia.org/)
 
 ## What is Included
 
-Skia# provides a PCL and platform-specific bindings for:
+SkiaSharp provides a PCL and platform-specific bindings for:
 
  - Mac OS X
  - Xamarin.Android
