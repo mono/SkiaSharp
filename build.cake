@@ -1,16 +1,53 @@
 #addin "Cake.Xamarin"
 #addin "Cake.XCode"
 
-#load "common.cake"
-
 using System.Xml;
 using System.Xml.Linq;
 
-var ROOT_PATH = MakeAbsolute(File(".")).GetDirectory();
-var DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("depot_tools"));
-var SKIA_PATH = MakeAbsolute(ROOT_PATH.Combine("skia"));
+var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")));
 
-var RunGyp = new Action (() => {
+var NuGetSources = new [] { "https://www.nuget.org/api/v2/" };
+var NugetToolPath = GetToolPath ("../nuget.exe");
+var XamarinComponentToolPath = GetToolPath ("../xamarin-component.exe");
+var CakeToolPath = GetToolPath ("Cake.exe");
+var NUnitConsoleToolPath = GetToolPath ("../NUnit.Console/tools/nunit3-console.exe");
+var GenApiToolPath = GetToolPath ("../genapi.exe");
+
+DirectoryPath ROOT_PATH = MakeAbsolute(File(".")).GetDirectory();
+DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("depot_tools"));
+DirectoryPath SKIA_PATH = MakeAbsolute(ROOT_PATH.Combine("skia"));
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// TOOLS & FUNCTIONS - the bits to make it all work
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+var SetEnvironmentVariable = new Action<string, string> ((name, value) => {
+    Environment.SetEnvironmentVariable (name, value, EnvironmentVariableTarget.Process);
+});
+var AppendEnvironmentVariable = new Action<string, string> ((name, value) => {
+    var old = EnvironmentVariable (name);
+    value += (IsRunningOnWindows () ? ";" : ":") + old;
+    SetEnvironmentVariable (name, value);
+});
+void ListEnvironmentVariables ()
+{
+    Information ("Environment Variables:");
+    foreach (var envVar in EnvironmentVariables ()) {
+        Information ("\tKey: {0}\tValue: \"{1}\"", envVar.Key, envVar.Value);
+    }
+}
+
+FilePath GetToolPath (FilePath toolPath)
+{
+	var appRoot = Context.Environment.GetApplicationRoot ();
+ 	var appRootExe = appRoot.CombineWithFilePath (toolPath);
+ 	if (FileExists (appRootExe))
+ 		return appRootExe;
+    throw new FileNotFoundException ("Unable to find tool: " + appRootExe); 
+}
+
+var RunGyp = new Action (() =>
+{
     Information ("Running 'sync-and-gyp'...");
     Information ("\tGYP_GENERATORS = " + EnvironmentVariable ("GYP_GENERATORS"));
     Information ("\tGYP_DEFINES = " + EnvironmentVariable ("GYP_DEFINES"));
@@ -21,177 +58,65 @@ var RunGyp = new Action (() => {
     });
 });
 
-var SetEnvironmentVariable = new Action<string, string> ((name, value) => {
-    Environment.SetEnvironmentVariable (name, value, EnvironmentVariableTarget.Process);
+var RunInstallNameTool = new Action<DirectoryPath, string, string, FilePath> ((directory, oldName, newName, library) =>
+{
+	StartProcess ("install_name_tool", new ProcessSettings {
+		Arguments = string.Format("-change {0} {1} \"{2}\"", oldName, newName, library),
+		WorkingDirectory = directory,
+	});
 });
-var AppendEnvironmentVariable = new Action<string, string> ((name, value) => {
-    var old = EnvironmentVariable (name);
-    value += (IsRunningOnWindows () ? ";" : ":") + old;
-    SetEnvironmentVariable (name, value);
+
+var RunLipo = new Action<DirectoryPath, FilePath, FilePath[]> ((directory, output, inputs) =>
+{
+	var inputString = string.Join(" ", inputs.Select (i => string.Format ("\"{0}\"", i)));
+	StartProcess ("lipo", new ProcessSettings {
+		Arguments = string.Format("-create -output \"{0}\" {1}", output, inputString),
+		WorkingDirectory = directory,
+	});
 });
 
+var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath) =>
+{
+	// NuGet messes up path on mac, so let's add ./ in front twice
+	var basePath = IsRunningOnUnix () ? "././" : "./";
 
-CakeSpec.Libs = new ISolutionBuilder [] {
-	new IOSSolutionBuilder {
-		SolutionPath = "binding/SkiaSharp.Mac.sln",
-        IsWindowsCompatible = false,
-        IsMacCompatible = true,
-		OutputFiles = new [] { 
-			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Android/bin/Release/SkiaSharp.dll",
-				ToDirectory = "./output/android/"
-			},
-			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.iOS/bin/Release/SkiaSharp.dll",
-				ToDirectory = "./output/ios/"
-			},
-			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.OSX/bin/Release/SkiaSharp.dll",
-				ToDirectory = "./output/osx/"
-			},
-			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.OSX/bin/Release/SkiaSharp.OSX.targets",
-				ToDirectory = "./output/osx/"
-			},
-			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll",
-				ToDirectory = "./output/portable/"
-			},
-			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll",
-				ToDirectory = "./output/mac/"
-			},
-			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.Desktop.targets",
-				ToDirectory = "./output/mac/"
-			},
-			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll.config",
-				ToDirectory = "./output/mac/"
-			},
-			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Desktop/bin/Release/mac/libskia_osx.dylib",
-				ToDirectory = "./output/mac/"
-			},
-		}
-	},	
-	new DefaultSolutionBuilder {
-		SolutionPath = "binding/SkiaSharp.Windows.sln",
-        IsWindowsCompatible = true,
-        IsMacCompatible = false,
-		OutputFiles = new [] { 
-			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll",
-				ToDirectory = "./output/portable/"
-			},
-			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll",
-				ToDirectory = "./output/windows/"
-			},
-			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.pdb",
-				ToDirectory = "./output/windows/"
-			},
-			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll.config",
-				ToDirectory = "./output/windows/"
-			},
-			new OutputFileCopy {
-				FromFile = "./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.Desktop.targets",
-				ToDirectory = "./output/windows/"
-			},
-		}
-	},
-};
+	if (!DirectoryExists (outputPath)) {
+		CreateDirectory (outputPath);
+	}
 
-CakeSpec.Samples = new ISolutionBuilder [] {
-	new IOSSolutionBuilder { 
-        IsWindowsCompatible = false,
-        IsMacCompatible = true,
-        SolutionPath = "./samples/Skia.OSX.Demo/Skia.OSX.Demo.sln"
-    },
-	new IOSSolutionBuilder { 
-        IsWindowsCompatible = false,
-        IsMacCompatible = true,
-        SolutionPath = "./samples/Skia.Forms.Demo/Skia.Forms.Demo.sln" 
-    },
-	new DefaultSolutionBuilder { 
-        IsWindowsCompatible = true,
-        IsMacCompatible = false,
-        Platform = "x86",
-        SolutionPath = "./samples/Skia.WindowsDesktop.Demo/Skia.WindowsDesktop.Demo.sln"
-    },
-};
+    NuGetPack (nuspecPath, new NuGetPackSettings { 
+        Verbosity = NuGetVerbosity.Detailed,
+        OutputDirectory = outputPath,		
+        BasePath = basePath,
+        ToolPath = NugetToolPath
+    });				
+});
 
-CakeSpec.Tests = new SolutionTestRunner [] {
-    // Windows (x86 and x64)
-    new SolutionTestRunner {
-        SolutionBuilder = new DefaultSolutionBuilder { 
-            IsWindowsCompatible = true,
-            IsMacCompatible = false,
-            SolutionPath = "./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln",
-            Platform = "x86",
-        },
-        TestAssembly = "./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/SkiaSharp.Desktop.Tests.dll",
-    },
-    new SolutionTestRunner {
-        SolutionBuilder = new DefaultSolutionBuilder { 
-            IsWindowsCompatible = true,
-            IsMacCompatible = false,
-            SolutionPath = "./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln",
-            Platform = "x64",
-        },
-        TestAssembly = "./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Desktop.Tests.dll",
-    },
-    // Mac OSX (Any CPU)
-    new SolutionTestRunner {
-        SolutionBuilder = new DefaultSolutionBuilder { 
-            IsWindowsCompatible = false,
-            IsMacCompatible = true,
-            SolutionPath = "./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln",
-        },
-        TestAssembly = "./tests/SkiaSharp.Desktop.Tests/bin/Release/SkiaSharp.Desktop.Tests.dll",
-    },
-};
+var RunTests = new Action<FilePath> ((testAssembly) =>
+{
+    var dir = testAssembly.GetDirectory ();
+    var result = StartProcess (NUnitConsoleToolPath, new ProcessSettings {
+        Arguments = string.Format ("\"{0}\" --work=\"{1}\"", testAssembly, dir),
+    });
+    
+    if (result != 0) {
+        throw new Exception ("NUnit test failed with error: " + result);
+    }
+});
 
-if (IsRunningOnWindows ()) {
-    CakeSpec.NuSpecs = new [] {
-        "./nuget/Xamarin.SkiaSharp.Windows.nuspec",
-    };
-}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXTERNALS - the native C and C++ libraries
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
-if (IsRunningOnUnix ()) {
-    CakeSpec.NuSpecs = new [] {
-        "./nuget/Xamarin.SkiaSharp.Mac.nuspec",
-        "./nuget/Xamarin.SkiaSharp.nuspec",
-    };
-}
-
-Task ("libs")
-    .IsDependentOn ("externals")
-    .IsDependentOn ("libs-base")
+// this builds all the externals
+Task ("externals")
+    .IsDependentOn ("externals-genapi")
+    .IsDependentOn ("externals-native")
     .Does (() => 
 {
-    if (IsRunningOnUnix ()) {
-        CopyFileToDirectory ("./native-builds/lib/osx/libskia_osx.dylib", "./output/osx/");
-        CopyFileToDirectory ("./native-builds/lib/osx/libskia_osx.dylib", "./output/mac/");
-    }
-    if (IsRunningOnWindows ()) {
-        if (!DirectoryExists ("./output/windows/x86/")) {
-            CreateDirectory ("./output/windows/x86/");
-        }
-        if (!DirectoryExists ("./output/windows/x64/")) {
-            CreateDirectory ("./output/windows/x64/");
-        }
-        CopyFileToDirectory ("./native-builds/lib/windows/x86/libskia_windows.dll", "./output/windows/x86/");
-        CopyFileToDirectory ("./native-builds/lib/windows/x86/libskia_windows.pdb", "./output/windows/x86/");
-        CopyFileToDirectory ("./native-builds/lib/windows/x64/libskia_windows.dll", "./output/windows/x64/");
-        CopyFileToDirectory ("./native-builds/lib/windows/x64/libskia_windows.pdb", "./output/windows/x64/");
-    }
 });
-
-
-Task ("externals")
+// this builds the native C and C++ externals 
+Task ("externals-native")
     .IsDependentOn ("externals-windows")
     .IsDependentOn ("externals-osx")
     .IsDependentOn ("externals-ios")
@@ -200,25 +125,31 @@ Task ("externals")
 {
     // copy all the native files into the output
     CopyDirectory ("./native-builds/lib/", "./output/native/");
-    
+});
+// this builds the managed PCL external 
+Task ("externals-genapi")
+    .IsDependentOn ("externals-windows")
+    .IsDependentOn ("externals-osx")
+    .IsDependentOn ("externals-ios")
+    .IsDependentOn ("externals-android")
+    .Does (() => 
+{
     // build the dummy project
-    var generic = new DefaultSolutionBuilder {
-		SolutionPath = "binding/SkiaSharp.Generic.sln",
-        IsWindowsCompatible = true,
-        IsMacCompatible = true,
-	};
-	generic.BuildSolution ();
+    DotNetBuild ("binding/SkiaSharp.Generic.sln", c => { 
+        c.Configuration = "Release"; 
+        c.Properties ["Platform"] = new [] { "\"Any CPU\"" };
+    });
     
     // generate the PCL
     FilePath input = "binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll";
     var libPath = "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/4.5/,.";
-    StartProcess (CakeStealer.GenApiToolPath, new ProcessSettings {
+    StartProcess (GenApiToolPath, new ProcessSettings {
         Arguments = string.Format("-libPath:{2} -out \"{0}\" \"{1}\"", input.GetFilename () + ".cs", input.GetFilename (), libPath),
         WorkingDirectory = input.GetDirectory ().FullPath,
     });
     CopyFile ("binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll.cs", "binding/SkiaSharp.Portable/SkiaPortable.cs");
 });
-
+// this builds the native C and C++ externals for Windows
 Task ("externals-windows")
     .WithCriteria (IsRunningOnWindows ())
     .WithCriteria (
@@ -275,7 +206,20 @@ Task ("externals-windows")
     CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.lib", "native-builds/lib/windows/x64");
     CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.dll", "native-builds/lib/windows/x64");
     CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.pdb", "native-builds/lib/windows/x64");
+    
+    // copy native output
+    if (!DirectoryExists ("./output/windows/x86/")) {
+        CreateDirectory ("./output/windows/x86/");
+    }
+    if (!DirectoryExists ("./output/windows/x64/")) {
+        CreateDirectory ("./output/windows/x64/");
+    }
+    CopyFileToDirectory ("./native-builds/lib/windows/x86/libskia_windows.dll", "./output/windows/x86/");
+    CopyFileToDirectory ("./native-builds/lib/windows/x86/libskia_windows.pdb", "./output/windows/x86/");
+    CopyFileToDirectory ("./native-builds/lib/windows/x64/libskia_windows.dll", "./output/windows/x64/");
+    CopyFileToDirectory ("./native-builds/lib/windows/x64/libskia_windows.pdb", "./output/windows/x64/");
 });
+// this builds the native C and C++ externals for Mac OS X
 Task ("externals-osx")
     .WithCriteria (IsRunningOnUnix ())
     .WithCriteria (
@@ -308,10 +252,16 @@ Task ("externals-osx")
     buildArch ("x86_64", "x86_64");
     
     // create the fat dylib
-    RunLipo ("native-builds/lib/osx/", "libskia_osx.dylib", 
-        "i386/libskia_osx.dylib", 
-        "x86_64/libskia_osx.dylib");
+    RunLipo ("native-builds/lib/osx/", "libskia_osx.dylib", new [] {
+        (FilePath) "i386/libskia_osx.dylib", 
+        (FilePath) "x86_64/libskia_osx.dylib"
+    });
+
+    // copy native output
+    CopyFileToDirectory ("./native-builds/lib/osx/libskia_osx.dylib", "./output/osx/");
+    CopyFileToDirectory ("./native-builds/lib/osx/libskia_osx.dylib", "./output/mac/");
 });
+// this builds the native C and C++ externals for iOS
 Task ("externals-ios")
     .WithCriteria (IsRunningOnUnix ())
     .WithCriteria (
@@ -348,13 +298,15 @@ Task ("externals-ios")
     // create the fat framework
     CopyDirectory ("native-builds/lib/ios/armv7/libskia_ios.framework/", "native-builds/lib/ios/libskia_ios.framework/");
     DeleteFile ("native-builds/lib/ios/libskia_ios.framework/libskia_ios");
-    RunLipo ("native-builds/lib/ios/", "libskia_ios.framework/libskia_ios", 
-        "i386/libskia_ios.framework/libskia_ios", 
-        "x86_64/libskia_ios.framework/libskia_ios", 
-        "armv7/libskia_ios.framework/libskia_ios", 
-        "armv7s/libskia_ios.framework/libskia_ios", 
-        "arm64/libskia_ios.framework/libskia_ios");
+    RunLipo ("native-builds/lib/ios/", "libskia_ios.framework/libskia_ios", new [] {
+        (FilePath) "i386/libskia_ios.framework/libskia_ios", 
+        (FilePath) "x86_64/libskia_ios.framework/libskia_ios", 
+        (FilePath) "armv7/libskia_ios.framework/libskia_ios", 
+        (FilePath) "armv7s/libskia_ios.framework/libskia_ios", 
+        (FilePath) "arm64/libskia_ios.framework/libskia_ios"
+    });
 });
+// this builds the native C and C++ externals for Android
 Task ("externals-android")
     .WithCriteria (IsRunningOnUnix ())
     .WithCriteria (
@@ -405,12 +357,165 @@ Task ("externals-android")
     }
 });
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// LIBS - the managed C# libraries
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Task ("libs")
+    .IsDependentOn ("libs-windows")
+    .IsDependentOn ("libs-osx")
+    .Does (() => 
+{
+});
+Task ("libs-windows")
+    .WithCriteria (IsRunningOnWindows ())
+    .IsDependentOn ("externals")
+    .Does (() => 
+{
+    // build
+    NuGetRestore ("binding/SkiaSharp.Windows.sln", new NuGetRestoreSettings { ToolPath = NugetToolPath });
+    DotNetBuild ("binding/SkiaSharp.Windows.sln", c => { 
+        c.Configuration = "Release"; 
+    });
+    
+    // copy build output
+    CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
+    CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll", "./output/windows/");
+    CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.pdb", "./output/windows/");
+    CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll.config", "./output/windows/");
+    CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.Desktop.targets", "./output/windows/");
+});
+Task ("libs-osx")
+    .WithCriteria (IsRunningOnUnix ())
+    .IsDependentOn ("externals")
+    .Does (() => 
+{
+    // build
+    NuGetRestore ("binding/SkiaSharp.Mac.sln", new NuGetRestoreSettings { ToolPath = NugetToolPath });
+    DotNetBuild ("binding/SkiaSharp.Mac.sln", c => { 
+        c.Configuration = "Release"; 
+    });
+
+    // copy build output
+    CopyFileToDirectory ("./binding/SkiaSharp.Android/bin/Release/SkiaSharp.dll", "./output/android/");
+    CopyFileToDirectory ("./binding/SkiaSharp.iOS/bin/Release/SkiaSharp.dll", "./output/ios/");
+    CopyFileToDirectory ("./binding/SkiaSharp.OSX/bin/Release/SkiaSharp.dll", "./output/osx/");
+    CopyFileToDirectory ("./binding/SkiaSharp.OSX/bin/Release/SkiaSharp.OSX.targets", "./output/osx/");
+    CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
+    CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll", "./output/mac/");
+    CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.Desktop.targets", "./output/mac/");
+    CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll.config", "./output/mac/");
+    CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/mac/libskia_osx.dylib", "./output/mac/");
+});
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// TESTS - some test cases to make sure it works
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Task ("tests")
+    .IsDependentOn ("libs")
+    .Does (() => 
+{
+    // Windows (x86 and x64)
+    if (IsRunningOnWindows ()) {
+        DotNetBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", c => { 
+            c.Configuration = "Release"; 
+            c.Properties ["Platform"] = new [] { "x86" };
+        });
+        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/SkiaSharp.Desktop.Tests.dll");
+        DotNetBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", c => { 
+            c.Configuration = "Release"; 
+            c.Properties ["Platform"] = new [] { "x64" };
+        });
+        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/SkiaSharp.Desktop.Tests.dll");
+    }
+    // Mac OSX (Any CPU)
+    if (IsRunningOnUnix ()) {
+        DotNetBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", c => { 
+            c.Configuration = "Release"; 
+            c.Properties ["Platform"] = new [] { "\"Any CPU\"" };
+        });
+        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/SkiaSharp.Desktop.Tests.dll");
+    }
+});
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// SAMPLES - the demo apps showing off the work
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Task ("samples")
+    .IsDependentOn ("libs")
+    .Does (() => 
+{
+    if (IsRunningOnUnix ()) {
+        DotNetBuild ("./samples/Skia.OSX.Demo/Skia.OSX.Demo.sln", c => { 
+            c.Configuration = "Release"; 
+        });
+        DotNetBuild ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.sln", c => { 
+            c.Configuration = "Release"; 
+            c.Properties ["Platform"] = new [] { "iPhone" };
+        });
+    }
+    
+    DotNetBuild ("./samples/Skia.WindowsDesktop.Demo/Skia.WindowsDesktop.Demo.sln", c => { 
+        c.Configuration = "Release"; 
+        c.Properties ["Platform"] = new [] { "x86" };
+    });
+});
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// NUGET - building the package for NuGet.org
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Task ("nuget")
+    .IsDependentOn ("libs")
+    .Does (() => 
+{
+    if (IsRunningOnWindows ()) {
+        PackageNuGet ("./nuget/Xamarin.SkiaSharp.Windows.nuspec", "./output/");
+    }
+
+    if (IsRunningOnUnix ()) {
+        PackageNuGet ("./nuget/Xamarin.SkiaSharp.Mac.nuspec", "./output/");
+        PackageNuGet ("./nuget/Xamarin.SkiaSharp.nuspec", "./output/");
+    }
+});
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// COMPONENT - building the package for components.xamarin.com
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Task ("component")
+    .IsDependentOn ("nuget")
+    .Does (() => 
+{
+    if (!DirectoryExists ("./output/")) {
+        CreateDirectory ("./output/");
+    }
+    
+    FilePath yaml = "./component/component.yaml";
+    var yamlDir = yaml.GetDirectory ();
+    PackageComponent (yamlDir, new XamarinComponentSettings { 
+        ToolPath = XamarinComponentToolPath
+    });
+
+    MoveFiles (yamlDir.FullPath.TrimEnd ('/') + "/*.xam", "./output/");
+});
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// CLEAN - remove all the build artefacts
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 Task ("clean")
     .IsDependentOn ("clean-externals")
     .Does (() => 
 {
-});
+    CleanDirectories ("./**/bin");
+    CleanDirectories ("./**/obj");
 
+    if (DirectoryExists ("./output"))
+        DeleteDirectory ("./output", true);
+});
 Task ("clean-externals").Does (() =>
 {
     // skia
@@ -431,7 +536,36 @@ Task ("clean-externals").Does (() =>
     CleanDirectories ("native-builds/libskia_windows/x64/Release");
 });
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// DEFAULT - target for common development
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
-DefineDefaultTasks ();
+Task ("Default")
+    .IsDependentOn ("externals")
+    .IsDependentOn ("libs");
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// CI - the master target to build everything
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Task ("CI")
+    .IsDependentOn ("externals")
+    .IsDependentOn ("libs")
+    .IsDependentOn ("nuget")
+    .IsDependentOn ("component")
+    .IsDependentOn ("tests")
+    .IsDependentOn ("samples");
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// BUILD NOW 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Information ("Cake.exe ToolPath: {0}", CakeToolPath);
+Information ("Cake.exe NUnitConsoleToolPath: {0}", NUnitConsoleToolPath);
+Information ("NuGet.exe ToolPath: {0}", NugetToolPath);
+Information ("Xamarin-Component.exe ToolPath: {0}", XamarinComponentToolPath);
+Information ("genapi.exe ToolPath: {0}", GenApiToolPath);
+
+ListEnvironmentVariables ();
 
 RunTarget (TARGET);
