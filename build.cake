@@ -67,6 +67,10 @@ var RunGyp = new Action (() =>
 
 var RunInstallNameTool = new Action<DirectoryPath, string, string, FilePath> ((directory, oldName, newName, library) =>
 {
+    if (!IsRunningOnUnix ()) {
+        throw new InvalidOperationException ("install_name_tool is only available on Unix.");
+    }
+    
 	StartProcess ("install_name_tool", new ProcessSettings {
 		Arguments = string.Format("-change {0} {1} \"{2}\"", oldName, newName, library),
 		WorkingDirectory = directory,
@@ -75,6 +79,10 @@ var RunInstallNameTool = new Action<DirectoryPath, string, string, FilePath> ((d
 
 var RunLipo = new Action<DirectoryPath, FilePath, FilePath[]> ((directory, output, inputs) =>
 {
+    if (!IsRunningOnUnix ()) {
+        throw new InvalidOperationException ("lipo is only available on Unix.");
+    }
+    
     var dir = directory.CombineWithFilePath (output).GetDirectory ();
     if (!DirectoryExists (dir)) {
         CreateDirectory (dir);
@@ -116,6 +124,24 @@ var RunTests = new Action<FilePath> ((testAssembly) =>
     }
 });
 
+var RunMdocUpdate = new Action<FilePath, DirectoryPath> ((assembly, docsRoot) =>
+{
+    FilePath mdocPath;
+    if (IsRunningOnUnix ()) {
+        mdocPath = "/Library/Frameworks/Mono.framework/Versions/Current/bin/mdoc";
+    } else {
+        DirectoryPath progFiles = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
+        mdocPath = progFiles.CombineWithFilePath ("Mono/bin/mdoc.bat");
+    }
+    if (!FileExists (mdocPath)) {
+        mdocPath = "mdoc";
+    }
+    
+    StartProcess (mdocPath, new ProcessSettings {
+        Arguments = string.Format ("update --out=\"{0}\" \"{1}\"", docsRoot, assembly),
+    });
+});
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXTERNALS - the native C and C++ libraries
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -140,22 +166,22 @@ Task ("externals-native")
     
     // copy the non-embedded native files into the output
     if (IsRunningOnWindows ()) {
+        if (!DirectoryExists ("./output/windows/x86")) CreateDirectory ("./output/windows/x86");
+        if (!DirectoryExists ("./output/windows/x64")) CreateDirectory ("./output/windows/x64");
         CopyFileToDirectory ("./native-builds/lib/windows/x86/libskia_windows.dll", "./output/windows/x86/");
         CopyFileToDirectory ("./native-builds/lib/windows/x86/libskia_windows.pdb", "./output/windows/x86/");
         CopyFileToDirectory ("./native-builds/lib/windows/x64/libskia_windows.dll", "./output/windows/x64/");
         CopyFileToDirectory ("./native-builds/lib/windows/x64/libskia_windows.pdb", "./output/windows/x64/");
     }
     if (IsRunningOnUnix ()) {
+        if (!DirectoryExists ("./output/osx")) CreateDirectory ("./output/osx");
+        if (!DirectoryExists ("./output/mac")) CreateDirectory ("./output/mac");
         CopyFileToDirectory ("./native-builds/lib/osx/libskia_osx.dylib", "./output/osx/");
         CopyFileToDirectory ("./native-builds/lib/osx/libskia_osx.dylib", "./output/mac/");
     }
 });
 // this builds the managed PCL external 
 Task ("externals-genapi")
-    .IsDependentOn ("externals-windows")
-    .IsDependentOn ("externals-osx")
-    .IsDependentOn ("externals-ios")
-    .IsDependentOn ("externals-android")
     .Does (() => 
 {
     // build the dummy project
@@ -209,9 +235,7 @@ Task ("externals-windows")
         c.Configuration = "Release"; 
         c.Properties ["Platform"] = new [] { "Win32" };
     });
-    if (!DirectoryExists ("native-builds/lib/windows/x86")) {
-        CreateDirectory ("native-builds/lib/windows/x86");
-    }
+    if (!DirectoryExists ("native-builds/lib/windows/x86")) CreateDirectory ("native-builds/lib/windows/x86");
     CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.lib", "native-builds/lib/windows/x86");
     CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.dll", "native-builds/lib/windows/x86");
     CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.pdb", "native-builds/lib/windows/x86");
@@ -224,9 +248,7 @@ Task ("externals-windows")
         c.Configuration = "Release"; 
         c.Properties ["Platform"] = new [] { "x64" };
     });
-    if (!DirectoryExists ("native-builds/lib/windows/x64")) {
-        CreateDirectory ("native-builds/lib/windows/x64");
-    }
+    if (!DirectoryExists ("native-builds/lib/windows/x64")) CreateDirectory ("native-builds/lib/windows/x64");
     CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.lib", "native-builds/lib/windows/x64");
     CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.dll", "native-builds/lib/windows/x64");
     CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.pdb", "native-builds/lib/windows/x64");
@@ -484,6 +506,17 @@ Task ("samples")
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+// DOCS - building the API documentation
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Task ("docs")
+    .IsDependentOn ("externals-genapi")
+    .Does (() => 
+{
+    RunMdocUpdate ("./binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll", "./docs/en/");
+});
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // NUGET - building the package for NuGet.org
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -579,6 +612,7 @@ Task ("Default")
 Task ("CI")
     .IsDependentOn ("externals")
     .IsDependentOn ("libs")
+    .IsDependentOn ("docs")
     .IsDependentOn ("nuget")
     .IsDependentOn ("component")
     .IsDependentOn ("tests")
