@@ -1,0 +1,294 @@
+<Type Name="SKColorFilter" FullName="SkiaSharp.SKColorFilter">
+  <TypeSignature Language="C#" Value="public class SKColorFilter : SkiaSharp.SKObject" />
+  <TypeSignature Language="ILAsm" Value=".class public auto ansi beforefieldinit SKColorFilter extends SkiaSharp.SKObject" />
+  <AssemblyInfo>
+    <AssemblyName>SkiaSharp</AssemblyName>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>SkiaSharp.SKObject</BaseTypeName>
+  </Base>
+  <Interfaces />
+  <Docs>
+    <summary>Color filters for use in an <see cref="T:SkiaSharp.SKPaint" />.</summary>
+    <remarks>
+      <para></para>
+    </remarks>
+  </Docs>
+  <Members>
+    <Member MemberName="CreateColorCube">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKColorFilter CreateColorCube (SkiaSharp.SKData cubeData, int cubeDimension);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKColorFilter CreateColorCube(class SkiaSharp.SKData cubeData, int32 cubeDimension) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKColorFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="cubeData" Type="SkiaSharp.SKData" />
+        <Parameter Name="cubeDimension" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="cubeData">must containt a 3D data in the form of cube of the size: cubeDimension * cubeDimension * cubeDimension * sizeof(SkColor)</param>
+        <param name="cubeDimension">Cube dimension.</param>
+        <summary>Creates a 3D Look-Up-Table Color filter.</summary>
+        <returns>Filter created with the specified lookup table.</returns>
+        <remarks>
+          <para>This cube contains a transform where (x,y,z) maps to the (r,g,b).</para>
+          <para>The alpha components of the colors must be 0xFF.</para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateColorCube">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKColorFilter CreateColorCube (byte[] cubeData, int cubeDimension);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKColorFilter CreateColorCube(unsigned int8[] cubeData, int32 cubeDimension) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKColorFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="cubeData" Type="System.Byte[]" />
+        <Parameter Name="cubeDimension" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="cubeData">must containt a 3D data in the form of cube of the size: cubeDimension * cubeDimension * cubeDimension * sizeof(SkColor)</param>
+        <param name="cubeDimension">Cube dimension.</param>
+        <summary>Creates a 3D Look-Up-Table Color filter.</summary>
+        <returns>Filter created with the specified lookup table.</returns>
+        <remarks>
+          <para>This cube contains a transform where (x,y,z) maps to the (r,g,b).</para>
+          <para>The alpha components of the colors must be 0xFF.</para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateColorMatrix">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKColorFilter CreateColorMatrix (float[] matrix);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKColorFilter CreateColorMatrix(float32[] matrix) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKColorFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="matrix" Type="System.Single[]" />
+      </Parameters>
+      <Docs>
+        <param name="matrix">An array of 20 elements.</param>
+        <summary>Creates a color matrix filter.</summary>
+        <returns>Filter created with the specified color matrix.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateCompose">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKColorFilter CreateCompose (SkiaSharp.SKColorFilter outer, SkiaSharp.SKColorFilter inner);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKColorFilter CreateCompose(class SkiaSharp.SKColorFilter outer, class SkiaSharp.SKColorFilter inner) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKColorFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="outer" Type="SkiaSharp.SKColorFilter" />
+        <Parameter Name="inner" Type="SkiaSharp.SKColorFilter" />
+      </Parameters>
+      <Docs>
+        <param name="outer">To be added.</param>
+        <param name="inner">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateLighting">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKColorFilter CreateLighting (SkiaSharp.SKColor mul, SkiaSharp.SKColor add);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKColorFilter CreateLighting(valuetype SkiaSharp.SKColor mul, valuetype SkiaSharp.SKColor add) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKColorFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="mul" Type="SkiaSharp.SKColor" />
+        <Parameter Name="add" Type="SkiaSharp.SKColor" />
+      </Parameters>
+      <Docs>
+        <param name="mul">To be added.</param>
+        <param name="add">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateLumaColor">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKColorFilter CreateLumaColor ();" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKColorFilter CreateLumaColor() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKColorFilter</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateTable">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKColorFilter CreateTable (byte[] table);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKColorFilter CreateTable(unsigned int8[] table) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKColorFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="table" Type="System.Byte[]" />
+      </Parameters>
+      <Docs>
+        <param name="table">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateTable">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKColorFilter CreateTable (byte[] tableA, byte[] tableR, byte[] tableG, byte[] tableB);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKColorFilter CreateTable(unsigned int8[] tableA, unsigned int8[] tableR, unsigned int8[] tableG, unsigned int8[] tableB) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKColorFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="tableA" Type="System.Byte[]" />
+        <Parameter Name="tableR" Type="System.Byte[]" />
+        <Parameter Name="tableG" Type="System.Byte[]" />
+        <Parameter Name="tableB" Type="System.Byte[]" />
+      </Parameters>
+      <Docs>
+        <param name="tableA">To be added.</param>
+        <param name="tableR">To be added.</param>
+        <param name="tableG">To be added.</param>
+        <param name="tableB">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateXferMode">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKColorFilter CreateXferMode (SkiaSharp.SKColor c, SkiaSharp.SKXferMode mode);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKColorFilter CreateXferMode(valuetype SkiaSharp.SKColor c, valuetype SkiaSharp.SKXferMode mode) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKColorFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="c" Type="SkiaSharp.SKColor" />
+        <Parameter Name="mode" Type="SkiaSharp.SKXferMode" />
+      </Parameters>
+      <Docs>
+        <param name="c">To be added.</param>
+        <param name="mode">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Dispose">
+      <MemberSignature Language="C#" Value="protected override void Dispose (bool disposing);" />
+      <MemberSignature Language="ILAsm" Value=".method familyhidebysig virtual instance void Dispose(bool disposing) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="disposing" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="disposing">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="IsValid3DColorCube">
+      <MemberSignature Language="C#" Value="public static bool IsValid3DColorCube (SkiaSharp.SKData cubeData, int cubeDimension);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig bool IsValid3DColorCube(class SkiaSharp.SKData cubeData, int32 cubeDimension) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="cubeData" Type="SkiaSharp.SKData" />
+        <Parameter Name="cubeDimension" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="cubeData">must containt a 3D data in the form of cube of the size: cubeDimension * cubeDimension * cubeDimension * sizeof(SkColor).</param>
+        <param name="cubeDimension">Cube dimensions.</param>
+        <summary>Determines if the provided cube data and dimensions represent a valid color cube.</summary>
+        <returns>true if the cube data and dimensions represent a valid color cube.</returns>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MAX_CUBE_SIZE">
+      <MemberSignature Language="C#" Value="public const int MAX_CUBE_SIZE = 64;" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal int32 MAX_CUBE_SIZE = (64)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <MemberValue>64</MemberValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MIN_CUBE_SIZE">
+      <MemberSignature Language="C#" Value="public const int MIN_CUBE_SIZE = 4;" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal int32 MIN_CUBE_SIZE = (4)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <MemberValue>4</MemberValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+  </Members>
+</Type>

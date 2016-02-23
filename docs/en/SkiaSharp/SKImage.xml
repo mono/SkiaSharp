@@ -1,0 +1,172 @@
+<Type Name="SKImage" FullName="SkiaSharp.SKImage">
+  <TypeSignature Language="C#" Value="public class SKImage : SkiaSharp.SKObject" />
+  <TypeSignature Language="ILAsm" Value=".class public auto ansi beforefieldinit SKImage extends SkiaSharp.SKObject" />
+  <AssemblyInfo>
+    <AssemblyName>SkiaSharp</AssemblyName>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>SkiaSharp.SKObject</BaseTypeName>
+  </Base>
+  <Interfaces />
+  <Docs>
+    <summary>Abstraction for drawing a rectangle of pixels.</summary>
+    <remarks>
+      <para>SkImage is an abstraction for drawing a rectagle of pixels, though the particular type of image could be actually storing its data on the GPU, or as drawing commands (picture or PDF or otherwise), ready to be played back into another canvas.</para>
+      <para></para>
+      <para>The content of SkImage is always immutable, though the actual storage may change, if for example that image can be re-created via encoded data or other means.</para>
+      <para></para>
+      <para>SkImage always has a non-zero dimensions. If there is a request to create a new image, either directly or via SkSurface, and either of the requested dimensions are zero, then <see langword="null" /> will be returned.</para>
+    </remarks>
+  </Docs>
+  <Members>
+    <Member MemberName="Dispose">
+      <MemberSignature Language="C#" Value="protected override void Dispose (bool disposing);" />
+      <MemberSignature Language="ILAsm" Value=".method familyhidebysig virtual instance void Dispose(bool disposing) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="disposing" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="disposing">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Encode">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKData Encode ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKData Encode() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKData</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Encodes the image as a PNG image</summary>
+        <returns>SKData wrapping the encoded image as a PNG.</returns>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromData">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromData (SkiaSharp.SKData data, SkiaSharp.SKRectI subset);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromData(class SkiaSharp.SKData data, valuetype SkiaSharp.SKRectI subset) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="data" Type="SkiaSharp.SKData" />
+        <Parameter Name="subset" Type="SkiaSharp.SKRectI" />
+      </Parameters>
+      <Docs>
+        <param name="data">Data holding the encoded image.</param>
+        <param name="subset">Specified a bounds for a subset of the image.</param>
+        <summary>Creates an SKImage from an encoded image wrapped by the data.</summary>
+        <returns>The decoded image, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromPixels">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromPixels (SkiaSharp.SKImageInfo info, IntPtr pixels, int rowBytes);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromPixels(valuetype SkiaSharp.SKImageInfo info, native int pixels, int32 rowBytes) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="pixels" Type="System.IntPtr" />
+        <Parameter Name="rowBytes" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="info">Information describing the encoding of the image in memory.</param>
+        <param name="pixels">Points to the image in memory.</param>
+        <param name="rowBytes">Specified the number of bytes used per row in the image.</param>
+        <summary>Creates an image from an in-memory buffer</summary>
+        <returns>A new SKImage wrapping the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Height">
+      <MemberSignature Language="C#" Value="public int Height { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance int32 Height" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>The image height.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="UniqueId">
+      <MemberSignature Language="C#" Value="public uint UniqueId { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance unsigned int32 UniqueId" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.UInt32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>The unique ID associated with the image.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Width">
+      <MemberSignature Language="C#" Value="public int Width { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance int32 Width" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>The image width.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+  </Members>
+</Type>

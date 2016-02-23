@@ -1,0 +1,74 @@
+<Type Name="SKAutoCanvasRestore" FullName="SkiaSharp.SKAutoCanvasRestore">
+  <TypeSignature Language="C#" Value="public class SKAutoCanvasRestore : IDisposable" />
+  <TypeSignature Language="ILAsm" Value=".class public auto ansi beforefieldinit SKAutoCanvasRestore extends System.Object implements class System.IDisposable" />
+  <AssemblyInfo>
+    <AssemblyName>SkiaSharp</AssemblyName>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.Object</BaseTypeName>
+  </Base>
+  <Interfaces>
+    <Interface>
+      <InterfaceName>System.IDisposable</InterfaceName>
+    </Interface>
+  </Interfaces>
+  <Docs>
+    <summary>Convenience class used to restore the canvas state in a using statement</summary>
+    <remarks>This class can be used in a using statement to save the state of the canvas (matrix, clip and draw filter) allowing you to change these components and have them automatically undone by virtue of having the Dispose method restore the canvas state to the state it was when this instance was created.</remarks>
+  </Docs>
+  <Members>
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public SKAutoCanvasRestore (SkiaSharp.SKCanvas canvas, bool doSave);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig specialname rtspecialname instance void .ctor(class SkiaSharp.SKCanvas canvas, bool doSave) cil managed" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters>
+        <Parameter Name="canvas" Type="SkiaSharp.SKCanvas" />
+        <Parameter Name="doSave" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="canvas">The canvas whose state will be preserved</param>
+        <param name="doSave">Determines whether you want the <see cref="M:SkiaSharp.SKCanvas.Save" /> method to be invoked on your behalf at this point.</param>
+        <summary>Creates a canvas restore point</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Dispose">
+      <MemberSignature Language="C#" Value="public void Dispose ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig newslot virtual instance void Dispose() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Disposes the canvas restore point, restoring the state of the canvas (matrix, clip and draw filter) to the state it was when the object was creatd.  This operation will not do anything if you had previously manually called the <see cref="M:SkiaSharp.SKAutoCanvasRestore.Restore" /> method.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Restore">
+      <MemberSignature Language="C#" Value="public void Restore ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Restore() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Restores the canvas restore point, restoring the state of the canvas (matrix, clip and draw filter) to the state it was when the object was creatd.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+  </Members>
+</Type>

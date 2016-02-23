@@ -1,0 +1,1038 @@
+<Type Name="SKCanvas" FullName="SkiaSharp.SKCanvas">
+  <TypeSignature Language="C#" Value="public class SKCanvas : SkiaSharp.SKObject" />
+  <TypeSignature Language="ILAsm" Value=".class public auto ansi beforefieldinit SKCanvas extends SkiaSharp.SKObject" />
+  <AssemblyInfo>
+    <AssemblyName>SkiaSharp</AssemblyName>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>SkiaSharp.SKObject</BaseTypeName>
+  </Base>
+  <Interfaces />
+  <Docs>
+    <summary>Encapsulates all of the state about drawing into a device (bitmap).</summary>
+    <remarks>
+      <para>Encapsulates all of the state about drawing into a device (bitmap).</para>
+      <para></para>
+      <para>This includes a reference to the device itself, and a stack of matrix/clip values. For any given draw call (e.g. drawRect), the geometry of the object being drawn is transformed by the concatenation of all the matrices in the stack. The transformed geometry is clipped by the intersection of all of the clips in the stack.</para>
+      <para></para>
+      <para>While the Canvas holds the state of the drawing device, the state (style) of the object being drawn is held by the Paint, which is provided as a parameter to each of the draw() methods. The Paint holds attributes such as color, typeface, the text size, the stroke width, the shader (for example, gradients, patterns), etc.</para>
+      <para></para>
+      <para>The SkCanvas is returned when accessing the <see cref="P:SkiaSharp.SKSurface.Canvas" /> property of a surface.</para>
+      <para>Transformations</para>
+      <para>The <see cref="T:SkiaSharp.SKCanvas" /> supports a number of 2D transformations.   Unlike other 2D graphic systems like CoreGraphics or Cairo, SKCanvas extends the transformations to include perspectives.   </para>
+      <para>You can use the <see cref="M:SkiaSharp.SKCanvas.Scale" />, <see cref="M:SkiaSharp.SKCanvas.Skew" />, <see cref="M:SkiaSharp.SKCanvas.Translate" />, <see cref="M:SkiaSharp.SKCanvas.RotateDegrees" />, <see cref="M:SkiaSharp.SKCanvas.RotateRadians" /> to perform some of the most common 2D transformations.   </para>
+      <para>For more control you can use the <see cref="M:SkiaSharp.SKCanvas.SetMatrix" /> to set an arbitrary transformation using the <see cref="T:SkiaSharp.SKMatrix" /> and the <see cref="M:SkiaSharp.SKCanvas.Concat" /> to concatenate an <see cref="T:SkiaSharp.SKMatrix" /> transformation to the current matrix in use.</para>
+      <para>The <see cref="M:SkiaSharp.SKCanvas.ResetMatrix" /> can be used to reset the state of the matrix</para>
+      <para></para>
+      <para>Drawing</para>
+      <para>The drawing operations can take a <see cref="T:SkiaSharp.SKPaint" /> parameter to affect their drawing.  You use <see cref="T:SkiaSharp.SKPaint" /> objects to cache the style and color information to draw geometries, texts and bitmaps.</para>
+      <para>Clipping Path</para>
+      <para>State</para>
+      <para>It is possible to save the current transformations by calling the <see cref="M:SkiaSharp.SKCanvas.Save" /> method which preserves the current transformation matrix, you can then alter the matrix and restore the previous state by using the <see cref="M:SkiaSharp.SKCanvas.Restore" /> or <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> methods.   </para>
+      <para>Additionally, it is possible to push a new state with <see cref="M:SkiaSharp.SKCanvas.SaveLayer" /> which will make an offscreen copy of a region, and once the drawing is completed, calling the <see cref="M:SkiaSharp.SKCanvas.Restore" /> method which copies the offscreen bitmap into this canvas.</para>
+      <para>The example below shows a typical use:</para>
+      <para></para>
+      <para></para>
+      <para></para>
+      <example>
+        <code lang="C#"><![CDATA[using (var surface = SKSurface.Create (width: 640, height: 480, SKColorType.N_32, SKAlphaType.Premul)) {
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear (SKColors.White);
+    
+    // set up drawing tools
+    using (var paint = new SKPaint ()) {
+        paint.IsAntialias = true;
+        paint.Color = new SKColor (0x2c, 0x3e, 0x50);
+        paint.StrokeCap = SKStrokeCap.Round;
+        
+        // create the Xamagon path
+        using (var path = new SKPath ()) {
+            path.MoveTo (71.4311121f, 56f);
+            path.CubicTo (68.6763107f, 56.0058575f, 65.9796704f, 57.5737917f, 64.5928855f, 59.965729f);
+            path.LineTo (43.0238921f, 97.5342563f);
+            path.CubicTo (41.6587026f, 99.9325978f, 41.6587026f, 103.067402f, 43.0238921f, 105.465744f);
+            path.LineTo (64.5928855f, 143.034271f);
+            path.CubicTo (65.9798162f, 145.426228f, 68.6763107f, 146.994582f, 71.4311121f, 147f);
+            path.LineTo (114.568946f, 147f);
+            path.CubicTo (117.323748f, 146.994143f, 120.020241f, 145.426228f, 121.407172f, 143.034271f);
+            path.LineTo (142.976161f, 105.465744f);
+            path.CubicTo (144.34135f, 103.067402f, 144.341209f, 99.9325978f, 142.976161f, 97.5342563f);
+            path.LineTo (121.407172f, 59.965729f);
+            path.CubicTo (120.020241f, 57.5737917f, 117.323748f, 56.0054182f, 114.568946f, 56f);
+            path.LineTo (71.4311121f, 56f);
+            path.Close ();
+          
+            // draw the Xamagon path
+            canvas.DrawPath (path, paint);
+        }
+    }
+}]]></code>
+      </example>
+    </remarks>
+  </Docs>
+  <Members>
+    <Member MemberName="Clear">
+      <MemberSignature Language="C#" Value="public void Clear ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Clear() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Replaces all the pixels in the canvas’ current clip with the <see cref="P:SkiaSharp.SKColors.Empty" /> color.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Clear">
+      <MemberSignature Language="C#" Value="public void Clear (SkiaSharp.SKColor color);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Clear(valuetype SkiaSharp.SKColor color) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="color" Type="SkiaSharp.SKColor" />
+      </Parameters>
+      <Docs>
+        <param name="color">The color to use to replace the pixels in the current clipping region.</param>
+        <summary>Helper method for drawing a color in source mode, completely replacing all the pixels in the current clip with this color.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ClipPath">
+      <MemberSignature Language="C#" Value="public void ClipPath (SkiaSharp.SKPath path);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void ClipPath(class SkiaSharp.SKPath path) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="path" Type="SkiaSharp.SKPath" />
+      </Parameters>
+      <Docs>
+        <param name="path">Path descrcibing the new clipping region.</param>
+        <summary>Set the current clipping region to the specified path.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ClipRect">
+      <MemberSignature Language="C#" Value="public void ClipRect (SkiaSharp.SKRect rect);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void ClipRect(valuetype SkiaSharp.SKRect rect) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="rect" Type="SkiaSharp.SKRect" />
+      </Parameters>
+      <Docs>
+        <param name="rect">Clipping rectangle.</param>
+        <summary>Set the current clipping region to the specified rectangle.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Concat">
+      <MemberSignature Language="C#" Value="public void Concat (ref SkiaSharp.SKMatrix m);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Concat(valuetype SkiaSharp.SKMatrix m) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="m" Type="SkiaSharp.SKMatrix&amp;" RefType="ref" />
+      </Parameters>
+      <Docs>
+        <param name="m">Transformation matrix to concatenate.</param>
+        <summary>Pre-concatenates the provided transformation matrix with the current transformation matrix.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawBitmap">
+      <MemberSignature Language="C#" Value="public void DrawBitmap (SkiaSharp.SKBitmap bitmap, SkiaSharp.SKRect dest, SkiaSharp.SKPaint paint = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawBitmap(class SkiaSharp.SKBitmap bitmap, valuetype SkiaSharp.SKRect dest, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="bitmap" Type="SkiaSharp.SKBitmap" />
+        <Parameter Name="dest" Type="SkiaSharp.SKRect" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="bitmap">Bitmap to draw</param>
+        <param name="dest">Region to draw the bitmap into</param>
+        <param name="paint">The paint used to draw the bitmap.</param>
+        <summary>Draws a bitmap on the canvas.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawBitmap">
+      <MemberSignature Language="C#" Value="public void DrawBitmap (SkiaSharp.SKBitmap bitmap, SkiaSharp.SKRect source, SkiaSharp.SKRect dest, SkiaSharp.SKPaint paint = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawBitmap(class SkiaSharp.SKBitmap bitmap, valuetype SkiaSharp.SKRect source, valuetype SkiaSharp.SKRect dest, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="bitmap" Type="SkiaSharp.SKBitmap" />
+        <Parameter Name="source" Type="SkiaSharp.SKRect" />
+        <Parameter Name="dest" Type="SkiaSharp.SKRect" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="bitmap">Bitmap to draw</param>
+        <param name="source">Source region to copy.</param>
+        <param name="dest">Region to draw the bitmap into.</param>
+        <param name="paint">The paint used to draw the bitmap.</param>
+        <summary>Draws a bitmap on the canvas.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawBitmap">
+      <MemberSignature Language="C#" Value="public void DrawBitmap (SkiaSharp.SKBitmap bitmap, float x, float y, SkiaSharp.SKPaint paint = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawBitmap(class SkiaSharp.SKBitmap bitmap, float32 x, float32 y, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="bitmap" Type="SkiaSharp.SKBitmap" />
+        <Parameter Name="x" Type="System.Single" />
+        <Parameter Name="y" Type="System.Single" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="bitmap">Bitmap to draw</param>
+        <param name="x">Targe x coordinate destination for the bitmap.</param>
+        <param name="y">Target y coordinate destination for the bitmap.</param>
+        <param name="paint">The paint used to draw the bitmap.</param>
+        <summary>Draws a bitmap on the canvas.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawColor">
+      <MemberSignature Language="C#" Value="public void DrawColor (SkiaSharp.SKColor color, SkiaSharp.SKXferMode mode = SkiaSharp.SKXferMode.Src);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawColor(valuetype SkiaSharp.SKColor color, valuetype SkiaSharp.SKXferMode mode) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="color" Type="SkiaSharp.SKColor" />
+        <Parameter Name="mode" Type="SkiaSharp.SKXferMode" />
+      </Parameters>
+      <Docs>
+        <param name="color">Color to use to paint the clipping region (or the entire canvas if one is not set).</param>
+        <param name="mode">The transfer mode for the color.</param>
+        <summary>Fills the current clipping path with the specified color using the specified transfer mode.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawImage">
+      <MemberSignature Language="C#" Value="public void DrawImage (SkiaSharp.SKImage image, SkiaSharp.SKRect dest, SkiaSharp.SKPaint paint = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawImage(class SkiaSharp.SKImage image, valuetype SkiaSharp.SKRect dest, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="image" Type="SkiaSharp.SKImage" />
+        <Parameter Name="dest" Type="SkiaSharp.SKRect" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="image">The image to draw.</param>
+        <param name="dest">Region to draw the bitmap into</param>
+        <param name="paint">The paint used to draw the image, or <see langword="null" />.</param>
+        <summary>Draws an image on the canvas.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawImage">
+      <MemberSignature Language="C#" Value="public void DrawImage (SkiaSharp.SKImage image, SkiaSharp.SKRect source, SkiaSharp.SKRect dest, SkiaSharp.SKPaint paint = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawImage(class SkiaSharp.SKImage image, valuetype SkiaSharp.SKRect source, valuetype SkiaSharp.SKRect dest, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="image" Type="SkiaSharp.SKImage" />
+        <Parameter Name="source" Type="SkiaSharp.SKRect" />
+        <Parameter Name="dest" Type="SkiaSharp.SKRect" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="image">Draws an image on the canvas.</param>
+        <param name="source">Source region to copy.</param>
+        <param name="dest">Region to draw the bitmap into</param>
+        <param name="paint">The paint used to draw the image, or <see langword="null" />.</param>
+        <summary>Draws an image on the canvas.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawImage">
+      <MemberSignature Language="C#" Value="public void DrawImage (SkiaSharp.SKImage image, float x, float y, SkiaSharp.SKPaint paint = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawImage(class SkiaSharp.SKImage image, float32 x, float32 y, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="image" Type="SkiaSharp.SKImage" />
+        <Parameter Name="x" Type="System.Single" />
+        <Parameter Name="y" Type="System.Single" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="image">Draws an image on the canvas.</param>
+        <param name="x">Targe x coordinate destination for the image.</param>
+        <param name="y">Targe y coordinate destination for the image.</param>
+        <param name="paint">The paint used to draw the image, or <see langword="null" />.</param>
+        <summary>Draws an image on the canvas.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawLine">
+      <MemberSignature Language="C#" Value="public void DrawLine (float x0, float y0, float x1, float y1, SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawLine(float32 x0, float32 y0, float32 x1, float32 y1, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="x0" Type="System.Single" />
+        <Parameter Name="y0" Type="System.Single" />
+        <Parameter Name="x1" Type="System.Single" />
+        <Parameter Name="y1" Type="System.Single" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="x0">First point x coordinate.</param>
+        <param name="y0">First point y coordinate.</param>
+        <param name="x1">Second point x coordinate.</param>
+        <param name="y1">First point y coordinate.</param>
+        <param name="paint">The paint used to draw the line.</param>
+        <summary>Draws a line on the canvas.</summary>
+        <remarks>Draws a line from (x0,y0) to (x1,y1) using the specified <paramref name="paint" /> parameters.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawOval">
+      <MemberSignature Language="C#" Value="public void DrawOval (SkiaSharp.SKRect rect, SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawOval(valuetype SkiaSharp.SKRect rect, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="rect" Type="SkiaSharp.SKRect" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="rect">Bounding box for the oval</param>
+        <param name="paint">The paint used to draw the oval.</param>
+        <summary>Draws an oval on the canvas.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawPaint">
+      <MemberSignature Language="C#" Value="public void DrawPaint (SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawPaint(class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="paint">The paint used to fill the current clipping path.</param>
+        <summary>Fills the current clipping path with the specified paint.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawPath">
+      <MemberSignature Language="C#" Value="public void DrawPath (SkiaSharp.SKPath path, SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawPath(class SkiaSharp.SKPath path, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="path" Type="SkiaSharp.SKPath" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="path">The path to draw</param>
+        <param name="paint">The paint used to draw the path.</param>
+        <summary>Draws a bezier path in the canvas.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawPicture">
+      <MemberSignature Language="C#" Value="public void DrawPicture (SkiaSharp.SKPicture picture, SkiaSharp.SKPaint paint = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawPicture(class SkiaSharp.SKPicture picture, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="picture" Type="SkiaSharp.SKPicture" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="picture">The picture to draw.</param>
+        <param name="paint">The paint used to draw the picture, or <see langword="null" />.</param>
+        <summary>Draws a picture on the canvas.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawPicture">
+      <MemberSignature Language="C#" Value="public void DrawPicture (SkiaSharp.SKPicture picture, ref SkiaSharp.SKMatrix matrix, SkiaSharp.SKPaint paint = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawPicture(class SkiaSharp.SKPicture picture, valuetype SkiaSharp.SKMatrix matrix, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="picture" Type="SkiaSharp.SKPicture" />
+        <Parameter Name="matrix" Type="SkiaSharp.SKMatrix&amp;" RefType="ref" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="picture">The picture to draw.</param>
+        <param name="matrix">The matrix to apply while painting</param>
+        <param name="paint">The paint used to draw the picture, or <see langword="null" />.</param>
+        <summary>Draws a picture on the canvas.</summary>
+        <remarks>
+          <para>This is equivalent to calling Save, followed by Concat with the specified <paramref name="matrix" />, DrawPicture and then Restore.</para>
+          <para />
+          <para>If paint is non-null, draw the picture into a temporary buffer, and then apply the paint's alpha, color filter, image filter, xfermode to that buffer as it is drawn to the canvas.</para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawPoint">
+      <MemberSignature Language="C#" Value="public void DrawPoint (float x, float y, SkiaSharp.SKColor color);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawPoint(float32 x, float32 y, valuetype SkiaSharp.SKColor color) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="x" Type="System.Single" />
+        <Parameter Name="y" Type="System.Single" />
+        <Parameter Name="color" Type="SkiaSharp.SKColor" />
+      </Parameters>
+      <Docs>
+        <param name="x">x coordinate for the point to draw.</param>
+        <param name="y">y coordinate for the point to draw.</param>
+        <param name="color">Color to use.</param>
+        <summary>Draws a point in the canvas with the specified color.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawPoint">
+      <MemberSignature Language="C#" Value="public void DrawPoint (float x, float y, SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawPoint(float32 x, float32 y, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="x" Type="System.Single" />
+        <Parameter Name="y" Type="System.Single" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="x">x coordinate for the point to draw.</param>
+        <param name="y">y coordinate for the point to draw.</param>
+        <param name="paint">The paint used to draw the point.</param>
+        <summary>Draws a point in the canvas with the specified color.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawPoints">
+      <MemberSignature Language="C#" Value="public void DrawPoints (SkiaSharp.SKPointMode mode, SkiaSharp.SKPoint[] points, SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawPoints(valuetype SkiaSharp.SKPointMode mode, valuetype SkiaSharp.SKPoint[] points, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="mode" Type="SkiaSharp.SKPointMode" />
+        <Parameter Name="points" Type="SkiaSharp.SKPoint[]" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="mode">Determines how the points array will be interpreted: as points, as coordinates to draw lines, or as coordinates of a polygon.</param>
+        <param name="points">array of points to draw.</param>
+        <param name="paint">The paint used to draw the points.</param>
+        <summary>Draws an array of points, lines or a polygon in the canvas.</summary>
+        <remarks>
+          <para>For all modes, the count parameter is interpreted as the total number of points. For kLine mode, count/2 line segments are drawn.</para>
+          <para></para>
+          <para>For point mode, each point is drawn centered at its coordinate, and its size is specified by the paint's stroke-width. It draws as a square, unless the paint's cap-type is round, in which the points are drawn as circles.</para>
+          <para></para>
+          <para>For line mode, each pair of points is drawn as a line segment, respecting the paint's settings for cap, join and width. </para>
+          <para></para>
+          <para>For polygon mode, the entire array is drawn as a series of connected line segments.</para>
+          <para></para>
+          <para>Note that, while similar, the line and polygon modes draw slightly differently than the equivalent path built with a series of move to, line to calls, in that the path will draw all of its contours at once, with no interactions if contours intersect each other (think XOR xfermode).  DrawPoints always draws each element one at a time.</para>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawRect">
+      <MemberSignature Language="C#" Value="public void DrawRect (SkiaSharp.SKRect rect, SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawRect(valuetype SkiaSharp.SKRect rect, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="rect" Type="SkiaSharp.SKRect" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="rect">The rectangle specification.</param>
+        <param name="paint">The paint used to draw the rectagle.</param>
+        <summary>Draws a rectangle in the canvas.</summary>
+        <remarks>
+          <para>The rectangle will be filled or stroked based on the Style in the paint.</para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawText">
+      <MemberSignature Language="C#" Value="public void DrawText (string text, SkiaSharp.SKPoint[] points, SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawText(string text, valuetype SkiaSharp.SKPoint[] points, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="text" Type="System.String" />
+        <Parameter Name="points" Type="SkiaSharp.SKPoint[]" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="text">The text to draw.</param>
+        <param name="points">Describes the position for each glyph in the <paramref name="text" /> string.</param>
+        <param name="paint">The paint used to draw the text.</param>
+        <summary>Draws glyphs of the text at specified locations on the canvas.</summary>
+        <remarks>
+          <para>Draw the text, with each character/glyph origin specified by the <paramref name="points" /> array. The origin is interpreted by the Align setting in the paint.</para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawText">
+      <MemberSignature Language="C#" Value="public void DrawText (string text, float x, float y, SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawText(string text, float32 x, float32 y, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="text" Type="System.String" />
+        <Parameter Name="x" Type="System.Single" />
+        <Parameter Name="y" Type="System.Single" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="text">The text to draw.</param>
+        <param name="x">The x-coordinate of the origin of the text being drawn</param>
+        <param name="y">The y-coordinate of the origin of the text being drawn</param>
+        <param name="paint">The paint used to draw the text.</param>
+        <summary>Draws text on the canvas</summary>
+        <remarks>
+          <para>Draws the <paramref name="text" />, with origin at (<paramref name="x" />,<paramref name="y" />), using the specified <paramref name="paint" />. The origin is interpreted based on the Align setting in the paint.</para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawText">
+      <MemberSignature Language="C#" Value="public void DrawText (string text, SkiaSharp.SKPath path, float hOffset, float vOffset, SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawText(string text, class SkiaSharp.SKPath path, float32 hOffset, float32 vOffset, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="text" Type="System.String" />
+        <Parameter Name="path" Type="SkiaSharp.SKPath" />
+        <Parameter Name="hOffset" Type="System.Single" />
+        <Parameter Name="vOffset" Type="System.Single" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="text">The text to draw.</param>
+        <param name="path">The path the text should follow for its baseline.</param>
+        <param name="hOffset">
+          <para>The distance along the path to add to the text’s starting position.</para>
+        </param>
+        <param name="vOffset">
+          <para>The distance above(-) or below(+) the path to position the text.</para>
+        </param>
+        <param name="paint">The paint used to draw the text.</param>
+        <summary>Draws text on the canvas following a bezier path.</summary>
+        <remarks>
+          <para>Draw the <paramref name="text" />, using the specified <paramref name="paint" />, along the specified <paramref name="path" />. The paint's Align setting determins where along the path to start the text.</para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ResetMatrix">
+      <MemberSignature Language="C#" Value="public void ResetMatrix ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void ResetMatrix() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Helper for setMatrix(identity). Sets the current matrix to identity.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Restore">
+      <MemberSignature Language="C#" Value="public void Restore ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Restore() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Restore the canvas state.</summary>
+        <remarks>
+          <para>This call balances a previous call to <see cref="M:SkiaSharp.SKCanvas.Save" />, and is used to remove all modifications to the matrix, clip and draw filter state since the last Save call.</para>
+          <para></para>
+          <para>It is an error to call Restore() more times than Save() was called.</para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="RestoreToCount">
+      <MemberSignature Language="C#" Value="public void RestoreToCount (int count);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void RestoreToCount(int32 count) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="count" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="count">The number of Save() levels to restore from.  Or -1 to restore all the way back to the initial value.</param>
+        <summary>Efficiently restore the state to a specific level.</summary>
+        <remarks>
+          <para>Efficient way to pop any calls to <see cref="M:SkiaSharp.SKCanvas.Save" /> that happened after the save count reached <paramref name="count" />. </para>
+          <para />
+          <para>It is an error for <paramref name="count" /> to be greater than <see cref="P:SkiaSharp.SKCanvas.SaveCount" />. To pop all the way back to the initial matrix/clip context set count to -1.</para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="RotateDegrees">
+      <MemberSignature Language="C#" Value="public void RotateDegrees (float degrees);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void RotateDegrees(float32 degrees) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="degrees" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="degrees">The number of degrees to rotate.</param>
+        <summary>Preconcat the current matrix with the specified rotation.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="RotateRadians">
+      <MemberSignature Language="C#" Value="public void RotateRadians (float radians);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void RotateRadians(float32 radians) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="radians" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="radians">The number of radiants to rotate.</param>
+        <summary>Preconcat the current matrix with the specified rotation.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Save">
+      <MemberSignature Language="C#" Value="public void Save ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Save() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Saves the canvas state.</summary>
+        <remarks>
+          <para>This call saves the current matrix, clip, and draw filter, and pushes a copy onto a private stack. </para>
+          <para>Subsequent calls to translate, scale, rotate, skew, concat or clipping path or drawing filter all operate on this copy.</para>
+          <para>When the balancing call to <see cref="M:SkiaSharp.SKCanvas.Restore" /> is made, the previous matrix, clipping, and drawing filters are restored.</para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SaveCount">
+      <MemberSignature Language="C#" Value="public int SaveCount { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance int32 SaveCount" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Returns the number of matrix/clip states on the SkCanvas' private stack.</summary>
+        <value>
+          <para>This will equal the number of Save calls minus Retore calls + 1. The save count on a new canvas is 1.</para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SaveLayer">
+      <MemberSignature Language="C#" Value="public void SaveLayer (SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void SaveLayer(class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="paint">This is copied, and is applied to the offscreen when <see cref="M:SkiaSharp.SKCanvas.Restore" /> is called.</param>
+        <summary>Saves the canvas state and allocates an offscreen bitmap.</summary>
+        <remarks>This behaves the same as save(), but in addition it allocates an offscreen bitmap. All drawing calls are directed there, and only when the balancing call to restore() is made is that offscreen transfered to the canvas (or the previous layer).</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SaveLayer">
+      <MemberSignature Language="C#" Value="public void SaveLayer (SkiaSharp.SKRect limit, SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void SaveLayer(valuetype SkiaSharp.SKRect limit, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="limit" Type="SkiaSharp.SKRect" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="limit">
+          <para>This rectangle, is used as a hint to limit the size of the offscreen, and thus drawing may be clipped to it, though that clipping is not guaranteed to happen. If exact clipping is desired, use <see cref="M:SkiaSharp.SKCanvas.ClipRect" /></para>
+        </param>
+        <param name="paint">
+          <para>This is copied, and is applied to the offscreen when <see cref="M:SkiaSharp.SKCanvas.Restore" /> is called.</para>
+        </param>
+        <summary>Saves the canvas state and allocates an offscreen bitmap.</summary>
+        <remarks>
+          <para>This behaves the same as save(), but in addition it allocates an offscreen bitmap. All drawing calls are directed there, and only when the balancing call to restore() is made is that offscreen transfered to the canvas (or the previous layer).</para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Scale">
+      <MemberSignature Language="C#" Value="public void Scale (SkiaSharp.SKPoint size);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Scale(valuetype SkiaSharp.SKPoint size) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="size" Type="SkiaSharp.SKPoint" />
+      </Parameters>
+      <Docs>
+        <param name="size">The amount to scale.</param>
+        <summary>Preconcat the current matrix with the specified scale.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Scale">
+      <MemberSignature Language="C#" Value="public void Scale (float sx, float sy);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Scale(float32 sx, float32 sy) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="sx" Type="System.Single" />
+        <Parameter Name="sy" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="sx">The amount to scale in X</param>
+        <param name="sy">The amount to scale in Y</param>
+        <summary>Preconcat the current matrix with the specified scale.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SetMatrix">
+      <MemberSignature Language="C#" Value="public void SetMatrix (SkiaSharp.SKMatrix matrix);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void SetMatrix(valuetype SkiaSharp.SKMatrix matrix) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="matrix" Type="SkiaSharp.SKMatrix" />
+      </Parameters>
+      <Docs>
+        <param name="matrix">The matrix that will be copied into the current matrix.</param>
+        <summary>Replace the current matrix with a copy of the specified matrix.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Skew">
+      <MemberSignature Language="C#" Value="public void Skew (SkiaSharp.SKPoint skew);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Skew(valuetype SkiaSharp.SKPoint skew) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="skew" Type="SkiaSharp.SKPoint" />
+      </Parameters>
+      <Docs>
+        <param name="skew">The amount to skew.</param>
+        <summary>Preconcat the current matrix with the specified skew.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Skew">
+      <MemberSignature Language="C#" Value="public void Skew (float sx, float sy);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Skew(float32 sx, float32 sy) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="sx" Type="System.Single" />
+        <Parameter Name="sy" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="sx">The amount to skew in X.</param>
+        <param name="sy">The amount to skew in Y.</param>
+        <summary>Preconcat the current matrix with the specified skew.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="TotalMatrix">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKMatrix TotalMatrix { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKMatrix TotalMatrix" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKMatrix</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Return the current matrix on the canvas.</summary>
+        <value>The current matrix on the canvas.</value>
+        <remarks>This does not account for the translate in any of the devices.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Translate">
+      <MemberSignature Language="C#" Value="public void Translate (SkiaSharp.SKPoint point);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Translate(valuetype SkiaSharp.SKPoint point) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="point" Type="SkiaSharp.SKPoint" />
+      </Parameters>
+      <Docs>
+        <param name="point">The distance to translate.</param>
+        <summary>Preconcat the current matrix with the specified translation</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Translate">
+      <MemberSignature Language="C#" Value="public void Translate (float dx, float dy);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Translate(float32 dx, float32 dy) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dx" Type="System.Single" />
+        <Parameter Name="dy" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="dx">The distance to translate in X.</param>
+        <param name="dy">The distance to translate in Y.</param>
+        <summary>Preconcat the current matrix with the specified translation</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+  </Members>
+</Type>
