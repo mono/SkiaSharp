@@ -14,9 +14,9 @@
     <remarks>
       <para>The SkTypeface class specifies the typeface and intrinsic style of a font.</para>
       <para>This is used in the paint, along with optionally algorithmic settings like textSize, textSkewX, textScaleX, kFakeBoldText_Mask, to specifyhow text appears when drawn (and measured).</para>
-      <para />
+      <para></para>
       <para>Typeface objects are immutable, and so they can be shared between threads.</para>
-      <para />
+      <para></para>
     </remarks>
   </Docs>
   <Members>
@@ -174,11 +174,15 @@
         <Parameter Name="index" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="path">To be added.</param>
-        <param name="index">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="path">path of the file.</param>
+        <param name="index">The font face index.</param>
+        <summary>Return a new typeface given a file. </summary>
+        <returns>
+          <para />
+        </returns>
+        <remarks>
+          <para>If the file does not exist, or is not a valid font file, returns <paramref name="null" />.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromStream">
@@ -196,11 +200,13 @@
         <Parameter Name="index" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="stream">To be added.</param>
-        <param name="index">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="stream">Input stream</param>
+        <param name="index">the font face index.</param>
+        <summary>Return a new typeface given a stream. </summary>
+        <returns>If the stream is not a valid font file, returns <paramref name="null" />. </returns>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTypeface">
