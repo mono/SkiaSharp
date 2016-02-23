@@ -42,8 +42,12 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Requests that the decoding be canceled.</summary>
+        <remarks>
+          <para>Decoding is synchronous, but for long decodes, a different thread can call this method safely. This sets a state that the decoders will periodically check, and if they see it changed to cancel, they will cancel. This will result in Decode() returning <paramref name="false" />. However, there is no guarantee that the decoder will see the state change in time, so it is possible that CancelDecode() will be called, but will be ignored and Decode() will return <paramref name="true" /> (assuming no other problems were encountered).</para>
+          <para />
+          <para>This state is automatically reset at the beginning of a Decode operation.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Decode">
@@ -63,13 +67,15 @@
         <Parameter Name="mode" Type="SkiaSharp.SKImageDecoderMode" />
       </Parameters>
       <Docs>
-        <param name="stream">To be added.</param>
-        <param name="bitmap">To be added.</param>
-        <param name="pref">To be added.</param>
-        <param name="mode">To be added.</param>
-        <summary>To be added.</summary>
+        <param name="stream">Stream to decode from.</param>
+        <param name="bitmap">Target bitmap</param>
+        <param name="pref">Give preference to this color type</param>
+        <param name="mode">Decoding mode</param>
+        <summary>Given a stream, decode it into the specified bitmap.</summary>
         <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DecodeFile">
@@ -89,13 +95,18 @@
         <Parameter Name="mode" Type="SkiaSharp.SKImageDecoderMode" />
       </Parameters>
       <Docs>
-        <param name="filename">To be added.</param>
-        <param name="bitmap">To be added.</param>
-        <param name="pref">To be added.</param>
-        <param name="mode">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="filename">Filename to decode</param>
+        <param name="bitmap">Target bitmap</param>
+        <param name="pref">Give preference to this color type</param>
+        <param name="mode">Decoding mode</param>
+        <summary>
+          <para>Decode the image stored in the specified file, and store the result in the provided bitmap.</para>
+        </summary>
+        <returns>
+          <paramref name="true" /> on success, <paramref name="false" /> on failure.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DecodeFile">
@@ -116,14 +127,17 @@
         <Parameter Name="format" Type="SkiaSharp.SKImageDecoderFormat&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="filename">To be added.</param>
-        <param name="bitmap">To be added.</param>
-        <param name="pref">To be added.</param>
-        <param name="mode">To be added.</param>
-        <param name="format">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="filename">Filename to decode</param>
+        <param name="bitmap">Target bitmap</param>
+        <param name="pref">Give preference to this color type</param>
+        <param name="mode">Decoding mode</param>
+        <param name="format">On success, this will contain the format of the decoded file.</param>
+        <summary>Decode the image stored in the specified file, and store the result in the provided bitmap.</summary>
+        <returns>
+          <paramref name="true" /> on success, <paramref name="false" /> on failure.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DecodeFileBounds">
@@ -142,11 +156,12 @@
         <Parameter Name="pref" Type="SkiaSharp.SKColorType" />
       </Parameters>
       <Docs>
-        <param name="filename">To be added.</param>
-        <param name="info">To be added.</param>
-        <param name="pref">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
+        <param name="filename">Filename to decode</param>
+        <param name="info">On success, the boundary information about the image will be stored here.</param>
+        <param name="pref">Give preference to this color type</param>
+        <summary>Parses a file to extract the boundary information.</summary>
+        <returns>
+          <paramref name="true" /> on success and the <paramref name="info" /> field set with the image boundary information, <paramref name="false" /> on failure.</returns>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -167,12 +182,13 @@
         <Parameter Name="format" Type="SkiaSharp.SKImageDecoderFormat&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="filename">To be added.</param>
-        <param name="info">To be added.</param>
-        <param name="pref">To be added.</param>
-        <param name="format">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
+        <param name="filename">Filename to decode</param>
+        <param name="info">On success, the boundary information about the image will be stored here.</param>
+        <param name="pref">Give preference to this color type</param>
+        <param name="format">On success, this will contain the format of the decoded file.</param>
+        <summary>Parses a file to extract the boundary information and the detected file format.</summary>
+        <returns>
+          <paramref name="true" /> on success and the <paramref name="info" /> field set with the image boundary information, <paramref name="false" /> on failure.</returns>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -193,12 +209,13 @@
         <Parameter Name="mode" Type="SkiaSharp.SKImageDecoderMode" />
       </Parameters>
       <Docs>
-        <param name="buffer">To be added.</param>
-        <param name="bitmap">To be added.</param>
-        <param name="pref">To be added.</param>
-        <param name="mode">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
+        <param name="buffer">Byte array containing the image.</param>
+        <param name="bitmap">Target bitmap</param>
+        <param name="pref">Give preference to this color type</param>
+        <param name="mode">Decoding mode</param>
+        <summary>Decodes a image stored on a byte buffer.</summary>
+        <returns>
+          <paramref name="true" /> on success, <paramref name="false" /> on failure.</returns>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -220,13 +237,14 @@
         <Parameter Name="format" Type="SkiaSharp.SKImageDecoderFormat&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="buffer">To be added.</param>
-        <param name="bitmap">To be added.</param>
-        <param name="pref">To be added.</param>
-        <param name="mode">To be added.</param>
-        <param name="format">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
+        <param name="buffer">Byte array containing the image.</param>
+        <param name="bitmap">Target bitmap</param>
+        <param name="pref">Give preference to this color type</param>
+        <param name="mode">Decoding mode</param>
+        <param name="format">On success, this will contain the format of the decoded file.</param>
+        <summary>Decodes a image stored on a byte buffer.</summary>
+        <returns>
+          <paramref name="true" /> on success, <paramref name="false" /> on failure.</returns>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -246,11 +264,12 @@
         <Parameter Name="pref" Type="SkiaSharp.SKColorType" />
       </Parameters>
       <Docs>
-        <param name="buffer">To be added.</param>
-        <param name="info">To be added.</param>
-        <param name="pref">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
+        <param name="buffer">Byte array containing the image.</param>
+        <param name="info">On success, the boundary information about the image will be stored here.</param>
+        <param name="pref">Give preference to this color type</param>
+        <summary>Parses a byte array to extract the image boundary information.</summary>
+        <returns>
+          <paramref name="true" /> on success and the <paramref name="info" /> field set with the image boundary information, <paramref name="false" /> on failure.</returns>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -271,12 +290,13 @@
         <Parameter Name="format" Type="SkiaSharp.SKImageDecoderFormat&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="buffer">To be added.</param>
-        <param name="info">To be added.</param>
-        <param name="pref">To be added.</param>
-        <param name="format">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
+        <param name="buffer">Byte array containing the image.</param>
+        <param name="info">On success, the boundary information about the image will be stored here.</param>
+        <param name="pref">Give preference to this color type</param>
+        <param name="format">On success, this will contain the format of the decoded file.</param>
+        <summary>Parses a byte array to extract the image boundary information and the detected file format.</summary>
+        <returns>
+          <paramref name="true" /> on success and the <paramref name="info" /> field set with the image boundary information, <paramref name="false" /> on failure.</returns>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -297,12 +317,13 @@
         <Parameter Name="mode" Type="SkiaSharp.SKImageDecoderMode" />
       </Parameters>
       <Docs>
-        <param name="stream">To be added.</param>
-        <param name="bitmap">To be added.</param>
-        <param name="pref">To be added.</param>
-        <param name="mode">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
+        <param name="stream">Stream containing the image</param>
+        <param name="bitmap">Target bitmap</param>
+        <param name="pref">Give preference to this color type</param>
+        <param name="mode">Decoding mode</param>
+        <summary>Decodes a image from a stream.</summary>
+        <returns>
+          <paramref name="true" /> on success, <paramref name="false" /> on failure.</returns>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -324,13 +345,14 @@
         <Parameter Name="format" Type="SkiaSharp.SKImageDecoderFormat&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="stream">To be added.</param>
-        <param name="bitmap">To be added.</param>
-        <param name="pref">To be added.</param>
-        <param name="mode">To be added.</param>
-        <param name="format">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
+        <param name="stream">Stream containing the image</param>
+        <param name="bitmap">Target bitmap</param>
+        <param name="pref">Give preference to this color type</param>
+        <param name="mode">Decoding mode</param>
+        <param name="format">On success, this will contain the format of the decoded file.</param>
+        <summary>Decodes a image from a stream.</summary>
+        <returns>
+          <paramref name="true" /> on success, <paramref name="false" /> on failure.</returns>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -350,11 +372,12 @@
         <Parameter Name="pref" Type="SkiaSharp.SKColorType" />
       </Parameters>
       <Docs>
-        <param name="stream">To be added.</param>
-        <param name="info">To be added.</param>
-        <param name="pref">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
+        <param name="stream">Stream containing the image</param>
+        <param name="info">On success, the boundary information about the image will be stored here.</param>
+        <param name="pref">Give preference to this color type</param>
+        <summary>Parses a stream to extract the image boundary information</summary>
+        <returns>
+          <paramref name="true" /> on success and the <paramref name="info" /> field set with the image boundary information, <paramref name="false" /> on failure.</returns>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -375,12 +398,13 @@
         <Parameter Name="format" Type="SkiaSharp.SKImageDecoderFormat&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="stream">To be added.</param>
-        <param name="info">To be added.</param>
-        <param name="pref">To be added.</param>
-        <param name="format">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
+        <param name="stream">Stream containing the image</param>
+        <param name="info">On success, the boundary information about the image will be stored here.</param>
+        <param name="pref">Give preference to this color type</param>
+        <param name="format">On success, this will contain the format of the decoded file.</param>
+        <summary>Parses a stream to extract the image boundary information and the detected file format.</summary>
+        <returns>
+          <paramref name="true" /> on success and the <paramref name="info" /> field set with the image boundary information, <paramref name="false" /> on failure.</returns>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -416,7 +440,7 @@
       <Docs>
         <summary>Controls whether the decoder attempts to dither the image.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
         <remarks>The default setting is <paramref name="true" />.</remarks>
       </Docs>
@@ -552,9 +576,9 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Returns <see langword="true" /> i<paramref name="true" /> if the decoding should stop.</summary>
         <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <remarks>This method is the companion to the <see cref="M:SkiaSharp.SKImageDecoder.CancelDecode" /> method which will request that the decoding of an image stop.   </remarks>
       </Docs>
     </Member>
     <Member MemberName="SkipWritingZeros">

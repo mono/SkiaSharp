@@ -13,7 +13,15 @@
     <summary>
       <para>Holds the style and color information about how to draw geometries, text and bitmaps.</para>
     </summary>
-    <remarks>To be added.</remarks>
+    <remarks>
+      <para>Anytime you draw something in Skia, and want to specify what color it is, or how it blends with the background, or what style or font to draw it in, you specify those attributes in a paint.</para>
+      <para />
+      <para>Unlike <see cref="T:SkiaSharp.SKCanvas" />, paints do not maintain an internal stack of state (i.e. there is no save/restore on a paint). However, paints are relatively light-weight, so the client may create and maintain any number of paint objects, each set up for a particular use. Factoring all of these color and stylistic attribute out of the canvas state, and into (multiple) paint objects, allows canvas’ save/restore to be that much more efficient, as all they have to do is maintain the stack of matrix and clip settings.</para>
+      <para />
+      <para />
+      <para />
+      <para />
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
