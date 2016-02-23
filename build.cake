@@ -46,12 +46,12 @@ FilePath GetToolPath (FilePath toolPath)
     throw new FileNotFoundException ("Unable to find tool: " + appRootExe); 
 }
 
-void RunNuGetRestore (FilePath solution)
+var RunNuGetRestore = new Action<FilePath> ((solution) =>
 {
     NuGetRestore (solution, new NuGetRestoreSettings { 
         ToolPath = NugetToolPath
     });
-}
+});
 
 var RunGyp = new Action (() =>
 {
@@ -75,6 +75,11 @@ var RunInstallNameTool = new Action<DirectoryPath, string, string, FilePath> ((d
 
 var RunLipo = new Action<DirectoryPath, FilePath, FilePath[]> ((directory, output, inputs) =>
 {
+    var dir = directory.CombineWithFilePath (output).GetDirectory ();
+    if (!DirectoryExists (dir)) {
+        CreateDirectory (dir);
+    }
+
 	var inputString = string.Join(" ", inputs.Select (i => string.Format ("\"{0}\"", i)));
 	StartProcess ("lipo", new ProcessSettings {
 		Arguments = string.Format("-create -output \"{0}\" {1}", output, inputString),
@@ -132,6 +137,18 @@ Task ("externals-native")
 {
     // copy all the native files into the output
     CopyDirectory ("./native-builds/lib/", "./output/native/");
+    
+    // copy the non-embedded native files into the output
+    if (IsRunningOnWindows ()) {
+        CopyFileToDirectory ("./native-builds/lib/windows/x86/libskia_windows.dll", "./output/windows/x86/");
+        CopyFileToDirectory ("./native-builds/lib/windows/x86/libskia_windows.pdb", "./output/windows/x86/");
+        CopyFileToDirectory ("./native-builds/lib/windows/x64/libskia_windows.dll", "./output/windows/x64/");
+        CopyFileToDirectory ("./native-builds/lib/windows/x64/libskia_windows.pdb", "./output/windows/x64/");
+    }
+    if (IsRunningOnUnix ()) {
+        CopyFileToDirectory ("./native-builds/lib/osx/libskia_osx.dylib", "./output/osx/");
+        CopyFileToDirectory ("./native-builds/lib/osx/libskia_osx.dylib", "./output/mac/");
+    }
 });
 // this builds the managed PCL external 
 Task ("externals-genapi")
@@ -213,18 +230,6 @@ Task ("externals-windows")
     CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.lib", "native-builds/lib/windows/x64");
     CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.dll", "native-builds/lib/windows/x64");
     CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.pdb", "native-builds/lib/windows/x64");
-    
-    // copy native output
-    if (!DirectoryExists ("./output/windows/x86/")) {
-        CreateDirectory ("./output/windows/x86/");
-    }
-    if (!DirectoryExists ("./output/windows/x64/")) {
-        CreateDirectory ("./output/windows/x64/");
-    }
-    CopyFileToDirectory ("./native-builds/lib/windows/x86/libskia_windows.dll", "./output/windows/x86/");
-    CopyFileToDirectory ("./native-builds/lib/windows/x86/libskia_windows.pdb", "./output/windows/x86/");
-    CopyFileToDirectory ("./native-builds/lib/windows/x64/libskia_windows.dll", "./output/windows/x64/");
-    CopyFileToDirectory ("./native-builds/lib/windows/x64/libskia_windows.pdb", "./output/windows/x64/");
 });
 // this builds the native C and C++ externals for Mac OS X
 Task ("externals-osx")
@@ -263,10 +268,6 @@ Task ("externals-osx")
         (FilePath) "i386/libskia_osx.dylib", 
         (FilePath) "x86_64/libskia_osx.dylib"
     });
-
-    // copy native output
-    CopyFileToDirectory ("./native-builds/lib/osx/libskia_osx.dylib", "./output/osx/");
-    CopyFileToDirectory ("./native-builds/lib/osx/libskia_osx.dylib", "./output/mac/");
 });
 // this builds the native C and C++ externals for iOS
 Task ("externals-ios")
@@ -385,9 +386,8 @@ Task ("libs-windows")
         c.Configuration = "Release"; 
     });
     
-    if (!DirectoryExists ("./output/portable/")) {
-        CreateDirectory ("./output/portable/");
-    }
+    if (!DirectoryExists ("./output/portable/")) CreateDirectory ("./output/portable/");
+    if (!DirectoryExists ("./output/windows/")) CreateDirectory ("./output/windows/");
     
     // copy build output
     CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
@@ -407,6 +407,12 @@ Task ("libs-osx")
         c.Configuration = "Release"; 
     });
 
+    if (!DirectoryExists ("./output/android/")) CreateDirectory ("./output/android/");
+    if (!DirectoryExists ("./output/ios/")) CreateDirectory ("./output/ios/");
+    if (!DirectoryExists ("./output/osx/")) CreateDirectory ("./output/osx/");
+    if (!DirectoryExists ("./output/portable/")) CreateDirectory ("./output/portable/");
+    if (!DirectoryExists ("./output/mac/")) CreateDirectory ("./output/mac/");
+    
     // copy build output
     CopyFileToDirectory ("./binding/SkiaSharp.Android/bin/Release/SkiaSharp.dll", "./output/android/");
     CopyFileToDirectory ("./binding/SkiaSharp.iOS/bin/Release/SkiaSharp.dll", "./output/ios/");
@@ -416,7 +422,6 @@ Task ("libs-osx")
     CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll", "./output/mac/");
     CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.Desktop.targets", "./output/mac/");
     CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll.config", "./output/mac/");
-    CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/mac/libskia_osx.dylib", "./output/mac/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -446,9 +451,8 @@ Task ("tests")
     if (IsRunningOnUnix ()) {
         DotNetBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", c => { 
             c.Configuration = "Release"; 
-            c.Properties ["Platform"] = new [] { "\"Any CPU\"" };
         });
-        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/SkiaSharp.Desktop.Tests.dll");
+        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/Release/SkiaSharp.Desktop.Tests.dll");
     }
 });
 
