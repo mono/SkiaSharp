@@ -242,14 +242,14 @@ Task ("externals-windows")
         SetEnvironmentVariable ("GYP_DEFINES", "skia_arch_type='" + skiaArch + "'");
         RunGyp ();
         fixup ();
-        // DotNetBuild ("native-builds/libskia_windows/libskia_windows_" + dir + ".sln", c => { 
-        //     c.Configuration = "Release"; 
-        //     c.Properties ["Platform"] = new [] { platform };
-        // });
-        // if (!DirectoryExists ("native-builds/lib/windows/" + dir)) CreateDirectory ("native-builds/lib/windows/" + dir);
-        // CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.lib", "native-builds/lib/windows/" + dir);
-        // CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.dll", "native-builds/lib/windows/" + dir);
-        // CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.pdb", "native-builds/lib/windows/" + dir);
+        DotNetBuild ("native-builds/libskia_windows/libskia_windows_" + dir + ".sln", c => { 
+            c.Configuration = "Release"; 
+            c.Properties ["Platform"] = new [] { platform };
+        });
+        if (!DirectoryExists ("native-builds/lib/windows/" + dir)) CreateDirectory ("native-builds/lib/windows/" + dir);
+        CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.lib", "native-builds/lib/windows/" + dir);
+        CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.dll", "native-builds/lib/windows/" + dir);
+        CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.pdb", "native-builds/lib/windows/" + dir);
     });
 
     // set up the gyp environment variables
