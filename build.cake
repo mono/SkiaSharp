@@ -222,7 +222,7 @@ Task ("externals-windows")
         !FileExists ("native-builds/lib/windows/x64/libskia_windows.dll"))
     .Does (() =>  
 {
-    var propsFixup = new Action (() => {
+    var fixup = new Action (() => {
         var props = SKIA_PATH.CombineWithFilePath ("out/gyp/libjpeg-turbo.props").FullPath;
         var xdoc = XDocument.Load (props);
         var ns = (XNamespace) "http://schemas.microsoft.com/developer/msbuild/2003";
@@ -238,46 +238,18 @@ Task ("externals-windows")
         }
     });
     
-    var gypVsVersionFixup = new Action<string> ((solutionPlatform) => {
-        var ns = (XNamespace) "http://schemas.microsoft.com/developer/msbuild/2003";
-        var correctVsVersion = 2015;
-        var vsVersionVar = EnvironmentVariable ("GYP_MSVS_VERSION") ?? correctVsVersion.ToString ();
-        var vsVersion = correctVsVersion;
-        if (!int.TryParse (vsVersionVar, out vsVersion)) {
-            vsVersion = correctVsVersion;
-        }
-        if (vsVersion < correctVsVersion) {
-            Information ("Fixing VS project versions. Was {0}, now {1}", vsVersionVar, correctVsVersion);
-            var sln = ROOT_PATH.CombineWithFilePath ("native-builds/libskia_windows/libskia_windows_" + solutionPlatform + ".sln");
-            ProcessSolutionProjects (sln, (projectName, projectPath) => {
-                if (projectName != "libskia_windows") {
-                    var xproj = XDocument.Load (projectPath.FullPath);
-                    var locals = xproj.Root
-                        .Elements (ns + "PropertyGroup")
-                        .Where (e => e.Attribute ("Label") != null && e.Attribute ("Label").Value == "Locals")
-                        .Elements (ns + "PlatformToolset");
-                    foreach (var local in locals) {
-                        local.Value = "v140";
-                    }
-                    xproj.Save (projectPath.FullPath);
-                }
-            });
-        }
-    });
-    
     var buildArch = new Action<string, string, string> ((platform, skiaArch, dir) => {
         SetEnvironmentVariable ("GYP_DEFINES", "skia_arch_type='" + skiaArch + "'");
         RunGyp ();
-        gypVsVersionFixup (dir);
-        propsFixup ();
-        DotNetBuild ("native-builds/libskia_windows/libskia_windows_" + dir + ".sln", c => { 
-            c.Configuration = "Release"; 
-            c.Properties ["Platform"] = new [] { platform };
-        });
-        if (!DirectoryExists ("native-builds/lib/windows/" + dir)) CreateDirectory ("native-builds/lib/windows/" + dir);
-        CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.lib", "native-builds/lib/windows/" + dir);
-        CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.dll", "native-builds/lib/windows/" + dir);
-        CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.pdb", "native-builds/lib/windows/" + dir);
+        fixup ();
+        // DotNetBuild ("native-builds/libskia_windows/libskia_windows_" + dir + ".sln", c => { 
+        //     c.Configuration = "Release"; 
+        //     c.Properties ["Platform"] = new [] { platform };
+        // });
+        // if (!DirectoryExists ("native-builds/lib/windows/" + dir)) CreateDirectory ("native-builds/lib/windows/" + dir);
+        // CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.lib", "native-builds/lib/windows/" + dir);
+        // CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.dll", "native-builds/lib/windows/" + dir);
+        // CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.pdb", "native-builds/lib/windows/" + dir);
     });
 
     // set up the gyp environment variables
