@@ -1,6 +1,8 @@
 #addin "Cake.Xamarin"
 #addin "Cake.XCode"
+#addin "Cake.FileHelpers"
 
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -142,6 +144,19 @@ var RunMdocUpdate = new Action<FilePath, DirectoryPath> ((assembly, docsRoot) =>
     });
 });
 
+var ProcessSolutionProjects = new Action<FilePath, Action<string, FilePath>> ((solutionFilePath, process) => {
+    var solutionFile = MakeAbsolute (solutionFilePath).FullPath;
+    foreach (var line in FileReadLines (solutionFile)) {
+        var match = Regex.Match (line, @"Project\(""(?<type>.*)""\) = ""(?<name>.*)"", ""(?<path>.*)"", "".*""");
+        if (match.Success && match.Groups ["type"].Value == "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") {
+            var path = match.Groups["path"].Value;
+            var projectFilePath = MakeAbsolute (solutionFilePath.GetDirectory ().CombineWithFilePath (path));
+            Information ("Processing project file: " + projectFilePath);
+            process (match.Groups["name"].Value, projectFilePath);
+        }
+    }
+});
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXTERNALS - the native C and C++ libraries
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -208,7 +223,7 @@ Task ("externals-windows")
     .Does (() =>  
 {
     var fixup = new Action (() => {
-        var props = SKIA_PATH.Combine ("out/gyp/libjpeg-turbo.props").FullPath;
+        var props = SKIA_PATH.CombineWithFilePath ("out/gyp/libjpeg-turbo.props").FullPath;
         var xdoc = XDocument.Load (props);
         var ns = (XNamespace) "http://schemas.microsoft.com/developer/msbuild/2003";
         var temp = xdoc.Root
@@ -222,36 +237,27 @@ Task ("externals-windows")
             xdoc.Save (props);
         }
     });
+    
+    var buildArch = new Action<string, string, string> ((platform, skiaArch, dir) => {
+        SetEnvironmentVariable ("GYP_DEFINES", "skia_arch_type='" + skiaArch + "'");
+        RunGyp ();
+        fixup ();
+        DotNetBuild ("native-builds/libskia_windows/libskia_windows_" + dir + ".sln", c => { 
+            c.Configuration = "Release"; 
+            c.Properties ["Platform"] = new [] { platform };
+        });
+        if (!DirectoryExists ("native-builds/lib/windows/" + dir)) CreateDirectory ("native-builds/lib/windows/" + dir);
+        CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.lib", "native-builds/lib/windows/" + dir);
+        CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.dll", "native-builds/lib/windows/" + dir);
+        CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.pdb", "native-builds/lib/windows/" + dir);
+    });
 
     // set up the gyp environment variables
     AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
     SetEnvironmentVariable ("GYP_GENERATORS", "ninja,msvs");
         
-    // build the x86 vesion
-    SetEnvironmentVariable ("GYP_DEFINES", "skia_arch_type='x86'");
-    RunGyp ();
-    fixup ();
-    DotNetBuild ("native-builds/libskia_windows/libskia_windows_x86.sln", c => { 
-        c.Configuration = "Release"; 
-        c.Properties ["Platform"] = new [] { "Win32" };
-    });
-    if (!DirectoryExists ("native-builds/lib/windows/x86")) CreateDirectory ("native-builds/lib/windows/x86");
-    CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.lib", "native-builds/lib/windows/x86");
-    CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.dll", "native-builds/lib/windows/x86");
-    CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.pdb", "native-builds/lib/windows/x86");
-    
-    // build the x64 vesion
-    SetEnvironmentVariable ("GYP_DEFINES", "skia_arch_type='x86_64'");
-    RunGyp ();
-    fixup ();
-    DotNetBuild ("native-builds/libskia_windows/libskia_windows_x64.sln", c => { 
-        c.Configuration = "Release"; 
-        c.Properties ["Platform"] = new [] { "x64" };
-    });
-    if (!DirectoryExists ("native-builds/lib/windows/x64")) CreateDirectory ("native-builds/lib/windows/x64");
-    CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.lib", "native-builds/lib/windows/x64");
-    CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.dll", "native-builds/lib/windows/x64");
-    CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.pdb", "native-builds/lib/windows/x64");
+    buildArch ("Win32", "x86", "x86");
+    buildArch ("x64", "x86_64", "x64");
 });
 // this builds the native C and C++ externals for Mac OS X
 Task ("externals-osx")
