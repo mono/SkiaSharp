@@ -194,6 +194,41 @@ namespace SkiaSharp
 			}
 		}
 
+        public float MeasureText (string text)
+        {
+			if (text == null)
+				throw new ArgumentNullException ("text");
+
+			var bytes = System.Text.Encoding.UTF8.GetBytes (text);
+            
+            return SkiaApi.sk_paint_measure_text (Handle, bytes, (IntPtr)bytes.Length, IntPtr.Zero);
+        }
+        
+        public float MeasureText (string text, ref SKRect bounds)
+        {
+			if (text == null)
+				throw new ArgumentNullException ("text");
+
+			var bytes = System.Text.Encoding.UTF8.GetBytes (text);
+            
+            return SkiaApi.sk_paint_measure_text (Handle, bytes, (IntPtr)bytes.Length, ref bounds);
+        }
+
+        public long BreakText (string text, float maxWidth)
+        {
+            float measuredWidth;
+            return BreakText (text, maxWidth, out measuredWidth);
+        }
+
+        public long BreakText (string text, float maxWidth, out float measuredWidth)
+        {
+			if (text == null)
+				throw new ArgumentNullException ("text");
+
+			var bytes = System.Text.Encoding.UTF8.GetBytes (text);
+            
+            return (long)SkiaApi.sk_paint_break_text (Handle, bytes, (IntPtr)bytes.Length, maxWidth, out measuredWidth);
+        }
 	}
 }
 
