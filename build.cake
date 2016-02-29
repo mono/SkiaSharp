@@ -14,6 +14,7 @@ var XamarinComponentToolPath = GetToolPath ("../xamarin-component.exe");
 var CakeToolPath = GetToolPath ("Cake.exe");
 var NUnitConsoleToolPath = GetToolPath ("../NUnit.Console/tools/nunit3-console.exe");
 var GenApiToolPath = GetToolPath ("../genapi.exe");
+var MDocPath = GetMDocPath ();
 
 DirectoryPath ROOT_PATH = MakeAbsolute(File(".")).GetDirectory();
 DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("depot_tools"));
@@ -46,6 +47,21 @@ FilePath GetToolPath (FilePath toolPath)
  	if (FileExists (appRootExe))
  		return appRootExe;
     throw new FileNotFoundException ("Unable to find tool: " + appRootExe); 
+}
+
+FilePath GetMDocPath ()
+{
+    FilePath mdocPath;
+    if (IsRunningOnUnix ()) {
+        mdocPath = "/Library/Frameworks/Mono.framework/Versions/Current/bin/mdoc";
+    } else {
+        DirectoryPath progFiles = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
+        mdocPath = progFiles.CombineWithFilePath ("Mono/bin/mdoc.bat");
+    }
+    if (!FileExists (mdocPath)) {
+        mdocPath = "mdoc";
+    }
+    return mdocPath;
 }
 
 var RunNuGetRestore = new Action<FilePath> ((solution) =>
@@ -128,19 +144,15 @@ var RunTests = new Action<FilePath> ((testAssembly) =>
 
 var RunMdocUpdate = new Action<FilePath, DirectoryPath> ((assembly, docsRoot) =>
 {
-    FilePath mdocPath;
-    if (IsRunningOnUnix ()) {
-        mdocPath = "/Library/Frameworks/Mono.framework/Versions/Current/bin/mdoc";
-    } else {
-        DirectoryPath progFiles = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
-        mdocPath = progFiles.CombineWithFilePath ("Mono/bin/mdoc.bat");
-    }
-    if (!FileExists (mdocPath)) {
-        mdocPath = "mdoc";
-    }
-    
-    StartProcess (mdocPath, new ProcessSettings {
+    StartProcess (MDocPath, new ProcessSettings {
         Arguments = string.Format ("update --out=\"{0}\" \"{1}\"", docsRoot, assembly),
+    });
+});
+
+var RunMdocMSXml = new Action<DirectoryPath, FilePath> ((docsRoot, output) =>
+{
+    StartProcess (MDocPath, new ProcessSettings {
+        Arguments = string.Format ("export-msxdoc --out=\"{0}\" \"{1}\"", output, docsRoot),
     });
 });
 
@@ -520,6 +532,9 @@ Task ("docs")
     .Does (() => 
 {
     RunMdocUpdate ("./binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll", "./docs/en/");
+    
+    if (!DirectoryExists ("./output/xml-docs/")) CreateDirectory ("./output/xml-docs/");
+    RunMdocMSXml ("./docs/en/", "./output/xml-docs/SkiaSharp.xml");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
