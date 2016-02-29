@@ -217,6 +217,12 @@ namespace SkiaSharp
 		public extern static float sk_paint_get_text_skew_x(sk_paint_t t);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_paint_set_text_skew_x(sk_paint_t t, float skew);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static float sk_paint_measure_text (sk_paint_t t, byte [] text, IntPtr length, ref SKRect bounds);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static float sk_paint_measure_text (sk_paint_t t, byte [] text, IntPtr length, IntPtr boundsZero);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static IntPtr sk_paint_break_text (sk_paint_t t, byte [] text, IntPtr length, float maxWidth, out float measuredWidth);
 
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
