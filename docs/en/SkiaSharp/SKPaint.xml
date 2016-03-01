@@ -10,18 +10,8 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>
-      <para>Holds the style and color information about how to draw geometries, text and bitmaps.</para>
-    </summary>
-    <remarks>
-      <para>Anytime you draw something in Skia, and want to specify what color it is, or how it blends with the background, or what style or font to draw it in, you specify those attributes in a paint.</para>
-      <para />
-      <para>Unlike <see cref="T:SkiaSharp.SKCanvas" />, paints do not maintain an internal stack of state (i.e. there is no save/restore on a paint). However, paints are relatively light-weight, so the client may create and maintain any number of paint objects, each set up for a particular use. Factoring all of these color and stylistic attribute out of the canvas state, and into (multiple) paint objects, allows canvas’ save/restore to be that much more efficient, as all they have to do is maintain the stack of matrix and clip settings.</para>
-      <para />
-      <para />
-      <para />
-      <para />
-    </remarks>
+    <summary>The SKPaint class holds the style and color information about how to draw geometries, text and bitmaps.</summary>
+    <remarks />
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -33,8 +23,66 @@
       </AssemblyInfo>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Creates a new SKPaint with the default settings.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="BreakText">
+      <MemberSignature Language="C#" Value="public long BreakText (string text, float maxWidth);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance int64 BreakText(string text, float32 maxWidth) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int64</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="text" Type="System.String" />
+        <Parameter Name="maxWidth" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="text">The text to be measured</param>
+        <param name="maxWidth">Maximum width. Only the subset of text whose accumulated widths are &lt;= maxWidth are measured.</param>
+        <summary>Measure the text, stopping early if the measured width exceeds <paramref name="maxWidth" />.</summary>
+        <returns>Return the number of characters of text that were measured. </returns>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="BreakText">
+      <MemberSignature Language="C#" Value="public long BreakText (string text, float maxWidth, out float measuredWidth);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance int64 BreakText(string text, float32 maxWidth, float32 measuredWidth) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int64</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="text" Type="System.String" />
+        <Parameter Name="maxWidth" Type="System.Single" />
+        <Parameter Name="measuredWidth" Type="System.Single&amp;" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="text">The text to be measured</param>
+        <param name="maxWidth">
+          <para>Maximum width. Only the subset of text whose accumulated widths are &lt;= <paramref name="maxWidth" /> are measured.</para>
+          <para></para>
+        </param>
+        <param name="measuredWidth">Returns the actual width of the measured text</param>
+        <summary>
+          <para>Measure the text, stopping early if the measured width exceeds <paramref name="maxWidth" />.</para>
+          <para></para>
+        </summary>
+        <returns>Return the number of characters of text that were measured. </returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Color">
@@ -68,9 +116,9 @@
         <ReturnType>SkiaSharp.SKColorFilter</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>The paint’s color filter.</summary>
+        <value>The current color filter.</value>
+        <remarks>A color filter can be used with a Paint to modify the color of each pixel drawn with that paint.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -119,9 +167,9 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Controls antialiasing in the SKPaint.</summary>
+        <value>The current setting for the anti-alias setting.</value>
+        <remarks>If this property is <see langword="true" />, the paint smooths out the edges of what is being drawn, but is has no impact on the interior of the shape. </remarks>
       </Docs>
     </Member>
     <Member MemberName="IsStroke">
@@ -151,9 +199,53 @@
         <ReturnType>SkiaSharp.SKMaskFilter</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>The SKPaint’s MaskFilter.</summary>
         <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <remarks>Mask filters control the transformations on the alpha channel before primitives are drawn.  Blur and Emboss are both MaskFilters.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MeasureText">
+      <MemberSignature Language="C#" Value="public float MeasureText (string text);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance float32 MeasureText(string text) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Single</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="text" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="text">The text to be measured</param>
+        <summary>Measures the text</summary>
+        <returns>Returns the width of the text.</returns>
+        <remarks>
+          <para>This will return the vertical measure if this is vertical text, in which case the returned value should be treated has a height instead of a width.</para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MeasureText">
+      <MemberSignature Language="C#" Value="public float MeasureText (string text, ref SkiaSharp.SKRect bounds);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance float32 MeasureText(string text, valuetype SkiaSharp.SKRect bounds) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Single</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="text" Type="System.String" />
+        <Parameter Name="bounds" Type="SkiaSharp.SKRect&amp;" RefType="ref" />
+      </Parameters>
+      <Docs>
+        <param name="text">The text to be measured</param>
+        <param name="bounds">Returns the bounds of the text relative to (0,0)</param>
+        <summary>Measures the text</summary>
+        <returns>Returns the width of the text.</returns>
+        <remarks>This will return the vertical measure if this is vertical text, in which case the returned value should be treated has a height instead of a width.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Shader">
@@ -167,9 +259,9 @@
         <ReturnType>SkiaSharp.SKShader</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>The SKPaint’s shader.</summary>
+        <value>The current shader associated with this paint.</value>
+        <remarks>Shaders are effects like gradients, or bitmap patterns.</remarks>
       </Docs>
     </Member>
     <Member MemberName="StrokeCap">
@@ -183,9 +275,9 @@
         <ReturnType>SkiaSharp.SKStrokeCap</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Controls how the start and end of stroked lines and paths are treated.</summary>
+        <value>The current cap setting.</value>
+        <remarks>The default is SKStrokeCap.Butt</remarks>
       </Docs>
     </Member>
     <Member MemberName="StrokeJoin">
@@ -199,7 +291,7 @@
         <ReturnType>SkiaSharp.SKStrokeJoin</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Controls the path’s join type.</summary>
         <value>To be added.</value>
         <remarks>To be added.</remarks>
       </Docs>
@@ -253,7 +345,7 @@
         <ReturnType>SkiaSharp.SKTextAlign</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Controls the path’s align value.</summary>
         <value>To be added.</value>
         <remarks>To be added.</remarks>
       </Docs>
@@ -285,9 +377,11 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>The SKPaint’s horizontal scale factor for text.</summary>
+        <value>The current scale factor for drawing/measuring text in X.</value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="TextSize">
@@ -317,9 +411,9 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>The SKPaint’s horizontal skew factor for text.</summary>
+        <value>The current skew factor along the X axis.</value>
+        <remarks>The default value is zero.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Typeface">
@@ -333,8 +427,8 @@
         <ReturnType>SkiaSharp.SKTypeface</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
+        <summary>Controls the typeface used when painting using this SKPaint.</summary>
+        <value>The current type face, or <see langword="null" /> if not set.</value>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
