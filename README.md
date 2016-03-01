@@ -22,13 +22,26 @@ Check our getting [started guide](https://developer.xamarin.com/guides/cross-pla
 
 ## Building SkiaSharp
 
-To build SkiaSharp on Mac OS X (Bash):
+### Mac OS X
+
+Run from Bash
 
     $ ./bootstrapper.sh -t libs
 
-Similarly on Windows (PowerShell):
+### Windows
+
+You need Python 2.7 in `PATH` environment variable. Then you need to run following commands from `skia` directory:
+
+    > ..\depot_tools\gclient.bat config --unmanaged https://github.com/mono/skia.git
+    > ..\depot_tools\gclient.bat sync
+
+The process will take some time while gclient downloads Skia build dependencies.
+
+Then you can finally build it:
 
     > .\bootstrapper.ps1 -Target libs
+
+
 
 There are several targets available:
 
