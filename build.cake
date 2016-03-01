@@ -546,12 +546,12 @@ Task ("nuget")
     .Does (() => 
 {
     if (IsRunningOnWindows ()) {
-        PackageNuGet ("./nuget/Xamarin.SkiaSharp.Windows.nuspec", "./output/");
+        PackageNuGet ("./nuget/SkiaSharp.Windows.nuspec", "./output/");
     }
 
     if (IsRunningOnUnix ()) {
-        PackageNuGet ("./nuget/Xamarin.SkiaSharp.Mac.nuspec", "./output/");
-        PackageNuGet ("./nuget/Xamarin.SkiaSharp.nuspec", "./output/");
+        PackageNuGet ("./nuget/SkiaSharp.Mac.nuspec", "./output/");
+        PackageNuGet ("./nuget/SkiaSharp.nuspec", "./output/");
     }
 });
 
