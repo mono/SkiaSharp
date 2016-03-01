@@ -240,7 +240,7 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException ("paint");
 
-			var bytes = System.Text.Encoding.UTF8.GetBytes (text);
+			var bytes = Util.GetEncodedText(text, paint.TextEncoding);
 			SkiaApi.sk_canvas_draw_text (Handle, bytes, bytes.Length, x, y, paint.Handle);
 		}
 
@@ -253,22 +253,57 @@ namespace SkiaSharp
 			if (points == null)
 				throw new ArgumentNullException ("points");
 
-			var bytes = System.Text.Encoding.UTF8.GetBytes (text);
-			SkiaApi.sk_canvas_draw_pos_text (Handle, bytes, bytes.Length, points, paint.Handle);
+			var bytes = Util.GetEncodedText(text, paint.TextEncoding);
+			SkiaApi.sk_canvas_draw_pos_text(Handle, bytes, bytes.Length, points, paint.Handle);
 		}
 
-		public void DrawText (string text, SKPath path, float hOffset, float vOffset, SKPaint paint)
+		public void DrawText (IntPtr buffer, int length, SKPath path, float hOffset, float vOffset, SKPaint paint)
+		{
+			if (buffer == IntPtr.Zero)
+				throw new ArgumentNullException("buffer");
+			if (paint == null)
+				throw new ArgumentNullException ("paint");
+			if (paint == null)
+				throw new ArgumentNullException ("paint");
+			
+			SkiaApi.sk_canvas_draw_text_on_path(Handle, buffer, length, path.Handle, hOffset, vOffset, paint.Handle);
+		}
+
+		public void DrawText(IntPtr buffer, int length, float x, float y, SKPaint paint)
+		{
+			if (buffer == IntPtr.Zero)
+				throw new ArgumentNullException("buffer");
+			if (paint == null)
+				throw new ArgumentNullException("paint");
+			
+			SkiaApi.sk_canvas_draw_text(Handle, buffer, length, x, y, paint.Handle);
+		}
+
+		public void DrawText(IntPtr buffer, int length, SKPoint[] points, SKPaint paint)
+		{
+			if (buffer == IntPtr.Zero)
+				throw new ArgumentNullException("buffer");
+			if (paint == null)
+				throw new ArgumentNullException("paint");
+			if (points == null)
+				throw new ArgumentNullException("points");
+			
+			SkiaApi.sk_canvas_draw_pos_text(Handle, buffer, length, points, paint.Handle);
+		}
+
+		public void DrawText(string text, SKPath path, float hOffset, float vOffset, SKPaint paint)
 		{
 			if (text == null)
-				throw new ArgumentNullException ("text");
+				throw new ArgumentNullException("text");
 			if (paint == null)
-				throw new ArgumentNullException ("paint");
+				throw new ArgumentNullException("paint");
 			if (paint == null)
-				throw new ArgumentNullException ("paint");
+				throw new ArgumentNullException("paint");
 
-			var bytes = System.Text.Encoding.UTF8.GetBytes (text);
-			SkiaApi.sk_canvas_draw_text_on_path (Handle, bytes, bytes.Length, path.Handle, hOffset, vOffset, paint.Handle);
+			var bytes = Util.GetEncodedText(text, paint.TextEncoding);
+			SkiaApi.sk_canvas_draw_text_on_path(Handle, bytes, bytes.Length, path.Handle, hOffset, vOffset, paint.Handle);
 		}
+
 
 		public void ResetMatrix ()
 		{

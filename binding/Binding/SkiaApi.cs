@@ -120,13 +120,19 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_line(sk_canvas_t t, float x0, float y0, float x1, float y1, sk_paint_t paint);
 
-		// These can be overloaded to take an IntPtr which points to some utf8 text.
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_text(sk_canvas_t t, byte[] text, int len, float x, float y, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_pos_text(sk_canvas_t t, byte[] text, int len, [In] SKPoint[] points, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_text_on_path(sk_canvas_t t, byte[] text, int len, sk_path_t path, float hOffset, float vOffset, sk_paint_t paint);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_canvas_draw_text(sk_canvas_t t, IntPtr text, int len, float x, float y, sk_paint_t paint);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_canvas_draw_pos_text(sk_canvas_t t, IntPtr text, int len, [In] SKPoint[] points, sk_paint_t paint);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_canvas_draw_text_on_path(sk_canvas_t t, IntPtr text, int len, sk_path_t path, float hOffset, float vOffset, sk_paint_t paint);
+
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_bitmap(sk_canvas_t t, sk_bitmap_t bitmap, float x, float y, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -223,9 +229,13 @@ namespace SkiaSharp
 		public extern static float sk_paint_measure_text (sk_paint_t t, byte [] text, IntPtr length, IntPtr boundsZero);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_paint_break_text (sk_paint_t t, byte [] text, IntPtr length, float maxWidth, out float measuredWidth);
-
-
+		public extern static float sk_paint_measure_text(sk_paint_t t, IntPtr text, IntPtr length, ref SKRect bounds);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static float sk_paint_measure_text(sk_paint_t t, IntPtr text, IntPtr length, IntPtr boundsZero);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static IntPtr sk_paint_break_text(sk_paint_t t, IntPtr text, IntPtr length, float maxWidth, out float measuredWidth);
+
+        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_image_t sk_image_new_raster_copy(ref SKImageInfo info, IntPtr pixels, IntPtr rowBytes);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_image_t sk_image_new_from_encoded(sk_data_t encoded, ref SKRectI subset);
