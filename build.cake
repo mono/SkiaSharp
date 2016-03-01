@@ -58,10 +58,10 @@ FilePath GetMDocPath ()
         DirectoryPath progFiles = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
         mdocPath = progFiles.CombineWithFilePath ("Mono/bin/mdoc.bat");
     }
-    if (!FileExists (mdocPath)) {
-        mdocPath = "mdoc";
+    if (FileExists (mdocPath)) {
+        return mdocPath;
     }
-    return mdocPath;
+    throw new FileNotFoundException ("Unable to find tool: " + mdocPath); 
 }
 
 var RunNuGetRestore = new Action<FilePath> ((solution) =>
