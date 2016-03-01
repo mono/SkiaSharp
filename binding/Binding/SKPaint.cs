@@ -199,9 +199,17 @@ namespace SkiaSharp
 			if (text == null)
 				throw new ArgumentNullException ("text");
 
-			var bytes = System.Text.Encoding.UTF8.GetBytes (text);
+			var bytes = Util.GetEncodedText (text, TextEncoding);
 
-			return SkiaApi.sk_paint_measure_text (Handle, bytes, (IntPtr)bytes.Length, IntPtr.Zero);
+			return SkiaApi.sk_paint_measure_text (Handle, bytes, (IntPtr) bytes.Length, IntPtr.Zero);
+		}
+
+		public float MeasureText (IntPtr buffer, IntPtr length)
+		{
+			if (buffer == IntPtr.Zero)
+				throw new ArgumentNullException ("buffer");
+
+			return SkiaApi.sk_paint_measure_text (Handle, buffer, length, IntPtr.Zero);
 		}
 
 		public float MeasureText (string text, ref SKRect bounds)
@@ -209,9 +217,17 @@ namespace SkiaSharp
 			if (text == null)
 				throw new ArgumentNullException ("text");
 
-			var bytes = System.Text.Encoding.UTF8.GetBytes (text);
+			var bytes = Util.GetEncodedText (text, TextEncoding);
 
-			return SkiaApi.sk_paint_measure_text (Handle, bytes, (IntPtr)bytes.Length, ref bounds);
+			return SkiaApi.sk_paint_measure_text (Handle, bytes, (IntPtr) bytes.Length, ref bounds);
+		}
+
+		public float MeasureText (IntPtr buffer, IntPtr length, ref SKRect bounds)
+		{
+			if (buffer == IntPtr.Zero)
+				throw new ArgumentNullException ("buffer");
+
+			return SkiaApi.sk_paint_measure_text (Handle, buffer, length, ref bounds);
 		}
 
 		public long BreakText (string text, float maxWidth)
@@ -225,9 +241,18 @@ namespace SkiaSharp
 			if (text == null)
 				throw new ArgumentNullException ("text");
 
-			var bytes = System.Text.Encoding.UTF8.GetBytes (text);
+			var bytes = Util.GetEncodedText (text, TextEncoding);
 
-			return (long)SkiaApi.sk_paint_break_text (Handle, bytes, (IntPtr)bytes.Length, maxWidth, out measuredWidth);
+			return (long) SkiaApi.sk_paint_break_text (Handle, bytes, (IntPtr) bytes.Length, maxWidth, out measuredWidth);
+		}
+
+
+		public long BreakText (IntPtr buffer, IntPtr length, float maxWidth, out float measuredWidth)
+		{
+			if (buffer == IntPtr.Zero)
+				throw new ArgumentNullException ("buffer");
+
+			return (long)SkiaApi.sk_paint_break_text (Handle, buffer, length, maxWidth, out measuredWidth);
 		}
 	}
 }
