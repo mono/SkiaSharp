@@ -156,6 +156,13 @@ var RunMdocMSXml = new Action<DirectoryPath, FilePath> ((docsRoot, output) =>
     });
 });
 
+var RunMdocAssemble = new Action<DirectoryPath, FilePath> ((docsRoot, output) =>
+{
+    StartProcess (MDocPath, new ProcessSettings {
+        Arguments = string.Format ("assemble --out=\"{0}\" \"{1}\"", output, docsRoot),
+    });
+});
+
 var ProcessSolutionProjects = new Action<FilePath, Action<string, FilePath>> ((solutionFilePath, process) => {
     var solutionFile = MakeAbsolute (solutionFilePath).FullPath;
     foreach (var line in FileReadLines (solutionFile)) {
@@ -533,8 +540,10 @@ Task ("docs")
 {
     RunMdocUpdate ("./binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll", "./docs/en/");
     
-    if (!DirectoryExists ("./output/xml-docs/")) CreateDirectory ("./output/xml-docs/");
-    RunMdocMSXml ("./docs/en/", "./output/xml-docs/SkiaSharp.xml");
+    if (!DirectoryExists ("./output/docs/msxml/")) CreateDirectory ("./output/docs/msxml/");
+    RunMdocMSXml ("./docs/en/", "./output/docs/msxml/SkiaSharp.xml");
+    if (!DirectoryExists ("./output/docs/mdoc/")) CreateDirectory ("./output/docs/mdoc/");
+    RunMdocAssemble ("./docs/en/", "./output/docs/mdoc/SkiaSharp");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -543,6 +552,7 @@ Task ("docs")
 
 Task ("nuget")
     .IsDependentOn ("libs")
+    .IsDependentOn ("docs")
     .Does (() => 
 {
     if (IsRunningOnWindows ()) {
