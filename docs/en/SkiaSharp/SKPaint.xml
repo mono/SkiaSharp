@@ -49,7 +49,7 @@
         <summary>Measure the text, stopping early if the measured width exceeds <paramref name="maxWidth" />.</summary>
         <returns>Return the number of characters of text that were measured. </returns>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -72,20 +72,43 @@
         <param name="text">The text to be measured</param>
         <param name="maxWidth">
           <para>Maximum width. Only the subset of text whose accumulated widths are &lt;= <paramref name="maxWidth" /> are measured.</para>
-          <para>
-          </para>
+          <para></para>
         </param>
         <param name="measuredWidth">Returns the actual width of the measured text</param>
         <summary>
           <para>Measure the text, stopping early if the measured width exceeds <paramref name="maxWidth" />.</para>
-          <para>
-          </para>
+          <para></para>
         </summary>
         <returns>Return the number of characters of text that were measured. </returns>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="BreakText">
+      <MemberSignature Language="C#" Value="public long BreakText (IntPtr buffer, IntPtr length, float maxWidth, out float measuredWidth);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance int64 BreakText(native int buffer, native int length, float32 maxWidth, float32 measuredWidth) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int64</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="buffer" Type="System.IntPtr" />
+        <Parameter Name="length" Type="System.IntPtr" />
+        <Parameter Name="maxWidth" Type="System.Single" />
+        <Parameter Name="measuredWidth" Type="System.Single&amp;" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="buffer">Contains a pointer to a region holding text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <param name="length">Number of bytes to read from the <paramref name="buffer." /></param>
+        <param name="maxWidth">Maximum width. Only the subset of text whose accumulated widths are &lt;= <paramref name="maxWidth" /> are measured.</param>
+        <param name="measuredWidth">Returns the actual width of the measured text</param>
+        <summary>Measure the text encoded as a UTF-8 buffer, stopping early if the measured width exceeds <paramref name="maxWidth" />.</summary>
+        <returns>Return the number of characters of text that were measured. </returns>
+        <remarks>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.   This only consumes up to <paramref name="length" /> bytes from the buffer.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Color">
@@ -101,7 +124,7 @@
       <Docs>
         <summary>The paint’s color.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
         <remarks>
           <para>Note that the color is a 32bit value containing alpha as well as r,g,b. This 32bit value is not premultiplied, meaning that its alpha can be any value, regardless of the values of r,g,b.</para>
@@ -230,6 +253,28 @@
       </Docs>
     </Member>
     <Member MemberName="MeasureText">
+      <MemberSignature Language="C#" Value="public float MeasureText (IntPtr buffer, IntPtr length);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance float32 MeasureText(native int buffer, native int length) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Single</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="buffer" Type="System.IntPtr" />
+        <Parameter Name="length" Type="System.IntPtr" />
+      </Parameters>
+      <Docs>
+        <param name="buffer">Contains a pointer to a region holding text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <param name="length">Number of bytes to read from the <paramref name="buffer." /></param>
+        <summary>Measures the UTF-8 encoded text.</summary>
+        <returns>Returns the width of the text.</returns>
+        <remarks>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.   This only consumes up to <paramref name="length" /> bytes from the buffer.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MeasureText">
       <MemberSignature Language="C#" Value="public float MeasureText (string text, ref SkiaSharp.SKRect bounds);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance float32 MeasureText(string text, valuetype SkiaSharp.SKRect bounds) cil managed" />
       <MemberType>Method</MemberType>
@@ -249,6 +294,33 @@
         <summary>Measures the text</summary>
         <returns>Returns the width of the text.</returns>
         <remarks>This will return the vertical measure if this is vertical text, in which case the returned value should be treated has a height instead of a width.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MeasureText">
+      <MemberSignature Language="C#" Value="public float MeasureText (IntPtr buffer, IntPtr length, ref SkiaSharp.SKRect bounds);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance float32 MeasureText(native int buffer, native int length, valuetype SkiaSharp.SKRect bounds) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Single</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="buffer" Type="System.IntPtr" />
+        <Parameter Name="length" Type="System.IntPtr" />
+        <Parameter Name="bounds" Type="SkiaSharp.SKRect&amp;" RefType="ref" />
+      </Parameters>
+      <Docs>
+        <param name="buffer">Contains a pointer to a region holding text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <param name="length">Number of bytes to read from the <paramref name="buffer." /></param>
+        <param name="bounds">Returns the bounds of the text relative to (0,0)</param>
+        <summary>Measures the UTF-8 encoded text.</summary>
+        <returns>Returns the width of the text.</returns>
+        <remarks>
+          <para>This will return the vertical measure if this is vertical text, in which case the returned value should be treated has a height instead of a width.</para>
+          <para>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.   This only consumes up to <paramref name="length" /> bytes from the buffer.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Shader">
@@ -364,9 +436,9 @@
         <ReturnType>SkiaSharp.SKTextEncoding</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>The encoding used by the text.</summary>
+        <value>The encoding used by the various text measuring primitives.</value>
+        <remarks>This defaults to UTF8 encoding.</remarks>
       </Docs>
     </Member>
     <Member MemberName="TextScaleX">
