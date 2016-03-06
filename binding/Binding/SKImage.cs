@@ -46,6 +46,17 @@ namespace SkiaSharp
 			return new SKImage (handle);
 		}
 
+		public static SKImage FromData (SKData data)
+		{
+			if (data == null)
+				throw new ArgumentNullException ("data");
+			
+			var handle = SkiaApi.sk_image_new_from_encoded (data.Handle, IntPtr.Zero);
+			if (handle == IntPtr.Zero)
+				return null;
+			return new SKImage (handle);
+		}
+
 		public SKData Encode ()
 		{
 			return new SKData (SkiaApi.sk_image_encode (Handle));
