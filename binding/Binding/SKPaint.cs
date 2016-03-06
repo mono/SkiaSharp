@@ -199,9 +199,7 @@ namespace SkiaSharp
 			if (text == null)
 				throw new ArgumentNullException ("text");
 
-			var bytes = Util.GetEncodedText (text, TextEncoding);
-
-			return SkiaApi.sk_paint_measure_text (Handle, bytes, (IntPtr) bytes.Length, IntPtr.Zero);
+			return SkiaApi.sk_paint_measure_utf16_text (Handle, text, (IntPtr) text.Length, IntPtr.Zero);
 		}
 
 		public float MeasureText (IntPtr buffer, IntPtr length)
@@ -217,9 +215,7 @@ namespace SkiaSharp
 			if (text == null)
 				throw new ArgumentNullException ("text");
 
-			var bytes = Util.GetEncodedText (text, TextEncoding);
-
-			return SkiaApi.sk_paint_measure_text (Handle, bytes, (IntPtr) bytes.Length, ref bounds);
+			return SkiaApi.sk_paint_measure_utf16_text (Handle, text, (IntPtr) text.Length, ref bounds);
 		}
 
 		public float MeasureText (IntPtr buffer, IntPtr length, ref SKRect bounds)
@@ -240,10 +236,7 @@ namespace SkiaSharp
 		{
 			if (text == null)
 				throw new ArgumentNullException ("text");
-
-			var bytes = Util.GetEncodedText (text, TextEncoding);
-
-			return (long) SkiaApi.sk_paint_break_text (Handle, bytes, (IntPtr) bytes.Length, maxWidth, out measuredWidth);
+			return (long) SkiaApi.sk_paint_break_utf16_text (Handle, text, (IntPtr) text.Length, maxWidth, out measuredWidth);
 		}
 
 
