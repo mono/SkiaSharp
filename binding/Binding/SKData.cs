@@ -55,11 +55,6 @@ namespace SkiaSharp
 			return new SKData (SkiaApi.sk_data_new_from_malloc (bytes, (IntPtr) length));
 		}
 
-		public static SKData FromMallocMemory (byte[] bytes)
-		{
-			return new SKData (SkiaApi.sk_data_new_from_malloc (bytes, (IntPtr)bytes.Length));
-		}
-
 		public SKData Subset (ulong offset, ulong length)
 		{
 			if (Marshal.SizeOf (typeof(IntPtr)) == 4) {
