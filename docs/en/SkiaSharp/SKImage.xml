@@ -13,11 +13,9 @@
     <summary>Abstraction for drawing a rectangle of pixels.</summary>
     <remarks>
       <para>SkImage is an abstraction for drawing a rectagle of pixels, though the particular type of image could be actually storing its data on the GPU, or as drawing commands (picture or PDF or otherwise), ready to be played back into another canvas.</para>
-      <para>
-      </para>
+      <para></para>
       <para>The content of SkImage is always immutable, though the actual storage may change, if for example that image can be re-created via encoded data or other means.</para>
-      <para>
-      </para>
+      <para></para>
       <para>SkImage always has a non-zero dimensions. If there is a request to create a new image, either directly or via SkSurface, and either of the requested dimensions are zero, then <see langword="null" /> will be returned.</para>
     </remarks>
   </Docs>
@@ -56,7 +54,7 @@
         <summary>Encodes the image as a PNG image</summary>
         <returns>SKData wrapping the encoded image as a PNG.</returns>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -75,11 +73,13 @@
         <Parameter Name="quality" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="format">To be added.</param>
-        <param name="quality">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="format">The file format used to encode the image.</param>
+        <param name="quality">The quality level to use for the image.</param>
+        <summary>Encodes an image, multiple file formats supported</summary>
+        <returns>SKData wrapping the encoded image as a PNG.</returns>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromData">
@@ -124,8 +124,7 @@
         <summary>Creates an SKImage from an encoded image wrapped by the data.</summary>
         <returns>The decoded image, or <see langword="null" /> on error.</returns>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
