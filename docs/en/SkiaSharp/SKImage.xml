@@ -13,11 +13,9 @@
     <summary>Abstraction for drawing a rectangle of pixels.</summary>
     <remarks>
       <para>SkImage is an abstraction for drawing a rectagle of pixels, though the particular type of image could be actually storing its data on the GPU, or as drawing commands (picture or PDF or otherwise), ready to be played back into another canvas.</para>
-      <para>
-      </para>
+      <para></para>
       <para>The content of SkImage is always immutable, though the actual storage may change, if for example that image can be re-created via encoded data or other means.</para>
-      <para>
-      </para>
+      <para></para>
       <para>SkImage always has a non-zero dimensions. If there is a request to create a new image, either directly or via SkSurface, and either of the requested dimensions are zero, then <see langword="null" /> will be returned.</para>
     </remarks>
   </Docs>
@@ -61,6 +59,26 @@
       </Docs>
     </Member>
     <Member MemberName="FromData">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromData (SkiaSharp.SKData data);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromData(class SkiaSharp.SKData data) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="data" Type="SkiaSharp.SKData" />
+      </Parameters>
+      <Docs>
+        <param name="data">Data holding the encoded image.</param>
+        <summary>Creates an SKImage from an encoded image wrapped by the data.</summary>
+        <returns>The decoded image, or <see langword="null" /> on error.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromData">
       <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromData (SkiaSharp.SKData data, SkiaSharp.SKRectI subset);" />
       <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromData(class SkiaSharp.SKData data, valuetype SkiaSharp.SKRectI subset) cil managed" />
       <MemberType>Method</MemberType>
@@ -80,7 +98,7 @@
         <summary>Creates an SKImage from an encoded image wrapped by the data.</summary>
         <returns>The decoded image, or <see langword="null" /> on error.</returns>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
