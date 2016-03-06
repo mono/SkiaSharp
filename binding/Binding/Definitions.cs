@@ -242,7 +242,7 @@ namespace SkiaSharp
 	public enum SKDropShadowImageFilterShadowMode
 	{
 		DrawShadowAndForeground,
-		DawShadowOnly,
+		DrawShadowOnly,
 	}
 
 	public enum SKDisplacementMapEffectChannelSelectorType
