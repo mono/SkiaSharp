@@ -10,6 +10,18 @@ using System;
 
 namespace SkiaSharp
 {
+	public enum SKImageEncodeFormat {
+		Unknown,
+		Bmp,
+		Gif,
+		Ico,
+		Jpeg,
+		Png,
+		Wbmp,
+		Webp,
+		Ktx,
+	}
+	
 	public class SKImage : SKObject
 	{
 		protected override void Dispose (bool disposing)
@@ -60,6 +72,11 @@ namespace SkiaSharp
 		public SKData Encode ()
 		{
 			return new SKData (SkiaApi.sk_image_encode (Handle));
+		}
+
+		public SKData Encode (SKImageEncodeFormat format, int quality)
+		{
+			return new SKData (SkiaApi.sk_image_encode_specific (Handle, format, quality));
 		}
 
 		public int Width => SkiaApi.sk_image_get_width (Handle);
