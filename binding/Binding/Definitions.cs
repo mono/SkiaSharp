@@ -12,6 +12,32 @@
 //
 // SkMatrix could benefit from bringing some of the operators defined in C++
 //
+// Augmented primitives come from Mono:
+// Author:
+//   Mike Kestner (mkestner@speakeasy.net)
+//
+// Copyright (C) 2001 Mike Kestner
+// Copyright (C) 2004,2006 Novell, Inc (http://www.novell.com)
+//
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to
+// permit persons to whom the Software is furnished to do so, subject to
+// the following conditions:
+// 
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
 using System;
 using System.Runtime.InteropServices;
 using System.Globalization;
@@ -324,33 +350,622 @@ namespace SkiaSharp
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKPoint {
-		public float X, Y;
-		public SKPoint(float x, float y)
+		private float x, y;
+		// -----------------------
+		// Public Shared Members
+		// -----------------------
+
+		/// <summary>
+		///	Empty Shared Field
+		/// </summary>
+		///
+		/// <remarks>
+		///	An uninitialized SKPoint Structure.
+		/// </remarks>
+		
+		public static readonly SKPoint Empty;
+
+		/// <summary>
+		///	Addition Operator
+		/// </summary>
+		///
+		/// <remarks>
+		///	Translates a SKPoint using the Width and Height
+		///	properties of the given SKSize.
+		/// </remarks>
+
+		public static SKPoint operator + (SKPoint pt, SKSizeI sz)
 		{
-			X = x;
-			Y = y;
+			return new SKPoint (pt.X + sz.Width, pt.Y + sz.Height);
+		}
+		public static SKPoint operator + (SKPoint pt, SKSize sz)
+		{
+			return new SKPoint (pt.X + sz.Width, pt.Y + sz.Height);
+		}
+		
+		/// <summary>
+		///	Equality Operator
+		/// </summary>
+		///
+		/// <remarks>
+		///	Compares two SKPoint objects. The return value is
+		///	based on the equivalence of the X and Y properties 
+		///	of the two points.
+		/// </remarks>
+
+		public static bool operator == (SKPoint left, SKPoint right)
+		{
+			return ((left.X == right.X) && (left.Y == right.Y));
+		}
+		
+		/// <summary>
+		///	Inequality Operator
+		/// </summary>
+		///
+		/// <remarks>
+		///	Compares two SKPoint objects. The return value is
+		///	based on the equivalence of the X and Y properties 
+		///	of the two points.
+		/// </remarks>
+
+		public static bool operator != (SKPoint left, SKPoint right)
+		{
+			return ((left.X != right.X) || (left.Y != right.Y));
+		}
+		
+		/// <summary>
+		///	Subtraction Operator
+		/// </summary>
+		///
+		/// <remarks>
+		///	Translates a SKPoint using the negation of the Width 
+		///	and Height properties of the given SKSize.
+		/// </remarks>
+
+		public static SKPoint operator - (SKPoint pt, SKSizeI sz)
+		{
+			return new SKPoint (pt.X - sz.Width, pt.Y - sz.Height);
+		}
+		public static SKPoint operator - (SKPoint pt, SKSize sz)
+		{
+			return new SKPoint (pt.X - sz.Width, pt.Y - sz.Height);
+		}
+		
+		// -----------------------
+		// Public Constructor
+		// -----------------------
+
+		/// <summary>
+		///	SKPoint Constructor
+		/// </summary>
+		///
+		/// <remarks>
+		///	Creates a SKPoint from a specified x,y coordinate pair.
+		/// </remarks>
+		
+		public SKPoint (float x, float y)
+		{
+			this.x = x;
+			this.y = y;
+		}
+
+		// -----------------------
+		// Public Instance Members
+		// -----------------------
+
+		/// <summary>
+		///	IsEmpty Property
+		/// </summary>
+		///
+		/// <remarks>
+		///	Indicates if both X and Y are zero.
+		/// </remarks>
+		
+		public bool IsEmpty {
+			get {
+				return ((x == 0.0) && (y == 0.0));
+			}
+		}
+
+		/// <summary>
+		///	X Property
+		/// </summary>
+		///
+		/// <remarks>
+		///	The X coordinate of the SKPoint.
+		/// </remarks>
+		
+		public float X {
+			get {
+				return x;
+			}
+			set {
+				x = value;
+			}
+		}
+
+		/// <summary>
+		///	Y Property
+		/// </summary>
+		///
+		/// <remarks>
+		///	The Y coordinate of the SKPoint.
+		/// </remarks>
+		
+		public float Y {
+			get {
+				return y;
+			}
+			set {
+				y = value;
+			}
+		}
+
+		/// <summary>
+		///	Equals Method
+		/// </summary>
+		///
+		/// <remarks>
+		///	Checks equivalence of this SKPoint and another object.
+		/// </remarks>
+		
+		public override bool Equals (object obj)
+		{
+			if (!(obj is SKPoint))
+				return false;
+
+			return (this == (SKPoint) obj);
+		}
+
+		/// <summary>
+		///	GetHashCode Method
+		/// </summary>
+		///
+		/// <remarks>
+		///	Calculates a hashing value.
+		/// </remarks>
+		
+		public override int GetHashCode ()
+		{
+			return (int) x ^ (int) y;
+		}
+
+		/// <summary>
+		///	ToString Method
+		/// </summary>
+		///
+		/// <remarks>
+		///	Formats the SKPoint as a string in coordinate notation.
+		/// </remarks>
+		
+		public override string ToString ()
+		{
+			return String.Format ("{{X={0}, Y={1}}}", x.ToString (CultureInfo.CurrentCulture),
+				y.ToString (CultureInfo.CurrentCulture));
+		}
+
+		public static SKPoint Add (SKPoint pt, SKSizeI sz)
+		{
+			return new SKPoint (pt.X + sz.Width, pt.Y + sz.Height);
+		}
+		
+		public static SKPoint Add (SKPoint pt, SKSize sz)
+		{
+			return new SKPoint (pt.X + sz.Width, pt.Y + sz.Height);
+		}
+
+		public static SKPoint Subtract (SKPoint pt, SKSizeI sz)
+		{
+			return new SKPoint (pt.X - sz.Width, pt.Y - sz.Height);
+		}
+
+		public static SKPoint Subtract (SKPoint pt, SKSize sz)
+		{
+			return new SKPoint (pt.X - sz.Width, pt.Y - sz.Height);
 		}
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKPointI {
-		public int X, Y;
-		public SKPointI(int x, int y)
+		// Private x and y coordinate fields.
+		private int x, y;
+
+		// -----------------------
+		// Public Shared Members
+		// -----------------------
+
+		/// <summary>
+		///	Empty Shared Field
+		/// </summary>
+		///
+		/// <remarks>
+		///	An uninitialized Point Structure.
+		/// </remarks>
+		
+		public static readonly SKPointI Empty;
+
+		/// <summary>
+		///	Ceiling Shared Method
+		/// </summary>
+		///
+		/// <remarks>
+		///	Produces a Point structure from a PointF structure by
+		///	taking the ceiling of the X and Y properties.
+		/// </remarks>
+		
+		public static SKPointI Ceiling (SKPoint value)
 		{
-			X = x;
-			Y = y;
+			int x, y;
+			checked {
+				x = (int) Math.Ceiling (value.X);
+				y = (int) Math.Ceiling (value.Y);
+			}
+
+			return new SKPointI (x, y);
+		}
+
+		/// <summary>
+		///	Round Shared Method
+		/// </summary>
+		///
+		/// <remarks>
+		///	Produces a Point structure from a PointF structure by
+		///	rounding the X and Y properties.
+		/// </remarks>
+		
+		public static SKPointI Round (SKPoint value)
+		{
+			int x, y;
+			checked {
+				x = (int) Math.Round (value.X);
+				y = (int) Math.Round (value.Y);
+			}
+
+			return new SKPointI (x, y);
+		}
+
+		/// <summary>
+		///	Truncate Shared Method
+		/// </summary>
+		///
+		/// <remarks>
+		///	Produces a Point structure from a PointF structure by
+		///	truncating the X and Y properties.
+		/// </remarks>
+		
+		// LAMESPEC: Should this be floor, or a pure cast to int?
+
+		public static SKPointI Truncate (SKPoint value)
+		{
+			int x, y;
+			checked {
+				x = (int) value.X;
+				y = (int) value.Y;
+			}
+
+			return new SKPointI (x, y);
+		}
+
+		/// <summary>
+		///	Addition Operator
+		/// </summary>
+		///
+		/// <remarks>
+		///	Translates a Point using the Width and Height
+		///	properties of the given <typeref>Size</typeref>.
+		/// </remarks>
+
+		public static SKPointI operator + (SKPointI pt, SKSizeI sz)
+		{
+			return new SKPointI (pt.X + sz.Width, pt.Y + sz.Height);
+		}
+		
+		/// <summary>
+		///	Equality Operator
+		/// </summary>
+		///
+		/// <remarks>
+		///	Compares two Point objects. The return value is
+		///	based on the equivalence of the X and Y properties 
+		///	of the two points.
+		/// </remarks>
+
+		public static bool operator == (SKPointI left, SKPointI right)
+		{
+			return ((left.X == right.X) && (left.Y == right.Y));
+		}
+		
+		/// <summary>
+		///	Inequality Operator
+		/// </summary>
+		///
+		/// <remarks>
+		///	Compares two Point objects. The return value is
+		///	based on the equivalence of the X and Y properties 
+		///	of the two points.
+		/// </remarks>
+
+		public static bool operator != (SKPointI left, SKPointI right)
+		{
+			return ((left.X != right.X) || (left.Y != right.Y));
+		}
+		
+		/// <summary>
+		///	Subtraction Operator
+		/// </summary>
+		///
+		/// <remarks>
+		///	Translates a Point using the negation of the Width 
+		///	and Height properties of the given Size.
+		/// </remarks>
+
+		public static SKPointI operator - (SKPointI pt, SKSizeI sz)
+		{
+			return new SKPointI (pt.X - sz.Width, pt.Y - sz.Height);
+		}
+		
+		/// <summary>
+		///	Point to Size Conversion
+		/// </summary>
+		///
+		/// <remarks>
+		///	Returns a Size based on the Coordinates of a given 
+		///	Point. Requires explicit cast.
+		/// </remarks>
+
+		public static explicit operator SKSizeI (SKPointI p)
+		{
+			return new SKSizeI (p.X, p.Y);
+		}
+
+		/// <summary>
+		///	Point to PointF Conversion
+		/// </summary>
+		///
+		/// <remarks>
+		///	Creates a PointF based on the coordinates of a given 
+		///	Point. No explicit cast is required.
+		/// </remarks>
+
+		public static implicit operator SKPoint (SKPointI p)
+		{
+			return new SKPoint (p.X, p.Y);
+		}
+
+
+		// -----------------------
+		// Public Constructors
+		// -----------------------
+
+		/// <summary>
+		///	Point Constructor
+		/// </summary>
+		///
+		/// <remarks>
+		///	Creates a Point from a Size value.
+		/// </remarks>
+		
+		public SKPointI (SKSizeI sz)
+		{
+			x = sz.Width;
+			y = sz.Height;
+		}
+
+		/// <summary>
+		///	Point Constructor
+		/// </summary>
+		///
+		/// <remarks>
+		///	Creates a Point from a specified x,y coordinate pair.
+		/// </remarks>
+		
+		public SKPointI (int x, int y)
+		{
+			this.x = x;
+			this.y = y;
+		}
+
+		// -----------------------
+		// Public Instance Members
+		// -----------------------
+
+		/// <summary>
+		///	IsEmpty Property
+		/// </summary>
+		///
+		/// <remarks>
+		///	Indicates if both X and Y are zero.
+		/// </remarks>
+		
+		public bool IsEmpty {
+			get {
+				return ((x == 0) && (y == 0));
+			}
+		}
+
+		/// <summary>
+		///	X Property
+		/// </summary>
+		///
+		/// <remarks>
+		///	The X coordinate of the Point.
+		/// </remarks>
+		
+		public int X {
+			get {
+				return x;
+			}
+			set {
+				x = value;
+			}
+		}
+
+		/// <summary>
+		///	Y Property
+		/// </summary>
+		///
+		/// <remarks>
+		///	The Y coordinate of the Point.
+		/// </remarks>
+		
+		public int Y {
+			get {
+				return y;
+			}
+			set {
+				y = value;
+			}
+		}
+
+		/// <summary>
+		///	Equals Method
+		/// </summary>
+		///
+		/// <remarks>
+		///	Checks equivalence of this Point and another object.
+		/// </remarks>
+		
+		public override bool Equals (object obj)
+		{
+			if (!(obj is SKPointI))
+				return false;
+
+			return (this == (SKPointI) obj);
+		}
+
+		/// <summary>
+		///	GetHashCode Method
+		/// </summary>
+		///
+		/// <remarks>
+		///	Calculates a hashing value.
+		/// </remarks>
+		
+		public override int GetHashCode ()
+		{
+			return x^y;
+		}
+
+		/// <summary>
+		///	Offset Method
+		/// </summary>
+		///
+		/// <remarks>
+		///	Moves the Point a specified distance.
+		/// </remarks>
+
+		public void Offset (int dx, int dy)
+		{
+			x += dx;
+			y += dy;
+		}
+		
+		/// <summary>
+		///	ToString Method
+		/// </summary>
+		///
+		/// <remarks>
+		///	Formats the Point as a string in coordinate notation.
+		/// </remarks>
+		
+		public override string ToString ()
+		{
+			return string.Format ("{{X={0},Y={1}}}", x.ToString (CultureInfo.InvariantCulture), 
+				y.ToString (CultureInfo.InvariantCulture));
+		}
+		public static SKPointI Add (SKPointI pt, SKSizeI sz)
+		{
+			return new SKPointI (pt.X + sz.Width, pt.Y + sz.Height);
+		}
+
+		public void Offset (SKPointI p)
+		{
+			Offset (p.X, p.Y);
+		}
+
+		public static SKPointI Subtract (SKPointI pt, SKSizeI sz)
+		{
+			return new SKPointI (pt.X - sz.Width, pt.Y - sz.Height);
 		}
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKPoint3
 	{
-		public float X, Y, Z;
+		public static readonly SKPoint3 Empty;
+		private float x, y, z;
+
+		public float X {
+			get {
+				return x;
+			}
+			set {
+				x = value;
+			}
+		}
+
+		public float Y {
+			get {
+				return y;
+			}
+			set {
+				y = value;
+			}
+		}
+
+		public float Z {
+			get {
+				return z;
+			}
+			set {
+				z = value;
+			}
+		}
+
+		
 		public SKPoint3(float x, float y, float z)
 		{
-			X = x;
-			Y = y;
-			Z = z;
+			this.x = x;
+			this.y = y;
+			this.z = z;
+		}
+
+		public static bool operator == (SKPoint3 left, SKPoint3 right)
+		{
+			return ((left.x == right.x) && (left.y == right.y) && (left.z == right.z));
+		}
+		
+		public static bool operator != (SKPoint3 left, SKPoint3 right)
+		{
+			return ((left.x != right.x) || (left.y != right.y) || (left.z != right.z));
+		}
+
+		public bool IsEmpty {
+			get {
+				return ((x == 0.0) && (y == 0.0) && (z==0.0));
+			}
+		}
+
+		public override bool Equals (object obj)
+		{
+			if (!(obj is SKPoint3))
+				return false;
+
+			return (this == (SKPoint3) obj);
+		}
+
+		public override int GetHashCode ()
+		{
+			return (int) x ^ (int) y ^ (int) z;
+		}
+
+		public override string ToString ()
+		{
+			return String.Format ("{{X={0}, Y={1}, Z={2}}}",
+					      x.ToString (CultureInfo.CurrentCulture),
+					      y.ToString (CultureInfo.CurrentCulture),
+					      z.ToString (CultureInfo.CurrentCulture)
+				);
 		}
 	}
 
