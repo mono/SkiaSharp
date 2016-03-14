@@ -31,7 +31,16 @@ namespace SkiaSharp
 
 			base.Dispose (disposing);
 		}
-		
+
+		public SKPathFillType FillType {
+			get {
+				return SkiaApi.sk_path_get_filltype (Handle);
+			}
+			set {
+				SkiaApi.sk_path_set_filltype (Handle, value);
+			}
+		}
+
 		public void MoveTo (float x, float y)
 		{
 			SkiaApi.sk_path_move_to (Handle, x, y);

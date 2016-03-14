@@ -288,9 +288,13 @@ namespace SkiaSharp
 		public extern static void sk_path_add_oval(sk_path_t t, ref SKRect rect, SKPathDirection direction);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static bool sk_path_get_bounds(sk_path_t t, out SKRect rect);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKPathFillType sk_path_get_filltype (sk_path_t t);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_set_filltype (sk_path_t t, SKPathFillType filltype);
 
 		// SkMaskFilter
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_maskfilter_unref(sk_maskfilter_t t);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_maskfilter_t sk_maskfilter_new_blur(SKBlurStyle style, float sigma);
