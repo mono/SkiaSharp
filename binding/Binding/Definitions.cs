@@ -133,13 +133,13 @@ namespace SkiaSharp
 		CounterClockwise
 	}
 
-    public enum SKPathFillType
-    {
-        Winding,
-        EvenOdd,
-        InverseWinding,
-        InverseEvenOdd
-    }
+	public enum SKPathFillType
+	{
+		Winding,
+		EvenOdd,
+		InverseWinding,
+		InverseEvenOdd
+	}
 
 	public enum SKColorType {
 		Unknown,
