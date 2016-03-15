@@ -247,6 +247,16 @@ namespace SkiaSharp
 
 			return (long)SkiaApi.sk_paint_break_text (Handle, buffer, length, maxWidth, out measuredWidth);
 		}
+
+		public SKFontMetrics FontMetrics
+		{
+			get
+			{
+				SKFontMetrics metrics;
+				SkiaApi.sk_paint_get_fontmetrics(Handle, out metrics);
+				return metrics;
+			}
+		}
 	}
 }
 

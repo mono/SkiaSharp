@@ -244,6 +244,8 @@ namespace SkiaSharp
 		public extern static IntPtr sk_paint_break_utf16_text(sk_paint_t t, [MarshalAs(UnmanagedType.LPWStr)] string text, IntPtr length, float maxWidth, out float measuredWidth);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_paint_break_text (sk_paint_t t, byte [] text, IntPtr length, float maxWidth, out float measuredWidth);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_paint_get_fontmetrics(sk_paint_t t, out SKFontMetrics fontMetrics);
 
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]

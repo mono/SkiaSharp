@@ -133,15 +133,16 @@ namespace SkiaSharp
 		CounterClockwise
 	}
 
-    public enum SKPathFillType
-    {
-        Winding,
-        EvenOdd,
-        InverseWinding,
-        InverseEvenOdd
-    }
+	public enum SKPathFillType
+	{
+		Winding,
+		EvenOdd,
+		InverseWinding,
+		InverseEvenOdd
+	}
 
-	public enum SKColorType {
+	public enum SKColorType
+	{
 		Unknown,
 		Rgba_8888,
 		Bgra_8888,
@@ -1138,6 +1139,102 @@ namespace SkiaSharp
 				Persp1 = 0,
 				Persp2 = 1
 			};
+		}
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct SKFontMetrics
+	{
+		uint flags;			// Bit field to identify which values are unknown
+		float top;			// The greatest distance above the baseline for any glyph (will be <= 0)
+		float ascent;			// The recommended distance above the baseline (will be <= 0)
+		float descent;			// The recommended distance below the baseline (will be >= 0)
+		float bottom;			// The greatest distance below the baseline for any glyph (will be >= 0)
+		float leading;			// The recommended distance to add between lines of text (will be >= 0)
+		float avgCharWidth;		// the average character width (>= 0)
+		float maxCharWidth;		// the max character width (>= 0)
+		float xMin;			// The minimum bounding box x value for all glyphs
+		float xMax;			// The maximum bounding box x value for all glyphs
+		float xHeight;			// The height of an 'x' in px, or 0 if no 'x' in face
+		float capHeight;		// The cap height (> 0), or 0 if cannot be determined.
+		float underlineThickness;	// underline thickness, or 0 if cannot be determined
+		float underlinePosition;        // underline position, or 0 if cannot be determined
+
+		const uint flagsUnderlineThicknessIsValid = (1U << 0);
+		const uint flagsUnderlinePositionIsValid = (1U << 1);
+
+		float Top {
+			get { return top; }
+		}
+
+		float Ascent
+		{
+			get { return ascent; }
+		}
+
+		float Descent
+		{
+			get { return descent; }
+		}
+
+		float Bottom
+		{
+			get { return bottom; }
+		}
+
+		float Leading
+		{
+			get { return leading; }
+		}
+
+		float AverageCharacterWidth
+		{
+			get { return avgCharWidth; }
+		}
+
+		float MaxCharacterWidth
+		{
+			get { return maxCharWidth; }
+		}
+
+		float XMin
+		{
+			get { return xMin; }
+		}
+
+		float XMax
+		{
+			get { return xMax; }
+		}
+
+		float XHeight
+		{
+			get { return xHeight; }
+		}
+
+		float CapHeight
+		{
+			get { return capHeight; }
+		}
+
+		float? UnderlineThickness
+		{
+			get {
+				if ((flags & flagsUnderlineThicknessIsValid) != 0)
+					return underlineThickness;
+				else
+					return null;
+			}
+		}
+
+		float? UnderlinePosition
+		{
+			get {
+				if ((flags & flagsUnderlinePositionIsValid) != 0)
+					return underlinePosition;
+				else
+					return null;
+			}
 		}
 	}
 }
