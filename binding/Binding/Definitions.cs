@@ -1163,61 +1163,61 @@ namespace SkiaSharp
 		const uint flagsUnderlineThicknessIsValid = (1U << 0);
 		const uint flagsUnderlinePositionIsValid = (1U << 1);
 
-		float Top {
+		public float Top {
 			get { return top; }
 		}
 
-		float Ascent
+        public float Ascent
 		{
 			get { return ascent; }
 		}
 
-		float Descent
+        public float Descent
 		{
 			get { return descent; }
 		}
 
-		float Bottom
+        public float Bottom
 		{
 			get { return bottom; }
 		}
 
-		float Leading
+        public float Leading
 		{
 			get { return leading; }
 		}
 
-		float AverageCharacterWidth
+        public float AverageCharacterWidth
 		{
 			get { return avgCharWidth; }
 		}
 
-		float MaxCharacterWidth
+        public float MaxCharacterWidth
 		{
 			get { return maxCharWidth; }
 		}
 
-		float XMin
+        public float XMin
 		{
 			get { return xMin; }
 		}
 
-		float XMax
+        public float XMax
 		{
 			get { return xMax; }
 		}
 
-		float XHeight
+        public float XHeight
 		{
 			get { return xHeight; }
 		}
 
-		float CapHeight
+        public float CapHeight
 		{
 			get { return capHeight; }
 		}
 
-		float? UnderlineThickness
+        public float? UnderlineThickness
 		{
 			get {
 				if ((flags & flagsUnderlineThicknessIsValid) != 0)
@@ -1227,7 +1227,7 @@ namespace SkiaSharp
 			}
 		}
 
-		float? UnderlinePosition
+        public float? UnderlinePosition
 		{
 			get {
 				if ((flags & flagsUnderlinePositionIsValid) != 0)
