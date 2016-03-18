@@ -891,18 +891,21 @@
       </Docs>
     </Member>
     <Member MemberName="Save">
-      <MemberSignature Language="C#" Value="public void Save ();" />
-      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Save() cil managed" />
+      <MemberSignature Language="C#" Value="public int Save ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance int32 Save() cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
+        <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Parameters />
       <Docs>
         <summary>Saves the canvas state.</summary>
+        <returns>
+          <para>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> to balance this save.</para>
+        </returns>
         <remarks>
           <para>This call saves the current matrix, clip, and draw filter, and pushes a copy onto a private stack. </para>
           <para>Subsequent calls to translate, scale, rotate, skew, concat or clipping path or drawing filter all operate on this copy.</para>
@@ -932,14 +935,14 @@
       </Docs>
     </Member>
     <Member MemberName="SaveLayer">
-      <MemberSignature Language="C#" Value="public void SaveLayer (SkiaSharp.SKPaint paint);" />
-      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void SaveLayer(class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberSignature Language="C#" Value="public int SaveLayer (SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance int32 SaveLayer(class SkiaSharp.SKPaint paint) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
+        <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Parameters>
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
@@ -947,18 +950,21 @@
       <Docs>
         <param name="paint">This is copied, and is applied to the offscreen when <see cref="M:SkiaSharp.SKCanvas.Restore" /> is called.</param>
         <summary>Saves the canvas state and allocates an offscreen bitmap.</summary>
+        <returns>
+          <para>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> to balance this save.</para>
+        </returns>
         <remarks>This behaves the same as save(), but in addition it allocates an offscreen bitmap. All drawing calls are directed there, and only when the balancing call to restore() is made is that offscreen transfered to the canvas (or the previous layer).</remarks>
       </Docs>
     </Member>
     <Member MemberName="SaveLayer">
-      <MemberSignature Language="C#" Value="public void SaveLayer (SkiaSharp.SKRect limit, SkiaSharp.SKPaint paint);" />
-      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void SaveLayer(valuetype SkiaSharp.SKRect limit, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberSignature Language="C#" Value="public int SaveLayer (SkiaSharp.SKRect limit, SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance int32 SaveLayer(valuetype SkiaSharp.SKRect limit, class SkiaSharp.SKPaint paint) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
+        <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Parameters>
         <Parameter Name="limit" Type="SkiaSharp.SKRect" />
@@ -972,6 +978,9 @@
           <para>This is copied, and is applied to the offscreen when <see cref="M:SkiaSharp.SKCanvas.Restore" /> is called.</para>
         </param>
         <summary>Saves the canvas state and allocates an offscreen bitmap.</summary>
+        <returns>
+          <para>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> to balance this save.</para>
+        </returns>
         <remarks>
           <para>This behaves the same as save(), but in addition it allocates an offscreen bitmap. All drawing calls are directed there, and only when the balancing call to restore() is made is that offscreen transfered to the canvas (or the previous layer).</para>
         </remarks>

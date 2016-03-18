@@ -64,11 +64,11 @@ namespace SkiaSharp
 		public extern static sk_image_t sk_surface_new_image_snapshot(sk_surface_t t);
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_canvas_save(sk_canvas_t t);
+		public extern static int sk_canvas_save(sk_canvas_t t);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_canvas_save_layer(sk_canvas_t t, ref SKRect rect, sk_paint_t paint);
+		public extern static int sk_canvas_save_layer(sk_canvas_t t, ref SKRect rect, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_canvas_save_layer(sk_canvas_t t, IntPtr rectZero, sk_paint_t paint);
+		public extern static int sk_canvas_save_layer(sk_canvas_t t, IntPtr rectZero, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_restore(sk_canvas_t t);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
