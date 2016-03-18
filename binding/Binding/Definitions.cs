@@ -141,8 +141,7 @@ namespace SkiaSharp
 		InverseEvenOdd
 	}
 
-	public enum SKColorType
-	{
+	public enum SKColorType {
 		Unknown,
 		Rgba_8888,
 		Bgra_8888,
