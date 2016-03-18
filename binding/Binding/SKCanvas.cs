@@ -19,21 +19,21 @@ namespace SkiaSharp
 		{
 		}
 
-		public void Save ()
+		public int Save ()
 		{
 			if (Handle == IntPtr.Zero)
 				throw new ObjectDisposedException ("SKCanvas");
-			SkiaApi.sk_canvas_save (Handle);
+			return SkiaApi.sk_canvas_save (Handle);
 		}
 
-		public void SaveLayer (SKRect limit, SKPaint paint)
+		public int SaveLayer (SKRect limit, SKPaint paint)
 		{
-			SkiaApi.sk_canvas_save_layer (Handle, ref limit, paint == null ? IntPtr.Zero : paint.Handle);
+			return SkiaApi.sk_canvas_save_layer (Handle, ref limit, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
-		public void SaveLayer (SKPaint paint)
+		public int SaveLayer (SKPaint paint)
 		{
-			SkiaApi.sk_canvas_save_layer (Handle, IntPtr.Zero, paint == null ? IntPtr.Zero : paint.Handle);
+			return SkiaApi.sk_canvas_save_layer (Handle, IntPtr.Zero, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
 		public void DrawColor (SKColor color, SKXferMode mode = SKXferMode.Src)
