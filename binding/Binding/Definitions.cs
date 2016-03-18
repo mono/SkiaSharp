@@ -1144,79 +1144,80 @@ namespace SkiaSharp
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKFontMetrics
 	{
-		uint flags;			// Bit field to identify which values are unknown
-		float top;			// The greatest distance above the baseline for any glyph (will be <= 0)
-		float ascent;			// The recommended distance above the baseline (will be <= 0)
-		float descent;			// The recommended distance below the baseline (will be >= 0)
-		float bottom;			// The greatest distance below the baseline for any glyph (will be >= 0)
-		float leading;			// The recommended distance to add between lines of text (will be >= 0)
-		float avgCharWidth;		// the average character width (>= 0)
-		float maxCharWidth;		// the max character width (>= 0)
-		float xMin;			// The minimum bounding box x value for all glyphs
-		float xMax;			// The maximum bounding box x value for all glyphs
-		float xHeight;			// The height of an 'x' in px, or 0 if no 'x' in face
-		float capHeight;		// The cap height (> 0), or 0 if cannot be determined.
-		float underlineThickness;	// underline thickness, or 0 if cannot be determined
+		uint flags;                     // Bit field to identify which values are unknown
+		float top;                      // The greatest distance above the baseline for any glyph (will be <= 0)
+		float ascent;                   // The recommended distance above the baseline (will be <= 0)
+		float descent;                  // The recommended distance below the baseline (will be >= 0)
+		float bottom;                   // The greatest distance below the baseline for any glyph (will be >= 0)
+		float leading;                  // The recommended distance to add between lines of text (will be >= 0)
+		float avgCharWidth;             // the average character width (>= 0)
+		float maxCharWidth;             // the max character width (>= 0)
+		float xMin;                     // The minimum bounding box x value for all glyphs
+		float xMax;                     // The maximum bounding box x value for all glyphs
+		float xHeight;                  // The height of an 'x' in px, or 0 if no 'x' in face
+		float capHeight;                // The cap height (> 0), or 0 if cannot be determined.
+		float underlineThickness;       // underline thickness, or 0 if cannot be determined
 		float underlinePosition;        // underline position, or 0 if cannot be determined
 
 		const uint flagsUnderlineThicknessIsValid = (1U << 0);
 		const uint flagsUnderlinePositionIsValid = (1U << 1);
 
-		public float Top {
+		public float Top
+		{
 			get { return top; }
 		}
 
-        public float Ascent
+		public float Ascent
 		{
 			get { return ascent; }
 		}
 
-        public float Descent
+		public float Descent
 		{
 			get { return descent; }
 		}
 
-        public float Bottom
+		public float Bottom
 		{
 			get { return bottom; }
 		}
 
-        public float Leading
+		public float Leading
 		{
 			get { return leading; }
 		}
 
-        public float AverageCharacterWidth
+		public float AverageCharacterWidth
 		{
 			get { return avgCharWidth; }
 		}
 
-        public float MaxCharacterWidth
+		public float MaxCharacterWidth
 		{
 			get { return maxCharWidth; }
 		}
 
-        public float XMin
+		public float XMin
 		{
 			get { return xMin; }
 		}
 
-        public float XMax
+		public float XMax
 		{
 			get { return xMax; }
 		}
 
-        public float XHeight
+		public float XHeight
 		{
 			get { return xHeight; }
 		}
 
-        public float CapHeight
+		public float CapHeight
 		{
 			get { return capHeight; }
 		}
 
-        public float? UnderlineThickness
+		public float? UnderlineThickness
 		{
 			get {
 				if ((flags & flagsUnderlineThicknessIsValid) != 0)
@@ -1226,7 +1227,7 @@ namespace SkiaSharp
 			}
 		}
 
-        public float? UnderlinePosition
+		public float? UnderlinePosition
 		{
 			get {
 				if ((flags & flagsUnderlinePositionIsValid) != 0)
