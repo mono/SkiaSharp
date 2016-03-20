@@ -200,6 +200,10 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SKXferMode sk_paint_get_xfermode_mode(sk_paint_t t);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_paint_set_filter_quality(sk_paint_t t, SKFilterQuality filterQuality);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKFilterQuality sk_paint_get_filter_quality(sk_paint_t t);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_typeface_t sk_paint_get_typeface(sk_paint_t t);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_paint_set_typeface(sk_paint_t t, sk_typeface_t typeface);

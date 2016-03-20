@@ -140,6 +140,18 @@ namespace SkiaSharp
 			}
 		}
 
+		public SKFilterQuality FilterQuality
+		{
+			get
+			{
+				return SkiaApi.sk_paint_get_filter_quality(Handle);
+			}
+			set
+			{
+				SkiaApi.sk_paint_set_filter_quality(Handle, value);
+			}
+		}
+
 		public SKTypeface Typeface {
 			get {
 				return GetObject<SKTypeface> (SkiaApi.sk_paint_get_typeface (Handle));
