@@ -253,7 +253,7 @@ namespace SkiaSharp
 			get
 			{
 				SKFontMetrics metrics;
-				SkiaApi.sk_paint_get_fontmetrics(Handle, out metrics);
+				SkiaApi.sk_paint_get_fontmetrics(Handle, out metrics, 0f);
 				return metrics;
 			}
 		}
