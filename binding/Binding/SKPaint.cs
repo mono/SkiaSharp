@@ -248,6 +248,35 @@ namespace SkiaSharp
 			return (long)SkiaApi.sk_paint_break_text (Handle, buffer, length, maxWidth, out measuredWidth);
 		}
 
+		public SKPath GetTextPath(string text, float x, float y)
+		{
+			if (text == null)
+				throw new ArgumentNullException(nameof(text));
+			return new SKPath(SkiaApi.sk_paint_get_utf16_text_path(Handle, text, (IntPtr)text.Length, x, y));
+		}
+
+		public SKPath GetTextPath(IntPtr buffer, IntPtr length, float x, float y)
+		{
+			if (buffer == IntPtr.Zero)
+				throw new ArgumentNullException(nameof(buffer));
+			return new SKPath(SkiaApi.sk_paint_get_text_path(Handle, buffer, length, x, y));
+
+		}
+
+		public SKPath GetTextPath(string text, SKPoint[] points)
+		{
+			if (text == null)
+				throw new ArgumentNullException(nameof(text));
+			return new SKPath(SkiaApi.sk_paint_get_pos_utf16_text_path(Handle, text, (IntPtr)text.Length, points));
+		}
+
+		public SKPath GetTextPath(IntPtr buffer, IntPtr length, SKPoint[] points)
+		{
+			if (buffer == IntPtr.Zero)
+				throw new ArgumentNullException(nameof(buffer));
+			return new SKPath(SkiaApi.sk_paint_get_pos_text_path(Handle, buffer, length, points));
+		}
+
 		public SKFontMetrics FontMetrics
 		{
 			get
