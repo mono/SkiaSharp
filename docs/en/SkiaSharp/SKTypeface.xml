@@ -4,6 +4,7 @@
   <AssemblyInfo>
     <AssemblyName>SkiaSharp</AssemblyName>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <AssemblyVersion>1.49.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>SkiaSharp.SKObject</BaseTypeName>
@@ -14,11 +15,9 @@
     <remarks>
       <para>The SkTypeface class specifies the typeface and intrinsic style of a font.</para>
       <para>This is used in the paint, along with optionally algorithmic settings like textSize, textSkewX, textScaleX, kFakeBoldText_Mask, to specifyhow text appears when drawn (and measured).</para>
-      <para>
-      </para>
+      <para></para>
       <para>Typeface objects are immutable, and so they can be shared between threads.</para>
-      <para>
-      </para>
+      <para></para>
     </remarks>
   </Docs>
   <Members>
@@ -28,6 +27,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -52,6 +52,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -80,6 +81,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -100,6 +102,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -124,6 +127,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -143,6 +147,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKTypeface</ReturnType>
@@ -167,6 +172,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKTypeface</ReturnType>
@@ -180,7 +186,7 @@
         <param name="index">The font face index.</param>
         <summary>Return a new typeface given a file. </summary>
         <returns>
-          <para />
+          <para></para>
         </returns>
         <remarks>
           <para>If the file does not exist, or is not a valid font file, returns <paramref name="null" />.</para>
@@ -193,6 +199,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKTypeface</ReturnType>
@@ -207,8 +214,18 @@
         <summary>Return a new typeface given a stream. </summary>
         <returns>If the stream is not a valid font file, returns <paramref name="null" />. </returns>
         <remarks>
-          <para />
-        </remarks>
+          <para></para>
+          <example>
+            <code lang="C#"><![CDATA[using (var stream = new SKFileStream (“myfont.ttf"))
+using (var tf = SKTypeface.FromStream (stream)) {
+    paint.Color = XamDkBlue;
+    paint.TextSize = 60;
+    paint.Typeface = tf;
+
+    canvas.DrawText (text, 50, 100, paint);
+}
+]]></code>
+          </example>.</remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTypeface">
@@ -217,6 +234,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKTypeface</ReturnType>
