@@ -1,7 +1,8 @@
 # SkiaSharp
 
-SkiaSharp is a cross-platform, managed binding for the 
-Skia Graphics Library (https://skia.org/)
+SkiaSharp is a cross-platform 2D graphics API for .NET platforms based on Google's
+Skia Graphics Library (https://skia.org/).   It provides a comprehensive 2D API that can
+be used across mobile, server and desktop models to render images.
 
 ## What is Included
 
