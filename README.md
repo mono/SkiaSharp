@@ -59,6 +59,8 @@ There are several targets available:
  - `docs` - updates the mdoc files
  - `nuget` - packages the libraries into a NuGet
  - `CI` - builds everything
+ - `clean` - cleans everything
+   - `clean-externals` - cleans externals only
 
 ## Where is Windows Phone / Store / tvOS
  
