@@ -23,6 +23,17 @@ Check our getting [started guide](https://developer.xamarin.com/guides/cross-pla
 
 ## Building SkiaSharp
 
+First clone the repository:
+
+    $ git clone https://github.com/mono/SkiaSharp.git
+
+Next, set up the submodules:
+
+    $ cd SkiaSharp
+    $ git submodule init && git submodule update
+    
+Then follow the platform-specific instructions below.
+
 ### Mac OS X
 
 Run from Bash
