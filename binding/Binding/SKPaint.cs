@@ -41,6 +41,15 @@ namespace SkiaSharp
 			}
 		}
 
+		public bool IsDither {
+			get {
+				return SkiaApi.sk_paint_is_dither (Handle);
+			}
+			set {
+				SkiaApi.sk_paint_set_dither (Handle, value);
+			}
+		}
+
 		public bool IsVerticalText {
 			get {
 				return SkiaApi.sk_paint_is_verticaltext (Handle);

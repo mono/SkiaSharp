@@ -156,6 +156,10 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_paint_set_antialias(sk_paint_t t, bool v);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_paint_is_dither(sk_paint_t t);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_paint_set_dither(sk_paint_t t, bool v);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static bool sk_paint_is_verticaltext(sk_paint_t t);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_paint_set_verticaltext(sk_paint_t t, bool v);
