@@ -101,6 +101,14 @@ namespace SkiaSharp
 			SkiaApi.sk_path_add_rect (Handle, ref rect, direction);
 		}
 
+		public void AddRect (SKRect rect, SKPathDirection direction, uint startIndex)
+		{
+			if (startIndex > 3)
+				throw new ArgumentOutOfRangeException ("startIndex", "startIndex must be 0 - 3");
+
+			SkiaApi.sk_path_add_rect_start (Handle, ref rect, direction, startIndex);
+		}
+
 		public void AddOval (SKRect rect, SKPathDirection direction)
 		{
 			SkiaApi.sk_path_add_oval (Handle, ref rect, direction);
