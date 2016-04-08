@@ -46,9 +46,19 @@ namespace SkiaSharp
 			SkiaApi.sk_path_move_to (Handle, x, y);
 		}
 
+		public void RMoveTo (float dx, float dy)
+		{
+			SkiaApi.sk_path_rmove_to (Handle, dx, dy);
+		}
+
 		public void LineTo (float x, float y)
 		{
 			SkiaApi.sk_path_line_to (Handle, x, y);
+		}
+
+		public void RLineTo (float dx, float dy)
+		{
+			SkiaApi.sk_path_rline_to (Handle, dx, dy);
 		}
 
 		public void QuadTo (float x0, float y0, float x1, float y1)
@@ -56,14 +66,29 @@ namespace SkiaSharp
 			SkiaApi.sk_path_quad_to (Handle, x0, y0, x1, y1);
 		}
 
+		public void RQuadTo (float dx0, float dy0, float dx1, float dy1)
+		{
+			SkiaApi.sk_path_rquad_to (Handle, dx0, dy0, dx1, dy1);
+		}
+
 		public void ConicTo (float x0, float y0, float x1, float y1, float w)
 		{
 			SkiaApi.sk_path_conic_to (Handle, x0, y0, x1, y1, w);
 		}
 
+		public void RConicTo (float dx0, float dy0, float dx1, float dy1, float w)
+		{
+			SkiaApi.sk_path_rconic_to (Handle, dx0, dy0, dx1, dy1, w);
+		}
+
 		public void CubicTo (float x0, float y0, float x1, float y1, float x2, float y2)
 		{
 			SkiaApi.sk_path_cubic_to (Handle, x0, y0, x1, y1, x2, y2);
+		}
+
+		public void RCubicTo (float dx0, float dy0, float dx1, float dy1, float dx2, float dy2)
+		{
+			SkiaApi.sk_path_rcubic_to (Handle, dx0, dy0, dx1, dy1, dx2, dy2);
 		}
 
 		public void Close ()

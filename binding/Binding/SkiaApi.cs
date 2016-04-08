@@ -275,13 +275,23 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_move_to(sk_path_t t, float x, float y);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_rmove_to(sk_path_t t, float dx, float dy);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_line_to(sk_path_t t, float x, float y);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_rline_to(sk_path_t t, float dx, float dy);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_quad_to(sk_path_t t, float x0, float y0, float x1, float y1);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_rquad_to(sk_path_t t, float dx0, float dy0, float dx1, float dy1);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_conic_to(sk_path_t t, float x0, float y0, float x1, float y1, float w);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_rconic_to(sk_path_t t, float dx0, float dy0, float dx1, float dy1, float w);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_cubic_to(sk_path_t t, float x0, float y0, float x1, float y1, float x2, float y2);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_rcubic_to(sk_path_t t, float dx0, float dy0, float dx1, float dy1, float dx2, float dy2);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_close(sk_path_t t);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
