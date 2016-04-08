@@ -41,6 +41,15 @@ namespace SkiaSharp
 			}
 		}
 
+		public bool IsVerticalText {
+			get {
+				return SkiaApi.sk_paint_is_verticaltext (Handle);
+			}
+			set {
+				SkiaApi.sk_paint_set_verticaltext (Handle, value);
+			}
+		}
+
 		public bool IsStroke {
 			get {
 				return SkiaApi.sk_paint_is_stroke (Handle);
