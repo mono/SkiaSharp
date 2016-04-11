@@ -1,4 +1,4 @@
-﻿//
+//
 // Skia Definitions, enumerations and interop structures
 //
 // Author:
@@ -97,7 +97,123 @@ namespace SkiaSharp
 		public byte Green => (byte)((color >> 8) & 0xff);
 		public byte Blue => (byte)((color) & 0xff);
 
-		public override string ToString ()
+		public static SKColor FromHSV (float hue, float saturation, float value)
+		{
+			if (saturation < 0 || saturation > 1)
+				throw new ArgumentException ("saturation");
+			if (value < 0 || value > 1)
+				throw new ArgumentException ("value");
+
+			byte s = SkUnitScalarClampToByte (saturation);
+			byte v = SkUnitScalarClampToByte (value);
+
+			if (0 == s) { // shade of gray
+				return new SKColor (v, v, v);
+			}
+
+			int hx = (hue < 0 || hue >= 360.0f) ? 0 : SkScalarToFixed (hue / 60.0f);
+			int f = hx & 0xFFFF;
+
+			uint v_scale = SkAlpha255To256 (v);
+			uint p = SkAlphaMul (255u - s, v_scale);
+			uint q = SkAlphaMul (255u - (uint)(s * f >> 16), v_scale);
+			uint t = SkAlphaMul (255u - (uint)(s * ((1 << 16) - f) >> 16), v_scale);
+
+			uint r, g, b;
+
+			switch (hx >> 16) {
+			case 0: r = v; g = t; b = p; break;
+			case 1: r = q; g = v; b = p; break;
+			case 2: r = p; g = v; b = t; break;
+			case 3: r = p; g = q; b = v; break;
+			case 4: r = t; g = p; b = v; break;
+			default: r = v; g = p; b = q; break;
+			}
+			return new SKColor ((byte)r, (byte)g, (byte)b);
+		}
+
+		public static void ToHSV(SKColor color, out float hue, out float saturation, out float value)
+		{
+			byte r = color.Red, g = color.Green, b = color.Blue;
+			byte min = Math.Min (r, Math.Min (g, b));
+			byte max = Math.Max (r, Math.Max (g, b));
+			byte delta = (byte)(max - min);
+
+			float v = ByteToScalar (max);
+
+			if (0 == delta) { // we're a shade of gray
+				hue = 0;
+				saturation = 0;
+				value = v;
+				return;
+			}
+
+			float s = ByteDivToScalar (delta, max);
+
+			float h;
+			if (r == max) {
+				h = ByteDivToScalar (g - b, delta);
+			} else if (g == max) {
+				h = SkIntToScalar (2) + ByteDivToScalar (b - r, delta);
+			} else { // b == max
+				h = SkIntToScalar (4) + ByteDivToScalar (r - g, delta);
+			}
+
+			h *= 60;
+			if (h < 0) {
+				h += SkIntToScalar (360);
+			}
+
+			hue = h;
+			saturation = s;
+			value = v;
+		}
+
+		public void ToHSV(out float hue, out float saturation, out float value)
+		{
+			ToHSV (this, out hue, out saturation, out value);
+		}
+
+		private static float ByteDivToScalar (int numer, byte denom)
+		{
+			return SkIntToScalar (numer) / (int)denom;
+		}
+
+		private static float ByteToScalar(byte x)
+		{
+			return SkIntToScalar (x) / 255.0f;
+		}
+
+		private static float SkIntToScalar (int x)
+		{
+			return (float)x;
+		}
+
+		private static uint SkAlphaMul (uint v, uint alpha256)
+		{
+			return (v * alpha256) >> 8;
+		}
+
+		private static uint SkAlpha255To256 (byte v)
+		{
+			return (uint)v + 1;
+		}
+
+		private static byte SkUnitScalarClampToByte (float x)
+		{
+			if (x < 0)
+				return 0;
+			if (x >= 1.0f)
+				return 255;
+			return (byte)(SkScalarToFixed (x) >> 8);
+		}
+
+		private static int SkScalarToFixed (float x)
+		{
+			return (int)(x * (1 << 16));
+		}
+
+        public override string ToString ()
 		{
 			return string.Format (CultureInfo.InvariantCulture, "#{0:x2}{1:x2}{2:x2}{3:x2}",  Alpha, Red, Green, Blue);
 		}
