@@ -858,6 +858,7 @@ namespace SkiaSharp
 			Android = 2,
 			OSX = 4,
 			WindowsDesktop = 8,
+			UWP = 16,
 			All = 0xFFFF,
 		}
 

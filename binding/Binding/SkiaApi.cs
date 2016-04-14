@@ -44,6 +44,8 @@ namespace SkiaSharp
 		const string SKIA = "libskia_osx.dylib";
 #elif DESKTOP
 		const string SKIA = "libskia_windows.dll"; // redirected using .dll.config to 'libskia_osx.dylib' on OS X
+#elif WINDOWS_UWP
+		const string SKIA = "libskia_uwp.dll";
 #else
 		const string SKIA = "path_to_native.library";
 #endif

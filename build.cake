@@ -24,12 +24,18 @@ DirectoryPath SKIA_PATH = MakeAbsolute(ROOT_PATH.Combine("skia"));
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 var SetEnvironmentVariable = new Action<string, string> ((name, value) => {
+    Information ("Setting Environment Variable {0} to {1}", name, value);
     Environment.SetEnvironmentVariable (name, value, EnvironmentVariableTarget.Process);
 });
 var AppendEnvironmentVariable = new Action<string, string> ((name, value) => {
     var old = EnvironmentVariable (name);
-    value += (IsRunningOnWindows () ? ";" : ":") + old;
-    SetEnvironmentVariable (name, value);
+    var sep = IsRunningOnWindows () ? ';' : ':';
+    
+    if (!old.ToUpper ().Split (sep).Contains (value.ToUpper ())) {
+        Information ("Adding {0} to Environment Variable {1}", value, name);
+        value += sep + old;
+        SetEnvironmentVariable (name, value);
+    }
 });
 void ListEnvironmentVariables ()
 {
@@ -55,16 +61,22 @@ var RunNuGetRestore = new Action<FilePath> ((solution) =>
     });
 });
 
-var RunGyp = new Action (() =>
+var RunGyp = new Action<string, string> ((defines, generators) =>
 {
+    SetEnvironmentVariable ("GYP_GENERATORS", generators);
+    SetEnvironmentVariable ("GYP_DEFINES", defines);
+    
     Information ("Running 'sync-and-gyp'...");
     Information ("\tGYP_GENERATORS = " + EnvironmentVariable ("GYP_GENERATORS"));
     Information ("\tGYP_DEFINES = " + EnvironmentVariable ("GYP_DEFINES"));
     
-    StartProcess ("python", new ProcessSettings {
+    var result = StartProcess ("python", new ProcessSettings {
         Arguments = SKIA_PATH.CombineWithFilePath("bin/sync-and-gyp").FullPath,
         WorkingDirectory = SKIA_PATH.FullPath,
     });
+    if (result != 0) {
+        throw new Exception ("sync-and-gyp failed with error: " + result);
+    }
 });
 
 var RunInstallNameTool = new Action<DirectoryPath, string, string, FilePath> ((directory, oldName, newName, library) =>
@@ -157,6 +169,41 @@ var ProcessSolutionProjects = new Action<FilePath, Action<string, FilePath>> ((s
     }
 });
 
+var MSBuildNS = (XNamespace) "http://schemas.microsoft.com/developer/msbuild/2003";
+
+var SetXValue = new Action<XElement, string, string> ((root, element, value) => {
+    var node = root.Element (MSBuildNS + element);
+    if (node == null)
+        root.Add (new XElement (MSBuildNS + element, value));
+    else
+        node.Value = value;
+});
+var AddXValue = new Action<XElement, string, string> ((root, element, value) => {
+    var node = root.Element (MSBuildNS + element);
+    if (node == null)
+        root.Add (new XElement (MSBuildNS + element, value));
+    else
+        node.Value += value;
+});
+var SetXValues = new Action<XElement, string[], string, string> ((root, parents, element, value) => {
+    IEnumerable<XElement> nodes = new [] { root };
+    foreach (var p in parents) {
+        nodes = nodes.Elements (MSBuildNS + p);
+    }
+    foreach (var n in nodes) {
+        SetXValue (n, element, value);
+    }
+});
+var AddXValues = new Action<XElement, string[], string, string> ((root, parents, element, value) => {
+    IEnumerable<XElement> nodes = new [] { root };
+    foreach (var p in parents) {
+        nodes = nodes.Elements (MSBuildNS + p);
+    }
+    foreach (var n in nodes) {
+        AddXValue (n, element, value);
+    }
+});
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXTERNALS - the native C and C++ libraries
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -170,6 +217,7 @@ Task ("externals")
 });
 // this builds the native C and C++ externals 
 Task ("externals-native")
+    .IsDependentOn ("externals-uwp")
     .IsDependentOn ("externals-windows")
     .IsDependentOn ("externals-osx")
     .IsDependentOn ("externals-ios")
@@ -214,6 +262,23 @@ Task ("externals-genapi")
     });
     CopyFile ("binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll.cs", "binding/SkiaSharp.Portable/SkiaPortable.cs");
 });
+
+    // find a better place for this / or fix the path issue
+    var VisualStudioPathFixup = new Action (() => {
+        var props = SKIA_PATH.CombineWithFilePath ("out/gyp/libjpeg-turbo.props").FullPath;
+        var xdoc = XDocument.Load (props);
+        var temp = xdoc.Root
+            .Elements (MSBuildNS + "ItemDefinitionGroup")
+            .Elements (MSBuildNS + "assemble")
+            .Elements (MSBuildNS + "CommandLineTemplate")
+            .Single ();
+        var newInclude = SKIA_PATH.Combine ("third_party/externals/libjpeg-turbo/win/").FullPath;
+        if (!temp.Value.Contains (newInclude)) {
+            temp.Value += " \"-I" + newInclude + "\"";
+            xdoc.Save (props);
+        }
+    });
+
 // this builds the native C and C++ externals for Windows
 Task ("externals-windows")
     .WithCriteria (IsRunningOnWindows ())
@@ -222,26 +287,9 @@ Task ("externals-windows")
         !FileExists ("native-builds/lib/windows/x64/libskia_windows.dll"))
     .Does (() =>  
 {
-    var fixup = new Action (() => {
-        var props = SKIA_PATH.CombineWithFilePath ("out/gyp/libjpeg-turbo.props").FullPath;
-        var xdoc = XDocument.Load (props);
-        var ns = (XNamespace) "http://schemas.microsoft.com/developer/msbuild/2003";
-        var temp = xdoc.Root
-            .Elements (ns + "ItemDefinitionGroup")
-            .Elements (ns + "assemble")
-            .Elements (ns + "CommandLineTemplate")
-            .Single ();
-        var newInclude = SKIA_PATH.Combine ("third_party/externals/libjpeg-turbo/win/").FullPath;
-        if (!temp.Value.Contains (newInclude)) {
-            temp.Value += " \"-I" + newInclude + "\"";
-            xdoc.Save (props);
-        }
-    });
-    
     var buildArch = new Action<string, string, string> ((platform, skiaArch, dir) => {
-        SetEnvironmentVariable ("GYP_DEFINES", "skia_arch_type='" + skiaArch + "'");
-        RunGyp ();
-        fixup ();
+        RunGyp ("skia_arch_type='" + skiaArch + "'", "ninja,msvs");
+        VisualStudioPathFixup ();
         DotNetBuild ("native-builds/libskia_windows/libskia_windows_" + dir + ".sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { platform };
@@ -254,10 +302,116 @@ Task ("externals-windows")
 
     // set up the gyp environment variables
     AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
-    SetEnvironmentVariable ("GYP_GENERATORS", "ninja,msvs");
-        
+    
     buildArch ("Win32", "x86", "x86");
     buildArch ("x64", "x86_64", "x64");
+});
+// this builds the native C and C++ externals for Windows UWP
+Task ("externals-uwp")
+    .WithCriteria (IsRunningOnWindows ())
+    .WithCriteria (
+        !FileExists ("native-builds/lib/uwp/ARM/libskia_uwp.dll") ||
+        !FileExists ("native-builds/lib/uwp/x86/libskia_uwp.dll") ||
+        !FileExists ("native-builds/lib/uwp/x64/libskia_uwp.dll"))
+    .Does (() =>  
+{
+    var convertDesktopToUWP = new Action<FilePath, string> ((projectFilePath, platform) => {
+        //
+        // TODO: the stuff in this block must be moved into the gyp files !!
+        //
+        
+        var projectFile = MakeAbsolute (projectFilePath).FullPath;
+        var xdoc = XDocument.Load (projectFile);
+        
+        var configType = xdoc.Root
+            .Elements (MSBuildNS + "PropertyGroup")
+            .Elements (MSBuildNS + "ConfigurationType")
+            .Select (e => e.Value)
+            .FirstOrDefault ();
+        if (configType != "StaticLibrary") {
+            // skip over "Utility" projects as they aren't actually 
+            // library projects, but intermediate build steps.
+            return;
+        } else {
+            // special case for ARM, gyp does not yet have ARM, 
+            // so it defaults to Win32
+            // update and reload
+            if (platform.ToUpper () == "ARM") {
+                ReplaceTextInFiles (projectFile, "Win32", "ARM");
+                ReplaceTextInFiles (projectFile, "SkTLS_win.cpp", "SkTLS_none.cpp");
+                xdoc = XDocument.Load (projectFile);
+            }
+        }
+        
+        var globals = xdoc.Root
+            .Elements (MSBuildNS + "PropertyGroup")
+            .Where (e => e.Attribute ("Label") != null && e.Attribute ("Label").Value == "Globals")
+            .Single ();
+            
+        globals.Elements (MSBuildNS + "WindowsTargetPlatformVersion").Remove ();
+        SetXValue (globals, "Keyword", "StaticLibrary");
+        SetXValue (globals, "AppContainerApplication", "true");
+        SetXValue (globals, "ApplicationType", "Windows Store");
+        SetXValue (globals, "WindowsTargetPlatformVersion", "10.0.10586.0");
+        SetXValue (globals, "WindowsTargetPlatformMinVersion", "10.0.10240.0");
+        SetXValue (globals, "ApplicationTypeRevision", "10.0");
+        SetXValue (globals, "DefaultLanguage", "en-US");
+
+        var properties = xdoc.Root
+            .Elements (MSBuildNS + "PropertyGroup")
+            .Elements (MSBuildNS + "LinkIncremental")
+            .First ()
+            .Parent;
+        SetXValue (properties, "GenerateManifest","false");
+        SetXValue (properties, "IgnoreImportLibrary","false");
+        
+        SetXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "CompileAsWinRT", "false");
+        //AddXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "AdditionalOptions", " /sdl ");
+        AddXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", ";SK_BUILD_FOR_WINRT;WINAPI_FAMILY=WINAPI_FAMILY_APP;");
+        AddXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "DisableSpecificWarnings", ";4146;4703;");
+        SetXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "Link" }, "SubSystem", "Console");
+        SetXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "Link" }, "IgnoreAllDefaultLibraries", "false");
+        SetXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "Link" }, "GenerateWindowsMetadata", "false");
+
+        xdoc.Root
+            .Elements (MSBuildNS + "ItemDefinitionGroup")
+            .Elements (MSBuildNS + "Link")
+            .Elements (MSBuildNS + "AdditionalDependencies")
+            .Remove ();
+            
+        xdoc.Save (projectFile);
+    });
+
+    var buildArch = new Action<string, string> ((platform, arch) => {
+        CleanDirectories ("native-builds/libskia_uwp/" + arch);
+        CleanDirectories ("native-builds/libskia_uwp/Release");
+        CleanDirectories ("native-builds/libskia_uwp/Generated Files");
+        ProcessSolutionProjects ("native-builds/libskia_uwp/libskia_uwp_" + arch + ".sln", (projectName, projectPath) => {
+            if (projectName != "libskia_uwp")
+                convertDesktopToUWP (projectPath, platform);
+        });
+        VisualStudioPathFixup ();
+        DotNetBuild ("native-builds/libskia_uwp/libskia_uwp_" + arch + ".sln", c => { 
+            c.Configuration = "Release"; 
+            c.Properties ["Platform"] = new [] { platform };
+        });
+        if (!DirectoryExists ("native-builds/lib/uwp/" + arch)) CreateDirectory ("native-builds/lib/uwp/" + arch);
+        CopyFileToDirectory ("native-builds/libskia_uwp/Release/libskia_uwp.lib", "native-builds/lib/uwp/" + arch);
+        CopyFileToDirectory ("native-builds/libskia_uwp/Release/libskia_uwp.dll", "native-builds/lib/uwp/" + arch);
+        CopyFileToDirectory ("native-builds/libskia_uwp/Release/libskia_uwp.pdb", "native-builds/lib/uwp/" + arch);
+    });
+
+    // set up the gyp environment variables
+    AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
+
+    RunGyp ("skia_arch_type='x86_64' skia_gpu=0", "ninja,msvs");
+    buildArch ("x64", "x64");
+    
+    RunGyp ("skia_arch_type='x86' skia_gpu=0", "ninja,msvs");
+    buildArch ("Win32", "x86");
+    
+    RunGyp ("skia_arch_type='arm' arm_version=7 arm_neon=0 skia_gpu=0", "ninja,msvs");
+    buildArch ("ARM", "arm");
 });
 // this builds the native C and C++ externals for Mac OS X
 Task ("externals-osx")
@@ -267,8 +421,7 @@ Task ("externals-osx")
     .Does (() =>  
 {
     var buildArch = new Action<string, string> ((arch, skiaArch) => {
-        SetEnvironmentVariable ("GYP_DEFINES", "skia_arch_type='" + skiaArch + "'");
-        RunGyp ();
+        RunGyp ("skia_arch_type='" + skiaArch + "'", "ninja,xcode");
         
         XCodeBuild (new XCodeBuildSettings {
             Project = "native-builds/libskia_osx/libskia_osx.xcodeproj",
@@ -286,7 +439,6 @@ Task ("externals-osx")
     
     // set up the gyp environment variables
     AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
-    SetEnvironmentVariable ("GYP_GENERATORS", "ninja,xcode");
     
     buildArch ("i386", "x86");
     buildArch ("x86_64", "x86_64");
@@ -320,10 +472,8 @@ Task ("externals-ios")
     
     // set up the gyp environment variables
     AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
-    SetEnvironmentVariable ("GYP_DEFINES", "skia_os='ios' skia_arch_type='arm' armv7=1 arm_neon=0");
-    SetEnvironmentVariable ("GYP_GENERATORS", "ninja,xcode");
-        
-    RunGyp ();
+    
+    RunGyp ("skia_os='ios' skia_arch_type='arm' armv7=1 arm_neon=0", "ninja,xcode");
     
     buildArch ("iphonesimulator", "i386");
     buildArch ("iphonesimulator", "x86_64");
