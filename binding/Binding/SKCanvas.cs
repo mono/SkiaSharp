@@ -140,6 +140,13 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_rect (Handle, ref rect, paint.Handle);
 		}
 
+		public void DrawRoundRect (SKRect rect, float rx, float ry, SKPaint paint)
+		{
+				if (paint == null)
+						throw new ArgumentNullException ("paint");
+				SkiaApi.sk_canvas_draw_round_rect (Handle, ref rect, rx, ry, paint.Handle);
+		}
+
 		public void DrawOval (SKRect rect, SKPaint paint)
 		{
 			if (paint == null)

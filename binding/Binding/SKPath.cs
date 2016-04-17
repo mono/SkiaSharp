@@ -22,6 +22,12 @@ namespace SkiaSharp
 			: this (SkiaApi.sk_path_new ())
 		{
 		}
+
+		public SKPath(SKPath path)
+			: this (SkiaApi.sk_path_clone(path.Handle))
+		{
+
+		}
 		
 		protected override void Dispose (bool disposing)
 		{
@@ -122,6 +128,11 @@ namespace SkiaSharp
 		public bool GetBounds (out SKRect rect)
 		{
 			return SkiaApi.sk_path_get_bounds (Handle, out rect);
+		}
+
+		public void Transform (SKMatrix matrix)
+		{
+			SkiaApi.sk_path_transform (Handle, ref matrix);
 		}
 	}
 }
