@@ -417,14 +417,25 @@ Task ("externals-android")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("libs")
+    .IsDependentOn ("libs-base")
     .IsDependentOn ("libs-windows")
     .IsDependentOn ("libs-osx")
     .Does (() => 
 {
 });
+Task ("libs-base")
+    .Does (() => 
+{
+    // set the SHA on the assembly info 
+    var sha = EnvironmentVariable ("GIT_COMMIT") ?? string.Empty;
+    if (!string.IsNullOrEmpty (sha) && sha.Length >= 6) {
+        ReplaceTextInFiles ("./binding/SkiaSharp/Properties/SkiaSharpAssemblyInfo.cs", "{GIT_SHA}", sha.Substring (0, 6));
+    }
+});
 Task ("libs-windows")
     .WithCriteria (IsRunningOnWindows ())
     .IsDependentOn ("externals")
+    .IsDependentOn ("libs-base")
     .Does (() => 
 {
     // build
@@ -446,6 +457,7 @@ Task ("libs-windows")
 Task ("libs-osx")
     .WithCriteria (IsRunningOnUnix ())
     .IsDependentOn ("externals")
+    .IsDependentOn ("libs-base")
     .Does (() => 
 {
     // build
