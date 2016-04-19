@@ -429,7 +429,9 @@ Task ("libs-base")
     // set the SHA on the assembly info 
     var sha = EnvironmentVariable ("GIT_COMMIT") ?? string.Empty;
     if (!string.IsNullOrEmpty (sha) && sha.Length >= 6) {
-        ReplaceTextInFiles ("./binding/SkiaSharp/Properties/SkiaSharpAssemblyInfo.cs", "{GIT_SHA}", sha.Substring (0, 6));
+        sha = sha.Substring (0, 6);
+        Information ("Setting Git SHA to {0}.", sha);
+        ReplaceTextInFiles ("./binding/SkiaSharp/Properties/SkiaSharpAssemblyInfo.cs", "{GIT_SHA}", sha);
     }
 });
 Task ("libs-windows")
