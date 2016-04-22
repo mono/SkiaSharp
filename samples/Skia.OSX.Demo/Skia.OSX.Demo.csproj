@@ -56,7 +56,7 @@
     <Reference Include="System.Core" />
     <Reference Include="Xamarin.Mac" />
     <Reference Include="SkiaSharp">
-      <HintPath>packages\SkiaSharp.1.49.1.0\lib\XamarinMac\SkiaSharp.dll</HintPath>
+      <HintPath>packages\SkiaSharp.1.49.2.1-beta\lib\XamarinMac\SkiaSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
@@ -109,11 +109,11 @@
       <Link>color-wheel.png</Link>
     </EmbeddedResource>
   </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
-  <Import Project="packages\SkiaSharp.1.49.1.0\build\XamarinMac\SkiaSharp.targets" Condition="Exists('packages\SkiaSharp.1.49.1.0\build\XamarinMac\SkiaSharp.targets')" />
   <ItemGroup>
     <BundleResource Include="..\SharedDemo\content-font.ttf">
       <Link>Resources\content-font.ttf</Link>
     </BundleResource>
   </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
+  <Import Project="packages\SkiaSharp.1.49.2.1-beta\build\XamarinMac\SkiaSharp.targets" Condition="Exists('packages\SkiaSharp.1.49.2.1-beta\build\XamarinMac\SkiaSharp.targets')" />
 </Project>
