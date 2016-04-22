@@ -231,7 +231,7 @@ namespace SkiaSharp
 			return (int)(x * (1 << 16));
 		}
 
-        public override string ToString ()
+		public override string ToString ()
 		{
 			return string.Format (CultureInfo.InvariantCulture, "#{0:x2}{1:x2}{2:x2}{3:x2}",  Alpha, Red, Green, Blue);
 		}
