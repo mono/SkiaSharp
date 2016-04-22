@@ -97,6 +97,30 @@ namespace SkiaSharp
 		public byte Green => (byte)((color >> 8) & 0xff);
 		public byte Blue => (byte)((color) & 0xff);
 
+		public float Hue {
+			get {
+				float hue, saturation, value;
+				ToHSV (out hue, out saturation, out value);
+				return hue;
+			}
+		}
+
+		public float Saturation {
+			get {
+				float hue, saturation, value;
+				ToHSV (out hue, out saturation, out value);
+				return saturation;
+			}
+		}
+
+		public float Value {
+			get {
+				float hue, saturation, value;
+				ToHSV (out hue, out saturation, out value);
+				return value;
+			}
+		}
+
 		public static SKColor FromHSV (float hue, float saturation, float value)
 		{
 			if (saturation < 0 || saturation > 1)
@@ -132,11 +156,10 @@ namespace SkiaSharp
 			return new SKColor ((byte)r, (byte)g, (byte)b);
 		}
 
-		public static void ToHSV(SKColor color, out float hue, out float saturation, out float value)
+		public void ToHSV(out float hue, out float saturation, out float value)
 		{
-			byte r = color.Red, g = color.Green, b = color.Blue;
-			byte min = Math.Min (r, Math.Min (g, b));
-			byte max = Math.Max (r, Math.Max (g, b));
+			byte min = Math.Min (Red, Math.Min (Green, Blue));
+			byte max = Math.Max (Red, Math.Max (Green, Blue));
 			byte delta = (byte)(max - min);
 
 			float v = ByteToScalar (max);
@@ -151,12 +174,12 @@ namespace SkiaSharp
 			float s = ByteDivToScalar (delta, max);
 
 			float h;
-			if (r == max) {
-				h = ByteDivToScalar (g - b, delta);
-			} else if (g == max) {
-				h = SkIntToScalar (2) + ByteDivToScalar (b - r, delta);
-			} else { // b == max
-				h = SkIntToScalar (4) + ByteDivToScalar (r - g, delta);
+			if (Red == max) {
+				h = ByteDivToScalar (Green - Blue, delta);
+			} else if (Green == max) {
+				h = SkIntToScalar (2) + ByteDivToScalar (Blue - Red, delta);
+			} else { // Blue == max
+				h = SkIntToScalar (4) + ByteDivToScalar (Red - Green, delta);
 			}
 
 			h *= 60;
@@ -167,11 +190,6 @@ namespace SkiaSharp
 			hue = h;
 			saturation = s;
 			value = v;
-		}
-
-		public void ToHSV(out float hue, out float saturation, out float value)
-		{
-			ToHSV (this, out hue, out saturation, out value);
 		}
 
 		private static float ByteDivToScalar (int numer, byte denom)

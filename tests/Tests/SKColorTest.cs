@@ -12,17 +12,23 @@ namespace SkiaSharp.Tests
 		{
 			SKColor color = new SKColor (r, g, b);
 			float checkh, checks, checkv;
-			SKColor.ToHSV (color, out checkh, out checks, out checkv);
+			color.ToHSV (out checkh, out checks, out checkv);
 			// Allow a small delta for rounding errors.
 			Assert.AreEqual (hue, checkh, 0.01);
 			Assert.AreEqual (saturation, checks, 0.01);
 			Assert.AreEqual (value, checkv, 0.01);
+			Assert.AreEqual (color.Hue, checkh, 0.01);
+			Assert.AreEqual (color.Saturation, checks, 0.01);
+			Assert.AreEqual (color.Value, checkv, 0.01);
 
 			color = SKColor.FromHSV (hue, saturation, value);
 			// Allow a small delta for rounding errors.
 			Assert.AreEqual (r, color.Red, 1);
 			Assert.AreEqual (g, color.Green, 1);
 			Assert.AreEqual (b, color.Blue, 1);
+			Assert.AreEqual (color.Hue, checkh, 0.01);
+			Assert.AreEqual (color.Saturation, checks, 0.01);
+			Assert.AreEqual (color.Value, checkv, 0.01);
 		}
 
 		[Test]
