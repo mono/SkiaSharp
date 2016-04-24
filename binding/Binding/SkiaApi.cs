@@ -16,6 +16,7 @@ using sk_paint_t = System.IntPtr;
 using sk_shader_t = System.IntPtr;
 using sk_maskfilter_t = System.IntPtr;
 using sk_path_t = System.IntPtr;
+using sk_path_iter_t = System.IntPtr;
 using sk_picture_t = System.IntPtr;
 using sk_data_t = System.IntPtr;
 using sk_picture_recorder_t = System.IntPtr;
@@ -336,6 +337,19 @@ namespace SkiaSharp
 		public extern static sk_path_t sk_path_clone (sk_path_t t);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_path_t sk_path_transform (sk_path_t t, ref SKMatrix matrix);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_path_count_verbs (sk_path_t t);
+
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_path_iter_t sk_path_iter_new (sk_path_t t);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_iter_delete (sk_path_iter_t t);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKPathVerb sk_path_iter_next (sk_path_iter_t t, [Out] SKPoint [] points);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKPathVerb sk_path_iter_peek (sk_path_iter_t t);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static float sk_path_iter_conic_weight (sk_path_iter_t t);
 
 		// SkMaskFilter
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

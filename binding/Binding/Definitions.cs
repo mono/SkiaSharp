@@ -141,6 +141,17 @@ namespace SkiaSharp
 		InverseEvenOdd
 	}
 
+	public enum SKPathVerb
+	{
+		Move,
+		Line,
+		Quad,
+		Conic,
+		Cubic,
+		Close,
+		Done
+	}
+
 	public enum SKColorType {
 		Unknown,
 		Rgba_8888,
