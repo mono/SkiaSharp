@@ -18,8 +18,10 @@ using sk_maskfilter_t = System.IntPtr;
 using sk_path_t = System.IntPtr;
 using sk_picture_t = System.IntPtr;
 using sk_data_t = System.IntPtr;
+using sk_string_t = System.IntPtr;
 using sk_picture_recorder_t = System.IntPtr;
 using sk_typeface_t = System.IntPtr;
+using sk_font_table_tag_t = System.UInt32;
 using sk_stream_t = System.IntPtr;
 using sk_stream_filestream_t = System.IntPtr;
 using sk_stream_memorystream_t = System.IntPtr;
@@ -458,6 +460,18 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_data_get_data(sk_data_t d);
 
+        // SkString
+        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+        public extern static sk_string_t sk_string_new_empty();
+        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+        public extern static sk_string_t sk_string_new_with_copy(byte[] src, IntPtr length);
+        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+        public extern static void sk_string_destructor(sk_string_t skstring);
+        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+        public extern static IntPtr sk_string_get_size(sk_string_t skstring);
+        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+        public extern static IntPtr sk_string_get_c_str(sk_string_t skstring);
+
 		// SkPicture
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_picture_recorder_delete(sk_picture_recorder_t r);
@@ -540,9 +554,19 @@ namespace SkiaSharp
 		public extern static void sk_typeface_unref(sk_typeface_t t);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_typeface_chars_to_glyphs(sk_typeface_t t, IntPtr chars, SKEncoding encoding, IntPtr glyphPtr, int glyphCount);
+        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+        public extern static int sk_typeface_get_family_name(sk_typeface_t typeface, sk_string_t familyName);
+        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+        public extern static int sk_typeface_count_tables(sk_typeface_t typeface);
+        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+        public extern static int sk_typeface_get_table_tags(sk_typeface_t typeface, sk_font_table_tag_t[] tags);
+        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+        public extern static IntPtr sk_typeface_get_table_size(sk_typeface_t typeface, sk_font_table_tag_t tag);
+        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+        public extern static IntPtr sk_typeface_get_table_data(sk_typeface_t typeface, sk_font_table_tag_t tag, IntPtr offset, IntPtr length, byte[] data);
 
-		// Streams
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+        // Streams
+        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_stream_read(sk_stream_t stream, IntPtr buffer, IntPtr size);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_stream_skip(sk_stream_t stream, IntPtr size);

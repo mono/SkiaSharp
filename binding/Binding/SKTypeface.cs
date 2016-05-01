@@ -7,6 +7,7 @@
 // Copyright 2016 Xamarin Inc
 //
 using System;
+using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
@@ -16,6 +17,7 @@ namespace SkiaSharp
 		internal SKTypeface (IntPtr handle)
 			: base (handle)
 		{
+            if (handle == IntPtr.Zero) throw new Exception("Invalid typeface");
 		}
 		
 		protected override void Dispose (bool disposing)
@@ -108,6 +110,46 @@ namespace SkiaSharp
 				}
 			}
 		}
-	}
+
+        public string FamilyName {
+            get {
+                var r = SkiaApi.sk_string_new_empty();
+                try {
+                    SkiaApi.sk_typeface_get_family_name(Handle, r);
+                    var cstr = SkiaApi.sk_string_get_c_str(r);
+                    var clen = SkiaApi.sk_string_get_size(r);
+                    return Util.GetString(cstr, (int)clen, SKTextEncoding.Utf8); 
+                } finally {
+                    SkiaApi.sk_string_destructor(r);
+                }
+
+
+            }
+        }
+
+        public UInt32[] GetTableTags()
+        {
+            int tableCount = SkiaApi.sk_typeface_count_tables(Handle);
+            UInt32[] result = new UInt32[tableCount];
+            int r = SkiaApi.sk_typeface_get_table_tags(Handle, result);
+            if (r == 0) {
+                throw new Exception("Unable to read the tables for the file.");
+            }
+            return result;
+        }
+
+        public byte[] GetTableData(UInt32 tag)
+        {
+            IntPtr dataSize = SkiaApi.sk_typeface_get_table_size(Handle, tag);
+            byte[] result = new byte[(int)dataSize];
+            IntPtr r = SkiaApi.sk_typeface_get_table_data(Handle, tag, IntPtr.Zero, dataSize, result);
+            if (r == IntPtr.Zero)
+            {
+                throw new Exception("Unable to read the data table.");
+            }
+            return result;
+        }
+
+    }
 }
 
