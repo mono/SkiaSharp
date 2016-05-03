@@ -102,7 +102,7 @@ namespace SkiaSharp
 			SkiaApi.sk_path_close (Handle);
 		}
 
-        public void Rewind()
+		public void Rewind()
         {
             SkiaApi.sk_path_rewind(Handle);
         }
