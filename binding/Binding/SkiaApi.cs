@@ -318,7 +318,9 @@ namespace SkiaSharp
 		public extern static void sk_path_rcubic_to(sk_path_t t, float dx0, float dy0, float dx1, float dy1, float dx2, float dy2);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_close(sk_path_t t);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+        public extern static void sk_path_rewind(sk_path_t t);
+        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_add_rect(sk_path_t t, ref SKRect rect, SKPathDirection direction);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_add_rect_start(sk_path_t t, ref SKRect rect, SKPathDirection direction, uint startIndex);

@@ -102,7 +102,12 @@ namespace SkiaSharp
 			SkiaApi.sk_path_close (Handle);
 		}
 
-		public void AddRect (SKRect rect, SKPathDirection direction)
+        public void Rewind()
+        {
+            SkiaApi.sk_path_rewind(Handle);
+        }
+
+        public void AddRect (SKRect rect, SKPathDirection direction)
 		{
 			SkiaApi.sk_path_add_rect (Handle, ref rect, direction);
 		}
