@@ -36,7 +36,9 @@ namespace SkiaSharp
 {
 	internal static class SkiaApi
 	{
-#if MONOTOUCH
+#if __TVOS__ && __UNIFIED__
+		const string SKIA = "@rpath/libskia_tvos.framework/libskia_tvos";
+#elif __IOS__ && __UNIFIED__
 		const string SKIA = "@rpath/libskia_ios.framework/libskia_ios";
 #elif __ANDROID__
 		const string SKIA = "libskia_android.so";

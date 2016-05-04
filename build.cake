@@ -191,6 +191,7 @@ Task ("externals")
 Task ("externals-native")
     .IsDependentOn ("externals-windows")
     .IsDependentOn ("externals-osx")
+    .IsDependentOn ("externals-tvos")
     .IsDependentOn ("externals-ios")
     .IsDependentOn ("externals-android")
     .Does (() => 
@@ -286,9 +287,15 @@ Task ("externals-osx")
     .Does (() =>  
 {
     var buildArch = new Action<string, string> ((arch, skiaArch) => {
+        // clean last builds
+        CleanDirectories ("skia/out");
+        CleanDirectories ("skia/xcodebuild");
+
+        // prepare for build
         SetEnvironmentVariable ("GYP_DEFINES", "skia_arch_type='" + skiaArch + "'");
         RunGyp ();
         
+        // build
         XCodeBuild (new XCodeBuildSettings {
             Project = "native-builds/libskia_osx/libskia_osx.xcodeproj",
             Target = "libskia_osx",
@@ -307,6 +314,7 @@ Task ("externals-osx")
     AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
     SetEnvironmentVariable ("GYP_GENERATORS", "ninja,xcode");
     
+    // build
     buildArch ("i386", "x86");
     buildArch ("x86_64", "x86_64");
     
@@ -339,11 +347,17 @@ Task ("externals-ios")
     
     // set up the gyp environment variables
     AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
-    SetEnvironmentVariable ("GYP_DEFINES", "skia_os='ios' skia_arch_type='arm' armv7=1 arm_neon=0");
+    SetEnvironmentVariable ("GYP_DEFINES", "skia_os='ios' skia_arch_type='arm' arm_version=7 arm_neon=0");
     SetEnvironmentVariable ("GYP_GENERATORS", "ninja,xcode");
         
+    // clean last builds
+    CleanDirectories ("skia/out");
+    CleanDirectories ("skia/xcodebuild");
+
+    // prepare for build
     RunGyp ();
     
+    // build
     buildArch ("iphonesimulator", "i386");
     buildArch ("iphonesimulator", "x86_64");
     buildArch ("iphoneos", "armv7");
@@ -359,6 +373,60 @@ Task ("externals-ios")
         (FilePath) "armv7/libskia_ios.framework/libskia_ios", 
         (FilePath) "armv7s/libskia_ios.framework/libskia_ios", 
         (FilePath) "arm64/libskia_ios.framework/libskia_ios"
+    });
+});
+// this builds the native C and C++ externals for tvOS
+Task ("externals-tvos")
+    .WithCriteria (IsRunningOnUnix ())
+    .WithCriteria (
+        !FileExists ("native-builds/lib/tvos/libskia_tvos.framework/libskia_tvos"))
+    .Does (() => 
+{
+    var fixup = new Action (() => {
+        var glob = "./skia/out/gyp/*.xcodeproj/project.pbxproj";
+        ReplaceTextInFiles (glob, "SDKROOT = iphoneos;", "SDKROOT = appletvos;");
+        ReplaceTextInFiles (glob, "IPHONEOS_DEPLOYMENT_TARGET = 9.2;", "TVOS_DEPLOYMENT_TARGET = 9.1;");
+        ReplaceTextInFiles (glob, "TARGETED_DEVICE_FAMILY = \"1,2\";", "TARGETED_DEVICE_FAMILY = 3;");
+        ReplaceTextInFiles (glob, "\"CODE_SIGN_IDENTITY[sdk=iphoneos*]\" = \"iPhone Developer\";", "");
+    });
+
+    var buildArch = new Action<string, string> ((sdk, arch) => {
+        XCodeBuild (new XCodeBuildSettings {
+            Project = "native-builds/libskia_tvos/libskia_tvos.xcodeproj",
+            Target = "libskia_tvos",
+            Sdk = sdk,
+            Arch = arch,
+            Configuration = "Release",
+        });
+        if (!DirectoryExists ("native-builds/lib/tvos/" + arch)) {
+            CreateDirectory ("native-builds/lib/tvos/" + arch);
+        }
+        CopyDirectory ("native-builds/libskia_tvos/build/Release-" + sdk, "native-builds/lib/tvos/" + arch);
+    });
+    
+    // set up the gyp environment variables
+    AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
+    SetEnvironmentVariable ("GYP_DEFINES", "skia_os='ios' skia_arch_type='arm' arm_version=7 arm_neon=0");
+    SetEnvironmentVariable ("GYP_GENERATORS", "ninja,xcode");
+        
+    // clean last builds
+    CleanDirectories ("skia/out");
+    CleanDirectories ("skia/xcodebuild");
+    
+    // prepare for build
+    RunGyp ();
+    fixup ();
+    
+    // build
+    buildArch ("appletvsimulator", "x86_64");
+    buildArch ("appletvos", "arm64");
+    
+    // create the fat framework
+    CopyDirectory ("native-builds/lib/tvos/x86_64/libskia_tvos.framework/", "native-builds/lib/tvos/libskia_tvos.framework/");
+    DeleteFile ("native-builds/lib/tvos/libskia_tvos.framework/libskia_tvos");
+    RunLipo ("native-builds/lib/tvos/", "libskia_tvos.framework/libskia_tvos", new [] {
+        (FilePath) "x86_64/libskia_tvos.framework/libskia_tvos", 
+        (FilePath) "arm64/libskia_tvos.framework/libskia_tvos"
     });
 });
 // this builds the native C and C++ externals for Android
@@ -470,6 +538,7 @@ Task ("libs-osx")
 
     if (!DirectoryExists ("./output/android/")) CreateDirectory ("./output/android/");
     if (!DirectoryExists ("./output/ios/")) CreateDirectory ("./output/ios/");
+    if (!DirectoryExists ("./output/tvos/")) CreateDirectory ("./output/tvos/");
     if (!DirectoryExists ("./output/osx/")) CreateDirectory ("./output/osx/");
     if (!DirectoryExists ("./output/portable/")) CreateDirectory ("./output/portable/");
     if (!DirectoryExists ("./output/mac/")) CreateDirectory ("./output/mac/");
@@ -477,6 +546,7 @@ Task ("libs-osx")
     // copy build output
     CopyFileToDirectory ("./binding/SkiaSharp.Android/bin/Release/SkiaSharp.dll", "./output/android/");
     CopyFileToDirectory ("./binding/SkiaSharp.iOS/bin/Release/SkiaSharp.dll", "./output/ios/");
+    CopyFileToDirectory ("./binding/SkiaSharp.tvOS/bin/Release/SkiaSharp.dll", "./output/tvos/");
     CopyFileToDirectory ("./binding/SkiaSharp.OSX/bin/Release/SkiaSharp.dll", "./output/osx/");
     CopyFileToDirectory ("./binding/SkiaSharp.OSX/bin/Release/SkiaSharp.OSX.targets", "./output/osx/");
     CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
@@ -636,6 +706,7 @@ Task ("clean-externals").Does (() =>
     CleanDirectories ("native-builds/libskia_android/libs");
     // ios
     CleanDirectories ("native-builds/libskia_ios/build");
+    CleanDirectories ("native-builds/libskia_tvos/build");
     // osx
     CleanDirectories ("native-builds/libskia_osx/build");
     // windows
