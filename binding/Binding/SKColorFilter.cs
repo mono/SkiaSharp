@@ -12,14 +12,14 @@ namespace SkiaSharp
 {
 	public class SKColorFilter : SKObject
 	{
-		public const int MIN_CUBE_SIZE = 4;
-		public const int MAX_CUBE_SIZE = 64;
+		public const int MinCubeSize = 4;
+		public const int MaxCubeSize = 64;
 
 		public static bool IsValid3DColorCube(SKData cubeData, int cubeDimension)
 		{
 			var minMemorySize = 4 * cubeDimension * cubeDimension * cubeDimension;
 			return
-				(cubeDimension >= MIN_CUBE_SIZE) && (cubeDimension <= MAX_CUBE_SIZE) &&
+				(cubeDimension >= MinCubeSize) && (cubeDimension <= MaxCubeSize) &&
 				(null != cubeData) && (cubeData.Size >= minMemorySize);
 		}
 

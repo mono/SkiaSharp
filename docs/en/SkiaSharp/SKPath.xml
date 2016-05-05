@@ -4,15 +4,18 @@
   <AssemblyInfo>
     <AssemblyName>SkiaSharp</AssemblyName>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <AssemblyVersion>1.49.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>SkiaSharp.SKObject</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>
-    <summary>Compound geometric paths.</summary>
+    <summary>
+      <para>Same as <see cref="M:SkiaSharp.SKPath.ConicTo" /> but the coordinates are considered relative to the last point on this contour.</para>
+    </summary>
     <remarks>
-      <para>The SkPath class encapsulates compound (multiple contour) geometric paths consisting of straight line segments, quadratic curves, and cubic curves.</para>
+      <para> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</para>
     </remarks>
   </Docs>
   <Members>
@@ -22,11 +25,37 @@
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
       <Docs>
         <summary>Creates an empty path.</summary>
         <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="AddArc">
+      <MemberSignature Language="C#" Value="public void AddArc (SkiaSharp.SKRect oval, float startAngle, float sweepAngle);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void AddArc(valuetype SkiaSharp.SKRect oval, float32 startAngle, float32 sweepAngle) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="oval" Type="SkiaSharp.SKRect" />
+        <Parameter Name="startAngle" Type="System.Single" />
+        <Parameter Name="sweepAngle" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="oval">The bounds of oval used to define the size of the arc.</param>
+        <param name="startAngle">Starting angle (in degrees) where the arc begins.</param>
+        <param name="sweepAngle">Sweep angle (in degrees) measured clockwise.</param>
+        <summary>Add the specified arc to the path as a new contour.</summary>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="AddOval">
@@ -35,6 +64,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -48,7 +78,7 @@
         <param name="direction">The direction to wind the oval's contour.</param>
         <summary>Adds an oval to the current path.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -58,6 +88,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -75,12 +106,36 @@
         </remarks>
       </Docs>
     </Member>
+    <Member MemberName="AddRect">
+      <MemberSignature Language="C#" Value="public void AddRect (SkiaSharp.SKRect rect, SkiaSharp.SKPathDirection direction, uint startIndex);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void AddRect(valuetype SkiaSharp.SKRect rect, valuetype SkiaSharp.SKPathDirection direction, unsigned int32 startIndex) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="rect" Type="SkiaSharp.SKRect" />
+        <Parameter Name="direction" Type="SkiaSharp.SKPathDirection" />
+        <Parameter Name="startIndex" Type="System.UInt32" />
+      </Parameters>
+      <Docs>
+        <param name="rect">The rectangle to add as a closed contour to the path</param>
+        <param name="direction">The direction to wind the rectangle's contour.</param>
+        <param name="startIndex">Initial point of the contour (initial moveTo), expressed as a corner index, starting in the upper-left position, clock-wise.  Must be 0-3.</param>
+        <summary>Add a closed rectangle contour to the path.</summary>
+        <remarks>Add a closed rectangle contour to the path with an initial point of the contour (startIndex) expressed as a corner index.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="Close">
       <MemberSignature Language="C#" Value="public void Close ();" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Close() cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -99,6 +154,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -111,13 +167,16 @@
         <Parameter Name="w" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="x0">To be added.</param>
-        <param name="y0">To be added.</param>
-        <param name="x1">To be added.</param>
-        <param name="y1">To be added.</param>
-        <param name="w">To be added.</param>
+        <param name="x0">The x-coordinate of the control point of the conic curve.</param>
+        <param name="y0">The y-coordinate of the control point of the conic curve.</param>
+        <param name="x1">The x-coordinate of the end point of the conic curve.</param>
+        <param name="y1">The y-coordinate of the end point of the conic curve.</param>
+        <param name="w">The weight of the conic curve.</param>
         <summary>Add a conic path from the last point.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</para>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CubicTo">
@@ -126,6 +185,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -158,6 +218,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -171,12 +232,34 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="FillType">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPathFillType FillType { get; set; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKPathFillType FillType" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPathFillType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>The path's fill type.</summary>
+        <value>
+          <para>The current fill type.</para>
+        </value>
+        <remarks>
+          <para>This is used to define how "inside" is computed. The default value is SKPathFillType.Winding.</para>
+        </remarks>
+      </Docs>
+    </Member>
     <Member MemberName="GetBounds">
       <MemberSignature Language="C#" Value="public bool GetBounds (out SkiaSharp.SKRect rect);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool GetBounds(valuetype SkiaSharp.SKRect rect) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -203,6 +286,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -226,6 +310,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -239,7 +324,7 @@
         <param name="y">The y-coordinate of the start of a new contour</param>
         <summary>Set the beginning of the next contour to the point.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -249,6 +334,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -268,6 +354,138 @@
         <remarks>
           <para>Add a quadratic bezier from the last point, approaching control point (x0,y0), and ending at (x1,y1). If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</para>
         </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="RConicTo">
+      <MemberSignature Language="C#" Value="public void RConicTo (float dx0, float dy0, float dx1, float dy1, float w);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void RConicTo(float32 dx0, float32 dy0, float32 dx1, float32 dy1, float32 w) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dx0" Type="System.Single" />
+        <Parameter Name="dy0" Type="System.Single" />
+        <Parameter Name="dx1" Type="System.Single" />
+        <Parameter Name="dy1" Type="System.Single" />
+        <Parameter Name="w" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="dx0">The amount to add to the x-coordinate of the last point on this contour, to specify the control point of the conic curve.</param>
+        <param name="dy0">The amount to add to the y-coordinate of the last point on this contour, to specify the control point of the conic curve.</param>
+        <param name="dx1">The amount to add to the x-coordinate of the last point on this contour, to specify the end point of the conic curve.</param>
+        <param name="dy1">The amount to add to the y-coordinate of the last point on this contour, to specify the end point of the conic curve.</param>
+        <param name="w">The weight of the conic curve.</param>
+        <summary>
+          <para>Same as <see cref="M:SkiaSharp.SKPath.ConicTo" /> but the coordinates are considered relative to the last point on this contour.</para>
+        </summary>
+        <remarks>
+          <para> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="RCubicTo">
+      <MemberSignature Language="C#" Value="public void RCubicTo (float dx0, float dy0, float dx1, float dy1, float dx2, float dy2);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void RCubicTo(float32 dx0, float32 dy0, float32 dx1, float32 dy1, float32 dx2, float32 dy2) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dx0" Type="System.Single" />
+        <Parameter Name="dy0" Type="System.Single" />
+        <Parameter Name="dx1" Type="System.Single" />
+        <Parameter Name="dy1" Type="System.Single" />
+        <Parameter Name="dx2" Type="System.Single" />
+        <Parameter Name="dy2" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="dx0">The amount to add to the x-coordinate of the last point on this contour, to specify the 1st control point on a cubic curve.</param>
+        <param name="dy0">The amount to add to the y-coordinate of the last point on this contour, to specify the 1st control point on a cubic curve.</param>
+        <param name="dx1">The amount to add to the x-coordinate of the last point on this contour, to specify the 2nd control point on a cubic curve.</param>
+        <param name="dy1">The amount to add to the y-coordinate of the last point on this contour, to specify the 2nd control point on a cubic curve.</param>
+        <param name="dx2">The amount to add to the x-coordinate of the last point on this contour, to specify the end point on a cubic curve.</param>
+        <param name="dy2">The amount to add to the y-coordinate of the last point on this contour, to specify the end point on a cubic curve.</param>
+        <summary>Same as <see cref="M:SkiaSharp.SKPath.CubicTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
+        <remarks>
+          <para> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</para>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="RLineTo">
+      <MemberSignature Language="C#" Value="public void RLineTo (float dx, float dy);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void RLineTo(float32 dx, float32 dy) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dx" Type="System.Single" />
+        <Parameter Name="dy" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="dx">The amount to add to the x-coordinate of the last point on this contour, to specify the end of a line.</param>
+        <param name="dy">The amount to add to the y-coordinate of the last point on this contour, to specify the end of a line.</param>
+        <summary>Same as <see cref="M:SkiaSharp.SKPath.LineTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
+        <remarks> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="RMoveTo">
+      <MemberSignature Language="C#" Value="public void RMoveTo (float dx, float dy);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void RMoveTo(float32 dx, float32 dy) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dx" Type="System.Single" />
+        <Parameter Name="dy" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="dx">The amount to add to the x-coordinate of the last point on this contour, to specify the start of a new contour.</param>
+        <param name="dy">The amount to add to the x-coordinate of the last point on this contour, to specify the start of a new contour.</param>
+        <summary>Same as <see cref="M:SkiaSharp.SKPath.MoveTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="RQuadTo">
+      <MemberSignature Language="C#" Value="public void RQuadTo (float dx0, float dy0, float dx1, float dy1);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void RQuadTo(float32 dx0, float32 dy0, float32 dx1, float32 dy1) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dx0" Type="System.Single" />
+        <Parameter Name="dy0" Type="System.Single" />
+        <Parameter Name="dx1" Type="System.Single" />
+        <Parameter Name="dy1" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="dx0">The amount to add to the x-coordinate of the last point on this contour, to specify the control point on a quadratic curve.</param>
+        <param name="dy0">The amount to add to the y-coordinate of the last point on this contour, to specify the control point on a quadratic curve.</param>
+        <param name="dx1">The amount to add to the x-coordinate of the last point on this contour, to specify end point on a quadratic curve.</param>
+        <param name="dy1">The amount to add to the y-coordinate of the last point on this contour, to specify end point on a quadratic curve.</param>
+        <summary>Same as <see cref="M:SkiaSharp.SKPath.QuadTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
+        <remarks> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</remarks>
       </Docs>
     </Member>
   </Members>

@@ -1,7 +1,8 @@
 # SkiaSharp
 
-SkiaSharp is a cross-platform, managed binding for the 
-Skia Graphics Library (https://skia.org/)
+SkiaSharp is a cross-platform 2D graphics API for .NET platforms based on Google's
+Skia Graphics Library (https://skia.org/).   It provides a comprehensive 2D API that can
+be used across mobile, server and desktop models to render images.
 
 ## What is Included
 
@@ -22,13 +23,37 @@ Check our getting [started guide](https://developer.xamarin.com/guides/cross-pla
 
 ## Building SkiaSharp
 
-To build SkiaSharp on Mac OS X (Bash):
+First clone the repository:
+
+    $ git clone https://github.com/mono/SkiaSharp.git
+
+Next, set up the submodules:
+
+    $ cd SkiaSharp
+    $ git submodule init && git submodule update
+    
+Then follow the platform-specific instructions below.
+
+### Mac OS X
+
+Run from Bash
 
     $ ./bootstrapper.sh -t libs
 
-Similarly on Windows (PowerShell):
+### Windows
+
+You need Python 2.7 in `PATH` environment variable. Then you need to run following commands from `skia` directory:
+
+    > ..\depot_tools\gclient.bat config --unmanaged https://github.com/mono/skia.git
+    > ..\depot_tools\gclient.bat sync
+
+The process will take some time while gclient downloads Skia build dependencies.
+
+Then you can finally build it:
 
     > .\bootstrapper.ps1 -Target libs
+
+
 
 There are several targets available:
 
@@ -45,13 +70,10 @@ There are several targets available:
  - `docs` - updates the mdoc files
  - `nuget` - packages the libraries into a NuGet
  - `CI` - builds everything
+ - `clean` - cleans everything
+   - `clean-externals` - cleans externals only
 
-## Where is Windows Phone / Store
+## Where is Windows Phone / Store / tvOS
  
-At this time, Windows Phone and Windows Store apps are not 
-supported. This is due to the native library not supporting 
-those platforms: 
-
- - https://bugs.chromium.org/p/skia/issues/detail?id=2059
- - https://groups.google.com/forum/#!searchin/skia-discuss/windows$20phone/skia-discuss/VHRCLl-XV8E/YpUKZr4OVKgJ
- - https://groups.google.com/forum/#!searchin/skia-discuss/windows$208/skia-discuss/FF4-KzRRDp8/S0Uoy1f0waIJ
+We are working to add binaries for these platforms, stay tuned for a future release
+(or check the pull requests and branches, where we are working on those)

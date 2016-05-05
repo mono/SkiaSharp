@@ -115,7 +115,7 @@ namespace SkiaSharp
 				{
 					var shouldReplace =
 						reference == null ||
-						reference.Target != null ||
+						reference.Target == null ||
 						((SKObject)reference.Target).Handle == IntPtr.Zero;
 
 					Debug.WriteLineIf(!shouldReplace, "Not replacing existing, living, managed instance with new object.");

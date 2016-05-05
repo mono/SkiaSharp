@@ -153,17 +153,32 @@ namespace SkiaSharp
 			get { return (int)SkiaApi.sk_bitmap_get_byte_count (Handle); }
 		}
 
+		public void LockPixels ()
+		{
+			SkiaApi.sk_bitmap_lock_pixels (Handle);
+		}
+
+		public void UnlockPixels ()
+		{
+			SkiaApi.sk_bitmap_unlock_pixels (Handle);
+		}
+
+		public IntPtr GetPixels (out IntPtr length)
+		{
+			return SkiaApi.sk_bitmap_get_pixels (Handle, out length);
+		}
+		
 		public byte[] Bytes {
 			get { 
-				SkiaApi.sk_bitmap_lock_pixels (Handle);
+				LockPixels ();
 				try {
 					IntPtr length;
-					var pixelsPtr = SkiaApi.sk_bitmap_get_pixels (Handle, out length);
+					var pixelsPtr = GetPixels (out length);
 					byte[] bytes = new byte[(int)length];
 					Marshal.Copy (pixelsPtr, bytes, 0, (int)length);
 					return bytes; 
 				} finally {
-					SkiaApi.sk_bitmap_unlock_pixels (Handle);
+					UnlockPixels ();
 				}
 			}
 		}

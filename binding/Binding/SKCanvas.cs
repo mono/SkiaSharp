@@ -19,21 +19,21 @@ namespace SkiaSharp
 		{
 		}
 
-		public void Save ()
+		public int Save ()
 		{
 			if (Handle == IntPtr.Zero)
 				throw new ObjectDisposedException ("SKCanvas");
-			SkiaApi.sk_canvas_save (Handle);
+			return SkiaApi.sk_canvas_save (Handle);
 		}
 
-		public void SaveLayer (SKRect limit, SKPaint paint)
+		public int SaveLayer (SKRect limit, SKPaint paint)
 		{
-			SkiaApi.sk_canvas_save_layer (Handle, ref limit, paint == null ? IntPtr.Zero : paint.Handle);
+			return SkiaApi.sk_canvas_save_layer (Handle, ref limit, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
-		public void SaveLayer (SKPaint paint)
+		public int SaveLayer (SKPaint paint)
 		{
-			SkiaApi.sk_canvas_save_layer (Handle, IntPtr.Zero, paint == null ? IntPtr.Zero : paint.Handle);
+			return SkiaApi.sk_canvas_save_layer (Handle, IntPtr.Zero, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
 		public void DrawColor (SKColor color, SKXferMode mode = SKXferMode.Src)
@@ -140,6 +140,13 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_rect (Handle, ref rect, paint.Handle);
 		}
 
+		public void DrawRoundRect (SKRect rect, float rx, float ry, SKPaint paint)
+		{
+				if (paint == null)
+						throw new ArgumentNullException ("paint");
+				SkiaApi.sk_canvas_draw_round_rect (Handle, ref rect, rx, ry, paint.Handle);
+		}
+
 		public void DrawOval (SKRect rect, SKPaint paint)
 		{
 			if (paint == null)
@@ -240,7 +247,7 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException ("paint");
 
-			var bytes = System.Text.Encoding.UTF8.GetBytes (text);
+			var bytes = Util.GetEncodedText (text, paint.TextEncoding);
 			SkiaApi.sk_canvas_draw_text (Handle, bytes, bytes.Length, x, y, paint.Handle);
 		}
 
@@ -253,8 +260,42 @@ namespace SkiaSharp
 			if (points == null)
 				throw new ArgumentNullException ("points");
 
-			var bytes = System.Text.Encoding.UTF8.GetBytes (text);
+			var bytes = Util.GetEncodedText (text, paint.TextEncoding);
 			SkiaApi.sk_canvas_draw_pos_text (Handle, bytes, bytes.Length, points, paint.Handle);
+		}
+
+		public void DrawText (IntPtr buffer, int length, SKPath path, float hOffset, float vOffset, SKPaint paint)
+		{
+			if (buffer == IntPtr.Zero)
+				throw new ArgumentNullException ("buffer");
+			if (paint == null)
+				throw new ArgumentNullException ("paint");
+			if (paint == null)
+				throw new ArgumentNullException ("paint");
+			
+			SkiaApi.sk_canvas_draw_text_on_path (Handle, buffer, length, path.Handle, hOffset, vOffset, paint.Handle);
+		}
+
+		public void DrawText (IntPtr buffer, int length, float x, float y, SKPaint paint)
+		{
+			if (buffer == IntPtr.Zero)
+				throw new ArgumentNullException ("buffer");
+			if (paint == null)
+				throw new ArgumentNullException ("paint");
+			
+			SkiaApi.sk_canvas_draw_text (Handle, buffer, length, x, y, paint.Handle);
+		}
+
+		public void DrawText (IntPtr buffer, int length, SKPoint[] points, SKPaint paint)
+		{
+			if (buffer == IntPtr.Zero)
+				throw new ArgumentNullException ("buffer");
+			if (paint == null)
+				throw new ArgumentNullException ("paint");
+			if (points == null)
+				throw new ArgumentNullException ("points");
+			
+			SkiaApi.sk_canvas_draw_pos_text (Handle, buffer, length, points, paint.Handle);
 		}
 
 		public void DrawText (string text, SKPath path, float hOffset, float vOffset, SKPaint paint)
@@ -266,9 +307,10 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException ("paint");
 
-			var bytes = System.Text.Encoding.UTF8.GetBytes (text);
+			var bytes = Util.GetEncodedText (text, paint.TextEncoding);
 			SkiaApi.sk_canvas_draw_text_on_path (Handle, bytes, bytes.Length, path.Handle, hOffset, vOffset, paint.Handle);
 		}
+
 
 		public void ResetMatrix ()
 		{

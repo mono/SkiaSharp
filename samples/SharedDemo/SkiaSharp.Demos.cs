@@ -262,7 +262,7 @@ namespace SkiaSharp
 
 				// draw
 				paint.Color = XamGreen;
-				canvas.DrawRect (rotatedRect, paint);
+				canvas.DrawRoundRect (rotatedRect, 10, 10, paint);
 
 				// undo transform / restore
 				canvas.Restore();

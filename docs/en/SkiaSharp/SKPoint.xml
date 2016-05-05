@@ -4,6 +4,7 @@
   <AssemblyInfo>
     <AssemblyName>SkiaSharp</AssemblyName>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <AssemblyVersion>1.49.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.ValueType</BaseTypeName>
@@ -12,7 +13,9 @@
   <Docs>
     <summary>Represents an ordered pair of floating-point x- and y-coordinates that defines a point in a two-dimensional plane.</summary>
     <remarks>
-      <para></para>
+      <para>To convert a <see cref="T:SkiaSharp.SKPoint" />  to a <see cref="T:SkiaSharp.SKPointI" />, use <see cref="M:SkiaSharp.PointI.Round(SkiaSharp.Point)" /> or <see cref="M:SkiaSharp.PointI.Truncate(SkiaSharp.Point)" />.</para>
+      <para>
+      </para>
     </remarks>
   </Docs>
   <Members>
@@ -22,15 +25,341 @@
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="x" Type="System.Single" />
         <Parameter Name="y" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <summary>Initializes a point from two floating point values.</summary>
+        <param name="x">The horizontal position of the point.</param>
+        <param name="y">The horizontal position of the point.</param>
+        <summary>Initializes a new instance of the <see cref="T:System.Drawing.PointF" /> class with the specified coordinates.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Add">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKPoint Add (SkiaSharp.SKPoint pt, SkiaSharp.SKSize sz);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig valuetype SkiaSharp.SKPoint Add(valuetype SkiaSharp.SKPoint pt, valuetype SkiaSharp.SKSize sz) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPoint</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pt" Type="SkiaSharp.SKPoint" />
+        <Parameter Name="sz" Type="SkiaSharp.SKSize" />
+      </Parameters>
+      <Docs>
+        <param name="pt">The point to translate.</param>
+        <param name="sz">The size that specified the number to add to the coordinates of <see langword="pt" />.</param>
+        <summary>Translates a given <see cref="T:SkiaSharp.SKPoint" /> by the specified <see cref="T:SkiaSharp.SKSize" />.</summary>
+        <returns>The translated <see cref="T:SkiaSharp.SKPoint" /></returns>
+        <remarks>This method adds the <see cref="P:SkiaSharp.SizeI.Width" /> of the specified size to the x-coordinate of the <see cref="T:SkiaSharp.Point" /> and the <see cref="P:SkiaSharp.SizeU.Height" /> to the y-coordinate of the <see cref="T:SkiaSharp.Point" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Add">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKPoint Add (SkiaSharp.SKPoint pt, SkiaSharp.SKSizeI sz);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig valuetype SkiaSharp.SKPoint Add(valuetype SkiaSharp.SKPoint pt, valuetype SkiaSharp.SKSizeI sz) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPoint</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pt" Type="SkiaSharp.SKPoint" />
+        <Parameter Name="sz" Type="SkiaSharp.SKSizeI" />
+      </Parameters>
+      <Docs>
+        <param name="pt">The point to translate</param>
+        <param name="sz">The size that specifies the numer to add to the coordinates of <paramref name="pt" />.</param>
+        <summary>Translates a given point by a specified size.</summary>
+        <returns>The translated Point.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Empty">
+      <MemberSignature Language="C#" Value="public static readonly SkiaSharp.SKPoint Empty;" />
+      <MemberSignature Language="ILAsm" Value=".field public static initonly valuetype SkiaSharp.SKPoint Empty" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPoint</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Represents a new instance of the <see cref="T:SkiaSharp.Point" /> class with member data left uninitialized.</summary>
+        <remarks>
+          <para>
+          </para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Equals">
+      <MemberSignature Language="C#" Value="public override bool Equals (object obj);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig virtual instance bool Equals(object obj) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="obj" Type="System.Object" />
+      </Parameters>
+      <Docs>
+        <param name="obj">The <see cref="T:System.Object" /> to test.</param>
+        <summary>Specifies whether this <see cref="T:SkiaSharp.Point" /> contains the same coordinates as the specified <see cref="T:System.Object" />.</summary>
+        <returns>This method returns true if <paramref name="obj" /> is a <see cref="T:SkiaSharp.Point" /> and has the same coordinates as this <see cref="T:SkiaSharp.SKPoint" />.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetHashCode">
+      <MemberSignature Language="C#" Value="public override int GetHashCode ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig virtual instance int32 GetHashCode() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Returns the hashcode for this SKPoint.</summary>
+        <returns>To be added.</returns>
+        <remarks>You should avoid depending on GetHashCode for unique values, as two <see cref="T:System.Drawing.Point" /> objects with the same values for their X and Y properties may return the same hash code. This behavior could change in a future release.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="IsEmpty">
+      <MemberSignature Language="C#" Value="public bool IsEmpty { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance bool IsEmpty" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets a value indicating whether this <see cref="T:SkiaSharp.SKPoint" /> is empty.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="op_Addition">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKPoint op_Addition (SkiaSharp.SKPoint pt, SkiaSharp.SKSize sz);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig specialname valuetype SkiaSharp.SKPoint op_Addition(valuetype SkiaSharp.SKPoint pt, valuetype SkiaSharp.SKSize sz) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPoint</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pt" Type="SkiaSharp.SKPoint" />
+        <Parameter Name="sz" Type="SkiaSharp.SKSize" />
+      </Parameters>
+      <Docs>
+        <param name="pt">The <see cref="T:SkiaSharp.SKPoint" /> to translate.</param>
+        <param name="sz">A <see cref="T:SkiaSharp.SKSize" /> that specifies the pair of numbers to add to the coordinates of <paramref name="pt" />.</param>
+        <summary>Translates a <see cref="T:SkiaSharp.SKPoint" /> by a given <see cref="T:SkiaSharp.SKSize" />.</summary>
+        <returns>Returns the translated <see cref="T:SkiaSharp.SKPoint" />.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="op_Addition">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKPoint op_Addition (SkiaSharp.SKPoint pt, SkiaSharp.SKSizeI sz);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig specialname valuetype SkiaSharp.SKPoint op_Addition(valuetype SkiaSharp.SKPoint pt, valuetype SkiaSharp.SKSizeI sz) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPoint</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pt" Type="SkiaSharp.SKPoint" />
+        <Parameter Name="sz" Type="SkiaSharp.SKSizeI" />
+      </Parameters>
+      <Docs>
+        <param name="pt">The <see cref="T:SkiaSharp.SKPoint" /> to translate.</param>
+        <param name="sz">A <see cref="T:SkiaSharp.SKSizeI" /> that specifies the pair of numbers to add to the coordinates of <paramref name="pt" />.</param>
+        <summary>Translates a <see cref="T:SkiaSharp.SKPoint" /> by a given <see cref="T:SkiaSharp.SKSizeI" />.</summary>
+        <returns>Returns the translated <see cref="T:SkiaSharp.SKPoint" />.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="op_Equality">
+      <MemberSignature Language="C#" Value="public static bool op_Equality (SkiaSharp.SKPoint left, SkiaSharp.SKPoint right);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig specialname bool op_Equality(valuetype SkiaSharp.SKPoint left, valuetype SkiaSharp.SKPoint right) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="left" Type="SkiaSharp.SKPoint" />
+        <Parameter Name="right" Type="SkiaSharp.SKPoint" />
+      </Parameters>
+      <Docs>
+        <param name="left">A <see cref="T:SkiaSharp.SKPoint" /> to compare.</param>
+        <param name="right">A <see cref="T:SkiaSharp.SKPoint" /> to compare.</param>
+        <summary>Compares two <see cref="T:SkiaSharp.SKPoint" /> structures. The result specifies whether the values of the <see cref="P:SkiaSharp.Point.X" /> and <see cref="P:SkiaSharp.Point.Y" /> properties of the two <see cref="T:SkiaSharp.SKPoint" /> structures are equal.</summary>
+        <returns>true if the <see cref="P:SkiaSharp.SKPoint.X" /> and <see cref="P:SkiaSharp.SKPoint.Y" /> values of the left and right <see cref="T:SkiaSharp.SKPoint" /> structures are equal; otherwise, false.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="op_Inequality">
+      <MemberSignature Language="C#" Value="public static bool op_Inequality (SkiaSharp.SKPoint left, SkiaSharp.SKPoint right);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig specialname bool op_Inequality(valuetype SkiaSharp.SKPoint left, valuetype SkiaSharp.SKPoint right) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="left" Type="SkiaSharp.SKPoint" />
+        <Parameter Name="right" Type="SkiaSharp.SKPoint" />
+      </Parameters>
+      <Docs>
+        <param name="left">A <see cref="T:SkiaSharp.SKPoint" /> to compare.</param>
+        <param name="right">A <see cref="T:SkiaSharp.SKPoint" /> to compare.</param>
+        <summary>Determines whether the coordinates of the specified points are not equal.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="op_Subtraction">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKPoint op_Subtraction (SkiaSharp.SKPoint pt, SkiaSharp.SKSize sz);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig specialname valuetype SkiaSharp.SKPoint op_Subtraction(valuetype SkiaSharp.SKPoint pt, valuetype SkiaSharp.SKSize sz) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPoint</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pt" Type="SkiaSharp.SKPoint" />
+        <Parameter Name="sz" Type="SkiaSharp.SKSize" />
+      </Parameters>
+      <Docs>
+        <param name="pt">The <see cref="T:SkiaSharp.SKPoint" /> to translate.</param>
+        <param name="sz">The <see cref="T:SkiaSharp.SKSize" /> that specifies the numbers to subtract from the coordinates of <paramref name="pt" />.</param>
+        <summary>Translates a <see cref="T:SkiaSharp.SKPoint" /> by the negative of a given <see cref="T:SkiaSharp.SKSize" />.</summary>
+        <returns>The translated <see cref="T:SkiaSharp.SKPoint" />.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="op_Subtraction">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKPoint op_Subtraction (SkiaSharp.SKPoint pt, SkiaSharp.SKSizeI sz);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig specialname valuetype SkiaSharp.SKPoint op_Subtraction(valuetype SkiaSharp.SKPoint pt, valuetype SkiaSharp.SKSizeI sz) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPoint</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pt" Type="SkiaSharp.SKPoint" />
+        <Parameter Name="sz" Type="SkiaSharp.SKSizeI" />
+      </Parameters>
+      <Docs>
+        <param name="pt">The <see cref="T:SkiaSharp.SKPoint" /> to translate.</param>
+        <param name="sz">The <see cref="T:SkiaSharp.SKSizeI" /> that specifies the numbers to subtract from the coordinates of <paramref name="pt" />.</param>
+        <summary>Translates a <see cref="T:SkiaSharp.SKPoint" /> by the negative of a given <see cref="T:SkiaSharp.SKSizeI" /> added.</summary>
+        <returns>The translated <see cref="T:SkiaSharp.SKPoint" />.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Subtract">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKPoint Subtract (SkiaSharp.SKPoint pt, SkiaSharp.SKSize sz);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig valuetype SkiaSharp.SKPoint Subtract(valuetype SkiaSharp.SKPoint pt, valuetype SkiaSharp.SKSize sz) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPoint</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pt" Type="SkiaSharp.SKPoint" />
+        <Parameter Name="sz" Type="SkiaSharp.SKSize" />
+      </Parameters>
+      <Docs>
+        <param name="pt">The <see cref="T:SkiaSharp.SKPoint" /> to translate.</param>
+        <param name="sz">The <see cref="T:SkiaSharp.SKSize" /> that specifies the numbers to subtract from the coordinates of <paramref name="pt" />.</param>
+        <summary>Translates a <see cref="T:SkiaSharp.SKPoint" /> by the negative of a specified size.</summary>
+        <returns>The translated <see cref="T:SkiaSharp.SKPoint" />.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Subtract">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKPoint Subtract (SkiaSharp.SKPoint pt, SkiaSharp.SKSizeI sz);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig valuetype SkiaSharp.SKPoint Subtract(valuetype SkiaSharp.SKPoint pt, valuetype SkiaSharp.SKSizeI sz) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPoint</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pt" Type="SkiaSharp.SKPoint" />
+        <Parameter Name="sz" Type="SkiaSharp.SKSizeI" />
+      </Parameters>
+      <Docs>
+        <param name="pt">The <see cref="T:SkiaSharp.SKPoint" /> to translate.</param>
+        <param name="sz">The <see cref="T:SkiaSharp.SKSize" /> that specifies the numbers to subtract from the coordinates of <paramref name="pt" />.</param>
+        <summary>Translates a <see cref="T:SkiaSharp.SKPoint" /> by the negative of a specified size.</summary>
+        <returns>The translated <see cref="T:SkiaSharp.SKPoint" />.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ToString">
+      <MemberSignature Language="C#" Value="public override string ToString ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig virtual instance string ToString() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Converts this <see cref="T:SkiaSharp.SKPoint" /> to a human readable string.</summary>
+        <returns>A string that represents this <see cref="T:SkiaSharp.SKPoint" />.</returns>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -38,9 +367,6 @@
       <MemberSignature Language="C#" Value="public float X;" />
       <MemberSignature Language="ILAsm" Value=".field public float32 X" />
       <MemberType>Field</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-      </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
@@ -49,18 +375,49 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="Y">
-      <MemberSignature Language="C#" Value="public float Y;" />
-      <MemberSignature Language="ILAsm" Value=".field public float32 Y" />
-      <MemberType>Field</MemberType>
+    <Member MemberName="X">
+      <MemberSignature Language="C#" Value="public float X { get; set; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance float32 X" />
+      <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
+        <summary>Gets or sets the x-coordinate of this <see cref="T:SkiaSharp.SKPoint" />.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Y">
+      <MemberSignature Language="C#" Value="public float Y;" />
+      <MemberSignature Language="ILAsm" Value=".field public float32 Y" />
+      <MemberType>Field</MemberType>
+      <ReturnValue>
+        <ReturnType>System.Single</ReturnType>
+      </ReturnValue>
+      <Docs>
         <summary>The Y component of the point.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Y">
+      <MemberSignature Language="C#" Value="public float Y { get; set; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance float32 Y" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Single</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets or sets the x-coordinate of this <see cref="T:SkiaSharp.SKPoint" />.</summary>
+        <value>To be added.</value>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>

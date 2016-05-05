@@ -55,11 +55,6 @@ namespace SkiaSharp
 			return new SKData (SkiaApi.sk_data_new_from_malloc (bytes, (IntPtr) length));
 		}
 
-		public static SKData FromMallocMemory (byte[] bytes)
-		{
-			return new SKData (SkiaApi.sk_data_new_from_malloc (bytes, (IntPtr)bytes.Length));
-		}
-
 		public SKData Subset (ulong offset, ulong length)
 		{
 			if (Marshal.SizeOf (typeof(IntPtr)) == 4) {
@@ -74,6 +69,25 @@ namespace SkiaSharp
 		public long Size => (long)SkiaApi.sk_data_get_size (Handle);
 		public IntPtr Data => SkiaApi.sk_data_get_data (Handle);
 
+		unsafe class MyUnmanagedMemoryStream : UnmanagedMemoryStream {
+			SKData host;
+			public MyUnmanagedMemoryStream (SKData host) : base((byte *) host.Data, host.Size)
+			{
+				this.host = host;
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				base.Dispose (disposing);
+				host = null;
+			}
+		}
+		
+		public Stream AsStream ()
+		{
+			return new MyUnmanagedMemoryStream (this);
+		}
+		
 		public void SaveTo (Stream target)
 		{
 			if (target == null)
