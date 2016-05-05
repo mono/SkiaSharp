@@ -14,6 +14,7 @@ var XamarinComponentToolPath = GetToolPath ("../xamarin-component.exe");
 var CakeToolPath = GetToolPath ("Cake.exe");
 var NUnitConsoleToolPath = GetToolPath ("../NUnit.Console/tools/nunit3-console.exe");
 var GenApiToolPath = GetToolPath ("../genapi.exe");
+var MDocPath = GetMDocPath ();
 
 DirectoryPath ROOT_PATH = MakeAbsolute(File(".")).GetDirectory();
 DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("depot_tools"));
@@ -52,6 +53,21 @@ FilePath GetToolPath (FilePath toolPath)
  	if (FileExists (appRootExe))
  		return appRootExe;
     throw new FileNotFoundException ("Unable to find tool: " + appRootExe); 
+}
+
+FilePath GetMDocPath ()
+{
+    FilePath mdocPath;
+    if (IsRunningOnUnix ()) {
+        mdocPath = "/Library/Frameworks/Mono.framework/Versions/Current/bin/mdoc";
+    } else {
+        DirectoryPath progFiles = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
+        mdocPath = progFiles.CombineWithFilePath ("Mono/bin/mdoc.bat");
+    }
+    if (!FileExists (mdocPath)) {
+        mdocPath = "mdoc";
+    }
+    return mdocPath;
 }
 
 var RunNuGetRestore = new Action<FilePath> ((solution) =>
@@ -140,19 +156,22 @@ var RunTests = new Action<FilePath> ((testAssembly) =>
 
 var RunMdocUpdate = new Action<FilePath, DirectoryPath> ((assembly, docsRoot) =>
 {
-    FilePath mdocPath;
-    if (IsRunningOnUnix ()) {
-        mdocPath = "/Library/Frameworks/Mono.framework/Versions/Current/bin/mdoc";
-    } else {
-        DirectoryPath progFiles = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
-        mdocPath = progFiles.CombineWithFilePath ("Mono/bin/mdoc.bat");
-    }
-    if (!FileExists (mdocPath)) {
-        mdocPath = "mdoc";
-    }
-    
-    StartProcess (mdocPath, new ProcessSettings {
+    StartProcess (MDocPath, new ProcessSettings {
         Arguments = string.Format ("update --out=\"{0}\" \"{1}\"", docsRoot, assembly),
+    });
+});
+
+var RunMdocMSXml = new Action<DirectoryPath, FilePath> ((docsRoot, output) =>
+{
+    StartProcess (MDocPath, new ProcessSettings {
+        Arguments = string.Format ("export-msxdoc --out=\"{0}\" \"{1}\"", output, docsRoot),
+    });
+});
+
+var RunMdocAssemble = new Action<DirectoryPath, FilePath> ((docsRoot, output) =>
+{
+    StartProcess (MDocPath, new ProcessSettings {
+        Arguments = string.Format ("assemble --out=\"{0}\" \"{1}\"", output, docsRoot),
     });
 });
 
@@ -201,6 +220,22 @@ var AddXValues = new Action<XElement, string[], string, string> ((root, parents,
     }
     foreach (var n in nodes) {
         AddXValue (n, element, value);
+    }
+});
+
+// find a better place for this / or fix the path issue
+var VisualStudioPathFixup = new Action (() => {
+    var props = SKIA_PATH.CombineWithFilePath ("out/gyp/libjpeg-turbo.props").FullPath;
+    var xdoc = XDocument.Load (props);
+    var temp = xdoc.Root
+        .Elements (MSBuildNS + "ItemDefinitionGroup")
+        .Elements (MSBuildNS + "assemble")
+        .Elements (MSBuildNS + "CommandLineTemplate")
+        .Single ();
+    var newInclude = SKIA_PATH.Combine ("third_party/externals/libjpeg-turbo/win/").FullPath;
+    if (!temp.Value.Contains (newInclude)) {
+        temp.Value += " \"-I" + newInclude + "\"";
+        xdoc.Save (props);
     }
 });
 
@@ -262,23 +297,6 @@ Task ("externals-genapi")
     });
     CopyFile ("binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll.cs", "binding/SkiaSharp.Portable/SkiaPortable.cs");
 });
-
-    // find a better place for this / or fix the path issue
-    var VisualStudioPathFixup = new Action (() => {
-        var props = SKIA_PATH.CombineWithFilePath ("out/gyp/libjpeg-turbo.props").FullPath;
-        var xdoc = XDocument.Load (props);
-        var temp = xdoc.Root
-            .Elements (MSBuildNS + "ItemDefinitionGroup")
-            .Elements (MSBuildNS + "assemble")
-            .Elements (MSBuildNS + "CommandLineTemplate")
-            .Single ();
-        var newInclude = SKIA_PATH.Combine ("third_party/externals/libjpeg-turbo/win/").FullPath;
-        if (!temp.Value.Contains (newInclude)) {
-            temp.Value += " \"-I" + newInclude + "\"";
-            xdoc.Save (props);
-        }
-    });
-
 // this builds the native C and C++ externals for Windows
 Task ("externals-windows")
     .WithCriteria (IsRunningOnWindows ())
@@ -548,14 +566,27 @@ Task ("externals-android")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("libs")
+    .IsDependentOn ("libs-base")
     .IsDependentOn ("libs-windows")
     .IsDependentOn ("libs-osx")
     .Does (() => 
 {
 });
+Task ("libs-base")
+    .Does (() => 
+{
+    // set the SHA on the assembly info 
+    var sha = EnvironmentVariable ("GIT_COMMIT") ?? string.Empty;
+    if (!string.IsNullOrEmpty (sha) && sha.Length >= 6) {
+        sha = sha.Substring (0, 6);
+        Information ("Setting Git SHA to {0}.", sha);
+        ReplaceTextInFiles ("./binding/SkiaSharp/Properties/SkiaSharpAssemblyInfo.cs", "{GIT_SHA}", sha);
+    }
+});
 Task ("libs-windows")
     .WithCriteria (IsRunningOnWindows ())
     .IsDependentOn ("externals")
+    .IsDependentOn ("libs-base")
     .Does (() => 
 {
     // build
@@ -577,6 +608,7 @@ Task ("libs-windows")
 Task ("libs-osx")
     .WithCriteria (IsRunningOnUnix ())
     .IsDependentOn ("externals")
+    .IsDependentOn ("libs-base")
     .Does (() => 
 {
     // build
@@ -670,6 +702,12 @@ Task ("docs")
     .Does (() => 
 {
     RunMdocUpdate ("./binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll", "./docs/en/");
+    
+    if (!DirectoryExists ("./output/docs/msxml/")) CreateDirectory ("./output/docs/msxml/");
+    RunMdocMSXml ("./docs/en/", "./output/docs/msxml/SkiaSharp.xml");
+    
+    if (!DirectoryExists ("./output/docs/mdoc/")) CreateDirectory ("./output/docs/mdoc/");
+    RunMdocAssemble ("./docs/en/", "./output/docs/mdoc/SkiaSharp");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -678,15 +716,16 @@ Task ("docs")
 
 Task ("nuget")
     .IsDependentOn ("libs")
+    .IsDependentOn ("docs")
     .Does (() => 
 {
     if (IsRunningOnWindows ()) {
-        PackageNuGet ("./nuget/Xamarin.SkiaSharp.Windows.nuspec", "./output/");
+        PackageNuGet ("./nuget/SkiaSharp.Windows.nuspec", "./output/");
     }
 
     if (IsRunningOnUnix ()) {
-        PackageNuGet ("./nuget/Xamarin.SkiaSharp.Mac.nuspec", "./output/");
-        PackageNuGet ("./nuget/Xamarin.SkiaSharp.nuspec", "./output/");
+        PackageNuGet ("./nuget/SkiaSharp.Mac.nuspec", "./output/");
+        PackageNuGet ("./nuget/SkiaSharp.nuspec", "./output/");
     }
 });
 
@@ -771,6 +810,12 @@ Task ("CI")
     .IsDependentOn ("docs")
     .IsDependentOn ("nuget")
     .IsDependentOn ("component")
+    .IsDependentOn ("tests")
+    .IsDependentOn ("samples");
+
+Task ("Windows-CI")
+    .IsDependentOn ("externals")
+    .IsDependentOn ("libs")
     .IsDependentOn ("tests")
     .IsDependentOn ("samples");
 
