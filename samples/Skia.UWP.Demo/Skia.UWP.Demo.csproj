@@ -17,6 +17,7 @@
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <PackageCertificateKeyFile>Skia.UWP.Demo_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateThumbprint>9B1FA5B13C53A89CC64E5350AA791CAAF06F1535</PackageCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -95,9 +96,6 @@
     <EmbeddedResource Include="..\SharedDemo\color-wheel.png">
       <Link>color-wheel.png</Link>
     </EmbeddedResource>
-    <Content Include="ApplicationInsights.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="..\SharedDemo\content-font.ttf">
       <Link>content-font.ttf</Link>
     </Content>
@@ -145,16 +143,9 @@
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\binding\SkiaSharp.UWP\SkiaSharp.UWP.csproj">
-      <Project>{bab615aa-956e-4079-b260-dd7b1f52ec7d}</Project>
-      <Name>SkiaSharp.UWP</Name>
-    </ProjectReference>
-  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
-  <Import Project="..\..\binding\SkiaSharp.UWP\bin\$(Platform)\$(Configuration)\SkiaSharp.UWP.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
