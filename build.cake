@@ -16,7 +16,7 @@ var NUnitConsoleToolPath = GetToolPath ("../NUnit.Console/tools/nunit3-console.e
 var GenApiToolPath = GetToolPath ("../genapi.exe");
 var MDocPath = GetMDocPath ();
 
-DirectoryPath ROOT_PATH = MakeAbsolute(File(".")).GetDirectory();
+DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("depot_tools"));
 DirectoryPath SKIA_PATH = MakeAbsolute(ROOT_PATH.Combine("skia"));
 
@@ -270,6 +270,15 @@ Task ("externals-native")
         CopyFileToDirectory ("./native-builds/lib/windows/x86/libskia_windows.pdb", "./output/windows/x86/");
         CopyFileToDirectory ("./native-builds/lib/windows/x64/libskia_windows.dll", "./output/windows/x64/");
         CopyFileToDirectory ("./native-builds/lib/windows/x64/libskia_windows.pdb", "./output/windows/x64/");
+        if (!DirectoryExists ("./output/uwp/x86")) CreateDirectory ("./output/uwp/x86");
+        if (!DirectoryExists ("./output/uwp/x64")) CreateDirectory ("./output/uwp/x64");
+        if (!DirectoryExists ("./output/uwp/arm")) CreateDirectory ("./output/uwp/arm");
+        CopyFileToDirectory ("./native-builds/lib/uwp/x86/libskia_uwp.dll", "./output/uwp/x86/");
+        CopyFileToDirectory ("./native-builds/lib/uwp/x86/libskia_uwp.pdb", "./output/uwp/x86/");
+        CopyFileToDirectory ("./native-builds/lib/uwp/x64/libskia_uwp.dll", "./output/uwp/x64/");
+        CopyFileToDirectory ("./native-builds/lib/uwp/x64/libskia_uwp.pdb", "./output/uwp/x64/");
+        CopyFileToDirectory ("./native-builds/lib/uwp/arm/libskia_uwp.dll", "./output/uwp/arm/");
+        CopyFileToDirectory ("./native-builds/lib/uwp/arm/libskia_uwp.pdb", "./output/uwp/arm/");
     }
     if (IsRunningOnUnix ()) {
         if (!DirectoryExists ("./output/osx")) CreateDirectory ("./output/osx");
@@ -597,6 +606,7 @@ Task ("libs-windows")
     
     if (!DirectoryExists ("./output/portable/")) CreateDirectory ("./output/portable/");
     if (!DirectoryExists ("./output/windows/")) CreateDirectory ("./output/windows/");
+    if (!DirectoryExists ("./output/uwp/")) CreateDirectory ("./output/uwp/");
     
     // copy build output
     CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
@@ -604,6 +614,10 @@ Task ("libs-windows")
     CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.pdb", "./output/windows/");
     CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll.config", "./output/windows/");
     CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.Desktop.targets", "./output/windows/");
+    CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.dll", "./output/uwp/");
+    CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.pdb", "./output/uwp/");
+    CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.pri", "./output/uwp/");
+    CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.UWP.targets", "./output/uwp/");
 });
 Task ("libs-osx")
     .WithCriteria (IsRunningOnUnix ())
