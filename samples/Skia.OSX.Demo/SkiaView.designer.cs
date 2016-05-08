@@ -9,10 +9,10 @@ using System.CodeDom.Compiler;
 
 namespace Skia.OSX.Demo
 {
-	[Register ("SkaiView")]
-	partial class SkaiView
+	[Register ("SkiaView")]
+	partial class SkiaView
 	{
-		
+
 		void ReleaseDesignerOutlets ()
 		{
 		}

@@ -8,11 +8,11 @@ using SkiaSharp;
 
 namespace Skia.OSX.Demo
 {
-	public partial class SkaiView : NSView
+	public partial class SkiaView : NSView
 	{
 		Action <SKCanvas, int, int> onDrawCallback;
 
-		public SkaiView (IntPtr handle) : base (handle)
+		public SkiaView (IntPtr handle) : base (handle)
 		{
 		}
 

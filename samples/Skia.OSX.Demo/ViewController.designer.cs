@@ -16,7 +16,7 @@ namespace Skia.OSX.Demo
 		AppKit.NSPopUpButton PopUpButton { get; set; }
 
 		[Outlet]
-		Skia.OSX.Demo.SkaiView SkiaView { get; set; }
+		Skia.OSX.Demo.SkiaView SkiaView { get; set; }
 
 		[Action ("PopUpButtonAction:")]
 		partial void PopUpButtonAction (Foundation.NSObject sender);
