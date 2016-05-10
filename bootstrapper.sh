@@ -42,7 +42,7 @@ fi
 # Download NuGet if it does not exist.
 if [ ! -f $NUGET_EXE ]; then
     echo "Downloading NuGet..."
-    curl -Lsfo $NUGET_EXE https://www.nuget.org/nuget.exe
+    curl -Lsfo $NUGET_EXE https://dist.nuget.org/win-x86-commandline/v2.8.6/nuget.exe
     if [ $? -ne 0 ]; then
         echo "An error occured while downloading nuget.exe."
         exit 1
