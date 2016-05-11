@@ -127,9 +127,6 @@ var RunLipo = new Action<DirectoryPath, FilePath, FilePath[]> ((directory, outpu
 
 var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath) =>
 {
-	// NuGet messes up path on mac, so let's add ./ in front twice
-	var basePath = IsRunningOnUnix () ? "././" : "./";
-
 	if (!DirectoryExists (outputPath)) {
 		CreateDirectory (outputPath);
 	}
@@ -137,7 +134,7 @@ var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath)
     NuGetPack (nuspecPath, new NuGetPackSettings { 
         Verbosity = NuGetVerbosity.Detailed,
         OutputDirectory = outputPath,		
-        BasePath = basePath,
+        BasePath = "./",
         ToolPath = NugetToolPath
     });				
 });
