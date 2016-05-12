@@ -71,7 +71,7 @@ void** KeepSkiaCSymbols ()
         (void*)sk_memorystream_new,
         (void*)sk_stream_read,
         (void*)sk_typeface_create_from_name,
-		(void*)sk_string_new_empty,
+        (void*)sk_string_new_empty,
 
         // Xamarin
         (void*)sk_managedstream_new,
