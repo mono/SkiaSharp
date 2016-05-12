@@ -35,15 +35,9 @@ if (!(Test-Path $TOOLS_DIR)) {
     New-Item -ItemType directory -Path $TOOLS_DIR | Out-Null
 }
 
-# Make sure packages.config exists where we expect it.
-if (!(Test-Path $PACKAGES_CONFIG)) {
-    #Invoke-WebRequest -Uri http://cakebuild.net/bootstrapper/packages -OutFile $PACKAGES_CONFIG
-    Copy-Item -Path cake.packages.config -Destination $PACKAGES_CONFIG
-}
-
 # Make sure NuGet exists where we expect it.
 if (!(Test-Path $NUGET_EXE)) {
-    Invoke-WebRequest -Uri http://nuget.org/nuget.exe -OutFile $NUGET_EXE
+    Invoke-WebRequest -Uri https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile $NUGET_EXE
 }
 
 # Make sure NuGet exists where we expect it.

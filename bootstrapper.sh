@@ -39,21 +39,10 @@ if [ ! -d $TOOLS_DIR ]; then
   mkdir $TOOLS_DIR
 fi
 
-# Make sure that packages.config exist.
-if [ ! -f $TOOLS_DIR/packages.config ]; then
-    #echo "Downloading packages.config..."
-    #curl -Lsfo $TOOLS_DIR/packages.config http://cakebuild.net/bootstrapper/packages
-    #if [ $? -ne 0 ]; then
-    #    echo "An error occured while downloading packages.config."
-    #    exit 1
-    #fi
-    cp cake.packages.config $TOOLS_DIR/packages.config
-fi
-
 # Download NuGet if it does not exist.
 if [ ! -f $NUGET_EXE ]; then
     echo "Downloading NuGet..."
-    curl -Lsfo $NUGET_EXE https://www.nuget.org/nuget.exe
+    curl -Lsfo $NUGET_EXE https://dist.nuget.org/win-x86-commandline/v2.8.6/nuget.exe
     if [ $? -ne 0 ]; then
         echo "An error occured while downloading nuget.exe."
         exit 1

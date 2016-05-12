@@ -10,6 +10,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 
 namespace SkiaSharp
@@ -89,8 +90,9 @@ namespace SkiaSharp
 			// create a new wrapper 
 			// TODO: we could probably cache this
 			var type = typeof(TSkiaObject);
-			var binding = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-			var constructor = type.GetTypeInfo().GetConstructor(binding, null, new[] { typeof(IntPtr) }, null);
+			var constructor = type.GetTypeInfo().DeclaredConstructors.FirstOrDefault(c => 
+				c.GetParameters().Length == 1 && 
+				c.GetParameters()[0].ParameterType == typeof(IntPtr));
 			if (constructor == null)
 			{
 				throw new MissingMethodException("No constructor found for " + type.FullName + ".ctor(System.IntPtr)");
