@@ -12,6 +12,7 @@ SkiaSharp provides a PCL and platform-specific bindings for:
  - Xamarin.Android
  - Xamarin.iOS
  - Windows Desktop
+ - Windows UWP
  - Mac Desktop
 
 You can also build this on your particular variant of Unix
@@ -59,6 +60,7 @@ There are several targets available:
 
  - `externals` - builds all the native libraries
    - [win] `externals-windows` - builds the native libraries for Windows
+   - [win] `externals-uwp` - builds the native libraries for Windows UWP
    - [mac] `externals-osx` - builds the native libraries for Mac OS X
    - [mac] `externals-ios` - builds the native libraries for iOS
    - [mac] `externals-andoid` - builds the native libraries for Android
@@ -73,7 +75,7 @@ There are several targets available:
  - `clean` - cleans everything
    - `clean-externals` - cleans externals only
 
-## Where is Windows Phone / Store / tvOS
+## Where is Windows Phone 8 / Store 8 / tvOS
  
 We are working to add binaries for these platforms, stay tuned for a future release
 (or check the pull requests and branches, where we are working on those)
