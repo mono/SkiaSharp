@@ -850,6 +850,68 @@ namespace SkiaSharp
 				canvas.DrawBitmap(bitmap, SKRect.Create(width, height), paint);
 			}
 		}
+		public static void MeasureTextSample (SKCanvas canvas, int width, int height)
+		{
+			canvas.DrawColor (SKColors.White);
+
+			using (var paint = new SKPaint ()) {
+				paint.TextSize = 64.0f;
+				paint.IsAntialias = true;
+				paint.Color = new SKColor (0x42, 0x81, 0xA4);
+				paint.TextEncoding = SKTextEncoding.Utf32;
+
+				canvas.DrawText ("Skia (UTF-32)", 0, 64.0f, paint);
+
+				var bounds = new SKRect();
+				paint.MeasureText ("Skia (UTF-32)", ref bounds);
+				bounds.Top += 64.0f;
+				bounds.Bottom += 64.0f;
+
+				paint.IsStroke = true;
+				paint.Color = SKColors.Red;
+
+				canvas.DrawRect (bounds, paint);
+			}
+
+			using (var paint = new SKPaint ()) {
+				paint.TextSize = 64.0f;
+				paint.IsAntialias = true;
+				paint.Color = new SKColor (0x9C, 0xAF, 0xB7);
+				paint.TextEncoding = SKTextEncoding.Utf16;
+
+				canvas.DrawText ("Skia (UTF-16)", 0, 144.0f, paint);
+
+				var bounds = new SKRect();
+				paint.MeasureText ("Skia (UTF-16)", ref bounds);
+				bounds.Top += 144.0f;
+				bounds.Bottom += 144.0f;
+
+				paint.IsStroke = true;
+				paint.Color = SKColors.Red;
+
+				canvas.DrawRect (bounds, paint);
+			}
+
+			using (var paint = new SKPaint ()) {
+				paint.TextSize = 64.0f;
+				paint.IsAntialias = true;
+				paint.Color = new SKColor (0xE6, 0xB8, 0x9C);
+				paint.TextEncoding = SKTextEncoding.Utf8;
+
+				canvas.DrawText ("Skia (UTF-8)", 0, 224.0f, paint);
+
+				var bounds = new SKRect();
+				paint.MeasureText ("Skia (UTF-8)", ref bounds);
+				bounds.Top += 224.0f;
+				bounds.Bottom += 224.0f;
+
+				paint.IsStroke = true;
+				paint.Color = SKColors.Red;
+
+				canvas.DrawRect (bounds, paint);
+			}
+		}
+
 
 		[Flags]
 		public enum Platform
@@ -858,6 +920,7 @@ namespace SkiaSharp
 			Android = 2,
 			OSX = 4,
 			WindowsDesktop = 8,
+			UWP = 16,
 			All = 0xFFFF,
 		}
 
@@ -907,6 +970,7 @@ namespace SkiaSharp
 			new Sample {Title="Blur Image Filter", Method = BlurImageFilter, Platform = Platform.All},
 			new Sample {Title="Magnifier Image Filter", Method = MagnifierImageFilter, Platform = Platform.All},
 			new Sample {Title="Chained Image Filter", Method = ChainedImageFilter, Platform = Platform.All},
+			new Sample {Title="Measure Text Sample", Method = MeasureTextSample, Platform = Platform.All},
 		};
 	}
 }

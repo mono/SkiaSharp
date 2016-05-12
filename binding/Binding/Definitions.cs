@@ -353,7 +353,7 @@ namespace SkiaSharp
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKSurfaceProps {
-		public SKPixelGeometry PixelGeometry { get; set; }
+		public SKPixelGeometry PixelGeometry;
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
