@@ -689,6 +689,19 @@ namespace SkiaSharp
 		public extern static bool sk_imagedecoder_decode_memory(IntPtr buffer, IntPtr size, sk_bitmap_t bitmap, SKColorType pref, SKImageDecoderMode mode, ref SKImageDecoderFormat format);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static bool sk_imagedecoder_decode_stream(sk_stream_streamrewindable_t cstream, sk_bitmap_t bitmap, SKColorType pref, SKImageDecoderMode mode, ref SKImageDecoderFormat format);
+
+
+        //Render target
+	    [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+	    public extern static IntPtr sk_os_window_render_target_new (IntPtr window, bool softwareOnly);
+        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+	    public extern static void sk_render_target_delete (IntPtr target);
+        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+	    public extern static IntPtr sk_render_target_create_context (IntPtr target);
+        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+	    public extern static IntPtr sk_render_context_get_canvas (IntPtr context);
+        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+	    public extern static void sk_render_context_delete (IntPtr context);
 	}
 }
 
