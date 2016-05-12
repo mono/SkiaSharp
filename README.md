@@ -43,17 +43,9 @@ Run from Bash
 
 ### Windows
 
-You need Python 2.7 in `PATH` environment variable. Then you need to run following commands from `skia` directory:
-
-    > ..\depot_tools\gclient.bat config --unmanaged https://github.com/mono/skia.git
-    > ..\depot_tools\gclient.bat sync
-
-The process will take some time while gclient downloads Skia build dependencies.
-
-Then you can finally build it:
+You need Python 2.7 in `PATH` environment variable. Then you can build it:
 
     > .\bootstrapper.ps1 -Target libs
-
 
 
 There are several targets available:
