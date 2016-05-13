@@ -154,7 +154,7 @@ var RunTests = new Action<FilePath> ((testAssembly) =>
 var RunMdocUpdate = new Action<FilePath, DirectoryPath> ((assembly, docsRoot) =>
 {
     StartProcess (MDocPath, new ProcessSettings {
-        Arguments = string.Format ("update --out=\"{0}\" \"{1}\"", docsRoot, assembly),
+        Arguments = string.Format ("update --delete --out=\"{0}\" \"{1}\"", docsRoot, assembly),
     });
 });
 
@@ -263,25 +263,25 @@ Task ("externals-native")
     if (IsRunningOnWindows ()) {
         if (!DirectoryExists ("./output/windows/x86")) CreateDirectory ("./output/windows/x86");
         if (!DirectoryExists ("./output/windows/x64")) CreateDirectory ("./output/windows/x64");
-        CopyFileToDirectory ("./native-builds/lib/windows/x86/libskia_windows.dll", "./output/windows/x86/");
-        CopyFileToDirectory ("./native-builds/lib/windows/x86/libskia_windows.pdb", "./output/windows/x86/");
-        CopyFileToDirectory ("./native-builds/lib/windows/x64/libskia_windows.dll", "./output/windows/x64/");
-        CopyFileToDirectory ("./native-builds/lib/windows/x64/libskia_windows.pdb", "./output/windows/x64/");
+        CopyFileToDirectory ("./native-builds/lib/windows/x86/libSkiaSharp.dll", "./output/windows/x86/");
+        CopyFileToDirectory ("./native-builds/lib/windows/x86/libSkiaSharp.pdb", "./output/windows/x86/");
+        CopyFileToDirectory ("./native-builds/lib/windows/x64/libSkiaSharp.dll", "./output/windows/x64/");
+        CopyFileToDirectory ("./native-builds/lib/windows/x64/libSkiaSharp.pdb", "./output/windows/x64/");
         if (!DirectoryExists ("./output/uwp/x86")) CreateDirectory ("./output/uwp/x86");
         if (!DirectoryExists ("./output/uwp/x64")) CreateDirectory ("./output/uwp/x64");
         if (!DirectoryExists ("./output/uwp/arm")) CreateDirectory ("./output/uwp/arm");
-        CopyFileToDirectory ("./native-builds/lib/uwp/x86/libskia_uwp.dll", "./output/uwp/x86/");
-        CopyFileToDirectory ("./native-builds/lib/uwp/x86/libskia_uwp.pdb", "./output/uwp/x86/");
-        CopyFileToDirectory ("./native-builds/lib/uwp/x64/libskia_uwp.dll", "./output/uwp/x64/");
-        CopyFileToDirectory ("./native-builds/lib/uwp/x64/libskia_uwp.pdb", "./output/uwp/x64/");
-        CopyFileToDirectory ("./native-builds/lib/uwp/arm/libskia_uwp.dll", "./output/uwp/arm/");
-        CopyFileToDirectory ("./native-builds/lib/uwp/arm/libskia_uwp.pdb", "./output/uwp/arm/");
+        CopyFileToDirectory ("./native-builds/lib/uwp/x86/libSkiaSharp.dll", "./output/uwp/x86/");
+        CopyFileToDirectory ("./native-builds/lib/uwp/x86/libSkiaSharp.pdb", "./output/uwp/x86/");
+        CopyFileToDirectory ("./native-builds/lib/uwp/x64/libSkiaSharp.dll", "./output/uwp/x64/");
+        CopyFileToDirectory ("./native-builds/lib/uwp/x64/libSkiaSharp.pdb", "./output/uwp/x64/");
+        CopyFileToDirectory ("./native-builds/lib/uwp/arm/libSkiaSharp.dll", "./output/uwp/arm/");
+        CopyFileToDirectory ("./native-builds/lib/uwp/arm/libSkiaSharp.pdb", "./output/uwp/arm/");
     }
     if (IsRunningOnUnix ()) {
         if (!DirectoryExists ("./output/osx")) CreateDirectory ("./output/osx");
         if (!DirectoryExists ("./output/mac")) CreateDirectory ("./output/mac");
-        CopyFileToDirectory ("./native-builds/lib/osx/libskia_osx.dylib", "./output/osx/");
-        CopyFileToDirectory ("./native-builds/lib/osx/libskia_osx.dylib", "./output/mac/");
+        CopyFileToDirectory ("./native-builds/lib/osx/libSkiaSharp.dylib", "./output/osx/");
+        CopyFileToDirectory ("./native-builds/lib/osx/libSkiaSharp.dylib", "./output/mac/");
     }
 });
 // this builds the managed PCL external 
@@ -307,21 +307,21 @@ Task ("externals-genapi")
 Task ("externals-windows")
     .WithCriteria (IsRunningOnWindows ())
     .WithCriteria (
-        !FileExists ("native-builds/lib/windows/x86/libskia_windows.dll") ||
-        !FileExists ("native-builds/lib/windows/x64/libskia_windows.dll"))
+        !FileExists ("native-builds/lib/windows/x86/libSkiaSharp.dll") ||
+        !FileExists ("native-builds/lib/windows/x64/libSkiaSharp.dll"))
     .Does (() =>  
 {
     var buildArch = new Action<string, string, string> ((platform, skiaArch, dir) => {
         RunGyp ("skia_arch_type='" + skiaArch + "'", "ninja,msvs");
         VisualStudioPathFixup ();
-        DotNetBuild ("native-builds/libskia_windows/libskia_windows_" + dir + ".sln", c => { 
+        DotNetBuild ("native-builds/libSkiaSharp_windows/libSkiaSharp_" + dir + ".sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { platform };
         });
         if (!DirectoryExists ("native-builds/lib/windows/" + dir)) CreateDirectory ("native-builds/lib/windows/" + dir);
-        CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.lib", "native-builds/lib/windows/" + dir);
-        CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.dll", "native-builds/lib/windows/" + dir);
-        CopyFileToDirectory ("native-builds/libskia_windows/Release/libskia_windows.pdb", "native-builds/lib/windows/" + dir);
+        CopyFileToDirectory ("native-builds/libSkiaSharp_windows/Release/libSkiaSharp.lib", "native-builds/lib/windows/" + dir);
+        CopyFileToDirectory ("native-builds/libSkiaSharp_windows/Release/libSkiaSharp.dll", "native-builds/lib/windows/" + dir);
+        CopyFileToDirectory ("native-builds/libSkiaSharp_windows/Release/libSkiaSharp.pdb", "native-builds/lib/windows/" + dir);
     });
 
     // set up the gyp environment variables
@@ -334,9 +334,9 @@ Task ("externals-windows")
 Task ("externals-uwp")
     .WithCriteria (IsRunningOnWindows ())
     .WithCriteria (
-        !FileExists ("native-builds/lib/uwp/ARM/libskia_uwp.dll") ||
-        !FileExists ("native-builds/lib/uwp/x86/libskia_uwp.dll") ||
-        !FileExists ("native-builds/lib/uwp/x64/libskia_uwp.dll"))
+        !FileExists ("native-builds/lib/uwp/ARM/libSkiaSharp.dll") ||
+        !FileExists ("native-builds/lib/uwp/x86/libSkiaSharp.dll") ||
+        !FileExists ("native-builds/lib/uwp/x64/libSkiaSharp.dll"))
     .Does (() =>  
 {
     var convertDesktopToUWP = new Action<FilePath, string> ((projectFilePath, platform) => {
@@ -407,22 +407,22 @@ Task ("externals-uwp")
     });
 
     var buildArch = new Action<string, string> ((platform, arch) => {
-        CleanDirectories ("native-builds/libskia_uwp/" + arch);
-        CleanDirectories ("native-builds/libskia_uwp/Release");
-        CleanDirectories ("native-builds/libskia_uwp/Generated Files");
-        ProcessSolutionProjects ("native-builds/libskia_uwp/libskia_uwp_" + arch + ".sln", (projectName, projectPath) => {
-            if (projectName != "libskia_uwp")
+        CleanDirectories ("native-builds/libSkiaSharp_uwp/" + arch);
+        CleanDirectories ("native-builds/libSkiaSharp_uwp/Release");
+        CleanDirectories ("native-builds/libSkiaSharp_uwp/Generated Files");
+        ProcessSolutionProjects ("native-builds/libSkiaSharp_uwp/libSkiaSharp_" + arch + ".sln", (projectName, projectPath) => {
+            if (projectName != "libSkiaSharp")
                 convertDesktopToUWP (projectPath, platform);
         });
         VisualStudioPathFixup ();
-        DotNetBuild ("native-builds/libskia_uwp/libskia_uwp_" + arch + ".sln", c => { 
+        DotNetBuild ("native-builds/libSkiaSharp_uwp/libSkiaSharp_" + arch + ".sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { platform };
         });
         if (!DirectoryExists ("native-builds/lib/uwp/" + arch)) CreateDirectory ("native-builds/lib/uwp/" + arch);
-        CopyFileToDirectory ("native-builds/libskia_uwp/Release/libskia_uwp.lib", "native-builds/lib/uwp/" + arch);
-        CopyFileToDirectory ("native-builds/libskia_uwp/Release/libskia_uwp.dll", "native-builds/lib/uwp/" + arch);
-        CopyFileToDirectory ("native-builds/libskia_uwp/Release/libskia_uwp.pdb", "native-builds/lib/uwp/" + arch);
+        CopyFileToDirectory ("native-builds/libSkiaSharp_uwp/Release/libSkiaSharp.lib", "native-builds/lib/uwp/" + arch);
+        CopyFileToDirectory ("native-builds/libSkiaSharp_uwp/Release/libSkiaSharp.dll", "native-builds/lib/uwp/" + arch);
+        CopyFileToDirectory ("native-builds/libSkiaSharp_uwp/Release/libSkiaSharp.pdb", "native-builds/lib/uwp/" + arch);
     });
 
     // set up the gyp environment variables
@@ -441,15 +441,15 @@ Task ("externals-uwp")
 Task ("externals-osx")
     .WithCriteria (IsRunningOnUnix ())
     .WithCriteria (
-        !FileExists ("native-builds/lib/osx/libskia_osx.dylib"))
+        !FileExists ("native-builds/lib/osx/libSkiaSharp.dylib"))
     .Does (() =>  
 {
     var buildArch = new Action<string, string> ((arch, skiaArch) => {
         RunGyp ("skia_arch_type='" + skiaArch + "'", "ninja,xcode");
         
         XCodeBuild (new XCodeBuildSettings {
-            Project = "native-builds/libskia_osx/libskia_osx.xcodeproj",
-            Target = "libskia_osx",
+            Project = "native-builds/libSkiaSharp_osx/libSkiaSharp.xcodeproj",
+            Target = "libSkiaSharp",
             Sdk = "macosx",
             Arch = arch,
             Configuration = "Release",
@@ -457,8 +457,8 @@ Task ("externals-osx")
         if (!DirectoryExists ("native-builds/lib/osx/" + arch)) {
             CreateDirectory ("native-builds/lib/osx/" + arch);
         }
-        CopyDirectory ("native-builds/libskia_osx/build/Release/", "native-builds/lib/osx/" + arch);
-        RunInstallNameTool ("native-builds/lib/osx/" + arch, "lib/libskia_osx.dylib", "@loader_path/libskia_osx.dylib", "libskia_osx.dylib");
+        CopyDirectory ("native-builds/libSkiaSharp_osx/build/Release/", "native-builds/lib/osx/" + arch);
+        RunInstallNameTool ("native-builds/lib/osx/" + arch, "lib/libSkiaSharp.dylib", "@loader_path/libSkiaSharp.dylib", "libSkiaSharp.dylib");
     });
     
     // set up the gyp environment variables
@@ -468,22 +468,22 @@ Task ("externals-osx")
     buildArch ("x86_64", "x86_64");
     
     // create the fat dylib
-    RunLipo ("native-builds/lib/osx/", "libskia_osx.dylib", new [] {
-        (FilePath) "i386/libskia_osx.dylib", 
-        (FilePath) "x86_64/libskia_osx.dylib"
+    RunLipo ("native-builds/lib/osx/", "libSkiaSharp.dylib", new [] {
+        (FilePath) "i386/libSkiaSharp.dylib", 
+        (FilePath) "x86_64/libSkiaSharp.dylib"
     });
 });
 // this builds the native C and C++ externals for iOS
 Task ("externals-ios")
     .WithCriteria (IsRunningOnUnix ())
     .WithCriteria (
-        !FileExists ("native-builds/lib/ios/libskia_ios.framework/libskia_ios"))
+        !FileExists ("native-builds/lib/ios/libSkiaSharp.framework/libSkiaSharp"))
     .Does (() => 
 {
     var buildArch = new Action<string, string> ((sdk, arch) => {
         XCodeBuild (new XCodeBuildSettings {
-            Project = "native-builds/libskia_ios/libskia_ios.xcodeproj",
-            Target = "libskia_ios",
+            Project = "native-builds/libSkiaSharp_ios/libSkiaSharp.xcodeproj",
+            Target = "libSkiaSharp",
             Sdk = sdk,
             Arch = arch,
             Configuration = "Release",
@@ -491,7 +491,7 @@ Task ("externals-ios")
         if (!DirectoryExists ("native-builds/lib/ios/" + arch)) {
             CreateDirectory ("native-builds/lib/ios/" + arch);
         }
-        CopyDirectory ("native-builds/libskia_ios/build/Release-" + sdk, "native-builds/lib/ios/" + arch);
+        CopyDirectory ("native-builds/libSkiaSharp_ios/build/Release-" + sdk, "native-builds/lib/ios/" + arch);
     });
     
     // set up the gyp environment variables
@@ -506,25 +506,25 @@ Task ("externals-ios")
     buildArch ("iphoneos", "arm64");
     
     // create the fat framework
-    CopyDirectory ("native-builds/lib/ios/armv7/libskia_ios.framework/", "native-builds/lib/ios/libskia_ios.framework/");
-    DeleteFile ("native-builds/lib/ios/libskia_ios.framework/libskia_ios");
-    RunLipo ("native-builds/lib/ios/", "libskia_ios.framework/libskia_ios", new [] {
-        (FilePath) "i386/libskia_ios.framework/libskia_ios", 
-        (FilePath) "x86_64/libskia_ios.framework/libskia_ios", 
-        (FilePath) "armv7/libskia_ios.framework/libskia_ios", 
-        (FilePath) "armv7s/libskia_ios.framework/libskia_ios", 
-        (FilePath) "arm64/libskia_ios.framework/libskia_ios"
+    CopyDirectory ("native-builds/lib/ios/armv7/libSkiaSharp.framework/", "native-builds/lib/ios/libSkiaSharp.framework/");
+    DeleteFile ("native-builds/lib/ios/libSkiaSharp.framework/libSkiaSharp");
+    RunLipo ("native-builds/lib/ios/", "libSkiaSharp.framework/libSkiaSharp", new [] {
+        (FilePath) "i386/libSkiaSharp.framework/libSkiaSharp", 
+        (FilePath) "x86_64/libSkiaSharp.framework/libSkiaSharp", 
+        (FilePath) "armv7/libSkiaSharp.framework/libSkiaSharp", 
+        (FilePath) "armv7s/libSkiaSharp.framework/libSkiaSharp", 
+        (FilePath) "arm64/libSkiaSharp.framework/libSkiaSharp"
     });
 });
 // this builds the native C and C++ externals for Android
 Task ("externals-android")
     .WithCriteria (IsRunningOnUnix ())
     .WithCriteria (
-        !FileExists ("native-builds/lib/android/x86/libskia_android.so") ||
-        !FileExists ("native-builds/lib/android/x86_64/libskia_android.so") ||
-        !FileExists ("native-builds/lib/android/armeabi/libskia_android.so") ||
-        !FileExists ("native-builds/lib/android/armeabi-v7a/libskia_android.so") ||
-        !FileExists ("native-builds/lib/android/arm64-v8a/libskia_android.so"))
+        !FileExists ("native-builds/lib/android/x86/libSkiaSharp.so") ||
+        !FileExists ("native-builds/lib/android/x86_64/libSkiaSharp.so") ||
+        !FileExists ("native-builds/lib/android/armeabi/libSkiaSharp.so") ||
+        !FileExists ("native-builds/lib/android/armeabi-v7a/libSkiaSharp.so") ||
+        !FileExists ("native-builds/lib/android/arm64-v8a/libSkiaSharp.so"))
     .Does (() => 
 {
     var ANDROID_HOME = EnvironmentVariable ("ANDROID_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-sdk-macosx";
@@ -556,14 +556,14 @@ Task ("externals-android")
     var ndkbuild = MakeAbsolute (Directory (ANDROID_NDK_HOME)).CombineWithFilePath ("ndk-build").FullPath;
     StartProcess (ndkbuild, new ProcessSettings {
         Arguments = "",
-        WorkingDirectory = ROOT_PATH.Combine ("native-builds/libskia_android").FullPath,
+        WorkingDirectory = ROOT_PATH.Combine ("native-builds/libSkiaSharp_android").FullPath,
     }); 
 
     foreach (var folder in new [] { "x86", "x86_64", "armeabi", "armeabi-v7a", "arm64-v8a" }) {
         if (!DirectoryExists ("native-builds/lib/android/" + folder)) {
             CreateDirectory ("native-builds/lib/android/" + folder);
         }
-        CopyFileToDirectory ("native-builds/libskia_android/libs/" + folder + "/libskia_android.so", "native-builds/lib/android/" + folder);
+        CopyFileToDirectory ("native-builds/libSkiaSharp_android/libs/" + folder + "/libSkiaSharp.so", "native-builds/lib/android/" + folder);
     }
 });
 
@@ -709,6 +709,7 @@ Task ("samples")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("docs")
+    .IsDependentOn ("libs-base")
     .IsDependentOn ("externals-genapi")
     .Does (() => 
 {
@@ -792,15 +793,15 @@ Task ("clean-externals").Does (() =>
     // all
     CleanDirectories ("native-builds/lib");
     // android
-    CleanDirectories ("native-builds/libskia_android/obj");
-    CleanDirectories ("native-builds/libskia_android/libs");
+    CleanDirectories ("native-builds/libSkiaSharp_android/obj");
+    CleanDirectories ("native-builds/libSkiaSharp_android/libs");
     // ios
-    CleanDirectories ("native-builds/libskia_ios/build");
+    CleanDirectories ("native-builds/libSkiaSharp_ios/build");
     // osx
-    CleanDirectories ("native-builds/libskia_osx/build");
+    CleanDirectories ("native-builds/libSkiaSharp_osx/build");
     // windows
-    CleanDirectories ("native-builds/libskia_windows/Release");
-    CleanDirectories ("native-builds/libskia_windows/x64/Release");
+    CleanDirectories ("native-builds/libSkiaSharp_windows/Release");
+    CleanDirectories ("native-builds/libSkiaSharp_windows/x64/Release");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
