@@ -280,8 +280,8 @@ Task ("externals-native")
     if (IsRunningOnUnix ()) {
         if (!DirectoryExists ("./output/osx")) CreateDirectory ("./output/osx");
         if (!DirectoryExists ("./output/mac")) CreateDirectory ("./output/mac");
-        CopyFileToDirectory ("./native-builds/lib/osx/libskia_osx.dylib", "./output/osx/");
-        CopyFileToDirectory ("./native-builds/lib/osx/libskia_osx.dylib", "./output/mac/");
+        CopyFileToDirectory ("./native-builds/lib/osx/libSkiaSharp.dylib", "./output/osx/");
+        CopyFileToDirectory ("./native-builds/lib/osx/libSkiaSharp.dylib", "./output/mac/");
     }
 });
 // this builds the managed PCL external 
@@ -441,15 +441,15 @@ Task ("externals-uwp")
 Task ("externals-osx")
     .WithCriteria (IsRunningOnUnix ())
     .WithCriteria (
-        !FileExists ("native-builds/lib/osx/libskia_osx.dylib"))
+        !FileExists ("native-builds/lib/osx/libSkiaSharp.dylib"))
     .Does (() =>  
 {
     var buildArch = new Action<string, string> ((arch, skiaArch) => {
         RunGyp ("skia_arch_type='" + skiaArch + "'", "ninja,xcode");
         
         XCodeBuild (new XCodeBuildSettings {
-            Project = "native-builds/libskia_osx/libskia_osx.xcodeproj",
-            Target = "libskia_osx",
+            Project = "native-builds/libSkiaSharp_osx/libSkiaSharp.xcodeproj",
+            Target = "libSkiaSharp",
             Sdk = "macosx",
             Arch = arch,
             Configuration = "Release",
@@ -457,8 +457,8 @@ Task ("externals-osx")
         if (!DirectoryExists ("native-builds/lib/osx/" + arch)) {
             CreateDirectory ("native-builds/lib/osx/" + arch);
         }
-        CopyDirectory ("native-builds/libskia_osx/build/Release/", "native-builds/lib/osx/" + arch);
-        RunInstallNameTool ("native-builds/lib/osx/" + arch, "lib/libskia_osx.dylib", "@loader_path/libskia_osx.dylib", "libskia_osx.dylib");
+        CopyDirectory ("native-builds/libSkiaSharp_osx/build/Release/", "native-builds/lib/osx/" + arch);
+        RunInstallNameTool ("native-builds/lib/osx/" + arch, "lib/libSkiaSharp.dylib", "@loader_path/libSkiaSharp.dylib", "libSkiaSharp.dylib");
     });
     
     // set up the gyp environment variables
@@ -468,22 +468,22 @@ Task ("externals-osx")
     buildArch ("x86_64", "x86_64");
     
     // create the fat dylib
-    RunLipo ("native-builds/lib/osx/", "libskia_osx.dylib", new [] {
-        (FilePath) "i386/libskia_osx.dylib", 
-        (FilePath) "x86_64/libskia_osx.dylib"
+    RunLipo ("native-builds/lib/osx/", "libSkiaSharp.dylib", new [] {
+        (FilePath) "i386/libSkiaSharp.dylib", 
+        (FilePath) "x86_64/libSkiaSharp.dylib"
     });
 });
 // this builds the native C and C++ externals for iOS
 Task ("externals-ios")
     .WithCriteria (IsRunningOnUnix ())
     .WithCriteria (
-        !FileExists ("native-builds/lib/ios/libskia_ios.framework/libskia_ios"))
+        !FileExists ("native-builds/lib/ios/libSkiaSharp.framework/libSkiaSharp"))
     .Does (() => 
 {
     var buildArch = new Action<string, string> ((sdk, arch) => {
         XCodeBuild (new XCodeBuildSettings {
-            Project = "native-builds/libskia_ios/libskia_ios.xcodeproj",
-            Target = "libskia_ios",
+            Project = "native-builds/libSkiaSharp_ios/libSkiaSharp.xcodeproj",
+            Target = "libSkiaSharp",
             Sdk = sdk,
             Arch = arch,
             Configuration = "Release",
@@ -491,7 +491,7 @@ Task ("externals-ios")
         if (!DirectoryExists ("native-builds/lib/ios/" + arch)) {
             CreateDirectory ("native-builds/lib/ios/" + arch);
         }
-        CopyDirectory ("native-builds/libskia_ios/build/Release-" + sdk, "native-builds/lib/ios/" + arch);
+        CopyDirectory ("native-builds/libSkiaSharp_ios/build/Release-" + sdk, "native-builds/lib/ios/" + arch);
     });
     
     // set up the gyp environment variables
@@ -506,14 +506,14 @@ Task ("externals-ios")
     buildArch ("iphoneos", "arm64");
     
     // create the fat framework
-    CopyDirectory ("native-builds/lib/ios/armv7/libskia_ios.framework/", "native-builds/lib/ios/libskia_ios.framework/");
-    DeleteFile ("native-builds/lib/ios/libskia_ios.framework/libskia_ios");
-    RunLipo ("native-builds/lib/ios/", "libskia_ios.framework/libskia_ios", new [] {
-        (FilePath) "i386/libskia_ios.framework/libskia_ios", 
-        (FilePath) "x86_64/libskia_ios.framework/libskia_ios", 
-        (FilePath) "armv7/libskia_ios.framework/libskia_ios", 
-        (FilePath) "armv7s/libskia_ios.framework/libskia_ios", 
-        (FilePath) "arm64/libskia_ios.framework/libskia_ios"
+    CopyDirectory ("native-builds/lib/ios/armv7/libSkiaSharp.framework/", "native-builds/lib/ios/libSkiaSharp.framework/");
+    DeleteFile ("native-builds/lib/ios/libSkiaSharp.framework/libSkiaSharp");
+    RunLipo ("native-builds/lib/ios/", "libSkiaSharp.framework/libSkiaSharp", new [] {
+        (FilePath) "i386/libSkiaSharp.framework/libSkiaSharp", 
+        (FilePath) "x86_64/libSkiaSharp.framework/libSkiaSharp", 
+        (FilePath) "armv7/libSkiaSharp.framework/libSkiaSharp", 
+        (FilePath) "armv7s/libSkiaSharp.framework/libSkiaSharp", 
+        (FilePath) "arm64/libSkiaSharp.framework/libSkiaSharp"
     });
 });
 // this builds the native C and C++ externals for Android
@@ -795,9 +795,9 @@ Task ("clean-externals").Does (() =>
     CleanDirectories ("native-builds/libskia_android/obj");
     CleanDirectories ("native-builds/libskia_android/libs");
     // ios
-    CleanDirectories ("native-builds/libskia_ios/build");
+    CleanDirectories ("native-builds/libSkiaSharp_ios/build");
     // osx
-    CleanDirectories ("native-builds/libskia_osx/build");
+    CleanDirectories ("native-builds/libSkiaSharp_osx/build");
     // windows
     CleanDirectories ("native-builds/libskia_windows/Release");
     CleanDirectories ("native-builds/libskia_windows/x64/Release");

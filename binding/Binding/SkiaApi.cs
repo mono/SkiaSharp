@@ -37,13 +37,13 @@ namespace SkiaSharp
 	internal static class SkiaApi
 	{
 #if MONOTOUCH
-		const string SKIA = "@rpath/libskia_ios.framework/libskia_ios";
+		const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
 #elif __ANDROID__
 		const string SKIA = "libskia_android.so";
 #elif XAMARIN_MAC
-		const string SKIA = "libskia_osx.dylib";
+		const string SKIA = "libSkiaSharp.dylib";
 #elif DESKTOP
-		const string SKIA = "libskia_windows.dll"; // redirected using .dll.config to 'libskia_osx.dylib' on OS X
+		const string SKIA = "libskia_windows.dll"; // redirected using .dll.config to 'libSkiaSharp.dylib' on OS X
 #elif WINDOWS_UWP
 		const string SKIA = "libskia_uwp.dll";
 #else

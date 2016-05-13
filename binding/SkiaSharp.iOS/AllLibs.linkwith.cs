@@ -1,4 +1,4 @@
 using ObjCRuntime;
 
-[assembly: LinkWith ("libskia_ios.framework")]
+[assembly: LinkWith ("libSkiaSharp.framework")]
 
