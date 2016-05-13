@@ -113,17 +113,17 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_concat (Handle, ref m);
 		}
 
-		public void ClipRect (SKRect rect)
+		public void ClipRect (SKRect rect, SKRegionOperation operation = SKRegionOperation.Intersect, bool antialias = false)
 		{
-			SkiaApi.sk_canvas_clip_rect (Handle, ref rect);
+			SkiaApi.sk_canvas_clip_rect_with_operation (Handle, ref rect, operation, antialias);
 		}
 
-		public void ClipPath (SKPath path)
+		public void ClipPath (SKPath path, SKRegionOperation operation = SKRegionOperation.Intersect, bool antialias = false)
 		{
 			if (path == null)
 				throw new ArgumentNullException ("path");
 			
-			SkiaApi.sk_canvas_clip_path (Handle, path.Handle);
+			SkiaApi.sk_canvas_clip_path_with_operation (Handle, path.Handle, operation, antialias);
 		}
 
 		public void DrawPaint (SKPaint paint)
