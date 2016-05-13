@@ -39,7 +39,7 @@ namespace SkiaSharp
 #if MONOTOUCH
 		const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
 #elif __ANDROID__
-		const string SKIA = "libskia_android.so";
+		const string SKIA = "libSkiaSharp.so";
 #elif XAMARIN_MAC
 		const string SKIA = "libSkiaSharp.dylib";
 #elif DESKTOP

@@ -520,11 +520,11 @@ Task ("externals-ios")
 Task ("externals-android")
     .WithCriteria (IsRunningOnUnix ())
     .WithCriteria (
-        !FileExists ("native-builds/lib/android/x86/libskia_android.so") ||
-        !FileExists ("native-builds/lib/android/x86_64/libskia_android.so") ||
-        !FileExists ("native-builds/lib/android/armeabi/libskia_android.so") ||
-        !FileExists ("native-builds/lib/android/armeabi-v7a/libskia_android.so") ||
-        !FileExists ("native-builds/lib/android/arm64-v8a/libskia_android.so"))
+        !FileExists ("native-builds/lib/android/x86/libSkiaSharp.so") ||
+        !FileExists ("native-builds/lib/android/x86_64/libSkiaSharp.so") ||
+        !FileExists ("native-builds/lib/android/armeabi/libSkiaSharp.so") ||
+        !FileExists ("native-builds/lib/android/armeabi-v7a/libSkiaSharp.so") ||
+        !FileExists ("native-builds/lib/android/arm64-v8a/libSkiaSharp.so"))
     .Does (() => 
 {
     var ANDROID_HOME = EnvironmentVariable ("ANDROID_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-sdk-macosx";
@@ -556,14 +556,14 @@ Task ("externals-android")
     var ndkbuild = MakeAbsolute (Directory (ANDROID_NDK_HOME)).CombineWithFilePath ("ndk-build").FullPath;
     StartProcess (ndkbuild, new ProcessSettings {
         Arguments = "",
-        WorkingDirectory = ROOT_PATH.Combine ("native-builds/libskia_android").FullPath,
+        WorkingDirectory = ROOT_PATH.Combine ("native-builds/libSkiaSharp_android").FullPath,
     }); 
 
     foreach (var folder in new [] { "x86", "x86_64", "armeabi", "armeabi-v7a", "arm64-v8a" }) {
         if (!DirectoryExists ("native-builds/lib/android/" + folder)) {
             CreateDirectory ("native-builds/lib/android/" + folder);
         }
-        CopyFileToDirectory ("native-builds/libskia_android/libs/" + folder + "/libskia_android.so", "native-builds/lib/android/" + folder);
+        CopyFileToDirectory ("native-builds/libSkiaSharp_android/libs/" + folder + "/libSkiaSharp.so", "native-builds/lib/android/" + folder);
     }
 });
 
@@ -792,8 +792,8 @@ Task ("clean-externals").Does (() =>
     // all
     CleanDirectories ("native-builds/lib");
     // android
-    CleanDirectories ("native-builds/libskia_android/obj");
-    CleanDirectories ("native-builds/libskia_android/libs");
+    CleanDirectories ("native-builds/libSkiaSharp_android/obj");
+    CleanDirectories ("native-builds/libSkiaSharp_android/libs");
     // ios
     CleanDirectories ("native-builds/libSkiaSharp_ios/build");
     // osx
