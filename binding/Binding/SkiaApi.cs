@@ -559,7 +559,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_typeface_chars_to_glyphs(sk_typeface_t t, IntPtr chars, SKEncoding encoding, IntPtr glyphPtr, int glyphCount);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static int sk_typeface_get_family_name(sk_typeface_t typeface, sk_string_t familyName);
+		public extern static sk_string_t sk_typeface_get_family_name(sk_typeface_t typeface);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_typeface_count_tables(sk_typeface_t typeface);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
