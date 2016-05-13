@@ -126,6 +126,16 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_clip_path_with_operation (Handle, path.Handle, operation, antialias);
 		}
 
+		public bool GetClipBounds (ref SKRect bounds)
+		{
+			return SkiaApi.sk_canvas_get_clip_bounds(Handle, ref bounds);
+		}
+
+		public bool GetClipDeviceBounds (ref SKRectI bounds)
+		{
+			return SkiaApi.sk_canvas_get_clip_device_bounds(Handle, ref bounds);
+		}
+
 		public void DrawPaint (SKPaint paint)
 		{
 			if (paint == null)
