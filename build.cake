@@ -154,7 +154,7 @@ var RunTests = new Action<FilePath> ((testAssembly) =>
 var RunMdocUpdate = new Action<FilePath, DirectoryPath> ((assembly, docsRoot) =>
 {
     StartProcess (MDocPath, new ProcessSettings {
-        Arguments = string.Format ("update --out=\"{0}\" \"{1}\"", docsRoot, assembly),
+        Arguments = string.Format ("update --delete --out=\"{0}\" \"{1}\"", docsRoot, assembly),
     });
 });
 
@@ -709,6 +709,7 @@ Task ("samples")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("docs")
+    .IsDependentOn ("libs-base")
     .IsDependentOn ("externals-genapi")
     .Does (() => 
 {
