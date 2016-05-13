@@ -33,6 +33,7 @@
 #include "xamarin/sk_x_shader.h"
 #include "xamarin/sk_x_stream.h"
 #include "xamarin/sk_x_typeface.h"
+#include "xamarin/sk_x_string.h"
 
 // Xamarin
 #include "sk_managedstream.h"
@@ -70,6 +71,7 @@ void** KeepSkiaCSymbols ()
         (void*)sk_memorystream_new,
         (void*)sk_stream_read,
         (void*)sk_typeface_create_from_name,
+        (void*)sk_string_new_empty,
 
         // Xamarin
         (void*)sk_managedstream_new,
