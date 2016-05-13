@@ -43,11 +43,11 @@ namespace SkiaSharp
 #elif XAMARIN_MAC
 		const string SKIA = "libskia_osx.dylib";
 #elif DESKTOP
-		const string SKIA = "libskia_windows.dll"; // redirected using .dll.config to 'libskia_osx.dylib' on OS X
+		const string SKIA = "libSkiaSharp.dll"; // redirected using .dll.config to 'libskia_osx.dylib' on OS X
 #elif WINDOWS_UWP
-		const string SKIA = "libskia_uwp.dll";
+		const string SKIA = "libSkiaSharp.dll";
 #else
-		const string SKIA = "path_to_native.library";
+		const string SKIA = "libSkiaSharp";
 #endif
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
