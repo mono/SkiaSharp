@@ -1,25 +1,36 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-    <ItemGroup Condition=" '$(Platform)' == 'x86' and '$(OS)' != 'Unix' ">
+    <!-- if ShouldIncludeNativeSkiaSharp == False then don't include the native libSkiaSharp -->
+    <PropertyGroup>
+        <ShouldIncludeNativeSkiaSharp Condition=" '$(ShouldIncludeNativeSkiaSharp)' == '' ">True</ShouldIncludeNativeSkiaSharp>
+    </PropertyGroup>
+
+    <!-- add the native x86 Windows library -->
+    <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and '$(Platform)' == 'x86' and '$(OS)' != 'Unix' ">
         <None Include="$(MSBuildThisFileDirectory)x86\libSkiaSharp.dll">
             <Link>libSkiaSharp.dll</Link>
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
-    <ItemGroup Condition=" '$(Platform)' == 'x64' and '$(OS)' != 'Unix' ">
+    <!-- add the native x64 Windows library -->
+    <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and '$(Platform)' == 'x64' and '$(OS)' != 'Unix' ">
         <None Include="$(MSBuildThisFileDirectory)x64\libSkiaSharp.dll">
             <Link>libSkiaSharp.dll</Link>
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
-    <Target Condition=" '$(Platform)' != 'x64' and '$(Platform)' != 'x86' and '$(OS)' != 'Unix' " Name="CheckSkiaPlatforms" BeforeTargets="Build">
+    <!-- make sure Windows is x86 or x64 -->
+    <Target Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and '$(Platform)' != 'x64' and '$(Platform)' != 'x86' and '$(OS)' != 'Unix' " 
+            Name="CheckSkiaPlatforms" 
+            BeforeTargets="Build">
         <Error Text="The Platform needs to be either x64 or x86 to support Skia in Windows." />
     </Target>
 
-    <ItemGroup Condition=" '$(OS)' == 'Unix' ">
+    <!-- add the native OSX library -->
+    <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and '$(OS)' == 'Unix' ">
         <None Include="$(MSBuildThisFileDirectory)mac\libSkiaSharp.dylib">
             <Link>libSkiaSharp.dylib</Link>
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
