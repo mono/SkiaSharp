@@ -99,5 +99,34 @@ namespace SkiaSharp.Tests
 				Assert.Throws<System.Exception>(() => typeface.GetTableData(8));
 			}
 		}
+
+		[Test]
+		public void TestTryGetTableData()
+		{
+			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "ReallyBigA.ttf")))
+			{
+				var tables = typeface.GetTableTags();
+				for (int i = 0; i < tables.Length; i++) {
+					byte[] tableData;
+					Assert.IsTrue(typeface.TryGetTableData(tables[i], out tableData));
+					Assert.AreEqual(ExpectedTableLengthsReallyBigAFont[i], tableData.Length, "Unexpected length for table: " + GetReadableTag(tables[i]));
+				}
+
+				Assert.AreEqual(ExpectedTableDataPostReallyBigAFont, typeface.GetTableData(GetIntTag("post")));
+
+			}
+		}
+
+		[Test]
+		public void InvalidTryGetTableData()
+		{
+			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Distortable.ttf")))
+			{
+				byte[] tableData;
+				Assert.IsFalse(typeface.TryGetTableData(8, out tableData));
+				Assert.IsNull(tableData);
+			}
+		}
+
 	}
 }

@@ -140,11 +140,22 @@ namespace SkiaSharp
 			IntPtr dataSize = SkiaApi.sk_typeface_get_table_size(Handle, tag);
 			byte[] result = new byte[(int)dataSize];
 			IntPtr r = SkiaApi.sk_typeface_get_table_data(Handle, tag, IntPtr.Zero, dataSize, result);
-			if (r == IntPtr.Zero)
-			{
+			if (r == IntPtr.Zero) {
 				throw new Exception("Unable to read the data table.");
 			}
 			return result;
+		}
+
+		public bool TryGetTableData(UInt32 tag, out byte[] tableData)
+		{
+			IntPtr dataSize = SkiaApi.sk_typeface_get_table_size(Handle, tag);
+			tableData = new byte[(int)dataSize];
+			IntPtr r = SkiaApi.sk_typeface_get_table_data(Handle, tag, IntPtr.Zero, dataSize, tableData);
+			if (r == IntPtr.Zero) {
+				tableData = null;
+				return false;
+			}
+			return true;
 		}
 
 	}
