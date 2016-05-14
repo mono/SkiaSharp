@@ -1,5 +1,7 @@
 # SkiaSharp
 
+[![Gitter.im](https://img.shields.io/badge/gitter.im-xamarin%2FXamarinComponents-E60256.svg)](https://gitter.im/xamarin/XamarinComponents)  [![NuGet](https://img.shields.io/nuget/v/SkiaSharp.svg?maxAge=2592000)](https://www.nuget.org/packages/SkiaSharp)  [![NuGet Pre Release](https://img.shields.io/nuget/vpre/SkiaSharp.svg?maxAge=2592000)](https://www.nuget.org/packages/SkiaSharp)
+
 SkiaSharp is a cross-platform 2D graphics API for .NET platforms based on Google's
 Skia Graphics Library (https://skia.org/).   It provides a comprehensive 2D API that can
 be used across mobile, server and desktop models to render images.
