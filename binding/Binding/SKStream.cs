@@ -160,6 +160,9 @@ namespace SkiaSharp
 		public SKFileStream (string path)
 			: base (SkiaApi.sk_filestream_new (path))
 		{
+			if (Handle == IntPtr.Zero) {
+				throw new InvalidOperationException ("Unable to create a new SKFileStream instance.");
+			}
 		}
 	}
 
@@ -174,21 +177,33 @@ namespace SkiaSharp
 		public SKMemoryStream ()
 			: this (SkiaApi.sk_memorystream_new ())
 		{
+			if (Handle == IntPtr.Zero) {
+				throw new InvalidOperationException ("Unable to create a new SKMemoryStream instance.");
+			}
 		}
 
 		public SKMemoryStream (ulong length)
 			: this(SkiaApi.sk_memorystream_new_with_length ((IntPtr)length))
 		{
+			if (Handle == IntPtr.Zero) {
+				throw new InvalidOperationException ("Unable to create a new SKMemoryStream instance.");
+			}
 		}
 
 		internal SKMemoryStream (IntPtr data, IntPtr length, bool copyData = false)
 			: this(SkiaApi.sk_memorystream_new_with_data (data, length, copyData))
 		{
+			if (Handle == IntPtr.Zero) {
+				throw new InvalidOperationException ("Unable to create a new SKMemoryStream instance.");
+			}
 		}
 
 		public SKMemoryStream (SKData data)
 			: this(SkiaApi.sk_memorystream_new_with_skdata (data))
 		{
+			if (Handle == IntPtr.Zero) {
+				throw new InvalidOperationException ("Unable to create a new SKMemoryStream instance.");
+			}
 		}
 
 		public SKMemoryStream (byte[] data)

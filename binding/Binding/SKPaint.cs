@@ -21,6 +21,9 @@ namespace SkiaSharp
 		public SKPaint ()
 			: this (SkiaApi.sk_paint_new ())
 		{
+			if (Handle == IntPtr.Zero) {
+				throw new InvalidOperationException ("Unable to create a new SKPaint instance.");
+			}
 		}
 		
 		protected override void Dispose (bool disposing)
@@ -286,14 +289,14 @@ namespace SkiaSharp
 			if (text == null)
 				throw new ArgumentNullException(nameof(text));
 			var bytes = Util.GetEncodedText (text, TextEncoding);
-			return new SKPath(SkiaApi.sk_paint_get_text_path(Handle, bytes, (IntPtr) bytes.Length, x, y));
+			return GetObject<SKPath>(SkiaApi.sk_paint_get_text_path(Handle, bytes, (IntPtr) bytes.Length, x, y));
 		}
 
 		public SKPath GetTextPath(IntPtr buffer, IntPtr length, float x, float y)
 		{
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentNullException(nameof(buffer));
-			return new SKPath(SkiaApi.sk_paint_get_text_path(Handle, buffer, length, x, y));
+			return GetObject<SKPath>(SkiaApi.sk_paint_get_text_path(Handle, buffer, length, x, y));
 
 		}
 
@@ -302,14 +305,14 @@ namespace SkiaSharp
 			if (text == null)
 				throw new ArgumentNullException(nameof(text));
 			var bytes = Util.GetEncodedText (text, TextEncoding);
-			return new SKPath(SkiaApi.sk_paint_get_pos_text_path(Handle, bytes, (IntPtr) bytes.Length, points));
+			return GetObject<SKPath>(SkiaApi.sk_paint_get_pos_text_path(Handle, bytes, (IntPtr) bytes.Length, points));
 		}
 
 		public SKPath GetTextPath(IntPtr buffer, IntPtr length, SKPoint[] points)
 		{
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentNullException(nameof(buffer));
-			return new SKPath(SkiaApi.sk_paint_get_pos_text_path(Handle, buffer, length, points));
+			return GetObject<SKPath>(SkiaApi.sk_paint_get_pos_text_path(Handle, buffer, length, points));
 		}
 
 		public SKFontMetrics FontMetrics

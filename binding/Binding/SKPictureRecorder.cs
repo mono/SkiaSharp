@@ -31,6 +31,9 @@ namespace SkiaSharp
 		public SKPictureRecorder ()
 			: this (SkiaApi.sk_picture_recorder_new ())
 		{
+			if (Handle == IntPtr.Zero) {
+				throw new InvalidOperationException ("Unable to create a new SKPictureRecorder instance.");
+			}
 		}
 
 		public SKCanvas BeginRecording (SKRect rect)

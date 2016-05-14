@@ -93,6 +93,10 @@ namespace SkiaSharp
 		public SKManagedStream (Stream managedStream, bool disposeManagedStream)
 			: base (SkiaApi.sk_managedstream_new ())
 		{
+			if (Handle == IntPtr.Zero) {
+				throw new InvalidOperationException ("Unable to create a new SKManagedStream instance.");
+			}
+
 			managedStreams.Add (Handle, new WeakReference<SKManagedStream>(this));
 
 			stream = managedStream;

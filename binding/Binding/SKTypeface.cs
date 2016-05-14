@@ -31,28 +31,28 @@ namespace SkiaSharp
 		{
 			if (familyName == null)
 				throw new ArgumentNullException ("familyName");
-			return new SKTypeface (SkiaApi.sk_typeface_create_from_name (familyName, style));
+			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_name (familyName, style));
 		}
 
 		public static SKTypeface FromTypeface (SKTypeface typeface, SKTypefaceStyle style = SKTypefaceStyle.Normal)
 		{
 			if (typeface == null)
 				throw new ArgumentNullException ("typeface");
-			return new SKTypeface (SkiaApi.sk_typeface_create_from_typeface (typeface.Handle, style));
+			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_typeface (typeface.Handle, style));
 		}
 
 		public static SKTypeface FromFile (string path, int index = 0)
 		{
 			if (path == null)
 				throw new ArgumentNullException ("path");
-			return new SKTypeface (SkiaApi.sk_typeface_create_from_file (path, index));
+			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_file (path, index));
 		}
 
 		public static SKTypeface FromStream (SKStreamAsset stream, int index = 0)
 		{
 			if (stream == null)
 				throw new ArgumentNullException ("stream");
-			return new SKTypeface (SkiaApi.sk_typeface_create_from_stream (stream.Handle, index));
+			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_stream (stream.Handle, index));
 		}
 
 		public int CountGlyphs (string str)
