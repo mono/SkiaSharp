@@ -23,6 +23,9 @@ namespace SkiaSharp
 		public SKBitmap ()
 			: this (SkiaApi.sk_bitmap_new ())
 		{
+			if (Handle == IntPtr.Zero) {
+				throw new InvalidOperationException ("Unable to create a new SKBitmap instance.");
+			}
 		}
 
 		public SKBitmap (int width, int height, bool isOpaque = false)

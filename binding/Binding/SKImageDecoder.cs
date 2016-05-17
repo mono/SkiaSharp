@@ -17,7 +17,7 @@ namespace SkiaSharp
 			: this(SkiaApi.sk_imagedecoder_factory(stream.Handle))
 		{
 			if (Handle == IntPtr.Zero) {
-				throw new ArgumentException ("Unable to find a decoder for the sream.", "stream");
+				throw new ArgumentException ("Unable to find a decoder for the stream.", "stream");
 			}
 		}
 

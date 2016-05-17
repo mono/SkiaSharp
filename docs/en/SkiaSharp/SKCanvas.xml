@@ -14,18 +14,22 @@
     <summary>Encapsulates all of the state about drawing into a device (bitmap).</summary>
     <remarks>
       <para>Encapsulates all of the state about drawing into a device (bitmap).</para>
-      <para></para>
+      <para>
+      </para>
       <para>This includes a reference to the device itself, and a stack of matrix/clip values. For any given draw call (e.g. drawRect), the geometry of the object being drawn is transformed by the concatenation of all the matrices in the stack. The transformed geometry is clipped by the intersection of all of the clips in the stack.</para>
-      <para></para>
+      <para>
+      </para>
       <para>While the Canvas holds the state of the drawing device, the state (style) of the object being drawn is held by the Paint, which is provided as a parameter to each of the draw() methods. The Paint holds attributes such as color, typeface, the text size, the stroke width, the shader (for example, gradients, patterns), etc.</para>
-      <para></para>
+      <para>
+      </para>
       <para>The SkCanvas is returned when accessing the <see cref="P:SkiaSharp.SKSurface.Canvas" /> property of a surface.</para>
       <para>Transformations</para>
       <para>The <see cref="T:SkiaSharp.SKCanvas" /> supports a number of 2D transformations.   Unlike other 2D graphic systems like CoreGraphics or Cairo, SKCanvas extends the transformations to include perspectives.   </para>
       <para>You can use the <see cref="M:SkiaSharp.SKCanvas.Scale" />, <see cref="M:SkiaSharp.SKCanvas.Skew" />, <see cref="M:SkiaSharp.SKCanvas.Translate" />, <see cref="M:SkiaSharp.SKCanvas.RotateDegrees" />, <see cref="M:SkiaSharp.SKCanvas.RotateRadians" /> to perform some of the most common 2D transformations.   </para>
       <para>For more control you can use the <see cref="M:SkiaSharp.SKCanvas.SetMatrix" /> to set an arbitrary transformation using the <see cref="T:SkiaSharp.SKMatrix" /> and the <see cref="M:SkiaSharp.SKCanvas.Concat" /> to concatenate an <see cref="T:SkiaSharp.SKMatrix" /> transformation to the current matrix in use.</para>
       <para>The <see cref="M:SkiaSharp.SKCanvas.ResetMatrix" /> can be used to reset the state of the matrix</para>
-      <para></para>
+      <para>
+      </para>
       <para>Drawing</para>
       <para>The drawing operations can take a <see cref="T:SkiaSharp.SKPaint" /> parameter to affect their drawing.  You use <see cref="T:SkiaSharp.SKPaint" /> objects to cache the style and color information to draw geometries, texts and bitmaps.</para>
       <para>Clipping Path</para>
@@ -33,9 +37,12 @@
       <para>It is possible to save the current transformations by calling the <see cref="M:SkiaSharp.SKCanvas.Save" /> method which preserves the current transformation matrix, you can then alter the matrix and restore the previous state by using the <see cref="M:SkiaSharp.SKCanvas.Restore" /> or <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> methods.   </para>
       <para>Additionally, it is possible to push a new state with <see cref="M:SkiaSharp.SKCanvas.SaveLayer" /> which will make an offscreen copy of a region, and once the drawing is completed, calling the <see cref="M:SkiaSharp.SKCanvas.Restore" /> method which copies the offscreen bitmap into this canvas.</para>
       <para>The example below shows a typical use:</para>
-      <para></para>
-      <para></para>
-      <para></para>
+      <para>
+      </para>
+      <para>
+      </para>
+      <para>
+      </para>
       <example>
         <code lang="C#"><![CDATA[using (var surface = SKSurface.Create (width: 640, height: 480, SKColorType.N_32, SKAlphaType.Premul)) {
     SKCanvas canvas = surface.Canvas;
@@ -121,7 +128,6 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -135,13 +141,35 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="ClipPath">
+      <MemberSignature Language="C#" Value="public void ClipPath (SkiaSharp.SKPath path, SkiaSharp.SKRegionOperation operation = SkiaSharp.SKRegionOperation.Intersect, bool antialias = false);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void ClipPath(class SkiaSharp.SKPath path, valuetype SkiaSharp.SKRegionOperation operation, bool antialias) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="path" Type="SkiaSharp.SKPath" />
+        <Parameter Name="operation" Type="SkiaSharp.SKRegionOperation" />
+        <Parameter Name="antialias" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="path">To be added.</param>
+        <param name="operation">To be added.</param>
+        <param name="antialias">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="ClipRect">
       <MemberSignature Language="C#" Value="public void ClipRect (SkiaSharp.SKRect rect);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void ClipRect(valuetype SkiaSharp.SKRect rect) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <AssemblyVersion>1.49.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -155,6 +183,29 @@
         <remarks>
           <para />
         </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ClipRect">
+      <MemberSignature Language="C#" Value="public void ClipRect (SkiaSharp.SKRect rect, SkiaSharp.SKRegionOperation operation = SkiaSharp.SKRegionOperation.Intersect, bool antialias = false);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void ClipRect(valuetype SkiaSharp.SKRect rect, valuetype SkiaSharp.SKRegionOperation operation, bool antialias) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="rect" Type="SkiaSharp.SKRect" />
+        <Parameter Name="operation" Type="SkiaSharp.SKRegionOperation" />
+        <Parameter Name="antialias" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="rect">To be added.</param>
+        <param name="operation">To be added.</param>
+        <param name="antialias">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Concat">
@@ -275,7 +326,8 @@
         <param name="mode">The transfer mode for the color.</param>
         <summary>Fills the current clipping path with the specified color using the specified transfer mode.</summary>
         <remarks>
-          <para></para>
+          <para>
+          </para>
         </remarks>
       </Docs>
     </Member>
@@ -473,7 +525,8 @@
         <param name="paint">The paint used to draw the picture, or <see langword="null" />.</param>
         <summary>Draws a picture on the canvas.</summary>
         <remarks>
-          <para></para>
+          <para>
+          </para>
         </remarks>
       </Docs>
     </Member>
@@ -578,15 +631,20 @@
         <summary>Draws an array of points, lines or a polygon in the canvas.</summary>
         <remarks>
           <para>For all modes, the count parameter is interpreted as the total number of points. For kLine mode, count/2 line segments are drawn.</para>
-          <para></para>
+          <para>
+          </para>
           <para>For point mode, each point is drawn centered at its coordinate, and its size is specified by the paint's stroke-width. It draws as a square, unless the paint's cap-type is round, in which the points are drawn as circles.</para>
-          <para></para>
+          <para>
+          </para>
           <para>For line mode, each pair of points is drawn as a line segment, respecting the paint's settings for cap, join and width. </para>
-          <para></para>
+          <para>
+          </para>
           <para>For polygon mode, the entire array is drawn as a series of connected line segments.</para>
-          <para></para>
+          <para>
+          </para>
           <para>Note that, while similar, the line and polygon modes draw slightly differently than the equivalent path built with a series of move to, line to calls, in that the path will draw all of its contours at once, with no interactions if contours intersect each other (think XOR xfermode).  DrawPoints always draws each element one at a time.</para>
-          <para></para>
+          <para>
+          </para>
         </remarks>
       </Docs>
     </Member>
@@ -612,6 +670,31 @@
         <remarks>
           <para>The rectangle will be filled or stroked based on the Style in the paint.</para>
         </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawRoundRect">
+      <MemberSignature Language="C#" Value="public void DrawRoundRect (SkiaSharp.SKRect rect, float rx, float ry, SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawRoundRect(valuetype SkiaSharp.SKRect rect, float32 rx, float32 ry, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="rect" Type="SkiaSharp.SKRect" />
+        <Parameter Name="rx" Type="System.Single" />
+        <Parameter Name="ry" Type="System.Single" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="rect">To be added.</param>
+        <param name="rx">To be added.</param>
+        <param name="ry">To be added.</param>
+        <param name="paint">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawText">
@@ -665,7 +748,8 @@
         <summary>Draws text from a UTF-8 buffer at specified locations on the canvas.</summary>
         <remarks>
           <para>Draw the text, with each character/glyph origin specified by the <paramref name="points" /> array. The origin is interpreted by the Align setting in the paint.</para>
-          <para></para>
+          <para>
+          </para>
           <para>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains a UTF-8 encoded block of text.   This only consumes up to <paramref name="length" /> bytes from the buffer.</para>
         </remarks>
       </Docs>
@@ -761,7 +845,8 @@
         <summary>Draws text encoded in a UTF-8 buffer on the canvas.</summary>
         <remarks>
           <para>Draws the <paramref name="text" />, with origin at (<paramref name="x" />,<paramref name="y" />), using the specified <paramref name="paint" />. The origin is interpreted based on the Align setting in the paint.</para>
-          <para></para>
+          <para>
+          </para>
           <para>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains a UTF-8 encoded block of text.   This only consumes up to <paramref name="length" /> bytes from the buffer.</para>
         </remarks>
       </Docs>
@@ -833,6 +918,46 @@
         </remarks>
       </Docs>
     </Member>
+    <Member MemberName="GetClipBounds">
+      <MemberSignature Language="C#" Value="public bool GetClipBounds (ref SkiaSharp.SKRect bounds);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool GetClipBounds(valuetype SkiaSharp.SKRect bounds) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="bounds" Type="SkiaSharp.SKRect&amp;" RefType="ref" />
+      </Parameters>
+      <Docs>
+        <param name="bounds">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetClipDeviceBounds">
+      <MemberSignature Language="C#" Value="public bool GetClipDeviceBounds (ref SkiaSharp.SKRectI bounds);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool GetClipDeviceBounds(valuetype SkiaSharp.SKRectI bounds) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="bounds" Type="SkiaSharp.SKRectI&amp;" RefType="ref" />
+      </Parameters>
+      <Docs>
+        <param name="bounds">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="ResetMatrix">
       <MemberSignature Language="C#" Value="public void ResetMatrix ();" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void ResetMatrix() cil managed" />
@@ -868,7 +993,8 @@
         <summary>Restore the canvas state.</summary>
         <remarks>
           <para>This call balances a previous call to <see cref="M:SkiaSharp.SKCanvas.Save" />, and is used to remove all modifications to the matrix, clip and draw filter state since the last Save call.</para>
-          <para></para>
+          <para>
+          </para>
           <para>It is an error to call Restore() more times than Save() was called.</para>
         </remarks>
       </Docs>
@@ -915,7 +1041,8 @@
         <param name="degrees">The number of degrees to rotate.</param>
         <summary>Preconcat the current matrix with the specified rotation.</summary>
         <remarks>
-          <para></para>
+          <para>
+          </para>
         </remarks>
       </Docs>
     </Member>
@@ -937,7 +1064,8 @@
         <param name="radians">The number of radiants to rotate.</param>
         <summary>Preconcat the current matrix with the specified rotation.</summary>
         <remarks>
-          <para></para>
+          <para>
+          </para>
         </remarks>
       </Docs>
     </Member>
@@ -982,7 +1110,8 @@
           <para>This will equal the number of Save calls minus Retore calls + 1. The save count on a new canvas is 1.</para>
         </value>
         <remarks>
-          <para></para>
+          <para>
+          </para>
         </remarks>
       </Docs>
     </Member>

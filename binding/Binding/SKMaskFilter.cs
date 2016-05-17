@@ -41,7 +41,7 @@ namespace SkiaSharp
 
 		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma)
 		{
-			return new SKMaskFilter (SkiaApi.sk_maskfilter_new_blur (blurStyle, sigma));
+			return GetObject<SKMaskFilter> (SkiaApi.sk_maskfilter_new_blur (blurStyle, sigma));
 		}
 
 		public static SKMaskFilter CreateEmboss(float blurSigma, SKPoint3 direction, float ambient, float specular)
@@ -51,7 +51,7 @@ namespace SkiaSharp
 
 		public static SKMaskFilter CreateEmboss(float blurSigma, float directionX, float directionY, float directionZ, float ambient, float specular)
 		{
-			return new SKMaskFilter(SkiaApi.sk_maskfilter_new_emboss(blurSigma, new[] { directionX, directionY, directionZ }, ambient, specular));
+			return GetObject<SKMaskFilter>(SkiaApi.sk_maskfilter_new_emboss(blurSigma, new[] { directionX, directionY, directionZ }, ambient, specular));
 		}
 
 		public static SKMaskFilter CreateTable(byte[] table)
@@ -60,17 +60,17 @@ namespace SkiaSharp
 				throw new ArgumentNullException("table");
 			if (table.Length != 256)
 				throw new ArgumentException("Table must have a length of 256.", "table");
-			return new SKMaskFilter(SkiaApi.sk_maskfilter_new_table(table));
+			return GetObject<SKMaskFilter>(SkiaApi.sk_maskfilter_new_table(table));
 		}
 
 		public static SKMaskFilter CreateGamma(float gamma)
 		{
-			return new SKMaskFilter(SkiaApi.sk_maskfilter_new_gamma(gamma));
+			return GetObject<SKMaskFilter>(SkiaApi.sk_maskfilter_new_gamma(gamma));
 		}
 
 		public static SKMaskFilter CreateClip(byte min, byte max)
 		{
-			return new SKMaskFilter(SkiaApi.sk_maskfilter_new_clip(min, max));
+			return GetObject<SKMaskFilter>(SkiaApi.sk_maskfilter_new_clip(min, max));
 		}
 	}
 }

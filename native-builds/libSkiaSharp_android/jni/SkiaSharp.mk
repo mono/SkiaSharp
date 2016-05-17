@@ -16,7 +16,7 @@ LOCAL_STATIC_LIBRARIES := libskia_ports libskia_skgpu libskia_images libskia_opt
 
 LOCAL_LDLIBS           := -llog -landroid -lEGL -lGLESv2 -lz
 
-LOCAL_MODULE           := skia_android
+LOCAL_MODULE           := SkiaSharp
 
 LOCAL_C_INCLUDES       := ../../skia/src/c ../../skia/include/c ../../skia/include/core ../../skia/include/config ../../skia/include/images
 

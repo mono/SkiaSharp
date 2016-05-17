@@ -21,12 +21,17 @@ namespace SkiaSharp
 		public SKPath ()
 			: this (SkiaApi.sk_path_new ())
 		{
+			if (Handle == IntPtr.Zero) {
+				throw new InvalidOperationException ("Unable to create a new SKPath instance.");
+			}
 		}
 
 		public SKPath(SKPath path)
 			: this (SkiaApi.sk_path_clone(path.Handle))
 		{
-
+			if (Handle == IntPtr.Zero) {
+				throw new InvalidOperationException ("Unable to copy the SKPath instance.");
+			}
 		}
 		
 		protected override void Dispose (bool disposing)

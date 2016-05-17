@@ -41,12 +41,12 @@ namespace SkiaSharp
 		
 		public static SKColorFilter CreateXferMode(SKColor c, SKXferMode mode)
 		{
-			return new SKColorFilter(SkiaApi.sk_colorfilter_new_mode(c, mode));
+			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_mode(c, mode));
 		}
 
 		public static SKColorFilter CreateLighting(SKColor mul, SKColor add)
 		{
-			return new SKColorFilter(SkiaApi.sk_colorfilter_new_lighting(mul, add));
+			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_lighting(mul, add));
 		}
 
 		public static SKColorFilter CreateCompose(SKColorFilter outer, SKColorFilter inner)
@@ -55,7 +55,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException("outer");
 			if (inner == null)
 				throw new ArgumentNullException("inner");
-			return new SKColorFilter(SkiaApi.sk_colorfilter_new_compose(outer.Handle, inner.Handle));
+			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_compose(outer.Handle, inner.Handle));
 		}
 
 		public static SKColorFilter CreateColorCube(byte[] cubeData, int cubeDimension)
@@ -67,7 +67,7 @@ namespace SkiaSharp
 		{
 			if (!IsValid3DColorCube(cubeData, cubeDimension))
 				throw new ArgumentNullException("cubeData");
-			return new SKColorFilter(SkiaApi.sk_colorfilter_new_color_cube(cubeData.Handle, cubeDimension));
+			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_color_cube(cubeData.Handle, cubeDimension));
 		}
 
 		public static SKColorFilter CreateColorMatrix(float[] matrix)
@@ -76,12 +76,12 @@ namespace SkiaSharp
 				throw new ArgumentNullException("matrix");
 			if (matrix.Length != 20)
 				throw new ArgumentException("Matrix must have a length of 20.", "matrix");
-			return new SKColorFilter(SkiaApi.sk_colorfilter_new_color_matrix(matrix));
+			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_color_matrix(matrix));
 		}
 
 		public static SKColorFilter CreateLumaColor()
 		{
-			return new SKColorFilter(SkiaApi.sk_colorfilter_new_luma_color());
+			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_luma_color());
 		}
 
 		public static SKColorFilter CreateTable(byte[] table)
@@ -90,7 +90,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException("table");
 			if (table.Length != 256)
 				throw new ArgumentException("Table must have a length of 256.", "table");
-			return new SKColorFilter(SkiaApi.sk_colorfilter_new_table(table));
+			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_table(table));
 		}
 
 		public static SKColorFilter CreateTable(byte[] tableA, byte[] tableR, byte[] tableG, byte[] tableB)
@@ -103,7 +103,7 @@ namespace SkiaSharp
 				throw new ArgumentException("Table G must have a length of 256.", "tableG");
 			if (tableB != null && tableB.Length != 256)
 				throw new ArgumentException("Table B must have a length of 256.", "tableB");
-			return new SKColorFilter(SkiaApi.sk_colorfilter_new_table_argb(tableA, tableR, tableG, tableB));
+			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_table_argb(tableA, tableR, tableG, tableB));
 		}
 	}
 }
