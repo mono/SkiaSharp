@@ -49,6 +49,7 @@ You need Python 2.7 in `PATH` environment variable. Then you can build it:
 
     > .\bootstrapper.ps1 -Target libs
 
+### Build Targets
 
 There are several targets available:
 
@@ -68,6 +69,14 @@ There are several targets available:
  - `CI` - builds everything
  - `clean` - cleans everything
    - `clean-externals` - cleans externals only
+
+## Compare Code
+
+Here are some links to show the differences in our code as compared to Google's.
+
+What version are we on? **m49**  
+Are we up-to-date with Google? [Compare](https://github.com/google/skia/compare/chrome/m49...mono:xamarin-mobile-bindings)  
+What have we added? [Compare](https://github.com/mono/skia/compare/xamarin-mobile-bindings...google:chrome/m49)  
 
 ## Where is Windows Phone 8 / Store 8 / tvOS
  
