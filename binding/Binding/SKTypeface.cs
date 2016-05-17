@@ -17,7 +17,6 @@ namespace SkiaSharp
 		internal SKTypeface (IntPtr handle)
 			: base (handle)
 		{
-			if (handle == IntPtr.Zero) throw new Exception("Invalid typeface");
 		}
 		
 		protected override void Dispose (bool disposing)
