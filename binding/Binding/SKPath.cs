@@ -139,6 +139,57 @@ namespace SkiaSharp
 		{
 			SkiaApi.sk_path_transform (Handle, ref matrix);
 		}
+
+		public int CountVerbs ()
+		{
+			return SkiaApi.sk_path_count_verbs (Handle);
+		}
+
+		public class Iter : SKObject
+		{
+			SKPath path;
+
+			[Preserve]
+			internal Iter (IntPtr handle)
+				: base (handle)
+			{
+			}
+
+			public Iter (SKPath path)
+				: this (SkiaApi.sk_path_iter_new (path.Handle))
+			{
+				this.path = path;
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				if (Handle != IntPtr.Zero) {
+					SkiaApi.sk_path_iter_delete (Handle);
+				}
+
+				base.Dispose (disposing);
+			}
+
+			public SKPathVerb Next (SKPoint [] points)
+			{
+				if (points.Length != 4)
+					throw new ArgumentException ("Points array must be length 4.");
+
+				return SkiaApi.sk_path_iter_next (Handle, points);
+			}
+
+			public SKPathVerb Peek ()
+			{
+				if (path.CountVerbs () == 0)
+					throw new InvalidOperationException ();
+				return SkiaApi.sk_path_iter_peek (Handle);
+			}
+
+			public float ConicWeight ()
+			{
+				return SkiaApi.sk_path_iter_conic_weight (Handle);
+			}
+		}
 	}
 }
 
