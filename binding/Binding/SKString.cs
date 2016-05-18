@@ -1,0 +1,60 @@
+﻿//
+// Bindings for SKTypeface
+//
+// Author:
+//   Matthew Leibowitz
+//
+// Copyright 2016 Xamarin Inc
+//
+using System;
+using System.Runtime.InteropServices;
+
+namespace SkiaSharp
+{
+	internal class SKString : SKObject
+	{
+		[Preserve]
+		internal SKString (IntPtr handle)
+			: base (handle)
+		{
+		}
+
+		public SKString ()
+			: base (SkiaApi.sk_string_new_empty ())
+		{
+			if (Handle == IntPtr.Zero) {
+				throw new InvalidOperationException ("Unable to create a new SKString instance.");
+			}
+		}
+		
+		public SKString (byte [] src, long length)
+			: base (SkiaApi.sk_string_new_with_copy (src, (IntPtr)length))
+		{
+			if (Handle == IntPtr.Zero) {
+				throw new InvalidOperationException ("Unable to copy the SKString instance.");
+			}
+		}
+		
+		public override string ToString ()
+		{
+			var cstr = SkiaApi.sk_string_get_c_str (Handle);
+			var clen = SkiaApi.sk_string_get_size (Handle);
+			return Util.GetString (cstr, (int)clen, SKTextEncoding.Utf8); 
+		}
+
+		public static explicit operator string (SKString skString)
+		{
+			return skString.ToString ();
+		}
+
+		protected override void Dispose (bool disposing)
+		{
+			if (Handle != IntPtr.Zero) {
+				SkiaApi.sk_string_destructor (Handle);
+			}
+
+			base.Dispose (disposing);
+		}
+	}
+}
+

@@ -112,14 +112,7 @@ namespace SkiaSharp
 
 		public string FamilyName {
 			get {
-				var r = SkiaApi.sk_typeface_get_family_name(Handle);
-				try {
-					var cstr = SkiaApi.sk_string_get_c_str(r);
-					var clen = SkiaApi.sk_string_get_size(r);
-					return Util.GetString(cstr, (int)clen, SKTextEncoding.Utf8); 
-				} finally {
-					SkiaApi.sk_string_destructor(r);
-				}
+				return (string) GetObject<SKString> (SkiaApi.sk_typeface_get_family_name (Handle));
 			}
 		}
 
