@@ -682,9 +682,9 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SKImageDecoderFormat sk_imagedecoder_get_stream_format(sk_stream_streamrewindable_t cstream);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static string sk_imagedecoder_get_format_name_from_format(SKImageDecoderFormat cformat);
+		public extern static sk_string_t sk_imagedecoder_get_format_name_from_format(SKImageDecoderFormat cformat);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static string sk_imagedecoder_get_format_name_from_decoder(sk_imagedecoder_t cdecoder);
+		public extern static sk_string_t sk_imagedecoder_get_format_name_from_decoder(sk_imagedecoder_t cdecoder);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static bool sk_imagedecoder_get_skip_writing_zeros(sk_imagedecoder_t cdecoder);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]

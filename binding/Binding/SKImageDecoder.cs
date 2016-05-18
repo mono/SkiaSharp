@@ -44,7 +44,7 @@ namespace SkiaSharp
 
 		public string FormatName
 		{
-			get { return SkiaApi.sk_imagedecoder_get_format_name_from_decoder(Handle); }
+			get { return (string) GetObject<SKString> (SkiaApi.sk_imagedecoder_get_format_name_from_decoder(Handle)); }
 		}
 
 		public bool SkipWritingZeros
@@ -99,7 +99,7 @@ namespace SkiaSharp
 
 		public static string GetFormatName(SKImageDecoderFormat format)
 		{
-			return SkiaApi.sk_imagedecoder_get_format_name_from_format(format);
+			return (string) GetObject<SKString> (SkiaApi.sk_imagedecoder_get_format_name_from_format(format));
 		}
 
 		public static bool DecodeStreamBounds(SKStreamRewindable stream, out SKImageInfo info, SKColorType pref = SKColorType.Unknown)
