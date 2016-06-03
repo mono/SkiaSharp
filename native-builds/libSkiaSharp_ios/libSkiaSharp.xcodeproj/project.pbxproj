@@ -31,6 +31,16 @@
 		340303971C4053E500630F26 /* SkManagedStream.h in Headers */ = {isa = PBXBuildFile; fileRef = 340303931C4053E500630F26 /* SkManagedStream.h */; };
 		340303DB1C40877300630F26 /* sk_xamarin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 340303DA1C40877300630F26 /* sk_xamarin.cpp */; };
 		343DAE471C3F285700FAD826 /* SkiaKeeper.c in Sources */ = {isa = PBXBuildFile; fileRef = 343DAE451C3F285700FAD826 /* SkiaKeeper.c */; };
+		3454C33E1D011F78008A8A1A /* libgiflib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3454C32C1D011F5F008A8A1A /* libgiflib.a */; };
+		3454C3411D011F78008A8A1A /* libpng_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3454C3321D011F5F008A8A1A /* libpng_static.a */; };
+		3454C3421D011F78008A8A1A /* libskia_codec_android.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 21FD2D0B1C015ED70023CFAE /* libskia_codec_android.a */; };
+		3454C3431D011F78008A8A1A /* libskia_codec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 21FD2D081C015ED70023CFAE /* libskia_codec.a */; };
+		3454C3441D011F78008A8A1A /* libskia_opts_avx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 21FD2D291C015ED70023CFAE /* libskia_opts_avx.a */; };
+		3454C3451D011F78008A8A1A /* libskia_opts_avx2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 21FD2D2B1C015ED70023CFAE /* libskia_opts_avx2.a */; };
+		3454C3481D011F78008A8A1A /* libskia_opts_sse42.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 21FD2D271C015ED70023CFAE /* libskia_opts_sse42.a */; };
+		3454C3491D011F78008A8A1A /* libskia_opts_ssse3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 21FD2D231C015ED70023CFAE /* libskia_opts_ssse3.a */; };
+		3454C34A1D011F78008A8A1A /* libskia_pdf.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3454C3191D011F3F008A8A1A /* libskia_pdf.a */; };
+		3454C4421D01225F008A8A1A /* libwebp_dsp_neon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 34F197A71C61883C00B41B54 /* libwebp_dsp_neon.a */; };
 		34F197AE1C61885000B41B54 /* libwebp_dec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 34F197A11C61883C00B41B54 /* libwebp_dec.a */; };
 		34F197AF1C61885000B41B54 /* libwebp_demux.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 34F197A31C61883C00B41B54 /* libwebp_demux.a */; };
 		34F197B01C61885000B41B54 /* libwebp_dsp_enc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 34F197A91C61883C00B41B54 /* libwebp_dsp_enc.a */; };
@@ -38,7 +48,7 @@
 		34F197B21C61885000B41B54 /* libwebp_enc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 34F197AB1C61883C00B41B54 /* libwebp_enc.a */; };
 		34F197B31C61885000B41B54 /* libwebp_utils.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 34F197AD1C61883C00B41B54 /* libwebp_utils.a */; };
 		34F197B41C61885A00B41B54 /* libjpeg-turbo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 34F197961C61883C00B41B54 /* libjpeg-turbo.a */; };
-		34F197BB1C618A7A00B41B54 /* libwebp_dsp_neon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 34F197A71C61883C00B41B54 /* libwebp_dsp_neon.a */; };
+		34FEFE431D0132B5002A83B6 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 34FEFE421D0132B5002A83B6 /* libz.tbd */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -154,13 +164,6 @@
 			remoteGlobalIDString = 6EB7C6A4C955592AFCAF5F41;
 			remoteInfo = utils;
 		};
-		21FD2D391C015ED70023CFAE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 21FD2D031C015ED70023CFAE /* utils.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = C9856C17693315AA9B404186;
-			remoteInfo = android_utils;
-		};
 		21FD2D731C0162C70023CFAE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 21FD2D6F1C0162C70023CFAE /* ktx.xcodeproj */;
@@ -175,75 +178,411 @@
 			remoteGlobalIDString = 58D65910B589341DD97198F8;
 			remoteInfo = libetc1;
 		};
-		21FD2D811C0165310023CFAE /* PBXContainerItemProxy */ = {
+		3454C3161D011F3F008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3454C2F01D011F3F008A8A1A /* pdf.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 929452BCB7CCAAD11CC1835D;
+			remoteInfo = nopdf;
+		};
+		3454C3181D011F3F008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3454C2F01D011F3F008A8A1A /* pdf.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 0DC15EA4ADE06EC812B0409E;
+			remoteInfo = pdf;
+		};
+		3454C32B1D011F5F008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3454C3231D011F5F008A8A1A /* giflib.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 02416B678B4C01D8DEE485DE;
+			remoteInfo = giflib;
+		};
+		3454C3311D011F5F008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3454C31D1D011F5F008A8A1A /* libpng.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = F7809684C4703FEA247919D7;
+			remoteInfo = libpng_static;
+		};
+		3454C3331D011F5F008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3454C31D1D011F5F008A8A1A /* libpng.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E39C49F89C198F5DCCBEC9D6;
+			remoteInfo = libpng_static_neon;
+		};
+		3454C33C1D011F5F008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3454C3201D011F5F008A8A1A /* zlib.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = AB2A2848CDD879230450649F;
+			remoteInfo = zlib_x86_simd;
+		};
+		3454C3AC1D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2CE41C015ED60023CFAE /* codec.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 016C72E9392A6EDCADA353AB;
+			remoteInfo = codec;
+		};
+		3454C3B01D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F197881C61883C00B41B54 /* libjpeg-turbo.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = B589593D38BB52075B6EE7B2;
+			remoteInfo = "libjpeg-turbo";
+		};
+		3454C3B61D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3454C31D1D011F5F008A8A1A /* libpng.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 8ED0FBBBD08C4B5967CE24C3;
+			remoteInfo = libpng_static;
+		};
+		3454C3BE1D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 06D6CEB264457DF20731B2AB;
+			remoteInfo = libwebp_dec;
+		};
+		3454C3C01D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = C7C48B5CEBCB5F16079F2659;
+			remoteInfo = libwebp_demux;
+		};
+		3454C3C21D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = EF4F4DAE03D0B2D442A5E75C;
+			remoteInfo = libwebp_dsp;
+		};
+		3454C3C61D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 43AF69108FDDD0AB4332A1ED;
+			remoteInfo = libwebp_dsp_enc;
+		};
+		3454C3C81D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 9AE87FBCC50847E54181717B;
+			remoteInfo = libwebp_enc;
+		};
+		3454C3CA1D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = D5FEE9A767851EE663B14DC1;
+			remoteInfo = libwebp_utils;
+		};
+		3454C3CE1D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2CE11C015ED60023CFAE /* codec_android.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 3A5E239D7941326C84BF7962;
+			remoteInfo = codec_android;
+		};
+		3454C3D01D012002008A8A1A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 21FD2CEC1C015ED60023CFAE /* core.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 5A9991BB6607533745115226;
 			remoteInfo = core;
 		};
-		21FD2D851C0165810023CFAE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 21FD2CF21C015ED60023CFAE /* gpu.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 7599172564E7286191FBC920;
-			remoteInfo = skgpu;
-		};
-		21FD2D881C0165A80023CFAE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 21FD2D6F1C0162C70023CFAE /* ktx.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 5BA0958DCF3CFAC6D5F7BD68;
-			remoteInfo = libSkKTX;
-		};
-		21FD2D8B1C0165BC0023CFAE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 21FD2D781C0163130023CFAE /* etc1.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 1E238A18338BD7C314DA6FB9;
-			remoteInfo = libetc1;
-		};
-		21FD2D8E1C0165DC0023CFAE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 21FD2CFD1C015ED60023CFAE /* ports.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 26FBB2066D17FDFB873DA3F9;
-			remoteInfo = ports;
-		};
-		21FD2D911C0166040023CFAE /* PBXContainerItemProxy */ = {
+		3454C3D21D012002008A8A1A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 21FD2CEF1C015ED60023CFAE /* effects.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = F0EB02F40D8DAD92937C53E1;
 			remoteInfo = effects;
 		};
-		21FD2D941C0166520023CFAE /* PBXContainerItemProxy */ = {
+		3454C3D41D012002008A8A1A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 21FD2CFA1C015ED60023CFAE /* opts.xcodeproj */;
+			containerPortal = 21FD2CF21C015ED60023CFAE /* gpu.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 801760729BE30DF59BEA25B9;
-			remoteInfo = opts;
+			remoteGlobalIDString = 7599172564E7286191FBC920;
+			remoteInfo = skgpu;
 		};
-		21FD2D971C0166770023CFAE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 21FD2D031C015ED70023CFAE /* utils.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 7364408688F1A6434987562A;
-			remoteInfo = utils;
-		};
-		21FD2D9A1C0166990023CFAE /* PBXContainerItemProxy */ = {
+		3454C3D61D012002008A8A1A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 21FD2CF51C015ED60023CFAE /* images.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 0A48FDCBAFF0B3D6F97E7AD5;
 			remoteInfo = images;
 		};
-		21FD2D9D1C0166BB0023CFAE /* PBXContainerItemProxy */ = {
+		3454C3D81D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 06D6CEB264457DF20731B2AB;
+			remoteInfo = libwebp_dec;
+		};
+		3454C3DA1D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = C7C48B5CEBCB5F16079F2659;
+			remoteInfo = libwebp_demux;
+		};
+		3454C3DC1D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = EF4F4DAE03D0B2D442A5E75C;
+			remoteInfo = libwebp_dsp;
+		};
+		3454C3E01D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 43AF69108FDDD0AB4332A1ED;
+			remoteInfo = libwebp_dsp_enc;
+		};
+		3454C3E21D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 9AE87FBCC50847E54181717B;
+			remoteInfo = libwebp_enc;
+		};
+		3454C3E41D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = D5FEE9A767851EE663B14DC1;
+			remoteInfo = libwebp_utils;
+		};
+		3454C3E81D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2CFA1C015ED60023CFAE /* opts.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 801760729BE30DF59BEA25B9;
+			remoteInfo = opts;
+		};
+		3454C3EA1D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2CFA1C015ED60023CFAE /* opts.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = C847B0A525BE3D349A9885D1;
+			remoteInfo = opts_ssse3;
+		};
+		3454C3EE1D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2CFA1C015ED60023CFAE /* opts.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 507984E7CB67588ABE813115;
+			remoteInfo = opts_sse42;
+		};
+		3454C3F01D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2CFA1C015ED60023CFAE /* opts.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 61766364CEA74CD0B2337CBC;
+			remoteInfo = opts_avx;
+		};
+		3454C3F21D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2CFA1C015ED60023CFAE /* opts.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 58BBC50A64E975660B389B87;
+			remoteInfo = opts_avx2;
+		};
+		3454C3F61D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2CFD1C015ED60023CFAE /* ports.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 26FBB2066D17FDFB873DA3F9;
+			remoteInfo = ports;
+		};
+		3454C3F81D012002008A8A1A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 21FD2D001C015ED60023CFAE /* sfnt.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 57EFBE15E8815D5865F6D5C7;
 			remoteInfo = sfnt;
+		};
+		3454C3FA1D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2D031C015ED70023CFAE /* utils.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 7364408688F1A6434987562A;
+			remoteInfo = utils;
+		};
+		3454C4001D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3454C3231D011F5F008A8A1A /* giflib.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = C4DF5DDD02EB6772E63E8297;
+			remoteInfo = giflib;
+		};
+		3454C4041D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3454C2F01D011F3F008A8A1A /* pdf.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = C37161A72930D0F121229C3F;
+			remoteInfo = pdf;
+		};
+		3454C40C1D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F197881C61883C00B41B54 /* libjpeg-turbo.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = B589593D38BB52075B6EE7B2;
+			remoteInfo = "libjpeg-turbo";
+		};
+		3454C4101D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 06D6CEB264457DF20731B2AB;
+			remoteInfo = libwebp_dec;
+		};
+		3454C4121D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = C7C48B5CEBCB5F16079F2659;
+			remoteInfo = libwebp_demux;
+		};
+		3454C4141D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = EF4F4DAE03D0B2D442A5E75C;
+			remoteInfo = libwebp_dsp;
+		};
+		3454C4181D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 43AF69108FDDD0AB4332A1ED;
+			remoteInfo = libwebp_dsp_enc;
+		};
+		3454C41A1D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 9AE87FBCC50847E54181717B;
+			remoteInfo = libwebp_enc;
+		};
+		3454C41C1D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = D5FEE9A767851EE663B14DC1;
+			remoteInfo = libwebp_utils;
+		};
+		3454C4201D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2D781C0163130023CFAE /* etc1.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 1E238A18338BD7C314DA6FB9;
+			remoteInfo = libetc1;
+		};
+		3454C4221D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2D6F1C0162C70023CFAE /* ktx.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 5BA0958DCF3CFAC6D5F7BD68;
+			remoteInfo = libSkKTX;
+		};
+		3454C4241D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2CE11C015ED60023CFAE /* codec_android.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 3A5E239D7941326C84BF7962;
+			remoteInfo = codec_android;
+		};
+		3454C4261D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2CEC1C015ED60023CFAE /* core.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 5A9991BB6607533745115226;
+			remoteInfo = core;
+		};
+		3454C4281D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2CEF1C015ED60023CFAE /* effects.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = F0EB02F40D8DAD92937C53E1;
+			remoteInfo = effects;
+		};
+		3454C42A1D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2CF21C015ED60023CFAE /* gpu.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 7599172564E7286191FBC920;
+			remoteInfo = skgpu;
+		};
+		3454C42C1D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2CFA1C015ED60023CFAE /* opts.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 801760729BE30DF59BEA25B9;
+			remoteInfo = opts;
+		};
+		3454C42E1D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2CFA1C015ED60023CFAE /* opts.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = C847B0A525BE3D349A9885D1;
+			remoteInfo = opts_ssse3;
+		};
+		3454C4321D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2CFA1C015ED60023CFAE /* opts.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 507984E7CB67588ABE813115;
+			remoteInfo = opts_sse42;
+		};
+		3454C4341D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2CFA1C015ED60023CFAE /* opts.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 61766364CEA74CD0B2337CBC;
+			remoteInfo = opts_avx;
+		};
+		3454C4361D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2CFA1C015ED60023CFAE /* opts.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 58BBC50A64E975660B389B87;
+			remoteInfo = opts_avx2;
+		};
+		3454C43A1D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2CFD1C015ED60023CFAE /* ports.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 26FBB2066D17FDFB873DA3F9;
+			remoteInfo = ports;
+		};
+		3454C43C1D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2D001C015ED60023CFAE /* sfnt.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 57EFBE15E8815D5865F6D5C7;
+			remoteInfo = sfnt;
+		};
+		3454C43E1D012002008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21FD2D031C015ED70023CFAE /* utils.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 7364408688F1A6434987562A;
+			remoteInfo = utils;
+		};
+		3454C4401D012257008A8A1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 1B6986FB36482648B3A1881E;
+			remoteInfo = libwebp_dsp_neon;
 		};
 		34F197931C61883C00B41B54 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -308,27 +647,6 @@
 			remoteGlobalIDString = 19B76369DDF015E4A37C4F1D;
 			remoteInfo = libwebp_utils;
 		};
-		34F197B51C61887E00B41B54 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 34F197851C61883C00B41B54 /* libjpeg-turbo-selector.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 77F3E5FCA3C0CD28BE14BF52;
-			remoteInfo = "libjpeg-turbo-selector";
-		};
-		34F197B71C61887E00B41B54 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 48175D1FF8639EC962F81D8E;
-			remoteInfo = libwebp;
-		};
-		34F197B91C61889300B41B54 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 43AF69108FDDD0AB4332A1ED;
-			remoteInfo = libwebp_dsp_enc;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -360,9 +678,15 @@
 		340303931C4053E500630F26 /* SkManagedStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SkManagedStream.h; path = ../src/SkManagedStream.h; sourceTree = "<absolute>"; };
 		340303DA1C40877300630F26 /* sk_xamarin.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sk_xamarin.cpp; path = ../../src/sk_xamarin.cpp; sourceTree = "<group>"; };
 		343DAE451C3F285700FAD826 /* SkiaKeeper.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = SkiaKeeper.c; path = ../../src/SkiaKeeper.c; sourceTree = "<group>"; };
+		3454C2F01D011F3F008A8A1A /* pdf.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = pdf.xcodeproj; path = ../../skia/out/gyp/pdf.xcodeproj; sourceTree = "<group>"; };
+		3454C31A1D011F5F008A8A1A /* skia_lib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = skia_lib.xcodeproj; path = ../../skia/out/gyp/skia_lib.xcodeproj; sourceTree = "<group>"; };
+		3454C31D1D011F5F008A8A1A /* libpng.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libpng.xcodeproj; path = ../../skia/out/gyp/libpng.xcodeproj; sourceTree = "<group>"; };
+		3454C3201D011F5F008A8A1A /* zlib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = zlib.xcodeproj; path = ../../skia/out/gyp/zlib.xcodeproj; sourceTree = "<group>"; };
+		3454C3231D011F5F008A8A1A /* giflib.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = giflib.xcodeproj; path = ../../skia/out/gyp/giflib.xcodeproj; sourceTree = "<group>"; };
 		34F197851C61883C00B41B54 /* libjpeg-turbo-selector.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libjpeg-turbo-selector.xcodeproj"; path = "../../skia/out/gyp/libjpeg-turbo-selector.xcodeproj"; sourceTree = "<group>"; };
 		34F197881C61883C00B41B54 /* libjpeg-turbo.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libjpeg-turbo.xcodeproj"; path = "../../skia/out/gyp/libjpeg-turbo.xcodeproj"; sourceTree = "<group>"; };
 		34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libwebp.xcodeproj; path = ../../skia/out/gyp/libwebp.xcodeproj; sourceTree = "<group>"; };
+		34FEFE421D0132B5002A83B6 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -370,11 +694,21 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				34FEFE431D0132B5002A83B6 /* libz.tbd in Frameworks */,
+				3454C4421D01225F008A8A1A /* libwebp_dsp_neon.a in Frameworks */,
+				3454C33E1D011F78008A8A1A /* libgiflib.a in Frameworks */,
+				3454C3411D011F78008A8A1A /* libpng_static.a in Frameworks */,
+				3454C3421D011F78008A8A1A /* libskia_codec_android.a in Frameworks */,
+				3454C3431D011F78008A8A1A /* libskia_codec.a in Frameworks */,
+				3454C3441D011F78008A8A1A /* libskia_opts_avx.a in Frameworks */,
+				3454C3451D011F78008A8A1A /* libskia_opts_avx2.a in Frameworks */,
+				3454C3481D011F78008A8A1A /* libskia_opts_sse42.a in Frameworks */,
+				3454C3491D011F78008A8A1A /* libskia_opts_ssse3.a in Frameworks */,
+				3454C34A1D011F78008A8A1A /* libskia_pdf.a in Frameworks */,
 				34F197B41C61885A00B41B54 /* libjpeg-turbo.a in Frameworks */,
 				34F197AE1C61885000B41B54 /* libwebp_dec.a in Frameworks */,
 				34F197AF1C61885000B41B54 /* libwebp_demux.a in Frameworks */,
 				34F197B01C61885000B41B54 /* libwebp_dsp_enc.a in Frameworks */,
-				34F197BB1C618A7A00B41B54 /* libwebp_dsp_neon.a in Frameworks */,
 				34F197B11C61885000B41B54 /* libwebp_dsp.a in Frameworks */,
 				34F197B21C61885000B41B54 /* libwebp_enc.a in Frameworks */,
 				34F197B31C61885000B41B54 /* libwebp_utils.a in Frameworks */,
@@ -403,6 +737,7 @@
 		21FD2B261C014C000023CFAE = {
 			isa = PBXGroup;
 			children = (
+				34FEFE421D0132B5002A83B6 /* libz.tbd */,
 				21FD2D411C015F780023CFAE /* libc++.tbd */,
 				21FD2B3B1C014C110023CFAE /* skia_libs */,
 				21FD2B321C014C000023CFAE /* Source */,
@@ -438,6 +773,11 @@
 		21FD2B3B1C014C110023CFAE /* skia_libs */ = {
 			isa = PBXGroup;
 			children = (
+				3454C31A1D011F5F008A8A1A /* skia_lib.xcodeproj */,
+				3454C31D1D011F5F008A8A1A /* libpng.xcodeproj */,
+				3454C3201D011F5F008A8A1A /* zlib.xcodeproj */,
+				3454C3231D011F5F008A8A1A /* giflib.xcodeproj */,
+				3454C2F01D011F3F008A8A1A /* pdf.xcodeproj */,
 				34F197851C61883C00B41B54 /* libjpeg-turbo-selector.xcodeproj */,
 				34F197881C61883C00B41B54 /* libjpeg-turbo.xcodeproj */,
 				34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */,
@@ -544,7 +884,6 @@
 			isa = PBXGroup;
 			children = (
 				21FD2D381C015ED70023CFAE /* libskia_utils.a */,
-				21FD2D3A1C015ED70023CFAE /* libskia_android_utils.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -561,6 +900,47 @@
 			isa = PBXGroup;
 			children = (
 				21FD2D7D1C0163140023CFAE /* libetc1.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3454C2F11D011F3F008A8A1A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3454C3171D011F3F008A8A1A /* libnopdf.a */,
+				3454C3191D011F3F008A8A1A /* libskia_pdf.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3454C31B1D011F5F008A8A1A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3454C31E1D011F5F008A8A1A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3454C3321D011F5F008A8A1A /* libpng_static.a */,
+				3454C3341D011F5F008A8A1A /* libpng_static_neon.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3454C3211D011F5F008A8A1A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3454C33D1D011F5F008A8A1A /* libzlib_x86_simd.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3454C3241D011F5F008A8A1A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3454C32C1D011F5F008A8A1A /* libgiflib.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -624,19 +1004,58 @@
 			buildRules = (
 			);
 			dependencies = (
-				34F197BA1C61889300B41B54 /* PBXTargetDependency */,
-				34F197B61C61887E00B41B54 /* PBXTargetDependency */,
-				34F197B81C61887E00B41B54 /* PBXTargetDependency */,
-				21FD2D9E1C0166BB0023CFAE /* PBXTargetDependency */,
-				21FD2D9B1C0166990023CFAE /* PBXTargetDependency */,
-				21FD2D981C0166770023CFAE /* PBXTargetDependency */,
-				21FD2D951C0166520023CFAE /* PBXTargetDependency */,
-				21FD2D921C0166040023CFAE /* PBXTargetDependency */,
-				21FD2D8F1C0165DC0023CFAE /* PBXTargetDependency */,
-				21FD2D8C1C0165BC0023CFAE /* PBXTargetDependency */,
-				21FD2D891C0165A80023CFAE /* PBXTargetDependency */,
-				21FD2D861C0165810023CFAE /* PBXTargetDependency */,
-				21FD2D821C0165310023CFAE /* PBXTargetDependency */,
+				3454C4411D012257008A8A1A /* PBXTargetDependency */,
+				3454C3AD1D012002008A8A1A /* PBXTargetDependency */,
+				3454C3B11D012002008A8A1A /* PBXTargetDependency */,
+				3454C3B71D012002008A8A1A /* PBXTargetDependency */,
+				3454C3BF1D012002008A8A1A /* PBXTargetDependency */,
+				3454C3C11D012002008A8A1A /* PBXTargetDependency */,
+				3454C3C31D012002008A8A1A /* PBXTargetDependency */,
+				3454C3C71D012002008A8A1A /* PBXTargetDependency */,
+				3454C3C91D012002008A8A1A /* PBXTargetDependency */,
+				3454C3CB1D012002008A8A1A /* PBXTargetDependency */,
+				3454C3CF1D012002008A8A1A /* PBXTargetDependency */,
+				3454C3D11D012002008A8A1A /* PBXTargetDependency */,
+				3454C3D31D012002008A8A1A /* PBXTargetDependency */,
+				3454C3D51D012002008A8A1A /* PBXTargetDependency */,
+				3454C3D71D012002008A8A1A /* PBXTargetDependency */,
+				3454C3D91D012002008A8A1A /* PBXTargetDependency */,
+				3454C3DB1D012002008A8A1A /* PBXTargetDependency */,
+				3454C3DD1D012002008A8A1A /* PBXTargetDependency */,
+				3454C3E11D012002008A8A1A /* PBXTargetDependency */,
+				3454C3E31D012002008A8A1A /* PBXTargetDependency */,
+				3454C3E51D012002008A8A1A /* PBXTargetDependency */,
+				3454C3E91D012002008A8A1A /* PBXTargetDependency */,
+				3454C3EB1D012002008A8A1A /* PBXTargetDependency */,
+				3454C3EF1D012002008A8A1A /* PBXTargetDependency */,
+				3454C3F11D012002008A8A1A /* PBXTargetDependency */,
+				3454C3F31D012002008A8A1A /* PBXTargetDependency */,
+				3454C3F71D012002008A8A1A /* PBXTargetDependency */,
+				3454C3F91D012002008A8A1A /* PBXTargetDependency */,
+				3454C3FB1D012002008A8A1A /* PBXTargetDependency */,
+				3454C4011D012002008A8A1A /* PBXTargetDependency */,
+				3454C4051D012002008A8A1A /* PBXTargetDependency */,
+				3454C40D1D012002008A8A1A /* PBXTargetDependency */,
+				3454C4111D012002008A8A1A /* PBXTargetDependency */,
+				3454C4131D012002008A8A1A /* PBXTargetDependency */,
+				3454C4151D012002008A8A1A /* PBXTargetDependency */,
+				3454C4191D012002008A8A1A /* PBXTargetDependency */,
+				3454C41B1D012002008A8A1A /* PBXTargetDependency */,
+				3454C41D1D012002008A8A1A /* PBXTargetDependency */,
+				3454C4211D012002008A8A1A /* PBXTargetDependency */,
+				3454C4231D012002008A8A1A /* PBXTargetDependency */,
+				3454C4251D012002008A8A1A /* PBXTargetDependency */,
+				3454C4271D012002008A8A1A /* PBXTargetDependency */,
+				3454C4291D012002008A8A1A /* PBXTargetDependency */,
+				3454C42B1D012002008A8A1A /* PBXTargetDependency */,
+				3454C42D1D012002008A8A1A /* PBXTargetDependency */,
+				3454C42F1D012002008A8A1A /* PBXTargetDependency */,
+				3454C4331D012002008A8A1A /* PBXTargetDependency */,
+				3454C4351D012002008A8A1A /* PBXTargetDependency */,
+				3454C4371D012002008A8A1A /* PBXTargetDependency */,
+				3454C43B1D012002008A8A1A /* PBXTargetDependency */,
+				3454C43D1D012002008A8A1A /* PBXTargetDependency */,
+				3454C43F1D012002008A8A1A /* PBXTargetDependency */,
 			);
 			name = libSkiaSharp;
 			productName = libSkiaSharp;
@@ -689,6 +1108,10 @@
 					ProjectRef = 21FD2D781C0163130023CFAE /* etc1.xcodeproj */;
 				},
 				{
+					ProductGroup = 3454C3241D011F5F008A8A1A /* Products */;
+					ProjectRef = 3454C3231D011F5F008A8A1A /* giflib.xcodeproj */;
+				},
+				{
 					ProductGroup = 21FD2CF31C015ED60023CFAE /* Products */;
 					ProjectRef = 21FD2CF21C015ED60023CFAE /* gpu.xcodeproj */;
 				},
@@ -709,12 +1132,20 @@
 					ProjectRef = 34F197881C61883C00B41B54 /* libjpeg-turbo.xcodeproj */;
 				},
 				{
+					ProductGroup = 3454C31E1D011F5F008A8A1A /* Products */;
+					ProjectRef = 3454C31D1D011F5F008A8A1A /* libpng.xcodeproj */;
+				},
+				{
 					ProductGroup = 34F1978C1C61883C00B41B54 /* Products */;
 					ProjectRef = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
 				},
 				{
 					ProductGroup = 21FD2CFB1C015ED60023CFAE /* Products */;
 					ProjectRef = 21FD2CFA1C015ED60023CFAE /* opts.xcodeproj */;
+				},
+				{
+					ProductGroup = 3454C2F11D011F3F008A8A1A /* Products */;
+					ProjectRef = 3454C2F01D011F3F008A8A1A /* pdf.xcodeproj */;
 				},
 				{
 					ProductGroup = 21FD2CFE1C015ED60023CFAE /* Products */;
@@ -725,8 +1156,16 @@
 					ProjectRef = 21FD2D001C015ED60023CFAE /* sfnt.xcodeproj */;
 				},
 				{
+					ProductGroup = 3454C31B1D011F5F008A8A1A /* Products */;
+					ProjectRef = 3454C31A1D011F5F008A8A1A /* skia_lib.xcodeproj */;
+				},
+				{
 					ProductGroup = 21FD2D041C015ED70023CFAE /* Products */;
 					ProjectRef = 21FD2D031C015ED70023CFAE /* utils.xcodeproj */;
+				},
+				{
+					ProductGroup = 3454C3211D011F5F008A8A1A /* Products */;
+					ProjectRef = 3454C3201D011F5F008A8A1A /* zlib.xcodeproj */;
 				},
 			);
 			projectRoot = "";
@@ -849,13 +1288,6 @@
 			remoteRef = 21FD2D371C015ED70023CFAE /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		21FD2D3A1C015ED70023CFAE /* libskia_android_utils.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libskia_android_utils.a;
-			remoteRef = 21FD2D391C015ED70023CFAE /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		21FD2D741C0162C70023CFAE /* libSkKTX.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -868,6 +1300,48 @@
 			fileType = archive.ar;
 			path = libetc1.a;
 			remoteRef = 21FD2D7C1C0163140023CFAE /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		3454C3171D011F3F008A8A1A /* libnopdf.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libnopdf.a;
+			remoteRef = 3454C3161D011F3F008A8A1A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		3454C3191D011F3F008A8A1A /* libskia_pdf.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libskia_pdf.a;
+			remoteRef = 3454C3181D011F3F008A8A1A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		3454C32C1D011F5F008A8A1A /* libgiflib.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libgiflib.a;
+			remoteRef = 3454C32B1D011F5F008A8A1A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		3454C3321D011F5F008A8A1A /* libpng_static.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libpng_static.a;
+			remoteRef = 3454C3311D011F5F008A8A1A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		3454C3341D011F5F008A8A1A /* libpng_static_neon.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libpng_static_neon.a;
+			remoteRef = 3454C3331D011F5F008A8A1A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		3454C33D1D011F5F008A8A1A /* libzlib_x86_simd.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libzlib_x86_simd.a;
+			remoteRef = 3454C33C1D011F5F008A8A1A /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		34F197941C61883C00B41B54 /* yasm-win */ = {
@@ -960,70 +1434,265 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		21FD2D821C0165310023CFAE /* PBXTargetDependency */ = {
+		3454C3AD1D012002008A8A1A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			name = core;
-			targetProxy = 21FD2D811C0165310023CFAE /* PBXContainerItemProxy */;
+			name = codec;
+			targetProxy = 3454C3AC1D012002008A8A1A /* PBXContainerItemProxy */;
 		};
-		21FD2D861C0165810023CFAE /* PBXTargetDependency */ = {
+		3454C3B11D012002008A8A1A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			name = skgpu;
-			targetProxy = 21FD2D851C0165810023CFAE /* PBXContainerItemProxy */;
+			name = "libjpeg-turbo";
+			targetProxy = 3454C3B01D012002008A8A1A /* PBXContainerItemProxy */;
 		};
-		21FD2D891C0165A80023CFAE /* PBXTargetDependency */ = {
+		3454C3B71D012002008A8A1A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			name = libSkKTX;
-			targetProxy = 21FD2D881C0165A80023CFAE /* PBXContainerItemProxy */;
+			name = libpng_static;
+			targetProxy = 3454C3B61D012002008A8A1A /* PBXContainerItemProxy */;
 		};
-		21FD2D8C1C0165BC0023CFAE /* PBXTargetDependency */ = {
+		3454C3BF1D012002008A8A1A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			name = libetc1;
-			targetProxy = 21FD2D8B1C0165BC0023CFAE /* PBXContainerItemProxy */;
+			name = libwebp_dec;
+			targetProxy = 3454C3BE1D012002008A8A1A /* PBXContainerItemProxy */;
 		};
-		21FD2D8F1C0165DC0023CFAE /* PBXTargetDependency */ = {
+		3454C3C11D012002008A8A1A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			name = ports;
-			targetProxy = 21FD2D8E1C0165DC0023CFAE /* PBXContainerItemProxy */;
+			name = libwebp_demux;
+			targetProxy = 3454C3C01D012002008A8A1A /* PBXContainerItemProxy */;
 		};
-		21FD2D921C0166040023CFAE /* PBXTargetDependency */ = {
+		3454C3C31D012002008A8A1A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			name = effects;
-			targetProxy = 21FD2D911C0166040023CFAE /* PBXContainerItemProxy */;
+			name = libwebp_dsp;
+			targetProxy = 3454C3C21D012002008A8A1A /* PBXContainerItemProxy */;
 		};
-		21FD2D951C0166520023CFAE /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = opts;
-			targetProxy = 21FD2D941C0166520023CFAE /* PBXContainerItemProxy */;
-		};
-		21FD2D981C0166770023CFAE /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = utils;
-			targetProxy = 21FD2D971C0166770023CFAE /* PBXContainerItemProxy */;
-		};
-		21FD2D9B1C0166990023CFAE /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = images;
-			targetProxy = 21FD2D9A1C0166990023CFAE /* PBXContainerItemProxy */;
-		};
-		21FD2D9E1C0166BB0023CFAE /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = sfnt;
-			targetProxy = 21FD2D9D1C0166BB0023CFAE /* PBXContainerItemProxy */;
-		};
-		34F197B61C61887E00B41B54 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = "libjpeg-turbo-selector";
-			targetProxy = 34F197B51C61887E00B41B54 /* PBXContainerItemProxy */;
-		};
-		34F197B81C61887E00B41B54 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = libwebp;
-			targetProxy = 34F197B71C61887E00B41B54 /* PBXContainerItemProxy */;
-		};
-		34F197BA1C61889300B41B54 /* PBXTargetDependency */ = {
+		3454C3C71D012002008A8A1A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = libwebp_dsp_enc;
-			targetProxy = 34F197B91C61889300B41B54 /* PBXContainerItemProxy */;
+			targetProxy = 3454C3C61D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C3C91D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libwebp_enc;
+			targetProxy = 3454C3C81D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C3CB1D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libwebp_utils;
+			targetProxy = 3454C3CA1D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C3CF1D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = codec_android;
+			targetProxy = 3454C3CE1D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C3D11D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = core;
+			targetProxy = 3454C3D01D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C3D31D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = effects;
+			targetProxy = 3454C3D21D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C3D51D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = skgpu;
+			targetProxy = 3454C3D41D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C3D71D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = images;
+			targetProxy = 3454C3D61D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C3D91D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libwebp_dec;
+			targetProxy = 3454C3D81D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C3DB1D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libwebp_demux;
+			targetProxy = 3454C3DA1D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C3DD1D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libwebp_dsp;
+			targetProxy = 3454C3DC1D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C3E11D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libwebp_dsp_enc;
+			targetProxy = 3454C3E01D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C3E31D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libwebp_enc;
+			targetProxy = 3454C3E21D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C3E51D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libwebp_utils;
+			targetProxy = 3454C3E41D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C3E91D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = opts;
+			targetProxy = 3454C3E81D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C3EB1D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = opts_ssse3;
+			targetProxy = 3454C3EA1D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C3EF1D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = opts_sse42;
+			targetProxy = 3454C3EE1D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C3F11D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = opts_avx;
+			targetProxy = 3454C3F01D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C3F31D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = opts_avx2;
+			targetProxy = 3454C3F21D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C3F71D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = ports;
+			targetProxy = 3454C3F61D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C3F91D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = sfnt;
+			targetProxy = 3454C3F81D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C3FB1D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = utils;
+			targetProxy = 3454C3FA1D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C4011D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = giflib;
+			targetProxy = 3454C4001D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C4051D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = pdf;
+			targetProxy = 3454C4041D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C40D1D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "libjpeg-turbo";
+			targetProxy = 3454C40C1D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C4111D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libwebp_dec;
+			targetProxy = 3454C4101D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C4131D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libwebp_demux;
+			targetProxy = 3454C4121D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C4151D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libwebp_dsp;
+			targetProxy = 3454C4141D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C4191D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libwebp_dsp_enc;
+			targetProxy = 3454C4181D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C41B1D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libwebp_enc;
+			targetProxy = 3454C41A1D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C41D1D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libwebp_utils;
+			targetProxy = 3454C41C1D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C4211D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libetc1;
+			targetProxy = 3454C4201D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C4231D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libSkKTX;
+			targetProxy = 3454C4221D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C4251D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = codec_android;
+			targetProxy = 3454C4241D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C4271D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = core;
+			targetProxy = 3454C4261D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C4291D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = effects;
+			targetProxy = 3454C4281D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C42B1D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = skgpu;
+			targetProxy = 3454C42A1D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C42D1D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = opts;
+			targetProxy = 3454C42C1D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C42F1D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = opts_ssse3;
+			targetProxy = 3454C42E1D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C4331D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = opts_sse42;
+			targetProxy = 3454C4321D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C4351D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = opts_avx;
+			targetProxy = 3454C4341D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C4371D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = opts_avx2;
+			targetProxy = 3454C4361D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C43B1D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = ports;
+			targetProxy = 3454C43A1D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C43D1D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = sfnt;
+			targetProxy = 3454C43C1D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C43F1D012002008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = utils;
+			targetProxy = 3454C43E1D012002008A8A1A /* PBXContainerItemProxy */;
+		};
+		3454C4411D012257008A8A1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libwebp_dsp_neon;
+			targetProxy = 3454C4401D012257008A8A1A /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 

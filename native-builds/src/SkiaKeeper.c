@@ -24,6 +24,7 @@
 #include "xamarin/sk_x_canvas.h"
 #include "xamarin/sk_x_colorfilter.h"
 #include "xamarin/sk_x_data.h"
+#include "xamarin/sk_x_document.h"
 #include "xamarin/sk_x_image.h"
 #include "xamarin/sk_x_imagedecoder.h"
 #include "xamarin/sk_x_imagefilter.h"
@@ -39,6 +40,23 @@
 #include "sk_managedstream.h"
 
 SK_X_API void** KeepSkiaCSymbols ();
+
+#if defined(SK_BUILD_FOR_WINRT)
+void ExitProcess(code)
+{
+    // we can't die in WinRT
+}
+#if defined(_M_ARM)
+// This should have been not used, but as the code is designed for x86
+// and there is a RUNTIME check for simd, this has to exist. As the
+// runtime check will fail, and revert to a C implementation, this is 
+// not a problem to have a stub.
+unsigned int _mm_crc32_u32(unsigned int crc, unsigned int v)
+{
+    return 0;
+}
+#endif
+#endif
 
 void** KeepSkiaCSymbols ()
 {
@@ -72,6 +90,8 @@ void** KeepSkiaCSymbols ()
         (void*)sk_stream_read,
         (void*)sk_typeface_create_from_name,
         (void*)sk_string_new_empty,
+        (void*)sk_document_unref,
+        (void*)sk_wstream_write,
 
         // Xamarin
         (void*)sk_managedstream_new,

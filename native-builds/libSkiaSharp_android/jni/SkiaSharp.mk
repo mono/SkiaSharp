@@ -12,7 +12,8 @@ LOCAL_STATIC_LIBRARIES := libskia_ports libskia_skgpu libskia_images libskia_opt
                           libskia_opts_avx libskia_opts_ssse3 libskia_opts_sse41         \
                           libjpeg-turbo libwebp_dec libwebp_demux libwebp_enc            \
                           libwebp_dsp libwebp_dsp_neon libwebp_utils libwebp_dsp_enc     \
-                          libgiflib libcpu_features libwebp_dsp_neon
+                          libgiflib libcpu_features libwebp_dsp_neon libskia_pdf         \
+                          libsfntly libicuuc
 
 LOCAL_LDLIBS           := -llog -landroid -lEGL -lGLESv2 -lz
 

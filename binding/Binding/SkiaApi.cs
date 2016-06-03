@@ -28,11 +28,15 @@ using sk_stream_memorystream_t = System.IntPtr;
 using sk_stream_assetstream_t = System.IntPtr;
 using sk_stream_managedstream_t = System.IntPtr;
 using sk_stream_streamrewindable_t = System.IntPtr;
+using sk_wstream_t = System.IntPtr;
+using sk_wstream_dynamicmemorystream_t = System.IntPtr;
+using sk_wstream_filestream_t = System.IntPtr;
 using sk_bitmap_t = System.IntPtr;
 using sk_imagedecoder_t = System.IntPtr;
 using sk_imagefilter_croprect_t = System.IntPtr;
 using sk_imagefilter_t = System.IntPtr;
 using sk_colorfilter_t = System.IntPtr;
+using sk_document_t = System.IntPtr;
 
 namespace SkiaSharp
 {
@@ -549,7 +553,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_typeface_t sk_typeface_create_from_name(string str, SKTypefaceStyle style);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_typeface_t sk_typeface_create_from_typeface(IntPtr typeface, SKTypefaceStyle style);
+		public extern static sk_typeface_t sk_typeface_create_from_typeface(sk_typeface_t typeface, SKTypefaceStyle style);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_typeface_t sk_typeface_create_from_file(string path, int index);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -570,6 +574,13 @@ namespace SkiaSharp
 		public extern static IntPtr sk_typeface_get_table_data(sk_typeface_t typeface, sk_font_table_tag_t tag, IntPtr offset, IntPtr length, byte[] data);
 
 		// Streams
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_memorystream_destroy(sk_stream_memorystream_t stream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_filestream_destroy(sk_stream_filestream_t stream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_stream_asset_destroy(sk_stream_assetstream_t stream);
+
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_stream_read(sk_stream_t stream, IntPtr buffer, IntPtr size);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -621,10 +632,84 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_memorystream_set_memory(sk_stream_memorystream_t s, byte[] data, IntPtr length, bool copyData);
 
+		// Managed streams
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_stream_managedstream_t sk_managedstream_new();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_managedstream_set_delegates(IntPtr pRead, IntPtr pPeek, IntPtr pIsAtEnd, IntPtr pRewind, IntPtr pGetPosition, IntPtr pSeek, IntPtr pMove, IntPtr pGetLength, IntPtr pCreateNew, IntPtr pDestroy);
+
+		// Writeable streams
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_filewstream_destroy(sk_wstream_filestream_t cstream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_dynamicmemorywstream_destroy(sk_wstream_dynamicmemorystream_t cstream);
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_wstream_filestream_t sk_filewstream_new(string path);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_wstream_dynamicmemorystream_t sk_dynamicmemorywstream_new();
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_data_t sk_dynamicmemorywstream_copy_to_data(sk_wstream_dynamicmemorystream_t cstream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_stream_assetstream_t sk_dynamicmemorywstream_detach_as_stream(sk_wstream_dynamicmemorystream_t cstream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_wstream_write(sk_wstream_t cstream, IntPtr buffer, IntPtr size);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_wstream_write(sk_wstream_t cstream, byte[] buffer, IntPtr size);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_wstream_newline(sk_wstream_t cstream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_wstream_flush(sk_wstream_t cstream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static IntPtr sk_wstream_bytes_written(sk_wstream_t cstream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_wstream_write_8(sk_wstream_t cstream, Byte value);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_wstream_write_16(sk_wstream_t cstream, UInt16 value);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_wstream_write_32(sk_wstream_t cstream, UInt32 value);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_wstream_write_text(sk_wstream_t cstream, string value);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_wstream_write_dec_as_text(sk_wstream_t cstream, Int32 value);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_wstream_write_bigdec_as_text(sk_wstream_t cstream, Int64 value, int minDigits);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_wstream_write_hex_as_text(sk_wstream_t cstream, UInt32 value, int minDigits);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_wstream_write_scalar_as_text(sk_wstream_t cstream, float value);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_wstream_write_bool(sk_wstream_t cstream, bool value);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_wstream_write_scalar(sk_wstream_t cstream, float value);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_wstream_write_packed_uint(sk_wstream_t cstream, IntPtr value);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_wstream_write_stream(sk_wstream_t cstream, sk_stream_t input, IntPtr length);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_wstream_get_size_of_packed_uint(IntPtr value);
+
+		// Document
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_document_unref(sk_document_t document);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_document_t sk_document_create_pdf_from_stream(sk_wstream_t stream, float dpi);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_document_t sk_document_create_pdf_from_filename(string path, float dpi);
+		//[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		//public extern static sk_document_t sk_document_create_xps_from_stream(sk_wstream_t stream, float dpi);
+		//[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		//public extern static sk_document_t sk_document_create_xps_from_filename(string path, float dpi);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_canvas_t sk_document_begin_page(sk_document_t document, float width, float height, ref SKRect content);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_canvas_t sk_document_begin_page(sk_document_t document, float width, float height, IntPtr content);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_document_end_page(sk_document_t document);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_document_close(sk_document_t document);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_document_abort(sk_document_t document);
 
 		// Bitmap
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
