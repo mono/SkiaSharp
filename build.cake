@@ -757,10 +757,21 @@ Task ("samples")
         DotNetBuild ("./samples/Skia.OSX.Demo/Skia.OSX.Demo.sln", c => { 
             c.Configuration = "Release"; 
         });
-        RunNuGetRestore ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.sln");
-        DotNetBuild ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.sln", c => { 
+        RunNuGetRestore ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Mac.sln");
+        DotNetBuild ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Mac.sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "iPhone" };
+        });
+    }
+    
+    if (IsRunningOnWindows ()) {
+        RunNuGetRestore ("./samples/Skia.UWP.Demo/Skia.UWP.Demo.sln");
+        DotNetBuild ("./samples/Skia.UWP.Demo/Skia.UWP.Demo.sln", c => { 
+            c.Configuration = "Release"; 
+        });
+        RunNuGetRestore ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Windows.sln");
+        DotNetBuild ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Windows.sln", c => { 
+            c.Configuration = "Release"; 
         });
     }
     
