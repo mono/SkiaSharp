@@ -25,7 +25,7 @@ namespace Skia.Forms.Demo.Droid
 			}
 			SkiaSharp.Demos.CustomFontPath = fontPath;
 
-			var dir = Path.Combine(ExternalCacheDir.AbsolutePath, "SkiaSharp.Demos");
+			var dir = Path.Combine(Android.OS.Environment.ExternalStorageDirectory.AbsolutePath, "SkiaSharp.Demos");
 			if (!Directory.Exists(dir))
 			{
 				Directory.CreateDirectory(dir);
