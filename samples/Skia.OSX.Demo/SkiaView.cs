@@ -10,17 +10,18 @@ namespace Skia.OSX.Demo
 {
 	public partial class SkiaView : NSView
 	{
-		Action <SKCanvas, int, int> onDrawCallback;
+		Demos.Sample sample;
 
 		public SkiaView (IntPtr handle) : base (handle)
 		{
+			AddGestureRecognizer (new NSClickGestureRecognizer (OnClicked));
 		}
 
 		public override void DrawRect (CoreGraphics.CGRect dirtyRect)
 		{
 			base.DrawRect (dirtyRect);
 
-			if (onDrawCallback == null)
+			if (sample == null)
 				return;
 
 			// Just not that sharp using the scale pixel scale only
@@ -37,7 +38,7 @@ namespace Skia.OSX.Demo
 
 					skcanvas.Scale (screenScale, screenScale);
 
-					onDrawCallback (skcanvas, (int)Bounds.Width, (int)Bounds.Height);
+					Sample?.Method (skcanvas, (int)Bounds.Width, (int)Bounds.Height);
 				}
 
 				using (var colorSpace = CoreGraphics.CGColorSpace.CreateDeviceRGB ()) {
@@ -56,12 +57,17 @@ namespace Skia.OSX.Demo
 			}
 		}
 
-		public Action<SKCanvas, int, int> OnDrawCallback {
+		void OnClicked ()
+		{
+			Sample?.TapMethod?.Invoke ();
+		}
+
+		public Demos.Sample Sample {
 			get {
-				return onDrawCallback;
+				return sample;
 			}
 			set {
-				onDrawCallback = value;
+				sample = value;
 				SetNeedsDisplayInRect (Bounds);
 			}
 		}

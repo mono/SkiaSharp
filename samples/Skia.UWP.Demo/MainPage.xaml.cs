@@ -29,6 +29,13 @@ namespace Skia.UWP.Demo
 			string fontName = "content-font.ttf";
 			var install = Windows.ApplicationModel.Package.Current.InstalledLocation;
 			SkiaSharp.Demos.CustomFontPath = Path.Combine(install.Path, fontName);
+			SkiaSharp.Demos.WorkingDirectory = Windows.Storage.ApplicationData.Current.LocalFolder.Path;
+			SkiaSharp.Demos.OpenFileDelegate =
+				async name =>
+				{
+					var file = await Windows.Storage.ApplicationData.Current.LocalFolder.GetFileAsync(name);
+					await Windows.System.Launcher.LaunchFileAsync(file);
+				};
 
 			var items = SkiaSharp.Demos.SamplesForPlatform(SkiaSharp.Demos.Platform.UWP);
 			foreach (var item in items)
@@ -36,9 +43,9 @@ namespace Skia.UWP.Demo
 				comboBox.Items.Add(item);
 			}
 
-			comboBox.SelectionChanged += (sender, e) =>
+			comboBox.SelectionChanged += async (sender, e) =>
 			{
-				skiaView.OnDrawCallback = SkiaSharp.Demos.MethodForSample((string)comboBox.SelectedItem);
+				skiaView.Sample = SkiaSharp.Demos.GetSample((string)comboBox.SelectedItem);
 			};
 
 			comboBox.SelectedIndex = 0;

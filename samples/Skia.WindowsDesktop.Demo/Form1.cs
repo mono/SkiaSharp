@@ -14,7 +14,17 @@ namespace Skia.WindowsDesktop.Demo
 		private void Form1_Load(object sender, EventArgs e)
 		{
 			string fontName = "content-font.ttf";
-			SkiaSharp.Demos.CustomFontPath = Path.Combine(typeof(Form1).Assembly.Location, "Content", fontName);
+			var dir = Path.Combine(Path.GetTempPath(), "SkiaSharp.Demos", Path.GetRandomFileName());
+			if (!Directory.Exists(dir))
+			{
+				Directory.CreateDirectory(dir);
+			}
+			SkiaSharp.Demos.CustomFontPath = Path.Combine(Path.GetDirectoryName (typeof(Form1).Assembly.Location), "Content", fontName);
+			SkiaSharp.Demos.WorkingDirectory = dir;
+			SkiaSharp.Demos.OpenFileDelegate = path => 
+			{
+				System.Diagnostics.Process.Start(Path.Combine(dir, path));
+			};
 
 			comboBox.Items.AddRange(SkiaSharp.Demos.SamplesForPlatform(SkiaSharp.Demos.Platform.WindowsDesktop));
 			comboBox.SelectedIndex = 0;
@@ -22,7 +32,7 @@ namespace Skia.WindowsDesktop.Demo
 
 		private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
 		{
-			skiaView.OnDrawCallback = SkiaSharp.Demos.MethodForSample((string)comboBox.SelectedItem);
+			skiaView.Sample = SkiaSharp.Demos.GetSample((string)comboBox.SelectedItem);
 		}
 	}
 }

@@ -28,7 +28,7 @@ namespace Skia.Forms.Demo
 				listView.SelectedItem = null;
 
 				navPage.PushAsync (new ContentPage {
-					Content = new SkiaView  (SkiaSharp.Demos.MethodForSample (e.SelectedItem.ToString ())),
+					Content = new SkiaView  (SkiaSharp.Demos.GetSample (e.SelectedItem.ToString ())),
 				});
 			};
 		}

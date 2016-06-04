@@ -25,6 +25,18 @@ namespace Skia.Forms.Demo.Droid
 			}
 			SkiaSharp.Demos.CustomFontPath = fontPath;
 
+			var dir = Path.Combine(ExternalCacheDir.AbsolutePath, "SkiaSharp.Demos");
+			if (!Directory.Exists(dir))
+			{
+				Directory.CreateDirectory(dir);
+			}
+			SkiaSharp.Demos.WorkingDirectory = dir;
+			SkiaSharp.Demos.OpenFileDelegate = path =>
+			{
+				var file = new Java.IO.File (Path.Combine (dir, path));
+				var uri = Android.Net.Uri.FromFile (file);
+				StartActivity (new Intent (Intent.ActionView, uri));
+			};
 
 			base.OnCreate (bundle);
 
