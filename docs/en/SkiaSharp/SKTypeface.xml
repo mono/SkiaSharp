@@ -212,15 +212,15 @@
         <Parameter Name="index" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="stream">Input stream</param>
-        <param name="index">the font face index.</param>
-        <summary>Return a new typeface given a stream. </summary>
+        <param name="stream">The input stream.</param>
+        <param name="index">The font face index.</param>
+        <summary>Return a new typeface given a stream. Ownership of the stream is transferred, so the caller must not reference it again.</summary>
         <returns>If the stream is not a valid font file, returns <paramref name="null" />. </returns>
         <remarks>
           <para>
           </para>
           <example>
-            <code lang="C#"><![CDATA[using (var stream = new SKFileStream (“myfont.ttf"))
+            <code lang="C#"><![CDATA[var stream = new SKFileStream (“myfont.ttf”);
 using (var tf = SKTypeface.FromStream (stream)) {
     paint.Color = XamDkBlue;
     paint.TextSize = 60;
