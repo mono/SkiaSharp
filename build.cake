@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")));
 
-var NuGetSources = new [] { "https://www.nuget.org/api/v2/", "https://www.myget.org/F/xamprojectci/api/v2" };
+var NuGetSources = new [] { IsRunningOnWindows () ? "https://api.nuget.org/v3/index.json" : "https://www.nuget.org/api/v2/" };
 var NugetToolPath = GetToolPath ("../nuget.exe");
 var XamarinComponentToolPath = GetToolPath ("../xamarin-component.exe");
 var CakeToolPath = GetToolPath ("Cake.exe");
@@ -73,7 +73,9 @@ FilePath GetMDocPath ()
 var RunNuGetRestore = new Action<FilePath> ((solution) =>
 {
     NuGetRestore (solution, new NuGetRestoreSettings { 
-        ToolPath = NugetToolPath
+        ToolPath = NugetToolPath,
+        Source = NuGetSources,
+        Verbosity = NuGetVerbosity.Detailed
     });
 });
 
@@ -750,14 +752,33 @@ Task ("tests")
 
 Task ("samples")
     .IsDependentOn ("libs")
+    .IsDependentOn ("nuget")
     .Does (() => 
 {
+    var InstallPlatformSkiaSharp = new Action<FilePath> ((solution) =>
+    {
+        RunNuGetRestore (solution);
+        var root = MakeAbsolute (solution.GetDirectory ());
+        var skiaSharpFolder = GetDirectories (root + "/packages/SkiaSharp.*").First ();
+
+        var platform = TARGET == "CI" ? "SkiaSharp" : IsRunningOnWindows () ? "SkiaSharp.Windows" : "SkiaSharp.Mac";
+        NuGetInstall (platform, new NuGetInstallSettings {
+            SolutionDirectory = solution.GetDirectory (),
+            ExcludeVersion = true,
+            Prerelease = true,
+            Source = new [] { MakeAbsolute (Directory ("./output/")).ToString () }
+        });
+        var platformFolder = root + "/packages/" + platform;
+        
+        CopyDirectory (platformFolder, skiaSharpFolder);
+    });
+
     if (IsRunningOnUnix ()) {
-        RunNuGetRestore ("./samples/Skia.OSX.Demo/Skia.OSX.Demo.sln");
+        InstallPlatformSkiaSharp ("./samples/Skia.OSX.Demo/Skia.OSX.Demo.sln");
         DotNetBuild ("./samples/Skia.OSX.Demo/Skia.OSX.Demo.sln", c => { 
             c.Configuration = "Release"; 
         });
-        RunNuGetRestore ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Mac.sln");
+        InstallPlatformSkiaSharp ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Mac.sln");
         DotNetBuild ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Mac.sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "iPhone" };
@@ -765,17 +786,17 @@ Task ("samples")
     }
     
     if (IsRunningOnWindows ()) {
-        RunNuGetRestore ("./samples/Skia.UWP.Demo/Skia.UWP.Demo.sln");
+        InstallPlatformSkiaSharp ("./samples/Skia.UWP.Demo/Skia.UWP.Demo.sln");
         DotNetBuild ("./samples/Skia.UWP.Demo/Skia.UWP.Demo.sln", c => { 
             c.Configuration = "Release"; 
         });
-        RunNuGetRestore ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Windows.sln");
+        InstallPlatformSkiaSharp ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Windows.sln");
         DotNetBuild ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Windows.sln", c => { 
             c.Configuration = "Release"; 
         });
     }
     
-    RunNuGetRestore ("./samples/Skia.WindowsDesktop.Demo/Skia.WindowsDesktop.Demo.sln");
+    InstallPlatformSkiaSharp ("./samples/Skia.WindowsDesktop.Demo/Skia.WindowsDesktop.Demo.sln");
     DotNetBuild ("./samples/Skia.WindowsDesktop.Demo/Skia.WindowsDesktop.Demo.sln", c => { 
         c.Configuration = "Release"; 
         c.Properties ["Platform"] = new [] { "x86" };
@@ -815,6 +836,10 @@ Task ("nuget")
 
     if (IsRunningOnUnix ()) {
         PackageNuGet ("./nuget/SkiaSharp.Mac.nuspec", "./output/");
+    }
+
+    // we can only build the combined package on CI
+    if (TARGET == "CI") {
         PackageNuGet ("./nuget/SkiaSharp.nuspec", "./output/");
     }
 });
