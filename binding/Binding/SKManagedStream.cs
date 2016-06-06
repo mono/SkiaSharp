@@ -58,6 +58,7 @@ namespace SkiaSharp
 
 		private readonly Stream stream;
 		private readonly bool disposeStream;
+		private bool isDisposed;
 
 		static SKManagedStream()
 		{
@@ -104,6 +105,12 @@ namespace SkiaSharp
 			disposeStream = disposeManagedStream;
 		}
 
+		void DisposeFromNative ()
+		{
+			isDisposed = true;
+			Dispose ();
+		}
+
 		protected override void Dispose (bool disposing)
 		{
 			lock (managedStreams){
@@ -114,6 +121,10 @@ namespace SkiaSharp
 
 			if (disposeStream && stream != null) {
 				stream.Dispose ();
+			}
+
+			if (!isDisposed && Handle != IntPtr.Zero && OwnsHandle) {
+				SkiaApi.sk_memorystream_destroy (Handle);
 			}
 
 			base.Dispose (disposing);
@@ -239,7 +250,7 @@ namespace SkiaSharp
 		{
 			SKManagedStream managedStream;
 			if (AsManagedStream (managedStreamPtr, out managedStream)) {
-				managedStream.Dispose ();
+				managedStream.DisposeFromNative ();
 			} else {
 				Debug.WriteLine ("Destroying disposed SKManagedStream: " + managedStreamPtr);
 			}
