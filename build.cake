@@ -74,8 +74,7 @@ var RunNuGetRestore = new Action<FilePath> ((solution) =>
 {
     NuGetRestore (solution, new NuGetRestoreSettings { 
         ToolPath = NugetToolPath,
-        Source = NuGetSources,
-        Verbosity = NuGetVerbosity.Detailed
+        Source = NuGetSources
     });
 });
 
@@ -752,33 +751,14 @@ Task ("tests")
 
 Task ("samples")
     .IsDependentOn ("libs")
-    .IsDependentOn ("nuget")
     .Does (() => 
 {
-    var InstallPlatformSkiaSharp = new Action<FilePath> ((solution) =>
-    {
-        RunNuGetRestore (solution);
-        var root = MakeAbsolute (solution.GetDirectory ());
-        var skiaSharpFolder = GetDirectories (root + "/packages/SkiaSharp.*").First ();
-
-        var platform = TARGET == "CI" ? "SkiaSharp" : IsRunningOnWindows () ? "SkiaSharp.Windows" : "SkiaSharp.Mac";
-        NuGetInstall (platform, new NuGetInstallSettings {
-            SolutionDirectory = solution.GetDirectory (),
-            ExcludeVersion = true,
-            Prerelease = true,
-            Source = new [] { MakeAbsolute (Directory ("./output/")).ToString () }
-        });
-        var platformFolder = root + "/packages/" + platform;
-        
-        CopyDirectory (platformFolder, skiaSharpFolder);
-    });
-
     if (IsRunningOnUnix ()) {
-        InstallPlatformSkiaSharp ("./samples/Skia.OSX.Demo/Skia.OSX.Demo.sln");
+        RunNuGetRestore ("./samples/Skia.OSX.Demo/Skia.OSX.Demo.sln");
         DotNetBuild ("./samples/Skia.OSX.Demo/Skia.OSX.Demo.sln", c => { 
             c.Configuration = "Release"; 
         });
-        InstallPlatformSkiaSharp ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Mac.sln");
+        RunNuGetRestore ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Mac.sln");
         DotNetBuild ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Mac.sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "iPhone" };
@@ -786,17 +766,17 @@ Task ("samples")
     }
     
     if (IsRunningOnWindows ()) {
-        InstallPlatformSkiaSharp ("./samples/Skia.UWP.Demo/Skia.UWP.Demo.sln");
+        RunNuGetRestore ("./samples/Skia.UWP.Demo/Skia.UWP.Demo.sln");
         DotNetBuild ("./samples/Skia.UWP.Demo/Skia.UWP.Demo.sln", c => { 
             c.Configuration = "Release"; 
         });
-        InstallPlatformSkiaSharp ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Windows.sln");
+        RunNuGetRestore ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Windows.sln");
         DotNetBuild ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Windows.sln", c => { 
             c.Configuration = "Release"; 
         });
     }
     
-    InstallPlatformSkiaSharp ("./samples/Skia.WindowsDesktop.Demo/Skia.WindowsDesktop.Demo.sln");
+    RunNuGetRestore ("./samples/Skia.WindowsDesktop.Demo/Skia.WindowsDesktop.Demo.sln");
     DotNetBuild ("./samples/Skia.WindowsDesktop.Demo/Skia.WindowsDesktop.Demo.sln", c => { 
         c.Configuration = "Release"; 
         c.Properties ["Platform"] = new [] { "x86" };
