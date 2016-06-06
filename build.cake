@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")));
 
-var NuGetSources = new [] { IsRunningOnWindows () ? "https://api.nuget.org/v3/index.json" : "https://www.nuget.org/api/v2/" };
+var NuGetSources = new [] { IsRunningOnWindows () ? "https://api.nuget.org/v3/index.json" : "https://www.nuget.org/api/v2/", "https://www.myget.org/F/xamprojectci/api/v2" };
 var NugetToolPath = GetToolPath ("../nuget.exe");
 var XamarinComponentToolPath = GetToolPath ("../xamarin-component.exe");
 var CakeToolPath = GetToolPath ("Cake.exe");
@@ -74,7 +74,9 @@ var RunNuGetRestore = new Action<FilePath> ((solution) =>
 {
     NuGetRestore (solution, new NuGetRestoreSettings { 
         ToolPath = NugetToolPath,
-        Source = NuGetSources
+        Source = NuGetSources,
+        NoCache = true,
+        Verbosity = NuGetVerbosity.Detailed
     });
 });
 
