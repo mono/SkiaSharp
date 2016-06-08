@@ -53,7 +53,9 @@ namespace SkiaSharp
 		{
 			if (stream == null)
 				throw new ArgumentNullException ("stream");
-			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_stream (stream.Handle, index));
+			var typeface = GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_stream (stream.Handle, index));
+			typeface?.TakeOwnership (stream);
+			return typeface;
 		}
 
 		public int CountGlyphs (string str)

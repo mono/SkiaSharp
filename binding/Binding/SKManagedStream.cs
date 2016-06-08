@@ -92,7 +92,12 @@ namespace SkiaSharp
 		}
 
 		public SKManagedStream (Stream managedStream, bool disposeManagedStream)
-			: base (SkiaApi.sk_managedstream_new (), true)
+			: this (managedStream, disposeManagedStream, true)
+		{
+		}
+
+		private SKManagedStream (Stream managedStream, bool disposeManagedStream, bool owns)
+			: base (SkiaApi.sk_managedstream_new (), owns)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKManagedStream instance.");
@@ -240,7 +245,8 @@ namespace SkiaSharp
 		private static IntPtr CreateNewInternal (IntPtr managedStreamPtr)
 		{
 			var managedStream = AsManagedStream (managedStreamPtr);
-			var newStream = new SKManagedStream (managedStream.stream);
+			var newStream = new SKManagedStream (managedStream.stream, false, false);
+			managedStream.TakeOwnership (newStream);
 			return newStream.Handle;
 		}
 		#if __IOS__

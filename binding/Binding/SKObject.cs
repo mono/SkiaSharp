@@ -19,6 +19,7 @@ namespace SkiaSharp
 	{
 		private static readonly Dictionary<IntPtr, WeakReference> instances = new Dictionary<IntPtr, WeakReference>();
 
+		private readonly List<SKObject> ownedObjects = new List<SKObject>();
 		private IntPtr handle;
 
 		[Preserve]
@@ -37,11 +38,7 @@ namespace SkiaSharp
 
 		~SKObject()
 		{
-			var h = handle;
-
 			Dispose(false);
-
-			DeregisterHandle(h, this);
 		}
 
 		protected bool OwnsHandle { get; private set; }
@@ -58,21 +55,23 @@ namespace SkiaSharp
 
 		public void Dispose()
 		{
-			var h = handle;
-
 			Dispose(true);
-
-			if (h != IntPtr.Zero)
-			{
-				DeregisterHandle(h, this);
-				handle = IntPtr.Zero;
-			}
-
 			GC.SuppressFinalize(this);
 		}
 
 		protected virtual void Dispose(bool disposing)
 		{
+			lock (ownedObjects)
+			{
+				foreach (var child in ownedObjects)
+				{
+					child.Dispose();
+				}
+				ownedObjects.Clear();
+			}
+
+			DeregisterHandle(handle, this);
+			handle = IntPtr.Zero;
 		}
 
 		internal static TSkiaObject GetObject<TSkiaObject>(IntPtr handle)
@@ -169,6 +168,15 @@ namespace SkiaSharp
 					instances.Remove(handle);
 				}
 			}
+		}
+
+		internal void TakeOwnership(SKObject obj)
+		{
+			lock (ownedObjects)
+			{
+				ownedObjects.Add(obj);
+			}
+			obj.OwnsHandle = false;
 		}
 	}
 }
