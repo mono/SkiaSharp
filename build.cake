@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")));
 
-var NuGetSources = new [] { IsRunningOnWindows () ? "https://api.nuget.org/v3/index.json" : "https://www.nuget.org/api/v2/", "https://www.myget.org/F/xamprojectci/api/v2" };
+var NuGetSources = new [] { "https://api.nuget.org/v3/index.json", "https://www.myget.org/F/xamprojectci/api/v2" };
 var NugetToolPath = GetToolPath ("../nuget.exe");
 var XamarinComponentToolPath = GetToolPath ("../xamarin-component.exe");
 var CakeToolPath = GetToolPath ("Cake.exe");
@@ -855,13 +855,20 @@ Task ("component")
 
 Task ("clean")
     .IsDependentOn ("clean-externals")
+    .IsDependentOn ("clean-managed")
     .Does (() => 
 {
-    CleanDirectories ("./binding/**/bin");
-    CleanDirectories ("./binding/**/obj");
+});
+Task ("clean-managed").Does (() => 
+{
+    CleanDirectories ("./binding/*/bin");
+    CleanDirectories ("./binding/*/obj");
 
-    CleanDirectories ("./samples/**/bin");
-    CleanDirectories ("./samples/**/obj");
+    CleanDirectories ("./samples/*/bin");
+    CleanDirectories ("./samples/*/obj");
+    CleanDirectories ("./samples/*/*/bin");
+    CleanDirectories ("./samples/*/*/obj");
+    CleanDirectories ("./samples/*/packages");
 
     CleanDirectories ("./tests/**/bin");
     CleanDirectories ("./tests/**/obj");
