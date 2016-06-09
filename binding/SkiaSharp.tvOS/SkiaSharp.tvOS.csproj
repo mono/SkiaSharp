@@ -3,8 +3,8 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectTypeGuids>{8FFB629D-F513-41CE-95D2-7ECE97B6EEEC};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <ProjectGuid>{6A678CFB-21A7-4E81-8909-FD72ABBFD408}</ProjectGuid>
+    <ProjectTypeGuids>{4A1ED743-3331-459B-915A-4B17C7B6DBB6};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <ProjectGuid>{5180E370-A455-42BB-99F9-97BD269B8A52}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>SkiaSharp</RootNamespace>
     <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
@@ -32,7 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="Xamarin.iOS" />
+    <Reference Include="Xamarin.TVOS" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Resources\" />
@@ -49,8 +49,8 @@
     <ObjcBindingCoreSource Include="StructsAndEnums.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ObjcBindingNativeFramework Include="..\..\native-builds\lib\ios\libSkiaSharp.framework" />
+    <ObjcBindingNativeFramework Include="..\..\native-builds\lib\tvos\libSkiaSharp.framework" />
   </ItemGroup>
   <Import Project="..\Binding\Binding.projitems" Label="Shared" Condition="Exists('..\Binding\Binding.projitems')" />
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.ObjCBinding.CSharp.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\TVOS\Xamarin.TVOS.ObjCBinding.CSharp.targets" />
 </Project>

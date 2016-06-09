@@ -42,7 +42,9 @@ namespace SkiaSharp
 {
 	internal static class SkiaApi
 	{
-#if MONOTOUCH
+#if __TVOS__ && __UNIFIED__
+		const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
+#elif __IOS__ && __UNIFIED__
 		const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
 #elif __ANDROID__
 		const string SKIA = "libSkiaSharp.so";

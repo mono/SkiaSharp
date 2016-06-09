@@ -296,6 +296,7 @@ Task ("externals-native")
     .IsDependentOn ("externals-windows")
     .IsDependentOn ("externals-osx")
     .IsDependentOn ("externals-ios")
+    .IsDependentOn ("externals-tvos")
     .IsDependentOn ("externals-android")
     .Does (() => 
 {
@@ -593,6 +594,52 @@ Task ("externals-ios")
         (FilePath) "arm64/libSkiaSharp.framework/libSkiaSharp"
     });
 });
+// this builds the native C and C++ externals for tvOS
+Task ("externals-tvos")
+    .WithCriteria (IsRunningOnUnix ())
+    .WithCriteria (
+        !FileExists ("native-builds/lib/tvos/libSkiaSharp.framework/libSkiaSharp"))
+    .Does (() => 
+{
+    var convertIOSToTVOS = new Action (() => {
+        var glob = "./skia/out/gyp/*.xcodeproj/project.pbxproj";
+        ReplaceTextInFiles (glob, "SDKROOT = iphoneos;", "SDKROOT = appletvos;");
+        ReplaceTextInFiles (glob, "IPHONEOS_DEPLOYMENT_TARGET = 9.2;", "TVOS_DEPLOYMENT_TARGET = 9.1;");
+        ReplaceTextInFiles (glob, "TARGETED_DEVICE_FAMILY = \"1,2\";", "TARGETED_DEVICE_FAMILY = 3;");
+        ReplaceTextInFiles (glob, "\"CODE_SIGN_IDENTITY[sdk=iphoneos*]\" = \"iPhone Developer\";", "");
+    });
+
+    var buildArch = new Action<string, string> ((sdk, arch) => {
+        XCodeBuild (new XCodeBuildSettings {
+            Project = "native-builds/libSkiaSharp_tvos/libSkiaSharp.xcodeproj",
+            Target = "libSkiaSharp",
+            Sdk = sdk,
+            Arch = arch,
+            Configuration = "Release",
+        });
+        if (!DirectoryExists ("native-builds/lib/tvos/" + arch)) {
+            CreateDirectory ("native-builds/lib/tvos/" + arch);
+        }
+        CopyDirectory ("native-builds/libSkiaSharp_tvos/build/Release-" + sdk, "native-builds/lib/tvos/" + arch);
+    });
+    
+    // set up the gyp environment variables
+    AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
+    
+    RunGyp ("skia_os='ios' skia_arch_type='arm' armv7=1 arm_neon=0", "ninja,xcode");
+    convertIOSToTVOS();
+    
+    buildArch ("appletvsimulator", "x86_64");
+    buildArch ("appletvos", "arm64");
+    
+    // create the fat framework
+    CopyDirectory ("native-builds/lib/tvos/arm64/libSkiaSharp.framework/", "native-builds/lib/tvos/libSkiaSharp.framework/");
+    DeleteFile ("native-builds/lib/tvos/libSkiaSharp.framework/libSkiaSharp");
+    RunLipo ("native-builds/lib/tvos/", "libSkiaSharp.framework/libSkiaSharp", new [] {
+        (FilePath) "x86_64/libSkiaSharp.framework/libSkiaSharp", 
+        (FilePath) "arm64/libSkiaSharp.framework/libSkiaSharp"
+    });
+});
 // this builds the native C and C++ externals for Android
 Task ("externals-android")
     .WithCriteria (IsRunningOnUnix ())
@@ -707,6 +754,7 @@ Task ("libs-osx")
 
     if (!DirectoryExists ("./output/android/")) CreateDirectory ("./output/android/");
     if (!DirectoryExists ("./output/ios/")) CreateDirectory ("./output/ios/");
+    if (!DirectoryExists ("./output/tvos/")) CreateDirectory ("./output/tvos/");
     if (!DirectoryExists ("./output/osx/")) CreateDirectory ("./output/osx/");
     if (!DirectoryExists ("./output/portable/")) CreateDirectory ("./output/portable/");
     if (!DirectoryExists ("./output/mac/")) CreateDirectory ("./output/mac/");
@@ -714,6 +762,7 @@ Task ("libs-osx")
     // copy build output
     CopyFileToDirectory ("./binding/SkiaSharp.Android/bin/Release/SkiaSharp.dll", "./output/android/");
     CopyFileToDirectory ("./binding/SkiaSharp.iOS/bin/Release/SkiaSharp.dll", "./output/ios/");
+    CopyFileToDirectory ("./binding/SkiaSharp.tvOS/bin/Release/SkiaSharp.dll", "./output/tvos/");
     CopyFileToDirectory ("./binding/SkiaSharp.OSX/bin/Release/SkiaSharp.dll", "./output/osx/");
     CopyFileToDirectory ("./binding/SkiaSharp.OSX/bin/Release/SkiaSharp.OSX.targets", "./output/osx/");
     CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
@@ -896,6 +945,8 @@ Task ("clean-externals").Does (() =>
     CleanDirectories ("native-builds/libSkiaSharp_android/libs");
     // ios
     CleanDirectories ("native-builds/libSkiaSharp_ios/build");
+    // tvos
+    CleanDirectories ("native-builds/libSkiaSharp_tvos/build");
     // osx
     CleanDirectories ("native-builds/libSkiaSharp_osx/build");
     // windows
