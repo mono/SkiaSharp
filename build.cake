@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")));
 
-var NuGetSources = new [] { "https://www.nuget.org/api/v2/" };
+var NuGetSources = new [] { "https://api.nuget.org/v3/index.json", "https://www.myget.org/F/xamprojectci/api/v2" };
 var NugetToolPath = GetToolPath ("../nuget.exe");
 var XamarinComponentToolPath = GetToolPath ("../xamarin-component.exe");
 var CakeToolPath = GetToolPath ("Cake.exe");
@@ -73,7 +73,10 @@ FilePath GetMDocPath ()
 var RunNuGetRestore = new Action<FilePath> ((solution) =>
 {
     NuGetRestore (solution, new NuGetRestoreSettings { 
-        ToolPath = NugetToolPath
+        ToolPath = NugetToolPath,
+        Source = NuGetSources,
+        NoCache = true,
+        Verbosity = NuGetVerbosity.Detailed
     });
 });
 
@@ -198,8 +201,13 @@ var AddXValue = new Action<XElement, string, string> ((root, element, value) => 
     var node = root.Element (MSBuildNS + element);
     if (node == null)
         root.Add (new XElement (MSBuildNS + element, value));
-    else
+    else if (!node.Value.Contains (value))
         node.Value += value;
+});
+var RemoveXValue = new Action<XElement, string, string> ((root, element, value) => {
+    var node = root.Element (MSBuildNS + element);
+    if (node != null)
+        node.Value = node.Value.Replace (value, string.Empty);
 });
 var SetXValues = new Action<XElement, string[], string, string> ((root, parents, element, value) => {
     IEnumerable<XElement> nodes = new [] { root };
@@ -217,6 +225,41 @@ var AddXValues = new Action<XElement, string[], string, string> ((root, parents,
     }
     foreach (var n in nodes) {
         AddXValue (n, element, value);
+    }
+});
+var RemoveXValues = new Action<XElement, string[], string, string> ((root, parents, element, value) => {
+    IEnumerable<XElement> nodes = new [] { root };
+    foreach (var p in parents) {
+        nodes = nodes.Elements (MSBuildNS + p);
+    }
+    foreach (var n in nodes) {
+        RemoveXValue (n, element, value);
+    }
+});
+var RemoveFileReference = new Action<XElement, string> ((root, filename) => {
+    var element = root
+        .Elements (MSBuildNS + "ItemGroup")
+        .Elements (MSBuildNS + "ClCompile")
+        .Where (e => e.Attribute ("Include") != null)
+        .Where (e => e.Attribute ("Include").Value.Contains (filename))
+        .FirstOrDefault ();
+    if (element != null) {
+        element.Remove ();
+    }
+});
+var AddFileReference = new Action<XElement, string> ((root, filename) => {
+    var element = root
+        .Elements (MSBuildNS + "ItemGroup")
+        .Elements (MSBuildNS + "ClCompile")
+        .Where (e => e.Attribute ("Include") != null)
+        .Where (e => e.Attribute ("Include").Value.Contains (filename))
+        .FirstOrDefault ();
+    if (element == null) {
+        root.Elements (MSBuildNS + "ItemGroup")
+            .Elements (MSBuildNS + "ClCompile")
+            .Last ()
+            .Parent
+            .Add (new XElement (MSBuildNS + "ClCompile", new XAttribute ("Include", filename)));
     }
 });
 
@@ -362,11 +405,15 @@ Task ("externals-uwp")
             // update and reload
             if (platform.ToUpper () == "ARM") {
                 ReplaceTextInFiles (projectFile, "Win32", "ARM");
-                ReplaceTextInFiles (projectFile, "SkTLS_win.cpp", "SkTLS_none.cpp");
                 xdoc = XDocument.Load (projectFile);
             }
         }
         
+        var rootNamespace = xdoc.Root
+            .Elements (MSBuildNS + "PropertyGroup")
+            .Elements (MSBuildNS + "RootNamespace")
+            .Select (e => e.Value)
+            .FirstOrDefault ();
         var globals = xdoc.Root
             .Elements (MSBuildNS + "PropertyGroup")
             .Where (e => e.Attribute ("Label") != null && e.Attribute ("Label").Value == "Globals")
@@ -403,6 +450,29 @@ Task ("externals-uwp")
             .Elements (MSBuildNS + "AdditionalDependencies")
             .Remove ();
             
+        // remove sfntly as this is not supported for winrt
+        RemoveXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", "SK_SFNTLY_SUBSETTER=\"font_subsetter.h\"");
+        
+        if (rootNamespace == "ports" && platform.ToUpper () == "ARM") {
+            // TLS is not available on ARM
+            AddFileReference (xdoc.Root, @"..\..\src\ports\SkTLS_none.cpp");
+            RemoveFileReference (xdoc.Root, "SkTLS_win.cpp");
+        } else if (rootNamespace == "zlib" && platform.ToUpper () == "ARM") {
+            // x86 instructions are not available on ARM
+            RemoveFileReference (xdoc.Root, "x86.c");
+        } else if (rootNamespace == "zlib_x86_simd" && platform.ToUpper () == "ARM") {
+            // SIMD is not available on ARM
+            AddFileReference (xdoc.Root, @"..\..\third_party\externals\zlib\simd_stub.c");
+            RemoveFileReference (xdoc.Root, "crc_folding.c");
+            RemoveFileReference (xdoc.Root, "fill_window_sse.c");
+        } else if (rootNamespace == "skgpu" ) {
+            // GL is not available to WinRT
+            RemoveFileReference (xdoc.Root, "GrGLCreateNativeInterface_none.cpp");
+            AddFileReference (xdoc.Root, @"..\..\src\gpu\gl\GrGLCreateNativeInterface_none.cpp");
+            RemoveFileReference (xdoc.Root, "GrGLCreateNativeInterface_win.cpp");
+            RemoveFileReference (xdoc.Root, "SkCreatePlatformGLContext_win.cpp");
+        } 
+
         xdoc.Save (projectFile);
     });
 
@@ -428,13 +498,13 @@ Task ("externals-uwp")
     // set up the gyp environment variables
     AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
 
-    RunGyp ("skia_arch_type='x86_64' skia_gpu=0", "ninja,msvs");
+    RunGyp ("skia_arch_type='x86_64'", "ninja,msvs");
     buildArch ("x64", "x64");
     
-    RunGyp ("skia_arch_type='x86' skia_gpu=0", "ninja,msvs");
+    RunGyp ("skia_arch_type='x86'", "ninja,msvs");
     buildArch ("Win32", "x86");
     
-    RunGyp ("skia_arch_type='arm' arm_version=7 arm_neon=0 skia_gpu=0", "ninja,msvs");
+    RunGyp ("skia_arch_type='arm' arm_version=7 arm_neon=0", "ninja,msvs");
     buildArch ("ARM", "arm");
 });
 // this builds the native C and C++ externals for Mac OS X
@@ -533,7 +603,7 @@ Task ("externals-android")
     
     var buildArch = new Action<string, string> ((arch, folder) => {
         StartProcess (SKIA_PATH.CombineWithFilePath ("platform_tools/android/bin/android_ninja").FullPath, new ProcessSettings {
-            Arguments = "-d " + arch + " \"skia_lib\"",
+            Arguments = "-d " + arch + " skia_lib pdf sfntly icuuc",
             WorkingDirectory = SKIA_PATH.FullPath,
         });
     });
@@ -673,7 +743,7 @@ Task ("tests")
         DotNetBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", c => { 
             c.Configuration = "Release"; 
         });
-        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/Release/SkiaSharp.Desktop.Tests.dll");
+        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/AnyCPU/Release/SkiaSharp.Desktop.Tests.dll");
     }
 });
 
@@ -690,10 +760,21 @@ Task ("samples")
         DotNetBuild ("./samples/Skia.OSX.Demo/Skia.OSX.Demo.sln", c => { 
             c.Configuration = "Release"; 
         });
-        RunNuGetRestore ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.sln");
-        DotNetBuild ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.sln", c => { 
+        RunNuGetRestore ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Mac.sln");
+        DotNetBuild ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Mac.sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "iPhone" };
+        });
+    }
+    
+    if (IsRunningOnWindows ()) {
+        RunNuGetRestore ("./samples/Skia.UWP.Demo/Skia.UWP.Demo.sln");
+        DotNetBuild ("./samples/Skia.UWP.Demo/Skia.UWP.Demo.sln", c => { 
+            c.Configuration = "Release"; 
+        });
+        RunNuGetRestore ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Windows.sln");
+        DotNetBuild ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Windows.sln", c => { 
+            c.Configuration = "Release"; 
         });
     }
     
@@ -770,13 +851,20 @@ Task ("component")
 
 Task ("clean")
     .IsDependentOn ("clean-externals")
+    .IsDependentOn ("clean-managed")
     .Does (() => 
 {
-    CleanDirectories ("./binding/**/bin");
-    CleanDirectories ("./binding/**/obj");
+});
+Task ("clean-managed").Does (() => 
+{
+    CleanDirectories ("./binding/*/bin");
+    CleanDirectories ("./binding/*/obj");
 
-    CleanDirectories ("./samples/**/bin");
-    CleanDirectories ("./samples/**/obj");
+    CleanDirectories ("./samples/*/bin");
+    CleanDirectories ("./samples/*/obj");
+    CleanDirectories ("./samples/*/*/bin");
+    CleanDirectories ("./samples/*/*/obj");
+    CleanDirectories ("./samples/*/packages");
 
     CleanDirectories ("./tests/**/bin");
     CleanDirectories ("./tests/**/obj");

@@ -58,6 +58,7 @@ namespace SkiaSharp
 
 		private readonly Stream stream;
 		private readonly bool disposeStream;
+		private bool isDisposed;
 
 		static SKManagedStream()
 		{
@@ -91,7 +92,12 @@ namespace SkiaSharp
 		}
 
 		public SKManagedStream (Stream managedStream, bool disposeManagedStream)
-			: base (SkiaApi.sk_managedstream_new ())
+			: this (managedStream, disposeManagedStream, true)
+		{
+		}
+
+		private SKManagedStream (Stream managedStream, bool disposeManagedStream, bool owns)
+			: base (SkiaApi.sk_managedstream_new (), owns)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKManagedStream instance.");
@@ -104,6 +110,12 @@ namespace SkiaSharp
 			disposeStream = disposeManagedStream;
 		}
 
+		void DisposeFromNative ()
+		{
+			isDisposed = true;
+			Dispose ();
+		}
+
 		protected override void Dispose (bool disposing)
 		{
 			lock (managedStreams){
@@ -114,6 +126,10 @@ namespace SkiaSharp
 
 			if (disposeStream && stream != null) {
 				stream.Dispose ();
+			}
+
+			if (!isDisposed && Handle != IntPtr.Zero && OwnsHandle) {
+				SkiaApi.sk_memorystream_destroy (Handle);
 			}
 
 			base.Dispose (disposing);
@@ -229,7 +245,8 @@ namespace SkiaSharp
 		private static IntPtr CreateNewInternal (IntPtr managedStreamPtr)
 		{
 			var managedStream = AsManagedStream (managedStreamPtr);
-			var newStream = new SKManagedStream (managedStream.stream);
+			var newStream = new SKManagedStream (managedStream.stream, false, false);
+			managedStream.TakeOwnership (newStream);
 			return newStream.Handle;
 		}
 		#if __IOS__
@@ -239,7 +256,7 @@ namespace SkiaSharp
 		{
 			SKManagedStream managedStream;
 			if (AsManagedStream (managedStreamPtr, out managedStream)) {
-				managedStream.Dispose ();
+				managedStream.DisposeFromNative ();
 			} else {
 				Debug.WriteLine ("Destroying disposed SKManagedStream: " + managedStreamPtr);
 			}

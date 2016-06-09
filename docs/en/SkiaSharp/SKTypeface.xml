@@ -143,6 +143,22 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="FamilyName">
+      <MemberSignature Language="C#" Value="public string FamilyName { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance string FamilyName" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.String</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="FromFamilyName">
       <MemberSignature Language="C#" Value="public static SkiaSharp.SKTypeface FromFamilyName (string familyName, SkiaSharp.SKTypefaceStyle style = SkiaSharp.SKTypefaceStyle.Normal);" />
       <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKTypeface FromFamilyName(string familyName, valuetype SkiaSharp.SKTypefaceStyle style) cil managed" />
@@ -212,15 +228,15 @@
         <Parameter Name="index" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="stream">Input stream</param>
-        <param name="index">the font face index.</param>
-        <summary>Return a new typeface given a stream. </summary>
+        <param name="stream">The input stream.</param>
+        <param name="index">The font face index.</param>
+        <summary>Return a new typeface given a stream. Ownership of the stream is transferred, so the caller must not reference it again.</summary>
         <returns>If the stream is not a valid font file, returns <paramref name="null" />. </returns>
         <remarks>
           <para>
           </para>
           <example>
-            <code lang="C#"><![CDATA[using (var stream = new SKFileStream (“myfont.ttf"))
+            <code lang="C#"><![CDATA[var stream = new SKFileStream (“myfont.ttf”);
 using (var tf = SKTypeface.FromStream (stream)) {
     paint.Color = XamDkBlue;
     paint.TextSize = 60;
@@ -254,6 +270,65 @@ using (var tf = SKTypeface.FromStream (stream)) {
           <para>Return a new reference to the typeface that most closely matches the requested typeface and specified Style</para>
         </summary>
         <returns>reference to the closest-matching typeface. </returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetTableData">
+      <MemberSignature Language="C#" Value="public byte[] GetTableData (uint tag);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance unsigned int8[] GetTableData(unsigned int32 tag) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Byte[]</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="tag" Type="System.UInt32" />
+      </Parameters>
+      <Docs>
+        <param name="tag">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetTableTags">
+      <MemberSignature Language="C#" Value="public uint[] GetTableTags ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance unsigned int32[] GetTableTags() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.UInt32[]</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="TryGetTableData">
+      <MemberSignature Language="C#" Value="public bool TryGetTableData (uint tag, out byte[] tableData);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool TryGetTableData(unsigned int32 tag, unsigned int8[] tableData) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="tag" Type="System.UInt32" />
+        <Parameter Name="tableData" Type="System.Byte[]&amp;" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="tag">To be added.</param>
+        <param name="tableData">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>

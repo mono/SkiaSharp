@@ -19,22 +19,29 @@ namespace SkiaSharp
 	{
 		private static readonly Dictionary<IntPtr, WeakReference> instances = new Dictionary<IntPtr, WeakReference>();
 
+		private readonly List<SKObject> ownedObjects = new List<SKObject>();
 		private IntPtr handle;
 
 		[Preserve]
 		internal SKObject(IntPtr handle)
 		{
 			Handle = handle;
+			OwnsHandle = false;
+		}
+
+		[Preserve]
+		internal SKObject(IntPtr handle, bool owns)
+		{
+			Handle = handle;
+			OwnsHandle = owns;
 		}
 
 		~SKObject()
 		{
-			var h = handle;
-
 			Dispose(false);
-
-			DeregisterHandle(h, this);
 		}
+
+		protected bool OwnsHandle { get; private set; }
 
 		public IntPtr Handle
 		{
@@ -48,24 +55,32 @@ namespace SkiaSharp
 
 		public void Dispose()
 		{
-			var h = handle;
-
 			Dispose(true);
-
-			if (h != IntPtr.Zero)
-			{
-				DeregisterHandle(h, this);
-				handle = IntPtr.Zero;
-			}
-
 			GC.SuppressFinalize(this);
 		}
 
 		protected virtual void Dispose(bool disposing)
 		{
+			lock (ownedObjects)
+			{
+				foreach (var child in ownedObjects)
+				{
+					child.Dispose();
+				}
+				ownedObjects.Clear();
+			}
+
+			DeregisterHandle(handle, this);
+			handle = IntPtr.Zero;
 		}
 
 		internal static TSkiaObject GetObject<TSkiaObject>(IntPtr handle)
+			where TSkiaObject : SKObject
+		{
+			return GetObject<TSkiaObject>(handle, null);
+		}
+
+		internal static TSkiaObject GetObject<TSkiaObject>(IntPtr handle, bool? owns)
 			where TSkiaObject : SKObject
 		{
 			if (handle == IntPtr.Zero)
@@ -91,13 +106,13 @@ namespace SkiaSharp
 			// TODO: we could probably cache this
 			var type = typeof(TSkiaObject);
 			var constructor = type.GetTypeInfo().DeclaredConstructors.FirstOrDefault(c => 
-				c.GetParameters().Length == 1 && 
-				c.GetParameters()[0].ParameterType == typeof(IntPtr));
+				(owns == null && c.GetParameters().Length == 1 && c.GetParameters()[0].ParameterType == typeof(IntPtr)) ||
+				(owns != null && c.GetParameters().Length == 2 && c.GetParameters()[0].ParameterType == typeof(IntPtr) && c.GetParameters()[1].ParameterType == typeof(bool)));
 			if (constructor == null)
 			{
-				throw new MissingMethodException("No constructor found for " + type.FullName + ".ctor(System.IntPtr)");
+				throw new MissingMethodException($"No constructor found for {type.FullName}.ctor(System.IntPtr{(owns==null?"":", System.Boolean")})");
 			}
-			return (TSkiaObject)constructor.Invoke(new object[] { handle });
+			return (TSkiaObject)constructor.Invoke(owns == null ? new object[] { handle } : new object[] { handle, owns });
 		}
 
 		internal static void RegisterHandle(IntPtr handle, SKObject instance)
@@ -153,6 +168,15 @@ namespace SkiaSharp
 					instances.Remove(handle);
 				}
 			}
+		}
+
+		internal void TakeOwnership(SKObject obj)
+		{
+			lock (ownedObjects)
+			{
+				ownedObjects.Add(obj);
+			}
+			obj.OwnsHandle = false;
 		}
 	}
 }

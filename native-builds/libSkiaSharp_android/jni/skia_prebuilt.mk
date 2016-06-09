@@ -160,3 +160,18 @@ LOCAL_MODULE := libgiflib
 LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libgiflib.a
 include $(PREBUILT_STATIC_LIBRARY)
 
+include $(CLEAR_VARS)
+LOCAL_MODULE := libskia_pdf
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_pdf.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libsfntly
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libsfntly.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libicuuc
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libicuuc.a
+include $(PREBUILT_STATIC_LIBRARY)
+
