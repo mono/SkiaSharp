@@ -13,6 +13,7 @@ SkiaSharp provides a PCL and platform-specific bindings for:
  - Mac OS X
  - Xamarin.Android
  - Xamarin.iOS
+ - Xamarin.tvOS
  - Windows Desktop
  - Windows UWP
  - Mac Desktop
@@ -53,11 +54,13 @@ You need Python 2.7 in `PATH` environment variable. Then you can build it:
 
 There are several targets available:
 
+ - `Everything` - builds everything for the current platform
  - `externals` - builds all the native libraries
    - [win] `externals-windows` - builds the native libraries for Windows
    - [win] `externals-uwp` - builds the native libraries for Windows UWP
    - [mac] `externals-osx` - builds the native libraries for Mac OS X
    - [mac] `externals-ios` - builds the native libraries for iOS
+   - [mac] `externals-tvos` - builds the native libraries for tvOS
    - [mac] `externals-andoid` - builds the native libraries for Android
  - `libs` - builds all the managed libraries
    - [win] `libs-windows` - builds the managed libraries that can be built on Windows
@@ -66,19 +69,19 @@ There are several targets available:
  - `samples` - builds the samples available for the current platform
  - `docs` - updates the mdoc files
  - `nuget` - packages the libraries into a NuGet
- - `CI` - builds everything
  - `clean` - cleans everything
    - `clean-externals` - cleans externals only
+   - `clean-managed` - cleans managed libraries/samples only
 
 ## Compare Code
 
 Here are some links to show the differences in our code as compared to Google's.
 
-What version are we on? **m49**  
-Are we up-to-date with Google? [Compare](https://github.com/google/skia/compare/chrome/m49...mono:xamarin-mobile-bindings)  
-What have we added? [Compare](https://github.com/mono/skia/compare/xamarin-mobile-bindings...google:chrome/m49)  
+What version are we on? [**m49**](https://github.com/google/skia/tree/chrome/m49)  
+Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/xamarin-mobile-bindings...google:chrome/m49)  
+What have we added? [Compare](https://github.com/google/skia/compare/chrome/m49...mono:xamarin-mobile-bindings)  
 
-## Where is Windows Phone 8 / Store 8 / tvOS
+## Where is Windows Phone 8 / Store 8
  
 We are working to add binaries for these platforms, stay tuned for a future release
 (or check the pull requests and branches, where we are working on those)
