@@ -453,10 +453,13 @@ Task ("externals-uwp")
         // remove sfntly as this is not supported for winrt
         RemoveXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", "SK_SFNTLY_SUBSETTER=\"font_subsetter.h\"");
         
-        if (rootNamespace == "ports" && platform.ToUpper () == "ARM") {
-            // TLS is not available on ARM
-            AddFileReference (xdoc.Root, @"..\..\src\ports\SkTLS_none.cpp");
-            RemoveFileReference (xdoc.Root, "SkTLS_win.cpp");
+        if (rootNamespace == "ports") {
+            if (platform.ToUpper () == "ARM") {
+                // TLS is not available on ARM
+                AddFileReference (xdoc.Root, @"..\..\src\ports\SkTLS_none.cpp");
+                RemoveFileReference (xdoc.Root, "SkTLS_win.cpp");
+            }
+            RemoveFileReference (xdoc.Root, "SkFontHost_win.cpp");
         } else if (rootNamespace == "zlib" && platform.ToUpper () == "ARM") {
             // x86 instructions are not available on ARM
             RemoveFileReference (xdoc.Root, "x86.c");
@@ -471,6 +474,10 @@ Task ("externals-uwp")
             AddFileReference (xdoc.Root, @"..\..\src\gpu\gl\GrGLCreateNativeInterface_none.cpp");
             RemoveFileReference (xdoc.Root, "GrGLCreateNativeInterface_win.cpp");
             RemoveFileReference (xdoc.Root, "SkCreatePlatformGLContext_win.cpp");
+        } else if (rootNamespace == "utils" ) {
+            // GL is not available to WinRT
+            RemoveFileReference (xdoc.Root, "SkWGL.h");
+            RemoveFileReference (xdoc.Root, "SkWGL_win.cpp");
         } 
 
         xdoc.Save (projectFile);

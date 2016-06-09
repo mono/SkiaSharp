@@ -41,23 +41,6 @@
 
 SK_X_API void** KeepSkiaCSymbols ();
 
-#if defined(SK_BUILD_FOR_WINRT)
-void ExitProcess(code)
-{
-    // we can't die in WinRT
-}
-#if defined(_M_ARM)
-// This should have been not used, but as the code is designed for x86
-// and there is a RUNTIME check for simd, this has to exist. As the
-// runtime check will fail, and revert to a C implementation, this is 
-// not a problem to have a stub.
-unsigned int _mm_crc32_u32(unsigned int crc, unsigned int v)
-{
-    return 0;
-}
-#endif
-#endif
-
 void** KeepSkiaCSymbols ()
 {
     static void* ret[] = {
