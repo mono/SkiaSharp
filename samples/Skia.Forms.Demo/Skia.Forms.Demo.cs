@@ -43,6 +43,8 @@ namespace Skia.Forms.Demo
             masterDetail.Detail = navPage;
 
             MainPage = masterDetail;
+
+            masterDetail.IsPresented = true;
         }
 
         public class DetailsPage : ContentPage
