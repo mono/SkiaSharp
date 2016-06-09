@@ -987,9 +987,6 @@ Task ("CI")
 Task ("Windows-CI")
     .IsDependentOn ("externals")
     .IsDependentOn ("libs")
-    .IsDependentOn ("docs")
-    .IsDependentOn ("nuget")
-    .IsDependentOn ("component")
     .IsDependentOn ("tests")
     .IsDependentOn ("samples");
 
