@@ -1,52 +1,134 @@
 ﻿using System;
+using System.Linq;
 
 using Xamarin.Forms;
 using SkiaSharp;
 
 namespace Skia.Forms.Demo
 {
-	public class App : Application
-	{
-		public App ()
-		{
-			ListView listView;
-			var listPage = new ContentPage {
-				Content = listView = new ListView (),
-				Title = "Skia Demo",
-			};
+    public class App : Application
+    {
+        public static readonly Color XamarinBlue = Color.FromHex("3498db");
+        public static readonly Color XamarinGreen = Color.FromHex("77d065");
+        public static readonly Color XamarinPurple = Color.FromHex("b455b6");
+        public static readonly Color XamarinDark = Color.FromHex("2c3e50");
 
-			NavigationPage navPage;
-			MainPage = navPage = new NavigationPage (listPage) {
-				BarBackgroundColor = new Xamarin.Forms.Color (0x34/255.0, 0x98/255.0, 0xdb/255.0),
-				BarTextColor = Xamarin.Forms.Color.White,
-			};
+        public App()
+        {
+            var items =
+                Device.OS == TargetPlatform.iOS ? Demos.SamplesForPlatform(Demos.Platform.iOS) :
+                Device.OS == TargetPlatform.Android ? Demos.SamplesForPlatform(Demos.Platform.Android) :
+                Device.OS == TargetPlatform.Windows ? Demos.SamplesForPlatform(Demos.Platform.UWP) :
+                Demos.SamplesForPlatform(Demos.Platform.All);
 
-			listView.ItemsSource = Demos.SamplesForPlatform (Demos.Platform.iOS | Demos.Platform.Android);
+            var masterDetail = new MasterDetailPage
+            {
+                IsGestureEnabled = true,
+                MasterBehavior = MasterBehavior.Popover
+            };
+            var detailPage = new DetailsPage(items.First());
+            var navPage = new NavigationPage(detailPage)
+            {
+                BarBackgroundColor = XamarinBlue,
+                BarTextColor = Color.White,
+            };
+            var masterPage = new MasterPage(items, demo =>
+            {
+                masterDetail.IsPresented = false;
+                detailPage.SetDemo(demo);
+                navPage.Title = demo;
+            });
 
-			listView.ItemSelected += (sender, e) => {
-				if (e.SelectedItem == null) return;
-				listView.SelectedItem = null;
+            masterDetail.Master = masterPage;
+            masterDetail.Detail = navPage;
 
-				navPage.PushAsync (new ContentPage {
-					Content = new SkiaView  (SkiaSharp.Demos.GetSample (e.SelectedItem.ToString ())),
-				});
-			};
-		}
+            MainPage = masterDetail;
+        }
 
-		protected override void OnStart ()
-		{
-			// Handle when your app starts
-		}
+        public class DetailsPage : ContentPage
+        {
+            public DetailsPage(string demo)
+            {
+                SetDemo(demo);
+            }
 
-		protected override void OnSleep ()
-		{
-			// Handle when your app sleeps
-		}
+            public void SetDemo(string demo)
+            {
+                Title = demo;
+                Content = new SkiaView(Demos.GetSample(demo));
+            }
+        }
 
-		protected override void OnResume ()
-		{
-			// Handle when your app resumes
-		}
-	}
+        public class MasterPage : ContentPage
+        {
+            private readonly ListView listView;
+            private readonly Action<string> showDemo;
+
+            public MasterPage(string[] items, Action<string> showDemo)
+            {
+                this.showDemo = showDemo;
+
+                Title = "SkiaSharp";
+                BackgroundColor = Color.FromHex("EEEEEE");
+
+                // a nice header
+                var header = new ContentView
+                {
+                    BackgroundColor = XamarinDark,
+                    Padding = new Thickness(12, 72, 12, 12),
+                    Margin = 0,
+                    Content = new Label
+                    {
+                        Text = Title,
+                        FontSize = Device.GetNamedSize(NamedSize.Large, typeof(Label)),
+                        TextColor = Color.White
+                    },
+                };
+
+                var spacer = new BoxView
+                {
+                    Color = XamarinBlue,
+                    HorizontalOptions = LayoutOptions.Fill,
+                    Margin = 0,
+                    HeightRequest = 3
+                };
+
+                // the contents of the menu
+                listView = new ListView()
+                {
+                    ItemsSource = items,
+                };
+                listView.ItemSelected += OnItemSelected;
+
+                // UWP specific for more spacing there
+                if (Device.OS == TargetPlatform.Windows)
+                {
+                    listView.RowHeight = 30;
+                    listView.Margin = new Thickness(12, 6);
+                    header.Padding = new Thickness(12, 36, 12, 12);
+                }
+
+                // put it all together
+                Content = new StackLayout
+                {
+                    Children = { header, spacer, listView },
+                    Padding = 0,
+                    Spacing = 0
+                };
+            }
+
+            private void OnItemSelected(object sender, SelectedItemChangedEventArgs e)
+            {
+                // deselect the menu item
+                if (e.SelectedItem == null)
+                {
+                    return;
+                }
+                listView.SelectedItem = null;
+
+                // display the selected demo
+                showDemo(e.SelectedItem.ToString());
+            }
+        }
+    }
 }
-

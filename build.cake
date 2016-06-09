@@ -904,6 +904,15 @@ Task ("Default")
     .IsDependentOn ("externals")
     .IsDependentOn ("libs");
 
+Task ("Everything")
+    .IsDependentOn ("externals")
+    .IsDependentOn ("libs")
+    .IsDependentOn ("docs")
+    .IsDependentOn ("nuget")
+    .IsDependentOn ("component")
+    .IsDependentOn ("tests")
+    .IsDependentOn ("samples");
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // CI - the master target to build everything
 ////////////////////////////////////////////////////////////////////////////////////////////////////

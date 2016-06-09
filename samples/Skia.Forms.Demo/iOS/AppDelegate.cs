@@ -24,8 +24,7 @@ namespace Skia.Forms.Demo.iOS
 			SkiaSharp.Demos.WorkingDirectory = dir;
 			SkiaSharp.Demos.OpenFileDelegate = path =>
 			{
-				var nav = Xamarin.Forms.Platform.iOS.Platform.GetRenderer (Xamarin.Forms.Application.Current.MainPage) as UINavigationController;
-				var vc = nav.VisibleViewController;
+				var vc = Xamarin.Forms.Platform.iOS.Platform.GetRenderer(Xamarin.Forms.Application.Current.MainPage) as UIViewController;
 				var resourceToOpen = NSUrl.FromFilename (Path.Combine (dir, path));
 				var controller = UIDocumentInteractionController.FromUrl (resourceToOpen);
 				if (!controller.PresentOpenInMenu (vc.View.Bounds, vc.View, true))
