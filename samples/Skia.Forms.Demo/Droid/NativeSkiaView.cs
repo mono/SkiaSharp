@@ -8,11 +8,14 @@ namespace Skia.Forms.Demo.Droid
 	public class NativeSkiaView : View
 	{
 		private Bitmap bitmap;
-		SkiaView skiaView;
+		readonly SkiaView skiaView;
+		readonly ISkiaViewController iskiaView;
 
 		public NativeSkiaView (Android.Content.Context context, SkiaView skiaView) : base (context)
 		{
 			this.skiaView = skiaView;
+			this.iskiaView = skiaView;
+			this.Click += OnTapped;
 		}
 
 		protected override void OnDraw (Android.Graphics.Canvas canvas)
@@ -31,7 +34,7 @@ namespace Skia.Forms.Demo.Droid
 				using (var surface = SKSurface.Create (canvas.Width, canvas.Height, SKColorType.Rgba_8888, SKAlphaType.Premul, bitmap.LockPixels (), canvas.Width * 4)) {
 					var skcanvas = surface.Canvas;
 					skcanvas.Scale (((float)canvas.Width)/(float)skiaView.Width, ((float)canvas.Height)/(float)skiaView.Height);
-					(skiaView as ISkiaViewController).SendDraw (skcanvas);
+					iskiaView.SendDraw (skcanvas);
 				}
 			}
 			finally {
@@ -39,6 +42,11 @@ namespace Skia.Forms.Demo.Droid
 			}
 
 			canvas.DrawBitmap (bitmap, 0, 0, null);
+		}
+
+		void OnTapped(object sender, EventArgs e)
+		{
+			iskiaView.SendTap ();
 		}
 	}
 }

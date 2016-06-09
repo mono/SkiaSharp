@@ -48,7 +48,6 @@
 			this.skiaView.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.skiaView.Location = new System.Drawing.Point(0, 0);
 			this.skiaView.Name = "skiaView";
-			this.skiaView.OnDrawCallback = null;
 			this.skiaView.Size = new System.Drawing.Size(778, 544);
 			this.skiaView.TabIndex = 1;
 			this.skiaView.Text = "skiaView";

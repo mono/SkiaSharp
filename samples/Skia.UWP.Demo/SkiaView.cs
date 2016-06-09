@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 
@@ -14,18 +15,16 @@ namespace Skia.WindowsDesktop.Demo
 {
 	public partial class SkiaView : Canvas
 	{
-		private Action<SKCanvas, int, int> onDrawCallback;
+		private Demos.Sample sample;
 
 		public SkiaView()
 		{
 			SizeChanged += OnSizeChanged;
+			Tapped += OnTapped;
 		}
 
 		private void UpdateBitmap()
 		{
-			if (onDrawCallback == null)
-				return;
-
 			var resolutionScale = DisplayInformation.GetForCurrentView().ResolutionScale;
 			var screenScale = (float)resolutionScale / 100.0f;
 			var width = (int)(ActualWidth * screenScale);
@@ -44,7 +43,7 @@ namespace Skia.WindowsDesktop.Demo
 
 					skcanvas.Scale(screenScale, screenScale);
 
-					onDrawCallback(skcanvas, (int)ActualWidth, (int)ActualHeight);
+					sample?.Method(skcanvas, (int)ActualWidth, (int)ActualHeight);
 				}
 
 				var pixels = new byte[width * height * 4];
@@ -81,12 +80,17 @@ namespace Skia.WindowsDesktop.Demo
 			UpdateBitmap();
 		}
 
-		public Action<SKCanvas, int, int> OnDrawCallback
+		private void OnTapped(object sender, TappedRoutedEventArgs e)
 		{
-			get { return onDrawCallback; }
+			sample?.TapMethod?.Invoke();
+		}
+
+		public Demos.Sample Sample
+		{
+			get { return sample; }
 			set
 			{
-				onDrawCallback = value;
+				sample = value;
 				UpdateBitmap();
 			}
 		}

@@ -14,6 +14,8 @@ namespace Skia.Forms.Demo.iOS
 		public NativeSkiaView (SkiaView skiaView)
 		{
 			this.skiaView = skiaView;
+
+			AddGestureRecognizer (new UITapGestureRecognizer (OnTapped));
 		}
 
 		public override void Draw (CGRect rect)
@@ -47,6 +49,11 @@ namespace Skia.Forms.Demo.iOS
 				if (buff != IntPtr.Zero)
 					System.Runtime.InteropServices.Marshal.FreeCoTaskMem (buff);
 			}
+		}
+
+		void OnTapped ()
+		{
+			skiaView.SendTap ();
 		}
 
 		public override void LayoutSubviews ()

@@ -818,6 +818,10 @@ Task ("nuget")
 
     if (IsRunningOnUnix ()) {
         PackageNuGet ("./nuget/SkiaSharp.Mac.nuspec", "./output/");
+    }
+
+    // we can only build the combined package on CI
+    if (TARGET == "CI") {
         PackageNuGet ("./nuget/SkiaSharp.nuspec", "./output/");
     }
 });
@@ -899,6 +903,15 @@ Task ("clean-externals").Does (() =>
 Task ("Default")
     .IsDependentOn ("externals")
     .IsDependentOn ("libs");
+
+Task ("Everything")
+    .IsDependentOn ("externals")
+    .IsDependentOn ("libs")
+    .IsDependentOn ("docs")
+    .IsDependentOn ("nuget")
+    .IsDependentOn ("component")
+    .IsDependentOn ("tests")
+    .IsDependentOn ("samples");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // CI - the master target to build everything

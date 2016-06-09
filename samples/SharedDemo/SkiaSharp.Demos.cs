@@ -912,6 +912,42 @@ namespace SkiaSharp
 			}
 		}
 
+		public static void CreatePdfSample (SKCanvas canvas, int width, int height)
+		{
+			canvas.Clear(SKColors.White);
+
+			using (var paint = new SKPaint ()) {
+				paint.TextSize = 24.0f;
+				paint.IsAntialias = true;
+				paint.Color = new SKColor (0x9C, 0xAF, 0xB7);
+				paint.StrokeWidth = 3;
+				paint.TextAlign = SKTextAlign.Center;
+
+				canvas.DrawText ("tap to open", width / 2f, 100f, paint);
+			}
+
+			using (var stream = new SKFileWStream (Path.Combine (WorkingDirectory, "document.pdf")))
+			using (var document = SKDocument.CreatePdf (stream))
+			using (var pdfCanvas = document.BeginPage (width, height))
+			using (var paint = new SKPaint ()) {
+				paint.TextSize = 64.0f;
+				paint.IsAntialias = true;
+				paint.Color = new SKColor (0x9C, 0xAF, 0xB7);
+				paint.IsStroke = true;
+				paint.StrokeWidth = 3;
+				paint.TextAlign = SKTextAlign.Center;
+
+				pdfCanvas.DrawText ("...PDF...", width / 2f, 100f, paint);
+				document.EndPage ();
+				document.Close ();
+			}
+		}
+
+		public static void CreatePdfSampleTapped ()
+		{
+			OpenFileDelegate?.Invoke ("document.pdf");
+		}
+
 
 		[Flags]
 		public enum Platform
@@ -924,11 +960,12 @@ namespace SkiaSharp
 			All = 0xFFFF,
 		}
 
-		class Sample 
+		public class Sample 
 		{
-			public string Title { get; set; }
-			public Action <SKCanvas, int, int> Method { get; set; }
-			public Platform Platform { get; set; }
+			public string Title { get; internal set; }
+			public Action <SKCanvas, int, int> Method { get; internal set; }
+			public Platform Platform { get; internal set; }
+			public Action TapMethod { get; internal set; }
 		}
 
 		public static string [] SamplesForPlatform (Platform platform)
@@ -936,12 +973,16 @@ namespace SkiaSharp
 			return sampleList.Where (s => 0 != (s.Platform & platform)).Select (s => s.Title).ToArray ();
 		}
 
-		public static Action <SKCanvas, int, int> MethodForSample (string title)
+		public static Sample GetSample (string title)
 		{
-			return sampleList.Where (s => s.Title == title).First ().Method;
+			return sampleList.Where (s => s.Title == title).First ();
 		}
 
 		public static string CustomFontPath { get; set; }
+
+		public static string WorkingDirectory { get; set; }
+
+		public static Action<string> OpenFileDelegate { get; set; }
 
 		static Sample [] sampleList = new Sample[] {
 			new Sample {Title="Xamagon", Method = DrawXamagon, Platform = Platform.All},
@@ -971,6 +1012,7 @@ namespace SkiaSharp
 			new Sample {Title="Magnifier Image Filter", Method = MagnifierImageFilter, Platform = Platform.All},
 			new Sample {Title="Chained Image Filter", Method = ChainedImageFilter, Platform = Platform.All},
 			new Sample {Title="Measure Text Sample", Method = MeasureTextSample, Platform = Platform.All},
+			new Sample {Title="Create PDF", Method = CreatePdfSample, Platform = Platform.All, TapMethod = CreatePdfSampleTapped},
 		};
 	}
 }

@@ -5,6 +5,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Graphics.Display;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using SkiaSharp;
@@ -19,6 +20,7 @@ namespace Skia.Forms.Demo.UWP
 		{
 			this.skiaView = skiaView;
 			this.SizeChanged += OnSizeChanged;
+			this.Tapped += OnTapped;
 		}
 
 		private void UpdateBitmap()
@@ -70,6 +72,11 @@ namespace Skia.Forms.Demo.UWP
 		private void OnSizeChanged(object sender, SizeChangedEventArgs e)
 		{
 			UpdateBitmap ();
+		}
+
+		private void OnTapped(object sender, TappedRoutedEventArgs e)
+		{
+			skiaView.SendTap();
 		}
 	}
 }

@@ -9,7 +9,7 @@ namespace Skia.WindowsDesktop.Demo
 {
 	public partial class SkiaView : Control
 	{
-		private Action<SKCanvas, int, int> onDrawCallback;
+		private Demos.Sample sample;
 
 		public SkiaView()
 		{
@@ -20,7 +20,7 @@ namespace Skia.WindowsDesktop.Demo
 		{
 			base.OnPaint(e);
 
-			if (onDrawCallback == null)
+			if (sample == null)
 				return;
 
 			var width = Width;
@@ -32,7 +32,7 @@ namespace Skia.WindowsDesktop.Demo
 				using (var surface = SKSurface.Create(width, height, SKColorType.N_32, SKAlphaType.Premul, data.Scan0, width * 4))
 				{
 					var skcanvas = surface.Canvas;
-					onDrawCallback(skcanvas, width, height);
+					sample.Method(skcanvas, width, height);
 				}
 				bitmap.UnlockBits(data);
 
@@ -46,12 +46,18 @@ namespace Skia.WindowsDesktop.Demo
 			Invalidate();
 		}
 
-		public Action<SKCanvas, int, int> OnDrawCallback
+		protected override void OnMouseClick(MouseEventArgs e)
 		{
-			get { return onDrawCallback; }
+			base.OnMouseClick(e);
+			sample?.TapMethod?.Invoke();
+		}
+
+		public Demos.Sample Sample
+		{
+			get { return sample; }
 			set
 			{
-				onDrawCallback = value;
+				sample = value;
 				Invalidate();
 			}
 		}

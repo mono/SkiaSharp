@@ -6,11 +6,11 @@ namespace Skia.Forms.Demo
 {
 	public class SkiaView : View, ISkiaViewController
 	{
-		Action <SKCanvas, int, int> onDrawCallback;
+		Demos.Sample sample;
 
-		public SkiaView (Action <SKCanvas, int, int> onDrawCallback)
+		public SkiaView (Demos.Sample sample)
 		{
-			this.onDrawCallback = onDrawCallback;
+			this.sample = sample;
 		}
 
 		void ISkiaViewController.SendDraw (SKCanvas canvas)
@@ -18,9 +18,14 @@ namespace Skia.Forms.Demo
 			Draw (canvas);
 		}
 
+		void ISkiaViewController.SendTap ()
+		{
+			sample?.TapMethod?.Invoke ();
+		}
+
 		protected virtual void Draw (SKCanvas canvas)
 		{
-			onDrawCallback (canvas, (int)Width, (int)Height);
+			sample?.Method?.Invoke (canvas, (int)Width, (int)Height);
 		}
 	}
 }

@@ -1,21 +1,19 @@
-﻿using System;
-
-using Android.App;
+﻿using Android.App;
 using Android.Content;
 using Android.Content.PM;
-using Android.Runtime;
-using Android.Views;
-using Android.Widget;
 using Android.OS;
 using System.IO;
 
 namespace Skia.Forms.Demo.Droid
 {
-	[Activity (Label = "Skia.Forms.Demo.Droid", Icon = "@drawable/icon", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
-	public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsApplicationActivity
+	[Activity (Label = "Skia.Forms.Demo.Droid", Icon = "@drawable/icon", Theme = "@style/MyTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
+	public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity
 	{
 		protected override void OnCreate (Bundle bundle)
 		{
+			TabLayoutResource = Resource.Layout.Tabbar;
+			ToolbarResource = Resource.Layout.Toolbar;
+
 			// set up resource paths
 			string fontName = "content-font.ttf";
 			string fontPath = Path.Combine (CacheDir.AbsolutePath, fontName);
@@ -25,6 +23,18 @@ namespace Skia.Forms.Demo.Droid
 			}
 			SkiaSharp.Demos.CustomFontPath = fontPath;
 
+			var dir = Path.Combine(Android.OS.Environment.ExternalStorageDirectory.AbsolutePath, "SkiaSharp.Demos");
+			if (!Directory.Exists(dir))
+			{
+				Directory.CreateDirectory(dir);
+			}
+			SkiaSharp.Demos.WorkingDirectory = dir;
+			SkiaSharp.Demos.OpenFileDelegate = path =>
+			{
+				var file = new Java.IO.File (Path.Combine (dir, path));
+				var uri = Android.Net.Uri.FromFile (file);
+				StartActivity (new Intent (Intent.ActionView, uri));
+			};
 
 			base.OnCreate (bundle);
 
