@@ -38,6 +38,10 @@ namespace Skia.Forms.Demo
                 detailPage.SetDemo(demo);
                 navPage.Title = demo;
             });
+            if (Device.OS == TargetPlatform.iOS)
+            {
+                masterPage.Icon = "hamburger.png";
+            }
 
             masterDetail.Master = masterPage;
             masterDetail.Detail = navPage;

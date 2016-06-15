@@ -821,6 +821,11 @@ Task ("samples")
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "iPhone" };
         });
+        RunNuGetRestore ("./samples/Skia.tvOS.Demo/Skia.tvOS.Demo.sln");
+        DotNetBuild ("./samples/Skia.tvOS.Demo/Skia.tvOS.Demo.sln", c => { 
+            c.Configuration = "Release"; 
+            c.Properties ["Platform"] = new [] { "iPhoneSimulator" };
+        });
     }
     
     if (IsRunningOnWindows ()) {

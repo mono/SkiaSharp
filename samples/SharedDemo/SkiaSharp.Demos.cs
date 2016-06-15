@@ -957,6 +957,7 @@ namespace SkiaSharp
 			OSX = 4,
 			WindowsDesktop = 8,
 			UWP = 16,
+			tvOS = 32,
 			All = 0xFFFF,
 		}
 
