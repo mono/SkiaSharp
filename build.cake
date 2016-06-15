@@ -61,8 +61,7 @@ FilePath GetMDocPath ()
     if (IsRunningOnUnix ()) {
         mdocPath = "/Library/Frameworks/Mono.framework/Versions/Current/bin/mdoc";
     } else {
-        DirectoryPath progFiles = Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
-        mdocPath = progFiles.CombineWithFilePath ("Mono/bin/mdoc.bat");
+        mdocPath = GetToolPath ("../mdoc/mdoc.exe");
     }
     if (!FileExists (mdocPath)) {
         mdocPath = "mdoc";
@@ -999,6 +998,9 @@ Task ("CI")
 Task ("Windows-CI")
     .IsDependentOn ("externals")
     .IsDependentOn ("libs")
+    .IsDependentOn ("docs")
+    .IsDependentOn ("nuget")
+    .IsDependentOn ("component")
     .IsDependentOn ("tests")
     .IsDependentOn ("samples");
 

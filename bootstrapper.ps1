@@ -14,6 +14,7 @@ Param(
 
 $TOOLS_DIR = Join-Path $PSScriptRoot "tools"
 $NUGET_EXE = Join-Path $TOOLS_DIR "nuget.exe"
+$MDOC_EXE = Join-Path $TOOLS_DIR "mdoc/mdoc.exe"
 $PACKAGES_CONFIG = Join-Path $TOOLS_DIR "packages.config"
 $CAKE_EXE = Join-Path $TOOLS_DIR "Cake/Cake.exe"
 $XC_EXE = Join-Path $TOOLS_DIR "xamarin-component.exe"
@@ -43,6 +44,14 @@ if (!(Test-Path $NUGET_EXE)) {
 # Make sure NuGet exists where we expect it.
 if (!(Test-Path $NUGET_EXE)) {
     Throw "Could not find NuGet.exe"
+}
+
+# Make sure mdoc exists where we expect it.
+if (!(Test-Path $MDOC_EXE)) {
+    Invoke-WebRequest -Uri http://www.go-mono.com/archive/mdoc-net-2010-01-04.zip -OutFile (Join-Path $TOOLS_DIR "mdoc.zip")    
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    [System.IO.Compression.ZipFile]::ExtractToDirectory((Join-Path $TOOLS_DIR "mdoc.zip"), ($TOOLS_DIR))   
+    Rename-Item (Join-Path $TOOLS_DIR "mdoc-net-2010-01-04") (Join-Path $TOOLS_DIR "mdoc")
 }
 
 # Make sure xamarin-component exists where we expect it.
