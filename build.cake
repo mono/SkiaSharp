@@ -881,17 +881,16 @@ Task ("nuget")
     .IsDependentOn ("docs")
     .Does (() => 
 {
-    if (IsRunningOnWindows ()) {
-        PackageNuGet ("./nuget/SkiaSharp.Windows.nuspec", "./output/");
-    }
-
-    if (IsRunningOnUnix ()) {
-        PackageNuGet ("./nuget/SkiaSharp.Mac.nuspec", "./output/");
-    }
-
     // we can only build the combined package on CI
     if (TARGET == "CI") {
         PackageNuGet ("./nuget/SkiaSharp.nuspec", "./output/");
+    } else {
+        if (IsRunningOnWindows ()) {
+            PackageNuGet ("./nuget/SkiaSharp.Windows.nuspec", "./output/");
+        }
+        if (IsRunningOnUnix ()) {
+            PackageNuGet ("./nuget/SkiaSharp.Mac.nuspec", "./output/");
+        }
     }
 });
 
