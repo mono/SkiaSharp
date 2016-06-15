@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")));
 
-var NuGetSources = new [] { "https://api.nuget.org/v3/index.json", "https://www.myget.org/F/xamprojectci/api/v2" };
+var NuGetSources = new [] { "https://api.nuget.org/v3/index.json", MakeAbsolute (Directory ("./output")).FullPath };
 var NugetToolPath = GetToolPath ("../nuget.exe");
 var XamarinComponentToolPath = GetToolPath ("../xamarin-component.exe");
 var CakeToolPath = GetToolPath ("Cake.exe");
@@ -75,7 +75,6 @@ var RunNuGetRestore = new Action<FilePath> ((solution) =>
     NuGetRestore (solution, new NuGetRestoreSettings { 
         ToolPath = NugetToolPath,
         Source = NuGetSources,
-        NoCache = true,
         Verbosity = NuGetVerbosity.Detailed
     });
 });
@@ -811,6 +810,15 @@ Task ("samples")
     .IsDependentOn ("libs")
     .Does (() => 
 {
+    // first we need to add our new nuget to the cache so we can restore
+    // we first need to delete the old stuff
+    DirectoryPath home = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
+    var installedNuGet = home.Combine (".nuget").Combine ("packages").Combine ("SkiaSharp");
+    if (DirectoryExists (installedNuGet)) {
+        Warning ("SkiaSharp nugets were installed at '{0}', removing...", installedNuGet);
+        CleanDirectory (installedNuGet);
+    }
+
     if (IsRunningOnUnix ()) {
         RunNuGetRestore ("./samples/Skia.OSX.Demo/Skia.OSX.Demo.sln");
         DotNetBuild ("./samples/Skia.OSX.Demo/Skia.OSX.Demo.sln", c => { 
