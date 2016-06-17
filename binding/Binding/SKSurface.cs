@@ -19,8 +19,8 @@ namespace SkiaSharp
 		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes, SKSurfaceProps props) => Create (new SKImageInfo (width, height, colorType, alphaType), pixels, rowBytes, props);
 
 		[Preserve]
-		internal SKSurface (IntPtr h)
-			: base (h)
+		internal SKSurface (IntPtr h, bool owns)
+			: base (h, owns)
 		{
 		}
 		
@@ -46,7 +46,7 @@ namespace SkiaSharp
 		
 		protected override void Dispose (bool disposing)
 		{
-			if (Handle != IntPtr.Zero) {
+			if (Handle != IntPtr.Zero && OwnsHandle) {
 				SkiaApi.sk_surface_unref (Handle);
 			}
 
@@ -55,7 +55,7 @@ namespace SkiaSharp
 		
 		public SKCanvas Canvas {
 			get {
-				return GetObject<SKCanvas> (SkiaApi.sk_surface_get_canvas (Handle));
+				return GetObject<SKCanvas> (SkiaApi.sk_surface_get_canvas (Handle), false);
 			}
 		}
 

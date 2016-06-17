@@ -15,13 +15,13 @@ namespace SkiaSharp
 	public class SKBitmap : SKObject
 	{
 		[Preserve]
-		internal SKBitmap (IntPtr handle)
-			: base (handle)
+		internal SKBitmap (IntPtr handle, bool owns)
+			: base (handle, owns)
 		{
 		}
 
 		public SKBitmap ()
-			: this (SkiaApi.sk_bitmap_new ())
+			: this (SkiaApi.sk_bitmap_new (), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKBitmap instance.");
@@ -29,7 +29,7 @@ namespace SkiaSharp
 		}
 
 		public SKBitmap (int width, int height, bool isOpaque = false)
-			: this (width, height, SKColorType.N_32, isOpaque ? SKAlphaType.Opaque : SKAlphaType.Premul)
+			: this (width, height, SKImageInfo.PlatformColorType, isOpaque ? SKAlphaType.Opaque : SKAlphaType.Premul)
 		{
 		}
 
@@ -53,7 +53,7 @@ namespace SkiaSharp
 
 		protected override void Dispose (bool disposing)
 		{
-			if (Handle != IntPtr.Zero) {
+			if (Handle != IntPtr.Zero && OwnsHandle) {
 				SkiaApi.sk_bitmap_destructor (Handle);
 			}
 
@@ -219,55 +219,65 @@ namespace SkiaSharp
 			set { SkiaApi.sk_bitmap_set_volatile (Handle, value); }
 		}
 
-		public static SKImageInfo DecodeBounds (SKStreamRewindable stream, SKColorType pref = SKColorType.Unknown)
+		public static SKImageInfo DecodeBounds (SKStream stream)
 		{
-			SKImageInfo info;
-			SKImageDecoder.DecodeStreamBounds (stream, out info, pref);
-			return info;
+			using (var codec = SKCodec.Create (stream)) {
+				return codec.Info;
+			}
 		}
 
-		public static SKImageInfo DecodeBounds (string filename, SKColorType pref = SKColorType.Unknown)
+		public static SKImageInfo DecodeBounds (SKData data)
 		{
-			SKImageInfo info;
-			SKImageDecoder.DecodeFileBounds (filename, out info, pref);
-			return info;
+			using (var codec = SKCodec.Create (data)) {
+				return codec.Info;
+			}
 		}
 
-		public static SKImageInfo DecodeBounds (byte[] buffer, SKColorType pref = SKColorType.Unknown)
+		public static SKImageInfo DecodeBounds (string filename)
 		{
-			SKImageInfo info;
-			SKImageDecoder.DecodeMemoryBounds (buffer, out info, pref);
-			return info;
+			return DecodeBounds (new SKFileStream (filename));
 		}
 
-		public static SKBitmap Decode (SKStreamRewindable stream, SKColorType pref = SKColorType.Unknown)
+		public static SKImageInfo DecodeBounds (byte[] buffer)
 		{
-			var bitmap = new SKBitmap ();
-			if (!SKImageDecoder.DecodeStream (stream, bitmap, pref)) {
+			return DecodeBounds (new SKMemoryStream (buffer));
+		}
+
+		public static SKBitmap Decode (SKCodec codec)
+		{
+			var info = codec.Info;
+			var bitmap = new SKBitmap (info.Width, info.Height, info.ColorType, info.IsOpaque ? SKAlphaType.Opaque : SKAlphaType.Premul);
+			IntPtr length;
+			var result = codec.GetPixels (bitmap.Info, bitmap.GetPixels(out length));
+			if (result != SKCodecResult.Success && result != SKCodecResult.IncompleteInput) {
 				bitmap.Dispose ();
 				bitmap = null;
 			}
 			return bitmap;
 		}
 
-		public static SKBitmap Decode (string filename, SKColorType pref = SKColorType.Unknown)
+		public static SKBitmap Decode (SKStream stream)
 		{
-			var bitmap = new SKBitmap ();
-			if (!SKImageDecoder.DecodeFile (filename, bitmap, pref)) {
-				bitmap.Dispose();
-				bitmap = null;
+			using (var codec = SKCodec.Create (stream)) {
+				return Decode (codec);
 			}
-			return bitmap;
 		}
 
-		public static SKBitmap Decode (byte[] buffer, SKColorType pref = SKColorType.Unknown)
+		public static SKBitmap Decode (SKData data)
 		{
-			var bitmap = new SKBitmap ();
-			if (!SKImageDecoder.DecodeMemory (buffer, bitmap, pref)) {
-				bitmap.Dispose ();
-				bitmap = null;
+			using (var codec = SKCodec.Create (data)) {
+				return Decode (codec);
 			}
-			return bitmap;
+		}
+
+		public static SKBitmap Decode (string filename)
+		{
+			return Decode (new SKFileStream (filename));
+		}
+
+		public static SKBitmap Decode (byte[] buffer)
+		{
+			return Decode (new SKMemoryStream (buffer));
 		}
 	}
 }

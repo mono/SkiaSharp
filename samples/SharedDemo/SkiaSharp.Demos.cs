@@ -459,32 +459,29 @@ namespace SkiaSharp
 			// load the embedded resource stream
 			using (var resource = assembly.GetManifestResourceStream(imageName))
 			using (var stream = new SKManagedStream(resource))
-			using (var decoder = new SKImageDecoder(stream))
+			using (var codec = SKCodec.Create(stream))
 			using (var paint = new SKPaint())
 			using (var tf = SKTypeface.FromFamilyName("Arial"))
 			{
+				var info = codec.Info;
+
 				paint.IsAntialias = true;
 				paint.TextSize = 14;
 				paint.Typeface = tf;
 				paint.Color = SKColors.Black;
 
-				// read / set decoder settings
-				decoder.DitherImage = true;
-				decoder.PreferQualityOverSpeed = true;
-				decoder.SampleSize = 2;
-
 				// decode the image
-				using (var bitmap = new SKBitmap())
+				using (var bitmap = new SKBitmap(info.Width, info.Height, info.ColorType, info.IsOpaque ? SKAlphaType.Opaque : SKAlphaType.Premul))
 				{
-					var result = decoder.Decode(stream, bitmap);
-					if (result != SKImageDecoderResult.Failure)
+					IntPtr length;
+					var result = codec.GetPixels(bitmap.Info, bitmap.GetPixels(out length));
+					if (result == SKCodecResult.Success || result == SKCodecResult.IncompleteInput)
 					{
-						var info = bitmap.Info;
 						var x = 25;
 						var y = 25;
 
 						canvas.DrawBitmap(bitmap, x, y);
-						x += info.Width + 25;
+						x += bitmap.Info.Width + 25;
 						y += 14;
 
 						canvas.DrawText(string.Format("Result: {0}", result), x, y, paint);

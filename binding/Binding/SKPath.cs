@@ -13,13 +13,13 @@ namespace SkiaSharp
 	public class SKPath : SKObject
 	{
 		[Preserve]
-		internal SKPath (IntPtr handle)
-			: base (handle)
+		internal SKPath (IntPtr handle, bool owns)
+			: base (handle, owns)
 		{
 		}
 
 		public SKPath ()
-			: this (SkiaApi.sk_path_new ())
+			: this (SkiaApi.sk_path_new (), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKPath instance.");
@@ -27,7 +27,7 @@ namespace SkiaSharp
 		}
 
 		public SKPath(SKPath path)
-			: this (SkiaApi.sk_path_clone(path.Handle))
+			: this (SkiaApi.sk_path_clone(path.Handle), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to copy the SKPath instance.");
@@ -36,7 +36,7 @@ namespace SkiaSharp
 		
 		protected override void Dispose (bool disposing)
 		{
-			if (Handle != IntPtr.Zero) {
+			if (Handle != IntPtr.Zero && OwnsHandle) {
 				SkiaApi.sk_path_delete (Handle);
 			}
 

@@ -13,14 +13,14 @@ namespace SkiaSharp
 	public class SKImageFilter : SKObject
 	{
 		[Preserve]
-		internal SKImageFilter(IntPtr handle)
-			: base(handle)
+		internal SKImageFilter(IntPtr handle, bool owns)
+			: base(handle, owns)
 		{
 		}
 
 		protected override void Dispose(bool disposing)
 		{
-			if (Handle != IntPtr.Zero)
+			if (Handle != IntPtr.Zero && OwnsHandle)
 			{
 				SkiaApi.sk_imagefilter_unref(Handle);
 			}
@@ -172,24 +172,24 @@ namespace SkiaSharp
 
 		public class CropRect : SKObject
 		{
-			internal CropRect(IntPtr handle)
-				: base(handle)
+			internal CropRect(IntPtr handle, bool owns)
+				: base(handle, owns)
 			{
 			}
 
 			public CropRect()
-				: this(SkiaApi.sk_imagefilter_croprect_new())
+				: this(SkiaApi.sk_imagefilter_croprect_new(), true)
 			{
 			}
 
 			public CropRect(SKRect rect, SKCropRectFlags flags = SKCropRectFlags.HasAll)
-				: this(SkiaApi.sk_imagefilter_croprect_new_with_rect(ref rect, flags))
+				: this(SkiaApi.sk_imagefilter_croprect_new_with_rect(ref rect, flags), true)
 			{
 			}
 			
 			protected override void Dispose(bool disposing)
 			{
-				if (Handle != IntPtr.Zero)
+				if (Handle != IntPtr.Zero && OwnsHandle)
 				{
 					SkiaApi.sk_imagefilter_croprect_destructor(Handle);
 				}

@@ -14,14 +14,14 @@ namespace SkiaSharp
 	public class SKTypeface : SKObject
 	{
 		[Preserve]
-		internal SKTypeface (IntPtr handle)
-			: base (handle)
+		internal SKTypeface (IntPtr handle, bool owns)
+			: base (handle, owns)
 		{
 		}
 		
 		protected override void Dispose (bool disposing)
 		{
-			if (Handle != IntPtr.Zero) {
+			if (Handle != IntPtr.Zero && OwnsHandle) {
 				SkiaApi.sk_typeface_unref (Handle);
 			}
 

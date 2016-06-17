@@ -14,8 +14,8 @@ namespace SkiaSharp
 	public class SKCanvas : SKObject
 	{
 		[Preserve]
-		internal SKCanvas (IntPtr handle)
-			: base (handle)
+		internal SKCanvas (IntPtr handle, bool owns)
+			: base (handle, owns)
 		{
 		}
 

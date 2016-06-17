@@ -26,7 +26,7 @@ namespace SkiaSharp
 	{
 		protected override void Dispose (bool disposing)
 		{
-			if (Handle != IntPtr.Zero) {
+			if (Handle != IntPtr.Zero && OwnsHandle) {
 				SkiaApi.sk_image_unref (Handle);
 			}
 
@@ -34,8 +34,8 @@ namespace SkiaSharp
 		}
 
 		[Preserve]
-		internal SKImage (IntPtr x)
-			: base (x)
+		internal SKImage (IntPtr x, bool owns)
+			: base (x, owns)
 		{
 		}
 		

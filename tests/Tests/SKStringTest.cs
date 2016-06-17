@@ -11,13 +11,10 @@ namespace SkiaSharp.Tests
 		[Test]
 		public void StringIsMarshaledCorrectly ()
 		{
-			var filename = Path.GetTempFileName ();
-
-			bitmap.Save (filename, ImageFormat.Png);
-
-			var filestream = new SKFileStream (filename);
-			var decoder = new SKImageDecoder (filestream);
-			string format1 = decoder.FormatName;
+			using (var typeface = SKTypeface.FromFile (Path.Combine ("fonts", "SpiderSymbol.ttf")))
+			{
+				Assert.AreEqual ("SpiderSymbol", typeface.FamilyName, "Family name must be SpiderSymbol");
+			}
 		}
 	}
 }

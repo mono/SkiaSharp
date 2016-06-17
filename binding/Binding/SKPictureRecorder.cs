@@ -15,7 +15,7 @@ namespace SkiaSharp
 	{		
 		protected override void Dispose (bool disposing)
 		{
-			if (Handle != IntPtr.Zero) {
+			if (Handle != IntPtr.Zero && OwnsHandle) {
 				SkiaApi.sk_picture_recorder_delete (Handle);
 			}
 
@@ -23,13 +23,13 @@ namespace SkiaSharp
 		}
 		
 		[Preserve]
-		public SKPictureRecorder (IntPtr handle)
-			: base (handle)
+		public SKPictureRecorder (IntPtr handle, bool owns)
+			: base (handle, owns)
 		{
 		}
 
 		public SKPictureRecorder ()
-			: this (SkiaApi.sk_picture_recorder_new ())
+			: this (SkiaApi.sk_picture_recorder_new (), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKPictureRecorder instance.");

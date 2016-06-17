@@ -24,14 +24,14 @@ namespace SkiaSharp
 		}
 
 		[Preserve]
-		internal SKColorFilter(IntPtr handle)
-			: base (handle)
+		internal SKColorFilter(IntPtr handle, bool owns)
+			: base (handle, owns)
 		{
 		}
 		
 		protected override void Dispose(bool disposing)
 		{
-			if (Handle != IntPtr.Zero)
+			if (Handle != IntPtr.Zero && OwnsHandle)
 			{
 				SkiaApi.sk_colorfilter_unref(Handle);
 			}

@@ -15,14 +15,14 @@ namespace SkiaSharp
 		private const float BlurSigmaScale = 0.57735f;
 		
 		[Preserve]
-		internal SKMaskFilter (IntPtr handle)
-			: base (handle)
+		internal SKMaskFilter (IntPtr handle, bool owns)
+			: base (handle, owns)
 		{
 		}
 		
 		protected override void Dispose (bool disposing)
 		{
-			if (Handle != IntPtr.Zero) {
+			if (Handle != IntPtr.Zero && OwnsHandle) {
 				SkiaApi.sk_maskfilter_unref (Handle);
 			}
 

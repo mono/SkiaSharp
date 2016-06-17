@@ -77,9 +77,12 @@ There are several targets available:
 
 Here are some links to show the differences in our code as compared to Google's.
 
-What version are we on? [**m49**](https://github.com/google/skia/tree/chrome/m49)  
-Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/xamarin-mobile-bindings...google:chrome/m49)  
-What have we added? [Compare](https://github.com/google/skia/compare/chrome/m49...mono:xamarin-mobile-bindings)  
+What version are we on? [**m52**](https://github.com/google/skia/tree/chrome/m52)  
+Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/xamarin-mobile-bindings...google:chrome/m52)  
+What have we added? [Compare](https://github.com/google/skia/compare/chrome/m52...mono:xamarin-mobile-bindings)  
+
+WIP: https://github.com/mono/skia/compare/update-google-skia...google:chrome/m52
+Diff: https://github.com/google/skia/compare/chrome/m52...mono:update-google-skia
 
 ## Where is Windows Phone 8 / Store 8
  

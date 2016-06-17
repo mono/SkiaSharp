@@ -22,11 +22,11 @@
 // Xamarin Skia
 #include "xamarin/sk_x_bitmap.h"
 #include "xamarin/sk_x_canvas.h"
+#include "xamarin/sk_x_codec.h"
 #include "xamarin/sk_x_colorfilter.h"
 #include "xamarin/sk_x_data.h"
 #include "xamarin/sk_x_document.h"
 #include "xamarin/sk_x_image.h"
-#include "xamarin/sk_x_imagedecoder.h"
 #include "xamarin/sk_x_imagefilter.h"
 #include "xamarin/sk_x_maskfilter.h"
 #include "xamarin/sk_x_paint.h"
@@ -62,7 +62,7 @@ void** KeepSkiaCSymbols ()
         (void*)sk_colorfilter_unref,
         (void*)sk_data_new_from_file,
         (void*)sk_image_encode_specific,
-        (void*)sk_imagedecoder_destructor,
+        (void*)sk_codec_new_from_stream,
         (void*)sk_imagefilter_croprect_new,
         (void*)sk_maskfilter_new_emboss,
         (void*)sk_paint_is_dither,
