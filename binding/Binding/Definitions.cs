@@ -328,7 +328,11 @@ namespace SkiaSharp
 
 		static SKImageInfo ()
 		{
+#if WINDOWS_UWP
+			var isUnix = false;
+#else
 			var isUnix = Environment.OSVersion.Platform == PlatformID.MacOSX || Environment.OSVersion.Platform == PlatformID.Unix;
+#endif
 			if (isUnix) {
 				// Unix depends on the CPU endianess, but we use RGBA
 				PlatformColorType = SKColorType.Rgba8888;
