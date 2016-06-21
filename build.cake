@@ -494,11 +494,6 @@ Task ("externals-uwp")
         } else if (rootNamespace == "zlib" && platform.ToUpper () == "ARM") {
             // x86 instructions are not available on ARM
             RemoveFileReference (xdoc.Root, "x86.c");
-        } else if (rootNamespace == "zlib_x86_simd" && platform.ToUpper () == "ARM") {
-            // SIMD is not available on ARM
-            AddFileReference (xdoc.Root, @"..\..\third_party\externals\zlib\simd_stub.c");
-            RemoveFileReference (xdoc.Root, "crc_folding.c");
-            RemoveFileReference (xdoc.Root, "fill_window_sse.c");
         } else if (rootNamespace == "skgpu" ) {
             // GL is not available to WinRT
             RemoveFileReference (xdoc.Root, "GrGLCreateNativeInterface_none.cpp");
