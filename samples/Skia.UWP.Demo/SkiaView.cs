@@ -37,7 +37,7 @@ namespace Skia.WindowsDesktop.Demo
 
 			try
 			{
-				using (var surface = SKSurface.Create(width, height, SKColorType.N_32, SKAlphaType.Premul, buff, width * 4))
+				using (var surface = SKSurface.Create(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, buff, width * 4))
 				{
 					var skcanvas = surface.Canvas;
 
