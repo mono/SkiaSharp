@@ -385,6 +385,35 @@ Task ("externals-uwp")
         //
         // TODO: the stuff in this block must be moved into the gyp files !!
         //
+
+        // some methods don't yet exist, so we must add the compat layer to them.
+        // we need this as we can't modify the third party files
+        // all we do is insert our header before all the others
+        var compatHeader = "native-builds/src/WinRTCompat.h";
+        var compatSource = "native-builds/src/WinRTCompat.c";
+        var files = new Dictionary<FilePath, string> { 
+            { "skia/third_party/externals/dng_sdk/source/dng_string.cpp", "#if qWinOS" },
+            { "skia/third_party/externals/dng_sdk/source/dng_utils.cpp", "#if qWinOS" },
+            { "skia/third_party/externals/dng_sdk/source/dng_pthread.cpp", "#if qWinOS" },
+            { "skia/third_party/externals/zlib/deflate.c", "#include <assert.h>" },
+            { "skia/third_party/externals/libpng/pngpriv.h", "#  include <windows.h>  /* defines _WINDOWS_ macro */" },
+        };
+        foreach (var filePair in files) {
+            var file = filePair.Key;
+            var root = string.Join ("/", file.GetDirectory().Segments.Select (x => ".."));
+            var include = "#include \"" + root + "/" + compatHeader + "\"";
+            
+            var contents = FileReadLines (file).ToList ();
+            var index = contents.IndexOf (include);
+            if (index == -1) {
+                if (string.IsNullOrEmpty (filePair.Value)) {
+                    contents.Insert (0, include);
+                } else {
+                    contents.Insert (contents.IndexOf (filePair.Value), include);
+                }
+                FileWriteLines (file, contents.ToArray ());
+            }
+        }
         
         var projectFile = MakeAbsolute (projectFilePath).FullPath;
         var xdoc = XDocument.Load (projectFile);
@@ -436,8 +465,11 @@ Task ("externals-uwp")
         SetXValue (properties, "IgnoreImportLibrary","false");
         
         SetXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "CompileAsWinRT", "false");
-        //AddXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "AdditionalOptions", " /sdl ");
         AddXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", ";SK_BUILD_FOR_WINRT;WINAPI_FAMILY=WINAPI_FAMILY_APP;");
+        AddXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", ";SK_HAS_DWRITE_1_H;SK_HAS_DWRITE_2_H;");
+        // if (platform.ToUpper () == "ARM") {
+        //     AddXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", ";__ARM_NEON;__ARM_NEON__;");
+        // }
         AddXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "DisableSpecificWarnings", ";4146;4703;");
         SetXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "Link" }, "SubSystem", "Console");
         SetXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "Link" }, "IgnoreAllDefaultLibraries", "false");
