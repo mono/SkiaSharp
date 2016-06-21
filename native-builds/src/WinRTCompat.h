@@ -8,6 +8,8 @@
 #ifndef WinRTCompat_h
 #define WinRTCompat_h
 
+#ifdef SK_BUILD_FOR_WINRT
+
 #include <Windows.h>
 
 #ifdef __cplusplus
@@ -23,8 +25,6 @@
 
 C_PLUS_PLUS_BEGIN_GUARD
 
-#ifdef SK_BUILD_FOR_WINRT
-
 #ifdef _M_ARM
 
 // This should have been not used, but as the code is designed for x86
@@ -34,14 +34,6 @@ C_PLUS_PLUS_BEGIN_GUARD
 unsigned int _mm_crc32_u32(unsigned int crc, unsigned int v);
 
 #endif // _M_ARM
-
-//int MessageBoxA(void* hWnd, const char* lpText, const char* lpCaption, unsigned int uType);
-//unsigned int GetACP(void);
-//int CompareStringW(unsigned long Locale, unsigned long dwCmpFlags, const wchar_t* lpString1, int cchCount1, const wchar_t* lpString2, int cchCount2);
-//unsigned long GetTickCount(void);
-//void* OpenThread(unsigned long dwDesiredAccess, bool bInheritHandle, unsigned long dwThreadId);
-
-#endif // SK_BUILD_FOR_WINRT
 
 int WINAPI MessageBoxACompat(_In_opt_ HWND hWnd, _In_opt_ LPCSTR lpText, _In_opt_ LPCSTR lpCaption, _In_ UINT uType);
 int WINAPI CompareStringWCompat(_In_ LCID Locale, _In_ DWORD dwCmpFlags, _In_NLS_string_(cchCount1) PCNZWCH lpString1, _In_ int cchCount1, _In_NLS_string_(cchCount2) PCNZWCH lpString2, _In_ int cchCount2);
@@ -71,5 +63,7 @@ void ExitProcessCompat(unsigned int code);
 #define TlsFree TlsFreeCompat
 
 C_PLUS_PLUS_END_GUARD
+
+#endif // SK_BUILD_FOR_WINRT
 
 #endif // WinRTCompat_h
