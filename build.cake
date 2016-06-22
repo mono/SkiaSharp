@@ -485,15 +485,7 @@ Task ("externals-uwp")
         RemoveXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", "SK_SFNTLY_SUBSETTER=\"font_subsetter.h\"");
         
         if (rootNamespace == "ports") {
-            if (platform.ToUpper () == "ARM") {
-                // TLS is not available on ARM
-                AddFileReference (xdoc.Root, @"..\..\src\ports\SkTLS_none.cpp");
-                RemoveFileReference (xdoc.Root, "SkTLS_win.cpp");
-            }
             RemoveFileReference (xdoc.Root, "SkFontHost_win.cpp");
-        } else if (rootNamespace == "zlib" && platform.ToUpper () == "ARM") {
-            // x86 instructions are not available on ARM
-            RemoveFileReference (xdoc.Root, "x86.c");
         } else if (rootNamespace == "skgpu" ) {
             // GL is not available to WinRT
             RemoveFileReference (xdoc.Root, "GrGLCreateNativeInterface_none.cpp");
