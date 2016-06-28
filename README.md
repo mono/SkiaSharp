@@ -44,15 +44,20 @@ Run from Bash
 
     $ ./bootstrapper.sh -t libs
 
+This runs the build process by using the `libs` build target.
+
 ### Windows
 
 You need Python 2.7 in `PATH` environment variable. Then you can build it:
 
     > .\bootstrapper.ps1 -Target libs
 
+This runs the build process by using the `libs` build target.
+
 ### Build Targets
 
-There are several targets available:
+There are several targets available, you can specify the target as the argument to the `-t` command line
+option in the bootstrapper script.
 
  - `Everything` - builds everything for the current platform
  - `externals` - builds all the native libraries
