@@ -14,11 +14,34 @@
     <summary>2D Transformation matrix with perspective.</summary>
     <remarks>
       <para>The SKMatrix is a full 3x3 matrix.</para>
-      <para />
+      <para></para>
       <para>It extends the traditional 2D affine transformation matrix with three perspective components that allow simple 3D effects to be created with it.   Those components must be manually set by using the <see cref="P:SkiaSharp.SKMatrix.Persp0" />, <see cref="P:SkiaSharp.SKMatrix.Persp1" />, <see cref="P:SkiaSharp.SKMatrix.Persp2" /> fields of the matrix.</para>
     </remarks>
   </Docs>
   <Members>
+    <Member MemberName="Concat">
+      <MemberSignature Language="C#" Value="public static void Concat (ref SkiaSharp.SKMatrix target, ref SkiaSharp.SKMatrix first, ref SkiaSharp.SKMatrix second);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig pinvokeimpl (&quot;libSkiaSharp&quot; as &quot;sk_matrix_concat&quot; cdecl)void Concat(valuetype SkiaSharp.SKMatrix target, valuetype SkiaSharp.SKMatrix first, valuetype SkiaSharp.SKMatrix second) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="target" Type="SkiaSharp.SKMatrix&amp;" RefType="ref" />
+        <Parameter Name="first" Type="SkiaSharp.SKMatrix&amp;" RefType="ref" />
+        <Parameter Name="second" Type="SkiaSharp.SKMatrix&amp;" RefType="ref" />
+      </Parameters>
+      <Docs>
+        <param name="target">The result matrix value.</param>
+        <param name="first">The first matrix to concatenate.</param>
+        <param name="second">The second matrix to concatenate.</param>
+        <summary>Concatenates the specified matrices into the resulting target matrix.   </summary>
+        <remarks>Either source matrices can also be the target matrix.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="MakeIdentity">
       <MemberSignature Language="C#" Value="public static SkiaSharp.SKMatrix MakeIdentity ();" />
       <MemberSignature Language="ILAsm" Value=".method public static hidebysig valuetype SkiaSharp.SKMatrix MakeIdentity() cil managed" />
@@ -52,8 +75,81 @@
         <Parameter Name="radians" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="radians">To be added.</param>
+        <param name="radians">The angle for the rotation, in radians.</param>
         <summary>Creates a rotation matrix</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MakeRotation">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKMatrix MakeRotation (float radians, float pivotx, float pivoty);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig valuetype SkiaSharp.SKMatrix MakeRotation(float32 radians, float32 pivotx, float32 pivoty) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKMatrix</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="radians" Type="System.Single" />
+        <Parameter Name="pivotx" Type="System.Single" />
+        <Parameter Name="pivoty" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="radians">The angle for the rotation, in radians.</param>
+        <param name="pivotx">The X coordiate for the rotation pivot.</param>
+        <param name="pivoty">The Y coordiate for the rotation pivot.</param>
+        <summary>Creates an <see cref="T:SkiaSharp.SKMatrix" /> that represents a specific rotation in radians with a specific pivot point.</summary>
+        <returns>Returns a new matrix with the specific rotation at the pivot point.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MakeRotationDegrees">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKMatrix MakeRotationDegrees (float degrees);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig valuetype SkiaSharp.SKMatrix MakeRotationDegrees(float32 degrees) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKMatrix</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="degrees" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="degrees">
+          <para>The angle for the rotation, in degrees.</para>
+          <para></para>
+        </param>
+        <summary>Creates an <see cref="T:SkiaSharp.SKMatrix" /> that represents a specific rotation in degrees.</summary>
+        <returns>Returns a new matrix with the specific rotation in degrees.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MakeRotationDegrees">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKMatrix MakeRotationDegrees (float degrees, float pivotx, float pivoty);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig valuetype SkiaSharp.SKMatrix MakeRotationDegrees(float32 degrees, float32 pivotx, float32 pivoty) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKMatrix</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="degrees" Type="System.Single" />
+        <Parameter Name="pivotx" Type="System.Single" />
+        <Parameter Name="pivoty" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="degrees">The angle for the rotation, in degrees.</param>
+        <param name="pivotx">The X coordiate for the rotation pivot.</param>
+        <param name="pivoty">The Y coordiate for the rotation pivot.</param>
+        <summary>Creates an <see cref="T:SkiaSharp.SKMatrix" /> that represents a specific rotation in degrees.</summary>
         <returns>To be added.</returns>
         <remarks>To be added.</remarks>
       </Docs>
@@ -74,10 +170,10 @@
         <Parameter Name="sy" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="sx">To be added.</param>
-        <param name="sy">To be added.</param>
+        <param name="sx">Scale X component.</param>
+        <param name="sy">Scale Y component.</param>
         <summary>Creates a scaling matrix.</summary>
-        <returns>To be added.</returns>
+        <returns>Returns a new matrix with the specific scale factor.</returns>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -99,12 +195,12 @@
         <Parameter Name="pivotY" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="sx">To be added.</param>
-        <param name="sy">To be added.</param>
-        <param name="pivotX">To be added.</param>
-        <param name="pivotY">To be added.</param>
+        <param name="sx">Scale X component.</param>
+        <param name="sy">Scale Y component.</param>
+        <param name="pivotX">The X coordiate for the rotation pivot.</param>
+        <param name="pivotY">The Y coordiate for the rotation pivot.</param>
         <summary>Creates a scaling matrix with a pivot point.</summary>
-        <returns>To be added.</returns>
+        <returns>Returns a new matrix with the specific scale factor at the pivot point.</returns>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -124,10 +220,10 @@
         <Parameter Name="sy" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="sx">To be added.</param>
-        <param name="sy">To be added.</param>
+        <param name="sx">Skew X component.</param>
+        <param name="sy">Skew Y component.</param>
         <summary>Creates a skewing matrix.</summary>
-        <returns>To be added.</returns>
+        <returns>Returns a new matrix with the specific skewing factor.</returns>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -147,10 +243,10 @@
         <Parameter Name="dy" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="dx">To be added.</param>
-        <param name="dy">To be added.</param>
+        <param name="dx">The X offset for the translation.</param>
+        <param name="dy">The Y offset for the translation.</param>
         <summary>Creates a translation matrix.</summary>
-        <returns>To be added.</returns>
+        <returns>Returns a new matrix with the specific translation factor.</returns>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -202,6 +298,140 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="PostConcat">
+      <MemberSignature Language="C#" Value="public static void PostConcat (ref SkiaSharp.SKMatrix target, ref SkiaSharp.SKMatrix matrix);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig pinvokeimpl (&quot;libSkiaSharp&quot; as &quot;sk_matrix_post_concat&quot; cdecl)void PostConcat(valuetype SkiaSharp.SKMatrix target, valuetype SkiaSharp.SKMatrix matrix) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="target" Type="SkiaSharp.SKMatrix&amp;" RefType="ref" />
+        <Parameter Name="matrix" Type="SkiaSharp.SKMatrix&amp;" RefType="ref" />
+      </Parameters>
+      <Docs>
+        <param name="target">Target matrix.</param>
+        <param name="matrix">The matrix to be post-concatenated.</param>
+        <summary>Post-concatenates the matrix to the target matrix</summary>
+        <remarks>This represents newTarget = matrix * target</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="PreConcat">
+      <MemberSignature Language="C#" Value="public static void PreConcat (ref SkiaSharp.SKMatrix target, ref SkiaSharp.SKMatrix matrix);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig pinvokeimpl (&quot;libSkiaSharp&quot; as &quot;sk_matrix_pre_concat&quot; cdecl)void PreConcat(valuetype SkiaSharp.SKMatrix target, valuetype SkiaSharp.SKMatrix matrix) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="target" Type="SkiaSharp.SKMatrix&amp;" RefType="ref" />
+        <Parameter Name="matrix" Type="SkiaSharp.SKMatrix&amp;" RefType="ref" />
+      </Parameters>
+      <Docs>
+        <param name="target">Target matrix.</param>
+        <param name="matrix">The matrix to be post-concatenated.</param>
+        <summary>Pre-concatenates the matrix to the target matrix</summary>
+        <remarks>This represents newTarget = target * matrix</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Rotate">
+      <MemberSignature Language="C#" Value="public static void Rotate (ref SkiaSharp.SKMatrix matrix, float radians);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig void Rotate(valuetype SkiaSharp.SKMatrix matrix, float32 radians) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="matrix" Type="SkiaSharp.SKMatrix&amp;" RefType="ref" />
+        <Parameter Name="radians" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="matrix">Target matrix.</param>
+        <param name="radians">The angle for the rotation, in radians.</param>
+        <summary>Rotates the spefixied matrix by the specified radians.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Rotate">
+      <MemberSignature Language="C#" Value="public static void Rotate (ref SkiaSharp.SKMatrix matrix, float radians, float pivotx, float pivoty);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig void Rotate(valuetype SkiaSharp.SKMatrix matrix, float32 radians, float32 pivotx, float32 pivoty) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="matrix" Type="SkiaSharp.SKMatrix&amp;" RefType="ref" />
+        <Parameter Name="radians" Type="System.Single" />
+        <Parameter Name="pivotx" Type="System.Single" />
+        <Parameter Name="pivoty" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="matrix">Target matrix.</param>
+        <param name="radians">The angle for the rotation, in radians.</param>
+        <param name="pivotx">The X coordiate for the rotation pivot.</param>
+        <param name="pivoty">The Y coordiate for the rotation pivot.</param>
+        <summary>Rotates the spefixied matrix by the specified radians.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="RotateDegrees">
+      <MemberSignature Language="C#" Value="public static void RotateDegrees (ref SkiaSharp.SKMatrix matrix, float degrees);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig void RotateDegrees(valuetype SkiaSharp.SKMatrix matrix, float32 degrees) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="matrix" Type="SkiaSharp.SKMatrix&amp;" RefType="ref" />
+        <Parameter Name="degrees" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="matrix">Target matrix.</param>
+        <param name="degrees">The angle for the rotation, in degrees.</param>
+        <summary>Rotates the spefixied matrix by the specified degrees.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="RotateDegrees">
+      <MemberSignature Language="C#" Value="public static void RotateDegrees (ref SkiaSharp.SKMatrix matrix, float degrees, float pivotx, float pivoty);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig void RotateDegrees(valuetype SkiaSharp.SKMatrix matrix, float32 degrees, float32 pivotx, float32 pivoty) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="matrix" Type="SkiaSharp.SKMatrix&amp;" RefType="ref" />
+        <Parameter Name="degrees" Type="System.Single" />
+        <Parameter Name="pivotx" Type="System.Single" />
+        <Parameter Name="pivoty" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="matrix">Target matrix.</param>
+        <param name="degrees">The angle for the rotation, in degrees.</param>
+        <param name="pivotx">The X coordiate for the rotation pivot.</param>
+        <param name="pivoty">The Y coordiate for the rotation pivot.</param>
+        <summary>Rotates the spefixied matrix by the specified degrees.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="ScaleX">
       <MemberSignature Language="C#" Value="public float ScaleX;" />
       <MemberSignature Language="ILAsm" Value=".field public float32 ScaleX" />
@@ -214,7 +444,7 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>The ScaleX component of the SKMatrix.</summary>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -230,7 +460,7 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>The ScaleY component of the SKMatrix.</summary>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -272,7 +502,7 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>The SkewX component of the SKMatrix.</summary>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -288,7 +518,7 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>The SkewY component of the SKMatrix.</summary>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -304,7 +534,7 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>The TransX component of the SKMatrix.</summary>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
@@ -320,7 +550,27 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>The TransY component of the SKMatrix.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="TryInvert">
+      <MemberSignature Language="C#" Value="public bool TryInvert (out SkiaSharp.SKMatrix inverse);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool TryInvert(valuetype SkiaSharp.SKMatrix inverse) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="inverse" Type="SkiaSharp.SKMatrix&amp;" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="inverse">The destination value to store the inverted matrix if the matrix can be inverted.</param>
+        <summary>Attempts to invert the matrix, if possible the inverse matrix contains the result.</summary>
+        <returns>True if the matrix can be inverted, and the inverse parameter is initialized with the inverted matrix, false otherwise.</returns>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>

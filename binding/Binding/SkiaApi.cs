@@ -43,19 +43,19 @@ namespace SkiaSharp
 	internal static class SkiaApi
 	{
 #if __TVOS__ && __UNIFIED__
-		const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
+		public const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
 #elif __IOS__ && __UNIFIED__
-		const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
+		public const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
 #elif __ANDROID__
-		const string SKIA = "libSkiaSharp.so";
+		public const string SKIA = "libSkiaSharp.so";
 #elif XAMARIN_MAC
-		const string SKIA = "libSkiaSharp.dylib";
+		public const string SKIA = "libSkiaSharp.dylib";
 #elif DESKTOP
-		const string SKIA = "libSkiaSharp.dll"; // redirected using .dll.config to 'libSkiaSharp.dylib' on OS X
+		public const string SKIA = "libSkiaSharp.dll"; // redirected using .dll.config to 'libSkiaSharp.dylib' on OS X
 #elif WINDOWS_UWP
-		const string SKIA = "libSkiaSharp.dll";
+		public const string SKIA = "libSkiaSharp.dll";
 #else
-		const string SKIA = "libSkiaSharp";
+		public const string SKIA = "libSkiaSharp";
 #endif
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -808,6 +808,14 @@ namespace SkiaSharp
 		public extern static bool sk_imagedecoder_decode_memory(IntPtr buffer, IntPtr size, sk_bitmap_t bitmap, SKColorType pref, SKImageDecoderMode mode, ref SKImageDecoderFormat format);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static bool sk_imagedecoder_decode_stream(sk_stream_streamrewindable_t cstream, sk_bitmap_t bitmap, SKColorType pref, SKImageDecoderMode mode, ref SKImageDecoderFormat format);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_matrix_try_invert(ref SKMatrix matrix, out SKMatrix result);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_matrix_preconcat(ref SKMatrix target, ref SKMatrix first, ref SKMatrix second);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_matrix_preconcat(ref SKMatrix target, ref SKMatrix matrix);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_matrix_postconcat(ref SKMatrix target, ref SKMatrix matrix);
 	}
 }
 
