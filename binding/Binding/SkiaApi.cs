@@ -110,6 +110,8 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_oval(sk_canvas_t t, ref SKRect rect, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_canvas_draw_circle(sk_canvas_t t, float cx, float cy, float radius, sk_paint_t paint);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_path(sk_canvas_t t, sk_path_t path, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_image(sk_canvas_t t, sk_image_t image, float x, float y, sk_paint_t paint);
@@ -810,10 +812,6 @@ namespace SkiaSharp
 		public extern static bool sk_imagedecoder_decode_stream(sk_stream_streamrewindable_t cstream, sk_bitmap_t bitmap, SKColorType pref, SKImageDecoderMode mode, ref SKImageDecoderFormat format);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_matrix_try_invert(ref SKMatrix matrix, out SKMatrix result);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static int sk_matrix_preconcat(ref SKMatrix target, ref SKMatrix matrix);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static int sk_matrix_post_concat(ref SKMatrix target, ref SKMatrix matrix);
 	}
 }
 
