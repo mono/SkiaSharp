@@ -250,6 +250,183 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="MapPoints">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPoint[] MapPoints (SkiaSharp.SKPoint[] points);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKPoint[] MapPoints(valuetype SkiaSharp.SKPoint[] points) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPoint[]</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="points" Type="SkiaSharp.SKPoint[]" />
+      </Parameters>
+      <Docs>
+        <param name="points">An array of points that you want to map.</param>
+        <summary>
+          <para>Apply the to the array of points and return the mapped results.</para>
+        </summary>
+        <returns>New array allocated with the mapped results.</returns>
+        <remarks>
+          <para>Mapping points uses all components of the matrix.   If you want to ignore the translation, use MapVectors.</para>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MapPoints">
+      <MemberSignature Language="C#" Value="public void MapPoints (SkiaSharp.SKPoint[] result, SkiaSharp.SKPoint[] points);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void MapPoints(valuetype SkiaSharp.SKPoint[] result, valuetype SkiaSharp.SKPoint[] points) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="result" Type="SkiaSharp.SKPoint[]" />
+        <Parameter Name="points" Type="SkiaSharp.SKPoint[]" />
+      </Parameters>
+      <Docs>
+        <param name="result">Array where the mapped results will be stored, the array needs to have the same number of elements of the <paramref name="points" /> array.</param>
+        <param name="points">Source array with the points to convert.</param>
+        <summary>Apply the to the array of points and return the mapped results.</summary>
+        <remarks>
+          <para>Mapping points uses all components of the matrix.   If you want to ignore the translation, use MapVectors.</para>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MapRadius">
+      <MemberSignature Language="C#" Value="public float MapRadius (float radius);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance float32 MapRadius(float32 radius) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Single</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="radius" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="radius">Radius to map.</param>
+        <summary>
+          <para>Return the mean radius of a circle after it has been mapped by this matrix</para>
+        </summary>
+        <returns>Return the mean radius of a circle after it has been mapped by this matrix</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MapRect">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKRect MapRect (SkiaSharp.SKRect source);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKRect MapRect(valuetype SkiaSharp.SKRect source) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKRect</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="source" Type="SkiaSharp.SKRect" />
+      </Parameters>
+      <Docs>
+        <param name="source">Source recatngle to map.</param>
+        <summary>Apply the matrix to the source rectangle and return the mapped rectangle.</summary>
+        <returns>The rectangle with the matrix.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MapVector">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPoint MapVector (float x, float y);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKPoint MapVector(float32 x, float32 y) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPoint</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="x" Type="System.Single" />
+        <Parameter Name="y" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="x">X component of the vector.</param>
+        <param name="y">Y component of the vector.</param>
+        <summary>Applies the matrix to a vector.</summary>
+        <returns>Returns the mapped point.</returns>
+        <remarks>Mapping vectors ignores the translation component in the matrix.   If you want to take the translation into consideration, use MapXY.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MapVectors">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPoint[] MapVectors (SkiaSharp.SKPoint[] vectors);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKPoint[] MapVectors(valuetype SkiaSharp.SKPoint[] vectors) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPoint[]</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="points" Type="SkiaSharp.SKPoint[]" />
+      </Parameters>
+      <Docs>
+        <param name="vectors">An array of vectors that you want to map.</param>
+        <summary>Apply the to the array of vectors and return the mapped results..</summary>
+        <returns>New array allocated with the mapped results.</returns>
+        <remarks>Mapping vectors ignores the translation component in the matrix.   If you want to take the translation into consideration, use MapPoints.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MapVectors">
+      <MemberSignature Language="C#" Value="public void MapVectors (SkiaSharp.SKPoint[] result, SkiaSharp.SKPoint[] vectors);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void MapVectors(valuetype SkiaSharp.SKPoint[] result, valuetype SkiaSharp.SKPoint[] vectors) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="result" Type="SkiaSharp.SKPoint[]" />
+        <Parameter Name="points" Type="SkiaSharp.SKPoint[]" />
+      </Parameters>
+      <Docs>
+        <param name="result">Array where the mapped results will be stored, the array needs to have the same number of elements of the <paramref name="vectors" /> array.</param>
+        <param name="vectors">To be added.</param>
+        <param name="points">An array of vectors that you want to map.</param>
+        <summary>Apply the to the array of vectors and return the mapped results..</summary>
+        <remarks>Mapping vectors ignores the translation component in the matrix.   If you want to take the translation into consideration, use MapPoints.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MapXY">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPoint MapXY (float x, float y);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKPoint MapXY(float32 x, float32 y) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPoint</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="x" Type="System.Single" />
+        <Parameter Name="y" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="x">X coordinate.</param>
+        <param name="y">Y coordinate.</param>
+        <summary>Applies the matrix to a point.</summary>
+        <returns>Returns the mapped point.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="Persp0">
       <MemberSignature Language="C#" Value="public float Persp0;" />
       <MemberSignature Language="ILAsm" Value=".field public float32 Persp0" />

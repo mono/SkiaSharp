@@ -811,11 +811,9 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_matrix_try_invert(ref SKMatrix matrix, out SKMatrix result);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static int sk_matrix_preconcat(ref SKMatrix target, ref SKMatrix first, ref SKMatrix second);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_matrix_preconcat(ref SKMatrix target, ref SKMatrix matrix);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static int sk_matrix_postconcat(ref SKMatrix target, ref SKMatrix matrix);
+		public extern static int sk_matrix_post_concat(ref SKMatrix target, ref SKMatrix matrix);
 	}
 }
 
