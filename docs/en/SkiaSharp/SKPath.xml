@@ -44,9 +44,9 @@
         <Parameter Name="path" Type="SkiaSharp.SKPath" />
       </Parameters>
       <Docs>
-        <param name="path">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="path">The path to clone.</param>
+        <summary>Creates an SKPath by making a copy of an existing path</summary>
+        <remarks>This constructor can throw InvalidOperationException if there is a problem copying the source path.</remarks>
       </Docs>
     </Member>
     <Member MemberName="AddArc">
@@ -94,8 +94,7 @@
         <param name="direction">The direction to wind the oval's contour.</param>
         <summary>Adds an oval to the current path.</summary>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -192,8 +191,7 @@
         <summary>Add a conic path from the last point.</summary>
         <remarks>
           <para> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</para>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -342,8 +340,7 @@
         <param name="y">The y-coordinate of the start of a new contour</param>
         <summary>Set the beginning of the next contour to the point.</summary>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -434,8 +431,47 @@
         <summary>Same as <see cref="M:SkiaSharp.SKPath.CubicTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
         <remarks>
           <para> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</para>
-          <para>
-          </para>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Reset">
+      <MemberSignature Language="C#" Value="public void Reset ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Reset() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Clear any lines and curves from the path, making it empty.</summary>
+        <remarks>
+          <para>This frees up internal storage associated with those segments.</para>
+          <para />
+          <para>On Android, does not change fSourcePath.</para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Rewind">
+      <MemberSignature Language="C#" Value="public void Rewind ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Rewind() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Clear any lines and curves from the path, making it empty.</summary>
+        <remarks>
+          <para>However, any internal storage for those lines/curves is retained, making reuse of the path potentially faster.</para>
+          <para />
+          <para>On Android, does not change fSourcePath.</para>
         </remarks>
       </Docs>
     </Member>
@@ -479,8 +515,7 @@
         <param name="dy">The amount to add to the x-coordinate of the last point on this contour, to specify the start of a new contour.</param>
         <summary>Same as <see cref="M:SkiaSharp.SKPath.MoveTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -524,7 +559,7 @@
       </Parameters>
       <Docs>
         <param name="matrix">To be added.</param>
-        <summary>To be added.</summary>
+        <summary>Applies a transformation matrix to the all the elements in the path.</summary>
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
