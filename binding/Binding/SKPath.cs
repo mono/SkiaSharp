@@ -12,6 +12,16 @@ namespace SkiaSharp
 {
 	public class SKPath : SKObject
 	{
+		public enum Verb {
+			Move, Line, Quad, Conic, Cubic, Close, Done
+		}
+
+		public enum AddMode {
+			Append,
+			Extend
+		}
+
+		
 		[Preserve]
 		internal SKPath (IntPtr handle)
 			: base (handle)
@@ -148,6 +158,137 @@ namespace SkiaSharp
 		public void Transform (SKMatrix matrix)
 		{
 			SkiaApi.sk_path_transform (Handle, ref matrix);
+		}
+
+		public void AddPath (SKPath other, float dx, float dy, AddMode mode = AddMode.Append)
+		{
+			if (other == null)
+				throw new ArgumentNullException (nameof (other));
+			
+			SkiaApi.sk_path_add_path_offset (Handle, other.Handle, dx, dy, mode);
+		}
+
+		public void AddPath (SKPath other, ref SKMatrix matrix, AddMode mode = AddMode.Append)
+		{
+			if (other == null)
+				throw new ArgumentNullException (nameof (other));
+			
+			SkiaApi.sk_path_add_path_matrix (Handle, other.Handle, ref matrix, mode);
+		}
+
+		public void AddPath (SKPath other, AddMode mode = AddMode.Append)
+		{
+			if (other == null)
+				throw new ArgumentNullException (nameof (other));
+			
+			SkiaApi.sk_path_add_path (Handle, other.Handle, mode);
+		}
+
+		public void AddPathReverse (SKPath other)
+		{
+			if (other == null)
+				throw new ArgumentNullException (nameof (other));
+			
+			SkiaApi.sk_path_add_path_reverse (Handle, other.Handle);
+		}
+
+		public Iterator CreateIterator (bool forceClose)
+		{
+			return new Iterator (this, SkiaApi.sk_path_create_iter (Handle, forceClose ? 1 : 0));
+		}
+
+		public RawIterator CreateRawIterator ()
+		{
+			return new RawIterator (this, SkiaApi.sk_path_create_rawiter (Handle));
+		}
+		
+		public class Iterator : IDisposable {
+			SKPath Path => path;
+			SKPath path;
+			IntPtr handle;
+
+			internal Iterator (SKPath path, IntPtr handle)
+			{
+				this.path = path;
+				this.handle = handle;
+			}
+
+			~Iterator ()
+			{
+				Dispose (false);
+			}
+
+			void Dispose (bool disposing)
+			{
+				if (handle != IntPtr.Zero){
+					// safe to call from a background thread to release resources.
+					SkiaApi.sk_path_iter_destroy (handle);
+					handle = IntPtr.Zero;
+				}
+			}
+			
+			public void Dispose ()
+			{
+				Dispose (true);
+				GC.SuppressFinalize (this);
+			}
+
+			public Verb Next (SKPoint [] points, bool doConsumeDegenerates = true, bool exact = false)
+			{
+				if (points == null)
+					throw new ArgumentNullException (nameof (points));
+				if (points.Length != 4)
+					throw new ArgumentException ("Must be an array of four elements", nameof (points));
+				return SkiaApi.sk_path_iter_next (handle, points, doConsumeDegenerates ? 1 : 0, exact ? 1 : 0);
+			}
+
+			public float ConicWeight () => SkiaApi.sk_path_iter_conic_weight (handle);
+			public bool IsCloseLine () => SkiaApi.sk_path_iter_is_close_line (handle) != 0;
+			public bool IsCloseContour () => SkiaApi.sk_path_iter_is_close_countour (handle) != 0;
+		}
+
+		public class RawIterator : IDisposable {
+			SKPath Path => path;
+			SKPath path;
+			IntPtr handle;
+
+			internal RawIterator (SKPath path, IntPtr handle)
+			{
+				this.path = path;
+				this.handle = handle;
+			}
+
+			~RawIterator ()
+			{
+				Dispose (false);
+			}
+
+			void Dispose (bool disposing)
+			{
+				if (handle != IntPtr.Zero){
+					// safe to call from a background thread to release resources.
+					SkiaApi.sk_path_rawiter_destroy (handle);
+					handle = IntPtr.Zero;
+				}
+			}
+			
+			public void Dispose ()
+			{
+				Dispose (true);
+				GC.SuppressFinalize (this);
+			}
+
+			public Verb Next (SKPoint [] points)
+			{
+				if (points == null)
+					throw new ArgumentNullException (nameof (points));
+				if (points.Length != 4)
+					throw new ArgumentException ("Must be an array of four elements", nameof (points));
+				return SkiaApi.sk_path_rawiter_next (handle, points);
+			}
+
+			public float ConicWeight () => SkiaApi.sk_path_rawiter_conic_weight (handle);
+			public Verb Peek () => SkiaApi.sk_path_rawiter_peek (handle);
 		}
 	}
 }

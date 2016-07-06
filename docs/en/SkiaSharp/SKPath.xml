@@ -98,6 +98,102 @@
         </remarks>
       </Docs>
     </Member>
+    <Member MemberName="AddPath">
+      <MemberSignature Language="C#" Value="public void AddPath (SkiaSharp.SKPath other, SkiaSharp.SKPath.AddMode mode = SkiaSharp.SKPath+AddMode.Append);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void AddPath(class SkiaSharp.SKPath other, valuetype SkiaSharp.SKPath/AddMode mode) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="other" Type="SkiaSharp.SKPath" />
+        <Parameter Name="mode" Type="SkiaSharp.SKPath+AddMode" />
+      </Parameters>
+      <Docs>
+        <param name="other">The path containing the elements to be added to the current path.</param>
+        <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path.   On Append mode, contours are added as new contours.   On Extend mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
+        <summary>Extends the current path with the path elements from another path, using the specified extension mode.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="AddPath">
+      <MemberSignature Language="C#" Value="public void AddPath (SkiaSharp.SKPath other, ref SkiaSharp.SKMatrix matrix, SkiaSharp.SKPath.AddMode mode = SkiaSharp.SKPath+AddMode.Append);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void AddPath(class SkiaSharp.SKPath other, valuetype SkiaSharp.SKMatrix matrix, valuetype SkiaSharp.SKPath/AddMode mode) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="other" Type="SkiaSharp.SKPath" />
+        <Parameter Name="matrix" Type="SkiaSharp.SKMatrix&amp;" RefType="ref" />
+        <Parameter Name="mode" Type="SkiaSharp.SKPath+AddMode" />
+      </Parameters>
+      <Docs>
+        <param name="other">The path containing the elements to be added to the current path.</param>
+        <param name="matrix">Transformation applied to the <paramref name="other" /> path.</param>
+        <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path.   On Append mode, contours are added as new contours.   On Extend mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
+        <summary>Extends the current path with the path elements from another path, by applying the specified transformation matrix, using the specified extension mode.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="AddPath">
+      <MemberSignature Language="C#" Value="public void AddPath (SkiaSharp.SKPath other, float dx, float dy, SkiaSharp.SKPath.AddMode mode = SkiaSharp.SKPath+AddMode.Append);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void AddPath(class SkiaSharp.SKPath other, float32 dx, float32 dy, valuetype SkiaSharp.SKPath/AddMode mode) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="other" Type="SkiaSharp.SKPath" />
+        <Parameter Name="dx" Type="System.Single" />
+        <Parameter Name="dy" Type="System.Single" />
+        <Parameter Name="mode" Type="SkiaSharp.SKPath+AddMode" />
+      </Parameters>
+      <Docs>
+        <param name="other">The path containing the elements to be added to the current path.</param>
+        <param name="dx">The amount to translate the path in X as it is added.</param>
+        <param name="dy">The amount to translate the path in Y as it is added.</param>
+        <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path.   On Append mode, contours are added as new contours.   On Extend mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
+        <summary>Extends the current path with the path elements from another path offset by (<paramref name="dx" />, <paramref name="dy" />), using the specified extension mode.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="AddPathReverse">
+      <MemberSignature Language="C#" Value="public void AddPathReverse (SkiaSharp.SKPath other);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void AddPathReverse(class SkiaSharp.SKPath other) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="other" Type="SkiaSharp.SKPath" />
+      </Parameters>
+      <Docs>
+        <param name="other">The path containing the elements to be added to the current path.</param>
+        <summary>Extends the current path with the path elements from another path in reverse.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
     <Member MemberName="AddRect">
       <MemberSignature Language="C#" Value="public void AddRect (SkiaSharp.SKRect rect, SkiaSharp.SKPathDirection direction);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void AddRect(valuetype SkiaSharp.SKRect rect, valuetype SkiaSharp.SKPathDirection direction) cil managed" />
@@ -193,6 +289,47 @@
           <para> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</para>
           <para></para>
         </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateIterator">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPath.Iterator CreateIterator (bool forceClose);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKPath/Iterator CreateIterator(bool forceClose) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPath+Iterator</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="forceClose" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="forceClose">
+          <para>When this is true, each contour (as defined by a new starting move command) will be completed with a close verb regardless of the contour's contents.</para>
+        </param>
+        <summary>Creates an iterator object to scan the all of the segments (lines, quadratics, cubics) of each contours in a path.</summary>
+        <returns>An object that can be used to iterate over the various elements of the path.</returns>
+        <remarks>
+          <para>This iterator is able to clean up the path as the values are returned.   If you do not desire to get verbs that have been cleaned up, use the <see cref="M:SkiaSharp.SKPath.CreateRawIterator" /> method instead.</para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateRawIterator">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPath.RawIterator CreateRawIterator ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKPath/RawIterator CreateRawIterator() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPath+RawIterator</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Creates a raw iterator object to scan the all of the segments (lines, quadratics, cubics) of each contours in a path.</summary>
+        <returns>An object that can be used to iterate over the various elements of the path.</returns>
+        <remarks>Unlike the <see cref="M:SkiaSharp.SKPath.CreateIterator" /> method, this iterator does not clean up or normalize the values in the path.   It returns the raw elements contained in the path.</remarks>
       </Docs>
     </Member>
     <Member MemberName="CubicTo">
