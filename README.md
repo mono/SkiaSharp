@@ -25,6 +25,10 @@ to create your native libraries.
 
 Check our getting [started guide](https://developer.xamarin.com/guides/cross-platform/drawing/)
 
+# Extensions for SkiaSharp
+
+Windows/WPF users might find the [SkiaSharpWPFExtensions](https://github.com/impsnldavid/skiasharpwpfextensions) useful.
+
 ## Building SkiaSharp
 
 First clone the repository:
