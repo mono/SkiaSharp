@@ -63,6 +63,14 @@ namespace SkiaSharp
 			return GetObject<SKImage> (handle);
 		}
 
+		public static SKImage FromBitmap (SKBitmap bitmap)
+		{
+			if (bitmap == null)
+				throw new ArgumentNullException (nameof (bitmap));
+			var handle = SkiaApi.sk_image_new_from_bitmap (bitmap.Handle);
+			return GetObject<SKImage> (handle);
+		}
+
 		public SKData Encode ()
 		{
 			return GetObject<SKData> (SkiaApi.sk_image_encode (Handle));

@@ -16,12 +16,18 @@
     <summary>Abstraction for drawing a rectangle of pixels.</summary>
     <remarks>
       <para>SkImage is an abstraction for drawing a rectagle of pixels, though the particular type of image could be actually storing its data on the GPU, or as drawing commands (picture or PDF or otherwise), ready to be played back into another canvas.</para>
-      <para>
-      </para>
+      <para></para>
       <para>The content of SkImage is always immutable, though the actual storage may change, if for example that image can be re-created via encoded data or other means.</para>
-      <para>
-      </para>
+      <para></para>
       <para>SkImage always has a non-zero dimensions. If there is a request to create a new image, either directly or via SkSurface, and either of the requested dimensions are zero, then <see langword="null" /> will be returned.</para>
+      <list type="bullet">
+        <item>
+          <term>Text1</term>
+        </item>
+        <item>
+          <term>Text2</term>
+        </item>
+      </list>
     </remarks>
   </Docs>
   <Members>
@@ -65,8 +71,7 @@
         <summary>Encodes the image as a PNG image</summary>
         <returns>SKData wrapping the encoded image as a PNG.</returns>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -93,8 +98,29 @@
         <summary>Encodes an image, multiple file formats supported</summary>
         <returns>SKData wrapping the encoded image as a PNG.</returns>
         <remarks>
-          <para>
-          </para>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromBitmap">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromBitmap (SkiaSharp.SKBitmap bitmap);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromBitmap(class SkiaSharp.SKBitmap bitmap) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="bitmap" Type="SkiaSharp.SKBitmap" />
+      </Parameters>
+      <Docs>
+        <param name="bitmap">The bitmap that will be used as the source for the image</param>
+        <summary>Creates a new <see cref="T:SkiaSharp.SKImage" /> from the provided <see cref="T:SkiaSharp.SKBitmap" />.</summary>
+        <returns>An image whose contents are the contents of the specified bitmap.</returns>
+        <remarks>
+          <para>If the bitmap is marked immutable, and its pixel memory is shareable, it may be shared instead of copied.</para>
         </remarks>
       </Docs>
     </Member>
@@ -165,8 +191,7 @@
         <summary>Creates an SKImage from an encoded image wrapped by the data.</summary>
         <returns>The decoded image, or <see langword="null" /> on error.</returns>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
