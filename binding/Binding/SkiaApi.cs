@@ -38,25 +38,27 @@ using sk_imagefilter_t = System.IntPtr;
 using sk_colorfilter_t = System.IntPtr;
 using sk_document_t = System.IntPtr;
 using sk_colorspace_t = System.IntPtr;
+using sk_path_iterator_t = System.IntPtr;
+using sk_path_effect_t = System.IntPtr;
 
 namespace SkiaSharp
 {
 	internal static class SkiaApi
 	{
 #if __TVOS__ && __UNIFIED__
-		const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
+		public const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
 #elif __IOS__ && __UNIFIED__
-		const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
+		public const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
 #elif __ANDROID__
-		const string SKIA = "libSkiaSharp.so";
+		public const string SKIA = "libSkiaSharp.so";
 #elif XAMARIN_MAC
-		const string SKIA = "libSkiaSharp.dylib";
+		public const string SKIA = "libSkiaSharp.dylib";
 #elif DESKTOP
-		const string SKIA = "libSkiaSharp.dll"; // redirected using .dll.config to 'libSkiaSharp.dylib' on OS X
+		public const string SKIA = "libSkiaSharp.dll"; // redirected using .dll.config to 'libSkiaSharp.dylib' on OS X
 #elif WINDOWS_UWP
-		const string SKIA = "libSkiaSharp.dll";
+		public const string SKIA = "libSkiaSharp.dll";
 #else
-		const string SKIA = "libSkiaSharp";
+		public const string SKIA = "libSkiaSharp";
 #endif
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -110,6 +112,8 @@ namespace SkiaSharp
 		public extern static void sk_canvas_draw_round_rect (sk_canvas_t t, ref SKRect rect, float rx, float ry, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_oval(sk_canvas_t t, ref SKRect rect, sk_paint_t paint);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_canvas_draw_circle(sk_canvas_t t, float cx, float cy, float radius, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_path(sk_canvas_t t, sk_path_t path, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -284,6 +288,11 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static float sk_paint_get_fontmetrics(sk_paint_t t, out SKFontMetrics fontMetrics, float scale);
 
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_path_effect_t sk_paint_get_path_effect(sk_paint_t cpaint);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_paint_set_path_effect(sk_paint_t cpaint, sk_path_effect_t effect);
+
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_image_t sk_image_new_raster_copy(ref SKImageInfo info, IntPtr pixels, IntPtr rowBytes);
@@ -332,6 +341,10 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_close(sk_path_t t);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_rewind(sk_path_t t);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_reset(sk_path_t t);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_add_rect(sk_path_t t, ref SKRect rect, SKPathDirection direction);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_add_rect_start(sk_path_t t, ref SKRect rect, SKPathDirection direction, uint startIndex);
@@ -339,6 +352,14 @@ namespace SkiaSharp
 		public extern static void sk_path_add_oval(sk_path_t t, ref SKRect rect, SKPathDirection direction);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_add_arc(sk_path_t t, ref SKRect rect, float startAngle, float sweepAngle);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_add_path_offset (sk_path_t t, sk_path_t other, float dx, float dy, SKPath.AddMode mode);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_add_path_matrix (sk_path_t t, sk_path_t other, ref SKMatrix matrix, SKPath.AddMode mode);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_add_path (sk_path_t t, sk_path_t other, SKPath.AddMode mode);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_add_path_reverse (sk_path_t t, sk_path_t other);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static bool sk_path_get_bounds(sk_path_t t, out SKRect rect);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -350,6 +371,32 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_path_t sk_path_transform (sk_path_t t, ref SKMatrix matrix);
 
+		// iterator
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_path_iterator_t sk_path_create_iter (sk_path_t path, int forceClose);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKPath.Verb sk_path_iter_next (sk_path_iterator_t iterator, [Out] SKPoint [] points, int doConsumeDegenerates, int exact);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static float sk_path_iter_conic_weight (sk_path_iterator_t iterator);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_path_iter_is_close_line (sk_path_iterator_t iterator);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_path_iter_is_close_countour (sk_path_iterator_t iterator);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_iter_destroy (sk_path_t path);
+
+		// Raw iterator
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_path_iterator_t sk_path_create_rawiter (sk_path_t path);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKPath.Verb sk_path_rawiter_next (sk_path_iterator_t iterator, [Out] SKPoint [] points);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKPath.Verb sk_path_rawiter_peek (sk_path_iterator_t iterator);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static float sk_path_rawiter_conic_weight (sk_path_iterator_t iterator);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_rawiter_destroy (sk_path_t path);
+							       
 		// SkMaskFilter
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_maskfilter_unref(sk_maskfilter_t t);
@@ -787,6 +834,26 @@ namespace SkiaSharp
 		public extern static void sk_bitmap_unlock_pixels(sk_bitmap_t b);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static bool sk_bitmap_try_alloc_pixels(sk_bitmap_t cbitmap, ref SKImageInfo requestedInfo, IntPtr rowBytes);
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_matrix_try_invert(ref SKMatrix matrix, out SKMatrix result);
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_path_effect_t sk_path_effect_create_compose(sk_path_effect_t outer, sk_path_effect_t inner);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_path_effect_t sk_path_effect_create_sum(sk_path_effect_t first, sk_path_effect_t second);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_path_effect_t sk_path_effect_create_discrete(float segLength, float deviation, UInt32 seedAssist /*0*/);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_path_effect_t sk_path_effect_create_corner(float radius);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_path_effect_t sk_path_effect_create_1d_path(sk_path_t path, float advance, float phase, SkPath1DPathEffectStyle style);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_path_effect_t sk_path_effect_create_2d_line(float width, SKMatrix matrix);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_path_effect_t sk_path_effect_create_2d_path(SKMatrix matrix, sk_path_t path);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_path_effect_t sk_path_effect_create_dash(float[] intervals, int count, float phase);
 
 	}
 }

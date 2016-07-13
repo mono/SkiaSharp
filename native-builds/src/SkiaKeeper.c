@@ -31,6 +31,7 @@
 #include "xamarin/sk_x_maskfilter.h"
 #include "xamarin/sk_x_paint.h"
 #include "xamarin/sk_x_path.h"
+#include "xamarin/sk_x_patheffect.h"
 #include "xamarin/sk_x_shader.h"
 #include "xamarin/sk_x_stream.h"
 #include "xamarin/sk_x_typeface.h"
@@ -75,6 +76,7 @@ void** KeepSkiaCSymbols ()
         (void*)sk_string_new_empty,
         (void*)sk_document_unref,
         (void*)sk_wstream_write,
+        (void*)sk_path_effect_create_dash,
 
         // Xamarin
         (void*)sk_managedstream_new,

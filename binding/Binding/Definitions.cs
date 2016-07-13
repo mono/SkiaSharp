@@ -96,7 +96,7 @@ namespace SkiaSharp
 
 		public SKColor (byte red, byte green, byte blue)
 		{
-			color = (uint)(0xff000000 | (red << 16) | (green << 8) | blue);
+			color = (uint)(0xff000000u | (red << 16) | (green << 8) | blue);
 		}
 
 		public SKColor WithAlpha (byte alpha)
@@ -1141,12 +1141,49 @@ namespace SkiaSharp
 		public float SkewY, ScaleY, TransY;
 		public float Persp0, Persp1, Persp2;
 
+#if OPTIMIZED_SKMATRIX
+
+		//
+		// If we manage to get an sk_matrix_t that contains the extra
+		// the fTypeMask flag, we could accelerate various operations
+		// as well, as this caches state of what is needed to be done.
+		//
+	
+		[Flags]
+		enum Mask : uint {
+			Identity = 0,
+			Translate = 1,
+			Scale = 2,
+			Affine = 4,
+			Perspective = 8,
+			RectStaysRect = 0x10,
+			OnlyPerspectiveValid = 0x40,
+			Unknown = 0x80,
+			OrableMasks = Translate | Scale | Affine | Perspective,
+			AllMasks = OrableMasks | RectStaysRect
+		}
+		Mask typeMask;
+
+		Mask GetMask ()
+		{
+			if (typeMask.HasFlag (Mask.Unknown))
+				typeMask = (Mask) SkiaApi.sk_matrix_get_type (ref this);
+
+		        // only return the public masks
+			return (Mask) ((uint)typeMask & 0xf);
+		}
+#endif
+
 		static float sdot (float a, float b, float c, float d) => a * b + c * d;
 		static float scross(float a, float b, float c, float d) => a * b - c * d;
 
 		public static SKMatrix MakeIdentity ()
 		{
-			return new SKMatrix () { ScaleX = 1, ScaleY = 1, Persp2 = 1 };
+			return new SKMatrix () { ScaleX = 1, ScaleY = 1, Persp2 = 1
+#if OPTIMIZED_SKMATRIX
+					, typeMask = Mask.Identity | Mask.RectStaysRect
+#endif
+                        };
 		}
 
 		public void SetScaleTranslate (float sx, float sy, float tx, float ty)
@@ -1162,13 +1199,23 @@ namespace SkiaSharp
 			Persp0 = 0;
 			Persp1 = 0;
 			Persp2 = 1;
+
+#if OPTIMIZED_SKMATRIX
+			typeMask = Mask.RectStaysRect | 
+				((sx != 1 || sy != 1) ? Mask.Scale : 0) |
+				((tx != 0 || ty != 0) ? Mask.Translate : 0);
+#endif
 		}
 
 		public static SKMatrix MakeScale (float sx, float sy)
 		{
 			if (sx == 1 && sy == 1)
 				return MakeIdentity ();
-			return new SKMatrix () { ScaleX = sx, ScaleY = sy, Persp2 = 1 };
+			return new SKMatrix () { ScaleX = sx, ScaleY = sy, Persp2 = 1, 
+#if OPTIMIZED_SKMATRIX
+typeMask = Mask.Scale | Mask.RectStaysRect
+#endif
+			};
 				
 		}
 
@@ -1180,41 +1227,132 @@ namespace SkiaSharp
 		{
 			if (sx == 1 && sy == 1)
 				return MakeIdentity ();
-			//this->setScaleTranslate(sx, sy, px - sx * px, py - sy * py);
+			float tx = pivotX - sx * pivotX;
+			float ty = pivotY - sy * pivotY;
 
+#if OPTIMIZED_SKMATRIX
+			Mask mask = Mask.RectStaysRect | 
+				((sx != 1 || sy != 1) ? Mask.Scale : 0) |
+				((tx != 0 || ty != 0) ? Mask.Translate : 0);
+#endif
 			return new SKMatrix () { 
 				ScaleX = sx, ScaleY = sy, 
-				TransX = pivotX - sx * pivotX,
-				TransY = pivotY - sy * pivotY,
-				Persp2 = 1 
+				TransX = tx,
+				TransY = ty,
+				Persp2 = 1,
+#if OPTIMIZED_SKMATRIX
+				typeMask = mask
+#endif
 			};
 		}
 
 		public static SKMatrix MakeTranslation (float dx, float dy)
 		{
+			if (dx == 0 && dy == 0)
+				return MakeIdentity ();
+			
 			return new SKMatrix () { 
 				ScaleX = 1, ScaleY = 1,
 				TransX = dx, TransY = dy,
-				Persp2 = 1
+				Persp2 = 1,
+#if OPTIMIZED_SKMATRIX
+				typeMask = Mask.Translate | Mask.RectStaysRect
+#endif
 			};
 		}
 
 		public static SKMatrix MakeRotation (float radians)
 		{
 			var sin = (float) Math.Sin (radians);
-			var cos = (float)Math.Cos (radians);
+			var cos = (float) Math.Cos (radians);
 
-			return new SKMatrix () {
-				ScaleX = cos,
-				SkewX = -sin,
-				TransX = 0,
-				SkewY = sin,
-				ScaleY = cos,
-				TransY = 0,
-				Persp0 = 0,
-				Persp1 = 0,
-				Persp2 = 1
-			};
+			var matrix = new SKMatrix ();
+			SetSinCos (ref matrix, sin, cos);
+			return matrix;
+		}
+
+		public static SKMatrix MakeRotation (float radians, float pivotx, float pivoty)
+		{
+			var sin = (float) Math.Sin (radians);
+			var cos = (float) Math.Cos (radians);
+
+			var matrix = new SKMatrix ();
+			SetSinCos (ref matrix, sin, cos, pivotx, pivoty);
+			return matrix;
+		}
+
+		const float degToRad = (float)System.Math.PI / 180.0f;
+		
+		public static SKMatrix MakeRotationDegrees (float degrees)
+		{
+			return MakeRotation (degrees * degToRad);
+		}
+
+		public static SKMatrix MakeRotationDegrees (float degrees, float pivotx, float pivoty)
+		{
+			return MakeRotation (degrees * degToRad, pivotx, pivoty);
+		}
+
+		static void SetSinCos (ref SKMatrix matrix, float sin, float cos)
+		{
+			matrix.ScaleX = cos;
+			matrix.SkewX = -sin;
+			matrix.TransX = 0;
+			matrix.SkewY = sin;
+			matrix.ScaleY = cos;
+			matrix.TransY = 0;
+			matrix.Persp0 = 0;
+			matrix.Persp1 = 0;
+			matrix.Persp2 = 1;
+#if OPTIMIZED_SKMATRIX
+			matrix.typeMask = Mask.Unknown | Mask.OnlyPerspectiveValid;
+#endif
+		}
+
+		static void SetSinCos (ref SKMatrix matrix, float sin, float cos, float pivotx, float pivoty)
+		{
+			float oneMinusCos = 1-cos;
+			
+			matrix.ScaleX = cos;
+			matrix.SkewX = -sin;
+			matrix.TransX = sdot(sin, pivoty, oneMinusCos, pivotx);
+			matrix.SkewY = sin;
+			matrix.ScaleY = cos;
+			matrix.TransY = sdot(-sin, pivotx, oneMinusCos, pivoty);
+			matrix.Persp0 = 0;
+			matrix.Persp1 = 0;
+			matrix.Persp2 = 1;
+#if OPTIMIZED_SKMATRIX
+			matrix.typeMask = Mask.Unknown | Mask.OnlyPerspectiveValid;
+#endif
+		}
+		
+		public static void Rotate (ref SKMatrix matrix, float radians, float pivotx, float pivoty)
+		{
+			var sin = (float) Math.Sin (radians);
+			var cos = (float) Math.Cos (radians);
+			SetSinCos (ref matrix, sin, cos, pivotx, pivoty);
+		}
+
+		public static void RotateDegrees (ref SKMatrix matrix, float degrees, float pivotx, float pivoty)
+		{
+			var sin = (float) Math.Sin (degrees * degToRad);
+			var cos = (float) Math.Cos (degrees * degToRad);
+			SetSinCos (ref matrix, sin, cos, pivotx, pivoty);
+		}
+
+		public static void Rotate (ref SKMatrix matrix, float radians)
+		{
+			var sin = (float) Math.Sin (radians);
+			var cos = (float) Math.Cos (radians);
+			SetSinCos (ref matrix, sin, cos);
+		}
+
+		public static void RotateDegrees (ref SKMatrix matrix, float degrees)
+		{
+			var sin = (float) Math.Sin (degrees * degToRad);
+			var cos = (float) Math.Cos (degrees * degToRad);
+			SetSinCos (ref matrix, sin, cos);
 		}
 
 		public static SKMatrix MakeSkew (float sx, float sy)
@@ -1228,8 +1366,119 @@ namespace SkiaSharp
 				TransY = 0,
 				Persp0 = 0,
 				Persp1 = 0,
-				Persp2 = 1
+				Persp2 = 1,
+#if OPTIMIZED_SKMATRIX
+				typeMask = Mask.Unknown | Mask.OnlyPerspectiveValid
+#endif
 			};
+		}
+
+		public bool TryInvert (out SKMatrix inverse)
+		{
+			return SkiaApi.sk_matrix_try_invert (ref this, out inverse) != 0;
+		}
+
+		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl, EntryPoint="sk_matrix_concat")]
+		public extern static void Concat (ref SKMatrix target, ref SKMatrix first, ref SKMatrix second);
+
+		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl, EntryPoint="sk_matrix_pre_concat")]
+		public extern static void PreConcat (ref SKMatrix target, ref SKMatrix matrix);
+
+		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl, EntryPoint="sk_matrix_post_concat")]
+		public extern static void PostConcat (ref SKMatrix target, ref SKMatrix matrix);
+
+		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl, EntryPoint="sk_matrix_map_rect")]
+		extern static void MapRect (ref SKMatrix matrix, out SKRect dest, ref SKRect source);
+
+		public SKRect MapRect (SKRect source)
+		{
+			SKRect result;
+			MapRect (ref this, out result, ref source);
+			return result;
+		}
+
+		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl)]
+		extern static void sk_matrix_map_points (ref SKMatrix matrix, IntPtr dst, IntPtr src, int count);
+
+		public void MapPoints (SKPoint [] result, SKPoint [] points)
+		{
+			if (result == null)
+				throw new ArgumentNullException ("result");
+			if (points == null)
+				throw new ArgumentNullException ("points");
+			int dl = result.Length;
+			if (dl != points.Length)
+				throw new ArgumentException ("buffers must be the same size");
+			unsafe {
+				fixed (SKPoint *rp = &result[0]){
+					fixed (SKPoint *pp = &points[0]){
+						sk_matrix_map_points (ref this, (IntPtr) rp, (IntPtr) pp, dl);
+					}
+				}
+			}
+		}
+
+		public SKPoint [] MapPoints (SKPoint [] points)
+		{
+			if (points == null)
+				throw new ArgumentNullException ("points");
+			var res = new SKPoint [points.Length];
+			MapPoints (res, points);
+			return res;
+		}
+
+		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl)]
+		extern static void sk_matrix_map_vectors (ref SKMatrix matrix, IntPtr dst, IntPtr src, int count);
+
+		public void MapVectors (SKPoint [] result, SKPoint [] vectors)
+		{
+			if (result == null)
+				throw new ArgumentNullException ("result");
+			if (vectors == null)
+				throw new ArgumentNullException ("vectors");
+			int dl = result.Length;
+			if (dl != vectors.Length)
+				throw new ArgumentException ("buffers must be the same size");
+			unsafe {
+				fixed (SKPoint *rp = &result[0]){
+					fixed (SKPoint *pp = &vectors[0]){
+						sk_matrix_map_vectors (ref this, (IntPtr) rp, (IntPtr) pp, dl);
+					}
+				}
+			}
+		}
+
+		public SKPoint [] MapVectors (SKPoint [] vectors)
+		{
+			if (vectors == null)
+				throw new ArgumentNullException ("vectors");
+			var res = new SKPoint [vectors.Length];
+			MapVectors (res, vectors);
+			return res;
+		}
+
+		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl)]
+		extern static SKPoint sk_matrix_map_xy (ref SKMatrix matrix, float x, float y);
+
+		public SKPoint MapXY (float x, float y)
+		{
+			return sk_matrix_map_xy (ref this, x, y);
+		}
+
+		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl)]
+		extern static SKPoint sk_matrix_map_vector (ref SKMatrix matrix, float x, float y);
+
+		public SKPoint MapVector (float x, float y)
+		{
+			return sk_matrix_map_vector (ref this, x, y);
+		}
+
+		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl)]
+		extern static float sk_matrix_map_radius (ref SKMatrix matrix, float radius);
+
+		public float MapRadius (float radius)
+		{
+			return sk_matrix_map_radius (ref this, radius);
 		}
 	}
 

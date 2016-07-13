@@ -163,6 +163,13 @@ namespace SkiaSharp
 				throw new ArgumentNullException ("paint");
 			SkiaApi.sk_canvas_draw_oval (Handle, ref rect, paint.Handle);
 		}
+
+		public void DrawCircle (float cx, float cy, float radius, SKPaint paint)
+		{
+			if (paint == null)
+				throw new ArgumentNullException ("paint");
+			SkiaApi.sk_canvas_draw_circle (Handle, cx, cy, radius, paint.Handle);
+		}
 		
 		public void DrawPath (SKPath path, SKPaint paint)
 		{

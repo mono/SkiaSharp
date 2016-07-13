@@ -14,10 +14,18 @@
     <summary>The SkTypeface class specifies the typeface and intrinsic style of a font.</summary>
     <remarks>
       <para>The SkTypeface class specifies the typeface and intrinsic style of a font.</para>
-      <para>This is used in the paint, along with optionally algorithmic settings like textSize, textSkewX, textScaleX, kFakeBoldText_Mask, to specifyhow text appears when drawn (and measured).</para>
+      <para>This is used in the paint, along with optionally algorithmic settings like textSize, textSkewX, textScaleX, FakeBoldText, to specifyhow text appears when drawn (and measured).</para>
       <para>
       </para>
       <para>Typeface objects are immutable, and so they can be shared between threads.</para>
+      <para>If you want to create type faces with specific weights not covered by the SKTypefaceStyle, you can pass a suffix to the font family name to trigger this, like this:</para>
+      <para>
+      </para>
+      <para>
+      </para>
+      <code lang="C#"><![CDATA[var myThinFace = SKTypeface.FromFamilyName ("sans-serif-thin");]]></code>
+      <para>
+      </para>
       <para>
       </para>
     </remarks>

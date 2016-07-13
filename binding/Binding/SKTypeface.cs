@@ -107,7 +107,7 @@ namespace SkiaSharp
 				glyphs = new ushort[n];
 
 				fixed (ushort *gp = &glyphs [0]){
-					return SkiaApi.sk_typeface_chars_to_glyphs (Handle, str, SKEncoding.Utf16, (IntPtr) gp, n);
+					return SkiaApi.sk_typeface_chars_to_glyphs (Handle, str, encoding, (IntPtr) gp, n);
 				}
 			}
 		}
