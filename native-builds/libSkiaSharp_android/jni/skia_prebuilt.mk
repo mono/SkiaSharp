@@ -77,48 +77,10 @@ LOCAL_MODULE := libskia_sfnt
 LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_sfnt.a
 include $(PREBUILT_STATIC_LIBRARY)
 
-
 include $(CLEAR_VARS)
 LOCAL_MODULE := libcpu_features
 LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libcpu_features.a
 include $(PREBUILT_STATIC_LIBRARY)
-
-ifneq (,$(filter x86 x86_64,$(TARGET_ARCH_ABI)))
-  include $(CLEAR_VARS)
-  LOCAL_MODULE := libskia_opts_avx
-  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_avx.a
-  include $(PREBUILT_STATIC_LIBRARY)
-
-  include $(CLEAR_VARS)
-  LOCAL_MODULE := libskia_opts_ssse3
-  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_ssse3.a
-  include $(PREBUILT_STATIC_LIBRARY)
-
-  include $(CLEAR_VARS)
-  LOCAL_MODULE := libskia_opts_sse41
-  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_sse41.a
-  include $(PREBUILT_STATIC_LIBRARY)
-endif
-
-ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
-  include $(CLEAR_VARS)
-  LOCAL_MODULE := libskia_opts_neon
-  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_neon.a
-  include $(PREBUILT_STATIC_LIBRARY)
-endif
-
-ifneq (,$(filter armeabi-v7a arm64-v8a,$(TARGET_ARCH_ABI)))
-  include $(CLEAR_VARS)
-  LOCAL_MODULE := libpng_static_neon
-  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libpng_static_neon.a
-  include $(PREBUILT_STATIC_LIBRARY)
-  
-  include $(CLEAR_VARS)
-  LOCAL_MODULE := libwebp_dsp_neon
-  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libwebp_dsp_neon.a
-  include $(PREBUILT_STATIC_LIBRARY)
-endif
-
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := libjpeg-turbo
@@ -175,3 +137,93 @@ LOCAL_MODULE := libicuuc
 LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libicuuc.a
 include $(PREBUILT_STATIC_LIBRARY)
 
+include $(CLEAR_VARS)
+LOCAL_MODULE := libzlib
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libzlib.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libskia_codec
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_codec.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libraw_codec
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libraw_codec.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libpiex
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libpiex.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libdng_sdk
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libdng_sdk.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+
+###
+# platforms
+###
+
+ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
+
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libwebp_dsp_neon
+  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libwebp_dsp_neon.a
+  include $(PREBUILT_STATIC_LIBRARY)
+
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libskia_opts_neon
+  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_neon.a
+  include $(PREBUILT_STATIC_LIBRARY)
+  
+endif
+
+ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
+
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libwebp_dsp_neon
+  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libwebp_dsp_neon.a
+  include $(PREBUILT_STATIC_LIBRARY)
+
+endif
+
+ifeq ($(TARGET_ARCH_ABI),x86)
+
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libskia_opts_avx
+  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_avx.a
+  include $(PREBUILT_STATIC_LIBRARY)
+
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libskia_opts_ssse3
+  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_ssse3.a
+  include $(PREBUILT_STATIC_LIBRARY)
+
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libskia_opts_sse41
+  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_sse41.a
+  include $(PREBUILT_STATIC_LIBRARY)
+  
+endif
+
+ifeq ($(TARGET_ARCH_ABI),x86_64)
+
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libskia_opts_avx
+  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_avx.a
+  include $(PREBUILT_STATIC_LIBRARY)
+
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libskia_opts_ssse3
+  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_ssse3.a
+  include $(PREBUILT_STATIC_LIBRARY)
+
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libskia_opts_sse41
+  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_sse41.a
+  include $(PREBUILT_STATIC_LIBRARY)
+  
+endif

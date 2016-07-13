@@ -663,7 +663,6 @@ Task ("externals-android")
     .WithCriteria (
         !FileExists ("native-builds/lib/android/x86/libSkiaSharp.so") ||
         !FileExists ("native-builds/lib/android/x86_64/libSkiaSharp.so") ||
-        !FileExists ("native-builds/lib/android/armeabi/libSkiaSharp.so") ||
         !FileExists ("native-builds/lib/android/armeabi-v7a/libSkiaSharp.so") ||
         !FileExists ("native-builds/lib/android/arm64-v8a/libSkiaSharp.so"))
     .Does (() => 
@@ -688,10 +687,13 @@ Task ("externals-android")
     SetEnvironmentVariable ("ANDROID_SDK_ROOT", ANDROID_SDK_ROOT);
     SetEnvironmentVariable ("ANDROID_NDK_HOME", ANDROID_NDK_HOME);
     
+    SetEnvironmentVariable ("GYP_DEFINES", "");
     buildArch ("x86", "x86");
+    SetEnvironmentVariable ("GYP_DEFINES", "");
     buildArch ("x86_64", "x86_64");
-    buildArch ("arm", "armeabi");
+    SetEnvironmentVariable ("GYP_DEFINES", "arm_neon=1 arm_version=7");
     buildArch ("arm_v7_neon", "armeabi-v7a");
+    SetEnvironmentVariable ("GYP_DEFINES", "arm_neon=0 arm_version=8");
     buildArch ("arm64", "arm64-v8a");
         
     var ndkbuild = MakeAbsolute (Directory (ANDROID_NDK_HOME)).CombineWithFilePath ("ndk-build").FullPath;
@@ -700,7 +702,7 @@ Task ("externals-android")
         WorkingDirectory = ROOT_PATH.Combine ("native-builds/libSkiaSharp_android").FullPath,
     }); 
 
-    foreach (var folder in new [] { "x86", "x86_64", "armeabi", "armeabi-v7a", "arm64-v8a" }) {
+    foreach (var folder in new [] { "x86", "x86_64", "armeabi-v7a", "arm64-v8a" }) {
         if (!DirectoryExists ("native-builds/lib/android/" + folder)) {
             CreateDirectory ("native-builds/lib/android/" + folder);
         }
