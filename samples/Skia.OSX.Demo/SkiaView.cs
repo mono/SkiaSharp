@@ -33,7 +33,7 @@ namespace Skia.OSX.Demo
 			IntPtr buff = System.Runtime.InteropServices.Marshal.AllocCoTaskMem (width * height * 4);
 			try {
 
-				using (var surface = SKSurface.Create (width, height, SKColorType.Rgba_8888, SKAlphaType.Premul, buff, width * 4)) {
+				using (var surface = SKSurface.Create (width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, buff, width * 4)) {
 					var skcanvas = surface.Canvas;
 
 					skcanvas.Scale (screenScale, screenScale);
