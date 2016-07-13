@@ -20,8 +20,8 @@ namespace SkiaSharp
 	public class SKPathEffect : SKObject
 	{
 		[Preserve]
-		internal SKPathEffect (IntPtr handle)
-			: base (handle)
+		internal SKPathEffect (IntPtr handle, bool owns)
+			: base (handle, owns)
 		{
 		}
 
