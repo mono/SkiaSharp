@@ -323,13 +323,6 @@ var InjectCompatibilityExternals = new Action<bool> ((inject) => {
 // EXTERNALS - the native C and C++ libraries
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Task ("externals-base")
-    .Does (() => 
-{
-    // add compatibility methods to skia externals
-    InjectCompatibilityExternals (true);
-});
-
 // this builds all the externals
 Task ("externals")
     .IsDependentOn ("externals-genapi")
@@ -396,7 +389,6 @@ Task ("externals-genapi")
 });
 // this builds the native C and C++ externals for Windows
 Task ("externals-windows")
-    .IsDependentOn ("externals-base")
     .WithCriteria (IsRunningOnWindows ())
     .WithCriteria (
         !FileExists ("native-builds/lib/windows/x86/libSkiaSharp.dll") ||
@@ -424,7 +416,6 @@ Task ("externals-windows")
 });
 // this builds the native C and C++ externals for Windows UWP
 Task ("externals-uwp")
-    .IsDependentOn ("externals-base")
     .WithCriteria (IsRunningOnWindows ())
     .WithCriteria (
         !FileExists ("native-builds/lib/uwp/ARM/libSkiaSharp.dll") ||
@@ -531,6 +522,7 @@ Task ("externals-uwp")
             if (projectName != "libSkiaSharp")
                 convertDesktopToUWP (projectPath, platform);
         });
+        InjectCompatibilityExternals (true);
         VisualStudioPathFixup ();
         DotNetBuild ("native-builds/libSkiaSharp_uwp/libSkiaSharp_" + arch + ".sln", c => { 
             c.Configuration = "Release"; 
@@ -556,7 +548,6 @@ Task ("externals-uwp")
 });
 // this builds the native C and C++ externals for Mac OS X
 Task ("externals-osx")
-    .IsDependentOn ("externals-base")
     .WithCriteria (IsRunningOnUnix ())
     .WithCriteria (
         !FileExists ("native-builds/lib/osx/libSkiaSharp.dylib"))
@@ -593,7 +584,6 @@ Task ("externals-osx")
 });
 // this builds the native C and C++ externals for iOS
 Task ("externals-ios")
-    .IsDependentOn ("externals-base")
     .WithCriteria (IsRunningOnUnix ())
     .WithCriteria (
         !FileExists ("native-builds/lib/ios/libSkiaSharp.framework/libSkiaSharp"))
@@ -637,7 +627,6 @@ Task ("externals-ios")
 });
 // this builds the native C and C++ externals for tvOS
 Task ("externals-tvos")
-    .IsDependentOn ("externals-base")
     .WithCriteria (IsRunningOnUnix ())
     .WithCriteria (
         !FileExists ("native-builds/lib/tvos/libSkiaSharp.framework/libSkiaSharp"))
@@ -684,7 +673,6 @@ Task ("externals-tvos")
 });
 // this builds the native C and C++ externals for Android
 Task ("externals-android")
-    .IsDependentOn ("externals-base")
     .WithCriteria (IsRunningOnUnix ())
     .WithCriteria (
         !FileExists ("native-builds/lib/android/x86/libSkiaSharp.so") ||
