@@ -858,6 +858,8 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_matrix_try_invert(ref SKMatrix matrix, out SKMatrix result);
 
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]  
+		public extern static void sk_path_effect_unref (sk_path_effect_t effect); 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_path_effect_t sk_path_effect_create_compose(sk_path_effect_t outer, sk_path_effect_t inner);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
