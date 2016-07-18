@@ -436,7 +436,7 @@ Task ("externals-uwp")
         //
         // TODO: the stuff in this block must be moved into the gyp files !!
         //
-
+        
         var projectFile = MakeAbsolute (projectFilePath).FullPath;
         var xdoc = XDocument.Load (projectFile);
         
