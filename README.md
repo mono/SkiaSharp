@@ -90,9 +90,6 @@ What version are we on? [**m52**](https://github.com/google/skia/tree/chrome/m52
 Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/xamarin-mobile-bindings...google:chrome/m52)  
 What have we added? [Compare](https://github.com/google/skia/compare/chrome/m52...mono:xamarin-mobile-bindings)  
 
-WIP: https://github.com/mono/skia/compare/update-google-skia...google:chrome/m52
-Diff: https://github.com/google/skia/compare/chrome/m52...mono:update-google-skia
-
 ## Where is Windows Phone 8 / Store 8
  
 We are working to add binaries for these platforms, stay tuned for a future release
