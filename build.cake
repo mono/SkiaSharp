@@ -288,7 +288,7 @@ var InjectCompatibilityExternals = new Action<bool> ((inject) => {
         { "skia/third_party/externals/dng_sdk/source/dng_utils.cpp", "#if qWinOS" },
         { "skia/third_party/externals/dng_sdk/source/dng_pthread.cpp", "#if qWinOS" },
         { "skia/third_party/externals/zlib/deflate.c", "#include <assert.h>" },
-        { "skia/third_party/externals/libpng/pngpriv.h", "#  include <windows.h>  /* defines _WINDOWS_ macro */" },
+        { "skia/third_party/libpng/pngpriv.h", "#  include <windows.h>  /* defines _WINDOWS_ macro */" },
     };
     foreach (var filePair in files) {
         var file = filePair.Key;
