@@ -439,8 +439,6 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_imagefilter_t sk_imagefilter_new_displacement_map_effect(SKDisplacementMapEffectChannelSelectorType xChannelSelector, SKDisplacementMapEffectChannelSelectorType yChannelSelector, float scale, sk_imagefilter_t displacement, sk_imagefilter_t color /*NULL*/, sk_imagefilter_croprect_t cropRect /*NULL*/);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_imagefilter_t sk_imagefilter_new_downsample(float scale, sk_imagefilter_t input /*NULL*/);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_imagefilter_t sk_imagefilter_new_drop_shadow(float dx, float dy, float sigmaX, float sigmaY, SKColor color, SKDropShadowImageFilterShadowMode shadowMode, sk_imagefilter_t input /*NULL*/, sk_imagefilter_croprect_t cropRect /*NULL*/);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_imagefilter_t sk_imagefilter_new_distant_lit_diffuse(ref SKPoint3 direction, SKColor lightColor, float surfaceScale, float kd, sk_imagefilter_t input /*NULL*/, sk_imagefilter_croprect_t cropRect /*NULL*/);
@@ -602,6 +600,9 @@ namespace SkiaSharp
 		// Typeface
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_typeface_t sk_typeface_create_from_name(string str, SKTypefaceStyle style);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_typeface_t sk_typeface_create_from_name_with_font_style(string familyName, int weight, int width, SKFontStyleSlant slant);
+
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_typeface_t sk_typeface_create_from_typeface(sk_typeface_t typeface, SKTypefaceStyle style);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]

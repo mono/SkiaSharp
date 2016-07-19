@@ -66,11 +66,6 @@ namespace SkiaSharp
 			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_displacement_map_effect(xChannelSelector, yChannelSelector, scale, displacement.Handle, input == null ? IntPtr.Zero : input.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
 		}
 
-		public static SKImageFilter CreateDownSample(float scale, SKImageFilter input = null)
-		{
-			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_downsample(scale, input == null ? IntPtr.Zero : input.Handle));
-		}
-
 		public static SKImageFilter CreateDownSample(float dx, float dy, float sigmaX, float sigmaY, SKColor color, SKDropShadowImageFilterShadowMode shadowMode, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null)
 		{
 			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_drop_shadow(dx, dy, sigmaX, sigmaY, color, shadowMode, input == null ? IntPtr.Zero : input.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));

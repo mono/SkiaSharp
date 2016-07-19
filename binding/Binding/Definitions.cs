@@ -129,12 +129,43 @@ namespace SkiaSharp
 		}
 	}
 
+	[Flags]
 	public enum SKTypefaceStyle {
-		Normal,
-		Bold,
-		Italic,
-		BoldItalic
+		Normal     = 0,
+		Bold       = 0x01,
+		Italic     = 0x02,
+		BoldItalic = 0x03
 	}
+
+	public enum SKFontStyleWeight {
+		Thin        = 100,
+		ExtraLight  = 200,
+		Light       = 300,
+		Normal      = 400,
+		Medium      = 500,
+		SemiBold    = 600,
+		Bold        = 700,
+		ExtraBold   = 800,
+		Black       = 900
+	};
+
+	public enum SKFontStyleWidth {
+		UltraCondensed   = 1,
+		ExtraCondensed   = 2,
+		Condensed        = 3,
+		SemiCondensed    = 4,
+		Normal           = 5,
+		SemiExpanded     = 6,
+		Expanded         = 7,
+		ExtraExpanded    = 8,
+		UltaExpanded     = 9
+	};
+
+	public enum SKFontStyleSlant {
+		Upright = 0,
+		Italic  = 1,
+		Oblique = 2,
+	};
 
 	public enum SKPointMode {
 		Points, Lines, Polygon
@@ -342,11 +373,11 @@ namespace SkiaSharp
 			}
 		}
 
+		private IntPtr ColorSpace;
 		public int Width;
 		public int Height;
 		public SKColorType ColorType;
 		public SKAlphaType AlphaType;
-		public SKColorProfileType ColorProfileType;
 
 		public SKImageInfo (int width, int height)
 		{
@@ -354,7 +385,7 @@ namespace SkiaSharp
 			this.Height = height;
 			this.ColorType = PlatformColorType;
 			this.AlphaType = SKAlphaType.Premul;
-			this.ColorProfileType = SKColorProfileType.Linear;
+			this.ColorSpace = IntPtr.Zero;
 		}
 
 		public SKImageInfo (int width, int height, SKColorType colorType)
@@ -363,7 +394,7 @@ namespace SkiaSharp
 			this.Height = height;
 			this.ColorType = colorType;
 			this.AlphaType = SKAlphaType.Premul;
-			this.ColorProfileType = SKColorProfileType.Linear;
+			this.ColorSpace = IntPtr.Zero;
 		}
 
 		public SKImageInfo (int width, int height, SKColorType colorType, SKAlphaType alphaType)
@@ -372,16 +403,7 @@ namespace SkiaSharp
 			this.Height = height;
 			this.ColorType = colorType;
 			this.AlphaType = alphaType;
-			this.ColorProfileType = SKColorProfileType.Linear;
-		}
-
-		public SKImageInfo (int width, int height, SKColorType colorType, SKAlphaType alphaType, SKColorProfileType colorProfileType)
-		{
-			this.Width = width;
-			this.Height = height;
-			this.ColorType = colorType;
-			this.AlphaType = alphaType;
-			this.ColorProfileType = colorProfileType;
+			this.ColorSpace = IntPtr.Zero;
 		}
 
 		public int BytesPerPixel {
