@@ -373,7 +373,6 @@ namespace SkiaSharp
 			}
 		}
 
-		private IntPtr ColorSpace;
 		public int Width;
 		public int Height;
 		public SKColorType ColorType;
@@ -385,7 +384,6 @@ namespace SkiaSharp
 			this.Height = height;
 			this.ColorType = PlatformColorType;
 			this.AlphaType = SKAlphaType.Premul;
-			this.ColorSpace = IntPtr.Zero;
 		}
 
 		public SKImageInfo (int width, int height, SKColorType colorType)
@@ -394,7 +392,6 @@ namespace SkiaSharp
 			this.Height = height;
 			this.ColorType = colorType;
 			this.AlphaType = SKAlphaType.Premul;
-			this.ColorSpace = IntPtr.Zero;
 		}
 
 		public SKImageInfo (int width, int height, SKColorType colorType, SKAlphaType alphaType)
@@ -403,7 +400,6 @@ namespace SkiaSharp
 			this.Height = height;
 			this.ColorType = colorType;
 			this.AlphaType = alphaType;
-			this.ColorSpace = IntPtr.Zero;
 		}
 
 		public int BytesPerPixel {
