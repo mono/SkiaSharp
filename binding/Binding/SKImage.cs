@@ -71,9 +71,17 @@ namespace SkiaSharp
 		public SKData Encode (SKImageEncodeFormat format, int quality)
 		{
 			return GetObject<SKData> (SkiaApi.sk_image_encode_specific (Handle, format, quality));
-		}
+        }
+        public static SKImage FromBitmap(SKBitmap bitmap)
+        {
+            if (bitmap == null)
+                throw new ArgumentNullException("bitmap");
 
-		public int Width => SkiaApi.sk_image_get_width (Handle);
+            var handle = SkiaApi.sk_image_new_from_bitmap(bitmap.Handle);
+            return GetObject<SKImage>(handle);
+        }
+
+        public int Width => SkiaApi.sk_image_get_width (Handle);
 		public int Height => SkiaApi.sk_image_get_height (Handle); 
 		public uint UniqueId => SkiaApi.sk_image_get_unique_id (Handle);
 	}
