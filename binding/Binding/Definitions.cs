@@ -1396,17 +1396,25 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			return SkiaApi.sk_matrix_try_invert (ref this, out inverse) != 0;
 		}
 
-		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl, EntryPoint="sk_matrix_concat")]
-		public extern static void Concat (ref SKMatrix target, ref SKMatrix first, ref SKMatrix second);
+		public static void Concat (ref SKMatrix target, ref SKMatrix first, ref SKMatrix second)
+		{
+			SkiaApi.sk_matrix_concat (ref target, ref first, ref second);
+		}
 
-		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl, EntryPoint="sk_matrix_pre_concat")]
-		public extern static void PreConcat (ref SKMatrix target, ref SKMatrix matrix);
+		public static void PreConcat (ref SKMatrix target, ref SKMatrix matrix)
+		{
+			SkiaApi.sk_matrix_pre_concat (ref target, ref matrix);
+		}
 
-		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl, EntryPoint="sk_matrix_post_concat")]
-		public extern static void PostConcat (ref SKMatrix target, ref SKMatrix matrix);
+		public static void PostConcat (ref SKMatrix target, ref SKMatrix matrix)
+		{
+			SkiaApi.sk_matrix_post_concat (ref target, ref matrix);
+		}
 
-		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl, EntryPoint="sk_matrix_map_rect")]
-		extern static void MapRect (ref SKMatrix matrix, out SKRect dest, ref SKRect source);
+		public void MapRect (ref SKMatrix matrix, out SKRect dest, ref SKRect source)
+		{
+			SkiaApi.sk_matrix_map_rect (ref matrix, out dest, ref source);
+		}
 
 		public SKRect MapRect (SKRect source)
 		{
@@ -1414,9 +1422,6 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			MapRect (ref this, out result, ref source);
 			return result;
 		}
-
-		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl)]
-		extern static void sk_matrix_map_points (ref SKMatrix matrix, IntPtr dst, IntPtr src, int count);
 
 		public void MapPoints (SKPoint [] result, SKPoint [] points)
 		{
@@ -1430,7 +1435,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			unsafe {
 				fixed (SKPoint *rp = &result[0]){
 					fixed (SKPoint *pp = &points[0]){
-						sk_matrix_map_points (ref this, (IntPtr) rp, (IntPtr) pp, dl);
+						SkiaApi.sk_matrix_map_points (ref this, (IntPtr) rp, (IntPtr) pp, dl);
 					}
 				}
 			}
@@ -1445,9 +1450,6 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			return res;
 		}
 
-		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl)]
-		extern static void sk_matrix_map_vectors (ref SKMatrix matrix, IntPtr dst, IntPtr src, int count);
-
 		public void MapVectors (SKPoint [] result, SKPoint [] vectors)
 		{
 			if (result == null)
@@ -1460,7 +1462,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			unsafe {
 				fixed (SKPoint *rp = &result[0]){
 					fixed (SKPoint *pp = &vectors[0]){
-						sk_matrix_map_vectors (ref this, (IntPtr) rp, (IntPtr) pp, dl);
+						SkiaApi.sk_matrix_map_vectors (ref this, (IntPtr) rp, (IntPtr) pp, dl);
 					}
 				}
 			}
@@ -1475,28 +1477,23 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			return res;
 		}
 
-		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl)]
-		extern static SKPoint sk_matrix_map_xy (ref SKMatrix matrix, float x, float y);
-
 		public SKPoint MapXY (float x, float y)
 		{
-			return sk_matrix_map_xy (ref this, x, y);
+			SKPoint result;
+			SkiaApi.sk_matrix_map_xy (ref this, x, y, out result);
+			return result;
 		}
-
-		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl)]
-		extern static SKPoint sk_matrix_map_vector (ref SKMatrix matrix, float x, float y);
 
 		public SKPoint MapVector (float x, float y)
 		{
-			return sk_matrix_map_vector (ref this, x, y);
+			SKPoint result;
+			SkiaApi.sk_matrix_map_vector(ref this, x, y, out result);
+			return result;
 		}
-
-		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl)]
-		extern static float sk_matrix_map_radius (ref SKMatrix matrix, float radius);
 
 		public float MapRadius (float radius)
 		{
-			return sk_matrix_map_radius (ref this, radius);
+			return SkiaApi.sk_matrix_map_radius (ref this, radius);
 		}
 	}
 

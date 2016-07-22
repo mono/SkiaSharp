@@ -46,19 +46,19 @@ namespace SkiaSharp
 	internal static class SkiaApi
 	{
 #if __TVOS__ && __UNIFIED__
-		public const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
+		private const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
 #elif __IOS__ && __UNIFIED__
-		public const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
+		private const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
 #elif __ANDROID__
-		public const string SKIA = "libSkiaSharp.so";
+		private const string SKIA = "libSkiaSharp.so";
 #elif XAMARIN_MAC
-		public const string SKIA = "libSkiaSharp.dylib";
+		private const string SKIA = "libSkiaSharp.dylib";
 #elif DESKTOP
-		public const string SKIA = "libSkiaSharp.dll"; // redirected using .dll.config to 'libSkiaSharp.dylib' on OS X
+		private const string SKIA = "libSkiaSharp.dll"; // redirected using .dll.config to 'libSkiaSharp.dylib' on OS X
 #elif WINDOWS_UWP
-		public const string SKIA = "libSkiaSharp.dll";
+		private const string SKIA = "libSkiaSharp.dll";
 #else
-		public const string SKIA = "libSkiaSharp";
+		private const string SKIA = "libSkiaSharp";
 #endif
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -838,6 +838,24 @@ namespace SkiaSharp
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_matrix_try_invert(ref SKMatrix matrix, out SKMatrix result);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix_concat(ref SKMatrix target, ref SKMatrix first, ref SKMatrix second);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix_pre_concat(ref SKMatrix target, ref SKMatrix matrix);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix_post_concat(ref SKMatrix target, ref SKMatrix matrix);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix_map_rect(ref SKMatrix matrix, out SKRect dest, ref SKRect source);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix_map_points (ref SKMatrix matrix, IntPtr dst, IntPtr src, int count);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix_map_vectors (ref SKMatrix matrix, IntPtr dst, IntPtr src, int count);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix_map_xy (ref SKMatrix matrix, float x, float y, out SKPoint result);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix_map_vector (ref SKMatrix matrix, float x, float y, out SKPoint result);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static float sk_matrix_map_radius (ref SKMatrix matrix, float radius);
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]  
 		public extern static void sk_path_effect_unref (sk_path_effect_t effect); 
