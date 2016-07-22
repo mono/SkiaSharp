@@ -23,6 +23,8 @@ LOCAL_MODULE           := SkiaSharp
 LOCAL_C_INCLUDES       := ../../skia/src/c           \
                           ../../skia/include/c       \
                           ../../skia/include/core    \
+                          ../../skia/include/codec   \
+                          ../../skia/include/effects \
                           ../../skia/include/config  \
                           ../../skia/include/images
 
