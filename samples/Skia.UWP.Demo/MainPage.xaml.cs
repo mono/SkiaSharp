@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -26,6 +27,14 @@ namespace Skia.UWP.Demo
 		{
 			this.InitializeComponent();
 
+			if (Windows.Foundation.Metadata.ApiInformation.IsTypePresent(typeof(Windows.UI.ViewManagement.StatusBar).FullName))
+			{
+				var statusBar = Windows.UI.ViewManagement.StatusBar.GetForCurrentView();
+				statusBar.BackgroundColor = Color.FromArgb(0xff, 0x34, 0x98, 0xdb);
+				statusBar.ForegroundColor = Colors.White;
+				statusBar.BackgroundOpacity = 1;
+			}
+
 			string fontName = "content-font.ttf";
 			var install = Windows.ApplicationModel.Package.Current.InstalledLocation;
 			SkiaSharp.Demos.CustomFontPath = Path.Combine(install.Path, fontName);
@@ -43,7 +52,7 @@ namespace Skia.UWP.Demo
 				comboBox.Items.Add(item);
 			}
 
-			comboBox.SelectionChanged += async (sender, e) =>
+			comboBox.SelectionChanged += (sender, e) =>
 			{
 				skiaView.Sample = SkiaSharp.Demos.GetSample((string)comboBox.SelectedItem);
 			};

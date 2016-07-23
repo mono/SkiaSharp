@@ -23,13 +23,6 @@ namespace SkiaSharp
 		private IntPtr handle;
 
 		[Preserve]
-		internal SKObject(IntPtr handle)
-		{
-			Handle = handle;
-			OwnsHandle = false;
-		}
-
-		[Preserve]
 		internal SKObject(IntPtr handle, bool owns)
 		{
 			Handle = handle;
@@ -71,16 +64,9 @@ namespace SkiaSharp
 			}
 
 			DeregisterHandle(handle, this);
-			handle = IntPtr.Zero;
-		}
+			handle = IntPtr.Zero;}
 
-		internal static TSkiaObject GetObject<TSkiaObject>(IntPtr handle)
-			where TSkiaObject : SKObject
-		{
-			return GetObject<TSkiaObject>(handle, null);
-		}
-
-		internal static TSkiaObject GetObject<TSkiaObject>(IntPtr handle, bool? owns)
+		internal static TSkiaObject GetObject<TSkiaObject>(IntPtr handle, bool owns = true)
 			where TSkiaObject : SKObject
 		{
 			if (handle == IntPtr.Zero)
@@ -106,13 +92,12 @@ namespace SkiaSharp
 			// TODO: we could probably cache this
 			var type = typeof(TSkiaObject);
 			var constructor = type.GetTypeInfo().DeclaredConstructors.FirstOrDefault(c => 
-				(owns == null && c.GetParameters().Length == 1 && c.GetParameters()[0].ParameterType == typeof(IntPtr)) ||
-				(owns != null && c.GetParameters().Length == 2 && c.GetParameters()[0].ParameterType == typeof(IntPtr) && c.GetParameters()[1].ParameterType == typeof(bool)));
+				c.GetParameters().Length == 2 && c.GetParameters()[0].ParameterType == typeof(IntPtr) && c.GetParameters()[1].ParameterType == typeof(bool));
 			if (constructor == null)
 			{
-				throw new MissingMethodException($"No constructor found for {type.FullName}.ctor(System.IntPtr{(owns==null?"":", System.Boolean")})");
+				throw new MissingMethodException($"No constructor found for {type.FullName}.ctor(System.IntPtr, System.Boolean)");
 			}
-			return (TSkiaObject)constructor.Invoke(owns == null ? new object[] { handle } : new object[] { handle, owns });
+			return (TSkiaObject)constructor.Invoke(new object[] { handle, owns });
 		}
 
 		internal static void RegisterHandle(IntPtr handle, SKObject instance)

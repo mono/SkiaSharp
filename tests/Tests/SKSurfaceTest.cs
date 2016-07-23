@@ -31,8 +31,8 @@ namespace SkiaSharp.Tests
 		{
 			var data = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
 
-			var surface1 = SKSurface.Create(width, height, SKColorType.N_32, SKAlphaType.Premul, data.Scan0, data.Stride);
-			var surface2 = SKSurface.Create(width, height, SKColorType.N_32, SKAlphaType.Premul, data.Scan0, data.Stride);
+			var surface1 = SKSurface.Create(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, data.Scan0, data.Stride);
+			var surface2 = SKSurface.Create(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, data.Scan0, data.Stride);
 
 			Assert.IsNotNull(surface1);
 			Assert.IsNotNull(surface2);
@@ -51,7 +51,7 @@ namespace SkiaSharp.Tests
 		{
 			var data = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
 
-			var surface = SKSurface.Create(width, height, SKColorType.N_32, SKAlphaType.Premul, data.Scan0, data.Stride);
+			var surface = SKSurface.Create(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, data.Scan0, data.Stride);
 
 			Assert.IsNotNull(surface);
 			Assert.AreNotEqual(IntPtr.Zero, surface.Handle);

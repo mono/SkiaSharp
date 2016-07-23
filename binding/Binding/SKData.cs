@@ -17,7 +17,7 @@ namespace SkiaSharp
 	{
 		protected override void Dispose (bool disposing)
 		{
-			if (Handle != IntPtr.Zero) {
+			if (Handle != IntPtr.Zero && OwnsHandle) {
 				SkiaApi.sk_data_unref (Handle);
 			}
 
@@ -25,13 +25,13 @@ namespace SkiaSharp
 		}
 
 		[Preserve]
-		internal SKData (IntPtr x)
-			: base (x)
+		internal SKData (IntPtr x, bool owns)
+			: base (x, owns)
 		{
 		}
 
 		public SKData ()
-			: this (SkiaApi.sk_data_new_empty ())
+			: this (SkiaApi.sk_data_new_empty (), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKData instance.");
@@ -39,7 +39,7 @@ namespace SkiaSharp
 		}
 			
 		public SKData (IntPtr bytes, ulong length)
-			: this (IntPtr.Zero)
+			: this (IntPtr.Zero, true)
 		{
 			if (Marshal.SizeOf (typeof(IntPtr)) == 4 && length > UInt32.MaxValue)
 				throw new ArgumentException ("length", "The length exceeds the size of pointers");
@@ -50,7 +50,7 @@ namespace SkiaSharp
 		}
 
 		public SKData (byte[] bytes)
-			: this (SkiaApi.sk_data_new_with_copy (bytes, (IntPtr) bytes.Length))
+			: this (SkiaApi.sk_data_new_with_copy (bytes, (IntPtr) bytes.Length), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to copy the SKData instance.");

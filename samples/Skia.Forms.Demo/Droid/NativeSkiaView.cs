@@ -31,7 +31,7 @@ namespace Skia.Forms.Demo.Droid
 
 			try
 			{
-				using (var surface = SKSurface.Create (canvas.Width, canvas.Height, SKColorType.Rgba_8888, SKAlphaType.Premul, bitmap.LockPixels (), canvas.Width * 4)) {
+				using (var surface = SKSurface.Create (canvas.Width, canvas.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, bitmap.LockPixels (), canvas.Width * 4)) {
 					var skcanvas = surface.Canvas;
 					skcanvas.Scale (((float)canvas.Width)/(float)skiaView.Width, ((float)canvas.Height)/(float)skiaView.Height);
 					iskiaView.SendDraw (skcanvas);

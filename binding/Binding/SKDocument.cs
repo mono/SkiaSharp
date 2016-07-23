@@ -15,14 +15,14 @@ namespace SkiaSharp
 		public const float DefaultRasterDpi = 72.0f;
 
 		[Preserve]
-		internal SKDocument(IntPtr handle)
-			: base (handle)
+		internal SKDocument(IntPtr handle, bool owns)
+			: base (handle, owns)
 		{
 		}
 
 		protected override void Dispose (bool disposing)
 		{
-			if (Handle != IntPtr.Zero) {
+			if (Handle != IntPtr.Zero && OwnsHandle) {
 				SkiaApi.sk_document_unref (Handle);
 			}
 

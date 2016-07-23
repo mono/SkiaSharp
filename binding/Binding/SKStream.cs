@@ -12,11 +12,6 @@ namespace SkiaSharp
 {
 	public abstract class SKStream : SKObject
 	{
-		private SKStream (IntPtr handle)
-			: base (handle)
-		{
-		}
-		
 		internal SKStream (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -264,11 +259,6 @@ namespace SkiaSharp
 
 	public abstract class SKWStream : SKObject
 	{
-		private SKWStream (IntPtr handle)
-			: base (handle)
-		{
-		}
-		
 		internal SKWStream (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -418,7 +408,7 @@ namespace SkiaSharp
 
 		public SKStreamAsset DetachAsStream ()
 		{
-			return GetObject<SKStreamAssetImplementation> (SkiaApi.sk_dynamicmemorywstream_detach_as_stream (Handle), true);
+			return GetObject<SKStreamAssetImplementation> (SkiaApi.sk_dynamicmemorywstream_detach_as_stream (Handle));
 		}
 
 		protected override void Dispose (bool disposing)

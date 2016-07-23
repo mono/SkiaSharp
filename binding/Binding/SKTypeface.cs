@@ -14,14 +14,14 @@ namespace SkiaSharp
 	public class SKTypeface : SKObject
 	{
 		[Preserve]
-		internal SKTypeface (IntPtr handle)
-			: base (handle)
+		internal SKTypeface (IntPtr handle, bool owns)
+			: base (handle, owns)
 		{
 		}
 		
 		protected override void Dispose (bool disposing)
 		{
-			if (Handle != IntPtr.Zero) {
+			if (Handle != IntPtr.Zero && OwnsHandle) {
 				SkiaApi.sk_typeface_unref (Handle);
 			}
 
@@ -33,6 +33,18 @@ namespace SkiaSharp
 			if (familyName == null)
 				throw new ArgumentNullException ("familyName");
 			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_name (familyName, style));
+		}
+
+		public static SKTypeface FromFamilyName (string familyName, int weight, int width, SKFontStyleSlant slant)
+		{
+			if (familyName == null)
+				throw new ArgumentNullException ("familyName");
+			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_name_with_font_style (familyName, weight, width, slant));
+		}
+
+		public static SKTypeface FromFamilyName (string familyName, SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant)
+		{
+			return FromFamilyName(familyName, (int)weight, (int)width, slant);
 		}
 
 		public static SKTypeface FromTypeface (SKTypeface typeface, SKTypefaceStyle style = SKTypefaceStyle.Normal)

@@ -36,7 +36,7 @@ namespace Skia.Forms.Demo.UWP
 			IntPtr buff = Marshal.AllocCoTaskMem (width * height * 4);
 
 			try {
-				using (var surface = SKSurface.Create (width, height, SKColorType.N_32, SKAlphaType.Premul, buff, width * 4)) {
+				using (var surface = SKSurface.Create (width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, buff, width * 4)) {
 					var skcanvas = surface.Canvas;
 					skcanvas.Scale (screenScale, screenScale);
 					using (new SKAutoCanvasRestore (skcanvas, true)) {

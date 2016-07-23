@@ -277,6 +277,47 @@ var VisualStudioPathFixup = new Action (() => {
     }
 });
 
+var InjectCompatibilityExternals = new Action<bool> ((inject) => {
+    // some methods don't yet exist, so we must add the compat layer to them.
+    // we need this as we can't modify the third party files
+    // all we do is insert our header before all the others
+    var compatHeader = "native-builds/src/WinRTCompat.h";
+    var compatSource = "native-builds/src/WinRTCompat.c";
+    var files = new Dictionary<FilePath, string> { 
+        { "skia/third_party/externals/dng_sdk/source/dng_string.cpp", "#if qWinOS" },
+        { "skia/third_party/externals/dng_sdk/source/dng_utils.cpp", "#if qWinOS" },
+        { "skia/third_party/externals/dng_sdk/source/dng_pthread.cpp", "#if qWinOS" },
+        { "skia/third_party/externals/zlib/deflate.c", "#include <assert.h>" },
+    };
+    foreach (var filePair in files) {
+        var file = filePair.Key;
+        var root = string.Join ("/", file.GetDirectory().Segments.Select (x => ".."));
+        var include = "#include \"" + root + "/" + compatHeader + "\"";
+        
+        var contents = FileReadLines (file).ToList ();
+        var index = contents.IndexOf (include);
+        if (index == -1 && inject) {
+            if (string.IsNullOrEmpty (filePair.Value)) {
+                contents.Insert (0, include);
+            } else {
+                contents.Insert (contents.IndexOf (filePair.Value), include);
+            }
+            FileWriteLines (file, contents.ToArray ());
+        } else if (index != -1 && !inject) {
+            int idx = 0;
+            if (string.IsNullOrEmpty (filePair.Value)) {
+                idx = 0;
+            } else {
+                idx = contents.IndexOf (filePair.Value) - 1;
+            }
+            if (contents [idx] == include) {
+                contents.RemoveAt (idx);
+            }
+            FileWriteLines (file, contents.ToArray ());
+        }
+    }
+});
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXTERNALS - the native C and C++ libraries
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -436,8 +477,11 @@ Task ("externals-uwp")
         SetXValue (properties, "IgnoreImportLibrary","false");
         
         SetXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "CompileAsWinRT", "false");
-        //AddXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "AdditionalOptions", " /sdl ");
         AddXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", ";SK_BUILD_FOR_WINRT;WINAPI_FAMILY=WINAPI_FAMILY_APP;");
+        AddXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", ";SK_HAS_DWRITE_1_H;SK_HAS_DWRITE_2_H;");
+        // if (platform.ToUpper () == "ARM") {
+        //     AddXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", ";__ARM_NEON;__ARM_NEON__;");
+        // }
         AddXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "DisableSpecificWarnings", ";4146;4703;");
         SetXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "Link" }, "SubSystem", "Console");
         SetXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "Link" }, "IgnoreAllDefaultLibraries", "false");
@@ -453,20 +497,7 @@ Task ("externals-uwp")
         RemoveXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", "SK_SFNTLY_SUBSETTER=\"font_subsetter.h\"");
         
         if (rootNamespace == "ports") {
-            if (platform.ToUpper () == "ARM") {
-                // TLS is not available on ARM
-                AddFileReference (xdoc.Root, @"..\..\src\ports\SkTLS_none.cpp");
-                RemoveFileReference (xdoc.Root, "SkTLS_win.cpp");
-            }
             RemoveFileReference (xdoc.Root, "SkFontHost_win.cpp");
-        } else if (rootNamespace == "zlib" && platform.ToUpper () == "ARM") {
-            // x86 instructions are not available on ARM
-            RemoveFileReference (xdoc.Root, "x86.c");
-        } else if (rootNamespace == "zlib_x86_simd" && platform.ToUpper () == "ARM") {
-            // SIMD is not available on ARM
-            AddFileReference (xdoc.Root, @"..\..\third_party\externals\zlib\simd_stub.c");
-            RemoveFileReference (xdoc.Root, "crc_folding.c");
-            RemoveFileReference (xdoc.Root, "fill_window_sse.c");
         } else if (rootNamespace == "skgpu" ) {
             // GL is not available to WinRT
             RemoveFileReference (xdoc.Root, "GrGLCreateNativeInterface_none.cpp");
@@ -490,6 +521,7 @@ Task ("externals-uwp")
             if (projectName != "libSkiaSharp")
                 convertDesktopToUWP (projectPath, platform);
         });
+        InjectCompatibilityExternals (true);
         VisualStudioPathFixup ();
         DotNetBuild ("native-builds/libSkiaSharp_uwp/libSkiaSharp_" + arch + ".sln", c => { 
             c.Configuration = "Release"; 
@@ -644,7 +676,6 @@ Task ("externals-android")
     .WithCriteria (
         !FileExists ("native-builds/lib/android/x86/libSkiaSharp.so") ||
         !FileExists ("native-builds/lib/android/x86_64/libSkiaSharp.so") ||
-        !FileExists ("native-builds/lib/android/armeabi/libSkiaSharp.so") ||
         !FileExists ("native-builds/lib/android/armeabi-v7a/libSkiaSharp.so") ||
         !FileExists ("native-builds/lib/android/arm64-v8a/libSkiaSharp.so"))
     .Does (() => 
@@ -669,10 +700,13 @@ Task ("externals-android")
     SetEnvironmentVariable ("ANDROID_SDK_ROOT", ANDROID_SDK_ROOT);
     SetEnvironmentVariable ("ANDROID_NDK_HOME", ANDROID_NDK_HOME);
     
+    SetEnvironmentVariable ("GYP_DEFINES", "");
     buildArch ("x86", "x86");
+    SetEnvironmentVariable ("GYP_DEFINES", "");
     buildArch ("x86_64", "x86_64");
-    buildArch ("arm", "armeabi");
+    SetEnvironmentVariable ("GYP_DEFINES", "arm_neon=1 arm_version=7");
     buildArch ("arm_v7_neon", "armeabi-v7a");
+    SetEnvironmentVariable ("GYP_DEFINES", "arm_neon=0 arm_version=8");
     buildArch ("arm64", "arm64-v8a");
         
     var ndkbuild = MakeAbsolute (Directory (ANDROID_NDK_HOME)).CombineWithFilePath ("ndk-build").FullPath;
@@ -681,7 +715,7 @@ Task ("externals-android")
         WorkingDirectory = ROOT_PATH.Combine ("native-builds/libSkiaSharp_android").FullPath,
     }); 
 
-    foreach (var folder in new [] { "x86", "x86_64", "armeabi", "armeabi-v7a", "arm64-v8a" }) {
+    foreach (var folder in new [] { "x86", "x86_64", "armeabi-v7a", "arm64-v8a" }) {
         if (!DirectoryExists ("native-builds/lib/android/" + folder)) {
             CreateDirectory ("native-builds/lib/android/" + folder);
         }
@@ -963,6 +997,9 @@ Task ("clean-externals").Does (() =>
     // windows
     CleanDirectories ("native-builds/libSkiaSharp_windows/Release");
     CleanDirectories ("native-builds/libSkiaSharp_windows/x64/Release");
+    
+    // remove compatibility
+    InjectCompatibilityExternals (false);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

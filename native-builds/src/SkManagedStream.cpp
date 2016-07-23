@@ -92,7 +92,7 @@ SkManagedStream* SkManagedStream::duplicate() const {
 SkManagedStream* SkManagedStream::fork() const {
     SkAutoTDelete<SkManagedStream> that(fCreateNew(this));
     that->seek(getPosition());
-    return that.detach();
+    return that.release();
 }
 
 

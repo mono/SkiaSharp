@@ -29,7 +29,7 @@ namespace Skia.WindowsDesktop.Demo
 			using (var bitmap = new Bitmap(width, height, PixelFormat.Format32bppPArgb))
 			{
 				var data = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
-				using (var surface = SKSurface.Create(width, height, SKColorType.N_32, SKAlphaType.Premul, data.Scan0, width * 4))
+				using (var surface = SKSurface.Create(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, data.Scan0, width * 4))
 				{
 					var skcanvas = surface.Canvas;
 					sample.Method(skcanvas, width, height);
