@@ -5,6 +5,8 @@
  * found in the LICENSE file.
  */
 
+#include "SkCodec.h"
+
 #include "sk_xamarin.h"
 
 #include "sk_types_priv.h"

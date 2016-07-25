@@ -14,13 +14,13 @@ namespace SkiaSharp
 	internal class SKString : SKObject
 	{
 		[Preserve]
-		internal SKString (IntPtr handle)
-			: base (handle)
+		internal SKString (IntPtr handle, bool owns)
+			: base (handle, owns)
 		{
 		}
 
 		public SKString ()
-			: base (SkiaApi.sk_string_new_empty ())
+			: base (SkiaApi.sk_string_new_empty (), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKString instance.");
@@ -28,7 +28,7 @@ namespace SkiaSharp
 		}
 		
 		public SKString (byte [] src, long length)
-			: base (SkiaApi.sk_string_new_with_copy (src, (IntPtr)length))
+			: base (SkiaApi.sk_string_new_with_copy (src, (IntPtr)length), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to copy the SKString instance.");
@@ -49,7 +49,7 @@ namespace SkiaSharp
 
 		protected override void Dispose (bool disposing)
 		{
-			if (Handle != IntPtr.Zero) {
+			if (Handle != IntPtr.Zero && OwnsHandle) {
 				SkiaApi.sk_string_destructor (Handle);
 			}
 

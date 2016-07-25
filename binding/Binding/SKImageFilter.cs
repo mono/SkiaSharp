@@ -13,14 +13,14 @@ namespace SkiaSharp
 	public class SKImageFilter : SKObject
 	{
 		[Preserve]
-		internal SKImageFilter(IntPtr handle)
-			: base(handle)
+		internal SKImageFilter(IntPtr handle, bool owns)
+			: base(handle, owns)
 		{
 		}
 
 		protected override void Dispose(bool disposing)
 		{
-			if (Handle != IntPtr.Zero)
+			if (Handle != IntPtr.Zero && OwnsHandle)
 			{
 				SkiaApi.sk_imagefilter_unref(Handle);
 			}
@@ -64,11 +64,6 @@ namespace SkiaSharp
 			if (displacement == null)
 				throw new ArgumentNullException("displacement");
 			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_displacement_map_effect(xChannelSelector, yChannelSelector, scale, displacement.Handle, input == null ? IntPtr.Zero : input.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
-		}
-
-		public static SKImageFilter CreateDownSample(float scale, SKImageFilter input = null)
-		{
-			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_downsample(scale, input == null ? IntPtr.Zero : input.Handle));
 		}
 
 		public static SKImageFilter CreateDownSample(float dx, float dy, float sigmaX, float sigmaY, SKColor color, SKDropShadowImageFilterShadowMode shadowMode, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null)
@@ -172,24 +167,24 @@ namespace SkiaSharp
 
 		public class CropRect : SKObject
 		{
-			internal CropRect(IntPtr handle)
-				: base(handle)
+			internal CropRect(IntPtr handle, bool owns)
+				: base(handle, owns)
 			{
 			}
 
 			public CropRect()
-				: this(SkiaApi.sk_imagefilter_croprect_new())
+				: this(SkiaApi.sk_imagefilter_croprect_new(), true)
 			{
 			}
 
 			public CropRect(SKRect rect, SKCropRectFlags flags = SKCropRectFlags.HasAll)
-				: this(SkiaApi.sk_imagefilter_croprect_new_with_rect(ref rect, flags))
+				: this(SkiaApi.sk_imagefilter_croprect_new_with_rect(ref rect, flags), true)
 			{
 			}
 			
 			protected override void Dispose(bool disposing)
 			{
-				if (Handle != IntPtr.Zero)
+				if (Handle != IntPtr.Zero && OwnsHandle)
 				{
 					SkiaApi.sk_imagefilter_croprect_destructor(Handle);
 				}

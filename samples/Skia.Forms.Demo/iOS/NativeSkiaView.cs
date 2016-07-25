@@ -28,7 +28,7 @@ namespace Skia.Forms.Demo.iOS
 
 			IntPtr buff = System.Runtime.InteropServices.Marshal.AllocCoTaskMem (width * height * 4);
 			try {
-				using (var surface = SKSurface.Create (width, height, SKColorType.N_32, SKAlphaType.Premul, buff, width * 4)) {
+				using (var surface = SKSurface.Create (width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, buff, width * 4)) {
 					var skcanvas = surface.Canvas;
 					skcanvas.Scale ((float)screenScale, (float)screenScale);
 					using (new SKAutoCanvasRestore (skcanvas, true)) {

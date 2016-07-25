@@ -14,14 +14,14 @@ namespace SkiaSharp
 	public class SKPicture : SKObject
 	{
 		[Preserve]
-		internal SKPicture (IntPtr h)
-			: base (h)
+		internal SKPicture (IntPtr h, bool owns)
+			: base (h, owns)
 		{
 		}
 		
 		protected override void Dispose (bool disposing)
 		{
-			if (Handle != IntPtr.Zero) {
+			if (Handle != IntPtr.Zero && OwnsHandle) {
 				SkiaApi.sk_picture_unref (Handle);
 			}
 

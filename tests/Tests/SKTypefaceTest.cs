@@ -5,10 +5,8 @@ using System.IO;
 namespace SkiaSharp.Tests
 {
 	[TestFixture]
-	public class SKTypefaceTest
+	public class SKTypefaceTest : SKTest
 	{
-		const string PathToFonts = @"../../../../../skia/resources/fonts";
-
 		static readonly string[] ExpectedTablesSpiderFont = new string[] {
 			"FFTM", "GDEF", "OS/2", "cmap", "cvt ", "gasp", "glyf", "head",
 			"hhea", "hmtx", "loca", "maxp", "name", "post",

@@ -44,18 +44,29 @@ using System.Globalization;
  	
 namespace SkiaSharp
 {
-	public enum SKImageDecoderResult {
-		Failure        = 0,
-		PartialSuccess = 1,
-		Success        = 2 
+	public enum SKCodecResult {
+		Success,
+		IncompleteInput,
+		InvalidConversion,
+		InvalidScale,
+		InvalidParameters,
+		InvalidInput,
+		CouldNotRewind,
+		Unimplemented,
 	}
 
-	public enum SKImageDecoderMode {
-		DecodeBounds,
-		DecodePixels
+	public enum SKCodecOrigin {
+		TopLeft = 1,
+		TopRight = 2,
+		BottomRight = 3,
+		BottomLeft = 4,
+		LeftTop = 5,
+		RightTop = 6,
+		RightBottom = 7,
+		LeftBottom = 8,
 	}
 
-	public enum SKImageDecoderFormat {
+	public enum SKEncodedFormat {
 		Unknown,
 		Bmp,
 		Gif,
@@ -67,6 +78,7 @@ namespace SkiaSharp
 		Pkm,
 		Ktx,
 		Astc,
+		Dng,
 	}
 
 	public partial struct SKColor {
@@ -117,12 +129,43 @@ namespace SkiaSharp
 		}
 	}
 
+	[Flags]
 	public enum SKTypefaceStyle {
-		Normal,
-		Bold,
-		Italic,
-		BoldItalic
+		Normal     = 0,
+		Bold       = 0x01,
+		Italic     = 0x02,
+		BoldItalic = 0x03
 	}
+
+	public enum SKFontStyleWeight {
+		Thin        = 100,
+		ExtraLight  = 200,
+		Light       = 300,
+		Normal      = 400,
+		Medium      = 500,
+		SemiBold    = 600,
+		Bold        = 700,
+		ExtraBold   = 800,
+		Black       = 900
+	};
+
+	public enum SKFontStyleWidth {
+		UltraCondensed   = 1,
+		ExtraCondensed   = 2,
+		Condensed        = 3,
+		SemiCondensed    = 4,
+		Normal           = 5,
+		SemiExpanded     = 6,
+		Expanded         = 7,
+		ExtraExpanded    = 8,
+		UltaExpanded     = 9
+	};
+
+	public enum SKFontStyleSlant {
+		Upright = 0,
+		Italic  = 1,
+		Oblique = 2,
+	};
 
 	public enum SKPointMode {
 		Points, Lines, Polygon
@@ -143,11 +186,14 @@ namespace SkiaSharp
 
 	public enum SKColorType {
 		Unknown,
-		Rgba_8888,
-		Bgra_8888,
-		Alpha_8,
-		Rgb_565,
-		N_32
+		Alpha8,
+		Rgb565,
+		Argb4444,
+		Rgba8888,
+		Bgra8888,
+		Index8,
+		Gray8,
+		RgbaF16
 	}
 
 	public enum SKColorProfileType {
@@ -156,6 +202,7 @@ namespace SkiaSharp
 	}
 
 	public enum SKAlphaType {
+		Unknown,
 		Opaque,
 		Premul,
 		Unpremul
@@ -308,11 +355,44 @@ namespace SkiaSharp
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKImageInfo {
 		public static SKImageInfo Empty;
+		public static SKColorType PlatformColorType;
+
+		static SKImageInfo ()
+		{
+#if WINDOWS_UWP
+			var isUnix = false;
+#else
+			var isUnix = Environment.OSVersion.Platform == PlatformID.MacOSX || Environment.OSVersion.Platform == PlatformID.Unix;
+#endif
+			if (isUnix) {
+				// Unix depends on the CPU endianess, but we use RGBA
+				PlatformColorType = SKColorType.Rgba8888;
+			} else {
+				// Windows is always BGRA
+				PlatformColorType = SKColorType.Bgra8888;
+			}
+		}
 
 		public int Width;
 		public int Height;
 		public SKColorType ColorType;
 		public SKAlphaType AlphaType;
+
+		public SKImageInfo (int width, int height)
+		{
+			this.Width = width;
+			this.Height = height;
+			this.ColorType = PlatformColorType;
+			this.AlphaType = SKAlphaType.Premul;
+		}
+
+		public SKImageInfo (int width, int height, SKColorType colorType)
+		{
+			this.Width = width;
+			this.Height = height;
+			this.ColorType = colorType;
+			this.AlphaType = SKAlphaType.Premul;
+		}
 
 		public SKImageInfo (int width, int height, SKColorType colorType, SKAlphaType alphaType)
 		{
@@ -327,17 +407,25 @@ namespace SkiaSharp
 				switch (ColorType) {
 				case SKColorType.Unknown:
 					return 0;
-				case SKColorType.Alpha_8:
+				case SKColorType.Alpha8:
+				case SKColorType.Index8:
+				case SKColorType.Gray8:
 					return 1;
-				case SKColorType.Rgb_565:
+				case SKColorType.Rgb565:
+				case SKColorType.Argb4444:
 					return 2;
-				case SKColorType.Bgra_8888:
-				case SKColorType.Rgba_8888:
-				case SKColorType.N_32:
+				case SKColorType.Bgra8888:
+				case SKColorType.Rgba8888:
 					return 4;
+				case SKColorType.RgbaF16:
+					return 8;
 				}
 				throw new ArgumentOutOfRangeException ("ColorType");
 			}
+		}
+
+		public int BytesSize {
+			get { return Width * Height * BytesPerPixel; }
 		}
 
 		public int RowBytes {
@@ -364,6 +452,18 @@ namespace SkiaSharp
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKSurfaceProps {
 		public SKPixelGeometry PixelGeometry;
+	}
+
+	public enum SKZeroInitialized {
+		Yes,
+		No,
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct SKCodecOptions {
+		public SKZeroInitialized ZeroInitialized;
+		public SKRectI Subset;
+		public bool HasSubset;
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -1296,17 +1396,25 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			return SkiaApi.sk_matrix_try_invert (ref this, out inverse) != 0;
 		}
 
-		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl, EntryPoint="sk_matrix_concat")]
-		public extern static void Concat (ref SKMatrix target, ref SKMatrix first, ref SKMatrix second);
+		public static void Concat (ref SKMatrix target, ref SKMatrix first, ref SKMatrix second)
+		{
+			SkiaApi.sk_matrix_concat (ref target, ref first, ref second);
+		}
 
-		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl, EntryPoint="sk_matrix_pre_concat")]
-		public extern static void PreConcat (ref SKMatrix target, ref SKMatrix matrix);
+		public static void PreConcat (ref SKMatrix target, ref SKMatrix matrix)
+		{
+			SkiaApi.sk_matrix_pre_concat (ref target, ref matrix);
+		}
 
-		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl, EntryPoint="sk_matrix_post_concat")]
-		public extern static void PostConcat (ref SKMatrix target, ref SKMatrix matrix);
+		public static void PostConcat (ref SKMatrix target, ref SKMatrix matrix)
+		{
+			SkiaApi.sk_matrix_post_concat (ref target, ref matrix);
+		}
 
-		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl, EntryPoint="sk_matrix_map_rect")]
-		extern static void MapRect (ref SKMatrix matrix, out SKRect dest, ref SKRect source);
+		public void MapRect (ref SKMatrix matrix, out SKRect dest, ref SKRect source)
+		{
+			SkiaApi.sk_matrix_map_rect (ref matrix, out dest, ref source);
+		}
 
 		public SKRect MapRect (SKRect source)
 		{
@@ -1314,9 +1422,6 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			MapRect (ref this, out result, ref source);
 			return result;
 		}
-
-		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl)]
-		extern static void sk_matrix_map_points (ref SKMatrix matrix, IntPtr dst, IntPtr src, int count);
 
 		public void MapPoints (SKPoint [] result, SKPoint [] points)
 		{
@@ -1330,7 +1435,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			unsafe {
 				fixed (SKPoint *rp = &result[0]){
 					fixed (SKPoint *pp = &points[0]){
-						sk_matrix_map_points (ref this, (IntPtr) rp, (IntPtr) pp, dl);
+						SkiaApi.sk_matrix_map_points (ref this, (IntPtr) rp, (IntPtr) pp, dl);
 					}
 				}
 			}
@@ -1345,9 +1450,6 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			return res;
 		}
 
-		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl)]
-		extern static void sk_matrix_map_vectors (ref SKMatrix matrix, IntPtr dst, IntPtr src, int count);
-
 		public void MapVectors (SKPoint [] result, SKPoint [] vectors)
 		{
 			if (result == null)
@@ -1360,7 +1462,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			unsafe {
 				fixed (SKPoint *rp = &result[0]){
 					fixed (SKPoint *pp = &vectors[0]){
-						sk_matrix_map_vectors (ref this, (IntPtr) rp, (IntPtr) pp, dl);
+						SkiaApi.sk_matrix_map_vectors (ref this, (IntPtr) rp, (IntPtr) pp, dl);
 					}
 				}
 			}
@@ -1375,28 +1477,23 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			return res;
 		}
 
-		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl)]
-		extern static SKPoint sk_matrix_map_xy (ref SKMatrix matrix, float x, float y);
-
 		public SKPoint MapXY (float x, float y)
 		{
-			return sk_matrix_map_xy (ref this, x, y);
+			SKPoint result;
+			SkiaApi.sk_matrix_map_xy (ref this, x, y, out result);
+			return result;
 		}
-
-		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl)]
-		extern static SKPoint sk_matrix_map_vector (ref SKMatrix matrix, float x, float y);
 
 		public SKPoint MapVector (float x, float y)
 		{
-			return sk_matrix_map_vector (ref this, x, y);
+			SKPoint result;
+			SkiaApi.sk_matrix_map_vector(ref this, x, y, out result);
+			return result;
 		}
-
-		[DllImport(SkiaApi.SKIA, CallingConvention = CallingConvention.Cdecl)]
-		extern static float sk_matrix_map_radius (ref SKMatrix matrix, float radius);
 
 		public float MapRadius (float radius)
 		{
-			return sk_matrix_map_radius (ref this, radius);
+			return SkiaApi.sk_matrix_map_radius (ref this, radius);
 		}
 	}
 

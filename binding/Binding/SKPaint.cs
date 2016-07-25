@@ -13,13 +13,13 @@ namespace SkiaSharp
 	public class SKPaint : SKObject
 	{
 		[Preserve]
-		internal SKPaint (IntPtr handle)
-			: base (handle)
+		internal SKPaint (IntPtr handle, bool owns)
+			: base (handle, owns)
 		{
 		}
 		
 		public SKPaint ()
-			: this (SkiaApi.sk_paint_new ())
+			: this (SkiaApi.sk_paint_new (), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKPaint instance.");
@@ -28,7 +28,7 @@ namespace SkiaSharp
 		
 		protected override void Dispose (bool disposing)
 		{
-			if (Handle != IntPtr.Zero) {
+			if (Handle != IntPtr.Zero && OwnsHandle) {
 				SkiaApi.sk_paint_delete (Handle);
 			}
 
@@ -118,7 +118,7 @@ namespace SkiaSharp
 
 		public SKShader Shader {
 			get {
-				return GetObject<SKShader>(SkiaApi.sk_paint_get_shader(Handle));
+				return GetObject<SKShader>(SkiaApi.sk_paint_get_shader(Handle), false);
 			}
 			set {
 				SkiaApi.sk_paint_set_shader(Handle, value == null ? IntPtr.Zero : value.Handle);
@@ -127,7 +127,7 @@ namespace SkiaSharp
 
 		public SKMaskFilter MaskFilter {
 			get {
-				return GetObject<SKMaskFilter>(SkiaApi.sk_paint_get_maskfilter(Handle));
+				return GetObject<SKMaskFilter>(SkiaApi.sk_paint_get_maskfilter(Handle), false);
 			}
 			set {
 				SkiaApi.sk_paint_set_maskfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
@@ -136,7 +136,7 @@ namespace SkiaSharp
 
 		public SKColorFilter ColorFilter {
 			get {
-				return GetObject<SKColorFilter>(SkiaApi.sk_paint_get_colorfilter(Handle));
+				return GetObject<SKColorFilter>(SkiaApi.sk_paint_get_colorfilter(Handle), false);
 			}
 			set {
 				SkiaApi.sk_paint_set_colorfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
@@ -145,7 +145,7 @@ namespace SkiaSharp
 		
 		public SKImageFilter ImageFilter {
 			get {
-				return GetObject<SKImageFilter>(SkiaApi.sk_paint_get_imagefilter(Handle));
+				return GetObject<SKImageFilter>(SkiaApi.sk_paint_get_imagefilter(Handle), false);
 			}
 			set {
 				SkiaApi.sk_paint_set_imagefilter(Handle, value == null ? IntPtr.Zero : value.Handle);
@@ -175,7 +175,7 @@ namespace SkiaSharp
 
 		public SKTypeface Typeface {
 			get {
-				return GetObject<SKTypeface> (SkiaApi.sk_paint_get_typeface (Handle));
+				return GetObject<SKTypeface> (SkiaApi.sk_paint_get_typeface (Handle), false);
 			}
 			set {
 				SkiaApi.sk_paint_set_typeface (Handle, value == null ? IntPtr.Zero : value.Handle);
@@ -224,6 +224,15 @@ namespace SkiaSharp
 			}
 			set {
 				SkiaApi.sk_paint_set_text_skew_x (Handle, value);
+			}
+		}
+
+		public SKPathEffect PathEffect {
+			get {
+				return GetObject<SKPathEffect> (SkiaApi.sk_paint_get_path_effect(Handle));
+			}
+			set {
+				SkiaApi.sk_paint_set_path_effect (Handle, value == null ? IntPtr.Zero : value.Handle);
 			}
 		}
 

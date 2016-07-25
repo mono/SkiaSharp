@@ -13,14 +13,14 @@ namespace SkiaSharp
 	public class SKShader : SKObject
 	{
 		[Preserve]
-		internal SKShader (IntPtr handle)
-			: base (handle)
+		internal SKShader (IntPtr handle, bool owns)
+			: base (handle, owns)
 		{
 		}
 
 		protected override void Dispose (bool disposing)
 		{
-			if (Handle != IntPtr.Zero) {
+			if (Handle != IntPtr.Zero && OwnsHandle) {
 				SkiaApi.sk_shader_unref (Handle);
 			}
 
@@ -117,14 +117,14 @@ namespace SkiaSharp
 			return GetObject<SKShader>(SkiaApi.sk_shader_new_perlin_noise_turbulence(baseFrequencyX, baseFrequencyY, numOctaves, seed, ref tileSize));
 		}
 
-		public static SKShader CreateCompose(SKShader shaderA, SKShader shaderB)
+		public static SKShader CreateCompose (SKShader shaderA, SKShader shaderB)
 		{
-			return GetObject<SKShader>(SkiaApi.sk_shader_new_compose(shaderA.Handle, shaderB.Handle));
+			return GetObject<SKShader> (SkiaApi.sk_shader_new_compose (shaderA.Handle, shaderB.Handle));
 		}
 
-		public static SKShader CreateCompose(SKShader shaderA, SKShader shaderB, SKXferMode mode)
+		public static SKShader CreateCompose (SKShader shaderA, SKShader shaderB, SKXferMode mode)
 		{
-			return GetObject<SKShader>(SkiaApi.sk_shader_new_compose_with_mode(shaderA.Handle, shaderB.Handle, mode));
+			return GetObject<SKShader> (SkiaApi.sk_shader_new_compose_with_mode (shaderA.Handle, shaderB.Handle, mode));
 		}
 	}
 }
