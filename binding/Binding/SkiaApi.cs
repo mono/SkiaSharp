@@ -305,6 +305,8 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_data_t sk_image_encode_specific(sk_image_t t, SKImageEncodeFormat format, int quality);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_image_t sk_image_new_from_bitmap(sk_bitmap_t b);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_image_unref(sk_image_t t);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_image_get_width(sk_image_t t);
