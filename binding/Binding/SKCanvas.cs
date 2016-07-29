@@ -44,7 +44,7 @@ namespace SkiaSharp
 		public void DrawLine (float x0, float y0, float x1, float y1, SKPaint paint)
 		{
 			if (paint == null)
-				throw new ArgumentNullException ("paint");
+				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_line (Handle, x0, y0, x1, y1, paint.Handle);
 		}
 
@@ -88,6 +88,13 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_scale (Handle, size.X, size.Y);
 		}
 
+		public void Scale (float sx, float sy, float px, float py)
+		{
+			Translate (px, py);
+			Scale (sx, sy);
+			Translate (-px, -py);
+		}
+
 		public void RotateDegrees (float degrees)
 		{
 			SkiaApi.sk_canvas_rotate_degrees (Handle, degrees);
@@ -96,6 +103,20 @@ namespace SkiaSharp
 		public void RotateRadians (float radians)
 		{
 			SkiaApi.sk_canvas_rotate_radians (Handle, radians);
+		}
+
+		public void RotateDegrees (float degrees, float px, float py)
+		{
+			Translate (px, py);
+			RotateDegrees (degrees);
+			Translate (-px, -py);
+		}
+
+		public void RotateRadians(float radians, float px, float py)
+		{
+			Translate (px, py);
+			RotateRadians (radians);
+			Translate (-px, -py);
 		}
 
 		public void Skew (float sx, float sy)
@@ -121,7 +142,7 @@ namespace SkiaSharp
 		public void ClipPath (SKPath path, SKRegionOperation operation = SKRegionOperation.Intersect, bool antialias = false)
 		{
 			if (path == null)
-				throw new ArgumentNullException ("path");
+				throw new ArgumentNullException (nameof (path));
 			
 			SkiaApi.sk_canvas_clip_path_with_operation (Handle, path.Handle, operation, antialias);
 		}
@@ -139,60 +160,60 @@ namespace SkiaSharp
 		public void DrawPaint (SKPaint paint)
 		{
 			if (paint == null)
-				throw new ArgumentNullException ("paint");
+				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_paint (Handle, paint.Handle);
 		}
 
 		public void DrawRect (SKRect rect, SKPaint paint)
 		{
 			if (paint == null)
-				throw new ArgumentNullException ("paint");
+				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_rect (Handle, ref rect, paint.Handle);
 		}
 
 		public void DrawRoundRect (SKRect rect, float rx, float ry, SKPaint paint)
 		{
 				if (paint == null)
-						throw new ArgumentNullException ("paint");
+						throw new ArgumentNullException (nameof (paint));
 				SkiaApi.sk_canvas_draw_round_rect (Handle, ref rect, rx, ry, paint.Handle);
 		}
 
 		public void DrawOval (SKRect rect, SKPaint paint)
 		{
 			if (paint == null)
-				throw new ArgumentNullException ("paint");
+				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_oval (Handle, ref rect, paint.Handle);
 		}
 
 		public void DrawCircle (float cx, float cy, float radius, SKPaint paint)
 		{
 			if (paint == null)
-				throw new ArgumentNullException ("paint");
+				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_circle (Handle, cx, cy, radius, paint.Handle);
 		}
 		
 		public void DrawPath (SKPath path, SKPaint paint)
 		{
 			if (paint == null)
-				throw new ArgumentNullException ("paint");
+				throw new ArgumentNullException (nameof (paint));
 			if (path == null)
-				throw new ArgumentNullException ("path");
+				throw new ArgumentNullException (nameof (path));
 			SkiaApi.sk_canvas_draw_path (Handle, path.Handle, paint.Handle);
 		}
 
 		public void DrawPoints (SKPointMode mode, SKPoint [] points, SKPaint paint)
 		{
 			if (paint == null)
-				throw new ArgumentNullException ("paint");
+				throw new ArgumentNullException (nameof (paint));
 			if (points == null)
-				throw new ArgumentNullException ("points");
+				throw new ArgumentNullException (nameof (points));
 			SkiaApi.sk_canvas_draw_points (Handle, mode, (IntPtr)points.Length, points, paint.Handle);
 		}
 
 		public void DrawPoint (float x, float y, SKPaint paint)
 		{
 			if (paint == null)
-				throw new ArgumentNullException ("paint");
+				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_point (Handle, x, y, paint.Handle);
 		}
 
@@ -204,21 +225,21 @@ namespace SkiaSharp
 		public void DrawImage (SKImage image, float x, float y, SKPaint paint = null)
 		{
 			if (image == null)
-				throw new ArgumentNullException ("image");
+				throw new ArgumentNullException (nameof (image));
 			SkiaApi.sk_canvas_draw_image (Handle, image.Handle, x, y, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
 		public void DrawImage (SKImage image, SKRect dest, SKPaint paint = null)
 		{
 			if (image == null)
-				throw new ArgumentNullException ("image");
+				throw new ArgumentNullException (nameof (image));
 			SkiaApi.sk_canvas_draw_image_rect (Handle, image.Handle, IntPtr.Zero, ref dest, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
 		public void DrawImage (SKImage image, SKRect source, SKRect dest, SKPaint paint = null)
 		{
 			if (image == null)
-				throw new ArgumentNullException ("image");
+				throw new ArgumentNullException (nameof (image));
 			SkiaApi.sk_canvas_draw_image_rect (Handle, image.Handle, ref source, ref dest, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
@@ -262,7 +283,7 @@ namespace SkiaSharp
 			if (text == null)
 				throw new ArgumentNullException ("text");
 			if (paint == null)
-				throw new ArgumentNullException ("paint");
+				throw new ArgumentNullException (nameof (paint));
 
 			var bytes = Util.GetEncodedText (text, paint.TextEncoding);
 			SkiaApi.sk_canvas_draw_text (Handle, bytes, bytes.Length, x, y, paint.Handle);
@@ -273,7 +294,7 @@ namespace SkiaSharp
 			if (text == null)
 				throw new ArgumentNullException ("text");
 			if (paint == null)
-				throw new ArgumentNullException ("paint");
+				throw new ArgumentNullException (nameof (paint));
 			if (points == null)
 				throw new ArgumentNullException ("points");
 
@@ -286,9 +307,9 @@ namespace SkiaSharp
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentNullException ("buffer");
 			if (paint == null)
-				throw new ArgumentNullException ("paint");
+				throw new ArgumentNullException (nameof (paint));
 			if (paint == null)
-				throw new ArgumentNullException ("paint");
+				throw new ArgumentNullException (nameof (paint));
 			
 			SkiaApi.sk_canvas_draw_text_on_path (Handle, buffer, length, path.Handle, hOffset, vOffset, paint.Handle);
 		}
@@ -298,7 +319,7 @@ namespace SkiaSharp
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentNullException ("buffer");
 			if (paint == null)
-				throw new ArgumentNullException ("paint");
+				throw new ArgumentNullException (nameof (paint));
 			
 			SkiaApi.sk_canvas_draw_text (Handle, buffer, length, x, y, paint.Handle);
 		}
@@ -308,7 +329,7 @@ namespace SkiaSharp
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentNullException ("buffer");
 			if (paint == null)
-				throw new ArgumentNullException ("paint");
+				throw new ArgumentNullException (nameof (paint));
 			if (points == null)
 				throw new ArgumentNullException ("points");
 			
@@ -320,9 +341,9 @@ namespace SkiaSharp
 			if (text == null)
 				throw new ArgumentNullException ("text");
 			if (paint == null)
-				throw new ArgumentNullException ("paint");
+				throw new ArgumentNullException (nameof (paint));
 			if (paint == null)
-				throw new ArgumentNullException ("paint");
+				throw new ArgumentNullException (nameof (paint));
 
 			var bytes = Util.GetEncodedText (text, paint.TextEncoding);
 			SkiaApi.sk_canvas_draw_text_on_path (Handle, bytes, bytes.Length, path.Handle, hOffset, vOffset, paint.Handle);

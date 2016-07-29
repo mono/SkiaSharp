@@ -67,6 +67,7 @@ void** KeepSkiaCSymbols ()
         (void*)sk_document_unref,
         (void*)sk_wstream_write,
         (void*)sk_path_effect_create_dash,
+        (void*)sk_matrix_concat,
 
         // Xamarin
         (void*)sk_managedstream_new,

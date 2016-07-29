@@ -176,6 +176,11 @@ namespace SkiaSharp
 		CounterClockwise
 	}
 
+	public enum SKPathArcSize {
+		Small,
+		Large
+	}
+
 	public enum SKPathFillType
 	{
 		Winding,
@@ -1426,9 +1431,9 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		public void MapPoints (SKPoint [] result, SKPoint [] points)
 		{
 			if (result == null)
-				throw new ArgumentNullException ("result");
+				throw new ArgumentNullException (nameof (result));
 			if (points == null)
-				throw new ArgumentNullException ("points");
+				throw new ArgumentNullException (nameof (points));
 			int dl = result.Length;
 			if (dl != points.Length)
 				throw new ArgumentException ("buffers must be the same size");
@@ -1444,7 +1449,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		public SKPoint [] MapPoints (SKPoint [] points)
 		{
 			if (points == null)
-				throw new ArgumentNullException ("points");
+				throw new ArgumentNullException (nameof (points));
 			var res = new SKPoint [points.Length];
 			MapPoints (res, points);
 			return res;
@@ -1453,9 +1458,9 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		public void MapVectors (SKPoint [] result, SKPoint [] vectors)
 		{
 			if (result == null)
-				throw new ArgumentNullException ("result");
+				throw new ArgumentNullException (nameof (result));
 			if (vectors == null)
-				throw new ArgumentNullException ("vectors");
+				throw new ArgumentNullException (nameof (vectors));
 			int dl = result.Length;
 			if (dl != vectors.Length)
 				throw new ArgumentException ("buffers must be the same size");
@@ -1471,7 +1476,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		public SKPoint [] MapVectors (SKPoint [] vectors)
 		{
 			if (vectors == null)
-				throw new ArgumentNullException ("vectors");
+				throw new ArgumentNullException (nameof (vectors));
 			var res = new SKPoint [vectors.Length];
 			MapVectors (res, vectors);
 			return res;
