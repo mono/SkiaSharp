@@ -112,6 +112,16 @@ namespace SkiaSharp
 			SkiaApi.sk_path_rcubic_to (Handle, dx0, dy0, dx1, dy1, dx2, dy2);
 		}
 
+		public void ArcTo (float rx, float ry, float xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, float x, float y)
+		{
+			SkiaApi.sk_path_arc_to (Handle, rx, ry, xAxisRotate, largeArc, sweep, x, y);
+		}
+
+		public void RArcTo (float rx, float ry, float xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, float x, float y)
+		{
+			SkiaApi.sk_path_arc_to (Handle, rx, ry, xAxisRotate, largeArc, sweep, x, y);
+		}
+
 		public void Close ()
 		{
 			SkiaApi.sk_path_close (Handle);
@@ -190,6 +200,16 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (other));
 			
 			SkiaApi.sk_path_add_path_reverse (Handle, other.Handle);
+		}
+
+		public void AddRoundedRect (SKRect rect, float rx, float ry, SKPathDirection dir)
+		{
+			SkiaApi.sk_path_add_rounded_rect (Handle, ref rect, rx, ry, dir);
+		}
+
+		public void AddCircle (float x, float y, float radius, SKPathDirection dir)
+		{
+			SkiaApi.sk_path_add_circle (Handle, x, y, radius, dir);
 		}
 
 		public Iterator CreateIterator (bool forceClose)

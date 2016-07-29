@@ -176,6 +176,11 @@ namespace SkiaSharp
 		CounterClockwise
 	}
 
+	public enum SKPathArcSize {
+		Small,
+		Large
+	}
+
 	public enum SKPathFillType
 	{
 		Winding,
