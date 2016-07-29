@@ -88,6 +88,13 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_scale (Handle, size.X, size.Y);
 		}
 
+		public void Scale(float sx, float sy, float px, float py)
+		{
+			Translate(px, py);
+			Scale(sx, sy);
+			Translate(-px, -py);
+		}
+
 		public void RotateDegrees (float degrees)
 		{
 			SkiaApi.sk_canvas_rotate_degrees (Handle, degrees);
