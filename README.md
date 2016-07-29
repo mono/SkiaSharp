@@ -10,13 +10,13 @@ be used across mobile, server and desktop models to render images.
 
 SkiaSharp provides a PCL and platform-specific bindings for:
 
- - Mac OS X
+ - Mac (Console or using the Xamarin.Mac)
  - Xamarin.Android
  - Xamarin.iOS
  - Xamarin.tvOS
+ - Xamarin.Mac
  - Windows Desktop
  - Windows UWP
- - Mac Desktop
 
 You can also build this on your particular variant of Unix
 to create your native libraries.
