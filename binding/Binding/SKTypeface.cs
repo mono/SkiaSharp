@@ -110,10 +110,6 @@ namespace SkiaSharp
 
 		public int CharsToGlyphs (IntPtr str, int strlen, SKEncoding encoding, out ushort [] glyphs)
 		{
-			if (str == null)
-				throw new ArgumentNullException ("str");
-
-
 			unsafe {
 				var n = SkiaApi.sk_typeface_chars_to_glyphs (Handle, str, encoding, IntPtr.Zero, strlen);
 				glyphs = new ushort[n];
