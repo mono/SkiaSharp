@@ -88,11 +88,11 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_scale (Handle, size.X, size.Y);
 		}
 
-		public void Scale(float sx, float sy, float px, float py)
+		public void Scale (float sx, float sy, float px, float py)
 		{
-			Translate(px, py);
-			Scale(sx, sy);
-			Translate(-px, -py);
+			Translate (px, py);
+			Scale (sx, sy);
+			Translate (-px, -py);
 		}
 
 		public void RotateDegrees (float degrees)
@@ -103,6 +103,20 @@ namespace SkiaSharp
 		public void RotateRadians (float radians)
 		{
 			SkiaApi.sk_canvas_rotate_radians (Handle, radians);
+		}
+
+		public void RotateDegrees (float degrees, float px, float py)
+		{
+			Translate (px, py);
+			RotateDegrees (degrees);
+			Translate (-px, -py);
+		}
+
+		public void RotateRadians(float radians, float px, float py)
+		{
+			Translate (px, py);
+			RotateRadians (radians);
+			Translate (-px, -py);
 		}
 
 		public void Skew (float sx, float sy)
