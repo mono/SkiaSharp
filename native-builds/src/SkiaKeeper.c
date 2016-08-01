@@ -53,6 +53,7 @@ void** KeepSkiaCSymbols ()
         (void*)sk_colorfilter_unref,
         (void*)sk_data_new_from_file,
         (void*)sk_image_encode_specific,
+        (void*)sk_image_new_from_bitmap,
         (void*)sk_codec_new_from_stream,
         (void*)sk_imagefilter_croprect_new,
         (void*)sk_maskfilter_new_emboss,
@@ -68,6 +69,15 @@ void** KeepSkiaCSymbols ()
         (void*)sk_wstream_write,
         (void*)sk_path_effect_create_dash,
         (void*)sk_matrix_concat,
+        (void*)sk_matrix_pre_concat,
+        (void*)sk_matrix_post_concat,
+        (void*)sk_matrix_map_rect,
+        (void*)sk_matrix_map_points,
+        (void*)sk_matrix_map_vectors,
+        (void*)sk_matrix_map_xy,
+        (void*)sk_matrix_map_vector,
+        (void*)sk_matrix_map_radius,
+        (void*)sk_matrix_try_invert,
 
         // Xamarin
         (void*)sk_managedstream_new,
