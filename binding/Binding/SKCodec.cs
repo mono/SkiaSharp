@@ -119,7 +119,7 @@ namespace SkiaSharp
 
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount)
 		{
-			return GetPixels (info, pixels, rowBytes, options, colorTable.ReadColors (), ref colorTableCount);
+			return GetPixels (info, pixels, rowBytes, options, colorTable == null ? IntPtr.Zero : colorTable.ReadColors (), ref colorTableCount);
 		}
 
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount)
@@ -131,9 +131,13 @@ namespace SkiaSharp
 		{
 			return GetPixels (info, pixels, info.RowBytes, SKCodecOptions.Default, colorTable, ref colorTableCount);
 		}
-        
+
 		public static SKCodec Create (SKStream stream)
 		{
+			if (stream == null)
+			{
+				throw new ArgumentNullException (nameof(stream));
+			}
 			var codec = GetObject<SKCodec> (SkiaApi.sk_codec_new_from_stream (stream.Handle));
 			codec.TakeOwnership (stream);
 			return codec;
@@ -141,6 +145,10 @@ namespace SkiaSharp
 
 		public static SKCodec Create (SKData data)
 		{
+			if (data == null)
+			{
+				throw new ArgumentNullException (nameof(data));
+			}
 			return GetObject<SKCodec> (SkiaApi.sk_codec_new_from_data (data.Handle));
 		}
 	}
