@@ -12,6 +12,7 @@
 #include "sk_canvas.h"
 #include "sk_codec.h"
 #include "sk_colorfilter.h"
+#include "sk_colortable.h"
 #include "sk_data.h"
 #include "sk_document.h"
 #include "sk_image.h"
@@ -78,6 +79,7 @@ void** KeepSkiaCSymbols ()
         (void*)sk_matrix_map_vector,
         (void*)sk_matrix_map_radius,
         (void*)sk_matrix_try_invert,
+        (void*)sk_colortable_new,
 
         // Xamarin
         (void*)sk_managedstream_new,

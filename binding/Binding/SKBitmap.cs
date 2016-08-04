@@ -51,6 +51,14 @@ namespace SkiaSharp
 			}
 		}
 
+		public SKBitmap (SKImageInfo info, SKColorTable ctable)
+			: this ()
+		{
+			if (!SkiaApi.sk_bitmap_try_alloc_pixels_with_color_table (Handle, ref info, IntPtr.Zero, ctable != null ? ctable.Handle : IntPtr.Zero)) {
+				throw new Exception ("Unable to allocate pixels for the bitmap.");
+			}
+		}
+
 		protected override void Dispose (bool disposing)
 		{
 			if (Handle != IntPtr.Zero && OwnsHandle) {
@@ -78,6 +86,11 @@ namespace SkiaSharp
 		public void Erase (SKColor color, SKRectI rect)
 		{
 			SkiaApi.sk_bitmap_erase_rect (Handle, color, ref rect);
+		}
+
+		public SKColor GetIndex8Color (int x, int y)
+		{
+			return SkiaApi.sk_bitmap_get_index8_color (Handle, x, y);
 		}
 
 		public SKColor GetPixel (int x, int y)
@@ -219,6 +232,10 @@ namespace SkiaSharp
 			set { SkiaApi.sk_bitmap_set_volatile (Handle, value); }
 		}
 
+		public SKColorTable ColorTable {
+			get { return GetObject<SKColorTable> (SkiaApi.sk_bitmap_get_colortable (Handle)); }
+		}
+
 		public static SKImageInfo DecodeBounds (SKStream stream)
 		{
 			using (var codec = SKCodec.Create (stream)) {
@@ -246,9 +263,19 @@ namespace SkiaSharp
 		public static SKBitmap Decode (SKCodec codec)
 		{
 			var info = codec.Info;
-			var bitmap = new SKBitmap (info.Width, info.Height, info.ColorType, info.IsOpaque ? SKAlphaType.Opaque : SKAlphaType.Premul);
+
+			// construct a color table for the decode if necessary
+			SKColorTable colorTable = null;
+			int colorCount = 0;
+			if (info.ColorType == SKColorType.Index8)
+			{
+				colorTable = new SKColorTable ();
+			}
+
+			// read the pixels and color table
+			var bitmap = new SKBitmap (info, colorTable);
 			IntPtr length;
-			var result = codec.GetPixels (bitmap.Info, bitmap.GetPixels(out length));
+			var result = codec.GetPixels (info, bitmap.GetPixels (out length), colorTable, ref colorCount);
 			if (result != SKCodecResult.Success && result != SKCodecResult.IncompleteInput) {
 				bitmap.Dispose ();
 				bitmap = null;

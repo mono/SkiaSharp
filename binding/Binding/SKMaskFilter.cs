@@ -58,7 +58,7 @@ namespace SkiaSharp
 		{
 			if (table == null)
 				throw new ArgumentNullException("table");
-			if (table.Length != 256)
+			if (table.Length != SKColorTable.MaxLength)
 				throw new ArgumentException("Table must have a length of 256.", "table");
 			return GetObject<SKMaskFilter>(SkiaApi.sk_maskfilter_new_table(table));
 		}

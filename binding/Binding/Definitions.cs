@@ -466,6 +466,21 @@ namespace SkiaSharp
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKCodecOptions {
+		public static readonly SKCodecOptions Default;
+		static SKCodecOptions ()
+		{
+			Default = new SKCodecOptions (SKZeroInitialized.No);
+		}
+		public SKCodecOptions (SKZeroInitialized zeroInitialized) {
+			ZeroInitialized = zeroInitialized;
+			Subset = SKRectI.Empty;
+			HasSubset = false;
+		}
+		public SKCodecOptions (SKZeroInitialized zeroInitialized, SKRectI subset) {
+			ZeroInitialized = zeroInitialized;
+			Subset = subset;
+			HasSubset = true;
+		}
 		public SKZeroInitialized ZeroInitialized;
 		public SKRectI Subset;
 		public bool HasSubset;
@@ -1116,6 +1131,7 @@ namespace SkiaSharp
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKRectI {
+		public static readonly SKRectI Empty;
 		public int Left, Top, Right, Bottom;
 		public SKRectI (int left, int top, int right, int bottom)
 		{

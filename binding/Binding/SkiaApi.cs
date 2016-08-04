@@ -40,6 +40,8 @@ using sk_document_t = System.IntPtr;
 using sk_colorspace_t = System.IntPtr;
 using sk_path_iterator_t = System.IntPtr;
 using sk_path_effect_t = System.IntPtr;
+using sk_pixelref_factory_t = System.IntPtr;
+using sk_colortable_t = System.IntPtr;
 
 namespace SkiaSharp
 {
@@ -794,7 +796,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SKEncodedFormat sk_codec_get_encoded_format(sk_codec_t codec);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static SKCodecResult sk_codec_get_pixels(sk_codec_t codec, ref SKImageInfo info, IntPtr pixels, IntPtr rowBytes, SKCodecOptions options, [Out] SKColor[] ctable /*256*/, out int ctableCount);
+		public extern static SKCodecResult sk_codec_get_pixels(sk_codec_t codec, ref SKImageInfo info, IntPtr pixels, IntPtr rowBytes, ref SKCodecOptions options, IntPtr ctable, ref int ctableCount);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SKCodecResult sk_codec_get_pixels_using_defaults(sk_codec_t codec, ref SKImageInfo info, IntPtr pixels, IntPtr rowBytes);
 
@@ -834,6 +836,8 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SKColor sk_bitmap_get_pixel_color(sk_bitmap_t cbitmap, int x, int y);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKColor sk_bitmap_get_index8_color(sk_bitmap_t cbitmap, int x, int y);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_bitmap_set_pixel_color(sk_bitmap_t cbitmap, int x, int y, SKColor color);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static bool sk_bitmap_copy(sk_bitmap_t cbitmap, sk_bitmap_t dst, SKColorType ct);
@@ -845,6 +849,12 @@ namespace SkiaSharp
 		public extern static void sk_bitmap_unlock_pixels(sk_bitmap_t b);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static bool sk_bitmap_try_alloc_pixels(sk_bitmap_t cbitmap, ref SKImageInfo requestedInfo, IntPtr rowBytes);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool sk_bitmap_try_alloc_pixels_with_color_table(sk_bitmap_t cbitmap, ref SKImageInfo requestedInfo, sk_pixelref_factory_t factory, sk_colortable_t ctable);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_colortable_t sk_bitmap_get_colortable(sk_bitmap_t cbitmap);
+
+		// Matrix
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_matrix_try_invert(ref SKMatrix matrix, out SKMatrix result);
@@ -867,6 +877,8 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static float sk_matrix_map_radius (ref SKMatrix matrix, float radius);
 
+		// Path Effect
+
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]  
 		public extern static void sk_path_effect_unref (sk_path_effect_t effect); 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -886,6 +898,18 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_path_effect_t sk_path_effect_create_dash(float[] intervals, int count, float phase);
 
+		// Color Table
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_colortable_unref (sk_colortable_t ctable);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_colortable_t sk_colortable_new ([In] SKColor[] colors, int count);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_colortable_count (sk_colortable_t ctable);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_colortable_read_colors (sk_colortable_t ctable, [Out] SKColor[] colors);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_colortable_read_colors (sk_colortable_t ctable, out IntPtr colors);
 	}
 }
 

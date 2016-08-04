@@ -96,11 +96,42 @@ namespace SkiaSharp
 			}
 		}
 
-		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels)
+		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
 		{
-			return SkiaApi.sk_codec_get_pixels_using_defaults (Handle, ref info, pixels, (IntPtr)info.RowBytes);
+			return SkiaApi.sk_codec_get_pixels (Handle, ref info, pixels, (IntPtr)rowBytes, ref options, colorTable, ref colorTableCount);
 		}
 
+		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
+		{
+			return GetPixels (info, pixels, info.RowBytes, options, colorTable, ref colorTableCount);
+		}
+
+		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, IntPtr colorTable, ref int colorTableCount)
+		{
+			return GetPixels (info, pixels, info.RowBytes, SKCodecOptions.Default, colorTable, ref colorTableCount);
+		}
+
+		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels)
+		{
+			int colorTableCount = 0;
+			return GetPixels (info, pixels, info.RowBytes, SKCodecOptions.Default, IntPtr.Zero, ref colorTableCount);
+		}
+
+		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount)
+		{
+			return GetPixels (info, pixels, rowBytes, options, colorTable.ReadColors (), ref colorTableCount);
+		}
+
+		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount)
+		{
+			return GetPixels (info, pixels, info.RowBytes, options, colorTable, ref colorTableCount);
+		}
+
+		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKColorTable colorTable, ref int colorTableCount)
+		{
+			return GetPixels (info, pixels, info.RowBytes, SKCodecOptions.Default, colorTable, ref colorTableCount);
+		}
+        
 		public static SKCodec Create (SKStream stream)
 		{
 			var codec = GetObject<SKCodec> (SkiaApi.sk_codec_new_from_stream (stream.Handle));
