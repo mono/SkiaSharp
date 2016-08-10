@@ -288,6 +288,7 @@ var InjectCompatibilityExternals = new Action<bool> ((inject) => {
         { "skia/third_party/externals/dng_sdk/source/dng_utils.cpp", "#if qWinOS" },
         { "skia/third_party/externals/dng_sdk/source/dng_pthread.cpp", "#if qWinOS" },
         { "skia/third_party/externals/zlib/deflate.c", "#include <assert.h>" },
+        { "skia/third_party/externals/libjpeg-turbo/simd/jsimd_x86_64.c", "#define JPEG_INTERNALS" },
     };
     foreach (var filePair in files) {
         var file = filePair.Key;

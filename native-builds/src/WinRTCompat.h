@@ -48,6 +48,8 @@ BOOL WINAPI TlsFreeCompat(_In_ DWORD dwTlsIndex);
 
 void ExitProcessCompat(unsigned int code);
 
+char *getenvCompat(const char *name);
+
 // override any previous declaration with ours
 
 #define MessageBoxA MessageBoxACompat
@@ -61,6 +63,8 @@ void ExitProcessCompat(unsigned int code);
 #define TlsGetValue TlsGetValueCompat
 #define TlsSetValue TlsSetValueCompat
 #define TlsFree TlsFreeCompat
+
+#define getenv getenvCompat
 
 C_PLUS_PLUS_END_GUARD
 

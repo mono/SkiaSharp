@@ -46,6 +46,12 @@ void ExitProcessCompat(unsigned int code)
 	// we can't kill in WinRT
 }
 
+char *getenvCompat(const char *name)
+{
+	// there is no environment in WinRT
+	return NULL;
+}
+
 int WINAPI MessageBoxACompat(_In_opt_ HWND hWnd, _In_opt_ LPCSTR lpText, _In_opt_ LPCSTR lpCaption, _In_ UINT uType)
 {
 	// TODO: implementation
