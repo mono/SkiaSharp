@@ -393,7 +393,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_path_iter_is_close_line (sk_path_iterator_t iterator);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static int sk_path_iter_is_close_countour (sk_path_iterator_t iterator);
+		public extern static int sk_path_iter_is_closed_countour (sk_path_iterator_t iterator);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_iter_destroy (sk_path_t path);
 
