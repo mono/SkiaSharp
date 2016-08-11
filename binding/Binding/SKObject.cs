@@ -155,13 +155,38 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>
+		/// This object will take ownership of the specified object.
+		/// </summary>
+		/// <param name="obj">The object to own.</param>
 		internal void TakeOwnership(SKObject obj)
 		{
 			lock (ownedObjects)
 			{
 				ownedObjects.Add(obj);
 			}
-			obj.OwnsHandle = false;
+			obj.RevokeOwnership ();
+		}
+
+		/// <summary>
+		/// This object will no longer own it's handle.
+		/// </summary>
+		internal void RevokeOwnership()
+		{
+			OwnsHandle = false;
+		}
+
+		/// <summary>
+		/// This object will hand ownership over to the specified object.
+		/// </summary>
+		/// <param name="owner">The object to give ownership to.</param>
+		internal void RevokeOwnership(SKObject owner)
+		{
+			if (owner != null) {
+				owner.TakeOwnership (this);
+			} else {
+				this.RevokeOwnership ();
+			}
 		}
 	}
 }

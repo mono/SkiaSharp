@@ -139,7 +139,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof(stream));
 			}
 			var codec = GetObject<SKCodec> (SkiaApi.sk_codec_new_from_stream (stream.Handle));
-			codec.TakeOwnership (stream);
+			stream.RevokeOwnership (codec);
 			return codec;
 		}
 
