@@ -23,7 +23,17 @@ to create your native libraries.
 
 ## Using SkiaSharp
 
-Check our getting [started guide](https://developer.xamarin.com/guides/cross-platform/drawing/)
+SkiaSharp is available as a convenience NuGet package, to use install the package like this:
+
+```
+nuget install SkiaSharp
+```
+
+Our [getting started guide](https://developer.xamarin.com/guides/cross-platform/drawing/) will walk you 
+through both the basic setup as well as the platform specific capabilties.
+
+The [API Documentation](https://developer.xamarin.com/api/namespace/SkiaSharp/) is also available on the
+web to browse.
 
 # Extensions for SkiaSharp
 
