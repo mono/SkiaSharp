@@ -306,5 +306,43 @@ namespace SkiaSharp
 		{
 			return Decode (new SKMemoryStream (buffer));
 		}
+
+		public static SKBitmap Create ()
+		{
+			return GetObject<SKBitmap> (SkiaApi.sk_bitmap_new());
+		}
+
+		public static SKBitmap Create (int width, int height, bool isOpaque = false)
+		{
+			return Create (width, height, SKImageInfo.PlatformColorType, isOpaque ? SKAlphaType.Opaque : SKAlphaType.Premul);
+		}
+
+		public static SKBitmap Create (int width, int height, SKColorType colorType, SKAlphaType alphaType)
+		{
+			return Create (new SKImageInfo (width, height, colorType, alphaType));
+		}
+
+		public static SKBitmap Create (SKImageInfo info)
+		{
+			return Create (info, info.RowBytes);
+		}
+
+		public static SKBitmap Create (SKImageInfo info, int rowBytes)
+		{
+			var bitmap = Create ();
+			if (bitmap != null) {
+				SkiaApi.sk_bitmap_try_alloc_pixels (bitmap.Handle, ref info, (IntPtr)rowBytes);
+			}
+			return bitmap;
+		}
+
+		public static SKBitmap Create (SKImageInfo info, SKColorTable ctable)
+		{
+			var bitmap = Create();
+			if (bitmap != null) {
+				SkiaApi.sk_bitmap_try_alloc_pixels_with_color_table (bitmap.Handle, ref info, IntPtr.Zero, ctable != null ? ctable.Handle : IntPtr.Zero);
+			}
+			return bitmap;
+		}
 	}
 }
