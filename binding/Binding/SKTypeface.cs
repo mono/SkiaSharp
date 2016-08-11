@@ -30,15 +30,11 @@ namespace SkiaSharp
 		
 		public static SKTypeface FromFamilyName (string familyName, SKTypefaceStyle style = SKTypefaceStyle.Normal)
 		{
-			if (familyName == null)
-				throw new ArgumentNullException ("familyName");
 			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_name (familyName, style));
 		}
 
 		public static SKTypeface FromFamilyName (string familyName, int weight, int width, SKFontStyleSlant slant)
 		{
-			if (familyName == null)
-				throw new ArgumentNullException ("familyName");
 			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_name_with_font_style (familyName, weight, width, slant));
 		}
 
