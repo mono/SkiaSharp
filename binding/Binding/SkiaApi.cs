@@ -299,8 +299,6 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_image_t sk_image_new_raster_copy(ref SKImageInfo info, IntPtr pixels, IntPtr rowBytes);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_image_t sk_image_new_from_bitmap(sk_bitmap_t bitmap); 
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_image_t sk_image_new_from_encoded(sk_data_t encoded, ref SKRectI subset);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_image_t sk_image_new_from_encoded(sk_data_t encoded, IntPtr subsetPtr);
