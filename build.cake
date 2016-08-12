@@ -871,6 +871,11 @@ Task ("samples")
     }
     
     if (IsRunningOnWindows ()) {
+        RunNuGetRestore ("./samples/Skia.WPF.Demo/Skia.WPF.Demo.sln");
+        DotNetBuild ("./samples/Skia.WPF.Demo/Skia.WPF.Demo.sln", c => { 
+            c.Configuration = "Release";
+            c.Properties ["Platform"] = new [] { "x86" };
+        });
         RunNuGetRestore ("./samples/Skia.UWP.Demo/Skia.UWP.Demo.sln");
         DotNetBuild ("./samples/Skia.UWP.Demo/Skia.UWP.Demo.sln", c => { 
             c.Configuration = "Release"; 

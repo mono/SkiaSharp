@@ -15,7 +15,7 @@ SkiaSharp provides a PCL and platform-specific bindings for:
  - Xamarin.iOS
  - Xamarin.tvOS
  - Xamarin.Mac
- - Windows Desktop
+ - Windows Desktop (Windows.Forms / WPF)
  - Windows UWP
 
 You can also build this on your particular variant of Unix
@@ -34,10 +34,6 @@ through both the basic setup as well as the platform specific capabilties.
 
 The [API Documentation](https://developer.xamarin.com/api/namespace/SkiaSharp/) is also available on the
 web to browse.
-
-# Extensions for SkiaSharp
-
-Windows/WPF users might find the [SkiaSharpWPFExtensions](https://github.com/impsnldavid/skiasharpwpfextensions) useful.
 
 ## Building SkiaSharp
 
