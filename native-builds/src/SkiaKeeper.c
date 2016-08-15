@@ -29,6 +29,8 @@
 #include "sk_string.h"
 #include "sk_surface.h"
 #include "sk_typeface.h"
+#include "sk_xml.h"
+#include "sk_svg.h"
 
 // Xamarin
 #include "sk_managedstream.h"
@@ -80,6 +82,8 @@ void** KeepSkiaCSymbols ()
         (void*)sk_matrix_map_radius,
         (void*)sk_matrix_try_invert,
         (void*)sk_colortable_new,
+        (void*)sk_xmlstreamwriter_new,
+        (void*)sk_svgcanvas_create,
 
         // Xamarin
         (void*)sk_managedstream_new,
