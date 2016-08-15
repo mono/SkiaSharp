@@ -42,8 +42,6 @@ using sk_path_iterator_t = System.IntPtr;
 using sk_path_effect_t = System.IntPtr;
 using sk_pixelref_factory_t = System.IntPtr;
 using sk_colortable_t = System.IntPtr;
-using sk_xmlstreamwriter_t = System.IntPtr;
-using sk_xmlwriter_t = System.IntPtr;
 
 namespace SkiaSharp
 {
@@ -912,18 +910,6 @@ namespace SkiaSharp
 		public extern static void sk_colortable_read_colors (sk_colortable_t ctable, [Out] SKColor[] colors);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_colortable_read_colors (sk_colortable_t ctable, out IntPtr colors);
-
-		// XML
-
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_xmlstreamwriter_t sk_xmlstreamwriter_new (sk_wstream_t stream);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_xmlstreamwriter_delete (sk_xmlstreamwriter_t writer);
-
-		// SVG
-
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_canvas_t sk_svgcanvas_create (ref SKRect bounds, sk_xmlwriter_t writer);
 	}
 }
 
