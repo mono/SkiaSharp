@@ -35,6 +35,11 @@ through both the basic setup as well as the platform specific capabilties.
 The [API Documentation](https://developer.xamarin.com/api/namespace/SkiaSharp/) is also available on the
 web to browse.
 
+### Prerequisites
+
+Make sure the [Microsoft Visual C++ 2015 Redistributable](https://www.microsoft.com/en-us/download/details.aspx?id=52982) is installed if this error occurs: 
+ > Unable to load DLL 'libSkiaSharp.dll': The specified module could not be found.
+
 ## Building SkiaSharp
 
 First clone the repository:
