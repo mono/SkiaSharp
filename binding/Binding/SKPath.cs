@@ -264,7 +264,7 @@ namespace SkiaSharp
 
 			public float ConicWeight () => SkiaApi.sk_path_iter_conic_weight (handle);
 			public bool IsCloseLine () => SkiaApi.sk_path_iter_is_close_line (handle) != 0;
-			public bool IsCloseContour () => SkiaApi.sk_path_iter_is_closed_countour (handle) != 0;
+			public bool IsCloseContour () => SkiaApi.sk_path_iter_is_closed_contour (handle) != 0;
 		}
 
 		public class RawIterator : IDisposable {
