@@ -349,6 +349,10 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_text_on_path (Handle, bytes, bytes.Length, path.Handle, hOffset, vOffset, paint.Handle);
 		}
 
+		public void Flush ()
+		{
+			SkiaApi.sk_canvas_flush (Handle);
+		}
 
 		public void ResetMatrix ()
 		{

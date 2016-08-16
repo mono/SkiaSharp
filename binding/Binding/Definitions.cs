@@ -41,6 +41,9 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Globalization;
+
+using GRBackendObject = System.IntPtr;
+using GRBackendContext = System.IntPtr;
  	
 namespace SkiaSharp
 {
@@ -265,6 +268,14 @@ namespace SkiaSharp
 		BgrVertical
 	}
 
+	[Flags]
+	public enum SKSurfacePropsFlags {
+		DisallowAntiAlias = 1 << 0,
+		DisallowDither = 1 << 1,
+		UseDeviceIndependentFonts = 1 << 2,
+		GammaCorrect = 1 << 3,
+	}
+
 	public enum SKEncoding {
 		Utf8, Utf16, Utf32
 	}
@@ -457,6 +468,7 @@ namespace SkiaSharp
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKSurfaceProps {
 		public SKPixelGeometry PixelGeometry;
+		public SKSurfacePropsFlags Flags;
 	}
 
 	public enum SKZeroInitialized {
@@ -1141,6 +1153,9 @@ namespace SkiaSharp
 			Bottom = bottom;
 		}
 
+		public float Height => Bottom - Top;
+		public float Width => Right - Left;
+
 		public static SKRectI Create (int width, int height)
 		{
 			return new SKRectI (0, 0, width, height);
@@ -1162,6 +1177,9 @@ namespace SkiaSharp
 			Top = top;
 			Bottom = bottom;
 		}
+
+		public float Height => Bottom - Top;
+		public float Width => Right - Left;
 
 		public static SKRect Create (float width, float height)
 		{
@@ -1613,6 +1631,46 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 					return null;
 			}
 		}
+	}
+
+	public enum GRSurfaceOrigin {
+		TopLeft,
+		BottomLeft,
+	}
+
+	public enum GRPixelConfig {
+		Unknown,
+		Alpha8,
+		Index8,
+		Rgb565,
+		Rgba4444,
+		Rgba8888,
+		Bgra8888,
+		Srgba8888,
+		Sbgra8888,
+		Etc1,
+		Latc,
+		R11Eac,
+		Astc12x12,
+		RgbaFloat,
+		AlphaHalf,
+		RgbaHalf,
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct GRBackendRenderTargetDesc {
+		public int Width;
+		public int Height;
+		public GRPixelConfig Config;
+		public GRSurfaceOrigin Origin;
+		public int SampleCount;
+		public int StencilBits;
+		public GRBackendObject RenderTargetHandle;
+	}
+	
+	public enum GRBackend {
+		OpenGL,
+		Vulkan,
 	}
 }
 

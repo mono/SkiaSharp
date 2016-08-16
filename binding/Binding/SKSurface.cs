@@ -44,6 +44,16 @@ namespace SkiaSharp
 			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster_direct (ref info, pixels, (IntPtr)rowBytes, ref props));
 		}
 		
+		public static SKSurface Create (GRContext context, GRBackendRenderTargetDesc desc, SKSurfaceProps props)
+		{
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_render_target (context.Handle, ref desc, ref props));
+		}
+		
+		public static SKSurface Create (GRContext context, GRBackendRenderTargetDesc desc)
+		{
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_render_target (context.Handle, ref desc, IntPtr.Zero));
+		}
+		
 		protected override void Dispose (bool disposing)
 		{
 			if (Handle != IntPtr.Zero && OwnsHandle) {

@@ -9,6 +9,9 @@
 using System;
 using System.Runtime.InteropServices;
 
+using GRBackendObject = System.IntPtr;
+using GRBackendContext = System.IntPtr;
+
 using sk_surface_t = System.IntPtr;
 using sk_canvas_t = System.IntPtr;
 using sk_image_t = System.IntPtr;
@@ -42,6 +45,7 @@ using sk_path_iterator_t = System.IntPtr;
 using sk_path_effect_t = System.IntPtr;
 using sk_pixelref_factory_t = System.IntPtr;
 using sk_colortable_t = System.IntPtr;
+using gr_context_t = System.IntPtr;
 
 namespace SkiaSharp
 {
@@ -77,6 +81,10 @@ namespace SkiaSharp
 		public extern static sk_canvas_t sk_surface_get_canvas(sk_surface_t t);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_image_t sk_surface_new_image_snapshot(sk_surface_t t);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_surface_t sk_surface_new_backend_render_target (gr_context_t context, ref GRBackendRenderTargetDesc desc, ref SKSurfaceProps props);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_surface_t sk_surface_new_backend_render_target (gr_context_t context, ref GRBackendRenderTargetDesc desc, IntPtr propsZero);
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_canvas_save(sk_canvas_t t);
@@ -173,6 +181,10 @@ namespace SkiaSharp
 		public extern static bool sk_canvas_get_clip_device_bounds(sk_canvas_t t, ref SKRectI cbounds);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static bool sk_canvas_get_clip_bounds(sk_canvas_t t, ref SKRect cbounds);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_canvas_flush (sk_canvas_t canvas);
+
+		// Paint
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_paint_t sk_paint_new();
@@ -910,6 +922,13 @@ namespace SkiaSharp
 		public extern static void sk_colortable_read_colors (sk_colortable_t ctable, [Out] SKColor[] colors);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_colortable_read_colors (sk_colortable_t ctable, out IntPtr colors);
+
+		// GRContext
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static gr_context_t gr_context_create_with_defaults (GRBackend backend, GRBackendContext backendContext);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void gr_context_unref (gr_context_t context);
 	}
 }
 
