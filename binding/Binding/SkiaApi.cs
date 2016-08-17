@@ -195,9 +195,9 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_paint_set_color(sk_paint_t t, SKColor color);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static bool sk_paint_is_stroke(sk_paint_t t);
+		public extern static SKPaintStyle sk_paint_get_style(sk_paint_t t);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_paint_set_stroke(sk_paint_t t, bool v);
+		public extern static void sk_paint_set_style(sk_paint_t t, SKPaintStyle style);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static float sk_paint_get_stroke_width(sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
