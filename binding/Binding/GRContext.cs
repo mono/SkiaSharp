@@ -29,6 +29,11 @@ namespace SkiaSharp
 			return GetObject<GRContext> (SkiaApi.gr_context_create_with_defaults (backend, backendContext));
 		}
 
+		public static GRContext Create (GRBackend backend, GRGlInterface backendContext)
+		{
+			return GetObject<GRContext> (SkiaApi.gr_context_create_with_defaults (backend, backendContext.Handle));
+		}
+
 		protected override void Dispose (bool disposing)
 		{
 			if (Handle != IntPtr.Zero && OwnsHandle) {

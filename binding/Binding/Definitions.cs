@@ -1672,5 +1672,23 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		OpenGL,
 		Vulkan,
 	}
+
+	[Flags]
+	public enum GRBackendTextureDescFlags {
+		None = 0,
+		RenderTarget = 1,
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct GRBackendTextureDesc {
+		public GRBackendTextureDescFlags Flags;
+		public GRSurfaceOrigin Origin;
+		public int Width;
+		public int Height;
+		public GRPixelConfig Config;
+		public int SampleCount;
+		public GRBackendObject TextureHandle;
+	}
+
 }
 
