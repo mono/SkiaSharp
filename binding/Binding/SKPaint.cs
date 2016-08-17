@@ -64,19 +64,10 @@ namespace SkiaSharp
 
 		public bool IsStroke {
 			get {
-				return SkiaApi.sk_paint_get_style (Handle) != SKPaintStyle.Fill;
+				return SkiaApi.sk_paint_is_stroke (Handle);
 			}
 			set {
-				SkiaApi.sk_paint_set_style (Handle, value ? SKPaintStyle.Stroke : SKPaintStyle.Fill);
-			}
-		}
-
-		public SKPaintStyle Style {
-			get {
-				return SkiaApi.sk_paint_get_style (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_style (Handle, value);
+				SkiaApi.sk_paint_set_stroke (Handle, value);
 			}
 		}
 

@@ -347,13 +347,6 @@ namespace SkiaSharp
 		ClampToBlack,
 	}
 
-	public enum SKPaintStyle
-	{
-		Fill,
-		Stroke,
-		StrokeAndFill,
-	}
-
 	public enum SKRegionOperation
 	{
 		Difference,
