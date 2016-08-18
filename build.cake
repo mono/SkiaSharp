@@ -396,7 +396,7 @@ Task ("externals-windows")
     .Does (() =>  
 {
     var buildArch = new Action<string, string, string> ((platform, skiaArch, dir) => {
-        RunGyp ("skia_arch_type='" + skiaArch + "'", "ninja,msvs");
+        RunGyp ("skia_arch_type='" + skiaArch + "' skia_gpu=1", "ninja,msvs");
         VisualStudioPathFixup ();
         DotNetBuild ("native-builds/libSkiaSharp_windows/libSkiaSharp_" + dir + ".sln", c => { 
             c.Configuration = "Release"; 
