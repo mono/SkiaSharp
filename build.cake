@@ -891,6 +891,12 @@ Task ("samples")
         c.Configuration = "Release"; 
         c.Properties ["Platform"] = new [] { "x86" };
     });
+    
+    RunNuGetRestore ("./samples/Skia.WindowsDesktop.GLDemo/Skia.WindowsDesktop.GLDemo.sln");
+    DotNetBuild ("./samples/Skia.WindowsDesktop.GLDemo/Skia.WindowsDesktop.GLDemo.sln", c => { 
+        c.Configuration = "Release"; 
+        c.Properties ["Platform"] = new [] { "x86" };
+    });
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
