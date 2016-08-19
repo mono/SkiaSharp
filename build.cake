@@ -868,6 +868,10 @@ Task ("samples")
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "iPhoneSimulator" };
         });
+        RunNuGetRestore ("./samples/Skia.OSX.GLDemo/Skia.OSX.GLDemo.sln");
+        DotNetBuild ("./samples/Skia.OSX.GLDemo/Skia.OSX.GLDemo.sln", c => { 
+            c.Configuration = "Release"; 
+        });
     }
     
     if (IsRunningOnWindows ()) {
@@ -884,16 +888,15 @@ Task ("samples")
         DotNetBuild ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Windows.sln", c => { 
             c.Configuration = "Release"; 
         });
+        RunNuGetRestore ("./samples/Skia.WindowsDesktop.GLDemo/Skia.WindowsDesktop.GLDemo.sln");
+        DotNetBuild ("./samples/Skia.WindowsDesktop.GLDemo/Skia.WindowsDesktop.GLDemo.sln", c => { 
+            c.Configuration = "Release"; 
+            c.Properties ["Platform"] = new [] { "x86" };
+        });
     }
     
     RunNuGetRestore ("./samples/Skia.WindowsDesktop.Demo/Skia.WindowsDesktop.Demo.sln");
     DotNetBuild ("./samples/Skia.WindowsDesktop.Demo/Skia.WindowsDesktop.Demo.sln", c => { 
-        c.Configuration = "Release"; 
-        c.Properties ["Platform"] = new [] { "x86" };
-    });
-    
-    RunNuGetRestore ("./samples/Skia.WindowsDesktop.GLDemo/Skia.WindowsDesktop.GLDemo.sln");
-    DotNetBuild ("./samples/Skia.WindowsDesktop.GLDemo/Skia.WindowsDesktop.GLDemo.sln", c => { 
         c.Configuration = "Release"; 
         c.Properties ["Platform"] = new [] { "x86" };
     });
