@@ -1697,5 +1697,22 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		public GRBackendObject TextureHandle;
 	}
 
+	[StructLayout(LayoutKind.Sequential)]
+	public struct GRContextOptions {
+		public bool SuppressPrints;
+		public int MaxTextureSizeOverride;
+		public int MaxTileSizeOverride;
+		public bool SuppressDualSourceBlending;
+		public int BufferMapThreshold;
+		public bool UseDrawInsteadOfPartialRenderTargetWrite;
+		public bool ImmediateMode;
+		public bool ClipBatchToBounds;
+		public bool DrawBatchBounds;
+		public int MaxBatchLookback;
+		public int MaxBatchLookahead;
+		public bool UseShaderSwizzling;
+		public bool DoManualMipmapping;
+	}
+	
 }
 

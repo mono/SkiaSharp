@@ -21,12 +21,27 @@ namespace SkiaSharp
 		
 		public static GRGlInterface CreateDefaultInterface ()
 		{
-			return GetObject<GRGlInterface> (SkiaApi.gr_gl_default_interface ());
+			return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_default_interface ());
 		}
 
 		public static GRGlInterface CreateNativeInterface ()
 		{
-			return GetObject<GRGlInterface> (SkiaApi.gr_gl_create_native_interface ());
+			return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_create_native_interface ());
+		}
+
+		public GRGlInterface Clone ()
+		{
+			return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_clone (Handle));
+		}
+
+		public bool Validate ()
+		{
+			return SkiaApi.gr_glinterface_validate (Handle);
+		}
+
+		public bool HasExtension (string extension)
+		{
+			return SkiaApi.gr_glinterface_has_extension (Handle, extension);
 		}
 
 		protected override void Dispose (bool disposing)
