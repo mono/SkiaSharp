@@ -1065,8 +1065,10 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static gr_glinterface_t gr_glinterface_clone (gr_glinterface_t glInterface);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool gr_glinterface_validate (gr_glinterface_t glInterface);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool gr_glinterface_has_extension (gr_glinterface_t glInterface, string extension);
 
 	}
