@@ -62,6 +62,43 @@ namespace SkiaSharp
 			}
 		}
 
+		public int PointCount {
+			get {
+				return SkiaApi.sk_path_count_points (Handle);
+			}
+		}
+
+		public SKPoint this [int index] {
+			get {
+				return GetPoint (index);
+			}
+		}
+
+		public SKPoint[] Points {
+			get {
+				return GetPoints (PointCount);
+			}
+		}
+
+		public SKPoint GetPoint (int index)
+		{
+			SKPoint point;
+			SkiaApi.sk_path_get_point (Handle, index, out point);
+			return point;
+		}
+
+		public SKPoint[] GetPoints (int max)
+		{
+			SKPoint[] points = new SKPoint [max];
+			GetPoints (points, max);
+			return points;
+		}
+
+		public int GetPoints (SKPoint[] points, int max)
+		{
+			return SkiaApi.sk_path_get_points (Handle, points, max);
+		}
+
 		public void MoveTo (float x, float y)
 		{
 			SkiaApi.sk_path_move_to (Handle, x, y);

@@ -19,6 +19,14 @@ namespace SkiaSharp
 		{
 		}
 
+		public SKCanvas (SKBitmap bitmap)
+			: this (IntPtr.Zero, true)
+		{
+			if (bitmap == null)
+				throw new ArgumentNullException (nameof (bitmap));
+			Handle = SkiaApi.sk_canvas_new_from_bitmap (bitmap.Handle);
+		}
+
 		public int Save ()
 		{
 			if (Handle == IntPtr.Zero)

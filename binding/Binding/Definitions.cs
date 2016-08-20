@@ -347,6 +347,21 @@ namespace SkiaSharp
 		ClampToBlack,
 	}
 
+	public enum SKPaintStyle
+	{
+		Fill,
+		Stroke,
+		StrokeAndFill,
+	}
+
+	public enum SKPaintHinting
+	{
+		NoHinting = 0,
+		Slight = 1,
+		Normal = 2,
+		Full = 3
+	}
+
 	public enum SKRegionOperation
 	{
 		Difference,
