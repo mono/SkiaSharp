@@ -62,6 +62,96 @@ namespace SkiaSharp
 			}
 		}
 
+		public bool IsLinearText {
+			get {
+				return SkiaApi.sk_paint_is_linear_text (Handle);
+			}
+			set {
+				SkiaApi.sk_paint_set_linear_text (Handle, value);
+			}
+		}
+
+		public bool SubpixelText {
+			get {
+				return SkiaApi.sk_paint_is_subpixel_text (Handle);
+			}
+			set {
+				SkiaApi.sk_paint_set_subpixel_text (Handle, value);
+			}
+		}
+
+		public bool LcdRenderText {
+			get {
+				return SkiaApi.sk_paint_is_lcd_render_text (Handle);
+			}
+			set {
+				SkiaApi.sk_paint_set_lcd_render_text (Handle, value);
+			}
+		}
+
+		public bool IsEmbeddedBitmapText {
+			get {
+				return SkiaApi.sk_paint_is_embedded_bitmap_text (Handle);
+			}
+			set {
+				SkiaApi.sk_paint_set_embedded_bitmap_text (Handle, value);
+			}
+		}
+
+		public bool IsAutohinted {
+			get {
+				return SkiaApi.sk_paint_is_autohinted (Handle);
+			}
+			set {
+				SkiaApi.sk_paint_set_autohinted (Handle, value);
+			}
+		}
+
+		public SKPaintHinting HintingLevel {
+			get {
+				return SkiaApi.sk_paint_get_hinting (Handle);
+			}
+			set {
+				SkiaApi.sk_paint_set_hinting (Handle, value);
+			}
+		}
+
+		public bool UnderlineText {
+			get {
+				return SkiaApi.sk_paint_is_underline_text (Handle);
+			}
+			set {
+				SkiaApi.sk_paint_set_underline_text (Handle, value);
+			}
+		}
+
+		public bool StrikeThruText {
+			get {
+				return SkiaApi.sk_paint_is_strikethru_text (Handle);
+			}
+			set {
+				SkiaApi.sk_paint_set_strikethru_text (Handle, value);
+			}
+		}
+
+		public bool FakeBoldText {
+			get {
+				return SkiaApi.sk_paint_is_fake_bold_text (Handle);
+			}
+			set {
+				SkiaApi.sk_paint_set_fake_bold_text (Handle, value);
+			}
+		}
+
+		public bool DeviceKerningEnabled {
+			get {
+				return SkiaApi.sk_paint_is_dev_kern_text (Handle);
+			}
+			set {
+				SkiaApi.sk_paint_set_dev_kern_text (Handle, value);
+			}
+		}
+
 		public bool IsStroke {
 			get {
 				return SkiaApi.sk_paint_get_style (Handle) != SKPaintStyle.Fill;
