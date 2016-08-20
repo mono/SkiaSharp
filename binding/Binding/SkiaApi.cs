@@ -175,6 +175,8 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_canvas_get_clip_bounds(sk_canvas_t t, ref SKRect cbounds);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_canvas_t sk_canvas_new_from_bitmap(sk_bitmap_t bitmap);
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_paint_t sk_paint_new();
