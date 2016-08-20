@@ -356,10 +356,10 @@ namespace SkiaSharp
 
 	public enum SKPaintHinting
 	{
-        NoHinting = 0,
-        Slight = 1,
-        Normal = 2,
-        Full = 3
+		NoHinting = 0,
+		Slight = 1,
+		Normal = 2,
+		Full = 3
 	}
 
 	public enum SKRegionOperation
