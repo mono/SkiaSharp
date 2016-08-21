@@ -1057,6 +1057,12 @@ namespace SkiaSharp
 		// GLInterface
 		
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static gr_glinterface_t gr_glinterface_assemble_interface (IntPtr ctx, IntPtr get);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static gr_glinterface_t gr_glinterface_assemble_gl_interface (IntPtr ctx, IntPtr get);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static gr_glinterface_t gr_glinterface_assemble_gles_interface (IntPtr ctx, IntPtr get);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static gr_glinterface_t gr_glinterface_default_interface ();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static gr_glinterface_t gr_glinterface_create_native_interface ();
