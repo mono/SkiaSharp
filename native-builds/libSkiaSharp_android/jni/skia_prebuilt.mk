@@ -162,6 +162,16 @@ LOCAL_MODULE := libdng_sdk
 LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libdng_sdk.a
 include $(PREBUILT_STATIC_LIBRARY)
 
+include $(CLEAR_VARS)
+LOCAL_MODULE := libskia_svg
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_svg.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libskia_xml
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_xml.a
+include $(PREBUILT_STATIC_LIBRARY)
+
 
 ###
 # platforms

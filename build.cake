@@ -690,7 +690,7 @@ Task ("externals-android")
     
     var buildArch = new Action<string, string> ((arch, folder) => {
         StartProcess (SKIA_PATH.CombineWithFilePath ("platform_tools/android/bin/android_ninja").FullPath, new ProcessSettings {
-            Arguments = "-d " + arch + " skia_lib pdf sfntly icuuc",
+            Arguments = "-d " + arch + " skia_lib pdf sfntly icuuc svg xml",
             WorkingDirectory = SKIA_PATH.FullPath,
         });
     });

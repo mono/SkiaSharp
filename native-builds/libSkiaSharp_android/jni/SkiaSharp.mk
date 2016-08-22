@@ -14,8 +14,9 @@ LOCAL_STATIC_LIBRARIES := libskia_ports libskia_skgpu libskia_images libskia_opt
                           libpiex libwebp_enc libwebp_dec libwebp_dsp libwebp_utils      \
                           libwebp_demux libwebp_dsp_enc libwebp_dsp_neon                 \
                           libpng_static_neon libdng_sdk libzlib                          \
-                          libskia_core libskia_effects libskia_utils
-                          
+                          libskia_core libskia_effects libskia_utils libskia_svg         \
+                          libskia_xml
+
 LOCAL_LDLIBS           := -llog -landroid -lEGL -lGLESv2 -lz
 
 LOCAL_MODULE           := SkiaSharp
