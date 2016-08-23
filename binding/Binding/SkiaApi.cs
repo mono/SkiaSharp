@@ -985,9 +985,9 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_path_effect_t sk_path_effect_create_1d_path(sk_path_t path, float advance, float phase, SkPath1DPathEffectStyle style);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_path_effect_t sk_path_effect_create_2d_line(float width, SKMatrix matrix);
+		public extern static sk_path_effect_t sk_path_effect_create_2d_line(float width, ref SKMatrix matrix);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_path_effect_t sk_path_effect_create_2d_path(SKMatrix matrix, sk_path_t path);
+		public extern static sk_path_effect_t sk_path_effect_create_2d_path(ref SKMatrix matrix, sk_path_t path);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_path_effect_t sk_path_effect_create_dash(float[] intervals, int count, float phase);
 
