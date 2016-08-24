@@ -130,6 +130,16 @@ namespace SkiaSharp
 		{
 			return (int) color;
 		}
+
+		public static implicit operator SKColor (uint color)
+		{
+			return new SKColor (color);
+		}
+
+		public static explicit operator uint (SKColor color)
+		{
+			return color.color;
+		}
 	}
 
 	[Flags]
