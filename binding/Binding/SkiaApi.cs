@@ -31,6 +31,7 @@ using sk_stream_streamrewindable_t = System.IntPtr;
 using sk_wstream_t = System.IntPtr;
 using sk_wstream_dynamicmemorystream_t = System.IntPtr;
 using sk_wstream_filestream_t = System.IntPtr;
+using sk_wstream_managedstream_t = System.IntPtr;
 using sk_bitmap_t = System.IntPtr;
 using sk_codec_t = System.IntPtr;
 using sk_imagefilter_croprect_t = System.IntPtr;
@@ -773,6 +774,15 @@ namespace SkiaSharp
 		public extern static sk_stream_managedstream_t sk_managedstream_new();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_managedstream_set_delegates(IntPtr pRead, IntPtr pPeek, IntPtr pIsAtEnd, IntPtr pRewind, IntPtr pGetPosition, IntPtr pSeek, IntPtr pMove, IntPtr pGetLength, IntPtr pCreateNew, IntPtr pDestroy);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_managedstream_destroy(sk_stream_managedstream_t stream);
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_wstream_managedstream_t sk_managedwstream_new();
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_managedwstream_destroy(sk_wstream_managedstream_t stream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_managedwstream_set_delegates(IntPtr pWrite, IntPtr pFlush, IntPtr pBytesWritten, IntPtr pDestroy);
 
 		// Writeable streams
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]

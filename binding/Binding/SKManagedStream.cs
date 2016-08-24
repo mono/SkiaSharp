@@ -129,7 +129,7 @@ namespace SkiaSharp
 			}
 
 			if (!isDisposed && Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_memorystream_destroy (Handle);
+				SkiaApi.sk_managedstream_destroy (Handle);
 			}
 
 			base.Dispose (disposing);

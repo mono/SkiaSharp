@@ -264,13 +264,13 @@ namespace SkiaSharp
 		{
 		}
 		
-		public int BytesWritten {
+		public virtual int BytesWritten {
 			get {
 				return (int)SkiaApi.sk_wstream_bytes_written (Handle);
 			}
 		}
 
-		public bool Write (byte[] buffer, int size)
+		public virtual bool Write (byte[] buffer, int size)
 		{
 			unsafe {
 				fixed (byte *b = &buffer [0]) {
@@ -284,7 +284,7 @@ namespace SkiaSharp
 			SkiaApi.sk_wstream_newline (Handle);
 		}
 
-		public void Flush ()
+		public virtual void Flush ()
 		{
 			SkiaApi.sk_wstream_flush (Handle);
 		}

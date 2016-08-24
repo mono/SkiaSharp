@@ -12,7 +12,9 @@
 #include "SkStream.h"
 
 
+class SkManagedWStream;
 class SkManagedStream;
+
 
 // delegate declarations
 typedef size_t            (*read_delegate)        (SkManagedStream* managedStream, void* buffer, size_t size);
@@ -25,6 +27,13 @@ typedef bool              (*move_delegate)        (SkManagedStream* managedStrea
 typedef size_t            (*getLength_delegate)   (const SkManagedStream* managedStream);
 typedef SkManagedStream*  (*createNew_delegate)   (const SkManagedStream* managedStream);
 typedef void              (*destroy_delegate)     (size_t managedStream);
+
+// delegate declarations
+typedef bool     (*write_delegate)          (SkManagedWStream* managedStream, const void* buffer, size_t size);
+typedef void     (*flush_delegate)          (SkManagedWStream* managedStream);
+typedef size_t   (*bytesWritten_delegate)   (const SkManagedWStream* managedStream);
+typedef void     (*wdestroy_delegate)       (size_t managedStream);
+
 
 // managed stream wrapper
 class SkManagedStream : public SkStreamAsset {
@@ -61,8 +70,31 @@ public:
     
 private:
     size_t address;
+
+    typedef SkStreamAsset INHERITED;
+};
+
+
+// managed wstream wrapper
+class SkManagedWStream : public SkWStream {
+public:
+    SkManagedWStream();
+
+    virtual ~SkManagedWStream();
+
+    static void setDelegates(const write_delegate pWrite,
+                             const flush_delegate pFlush,
+                             const bytesWritten_delegate pBytesWritten,
+                             const wdestroy_delegate pDestroy);
     
-    typedef SkManagedStream INHERITED;
+    bool write(const void* buffer, size_t size) override;
+    void flush() override;
+    size_t bytesWritten() const override;
+    
+private:
+    size_t address;
+    
+    typedef SkWStream INHERITED;
 };
 
 
