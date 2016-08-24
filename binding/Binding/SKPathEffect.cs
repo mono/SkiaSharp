@@ -71,14 +71,14 @@ namespace SkiaSharp
 
 		public static SKPathEffect Create2DLine(float width, SKMatrix matrix)
 		{
-			return GetObject<SKPathEffect>(SkiaApi.sk_path_effect_create_2d_line(width, matrix));
+			return GetObject<SKPathEffect>(SkiaApi.sk_path_effect_create_2d_line(width, ref matrix));
 		}
 
 		public static SKPathEffect Create2DPath(SKMatrix matrix, SKPath path)
 		{
 			if (path == null)
 				throw new ArgumentNullException(nameof(path));
-			return GetObject<SKPathEffect>(SkiaApi.sk_path_effect_create_2d_path(matrix, path.Handle));
+			return GetObject<SKPathEffect>(SkiaApi.sk_path_effect_create_2d_path(ref matrix, path.Handle));
 		}
 
 		public static SKPathEffect CreateDash(float[] intervals, float phase)
