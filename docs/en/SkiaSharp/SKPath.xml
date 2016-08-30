@@ -84,6 +84,7 @@
     </Member>
     <Member MemberName="AddCircle">
       <MemberSignature Language="C#" Value="public void AddCircle (float x, float y, float radius, SkiaSharp.SKPathDirection dir);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void AddCircle(float32 x, float32 y, float32 radius, valuetype SkiaSharp.SKPathDirection dir) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
@@ -134,7 +135,7 @@
       </Docs>
     </Member>
     <Member MemberName="AddPath">
-      <MemberSignature Language="C#" Value="public void AddPath (SkiaSharp.SKPath other, SkiaSharp.SKPath.AddMode mode);" />
+      <MemberSignature Language="C#" Value="public void AddPath (SkiaSharp.SKPath other, SkiaSharp.SKPath.AddMode mode = SkiaSharp.SKPath+AddMode.Append);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void AddPath(class SkiaSharp.SKPath other, valuetype SkiaSharp.SKPath/AddMode mode) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
@@ -160,7 +161,7 @@
       </Docs>
     </Member>
     <Member MemberName="AddPath">
-      <MemberSignature Language="C#" Value="public void AddPath (SkiaSharp.SKPath other, ref SkiaSharp.SKMatrix matrix, SkiaSharp.SKPath.AddMode mode);" />
+      <MemberSignature Language="C#" Value="public void AddPath (SkiaSharp.SKPath other, ref SkiaSharp.SKMatrix matrix, SkiaSharp.SKPath.AddMode mode = SkiaSharp.SKPath+AddMode.Append);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void AddPath(class SkiaSharp.SKPath other, valuetype SkiaSharp.SKMatrix matrix, valuetype SkiaSharp.SKPath/AddMode mode) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
@@ -187,7 +188,7 @@
       </Docs>
     </Member>
     <Member MemberName="AddPath">
-      <MemberSignature Language="C#" Value="public void AddPath (SkiaSharp.SKPath other, float dx, float dy, SkiaSharp.SKPath.AddMode mode);" />
+      <MemberSignature Language="C#" Value="public void AddPath (SkiaSharp.SKPath other, float dx, float dy, SkiaSharp.SKPath.AddMode mode = SkiaSharp.SKPath+AddMode.Append);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void AddPath(class SkiaSharp.SKPath other, float32 dx, float32 dy, valuetype SkiaSharp.SKPath/AddMode mode) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
@@ -292,6 +293,7 @@
     </Member>
     <Member MemberName="AddRoundedRect">
       <MemberSignature Language="C#" Value="public void AddRoundedRect (SkiaSharp.SKRect rect, float rx, float ry, SkiaSharp.SKPathDirection dir);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void AddRoundedRect(valuetype SkiaSharp.SKRect rect, float32 rx, float32 ry, valuetype SkiaSharp.SKPathDirection dir) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
@@ -316,6 +318,7 @@
     </Member>
     <Member MemberName="ArcTo">
       <MemberSignature Language="C#" Value="public void ArcTo (float rx, float ry, float xAxisRotate, SkiaSharp.SKPathArcSize largeArc, SkiaSharp.SKPathDirection sweep, float x, float y);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void ArcTo(float32 rx, float32 ry, float32 xAxisRotate, valuetype SkiaSharp.SKPathArcSize largeArc, valuetype SkiaSharp.SKPathDirection sweep, float32 x, float32 y) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
@@ -502,7 +505,7 @@
       </Docs>
     </Member>
     <Member MemberName="FillType">
-      <MemberSignature Language="C#" Value="public SkiaSharp.SKPathFillType FillType { set; get; }" />
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPathFillType FillType { get; set; }" />
       <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKPathFillType FillType" />
       <MemberType>Property</MemberType>
       <AssemblyInfo>
@@ -551,6 +554,88 @@
         <remarks>
           <para>Note: this bounds may be larger than the actual shape, since curves do not extend as far as their control points. Additionally this bound encompases all points, even isolated moveTos either preceeding or following the last non-degenerate contour.</para>
         </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetPoint">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPoint GetPoint (int index);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKPoint GetPoint(int32 index) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.53.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPoint</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="index" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="index">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetPoints">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPoint[] GetPoints (int max);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKPoint[] GetPoints(int32 max) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.53.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPoint[]</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="max" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="max">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetPoints">
+      <MemberSignature Language="C#" Value="public int GetPoints (SkiaSharp.SKPoint[] points, int max);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance int32 GetPoints(valuetype SkiaSharp.SKPoint[] points, int32 max) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.53.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="points" Type="SkiaSharp.SKPoint[]" />
+        <Parameter Name="max" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="points">To be added.</param>
+        <param name="max">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Item">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPoint this[int index] { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKPoint Item(int32)" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.53.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPoint</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="index" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="index">To be added.</param>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
       </Docs>
     </Member>
     <Member MemberName="LineTo">
@@ -606,6 +691,38 @@
         </remarks>
       </Docs>
     </Member>
+    <Member MemberName="PointCount">
+      <MemberSignature Language="C#" Value="public int PointCount { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance int32 PointCount" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.53.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Points">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPoint[] Points { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKPoint[] Points" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.53.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPoint[]</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="QuadTo">
       <MemberSignature Language="C#" Value="public void QuadTo (float x0, float y0, float x1, float y1);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void QuadTo(float32 x0, float32 y0, float32 x1, float32 y1) cil managed" />
@@ -638,6 +755,7 @@
     </Member>
     <Member MemberName="RArcTo">
       <MemberSignature Language="C#" Value="public void RArcTo (float rx, float ry, float xAxisRotate, SkiaSharp.SKPathArcSize largeArc, SkiaSharp.SKPathDirection sweep, float x, float y);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void RArcTo(float32 rx, float32 ry, float32 xAxisRotate, valuetype SkiaSharp.SKPathArcSize largeArc, valuetype SkiaSharp.SKPathDirection sweep, float32 x, float32 y) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
