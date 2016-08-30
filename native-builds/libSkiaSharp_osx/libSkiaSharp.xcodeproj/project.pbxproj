@@ -50,6 +50,7 @@
 		3488AE1B1D1ADC7E00BE2DC3 /* libpiex.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3488AE0E1D1ADC3F00BE2DC3 /* libpiex.a */; };
 		3488AE1C1D1ADC7E00BE2DC3 /* libraw_codec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3488ADEB1D1ADC1000BE2DC3 /* libraw_codec.a */; };
 		3488AE1D1D1ADC7E00BE2DC3 /* libzlib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3488AE111D1ADC3F00BE2DC3 /* libzlib.a */; };
+		34C653D71D76017D000C1D5D /* libskia_opts_sse42.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 21C9519A1C03D392003A1E1D /* libskia_opts_sse42.a */; };
 		34FEFECE1D01572D002A83B6 /* libicuuc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 34FEFE9B1D015718002A83B6 /* libicuuc.a */; };
 /* End PBXBuildFile section */
 
@@ -257,13 +258,6 @@
 			remoteGlobalIDString = 1E238A18338BD7C314DA6FB9;
 			remoteInfo = libetc1;
 		};
-		342959941C616FA000BF1BB6 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 3429598C1C616FA000BF1BB6 /* libjpeg-turbo.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 6C7F36B7E05C9CAE89B0BAC9;
-			remoteInfo = "yasm-win";
-		};
 		342959961C616FA000BF1BB6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 3429598C1C616FA000BF1BB6 /* libjpeg-turbo.xcodeproj */;
@@ -467,6 +461,20 @@
 			remoteGlobalIDString = FE981E92663D0162AD2B491E;
 			remoteInfo = raw_codec;
 		};
+		34C653CE1D76016A000C1D5D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21C951881C03D392003A1E1D /* opts.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = C7E8882721F7612ABD656185;
+			remoteInfo = opts_crc32;
+		};
+		34C653D51D760173000C1D5D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21C951881C03D392003A1E1D /* opts.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 507984E7CB67588ABE813115;
+			remoteInfo = opts_sse42;
+		};
 		34FEFE911D015718002A83B6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 34FEFE7B1D015718002A83B6 /* codec.xcodeproj */;
@@ -571,6 +579,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				34C653D71D76017D000C1D5D /* libskia_opts_sse42.a in Frameworks */,
 				344B478A1D1ADD7400EFE6F9 /* libsfntly.a in Frameworks */,
 				3488AE1A1D1ADC7E00BE2DC3 /* libdng_sdk.a in Frameworks */,
 				3488AE1B1D1ADC7E00BE2DC3 /* libpiex.a in Frameworks */,
@@ -704,6 +713,7 @@
 			isa = PBXGroup;
 			children = (
 				21C951941C03D392003A1E1D /* libskia_opts.a */,
+				34C653CF1D76016A000C1D5D /* libskia_opts_crc32.a */,
 				21C951961C03D392003A1E1D /* libskia_opts_ssse3.a */,
 				21C951981C03D392003A1E1D /* libskia_opts_sse41.a */,
 				21C9519A1C03D392003A1E1D /* libskia_opts_sse42.a */,
@@ -764,7 +774,6 @@
 		3429598D1C616FA000BF1BB6 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				342959951C616FA000BF1BB6 /* yasm-win */,
 				342959971C616FA000BF1BB6 /* libjpeg-turbo.a */,
 			);
 			name = Products;
@@ -913,6 +922,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				34C653D61D760173000C1D5D /* PBXTargetDependency */,
 				344B47891D1ADD6F00EFE6F9 /* PBXTargetDependency */,
 				3488AE131D1ADC6400BE2DC3 /* PBXTargetDependency */,
 				3488AE151D1ADC6400BE2DC3 /* PBXTargetDependency */,
@@ -1192,13 +1202,6 @@
 			remoteRef = 21C951F11C03D551003A1E1D /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		342959951C616FA000BF1BB6 /* yasm-win */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = "yasm-win";
-			remoteRef = 342959941C616FA000BF1BB6 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		342959971C616FA000BF1BB6 /* libjpeg-turbo.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -1281,6 +1284,13 @@
 			fileType = archive.ar;
 			path = libzlib.a;
 			remoteRef = 3488AE101D1ADC3F00BE2DC3 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		34C653CF1D76016A000C1D5D /* libskia_opts_crc32.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libskia_opts_crc32.a;
+			remoteRef = 34C653CE1D76016A000C1D5D /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		34FEFE921D015718002A83B6 /* libskia_codec.a */ = {
@@ -1498,6 +1508,11 @@
 			isa = PBXTargetDependency;
 			name = raw_codec;
 			targetProxy = 3488AE181D1ADC6400BE2DC3 /* PBXContainerItemProxy */;
+		};
+		34C653D61D760173000C1D5D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = opts_sse42;
+			targetProxy = 34C653D51D760173000C1D5D /* PBXContainerItemProxy */;
 		};
 		34FEFECB1D015725002A83B6 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
