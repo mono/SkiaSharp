@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")));
 
-var NuGetSources = new [] { "https://api.nuget.org/v3/index.json", MakeAbsolute (Directory ("./output")).FullPath };
+var NuGetSources = new [] { MakeAbsolute (Directory ("./output")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NugetToolPath = GetToolPath ("../nuget.exe");
 var XamarinComponentToolPath = GetToolPath ("../xamarin-component.exe");
 var CakeToolPath = GetToolPath ("Cake.exe");
@@ -845,6 +845,7 @@ Task ("tests")
 
 Task ("samples")
     .IsDependentOn ("libs")
+    .IsDependentOn ("nuget")
     .Does (() => 
 {
     // first we need to add our new nuget to the cache so we can restore
