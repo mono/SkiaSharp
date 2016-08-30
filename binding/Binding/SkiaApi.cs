@@ -872,8 +872,6 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_codec_get_info(sk_codec_t codec, out SKImageInfo info);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_colorspace_t sk_codec_get_color_space(sk_codec_t codec);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SKCodecOrigin sk_codec_get_origin(sk_codec_t codec);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_codec_get_scaled_dimensions(sk_codec_t codec, float desiredScale, out SKSizeI dimensions);
