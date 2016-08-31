@@ -84,6 +84,11 @@ namespace SkiaSharp
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_luma_color());
 		}
 
+		public static SKColorFilter CreateGamma(float gamma)
+		{
+			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_gamma(gamma));
+		}
+
 		public static SKColorFilter CreateTable(byte[] table)
 		{
 			if (table == null)

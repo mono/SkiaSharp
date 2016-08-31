@@ -564,6 +564,8 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_colorfilter_t sk_colorfilter_new_luma_color();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_colorfilter_t sk_colorfilter_new_gamma(float gamma);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_colorfilter_t sk_colorfilter_new_table(byte[] table/*[256]*/);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_colorfilter_t sk_colorfilter_new_table_argb(byte[] tableA/*[256]*/, byte[] tableR/*[256]*/, byte[] tableG/*[256]*/, byte[] tableB/*[256]*/);
