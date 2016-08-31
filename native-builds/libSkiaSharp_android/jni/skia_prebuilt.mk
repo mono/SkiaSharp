@@ -58,8 +58,8 @@ LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libpng_static.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := libexpat
-LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libexpat.a
+LOCAL_MODULE := libexpat_static
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libexpat_static.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -188,6 +188,11 @@ ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
   LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libwebp_dsp_neon.a
   include $(PREBUILT_STATIC_LIBRARY)
 
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libskia_opts_crc32
+  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_crc32.a
+  include $(PREBUILT_STATIC_LIBRARY)
+
 endif
 
 ifeq ($(TARGET_ARCH_ABI),x86)
@@ -206,7 +211,12 @@ ifeq ($(TARGET_ARCH_ABI),x86)
   LOCAL_MODULE := libskia_opts_sse41
   LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_sse41.a
   include $(PREBUILT_STATIC_LIBRARY)
-  
+
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libskia_opts_sse42
+  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_sse42.a
+  include $(PREBUILT_STATIC_LIBRARY)
+
 endif
 
 ifeq ($(TARGET_ARCH_ABI),x86_64)
@@ -225,5 +235,10 @@ ifeq ($(TARGET_ARCH_ABI),x86_64)
   LOCAL_MODULE := libskia_opts_sse41
   LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_sse41.a
   include $(PREBUILT_STATIC_LIBRARY)
-  
+
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libskia_opts_sse42
+  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_sse42.a
+  include $(PREBUILT_STATIC_LIBRARY)
+
 endif
