@@ -177,6 +177,10 @@ namespace SkiaSharp
 		public extern static bool sk_canvas_get_clip_bounds(sk_canvas_t t, ref SKRect cbounds);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_canvas_t sk_canvas_new_from_bitmap(sk_bitmap_t bitmap);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_canvas_draw_bitmap_lattice(sk_canvas_t t, sk_bitmap_t bitmap, int[] xDivs, int xCount, int[] yDivs, int yCount, ref SKRect dst, sk_paint_t paint);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_canvas_draw_image_lattice(sk_canvas_t t, sk_image_t image, int[] xDivs, int xCount, int[] yDivs, int yCount, ref SKRect dst, sk_paint_t paint);
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_paint_t sk_paint_new();

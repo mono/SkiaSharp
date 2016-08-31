@@ -357,6 +357,55 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_text_on_path (Handle, bytes, bytes.Length, path.Handle, hOffset, vOffset, paint.Handle);
 		}
 
+		public void DrawBitmapNinePatch (SKBitmap bitmap, SKRectI center, SKRect dst, SKPaint paint = null)
+		{
+			if (bitmap == null)
+				throw new ArgumentNullException (nameof (bitmap));
+			// the "center" rect must fit inside the bitmap "rect"
+			if (!SKRect.Create (bitmap.Info.Size).Contains (center))
+				throw new ArgumentOutOfRangeException (nameof (center));
+
+			var xDivs = new [] { center.Left, center.Right };
+			var yDivs = new [] { center.Top, center.Bottom };
+			DrawBitmapLattice (bitmap, xDivs, yDivs, dst, paint);
+		}
+
+		public void DrawImageNinePatch (SKImage image, SKRectI center, SKRect dst, SKPaint paint = null)
+		{
+			if (image == null)
+				throw new ArgumentNullException (nameof (image));
+			// the "center" rect must fit inside the image "rect"
+			if (!SKRect.Create (image.Width, image.Height).Contains (center))
+				throw new ArgumentOutOfRangeException (nameof (center));
+
+			var xDivs = new [] { center.Left, center.Right };
+			var yDivs = new [] { center.Top, center.Bottom };
+			DrawImageLattice (image, xDivs, yDivs, dst, paint);
+		}
+
+		public void DrawBitmapLattice (SKBitmap bitmap, int[] xDivs, int[] yDivs, SKRect dst, SKPaint paint = null)
+		{
+			if (bitmap == null)
+				throw new ArgumentNullException (nameof (bitmap));
+			if (xDivs == null)
+				throw new ArgumentNullException (nameof (xDivs));
+			if (yDivs == null)
+				throw new ArgumentNullException (nameof (yDivs));
+
+			SkiaApi.sk_canvas_draw_bitmap_lattice (Handle, bitmap.Handle, xDivs, xDivs.Length, yDivs, yDivs.Length, ref dst, paint == null ? IntPtr.Zero : paint.Handle);
+		}
+
+		public void DrawImageLattice (SKImage image, int[] xDivs, int[] yDivs, SKRect dst, SKPaint paint = null)
+		{
+			if (image == null)
+				throw new ArgumentNullException (nameof (image));
+			if (xDivs == null)
+				throw new ArgumentNullException (nameof (xDivs));
+			if (yDivs == null)
+				throw new ArgumentNullException (nameof (yDivs));
+
+			SkiaApi.sk_canvas_draw_image_lattice (Handle, image.Handle, xDivs, xDivs.Length, yDivs, yDivs.Length, ref dst, paint == null ? IntPtr.Zero : paint.Handle);
+		}
 
 		public void ResetMatrix ()
 		{
