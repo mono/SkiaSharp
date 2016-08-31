@@ -57,12 +57,7 @@ FilePath GetToolPath (FilePath toolPath)
 
 FilePath GetMDocPath ()
 {
-    FilePath mdocPath;
-    if (IsRunningOnUnix ()) {
-        mdocPath = "/Library/Frameworks/Mono.framework/Versions/Current/bin/mdoc";
-    } else {
-        mdocPath = GetToolPath ("../mdoc/mdoc.exe");
-    }
+    FilePath mdocPath = GetToolPath ("../mdoc.exe");
     if (!FileExists (mdocPath)) {
         mdocPath = "mdoc";
     }
