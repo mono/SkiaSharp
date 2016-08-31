@@ -562,8 +562,8 @@ namespace SkiaSharp
 			get { return AlphaType == SKAlphaType.Opaque; }
 		}
 
-		public SKPointI Size {
-			get { return new SKPointI (Width, Height); }
+		public SKSizeI Size {
+			get { return new SKSizeI (Width, Height); }
 		}
 
 		public SKRectI Rect {
