@@ -1026,6 +1026,49 @@ namespace SkiaSharp
 
 		}
 
+		public static void BitmapLattice (SKCanvas canvas, int width, int height)
+		{
+			canvas.Clear (SKColors.White);
+
+			var assembly = typeof (Demos).GetTypeInfo ().Assembly;
+			var imageName = assembly.GetName ().Name + ".nine-patch.png";
+
+			// load the image from the embedded resource stream
+			using (var resource = assembly.GetManifestResourceStream (imageName))
+			using (var stream = new SKManagedStream (resource))
+			using (var bitmap = SKBitmap.Decode (stream))
+			{
+				var patchCenter = new SKRectI (33, 33, 256 - 33, 256 - 33);
+
+				// 2x3 for portrait, or 3x2 for landscape
+				var land = width > height;
+				var min = land ? Math.Min (width / 3f, height / 2f) : Math.Min (width / 2f, height / 3f);
+				var wide = SKRect.Inflate (SKRect.Create (0, land ? min : (min * 2f), min * 2f, min), -6, -6);
+				var tall = SKRect.Inflate (SKRect.Create (land ? (min * 2f) : min, 0, min, min * 2f), -6, -6);
+				var square = SKRect.Inflate (SKRect.Create (0, 0, min, min), -6, -6);
+				var text = SKRect.Create (land ? min : 0, land ? 0 : min, min, min / 5f);
+				text.Offset (text.Width / 2f, text.Height * 1.5f);
+				text.Right = text.Left;
+
+				// draw the bitmaps
+				canvas.DrawBitmapNinePatch (bitmap, patchCenter, square);
+				canvas.DrawBitmapNinePatch (bitmap, patchCenter, tall);
+				canvas.DrawBitmapNinePatch (bitmap, patchCenter, wide);
+
+				// describe what we see
+				using (var paint = new SKPaint ())
+				{
+					paint.TextAlign = SKTextAlign.Center;
+					paint.TextSize = text.Height * 0.75f;
+
+					canvas.DrawText ("The corners", text.Left, text.Top, paint);
+					text.Offset (0, text.Height);
+					canvas.DrawText ("should always", text.Left, text.Top, paint);
+					text.Offset (0, text.Height);
+					canvas.DrawText ("be square", text.Left, text.Top, paint);
+				}
+			}
+		}
 
 		[Flags]
 		public enum Platform
@@ -1094,6 +1137,7 @@ namespace SkiaSharp
 			new Sample {Title="Measure Text Sample", Method = MeasureTextSample, Platform = Platform.All},
 			new Sample {Title="Create PDF", Method = CreatePdfSample, Platform = Platform.All, TapMethod = CreatePdfSampleTapped},
 			new Sample {Title="Path Effects", Method = PathEffects, Platform = Platform.All},
+			new Sample {Title="Nine Patch / Lattice", Method = BitmapLattice, Platform = Platform.All},
 		};
 	}
 }
