@@ -482,7 +482,6 @@ Task ("externals-uwp")
         
         SetXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "CompileAsWinRT", "false");
         AddXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", ";SK_BUILD_FOR_WINRT;WINAPI_FAMILY=WINAPI_FAMILY_APP;");
-        AddXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", ";SK_HAS_DWRITE_1_H;SK_HAS_DWRITE_2_H;");
         // if (platform.ToUpper () == "ARM") {
         //     AddXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", ";__ARM_NEON;__ARM_NEON__;");
         // }
@@ -497,11 +496,12 @@ Task ("externals-uwp")
             .Elements (MSBuildNS + "AdditionalDependencies")
             .Remove ();
             
-        // remove sfntly as this is not supported for winrt
-        RemoveXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", "SK_SFNTLY_SUBSETTER=\"font_subsetter.h\"");
-        
-        if (rootNamespace == "ports") {
+        if (rootNamespace == "pdf") {
+            // remove sfntly as this is not supported for winrt
+            RemoveXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", "SK_SFNTLY_SUBSETTER=\"sample/chromium/font_subsetter.h\"");
+        } else if (rootNamespace == "ports") {
             RemoveFileReference (xdoc.Root, "SkFontHost_win.cpp");
+            AddXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", ";SK_HAS_DWRITE_1_H;SK_HAS_DWRITE_2_H;");
         } else if (rootNamespace == "skgpu" ) {
             // GL is not available to WinRT
             RemoveFileReference (xdoc.Root, "GrGLCreateNativeInterface_none.cpp");
@@ -512,6 +512,7 @@ Task ("externals-uwp")
             // GL is not available to WinRT
             RemoveFileReference (xdoc.Root, "SkWGL.h");
             RemoveFileReference (xdoc.Root, "SkWGL_win.cpp");
+            AddXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", ";SK_HAS_DWRITE_1_H;SK_HAS_DWRITE_2_H;");
         } 
 
         xdoc.Save (projectFile);
