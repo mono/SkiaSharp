@@ -14,7 +14,7 @@ var XamarinComponentToolPath = GetToolPath ("../xamarin-component.exe");
 var CakeToolPath = GetToolPath ("Cake.exe");
 var NUnitConsoleToolPath = GetToolPath ("../NUnit.Console/tools/nunit3-console.exe");
 var GenApiToolPath = GetToolPath ("../genapi.exe");
-var MDocPath = GetMDocPath ();
+var MDocPath = GetToolPath ("../mdoc/mdoc.exe");
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("depot_tools"));
@@ -48,20 +48,11 @@ void ListEnvironmentVariables ()
 
 FilePath GetToolPath (FilePath toolPath)
 {
-	var appRoot = Context.Environment.GetApplicationRoot ();
- 	var appRootExe = appRoot.CombineWithFilePath (toolPath);
- 	if (FileExists (appRootExe))
- 		return appRootExe;
+    var appRoot = Context.Environment.GetApplicationRoot ();
+     var appRootExe = appRoot.CombineWithFilePath (toolPath);
+     if (FileExists (appRootExe))
+         return appRootExe;
     throw new FileNotFoundException ("Unable to find tool: " + appRootExe); 
-}
-
-FilePath GetMDocPath ()
-{
-    FilePath mdocPath = GetToolPath ("../mdoc.exe");
-    if (!FileExists (mdocPath)) {
-        mdocPath = "mdoc";
-    }
-    return mdocPath;
 }
 
 var RunNuGetRestore = new Action<FilePath> ((solution) =>
@@ -97,10 +88,10 @@ var RunInstallNameTool = new Action<DirectoryPath, string, string, FilePath> ((d
         throw new InvalidOperationException ("install_name_tool is only available on Unix.");
     }
     
-	StartProcess ("install_name_tool", new ProcessSettings {
-		Arguments = string.Format("-change {0} {1} \"{2}\"", oldName, newName, library),
-		WorkingDirectory = directory,
-	});
+    StartProcess ("install_name_tool", new ProcessSettings {
+        Arguments = string.Format("-change {0} {1} \"{2}\"", oldName, newName, library),
+        WorkingDirectory = directory,
+    });
 });
 
 var RunLipo = new Action<DirectoryPath, FilePath, FilePath[]> ((directory, output, inputs) =>
@@ -114,25 +105,25 @@ var RunLipo = new Action<DirectoryPath, FilePath, FilePath[]> ((directory, outpu
         CreateDirectory (dir);
     }
 
-	var inputString = string.Join(" ", inputs.Select (i => string.Format ("\"{0}\"", i)));
-	StartProcess ("lipo", new ProcessSettings {
-		Arguments = string.Format("-create -output \"{0}\" {1}", output, inputString),
-		WorkingDirectory = directory,
-	});
+    var inputString = string.Join(" ", inputs.Select (i => string.Format ("\"{0}\"", i)));
+    StartProcess ("lipo", new ProcessSettings {
+        Arguments = string.Format("-create -output \"{0}\" {1}", output, inputString),
+        WorkingDirectory = directory,
+    });
 });
 
 var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath) =>
 {
-	if (!DirectoryExists (outputPath)) {
-		CreateDirectory (outputPath);
-	}
+    if (!DirectoryExists (outputPath)) {
+        CreateDirectory (outputPath);
+    }
 
     NuGetPack (nuspecPath, new NuGetPackSettings { 
         Verbosity = NuGetVerbosity.Detailed,
-        OutputDirectory = outputPath,		
+        OutputDirectory = outputPath,        
         BasePath = "./",
         ToolPath = NugetToolPath
-    });				
+    });                
 });
 
 var RunTests = new Action<FilePath> ((testAssembly) =>
