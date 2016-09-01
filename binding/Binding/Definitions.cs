@@ -111,64 +111,6 @@ namespace SkiaSharp
 		public byte Green => (byte)((color >> 8) & 0xff);
 		public byte Blue => (byte)((color) & 0xff);
 
-		public float GetBrightness ()
-		{
-			int r = Red;
-			int g = Green;
-			int b = Blue;
-			byte minval = (byte) Math.Min (r, Math.Min (g, b));
-			byte maxval = (byte) Math.Max (r, Math.Max (g, b));
-	
-			return (float)(maxval + minval) / 510;
-		}
-
-		public float GetSaturation ()
-		{
-			int r = Red;
-			int g = Green;
-			int b = Blue;
-			byte minval = (byte) Math.Min (r, Math.Min (g, b));
-			byte maxval = (byte) Math.Max (r, Math.Max (g, b));
-			
-			if (maxval == minval)
-					return 0.0f;
-
-			int sum = maxval + minval;
-			if (sum > 255)
-				sum = 510 - sum;
-
-			return (float)(maxval - minval) / sum;
-		}
-
-		public float GetHue ()
-		{
-			int r = Red;
-			int g = Green;
-			int b = Blue;
-			byte minval = (byte) Math.Min (r, Math.Min (g, b));
-			byte maxval = (byte) Math.Max (r, Math.Max (g, b));
-			
-			if (maxval == minval)
-					return 0.0f;
-			
-			float diff = (float)(maxval - minval);
-			float rnorm = (maxval - r) / diff;
-			float gnorm = (maxval - g) / diff;
-			float bnorm = (maxval - b) / diff;
-	
-			float hue = 0.0f;
-			if (r == maxval) 
-				hue = 60.0f * (6.0f + bnorm - gnorm);
-			if (g == maxval) 
-				hue = 60.0f * (2.0f + rnorm - bnorm);
-			if (b  == maxval) 
-				hue = 60.0f * (4.0f + gnorm - rnorm);
-			if (hue > 360.0f) 
-				hue = hue - 360.0f;
-
-			return hue;
-		}
-		
 		public override string ToString ()
 		{
 			return string.Format (CultureInfo.InvariantCulture, "#{0:x2}{1:x2}{2:x2}{3:x2}",  Alpha, Red, Green, Blue);
