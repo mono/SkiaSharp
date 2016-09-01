@@ -128,6 +128,14 @@ namespace SkiaSharp
 		public byte Green => (byte)((color >> 8) & 0xff);
 		public byte Blue => (byte)((color) & 0xff);
 
+		public float Hue {
+			get {
+				float h, s, v;
+				ToHsv (out h, out s, out v);
+				return h;
+			}
+		}
+		
 		public static SKColor FromHsl (float h, float s, float l, byte a = 255)
 		{
 			// convert from percentages
