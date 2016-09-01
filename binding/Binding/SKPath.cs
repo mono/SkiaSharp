@@ -80,6 +80,15 @@ namespace SkiaSharp
 			}
 		}
 
+		public SKPoint LastPoint
+		{
+			get {
+				SKPoint point;
+				SkiaApi.sk_path_get_last_point (Handle, out point);
+				return point;
+			}
+		}
+
 		public SKPoint GetPoint (int index)
 		{
 			SKPoint point;
@@ -97,6 +106,11 @@ namespace SkiaSharp
 		public int GetPoints (SKPoint[] points, int max)
 		{
 			return SkiaApi.sk_path_get_points (Handle, points, max);
+		}
+
+		public bool Contains (float x, float y)
+		{
+			return SkiaApi.sk_path_contains (Handle, x, y);
 		}
 
 		public void MoveTo (float x, float y)

@@ -37,5 +37,27 @@ namespace SkiaSharp.Tests
 				Assert.AreEqual (new SKPoint (68.6763107f, 56.0058575f), path.Points [1]);
 			}
 		}
+
+		[Test]
+		public void PathContainsPoint()
+		{
+			using (var path = new SKPath ()) {
+				path.AddRect (SKRect.Create (10, 10, 100, 100), SKPathDirection.Clockwise);
+
+				Assert.IsTrue (path.Contains (30, 30));
+				Assert.IsFalse (path.Contains (5, 30));
+			}
+		}
+
+		[Test]
+		public void GetLastPoint()
+		{
+			using (var path = new SKPath ()) {
+				path.MoveTo (0, 0);
+				path.LineTo (10, 20);
+
+				Assert.AreEqual (new SKPoint(10, 20), path.LastPoint);
+			}
+		}
 	}
 }
