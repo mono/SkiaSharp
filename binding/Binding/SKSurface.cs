@@ -44,6 +44,51 @@ namespace SkiaSharp
 			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster_direct (ref info, pixels, (IntPtr)rowBytes, ref props));
 		}
 		
+		public static SKSurface Create (GRContext context, GRBackendRenderTargetDesc desc, SKSurfaceProps props)
+		{
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_render_target (context.Handle, ref desc, ref props));
+		}
+		
+		public static SKSurface Create (GRContext context, GRBackendRenderTargetDesc desc)
+		{
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_render_target (context.Handle, ref desc, IntPtr.Zero));
+		}
+		
+		public static SKSurface Create (GRContext context, GRBackendTextureDesc desc, SKSurfaceProps props)
+		{
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_texture (context.Handle, ref desc, ref props));
+		}
+		
+		public static SKSurface Create (GRContext context, GRBackendTextureDesc desc)
+		{
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_texture (context.Handle, ref desc, IntPtr.Zero));
+		}
+		
+		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTextureDesc desc, SKSurfaceProps props)
+		{
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_texture_as_render_target (context.Handle, ref desc, ref props));
+		}
+		
+		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTextureDesc desc)
+		{
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_texture_as_render_target (context.Handle, ref desc, IntPtr.Zero));
+		}
+		
+		public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, int sampleCount, SKSurfaceProps props)
+		{
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, ref info, sampleCount, ref props));
+		}
+		
+		public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, int sampleCount)
+		{
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, ref info, sampleCount, IntPtr.Zero));
+		}
+		
+		public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info)
+		{
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, ref info, 0, IntPtr.Zero));
+		}
+		
 		protected override void Dispose (bool disposing)
 		{
 			if (Handle != IntPtr.Zero && OwnsHandle) {

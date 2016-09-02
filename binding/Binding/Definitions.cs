@@ -1,4 +1,4 @@
-﻿//
+//
 // Skia Definitions, enumerations and interop structures
 //
 // Author:
@@ -41,6 +41,9 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Globalization;
+
+using GRBackendObject = System.IntPtr;
+using GRBackendContext = System.IntPtr;
  	
 namespace SkiaSharp
 {
@@ -522,6 +525,14 @@ namespace SkiaSharp
 		BgrVertical
 	}
 
+	[Flags]
+	public enum SKSurfacePropsFlags {
+		DisallowAntiAlias = 1 << 0,
+		DisallowDither = 1 << 1,
+		UseDeviceIndependentFonts = 1 << 2,
+		GammaCorrect = 1 << 3,
+	}
+
 	public enum SKEncoding {
 		Utf8, Utf16, Utf32
 	}
@@ -749,10 +760,16 @@ namespace SkiaSharp
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKSurfaceProps {
 		private SKPixelGeometry pixelGeometry;
+		private SKSurfacePropsFlags flags;
 
 		public SKPixelGeometry PixelGeometry {
 			get { return pixelGeometry; }
 			set { pixelGeometry = value; }
+		}
+
+		public SKSurfacePropsFlags Flags {
+			get { return flags; }
+			set { flags = value; }
 		}
 	}
 
@@ -2256,5 +2273,191 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			}
 		}
 	}
+
+	public enum GRSurfaceOrigin {
+		TopLeft,
+		BottomLeft,
+	}
+
+	public enum GRPixelConfig {
+		Unknown,
+		Alpha8,
+		Index8,
+		Rgb565,
+		Rgba4444,
+		Rgba8888,
+		Bgra8888,
+		Srgba8888,
+		Sbgra8888,
+		Etc1,
+		Latc,
+		R11Eac,
+		Astc12x12,
+		RgbaFloat,
+		AlphaHalf,
+		RgbaHalf,
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct GRBackendRenderTargetDesc {
+		private int width;
+		private int height;
+		private GRPixelConfig config;
+		private GRSurfaceOrigin origin;
+		private int sampleCount;
+		private int stencilBits;
+		private GRBackendObject renderTargetHandle;
+
+		public int Width {
+			get { return width; }
+			set { width = value; }
+		}
+		public int Height {
+			get { return height; }
+			set { height = value; }
+		}
+		public GRPixelConfig Config {
+			get { return config; }
+			set { config = value; }
+		}
+		public GRSurfaceOrigin Origin {
+			get { return origin; }
+			set { origin = value; }
+		}
+		public int SampleCount {
+			get { return sampleCount; }
+			set { sampleCount = value; }
+		}
+		public int StencilBits {
+			get { return stencilBits; }
+			set { stencilBits = value; }
+		}
+		public GRBackendObject RenderTargetHandle {
+			get { return renderTargetHandle; }
+			set { renderTargetHandle = value; }
+		}
+	}
+	
+	public enum GRBackend {
+		OpenGL,
+		Vulkan,
+	}
+
+	[Flags]
+	public enum GRBackendTextureDescFlags {
+		None = 0,
+		RenderTarget = 1,
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct GRBackendTextureDesc {
+		private GRBackendTextureDescFlags flags;
+		private GRSurfaceOrigin origin;
+		private int width;
+		private int height;
+		private GRPixelConfig config;
+		private int sampleCount;
+		private GRBackendObject textureHandle;
+		
+		public GRBackendTextureDescFlags Flags {
+			get { return flags; }
+			set { flags = value; }
+		}
+		public GRSurfaceOrigin Origin {
+			get { return origin; }
+			set { origin = value; }
+		}
+		public int Width {
+			get { return width; }
+			set { width = value; }
+		}
+		public int Height {
+			get { return height; }
+			set { height = value; }
+		}
+		public GRPixelConfig Config {
+			get { return config; }
+			set { config = value; }
+		}
+		public int SampleCount {
+			get { return sampleCount; }
+			set { sampleCount = value; }
+		}
+		public GRBackendObject TextureHandle {
+			get { return textureHandle; }
+			set { textureHandle = value; }
+		}
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct GRContextOptions {
+		private bool suppressPrints;
+		private int maxTextureSizeOverride;
+		private int maxTileSizeOverride;
+		private bool suppressDualSourceBlending;
+		private int bufferMapThreshold;
+		private bool useDrawInsteadOfPartialRenderTargetWrite;
+		private bool immediateMode;
+		private bool clipBatchToBounds;
+		private bool drawBatchBounds;
+		private int maxBatchLookback;
+		private int maxBatchLookahead;
+		private bool useShaderSwizzling;
+		private bool doManualMipmapping;
+
+		public bool SuppressPrints {
+			get { return suppressPrints; }
+			set { suppressPrints = value; }
+		}
+		public int MaxTextureSizeOverride {
+			get { return maxTextureSizeOverride; }
+			set { maxTextureSizeOverride = value; }
+		}
+		public int MaxTileSizeOverride {
+			get { return maxTileSizeOverride; }
+			set { maxTileSizeOverride = value; }
+		}
+		public bool SuppressDualSourceBlending {
+			get { return suppressDualSourceBlending; }
+			set { suppressDualSourceBlending = value; }
+		}
+		public int BufferMapThreshold {
+			get { return bufferMapThreshold; }
+			set { bufferMapThreshold = value; }
+		}
+		public bool UseDrawInsteadOfPartialRenderTargetWrite {
+			get { return useDrawInsteadOfPartialRenderTargetWrite; }
+			set { useDrawInsteadOfPartialRenderTargetWrite = value; }
+		}
+		public bool ImmediateMode {
+			get { return immediateMode; }
+			set { immediateMode = value; }
+		}
+		public bool ClipBatchToBounds {
+			get { return clipBatchToBounds; }
+			set { clipBatchToBounds = value; }
+		}
+		public bool DrawBatchBounds {
+			get { return drawBatchBounds; }
+			set { drawBatchBounds = value; }
+		}
+		public int MaxBatchLookback {
+			get { return maxBatchLookback; }
+			set { maxBatchLookback = value; }
+		}
+		public int MaxBatchLookahead {
+			get { return maxBatchLookahead; }
+			set { maxBatchLookahead = value; }
+		}
+		public bool UseShaderSwizzling {
+			get { return useShaderSwizzling; }
+			set { useShaderSwizzling = value; }
+		}
+		public bool DoManualMipmapping {
+			get { return doManualMipmapping; }
+			set { doManualMipmapping = value; }
+		}
+	}
+	
 }
 

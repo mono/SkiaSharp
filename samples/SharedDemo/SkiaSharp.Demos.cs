@@ -1079,7 +1079,8 @@ namespace SkiaSharp
 			WindowsDesktop = 8,
 			UWP = 16,
 			tvOS = 32,
-			All = 0xFFFF,
+			OpenGL = 64,
+			All = iOS | Android | OSX | WindowsDesktop | UWP | tvOS | OpenGL,
 		}
 
 		public class Sample 
@@ -1092,7 +1093,7 @@ namespace SkiaSharp
 
 		public static string [] SamplesForPlatform (Platform platform)
 		{
-			return sampleList.Where (s => 0 != (s.Platform & platform)).Select (s => s.Title).ToArray ();
+			return sampleList.Where (s => s.Platform.HasFlag (platform)).Select (s => s.Title).ToArray ();
 		}
 
 		public static Sample GetSample (string title)
@@ -1124,7 +1125,7 @@ namespace SkiaSharp
 			new Sample {Title="Turbulence Perlin Noise Shader", Method = TurbulencePerlinNoiseShader, Platform = Platform.All},
 			new Sample {Title="Compose Shader", Method = ComposeShader, Platform = Platform.All},
 			new Sample {Title="Blur Mask Filter", Method = BlurMaskFilter, Platform = Platform.All},
-			new Sample {Title="Emboss Mask Filter", Method = EmbossMaskFilter, Platform = Platform.All},
+			new Sample {Title="Emboss Mask Filter", Method = EmbossMaskFilter, Platform = Platform.All & ~Platform.OpenGL},
 			new Sample {Title="Color Matrix Color Filter", Method = ColorMatrixColorFilter, Platform = Platform.All},
 			new Sample {Title="Color Table Color Filter", Method = ColorTableColorFilter, Platform = Platform.All},
 			new Sample {Title="Luma Color Filter", Method = LumaColorFilter, Platform = Platform.All},

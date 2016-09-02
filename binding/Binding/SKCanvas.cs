@@ -1,4 +1,4 @@
-﻿//
+//
 // Bindings for SKCanvas
 //
 // Author:
@@ -355,6 +355,11 @@ namespace SkiaSharp
 
 			var bytes = Util.GetEncodedText (text, paint.TextEncoding);
 			SkiaApi.sk_canvas_draw_text_on_path (Handle, bytes, bytes.Length, path.Handle, hOffset, vOffset, paint.Handle);
+		}
+
+		public void Flush ()
+		{
+			SkiaApi.sk_canvas_flush (Handle);
 		}
 
 		public void DrawBitmapNinePatch (SKBitmap bitmap, SKRectI center, SKRect dst, SKPaint paint = null)

@@ -9,6 +9,9 @@
 using System;
 using System.Runtime.InteropServices;
 
+using GRBackendObject = System.IntPtr;
+using GRBackendContext = System.IntPtr;
+
 using sk_surface_t = System.IntPtr;
 using sk_canvas_t = System.IntPtr;
 using sk_image_t = System.IntPtr;
@@ -42,6 +45,8 @@ using sk_path_iterator_t = System.IntPtr;
 using sk_path_effect_t = System.IntPtr;
 using sk_pixelref_factory_t = System.IntPtr;
 using sk_colortable_t = System.IntPtr;
+using gr_context_t = System.IntPtr;
+using gr_glinterface_t = System.IntPtr;
 
 namespace SkiaSharp
 {
@@ -77,6 +82,26 @@ namespace SkiaSharp
 		public extern static sk_canvas_t sk_surface_get_canvas(sk_surface_t t);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_image_t sk_surface_new_image_snapshot(sk_surface_t t);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_surface_t sk_surface_new_backend_render_target (gr_context_t context, ref GRBackendRenderTargetDesc desc, ref SKSurfaceProps props);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_surface_t sk_surface_new_backend_render_target (gr_context_t context, ref GRBackendRenderTargetDesc desc, IntPtr propsZero);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_surface_t sk_surface_new_backend_texture (gr_context_t context, ref GRBackendTextureDesc desc, ref SKSurfaceProps props);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_surface_t sk_surface_new_backend_texture (gr_context_t context, ref GRBackendTextureDesc desc, IntPtr propsZero);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_surface_t sk_surface_new_backend_texture_as_render_target (gr_context_t context, ref GRBackendTextureDesc desc, ref SKSurfaceProps props);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_surface_t sk_surface_new_backend_texture_as_render_target (gr_context_t context, ref GRBackendTextureDesc desc, IntPtr propsZero);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_surface_t sk_surface_new_render_target (gr_context_t context, bool budgeted, ref SKImageInfo info, int sampleCount, ref SKSurfaceProps props);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_surface_t sk_surface_new_render_target (gr_context_t context, bool budgeted, ref SKImageInfo info, int sampleCount, IntPtr propsZero);
+
+
+		// Canvas
+
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_canvas_save(sk_canvas_t t);
@@ -178,9 +203,13 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_canvas_t sk_canvas_new_from_bitmap(sk_bitmap_t bitmap);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_canvas_flush (sk_canvas_t canvas);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_bitmap_lattice(sk_canvas_t t, sk_bitmap_t bitmap, int[] xDivs, int xCount, int[] yDivs, int yCount, ref SKRect dst, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_image_lattice(sk_canvas_t t, sk_image_t image, int[] xDivs, int xCount, int[] yDivs, int yCount, ref SKRect dst, sk_paint_t paint);
+
+		// Paint
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_paint_t sk_paint_new();
@@ -1013,6 +1042,51 @@ namespace SkiaSharp
 		public extern static void sk_colortable_read_colors (sk_colortable_t ctable, [Out] SKColor[] colors);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_colortable_read_colors (sk_colortable_t ctable, out IntPtr colors);
+
+		// GRContext
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static gr_context_t gr_context_create (GRBackend backend, GRBackendContext backendContext, ref GRContextOptions options);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static gr_context_t gr_context_create_with_defaults (GRBackend backend, GRBackendContext backendContext);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void gr_context_unref (gr_context_t context);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void gr_context_abandon_context (gr_context_t context);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void gr_context_release_resources_and_abandon_context (gr_context_t context);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void gr_context_get_resource_cache_limits (gr_context_t context, out int maxResources, out IntPtr maxResourceBytes);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void gr_context_set_resource_cache_limits (gr_context_t context, int maxResources, IntPtr maxResourceBytes);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void gr_context_get_resource_cache_usage (gr_context_t context, out int maxResources, out IntPtr maxResourceBytes);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int gr_context_get_recommended_sample_count (gr_context_t context, GRPixelConfig config, float dpi);
+		
+		// GLInterface
+		
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static gr_glinterface_t gr_glinterface_assemble_interface (IntPtr ctx, IntPtr get);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static gr_glinterface_t gr_glinterface_assemble_gl_interface (IntPtr ctx, IntPtr get);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static gr_glinterface_t gr_glinterface_assemble_gles_interface (IntPtr ctx, IntPtr get);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static gr_glinterface_t gr_glinterface_default_interface ();
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static gr_glinterface_t gr_glinterface_create_native_interface ();
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void gr_glinterface_interface_unref (gr_glinterface_t glInterface);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static gr_glinterface_t gr_glinterface_clone (gr_glinterface_t glInterface);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool gr_glinterface_validate (gr_glinterface_t glInterface);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool gr_glinterface_has_extension (gr_glinterface_t glInterface, string extension);
+
 	}
 }
 

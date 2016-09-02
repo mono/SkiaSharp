@@ -385,7 +385,7 @@ Task ("externals-windows")
     .Does (() =>  
 {
     var buildArch = new Action<string, string, string> ((platform, skiaArch, dir) => {
-        RunGyp ("skia_arch_type='" + skiaArch + "'", "ninja,msvs");
+        RunGyp ("skia_arch_type='" + skiaArch + "' skia_gpu=1", "ninja,msvs");
         VisualStudioPathFixup ();
         DotNetBuild ("native-builds/libSkiaSharp_windows/libSkiaSharp_" + dir + ".sln", c => { 
             c.Configuration = "Release"; 
@@ -544,7 +544,7 @@ Task ("externals-osx")
     .Does (() =>  
 {
     var buildArch = new Action<string, string> ((arch, skiaArch) => {
-        RunGyp ("skia_arch_type='" + skiaArch + "'", "ninja,xcode");
+        RunGyp ("skia_arch_type='" + skiaArch + "' skia_gpu=1", "ninja,xcode");
         
         XCodeBuild (new XCodeBuildSettings {
             Project = "native-builds/libSkiaSharp_osx/libSkiaSharp.xcodeproj",
@@ -596,7 +596,7 @@ Task ("externals-ios")
     // set up the gyp environment variables
     AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
     
-    RunGyp ("skia_os='ios' skia_arch_type='arm' armv7=1 arm_neon=0", "ninja,xcode");
+    RunGyp ("skia_os='ios' skia_arch_type='arm' armv7=1 arm_neon=0 skia_gpu=1", "ninja,xcode");
     
     buildArch ("iphonesimulator", "i386");
     buildArch ("iphonesimulator", "x86_64");
@@ -647,7 +647,7 @@ Task ("externals-tvos")
     // set up the gyp environment variables
     AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
     
-    RunGyp ("skia_os='ios' skia_arch_type='arm' armv7=1 arm_neon=0", "ninja,xcode");
+    RunGyp ("skia_os='ios' skia_arch_type='arm' armv7=1 arm_neon=0 skia_gpu=1", "ninja,xcode");
     convertIOSToTVOS();
     
     buildArch ("appletvsimulator", "x86_64");
@@ -691,13 +691,13 @@ Task ("externals-android")
     SetEnvironmentVariable ("ANDROID_SDK_ROOT", ANDROID_SDK_ROOT);
     SetEnvironmentVariable ("ANDROID_NDK_HOME", ANDROID_NDK_HOME);
     
-    SetEnvironmentVariable ("GYP_DEFINES", "");
+    SetEnvironmentVariable ("GYP_DEFINES", "skia_gpu=1");
     buildArch ("x86", "x86");
-    SetEnvironmentVariable ("GYP_DEFINES", "");
+    SetEnvironmentVariable ("GYP_DEFINES", "skia_gpu=1");
     buildArch ("x86_64", "x86_64");
-    SetEnvironmentVariable ("GYP_DEFINES", "arm_neon=1 arm_version=7");
+    SetEnvironmentVariable ("GYP_DEFINES", "arm_neon=1 arm_version=7 skia_gpu=1");
     buildArch ("arm_v7_neon", "armeabi-v7a");
-    SetEnvironmentVariable ("GYP_DEFINES", "arm_neon=0 arm_version=8");
+    SetEnvironmentVariable ("GYP_DEFINES", "arm_neon=0 arm_version=8 skia_gpu=1");
     buildArch ("arm64", "arm64-v8a");
         
     var ndkbuild = MakeAbsolute (Directory (ANDROID_NDK_HOME)).CombineWithFilePath ("ndk-build").FullPath;
@@ -859,6 +859,10 @@ Task ("samples")
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "iPhoneSimulator" };
         });
+        RunNuGetRestore ("./samples/Skia.OSX.GLDemo/Skia.OSX.GLDemo.sln");
+        DotNetBuild ("./samples/Skia.OSX.GLDemo/Skia.OSX.GLDemo.sln", c => { 
+            c.Configuration = "Release"; 
+        });
     }
     
     if (IsRunningOnWindows ()) {
@@ -874,6 +878,11 @@ Task ("samples")
         RunNuGetRestore ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Windows.sln");
         DotNetBuild ("./samples/Skia.Forms.Demo/Skia.Forms.Demo.Windows.sln", c => { 
             c.Configuration = "Release"; 
+        });
+        RunNuGetRestore ("./samples/Skia.WindowsDesktop.GLDemo/Skia.WindowsDesktop.GLDemo.sln");
+        DotNetBuild ("./samples/Skia.WindowsDesktop.GLDemo/Skia.WindowsDesktop.GLDemo.sln", c => { 
+            c.Configuration = "Release"; 
+            c.Properties ["Platform"] = new [] { "x86" };
         });
     }
     

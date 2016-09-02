@@ -26,7 +26,9 @@ LOCAL_C_INCLUDES       := ../../skia/src/c           \
                           ../../skia/include/core    \
                           ../../skia/include/codec   \
                           ../../skia/include/effects \
+                          ../../skia/include/gpu     \
                           ../../skia/include/config  \
+                          ../../skia/include/utils   \
                           ../../skia/include/images
 
 LOCAL_CFLAGS           := -DSK_INTERNAL -DSK_GAMMA_APPLY_TO_A8                                   \
