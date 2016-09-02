@@ -527,10 +527,7 @@ namespace SkiaSharp
 
 	[Flags]
 	public enum SKSurfacePropsFlags {
-		DisallowAntiAlias = 1 << 0,
-		DisallowDither = 1 << 1,
-		UseDeviceIndependentFonts = 1 << 2,
-		GammaCorrect = 1 << 3,
+		UseDeviceIndependentFonts = 1 << 0,
 	}
 
 	public enum SKEncoding {
