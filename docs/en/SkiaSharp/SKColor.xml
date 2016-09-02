@@ -152,18 +152,53 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="GetBrightness">
-      <MemberSignature Language="C#" Value="public float GetBrightness ();" />
-      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance float32 GetBrightness() cil managed" />
+    <Member MemberName="FromHsl">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKColor FromHsl (float h, float s, float l, byte a = 255);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig valuetype SkiaSharp.SKColor FromHsl(float32 h, float32 s, float32 l, unsigned int8 a) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>System.Single</ReturnType>
+        <ReturnType>SkiaSharp.SKColor</ReturnType>
       </ReturnValue>
-      <Parameters />
+      <Parameters>
+        <Parameter Name="h" Type="System.Single" />
+        <Parameter Name="s" Type="System.Single" />
+        <Parameter Name="l" Type="System.Single" />
+        <Parameter Name="a" Type="System.Byte" />
+      </Parameters>
       <Docs>
+        <param name="h">To be added.</param>
+        <param name="s">To be added.</param>
+        <param name="l">To be added.</param>
+        <param name="a">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromHsv">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKColor FromHsv (float h, float s, float v, byte a = 255);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig valuetype SkiaSharp.SKColor FromHsv(float32 h, float32 s, float32 v, unsigned int8 a) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.54.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKColor</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="h" Type="System.Single" />
+        <Parameter Name="s" Type="System.Single" />
+        <Parameter Name="v" Type="System.Single" />
+        <Parameter Name="a" Type="System.Byte" />
+      </Parameters>
+      <Docs>
+        <param name="h">To be added.</param>
+        <param name="s">To be added.</param>
+        <param name="v">To be added.</param>
+        <param name="a">To be added.</param>
         <summary>To be added.</summary>
         <returns>To be added.</returns>
         <remarks>To be added.</remarks>
@@ -190,40 +225,6 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="GetHue">
-      <MemberSignature Language="C#" Value="public float GetHue ();" />
-      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance float32 GetHue() cil managed" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.54.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Single</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="GetSaturation">
-      <MemberSignature Language="C#" Value="public float GetSaturation ();" />
-      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance float32 GetSaturation() cil managed" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.54.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Single</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
     <Member MemberName="Green">
       <MemberSignature Language="C#" Value="public byte Green { get; }" />
       <MemberSignature Language="ILAsm" Value=".property instance unsigned int8 Green" />
@@ -240,6 +241,22 @@
       </ReturnValue>
       <Docs>
         <summary>The green component of the color.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Hue">
+      <MemberSignature Language="C#" Value="public float Hue { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance float32 Hue" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.54.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Single</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
         <value>To be added.</value>
         <remarks>To be added.</remarks>
       </Docs>
@@ -348,6 +365,52 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="ToHsl">
+      <MemberSignature Language="C#" Value="public void ToHsl (out float h, out float s, out float l);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void ToHsl(float32 h, float32 s, float32 l) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.54.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="h" Type="System.Single&amp;" RefType="out" />
+        <Parameter Name="s" Type="System.Single&amp;" RefType="out" />
+        <Parameter Name="l" Type="System.Single&amp;" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="h">To be added.</param>
+        <param name="s">To be added.</param>
+        <param name="l">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ToHsv">
+      <MemberSignature Language="C#" Value="public void ToHsv (out float h, out float s, out float v);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void ToHsv(float32 h, float32 s, float32 v) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.54.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="h" Type="System.Single&amp;" RefType="out" />
+        <Parameter Name="s" Type="System.Single&amp;" RefType="out" />
+        <Parameter Name="v" Type="System.Single&amp;" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="h">To be added.</param>
+        <param name="s">To be added.</param>
+        <param name="v">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="ToString">
       <MemberSignature Language="C#" Value="public override string ToString ();" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig virtual instance string ToString() cil managed" />
@@ -389,6 +452,66 @@
       <Docs>
         <param name="alpha">To be added.</param>
         <summary>Returns a new SKColor based on this current instance that has a new Alpha channel value.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="WithBlue">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKColor WithBlue (byte blue);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKColor WithBlue(unsigned int8 blue) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.54.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKColor</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="blue" Type="System.Byte" />
+      </Parameters>
+      <Docs>
+        <param name="blue">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="WithGreen">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKColor WithGreen (byte green);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKColor WithGreen(unsigned int8 green) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.54.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKColor</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="green" Type="System.Byte" />
+      </Parameters>
+      <Docs>
+        <param name="green">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="WithRed">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKColor WithRed (byte red);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKColor WithRed(unsigned int8 red) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.54.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKColor</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="red" Type="System.Byte" />
+      </Parameters>
+      <Docs>
+        <param name="red">To be added.</param>
+        <summary>To be added.</summary>
         <returns>To be added.</returns>
         <remarks>To be added.</remarks>
       </Docs>
