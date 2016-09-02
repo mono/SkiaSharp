@@ -113,6 +113,11 @@ namespace SkiaSharp
 			return SkiaApi.sk_path_contains (Handle, x, y);
 		}
 
+		public void Offset (float dx, float dy)
+		{
+			Transform (SKMatrix.MakeTranslation(dx, dy));
+		}
+
 		public void MoveTo (float x, float y)
 		{
 			SkiaApi.sk_path_move_to (Handle, x, y);
