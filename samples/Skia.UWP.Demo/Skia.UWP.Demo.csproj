@@ -16,8 +16,11 @@
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <PackageCertificateKeyFile>Skia.UWP.Demo_TemporaryKey.pfx</PackageCertificateKeyFile>
-    <PackageCertificateThumbprint>7679459654B72E51273C29F7CC1004A641B0304A</PackageCertificateThumbprint>
+    <PackageCertificateKeyFile>..\AppStoreCertificates\Skia.UWP.Demo_StoreKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateThumbprint>77BB456C567B1501535FACDA67D559B9513862C1</PackageCertificateThumbprint>
+    <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
+    <AppxBundle>Always</AppxBundle>
+    <AppxBundlePlatforms>x86|x64|arm</AppxBundlePlatforms>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -109,6 +112,9 @@
       <Link>nine-patch.png</Link>
     </EmbeddedResource>
     <None Include="project.json" />
+    <None Include="..\AppStoreCertificates\Skia.UWP.Demo_StoreKey.pfx">
+      <Link>Skia.UWP.Demo_StoreKey.pfx</Link>
+    </None>
     <None Include="Skia.UWP.Demo_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
@@ -130,6 +136,7 @@
     </AppxManifest>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Package.StoreAssociation.xml" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
