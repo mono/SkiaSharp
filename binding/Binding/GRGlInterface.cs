@@ -111,7 +111,7 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing)
 		{
 			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.gr_context_unref (Handle);
+				SkiaApi.gr_glinterface_unref (Handle);
 			}
 
 			base.Dispose (disposing);
