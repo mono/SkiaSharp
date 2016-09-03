@@ -781,6 +781,7 @@ namespace SkiaSharp
 
 		private SKZeroInitialized zeroInitialized;
 		private SKRectI subset;
+		[MarshalAs(UnmanagedType.I1)]
 		private bool hasSubset;
 
 		static SKCodecOptions ()
@@ -2388,18 +2389,26 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct GRContextOptions {
+		[MarshalAs(UnmanagedType.I1)]
 		private bool suppressPrints;
 		private int maxTextureSizeOverride;
 		private int maxTileSizeOverride;
+		[MarshalAs(UnmanagedType.I1)]
 		private bool suppressDualSourceBlending;
 		private int bufferMapThreshold;
+		[MarshalAs(UnmanagedType.I1)]
 		private bool useDrawInsteadOfPartialRenderTargetWrite;
+		[MarshalAs(UnmanagedType.I1)]
 		private bool immediateMode;
+		[MarshalAs(UnmanagedType.I1)]
 		private bool clipBatchToBounds;
+		[MarshalAs(UnmanagedType.I1)]
 		private bool drawBatchBounds;
 		private int maxBatchLookback;
 		private int maxBatchLookahead;
+		[MarshalAs(UnmanagedType.I1)]
 		private bool useShaderSwizzling;
+		[MarshalAs(UnmanagedType.I1)]
 		private bool doManualMipmapping;
 
 		public bool SuppressPrints {
