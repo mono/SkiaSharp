@@ -18,7 +18,7 @@ namespace SkiaSharp
 
 	// internal proxy delegates
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal delegate IntPtr GRGlGetProcDelegateInternal (IntPtr context, string name);
+	internal delegate IntPtr GRGlGetProcDelegateInternal (IntPtr context, [MarshalAs(UnmanagedType.LPStr)] string name);
 
 	public class GRGlInterface : SKObject
 	{

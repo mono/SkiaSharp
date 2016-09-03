@@ -716,14 +716,14 @@ namespace SkiaSharp
 
 		// Typeface
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_typeface_t sk_typeface_create_from_name(string str, SKTypefaceStyle style);
+		public extern static sk_typeface_t sk_typeface_create_from_name([MarshalAs(UnmanagedType.LPStr)] string str, SKTypefaceStyle style);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_typeface_t sk_typeface_create_from_name_with_font_style(string familyName, int weight, int width, SKFontStyleSlant slant);
+		public extern static sk_typeface_t sk_typeface_create_from_name_with_font_style([MarshalAs(UnmanagedType.LPStr)] string familyName, int weight, int width, SKFontStyleSlant slant);
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_typeface_t sk_typeface_create_from_typeface(sk_typeface_t typeface, SKTypefaceStyle style);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_typeface_t sk_typeface_create_from_file(string path, int index);
+		public extern static sk_typeface_t sk_typeface_create_from_file([MarshalAs(UnmanagedType.LPStr)] string path, int index);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_typeface_t sk_typeface_create_from_stream(sk_stream_assetstream_t stream, int index);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -791,7 +791,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_stream_get_length(sk_stream_t stream);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_stream_filestream_t sk_filestream_new(string path);
+		public extern static sk_stream_filestream_t sk_filestream_new([MarshalAs(UnmanagedType.LPStr)] string path);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_stream_memorystream_t sk_memorystream_new();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -820,7 +820,7 @@ namespace SkiaSharp
 		public extern static void sk_dynamicmemorywstream_destroy(sk_wstream_dynamicmemorystream_t cstream);
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_wstream_filestream_t sk_filewstream_new(string path);
+		public extern static sk_wstream_filestream_t sk_filewstream_new([MarshalAs(UnmanagedType.LPStr)] string path);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_wstream_dynamicmemorystream_t sk_dynamicmemorywstream_new();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -850,7 +850,7 @@ namespace SkiaSharp
 		public extern static bool sk_wstream_write_32(sk_wstream_t cstream, UInt32 value);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		public extern static bool sk_wstream_write_text(sk_wstream_t cstream, string value);
+		public extern static bool sk_wstream_write_text(sk_wstream_t cstream, [MarshalAs(UnmanagedType.LPStr)] string value);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_wstream_write_dec_as_text(sk_wstream_t cstream, Int32 value);
@@ -884,11 +884,11 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_document_t sk_document_create_pdf_from_stream(sk_wstream_t stream, float dpi);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_document_t sk_document_create_pdf_from_filename(string path, float dpi);
+		public extern static sk_document_t sk_document_create_pdf_from_filename([MarshalAs(UnmanagedType.LPStr)] string path, float dpi);
 		//[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		//public extern static sk_document_t sk_document_create_xps_from_stream(sk_wstream_t stream, float dpi);
 		//[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		//public extern static sk_document_t sk_document_create_xps_from_filename(string path, float dpi);
+		//public extern static sk_document_t sk_document_create_xps_from_filename([MarshalAs(UnmanagedType.LPStr)] string path, float dpi);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_canvas_t sk_document_begin_page(sk_document_t document, float width, float height, ref SKRect content);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1085,7 +1085,7 @@ namespace SkiaSharp
 		public extern static bool gr_glinterface_validate (gr_glinterface_t glInterface);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		public extern static bool gr_glinterface_has_extension (gr_glinterface_t glInterface, string extension);
+		public extern static bool gr_glinterface_has_extension (gr_glinterface_t glInterface, [MarshalAs(UnmanagedType.LPStr)] string extension);
 
 	}
 }
