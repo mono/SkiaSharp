@@ -544,7 +544,7 @@ Task ("externals-osx")
     .Does (() =>  
 {
     var buildArch = new Action<string, string> ((arch, skiaArch) => {
-        RunGyp ("skia_arch_type='" + skiaArch + "' skia_gpu=1", "ninja,xcode");
+        RunGyp ("skia_arch_type='" + skiaArch + "' skia_gpu=1 skia_osx_deployment_target=10.7", "ninja,xcode");
         
         XCodeBuild (new XCodeBuildSettings {
             Project = "native-builds/libSkiaSharp_osx/libSkiaSharp.xcodeproj",
@@ -596,7 +596,7 @@ Task ("externals-ios")
     // set up the gyp environment variables
     AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
     
-    RunGyp ("skia_os='ios' skia_arch_type='arm' armv7=1 arm_neon=0 skia_gpu=1", "ninja,xcode");
+    RunGyp ("skia_os='ios' skia_arch_type='arm' armv7=1 arm_neon=0 skia_gpu=1 ios_sdk_version=8.0", "ninja,xcode");
     
     buildArch ("iphonesimulator", "i386");
     buildArch ("iphonesimulator", "x86_64");
@@ -625,7 +625,7 @@ Task ("externals-tvos")
     var convertIOSToTVOS = new Action (() => {
         var glob = "./skia/out/gyp/*.xcodeproj/project.pbxproj";
         ReplaceTextInFiles (glob, "SDKROOT = iphoneos;", "SDKROOT = appletvos;");
-        ReplaceTextInFiles (glob, "IPHONEOS_DEPLOYMENT_TARGET = 9.2;", "TVOS_DEPLOYMENT_TARGET = 9.1;");
+        ReplaceTextInFiles (glob, "IPHONEOS_DEPLOYMENT_TARGET", "TVOS_DEPLOYMENT_TARGET");
         ReplaceTextInFiles (glob, "TARGETED_DEVICE_FAMILY = \"1,2\";", "TARGETED_DEVICE_FAMILY = 3;");
         ReplaceTextInFiles (glob, "\"CODE_SIGN_IDENTITY[sdk=iphoneos*]\" = \"iPhone Developer\";", "");
     });
@@ -647,7 +647,7 @@ Task ("externals-tvos")
     // set up the gyp environment variables
     AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
     
-    RunGyp ("skia_os='ios' skia_arch_type='arm' armv7=1 arm_neon=0 skia_gpu=1", "ninja,xcode");
+    RunGyp ("skia_os='ios' skia_arch_type='arm' armv7=1 arm_neon=0 skia_gpu=1 ios_sdk_version=9.0", "ninja,xcode");
     convertIOSToTVOS();
     
     buildArch ("appletvsimulator", "x86_64");
