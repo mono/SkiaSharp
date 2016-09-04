@@ -544,7 +544,7 @@ Task ("externals-osx")
     .Does (() =>  
 {
     var buildArch = new Action<string, string> ((arch, skiaArch) => {
-        RunGyp ("skia_arch_type='" + skiaArch + "' skia_gpu=1 skia_osx_deployment_target=10.7", "ninja,xcode");
+        RunGyp ("skia_arch_type='" + skiaArch + "' skia_gpu=1 skia_osx_deployment_target=10.8", "ninja,xcode");
         
         XCodeBuild (new XCodeBuildSettings {
             Project = "native-builds/libSkiaSharp_osx/libSkiaSharp.xcodeproj",
