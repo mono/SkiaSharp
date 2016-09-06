@@ -1063,6 +1063,8 @@ namespace SkiaSharp
 		public extern static void gr_context_get_resource_cache_usage (gr_context_t context, out int maxResources, out IntPtr maxResourceBytes);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int gr_context_get_recommended_sample_count (gr_context_t context, GRPixelConfig config, float dpi);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void gr_context_flush (gr_context_t context, GRContextFlushBits flagsBitfield);
 		
 		// GLInterface
 		

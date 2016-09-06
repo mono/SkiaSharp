@@ -72,6 +72,11 @@ namespace SkiaSharp
 			maxResourceBytes = (long)maxResourceBytesPtr;
 		}
 		
+		public void Flush (GRContextFlushBits flagsBitfield = GRContextFlushBits.None)
+		{
+			SkiaApi.gr_context_flush (Handle, flagsBitfield);
+		}
+
 		public int GetRecommendedSampleCount (GRPixelConfig config, float dpi)
 		{
 			return SkiaApi.gr_context_get_recommended_sample_count (Handle, config, dpi);

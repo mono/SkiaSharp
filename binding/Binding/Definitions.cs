@@ -2465,5 +2465,9 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		}
 	}
 	
+	public enum GRContextFlushBits {
+		None = 0,
+		Discard = 0x2,
+	}
 }
 
