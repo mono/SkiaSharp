@@ -12,6 +12,7 @@ namespace SkiaSharp.Views
 			drawable = new SKDrawable();
 
 			SetNeedsDisplay();
+			NeedsDisplayOnBoundsChange = true;
 		}
 
 		public ISKLayerDelegate SKDelegate { get; set; }
@@ -34,13 +35,6 @@ namespace SkiaSharp.Views
 
 		public virtual void DrawInSurface(SKSurface surface, SKImageInfo info)
 		{
-		}
-
-		public override void LayoutSublayers()
-		{
-			base.LayoutSublayers();
-
-			SetNeedsDisplay();
 		}
 
 		protected override void Dispose(bool disposing)

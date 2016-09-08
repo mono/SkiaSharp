@@ -1,4 +1,3 @@
-using System;
 using System.ComponentModel;
 using AppKit;
 using CoreGraphics;
@@ -30,28 +29,7 @@ namespace SkiaSharp.Views
 			var glInterface = GRGlInterface.CreateNativeInterface();
 			context = GRContext.Create(GRBackend.OpenGL, glInterface);
 
-			// get the current frame buffer
-			int framebuffer;
-			GL.GetInteger(GetPName.FramebufferBinding, out framebuffer);
-
-			// get samples
-			var screen = OpenGLContext.CurrentVirtualScreen;
-			int samples = 0;
-			OpenGLContext.PixelFormat.GetValue(ref samples, NSOpenGLPixelFormatAttribute.Samples, screen);
-			int stencils = 0;
-			OpenGLContext.PixelFormat.GetValue(ref stencils, NSOpenGLPixelFormatAttribute.StencilSize, screen);
-
-			// create the surface
-			renderTarget = new GRBackendRenderTargetDesc
-			{
-				Width = 0, // set later
-				Height = 0, // set later
-				Config = GRPixelConfig.Rgba8888,
-				Origin = GRSurfaceOrigin.TopLeft,
-				SampleCount = samples,
-				StencilBits = stencils,
-				RenderTargetHandle = (IntPtr)framebuffer,
-			};
+			renderTarget = SKGLDrawable.CreateRenderTarget();
 		}
 
 		public override void DrawRect(CGRect dirtyRect)

@@ -1,9 +1,7 @@
-using System;
 using System.ComponentModel;
 using CoreGraphics;
 using GLKit;
 using OpenGLES;
-using OpenTK.Graphics.ES20;
 
 namespace SkiaSharp.Views
 {
@@ -11,7 +9,7 @@ namespace SkiaSharp.Views
 	public class SKGLView : GLKView, IGLKViewDelegate
 	{
 		private GRContext context;
-		private int framebuffer;
+		private GRBackendRenderTargetDesc renderTarget;
 
 		public SKGLView()
 		{
@@ -33,28 +31,20 @@ namespace SkiaSharp.Views
 
 		public new void DrawInRect(GLKView view, CGRect rect)
 		{
-			// get the bits for SkiaSharp
 			if (context == null)
 			{
-				// create the context
 				var glInterface = GRGlInterface.CreateNativeInterface();
 				context = GRContext.Create(GRBackend.OpenGL, glInterface);
 
-				// get the current frame buffer
-				GL.GetInteger(GetPName.FramebufferBinding, out framebuffer);
+				// get the initial details
+				renderTarget = SKGLDrawable.CreateRenderTarget();
 			}
 
+			// set the dimensions as they might have changed
+			renderTarget.Width = (int)DrawableWidth;
+			renderTarget.Height = (int)DrawableHeight;
+
 			// create the surface
-			var renderTarget = new GRBackendRenderTargetDesc
-			{
-				Width = (int)DrawableWidth,
-				Height = (int)DrawableHeight,
-				Config = GRPixelConfig.Rgba8888,
-				Origin = GRSurfaceOrigin.TopLeft,
-				SampleCount = 0,
-				StencilBits = 8,
-				RenderTargetHandle = (IntPtr)framebuffer,
-			};
 			using (var surface = SKSurface.Create(context, renderTarget))
 			{
 				// draw on the surface
@@ -71,11 +61,14 @@ namespace SkiaSharp.Views
 		{
 		}
 
-		public override void LayoutSubviews()
+		public override CGRect Frame
 		{
-			base.LayoutSubviews();
-	
-			SetNeedsDisplay();
+			get { return base.Frame; }
+			set
+			{
+				base.Frame = value;
+				SetNeedsDisplay();
+			}
 		}
 	}
 }
