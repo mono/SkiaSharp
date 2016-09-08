@@ -8,16 +8,12 @@ using SkiaSharp.Views;
 
 namespace BasicSkiaSharp
 {
-	public partial class MainWindow : NSWindow, ISKLayerDelegate //, ISKGLLayerDelegate
+	public partial class MainWindow : NSWindow, ISKLayerDelegate, ISKGLLayerDelegate
 	{
 		private MySoftwareView softwareSkiaView;
-
 		private NSView softwareSkiaLayerView;
-
 		private MyHardwareView hardwareSkiaView;
-
-		//private SKGLLayer hardwareSkiaLayer;
-		//private NSView hardwareSkiaLayerView;
+		private NSView hardwareSkiaLayerView;
 
 		private NSTextField softwareLabel;
 		private NSTextField hardwareLabel;
@@ -106,15 +102,15 @@ namespace BasicSkiaSharp
 			softwareSkiaLayerView.WantsLayer = true;
 			ContentView.AddSubview(softwareSkiaLayerView);
 
-			//// add a hardware layer
-			//hardwareSkiaLayerView = new NSView();
-			//ContentView.AddSubview(hardwareSkiaLayerView);
-			//hardwareSkiaLayer = new SKGLLayer
-			//{
-			//	ContentsScale = BackingScaleFactor,
-			//	SKDelegate = this
-			//};
-			//hardwareSkiaLayerView.Layer.AddSublayer(hardwareSkiaLayer);
+			// add a hardware layer
+			hardwareSkiaLayerView = new NSView();
+			hardwareSkiaLayerView.Layer = new SKGLLayer
+			{
+				ContentsScale = BackingScaleFactor,
+				SKDelegate = this
+			};
+			hardwareSkiaLayerView.WantsLayer = true;
+			ContentView.AddSubview(hardwareSkiaLayerView);
 
 			DidResize += delegate { LayoutSubviews(); };
 			LayoutSubviews();
@@ -147,9 +143,8 @@ namespace BasicSkiaSharp
 			// the hardware view
 			hardwareSkiaView.Frame = new CGRect(availableSpace.X + colWidth, availableSpace.Y, colWidth, rowHeight).Inset(inset, inset);
 
-			//// the hardware layer
-			//hardwareSkiaLayerView.Frame = new CGRect(availableSpace.X + colWidth, availableSpace.Y + rowHeight, colWidth, rowHeight).Inset(inset, inset);
-			//hardwareSkiaLayer.Frame = hardwareSkiaLayerView.Bounds;
+			// the hardware layer
+			hardwareSkiaLayerView.Frame = new CGRect(availableSpace.X + colWidth, availableSpace.Y + rowHeight, colWidth, rowHeight).Inset(inset, inset);
 		}
 
 		// the real draw method
@@ -193,11 +188,11 @@ namespace BasicSkiaSharp
 			Draw(surface, info.Size);
 		}
 
-		//// drawing for the hardware layer
-		//public void DrawInSurface(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
-		//{
-		//	Draw(surface, new SKSize(renderTarget.Width, renderTarget.Height));
-		//}
+		// drawing for the hardware layer
+		public void DrawInSurface(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
+		{
+			Draw(surface, new SKSize(renderTarget.Width, renderTarget.Height));
+		}
 
 		// the custom view
 		private class MySoftwareView : SKView
