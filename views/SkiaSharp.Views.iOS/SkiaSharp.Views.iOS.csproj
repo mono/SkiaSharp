@@ -50,16 +50,15 @@
     <Folder Include="Resources\" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SKView.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SKGLView.cs" />
-    <Compile Include="SKLayer.cs" />
     <Compile Include="SKGLLayer.cs" />
-    <Compile Include="ISKLayerDelegate.cs" />
     <Compile Include="ISKGLLayerDelegate.cs" />
+    <Compile Include="SKView.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <Import Project="..\SkiaSharp.Views.Apple\SkiaSharp.Views.Apple.projitems" Label="Shared" Condition="Exists('..\SkiaSharp.Views.Apple\SkiaSharp.Views.Apple.projitems')" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
 </Project>

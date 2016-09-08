@@ -1,11 +1,10 @@
 using System;
 using System.Runtime.InteropServices;
-using CoreAnimation;
 using CoreGraphics;
 
 namespace SkiaSharp.Views
 {
-	public class SKLayer : CALayer
+	internal class SKDrawable : IDisposable
 	{
 		private const int BitsPerByte = 8; // 1 byte = 8 bits
 		private const CGBitmapFlags BitmapFlags = CGBitmapFlags.ByteOrder32Big | CGBitmapFlags.PremultipliedLast;
@@ -13,22 +12,14 @@ namespace SkiaSharp.Views
 		private IntPtr bitmapData;
 		private int lastLength;
 
-		public SKLayer()
+		public SKSurface CreateSurface(CGRect contentsBounds, nfloat scale, out SKImageInfo info)
 		{
-			SetNeedsDisplay();
-		}
-
-		public ISKLayerDelegate SKDelegate { get; set; }
-
-		public override void DrawInContext(CGContext ctx)
-		{
-			base.DrawInContext(ctx);
+			// apply a scale
+			contentsBounds.Width *= scale;
+			contentsBounds.Height *= scale;
 
 			// get context details
-			var bmp = ctx.AsBitmapContext();
-			var width = (int)bmp.Width;
-			var height = (int)bmp.Height;
-			var info = new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
+			info = new SKImageInfo((int)contentsBounds.Width, (int)contentsBounds.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
 
 			// allocate a memory block for the drawing process
 			var newLength = info.BytesSize;
@@ -41,45 +32,37 @@ namespace SkiaSharp.Views
 					bitmapData = Marshal.AllocCoTaskMem(newLength);
 			}
 
-			// draw on the image using SKiaSharp
-			using (var surface = SKSurface.Create(info, bitmapData, info.RowBytes))
-			{
-				DrawInSurface(surface, info);
-				SKDelegate?.DrawInSurface(surface, info);
+			return SKSurface.Create(info, bitmapData, info.RowBytes);
+		}
 
-				surface.Canvas.Flush();
-			}
+		public void DrawSurface(CGContext ctx, CGRect viewBounds, SKImageInfo info, SKSurface surface)
+		{
+			surface.Canvas.Flush();
+			surface.Dispose();
 
 			// draw the image onto the context
 			using (var dataProvider = new CGDataProvider(bitmapData, lastLength))
-			using (var image = new CGImage(width, height, BitsPerByte, info.BytesPerPixel * BitsPerByte, info.RowBytes, bmp.ColorSpace, BitmapFlags, dataProvider, null, false, CGColorRenderingIntent.Default))
+			using (var colorSpace = CGColorSpace.CreateDeviceRGB())
+			using (var image = new CGImage(info.Width, info.Height, BitsPerByte, info.BytesPerPixel * BitsPerByte, info.RowBytes, colorSpace, BitmapFlags, dataProvider, null, false, CGColorRenderingIntent.Default))
 			{
+#if __IOS__
 				// we need to flip the image as we are mixing CoreGraphics and UIKit functions:
 				// https://developer.apple.com/library/ios/documentation/2DDrawing/Conceptual/DrawingPrintingiOS/GraphicsDrawingOverview/GraphicsDrawingOverview.html#//apple_ref/doc/uid/TP40010156-CH14-SW26
 				ctx.SaveState();
-				ctx.TranslateCTM(0, Frame.Height);
+				ctx.TranslateCTM(0, viewBounds.Height);
 				ctx.ScaleCTM(1, -1);
 				// draw the image
-				ctx.DrawImage(Bounds, image);
+				ctx.DrawImage(viewBounds, image);
 				ctx.RestoreState();
+#elif __MAC__
+				// draw the image
+				ctx.DrawImage(viewBounds, image);
+#endif
 			}
 		}
 
-		public virtual void DrawInSurface(SKSurface surface, SKImageInfo info)
+		public void Dispose()
 		{
-		}
-
-		public override void LayoutSublayers()
-		{
-			base.LayoutSublayers();
-
-			SetNeedsDisplay();
-		}
-
-		protected override void Dispose(bool disposing)
-		{
-			base.Dispose(disposing);
-
 			// make sure we free the image data
 			if (bitmapData != IntPtr.Zero)
 			{

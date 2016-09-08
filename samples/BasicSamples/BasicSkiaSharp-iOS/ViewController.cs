@@ -183,9 +183,9 @@ namespace BasicSkiaSharp
 		// the custom view
 		private class MySoftwareView : SKView
 		{
-			public override void DrawInSurface(SKSurface surface, SKImageInfo info)
+			public override void Draw(SKSurface surface, SKImageInfo info)
 			{
-				base.DrawInSurface(surface, info);
+				base.Draw(surface, info);
 
 				ViewController.Draw(surface, info.Size);
 			}

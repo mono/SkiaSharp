@@ -1,15 +1,15 @@
 ﻿using System;
 using System.ComponentModel;
 using CoreGraphics;
-using Foundation;
-using ObjCRuntime;
 using UIKit;
 
 namespace SkiaSharp.Views
 {
 	[DesignTimeVisible(true)]
-	public class SKView : UIView, ISKLayerDelegate
+	public class SKView : UIView
 	{
+		private SKDrawable drawable;
+
 		// created in code
 		public SKView()
 		{
@@ -38,13 +38,27 @@ namespace SkiaSharp.Views
 
 		private void Initialize()
 		{
-			((SKLayer)Layer).SKDelegate = this;
-
-			// set the scale
-			Layer.ContentsScale = UIScreen.MainScreen.Scale;
+			drawable = new SKDrawable();
 		}
 
-		public virtual void DrawInSurface(SKSurface surface, SKImageInfo info)
+		public override void Draw(CGRect rect)
+		{
+			base.Draw(rect);
+
+			var ctx = UIGraphics.GetCurrentContext();
+
+			// create the skia context
+			SKImageInfo info;
+			var surface = drawable.CreateSurface(Bounds, ContentScaleFactor, out info);
+
+			// draw on the image using SKiaSharp
+			Draw(surface, info);
+
+			// draw the surface to the context
+			drawable.DrawSurface(ctx, Bounds, info, surface);
+		}
+
+		public virtual void Draw(SKSurface surface, SKImageInfo info)
 		{
 			// empty
 		}
@@ -56,10 +70,11 @@ namespace SkiaSharp.Views
 			Layer.SetNeedsDisplay();
 		}
 
-		[Export("layerClass")]
-		public static Class LayerClass()
+		protected override void Dispose(bool disposing)
 		{
-			return new Class(typeof(SKLayer));
+			base.Dispose(disposing);
+
+			drawable.Dispose();
 		}
 	}
 }
