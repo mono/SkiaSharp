@@ -308,6 +308,17 @@ var InjectCompatibilityExternals = new Action<bool> ((inject) => {
     }
 });
 
+var ClearSkiaSharpNuGetCache = new Action(() => {
+    // first we need to add our new nuget to the cache so we can restore
+    // we first need to delete the old stuff
+    DirectoryPath home = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
+    var installedNuGet = home.Combine (".nuget").Combine ("packages").Combine ("SkiaSharp");
+    if (DirectoryExists (installedNuGet)) {
+        Warning ("SkiaSharp nugets were installed at '{0}', removing...", installedNuGet);
+        CleanDirectory (installedNuGet);
+    }
+});
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXTERNALS - the native C and C++ libraries
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -835,14 +846,7 @@ Task ("samples")
     .IsDependentOn ("nuget")
     .Does (() => 
 {
-    // first we need to add our new nuget to the cache so we can restore
-    // we first need to delete the old stuff
-    DirectoryPath home = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
-    var installedNuGet = home.Combine (".nuget").Combine ("packages").Combine ("SkiaSharp");
-    if (DirectoryExists (installedNuGet)) {
-        Warning ("SkiaSharp nugets were installed at '{0}', removing...", installedNuGet);
-        CleanDirectory (installedNuGet);
-    }
+    ClearSkiaSharpNuGetCache();
 
     if (IsRunningOnUnix ()) {
         RunNuGetRestore ("./samples/Skia.OSX.Demo/Skia.OSX.Demo.sln");
@@ -894,6 +898,39 @@ Task ("samples")
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+// VIEWS - set of platform-specific views and containers
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Task ("views")
+    .IsDependentOn ("libs")
+    .IsDependentOn ("nuget")
+    .Does (() => 
+{
+    ClearSkiaSharpNuGetCache();
+
+    if (IsRunningOnUnix ()) {
+        RunNuGetRestore ("./views/SkiaSharp.Views.sln");
+        DotNetBuild ("./views/SkiaSharp.Views.sln", c => { 
+            c.Configuration = "Release"; 
+        });
+    }
+    
+    if (IsRunningOnWindows ()) {
+        RunNuGetRestore ("./views/SkiaSharp.Views.sln");
+        DotNetBuild ("./views/SkiaSharp.Views.sln", c => { 
+            c.Configuration = "Release";
+            c.Properties ["Platform"] = new [] { "x86" };
+        });
+    }
+
+    CopyFileToDirectory ("./views/SkiaSharp.Views.Android/bin/Release/SkiaSharp.Views.Android.dll", "./output/android/");
+    CopyFileToDirectory ("./views/SkiaSharp.Views.iOS/bin/Release/SkiaSharp.Views.iOS.dll", "./output/ios/");
+    CopyFileToDirectory ("./views/SkiaSharp.Views.tvOS/bin/Release/SkiaSharp.Views.tvOS.dll", "./output/tvos/");
+    CopyFileToDirectory ("./views/SkiaSharp.Views.Mac/bin/Release/SkiaSharp.Views.Mac.dll", "./output/mac/");
+    CopyFileToDirectory ("./views/SkiaSharp.Views.Mac/bin/Release/SkiaSharp.Views.Mac.dll", "./output/osx/");
+});
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // DOCS - building the API documentation
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -931,6 +968,30 @@ Task ("nuget")
             PackageNuGet ("./nuget/SkiaSharp.Mac.nuspec", "./output/");
         }
     }
+});
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// VIEWS NUGET - building the package for NuGet.org
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Task ("views-nuget")
+    .IsDependentOn ("views")
+    .Does (() => 
+{
+    // TODO: TEMP
+    PackageNuGet ("./nuget/SkiaSharp.Views.nuspec", "./output/");
+
+    // // we can only build the combined package on CI
+    // if (TARGET == "CI") {
+    //     PackageNuGet ("./nuget/SkiaSharp.Views.nuspec", "./output/");
+    // } else {
+    //     if (IsRunningOnWindows ()) {
+    //         PackageNuGet ("./nuget/SkiaSharp.Views.Windows.nuspec", "./output/");
+    //     }
+    //     if (IsRunningOnUnix ()) {
+    //         PackageNuGet ("./nuget/SkiaSharp.Views.Mac.nuspec", "./output/");
+    //     }
+    // }
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
