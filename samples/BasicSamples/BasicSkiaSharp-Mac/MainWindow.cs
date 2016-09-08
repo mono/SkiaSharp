@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using AppKit;
 using CoreGraphics;
 using Foundation;
@@ -13,7 +14,7 @@ namespace BasicSkiaSharp
 
 		private NSView softwareSkiaLayerView;
 
-		//private MyHardwareView hardwareSkiaView;
+		private MyHardwareView hardwareSkiaView;
 
 		//private SKGLLayer hardwareSkiaLayer;
 		//private NSView hardwareSkiaLayerView;
@@ -91,10 +92,9 @@ namespace BasicSkiaSharp
 			softwareSkiaView = new MySoftwareView();
 			ContentView.AddSubview(softwareSkiaView);
 
-			//// create a custom hardware view
-			//hardwareSkiaView = new MyHardwareView();
-			//hardwareSkiaView.EnableSetNeedsDisplay = true;
-			//ContentView.AddSubview(hardwareSkiaView);
+			// create a custom hardware view
+			hardwareSkiaView = new MyHardwareView();
+			ContentView.AddSubview(hardwareSkiaView);
 
 			// add a software layer
 			softwareSkiaLayerView = new NSView();
@@ -144,8 +144,8 @@ namespace BasicSkiaSharp
 			// the software layer
 			softwareSkiaLayerView.Frame = new CGRect(availableSpace.X, availableSpace.Y + rowHeight, colWidth, rowHeight).Inset(inset, inset);
 
-			//// the hardware view
-			//hardwareSkiaView.Frame = new CGRect(availableSpace.X + colWidth, availableSpace.Y, colWidth, rowHeight).Inset(inset, inset);
+			// the hardware view
+			hardwareSkiaView.Frame = new CGRect(availableSpace.X + colWidth, availableSpace.Y, colWidth, rowHeight).Inset(inset, inset);
 
 			//// the hardware layer
 			//hardwareSkiaLayerView.Frame = new CGRect(availableSpace.X + colWidth, availableSpace.Y + rowHeight, colWidth, rowHeight).Inset(inset, inset);
@@ -210,15 +210,15 @@ namespace BasicSkiaSharp
 			}
 		}
 
-		//// the custom view
-		//private class MyHardwareView : SKGLView
-		//{
-		//	public override void DrawInSurface(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
-		//	{
-		//		base.DrawInSurface(surface, renderTarget);
+		// the custom view
+		private class MyHardwareView : SKGLView
+		{
+			public override void DrawInSurface(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
+			{
+				base.DrawInSurface(surface, renderTarget);
 
-		//		ViewController.Draw(surface, new SKSize(renderTarget.Width, renderTarget.Height));
-		//	}
-		//}
+				MainWindow.Draw(surface, new SKSize(renderTarget.Width, renderTarget.Height));
+			}
+		}
 	}
 }
