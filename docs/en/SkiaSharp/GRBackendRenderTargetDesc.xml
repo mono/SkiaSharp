@@ -10,8 +10,11 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>Wrap an existing render target created by the client in the 3D API with an underlying GRRenderTarget object.</summary>
+    <remarks>
+      <para>The client is responsible for ensuring that the underlying 3D API object lives at least as long as the GRRenderTarget object wrapping it.</para>
+      <para>We require the client to explicitly provide information about the target, such as width, height, and pixel config rather than querying the 3D API for these values. We expect these properties to be immutable even if the 3D API doesn't require this (OpenGL).</para>
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName="Config">
@@ -25,7 +28,7 @@
         <ReturnType>SkiaSharp.GRPixelConfig</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>The color format.</summary>
         <value>To be added.</value>
         <remarks>To be added.</remarks>
       </Docs>
@@ -41,7 +44,7 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>The height in pixels.</summary>
         <value>To be added.</value>
         <remarks>To be added.</remarks>
       </Docs>
@@ -57,7 +60,7 @@
         <ReturnType>SkiaSharp.GRSurfaceOrigin</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>The pixel origin.</summary>
         <value>To be added.</value>
         <remarks>To be added.</remarks>
       </Docs>
@@ -73,9 +76,9 @@
         <ReturnType>System.IntPtr</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Handle to the 3D API object.</summary>
         <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <remarks>When using OpenGL, it is the FBO ID.</remarks>
       </Docs>
     </Member>
     <Member MemberName="SampleCount">
@@ -89,9 +92,9 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary> The number of samples per pixel.</summary>
         <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <remarks>This is used to influence decisions about applying other forms of anti-aliasing.</remarks>
       </Docs>
     </Member>
     <Member MemberName="StencilBits">
@@ -105,7 +108,7 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Number of bits of stencil per-pixel.</summary>
         <value>To be added.</value>
         <remarks>To be added.</remarks>
       </Docs>
@@ -121,7 +124,7 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>The width in pixels.</summary>
         <value>To be added.</value>
         <remarks>To be added.</remarks>
       </Docs>
