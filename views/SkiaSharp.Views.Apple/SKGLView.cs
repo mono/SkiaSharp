@@ -1,3 +1,4 @@
+#if __IOS__ || __TVOS__
 using System;
 using System.ComponentModel;
 using CoreGraphics;
@@ -79,3 +80,4 @@ namespace SkiaSharp.Views
 		}
 	}
 }
+#endif

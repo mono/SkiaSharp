@@ -1,3 +1,4 @@
+#if __IOS__ || __TVOS__
 using System;
 using CoreAnimation;
 using OpenGLES;
@@ -102,3 +103,5 @@ namespace SkiaSharp.Views
 		}
 	}
 }
+#endif
+	
