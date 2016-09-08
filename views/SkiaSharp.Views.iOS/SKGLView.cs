@@ -59,6 +59,8 @@ namespace SkiaSharp.Views
 			{
 				// draw on the surface
 				DrawInSurface(surface, renderTarget);
+
+				surface.Canvas.Flush();
 			}
 
 			// flush the SkiaSharp contents to GL

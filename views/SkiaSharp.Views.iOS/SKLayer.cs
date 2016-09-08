@@ -46,6 +46,8 @@ namespace SkiaSharp.Views
 			{
 				DrawInSurface(surface, info);
 				SKDelegate?.DrawInSurface(surface, info);
+
+				surface.Canvas.Flush();
 			}
 
 			// draw the image onto the context

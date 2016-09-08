@@ -52,6 +52,8 @@ namespace SkiaSharp.Views
 				// draw on the surface
 				DrawInSurface(surface, renderTarget);
 				SKDelegate.DrawInSurface(surface, renderTarget);
+
+				surface.Canvas.Flush();
 			}
 
 			// flush the SkiaSharp context to the GL context
