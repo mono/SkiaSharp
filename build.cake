@@ -909,25 +909,23 @@ Task ("views")
     ClearSkiaSharpNuGetCache();
 
     if (IsRunningOnUnix ()) {
-        RunNuGetRestore ("./views/SkiaSharp.Views.sln");
-        DotNetBuild ("./views/SkiaSharp.Views.sln", c => { 
+        RunNuGetRestore ("./views/SkiaSharp.Views.Mac.sln");
+        DotNetBuild ("./views/SkiaSharp.Views.Mac.sln", c => { 
             c.Configuration = "Release"; 
         });
+
+        CopyFileToDirectory ("./views/SkiaSharp.Views.Android/bin/Release/SkiaSharp.Views.Android.dll", "./output/android/");
+        CopyFileToDirectory ("./views/SkiaSharp.Views.iOS/bin/Release/SkiaSharp.Views.iOS.dll", "./output/ios/");
+        CopyFileToDirectory ("./views/SkiaSharp.Views.tvOS/bin/Release/SkiaSharp.Views.tvOS.dll", "./output/tvos/");
+        CopyFileToDirectory ("./views/SkiaSharp.Views.Mac/bin/Release/SkiaSharp.Views.Mac.dll", "./output/osx/");
     }
     
     if (IsRunningOnWindows ()) {
-        RunNuGetRestore ("./views/SkiaSharp.Views.sln");
-        DotNetBuild ("./views/SkiaSharp.Views.sln", c => { 
+        RunNuGetRestore ("./views/SkiaSharp.Views.Windows.sln");
+        DotNetBuild ("./views/SkiaSharp.Views.Windows.sln", c => { 
             c.Configuration = "Release";
-            c.Properties ["Platform"] = new [] { "x86" };
         });
     }
-
-    CopyFileToDirectory ("./views/SkiaSharp.Views.Android/bin/Release/SkiaSharp.Views.Android.dll", "./output/android/");
-    CopyFileToDirectory ("./views/SkiaSharp.Views.iOS/bin/Release/SkiaSharp.Views.iOS.dll", "./output/ios/");
-    CopyFileToDirectory ("./views/SkiaSharp.Views.tvOS/bin/Release/SkiaSharp.Views.tvOS.dll", "./output/tvos/");
-    CopyFileToDirectory ("./views/SkiaSharp.Views.Mac/bin/Release/SkiaSharp.Views.Mac.dll", "./output/mac/");
-    CopyFileToDirectory ("./views/SkiaSharp.Views.Mac/bin/Release/SkiaSharp.Views.Mac.dll", "./output/osx/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -978,20 +976,17 @@ Task ("views-nuget")
     .IsDependentOn ("views")
     .Does (() => 
 {
-    // TODO: TEMP
-    PackageNuGet ("./nuget/SkiaSharp.Views.nuspec", "./output/");
-
-    // // we can only build the combined package on CI
-    // if (TARGET == "CI") {
-    //     PackageNuGet ("./nuget/SkiaSharp.Views.nuspec", "./output/");
-    // } else {
-    //     if (IsRunningOnWindows ()) {
-    //         PackageNuGet ("./nuget/SkiaSharp.Views.Windows.nuspec", "./output/");
-    //     }
-    //     if (IsRunningOnUnix ()) {
-    //         PackageNuGet ("./nuget/SkiaSharp.Views.Mac.nuspec", "./output/");
-    //     }
-    // }
+    // we can only build the combined package on CI
+    if (TARGET == "CI") {
+        PackageNuGet ("./nuget/SkiaSharp.Views.nuspec", "./output/");
+    } else {
+        if (IsRunningOnWindows ()) {
+            PackageNuGet ("./nuget/SkiaSharp.Views.Windows.nuspec", "./output/");
+        }
+        if (IsRunningOnUnix ()) {
+            PackageNuGet ("./nuget/SkiaSharp.Views.Mac.nuspec", "./output/");
+        }
+    }
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
