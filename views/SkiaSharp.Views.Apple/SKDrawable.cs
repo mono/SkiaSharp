@@ -57,6 +57,8 @@ namespace SkiaSharp.Views
 #elif __MAC__
 				// draw the image
 				ctx.DrawImage(viewBounds, image);
+#else
+#error Plaform-specific code missing
 #endif
 			}
 		}

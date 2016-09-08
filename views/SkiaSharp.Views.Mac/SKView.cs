@@ -1,13 +1,12 @@
-﻿#if __IOS__ || __TVOS__
-using System;
+﻿using System;
 using System.ComponentModel;
+using AppKit;
 using CoreGraphics;
-using UIKit;
 
 namespace SkiaSharp.Views
 {
 	[DesignTimeVisible(true)]
-	public class SKView : UIView
+	public class SKView : NSView
 	{
 		private SKDrawable drawable;
 
@@ -19,8 +18,8 @@ namespace SkiaSharp.Views
 
 		// created in code
 		public SKView(CGRect frame)
+			: base(frame)
 		{
-			Frame = frame;
 
 			Initialize();
 		}
@@ -42,33 +41,26 @@ namespace SkiaSharp.Views
 			drawable = new SKDrawable();
 		}
 
-		public override void Draw(CGRect rect)
+		public virtual void Draw(SKSurface surface, SKImageInfo info)
 		{
-			base.Draw(rect);
+			// empty
+		}
 
-			var ctx = UIGraphics.GetCurrentContext();
+		public override void DrawRect(CGRect dirtyRect)
+		{
+			base.DrawRect(dirtyRect);
+
+			var ctx = NSGraphicsContext.CurrentContext.CGContext;
 
 			// create the skia context
 			SKImageInfo info;
-			var surface = drawable.CreateSurface(Bounds, ContentScaleFactor, out info);
+			var surface = drawable.CreateSurface(Bounds, Window.BackingScaleFactor, out info);
 
 			// draw on the image using SKiaSharp
 			Draw(surface, info);
 
 			// draw the surface to the context
 			drawable.DrawSurface(ctx, Bounds, info, surface);
-		}
-
-		public virtual void Draw(SKSurface surface, SKImageInfo info)
-		{
-			// empty
-		}
-
-		public override void LayoutSubviews()
-		{
-			base.LayoutSubviews();
-
-			Layer.SetNeedsDisplay();
 		}
 
 		protected override void Dispose(bool disposing)
@@ -79,4 +71,3 @@ namespace SkiaSharp.Views
 		}
 	}
 }
-#endif
