@@ -2,8 +2,15 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
     <!-- if ShouldIncludeNativeSkiaSharp == False then don't include the native libSkiaSharp -->
+    <!-- if IsLibraryOutputType == True then don't copy the native files as they will be copied by the app -->
     <PropertyGroup>
-        <ShouldIncludeNativeSkiaSharp Condition=" '$(ShouldIncludeNativeSkiaSharp)' == '' ">True</ShouldIncludeNativeSkiaSharp>
+        <!-- set the variable to true whenever they should be -->
+        <IsLibraryOutputType Condition=" '$(IsLibraryOutputType)' == '' and '$(OutputType)' == 'Library' ">True</IsLibraryOutputType>
+        <ShouldIncludeNativeSkiaSharp Condition=" '$(ShouldIncludeNativeSkiaSharp)' == '' and '$(IsLibraryOutputType)' != 'True' ">True</ShouldIncludeNativeSkiaSharp>
+        
+        <!-- set the final values based on the variables -->
+        <IsLibraryOutputType Condition=" '$(IsLibraryOutputType)' == '' ">False</IsLibraryOutputType>
+        <ShouldIncludeNativeSkiaSharp Condition=" '$(ShouldIncludeNativeSkiaSharp)' == '' and '$(IsLibraryOutputType)' == 'True' ">False</ShouldIncludeNativeSkiaSharp>
     </PropertyGroup>
 
     <!-- add the native x86 Windows library -->
