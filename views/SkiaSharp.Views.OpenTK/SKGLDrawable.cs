@@ -1,7 +1,7 @@
 ﻿using System;
 #if __IOS__ || __TVOS__
 using OpenTK.Graphics.ES20;
-#elif __MAC__
+#elif __MAC__ || __DESKTOP__
 using OpenTK.Graphics.OpenGL;
 #endif
 
