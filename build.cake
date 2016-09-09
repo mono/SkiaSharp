@@ -1036,6 +1036,14 @@ Task ("clean-managed").Does (() =>
     CleanDirectories ("./tests/**/bin");
     CleanDirectories ("./tests/**/obj");
 
+    CleanDirectories ("./views/*/bin");
+    CleanDirectories ("./views/*/obj");
+    CleanDirectories ("./views/packages");
+
+    CleanDirectories ("./samples/BasicSamples/*/bin");
+    CleanDirectories ("./samples/BasicSamples/*/obj");
+    CleanDirectories ("./samples/BasicSamples/*/packages");
+
     if (DirectoryExists ("./output"))
         DeleteDirectory ("./output", true);
 });
