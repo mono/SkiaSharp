@@ -133,6 +133,9 @@ namespace SkiaSharp
 		// us from having to marshal the user's callback too. 
 		private struct GRGlGetProcDelegateContext
 		{
+			// instead of pinning the struct, we pin a GUID which is paired to the struct
+			private static readonly IDictionary<Guid, GRGlGetProcDelegateContext> contexts = new Dictionary<Guid, GRGlGetProcDelegateContext>();
+
 			// the "managed version" of the callback 
 			public readonly GRGlGetProcDelegate GetProc;
 			public readonly object Context;
@@ -146,7 +149,11 @@ namespace SkiaSharp
 			// wrap this context into a "native" pointer
 			public IntPtr Wrap ()
 			{
-				var gc = GCHandle.Alloc (this, GCHandleType.Pinned);
+				var guid = Guid.NewGuid ();
+				lock (contexts) {
+					contexts.Add (guid, this);
+				}
+				var gc = GCHandle.Alloc (guid, GCHandleType.Pinned);
 				return GCHandle.ToIntPtr (gc);
 			}
 
@@ -154,13 +161,22 @@ namespace SkiaSharp
 			public static GRGlGetProcDelegateContext Unwrap (IntPtr ptr)
 			{
 				var gchandle = GCHandle.FromIntPtr (ptr);
-				return (GRGlGetProcDelegateContext) gchandle.Target;
+				var guid = (Guid) gchandle.Target;
+				lock (contexts) {
+					GRGlGetProcDelegateContext value;
+					contexts.TryGetValue (guid, out value);
+					return value;
+				}
 			}
 
 			// unwrap and free the context
 			public static void Free (IntPtr ptr)
 			{
 				var gchandle = GCHandle.FromIntPtr (ptr);
+				var guid = (Guid) gchandle.Target;
+				lock (contexts) {
+					contexts.Remove (guid);
+				}
 				gchandle.Free ();
 			}
 		}
