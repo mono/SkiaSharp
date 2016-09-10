@@ -69,7 +69,11 @@ namespace SkiaSharp.Views
 			base.Dispose(disposing);
 
 			// clean up
-			grContext.Dispose();
+			if (grContext != null)
+			{
+				grContext.Dispose();
+				grContext = null;
+			}
 		}
 	}
 }
