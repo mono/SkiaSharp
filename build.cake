@@ -538,13 +538,13 @@ Task ("externals-uwp")
     // set up the gyp environment variables
     AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
 
-    RunGyp ("skia_arch_type='x86_64'", "ninja,msvs");
+    RunGyp ("skia_arch_type='x86_64' skia_gpu=1", "ninja,msvs");
     buildArch ("x64", "x64");
     
-    RunGyp ("skia_arch_type='x86'", "ninja,msvs");
+    RunGyp ("skia_arch_type='x86' skia_gpu=1", "ninja,msvs");
     buildArch ("Win32", "x86");
     
-    RunGyp ("skia_arch_type='arm' arm_version=7 arm_neon=0", "ninja,msvs");
+    RunGyp ("skia_arch_type='arm' arm_version=7 arm_neon=0 skia_gpu=1", "ninja,msvs");
     buildArch ("ARM", "arm");
 });
 // this builds the native C and C++ externals for Mac OS X
