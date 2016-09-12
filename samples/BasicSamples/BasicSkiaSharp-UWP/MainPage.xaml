@@ -7,7 +7,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="Hardware" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="30" FontWeight="Bold" />
+        <local:SKSwapChainPanel x:Name="swapChainPanel" Margin="6" Grid.Row="1" PaintSurface="swapChainPanel_PaintSurface" />
     </Grid>
 </Page>

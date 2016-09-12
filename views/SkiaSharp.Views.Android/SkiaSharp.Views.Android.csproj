@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -44,12 +44,14 @@
     <Reference Include="System.Core" />
     <Reference Include="Mono.Android" />
     <Reference Include="SkiaSharp">
-      <HintPath>..\packages\SkiaSharp.1.54.0\lib\MonoAndroid\SkiaSharp.dll</HintPath>
+      <HintPath>..\packages\SkiaSharp.1.54.1\lib\MonoAndroid\SkiaSharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\SkiaSharp.Views\Properties\SkiaSharpViewsAssemblyInfo.cs">
+      <Link>Properties\SkiaSharpViewsAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Resources\Resource.designer.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SKView.cs" />
     <Compile Include="SKGLSurfaceViewRenderer.cs" />
     <Compile Include="SKGLSurfaceView.cs" />

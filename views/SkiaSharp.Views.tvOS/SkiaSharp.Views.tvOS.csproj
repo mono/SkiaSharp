@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -44,7 +44,7 @@
     <Reference Include="System.Core" />
     <Reference Include="Xamarin.TVOS" />
     <Reference Include="SkiaSharp">
-      <HintPath>..\packages\SkiaSharp.1.54.0\lib\XamarintvOS\SkiaSharp.dll</HintPath>
+      <HintPath>..\packages\SkiaSharp.1.54.1\lib\XamarintvOS\SkiaSharp.dll</HintPath>
     </Reference>
     <Reference Include="OpenTK-1.0" />
   </ItemGroup>
@@ -52,10 +52,12 @@
     <Folder Include="Resources\" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <Compile Include="..\SkiaSharp.Views\Properties\SkiaSharpViewsAssemblyInfo.cs">
+      <Link>Properties\SkiaSharpViewsAssemblyInfo.cs</Link>
+    </Compile>
   </ItemGroup>
   <Import Project="..\SkiaSharp.Views.AppleiOS\SkiaSharp.Views.AppleiOS.projitems" Label="Shared" />
   <Import Project="..\SkiaSharp.Views.Apple\SkiaSharp.Views.Apple.projitems" Label="Shared" />

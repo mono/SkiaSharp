@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -30,7 +30,8 @@
     <HttpClientHandler>HttpClientHandler</HttpClientHandler>
     <TlsProvider>Default</TlsProvider>
     <LinkMode>None</LinkMode>
-    <XamMacArch></XamMacArch>
+    <XamMacArch>
+    </XamMacArch>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
@@ -46,19 +47,22 @@
     <HttpClientHandler>HttpClientHandler</HttpClientHandler>
     <TlsProvider>Default</TlsProvider>
     <LinkMode>None</LinkMode>
-    <XamMacArch></XamMacArch>
+    <XamMacArch>
+    </XamMacArch>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Xamarin.Mac" />
     <Reference Include="SkiaSharp">
-      <HintPath>..\packages\SkiaSharp.1.54.0\lib\XamarinMac\SkiaSharp.dll</HintPath>
+      <HintPath>..\packages\SkiaSharp.1.54.1\lib\XamarinMac\SkiaSharp.dll</HintPath>
     </Reference>
     <Reference Include="OpenTK" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="..\SkiaSharp.Views\Properties\SkiaSharpViewsAssemblyInfo.cs">
+      <Link>Properties\SkiaSharpViewsAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="SKView.cs" />
     <Compile Include="SKGLView.cs" />
     <Compile Include="SKGLLayer.cs" />
@@ -69,5 +73,5 @@
   <Import Project="..\SkiaSharp.Views.Apple\SkiaSharp.Views.Apple.projitems" Label="Shared" />
   <Import Project="..\SkiaSharp.Views.OpenTK\SkiaSharp.Views.OpenTK.projitems" Label="Shared" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
-  <Import Project="..\packages\SkiaSharp.1.54.0\build\XamarinMac\SkiaSharp.targets" Condition="Exists('..\packages\SkiaSharp.1.54.0\build\XamarinMac\SkiaSharp.targets')" />
+  <Import Project="..\packages\SkiaSharp.1.54.1\build\XamarinMac\SkiaSharp.targets" Condition="Exists('..\packages\SkiaSharp.1.54.1\build\XamarinMac\SkiaSharp.targets')" />
 </Project>
