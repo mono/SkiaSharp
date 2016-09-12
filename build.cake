@@ -360,6 +360,13 @@ Task ("externals-native")
         CopyFileToDirectory ("./native-builds/lib/uwp/x64/libSkiaSharp.pdb", "./output/uwp/x64/");
         CopyFileToDirectory ("./native-builds/lib/uwp/arm/libSkiaSharp.dll", "./output/uwp/arm/");
         CopyFileToDirectory ("./native-builds/lib/uwp/arm/libSkiaSharp.pdb", "./output/uwp/arm/");
+        // the ANGLE externals
+        CopyFileToDirectory ("./angle/uwp/bin/UAP/ARM/libEGL.dll", "./output/uwp/arm/");
+        CopyFileToDirectory ("./angle/uwp/bin/UAP/ARM/libGLESv2.dll", "./output/uwp/arm/");
+        CopyFileToDirectory ("./angle/uwp/bin/UAP/Win32/libEGL.dll", "./output/uwp/x86/");
+        CopyFileToDirectory ("./angle/uwp/bin/UAP/Win32/libGLESv2.dll", "./output/uwp/x86/");
+        CopyFileToDirectory ("./angle/uwp/bin/UAP/x64/libEGL.dll", "./output/uwp/x64/");
+        CopyFileToDirectory ("./angle/uwp/bin/UAP/x64/libGLESv2.dll", "./output/uwp/x64/");
     }
     if (IsRunningOnUnix ()) {
         if (!DirectoryExists ("./output/osx")) CreateDirectory ("./output/osx");
@@ -416,6 +423,7 @@ Task ("externals-windows")
 });
 // this builds the native C and C++ externals for Windows UWP
 Task ("externals-uwp")
+    .IsDependentOn ("externals-angle-uwp")
     .WithCriteria (IsRunningOnWindows ())
     .WithCriteria (
         !FileExists ("native-builds/lib/uwp/ARM/libSkiaSharp.dll") ||
@@ -726,6 +734,29 @@ Task ("externals-android")
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+// EXTERNALS DOWNLOAD - download any externals that are needed
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Task ("externals-angle-uwp")
+    .WithCriteria (IsRunningOnWindows ())
+    .WithCriteria (!FileExists ("./angle/uwp/ANGLE.WindowsStore.nuspec"))
+    .Does (() =>  
+{
+    var angleVersion = "2.1.10";
+    var angleUrl = "https://www.nuget.org/api/v2/package/ANGLE.WindowsStore/" + angleVersion;
+    var angleRoot = (DirectoryPath)"./angle/uwp";
+    var angleNupkg = angleRoot.CombineWithFilePath ("angle_" + angleVersion + ".nupkg");
+
+    if (!DirectoryExists (angleRoot)) {
+        CreateDirectory (angleRoot);
+    } else {
+        CleanDirectory (angleRoot);
+    }
+    DownloadFile (angleUrl, angleNupkg);
+    Unzip (angleNupkg, angleRoot);
+});
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // LIBS - the managed C# libraries
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -921,10 +952,36 @@ Task ("views")
     }
     
     if (IsRunningOnWindows ()) {
+        // build the native interop
+        RunNuGetRestore ("./views/SkiaSharp.Views.Interop.sln");
+        DotNetBuild ("./views/SkiaSharp.Views.Interop.sln", c => { 
+            c.Configuration = "Release";
+            c.Properties ["Platform"] = new [] { "x86" };
+        });
+        DotNetBuild ("./views/SkiaSharp.Views.Interop.sln", c => { 
+            c.Configuration = "Release";
+            c.Properties ["Platform"] = new [] { "x64" };
+        });
+        DotNetBuild ("./views/SkiaSharp.Views.Interop.sln", c => { 
+            c.Configuration = "Release";
+            c.Properties ["Platform"] = new [] { "ARM" };
+        });
+        
+        // build the managed views
         RunNuGetRestore ("./views/SkiaSharp.Views.Windows.sln");
         DotNetBuild ("./views/SkiaSharp.Views.Windows.sln", c => { 
             c.Configuration = "Release";
         });
+
+        // copy the native interop files
+        CopyFileToDirectory ("./views/SkiaSharp.Views.Interop.UWP/bin/Win32/Release/SkiaSharp.Views.Interop.UWP.dll", "./output/uwp/x86");
+        CopyFileToDirectory ("./views/SkiaSharp.Views.Interop.UWP/bin/x64/Release/SkiaSharp.Views.Interop.UWP.dll", "./output/uwp/x64");
+        CopyFileToDirectory ("./views/SkiaSharp.Views.Interop.UWP/bin/ARM/Release/SkiaSharp.Views.Interop.UWP.dll", "./output/uwp/arm");
+
+        // copy the managed views
+        CopyFileToDirectory ("./views/SkiaSharp.Views.UWP/bin/Release/SkiaSharp.Views.UWP.dll", "./output/uwp/");
+        CopyFileToDirectory ("./views/SkiaSharp.Views.UWP/bin/Release/SkiaSharp.Views.UWP.targets", "./output/uwp/");
+        CopyFileToDirectory ("./views/SkiaSharp.Views.Desktop/bin/Release/SkiaSharp.Views.Desktop.dll", "./output/windows/");
     }
 });
 
@@ -1038,6 +1095,7 @@ Task ("clean-managed").Does (() =>
 
     CleanDirectories ("./views/*/bin");
     CleanDirectories ("./views/*/obj");
+    CleanDirectories ("./views/*/Generated Files");
     CleanDirectories ("./views/packages");
 
     CleanDirectories ("./samples/BasicSamples/*/bin");
@@ -1067,6 +1125,11 @@ Task ("clean-externals").Does (() =>
     // windows
     CleanDirectories ("native-builds/libSkiaSharp_windows/Release");
     CleanDirectories ("native-builds/libSkiaSharp_windows/x64/Release");
+    // uwp
+    CleanDirectories ("native-builds/libSkiaSharp_uwp/Release");
+    CleanDirectories ("native-builds/libSkiaSharp_uwp/x64/Release");
+    CleanDirectories ("native-builds/libSkiaSharp_uwp/ARM/Release");
+    CleanDirectories ("angle/uwp");
     
     // remove compatibility
     InjectCompatibilityExternals (false);
