@@ -7,6 +7,7 @@ using EGLDisplay = System.IntPtr;
 using EGLContext = System.IntPtr;
 using EGLConfig = System.IntPtr;
 using EGLSurface = System.IntPtr;
+using Windows.Foundation;
 
 namespace SkiaSharp.Views
 {
@@ -55,12 +56,13 @@ namespace SkiaSharp.Views
 
 		public void SetSurface(SwapChainPanel swapChainPanel)
 		{
-			if (swapChainPanel == null)
+			if (eglSurface != Egl.EGL_NO_SURFACE)
 			{
 				DestroySurface(eglSurface);
 				eglSurface = Egl.EGL_NO_SURFACE;
 			}
-			else
+
+			if (swapChainPanel != null)
 			{
 				eglSurface = CreateSurface(swapChainPanel);
 			}
@@ -240,8 +242,16 @@ namespace SkiaSharp.Views
 
 			EGLSurface surface = Egl.EGL_NO_SURFACE;
 
+			// get the scale from the current display
+			var info = Windows.Graphics.Display.DisplayInformation.GetForCurrentView();
+			var dpi = info.LogicalDpi / 96.0f;
+
 			int[] surfaceAttributes =
 			{
+				//Egl.EGL_WIDTH, (int)(panel.ActualWidth * dpi),
+				//Egl.EGL_HEIGHT, (int)(panel.ActualHeight * dpi),
+				//Egl.EGL_FIXED_SIZE_ANGLE, Egl.EGL_TRUE,
+
 				// Egl.EGL_ANGLE_SURFACE_RENDER_TO_BACK_BUFFER is part of the same optimization as Egl.EGL_ANGLE_DISPLAY_ALLOW_RENDER_TO_BACK_BUFFER (see above).
 				// If you have compilation issues with it then please update your Visual Studio templates.
 				Egl.EGL_ANGLE_SURFACE_RENDER_TO_BACK_BUFFER, Egl.EGL_TRUE,
@@ -249,13 +259,10 @@ namespace SkiaSharp.Views
 			};
 
 			// Create a PropertySet and initialize with the EGLNativeWindowType.
-			PropertySet surfaceCreationProperties = new PropertySet();
+			var surfaceCreationProperties = new PropertySet();
 			surfaceCreationProperties.Add("EGLNativeWindowTypeProperty", panel);
-
-			//// add the scale from the current display
-			//var info = Windows.Graphics.Display.DisplayInformation.GetForCurrentView();
-			//var dpi = info.LogicalDpi / 96.0f;
-			//surfaceCreationProperties.Add("EGLRenderResolutionScaleProperty", PropertyValue.CreateSingle(dpi));
+			// add the DPI scaling
+			PropertySetInterop.AddSingle(surfaceCreationProperties, "EGLRenderResolutionScaleProperty", dpi);
 
 			// You can configure the surface to render at a lower resolution and be scaled up to 
 			// the full window size. The scaling is often free on mobile hardware.

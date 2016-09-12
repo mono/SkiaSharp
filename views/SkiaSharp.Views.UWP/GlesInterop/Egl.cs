@@ -62,6 +62,8 @@ namespace SkiaSharp.Views.GlesInterop
 		public const int EGL_PLATFORM_ANGLE_DEVICE_TYPE_REFERENCE_ANGLE = 0x320C;
 		public const int EGL_PLATFORM_ANGLE_ENABLE_AUTOMATIC_TRIM_ANGLE = 0x320F;
 
+		public const int EGL_FIXED_SIZE_ANGLE = 0x3201;
+
 		[DllImport(libEGL)]
 		private static extern IntPtr eglGetProcAddress([MarshalAs(UnmanagedType.LPStr)] string procname);
 		[DllImport(libEGL)]
