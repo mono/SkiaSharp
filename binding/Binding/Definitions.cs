@@ -2469,5 +2469,13 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		None = 0,
 		Discard = 0x2,
 	}
+
+	public enum SKPathOp {
+		Difference,
+		Intersect,
+		Union,
+		Xor,
+		ReverseDifference,
+	};
 }
 

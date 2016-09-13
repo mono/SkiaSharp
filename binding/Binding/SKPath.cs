@@ -270,101 +270,134 @@ namespace SkiaSharp
 
 		public Iterator CreateIterator (bool forceClose)
 		{
-			return new Iterator (this, SkiaApi.sk_path_create_iter (Handle, forceClose ? 1 : 0));
+			return new Iterator (this, forceClose);
 		}
 
 		public RawIterator CreateRawIterator ()
 		{
-			return new RawIterator (this, SkiaApi.sk_path_create_rawiter (Handle));
+			return new RawIterator (this);
 		}
 		
-		public class Iterator : IDisposable {
+		public bool Op (SKPath other, SKPathOp op, SKPath result)
+		{
+			if (other == null)
+				throw new ArgumentNullException (nameof (other));
+			if (result == null)
+				throw new ArgumentNullException (nameof (result));
+
+			return SkiaApi.sk_pathop_op (Handle, other.Handle, op, result.Handle);
+		}
+		
+		public bool Simplify (SKPath result)
+		{
+			if (result == null)
+				throw new ArgumentNullException (nameof (result));
+
+			return SkiaApi.sk_pathop_simplify (Handle, result.Handle);
+		}
+		
+		public bool GetTightBounds (out SKRect result)
+		{
+			return SkiaApi.sk_pathop_tight_bounds (Handle, out result);
+		}
+		
+		public class Iterator : SKNativeObject
+		{
 			SKPath Path => path;
 			SKPath path;
-			IntPtr handle;
 
-			internal Iterator (SKPath path, IntPtr handle)
+			internal Iterator (SKPath path, bool forceClose)
+				: base (SkiaApi.sk_path_create_iter (path.Handle, forceClose ? 1 : 0))
 			{
 				this.path = path;
-				this.handle = handle;
-			}
-
-			~Iterator ()
-			{
-				Dispose (false);
-			}
-
-			void Dispose (bool disposing)
-			{
-				if (handle != IntPtr.Zero){
-					// safe to call from a background thread to release resources.
-					SkiaApi.sk_path_iter_destroy (handle);
-					handle = IntPtr.Zero;
-				}
 			}
 			
-			public void Dispose ()
+			protected override void Dispose (bool disposing)
 			{
-				Dispose (true);
-				GC.SuppressFinalize (this);
-			}
+				if (Handle != IntPtr.Zero){
+					// safe to call from a background thread to release resources.
+					SkiaApi.sk_path_iter_destroy (Handle);
+				}
 
+				base.Dispose (disposing);
+			}
+			
 			public Verb Next (SKPoint [] points, bool doConsumeDegenerates = true, bool exact = false)
 			{
 				if (points == null)
 					throw new ArgumentNullException (nameof (points));
 				if (points.Length != 4)
 					throw new ArgumentException ("Must be an array of four elements", nameof (points));
-				return SkiaApi.sk_path_iter_next (handle, points, doConsumeDegenerates ? 1 : 0, exact ? 1 : 0);
+				return SkiaApi.sk_path_iter_next (Handle, points, doConsumeDegenerates ? 1 : 0, exact ? 1 : 0);
 			}
 
-			public float ConicWeight () => SkiaApi.sk_path_iter_conic_weight (handle);
-			public bool IsCloseLine () => SkiaApi.sk_path_iter_is_close_line (handle) != 0;
-			public bool IsCloseContour () => SkiaApi.sk_path_iter_is_closed_contour (handle) != 0;
+			public float ConicWeight () => SkiaApi.sk_path_iter_conic_weight (Handle);
+			public bool IsCloseLine () => SkiaApi.sk_path_iter_is_close_line (Handle) != 0;
+			public bool IsCloseContour () => SkiaApi.sk_path_iter_is_closed_contour (Handle) != 0;
 		}
 
-		public class RawIterator : IDisposable {
+		public class RawIterator : SKNativeObject
+		{
 			SKPath Path => path;
 			SKPath path;
-			IntPtr handle;
 
-			internal RawIterator (SKPath path, IntPtr handle)
+			internal RawIterator (SKPath path)
+				: base (SkiaApi.sk_path_create_rawiter (path.Handle))
 			{
 				this.path = path;
-				this.handle = handle;
 			}
 
-			~RawIterator ()
+			protected override void Dispose (bool disposing)
 			{
-				Dispose (false);
-			}
-
-			void Dispose (bool disposing)
-			{
-				if (handle != IntPtr.Zero){
+				if (Handle != IntPtr.Zero){
 					// safe to call from a background thread to release resources.
-					SkiaApi.sk_path_rawiter_destroy (handle);
-					handle = IntPtr.Zero;
+					SkiaApi.sk_path_rawiter_destroy (Handle);
 				}
+
+				base.Dispose (disposing);
 			}
 			
-			public void Dispose ()
-			{
-				Dispose (true);
-				GC.SuppressFinalize (this);
-			}
-
 			public Verb Next (SKPoint [] points)
 			{
 				if (points == null)
 					throw new ArgumentNullException (nameof (points));
 				if (points.Length != 4)
 					throw new ArgumentException ("Must be an array of four elements", nameof (points));
-				return SkiaApi.sk_path_rawiter_next (handle, points);
+				return SkiaApi.sk_path_rawiter_next (Handle, points);
 			}
 
-			public float ConicWeight () => SkiaApi.sk_path_rawiter_conic_weight (handle);
-			public Verb Peek () => SkiaApi.sk_path_rawiter_peek (handle);
+			public float ConicWeight () => SkiaApi.sk_path_rawiter_conic_weight (Handle);
+			public Verb Peek () => SkiaApi.sk_path_rawiter_peek (Handle);
+		}
+
+		public class OpBuilder : SKNativeObject
+		{
+			public OpBuilder ()
+				: base (SkiaApi.sk_opbuilder_new ())
+			{
+			}
+
+			public void Add (SKPath path, SKPathOp op)
+			{
+				SkiaApi.sk_opbuilder_add (Handle, path.Handle, op);
+			}
+
+			public bool Resolve (SKPath result)
+			{
+				if (result == null)
+					throw new ArgumentNullException (nameof (result));
+
+				return SkiaApi.sk_opbuilder_resolve (Handle, result.Handle);
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				if (Handle != IntPtr.Zero) {
+					SkiaApi.sk_opbuilder_destroy (Handle);
+				}
+
+				base.Dispose (disposing);
+			}
 		}
 	}
 }
