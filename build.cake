@@ -815,7 +815,7 @@ Task ("tests")
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "x64" };
         });
-        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/SkiaSharp.Desktop.Tests.dll");
+        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Desktop.Tests.dll");
     }
     // Mac OSX (Any CPU)
     if (IsRunningOnUnix ()) {

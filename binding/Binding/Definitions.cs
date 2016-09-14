@@ -2477,5 +2477,11 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		Xor,
 		ReverseDifference,
 	};
+
+	public enum SKPathConvexity {
+		Unknown,
+		Convex,
+		Concave,
+	};
 }
 

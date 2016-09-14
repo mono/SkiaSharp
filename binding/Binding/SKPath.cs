@@ -62,6 +62,19 @@ namespace SkiaSharp
 			}
 		}
 
+		public SKPathConvexity Convexity {
+			get {
+				return SkiaApi.sk_path_get_convexity (Handle);
+			}
+			set {
+				SkiaApi.sk_path_set_convexity (Handle, value);
+			}
+		}
+
+		public bool IsConvex => Convexity == SKPathConvexity.Convex;
+		
+		public bool IsConcave => Convexity == SKPathConvexity.Concave;
+
 		public int PointCount {
 			get {
 				return SkiaApi.sk_path_count_points (Handle);
@@ -86,6 +99,28 @@ namespace SkiaSharp
 				SKPoint point;
 				SkiaApi.sk_path_get_last_point (Handle, out point);
 				return point;
+			}
+		}
+
+		public SKRect Bounds {
+			get {
+				SKRect rect;
+				if (GetBounds (out rect)) {
+					return rect;
+				} else {
+					return SKRect.Empty;
+				}
+			}
+		}
+
+		public SKRect TightBounds {
+			get {
+				SKRect rect;
+				if (GetTightBounds (out rect)) {
+					return rect;
+				} else {
+					return SKRect.Empty;
+				}
 			}
 		}
 
@@ -193,7 +228,7 @@ namespace SkiaSharp
 			SkiaApi.sk_path_reset(Handle);
 		}
 
-		public void AddRect (SKRect rect, SKPathDirection direction)
+		public void AddRect (SKRect rect, SKPathDirection direction = SKPathDirection.Clockwise)
 		{
 			SkiaApi.sk_path_add_rect (Handle, ref rect, direction);
 		}
@@ -206,7 +241,7 @@ namespace SkiaSharp
 			SkiaApi.sk_path_add_rect_start (Handle, ref rect, direction, startIndex);
 		}
 
-		public void AddOval (SKRect rect, SKPathDirection direction)
+		public void AddOval (SKRect rect, SKPathDirection direction = SKPathDirection.Clockwise)
 		{
 			SkiaApi.sk_path_add_oval (Handle, ref rect, direction);
 		}
@@ -258,12 +293,12 @@ namespace SkiaSharp
 			SkiaApi.sk_path_add_path_reverse (Handle, other.Handle);
 		}
 
-		public void AddRoundedRect (SKRect rect, float rx, float ry, SKPathDirection dir)
+		public void AddRoundedRect (SKRect rect, float rx, float ry, SKPathDirection dir = SKPathDirection.Clockwise)
 		{
 			SkiaApi.sk_path_add_rounded_rect (Handle, ref rect, rx, ry, dir);
 		}
 
-		public void AddCircle (float x, float y, float radius, SKPathDirection dir)
+		public void AddCircle (float x, float y, float radius, SKPathDirection dir = SKPathDirection.Clockwise)
 		{
 			SkiaApi.sk_path_add_circle (Handle, x, y, radius, dir);
 		}
@@ -299,6 +334,24 @@ namespace SkiaSharp
 		public bool GetTightBounds (out SKRect result)
 		{
 			return SkiaApi.sk_pathop_tight_bounds (Handle, out result);
+		}
+
+		public string ToSvgPathData () {
+			using (SKString str = new SKString ()) {
+				SkiaApi.sk_path_to_svg_string (Handle, str.Handle);
+				return (string)str;
+			}
+		}
+		
+		public static SKPath ParseSvgPathData (string svgPath)
+		{
+			SKPath path = new SKPath ();
+			var success = SkiaApi.sk_path_parse_svg_string (path.Handle, svgPath);
+			if (!success) {
+				path.Dispose ();
+				path = null;
+			}
+			return path;
 		}
 		
 		public class Iterator : SKNativeObject

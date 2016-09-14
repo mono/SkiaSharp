@@ -486,6 +486,15 @@ namespace SkiaSharp
 		public extern static void sk_path_get_point (sk_path_t path, int index, out SKPoint point);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_path_get_points (sk_path_t path, [Out] SKPoint[] points, int max);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKPathConvexity sk_path_get_convexity (sk_path_t cpath);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_set_convexity (sk_path_t cpath, SKPathConvexity convexity);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_path_parse_svg_string (sk_path_t cpath, [MarshalAs(UnmanagedType.LPStr)] string str);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_to_svg_string (sk_path_t cpath, sk_string_t str);
 
 		// path ops
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
