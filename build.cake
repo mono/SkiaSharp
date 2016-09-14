@@ -308,7 +308,7 @@ var InjectCompatibilityExternals = new Action<bool> ((inject) => {
     }
 });
 
-var ClearSkiaSharpNuGetCache = new Action(() => {
+var ClearSkiaSharpNuGetCache = new Action (() => {
     // first we need to add our new nuget to the cache so we can restore
     // we first need to delete the old stuff
     DirectoryPath home = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
@@ -877,7 +877,7 @@ Task ("samples")
     .IsDependentOn ("nuget")
     .Does (() => 
 {
-    ClearSkiaSharpNuGetCache();
+    ClearSkiaSharpNuGetCache ();
 
     if (IsRunningOnUnix ()) {
         RunNuGetRestore ("./samples/Skia.OSX.Demo/Skia.OSX.Demo.sln");
@@ -937,7 +937,7 @@ Task ("views")
     .IsDependentOn ("nuget")
     .Does (() => 
 {
-    ClearSkiaSharpNuGetCache();
+    ClearSkiaSharpNuGetCache ();
 
     if (IsRunningOnUnix ()) {
         RunNuGetRestore ("./views/SkiaSharp.Views.Mac.sln");
