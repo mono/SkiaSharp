@@ -1069,6 +1069,53 @@ namespace SkiaSharp
 				}
 			}
 		}
+		
+		public static void PathBounds (SKCanvas canvas, int width, int height)
+		{
+			canvas.Clear (SKColors.White);
+			canvas.Scale (2, 2);
+
+			using (SKPaint paint = new SKPaint ())
+			{
+				paint.Style = SKPaintStyle.Stroke;
+				paint.StrokeWidth = 1;
+				paint.IsAntialias = true;
+				paint.StrokeCap = SKStrokeCap.Round;
+
+				using (SKPath path = new SKPath ())
+				{
+					path.MoveTo (-6.2157825e-7f, -25.814698f);
+					path.RCubicTo (-34.64102137842175f, 19.9999998f, 0f, 40f, 0f, 40f);
+					path.Offset (50, 35);
+
+					// draw using GetBounds
+					paint.Color = XamLtBlue;
+					canvas.DrawPath (path, paint);
+
+					SKRect rect;
+					path.GetBounds (out rect);
+
+					paint.Color = XamDkBlue;
+					canvas.DrawRect (rect, paint);
+
+					canvas.DrawText ("Bounds", rect.Left, rect.Bottom + paint.TextSize + 10, paint);
+					
+					// move for next curve
+					path.Offset (100, 0);
+
+					// draw using GetTightBounds
+					paint.Color = XamLtBlue;
+					canvas.DrawPath (path, paint);
+
+					path.GetTightBounds (out rect);
+
+					paint.Color = XamDkBlue;
+					canvas.DrawRect (rect, paint);
+
+					canvas.DrawText ("TightBounds", rect.Left, rect.Bottom + paint.TextSize + 10, paint);
+				}
+			}
+		}
 
 		[Flags]
 		public enum Platform
@@ -1139,6 +1186,7 @@ namespace SkiaSharp
 			new Sample {Title="Create PDF", Method = CreatePdfSample, Platform = Platform.All, TapMethod = CreatePdfSampleTapped},
 			new Sample {Title="Path Effects", Method = PathEffects, Platform = Platform.All},
 			new Sample {Title="Nine Patch / Lattice", Method = BitmapLattice, Platform = Platform.All},
+			new Sample {Title="Path Bounds", Method = PathBounds, Platform = Platform.All},
 		};
 	}
 }

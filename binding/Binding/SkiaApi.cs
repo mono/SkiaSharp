@@ -47,6 +47,7 @@ using sk_pixelref_factory_t = System.IntPtr;
 using sk_colortable_t = System.IntPtr;
 using gr_context_t = System.IntPtr;
 using gr_glinterface_t = System.IntPtr;
+using sk_opbuilder_t = System.IntPtr;
 
 namespace SkiaSharp
 {
@@ -485,6 +486,37 @@ namespace SkiaSharp
 		public extern static void sk_path_get_point (sk_path_t path, int index, out SKPoint point);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_path_get_points (sk_path_t path, [Out] SKPoint[] points, int max);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKPathConvexity sk_path_get_convexity (sk_path_t cpath);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_set_convexity (sk_path_t cpath, SKPathConvexity convexity);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_path_parse_svg_string (sk_path_t cpath, [MarshalAs(UnmanagedType.LPStr)] string str);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_to_svg_string (sk_path_t cpath, sk_string_t str);
+
+		// path ops
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_pathop_op(sk_path_t one, sk_path_t two, SKPathOp op, sk_path_t result);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_pathop_simplify(sk_path_t path, sk_path_t result);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_pathop_tight_bounds(sk_path_t path, out SKRect result);
+		
+		// path op builder
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_opbuilder_t sk_opbuilder_new();
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_opbuilder_destroy(sk_opbuilder_t builder);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_opbuilder_add(sk_opbuilder_t builder, sk_path_t path, SKPathOp op);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_opbuilder_resolve(sk_opbuilder_t builder, sk_path_t result);
 
 		// iterator
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

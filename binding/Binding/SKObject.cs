@@ -15,44 +15,33 @@ using System.Reflection;
 
 namespace SkiaSharp
 {
-	public abstract class SKObject : IDisposable
+	public abstract class SKObject : SKNativeObject
 	{
 		private static readonly Dictionary<IntPtr, WeakReference> instances = new Dictionary<IntPtr, WeakReference>();
 
 		private readonly List<SKObject> ownedObjects = new List<SKObject>();
-		private IntPtr handle;
 
 		[Preserve]
 		internal SKObject(IntPtr handle, bool owns)
+			: base(handle)
 		{
-			Handle = handle;
 			OwnsHandle = owns;
-		}
-
-		~SKObject()
-		{
-			Dispose(false);
 		}
 
 		protected bool OwnsHandle { get; private set; }
 
-		public IntPtr Handle
+		public override IntPtr Handle
 		{
-			get { return handle; }
+			get { return base.Handle; }
 			protected set
 			{
-				handle = value;
-				RegisterHandle(handle, this);
+				base.Handle = value;
+
+				RegisterHandle(Handle, this);
 			}
 		}
 
-		public void Dispose()
-		{
-			Dispose(true);
-			GC.SuppressFinalize(this);
-		}
-
-		protected virtual void Dispose(bool disposing)
+		protected override void Dispose(bool disposing)
 		{
 			lock (ownedObjects)
 			{
@@ -63,8 +52,10 @@ namespace SkiaSharp
 				ownedObjects.Clear();
 			}
 
-			DeregisterHandle(handle, this);
-			handle = IntPtr.Zero;}
+			DeregisterHandle(Handle, this);
+
+			base.Dispose(disposing);
+		}
 
 		internal static TSkiaObject GetObject<TSkiaObject>(IntPtr handle, bool owns = true)
 			where TSkiaObject : SKObject
@@ -81,7 +72,7 @@ namespace SkiaSharp
 				if (instances.TryGetValue(handle, out reference))
 				{
 					var instance = reference.Target as TSkiaObject;
-					if (instance != null && instance.handle != IntPtr.Zero)
+					if (instance != null && instance.Handle != IntPtr.Zero)
 					{
 						return instance;
 					}
@@ -187,6 +178,32 @@ namespace SkiaSharp
 			} else {
 				this.RevokeOwnership ();
 			}
+		}
+	}
+
+	public class SKNativeObject : IDisposable
+	{
+		internal SKNativeObject(IntPtr handle)
+		{
+			Handle = handle;
+		}
+
+		~SKNativeObject()
+		{
+			Dispose(false);
+		}
+
+		public virtual IntPtr Handle { get; protected set; }
+
+		protected virtual void Dispose(bool disposing)
+		{
+			Handle = IntPtr.Zero;
+		}
+
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
 		}
 	}
 }

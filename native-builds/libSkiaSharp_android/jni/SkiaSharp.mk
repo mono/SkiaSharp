@@ -26,6 +26,7 @@ LOCAL_C_INCLUDES       := ../../skia/src/c           \
                           ../../skia/include/core    \
                           ../../skia/include/codec   \
                           ../../skia/include/effects \
+                          ../../skia/include/pathops \
                           ../../skia/include/gpu     \
                           ../../skia/include/config  \
                           ../../skia/include/utils   \
