@@ -3,9 +3,9 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.ApplicationModel;
+using Windows.Graphics.Display;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 
@@ -18,6 +18,7 @@ namespace SkiaSharp.Views
 		private byte[] pixels;
 		private GCHandle buff;
 		private WriteableBitmap bitmap;
+		private double dpi;
 
 		public SKXamlCanvas()
 		{
@@ -30,13 +31,13 @@ namespace SkiaSharp.Views
 				return;
 
 			SizeChanged += OnSizeChanged;
-			Tapped += OnTapped;
 			Unloaded += OnUnloaded;
+
+			// get the scale from the current display
+			var display = DisplayInformation.GetForCurrentView();
+			OnDpiChanged(display);
+			display.DpiChanged += OnDpiChanged;
 		}
-
-		public int PixelWidth => (int)ActualWidth;
-
-		public int PixelHeight => (int)ActualHeight;
 
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
@@ -45,18 +46,20 @@ namespace SkiaSharp.Views
 			PaintSurface?.Invoke(this, e);
 		}
 
-		protected virtual void OnSizeChanged(object sender, SizeChangedEventArgs e)
+		private void OnDpiChanged(DisplayInformation sender, object args = null)
+		{
+			dpi = sender.LogicalDpi / 96.0f;
+			Invalidate();
+		}
+
+		private void OnSizeChanged(object sender, SizeChangedEventArgs e)
 		{
 			Invalidate();
 		}
 
-		protected virtual void OnTapped(object sender, TappedRoutedEventArgs e)
-		{
-		}
-
 		private void OnUnloaded(object sender, RoutedEventArgs e)
 		{
-			FreeBitmap();
+			FreeBitmap(true);
 		}
 
 		public void Invalidate()
@@ -64,9 +67,12 @@ namespace SkiaSharp.Views
 			if (designMode)
 				return;
 
-			CreateBitmap();
-			var info = new SKImageInfo(PixelWidth, PixelHeight, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
-			using (var surface = SKSurface.Create(info, buff.AddrOfPinnedObject(), PixelWidth * 4))
+			if (ActualWidth == 0 || ActualHeight == 0)
+				return;
+
+			var info = new SKImageInfo((int)(ActualWidth * dpi), (int)(ActualHeight * dpi), SKImageInfo.PlatformColorType, SKAlphaType.Premul);
+			CreateBitmap(info);
+			using (var surface = SKSurface.Create(info, buff.AddrOfPinnedObject(), info.RowBytes))
 			{
 				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
 			}
@@ -78,38 +84,48 @@ namespace SkiaSharp.Views
 			bitmap.Invalidate();
 		}
 
-		private void CreateBitmap()
+		private void CreateBitmap(SKImageInfo info)
 		{
-			if (bitmap == null || bitmap.PixelWidth != PixelWidth || bitmap.PixelHeight != PixelHeight)
+			if (bitmap == null || bitmap.PixelWidth != info.Width || bitmap.PixelHeight != info.Height)
 			{
-				FreeBitmap();
+				var recreateArray = pixels == null || pixels.Length != info.BytesSize;
 
-				bitmap = new WriteableBitmap(PixelWidth, PixelHeight);
-				pixels = new byte[bitmap.PixelWidth * bitmap.PixelHeight * 4];
-				buff = GCHandle.Alloc(pixels, GCHandleType.Pinned);
+				FreeBitmap(recreateArray);
 
+				if (recreateArray)
+				{
+					pixels = new byte[info.BytesSize];
+					buff = GCHandle.Alloc(pixels, GCHandleType.Pinned);
+				}
+				bitmap = new WriteableBitmap(info.Width, info.Height);
+
+				var scale = 1.0 / dpi;
 				Background = new ImageBrush
 				{
 					ImageSource = bitmap,
 					AlignmentX = AlignmentX.Left,
 					AlignmentY = AlignmentY.Top,
-					Stretch = Stretch.None
+					Stretch = Stretch.None,
+					Transform = new ScaleTransform { ScaleX = scale, ScaleY = scale }
 				};
 			}
 		}
 
-		private void FreeBitmap()
+		private void FreeBitmap(bool freeArray)
 		{
 			if (bitmap != null)
 			{
 				bitmap = null;
 			}
-			if (buff.IsAllocated)
+			if (freeArray)
 			{
-				buff.Free();
-				buff = default(GCHandle);
+				if (buff.IsAllocated)
+				{
+					buff.Free();
+					buff = default(GCHandle);
+				}
+				pixels = null;
 			}
-			pixels = null;
 		}
 	}
 }
