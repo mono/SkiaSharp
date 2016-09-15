@@ -3,6 +3,8 @@ using System.Linq;
 
 using Xamarin.Forms;
 using SkiaSharp;
+using SkiaSharp.Views.Forms;
+using SkiaSharp.Views;
 
 namespace Skia.Forms.Demo
 {
@@ -53,6 +55,8 @@ namespace Skia.Forms.Demo
 
         public class DetailsPage : ContentPage
         {
+			private Demos.Sample sample;
+
             public DetailsPage(string demo)
             {
                 SetDemo(demo);
@@ -61,7 +65,26 @@ namespace Skia.Forms.Demo
             public void SetDemo(string demo)
             {
                 Title = demo;
-                Content = new SkiaView(Demos.GetSample(demo));
+				sample = Demos.GetSample(demo);
+
+				var tap = new TapGestureRecognizer();
+				tap.Command = new Command(OnTap);
+
+				var view = new SKView();
+				view.PaintSurface += OnPaintSurface;
+				view.GestureRecognizers.Add(tap);
+
+				Content = view;
+			}
+
+			private void OnTap()
+			{
+				sample?.TapMethod?.Invoke();
+			}
+
+			private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
+			{
+				sample?.Method?.Invoke(e.Surface.Canvas, e.Info.Width, e.Info.Height);
             }
         }
 
