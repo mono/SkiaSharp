@@ -1,15 +1,15 @@
 
 
 ifeq ($(TARGET_ARCH_ABI),x86)
-  SKIA_ANDROID_RELEASE=../../../skia/out/config/android-x86/Release
+  SKIA_ANDROID_RELEASE=../../../externals/skia/out/config/android-x86/Release
 else ifeq ($(TARGET_ARCH_ABI),x86_64)
-  SKIA_ANDROID_RELEASE=../../../skia/out/config/android-x86_64/Release
+  SKIA_ANDROID_RELEASE=../../../externals/skia/out/config/android-x86_64/Release
 else ifeq ($(TARGET_ARCH_ABI),armeabi)
-  SKIA_ANDROID_RELEASE=../../../skia/out/config/android-arm/Release
+  SKIA_ANDROID_RELEASE=../../../externals/skia/out/config/android-arm/Release
 else ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
-  SKIA_ANDROID_RELEASE=../../../skia/out/config/android-arm_v7_neon/Release
+  SKIA_ANDROID_RELEASE=../../../externals/skia/out/config/android-arm_v7_neon/Release
 else ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
-  SKIA_ANDROID_RELEASE=../../../skia/out/config/android-arm64/Release
+  SKIA_ANDROID_RELEASE=../../../externals/skia/out/config/android-arm64/Release
 endif
 
 include $(CLEAR_VARS)
