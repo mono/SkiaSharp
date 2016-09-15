@@ -46,21 +46,9 @@ Task ("externals")
 // LIBS - the managed C# libraries
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Task ("libs-base")
-    .Does (() => 
-{
-    // set the SHA on the assembly info 
-    var sha = EnvironmentVariable ("GIT_COMMIT") ?? string.Empty;
-    if (!string.IsNullOrEmpty (sha) && sha.Length >= 6) {
-        sha = sha.Substring (0, 6);
-        Information ("Setting Git SHA to {0}.", sha);
-        ReplaceTextInFiles ("./binding/SkiaSharp/Properties/SkiaSharpAssemblyInfo.cs", "{GIT_SHA}", sha);
-    }
-});
-
 Task ("libs")
     .IsDependentOn ("externals")
-    .IsDependentOn ("libs-base")
+    .IsDependentOn ("set-versions")
     .Does (() => 
 {
     // set the SHA on the assembly info 
@@ -306,7 +294,7 @@ Task ("views-forms")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("docs")
-    .IsDependentOn ("libs-base")
+    .IsDependentOn ("set-versions")
     .IsDependentOn ("externals-genapi")
     .Does (() => 
 {
@@ -400,6 +388,65 @@ Task ("component")
     // });
 
     // MoveFiles (yamlDir.FullPath.TrimEnd ('/') + "/*.xam", "./output/");
+});
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// VERSIONS - update all packages and references to the new version
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Task ("set-versions")
+    .Does (() => 
+{
+    // set the SHA on the assembly info 
+    var sha = EnvironmentVariable ("GIT_COMMIT") ?? string.Empty;
+    if (!string.IsNullOrEmpty (sha) && sha.Length >= 6) {
+        sha = sha.Substring (0, 6);
+    } else {
+        sha = "{GIT_SHA}";
+    }
+
+    // the versions
+    var version = "1.54.0.0";
+    var fileVersion = "1.54.1.0";
+    var versions = new Dictionary<string, string> {
+        { "SkiaSharp", "1.54.1" },
+        { "SkiaSharp.Views", "1.54.1-beta1" },
+        { "SkiaSharp.Views.Forms", "1.54.1-beta1" },
+    };
+
+    var files = new List<string> ();
+    var add = new Action<string> (glob => {
+        files.AddRange (GetFiles (glob).Select (p => MakeAbsolute (p).ToString ()));
+    });
+    // nuspecs
+    add ("./nuget/*.nuspec");
+    // packages files
+    add ("./source/*/*/packages.config");
+    add ("./source/*/*/project.json");
+    // project files
+    add ("./source/*/*/*.nuget.targets");
+    add ("./source/*/*/*.csproj");
+    // sample packages files
+    add ("./samples/**/packages.config");
+    add ("./samples/**/project.json");
+    // sample project files
+    add ("./samples/**/*.nuget.targets");
+    add ("./samples/**/*.csproj");
+    // update
+    foreach (var file in files) {
+        UpdateSkiaSharpVersion (file, versions);
+    }
+
+    // assembly infos
+    UpdateAssemblyInfo (
+        "./binding/SkiaSharp/Properties/SkiaSharpAssemblyInfo.cs",
+        version, fileVersion, sha);
+    UpdateAssemblyInfo (
+        "./source/SkiaSharp.Views/SkiaSharp.Views/Properties/SkiaSharpViewsAssemblyInfo.cs",
+        version, fileVersion, sha);
+    UpdateAssemblyInfo (
+        "./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Shared/SkiaSharpViewsFormsAssemblyInfo.cs",
+        version, fileVersion, sha);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
