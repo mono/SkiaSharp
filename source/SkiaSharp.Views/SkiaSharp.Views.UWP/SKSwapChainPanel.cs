@@ -8,7 +8,7 @@ using Windows.UI.Xaml.Controls;
 using SkiaSharp;
 using SkiaSharp.Views;
 
-namespace BasicSkiaSharp
+namespace SkiaSharp.Views
 {
 	public class SKSwapChainPanel : SwapChainPanel
 	{
