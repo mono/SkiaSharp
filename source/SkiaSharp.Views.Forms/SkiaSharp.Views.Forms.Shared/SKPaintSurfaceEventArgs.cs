@@ -1,8 +1,7 @@
 using System;
 
-namespace SkiaSharp.Views
+namespace SkiaSharp.Views.Forms
 {
-	[Obsolete("this should be used from the main SkiaSharp.Views")]
 	public class SKPaintSurfaceEventArgs : EventArgs
 	{
 		public SKPaintSurfaceEventArgs(SKSurface surface, SKImageInfo info)

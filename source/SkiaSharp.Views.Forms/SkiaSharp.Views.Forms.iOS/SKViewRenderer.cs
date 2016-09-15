@@ -1,5 +1,4 @@
 ﻿using System;
-using Foundation;
 using Xamarin.Forms;
 using Xamarin.Forms.Platform.iOS;
 
@@ -10,7 +9,6 @@ using SKNativeView = SkiaSharp.Views.SKView;
 
 namespace SkiaSharp.Views.Forms
 {
-	[Preserve(AllMembers = true)]
 	internal class SKViewRenderer : ViewRenderer<SKFormsView, SKNativeView>
 	{
 		protected override void OnElementChanged(ElementChangedEventArgs<SKFormsView> e)
