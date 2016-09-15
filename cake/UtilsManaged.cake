@@ -64,4 +64,14 @@ var ClearSkiaSharpNuGetCache = new Action (() => {
         Warning ("SkiaSharp nugets were installed at '{0}', removing...", installedNuGet);
         CleanDirectory (installedNuGet);
     }
+    installedNuGet = home.Combine (".nuget").Combine ("packages").Combine ("SkiaSharp.Views");
+    if (DirectoryExists (installedNuGet)) {
+        Warning ("SkiaSharp nugets were installed at '{0}', removing...", installedNuGet);
+        CleanDirectory (installedNuGet);
+    }
+    installedNuGet = home.Combine (".nuget").Combine ("packages").Combine ("SkiaSharp.Views.Forms");
+    if (DirectoryExists (installedNuGet)) {
+        Warning ("SkiaSharp nugets were installed at '{0}', removing...", installedNuGet);
+        CleanDirectory (installedNuGet);
+    }
 });
