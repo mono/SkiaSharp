@@ -226,48 +226,48 @@ Task ("views")
     ClearSkiaSharpNuGetCache ();
 
     if (IsRunningOnUnix ()) {
-        RunNuGetRestore ("./views/SkiaSharp.Views.Mac.sln");
-        DotNetBuild ("./views/SkiaSharp.Views.Mac.sln", c => { 
+        RunNuGetRestore ("./source/SkiaSharp.Views/SkiaSharp.Views.Mac.sln");
+        DotNetBuild ("./source/SkiaSharp.Views/SkiaSharp.Views.Mac.sln", c => { 
             c.Configuration = "Release"; 
         });
 
-        CopyFileToDirectory ("./views/SkiaSharp.Views.Android/bin/Release/SkiaSharp.Views.Android.dll", "./output/android/");
-        CopyFileToDirectory ("./views/SkiaSharp.Views.iOS/bin/Release/SkiaSharp.Views.iOS.dll", "./output/ios/");
-        CopyFileToDirectory ("./views/SkiaSharp.Views.tvOS/bin/Release/SkiaSharp.Views.tvOS.dll", "./output/tvos/");
-        CopyFileToDirectory ("./views/SkiaSharp.Views.Mac/bin/Release/SkiaSharp.Views.Mac.dll", "./output/osx/");
+        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Android/bin/Release/SkiaSharp.Views.Android.dll", "./output/android/");
+        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.iOS/bin/Release/SkiaSharp.Views.iOS.dll", "./output/ios/");
+        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.tvOS/bin/Release/SkiaSharp.Views.tvOS.dll", "./output/tvos/");
+        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Mac/bin/Release/SkiaSharp.Views.Mac.dll", "./output/osx/");
     }
     
     if (IsRunningOnWindows ()) {
         // build the native interop
-        RunNuGetRestore ("./views/SkiaSharp.Views.Interop.sln");
-        DotNetBuild ("./views/SkiaSharp.Views.Interop.sln", c => { 
+        RunNuGetRestore ("./source/SkiaSharp.Views/SkiaSharp.Views.Interop.sln");
+        DotNetBuild ("./source/SkiaSharp.Views/SkiaSharp.Views.Interop.sln", c => { 
             c.Configuration = "Release";
             c.Properties ["Platform"] = new [] { "x86" };
         });
-        DotNetBuild ("./views/SkiaSharp.Views.Interop.sln", c => { 
+        DotNetBuild ("./source/SkiaSharp.Views/SkiaSharp.Views.Interop.sln", c => { 
             c.Configuration = "Release";
             c.Properties ["Platform"] = new [] { "x64" };
         });
-        DotNetBuild ("./views/SkiaSharp.Views.Interop.sln", c => { 
+        DotNetBuild ("./source/SkiaSharp.Views/SkiaSharp.Views.Interop.sln", c => { 
             c.Configuration = "Release";
             c.Properties ["Platform"] = new [] { "ARM" };
         });
         
         // build the managed views
-        RunNuGetRestore ("./views/SkiaSharp.Views.Windows.sln");
-        DotNetBuild ("./views/SkiaSharp.Views.Windows.sln", c => { 
+        RunNuGetRestore ("./source/SkiaSharp.Views/SkiaSharp.Views.Windows.sln");
+        DotNetBuild ("./source/SkiaSharp.Views/SkiaSharp.Views.Windows.sln", c => { 
             c.Configuration = "Release";
         });
 
         // copy the native interop files
-        CopyFileToDirectory ("./views/SkiaSharp.Views.Interop.UWP/bin/Win32/Release/SkiaSharp.Views.Interop.UWP.dll", "./output/uwp/x86");
-        CopyFileToDirectory ("./views/SkiaSharp.Views.Interop.UWP/bin/x64/Release/SkiaSharp.Views.Interop.UWP.dll", "./output/uwp/x64");
-        CopyFileToDirectory ("./views/SkiaSharp.Views.Interop.UWP/bin/ARM/Release/SkiaSharp.Views.Interop.UWP.dll", "./output/uwp/arm");
+        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Interop.UWP/bin/Win32/Release/SkiaSharp.Views.Interop.UWP.dll", "./output/uwp/x86");
+        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Interop.UWP/bin/x64/Release/SkiaSharp.Views.Interop.UWP.dll", "./output/uwp/x64");
+        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Interop.UWP/bin/ARM/Release/SkiaSharp.Views.Interop.UWP.dll", "./output/uwp/arm");
 
         // copy the managed views
-        CopyFileToDirectory ("./views/SkiaSharp.Views.UWP/bin/Release/SkiaSharp.Views.UWP.dll", "./output/uwp/");
-        CopyFileToDirectory ("./views/SkiaSharp.Views.UWP/bin/Release/SkiaSharp.Views.UWP.targets", "./output/uwp/");
-        CopyFileToDirectory ("./views/SkiaSharp.Views.Desktop/bin/Release/SkiaSharp.Views.Desktop.dll", "./output/windows/");
+        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.UWP/bin/Release/SkiaSharp.Views.UWP.dll", "./output/uwp/");
+        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.UWP/bin/Release/SkiaSharp.Views.UWP.targets", "./output/uwp/");
+        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Desktop/bin/Release/SkiaSharp.Views.Desktop.dll", "./output/windows/");
     }
 });
 
@@ -379,10 +379,10 @@ Task ("clean-managed").Does (() =>
     CleanDirectories ("./tests/**/bin");
     CleanDirectories ("./tests/**/obj");
 
-    CleanDirectories ("./views/*/bin");
-    CleanDirectories ("./views/*/obj");
-    CleanDirectories ("./views/*/Generated Files");
-    CleanDirectories ("./views/packages");
+    CleanDirectories ("./source/*/*/bin");
+    CleanDirectories ("./source/*/*/obj");
+    CleanDirectories ("./source/*/*/Generated Files");
+    CleanDirectories ("./source/*/packages");
 
     CleanDirectories ("./samples/BasicSamples/*/bin");
     CleanDirectories ("./samples/BasicSamples/*/obj");
