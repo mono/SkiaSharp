@@ -372,8 +372,10 @@ Task ("clean-managed").Does (() =>
 
     CleanDirectories ("./samples/*/bin");
     CleanDirectories ("./samples/*/obj");
+    CleanDirectories ("./samples/*/AppPackages");
     CleanDirectories ("./samples/*/*/bin");
     CleanDirectories ("./samples/*/*/obj");
+    CleanDirectories ("./samples/*/*/AppPackages");
     CleanDirectories ("./samples/*/packages");
 
     CleanDirectories ("./tests/**/bin");

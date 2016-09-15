@@ -431,12 +431,11 @@ Task ("clean-externals").Does (() =>
     // osx
     CleanDirectories ("native-builds/libSkiaSharp_osx/build");
     // windows
-    CleanDirectories ("native-builds/libSkiaSharp_windows/Release");
-    CleanDirectories ("native-builds/libSkiaSharp_windows/x64/Release");
+    CleanDirectories ("native-builds/libSkiaSharp_windows/bin");
+    CleanDirectories ("native-builds/libSkiaSharp_windows/obj");
     // uwp
-    CleanDirectories ("native-builds/libSkiaSharp_uwp/Release");
-    CleanDirectories ("native-builds/libSkiaSharp_uwp/x64/Release");
-    CleanDirectories ("native-builds/libSkiaSharp_uwp/ARM/Release");
+    CleanDirectories ("native-builds/libSkiaSharp_uwp/bin");
+    CleanDirectories ("native-builds/libSkiaSharp_uwp/obj");
     CleanDirectories ("externals/angle/uwp");
     
     // remove compatibility
