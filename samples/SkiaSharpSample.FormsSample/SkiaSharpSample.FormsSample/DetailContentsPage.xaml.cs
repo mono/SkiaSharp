@@ -33,6 +33,8 @@ namespace SkiaSharpSample.FormsSample
 
 		public void SwitchBackend(SampleBackends backend)
 		{
+			// TODO: implement once the Forms GL is working
+
 			DisplayAlert("Configure Backend", "This functionality is not yet implemented.", "OK");
 		}
 
