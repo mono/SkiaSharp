@@ -63,6 +63,8 @@ namespace SkiaSharp.Views.Forms
 
 			public InternalView(ISKViewController controller)
 			{
+				UserInteractionEnabled = false;
+
 				this.controller = controller;
 			}
 
