@@ -11,17 +11,23 @@ namespace SkiaSharpSample.FormsSample
 {
 	public partial class MasterPage : ContentPage
 	{
+		private static readonly IEnumerable<SampleCategories> categories;
+
 		private CancellationTokenSource cancellations;
+		private SampleBase[] samples;
+
+		static MasterPage()
+		{
+			categories = Enum.GetValues(typeof(SampleCategories)).Cast<SampleCategories>();
+		}
 
 		public MasterPage(SampleBase[] samples)
 		{
 			InitializeComponent();
 
-			var groups = Enum.GetValues(typeof(SampleCategories))
-				.Cast<SampleCategories>()
-				.Select(c => new GroupedSamples(c, samples.Where(s => s.Category.HasFlag(c))))
-				.OrderBy(g => g.Category == SampleCategories.Showcases ? string.Empty : g.Name);
-			Samples = new ObservableCollection<GroupedSamples>(groups);
+			this.samples = samples;
+
+			Samples = new ObservableCollection<GroupedSamples>(GetFilteredSamples(string.Empty));
 
 			BindingContext = this;
 		}
@@ -73,6 +79,25 @@ namespace SkiaSharpSample.FormsSample
 					}
 				});
 			}
+		}
+
+		private void OnSearchTextChanged(object sender, TextChangedEventArgs e)
+		{
+			Samples.Clear();
+			foreach (var sample in GetFilteredSamples(e.NewTextValue))
+			{
+				Samples.Add(sample);
+			}
+		}
+
+		private IEnumerable<GroupedSamples> GetFilteredSamples(string searchText)
+		{
+			var filteredSamples = samples.Where(s => s.MatchesFilter(searchText));
+
+			return categories
+				.Select(c => new GroupedSamples(c, filteredSamples.Where(s => s.Category.HasFlag(c))))
+				.Where(g => g.Any())
+				.OrderBy(g => g.Category == SampleCategories.Showcases ? string.Empty : g.Name);
 		}
 
 		private void OnSampleSelected(object sender, SelectedItemChangedEventArgs e)

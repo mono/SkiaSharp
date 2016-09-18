@@ -56,5 +56,15 @@ namespace SkiaSharpSample
 		protected virtual void OnTapped()
 		{
 		}
+
+		public virtual bool MatchesFilter(string searchText)
+		{
+			if (string.IsNullOrWhiteSpace(searchText))
+				return true;
+			
+			return
+				Title.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) != -1 ||
+				Description.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) != -1;
+		}
 	}
 }
