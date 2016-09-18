@@ -57,7 +57,7 @@ namespace SkiaSharp.Views
 			gl.GlGetIntegerv(GLES20.GlFramebufferBinding, framebuffers, 0);
 
 			// create the SkiaSharp context
-			var glInterface = GRGlInterface.CreateNativeInterface();
+			var glInterface = GRGlInterface.CreateNativeGlInterface();
 			context = GRContext.Create(GRBackend.OpenGL, glInterface);
 
 			// create the render target

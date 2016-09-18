@@ -7,30 +7,30 @@ using Android.Views;
 
 namespace SkiaSharp.Views
 {
-	public class SKView : View
+	public class SKCanvasView : View
 	{
 		private Bitmap bitmap;
 		private SKImageInfo info;
 
-		public SKView(Context context)
+		public SKCanvasView(Context context)
 			: base(context)
 		{
 			Initialize();
 		}
 
-		public SKView(Context context, IAttributeSet attrs)
+		public SKCanvasView(Context context, IAttributeSet attrs)
 			: base(context, attrs)
 		{
 			Initialize();
 		}
 
-		public SKView(Context context, IAttributeSet attrs, int defStyleAttr)
+		public SKCanvasView(Context context, IAttributeSet attrs, int defStyleAttr)
 			: base(context, attrs, defStyleAttr)
 		{
 			Initialize();
 		}
 
-		protected SKView(IntPtr javaReference, JniHandleOwnership transfer)
+		protected SKCanvasView(IntPtr javaReference, JniHandleOwnership transfer)
 			: base(javaReference, transfer)
 		{
 			Initialize();
@@ -76,9 +76,11 @@ namespace SkiaSharp.Views
 			info.Height = h;
 		}
 
+		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
+
 		protected virtual void OnDraw(SKSurface surface, SKImageInfo info)
 		{
-			// empty
+			PaintSurface?.Invoke(this, new SKPaintSurfaceEventArgs(surface, info));
 		}
 
 		protected override void Dispose(bool disposing)

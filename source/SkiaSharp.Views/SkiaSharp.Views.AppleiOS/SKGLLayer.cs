@@ -1,3 +1,4 @@
+using System;
 using CoreAnimation;
 using CoreGraphics;
 using OpenGLES;
@@ -67,8 +68,11 @@ namespace SkiaSharp.Views
 			}
 		}
 
+		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
+		
 		public virtual void DrawInSurface(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
 		{
+			PaintSurface?.Invoke(this, new SKPaintGLSurfaceEventArgs(surface, renderTarget));
 		}
 
 		public virtual void PrepareGLContexts()
@@ -88,7 +92,7 @@ namespace SkiaSharp.Views
 			GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferSlot.ColorAttachment0, RenderbufferTarget.Renderbuffer, renderBuffer);
 
 			// get the bits for SkiaSharp
-			var glInterface = GRGlInterface.CreateNativeInterface();
+			var glInterface = GRGlInterface.CreateNativeGlInterface();
 			context = GRContext.Create(GRBackend.OpenGL, glInterface);
 
 			// finished

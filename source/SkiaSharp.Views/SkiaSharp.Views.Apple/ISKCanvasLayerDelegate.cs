@@ -1,6 +1,6 @@
 namespace SkiaSharp.Views
 {
-	public interface ISKLayerDelegate
+	public interface ISKCanvasLayerDelegate
 	{
 		void DrawInSurface(SKSurface surface, SKImageInfo info);
 	}

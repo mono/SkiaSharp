@@ -34,7 +34,7 @@ namespace SkiaSharp.Views
 			// create the contexts if not done already
 			if (grContext == null)
 			{
-				var glInterface = GRGlInterface.CreateNativeInterface();
+				var glInterface = GRGlInterface.CreateNativeGlInterface();
 				grContext = GRContext.Create(GRBackend.OpenGL, glInterface);
 
 				// get initial details

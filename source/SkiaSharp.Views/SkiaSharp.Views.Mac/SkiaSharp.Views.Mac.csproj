@@ -30,7 +30,8 @@
     <HttpClientHandler>HttpClientHandler</HttpClientHandler>
     <TlsProvider>Default</TlsProvider>
     <LinkMode>None</LinkMode>
-    <XamMacArch></XamMacArch>
+    <XamMacArch>
+    </XamMacArch>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
@@ -46,7 +47,8 @@
     <HttpClientHandler>HttpClientHandler</HttpClientHandler>
     <TlsProvider>Default</TlsProvider>
     <LinkMode>None</LinkMode>
-    <XamMacArch></XamMacArch>
+    <XamMacArch>
+    </XamMacArch>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -61,7 +63,7 @@
     <Compile Include="..\SkiaSharp.Views\Properties\SkiaSharpViewsAssemblyInfo.cs">
       <Link>Properties\SkiaSharpViewsAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="SKView.cs" />
+    <Compile Include="SKCanvasView.cs" />
     <Compile Include="SKGLView.cs" />
     <Compile Include="SKGLLayer.cs" />
   </ItemGroup>
@@ -70,6 +72,7 @@
   </ItemGroup>
   <Import Project="..\SkiaSharp.Views.Apple\SkiaSharp.Views.Apple.projitems" Label="Shared" />
   <Import Project="..\SkiaSharp.Views.OpenTK\SkiaSharp.Views.OpenTK.projitems" Label="Shared" />
+  <Import Project="..\SkiaSharp.Views.Shared\SkiaSharp.Views.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
   <Import Project="..\packages\SkiaSharp.1.54.1\build\XamarinMac\SkiaSharp.targets" Condition="Exists('..\packages\SkiaSharp.1.54.1\build\XamarinMac\SkiaSharp.targets')" />
 </Project>

@@ -1,13 +1,14 @@
+using System;
 using CoreAnimation;
 using CoreGraphics;
 
 namespace SkiaSharp.Views
 {
-	public class SKLayer : CALayer
+	public class SKCanvasLayer : CALayer
 	{
 		private readonly SKDrawable drawable;
 
-		public SKLayer()
+		public SKCanvasLayer()
 		{
 			drawable = new SKDrawable();
 
@@ -15,7 +16,7 @@ namespace SkiaSharp.Views
 			NeedsDisplayOnBoundsChange = true;
 		}
 
-		public ISKLayerDelegate SKDelegate { get; set; }
+		public ISKCanvasLayerDelegate SKDelegate { get; set; }
 
 		public override void DrawInContext(CGContext ctx)
 		{
@@ -33,8 +34,11 @@ namespace SkiaSharp.Views
 			drawable.DrawSurface(ctx, Bounds, info, surface);
 		}
 
+		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
+
 		public virtual void DrawInSurface(SKSurface surface, SKImageInfo info)
 		{
+			PaintSurface?.Invoke(this, new SKPaintSurfaceEventArgs(surface, info));
 		}
 
 		protected override void Dispose(bool disposing)

@@ -2,22 +2,24 @@
 using System.ComponentModel;
 using AppKit;
 using CoreGraphics;
+using Foundation;
 
 namespace SkiaSharp.Views
 {
+	[Register(nameof(SKCanvasView))]
 	[DesignTimeVisible(true)]
-	public class SKView : NSView
+	public class SKCanvasView : NSView
 	{
 		private SKDrawable drawable;
 
 		// created in code
-		public SKView()
+		public SKCanvasView()
 		{
 			Initialize();
 		}
 
 		// created in code
-		public SKView(CGRect frame)
+		public SKCanvasView(CGRect frame)
 			: base(frame)
 		{
 
@@ -25,7 +27,7 @@ namespace SkiaSharp.Views
 		}
 
 		// created via designer
-		public SKView(IntPtr p)
+		public SKCanvasView(IntPtr p)
 			: base(p)
 		{
 		}
@@ -41,9 +43,11 @@ namespace SkiaSharp.Views
 			drawable = new SKDrawable();
 		}
 
-		public virtual void Draw(SKSurface surface, SKImageInfo info)
+		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
+
+		public virtual void DrawInSurface(SKSurface surface, SKImageInfo info)
 		{
-			// empty
+			PaintSurface?.Invoke(this, new SKPaintSurfaceEventArgs(surface, info));
 		}
 
 		public override void DrawRect(CGRect dirtyRect)
@@ -57,7 +61,7 @@ namespace SkiaSharp.Views
 			var surface = drawable.CreateSurface(Bounds, Window.BackingScaleFactor, out info);
 
 			// draw on the image using SKiaSharp
-			Draw(surface, info);
+			DrawInSurface(surface, info);
 
 			// draw the surface to the context
 			drawable.DrawSurface(ctx, Bounds, info, surface);

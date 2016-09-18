@@ -1,31 +1,37 @@
 ﻿using System;
 using System.ComponentModel;
 using CoreGraphics;
+using Foundation;
 using UIKit;
 
 namespace SkiaSharp.Views
 {
+	[Register(nameof(SKCanvasView))]
 	[DesignTimeVisible(true)]
-	public class SKView : UIView
+	public class SKCanvasView : UIView, IComponent
 	{
+		// for IComponent
+		public ISite Site { get; set; }
+		public event EventHandler Disposed;
+		private bool designMode;
+
 		private SKDrawable drawable;
 
 		// created in code
-		public SKView()
+		public SKCanvasView()
 		{
 			Initialize();
 		}
 
 		// created in code
-		public SKView(CGRect frame)
+		public SKCanvasView(CGRect frame)
+			: base(frame)
 		{
-			Frame = frame;
-
 			Initialize();
 		}
 
 		// created via designer
-		public SKView(IntPtr p)
+		public SKCanvasView(IntPtr p)
 			: base(p)
 		{
 		}
@@ -33,6 +39,8 @@ namespace SkiaSharp.Views
 		// created via designer
 		public override void AwakeFromNib()
 		{
+			designMode = Site?.DesignMode == true;
+
 			Initialize();
 		}
 
@@ -52,15 +60,17 @@ namespace SkiaSharp.Views
 			var surface = drawable.CreateSurface(Bounds, ContentScaleFactor, out info);
 
 			// draw on the image using SKiaSharp
-			Draw(surface, info);
+			DrawInSurface(surface, info);
 
 			// draw the surface to the context
 			drawable.DrawSurface(ctx, Bounds, info, surface);
 		}
 
-		public virtual void Draw(SKSurface surface, SKImageInfo info)
+		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
+
+		public virtual void DrawInSurface(SKSurface surface, SKImageInfo info)
 		{
-			// empty
+			PaintSurface?.Invoke(this, new SKPaintSurfaceEventArgs(surface, info));
 		}
 
 		public override void LayoutSubviews()

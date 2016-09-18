@@ -1,3 +1,4 @@
+using System;
 using CoreAnimation;
 using CoreVideo;
 using OpenGL;
@@ -17,8 +18,11 @@ namespace SkiaSharp.Views
 
 		public ISKGLLayerDelegate SKDelegate { get; set; }
 
+		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
+
 		public virtual void DrawInSurface(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
 		{
+			PaintSurface?.Invoke(this, new SKPaintGLSurfaceEventArgs(surface, renderTarget));
 		}
 
 		public override void DrawInCGLContext(CGLContext glContext, CGLPixelFormat pixelFormat, double timeInterval, ref CVTimeStamp timeStamp)
@@ -28,7 +32,7 @@ namespace SkiaSharp.Views
 			if (context == null)
 			{
 				// get the bits for SkiaSharp
-				var glInterface = GRGlInterface.CreateNativeInterface();
+				var glInterface = GRGlInterface.CreateNativeGlInterface();
 				context = GRContext.Create(GRBackend.OpenGL, glInterface);
 			}
 
