@@ -90,16 +90,16 @@ Task ("libs")
         CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.UWP.targets", "./output/uwp/");
 
         // build the native interop
-        RunNuGetRestore ("./source/SkiaSharp.Views/SkiaSharp.Views.Interop.sln");
-        DotNetBuild ("./source/SkiaSharp.Views/SkiaSharp.Views.Interop.sln", c => { 
+        RunNuGetRestore ("./source/SkiaSharp.Views.Interop.sln");
+        DotNetBuild ("./source/SkiaSharp.Views.Interop.sln", c => { 
             c.Configuration = "Release";
             c.Properties ["Platform"] = new [] { "x86" };
         });
-        DotNetBuild ("./source/SkiaSharp.Views/SkiaSharp.Views.Interop.sln", c => { 
+        DotNetBuild ("./source/SkiaSharp.Views.Interop.sln", c => { 
             c.Configuration = "Release";
             c.Properties ["Platform"] = new [] { "x64" };
         });
-        DotNetBuild ("./source/SkiaSharp.Views/SkiaSharp.Views.Interop.sln", c => { 
+        DotNetBuild ("./source/SkiaSharp.Views.Interop.sln", c => { 
             c.Configuration = "Release";
             c.Properties ["Platform"] = new [] { "ARM" };
         });
