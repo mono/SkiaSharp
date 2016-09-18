@@ -60,7 +60,7 @@ namespace SkiaSharpSample
 			File.Copy(path, newPath);
 			// open the file
 			var vc = Platform.GetRenderer(Application.Current.MainPage) as UIViewController;
-			var resourceToOpen = NSUrl.FromFilename(external);
+			var resourceToOpen = NSUrl.FromFilename(newPath);
 			var controller = UIDocumentInteractionController.FromUrl(resourceToOpen);
 			if (!controller.PresentOpenInMenu(vc.View.Bounds, vc.View, true))
 			{
