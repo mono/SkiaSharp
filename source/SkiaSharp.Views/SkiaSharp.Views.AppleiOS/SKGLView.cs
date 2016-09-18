@@ -61,6 +61,9 @@ namespace SkiaSharp.Views
 
 		public new void DrawInRect(GLKView view, CGRect rect)
 		{
+			if (designMode)
+				return;
+
 			if (context == null)
 			{
 				var glInterface = GRGlInterface.CreateNativeGlInterface();

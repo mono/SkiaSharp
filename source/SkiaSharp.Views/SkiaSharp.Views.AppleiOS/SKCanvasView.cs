@@ -53,6 +53,9 @@ namespace SkiaSharp.Views
 		{
 			base.Draw(rect);
 
+			if (designMode)
+				return;
+
 			var ctx = UIGraphics.GetCurrentContext();
 
 			// create the skia context
