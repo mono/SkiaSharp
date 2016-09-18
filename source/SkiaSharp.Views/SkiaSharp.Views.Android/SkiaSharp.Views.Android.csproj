@@ -43,9 +43,6 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="Mono.Android" />
-    <Reference Include="SkiaSharp">
-      <HintPath>..\packages\SkiaSharp.1.54.1\lib\MonoAndroid\SkiaSharp.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\SkiaSharp.Views\Properties\SkiaSharpViewsAssemblyInfo.cs">
@@ -59,7 +56,10 @@
     <Compile Include="SKLockedSurface.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <ProjectReference Include="..\..\..\Binding\SkiaSharp.Android\SkiaSharp.Android.csproj">
+      <Project>{c737dc80-5b71-4b26-a2dc-da30421788b0}</Project>
+      <Name>SkiaSharp.Android</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="..\SkiaSharp.Views.Shared\SkiaSharp.Views.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />

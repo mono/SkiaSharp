@@ -13,6 +13,8 @@
     <MonoMacResourcePrefix>Resources</MonoMacResourcePrefix>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\mono.snk</AssemblyOriginatorKeyFile>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -54,9 +56,6 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Xamarin.Mac" />
-    <Reference Include="SkiaSharp">
-      <HintPath>..\packages\SkiaSharp.1.54.1\lib\XamarinMac\SkiaSharp.dll</HintPath>
-    </Reference>
     <Reference Include="OpenTK" />
   </ItemGroup>
   <ItemGroup>
@@ -68,11 +67,14 @@
     <Compile Include="SKGLLayer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <ProjectReference Include="..\..\..\Binding\SkiaSharp.OSX\SkiaSharp.OSX.csproj">
+      <Project>{4588a759-3853-49b8-8a68-6c7917be9220}</Project>
+      <Name>SkiaSharp.OSX</Name>
+      <IsAppExtension>false</IsAppExtension>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="..\SkiaSharp.Views.Apple\SkiaSharp.Views.Apple.projitems" Label="Shared" />
   <Import Project="..\SkiaSharp.Views.OpenTK\SkiaSharp.Views.OpenTK.projitems" Label="Shared" />
   <Import Project="..\SkiaSharp.Views.Shared\SkiaSharp.Views.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
-  <Import Project="..\packages\SkiaSharp.1.54.1\build\XamarinMac\SkiaSharp.targets" Condition="Exists('..\packages\SkiaSharp.1.54.1\build\XamarinMac\SkiaSharp.targets')" />
 </Project>
