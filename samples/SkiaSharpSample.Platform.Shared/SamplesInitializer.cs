@@ -4,12 +4,10 @@ using System.IO;
 using Windows.ApplicationModel;
 using Windows.Storage;
 using Windows.System;
-#elif __IOS__
+#elif __IOS__ || __TVOS__
 using System.IO;
 using Foundation;
 using UIKit;
-using Xamarin.Forms;
-using Xamarin.Forms.Platform.iOS;
 #elif __ANDROID__
 using System.IO;
 using Android.App;
@@ -29,7 +27,7 @@ namespace SkiaSharpSample
 #if WINDOWS_UWP
 			var pkg = Package.Current.InstalledLocation.Path;
 			var path = Path.Combine(pkg, "Assets", "Media", fontName);
-#elif __IOS__
+#elif __IOS__ || __TVOS__
 			var path = NSBundle.MainBundle.PathForResource(Path.GetFileNameWithoutExtension(fontName), Path.GetExtension(fontName));
 #elif __ANDROID__
 			var path = Path.Combine(Application.Context.CacheDir.AbsolutePath, fontName);
@@ -48,6 +46,7 @@ namespace SkiaSharpSample
 #if WINDOWS_UWP
 			var file = await StorageFile.GetFileFromPathAsync(path);
 			await Launcher.LaunchFileAsync(file);
+#elif __TVOS__
 #elif __IOS__
 			// the external / shared location
 			var external = Path.Combine(Path.GetTempPath(), "SkiaSharpSample");
@@ -59,7 +58,7 @@ namespace SkiaSharpSample
 			var newPath = Path.Combine(external, Path.GetFileName(path));
 			File.Copy(path, newPath);
 			// open the file
-			var vc = Platform.GetRenderer(Application.Current.MainPage) as UIViewController;
+			var vc = Xamarin.Forms.Platform.iOS.Platform.GetRenderer(Xamarin.Forms.Application.Current.MainPage) as UIViewController;
 			var resourceToOpen = NSUrl.FromFilename(newPath);
 			var controller = UIDocumentInteractionController.FromUrl(resourceToOpen);
 			if (!controller.PresentOpenInMenu(vc.View.Bounds, vc.View, true))
