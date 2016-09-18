@@ -3,8 +3,8 @@ using Xamarin.Forms;
 
 namespace SkiaSharp.Views.Forms
 {
-	[RenderWith(typeof(SKViewRenderer))]
-	public class SKView : View, ISKViewController
+	[RenderWith(typeof(SKCanvasViewRenderer))]
+	public class SKCanvasView : View, ISKCanvasViewController
 	{
 		// the user can subscribe to repaint
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
@@ -27,19 +27,19 @@ namespace SkiaSharp.Views.Forms
 
 		// ISKViewController implementation
 
-		event EventHandler ISKViewController.SurfaceInvalidated
+		event EventHandler ISKCanvasViewController.SurfaceInvalidated
 		{
 			add { SurfaceInvalidated += value; }
 			remove { SurfaceInvalidated -= value; }
 		}
 
-		void ISKViewController.OnPaintSurface(SKPaintSurfaceEventArgs e)
+		void ISKCanvasViewController.OnPaintSurface(SKPaintSurfaceEventArgs e)
 		{
 			OnPaintSurface(e);
 		}
 	}
 
-	internal interface ISKViewController : IViewController
+	internal interface ISKCanvasViewController : IViewController
 	{
 		// the native listens to this event
 		event EventHandler SurfaceInvalidated;

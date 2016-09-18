@@ -1,21 +1,22 @@
 ﻿using System;
+using Android.Content;
 using Xamarin.Forms;
-using Xamarin.Forms.Platform.iOS;
+using Xamarin.Forms.Platform.Android;
 
-using SKFormsView = SkiaSharp.Views.Forms.SKView;
-using SKNativeView = SkiaSharp.Views.SKView;
+using SKFormsView = SkiaSharp.Views.Forms.SKCanvasView;
+using SKNativeView = SkiaSharp.Views.SKCanvasView;
 
-[assembly: ExportRenderer(typeof(SKFormsView), typeof(SkiaSharp.Views.Forms.SKViewRenderer))]
+[assembly: ExportRenderer(typeof(SKFormsView), typeof(SkiaSharp.Views.Forms.SKCanvasViewRenderer))]
 
 namespace SkiaSharp.Views.Forms
 {
-	internal class SKViewRenderer : ViewRenderer<SKFormsView, SKNativeView>
+	internal class SKCanvasViewRenderer : ViewRenderer<SKFormsView, SKNativeView>
 	{
 		protected override void OnElementChanged(ElementChangedEventArgs<SKFormsView> e)
 		{
 			if (e.OldElement != null)
 			{
-				var oldController = (ISKViewController)e.OldElement;
+				var oldController = (ISKCanvasViewController)e.OldElement;
 
 				// unsubscribe from events
 				oldController.SurfaceInvalidated -= OnSurfaceInvalidated;
@@ -23,17 +24,17 @@ namespace SkiaSharp.Views.Forms
 
 			if (e.NewElement != null)
 			{
-				var newController = (ISKViewController)e.NewElement;
+				var newController = (ISKCanvasViewController)e.NewElement;
 
 				// create the native view
-				var view = new InternalView(newController);
+				var view = new InternalView(Context, newController);
 				SetNativeControl(view);
 
 				// subscribe to events from the user
 				newController.SurfaceInvalidated += OnSurfaceInvalidated;
 
 				// paint for the first time
-				Control.SetNeedsDisplay();
+				Control.Invalidate();
 			}
 
 			base.OnElementChanged(e);
@@ -42,7 +43,7 @@ namespace SkiaSharp.Views.Forms
 		protected override void Dispose(bool disposing)
 		{
 			// detach all events before disposing
-			var controller = (ISKViewController)Element;
+			var controller = (ISKCanvasViewController)Element;
 			if (controller != null)
 			{
 				controller.SurfaceInvalidated -= OnSurfaceInvalidated;
@@ -54,23 +55,22 @@ namespace SkiaSharp.Views.Forms
 		private void OnSurfaceInvalidated(object sender, EventArgs eventArgs)
 		{
 			// repaint the native control
-			Control.SetNeedsDisplay();
+			Control.Invalidate();
 		}
 
 		private class InternalView : SKNativeView
 		{
-			private readonly ISKViewController controller;
+			private readonly ISKCanvasViewController controller;
 
-			public InternalView(ISKViewController controller)
+			public InternalView(Context context, ISKCanvasViewController controller)
+				: base(context)
 			{
-				UserInteractionEnabled = false;
-
 				this.controller = controller;
 			}
 
-			public override void Draw(SKSurface surface, SKImageInfo info)
+			protected override void OnDraw(SKSurface surface, SKImageInfo info)
 			{
-				base.Draw(surface, info);
+				base.OnDraw(surface, info);
 
 				// the control is being repainted, let the user know
 				controller.OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
