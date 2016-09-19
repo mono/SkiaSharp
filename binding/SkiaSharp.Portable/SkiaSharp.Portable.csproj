@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -31,15 +31,13 @@
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="SkiaPortable.cs" />
-    <Compile Include="..\SkiaSharp\Properties\SkiaSharpAssemblyInfo.cs">
+    <Compile Include="..\Binding\Properties\SkiaSharpAssemblyInfo.cs">
       <Link>Properties\SkiaSharpAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="SkiaPortable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PreserveAttribute.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
-  <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup>
+  <ItemGroup />
 </Project>

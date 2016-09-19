@@ -56,9 +56,9 @@ Task ("libs")
     if (!string.IsNullOrEmpty (sha) && sha.Length >= 6) {
         sha = sha.Substring (0, 6);
         Information ("Setting Git SHA to {0}.", sha);
-        ReplaceTextInFiles ("./binding/SkiaSharp/Properties/SkiaSharpAssemblyInfo.cs", "{GIT_SHA}", sha);
-        ReplaceTextInFiles ("./source/SkiaSharp.Views/SkiaSharp.Views/Properties/SkiaSharpViewsAssemblyInfo.cs", "{GIT_SHA}", sha);
-        ReplaceTextInFiles ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Shared/SkiaSharpViewsFormsAssemblyInfo.cs", "{GIT_SHA}", sha);
+        ReplaceTextInFiles ("./binding/Binding/Properties/SkiaSharpAssemblyInfo.cs", "{GIT_SHA}", sha);
+        ReplaceTextInFiles ("./source/SkiaSharp.Views/SkiaSharp.Views.Shared/Properties/SkiaSharpViewsAssemblyInfo.cs", "{GIT_SHA}", sha);
+        ReplaceTextInFiles ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Shared/Properties/SkiaSharpViewsFormsAssemblyInfo.cs", "{GIT_SHA}", sha);
     }
 
     // create all the directories
@@ -110,8 +110,8 @@ Task ("libs")
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Interop.UWP/bin/ARM/Release/SkiaSharp.Views.Interop.UWP.dll", "./output/uwp/arm");
 
         // build other source
-        RunNuGetRestore ("./source/SkiaSharp.Views.Forms.Windows.sln");
-        DotNetBuild ("./source/SkiaSharp.Views.Forms.Windows.sln", c => { 
+        RunNuGetRestore ("./source/SkiaSharpSource.Windows.sln");
+        DotNetBuild ("./source/SkiaSharpSource.Windows.sln", c => { 
             c.Configuration = "Release"; 
         });
 
@@ -119,6 +119,7 @@ Task ("libs")
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.UWP/bin/Release/SkiaSharp.Views.UWP.dll", "./output/uwp/");
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.UWP/bin/Release/SkiaSharp.Views.UWP.targets", "./output/uwp/");
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Desktop/bin/Release/SkiaSharp.Views.Desktop.dll", "./output/windows/");
+        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.WPF/bin/Release/SkiaSharp.Views.WPF.dll", "./output/windows/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms/bin/Release/SkiaSharp.Views.Forms.dll", "./output/portable/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.UWP/bin/Release/SkiaSharp.Views.Forms.dll", "./output/uwp/");
 
@@ -143,8 +144,8 @@ Task ("libs")
         CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll.config", "./output/mac/");
 
         // build other source
-        RunNuGetRestore ("./source/SkiaSharp.Views.Forms.Mac.sln");
-        DotNetBuild ("./source/SkiaSharp.Views.Forms.Mac.sln", c => { 
+        RunNuGetRestore ("./source/SkiaSharpSource.Mac.sln");
+        DotNetBuild ("./source/SkiaSharpSource.Mac.sln", c => { 
             c.Configuration = "Release"; 
         });
 
@@ -369,13 +370,13 @@ Task ("set-versions")
 
     // assembly infos
     UpdateAssemblyInfo (
-        "./binding/SkiaSharp/Properties/SkiaSharpAssemblyInfo.cs",
+        "./binding/Binding/Properties/SkiaSharpAssemblyInfo.cs",
         version, fileVersion, sha);
     UpdateAssemblyInfo (
-        "./source/SkiaSharp.Views/SkiaSharp.Views/Properties/SkiaSharpViewsAssemblyInfo.cs",
+        "./source/SkiaSharp.Views/SkiaSharp.Views.Shared/Properties/SkiaSharpViewsAssemblyInfo.cs",
         version, fileVersion, sha);
     UpdateAssemblyInfo (
-        "./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Shared/SkiaSharpViewsFormsAssemblyInfo.cs",
+        "./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Shared/Properties/SkiaSharpViewsFormsAssemblyInfo.cs",
         version, fileVersion, sha);
 });
 
