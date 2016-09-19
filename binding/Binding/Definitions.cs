@@ -1833,9 +1833,113 @@ namespace SkiaSharp
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKMatrix {
-		public float ScaleX, SkewX, TransX;
-		public float SkewY, ScaleY, TransY;
-		public float Persp0, Persp1, Persp2;
+		private float scaleX, skewX, transX;
+		private float skewY, scaleY, transY;
+		private float persp0, persp1, persp2;
+
+		private class Indices {
+			public const int ScaleX = 0;
+			public const int SkewX = 1;
+			public const int TransX = 2;
+			public const int SkewY = 3;
+			public const int ScaleY = 4;
+			public const int TransY = 5;
+			public const int Persp0 = 6;
+			public const int Persp1 = 7;
+			public const int Persp2 = 8;
+
+			public const int Count = 9;
+		};
+
+		public float ScaleX {
+			get { return scaleX; }
+			set { scaleX = value; }
+		}
+
+		public float SkewX {
+			get { return skewX; }
+			set { skewX = value; }
+		}
+
+		public float TransX {
+			get { return transX; }
+			set { transX = value; }
+		}
+
+		public float SkewY {
+			get { return skewY; }
+			set { skewY = value; }
+		}
+
+		public float ScaleY {
+			get { return scaleY; }
+			set { scaleY = value; }
+		}
+
+		public float TransY {
+			get { return transY; }
+			set { transY = value; }
+		}
+
+		public float Persp0 {
+			get { return persp0; }
+			set { persp0 = value; }
+		}
+
+		public float Persp1 {
+			get { return persp1; }
+			set { persp1 = value; }
+		}
+
+		public float Persp2 {
+			get { return persp2; }
+			set { persp2 = value; }
+		}
+
+		public float [] Values {
+			get {
+				return new float [9] {
+					scaleX, skewX, transX,
+					skewY, scaleY, transY,
+					persp0, persp1, persp2 };
+			}
+			set {
+				if (value == null)
+					throw new ArgumentNullException (nameof (Values));
+				if (value.Length != Indices.Count)
+					throw new ArgumentOutOfRangeException (nameof (Values));
+
+				scaleX = value [Indices.ScaleX];
+				skewX = value [Indices.SkewX];
+				transX = value [Indices.TransX];
+
+				skewY = value [Indices.SkewY];
+				scaleY = value [Indices.ScaleY];
+				transY = value [Indices.TransY];
+
+				persp0 = value [Indices.Persp0];
+				persp1 = value [Indices.Persp1];
+				persp2 = value [Indices.Persp2];
+			}
+		}
+
+		public void GetValues(float[] values)
+		{
+			if (values == null)
+				throw new ArgumentNullException (nameof (values));
+			if (values.Length != Indices.Count)
+				throw new ArgumentOutOfRangeException (nameof (values));
+
+			values [Indices.ScaleX] = scaleX;
+			values [Indices.SkewX] = skewX;
+			values [Indices.TransX] = transX;
+			values [Indices.SkewY] = skewY;
+			values [Indices.ScaleY] = scaleY;
+			values [Indices.TransY] = transY;
+			values [Indices.Persp0] = persp0;
+			values [Indices.Persp1] = persp1;
+			values [Indices.Persp2] = persp2;
+		}
 
 #if OPTIMIZED_SKMATRIX
 
@@ -1875,7 +1979,7 @@ namespace SkiaSharp
 
 		public static SKMatrix MakeIdentity ()
 		{
-			return new SKMatrix () { ScaleX = 1, ScaleY = 1, Persp2 = 1
+			return new SKMatrix () { scaleX = 1, scaleY = 1, persp2 = 1
 #if OPTIMIZED_SKMATRIX
 					, typeMask = Mask.Identity | Mask.RectStaysRect
 #endif
@@ -1884,17 +1988,17 @@ namespace SkiaSharp
 
 		public void SetScaleTranslate (float sx, float sy, float tx, float ty)
 		{
-			ScaleX = sx;
-			SkewX = 0;
-			TransX = tx;
+			scaleX = sx;
+			skewX = 0;
+			transX = tx;
 
-			SkewY = 0;
-			ScaleY = sy;
-			TransY = ty;
+			skewY = 0;
+			scaleY = sy;
+			transY = ty;
 
-			Persp0 = 0;
-			Persp1 = 0;
-			Persp2 = 1;
+			persp0 = 0;
+			persp1 = 0;
+			persp2 = 1;
 
 #if OPTIMIZED_SKMATRIX
 			typeMask = Mask.RectStaysRect | 
@@ -1907,7 +2011,7 @@ namespace SkiaSharp
 		{
 			if (sx == 1 && sy == 1)
 				return MakeIdentity ();
-			return new SKMatrix () { ScaleX = sx, ScaleY = sy, Persp2 = 1, 
+			return new SKMatrix () { scaleX = sx, scaleY = sy, persp2 = 1, 
 #if OPTIMIZED_SKMATRIX
 typeMask = Mask.Scale | Mask.RectStaysRect
 #endif
@@ -1932,10 +2036,9 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 				((tx != 0 || ty != 0) ? Mask.Translate : 0);
 #endif
 			return new SKMatrix () { 
-				ScaleX = sx, ScaleY = sy, 
-				TransX = tx,
-				TransY = ty,
-				Persp2 = 1,
+				scaleX = sx, scaleY = sy, 
+				transX = tx, transY = ty,
+				persp2 = 1,
 #if OPTIMIZED_SKMATRIX
 				typeMask = mask
 #endif
@@ -1948,9 +2051,9 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 				return MakeIdentity ();
 			
 			return new SKMatrix () { 
-				ScaleX = 1, ScaleY = 1,
-				TransX = dx, TransY = dy,
-				Persp2 = 1,
+				scaleX = 1, scaleY = 1,
+				transX = dx, transY = dy,
+				persp2 = 1,
 #if OPTIMIZED_SKMATRIX
 				typeMask = Mask.Translate | Mask.RectStaysRect
 #endif
@@ -1991,15 +2094,15 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 
 		static void SetSinCos (ref SKMatrix matrix, float sin, float cos)
 		{
-			matrix.ScaleX = cos;
-			matrix.SkewX = -sin;
-			matrix.TransX = 0;
-			matrix.SkewY = sin;
-			matrix.ScaleY = cos;
-			matrix.TransY = 0;
-			matrix.Persp0 = 0;
-			matrix.Persp1 = 0;
-			matrix.Persp2 = 1;
+			matrix.scaleX = cos;
+			matrix.skewX = -sin;
+			matrix.transX = 0;
+			matrix.skewY = sin;
+			matrix.scaleY = cos;
+			matrix.transY = 0;
+			matrix.persp0 = 0;
+			matrix.persp1 = 0;
+			matrix.persp2 = 1;
 #if OPTIMIZED_SKMATRIX
 			matrix.typeMask = Mask.Unknown | Mask.OnlyPerspectiveValid;
 #endif
@@ -2009,15 +2112,15 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		{
 			float oneMinusCos = 1-cos;
 			
-			matrix.ScaleX = cos;
-			matrix.SkewX = -sin;
-			matrix.TransX = sdot(sin, pivoty, oneMinusCos, pivotx);
-			matrix.SkewY = sin;
-			matrix.ScaleY = cos;
-			matrix.TransY = sdot(-sin, pivotx, oneMinusCos, pivoty);
-			matrix.Persp0 = 0;
-			matrix.Persp1 = 0;
-			matrix.Persp2 = 1;
+			matrix.scaleX = cos;
+			matrix.skewX = -sin;
+			matrix.transX = sdot(sin, pivoty, oneMinusCos, pivotx);
+			matrix.skewY = sin;
+			matrix.scaleY = cos;
+			matrix.transY = sdot(-sin, pivotx, oneMinusCos, pivoty);
+			matrix.persp0 = 0;
+			matrix.persp1 = 0;
+			matrix.persp2 = 1;
 #if OPTIMIZED_SKMATRIX
 			matrix.typeMask = Mask.Unknown | Mask.OnlyPerspectiveValid;
 #endif
@@ -2054,15 +2157,15 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		public static SKMatrix MakeSkew (float sx, float sy)
 		{
 			return new SKMatrix () {
-				ScaleX = 1,
-				SkewX = sx,
-				TransX = 0,
-				SkewY = sy,
-				ScaleY = 1,
-				TransY = 0,
-				Persp0 = 0,
-				Persp1 = 0,
-				Persp2 = 1,
+				scaleX = 1,
+				skewX = sx,
+				transX = 0,
+				skewY = sy,
+				scaleY = 1,
+				transY = 0,
+				persp0 = 0,
+				persp1 = 0,
+				persp2 = 1,
 #if OPTIMIZED_SKMATRIX
 				typeMask = Mask.Unknown | Mask.OnlyPerspectiveValid
 #endif
