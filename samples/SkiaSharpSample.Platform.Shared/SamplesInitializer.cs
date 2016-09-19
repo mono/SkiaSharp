@@ -4,7 +4,7 @@ using System.IO;
 using Windows.ApplicationModel;
 using Windows.Storage;
 using Windows.System;
-#elif __MAC__
+#elif __MACOS__
 using System.IO;
 using AppKit;
 using Foundation;
@@ -31,7 +31,7 @@ namespace SkiaSharpSample
 #if WINDOWS_UWP
 			var pkg = Package.Current.InstalledLocation.Path;
 			var path = Path.Combine(pkg, "Assets", "Media", fontName);
-#elif __IOS__ || __TVOS__ || __MAC__
+#elif __IOS__ || __TVOS__ || __MACOS__
 			var path = NSBundle.MainBundle.PathForResource(Path.GetFileNameWithoutExtension(fontName), Path.GetExtension(fontName));
 #elif __ANDROID__
 			var path = Path.Combine(Application.Context.CacheDir.AbsolutePath, fontName);
@@ -50,7 +50,7 @@ namespace SkiaSharpSample
 #if WINDOWS_UWP
 			var file = await StorageFile.GetFileFromPathAsync(path);
 			await Launcher.LaunchFileAsync(file);
-#elif __MAC__
+#elif __MACOS__
 			if (!NSWorkspace.SharedWorkspace.OpenFile(path))
 			{
 				var alert = new NSAlert();

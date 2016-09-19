@@ -59,7 +59,7 @@ namespace SkiaSharp
 		private const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
 #elif __ANDROID__
 		private const string SKIA = "libSkiaSharp.so";
-#elif XAMARIN_MAC
+#elif __MACOS__
 		private const string SKIA = "libSkiaSharp.dylib";
 #elif DESKTOP
 		private const string SKIA = "libSkiaSharp.dll"; // redirected using .dll.config to 'libSkiaSharp.dylib' on OS X

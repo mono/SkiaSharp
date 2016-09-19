@@ -1,4 +1,4 @@
-﻿#if __TVOS__ || __MAC__
+﻿#if __TVOS__ || __MACOS__
 using System;
 using System.IO;
 using System.Threading.Tasks;

@@ -54,7 +54,7 @@ namespace SkiaSharp.Views
 				// draw the image
 				ctx.DrawImage(viewBounds, image);
 				ctx.RestoreState();
-#elif __MAC__
+#elif __MACOS__
 				// draw the image
 				ctx.DrawImage(viewBounds, image);
 #else
