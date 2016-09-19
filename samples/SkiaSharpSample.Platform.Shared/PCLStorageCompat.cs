@@ -1,4 +1,4 @@
-﻿#if __TVOS__
+﻿#if __TVOS__ || __MAC__
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -12,9 +12,7 @@ namespace PCLStorage
 			static Current()
 			{
 				var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-				var path = Path.Combine(documents, "..", "Library");
-
-				LocalStorage = new FileSystemFolder(path);
+				LocalStorage = new FileSystemFolder(documents);
 			}
 
 			public static FileSystemFolder LocalStorage { get; private set; }

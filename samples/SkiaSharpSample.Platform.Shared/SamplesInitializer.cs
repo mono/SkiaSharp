@@ -4,6 +4,10 @@ using System.IO;
 using Windows.ApplicationModel;
 using Windows.Storage;
 using Windows.System;
+#elif __MAC__
+using System.IO;
+using AppKit;
+using Foundation;
 #elif __IOS__ || __TVOS__
 using System.IO;
 using Foundation;
@@ -27,7 +31,7 @@ namespace SkiaSharpSample
 #if WINDOWS_UWP
 			var pkg = Package.Current.InstalledLocation.Path;
 			var path = Path.Combine(pkg, "Assets", "Media", fontName);
-#elif __IOS__ || __TVOS__
+#elif __IOS__ || __TVOS__ || __MAC__
 			var path = NSBundle.MainBundle.PathForResource(Path.GetFileNameWithoutExtension(fontName), Path.GetExtension(fontName));
 #elif __ANDROID__
 			var path = Path.Combine(Application.Context.CacheDir.AbsolutePath, fontName);
@@ -46,6 +50,15 @@ namespace SkiaSharpSample
 #if WINDOWS_UWP
 			var file = await StorageFile.GetFileFromPathAsync(path);
 			await Launcher.LaunchFileAsync(file);
+#elif __MAC__
+			if (!NSWorkspace.SharedWorkspace.OpenFile(path))
+			{
+				var alert = new NSAlert();
+				alert.AddButton("OK");
+				alert.MessageText = "SkiaSharp";
+				alert.InformativeText = "Unable to open file.";
+				alert.RunSheetModal(NSApplication.SharedApplication.MainWindow);
+			}
 #elif __TVOS__
 #elif __IOS__
 			// the external / shared location
