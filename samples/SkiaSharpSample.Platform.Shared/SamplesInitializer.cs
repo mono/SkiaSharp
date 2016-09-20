@@ -18,6 +18,11 @@ using Android.App;
 using Android.Content;
 using Android.Net;
 using Android.OS;
+#elif __DESKTOP__
+using System.Diagnostics;
+using System.IO;
+using System.Reflection;
+using System.Windows;
 #endif
 
 namespace SkiaSharpSample
@@ -40,6 +45,9 @@ namespace SkiaSharpSample
 			{
 				asset.CopyTo(dest);
 			}
+#elif __DESKTOP__
+			var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+			var path = Path.Combine(root, "Media", fontName);
 #endif
 			SamplesManager.ContentFontPath = path;
 			SamplesManager.OpenFile += OnOpenSampleFile;
@@ -93,6 +101,8 @@ namespace SkiaSharpSample
 			var intent = new Intent(Intent.ActionView, uri);
 			intent.AddFlags(ActivityFlags.NewTask);
 			Application.Context.StartActivity(intent);
+#elif __DESKTOP__
+			Process.Start(path);
 #endif
 		}
 	}
