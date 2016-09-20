@@ -6,7 +6,7 @@ using Xamarin.Forms.Platform.Android;
 
 namespace SkiaSharpSample.FormsSample.Platform
 {
-	[Activity(MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
+	[Activity(ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation)]
 	public class MainActivity : FormsAppCompatActivity
 	{
 		protected override void OnCreate(Bundle bundle)
@@ -15,8 +15,6 @@ namespace SkiaSharpSample.FormsSample.Platform
 			ToolbarResource = Resource.Layout.Toolbar;
 
 			base.OnCreate(bundle);
-
-			SamplesInitializer.Init();
 
 			Forms.Init(this, bundle);
 			LoadApplication(new App());
