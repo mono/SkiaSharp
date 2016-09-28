@@ -1,16 +1,10 @@
-﻿using SkiaSharp;
-using SkiaSharp.Views;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.Foundation.Metadata;
 using Windows.UI;
 using Windows.UI.Core;
@@ -18,11 +12,10 @@ using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using SkiaSharp;
+using SkiaSharp.Views;
 
 namespace SkiaSharpSample.UWPSample
 {
@@ -71,25 +64,6 @@ namespace SkiaSharpSample.UWPSample
 
 			samplesViewSource.Source = sampleGroups;
 
-			//foreach (var category in sampleGroups)
-			//{
-			//	// create the menu item
-			//	var menu = new MenuItem { Header = category.Name };
-			//	foreach (var sample in category.Samples)
-			//	{
-			//		// create the sample item
-			//		var menuItem = new MenuItem
-			//		{
-			//			Header = sample.Title,
-			//			Tag = sample
-			//		};
-			//		menuItem.Click += OnSampleSelected;
-			//		menu.Items.Add(menuItem);
-			//	}
-			//	// add to the menu bar
-			//	samplesList.Items.Add(menu);
-			//}
-
 			SetSample(samples.First(s => s.Category.HasFlag(SampleCategories.Showcases)));
 		}
 
@@ -115,12 +89,14 @@ namespace SkiaSharpSample.UWPSample
 			switch (backend)
 			{
 				case SampleBackends.Memory:
-					//glhost.Visibility = Visibility.Collapsed;
+					glview.Visibility = Visibility.Collapsed;
 					canvas.Visibility = Visibility.Visible;
+					canvas.Invalidate();
 					break;
 				case SampleBackends.OpenGL:
-					//glhost.Visibility = Visibility.Visible;
+					glview.Visibility = Visibility.Visible;
 					canvas.Visibility = Visibility.Collapsed;
+					glview.Invalidate();
 					break;
 				default:
 					var msg = new MessageDialog("This functionality is not yet implemented.", "Configure Backend");
@@ -180,6 +156,11 @@ namespace SkiaSharpSample.UWPSample
 			OnPaintSurface(e.Surface.Canvas, e.Info.Width, e.Info.Height);
 		}
 
+		private void OnPaintGL(object sender, SKPaintGLSurfaceEventArgs e)
+		{
+			OnPaintSurface(e.Surface.Canvas, e.RenderTarget.Width, e.RenderTarget.Height);
+		}
+
 		private void SetSample(SampleBase newSample)
 		{
 			sample = newSample;
@@ -192,12 +173,12 @@ namespace SkiaSharpSample.UWPSample
 			{
 				// refresh the view
 				canvas.Invalidate();
-				//glhost.Child?.Invalidate();
+				glview.Invalidate();
 			});
 
 			// refresh the view
 			canvas.Invalidate();
-			//glhost.Child?.Invalidate();
+			glview.Invalidate();
 		}
 
 		private void OnPaintSurface(SKCanvas canvas, int width, int height)
