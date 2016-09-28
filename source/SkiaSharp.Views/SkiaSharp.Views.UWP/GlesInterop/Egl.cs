@@ -23,6 +23,7 @@ namespace SkiaSharp.Views.GlesInterop
 
 		public const glbool EGL_FALSE = 0;
 		public const glbool EGL_TRUE = 1;
+		public const int EGL_SUCCESS = 0x3000;
 
 		// Config attributes
 		public const int EGL_BUFFER_SIZE = 0x3020;
@@ -42,6 +43,18 @@ namespace SkiaSharp.Views.GlesInterop
 
 		// CreateContext attributes
 		public const int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
+
+		// EGL_VERSION
+		public const int EGL_SWAP_BEHAVIOR = 0x3093;
+		public const int EGL_BUFFER_PRESERVED = 0x3094;
+		public const int EGL_BUFFER_DESTROYED = 0x3095;
+		public const int EGL_OPENGL_ES_API = 0x30A0;
+
+		public const int EGL_RENDERABLE_TYPE = 0x3040;
+		public const int EGL_OPENGL_ES2_BIT = 0x0004;
+		public const int EGL_SURFACE_TYPE = 0x3033;
+		public const int EGL_PBUFFER_BIT = 0x0001;
+		public const int EGL_SWAP_BEHAVIOR_PRESERVED_BIT = 0x0400;
 
 		// ANGLE
 		public const int EGL_ANGLE_DISPLAY_ALLOW_RENDER_TO_BACK_BUFFER = 0x320B;
@@ -67,7 +80,7 @@ namespace SkiaSharp.Views.GlesInterop
 		[DllImport(libEGL)]
 		private static extern IntPtr eglGetProcAddress([MarshalAs(UnmanagedType.LPStr)] string procname);
 		[DllImport(libEGL)]
-		public static extern EGLDisplay eglGetPlatformDisplayEXT(int platform, EGLNativeDisplayType native_display, int[] attrib_list);
+		public static extern EGLDisplay eglGetPlatformDisplayEXT(uint platform, EGLNativeDisplayType native_display, int[] attrib_list);
 		[DllImport(libEGL)]
 		public static extern glbool eglInitialize(EGLDisplay dpy, out int major, out int minor);
 		[DllImport(libEGL)]
@@ -90,5 +103,11 @@ namespace SkiaSharp.Views.GlesInterop
 		public static extern glbool eglTerminate(EGLDisplay dpy);
 		[DllImport(libEGL)]
 		public static extern int eglGetError();
+		[DllImport(libEGL)]
+		public static extern glbool eglBindAPI(uint api);
+		[DllImport(libEGL)]
+		public static extern EGLSurface eglCreatePbufferSurface(EGLDisplay dpy, EGLConfig config, int[] attrib_list);
+		[DllImport(libEGL)]
+		public static extern glbool eglSurfaceAttrib(EGLDisplay dpy, EGLSurface surface, int attribute, int value);
 	}
 }

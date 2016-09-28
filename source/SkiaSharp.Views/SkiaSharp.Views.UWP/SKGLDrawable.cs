@@ -12,9 +12,9 @@ namespace SkiaSharp.Views
 			Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out stencil);
 			Gles.glGetIntegerv(Gles.GL_SAMPLES, out samples);
 
-			int bufferWidth = 0;
-			int bufferHeight = 0;
-			GlesContext.CurrentContext.GetSurfaceDimensions(out bufferWidth, out bufferHeight);
+			int bufferWidth, bufferHeight;
+			Gles.glGetRenderbufferParameteriv(Gles.GL_RENDERBUFFER, Gles.GL_RENDERBUFFER_WIDTH, out bufferWidth);
+			Gles.glGetRenderbufferParameteriv(Gles.GL_RENDERBUFFER, Gles.GL_RENDERBUFFER_HEIGHT, out bufferHeight);
 
 			return new GRBackendRenderTargetDesc
 			{

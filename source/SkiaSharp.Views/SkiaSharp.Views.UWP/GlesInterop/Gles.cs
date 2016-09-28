@@ -9,6 +9,10 @@ namespace SkiaSharp.Views.GlesInterop
 		public const int GL_FRAMEBUFFER_BINDING = 0x8CA6;
 		public const int GL_RENDERBUFFER_BINDING = 0x8CA7;
 
+		public const int GL_BGRA8_EXT = 0x93A1;
+		public const int GL_VERSION = 0x1F02;
+		public const int GL_EXTENSIONS = 0x1F03;
+
 		// GetPName
 		public const int GL_SUBPIXEL_BITS = 0x0D50;
 		public const int GL_RED_BITS = 0x0D52;
@@ -24,6 +28,13 @@ namespace SkiaSharp.Views.GlesInterop
 		public const int GL_STENCIL_BUFFER_BIT = 0x00000400;
 		public const int GL_COLOR_BUFFER_BIT = 0x00004000;
 
+		public const int GL_NEAREST = 0x2600;
+
+		public const int GL_READ_FRAMEBUFFER_ANGLE = 0x8CA8;
+		public const int GL_DRAW_FRAMEBUFFER_ANGLE = 0x8CA9;
+		public const int GL_DRAW_FRAMEBUFFER_BINDING_ANGLE = 0x8CA6;
+		public const int GL_READ_FRAMEBUFFER_BINDING_ANGLE = 0x8CAA;
+
 		// Framebuffer Object
 		public const int GL_FRAMEBUFFER = 0x8D40;
 		public const int GL_RENDERBUFFER = 0x8D41;
@@ -37,20 +48,54 @@ namespace SkiaSharp.Views.GlesInterop
 		public const int GL_RENDERBUFFER_ALPHA_SIZE = 0x8D53;
 		public const int GL_RENDERBUFFER_DEPTH_SIZE = 0x8D54;
 		public const int GL_RENDERBUFFER_STENCIL_SIZE = 0x8D55;
+		public const int GL_COLOR_ATTACHMENT0 = 0x8CE0;
+		public const int GL_DEPTH_ATTACHMENT = 0x8D00;
+		public const int GL_STENCIL_ATTACHMENT = 0x8D20;
+
+		public const int GL_DEPTH_COMPONENT16 = 0x81A5;
+		public const int GL_DEPTH_STENCIL_OES = 0x84F9;
+		public const int GL_UNSIGNED_INT_24_8_OES = 0x84FA;
+		public const int GL_DEPTH24_STENCIL8_OES = 0x88F0;
 
 		[DllImport(libGLESv2)]
 		public static extern void glGenRenderbuffers(int n, [In, Out] uint[] buffers);
 		[DllImport(libGLESv2)]
-		public static extern void glGetIntegerv(int pname, out int data);
+		public static extern void glGenFramebuffers(int n, [In, Out] uint[] buffers);
 		[DllImport(libGLESv2)]
-		public static extern void glGetRenderbufferParameteriv(int target, int pname, out int param);
+		public static extern void glGenRenderbuffers(int n, ref uint buffer);
 		[DllImport(libGLESv2)]
-		public static extern void glBindRenderbuffer(int n, uint buffer);
+		public static extern void glGenFramebuffers(int n, ref uint buffer);
+		[DllImport(libGLESv2)]
+		public static extern void glGetIntegerv(uint pname, out int data);
+		[DllImport(libGLESv2)]
+		public static extern void glGetRenderbufferParameteriv(uint target, int pname, out int param);
+		[DllImport(libGLESv2)]
+		public static extern void glBindRenderbuffer(uint target, uint buffer);
 		[DllImport(libGLESv2)]
 		public static extern void glViewport(int x, int y, int width, int height);
 		[DllImport(libGLESv2)]
 		public static extern void glClearColor(float red, float green, float blue, float alpha);
 		[DllImport(libGLESv2)]
-		public static extern void glClear(int mask);
+		public static extern void glClear(uint mask);
+		[DllImport(libGLESv2)]
+		public static extern void glRenderbufferStorageMultisampleANGLE(uint target, int samples, uint internalformat, int width, int height);
+		[DllImport(libGLESv2)]
+		public static extern void glRenderbufferStorage(uint target, uint internalformat, int width, int height);
+		[DllImport(libGLESv2)]
+		public static extern void glBlitFramebufferANGLE(int srcX0, int srcY0, int srcX1, int srcY1, int dstX0, int dstY0, int dstX1, int dstY1, uint mask, uint filter);
+		[DllImport(libGLESv2)]
+		public static extern void glBindFramebuffer(uint target, uint framebuffer);
+		[DllImport(libGLESv2)]
+		public static extern void glDeleteFramebuffers(int n, [In, Out] uint[] framebuffers);
+		[DllImport(libGLESv2)]
+		public static extern void glDeleteRenderbuffers(int n, [In, Out] uint[] renderbuffers);
+		[DllImport(libGLESv2)]
+		public static extern void glDeleteFramebuffers(int n, ref uint framebuffer);
+		[DllImport(libGLESv2)]
+		public static extern void glDeleteRenderbuffers(int n, ref uint renderbuffer);
+		[DllImport(libGLESv2)]
+		public static extern void glFramebufferRenderbuffer(uint target, uint attachment, uint renderbuffertarget, uint renderbuffer);
+		[DllImport(libGLESv2)]
+		public static extern System.IntPtr glGetString(uint value);
 	}
 }

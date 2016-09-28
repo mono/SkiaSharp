@@ -67,7 +67,7 @@ namespace SkiaSharp.Views
 			if (designMode)
 				return;
 
-			if (ActualWidth == 0 || ActualHeight == 0)
+			if (ActualWidth == 0 || ActualHeight == 0 || Visibility != Visibility.Visible)
 				return;
 
 			var info = new SKImageInfo((int)(ActualWidth * dpi), (int)(ActualHeight * dpi), SKImageInfo.PlatformColorType, SKAlphaType.Premul);
