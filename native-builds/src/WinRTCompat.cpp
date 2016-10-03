@@ -40,22 +40,10 @@ BOOL WINAPI TlsFreeCompat(_In_ DWORD dwTlsIndex)
 	return ::FlsFree(dwTlsIndex);
 }
 
-
-void ExitProcessCompat(unsigned int code)
-{
-	// we can't kill in WinRT
-}
-
 char *getenvCompat(const char *name)
 {
 	// there is no environment in WinRT
 	return NULL;
-}
-
-int WINAPI MessageBoxACompat(_In_opt_ HWND hWnd, _In_opt_ LPCSTR lpText, _In_opt_ LPCSTR lpCaption, _In_ UINT uType)
-{
-	// TODO: implementation
-	return 0;
 }
 
 int WINAPI CompareStringWCompat(_In_ LCID Locale, _In_ DWORD dwCmpFlags, _In_NLS_string_(cchCount1) PCNZWCH lpString1, _In_ int cchCount1, _In_NLS_string_(cchCount2) PCNZWCH lpString2, _In_ int cchCount2)
