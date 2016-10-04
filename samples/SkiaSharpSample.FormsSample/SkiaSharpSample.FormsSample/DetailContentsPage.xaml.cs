@@ -24,18 +24,32 @@ namespace SkiaSharpSample.FormsSample
 			{
 				sample = value;
 
-				sample.Init(canvas.InvalidateSurface);
+				sample.Init(RefreshSamples);
 
 				Title = sample.Title;
-				canvas.InvalidateSurface();
+				RefreshSamples();
 			}
 		}
 
 		public void SwitchBackend(SampleBackends backend)
 		{
-			// TODO: implement once the Forms GL is working
-
-			DisplayAlert("Configure Backend", "This functionality is not yet implemented.", "OK");
+			switch (backend)
+			{
+				case SampleBackends.Memory:
+					canvas.IsVisible = true;
+					canvas.InvalidateSurface();
+					glview.IsVisible = false;
+					break;
+				case SampleBackends.OpenGL:
+					glview.IsVisible = true;
+					glview.InvalidateSurface();
+					canvas.IsVisible = false;
+					break;
+				case SampleBackends.Vulkan:
+				default:
+					DisplayAlert("Configure Backend", "This functionality is not yet implemented.", "OK");
+					break;
+			}
 		}
 
 		private void OnTapSample(object sender, EventArgs e)
@@ -46,6 +60,23 @@ namespace SkiaSharpSample.FormsSample
 		private void OnPaintSample(object sender, SKPaintSurfaceEventArgs e)
 		{
 			Sample?.DrawSample(e.Surface.Canvas, e.Info.Width, e.Info.Height);
+		}
+
+		private void OnPaintGLSample(object sender, SKPaintGLSurfaceEventArgs e)
+		{
+			Sample?.DrawSample(e.Surface.Canvas, e.RenderTarget.Width, e.RenderTarget.Height);
+		}
+
+		private void RefreshSamples()
+		{
+			if (canvas.IsVisible)
+			{
+				canvas.InvalidateSurface();
+			}
+			if (glview.IsVisible)
+			{
+				glview.InvalidateSurface();
+			}
 		}
 	}
 }

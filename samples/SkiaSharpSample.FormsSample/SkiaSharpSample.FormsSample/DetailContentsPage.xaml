@@ -3,9 +3,16 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:views="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
              x:Class="SkiaSharpSample.FormsSample.DetailContentsPage">
-  <views:SKCanvasView x:Name="canvas" PaintSurface="OnPaintSample">
-    <views:SKCanvasView.GestureRecognizers>
-      <TapGestureRecognizer Tapped="OnTapSample" />
-    </views:SKCanvasView.GestureRecognizers>
-  </views:SKCanvasView>
+  <Grid>
+    <views:SKCanvasView x:Name="canvas" PaintSurface="OnPaintSample">
+      <views:SKCanvasView.GestureRecognizers>
+        <TapGestureRecognizer Tapped="OnTapSample" />
+      </views:SKCanvasView.GestureRecognizers>
+    </views:SKCanvasView>
+    <views:SKGLView x:Name="glview" PaintSurface="OnPaintGLSample" IsVisible="False" HasRenderLoop="False">
+      <views:SKGLView.GestureRecognizers>
+        <TapGestureRecognizer Tapped="OnTapSample" />
+      </views:SKGLView.GestureRecognizers>
+    </views:SKGLView>
+  </Grid>
 </ContentPage>
