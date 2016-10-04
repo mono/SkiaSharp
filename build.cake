@@ -184,38 +184,38 @@ Task ("samples")
     ClearSkiaSharpNuGetCache ();
 
     if (IsRunningOnUnix ()) {
-        RunNuGetRestore ("./samples/SkiaSharpSample.MacSample/SkiaSharpSample.MacSample.sln");
-        DotNetBuild ("./samples/SkiaSharpSample.MacSample/SkiaSharpSample.MacSample.sln", c => { 
+        RunNuGetRestore ("./samples/MacSample/MacSample.sln");
+        DotNetBuild ("./samples/MacSample/MacSample.sln", c => { 
             c.Configuration = "Release"; 
         });
-        RunNuGetRestore ("./samples/SkiaSharpSample.FormsSample/SkiaSharpSample.FormsSample.Mac.sln");
-        DotNetBuild ("./samples/SkiaSharpSample.FormsSample/SkiaSharpSample.FormsSample.Mac.sln", c => { 
+        RunNuGetRestore ("./samples/FormsSample/FormsSample.Mac.sln");
+        DotNetBuild ("./samples/FormsSample/FormsSample.Mac.sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "iPhone" };
         });
-        RunNuGetRestore ("./samples/SkiaSharpSample.TvSample/SkiaSharpSample.TvSample.sln");
-        DotNetBuild ("./samples/SkiaSharpSample.TvSample/SkiaSharpSample.TvSample.sln", c => { 
+        RunNuGetRestore ("./samples/TvSample/TvSample.sln");
+        DotNetBuild ("./samples/TvSample/TvSample.sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "iPhoneSimulator" };
         });
     }
     
     if (IsRunningOnWindows ()) {
-        RunNuGetRestore ("./samples/SkiaSharpSample.WPFSample/SkiaSharpSample.WPFSample.sln");
-        DotNetBuild ("./samples/SkiaSharpSample.WPFSample/SkiaSharpSample.WPFSample.sln", c => { 
+        RunNuGetRestore ("./samples/WPFSample/WPFSample.sln");
+        DotNetBuild ("./samples/WPFSample/WPFSample.sln", c => { 
             c.Configuration = "Release";
             c.Properties ["Platform"] = new [] { "x86" };
         });
-        RunNuGetRestore ("./samples/SkiaSharpSample.UWPSample/SkiaSharpSample.UWPSample.sln");
-        DotNetBuild ("./samples/SkiaSharpSample.UWPSample/SkiaSharpSample.UWPSample.sln", c => { 
+        RunNuGetRestore ("./samples/UWPSample/UWPSample.sln");
+        DotNetBuild ("./samples/UWPSample/UWPSample.sln", c => { 
             c.Configuration = "Release"; 
         });
-        RunNuGetRestore ("./samples/SkiaSharpSample.FormsSample/SkiaSharpSample.FormsSample.Windows.sln");
-        DotNetBuild ("./samples/SkiaSharpSample.FormsSample/SkiaSharpSample.FormsSample.Windows.sln", c => { 
+        RunNuGetRestore ("./samples/FormsSample/FormsSample.Windows.sln");
+        DotNetBuild ("./samples/FormsSample/FormsSample.Windows.sln", c => { 
             c.Configuration = "Release"; 
         });
-        RunNuGetRestore ("./samples/SkiaSharpSample.WindowsSample/SkiaSharpSample.WindowsSample.sln");
-        DotNetBuild ("./samples/SkiaSharpSample.WindowsSample/SkiaSharpSample.WindowsSample.sln", c => { 
+        RunNuGetRestore ("./samples/WindowsSample/WindowsSample.sln");
+        DotNetBuild ("./samples/WindowsSample/WindowsSample.sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "x86" };
         });
@@ -328,11 +328,11 @@ Task ("set-versions")
     add ("./source/*/*/*.nuget.targets");
     add ("./source/*/*/*.csproj");
     // sample packages files
-    add ("./samples/**/packages.config");
-    add ("./samples/**/project.json");
+    add ("./samples/*/*/packages.config");
+    add ("./samples/*/*/project.json");
     // sample project files
-    add ("./samples/**/*.nuget.targets");
-    add ("./samples/**/*.csproj");
+    add ("./samples/*/*/*.nuget.targets");
+    add ("./samples/*/*/*.csproj");
     // update
     foreach (var file in files) {
         UpdateSkiaSharpVersion (file, versions);
@@ -380,10 +380,6 @@ Task ("clean-managed").Does (() =>
     CleanDirectories ("./source/*/*/obj");
     CleanDirectories ("./source/*/*/Generated Files");
     CleanDirectories ("./source/packages");
-
-    CleanDirectories ("./samples/BasicSamples/*/bin");
-    CleanDirectories ("./samples/BasicSamples/*/obj");
-    CleanDirectories ("./samples/BasicSamples/*/packages");
 
     if (DirectoryExists ("./output"))
         DeleteDirectory ("./output", true);
