@@ -184,8 +184,8 @@ Task ("samples")
     ClearSkiaSharpNuGetCache ();
 
     if (IsRunningOnUnix ()) {
-        RunNuGetRestore ("./samples/Skia.OSX.Demo/Skia.OSX.Demo.sln");
-        DotNetBuild ("./samples/Skia.OSX.Demo/Skia.OSX.Demo.sln", c => { 
+        RunNuGetRestore ("./samples/SkiaSharpSample.MacSample/SkiaSharpSample.MacSample.sln");
+        DotNetBuild ("./samples/SkiaSharpSample.MacSample/SkiaSharpSample.MacSample.sln", c => { 
             c.Configuration = "Release"; 
         });
         RunNuGetRestore ("./samples/SkiaSharpSample.FormsSample/SkiaSharpSample.FormsSample.Mac.sln");
@@ -198,38 +198,28 @@ Task ("samples")
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "iPhoneSimulator" };
         });
-        RunNuGetRestore ("./samples/Skia.OSX.GLDemo/Skia.OSX.GLDemo.sln");
-        DotNetBuild ("./samples/Skia.OSX.GLDemo/Skia.OSX.GLDemo.sln", c => { 
-            c.Configuration = "Release"; 
-        });
     }
     
     if (IsRunningOnWindows ()) {
-        RunNuGetRestore ("./samples/Skia.WPF.Demo/Skia.WPF.Demo.sln");
-        DotNetBuild ("./samples/Skia.WPF.Demo/Skia.WPF.Demo.sln", c => { 
+        RunNuGetRestore ("./samples/SkiaSharpSample.WPFSample/SkiaSharpSample.WPFSample.sln");
+        DotNetBuild ("./samples/SkiaSharpSample.WPFSample/SkiaSharpSample.WPFSample.sln", c => { 
             c.Configuration = "Release";
             c.Properties ["Platform"] = new [] { "x86" };
         });
-        RunNuGetRestore ("./samples/Skia.UWP.Demo/Skia.UWP.Demo.sln");
-        DotNetBuild ("./samples/Skia.UWP.Demo/Skia.UWP.Demo.sln", c => { 
+        RunNuGetRestore ("./samples/SkiaSharpSample.UWPSample/SkiaSharpSample.UWPSample.sln");
+        DotNetBuild ("./samples/SkiaSharpSample.UWPSample/SkiaSharpSample.UWPSample.sln", c => { 
             c.Configuration = "Release"; 
         });
         RunNuGetRestore ("./samples/SkiaSharpSample.FormsSample/SkiaSharpSample.FormsSample.Windows.sln");
         DotNetBuild ("./samples/SkiaSharpSample.FormsSample/SkiaSharpSample.FormsSample.Windows.sln", c => { 
             c.Configuration = "Release"; 
         });
-        RunNuGetRestore ("./samples/Skia.WindowsDesktop.GLDemo/Skia.WindowsDesktop.GLDemo.sln");
-        DotNetBuild ("./samples/Skia.WindowsDesktop.GLDemo/Skia.WindowsDesktop.GLDemo.sln", c => { 
+        RunNuGetRestore ("./samples/SkiaSharpSample.WindowsSample/SkiaSharpSample.WindowsSample.sln");
+        DotNetBuild ("./samples/SkiaSharpSample.WindowsSample/SkiaSharpSample.WindowsSample.sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "x86" };
         });
     }
-    
-    RunNuGetRestore ("./samples/Skia.WindowsDesktop.Demo/Skia.WindowsDesktop.Demo.sln");
-    DotNetBuild ("./samples/Skia.WindowsDesktop.Demo/Skia.WindowsDesktop.Demo.sln", c => { 
-        c.Configuration = "Release"; 
-        c.Properties ["Platform"] = new [] { "x86" };
-    });
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
