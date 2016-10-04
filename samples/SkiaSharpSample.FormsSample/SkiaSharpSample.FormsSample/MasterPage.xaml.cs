@@ -54,8 +54,8 @@ namespace SkiaSharpSample.FormsSample
 					try
 					{
 						// get the samples in a list
-						var samples = Samples.SelectMany(g => g).Distinct().ToList();
-						var lastSample = samples.First();
+						var distinct = GetFilteredSamples(string.Empty).SelectMany(g => g).Distinct().ToList();
+						var lastSample = distinct.First();
 						while (!token.IsCancellationRequested)
 						{
 							// display the sample
@@ -65,12 +65,12 @@ namespace SkiaSharpSample.FormsSample
 							await Task.Delay(3000, token);
 
 							// select the next one
-							var idx = samples.IndexOf(lastSample) + 1;
-							if (idx >= samples.Count)
+							var idx = distinct.IndexOf(lastSample) + 1;
+							if (idx >= distinct.Count)
 							{
 								idx = 0;
 							}
-							lastSample = samples[idx];
+							lastSample = distinct[idx];
 						}
 					}
 					catch (TaskCanceledException)
