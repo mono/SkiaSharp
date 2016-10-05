@@ -94,6 +94,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Include="project.json" />
+    <None Include="UWPSample_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.xaml.cs">
@@ -108,13 +109,8 @@
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
-    <None Include="SkiaSharpSample.UWPSample_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\..\..\native-builds\lib\uwp\x86\libSkiaSharp.dll">
-      <Link>libSkiaSharp.dll</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -133,20 +129,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\binding\SkiaSharp.UWP\SkiaSharp.UWP.csproj">
-      <Project>{bab615aa-956e-4079-b260-dd7b1f52ec7d}</Project>
-      <Name>SkiaSharp.UWP</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.Interop.UWP\SkiaSharp.Views.Interop.UWP.vcxproj">
-      <Project>{162d75e5-b52a-4b43-b896-5d3f3a7ab90c}</Project>
-      <Name>SkiaSharp.Views.Interop.UWP</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.UWP\SkiaSharp.Views.UWP.csproj">
-      <Project>{8bb20362-91a2-4206-944d-634070eac6f3}</Project>
-      <Name>SkiaSharp.Views.UWP</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <SDKReference Include="WindowsDesktop, Version=10.0.10240.0">
