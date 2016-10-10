@@ -37,12 +37,30 @@ namespace SkiaSharp
 		
 		public static GRGlInterface CreateDefaultInterface ()
 		{
-			return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_default_interface ());
+			// first try ANGLE, then fall back to the OpenGL-based
+			return CreateNativeAngleInterface () ?? CreateNativeGlInterface ();
 		}
 
+		[Obsolete ("Use CreateNativeGlInterface() or CreateDefaultInterface() instead. This method will be removed in the next release.")]
 		public static GRGlInterface CreateNativeInterface ()
 		{
+			return CreateNativeGlInterface ();
+		}
+
+		public static GRGlInterface CreateNativeGlInterface ()
+		{
+			// the native code will automatically return null on non-OpenGL platforms, such as UWP
 			return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_create_native_interface ());
+		}
+		
+		public static GRGlInterface CreateNativeAngleInterface ()
+		{
+#if DESKTOP || WINDOWS_UWP
+			return AssembleAngleInterface (AngleLoader.GetProc);
+#else
+			// return null on non-DirectX platforms: everything except Windows
+			return null;
+#endif
 		}
 
 		public static GRGlInterface AssembleInterface (GRGlGetProcDelegate get)
@@ -52,6 +70,19 @@ namespace SkiaSharp
 
 		public static GRGlInterface AssembleInterface (object context, GRGlGetProcDelegate get)
 		{
+#if DESKTOP || WINDOWS_UWP
+			var angle = AssembleAngleInterface (context, get);
+#endif
+			// always use ANGLE on UWP
+#if WINDOWS_UWP
+			return angle;
+#else
+			// first try ANGLE on Desktop
+#if DESKTOP
+			if (angle != null)
+				return angle;
+#endif
+			// always use the default on non-Windows
 			var del = Marshal.GetFunctionPointerForDelegate (getProcDelegate);
 
 			var ctx = new GRGlGetProcDelegateContext (context, get);
@@ -59,6 +90,18 @@ namespace SkiaSharp
 			var glInterface = GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_interface (ptr, del));
 			GRGlGetProcDelegateContext.Free (ptr);
 			return glInterface;
+#endif
+		}
+
+		public static GRGlInterface AssembleAngleInterface (GRGlGetProcDelegate get)
+		{
+			return AssembleAngleInterface (null, get);
+		}
+
+		public static GRGlInterface AssembleAngleInterface (object context, GRGlGetProcDelegate get)
+		{
+			// ANGLE is just a GLES v2 over DX v9+
+			return AssembleGlesInterface (context, get);
 		}
 
 		public static GRGlInterface AssembleGlInterface (GRGlGetProcDelegate get)
@@ -133,6 +176,9 @@ namespace SkiaSharp
 		// us from having to marshal the user's callback too. 
 		private struct GRGlGetProcDelegateContext
 		{
+			// instead of pinning the struct, we pin a GUID which is paired to the struct
+			private static readonly IDictionary<Guid, GRGlGetProcDelegateContext> contexts = new Dictionary<Guid, GRGlGetProcDelegateContext>();
+
 			// the "managed version" of the callback 
 			public readonly GRGlGetProcDelegate GetProc;
 			public readonly object Context;
@@ -146,7 +192,11 @@ namespace SkiaSharp
 			// wrap this context into a "native" pointer
 			public IntPtr Wrap ()
 			{
-				var gc = GCHandle.Alloc (this, GCHandleType.Pinned);
+				var guid = Guid.NewGuid ();
+				lock (contexts) {
+					contexts.Add (guid, this);
+				}
+				var gc = GCHandle.Alloc (guid, GCHandleType.Pinned);
 				return GCHandle.ToIntPtr (gc);
 			}
 
@@ -154,16 +204,75 @@ namespace SkiaSharp
 			public static GRGlGetProcDelegateContext Unwrap (IntPtr ptr)
 			{
 				var gchandle = GCHandle.FromIntPtr (ptr);
-				return (GRGlGetProcDelegateContext) gchandle.Target;
+				var guid = (Guid) gchandle.Target;
+				lock (contexts) {
+					GRGlGetProcDelegateContext value;
+					contexts.TryGetValue (guid, out value);
+					return value;
+				}
 			}
 
 			// unwrap and free the context
 			public static void Free (IntPtr ptr)
 			{
 				var gchandle = GCHandle.FromIntPtr (ptr);
+				var guid = (Guid) gchandle.Target;
+				lock (contexts) {
+					contexts.Remove (guid);
+				}
 				gchandle.Free ();
 			}
 		}
+
+#if DESKTOP || WINDOWS_UWP
+		private static class AngleLoader
+		{
+			private static readonly IntPtr libEGL;
+			private static readonly IntPtr libGLESv2;
+
+#if WINDOWS_UWP
+			[DllImport ("Kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi)]
+			private static extern IntPtr LoadPackagedLibrary ([MarshalAs (UnmanagedType.LPWStr)] string lpFileName, uint Reserved);
+
+			private static IntPtr LoadLibrary (string lpFileName) => LoadPackagedLibrary(lpFileName, 0);
+#else
+			[DllImport ("Kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi)]
+			private static extern IntPtr LoadLibrary ([MarshalAs (UnmanagedType.LPStr)] string lpFileName);
+#endif
+
+			[DllImport ("Kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi)]
+			private static extern IntPtr GetProcAddress (IntPtr hModule, [MarshalAs (UnmanagedType.LPStr)] string lpProcName);
+
+			[DllImport ("libEGL.dll")]
+			private static extern IntPtr eglGetProcAddress ([MarshalAs (UnmanagedType.LPStr)] string procname);
+
+			static AngleLoader()
+			{
+				libEGL = LoadLibrary ("libEGL.dll");
+				if (Marshal.GetLastWin32Error () != 0 || libEGL == IntPtr.Zero)
+					throw new DllNotFoundException ("Unable to load libEGL.dll.");
+
+				libGLESv2 = LoadLibrary ("libGLESv2.dll");
+				if (Marshal.GetLastWin32Error () != 0 || libGLESv2 == IntPtr.Zero)
+					throw new DllNotFoundException ("Unable to load libGLESv2.dll.");
+			}
+
+			// function to assemble the ANGLE interface
+			public static IntPtr GetProc (object context, string name)
+			{
+				IntPtr proc = GetProcAddress (libGLESv2, name);
+				if (proc == IntPtr.Zero)
+				{
+					proc = GetProcAddress (libEGL, name);
+				}
+				if (proc == IntPtr.Zero)
+				{
+					proc = eglGetProcAddress (name);
+				}
+				return proc;
+			}
+		}
+#endif
 	}
 }
 

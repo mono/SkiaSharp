@@ -1,0 +1,91 @@
+using System;
+using Android.Opengl;
+using Android.Runtime;
+using Javax.Microedition.Khronos.Egl;
+using Javax.Microedition.Khronos.Opengles;
+
+namespace SkiaSharp.Views
+{
+	public abstract class SKGLSurfaceViewRenderer : Java.Lang.Object, GLSurfaceView.IRenderer
+	{
+		private GRContext context;
+		private GRBackendRenderTargetDesc renderTarget;
+
+		protected abstract void OnDrawFrame(SKSurface surface, GRBackendRenderTargetDesc renderTarget);
+
+		void GLSurfaceView.IRenderer.OnDrawFrame(IGL10 gl)
+		{
+			// create the surface
+			using (var surface = SKSurface.Create(context, renderTarget))
+			{
+				// draw using SkiaSharp
+				OnDrawFrame(surface, renderTarget);
+
+				surface.Canvas.Flush();
+			}
+
+			// flush the SkiaSharp contents to GL
+			context.Flush();
+		}
+
+		void GLSurfaceView.IRenderer.OnSurfaceChanged(IGL10 gl, int width, int height)
+		{
+			GLES20.GlViewport(0, 0, width, height);
+
+			renderTarget.Width = width;
+			renderTarget.Height = height;
+		}
+
+		void GLSurfaceView.IRenderer.OnSurfaceCreated(IGL10 gl, EGLConfig config)
+		{
+			FreeContext();
+
+			// get the config
+			var egl = EGLContext.EGL.JavaCast<IEGL10>();
+			var disp = egl.EglGetCurrentDisplay();
+
+			// stencil buffers
+			int[] stencilbuffers = new int[1];
+			egl.EglGetConfigAttrib(disp, config, EGL10.EglStencilSize, stencilbuffers);
+
+			// samples
+			int[] samples = new int[1];
+			egl.EglGetConfigAttrib(disp, config, EGL10.EglSamples, samples);
+
+			// get the frame buffer
+			int[] framebuffers = new int[1];
+			gl.GlGetIntegerv(GLES20.GlFramebufferBinding, framebuffers, 0);
+
+			// create the SkiaSharp context
+			var glInterface = GRGlInterface.CreateNativeGlInterface();
+			context = GRContext.Create(GRBackend.OpenGL, glInterface);
+
+			// create the render target
+			renderTarget = new GRBackendRenderTargetDesc
+			{
+				Width = 0, // set later
+				Height = 0, // set later
+				Config = GRPixelConfig.Rgba8888,
+				Origin = GRSurfaceOrigin.TopLeft,
+				SampleCount = samples[0],
+				StencilBits = stencilbuffers[0],
+				RenderTargetHandle = (IntPtr)framebuffers[0],
+			};
+		}
+
+		protected override void Dispose(bool disposing)
+		{
+			base.Dispose(disposing);
+			FreeContext();
+		}
+
+		private void FreeContext()
+		{
+			if (context != null)
+			{
+				context.Dispose();
+				context = null;
+			}
+		}
+	}
+}
