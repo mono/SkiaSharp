@@ -82,8 +82,8 @@ namespace SkiaSharpSample.WindowsSample
 					canvas.Visible = true;
 					break;
 				case SampleBackends.OpenGL:
-					glview.Visible = false;
-					canvas.Visible = true;
+					glview.Visible = true;
+					canvas.Visible = false;
 					break;
 				default:
 					MessageBox.Show(
