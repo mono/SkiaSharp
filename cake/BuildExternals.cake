@@ -148,7 +148,7 @@ Task ("externals-windows")
 {
     var buildArch = new Action<string, string, string> ((platform, skiaArch, dir) => {
         RunGyp ("skia_arch_type='" + skiaArch + "' skia_gpu=1", "msvs");
-        ProcessSolutionProjects ("native-builds/libSkiaSharp_uwp/libSkiaSharp_" + dir + ".sln", (projectName, projectPath) => {
+        ProcessSolutionProjects ("native-builds/libSkiaSharp_windows/libSkiaSharp_" + dir + ".sln", (projectName, projectPath) => {
             if (projectName != "libSkiaSharp") {
                 RedirectBuildOutputs (projectPath);
             }
