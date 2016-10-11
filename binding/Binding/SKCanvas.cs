@@ -44,7 +44,13 @@ namespace SkiaSharp
 			return SkiaApi.sk_canvas_save_layer (Handle, IntPtr.Zero, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
-		public void DrawColor (SKColor color, SKXferMode mode = SKXferMode.Src)
+		[Obsolete ("Use DrawColor(SKColor, SKBlendMode) instead.")]
+		public void DrawColor (SKColor color, SKXferMode mode)
+		{
+			DrawColor (color, (SKBlendMode)(int)mode);
+		}
+
+		public void DrawColor (SKColor color, SKBlendMode mode = SKBlendMode.Src)
 		{
 			SkiaApi.sk_canvas_draw_color (Handle, color, mode);
 		}
@@ -58,12 +64,12 @@ namespace SkiaSharp
 
 		public void Clear ()
 		{
-			DrawColor (SKColors.Empty, SKXferMode.Src);
+			DrawColor (SKColors.Empty, SKBlendMode.Src);
 		}
 
 		public void Clear (SKColor color)
 		{
-			DrawColor (color, SKXferMode.Src);
+			DrawColor (color, SKBlendMode.Src);
 		}
 
 		public void Restore ()
@@ -142,12 +148,24 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_concat (Handle, ref m);
 		}
 
-		public void ClipRect (SKRect rect, SKRegionOperation operation = SKRegionOperation.Intersect, bool antialias = false)
+		[Obsolete ("Use ClipRect(SKRect, SKClipOperation, bool) instead.")]
+		public void ClipRect (SKRect rect, SKRegionOperation operation, bool antialias = false)
+		{
+			ClipRect (rect, (SKClipOperation)(int)operation, antialias);
+		}
+
+		public void ClipRect (SKRect rect, SKClipOperation operation = SKClipOperation.Intersect, bool antialias = false)
 		{
 			SkiaApi.sk_canvas_clip_rect_with_operation (Handle, ref rect, operation, antialias);
 		}
 
-		public void ClipPath (SKPath path, SKRegionOperation operation = SKRegionOperation.Intersect, bool antialias = false)
+		[Obsolete ("Use ClipPath(SKPath, SKClipOperation, bool) instead.")]
+		public void ClipPath (SKPath path, SKRegionOperation operation, bool antialias = false)
+		{
+			ClipPath (path, (SKClipOperation)(int)operation, antialias);
+		}
+
+		public void ClipPath (SKPath path, SKClipOperation operation = SKClipOperation.Intersect, bool antialias = false)
 		{
 			if (path == null)
 				throw new ArgumentNullException (nameof (path));
@@ -390,26 +408,80 @@ namespace SkiaSharp
 
 		public void DrawBitmapLattice (SKBitmap bitmap, int[] xDivs, int[] yDivs, SKRect dst, SKPaint paint = null)
 		{
-			if (bitmap == null)
-				throw new ArgumentNullException (nameof (bitmap));
-			if (xDivs == null)
-				throw new ArgumentNullException (nameof (xDivs));
-			if (yDivs == null)
-				throw new ArgumentNullException (nameof (yDivs));
-
-			SkiaApi.sk_canvas_draw_bitmap_lattice (Handle, bitmap.Handle, xDivs, xDivs.Length, yDivs, yDivs.Length, ref dst, paint == null ? IntPtr.Zero : paint.Handle);
+			var lattice = new SKLattice {
+				Bounds = null,
+				Flags = null,
+				XDivs = xDivs,
+				YDivs = yDivs
+			};
+			DrawBitmapLattice (bitmap, lattice, dst, paint);
 		}
 
 		public void DrawImageLattice (SKImage image, int[] xDivs, int[] yDivs, SKRect dst, SKPaint paint = null)
 		{
+			var lattice = new SKLattice {
+				Bounds = null,
+				Flags = null,
+				XDivs = xDivs,
+				YDivs = yDivs
+			};
+			DrawImageLattice (image, lattice, dst, paint);
+		}
+		
+		public unsafe void DrawBitmapLattice (SKBitmap bitmap, SKLattice lattice, SKRect dst, SKPaint paint = null)
+		{
+			if (bitmap == null)
+				throw new ArgumentNullException (nameof (bitmap));
+			if (lattice.XDivs == null)
+				throw new ArgumentNullException (nameof (lattice.XDivs));
+			if (lattice.YDivs == null)
+				throw new ArgumentNullException (nameof (lattice.YDivs));
+
+			fixed (int* x = lattice.XDivs)
+			fixed (int* y = lattice.YDivs)
+			fixed (SKLatticeFlags* f = lattice.Flags) {
+				var nativeLattice = new SKLatticeInternal {
+					fBounds = null,
+					fFlags = f,
+					fXCount = lattice.XDivs.Length,
+					fXDivs = x,
+					fYCount = lattice.YDivs.Length,
+					fYDivs = y,
+				};
+				if (lattice.Bounds != null) {
+					var bounds = lattice.Bounds.Value;
+					nativeLattice.fBounds = &bounds;
+				}
+				SkiaApi.sk_canvas_draw_bitmap_lattice (Handle, bitmap.Handle, ref nativeLattice, ref dst, paint == null ? IntPtr.Zero : paint.Handle);
+			}
+		}
+
+		public unsafe void DrawImageLattice (SKImage image, SKLattice lattice, SKRect dst, SKPaint paint = null)
+		{
 			if (image == null)
 				throw new ArgumentNullException (nameof (image));
-			if (xDivs == null)
-				throw new ArgumentNullException (nameof (xDivs));
-			if (yDivs == null)
-				throw new ArgumentNullException (nameof (yDivs));
-
-			SkiaApi.sk_canvas_draw_image_lattice (Handle, image.Handle, xDivs, xDivs.Length, yDivs, yDivs.Length, ref dst, paint == null ? IntPtr.Zero : paint.Handle);
+			if (lattice.XDivs == null)
+				throw new ArgumentNullException (nameof (lattice.XDivs));
+			if (lattice.YDivs == null)
+				throw new ArgumentNullException (nameof (lattice.YDivs));
+			
+			fixed (int* x = lattice.XDivs)
+			fixed (int* y = lattice.YDivs)
+			fixed (SKLatticeFlags* f = lattice.Flags) {
+				var nativeLattice = new SKLatticeInternal {
+					fBounds = null,
+					fFlags = f,
+					fXCount = lattice.XDivs.Length,
+					fXDivs = x,
+					fYCount = lattice.YDivs.Length,
+					fYDivs = y,
+				};
+				if (lattice.Bounds != null) {
+					var bounds = lattice.Bounds.Value;
+					nativeLattice.fBounds = &bounds;
+				}
+				SkiaApi.sk_canvas_draw_image_lattice (Handle, image.Handle, ref nativeLattice, ref dst, paint == null ? IntPtr.Zero : paint.Handle);
+			}
 		}
 
 		public void ResetMatrix ()

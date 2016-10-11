@@ -67,7 +67,7 @@ var TransformToUWP = new Action<FilePath, string> ((projectFilePath, platform) =
         
     if (rootNamespace == "pdf") {
         // remove sfntly as this is not supported for winrt
-        RemoveXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", "SK_SFNTLY_SUBSETTER=\"sample/chromium/font_subsetter.h\"");
+        RemoveXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", "SK_PDF_USE_SFNTLY");
     } else if (rootNamespace == "ports") {
         RemoveFileReference (xdoc.Root, "SkFontHost_win.cpp");
         AddXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", ";SK_HAS_DWRITE_1_H;SK_HAS_DWRITE_2_H;");

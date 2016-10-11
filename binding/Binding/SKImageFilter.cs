@@ -165,6 +165,27 @@ namespace SkiaSharp
 			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_picture_for_localspace(picture.Handle, ref cropRect, filterQuality));
 		}
 
+		public static SKImageFilter CreateTile(SKRect src, SKRect dst, SKImageFilter input)
+		{
+			if (input == null)
+				throw new ArgumentNullException(nameof(input));
+			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_tile(ref src, ref dst, input.Handle));
+		}
+
+		public static SKImageFilter CreateXfermode(SKBlendMode mode, SKImageFilter background, SKImageFilter foreground = null, SKImageFilter.CropRect cropRect = null)
+		{
+			if (background == null)
+				throw new ArgumentNullException(nameof(background));
+			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_xfermode(mode, background.Handle, foreground == null ? IntPtr.Zero : foreground.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
+		}
+
+		public static SKImageFilter CreateArithmetic(float k1, float k2, float k3, float k4, bool enforcePMColor, SKImageFilter background, SKImageFilter foreground = null, SKImageFilter.CropRect cropRect = null)
+		{
+			if (background == null)
+				throw new ArgumentNullException(nameof(background));
+			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_arithmetic(k1, k2, k3, k4, enforcePMColor, background.Handle, foreground == null ? IntPtr.Zero : foreground.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
+		}
+
 		public class CropRect : SKObject
 		{
 			internal CropRect(IntPtr handle, bool owns)

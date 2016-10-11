@@ -253,10 +253,19 @@ namespace SkiaSharp
 
 		public SKXferMode XferMode {
 			get {
-				return SkiaApi.sk_paint_get_xfermode_mode(Handle);
+				return (SKXferMode)BlendMode;
 			}
 			set {
-				SkiaApi.sk_paint_set_xfermode_mode (Handle, value);
+				BlendMode = (SKBlendMode)value;
+			}
+		}
+
+		public SKBlendMode BlendMode {
+			get {
+				return SkiaApi.sk_paint_get_blendmode(Handle);
+			}
+			set {
+				SkiaApi.sk_paint_set_blendmode (Handle, value);
 			}
 		}
 

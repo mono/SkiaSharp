@@ -513,6 +513,38 @@ namespace SkiaSharp
 		Luminosity,
 	}
 
+	public enum SKBlendMode {
+		Clear,
+		Src,
+		Dst,
+		SrcOver,
+		DstOver,
+		SrcIn,
+		DstIn,
+		SrcOut,
+		DstOut,
+		SrcATop,
+		DstATop,
+		Xor,
+		Plus,
+		Modulate,
+		Screen,
+		Overlay,
+		Darken,
+		Lighten,
+		ColorDodge,
+		ColorBurn,
+		HardLight,
+		SoftLight,
+		Difference,
+		Exclusion,
+		Multiply,
+		Hue,
+		Saturation,
+		Color,
+		Luminosity,
+	}
+
 	public enum SKClipType {
 		Intersect, Difference 
 	}
@@ -635,6 +667,12 @@ namespace SkiaSharp
 		XOR,
 		ReverseDifference,
 		Replace,
+	}
+
+	public enum SKClipOperation
+	{
+		Difference,
+		Intersect,
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -776,42 +814,29 @@ namespace SkiaSharp
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
+	internal unsafe struct SKCodecOptionsInternal {
+		public SKZeroInitialized fZeroInitialized;
+		public SKRectI* fSubset;
+	}
+
 	public struct SKCodecOptions {
 		public static readonly SKCodecOptions Default;
-
-		private SKZeroInitialized zeroInitialized;
-		private SKRectI subset;
-		[MarshalAs(UnmanagedType.I1)]
-		private bool hasSubset;
 
 		static SKCodecOptions ()
 		{
 			Default = new SKCodecOptions (SKZeroInitialized.No);
 		}
 		public SKCodecOptions (SKZeroInitialized zeroInitialized) {
-			this.zeroInitialized = zeroInitialized;
-			this.subset = SKRectI.Empty;
-			this.hasSubset = false;
+			ZeroInitialized = zeroInitialized;
+			Subset = null;
 		}
 		public SKCodecOptions (SKZeroInitialized zeroInitialized, SKRectI subset) {
-			this.zeroInitialized = zeroInitialized;
-			this.subset = subset;
-			this.hasSubset = true;
+			ZeroInitialized = zeroInitialized;
+			Subset = subset;
 		}
-		public SKZeroInitialized ZeroInitialized{
-			get { return zeroInitialized; }
-			set { zeroInitialized = value; }
-		}
-
-		public SKRectI Subset{
-			get { return subset; }
-			set { subset = value; }
-		}
-
-		public bool HasSubset{
-			get { return hasSubset; }
-			set { hasSubset = value; }
-		}
+		public SKZeroInitialized ZeroInitialized { get; set; }
+		public SKRectI? Subset { get; set; }
+		public bool HasSubset => Subset != null;
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -2513,6 +2538,14 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		private bool useShaderSwizzling;
 		[MarshalAs(UnmanagedType.I1)]
 		private bool doManualMipmapping;
+		[MarshalAs(UnmanagedType.I1)]
+		private bool enableInstancedRendering;
+		[MarshalAs(UnmanagedType.I1)]
+		private bool disableDistanceFieldPaths;
+		[MarshalAs(UnmanagedType.I1)]
+		private bool allowPathMaskCaching;
+		[MarshalAs(UnmanagedType.I1)]
+		private bool forceSWPathMasks;
 
 		public bool SuppressPrints {
 			get { return suppressPrints; }
@@ -2566,8 +2599,49 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			get { return doManualMipmapping; }
 			set { doManualMipmapping = value; }
 		}
+		public bool EnableInstancedRendering {
+			get { return enableInstancedRendering; }
+			set { enableInstancedRendering = value; }
+		}
+		public bool DisableDistanceFieldPaths {
+			get { return disableDistanceFieldPaths; }
+			set { disableDistanceFieldPaths = value; }
+		}
+		public bool AllowPathMaskCaching {
+			get { return allowPathMaskCaching; }
+			set { allowPathMaskCaching = value; }
+		}
+		public bool ForceSWPathMasks {
+			get { return forceSWPathMasks; }
+			set { forceSWPathMasks = value; }
+		}
+
+		public static GRContextOptions Default {
+			get {
+				return new GRContextOptions {
+					suppressPrints = false,
+					maxTextureSizeOverride = int.MaxValue,
+					maxTileSizeOverride = 0,
+					suppressDualSourceBlending = false,
+					bufferMapThreshold = -1,
+					useDrawInsteadOfPartialRenderTargetWrite = false,
+					immediateMode = false,
+					clipBatchToBounds = false,
+					drawBatchBounds = false,
+					maxBatchLookback = -1,
+					maxBatchLookahead = -1,
+					useShaderSwizzling = false,
+					doManualMipmapping = false,
+					enableInstancedRendering = false,
+					disableDistanceFieldPaths = false,
+					allowPathMaskCaching = false,
+					forceSWPathMasks = false
+				};
+			}
+		}
 	}
 	
+	[Obsolete ("Use GRContext.Flush() instead.")]
 	public enum GRContextFlushBits {
 		None = 0,
 		Discard = 0x2,
@@ -2586,5 +2660,28 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		Convex,
 		Concave,
 	};
+
+	public enum SKLatticeFlags {
+		Default,
+		Transparent = 1 << 0,
+	};
+
+	[StructLayout(LayoutKind.Sequential)]
+	internal unsafe struct SKLatticeInternal {
+		public int* fXDivs;
+		public int* fYDivs;
+		public SKLatticeFlags* fFlags;
+		public int fXCount;
+		public int fYCount;
+		public SKRectI* fBounds;
+	}
+
+	public struct SKLattice {
+		public int[] XDivs { get; set; }
+		public int[] YDivs { get; set; }
+		public SKLatticeFlags[] Flags { get; set; }
+		public SKRectI? Bounds { get; set; }
+	}
+
 }
 

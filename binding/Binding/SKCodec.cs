@@ -96,9 +96,17 @@ namespace SkiaSharp
 			}
 		}
 
-		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
+		public unsafe SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
 		{
-			return SkiaApi.sk_codec_get_pixels (Handle, ref info, pixels, (IntPtr)rowBytes, ref options, colorTable, ref colorTableCount);
+			var nativeOptions = new SKCodecOptionsInternal {
+				fZeroInitialized = options.ZeroInitialized,
+				fSubset = null
+			};
+			if (options.HasSubset) {
+				var subset = options.Subset.Value;
+				nativeOptions.fSubset = &subset;
+			}
+			return SkiaApi.sk_codec_get_pixels (Handle, ref info, pixels, (IntPtr)rowBytes, ref nativeOptions, colorTable, ref colorTableCount);
 		}
 
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)

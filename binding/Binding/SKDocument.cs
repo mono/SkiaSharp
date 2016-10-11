@@ -49,9 +49,9 @@ namespace SkiaSharp
 			SkiaApi.sk_document_end_page (Handle);
 		}
 
-		public bool Close ()
+		public void Close ()
 		{
-			return SkiaApi.sk_document_close (Handle);
+			SkiaApi.sk_document_close (Handle);
 		}
 
 		public static SKDocument CreatePdf (string path, float dpi = DefaultRasterDpi)
