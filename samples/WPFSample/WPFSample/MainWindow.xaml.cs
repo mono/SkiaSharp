@@ -89,8 +89,8 @@ namespace SkiaSharpSample.WPFSample
 					canvas.Visibility = Visibility.Visible;
 					break;
 				case SampleBackends.OpenGL:
-					glhost.Visibility = Visibility.Collapsed;
-					canvas.Visibility = Visibility.Visible;
+					glhost.Visibility = Visibility.Visible;
+					canvas.Visibility = Visibility.Collapsed;
 					break;
 				default:
 					MessageBox.Show(
