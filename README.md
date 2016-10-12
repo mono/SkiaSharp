@@ -97,9 +97,9 @@ option in the bootstrapper script.
 
 Here are some links to show the differences in our code as compared to Google's.
 
-What version are we on? [**m54**](https://github.com/google/skia/tree/chrome/m54)  
-Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/xamarin-mobile-bindings...google:chrome/m54)  
-What have we added? [Compare](https://github.com/google/skia/compare/chrome/m54...mono:xamarin-mobile-bindings)  
+What version are we on? [**m55**](https://github.com/google/skia/tree/chrome/m55)  
+Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/update-m55...google:chrome/m55)  
+What have we added? [Compare](https://github.com/google/skia/compare/chrome/m55...mono:update-m55)  
 
 ## Where is Windows Phone 8 / Store 8
  
