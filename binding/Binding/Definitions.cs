@@ -834,6 +834,10 @@ namespace SkiaSharp
 			ZeroInitialized = zeroInitialized;
 			Subset = subset;
 		}
+		public SKCodecOptions (SKRectI subset) {
+			ZeroInitialized = SKZeroInitialized.No;
+			Subset = subset;
+		}
 		public SKZeroInitialized ZeroInitialized { get; set; }
 		public SKRectI? Subset { get; set; }
 		public bool HasSubset => Subset != null;
