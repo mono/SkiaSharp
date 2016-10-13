@@ -945,6 +945,17 @@ namespace SkiaSharp
 				x.ToString (CultureInfo.CurrentCulture),
 				y.ToString (CultureInfo.CurrentCulture));
 		}
+		
+		public void Offset (SKPoint p)
+		{
+			Offset (p.X, p.Y);
+		}
+		
+		public void Offset (float dx, float dy)
+		{
+			x += dx;
+			y += dy;
+		}
 
 		public static SKPoint Add (SKPoint pt, SKSizeI sz) => pt + sz;
 		public static SKPoint Add (SKPoint pt, SKSize sz) => pt + sz;

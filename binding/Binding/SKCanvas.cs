@@ -91,6 +91,11 @@ namespace SkiaSharp
 		{
 			SkiaApi.sk_canvas_translate (Handle, point.X, point.Y);
 		}
+		
+		public void Scale (float s)
+		{
+			SkiaApi.sk_canvas_scale (Handle, s, s);
+		}
 
 		public void Scale (float sx, float sy)
 		{
