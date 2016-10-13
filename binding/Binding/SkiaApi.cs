@@ -501,6 +501,8 @@ namespace SkiaSharp
 		public extern static bool sk_path_parse_svg_string (sk_path_t cpath, [MarshalAs(UnmanagedType.LPStr)] string str);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_to_svg_string (sk_path_t cpath, sk_string_t str);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_path_convert_conic_to_quads(ref SKPoint p0, ref SKPoint p1, ref SKPoint p2, float w, [Out] SKPoint[] pts, int pow2);
 
 		// path ops
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]

@@ -354,6 +354,26 @@ namespace SkiaSharp
 			return path;
 		}
 		
+		public static SKPoint [] ConvertConicToQuads (SKPoint p0, SKPoint p1, SKPoint p2, float w, int pow2)
+		{
+			SKPoint [] pts;
+			ConvertConicToQuads(p0, p1, p2, w, out pts, pow2);
+			return pts;
+		}
+		
+		public static int ConvertConicToQuads (SKPoint p0, SKPoint p1, SKPoint p2, float w, out SKPoint [] pts, int pow2)
+		{
+			int quadCount = 1 << pow2;
+			int ptCount = 2 * quadCount + 1;
+			pts = new SKPoint [ptCount];
+			return ConvertConicToQuads(p0, p1, p2, w, pts, pow2);
+		}
+		
+		public static int ConvertConicToQuads (SKPoint p0, SKPoint p1, SKPoint p2, float w, SKPoint [] pts, int pow2)
+		{
+			return SkiaApi.sk_path_convert_conic_to_quads(ref p0, ref p1, ref p2, w, pts, pow2);
+		}
+		
 		public class Iterator : SKNativeObject
 		{
 			SKPath Path => path;
