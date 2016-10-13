@@ -432,6 +432,24 @@ namespace SkiaSharp
 			return GetObject<SKPath>(SkiaApi.sk_paint_get_pos_text_path(Handle, buffer, length, points));
 		}
 
+		public bool GetFillPath(SKPath src, SKPath dst, SKRect cullRect, float resScale = 1)
+		{
+			if (src == null)
+				throw new ArgumentNullException(nameof(src));
+			if (dst == null)
+				throw new ArgumentNullException(nameof(dst));
+			return SkiaApi.sk_paint_get_fill_path(Handle, src.Handle, dst.Handle, ref cullRect, resScale);
+		}
+
+		public bool GetFillPath(SKPath src, SKPath dst, float resScale = 1)
+		{
+			if (src == null)
+				throw new ArgumentNullException(nameof(src));
+			if (dst == null)
+				throw new ArgumentNullException(nameof(dst));
+			return SkiaApi.sk_paint_get_fill_path(Handle, src.Handle, dst.Handle, IntPtr.Zero, resScale);
+		}
+
 		public SKFontMetrics FontMetrics
 		{
 			get

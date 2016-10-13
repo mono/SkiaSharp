@@ -495,6 +495,12 @@ namespace SkiaSharp
 		public extern static bool sk_path_parse_svg_string (sk_path_t cpath, [MarshalAs(UnmanagedType.LPStr)] string str);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_to_svg_string (sk_path_t cpath, sk_string_t str);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_paint_get_fill_path(sk_paint_t paint, sk_path_t src, sk_path_t dst, ref SKRect cullRect, float resScale);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_paint_get_fill_path(sk_paint_t paint, sk_path_t src, sk_path_t dst, IntPtr cullRectZero, float resScale);
 
 		// path ops
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
