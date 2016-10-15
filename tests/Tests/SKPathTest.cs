@@ -211,5 +211,28 @@ namespace SkiaSharp.Tests
 				Assert.AreEqual (14.185303f, tightBounds.Bottom, EPSILON);
 			}
 		}
+
+		[Test]
+		public void MeasuringSegementsWorks ()
+		{
+			const float EPSILON = 0.000001f;
+
+			using (SKPath path = new SKPath ())
+			{
+				path.MoveTo (10f, 10f);
+				path.LineTo (110f, 10f);
+
+				var measure = new SKPathMeasure (path);
+
+				Assert.AreEqual (100f, measure.Length, EPSILON);
+
+				var segment = new SKPath ();
+				var result = measure.GetSegment (20, 50, segment, true);
+				Assert.IsTrue (result);
+				Assert.AreEqual (2, segment.PointCount);
+				Assert.AreEqual (new SKPoint (30, 10), segment.Points [0]);
+				Assert.AreEqual (new SKPoint (60, 10), segment.Points [1]);
+			}
+		}
 	}
 }

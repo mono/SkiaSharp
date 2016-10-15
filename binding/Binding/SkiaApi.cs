@@ -43,6 +43,7 @@ using sk_document_t = System.IntPtr;
 using sk_colorspace_t = System.IntPtr;
 using sk_path_iterator_t = System.IntPtr;
 using sk_path_effect_t = System.IntPtr;
+using sk_pathmeasure_t = System.IntPtr;
 using sk_pixelref_factory_t = System.IntPtr;
 using sk_colortable_t = System.IntPtr;
 using gr_context_t = System.IntPtr;
@@ -503,6 +504,38 @@ namespace SkiaSharp
 		public extern static void sk_path_to_svg_string (sk_path_t cpath, sk_string_t str);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_path_convert_conic_to_quads(ref SKPoint p0, ref SKPoint p1, ref SKPoint p2, float w, [Out] SKPoint[] pts, int pow2);
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_pathmeasure_t sk_pathmeasure_new();
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_pathmeasure_t sk_pathmeasure_new_with_path(sk_path_t path, bool forceClosed, float resScale);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_pathmeasure_destroy(sk_pathmeasure_t pathMeasure);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_pathmeasure_set_path(sk_pathmeasure_t pathMeasure, sk_path_t path, bool forceClosed);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static float sk_pathmeasure_get_length(sk_pathmeasure_t pathMeasure);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_pathmeasure_get_pos_tan(sk_pathmeasure_t pathMeasure, float distance, out SKPoint position, out SKPoint tangent);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_pathmeasure_get_pos_tan(sk_pathmeasure_t pathMeasure, float distance, IntPtr positionZero, out SKPoint tangent);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_pathmeasure_get_pos_tan(sk_pathmeasure_t pathMeasure, float distance, out SKPoint position, IntPtr tangentZero);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_pathmeasure_get_matrix(sk_pathmeasure_t pathMeasure, float distance, out SKMatrix matrix, SKPathMeasure.MatrixFlags flags);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_pathmeasure_get_segment(sk_pathmeasure_t pathMeasure, float start, float stop, sk_path_t dst, bool startWithMoveTo);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_pathmeasure_is_closed(sk_pathmeasure_t pathMeasure);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_pathmeasure_next_contour(sk_pathmeasure_t pathMeasure);
 
 		// path ops
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
