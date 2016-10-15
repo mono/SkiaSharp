@@ -734,6 +734,8 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_picture_t sk_picture_recorder_end_recording(sk_picture_recorder_t r);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_canvas_t sk_picture_get_recording_canvas(sk_picture_recorder_t r);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_picture_unref(sk_image_t t);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static uint sk_picture_get_unique_id(sk_picture_t p);

@@ -23,7 +23,7 @@ namespace SkiaSharp
 		}
 		
 		[Preserve]
-		public SKPictureRecorder (IntPtr handle, bool owns)
+		internal SKPictureRecorder (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
@@ -38,13 +38,15 @@ namespace SkiaSharp
 
 		public SKCanvas BeginRecording (SKRect rect)
 		{
-			return GetObject<SKCanvas> (SkiaApi.sk_picture_recorder_begin_recording (Handle, ref rect));
+			return GetObject<SKCanvas> (SkiaApi.sk_picture_recorder_begin_recording (Handle, ref rect), false);
 		}
 
 		public SKPicture EndRecording ()
 		{
 			return GetObject<SKPicture> (SkiaApi.sk_picture_recorder_end_recording (Handle));
 		}
+
+		public SKCanvas RecordingCanvas => GetObject<SKCanvas> (SkiaApi.sk_picture_get_recording_canvas (Handle), false);
 	}
 }
 
