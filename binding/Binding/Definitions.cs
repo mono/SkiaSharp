@@ -385,6 +385,79 @@ namespace SkiaSharp
 		{
 			return !(left == right);
 		}
+
+		public static SKColor Parse (string hexString)
+		{
+			SKColor color;
+			if (!TryParse (hexString, out color))
+				throw new ArgumentOutOfRangeException (nameof (hexString));
+			return color;
+		}
+
+		public static bool TryParse (string hexString, out SKColor color)
+		{
+			if (string.IsNullOrWhiteSpace (hexString)) {
+				// error
+				color = SKColor.Empty;
+				return false;
+			}
+
+			// clean up string
+			hexString = hexString.Trim ().ToUpperInvariant ();
+			if (hexString [0] == '#')
+				hexString = hexString.Substring (1);
+
+			var len = hexString.Length;
+			if (len == 3 || len == 4) {
+				byte a, r, g, b;
+				// parse [A]
+				if (len == 4) {
+					if (!byte.TryParse (string.Concat (hexString [len - 4], hexString [len - 4]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out a)) {
+						// error
+						color = SKColor.Empty;
+						return false;
+					}
+				} else {
+					a = 255;
+				}
+
+				// parse RGB
+				if (!byte.TryParse (string.Concat (hexString [len - 3], hexString [len - 3]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out r) ||
+					!byte.TryParse (string.Concat (hexString [len - 2], hexString [len - 2]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out g) ||
+					!byte.TryParse (string.Concat (hexString [len - 1], hexString [len - 1]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out b)) {
+					// error
+					color = SKColor.Empty;
+					return false;
+				}
+
+				// success
+				color = new SKColor(r, g, b, a);
+				return true;
+			}
+
+			if (len == 6 || len == 8) {
+				// parse [AA]RRGGBB
+				uint number;
+				if (!uint.TryParse (hexString, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out number)) {
+					// error
+					color = SKColor.Empty;
+					return false;
+				}
+
+				// success
+				color = (SKColor)number;
+
+				// alpha was not provided, so use 255
+				if (len == 6) {
+					color = color.WithAlpha (255);
+				}
+				return true;
+			}
+
+			// error
+			color = SKColor.Empty;
+			return false;
+		}
 	}
 
 	[Flags]
