@@ -2290,14 +2290,29 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			return SkiaApi.sk_matrix_try_invert (ref this, out inverse) != 0;
 		}
 
+		public static void Concat (ref SKMatrix target, SKMatrix first, SKMatrix second)
+		{
+			SkiaApi.sk_matrix_concat (ref target, ref first, ref second);
+		}
+
 		public static void Concat (ref SKMatrix target, ref SKMatrix first, ref SKMatrix second)
 		{
 			SkiaApi.sk_matrix_concat (ref target, ref first, ref second);
 		}
 
+		public static void PreConcat (ref SKMatrix target, SKMatrix matrix)
+		{
+			SkiaApi.sk_matrix_pre_concat (ref target, ref matrix);
+		}
+
 		public static void PreConcat (ref SKMatrix target, ref SKMatrix matrix)
 		{
 			SkiaApi.sk_matrix_pre_concat (ref target, ref matrix);
+		}
+
+		public static void PostConcat (ref SKMatrix target, SKMatrix matrix)
+		{
+			SkiaApi.sk_matrix_post_concat (ref target, ref matrix);
 		}
 
 		public static void PostConcat (ref SKMatrix target, ref SKMatrix matrix)

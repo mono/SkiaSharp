@@ -209,6 +209,11 @@ namespace SkiaSharp
 				SkiaApi.sk_canvas_draw_round_rect (Handle, ref rect, rx, ry, paint.Handle);
 		}
 
+		public void DrawOval (float cx, float cy, float rx, float ry, SKPaint paint)
+		{
+			DrawOval (new SKRect (cx - rx, cy - ry, cx + rx, cy + ry), paint);
+		}
+
 		public void DrawOval (SKRect rect, SKPaint paint)
 		{
 			if (paint == null)
