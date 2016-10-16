@@ -459,6 +459,11 @@ namespace SkiaSharp
 				return metrics;
 			}
 		}
+
+		public SKPaint Clone()
+		{
+			return GetObject<SKPaint>(SkiaApi.sk_paint_clone(Handle));
+		}
 	}
 }
 
