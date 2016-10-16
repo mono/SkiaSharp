@@ -491,7 +491,9 @@ namespace SkiaSharp
 		SemiExpanded     = 6,
 		Expanded         = 7,
 		ExtraExpanded    = 8,
-		UltaExpanded     = 9
+		UltraExpanded    = 9,
+		[Obsolete("Use UltraExpanded instead.")]
+		UltaExpanded     = UltraExpanded
 	};
 
 	public enum SKFontStyleSlant {

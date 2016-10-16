@@ -122,6 +122,11 @@ namespace SkiaSharp
 			}
 		}
 
+		public int FontWeight => SkiaApi.sk_typeface_get_font_weight (Handle);
+		public int FontWidth => SkiaApi.sk_typeface_get_font_width (Handle);
+		public SKFontStyleSlant FontSlant => SkiaApi.sk_typeface_get_font_slant (Handle);
+		public SKTypefaceStyle Style => SkiaApi.sk_typeface_get_style (Handle);
+
 		public UInt32[] GetTableTags()
 		{
 			int tableCount = SkiaApi.sk_typeface_count_tables(Handle);

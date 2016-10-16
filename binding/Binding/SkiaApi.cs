@@ -823,6 +823,14 @@ namespace SkiaSharp
 		public extern static IntPtr sk_typeface_get_table_size(sk_typeface_t typeface, sk_font_table_tag_t tag);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_typeface_get_table_data(sk_typeface_t typeface, sk_font_table_tag_t tag, IntPtr offset, IntPtr length, byte[] data);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_typeface_get_font_weight(sk_typeface_t typeface);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_typeface_get_font_width(sk_typeface_t typeface);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKFontStyleSlant sk_typeface_get_font_slant(sk_typeface_t typeface);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKTypefaceStyle sk_typeface_get_style(sk_typeface_t typeface);
 
 		// Streams
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
