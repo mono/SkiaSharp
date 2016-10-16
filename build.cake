@@ -315,13 +315,13 @@ Task ("set-versions")
     }
 
     // the versions
-    var version = "1.54.0.0";
-    var fileVersion = "1.54.1.0";
+    var version = "1.55.0.0";
+    var fileVersion = "1.55.0.0";
     var versions = new Dictionary<string, string> {
-        { "SkiaSharp", "1.54.1" },
-        { "SkiaSharp.Views", "1.54.1-beta1" },
-        { "SkiaSharp.Views.Forms", "1.54.1-beta1" },
-        { "SkiaSharp.Svg", "1.54.1-beta1" },
+        { "SkiaSharp", "1.55.0" },
+        { "SkiaSharp.Views", "1.55.0-beta1" },
+        { "SkiaSharp.Views.Forms", "1.55.0-beta1" },
+        { "SkiaSharp.Svg", "1.55.0-beta1" },
     };
 
     var files = new List<string> ();
