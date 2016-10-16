@@ -59,6 +59,7 @@ Task ("libs")
         ReplaceTextInFiles ("./binding/Binding/Properties/SkiaSharpAssemblyInfo.cs", "{GIT_SHA}", sha);
         ReplaceTextInFiles ("./source/SkiaSharp.Views/SkiaSharp.Views.Shared/Properties/SkiaSharpViewsAssemblyInfo.cs", "{GIT_SHA}", sha);
         ReplaceTextInFiles ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Shared/Properties/SkiaSharpViewsFormsAssemblyInfo.cs", "{GIT_SHA}", sha);
+        ReplaceTextInFiles ("./source/SkiaSharp.Svg/SkiaSharp.Svg/Properties/SkiaSharpSvgAssemblyInfo.cs", "{GIT_SHA}", sha);
     }
 
     // create all the directories
@@ -103,6 +104,8 @@ Task ("libs")
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms/bin/Release/SkiaSharp.Views.Forms.dll", "./output/portable/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.UWP/bin/Release/SkiaSharp.Views.Forms.dll", "./output/uwp/");
 
+        // copy SVG
+        CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
     }
 
     if (IsRunningOnUnix ()) {
@@ -137,6 +140,9 @@ Task ("libs")
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms/bin/Release/SkiaSharp.Views.Forms.dll", "./output/portable/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Android/bin/Release/SkiaSharp.Views.Forms.dll", "./output/android/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.iOS/bin/Release/SkiaSharp.Views.Forms.dll", "./output/ios/");
+
+        // copy SVG
+        CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
     }
 });
 
@@ -266,6 +272,8 @@ Task ("nuget")
             PackageNuGet ("./nuget/SkiaSharp.Views.Forms.Mac.nuspec", "./output/");
         }
     }
+    // SVG is a PCL
+    PackageNuGet ("./nuget/SkiaSharp.Svg.nuspec", "./output/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -313,6 +321,7 @@ Task ("set-versions")
         { "SkiaSharp", "1.54.1" },
         { "SkiaSharp.Views", "1.54.1-beta1" },
         { "SkiaSharp.Views.Forms", "1.54.1-beta1" },
+        { "SkiaSharp.Svg", "1.54.1-beta1" },
     };
 
     var files = new List<string> ();
@@ -347,6 +356,9 @@ Task ("set-versions")
         version, fileVersion, sha);
     UpdateAssemblyInfo (
         "./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Shared/Properties/SkiaSharpViewsFormsAssemblyInfo.cs",
+        version, fileVersion, sha);
+    UpdateAssemblyInfo (
+        "./source/SkiaSharp.Svg/SkiaSharp.Svg/Properties/SkiaSharpSvgAssemblyInfo.cs",
         version, fileVersion, sha);
 });
 
