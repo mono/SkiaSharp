@@ -542,113 +542,119 @@ namespace SkiaSharp
 		{
 			// stroke
 			var stroke = GetString(style, "stroke").Trim();
-			if (string.IsNullOrEmpty(stroke))
-			{
-				// no change
-			}
-			else if (stroke.Equals("none", StringComparison.OrdinalIgnoreCase))
+			if (stroke.Equals("none", StringComparison.OrdinalIgnoreCase))
 			{
 				strokePaint = null;
 			}
 			else
 			{
-				if (strokePaint == null)
-					strokePaint = CreatePaint(true);
-
-				SKColor color;
-				if (SKColor.TryParse(stroke, out color))
+				if (string.IsNullOrEmpty(stroke))
 				{
-					// preserve alpha
-					if (color.Alpha == 255)
-						strokePaint.Color = color.WithAlpha(strokePaint.Color.Alpha);
-					else
-						strokePaint.Color = color;
+					// no change
 				}
-			}
+				else
+				{
+					if (strokePaint == null)
+						strokePaint = CreatePaint(true);
 
-			// stroke attributes
-			var strokeWidth = GetString(style, "stroke-width");
-			if (!string.IsNullOrWhiteSpace(strokeWidth))
-			{
-				if (strokePaint == null)
-					strokePaint = CreatePaint(true);
-				strokePaint.StrokeWidth = ReadNumber(strokeWidth);
-			}
+					SKColor color;
+					if (SKColor.TryParse(stroke, out color))
+					{
+						// preserve alpha
+						if (color.Alpha == 255)
+							strokePaint.Color = color.WithAlpha(strokePaint.Color.Alpha);
+						else
+							strokePaint.Color = color;
+					}
+				}
 
-			var strokeOpacity = GetString(style, "stroke-opacity");
-			if (!string.IsNullOrWhiteSpace(strokeOpacity))
-			{
-				if (strokePaint == null)
-					strokePaint = CreatePaint(true);
-				strokePaint.Color = strokePaint.Color.WithAlpha((byte)(ReadNumber(strokeOpacity) * 255));
+				// stroke attributes
+				var strokeWidth = GetString(style, "stroke-width");
+				if (!string.IsNullOrWhiteSpace(strokeWidth))
+				{
+					if (strokePaint == null)
+						strokePaint = CreatePaint(true);
+					strokePaint.StrokeWidth = ReadNumber(strokeWidth);
+				}
+
+				var strokeOpacity = GetString(style, "stroke-opacity");
+				if (!string.IsNullOrWhiteSpace(strokeOpacity))
+				{
+					if (strokePaint == null)
+						strokePaint = CreatePaint(true);
+					strokePaint.Color = strokePaint.Color.WithAlpha((byte)(ReadNumber(strokeOpacity) * 255));
+				}
 			}
 
 			// fill
 			var fill = GetString(style, "fill").Trim();
-			if (string.IsNullOrEmpty(fill))
-			{
-				// no change
-			}
-			else if (fill.Equals("none", StringComparison.OrdinalIgnoreCase))
+			if (fill.Equals("none", StringComparison.OrdinalIgnoreCase))
 			{
 				fillPaint = null;
 			}
 			else
 			{
-				if (fillPaint == null)
-					fillPaint = CreatePaint();
-
-				SKColor color;
-				if (SKColor.TryParse(fill, out color))
+				if (string.IsNullOrEmpty(fill))
 				{
-					// preserve alpha
-					if (color.Alpha == 255)
-						fillPaint.Color = color.WithAlpha(fillPaint.Color.Alpha);
-					else
-						fillPaint.Color = color;
+					// no change
 				}
 				else
 				{
-					var read = false;
-					var urlM = fillUrlRe.Match(fill);
-					if (urlM.Success)
+					if (fillPaint == null)
+						fillPaint = CreatePaint();
+
+					SKColor color;
+					if (SKColor.TryParse(fill, out color))
 					{
-						var id = urlM.Groups[1].Value.Trim();
-
-						XElement defE;
-						if (defs.TryGetValue(id, out defE))
-						{
-							var gradientShader = ReadGradient(defE);
-							if (gradientShader != null)
-							{
-								// TODO: multiple shaders
-
-								fillPaint.Shader = gradientShader;
-								read = true;
-							}
-							// else try another type (eg: image)
-						}
+						// preserve alpha
+						if (color.Alpha == 255)
+							fillPaint.Color = color.WithAlpha(fillPaint.Color.Alpha);
 						else
-						{
-							LogOrThrow($"Invalid fill url reference: {id}");
-						}
+							fillPaint.Color = color;
 					}
-
-					if (!read)
+					else
 					{
-						LogOrThrow($"Unsupported fill: {fill}");
+						var read = false;
+						var urlM = fillUrlRe.Match(fill);
+						if (urlM.Success)
+						{
+							var id = urlM.Groups[1].Value.Trim();
+
+							XElement defE;
+							if (defs.TryGetValue(id, out defE))
+							{
+								var gradientShader = ReadGradient(defE);
+								if (gradientShader != null)
+								{
+									// TODO: multiple shaders
+
+									fillPaint.Shader = gradientShader;
+									read = true;
+								}
+								// else try another type (eg: image)
+							}
+							else
+							{
+								LogOrThrow($"Invalid fill url reference: {id}");
+							}
+						}
+
+						if (!read)
+						{
+							LogOrThrow($"Unsupported fill: {fill}");
+						}
 					}
 				}
-			}
 
-			// fill attributes
-			var fillOpacity = GetString(style, "fill-opacity");
-			if (!string.IsNullOrWhiteSpace(fillOpacity))
-			{
-				if (fillPaint == null)
-					fillPaint = CreatePaint();
+				// fill attributes
+				var fillOpacity = GetString(style, "fill-opacity");
+				if (!string.IsNullOrWhiteSpace(fillOpacity))
+				{
+					if (fillPaint == null)
+						fillPaint = CreatePaint();
 
-				fillPaint.Color = fillPaint.Color.WithAlpha((byte)(ReadNumber(fillOpacity) * 255));
+					fillPaint.Color = fillPaint.Color.WithAlpha((byte)(ReadNumber(fillOpacity) * 255));
+				}
 			}
 		}
 
