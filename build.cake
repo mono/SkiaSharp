@@ -241,6 +241,8 @@ Task ("docs")
     
     if (!DirectoryExists ("./output/docs/mdoc/")) CreateDirectory ("./output/docs/mdoc/");
     RunMdocAssemble (DOCS_PATH, "./output/docs/mdoc/SkiaSharp");
+
+    CopyFileToDirectory ("./docs/SkiaSharp.source", "./output/docs/mdoc/");
 });
 
 // we can only update the docs on the platform machines
@@ -250,7 +252,7 @@ Task ("update-docs")
     .Does (() => 
 {
     // the reference folders to locate assemblies
-    var refs = new DirectoryPath [] {
+    IEnumerable<DirectoryPath> refs = new DirectoryPath [] {
             // you never know
         };
     // add windows-specific references
