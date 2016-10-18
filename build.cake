@@ -233,17 +233,53 @@ Task ("samples")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("docs")
-    .IsDependentOn ("set-versions")
-    .IsDependentOn ("externals-genapi")
+    .IsDependentOn ("libs")
     .Does (() => 
 {
-    RunMdocUpdate ("./binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll", "./docs/en/");
+    var DocsDir = "./docs/en/";
+
+    var refs = new DirectoryPath [] {
+            // you never know
+        }
+        .Union (GetDirectories ("./source/packages/Xamarin.Forms.*/lib/portable*"))
+        .Union (GetDirectories ("./source/packages/OpenTK.*/lib/net40*"));
+    if (IsRunningOnWindows () || TARGET == "CI") {
+        // Windows.Foundation.UniversalApiContract is a winmd, so fake the dll
+        // types aren't needed here
+        DotNetBuild ("./externals/Windows.Foundation.UniversalApiContract/Windows.Foundation.UniversalApiContract.csproj", c => {
+            c.Verbosity = Verbosity.Quiet;
+        });
+        refs = refs.Union (new DirectoryPath [] {
+            "./externals/Windows.Foundation.UniversalApiContract/bin/Release",
+        });
+    }
+    var assemblies = new FilePath [] {
+        "./output/portable/SkiaSharp.dll",
+        "./output/portable/SkiaSharp.Views.Forms.dll",
+    };
+    if (IsRunningOnWindows () || TARGET == "CI") {
+        assemblies = assemblies.Union (new FilePath [] {
+            "./output/windows/SkiaSharp.Views.Desktop.dll",
+            "./output/windows/SkiaSharp.Views.WPF.dll",
+            "./output/uwp/SkiaSharp.Views.UWP.dll",
+        }).ToArray ();
+    }
+    if (IsRunningOnUnix () || TARGET == "CI") {
+        assemblies = assemblies.Union (new FilePath [] {
+            "./output/android/SkiaSharp.Views.Android.dll",
+            "./output/ios/SkiaSharp.Views.iOS.dll",
+            "./output/osx/SkiaSharp.Views.Mac.dll",
+            "./output/tvos/SkiaSharp.Views.tvOS.dll",
+        }).ToArray ();
+    }
+
+    RunMdocUpdate (assemblies, DocsDir, refs.ToArray ());
     
     if (!DirectoryExists ("./output/docs/msxml/")) CreateDirectory ("./output/docs/msxml/");
-    RunMdocMSXml ("./docs/en/", "./output/docs/msxml/SkiaSharp.xml");
+    RunMdocMSXml (DocsDir, "./output/docs/msxml/");
     
     if (!DirectoryExists ("./output/docs/mdoc/")) CreateDirectory ("./output/docs/mdoc/");
-    RunMdocAssemble ("./docs/en/", "./output/docs/mdoc/SkiaSharp");
+    RunMdocAssemble (DocsDir, "./output/docs/mdoc/SkiaSharp");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -392,6 +428,9 @@ Task ("clean-managed").Does (() =>
     CleanDirectories ("./source/*/*/obj");
     CleanDirectories ("./source/*/*/Generated Files");
     CleanDirectories ("./source/packages");
+
+    CleanDirectories ("./externals/Windows.Foundation.UniversalApiContract/bin");
+    CleanDirectories ("./externals/Windows.Foundation.UniversalApiContract/obj");
 
     if (DirectoryExists ("./output"))
         DeleteDirectory ("./output", true);
