@@ -93,6 +93,11 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (dst));
 			return SkiaApi.sk_pathmeasure_get_segment (Handle, start, stop, dst.Handle, startWithMoveTo);
 		}
+
+		public bool NextContour ()
+		{
+			return SkiaApi.sk_pathmeasure_next_contour (Handle);
+		}
 	}
 }
 
