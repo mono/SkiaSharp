@@ -22,6 +22,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/depot_tools"));
 DirectoryPath SKIA_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia"));
 DirectoryPath ANGLE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/angle"));
+DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/en"));
 
 #load "cake/UtilsManaged.cake"
 #load "cake/UtilsMSBuild.cake"
@@ -233,83 +234,13 @@ Task ("samples")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("docs")
-    .IsDependentOn ("libs")
     .Does (() => 
 {
-    var DocsDir = "./docs/en/";
-
-    // we can only update the docs on the platform machines
-    // becuase each requires platform features for the views 
-    if (TARGET != "CI") {
-        // the reference folders to locate assemblies
-        var refs = new DirectoryPath [] {
-                // you never know
-            }
-            .Union (GetDirectories ("./source/packages/Xamarin.Forms.*/lib/portable*"))
-            .Union (GetDirectories ("./source/packages/OpenTK.*/lib/net40*"));
-        // add windows-specific references
-        if (IsRunningOnWindows ()) {
-            // Windows.Foundation.UniversalApiContract is a winmd, so fake the dll
-            // types aren't needed here
-            DotNetBuild ("./externals/Windows.Foundation.UniversalApiContract/Windows.Foundation.UniversalApiContract.csproj", c => {
-                c.Verbosity = Verbosity.Quiet;
-            });
-            refs = refs.Union (new DirectoryPath [] {
-                "./externals/Windows.Foundation.UniversalApiContract/bin/Release",
-            });
-        }
-        // add mac-specific references
-        if (IsRunningOnUnix ()) {
-            refs = refs.Union (new DirectoryPath [] {
-                "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/xbuild-frameworks/.NETPortable/v4.5",
-                "/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xbuild-frameworks/MonoAndroid/v1.0",
-                "/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xbuild-frameworks/MonoAndroid/v4.5",
-                "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/lib/mono/Xamarin.TVOS",
-                "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/lib/mono/Xamarin.iOS",
-                "/Library/Frameworks/Xamarin.Mac.framework/Versions/Current/lib/mono/Xamarin.Mac",
-            });
-        }
-
-        // the assemblies to generate docs for
-        var assemblies = new FilePath [] {
-            "./output/portable/SkiaSharp.dll",
-            "./output/portable/SkiaSharp.Views.Forms.dll",
-        };
-        // add windows-specific assemblies
-        if (IsRunningOnWindows ()) {
-            assemblies = assemblies.Union (new FilePath [] {
-                "./output/windows/SkiaSharp.Views.Desktop.dll",
-                "./output/windows/SkiaSharp.Views.WPF.dll",
-                "./output/uwp/SkiaSharp.Views.UWP.dll",
-            }).ToArray ();
-        }
-        // add mac-specific assemblies
-        if (IsRunningOnUnix ()) {
-            assemblies = assemblies.Union (new FilePath [] {
-                "./output/android/SkiaSharp.Views.Android.dll",
-                "./output/ios/SkiaSharp.Views.iOS.dll",
-                "./output/osx/SkiaSharp.Views.Mac.dll",
-                "./output/tvos/SkiaSharp.Views.tvOS.dll",
-            }).ToArray ();
-        }
-
-        // print out the assemblies
-        foreach (var r in refs) {
-            Information ("Reference Directory: {0}", r);
-        }
-        foreach (var a in assemblies) {
-            Information ("Processing {0}...", a);
-        }
-
-        // generate doc files
-        RunMdocUpdate (assemblies, DocsDir, refs.ToArray ());
-    }
-    
     if (!DirectoryExists ("./output/docs/msxml/")) CreateDirectory ("./output/docs/msxml/");
-    RunMdocMSXml (DocsDir, "./output/docs/msxml/");
+    RunMdocMSXml (DOCS_PATH, "./output/docs/msxml/");
     
     if (!DirectoryExists ("./output/docs/mdoc/")) CreateDirectory ("./output/docs/mdoc/");
-    RunMdocAssemble (DocsDir, "./output/docs/mdoc/SkiaSharp");
+    RunMdocAssemble (DOCS_PATH, "./output/docs/mdoc/SkiaSharp");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
