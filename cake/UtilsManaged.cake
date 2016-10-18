@@ -42,7 +42,7 @@ var RunMdocUpdate = new Action<FilePath[], DirectoryPath, DirectoryPath[]> ((ass
     }
     var assemblyArgs = string.Join (" ", assemblies.Select (a => string.Format ("\"{0}\"", a)));
     StartProcess (MDocPath, new ProcessSettings {
-        Arguments = string.Format ("update --delete --out=\"{0}\" {1} {2}", docsRoot, refArgs, assemblyArgs),
+        Arguments = string.Format ("update --preserve --out=\"{0}\" {1} {2}", docsRoot, refArgs, assemblyArgs),
     });
 });
 
