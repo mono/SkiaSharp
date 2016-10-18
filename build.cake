@@ -243,6 +243,83 @@ Task ("docs")
     RunMdocAssemble (DOCS_PATH, "./output/docs/mdoc/SkiaSharp");
 });
 
+// we can only update the docs on the platform machines
+// becuase each requires platform features for the views 
+Task ("update-docs")
+    .IsDependentOn ("libs")
+    .Does (() => 
+{
+    // the reference folders to locate assemblies
+    var refs = new DirectoryPath [] {
+            // you never know
+        };
+    // add windows-specific references
+    if (IsRunningOnWindows ()) {
+        // Windows.Foundation.UniversalApiContract is a winmd, so fake the dll
+        // types aren't needed here
+        DotNetBuild ("./externals/Windows.Foundation.UniversalApiContract/Windows.Foundation.UniversalApiContract.csproj", c => {
+            c.Verbosity = Verbosity.Quiet;
+        });
+        refs = refs.Union (new DirectoryPath [] {
+            "./externals/Windows.Foundation.UniversalApiContract/bin/Release",
+            "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/MonoAndroid/v1.0",
+            "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/MonoAndroid/v2.3",
+            "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.iOS/v1.0",
+            "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.TVOS/v1.0",
+            "./externals",
+        });
+    }
+    // add mac-specific references
+    if (IsRunningOnUnix ()) {
+        refs = refs.Union (new DirectoryPath [] {
+            "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/xbuild-frameworks/.NETPortable/v4.5",
+            "/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xbuild-frameworks/MonoAndroid/v1.0",
+            "/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xbuild-frameworks/MonoAndroid/v4.5",
+            "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/lib/mono/Xamarin.TVOS",
+            "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/lib/mono/Xamarin.iOS",
+            "/Library/Frameworks/Xamarin.Mac.framework/Versions/Current/lib/mono/Xamarin.Mac",
+        });
+    }
+
+    // the assemblies to generate docs for
+    var assemblies = new FilePath [] {
+        "./output/portable/SkiaSharp.dll",
+        "./output/portable/SkiaSharp.Views.Forms.dll",
+    };
+    // add windows-specific assemblies
+    if (IsRunningOnWindows ()) {
+        assemblies = assemblies.Union (new FilePath [] {
+            "./output/windows/SkiaSharp.Views.Desktop.dll",
+            "./output/windows/SkiaSharp.Views.WPF.dll",
+            "./output/uwp/SkiaSharp.Views.UWP.dll",
+            "./output/android/SkiaSharp.Views.Android.dll",
+            "./output/ios/SkiaSharp.Views.iOS.dll",
+            "./output/osx/SkiaSharp.Views.Mac.dll",
+            "./output/tvos/SkiaSharp.Views.tvOS.dll",
+        }).ToArray ();
+    }
+    // add mac-specific assemblies
+    if (IsRunningOnUnix ()) {
+        assemblies = assemblies.Union (new FilePath [] {
+            "./output/android/SkiaSharp.Views.Android.dll",
+            "./output/ios/SkiaSharp.Views.iOS.dll",
+            "./output/osx/SkiaSharp.Views.Mac.dll",
+            "./output/tvos/SkiaSharp.Views.tvOS.dll",
+        }).ToArray ();
+    }
+
+    // print out the assemblies
+    foreach (var r in refs) {
+        Information ("Reference Directory: {0}", r);
+    }
+    foreach (var a in assemblies) {
+        Information ("Processing {0}...", a);
+    }
+
+    // generate doc files
+    RunMdocUpdate (assemblies, DOCS_PATH, refs.ToArray ());
+});
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // NUGET - building the package for NuGet.org
 ////////////////////////////////////////////////////////////////////////////////////////////////////
