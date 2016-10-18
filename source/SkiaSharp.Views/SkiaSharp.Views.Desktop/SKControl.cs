@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
 
-namespace SkiaSharp.Views
+namespace SkiaSharp.Views.Desktop
 {
 	public class SKControl : Control
 	{

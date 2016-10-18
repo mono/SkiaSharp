@@ -7,8 +7,9 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using SkiaSharp.Views.Desktop;
 
-namespace SkiaSharp.Views
+namespace SkiaSharp.Views.WPF
 {
 	public class SKElement : FrameworkElement
 	{

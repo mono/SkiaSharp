@@ -3,7 +3,7 @@ using Xamarin.Forms;
 using Xamarin.Forms.Platform.iOS;
 
 using SKFormsView = SkiaSharp.Views.Forms.SKCanvasView;
-using SKNativeView = SkiaSharp.Views.SKCanvasView;
+using SKNativeView = SkiaSharp.Views.iOS.SKCanvasView;
 
 [assembly: ExportRenderer(typeof(SKFormsView), typeof(SkiaSharp.Views.Forms.SKCanvasViewRenderer))]
 

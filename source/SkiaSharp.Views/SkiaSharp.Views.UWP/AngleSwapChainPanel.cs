@@ -9,7 +9,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using SkiaSharp.Views.GlesInterop;
 
-namespace SkiaSharp.Views
+namespace SkiaSharp.Views.UWP
 {
 	public class AngleSwapChainPanel : SwapChainPanel
 	{

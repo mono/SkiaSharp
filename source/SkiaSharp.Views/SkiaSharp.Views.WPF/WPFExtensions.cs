@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Media;
 
-namespace SkiaSharp.Views
+namespace SkiaSharp.Views.WPF
 {
 	public static class WPFExtensions
 	{

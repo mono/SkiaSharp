@@ -3,7 +3,7 @@ using System.ComponentModel;
 using Xamarin.Forms.Platform.UWP;
 
 using SKFormsView = SkiaSharp.Views.Forms.SKGLView;
-using SKNativeView = SkiaSharp.Views.SKSwapChainPanel;
+using SKNativeView = SkiaSharp.Views.UWP.SKSwapChainPanel;
 
 [assembly: ExportRenderer(typeof(SKFormsView), typeof(SkiaSharp.Views.Forms.SKGLViewRenderer))]
 
@@ -86,7 +86,7 @@ namespace SkiaSharp.Views.Forms
 				this.controller = controller;
 			}
 
-			protected override void OnPaintSurface(SkiaSharp.Views.SKPaintGLSurfaceEventArgs e)
+			protected override void OnPaintSurface(SkiaSharp.Views.UWP.SKPaintGLSurfaceEventArgs e)
 			{
 				base.OnPaintSurface(e);
 

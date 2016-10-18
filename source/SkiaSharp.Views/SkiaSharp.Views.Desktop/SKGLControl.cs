@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using OpenTK;
 
-namespace SkiaSharp.Views
+namespace SkiaSharp.Views.Desktop
 {
 	public class SKGLControl : GLControl
 	{

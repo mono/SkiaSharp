@@ -1,6 +1,18 @@
-﻿namespace SkiaSharp.Views
+﻿#if __ANDROID__
+namespace SkiaSharp.Views.Android
+#elif __IOS__
+namespace SkiaSharp.Views.iOS
+#elif __DESKTOP__ || __WPF__
+namespace SkiaSharp.Views.Desktop
+#elif __TVOS__
+namespace SkiaSharp.Views.tvOS
+#elif WINDOWS_UWP
+namespace SkiaSharp.Views.UWP
+#elif __MACOS__
+namespace SkiaSharp.Views.Mac
+#endif
 {
-	public static class Extensions
+    public static class Extensions
 	{
 #if !WINDOWS_UWP
 		// System.Drawing.Point*

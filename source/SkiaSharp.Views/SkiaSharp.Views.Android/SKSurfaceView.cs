@@ -4,7 +4,7 @@ using Android.Runtime;
 using Android.Util;
 using Android.Views;
 
-namespace SkiaSharp.Views
+namespace SkiaSharp.Views.Android
 {
 	public class SKSurfaceView : SurfaceView, ISurfaceHolderCallback
 	{

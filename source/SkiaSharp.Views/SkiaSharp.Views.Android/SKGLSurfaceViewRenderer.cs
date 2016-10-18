@@ -4,7 +4,7 @@ using Android.Runtime;
 using Javax.Microedition.Khronos.Egl;
 using Javax.Microedition.Khronos.Opengles;
 
-namespace SkiaSharp.Views
+namespace SkiaSharp.Views.Android
 {
 	public abstract class SKGLSurfaceViewRenderer : Java.Lang.Object, GLSurfaceView.IRenderer
 	{

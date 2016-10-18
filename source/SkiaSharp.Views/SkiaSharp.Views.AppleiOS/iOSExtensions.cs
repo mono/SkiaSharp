@@ -1,6 +1,10 @@
 ﻿using UIKit;
 
-namespace SkiaSharp.Views
+#if __IOS__
+namespace SkiaSharp.Views.iOS
+#elif __TVOS__
+namespace SkiaSharp.Views.tvOS
+#endif
 {
 	public static class iOSExtensions
 	{
