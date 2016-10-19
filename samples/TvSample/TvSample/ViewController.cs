@@ -3,9 +3,9 @@ using System.ComponentModel;
 using System.Linq;
 using CoreGraphics;
 using Foundation;
-using SkiaSharp;
-using SkiaSharp.Views;
 using UIKit;
+using SkiaSharp;
+using SkiaSharp.Views.Mac;
 
 namespace SkiaSharpSample.TvSample
 {

@@ -16,7 +16,7 @@ namespace SkiaSharpSample.TvSample
     {
         [Outlet]
         [GeneratedCode ("iOS Designer", "1.0")]
-        SkiaSharp.Views.SKCanvasView canvas { get; set; }
+        SkiaSharp.Views.Mac.SKCanvasView canvas { get; set; }
 
         [Outlet]
         [GeneratedCode ("iOS Designer", "1.0")]

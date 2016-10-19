@@ -11,7 +11,7 @@ using System.Windows.Forms.Integration;
 using System.Windows.Input;
 using System.Windows.Threading;
 using SkiaSharp;
-using SkiaSharp.Views;
+using SkiaSharp.Views.WPF;
 
 namespace SkiaSharpSample.WPFSample
 {
