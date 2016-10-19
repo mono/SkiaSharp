@@ -5,7 +5,7 @@ using CoreGraphics;
 using Foundation;
 using UIKit;
 using SkiaSharp;
-using SkiaSharp.Views.Mac;
+using SkiaSharp.Views.tvOS;
 
 namespace SkiaSharpSample.TvSample
 {
