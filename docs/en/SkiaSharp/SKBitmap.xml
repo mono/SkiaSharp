@@ -16,11 +16,10 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>Raster bitmap.</summary>
+    <summary>The <see cref="T:SkiaSharp.SKBitmap" /> specifies a raster bitmap.</summary>
     <remarks>
-      <para>This class specifies a raster bitmap. A bitmap has an integer width and height, and a format (colortype), and a pointer to the actual pixels. Bitmaps can be drawn into a <see cref="T:SkiaSharp.SKCanvas" />, but they are also used to specify the target of a <see cref="T:SkiaSharp.SKCanvas" />' drawing operations.</para>
-      <para>An SkBitmap exposes, which lets a caller write its pixels; the constness is considered to apply to the bitmap's configuration, not its contents.</para>
-      <para>To retrive a pointer to the raw image data of the SKBitmap, call the <see cref="M:SkiaSharp.SKBitmap.LockPixels" /> method, and then call the <see cref="M:SkiaSharp.SKBitmap.GetPixels" /> method to get a pointer to the image data.  Once you no longer need to use the raw data pointer, call the <see cref="M:SkiaSharp.SKBitmap.UnlockPixels" /> method.   The raw data is laid out in the format configured at the time that the SKBitmap was created.</para>
+      <para>A bitmap has an integer width and height, and a format (colortype), and a pointer to the actual pixels. Bitmaps can be drawn into a <see cref="T:SkiaSharp.SKCanvas" />, but they are also used to specify the target of a <see cref="T:SkiaSharp.SKCanvas" />' drawing operations.</para>
+      <para>A <see cref="T:SkiaSharp.SKBitmap" /> exposes <see cref="M:SkiaSharp.SKBitmap.GetPixels" />, which lets a caller write its pixels. To retrive a pointer to the raw image data of the bitmap, call the <see cref="M:SkiaSharp.SKBitmap.LockPixels" /> method, and then call the <see cref="M:SkiaSharp.SKBitmap.GetPixels" /> method to get a pointer to the image data.  Once you no longer need to use the raw data pointer, call the <see cref="M:SkiaSharp.SKBitmap.UnlockPixels" /> method. The raw data is laid out in the format configured at the time that the bitmap was created.</para>
     </remarks>
   </Docs>
   <Members>
@@ -40,11 +39,7 @@
       <Parameters />
       <Docs>
         <summary>Default construct creates a bitmap with zero width and height, and no pixels. Its colortype is set to <see cref="E:SkiaSharp.SKColorType.Unknown." /></summary>
-        <remarks>
-          <para>This constructor does not allocate a backing store for the bitmap.</para>
-          <para>
-          </para>
-        </remarks>
+        <remarks>This constructor does not allocate a backing store for the bitmap.</remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -84,8 +79,8 @@
         <Parameter Name="ctable" Type="SkiaSharp.SKColorTable" />
       </Parameters>
       <Docs>
-        <param name="info">Description of the desired image format.</param>
-        <param name="ctable">Color lookup table</param>
+        <param name="info">The description of the desired image format.</param>
+        <param name="ctable">The color lookup table.</param>
         <summary>Constructor that configures the bitmap based on an <see cref="T:SkiaSharp.SKImageInfo" /> specification and a color table.</summary>
         <remarks>Use this method to create a bitmap that will use a color lookup table.   The bitmap will be an 8-bit indexed bitmap, where each value represents an index into the color table, and the color is determined by the value in the specific location in the color table array.</remarks>
       </Docs>
@@ -135,13 +130,9 @@
       <Docs>
         <param name="width">Desired width in pixels.</param>
         <param name="height">Desired height in pixels.</param>
-        <param name="isOpaque">If true, sets the <see cref="T:SkiaSharp.SKAlphaType" /> to Opaque, otherwise it sets it to Premul</param>
+        <param name="isOpaque">If true, sets the <see cref="T:SkiaSharp.SKAlphaType" /> to <see cref="F:SkiaSharp.SKAlphaType.Opaque" />, otherwise it sets it to <see cref="F:SkiaSharp.SKAlphaType.Premul" />.</param>
         <summary>Creates a bitmap with the given width, height and opacity with color type set to <see cref="E:SkiaSharp.SKColorType.N_32" /></summary>
-        <remarks>
-          <para>This constructor might throw an exception if it is not possible to create a bitmap with the specified configuration (for example, the image info requires a color table, and there is no color table).</para>
-          <para>
-          </para>
-        </remarks>
+        <remarks>This constructor might throw an exception if it is not possible to create a bitmap with the specified configuration (for example, the image info requires a color table, and there is no color table).</remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -166,8 +157,8 @@
       <Docs>
         <param name="width">Desired width in pixels.</param>
         <param name="height">Desired height in pixels.</param>
-        <param name="colorType">The desired color type.</param>
-        <param name="alphaType">The desired alpha type.</param>
+        <param name="colorType">The desired <see cref="T:SkiaSharp.SKColorType" />.</param>
+        <param name="alphaType">The desired <see cref="T:SkiaSharp.SKAlphaType" />.</param>
         <summary>Creates a bitmap with the given width, height, color type and alpha type.</summary>
         <remarks>This constructor might throw an exception if it is not possible to create a bitmap with the specified configuration (for example, the image info requires a color table, and there is no color table).</remarks>
       </Docs>
@@ -189,11 +180,8 @@
         <ReturnType>SkiaSharp.SKAlphaType</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Returns the configured alpha type for the bitmap.</summary>
-        <value>
-          <para>
-          </para>
-        </value>
+        <summary>Gets the configured <see cref="T:SkiaSharp.SKAlphaType" /> for the bitmap.</summary>
+        <value>The configured <see cref="T:SkiaSharp.SKAlphaType" />.</value>
         <remarks>This determines the kind of encoding used for the alpha channel, opaque, premultiplied or unpremultiplied.</remarks>
       </Docs>
     </Member>
@@ -214,9 +202,9 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Return the byte size of the pixels, based on the <see cref="P:SkiaSharp.SKBitmap.Height" /> and <see cref="P:SkiaSharp.SKBitmap.RowBytes" />.</summary>
+        <value>The byte size of the pixels.</value>
+        <remarks>Note: this truncates the result to 32-bits.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Bytes">
@@ -236,9 +224,11 @@
         <ReturnType>System.Byte[]</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a copy of all the pixel data as a byte array.</summary>
+        <value>The pixel data.</value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="BytesPerPixel">
@@ -351,8 +341,7 @@
         <summary>Copies the contents of the bitmap and returns the copy.</summary>
         <returns>The copy of the bitmap, or <paramref name="null" /> on error.</returns>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -964,12 +953,11 @@
         <Parameter Name="length" Type="System.IntPtr&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="length">The lenght of the pixel buffer returned.</param>
+        <param name="length">The length of the pixel buffer returned.</param>
         <summary>Returns the address of the pixels for this SKBitmap</summary>
-        <returns>Returns a pointer to the region that contains the pixel data for this bitmap.   This might return <see langword="null" /> if there is no pixel buffer associated with this bitmap.</returns>
+        <returns>Returns a pointer to the region that contains the pixel data for this bitmap. This might return <see langword="null" /> if there is no pixel buffer associated with this bitmap.</returns>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1060,8 +1048,7 @@
         <value>
           <see langword="true" /> if it is immutable, <see langword="false" /> otherwise.</value>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1223,9 +1210,7 @@
       <Parameters />
       <Docs>
         <summary>Marks the bitmap as immutable.</summary>
-        <remarks>
-          <para>Marks this bitmap as immutable, meaning that the contents of its pixels will not change for the lifetime of the bitmap and of the underlying pixelref. This state can be set, but it cannot be cleared once it is set. This state propagates to all other bitmaps that share the same pixelref.</para>
-        </remarks>
+        <remarks>Marks this bitmap as immutable, meaning that the contents of its pixels will not change for the lifetime of the bitmap and of the underlying pixelref. This state can be set, but it cannot be cleared once it is set. This state propagates to all other bitmaps that share the same pixelref.</remarks>
       </Docs>
     </Member>
     <Member MemberName="SetPixel">
@@ -1276,11 +1261,7 @@
       <Parameters />
       <Docs>
         <summary>Call this to balance a previous call to <see cref="M:SkiaSharp.SKBitmap.LockPixels" />.</summary>
-        <remarks>
-          <para>When you are finished access the pixel memory, call this to balance a previous call to <see cref="M:SkiaSharp.SKBitmap.LockPixels" />. This allows pixelrefs that implement cached/deferred image decoding to know when there are active clients of a given image.</para>
-          <para>
-          </para>
-        </remarks>
+        <remarks>When you are finished access the pixel memory, call this to balance a previous call to <see cref="M:SkiaSharp.SKBitmap.LockPixels" />. This allows pixelrefs that implement cached/deferred image decoding to know when there are active clients of a given image.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Width">

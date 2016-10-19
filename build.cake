@@ -236,6 +236,10 @@ Task ("samples")
 Task ("docs")
     .Does (() => 
 {
+    // log TODOs
+    var docFiles = FindTextInFiles ("./docs/**/*.xml", "To be added.");
+    Information ("Documentation missing in {0} files.", docFiles.Length);
+
     if (!DirectoryExists ("./output/docs/msxml/")) CreateDirectory ("./output/docs/msxml/");
     RunMdocMSXml (DOCS_PATH, "./output/docs/msxml/");
     
