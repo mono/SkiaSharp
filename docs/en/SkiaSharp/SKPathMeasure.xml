@@ -40,11 +40,11 @@
         <Parameter Name="resScale" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="path">To be added.</param>
+        <param name="path">The path to use, or null.</param>
         <param name="forceClosed">To be added.</param>
-        <param name="resScale">To be added.</param>
+        <param name="resScale">Controls the precision of the measure. Values greater 1 increase the precision (and possibly slow down the computation).</param>
         <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>The path must remain valid for the lifetime of the measure object, or until <see cref="M:SkiaSharp.SKPathMeasure.SetPath" /> is called with a different path (or null), since the measure object keeps a reference to the path object (does not copy its data).</remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -105,11 +105,11 @@
         <Parameter Name="position" Type="SkiaSharp.SKPoint&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="distance">To be added.</param>
-        <param name="position">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="distance">The distance to use.</param>
+        <param name="position">The position of a point along the current contour.</param>
+        <summary>Computes the corresponding position from the specified distance.</summary>
+        <returns>Returns false if there is no path, or a zero-length path was specified, in which case position is unchanged.</returns>
+        <remarks>Distance is pinned to 0 &lt;= distance &lt;= <see cref="P:SkiaSharp.SKPathMeasure.Length" />.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPositionAndTangent">
@@ -128,12 +128,12 @@
         <Parameter Name="tangent" Type="SkiaSharp.SKPoint&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="distance">To be added.</param>
-        <param name="position">To be added.</param>
-        <param name="tangent">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="distance">The distance to use. </param>
+        <param name="position">The position of a point along the current contour.</param>
+        <param name="tangent">The tangent along the current contour.</param>
+        <summary>Computes the corresponding position and tangent from the specified distance.</summary>
+        <returns>Returns false if there is no path, or a zero-length path was specified, in which case position and tangent are unchanged.</returns>
+        <remarks>Distance is pinned to 0 &lt;= distance &lt;= <see cref="P:SkiaSharp.SKPathMeasure.Length" />.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetSegment">
@@ -195,9 +195,11 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a value indicating if the current contour is closed.</summary>
+        <value>Returns true if the current contour is closed.</value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Length">
@@ -211,9 +213,28 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the total length of the current contour, or 0 if no path is associated.</summary>
+        <value>The total length of the current contour.</value>
+        <remarks />
+      </Docs>
+    </Member>
+    <Member MemberName="NextContour">
+      <MemberSignature Language="C#" Value="public bool NextContour ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool NextContour() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Move to the next contour in the path.</summary>
+        <returns>Returns true if another one exists, otherwise false.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="SetPath">
@@ -231,10 +252,10 @@
         <Parameter Name="forceClosed" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="path">To be added.</param>
+        <param name="path">The path to use, or null.</param>
         <param name="forceClosed">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Reset the path measure with the specified path.</summary>
+        <remarks>The path must remain valid for the lifetime of the measure object, or until <see cref="M:SkiaSharp.SKPathMeasure.SetPath" /> is called with a different path (or null), since the measure object keeps a reference to the path object (does not copy its data).</remarks>
       </Docs>
     </Member>
   </Members>

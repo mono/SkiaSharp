@@ -16,12 +16,8 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>
-      <para>Same as <see cref="M:SkiaSharp.SKPath.ConicTo" /> but the coordinates are considered relative to the last point on this contour.</para>
-    </summary>
-    <remarks>
-      <para> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</para>
-    </remarks>
+    <summary>Same as <see cref="M:SkiaSharp.SKPath.ConicTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
+    <remarks> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -90,7 +86,7 @@
         <param name="sweepAngle">Sweep angle (in degrees) measured clockwise.</param>
         <summary>Add the specified arc to the path as a new contour.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -147,8 +143,7 @@
         <param name="direction">The direction to wind the oval's contour.</param>
         <summary>Adds an oval to the current path.</summary>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -176,8 +171,7 @@
         <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path.   On Append mode, contours are added as new contours.   On Extend mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
         <summary>Extends the current path with the path elements from another path, using the specified extension mode.</summary>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -207,7 +201,7 @@
         <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path.   On Append mode, contours are added as new contours.   On Extend mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
         <summary>Extends the current path with the path elements from another path, by applying the specified transformation matrix, using the specified extension mode.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -239,8 +233,7 @@
         <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path.   On Append mode, contours are added as new contours.   On Extend mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
         <summary>Extends the current path with the path elements from another path offset by (<paramref name="dx" />, <paramref name="dy" />), using the specified extension mode.</summary>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -266,7 +259,7 @@
         <param name="other">The path containing the elements to be added to the current path.</param>
         <summary>Extends the current path with the path elements from another path in reverse.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -295,7 +288,7 @@
         <param name="direction">The direction to wind the rectangle's contour.</param>
         <summary>Add a closed rectangle contour to the path.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -401,9 +394,9 @@
         <ReturnType>SkiaSharp.SKRect</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Gets the bounds of the path's points. If the path contains zero points/verbs, this will return the empty rectangle.</summary>
         <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <remarks>This bounds may be larger than the actual shape, since curves do not extend as far as their control points. Additionally this bound encompases all points, even isolated MoveTo either preceeding or following the last non-degenerate contour.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Close">
@@ -425,9 +418,7 @@
       <Parameters />
       <Docs>
         <summary>Closes the current contour.</summary>
-        <remarks>
-          <para>If the current point is not equal to the first point of the contour, a line segment is automatically added.</para>
-        </remarks>
+        <remarks>If the current point is not equal to the first point of the contour, a line segment is automatically added.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ConicTo">
@@ -483,11 +474,7 @@
         <param name="y1">The y-coordinate of the end point of the conic curve.</param>
         <param name="w">The weight of the conic curve.</param>
         <summary>Add a conic path from the last point.</summary>
-        <remarks>
-          <para> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</para>
-          <para>
-          </para>
-        </remarks>
+        <remarks>If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0, 0).</remarks>
       </Docs>
     </Member>
     <Member MemberName="Contains">
@@ -507,11 +494,17 @@
         <Parameter Name="y" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="x">
+          <para></para>
+        </param>
+        <param name="y">
+          <para></para>
+        </param>
+        <summary>Returns true if the point (x, y) is contained by the path, taking into account the <see cref="P:SkiaSharp.SKPath.FillType" />.</summary>
+        <returns>Returns true if the point (x, y) is contained by the path.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ConvertConicToQuads">
@@ -614,9 +607,11 @@
         <ReturnType>SkiaSharp.SKPathConvexity</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the path's convexity, as stored in the path. If it is currently unknown, then this function will attempt to compute the convexity (and cache the result).</summary>
+        <value>The path's convexity, as stored in the path.</value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateIterator">
@@ -638,14 +633,10 @@
         <Parameter Name="forceClose" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="forceClose">
-          <para>When this is true, each contour (as defined by a new starting move command) will be completed with a close verb regardless of the contour's contents.</para>
-        </param>
+        <param name="forceClose">When this is true, each contour (as defined by a new starting move command) will be completed with a close verb regardless of the contour's contents.</param>
         <summary>Creates an iterator object to scan the all of the segments (lines, quadratics, cubics) of each contours in a path.</summary>
         <returns>An object that can be used to iterate over the various elements of the path.</returns>
-        <remarks>
-          <para>This iterator is able to clean up the path as the values are returned.   If you do not desire to get verbs that have been cleaned up, use the <see cref="M:SkiaSharp.SKPath.CreateRawIterator" /> method instead.</para>
-        </remarks>
+        <remarks>This iterator is able to clean up the path as the values are returned.   If you do not desire to get verbs that have been cleaned up, use the <see cref="M:SkiaSharp.SKPath.CreateRawIterator" /> method instead.</remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateRawIterator">
@@ -718,17 +709,14 @@
         <Parameter Name="y2" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="x0">The x-coordinate of the 1st control point on a cubic curve</param>
-        <param name="y0">The y-coordinate of the 1st control point on a cubic curve</param>
-        <param name="x1">The x-coordinate of the 2nd control point on a cubic curve</param>
-        <param name="y1">The y-coordinate of the 2nd control point on a cubic curve</param>
-        <param name="x2">The x-coordinate of the end point on a cubic curve</param>
-        <param name="y2">The y-coordinate of the end point on a cubic curve</param>
-        <summary>Add a cubic bezier from the last point</summary>
-        <remarks>
-          <para>Add a cubic bezier from the last point, approaching control points (x0,y0) and (x1,y1), and ending at (x2,y2). </para>
-          <para>If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</para>
-        </remarks>
+        <param name="x0">The x-coordinate of the 1st control point on a cubic curve.</param>
+        <param name="y0">The y-coordinate of the 1st control point on a cubic curve.</param>
+        <param name="x1">The x-coordinate of the 2nd control point on a cubic curve.</param>
+        <param name="y1">The y-coordinate of the 2nd control point on a cubic curve.</param>
+        <param name="x2">The x-coordinate of the end point on a cubic curve.</param>
+        <param name="y2">The y-coordinate of the end point on a cubic curve.</param>
+        <summary>Add a cubic bezier from the last point.</summary>
+        <remarks>Add a cubic bezier from the last point, approaching control points (x0, y0) and (x1, y1), and ending at (x2, y2). If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0, 0).</remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -774,12 +762,8 @@
       </ReturnValue>
       <Docs>
         <summary>The path's fill type.</summary>
-        <value>
-          <para>The current fill type.</para>
-        </value>
-        <remarks>
-          <para>This is used to define how "inside" is computed. The default value is SKPathFillType.Winding.</para>
-        </remarks>
+        <value>The current fill type.</value>
+        <remarks>This is used to define how "inside" is computed. The default value is <see cref="F:SkiaSharp.SKPathFillType.Winding" />.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetBounds">
@@ -802,16 +786,10 @@
         <Parameter Name="rect" Type="SkiaSharp.SKRect&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="rect">
-          <para />
-        </param>
+        <param name="rect">The bounds.</param>
         <summary>Returns the bounds of the path's points.</summary>
-        <returns>
-          <para>If the path contains zero points/verbs, this will return the "empty" rect [0, 0, 0, 0].</para>
-        </returns>
-        <remarks>
-          <para>Note: this bounds may be larger than the actual shape, since curves do not extend as far as their control points. Additionally this bound encompases all points, even isolated moveTos either preceeding or following the last non-degenerate contour.</para>
-        </remarks>
+        <returns>If the path contains zero points/verbs, this will return the empty rectangle.</returns>
+        <remarks>This bounds may be larger than the actual shape, since curves do not extend as far as their control points. Additionally this bound encompases all points, even isolated MoveTo either preceeding or following the last non-degenerate contour.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPoint">
@@ -830,10 +808,10 @@
         <Parameter Name="index" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="index">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="index">The index of the point to return.</param>
+        <summary>Returns the point at the specified index.</summary>
+        <returns>The point at the specified index.</returns>
+        <remarks>If the index is out of range (i.e. is not 0 &lt;= index &lt; <see cref="P:SkiaSharp.SKPath.PointCount" />), then the returned coordinates will be (0, 0).</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPoints">
@@ -897,10 +875,12 @@
         <Parameter Name="result" Type="SkiaSharp.SKRect&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="result">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="result">The tight bounds of the path.</param>
+        <summary>Gets the “tight” bounds of the path. Unlike <see cref="M:SkiaSharp.SKPath.GetBounds" />, the control points of curves are excluded.</summary>
+        <returns>True if the bounds could be computed, otherwise false.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="IsConcave">
@@ -953,10 +933,10 @@
         <Parameter Name="index" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="index">To be added.</param>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <param name="index">The index of the point to get.</param>
+        <summary>Gets the point at the specified index.</summary>
+        <value>The point at the specified index.</value>
+        <remarks>If the index is out of range (i.e. is not 0 &lt;= index &lt; <see cref="P:SkiaSharp.SKPath.PointCount" />), then the returned coordinates will be (0, 0).</remarks>
       </Docs>
     </Member>
     <Member MemberName="LastPoint">
@@ -1069,8 +1049,7 @@
         <param name="y">The y-coordinate of the start of a new contour</param>
         <summary>Set the beginning of the next contour to the point.</summary>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1176,8 +1155,10 @@
       </ReturnValue>
       <Docs>
         <summary>Gets the number of points on the path.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <value>The number of points on the path.</value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Points">
@@ -1401,8 +1382,7 @@
         <summary>Same as <see cref="M:SkiaSharp.SKPath.CubicTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
         <remarks>
           <para> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</para>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1544,8 +1524,7 @@
         <param name="dy">The amount to add to the x-coordinate of the last point on this contour, to specify the start of a new contour.</param>
         <summary>Same as <see cref="M:SkiaSharp.SKPath.MoveTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1633,9 +1612,11 @@
         <ReturnType>SkiaSharp.SKRect</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the “tight” bounds of the path. Unlike <see cref="P:SkiaSharp.SKPath.Bounds" />, the control points of curves are excluded.</summary>
+        <value>The tight bounds of the path.</value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ToSvgPathData">
