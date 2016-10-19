@@ -254,7 +254,9 @@ Task ("update-docs")
     // the reference folders to locate assemblies
     IEnumerable<DirectoryPath> refs = new DirectoryPath [] {
             // you never know
-        };
+        }
+        .Union (GetDirectories ("./source/packages/Xamarin.Forms.*/lib/portable*"))
+        .Union (GetDirectories ("./source/packages/OpenTK.*/lib/net40*"));
     // add windows-specific references
     if (IsRunningOnWindows ()) {
         // Windows.Foundation.UniversalApiContract is a winmd, so fake the dll
