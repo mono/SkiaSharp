@@ -397,6 +397,17 @@ namespace SkiaSharp
 			return SkiaApi.sk_pathop_simplify (Handle, result.Handle);
 		}
 		
+		public SKPath Simplify ()
+		{
+			var result = new SKPath ();
+			if (Simplify (result)) {
+				return result;
+			} else {
+				result.Dispose ();
+				return null;
+			}
+		}
+		
 		public bool GetTightBounds (out SKRect result)
 		{
 			return SkiaApi.sk_pathop_tight_bounds (Handle, out result);
