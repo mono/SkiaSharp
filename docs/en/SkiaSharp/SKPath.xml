@@ -36,7 +36,9 @@
       <Parameters />
       <Docs>
         <summary>Creates an empty path.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -84,7 +86,7 @@
         <param name="oval">The bounds of oval used to define the size of the arc.</param>
         <param name="startAngle">Starting angle (in degrees) where the arc begins.</param>
         <param name="sweepAngle">Sweep angle (in degrees) measured clockwise.</param>
-        <summary>Add the specified arc to the path as a new contour.</summary>
+        <summary>Adds the specified arc to the path as a new contour.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -110,12 +112,14 @@
         <Parameter Name="dir" Type="SkiaSharp.SKPathDirection" />
       </Parameters>
       <Docs>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <param name="radius">To be added.</param>
-        <param name="dir">To be added.</param>
-        <summary>Adds a circle to the current path.</summary>
-        <remarks>To be added.</remarks>
+        <param name="x">The x-coordinate of the center of the circle.</param>
+        <param name="y">The y-coordinate of the center of the circle.</param>
+        <param name="radius">The radius of the circle.</param>
+        <param name="dir">The direction to wind the circle's contour.</param>
+        <summary>Adds a closed circle contour to the path.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="AddOval">
@@ -139,9 +143,9 @@
         <Parameter Name="direction" Type="SkiaSharp.SKPathDirection" />
       </Parameters>
       <Docs>
-        <param name="rect">The bounding oval to add as a closed contour to the path</param>
+        <param name="rect">The bounding oval to add as a closed contour to the path.</param>
         <param name="direction">The direction to wind the oval's contour.</param>
-        <summary>Adds an oval to the current path.</summary>
+        <summary>Adds a closed oval contour to the path.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -168,7 +172,7 @@
       </Parameters>
       <Docs>
         <param name="other">The path containing the elements to be added to the current path.</param>
-        <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path.   On Append mode, contours are added as new contours.   On Extend mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
+        <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path. On <see cref="F:SkiaSharp.SKPath+AddMode.Append" /> mode, contours are added as new contours. On <see cref="F:SkiaSharp.SKPath+AddMode.Extend" /> mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
         <summary>Extends the current path with the path elements from another path, using the specified extension mode.</summary>
         <remarks>
           <para></para>
@@ -197,8 +201,8 @@
       </Parameters>
       <Docs>
         <param name="other">The path containing the elements to be added to the current path.</param>
-        <param name="matrix">Transformation applied to the <paramref name="other" /> path.</param>
-        <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path.   On Append mode, contours are added as new contours.   On Extend mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
+        <param name="matrix">Transformation matrix applied to the <paramref name="other" /> path.</param>
+        <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path. On <see cref="F:SkiaSharp.SKPath+AddMode.Append" /> mode, contours are added as new contours. On <see cref="F:SkiaSharp.SKPath+AddMode.Extend" /> mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
         <summary>Extends the current path with the path elements from another path, by applying the specified transformation matrix, using the specified extension mode.</summary>
         <remarks>
           <para></para>
@@ -230,7 +234,7 @@
         <param name="other">The path containing the elements to be added to the current path.</param>
         <param name="dx">The amount to translate the path in X as it is added.</param>
         <param name="dy">The amount to translate the path in Y as it is added.</param>
-        <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path.   On Append mode, contours are added as new contours.   On Extend mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
+        <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path. On <see cref="F:SkiaSharp.SKPath+AddMode.Append" /> mode, contours are added as new contours. On <see cref="F:SkiaSharp.SKPath+AddMode.Extend" /> mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
         <summary>Extends the current path with the path elements from another path offset by (<paramref name="dx" />, <paramref name="dy" />), using the specified extension mode.</summary>
         <remarks>
           <para></para>
@@ -257,7 +261,7 @@
       </Parameters>
       <Docs>
         <param name="other">The path containing the elements to be added to the current path.</param>
-        <summary>Extends the current path with the path elements from another path in reverse.</summary>
+        <summary>Extends the current path with the path elements from another path in reverse order.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -286,7 +290,7 @@
       <Docs>
         <param name="rect">The rectangle to add as a closed contour to the path</param>
         <param name="direction">The direction to wind the rectangle's contour.</param>
-        <summary>Add a closed rectangle contour to the path.</summary>
+        <summary>Adds a closed rectangle contour to the path.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -315,8 +319,8 @@
       <Docs>
         <param name="rect">The rectangle to add as a closed contour to the path</param>
         <param name="direction">The direction to wind the rectangle's contour.</param>
-        <param name="startIndex">Initial point of the contour (initial moveTo), expressed as a corner index, starting in the upper-left position, clock-wise.  Must be 0-3.</param>
-        <summary>Add a closed rectangle contour to the path.</summary>
+        <param name="startIndex">Initial point of the contour (initial <see cref="M:SkiaSharp.SKPath.MoveTo" />), expressed as a corner index, starting in the upper-left position, clock-wise. Must be in the range of 0..3.</param>
+        <summary>Adds a closed rectangle contour to the path.</summary>
         <remarks>Add a closed rectangle contour to the path with an initial point of the contour (startIndex) expressed as a corner index.</remarks>
       </Docs>
     </Member>
@@ -340,12 +344,14 @@
         <Parameter Name="dir" Type="SkiaSharp.SKPathDirection" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <param name="rx">To be added.</param>
-        <param name="ry">To be added.</param>
-        <param name="dir">To be added.</param>
+        <param name="rect">The bounds of a the rounded rectangle.</param>
+        <param name="rx">The x-radius of the rounded corners.</param>
+        <param name="ry">The y-radius of the rounded corners</param>
+        <param name="dir">The direction to wind the rectangle's contour.</param>
         <summary>Adds a closed rectangle with rounded corners to the current path.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ArcTo">
@@ -371,15 +377,17 @@
         <Parameter Name="y" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="rx">To be added.</param>
-        <param name="ry">To be added.</param>
-        <param name="xAxisRotate">To be added.</param>
-        <param name="largeArc">To be added.</param>
-        <param name="sweep">To be added.</param>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rx">The radius in the x-direction.</param>
+        <param name="ry">The radius in the y-direction.</param>
+        <param name="xAxisRotate">The angle in degrees relative to the x-axis.</param>
+        <param name="largeArc">Determines whether the smallest or largest arc possible is drawn.</param>
+        <param name="sweep">Determines if the arc should be swept in an anti-clockwise or clockwise direction.</param>
+        <param name="x">The destination x-coordinate.</param>
+        <param name="y">The destination y-coordinate.</param>
+        <summary>Appends an elliptical arc from the current point in the format used by SVG.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Bounds">
@@ -395,7 +403,7 @@
       </ReturnValue>
       <Docs>
         <summary>Gets the bounds of the path's points. If the path contains zero points/verbs, this will return the empty rectangle.</summary>
-        <value>To be added.</value>
+        <value>Gets the bounds of the path's points.</value>
         <remarks>This bounds may be larger than the actual shape, since curves do not extend as far as their control points. Additionally this bound encompases all points, even isolated MoveTo either preceeding or following the last non-degenerate contour.</remarks>
       </Docs>
     </Member>
@@ -437,11 +445,11 @@
         <Parameter Name="w" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="point0">To be added.</param>
-        <param name="point1">To be added.</param>
-        <param name="w">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="point0">The coordinates of the control point of the conic curve.</param>
+        <param name="point1">The coordinates of the end point of the conic curve.</param>
+        <param name="w">The weight of the conic curve.</param>
+        <summary>Add a conic path from the last point.</summary>
+        <remarks>If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0, 0).</remarks>
       </Docs>
     </Member>
     <Member MemberName="ConicTo">
@@ -494,12 +502,8 @@
         <Parameter Name="y" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="x">
-          <para></para>
-        </param>
-        <param name="y">
-          <para></para>
-        </param>
+        <param name="x">The x-coordinate to check.</param>
+        <param name="y">The y-coordinate to check.</param>
         <summary>Returns true if the point (x, y) is contained by the path, taking into account the <see cref="P:SkiaSharp.SKPath.FillType" />.</summary>
         <returns>Returns true if the point (x, y) is contained by the path.</returns>
         <remarks>
@@ -525,14 +529,14 @@
         <Parameter Name="pow2" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="p0">To be added.</param>
-        <param name="p1">To be added.</param>
-        <param name="p2">To be added.</param>
-        <param name="w">To be added.</param>
-        <param name="pow2">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="p0">The coordinates of the starting point of the conic curve.</param>
+        <param name="p1">The coordinates of the control point of the conic curve.</param>
+        <param name="p2">The coordinates of the end point of the conic curve.</param>
+        <param name="w">The weight of the conic curve.</param>
+        <param name="pow2">The tolerance to use (1 &lt;&lt; pow2).</param>
+        <summary>Chop a conic into a number of quads.</summary>
+        <returns>Returns the collection of points that make up the conic curve.</returns>
+        <remarks>The amount of storage needed for pts is: 1 + 2 * (1 &lt;&lt; pow2)</remarks>
       </Docs>
     </Member>
     <Member MemberName="ConvertConicToQuads">
@@ -554,15 +558,15 @@
         <Parameter Name="pow2" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="p0">To be added.</param>
-        <param name="p1">To be added.</param>
-        <param name="p2">To be added.</param>
-        <param name="w">To be added.</param>
-        <param name="pts">To be added.</param>
-        <param name="pow2">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="p0">The coordinates of the starting point of the conic curve.</param>
+        <param name="p1">The coordinates of the control point of the conic curve.</param>
+        <param name="p2">The coordinates of the end point of the conic curve.</param>
+        <param name="w">The weight of the conic curve.</param>
+        <param name="pts">The collection to store the points.</param>
+        <param name="pow2">The tolerance to use (1 &lt;&lt; pow2).</param>
+        <summary>Chop a conic into a number of quads.</summary>
+        <returns>Returns the number of quads.</returns>
+        <remarks>The amount of storage needed for pts is: 1 + 2 * (1 &lt;&lt; pow2)</remarks>
       </Docs>
     </Member>
     <Member MemberName="ConvertConicToQuads">
@@ -584,15 +588,17 @@
         <Parameter Name="pow2" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="p0">To be added.</param>
-        <param name="p1">To be added.</param>
-        <param name="p2">To be added.</param>
-        <param name="w">To be added.</param>
-        <param name="pts">To be added.</param>
-        <param name="pow2">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="p0">The coordinates of the starting point of the conic curve.</param>
+        <param name="p1">The coordinates of the control point of the conic curve.</param>
+        <param name="p2">The coordinates of the end point of the conic curve.</param>
+        <param name="w">The weight of the conic curve.</param>
+        <param name="pts">The collection of points.</param>
+        <param name="pow2">The tolerance to use (1 &lt;&lt; pow2).</param>
+        <summary>Chop a conic into a number of quads.</summary>
+        <returns>Returns the number of quads.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Convexity">
@@ -607,11 +613,11 @@
         <ReturnType>SkiaSharp.SKPathConvexity</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Gets the path's convexity, as stored in the path. If it is currently unknown, then this function will attempt to compute the convexity (and cache the result).</summary>
-        <value>The path's convexity, as stored in the path.</value>
-        <remarks>
+        <summary>Gets the path's convexity, as stored in the path.</summary>
+        <value>
           <para></para>
-        </remarks>
+        </value>
+        <remarks>If it is currently unknown, then this function will attempt to compute the convexity (and cache the result).</remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateIterator">
@@ -636,7 +642,7 @@
         <param name="forceClose">When this is true, each contour (as defined by a new starting move command) will be completed with a close verb regardless of the contour's contents.</param>
         <summary>Creates an iterator object to scan the all of the segments (lines, quadratics, cubics) of each contours in a path.</summary>
         <returns>An object that can be used to iterate over the various elements of the path.</returns>
-        <remarks>This iterator is able to clean up the path as the values are returned.   If you do not desire to get verbs that have been cleaned up, use the <see cref="M:SkiaSharp.SKPath.CreateRawIterator" /> method instead.</remarks>
+        <remarks>This iterator is able to clean up the path as the values are returned. If you do not desire to get verbs that have been cleaned up, use the <see cref="M:SkiaSharp.SKPath.CreateRawIterator" /> method instead.</remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateRawIterator">
@@ -658,7 +664,7 @@
       <Docs>
         <summary>Creates a raw iterator object to scan the all of the segments (lines, quadratics, cubics) of each contours in a path.</summary>
         <returns>An object that can be used to iterate over the various elements of the path.</returns>
-        <remarks>Unlike the <see cref="M:SkiaSharp.SKPath.CreateIterator" /> method, this iterator does not clean up or normalize the values in the path.   It returns the raw elements contained in the path.</remarks>
+        <remarks>Unlike the <see cref="M:SkiaSharp.SKPath.CreateIterator" /> method, this iterator does not clean up or normalize the values in the path. It returns the raw elements contained in the path.</remarks>
       </Docs>
     </Member>
     <Member MemberName="CubicTo">
@@ -677,11 +683,11 @@
         <Parameter Name="point2" Type="SkiaSharp.SKPoint" />
       </Parameters>
       <Docs>
-        <param name="point0">To be added.</param>
-        <param name="point1">To be added.</param>
-        <param name="point2">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="point0">The coordinates of the 1st control point on a cubic curve.</param>
+        <param name="point1">The coordinates of the 2nd control point on a cubic curve.</param>
+        <param name="point2">The coordinates of the end point on a cubic curve.</param>
+        <summary>Adds a cubic bezier from the last point.</summary>
+        <remarks>If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0, 0).</remarks>
       </Docs>
     </Member>
     <Member MemberName="CubicTo">
@@ -715,8 +721,8 @@
         <param name="y1">The y-coordinate of the 2nd control point on a cubic curve.</param>
         <param name="x2">The x-coordinate of the end point on a cubic curve.</param>
         <param name="y2">The y-coordinate of the end point on a cubic curve.</param>
-        <summary>Add a cubic bezier from the last point.</summary>
-        <remarks>Add a cubic bezier from the last point, approaching control points (x0, y0) and (x1, y1), and ending at (x2, y2). If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0, 0).</remarks>
+        <summary>Adds a cubic bezier from the last point.</summary>
+        <remarks>If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0, 0).</remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -830,10 +836,10 @@
         <Parameter Name="max" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="max">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="max">The maximum number of points to copy into points.</param>
+        <summary>Returns a subset of points in the path. Up to max points are copied.</summary>
+        <returns>Returns the requested set of points.</returns>
+        <remarks />
       </Docs>
     </Member>
     <Member MemberName="GetPoints">
@@ -853,11 +859,13 @@
         <Parameter Name="max" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="points">To be added.</param>
-        <param name="max">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="points">The array to hold the points.</param>
+        <param name="max">The maximum number of points to copy into points.</param>
+        <summary>Returns a subset of points in the path. Up to max points are copied.</summary>
+        <returns>Returns the actual number of points in the path</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetTightBounds">
@@ -895,9 +903,9 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a value indicating whether the path is concave, as stored in the path.</summary>
+        <value />
+        <remarks>If it is currently unknown, then this function will attempt to compute the convexity (and cache the result).</remarks>
       </Docs>
     </Member>
     <Member MemberName="IsConvex">
@@ -912,9 +920,11 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a value indicating whether the path is convex, as stored in the path.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>If it is currently unknown, then this function will attempt to compute the convexity (and cache the result).</remarks>
       </Docs>
     </Member>
     <Member MemberName="Item">
@@ -952,9 +962,15 @@
         <ReturnType>SkiaSharp.SKPoint</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>
+          <para>Return the last point on the path. If no points have been added, (0, 0) is returned.</para>
+        </summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="LineTo">
@@ -971,9 +987,9 @@
         <Parameter Name="point" Type="SkiaSharp.SKPoint" />
       </Parameters>
       <Docs>
-        <param name="point">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="point">The coordinates of the end of a line</param>
+        <summary>Add a line from the last point to the specified point (x, y).</summary>
+        <remarks>If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0, 0).</remarks>
       </Docs>
     </Member>
     <Member MemberName="LineTo">
@@ -997,12 +1013,10 @@
         <Parameter Name="y" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="x">The x-coordinate of the end of a line</param>
-        <param name="y">The y-coordinate of the end of a line</param>
-        <summary>Add a line from the last point to the specified point (x,y).</summary>
-        <remarks>
-          <para> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</para>
-        </remarks>
+        <param name="x">The x-coordinate of the end of a line.</param>
+        <param name="y">The y-coordinate of the end of a line.</param>
+        <summary>Add a line from the last point to the specified point (x, y).</summary>
+        <remarks>If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0, 0).</remarks>
       </Docs>
     </Member>
     <Member MemberName="MoveTo">
@@ -1019,9 +1033,11 @@
         <Parameter Name="point" Type="SkiaSharp.SKPoint" />
       </Parameters>
       <Docs>
-        <param name="point">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="point">The coordinates of the start of a new contour.</param>
+        <summary>Set the beginning of the next contour to the point.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="MoveTo">
@@ -1045,8 +1061,8 @@
         <Parameter Name="y" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="x">The x-coordinate of the start of a new contour</param>
-        <param name="y">The y-coordinate of the start of a new contour</param>
+        <param name="x">The x-coordinate of the start of a new contour.</param>
+        <param name="y">The y-coordinate of the start of a new contour.</param>
         <summary>Set the beginning of the next contour to the point.</summary>
         <remarks>
           <para></para>
@@ -1067,9 +1083,11 @@
         <Parameter Name="offset" Type="SkiaSharp.SKPoint" />
       </Parameters>
       <Docs>
-        <param name="offset">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="offset">The amount to offset the entire path.</param>
+        <summary>Set the beginning of the next contour to the point.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Offset">
@@ -1089,10 +1107,12 @@
         <Parameter Name="dy" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="dx">To be added.</param>
-        <param name="dy">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="dx">The amount in the X direction to offset the entire path.</param>
+        <param name="dy">The amount in the Y direction to offset the entire path.</param>
+        <summary>Offset the path by the specifid distance.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Op">
@@ -1156,9 +1176,7 @@
       <Docs>
         <summary>Gets the number of points on the path.</summary>
         <value>The number of points on the path.</value>
-        <remarks>
-          <para />
-        </remarks>
+        <remarks />
       </Docs>
     </Member>
     <Member MemberName="Points">
@@ -1174,9 +1192,11 @@
         <ReturnType>SkiaSharp.SKPoint[]</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets all the points in the path.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>The number of points will be <see cref="P:SkiaSharp.SKPath.PointCount" />, To only return a subset of the points in the path, use <see cref="M:SkiaSharp.SKPath.GetPoints" />.</remarks>
       </Docs>
     </Member>
     <Member MemberName="QuadTo">
