@@ -15,7 +15,7 @@ var NugetToolPath = GetToolPath ("nuget.exe");
 var XamarinComponentToolPath = GetToolPath ("xamarin-component.exe");
 var CakeToolPath = GetToolPath ("Cake/Cake.exe");
 var NUnitConsoleToolPath = GetToolPath ("NUnit.Console/tools/nunit3-console.exe");
-var GenApiToolPath = GetToolPath ("genapi.exe");
+var GenApiToolPath = GetToolPath ("Microsoft.DotNet.BuildTools.GenAPI/tools/GenAPI.exe");
 var MDocPath = GetToolPath ("mdoc/mdoc.exe");
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
