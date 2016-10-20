@@ -620,6 +620,7 @@ namespace SkiaSharp
 		Luminosity,
 	}
 
+	[Obsolete ("Use SKClipOperation instead.")]
 	public enum SKClipType {
 		Intersect, Difference 
 	}
