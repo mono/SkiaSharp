@@ -237,8 +237,33 @@ Task ("docs")
     .Does (() => 
 {
     // log TODOs
-    var docFiles = FindTextInFiles ("./docs/**/*.xml", "To be added.");
-    Information ("Documentation missing in {0} files.", docFiles.Length);
+    var docFiles = GetFiles ("./docs/**/*.xml");
+    float typeCount = 0;
+    float memberCount = 0;
+    float totalTypes = 0;
+    float totalMembers = 0;
+    foreach (var file in docFiles) {
+        var xdoc = XDocument.Load (file.ToString ());
+
+        var typesWithDocs = xdoc.Root
+            .Elements ("Docs");
+
+        totalTypes += typesWithDocs.Count (); 
+        typeCount += typesWithDocs.Where (m => m.Value?.IndexOf ("To be added.") >= 0).Count ();
+
+        var membersWithDocs = xdoc.Root
+            .Elements ("Members")
+            .Elements ("Member")
+            .Where (m => m.Attribute ("MemberName")?.Value != "Dispose")
+            .Elements ("Docs");
+
+        totalMembers += membersWithDocs.Count ();
+        memberCount += membersWithDocs.Where (m => m.Value?.IndexOf ("To be added.") >= 0).Count ();
+    }
+    Information (
+        "Documentation missing in {0}/{1} ({2:0.0%}) types and {3}/{4} ({5:0.0%}) members.", 
+        typeCount, totalTypes, typeCount / totalTypes, 
+        memberCount, totalMembers, memberCount / totalMembers);
 
     if (!DirectoryExists ("./output/docs/msxml/")) CreateDirectory ("./output/docs/msxml/");
     RunMdocMSXml (DOCS_PATH, "./output/docs/msxml/");
