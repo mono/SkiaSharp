@@ -25,7 +25,7 @@
       <para>Once you create a surface with one of its <see cref="M:SkiaSharp.SKSurface.Create" /> methods, you can draw into the canvas returned by the <see cref="M:SkiaSharp.SKSurface.Canvas" /> property.   Once the drawing is complete, you can retrieve an <see cref="T:SkiaSharp.SKImage" /> by calling the <see cref="M:SkiaSharp.SKSurface.Snapshot" /> method.</para>
       <para></para>
       <example>
-        <code lang="C#"><![CDATA[using (var surface = SKSurface.Create (width: 640, height: 480, SKColorType.N_32, SKAlphaType.Premul)) {
+        <code lang="C#"><![CDATA[using (var surface = SKSurface.Create (width: 640, height: 480, SKImageInfo.PlatformColorType, SKAlphaType.Premul)) {
     SKCanvas myCanvas = surface.Canvas;
 
     // Your drawing code goes here.

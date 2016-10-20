@@ -27,9 +27,11 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether to allow path mask textures to be cached.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>This is only really useful if paths are commonly rendered at the same scale and fractional translation.</remarks>
       </Docs>
     </Member>
     <Member MemberName="BufferMapThreshold">
@@ -45,9 +47,11 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the threshold, in bytes, above which a buffer mapping API will be used to map vertex and index buffers to CPU memory in order to update them.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>A value of -1 means the context should deduce the optimal value for this platform.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ClipBatchToBounds">
@@ -63,9 +67,11 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether to turn each batch bounds into a clip rect.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>For debugging purposes. This is used to verify that the clip bounds are conservative.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Default">
@@ -79,9 +85,13 @@
         <ReturnType>SkiaSharp.GRContextOptions</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a new instance with the values set to the defaults.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DisableDistanceFieldPaths">
@@ -95,9 +105,11 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether to disable distance field rendering for paths.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>Distance field computation can be expensive and yields no benefit if a path is not rendered multiple times with different transforms.</remarks>
       </Docs>
     </Member>
     <Member MemberName="DoManualMipmapping">
@@ -113,9 +125,11 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether to construct mipmaps manually, via repeated downsampling draw-calls.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>This is used when the driver's implementation (glGenerateMipmap) contains bugs. This requires mipmap level and LOD control (ie desktop or ES3).</remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawBatchBounds">
@@ -131,9 +145,11 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether to draw a wireframe device bounds rect for each batch.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>For debugging purposes. The wireframe rect is drawn before the batch in order to visualize batches that draw outside of their dev bounds.</remarks>
       </Docs>
     </Member>
     <Member MemberName="EnableInstancedRendering">
@@ -147,9 +163,11 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether to enable instanced rendering as long as all required functionality is supported by the hardware.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>Instanced rendering is still experimental at this point and disabled by default.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ForceSWPathMasks">
@@ -163,9 +181,11 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether to force all path draws to go through through the software-rasterize-to-texture code path.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>This assumes the path is not recognized as a simpler shape (e.g. a rrect). This is intended for testing purposes.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ImmediateMode">
@@ -181,9 +201,11 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether the context operates in immediate mode.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>The context will issue all draws to the backend API immediately. Intended to ease debugging.</remarks>
       </Docs>
     </Member>
     <Member MemberName="MaxBatchLookahead">
@@ -199,9 +221,11 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value overriding the default maximum look-ahead window for batch combing.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>For debugging purposes. Default is -1.</remarks>
       </Docs>
     </Member>
     <Member MemberName="MaxBatchLookback">
@@ -217,9 +241,11 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value overriding the default maximum look-back window for batch combing.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>For debugging purposes. Default is -1.</remarks>
       </Docs>
     </Member>
     <Member MemberName="MaxTextureSizeOverride">
@@ -235,9 +261,11 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the maximum size of a texture.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>An option to override feature detection using backend API queries. The override can only reduce the feature set or limits, never increase them beyond the detected values.</remarks>
       </Docs>
     </Member>
     <Member MemberName="MaxTileSizeOverride">
@@ -253,9 +281,11 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the maximum size (if non-zero) of a tile for software-backed images and bitmaps rendered by the device.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>An option to override feature detection using backend API queries. The override can only reduce the feature set or limits, never increase them beyond the detected values.</remarks>
       </Docs>
     </Member>
     <Member MemberName="SuppressDualSourceBlending">
@@ -271,9 +301,13 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether to suppress dual source blending.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="SuppressPrints">
@@ -289,9 +323,11 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether to suppress prints for the <see cref="T:SkiaSharp.GRContext" />.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks />
       </Docs>
     </Member>
     <Member MemberName="UseDrawInsteadOfPartialRenderTargetWrite">
@@ -307,9 +343,11 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether to avoid partial writes.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>Some GPUs have problems with partial writes of the render target.</remarks>
       </Docs>
     </Member>
     <Member MemberName="UseShaderSwizzling">
@@ -325,9 +363,13 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether to do all swizzling manually in the shader and don't rely on extensions to do swizzling.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
   </Members>

@@ -131,7 +131,7 @@
         <param name="width">Desired width in pixels.</param>
         <param name="height">Desired height in pixels.</param>
         <param name="isOpaque">If true, sets the <see cref="T:SkiaSharp.SKAlphaType" /> to <see cref="F:SkiaSharp.SKAlphaType.Opaque" />, otherwise it sets it to <see cref="F:SkiaSharp.SKAlphaType.Premul" />.</param>
-        <summary>Creates a bitmap with the given width, height and opacity with color type set to <see cref="E:SkiaSharp.SKColorType.N_32" /></summary>
+        <summary>Creates a bitmap with the given width, height and opacity with color type set to <see cref="F:SkiaSharp.SKImageInfo.PlatformColorType" /></summary>
         <remarks>This constructor might throw an exception if it is not possible to create a bitmap with the specified configuration (for example, the image info requires a color table, and there is no color table).</remarks>
       </Docs>
     </Member>
@@ -248,9 +248,11 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the number of bytes used per pixel.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>This is calculated from the <see cref="P:SkiaSharp.SKBitmap.ColorType" />. If the color type is <see cref="F:SkiaSharp.SKColorType.Unknown" />, then the value will be 0.</remarks>
       </Docs>
     </Member>
     <Member MemberName="CanCopyTo">
@@ -293,9 +295,13 @@
         <ReturnType>SkiaSharp.SKColorTable</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the color table of the bitmap.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ColorType">
@@ -315,9 +321,13 @@
         <ReturnType>SkiaSharp.SKColorType</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the color type of the bitmap.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Copy">
@@ -369,7 +379,7 @@
         <summary>Copies the contents of the bitmap with the specified color type and returns the copy.</summary>
         <returns>The copy of the bitmap, or <paramref name="null" /> on error.</returns>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -978,9 +988,13 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the height of the bitmap.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Info">
@@ -1000,9 +1014,13 @@
         <ReturnType>SkiaSharp.SKImageInfo</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets an instance of <see cref="T:SkiaSharp.SKImageInfo" /> with all the properties of the bitmap.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="IsEmpty">
@@ -1186,9 +1204,11 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>The number of bytes per row.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>The same as <see cref="P:SkiaSharp.SKImageInfo.RowBytes" />.</remarks>
       </Docs>
     </Member>
     <Member MemberName="SetImmutable">
@@ -1235,9 +1255,9 @@
         <Parameter Name="color" Type="SkiaSharp.SKColor" />
       </Parameters>
       <Docs>
-        <param name="x">X coordinate</param>
-        <param name="y">Y coordinat</param>
-        <param name="color">Color to set</param>
+        <param name="x">The x-coordinate.</param>
+        <param name="y">The y-coordinate.</param>
+        <param name="color">The color to set.</param>
         <summary>Sets the color of the pixel at a specified location.</summary>
         <remarks>This method will set the color of the pixel on the bitmap to the specified <paramref name="color" /> performing any necessary color conversions to the format of the bitmap.</remarks>
       </Docs>
@@ -1281,9 +1301,13 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the width of the bitmap.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
   </Members>
