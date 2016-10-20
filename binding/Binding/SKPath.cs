@@ -378,6 +378,17 @@ namespace SkiaSharp
 			return SkiaApi.sk_pathop_op (Handle, other.Handle, op, result.Handle);
 		}
 		
+		public SKPath Op (SKPath other, SKPathOp op)
+		{
+			var result = new SKPath ();
+			if (Op (other, op, result)) {
+				return result;
+			} else {
+				result.Dispose ();
+				return null;
+			}
+		}
+
 		public bool Simplify (SKPath result)
 		{
 			if (result == null)
