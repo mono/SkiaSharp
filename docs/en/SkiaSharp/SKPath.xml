@@ -1116,6 +1116,30 @@
       </Docs>
     </Member>
     <Member MemberName="Op">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPath Op (SkiaSharp.SKPath other, SkiaSharp.SKPathOp op);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKPath Op(class SkiaSharp.SKPath other, valuetype SkiaSharp.SKPathOp op) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPath</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="other" Type="SkiaSharp.SKPath" />
+        <Parameter Name="op" Type="SkiaSharp.SKPathOp" />
+      </Parameters>
+      <Docs>
+        <param name="other">The second operand.</param>
+        <param name="op">The logical operator.</param>
+        <summary>Compute the result of a logical operation on two paths.</summary>
+        <returns>Returns the resulting path if the operation was successful, otherwise null.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Op">
       <MemberSignature Language="C#" Value="public bool Op (SkiaSharp.SKPath other, SkiaSharp.SKPathOp op, SkiaSharp.SKPath result);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool Op(class SkiaSharp.SKPath other, valuetype SkiaSharp.SKPathOp op, class SkiaSharp.SKPath result) cil managed" />
       <MemberType>Method</MemberType>
@@ -1132,12 +1156,14 @@
         <Parameter Name="result" Type="SkiaSharp.SKPath" />
       </Parameters>
       <Docs>
-        <param name="other">To be added.</param>
-        <param name="op">To be added.</param>
-        <param name="result">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="other">The second operand.</param>
+        <param name="op">The logical operator.</param>
+        <param name="result">The path that will be used to set the result to. The current path will be <see cref="M:SkiaSharp.SKPath.Reset" />.</param>
+        <summary>Compute the result of a logical operation on two paths.</summary>
+        <returns>Returns true if the operation was successful, otherwise false.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ParseSvgPathData">
@@ -1155,10 +1181,12 @@
         <Parameter Name="svgPath" Type="System.String" />
       </Parameters>
       <Docs>
-        <param name="svgPath">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="svgPath">The SVG path data.</param>
+        <summary>Creates a path based on the SVG path data string.</summary>
+        <returns>Returns the new path if successful, otherwise null.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="PointCount">
@@ -1424,11 +1452,7 @@
       <Parameters />
       <Docs>
         <summary>Clear any lines and curves from the path, making it empty.</summary>
-        <remarks>
-          <para>This frees up internal storage associated with those segments.</para>
-          <para />
-          <para>On Android, does not change fSourcePath.</para>
-        </remarks>
+        <remarks>This frees up internal storage associated with those segments.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Rewind">
