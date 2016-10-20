@@ -1242,10 +1242,10 @@
         <Parameter Name="point1" Type="SkiaSharp.SKPoint" />
       </Parameters>
       <Docs>
-        <param name="point0">To be added.</param>
-        <param name="point1">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="point0">The coordinates of the control point on a quadratic curve.</param>
+        <param name="point1">The coordinates of the end point on a quadratic curve.</param>
+        <summary>Add a quadratic bezier from the last point.</summary>
+        <remarks>Add a quadratic bezier from the last point, approaching control point (point0), and ending at point1. If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0, 0).</remarks>
       </Docs>
     </Member>
     <Member MemberName="QuadTo">
@@ -1271,14 +1271,12 @@
         <Parameter Name="y1" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="x0">The x-coordinate of the control point on a quadratic curve</param>
-        <param name="y0">The y-coordinate of the control point on a quadratic curve</param>
-        <param name="x1">The x-coordinate of the end point on a quadratic curve</param>
-        <param name="y1">The y-coordinate of the end point on a quadratic curve</param>
+        <param name="x0">The x-coordinate of the control point on a quadratic curve.</param>
+        <param name="y0">The y-coordinate of the control point on a quadratic curve.</param>
+        <param name="x1">The x-coordinate of the end point on a quadratic curve.</param>
+        <param name="y1">The y-coordinate of the end point on a quadratic curve.</param>
         <summary>Add a quadratic bezier from the last point.</summary>
-        <remarks>
-          <para>Add a quadratic bezier from the last point, approaching control point (x0,y0), and ending at (x1,y1). If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</para>
-        </remarks>
+        <remarks>Add a quadratic bezier from the last point, approaching control point (x0, y0), and ending at (x1, y1). If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0, 0).</remarks>
       </Docs>
     </Member>
     <Member MemberName="RArcTo">
@@ -1304,15 +1302,17 @@
         <Parameter Name="y" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="rx">To be added.</param>
-        <param name="ry">To be added.</param>
-        <param name="xAxisRotate">To be added.</param>
-        <param name="largeArc">To be added.</param>
-        <param name="sweep">To be added.</param>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rx">The radius in the x-direction.</param>
+        <param name="ry">The radius in the y-direction.</param>
+        <param name="xAxisRotate">The angle in degrees relative to the x-axis.</param>
+        <param name="largeArc">Determines whether the smallest or largest arc possible is drawn.</param>
+        <param name="sweep">Determines if the arc should be swept in an anti-clockwise or clockwise direction.</param>
+        <param name="x">The destination x-coordinate relative to the last point.</param>
+        <param name="y">The destination y-coordinate relative to the last point.</param>
+        <summary>The same as <see cref="M:SkiaSharp.SKPath.ArcTo" />, but the coordinates are considered relative to the last point on this contour.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="RConicTo">
@@ -1331,11 +1331,11 @@
         <Parameter Name="w" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="point0">To be added.</param>
-        <param name="point1">To be added.</param>
-        <param name="w">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="point0">The amount to add to the coordinates of the last point on this contour, to specify the control point of the conic curve.</param>
+        <param name="point1">The amount to add to the coordinates of the last point on this contour, to specify the end point of the conic curve.</param>
+        <param name="w">The weight of the conic curve.</param>
+        <summary>Same as <see cref="M:SkiaSharp.SKPath.ConicTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
+        <remarks>If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0, 0).</remarks>
       </Docs>
     </Member>
     <Member MemberName="RConicTo">
@@ -1366,12 +1366,8 @@
         <param name="dx1">The amount to add to the x-coordinate of the last point on this contour, to specify the end point of the conic curve.</param>
         <param name="dy1">The amount to add to the y-coordinate of the last point on this contour, to specify the end point of the conic curve.</param>
         <param name="w">The weight of the conic curve.</param>
-        <summary>
-          <para>Same as <see cref="M:SkiaSharp.SKPath.ConicTo" /> but the coordinates are considered relative to the last point on this contour.</para>
-        </summary>
-        <remarks>
-          <para> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</para>
-        </remarks>
+        <summary>Same as <see cref="M:SkiaSharp.SKPath.ConicTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
+        <remarks>If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0, 0).</remarks>
       </Docs>
     </Member>
     <Member MemberName="RCubicTo">
@@ -1390,11 +1386,11 @@
         <Parameter Name="point2" Type="SkiaSharp.SKPoint" />
       </Parameters>
       <Docs>
-        <param name="point0">To be added.</param>
-        <param name="point1">To be added.</param>
-        <param name="point2">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="point0">The amount to add to the coordinates of the last point on this contour, to specify the 1st control point on a cubic curve.</param>
+        <param name="point1">The amount to add to the coordinates of the last point on this contour, to specify the 2nd control point on a cubic curve.</param>
+        <param name="point2">The amount to add to the coordinates of the last point on this contour, to specify the end point on a cubic curve.</param>
+        <summary>Same as <see cref="M:SkiaSharp.SKPath.CubicTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
+        <remarks> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0, 0).</remarks>
       </Docs>
     </Member>
     <Member MemberName="RCubicTo">
@@ -1428,10 +1424,7 @@
         <param name="dx2">The amount to add to the x-coordinate of the last point on this contour, to specify the end point on a cubic curve.</param>
         <param name="dy2">The amount to add to the y-coordinate of the last point on this contour, to specify the end point on a cubic curve.</param>
         <summary>Same as <see cref="M:SkiaSharp.SKPath.CubicTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
-        <remarks>
-          <para> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</para>
-          <para></para>
-        </remarks>
+        <remarks> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0, 0).</remarks>
       </Docs>
     </Member>
     <Member MemberName="Reset">
@@ -1473,11 +1466,7 @@
       <Parameters />
       <Docs>
         <summary>Clear any lines and curves from the path, making it empty.</summary>
-        <remarks>
-          <para>However, any internal storage for those lines/curves is retained, making reuse of the path potentially faster.</para>
-          <para />
-          <para>On Android, does not change fSourcePath.</para>
-        </remarks>
+        <remarks>Any internal storage for those lines/curves is retained, making reuse of the path potentially faster.</remarks>
       </Docs>
     </Member>
     <Member MemberName="RLineTo">
@@ -1494,9 +1483,9 @@
         <Parameter Name="point" Type="SkiaSharp.SKPoint" />
       </Parameters>
       <Docs>
-        <param name="point">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="point">The amount to add to the coordinates of the last point on this contour, to specify the end of a line.</param>
+        <summary>Same as <see cref="M:SkiaSharp.SKPath.LineTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
+        <remarks> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0, 0).</remarks>
       </Docs>
     </Member>
     <Member MemberName="RLineTo">
@@ -1522,7 +1511,7 @@
         <param name="dx">The amount to add to the x-coordinate of the last point on this contour, to specify the end of a line.</param>
         <param name="dy">The amount to add to the y-coordinate of the last point on this contour, to specify the end of a line.</param>
         <summary>Same as <see cref="M:SkiaSharp.SKPath.LineTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
-        <remarks> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</remarks>
+        <remarks> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0, 0).</remarks>
       </Docs>
     </Member>
     <Member MemberName="RMoveTo">
@@ -1539,9 +1528,11 @@
         <Parameter Name="point" Type="SkiaSharp.SKPoint" />
       </Parameters>
       <Docs>
-        <param name="point">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="point">The amount to add to the coordinates of the last point on this contour, to specify the start of a new contour.</param>
+        <summary>Same as <see cref="M:SkiaSharp.SKPath.MoveTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="RMoveTo">
@@ -1587,10 +1578,10 @@
         <Parameter Name="point1" Type="SkiaSharp.SKPoint" />
       </Parameters>
       <Docs>
-        <param name="point0">To be added.</param>
-        <param name="point1">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="point0">The amount to add to the coordinates of the last point on this contour, to specify the control point on a quadratic curve.</param>
+        <param name="point1">The amount to add to the coordinates of the last point on this contour, to specify end point on a quadratic curve.</param>
+        <summary>Same as <see cref="M:SkiaSharp.SKPath.QuadTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
+        <remarks> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0, 0).</remarks>
       </Docs>
     </Member>
     <Member MemberName="RQuadTo">
@@ -1620,7 +1611,24 @@
         <param name="dx1">The amount to add to the x-coordinate of the last point on this contour, to specify end point on a quadratic curve.</param>
         <param name="dy1">The amount to add to the y-coordinate of the last point on this contour, to specify end point on a quadratic curve.</param>
         <summary>Same as <see cref="M:SkiaSharp.SKPath.QuadTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
-        <remarks> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</remarks>
+        <remarks> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0, 0).</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Simplify">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPath Simplify ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKPath Simplify() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPath</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Return a simplified copy of the current path.</summary>
+        <returns>Returns the new path if simplification was successful, otherwise null.</returns>
+        <remarks>The curve order is reduced where possible so that cubics may be turned into quadratics, and quadratics maybe turned into lines.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Simplify">
@@ -1638,10 +1646,10 @@
         <Parameter Name="result" Type="SkiaSharp.SKPath" />
       </Parameters>
       <Docs>
-        <param name="result">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="result">The path to store the simplified path data. If simplification failed, then this is unmodified.</param>
+        <summary>Simplifies the current path.</summary>
+        <returns>Returns true if simplification was successful, otherwise false.</returns>
+        <remarks>The curve order is reduced where possible so that cubics may be turned into quadratics, and quadratics maybe turned into lines.</remarks>
       </Docs>
     </Member>
     <Member MemberName="TightBounds">
@@ -1676,9 +1684,13 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Returns a SVG path data representation of the current path.</summary>
+        <returns>
+          <para></para>
+        </returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Transform">
@@ -1700,9 +1712,11 @@
         <Parameter Name="matrix" Type="SkiaSharp.SKMatrix" />
       </Parameters>
       <Docs>
-        <param name="matrix">To be added.</param>
+        <param name="matrix">The matrix to use for transformation.</param>
         <summary>Applies a transformation matrix to the all the elements in the path.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
   </Members>
