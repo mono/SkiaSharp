@@ -258,9 +258,34 @@ namespace SkiaSharp
 			SkiaApi.sk_path_rcubic_to (Handle, dx0, dy0, dx1, dy1, dx2, dy2);
 		}
 
+		public void ArcTo (SKPoint r, float xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, SKPoint xy)
+		{
+			SkiaApi.sk_path_arc_to (Handle, r.X, r.Y, xAxisRotate, largeArc, sweep, xy.X, xy.Y);
+		}
+
 		public void ArcTo (float rx, float ry, float xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, float x, float y)
 		{
 			SkiaApi.sk_path_arc_to (Handle, rx, ry, xAxisRotate, largeArc, sweep, x, y);
+		}
+
+		public void ArcTo (SKRect oval, float startAngle, float sweepAngle, bool forceMoveTo)
+		{
+			SkiaApi.sk_path_arc_to_with_oval (Handle, ref oval, startAngle, sweepAngle, forceMoveTo);
+		}
+
+		public void ArcTo (SKPoint point1, SKPoint point2, float radius)
+		{
+			SkiaApi.sk_path_arc_to_with_points (Handle, point1.X, point1.Y, point2.X, point2.Y, radius);
+		}
+
+		public void ArcTo (float x1, float y1, float x2, float y2, float radius)
+		{
+			SkiaApi.sk_path_arc_to_with_points (Handle, x1, y1, x2, y2, radius);
+		}
+
+		public void RArcTo (SKPoint r, float xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, SKPoint xy)
+		{
+			SkiaApi.sk_path_rarc_to (Handle, r.X, r.Y, xAxisRotate, largeArc, sweep, xy.X, xy.Y);
 		}
 
 		public void RArcTo (float rx, float ry, float xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, float x, float y)
