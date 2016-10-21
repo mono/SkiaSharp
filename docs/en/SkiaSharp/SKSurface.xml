@@ -18,11 +18,11 @@
   <Docs>
     <summary>Represents the backend/results of drawing to a canvas</summary>
     <remarks>
-      <para>SkSurface represents the backend/results of drawing to a canvas. For raster drawing, the surface will be pixels, but (for example) when drawing into a PDF or Picture canvas, the surface stores the recorded commands.</para>
+      <para>The surface represents the backend/results of drawing to a canvas. For raster drawing, the surface will be pixels, but (for example) when drawing into a PDF or <see cref="T:SkiaSharp.SKPicture" /> canvas, the surface stores the recorded commands.</para>
       <para></para>
-      <para>SkSurface always has non-zero dimensions. If there is a request for a new surface, and either of the requested dimensions are zero, then <see langword="null" /> will be returned.</para>
+      <para>The surface always has non-zero dimensions. If there is a request for a new surface, and either of the requested dimensions are zero, then <see langword="null" /> will be returned.</para>
       <para></para>
-      <para>Once you create a surface with one of its <see cref="M:SkiaSharp.SKSurface.Create" /> methods, you can draw into the canvas returned by the <see cref="M:SkiaSharp.SKSurface.Canvas" /> property.   Once the drawing is complete, you can retrieve an <see cref="T:SkiaSharp.SKImage" /> by calling the <see cref="M:SkiaSharp.SKSurface.Snapshot" /> method.</para>
+      <para>Once you create a surface with one of its <see cref="M:SkiaSharp.SKSurface.Create" /> methods, you can draw into the canvas returned by the <see cref="M:SkiaSharp.SKSurface.Canvas" /> property. Once the drawing is complete, you can retrieve an <see cref="T:SkiaSharp.SKImage" /> by calling the <see cref="M:SkiaSharp.SKSurface.Snapshot" /> method.</para>
       <para></para>
       <example>
         <code lang="C#"><![CDATA[using (var surface = SKSurface.Create (width: 640, height: 480, SKImageInfo.PlatformColorType, SKAlphaType.Premul)) {
@@ -53,12 +53,12 @@
         <ReturnType>SkiaSharp.SKCanvas</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Returns the canvas for this surface which can be used for drawing into it.</summary>
+        <summary>Gets the canvas for this surface which can be used for drawing into it.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -83,8 +83,8 @@
       </Parameters>
       <Docs>
         <param name="info">Contains the image configuration parameters.</param>
-        <summary>Creates a new SKSurface with the specified image parameters.</summary>
-        <returns>If the requested surface can not be created, or the configuration is not supported, this returns <see langword="null" />.   Otherwise the return is an instance of SKSuface.</returns>
+        <summary>Creates a new surface with the specified image parameters.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
         <remarks>This will create a buffer with the parameters specified in <paramref name="info" />.</remarks>
       </Docs>
     </Member>
@@ -105,11 +105,13 @@
         <Parameter Name="desc" Type="SkiaSharp.GRBackendRenderTargetDesc" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="desc">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing render target.</param>
+        <summary>Wraps a pre-existing 3D API rendering target as a surface.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -129,11 +131,13 @@
         <Parameter Name="desc" Type="SkiaSharp.GRBackendTextureDesc" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="desc">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing texture.</param>
+        <summary>Wraps a pre-existing 3D API texture as a surface.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -157,10 +161,10 @@
         <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
       </Parameters>
       <Docs>
-        <param name="info">Contains the image configuration parameters.</param>
-        <param name="props">Contains the surface property configuration.</param>
-        <summary>Creates a new SKSurface from the specified image parameters and surface properties.</summary>
-        <returns>If the requested surface can not be created, or the configuration is not supported, this returns <see langword="null" />.   Otherwise the return is an instance of SKSuface.</returns>
+        <param name="info">The image configuration parameters.</param>
+        <param name="props">The surface property configuration.</param>
+        <summary>Creates a new surface from the specified image parameters and surface properties.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
         <remarks>This will create a buffer with the parameters specified in <paramref name="info&amp;nbsp;" />and the properties specified in <paramref name="props" />.</remarks>
       </Docs>
     </Member>
@@ -182,12 +186,14 @@
         <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="desc">To be added.</param>
-        <param name="props">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing render target.</param>
+        <param name="props">The surface property configuration.</param>
+        <summary>Wraps a pre-existing 3D API rendering target as a surface.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -208,12 +214,14 @@
         <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="desc">To be added.</param>
-        <param name="props">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing texture.</param>
+        <param name="props">The surface property configuration.</param>
+        <summary>Wraps a pre-existing 3D API texture as a surface.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -234,12 +242,14 @@
         <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="budgeted">To be added.</param>
-        <param name="info">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="budgeted">Whether an allocation should count against a cache budget.</param>
+        <param name="info">The image configuration parameters.</param>
+        <summary>Creates a new surface whose contents will be drawn to an offscreen render target, allocated by the surface.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -264,11 +274,11 @@
         <Parameter Name="rowBytes" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="info">Contains the image configuration parameters.</param>
-        <param name="pixels">Pointer to an in memory-buffer that can hold the image as specified.</param>
+        <param name="info">The image configuration parameters.</param>
+        <param name="pixels">The pointer to an in memory-buffer that can hold the image as specified.</param>
         <param name="rowBytes">The number of bytes per row in the pixel buffer.</param>
-        <summary>Creates a new SKSurface with the specified image parameters using a provided buffer.</summary>
-        <returns>If the requested surface can not be created, or the configuration is not supported, this returns <see langword="null" />.   Otherwise the return is an instance of SKSuface.</returns>
+        <summary>Creates a new surface with the specified image parameters using a provided buffer.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
         <remarks>This will create a buffer that will be backend by the in-memory buffer provided in <paramref name="pixels" />.</remarks>
       </Docs>
     </Member>
@@ -291,13 +301,15 @@
         <Parameter Name="sampleCount" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="budgeted">To be added.</param>
-        <param name="info">To be added.</param>
-        <param name="sampleCount">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="budgeted">Whether an allocation should count against a cache budget.</param>
+        <param name="info">The image configuration parameters.</param>
+        <param name="sampleCount">The number of samples.</param>
+        <summary>Creates a new surface whose contents will be drawn to an offscreen render target, allocated by the surface.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -323,12 +335,12 @@
         <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
       </Parameters>
       <Docs>
-        <param name="info">Contains the image configuration parameters.</param>
-        <param name="pixels">Pointer to an in memory-buffer that can hold the image as specified.</param>
+        <param name="info">The image configuration parameters.</param>
+        <param name="pixels">The pointer to an in memory-buffer that can hold the image as specified.</param>
         <param name="rowBytes">The number of bytes per row in the pixel buffer.</param>
-        <param name="props">Contains the surface property configuration.</param>
-        <summary>Creates a new SKSurface from the specified image parameters, the provided buffer and surface properties.</summary>
-        <returns>If the requested surface can not be created, or the configuration is not supported, this returns <see langword="null" />.   Otherwise the return is an instance of SKSuface.</returns>
+        <param name="props">The surface property configuration.</param>
+        <summary>Creates a new surface from the specified image parameters, the provided buffer and surface properties.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
         <remarks>This will create a buffer that will be backend by the in-memory buffer provided in <paramref name="pixels" />.</remarks>
       </Docs>
     </Member>
@@ -357,10 +369,10 @@
       <Docs>
         <param name="width">The desired width for the surface.</param>
         <param name="height">The desired heigh for the surface.</param>
-        <param name="colorType">Color type to use for the surface.</param>
-        <param name="alphaType">Transparency mode to use for the surface.</param>
-        <summary>Creates a new SKSurface with the specified image parameters.</summary>
-        <returns>If the requested surface can not be created, or the configuration is not supported, this returns <see langword="null" />.   Otherwise the return is an instance of SKSuface.</returns>
+        <param name="colorType">The color type to use for the surface.</param>
+        <param name="alphaType">The transparency mode to use for the surface.</param>
+        <summary>Creates a new surface with the specified image parameters.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
         <remarks>This will create a buffer that will be backend by the in-memory buffer.</remarks>
       </Docs>
     </Member>
@@ -384,14 +396,16 @@
         <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="budgeted">To be added.</param>
-        <param name="info">To be added.</param>
-        <param name="sampleCount">To be added.</param>
-        <param name="props">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="budgeted">Whether an allocation should count against a cache budget.</param>
+        <param name="info">The image configuration parameters.</param>
+        <param name="sampleCount">The number of samples.</param>
+        <param name="props">The surface property configuration.</param>
+        <summary>Creates a new surface whose contents will be drawn to an offscreen render target, allocated by the surface.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -420,12 +434,14 @@
       <Docs>
         <param name="width">The desired width for the surface.</param>
         <param name="height">The desired height for the surface.</param>
-        <param name="colorType">Color type to use for the surface.</param>
-        <param name="alphaType">Transparency mode to use for the surface.</param>
-        <param name="props">Contains the surface property configuration.</param>
-        <summary>Creates a new SKSurface with the specified image parameters and surface properties.</summary>
-        <returns>If the requested surface can not be created, or the configuration is not supported, this returns <see langword="null" />.   Otherwise the return is an instance of SKSuface.</returns>
-        <remarks>To be added.</remarks>
+        <param name="colorType">The color type to use for the surface.</param>
+        <param name="alphaType">The transparency mode to use for the surface.</param>
+        <param name="props">The surface property configuration.</param>
+        <summary>Creates a new surface with the specified image parameters and surface properties.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -455,13 +471,15 @@
       <Docs>
         <param name="width">The desired width for the surface.</param>
         <param name="height">The desired height for the surface.</param>
-        <param name="colorType">Color type to use for the surface.</param>
-        <param name="alphaType">Transparency mode to use for the surface.</param>
-        <param name="pixels">Pointer to an in memory-buffer that can hold the image as specified.</param>
+        <param name="colorType">The color type to use for the surface.</param>
+        <param name="alphaType">The transparency mode to use for the surface.</param>
+        <param name="pixels">The pointer to an in memory-buffer that can hold the image as specified.</param>
         <param name="rowBytes">The number of bytes per row in the pixel buffer.</param>
-        <summary>Creates a new SKSurface with the specified image parameters using a provided buffer.</summary>
-        <returns>If the requested surface can not be created, or the configuration is not supported, this returns <see langword="null" />.   Otherwise the return is an instance of SKSuface.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Creates a new surface with the specified image parameters using a provided buffer.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -492,14 +510,16 @@
       <Docs>
         <param name="width">The desired width for the surface.</param>
         <param name="height">The desired height for the surface.</param>
-        <param name="colorType">Color type to use for the surface.</param>
-        <param name="alphaType">Transparency mode to use for the surface.</param>
-        <param name="pixels">Pointer to an in memory-buffer that can hold the image as specified.</param>
+        <param name="colorType">The color type to use for the surface.</param>
+        <param name="alphaType">The transparency mode to use for the surface.</param>
+        <param name="pixels">The pointer to an in memory-buffer that can hold the image as specified.</param>
         <param name="rowBytes">The number of bytes per row in the pixel buffer.</param>
-        <param name="props">Contains the surface property configuration.</param>
-        <summary>Creates a new SKSurface with the specified image parameters using a provided buffer and surface properties.</summary>
-        <returns>If the requested surface can not be created, or the configuration is not supported, this returns <see langword="null" />.   Otherwise the return is an instance of SKSuface.</returns>
-        <remarks>To be added.</remarks>
+        <param name="props">The surface property configuration.</param>
+        <summary>Creates a new surface with the specified image parameters using a provided buffer and surface properties.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateAsRenderTarget">
@@ -519,11 +539,11 @@
         <Parameter Name="desc" Type="SkiaSharp.GRBackendTextureDesc" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="desc">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing texture.</param>
+        <summary>Wraps a pre-existing backend 3D API texture as a surface.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
+        <remarks>The <see cref="F:SkiaSharp.GRBackendTextureDescFlags.RenderTarget" /> flag must be set on <see cref="T:SkiaSharp.GRBackendTextureDesc" /> for this to succeed. The texture must remain valid for the lifetime of the surface.  </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateAsRenderTarget">
@@ -544,12 +564,12 @@
         <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="desc">To be added.</param>
-        <param name="props">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing texture.</param>
+        <param name="props">The surface property configuration.</param>
+        <summary>Wraps a pre-existing backend 3D API texture as a surface.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
+        <remarks>The <see cref="F:SkiaSharp.GRBackendTextureDescFlags.RenderTarget" /> flag must be set on <see cref="T:SkiaSharp.GRBackendTextureDesc" /> for this to succeed. The texture must remain valid for the lifetime of the surface.  </remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -596,8 +616,12 @@
       <Parameters />
       <Docs>
         <summary>Takes a snapshot of the surface and returns it as an image.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <returns>
+          <para />
+        </returns>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
   </Members>

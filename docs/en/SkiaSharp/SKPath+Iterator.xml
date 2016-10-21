@@ -15,7 +15,7 @@
   </Base>
   <Interfaces></Interfaces>
   <Docs>
-    <summary>Iterator object to scan the all of the segments (lines, quadratics, cubics) of each contours in a path.   </summary>
+    <summary>Iterator object to scan the all of the segments (lines, quadratics, cubics) of each contours in a path.</summary>
     <remarks>Iterators are created by calling the <see cref="M:SkiaSharp.SKPath.CreateIterator" /> method.</remarks>
   </Docs>
   <Members>
@@ -36,15 +36,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>
-          <para>Return the weight for the current conic. Only valid if the current segment return by <see cref="M:SkiaSharp.SKPath+Iterator.Next" /> was a conic.</para>
-        </summary>
+        <summary>Return the weight for the current conic.</summary>
         <returns>
           <para></para>
         </returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks>Only valid if the current segment return by <see cref="M:SkiaSharp.SKPath+Iterator.Next" /> was <see cref="F:SkiaSharp.SKPath+Verb.Conic" />.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -61,10 +57,8 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Releases the iterator.</summary>
-        <remarks>
-          <para />
-        </remarks>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -104,12 +98,10 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Returns true if the current contour is closed (has a <see cref="E:SkiaSharp.SKPath+Verb.Close" />).</summary>
-        <returns>
-          <para />
-        </returns>
+        <summary>Returns a value indicating whether the current contour is closed.</summary>
+        <returns>Returns true if the current contour is closed (has a <see cref="E:SkiaSharp.SKPath+Verb.Close" />).</returns>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -130,9 +122,9 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>If the last call to <see cref="M:SkiaSharp.SKPath+Iterator.Next" /> returns a line, returns true if the line was the result of a <see cref="M:SkiaSharp.SKPath.Close()" /> command.</summary>
-        <returns>If the last call to <see cref="M:SkiaSharp.SKPath+Iterator.Next" /> returns a line, returns true if the line was the result of a <see cref="M:SkiaSharp.SKPath.Close()" /> command.</returns>
-        <remarks>If the call to Next returned a different value than Line, the result is undefined.</remarks>
+        <summary>Returns a value indicating whether the last call to <see cref="M:SkiaSharp.SKPath+Iterator.Next" /> returns a line which was the result of a <see cref="M:SkiaSharp.SKPath.Close()" /> command.</summary>
+        <returns>Returns true if the last call to <see cref="M:SkiaSharp.SKPath+Iterator.Next" /> returned a line which was the result of a <see cref="M:SkiaSharp.SKPath.Close()" /> command.</returns>
+        <remarks>If the call to <see cref="M:SkiaSharp.SKPath+Iterator.Next" /> returned a different value than <see cref="F:SkiaSharp.SKPath+Verb.Line" />, the result is undefined.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Next">
@@ -156,18 +148,12 @@
         <Parameter Name="exact" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="points">Outgoing parameter, should be an array of four points, on return this contains points representing the current verb and/or segment.</param>
-        <param name="doConsumeDegenerates">
-          <para>If <see langword="true" />, first scan for segments that are deemed degenerate (too short) and skip those.</para>
-        </param>
-        <param name="exact">
-          <para>if <paramref name="doConsumeDegenerates" /> is <see langword="true" /> and exact is true, skip only degenerate elements with lengths exactly equal to zero. If exact is <see langword="false" />, skip degenerate elements with lengths close to zero. If <paramref name="doConsumeDegenerates" /> is <see langword="false" />, exact has no effect.</para>
-        </param>
-        <summary>Return the next verb in this iteration of the path.</summary>
+        <param name="points">The storage for the points representing the current verb and/or segment. Should be an array of four points.</param>
+        <param name="doConsumeDegenerates">If <see langword="true" />, first scan for segments that are deemed degenerate (too short) and skip those.</param>
+        <param name="exact">If <paramref name="doConsumeDegenerates" /> is <see langword="true" /> and exact is true, skip only degenerate elements with lengths exactly equal to zero. If exact is <see langword="false" />, skip degenerate elements with lengths close to zero. If <paramref name="doConsumeDegenerates" /> is <see langword="false" />, exact has no effect.</param>
+        <summary>Returns the next verb in this iteration of the path.</summary>
         <returns>The verb of the current segment.</returns>
-        <remarks>
-          <para>When all segments have been visited, returns Verb.Done</para>
-        </remarks>
+        <remarks>When all segments have been visited, returns <see cref="F:SkiaSharp.SKPath+Verb.Done" />.</remarks>
       </Docs>
     </Member>
   </Members>
