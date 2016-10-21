@@ -16,8 +16,10 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>Skia’s Stream class.</summary>
-    <remarks>To be added.</remarks>
+    <summary>An abstraction for a source of bytes, which can be backed by memory, or a file, or something else.</summary>
+    <remarks>
+      <para></para>
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName="HasLength">
@@ -37,9 +39,13 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a value indicating whether this stream can report it's total length.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="HasPosition">
@@ -59,9 +65,13 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a value indicating whether this stream can report it's current position.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="IsAtEnd">
@@ -81,9 +91,11 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a value indicating whether all the bytes in the stream have been read.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>This method may return true if there was an error, and the stream cannot be read anymore.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Length">
@@ -103,9 +115,13 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the total length of the stream. If this is not supported, the length will be reported as 0.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Move">
@@ -128,10 +144,10 @@
         <Parameter Name="offset" Type="System.Int64" />
       </Parameters>
       <Docs>
-        <param name="offset">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="offset">The relative offset.</param>
+        <summary>Seeks to an relative offset in the stream.</summary>
+        <returns>Returns true if seeking is supported and the seek was successful, otherwise false.</returns>
+        <remarks>If an attempt is made to move to a position outside the stream, the position will be set to the closest point within the stream (beginning or end).</remarks>
       </Docs>
     </Member>
     <Member MemberName="Position">
@@ -151,9 +167,13 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the current position in the stream. If this is not supported, the position will be reported as 0.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Read">
@@ -177,11 +197,13 @@
         <Parameter Name="size" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="buffer">To be added.</param>
-        <param name="size">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="buffer">The buffer to read into.</param>
+        <param name="size">The number of bytes to read.</param>
+        <summary>Reads a copy of the specified number of bytes into the provided buffer.</summary>
+        <returns>Returns the number of bytes actually read.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ReadByte">
@@ -202,9 +224,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Read a single byte.</summary>
+        <returns>Returns the byte that was read.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ReadInt16">
@@ -225,9 +249,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Read a single 16-bit integer.</summary>
+        <returns>Returns the 16-bit integer that was read.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ReadInt32">
@@ -248,9 +274,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Read a single 32-bit integer.</summary>
+        <returns>Returns the 32-bit integer that was read.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ReadSByte">
@@ -271,9 +299,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Read a single, signed byte.</summary>
+        <returns>Returns the signed byte that was read.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ReadUInt16">
@@ -294,9 +324,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Read a single, unsigned 16-bit integer.</summary>
+        <returns>Returns the unsigned 16-bit integer that was read.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ReadUInt32">
@@ -317,9 +349,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Read a single, unsigned 32-bit integer.</summary>
+        <returns>Returns the unsigned 32-bit integer that was read.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Rewind">
@@ -340,9 +374,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Rewinds to the beginning of the stream.</summary>
+        <returns>Returns true if the stream is known to be at the beginning after this call returns.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Seek">
@@ -365,10 +401,10 @@
         <Parameter Name="position" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="position">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="position">The absolute position.</param>
+        <summary>Seeks to an absolute position in the stream.</summary>
+        <returns>Returns true if seeking is supported and the seek was successful, otherwise false.</returns>
+        <remarks>If an attempt is made to move to a position outside the stream, the position will be set to the closest point within the stream (beginning or end).</remarks>
       </Docs>
     </Member>
     <Member MemberName="Skip">
@@ -391,10 +427,12 @@
         <Parameter Name="size" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="size">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="size">The number of bytes to skip.</param>
+        <summary>Moves the current position on by the specified number of bytes.</summary>
+        <returns>Returns the actual number bytes that could be skipped.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
   </Members>
