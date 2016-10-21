@@ -21,7 +21,25 @@
   </Interfaces>
   <Docs>
     <summary>Convenience class used to restore the canvas state in a using statement.</summary>
-    <remarks>This class can be used in a using statement to save the state of the canvas (matrix, clip and draw filter) allowing you to change these components and have them automatically undone by virtue of having the Dispose method restore the canvas state to the state it was when this instance was created.</remarks>
+    <remarks>
+      <para>This class can be used in a using statement to save the state of the canvas (matrix, clip and draw filter) allowing you to change these components and have them automatically undone by virtue of having the <see cref="M:SkiaSharp.SKAutoCanvasRestore.Dispose" /> method restore the canvas state to the state it was when this instance was created.</para>
+          <para></para>
+          <example>
+            <code lang="C#"><![CDATA[SKCanvas canvas = ...;
+
+using (new SKAutoCanvasRestore(canvas, true)) {
+    // perform some transform
+    canvas.RotateDegrees(45);
+
+    // draw as usual
+    var paint = new SKPaint ();
+    canavs.DrawRect (10, 10, 100, 100, paint);
+
+    // automatically restore to original transform
+}]]></code>
+          </example>
+          <para></para>
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
