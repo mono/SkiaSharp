@@ -17,72 +17,72 @@ using System.Text;
 
 namespace SkiaSharp
 {
-    public class SKRegion : SKObject
-    {
-        [Preserve]
-        internal SKRegion(IntPtr handle,  bool owns)
+	public class SKRegion : SKObject
+	{
+		[Preserve]
+		internal SKRegion(IntPtr handle,  bool owns)
 			: base (handle, owns)
 		{
-        }
+		}
 
-        public SKRegion()
+		public SKRegion()
 			: this (SkiaApi.sk_region_new(), true)
 		{
-        }
+		}
 
-        public SKRegion(SKRegion region)
-            : this(SkiaApi.sk_region_new2(region.Handle), true)
-        {
-        }
+		public SKRegion(SKRegion region)
+			: this(SkiaApi.sk_region_new2(region.Handle), true)
+		{
+		}
 
-        public bool Contains(SKRegion src)
-        {
-            return SkiaApi.sk_region_contains(Handle, src.Handle); 
-        }
+		public bool Contains(SKRegion src)
+		{
+			return SkiaApi.sk_region_contains(Handle, src.Handle); 
+		}
 
-        public bool Contains(int x, int y)
-        {
-            return SkiaApi.sk_region_contains2(Handle, x, y);
-        }
+		public bool Contains(int x, int y)
+		{
+			return SkiaApi.sk_region_contains2(Handle, x, y);
+		}
 
-        public bool Intersects(SKRegion region)
-        {
-            return SkiaApi.sk_region_intersects(Handle, region.Handle);
-        }
+		public bool Intersects(SKRegion region)
+		{
+			return SkiaApi.sk_region_intersects(Handle, region.Handle);
+		}
 
-        public bool Intersects(SKRectI rect)
-        {
-            return SkiaApi.sk_region_intersects(Handle, rect);
-        }
+		public bool Intersects(SKRectI rect)
+		{
+			return SkiaApi.sk_region_intersects(Handle, rect);
+		}
 
-        public bool Set(SKRegion region)
-        {
-            return SkiaApi.sk_region_set(Handle, region.Handle);
-        }
+		public bool Set(SKRegion region)
+		{
+			return SkiaApi.sk_region_set(Handle, region.Handle);
+		}
 
-        public bool SetRect(SKRectI rect)
-        {
-            return SkiaApi.sk_region_set_rect(Handle, ref rect); 
-        }
+		public bool SetRect(SKRectI rect)
+		{
+			return SkiaApi.sk_region_set_rect(Handle, ref rect); 
+		}
 
-        public bool SetPath(SKPath path)
-        {
-            return SkiaApi.sk_region_set_path(Handle, path.Handle); 
-        }
+		public bool SetPath(SKPath path)
+		{
+			return SkiaApi.sk_region_set_path(Handle, path.Handle); 
+		}
 
-        public bool Op(int left, int top, int right, int bottom, SKRegionOperation op)
-        {
-            return SkiaApi.sk_region_op(Handle, left, top, right, bottom, op);
-        }
+		public bool Op(int left, int top, int right, int bottom, SKRegionOperation op)
+		{
+			return SkiaApi.sk_region_op(Handle, left, top, right, bottom, op);
+		}
 
-        public bool Op(SKRegion region, SKRegionOperation op)
-        {
-            return SkiaApi.sk_region_op2(Handle, region.Handle, op);
-        }
+		public bool Op(SKRegion region, SKRegionOperation op)
+		{
+			return SkiaApi.sk_region_op2(Handle, region.Handle, op);
+		}
 
-        public SKRectI GetBounds()
-        {
-            return SkiaApi.sk_region_get_bounds(Handle);
-        }
-    }
+		public SKRectI GetBounds()
+		{
+			return SkiaApi.sk_region_get_bounds(Handle);
+		}
+	}
 }
