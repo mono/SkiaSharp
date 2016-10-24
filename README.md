@@ -93,6 +93,11 @@ option in the bootstrapper script.
    - `clean-externals` - cleans externals only
    - `clean-managed` - cleans managed libraries/samples only
 
+## New Skia Features Roadmap
+
+Google has created a [nice doc with a collection of high level items](https://docs.google.com/document/d/1C9w8qpPpdgNGThqmgNnTToLZ5UYK4TsUGl5X3B_q6oM/edit)
+they have on tap the next 6-12 months. Note it is a living document that changes based on the requirements of the library's users.
+
 ## Compare Code
 
 Here are some links to show the differences in our code as compared to Google's.
