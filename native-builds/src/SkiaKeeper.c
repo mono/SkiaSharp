@@ -23,6 +23,7 @@
 #include "sk_path.h"
 #include "sk_patheffect.h"
 #include "sk_picture.h"
+#include "sk_region.h"
 #include "sk_shader.h"
 #include "sk_shader.h"
 #include "sk_stream.h"
@@ -47,6 +48,7 @@ void** KeepSkiaCSymbols ()
         (void*)sk_paint_new,
         (void*)sk_path_new,
         (void*)sk_picture_recorder_new,
+        (void*)sk_region_new,
         (void*)sk_shader_ref,
         (void*)sk_surface_new_raster,
         (void*)sk_colortype_get_default_8888,

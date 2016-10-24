@@ -1132,22 +1132,32 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_region_t sk_region_new2(sk_region_t r);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)] 
 		public extern static bool sk_region_contains(sk_region_t r, sk_region_t region);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)] 
 		public extern static bool sk_region_contains2(sk_region_t r, int x, int y);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)] 
 		public extern static bool sk_region_intersects(sk_region_t r, sk_region_t src);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)] 
 		public extern static bool sk_region_intersects(sk_region_t r, SKRectI rect);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)] 
 		public extern static bool sk_region_set(sk_region_t r, sk_region_t src);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)] 
 		public extern static bool sk_region_set_rect(sk_region_t r, ref SKRectI rect);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)] 
 		public extern static bool sk_region_set_path(sk_region_t r, sk_path_t t);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)] 
 		public extern static bool sk_region_op(sk_region_t r, int left, int top, int right, int bottom, SKRegionOperation op);
+		[return: MarshalAs(UnmanagedType.I1)] 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)] 
 		public extern static bool sk_region_op2(sk_region_t r, sk_region_t src, SKRegionOperation op);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SKRectI sk_region_get_bounds(sk_region_t r);
