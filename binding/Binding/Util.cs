@@ -18,7 +18,7 @@ namespace SkiaSharp
 				case SKTextEncoding.Utf32:
 					return Encoding.UTF32.GetBytes(text);
 				default:
-					throw new ArgumentException($"Encoding {encoding} is not supported");
+					throw new ArgumentOutOfRangeException(nameof(encoding), $"Encoding {encoding} is not supported.");
 			}
 		}
 
@@ -36,7 +36,7 @@ namespace SkiaSharp
 				case SKTextEncoding.Utf32:
 					return Encoding.UTF32.GetString(result);
 				default:
-					throw new ArgumentException($"Encoding {encoding} is not supported");
+					throw new ArgumentOutOfRangeException(nameof(encoding), $"Encoding {encoding} is not supported.");
 			}
 		}
 	}

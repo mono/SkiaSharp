@@ -337,7 +337,7 @@ namespace SkiaSharp
 
 		public SKPathEffect PathEffect {
 			get {
-				return GetObject<SKPathEffect> (SkiaApi.sk_paint_get_path_effect(Handle));
+				return GetObject<SKPathEffect> (SkiaApi.sk_paint_get_path_effect (Handle));
 			}
 			set {
 				SkiaApi.sk_paint_set_path_effect (Handle, value == null ? IntPtr.Zero : value.Handle);
@@ -347,7 +347,7 @@ namespace SkiaSharp
 		public float MeasureText (string text)
 		{
 			if (text == null)
-				throw new ArgumentNullException ("text");
+				throw new ArgumentNullException (nameof (text));
 
 			var bytes = Util.GetEncodedText (text, TextEncoding);
 			return SkiaApi.sk_paint_measure_text (Handle, bytes, (IntPtr) bytes.Length, IntPtr.Zero);
@@ -356,7 +356,7 @@ namespace SkiaSharp
 		public float MeasureText (IntPtr buffer, IntPtr length)
 		{
 			if (buffer == IntPtr.Zero)
-				throw new ArgumentNullException ("buffer");
+				throw new ArgumentNullException (nameof (buffer));
 
 			return SkiaApi.sk_paint_measure_text (Handle, buffer, length, IntPtr.Zero);
 		}
@@ -364,7 +364,7 @@ namespace SkiaSharp
 		public float MeasureText (string text, ref SKRect bounds)
 		{
 			if (text == null)
-				throw new ArgumentNullException ("text");
+				throw new ArgumentNullException (nameof (text));
 
 			var bytes = Util.GetEncodedText (text, TextEncoding);
 			return SkiaApi.sk_paint_measure_text(Handle, bytes, (IntPtr) bytes.Length, ref bounds);
@@ -373,7 +373,7 @@ namespace SkiaSharp
 		public float MeasureText (IntPtr buffer, IntPtr length, ref SKRect bounds)
 		{
 			if (buffer == IntPtr.Zero)
-				throw new ArgumentNullException ("buffer");
+				throw new ArgumentNullException (nameof (buffer));
 
 			return SkiaApi.sk_paint_measure_text (Handle, buffer, length, ref bounds);
 		}
@@ -387,7 +387,7 @@ namespace SkiaSharp
 		public long BreakText (string text, float maxWidth, out float measuredWidth)
 		{
 			if (text == null)
-				throw new ArgumentNullException ("text");
+				throw new ArgumentNullException (nameof (text));
 			var bytes = Util.GetEncodedText (text, TextEncoding);
 			return (long) SkiaApi.sk_paint_break_text (Handle, bytes, (IntPtr) bytes.Length, maxWidth, out measuredWidth);
 		}
@@ -396,7 +396,7 @@ namespace SkiaSharp
 		public long BreakText (IntPtr buffer, IntPtr length, float maxWidth, out float measuredWidth)
 		{
 			if (buffer == IntPtr.Zero)
-				throw new ArgumentNullException ("buffer");
+				throw new ArgumentNullException (nameof (buffer));
 
 			return (long)SkiaApi.sk_paint_break_text (Handle, buffer, length, maxWidth, out measuredWidth);
 		}
@@ -458,6 +458,13 @@ namespace SkiaSharp
 				SkiaApi.sk_paint_get_fontmetrics(Handle, out metrics, 0f);
 				return metrics;
 			}
+		}
+
+		public float FontSpacing => SkiaApi.sk_paint_get_fontmetrics (Handle, IntPtr.Zero, 0);
+
+		public float GetFontMetrics (out SKFontMetrics metrics, float scale = 0f)
+		{
+			return SkiaApi.sk_paint_get_fontmetrics (Handle, out metrics, scale);
 		}
 
 		public SKPaint Clone()

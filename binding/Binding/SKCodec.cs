@@ -85,6 +85,9 @@ namespace SkiaSharp
 
 		public SKCodecResult GetPixels (SKImageInfo info, byte[] pixels)
 		{
+			if (pixels == null)
+				throw new ArgumentNullException (nameof (pixels));
+
 			GCHandle handle = default (GCHandle);
 			try {
 				handle = GCHandle.Alloc (pixels, GCHandleType.Pinned);
@@ -98,6 +101,9 @@ namespace SkiaSharp
 
 		public unsafe SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
 		{
+			if (pixels == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (pixels));
+
 			var nativeOptions = new SKCodecOptionsInternal {
 				fZeroInitialized = options.ZeroInitialized,
 				fSubset = null
@@ -143,9 +149,7 @@ namespace SkiaSharp
 		public static SKCodec Create (SKStream stream)
 		{
 			if (stream == null)
-			{
-				throw new ArgumentNullException (nameof(stream));
-			}
+				throw new ArgumentNullException (nameof (stream));
 			var codec = GetObject<SKCodec> (SkiaApi.sk_codec_new_from_stream (stream.Handle));
 			stream.RevokeOwnership (codec);
 			return codec;
@@ -154,9 +158,7 @@ namespace SkiaSharp
 		public static SKCodec Create (SKData data)
 		{
 			if (data == null)
-			{
-				throw new ArgumentNullException (nameof(data));
-			}
+				throw new ArgumentNullException (nameof (data));
 			return GetObject<SKCodec> (SkiaApi.sk_codec_new_from_data (data.Handle));
 		}
 	}

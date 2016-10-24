@@ -390,7 +390,7 @@ namespace SkiaSharp
 		{
 			SKColor color;
 			if (!TryParse (hexString, out color))
-				throw new ArgumentOutOfRangeException (nameof (hexString));
+				throw new ArgumentException ("Invalid hexadecimal color string.", nameof (hexString));
 			return color;
 		}
 
@@ -839,7 +839,7 @@ namespace SkiaSharp
 				case SKColorType.RgbaF16:
 					return 8;
 				}
-				throw new ArgumentOutOfRangeException ("ColorType");
+				throw new ArgumentOutOfRangeException (nameof (ColorType));
 			}
 		}
 
@@ -2023,7 +2023,7 @@ namespace SkiaSharp
 				if (value == null)
 					throw new ArgumentNullException (nameof (Values));
 				if (value.Length != Indices.Count)
-					throw new ArgumentOutOfRangeException (nameof (Values));
+					throw new ArgumentException ($"The matrix array must hve a length of {Indices.Count}.", nameof (Values));
 
 				scaleX = value [Indices.ScaleX];
 				skewX = value [Indices.SkewX];
@@ -2044,7 +2044,7 @@ namespace SkiaSharp
 			if (values == null)
 				throw new ArgumentNullException (nameof (values));
 			if (values.Length != Indices.Count)
-				throw new ArgumentOutOfRangeException (nameof (values));
+				throw new ArgumentException ($"The matrix array must hve a length of {Indices.Count}.", nameof (values));
 
 			values [Indices.ScaleX] = scaleX;
 			values [Indices.SkewX] = skewX;
@@ -2343,7 +2343,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 				throw new ArgumentNullException (nameof (points));
 			int dl = result.Length;
 			if (dl != points.Length)
-				throw new ArgumentException ("buffers must be the same size");
+				throw new ArgumentException ("Buffers must be the same size.");
 			unsafe {
 				fixed (SKPoint *rp = &result[0]){
 					fixed (SKPoint *pp = &points[0]){
@@ -2370,7 +2370,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 				throw new ArgumentNullException (nameof (vectors));
 			int dl = result.Length;
 			if (dl != vectors.Length)
-				throw new ArgumentException ("buffers must be the same size");
+				throw new ArgumentException ("Buffers must be the same size.");
 			unsafe {
 				fixed (SKPoint *rp = &result[0]){
 					fixed (SKPoint *pp = &vectors[0]){

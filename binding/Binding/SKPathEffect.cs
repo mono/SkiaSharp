@@ -99,6 +99,8 @@ namespace SkiaSharp
 		{
 			if (intervals == null)
 				throw new ArgumentNullException(nameof(intervals));
+			if (intervals.Length % 2 != 0)
+				throw new ArgumentException("The intervals must have an even number of entries.", nameof(intervals));
 			return GetObject<SKPathEffect>(SkiaApi.sk_path_effect_create_dash(intervals, intervals.Length, phase));
 		}
 

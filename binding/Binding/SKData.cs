@@ -42,7 +42,7 @@ namespace SkiaSharp
 			: this (IntPtr.Zero, true)
 		{
 			if (Marshal.SizeOf (typeof(IntPtr)) == 4 && length > UInt32.MaxValue)
-				throw new ArgumentException ("length", "The length exceeds the size of pointers");
+				throw new ArgumentOutOfRangeException (nameof (length), "The length exceeds the size of pointers.");
 			Handle = SkiaApi.sk_data_new_with_copy (bytes, (IntPtr) length);
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to copy the SKData instance.");
@@ -60,7 +60,7 @@ namespace SkiaSharp
 		public static SKData FromMallocMemory (IntPtr bytes, ulong length)
 		{
 			if (Marshal.SizeOf (typeof(IntPtr)) == 4 && length > UInt32.MaxValue)
-				throw new ArgumentException ("length", "The length exceeds the size of pointers");
+				throw new ArgumentOutOfRangeException (nameof (length), "The length exceeds the size of pointers.");
 			return GetObject<SKData> (SkiaApi.sk_data_new_from_malloc (bytes, (IntPtr) length));
 		}
 
@@ -68,9 +68,9 @@ namespace SkiaSharp
 		{
 			if (Marshal.SizeOf (typeof(IntPtr)) == 4) {
 				if (length > UInt32.MaxValue)
-					throw new ArgumentException ("length", "The length exceeds the size of pointers");
+					throw new ArgumentOutOfRangeException (nameof (length), "The length exceeds the size of pointers.");
 				if (offset > UInt32.MaxValue)
-					throw new ArgumentException ("offset", "The length exceeds the size of pointers");
+					throw new ArgumentOutOfRangeException (nameof (offset), "The offset exceeds the size of pointers.");
 			}
 			return GetObject<SKData> (SkiaApi.sk_data_new_subset (Handle, (IntPtr) offset, (IntPtr) length));
 		}

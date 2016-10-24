@@ -125,11 +125,17 @@ namespace SkiaSharp
 
 		public bool CopyTo (SKBitmap destination)
 		{
+			if (destination == null) {
+				throw new ArgumentNullException (nameof (destination));
+			}
 			return SkiaApi.sk_bitmap_copy (Handle, destination.Handle, ColorType);
 		}
 
 		public bool CopyTo (SKBitmap destination, SKColorType colorType)
 		{
+			if (destination == null) {
+				throw new ArgumentNullException (nameof (destination));
+			}
 			return SkiaApi.sk_bitmap_copy (Handle, destination.Handle, colorType);
 		}
 
@@ -238,6 +244,9 @@ namespace SkiaSharp
 
 		public static SKImageInfo DecodeBounds (SKStream stream)
 		{
+			if (stream == null) {
+				throw new ArgumentNullException (nameof (stream));
+			}
 			using (var codec = SKCodec.Create (stream)) {
 				return codec.Info;
 			}
@@ -245,6 +254,9 @@ namespace SkiaSharp
 
 		public static SKImageInfo DecodeBounds (SKData data)
 		{
+			if (data == null) {
+				throw new ArgumentNullException (nameof (data));
+			}
 			using (var codec = SKCodec.Create (data)) {
 				return codec.Info;
 			}
@@ -252,16 +264,26 @@ namespace SkiaSharp
 
 		public static SKImageInfo DecodeBounds (string filename)
 		{
+			if (filename == null) {
+				throw new ArgumentNullException (nameof (filename));
+			}
 			return DecodeBounds (new SKFileStream (filename));
 		}
 
 		public static SKImageInfo DecodeBounds (byte[] buffer)
 		{
+			if (buffer == null) {
+				throw new ArgumentNullException (nameof (buffer));
+			}
 			return DecodeBounds (new SKMemoryStream (buffer));
 		}
 
 		public static SKBitmap Decode (SKCodec codec)
 		{
+			if (codec == null) {
+				throw new ArgumentNullException (nameof (codec));
+			}
+
 			var info = codec.Info;
 
 			// construct a color table for the decode if necessary
@@ -285,6 +307,9 @@ namespace SkiaSharp
 
 		public static SKBitmap Decode (SKStream stream)
 		{
+			if (stream == null) {
+				throw new ArgumentNullException (nameof (stream));
+			}
 			using (var codec = SKCodec.Create (stream)) {
 				return Decode (codec);
 			}
@@ -292,6 +317,9 @@ namespace SkiaSharp
 
 		public static SKBitmap Decode (SKData data)
 		{
+			if (data == null) {
+				throw new ArgumentNullException (nameof (data));
+			}
 			using (var codec = SKCodec.Create (data)) {
 				return Decode (codec);
 			}
@@ -299,11 +327,17 @@ namespace SkiaSharp
 
 		public static SKBitmap Decode (string filename)
 		{
+			if (filename == null) {
+				throw new ArgumentNullException (nameof (filename));
+			}
 			return Decode (new SKFileStream (filename));
 		}
 
 		public static SKBitmap Decode (byte[] buffer)
 		{
+			if (buffer == null) {
+				throw new ArgumentNullException (nameof (buffer));
+			}
 			return Decode (new SKMemoryStream (buffer));
 		}
 	}

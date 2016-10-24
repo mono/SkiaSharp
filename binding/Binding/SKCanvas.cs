@@ -282,42 +282,42 @@ namespace SkiaSharp
 		public void DrawPicture (SKPicture picture, ref SKMatrix matrix, SKPaint paint = null)
 		{
 			if (picture == null)
-				throw new ArgumentNullException ("picture");
+				throw new ArgumentNullException (nameof (picture));
 			SkiaApi.sk_canvas_draw_picture (Handle, picture.Handle, ref matrix, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
 		public void DrawPicture (SKPicture picture, SKPaint paint = null)
 		{
 			if (picture == null)
-				throw new ArgumentNullException ("picture");
+				throw new ArgumentNullException (nameof (picture));
 			SkiaApi.sk_canvas_draw_picture (Handle, picture.Handle, IntPtr.Zero, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
 		public void DrawBitmap (SKBitmap bitmap, float x, float y, SKPaint paint = null)
 		{
 			if (bitmap == null)
-				throw new ArgumentNullException ("bitmap");
+				throw new ArgumentNullException (nameof (bitmap));
 			SkiaApi.sk_canvas_draw_bitmap (Handle, bitmap.Handle, x, y, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
 		public void DrawBitmap (SKBitmap bitmap, SKRect dest, SKPaint paint = null)
 		{
 			if (bitmap == null)
-				throw new ArgumentNullException ("bitmap");
+				throw new ArgumentNullException (nameof (bitmap));
 			SkiaApi.sk_canvas_draw_bitmap_rect (Handle, bitmap.Handle, IntPtr.Zero, ref dest, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
 		public void DrawBitmap (SKBitmap bitmap, SKRect source, SKRect dest, SKPaint paint = null)
 		{
 			if (bitmap == null)
-				throw new ArgumentNullException ("bitmap");
+				throw new ArgumentNullException (nameof (bitmap));
 			SkiaApi.sk_canvas_draw_bitmap_rect (Handle, bitmap.Handle, ref source, ref dest, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
 		public void DrawText (string text, float x, float y, SKPaint paint)
 		{
 			if (text == null)
-				throw new ArgumentNullException ("text");
+				throw new ArgumentNullException (nameof (text));
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
@@ -328,11 +328,11 @@ namespace SkiaSharp
 		public void DrawText (string text, SKPoint [] points, SKPaint paint)
 		{
 			if (text == null)
-				throw new ArgumentNullException ("text");
+				throw new ArgumentNullException (nameof (text));
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			if (points == null)
-				throw new ArgumentNullException ("points");
+				throw new ArgumentNullException (nameof (points));
 
 			var bytes = Util.GetEncodedText (text, paint.TextEncoding);
 			SkiaApi.sk_canvas_draw_pos_text (Handle, bytes, bytes.Length, points, paint.Handle);
@@ -341,7 +341,7 @@ namespace SkiaSharp
 		public void DrawText (IntPtr buffer, int length, SKPath path, float hOffset, float vOffset, SKPaint paint)
 		{
 			if (buffer == IntPtr.Zero)
-				throw new ArgumentNullException ("buffer");
+				throw new ArgumentNullException (nameof (buffer));
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			if (paint == null)
@@ -353,7 +353,7 @@ namespace SkiaSharp
 		public void DrawText (IntPtr buffer, int length, float x, float y, SKPaint paint)
 		{
 			if (buffer == IntPtr.Zero)
-				throw new ArgumentNullException ("buffer");
+				throw new ArgumentNullException (nameof (buffer));
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			
@@ -363,11 +363,11 @@ namespace SkiaSharp
 		public void DrawText (IntPtr buffer, int length, SKPoint[] points, SKPaint paint)
 		{
 			if (buffer == IntPtr.Zero)
-				throw new ArgumentNullException ("buffer");
+				throw new ArgumentNullException (nameof (buffer));
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			if (points == null)
-				throw new ArgumentNullException ("points");
+				throw new ArgumentNullException (nameof (points));
 			
 			SkiaApi.sk_canvas_draw_pos_text (Handle, buffer, length, points, paint.Handle);
 		}
@@ -375,7 +375,7 @@ namespace SkiaSharp
 		public void DrawText (string text, SKPath path, float hOffset, float vOffset, SKPaint paint)
 		{
 			if (text == null)
-				throw new ArgumentNullException ("text");
+				throw new ArgumentNullException (nameof (text));
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			if (paint == null)
@@ -396,7 +396,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (bitmap));
 			// the "center" rect must fit inside the bitmap "rect"
 			if (!SKRect.Create (bitmap.Info.Size).Contains (center))
-				throw new ArgumentOutOfRangeException (nameof (center));
+				throw new ArgumentException ("Center rectangle must be contained inside the bitmap bounds.", nameof (center));
 
 			var xDivs = new [] { center.Left, center.Right };
 			var yDivs = new [] { center.Top, center.Bottom };
@@ -409,7 +409,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (image));
 			// the "center" rect must fit inside the image "rect"
 			if (!SKRect.Create (image.Width, image.Height).Contains (center))
-				throw new ArgumentOutOfRangeException (nameof (center));
+				throw new ArgumentException ("Center rectangle must be contained inside the image bounds.", nameof (center));
 
 			var xDivs = new [] { center.Left, center.Right };
 			var yDivs = new [] { center.Top, center.Bottom };
