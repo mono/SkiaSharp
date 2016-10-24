@@ -84,20 +84,5 @@ namespace SkiaSharp
         {
             return SkiaApi.sk_region_get_bounds(Handle);
         }
-        
-        //public bool Op(SKRegion region, SKRectI rect, SKRegionOperation op)
-        //{
-        //    return SkiaApi.sk_region_op(Handle, region.Handle, rect, op);
-        //}
-
-        //public bool Op(SKRectI rect, SKRegion region, SKRegionOperation op)
-        //{
-        //    return SkiaApi.sk_region_op(Handle, rect, region.Handle, op);
-        //}
-
-        //public bool Op(SKRegion rgna, SKRegion rgnb, SKRegionOperation op)
-        //{
-        //    return SkiaApi.sk_region_op(Handle, rgna.Handle, rgnb.Handle, op);
-        //}
     }
 }

@@ -1127,7 +1127,7 @@ namespace SkiaSharp
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool gr_glinterface_has_extension (gr_glinterface_t glInterface, [MarshalAs(UnmanagedType.LPStr)] string extension);
 		
-        #region SKRegion
+        // SKRegion
         [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
         public extern static sk_region_t sk_region_new();
         [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1152,13 +1152,6 @@ namespace SkiaSharp
         public extern static bool sk_region_op2(sk_region_t r, sk_region_t src, SKRegionOperation op);
         [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
         public extern static SKRectI sk_region_get_bounds(sk_region_t r);
-        /*[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-        public extern static bool sk_region_op(sk_region_t r, sk_region_t src, SKRectI rect, SKRegionOperation op);
-        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-        public extern static bool sk_region_op(sk_region_t r, SKRectI rect, sk_region_t src, SKRegionOperation op);
-        [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-        public extern static bool sk_region_op(sk_region_t r, sk_region_t rgna, sk_region_t rgnb, SKRegionOperation op);*/
-        #endregion
 	}
 }
 
