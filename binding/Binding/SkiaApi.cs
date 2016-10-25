@@ -1233,7 +1233,6 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)] 
 		public extern static bool sk_region_op(sk_region_t r, int left, int top, int right, int bottom, SKRegionOperation op);
-		[return: MarshalAs(UnmanagedType.I1)] 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)] 
 		public extern static bool sk_region_op2(sk_region_t r, sk_region_t src, SKRegionOperation op);
