@@ -1229,7 +1229,7 @@ namespace SkiaSharp
 		public extern static bool sk_region_set_rect(sk_region_t r, ref SKRectI rect);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)] 
-		public extern static bool sk_region_set_path(sk_region_t r, sk_path_t t);
+		public extern static bool sk_region_set_path(sk_region_t r, sk_path_t t, sk_region_t clip);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)] 
 		public extern static bool sk_region_op(sk_region_t r, int left, int top, int right, int bottom, SKRegionOperation op);
