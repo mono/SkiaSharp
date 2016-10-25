@@ -2023,7 +2023,7 @@ namespace SkiaSharp
 				if (value == null)
 					throw new ArgumentNullException (nameof (Values));
 				if (value.Length != Indices.Count)
-					throw new ArgumentException ($"The matrix array must hve a length of {Indices.Count}.", nameof (Values));
+					throw new ArgumentException ($"The matrix array must have a length of {Indices.Count}.", nameof (Values));
 
 				scaleX = value [Indices.ScaleX];
 				skewX = value [Indices.SkewX];
@@ -2044,7 +2044,7 @@ namespace SkiaSharp
 			if (values == null)
 				throw new ArgumentNullException (nameof (values));
 			if (values.Length != Indices.Count)
-				throw new ArgumentException ($"The matrix array must hve a length of {Indices.Count}.", nameof (values));
+				throw new ArgumentException ($"The matrix array must have a length of {Indices.Count}.", nameof (values));
 
 			values [Indices.ScaleX] = scaleX;
 			values [Indices.SkewX] = skewX;
