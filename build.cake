@@ -249,16 +249,16 @@ Task ("docs")
             .Elements ("Docs");
 
         totalTypes += typesWithDocs.Count (); 
-        typeCount += typesWithDocs.Where (m => m.Value?.IndexOf ("To be added.") >= 0).Count ();
+        typeCount += typesWithDocs.Where (m => m.Value != null && m.Value.IndexOf ("To be added.") >= 0).Count ();
 
         var membersWithDocs = xdoc.Root
             .Elements ("Members")
             .Elements ("Member")
-            .Where (m => m.Attribute ("MemberName")?.Value != "Dispose")
+            .Where (m => m.Attribute ("MemberName") != null && m.Attribute ("MemberName").Value != "Dispose")
             .Elements ("Docs");
 
         totalMembers += membersWithDocs.Count ();
-        memberCount += membersWithDocs.Where (m => m.Value?.IndexOf ("To be added.") >= 0).Count ();
+        memberCount += membersWithDocs.Where (m => m.Value != null && m.Value.IndexOf ("To be added.") >= 0).Count ();
     }
     Information (
         "Documentation missing in {0}/{1} ({2:0.0%}) types and {3}/{4} ({5:0.0%}) members.", 
