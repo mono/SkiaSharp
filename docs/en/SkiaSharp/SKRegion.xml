@@ -10,8 +10,10 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>Encapsulates the geometric region used to specify clipping areas for drawing.</summary>
+    <remarks>
+      <para></para>
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -23,8 +25,10 @@
       </AssemblyInfo>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Creates an empty region.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -38,9 +42,11 @@
         <Parameter Name="region" Type="SkiaSharp.SKRegion" />
       </Parameters>
       <Docs>
-        <param name="region">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="region">The region to copy.</param>
+        <summary>Creates a new region by copying an existing region.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Bounds">
@@ -54,9 +60,33 @@
         <ReturnType>SkiaSharp.SKRectI</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the bounds of this region.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>If the region is empty, returns an empty rectangle.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Contains">
+      <MemberSignature Language="C#" Value="public bool Contains (SkiaSharp.SKPointI xy);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool Contains(valuetype SkiaSharp.SKPointI xy) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="xy" Type="SkiaSharp.SKPointI" />
+      </Parameters>
+      <Docs>
+        <param name="xy">The coordinates to check with.</param>
+        <summary>Check to see if the specified coordinates are completely inside the current region.</summary>
+        <returns>Returns true if the specified coordinates are completely inside the current region, otherwise false.</returns>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Contains">
@@ -73,10 +103,10 @@
         <Parameter Name="src" Type="SkiaSharp.SKRegion" />
       </Parameters>
       <Docs>
-        <param name="src">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="src">The region to check with.</param>
+        <summary>Check to see if the specified region is completely inside the current region.</summary>
+        <returns>Returns true if the specified region is completely inside the current region, otherwise false.</returns>
+        <remarks>This works for simple (rectangular) and complex regions, and always returns the correct result. If either region is empty, this method returns false.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Contains">
@@ -94,11 +124,13 @@
         <Parameter Name="y" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="x">The x-coordinate to check with.</param>
+        <param name="y">The y-coordinate to check with.</param>
+        <summary>Check to see if the specified coordinates are completely inside the current region.</summary>
+        <returns>Returns true if the specified coordinates are completely inside the current region, otherwise false.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Intersects">
@@ -115,10 +147,12 @@
         <Parameter Name="rect" Type="SkiaSharp.SKRectI" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="rect">The rectangle to check with.</param>
+        <summary>Check to see if the specified rectangle intersects with the current region.</summary>
+        <returns>Returns true if the specified rectangle has a non-empty intersection with the current region.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Intersects">
@@ -135,10 +169,36 @@
         <Parameter Name="region" Type="SkiaSharp.SKRegion" />
       </Parameters>
       <Docs>
-        <param name="region">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="region">The region to check with.</param>
+        <summary>Check to see if the specified region intersects with the current region.</summary>
+        <returns>Returns true if the specified region has a non-empty intersection with the current region.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Op">
+      <MemberSignature Language="C#" Value="public bool Op (SkiaSharp.SKRectI rect, SkiaSharp.SKRegionOperation op);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool Op(valuetype SkiaSharp.SKRectI rect, valuetype SkiaSharp.SKRegionOperation op) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="rect" Type="SkiaSharp.SKRectI" />
+        <Parameter Name="op" Type="SkiaSharp.SKRegionOperation" />
+      </Parameters>
+      <Docs>
+        <param name="rect">The rectangle to apply the operator on.</param>
+        <param name="op">The operator to apply.</param>
+        <summary>Set this region to the result of applying the operation to this region and the specified rectangle.</summary>
+        <returns>Returns true if the resulting region is non-empty.</returns>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Op">
@@ -156,11 +216,13 @@
         <Parameter Name="op" Type="SkiaSharp.SKRegionOperation" />
       </Parameters>
       <Docs>
-        <param name="region">To be added.</param>
-        <param name="op">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="region">The region to apply the operator on.</param>
+        <param name="op">The operator to apply.</param>
+        <summary>Set this region to the result of applying the operation to this region and the specified region.</summary>
+        <returns>Returns true if the resulting region is non-empty.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Op">
@@ -181,14 +243,16 @@
         <Parameter Name="op" Type="SkiaSharp.SKRegionOperation" />
       </Parameters>
       <Docs>
-        <param name="left">To be added.</param>
-        <param name="top">To be added.</param>
-        <param name="right">To be added.</param>
-        <param name="bottom">To be added.</param>
-        <param name="op">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="left">The x-coordinate to apply the operator on.</param>
+        <param name="top">The y-coordinate to apply the operator on.</param>
+        <param name="right">The right-coordinate to apply the operator on.</param>
+        <param name="bottom">The bottom-coordinate to apply the operator on.</param>
+        <param name="op">The operator to apply.</param>
+        <summary>Set this region to the result of applying the operation to this region and the specified rectangle.</summary>
+        <returns>Returns true if the resulting region is non-empty.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Set">
@@ -205,10 +269,12 @@
         <Parameter Name="region" Type="SkiaSharp.SKRegion" />
       </Parameters>
       <Docs>
-        <param name="region">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="region">The replacement region.</param>
+        <summary>Replace this region with the specified region.</summary>
+        <returns>Return true if the resulting region is non-empty.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="SetPath">
@@ -225,10 +291,10 @@
         <Parameter Name="path" Type="SkiaSharp.SKPath" />
       </Parameters>
       <Docs>
-        <param name="path">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="path">The replacement path.</param>
+        <summary>Set this region to the area described by the path, clipped to the current region.</summary>
+        <returns>Returns true if the resulting region is non-empty.</returns>
+        <remarks>This produces a region that is identical to the pixels that would be drawn by the path (with no antialiasing) with the current region as the clip.</remarks>
       </Docs>
     </Member>
     <Member MemberName="SetPath">
@@ -246,11 +312,11 @@
         <Parameter Name="clip" Type="SkiaSharp.SKRegion" />
       </Parameters>
       <Docs>
-        <param name="path">To be added.</param>
-        <param name="clip">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="path">The replacement path.</param>
+        <param name="clip">The clipping region.</param>
+        <summary>Set this region to the area described by the path, clipped.</summary>
+        <returns>Returns true if the resulting region is non-empty.</returns>
+        <remarks>This produces a region that is identical to the pixels that would be drawn by the path (with no antialiasing) with the specified clip.</remarks>
       </Docs>
     </Member>
     <Member MemberName="SetRect">
@@ -267,10 +333,12 @@
         <Parameter Name="rect" Type="SkiaSharp.SKRectI" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="rect">The replacement rectangle.</param>
+        <summary>Set this region to the specified rectangle.</summary>
+        <returns>Returns true if the resulting region is non-empty.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
   </Members>

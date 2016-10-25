@@ -44,6 +44,11 @@ namespace SkiaSharp
 			return SkiaApi.sk_region_contains(Handle, src.Handle); 
 		}
 
+		public bool Contains(SKPointI xy)
+		{
+			return SkiaApi.sk_region_contains2(Handle, xy.X, xy.Y);
+		}
+
 		public bool Contains(int x, int y)
 		{
 			return SkiaApi.sk_region_contains2(Handle, x, y);
@@ -87,6 +92,11 @@ namespace SkiaSharp
 			if (path == null)
 				throw new ArgumentNullException (nameof (path));
 			return SkiaApi.sk_region_set_path(Handle, path.Handle, Handle); 
+		}
+
+		public bool Op(SKRectI rect, SKRegionOperation op)
+		{
+			return SkiaApi.sk_region_op(Handle, rect.Left, rect.Top, rect.Right, rect.Bottom, op);
 		}
 
 		public bool Op(int left, int top, int right, int bottom, SKRegionOperation op)
