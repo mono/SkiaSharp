@@ -230,33 +230,21 @@ namespace SkiaSharp
 			private static readonly IntPtr libEGL;
 			private static readonly IntPtr libGLESv2;
 
-			private const string Kernel32Dll = "Kernel32.dll"; 
-			private const string PhoneAppModelHostDll = "PhoneAppModelHost.dll"; 
-
 #if WINDOWS_UWP
-			[DllImport (Kernel32Dll, EntryPoint = "LoadPackagedLibrary", SetLastError = true, CharSet = CharSet.Ansi)]
-			private static extern IntPtr LoadPackagedLibraryDesktop ([MarshalAs (UnmanagedType.LPWStr)] string lpFileName, uint Reserved);
+			// https://msdn.microsoft.com/en-us/library/windows/desktop/mt186421(v=vs.85).aspx
 
-			[DllImport (Kernel32Dll, EntryPoint = "GetProcAddress", SetLastError = true, CharSet = CharSet.Ansi)]
-			private static extern IntPtr GetProcAddressDesktop (IntPtr hModule, [MarshalAs (UnmanagedType.LPStr)] string lpProcName);
+			[DllImport ("api-ms-win-core-libraryloader-l2-1-0.dll", SetLastError = true, CharSet = CharSet.Ansi)]
+			private static extern IntPtr LoadPackagedLibrary ([MarshalAs (UnmanagedType.LPWStr)] string lpFileName, uint Reserved);
 
-			[DllImport (PhoneAppModelHostDll, EntryPoint = "LoadPackagedLibrary", SetLastError = true, CharSet = CharSet.Ansi)]
-			private static extern IntPtr LoadPackagedLibraryPhone ([MarshalAs (UnmanagedType.LPWStr)] string lpFileName, uint Reserved);
+			[DllImport ("api-ms-win-core-libraryloader-l1-2-0.dll", SetLastError = true, CharSet = CharSet.Ansi)]
+			private static extern IntPtr GetProcAddress (IntPtr hModule, [MarshalAs (UnmanagedType.LPStr)] string lpProcName);
 
-			[DllImport (PhoneAppModelHostDll, EntryPoint = "GetProcAddress", SetLastError = true, CharSet = CharSet.Ansi)]
-			private static extern IntPtr GetProcAddressPhone (IntPtr hModule, [MarshalAs (UnmanagedType.LPStr)] string lpProcName);
-			
-			private static readonly Func<string, IntPtr> LoadLibrary;
-
-			private static readonly Func<IntPtr, string, IntPtr> GetProcAddress;
-
-			private static readonly bool OnDesktopDevice;
-			private static readonly bool OnPhoneDevice;
+			private static IntPtr LoadLibrary (string lpFileName) => LoadPackagedLibrary(lpFileName, 0);
 #else
-			[DllImport (Kernel32Dll, SetLastError = true, CharSet = CharSet.Ansi)]
+			[DllImport ("Kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi)]
 			private static extern IntPtr LoadLibrary ([MarshalAs (UnmanagedType.LPStr)] string lpFileName);
 
-			[DllImport (Kernel32Dll, SetLastError = true, CharSet = CharSet.Ansi)]
+			[DllImport ("Kernel32.dll", SetLastError = true, CharSet = CharSet.Ansi)]
 			private static extern IntPtr GetProcAddress (IntPtr hModule, [MarshalAs (UnmanagedType.LPStr)] string lpProcName);
 #endif
 
@@ -265,23 +253,6 @@ namespace SkiaSharp
 
 			static AngleLoader()
 			{
-#if WINDOWS_UWP
-				// Phone devices have a few restrictions with dynamic libraries
-				try {
-					OnDesktopDevice = LoadPackagedLibraryDesktop ("libEGL.dll", 0) != IntPtr.Zero;
-					OnPhoneDevice = !OnDesktopDevice;
-
-					LoadLibrary = (lpFileName) => LoadPackagedLibraryDesktop (lpFileName, 0);
-					GetProcAddress = (hModule, lpProcName) => GetProcAddressDesktop (hModule, lpProcName);
-				} catch {
-					OnPhoneDevice = LoadPackagedLibraryPhone("libEGL.dll", 0) != IntPtr.Zero;
-					OnDesktopDevice = !OnPhoneDevice;
-
-					LoadLibrary = (lpFileName) => LoadPackagedLibraryPhone (lpFileName, 0);
-					GetProcAddress = (hModule, lpProcName) => GetProcAddressPhone (hModule, lpProcName);
-				}
-#endif
-
 				libEGL = LoadLibrary ("libEGL.dll");
 				if (Marshal.GetLastWin32Error () != 0 || libEGL == IntPtr.Zero)
 					throw new DllNotFoundException ("Unable to load libEGL.dll.");
