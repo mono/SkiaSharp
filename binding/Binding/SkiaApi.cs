@@ -133,10 +133,6 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_clip_rect(sk_canvas_t t, ref SKRect rect);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_canvas_clip_rect2(sk_canvas_t t, ref SKRect rect, SKRegionOperation op);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_canvas_clip_region(sk_canvas_t t, sk_region_t region, SKRegionOperation op);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_clip_path(sk_canvas_t t, sk_path_t p);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_paint(sk_canvas_t t, sk_paint_t p);
@@ -201,6 +197,8 @@ namespace SkiaSharp
 		public extern static void sk_canvas_clip_rect_with_operation(sk_canvas_t t, ref SKRect crect, SKClipOperation op, bool doAA);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_clip_path_with_operation(sk_canvas_t t, sk_path_t cpath, SKClipOperation op, bool doAA);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_canvas_clip_region(sk_canvas_t t, sk_region_t region, SKClipOperation op);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_canvas_get_clip_device_bounds(sk_canvas_t t, ref SKRectI cbounds);
@@ -1223,7 +1221,7 @@ namespace SkiaSharp
 		public extern static bool sk_region_intersects(sk_region_t r, SKRectI rect);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)] 
-		public extern static bool sk_region_set(sk_region_t r, sk_region_t src);
+		public extern static bool sk_region_set_region(sk_region_t r, sk_region_t src);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)] 
 		public extern static bool sk_region_set_rect(sk_region_t r, ref SKRectI rect);

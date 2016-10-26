@@ -12,8 +12,6 @@
 //
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace SkiaSharp
 {
@@ -66,11 +64,11 @@ namespace SkiaSharp
 			return SkiaApi.sk_region_intersects(Handle, rect);
 		}
 
-		public bool Set(SKRegion region)
+		public bool SetRegion(SKRegion region)
 		{
 			if (region == null)
 				throw new ArgumentNullException (nameof (region));
-			return SkiaApi.sk_region_set(Handle, region.Handle);
+			return SkiaApi.sk_region_set_region(Handle, region.Handle);
 		}
 
 		public bool SetRect(SKRectI rect)

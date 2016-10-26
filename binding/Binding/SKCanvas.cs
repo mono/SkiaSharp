@@ -178,6 +178,14 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_clip_path_with_operation (Handle, path.Handle, operation, antialias);
 		}
 
+		public void ClipRegion (SKRegion region, SKClipOperation operation = SKClipOperation.Intersect)
+		{
+			if (region == null)
+				throw new ArgumentNullException (nameof (region));
+
+			SkiaApi.sk_canvas_clip_region (Handle, region.Handle, operation);
+		}
+
 		public SKRect ClipBounds {
 			get {
 				var bounds = SKRect.Empty;
