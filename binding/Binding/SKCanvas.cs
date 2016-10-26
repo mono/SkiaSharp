@@ -178,6 +178,28 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_clip_path_with_operation (Handle, path.Handle, operation, antialias);
 		}
 
+		public SKRect ClipBounds {
+			get {
+				var bounds = SKRect.Empty;
+				if (GetClipBounds (ref bounds)) {
+					return bounds;
+				} else {
+					return SKRect.Empty;
+				}
+			}
+		}
+
+		public SKRectI ClipDeviceBounds {
+			get {
+				var bounds = SKRectI.Empty;
+				if (GetClipDeviceBounds (ref bounds)) {
+					return bounds;
+				} else {
+					return SKRectI.Empty;
+				}
+			}
+		}
+
 		public bool GetClipBounds (ref SKRect bounds)
 		{
 			return SkiaApi.sk_canvas_get_clip_bounds(Handle, ref bounds);
