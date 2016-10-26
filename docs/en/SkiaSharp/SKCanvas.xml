@@ -92,9 +92,11 @@
         <Parameter Name="bitmap" Type="SkiaSharp.SKBitmap" />
       </Parameters>
       <Docs>
-        <param name="bitmap">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="bitmap">The bitmap for the canvas to draw into.</param>
+        <summary>Creates a canvas with the specified bitmap to draw into.</summary>
+        <remarks>
+          <para>The structure of the bitmap is copied into the canvas.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Clear">
@@ -117,7 +119,7 @@
       <Docs>
         <summary>Replaces all the pixels in the canvas’ current clip with the <see cref="P:SkiaSharp.SKColors.Empty" /> color.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -142,9 +144,9 @@
       </Parameters>
       <Docs>
         <param name="color">The color to use to replace the pixels in the current clipping region.</param>
-        <summary>Helper method for drawing a color in source mode, completely replacing all the pixels in the current clip with this color.</summary>
+        <summary>Replaces all the pixels in the canvas’ current clip with the specified color.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -162,9 +164,11 @@
         <Parameter Name="path" Type="SkiaSharp.SKPath" />
       </Parameters>
       <Docs>
-        <param name="path">Path descrcibing the new clipping region.</param>
-        <summary>Set the current clipping region to the specified path.</summary>
-        <remarks>To be added.</remarks>
+        <param name="path">The path to combine with the current clip.</param>
+        <summary>Modify the current clip with the specified path.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ClipPath">
@@ -183,11 +187,13 @@
         <Parameter Name="antialias" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="path">To be added.</param>
-        <param name="operation">To be added.</param>
-        <param name="antialias">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="path">The path to combine with the current clip.</param>
+        <param name="operation">The clip operator to apply to the current clip</param>
+        <param name="antialias">Whether or not the clip should be antialiased.</param>
+        <summary>Modify the current clip with the specified path.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ClipPath">
@@ -216,11 +222,13 @@
         <Parameter Name="antialias" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="path">To be added.</param>
-        <param name="operation">To be added.</param>
-        <param name="antialias">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="path">The path to combine with the current clip.</param>
+        <param name="operation">The region operator to apply to the current clip</param>
+        <param name="antialias">Whether or not the clip should be antialiased.</param>
+        <summary>Modify the current clip with the specified path.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ClipRect">
@@ -237,10 +245,10 @@
         <Parameter Name="rect" Type="SkiaSharp.SKRect" />
       </Parameters>
       <Docs>
-        <param name="rect">Clipping rectangle.</param>
-        <summary>Set the current clipping region to the specified rectangle.</summary>
+        <param name="rect">The rectangle to combine with the current clip.</param>
+        <summary>Modify the current clip with the specified rectangle.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -260,11 +268,13 @@
         <Parameter Name="antialias" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <param name="operation">To be added.</param>
-        <param name="antialias">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rect">The rectangle to combine with the current clip.</param>
+        <param name="operation">The clip operator to apply to the current clip.</param>
+        <param name="antialias">Whether or not the clip should be antialiased.</param>
+        <summary>Modify the current clip with the specified rectangle.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ClipRect">
@@ -293,11 +303,13 @@
         <Parameter Name="antialias" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <param name="operation">To be added.</param>
-        <param name="antialias">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rect">The rectangle to combine with the current clip.</param>
+        <param name="operation">The region operator to apply to the current clip.</param>
+        <param name="antialias">Whether or not the clip should be antialiased.</param>
+        <summary>Modify the current clip with the specified rectangle.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Concat">
@@ -320,10 +332,10 @@
         <Parameter Name="m" Type="SkiaSharp.SKMatrix&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="m">Transformation matrix to concatenate.</param>
+        <param name="m">Transformation matrix to pre-concatenate.</param>
         <summary>Pre-concatenates the provided transformation matrix with the current transformation matrix.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -349,11 +361,13 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="bitmap">Bitmap to draw</param>
-        <param name="dest">Region to draw the bitmap into</param>
+        <param name="bitmap">The bitmap to draw.</param>
+        <param name="dest">The region to draw the bitmap into.</param>
         <param name="paint">The paint used to draw the bitmap.</param>
         <summary>Draws a bitmap on the canvas.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawBitmap">
@@ -379,12 +393,14 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="bitmap">Bitmap to draw</param>
-        <param name="source">Source region to copy.</param>
-        <param name="dest">Region to draw the bitmap into.</param>
+        <param name="bitmap">The bitmap to draw.</param>
+        <param name="source">The source region to copy.</param>
+        <param name="dest">The region to draw the bitmap into.</param>
         <param name="paint">The paint used to draw the bitmap.</param>
         <summary>Draws a bitmap on the canvas.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawBitmap">
@@ -415,7 +431,9 @@
         <param name="y">Target y coordinate destination for the bitmap.</param>
         <param name="paint">The paint used to draw the bitmap.</param>
         <summary>Draws a bitmap on the canvas.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawBitmapLattice">
@@ -435,12 +453,14 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="bitmap">To be added.</param>
-        <param name="lattice">To be added.</param>
-        <param name="dst">To be added.</param>
-        <param name="paint">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="bitmap">The bitmap to draw.</param>
+        <param name="lattice">The lattice that describes the areas of the bitmap to stretch or shrink.</param>
+        <param name="dst">The region to draw the bitmap into.</param>
+        <param name="paint">The paint used to draw the bitmap.</param>
+        <summary>Draws the bitmap, stretched or shrunk differentially to fit into the destination rectangle.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawBitmapLattice">
@@ -463,13 +483,15 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="bitmap">To be added.</param>
-        <param name="xDivs">To be added.</param>
-        <param name="yDivs">To be added.</param>
-        <param name="dst">To be added.</param>
-        <param name="paint">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="bitmap">The bitmap to draw.</param>
+        <param name="xDivs">The x-coordinates that divide the bitmap vertically, describing the areas to stretch or shrink.</param>
+        <param name="yDivs">The y-coordinates that divide the bitmap horizontally, describing the areas to stretch or shrink.</param>
+        <param name="dst">The region to draw the bitmap into.</param>
+        <param name="paint">The paint used to draw the bitmap.</param>
+        <summary>Draws the bitmap, stretched or shrunk differentially to fit into the destination rectangle.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawBitmapNinePatch">
@@ -491,12 +513,14 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="bitmap">To be added.</param>
-        <param name="center">To be added.</param>
-        <param name="dst">To be added.</param>
-        <param name="paint">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="bitmap">The bitmap to draw.</param>
+        <param name="center">The center region within the bitmap to logically divide the bitmap into 9 sections (3x3).</param>
+        <param name="dst">The region to draw the bitmap into.</param>
+        <param name="paint">The paint used to draw the bitmap.</param>
+        <summary>Draws the bitmap, stretched or shrunk differentially to fit into the destination rectangle.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawCircle">
@@ -521,12 +545,14 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="cx">Center X coordinate.</param>
-        <param name="cy">Center Y coordinate.</param>
-        <param name="radius">Radius for the circle.</param>
+        <param name="cx">The center x-coordinate.</param>
+        <param name="cy">The center y-coordinate.</param>
+        <param name="radius">The radius for the circle.</param>
         <param name="paint">The paint used to draw the bitmap.</param>
         <summary>Draws a circle on the canvas.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawColor">
@@ -544,10 +570,12 @@
         <Parameter Name="mode" Type="SkiaSharp.SKBlendMode" />
       </Parameters>
       <Docs>
-        <param name="color">To be added.</param>
-        <param name="mode">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="color">The color to use to paint the clipping region.</param>
+        <param name="mode">The blend mode for the color.</param>
+        <summary>Fills the current clipping area with the specified color using the specified color and blend mode.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawColor">
@@ -576,9 +604,9 @@
         <Parameter Name="mode" Type="SkiaSharp.SKXferMode" />
       </Parameters>
       <Docs>
-        <param name="color">Color to use to paint the clipping region (or the entire canvas if one is not set).</param>
+        <param name="color">The color to use to paint the clipping region.</param>
         <param name="mode">The transfer mode for the color.</param>
-        <summary>Fills the current clipping path with the specified color using the specified transfer mode.</summary>
+        <summary>Fills the current clipping area with the specified color using the specified color and transfer mode.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -607,10 +635,12 @@
       </Parameters>
       <Docs>
         <param name="image">The image to draw.</param>
-        <param name="dest">Region to draw the bitmap into</param>
+        <param name="dest">The region to draw the image into.</param>
         <param name="paint">The paint used to draw the image, or <see langword="null" />.</param>
         <summary>Draws an image on the canvas.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawImage">
@@ -636,12 +666,14 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="image">Draws an image on the canvas.</param>
-        <param name="source">Source region to copy.</param>
-        <param name="dest">Region to draw the bitmap into</param>
+        <param name="image">The image to draw.</param>
+        <param name="source">The source region to copy.</param>
+        <param name="dest">The region to draw the image into.</param>
         <param name="paint">The paint used to draw the image, or <see langword="null" />.</param>
         <summary>Draws an image on the canvas.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawImage">
@@ -667,12 +699,14 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="image">Draws an image on the canvas.</param>
-        <param name="x">Targe x coordinate destination for the image.</param>
-        <param name="y">Targe y coordinate destination for the image.</param>
+        <param name="image">The image to draw.</param>
+        <param name="x">The x-coordinate destination for the image.</param>
+        <param name="y">The y-coordinate destination for the image.</param>
         <param name="paint">The paint used to draw the image, or <see langword="null" />.</param>
         <summary>Draws an image on the canvas.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawImageLattice">
@@ -692,12 +726,14 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="image">To be added.</param>
-        <param name="lattice">To be added.</param>
-        <param name="dst">To be added.</param>
-        <param name="paint">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="image">The image to draw.</param>
+        <param name="lattice">The lattice that describes the areas of the image to stretch or shrink.</param>
+        <param name="dst">The region to draw the image into.</param>
+        <param name="paint">The paint used to draw the image, or <see langword="null" />.</param>
+        <summary>Draws the image, stretched or shrunk differentially to fit into the destination rectangle.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawImageLattice">
@@ -720,13 +756,15 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="image">To be added.</param>
-        <param name="xDivs">To be added.</param>
-        <param name="yDivs">To be added.</param>
-        <param name="dst">To be added.</param>
-        <param name="paint">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="image">The image to draw.</param>
+        <param name="xDivs">The x-coordinates that divide the image vertically, describing the areas to stretch or shrink.</param>
+        <param name="yDivs">The Y-coordinates that divide the image horizontally, describing the areas to stretch or shrink.</param>
+        <param name="dst">The region to draw the image into.</param>
+        <param name="paint">The paint used to draw the image, or <see langword="null" />.</param>
+        <summary>Draws the image, stretched or shrunk differentially to fit into the destination rectangle.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawImageNinePatch">
@@ -748,12 +786,14 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="image">To be added.</param>
-        <param name="center">To be added.</param>
-        <param name="dst">To be added.</param>
-        <param name="paint">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="image">The image to draw.</param>
+        <param name="center">The center region within the image to logically divide the image into 9 sections (3x3).</param>
+        <param name="dst">The region to draw the image into.</param>
+        <param name="paint">The paint used to draw the image, or <see langword="null" />.</param>
+        <summary>Draws the image, stretched or shrunk differentially to fit into the destination rectangle.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawLine">
@@ -780,13 +820,15 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="x0">First point x coordinate.</param>
-        <param name="y0">First point y coordinate.</param>
-        <param name="x1">Second point x coordinate.</param>
-        <param name="y1">First point y coordinate.</param>
+        <param name="x0">The first point x-coordinate.</param>
+        <param name="y0">The first point y-coordinate.</param>
+        <param name="x1">The second point x-coordinate.</param>
+        <param name="y1">The second point y-coordinate.</param>
         <param name="paint">The paint used to draw the line.</param>
         <summary>Draws a line on the canvas.</summary>
-        <remarks>Draws a line from (x0,y0) to (x1,y1) using the specified <paramref name="paint" /> parameters.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawOval">
@@ -810,11 +852,11 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="rect">Bounding box for the oval</param>
+        <param name="rect">The bounding box for the oval.</param>
         <param name="paint">The paint used to draw the oval.</param>
         <summary>Draws an oval on the canvas.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -836,13 +878,15 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="cx">To be added.</param>
-        <param name="cy">To be added.</param>
-        <param name="rx">To be added.</param>
-        <param name="ry">To be added.</param>
-        <param name="paint">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="cx">The center x-coordinate.</param>
+        <param name="cy">The center y-coordinate.</param>
+        <param name="rx">The vertical radius for the oval.</param>
+        <param name="ry">The horizontal radius for the oval.</param>
+        <param name="paint">The paint used to draw the oval.</param>
+        <summary>Draws an oval on the canvas.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawPaint">
@@ -868,7 +912,7 @@
         <param name="paint">The paint used to fill the current clipping path.</param>
         <summary>Fills the current clipping path with the specified paint.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -893,11 +937,11 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="path">The path to draw</param>
+        <param name="path">The path to draw.</param>
         <param name="paint">The paint used to draw the path.</param>
-        <summary>Draws a bezier path in the canvas.</summary>
+        <summary>Draws a path in the canvas.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -953,13 +997,13 @@
       </Parameters>
       <Docs>
         <param name="picture">The picture to draw.</param>
-        <param name="matrix">The matrix to apply while painting</param>
+        <param name="matrix">The matrix to apply while painting.</param>
         <param name="paint">The paint used to draw the picture, or <see langword="null" />.</param>
         <summary>Draws a picture on the canvas.</summary>
         <remarks>
-          <para>This is equivalent to calling Save, followed by Concat with the specified <paramref name="matrix" />, DrawPicture and then Restore.</para>
-          <para />
-          <para>If paint is non-null, draw the picture into a temporary buffer, and then apply the paint's alpha, color filter, image filter, xfermode to that buffer as it is drawn to the canvas.</para>
+          <para>This is equivalent to calling <see cref="M:SkiaSharp.SKCanvas.Save" />, followed by <see cref="M:SkiaSharp.SKCanvas.Concat" /> with the specified <paramref name="matrix" />, <see cref="M:SkiaSharp.SKCanvas.DrawPicture" /> and then <see cref="M:SkiaSharp.SKCanvas.Restore" />.</para>
+          <para></para>
+          <para>If paint is non-null, the picture is drawn into a temporary buffer, and then the paint's alpha, color filter, image filter, blend mode are applied to that buffer as it is drawn to the canvas.</para>
         </remarks>
       </Docs>
     </Member>
@@ -985,11 +1029,13 @@
         <Parameter Name="color" Type="SkiaSharp.SKColor" />
       </Parameters>
       <Docs>
-        <param name="x">x coordinate for the point to draw.</param>
-        <param name="y">y coordinate for the point to draw.</param>
-        <param name="color">Color to use.</param>
+        <param name="x">The x-coordinate for the point to draw.</param>
+        <param name="y">The y-coordinate for the point to draw.</param>
+        <param name="color">The color to use.</param>
         <summary>Draws a point in the canvas with the specified color.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawPoint">
@@ -1014,12 +1060,12 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="x">x coordinate for the point to draw.</param>
-        <param name="y">y coordinate for the point to draw.</param>
+        <param name="x">The x-coordinate for the point to draw.</param>
+        <param name="y">The y-coordinate for the point to draw.</param>
         <param name="paint">The paint used to draw the point.</param>
         <summary>Draws a point in the canvas with the specified color.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1046,19 +1092,17 @@
       </Parameters>
       <Docs>
         <param name="mode">Determines how the points array will be interpreted: as points, as coordinates to draw lines, or as coordinates of a polygon.</param>
-        <param name="points">array of points to draw.</param>
+        <param name="points">The array of points to draw.</param>
         <param name="paint">The paint used to draw the points.</param>
-        <summary>Draws an array of points, lines or a polygon in the canvas.</summary>
+        <summary>Draws an array of points, lines or a polygon in the canvas, one at a time.</summary>
         <remarks>
-          <para>For all modes, the count parameter is interpreted as the total number of points. For kLine mode, count/2 line segments are drawn.</para>
+          <para>For <see cref="F:SkiaSharp.SKPointMode.Points" />, each point is drawn centered at its coordinate, and its size is specified by the paint's stroke-width. It draws as a square, unless the paint's <see cref="P:SkiaSharp.SKPaint.StrokeCap" /> is <see cref="F:SkiaSharp.SKStrokeCap.Round" />, in which the points are drawn as circles.</para>
           <para></para>
-          <para>For point mode, each point is drawn centered at its coordinate, and its size is specified by the paint's stroke-width. It draws as a square, unless the paint's cap-type is round, in which the points are drawn as circles.</para>
+          <para>For <see cref="F:SkiaSharp.SKPointMode.Lines" />, each pair of points is drawn as a line segment, respecting the paint's settings for cap, join and width. </para>
           <para></para>
-          <para>For line mode, each pair of points is drawn as a line segment, respecting the paint's settings for cap, join and width. </para>
+          <para>For <see cref="F:SkiaSharp.SKPointMode.Polygon" />, the entire array is drawn as a series of connected line segments.</para>
           <para></para>
-          <para>For polygon mode, the entire array is drawn as a series of connected line segments.</para>
-          <para></para>
-          <para>Note that, while similar, the line and polygon modes draw slightly differently than the equivalent path built with a series of move to, line to calls, in that the path will draw all of its contours at once, with no interactions if contours intersect each other (think XOR xfermode).  DrawPoints always draws each element one at a time.</para>
+          <para>Note that, while similar, the line and polygon modes draw slightly differently than the equivalent path built with a series of move to, line to calls, in that the path will draw all of its contours at once, with no interactions if contours intersect each other (think <see cref="F:SkiaSharp.SKBlendMode.Xor" />).</para>
           <para></para>
         </remarks>
       </Docs>
@@ -1084,11 +1128,11 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="rect">The rectangle specification.</param>
+        <param name="rect">The rectangle to draw.</param>
         <param name="paint">The paint used to draw the rectagle.</param>
         <summary>Draws a rectangle in the canvas.</summary>
         <remarks>
-          <para>The rectangle will be filled or stroked based on the Style in the paint.</para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1114,12 +1158,14 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <param name="rx">To be added.</param>
-        <param name="ry">To be added.</param>
-        <param name="paint">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rect">The rectangle to draw.</param>
+        <param name="rx">The x-radius of the oval used to round the corners.</param>
+        <param name="ry">The y-radius of the oval used to round the corners.</param>
+        <param name="paint">The paint used to draw the rectagle.</param>
+        <summary>Draws a rounded rectangle in the canvas.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawText">
@@ -1145,11 +1191,11 @@
       </Parameters>
       <Docs>
         <param name="text">The text to draw.</param>
-        <param name="points">Describes the position for each glyph in the <paramref name="text" /> string.</param>
+        <param name="points">The positions for each glyph in the <paramref name="text" /> string.</param>
         <param name="paint">The paint used to draw the text.</param>
         <summary>Draws glyphs of the text at specified locations on the canvas.</summary>
         <remarks>
-          <para>Draw the text, with each character/glyph origin specified by the <paramref name="points" /> array. The origin is interpreted by the Align setting in the paint.</para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1176,16 +1222,12 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="buffer">Contains a pointer to a region holding UTF-8 encoded text to draw.</param>
-        <param name="length">Number of bytes to read from the <paramref name="buffer." /></param>
-        <param name="points">Describes the position for each glyph in the <paramref name="text" /> string.</param>
+        <param name="buffer">The pointer to a region holding UTF-8 encoded text to draw.</param>
+        <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
+        <param name="points">The positions for each glyph in the <paramref name="buffer." /></param>
         <param name="paint">The paint used to draw the text.</param>
         <summary>Draws text from a UTF-8 buffer at specified locations on the canvas.</summary>
-        <remarks>
-          <para>Draw the text, with each character/glyph origin specified by the <paramref name="points" /> array. The origin is interpreted by the Align setting in the paint.</para>
-          <para></para>
-          <para>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains a UTF-8 encoded block of text.   This only consumes up to <paramref name="length" /> bytes from the buffer.</para>
-        </remarks>
+        <remarks />
       </Docs>
     </Member>
     <Member MemberName="DrawText">
@@ -1212,12 +1254,12 @@
       </Parameters>
       <Docs>
         <param name="text">The text to draw.</param>
-        <param name="x">The x-coordinate of the origin of the text being drawn</param>
-        <param name="y">The y-coordinate of the origin of the text being drawn</param>
+        <param name="x">The x-coordinate of the origin of the text being drawn.</param>
+        <param name="y">The y-coordinate of the origin of the text being drawn.</param>
         <param name="paint">The paint used to draw the text.</param>
-        <summary>Draws text on the canvas</summary>
+        <summary>Draws text on the canvas at the specified coordinates.</summary>
         <remarks>
-          <para>Draws the <paramref name="text" />, with origin at (<paramref name="x" />,<paramref name="y" />), using the specified <paramref name="paint" />. The origin is interpreted based on the Align setting in the paint.</para>
+          <para></para>
           <example>
             <code lang="C#"><![CDATA[public static void TextSample (SKCanvas canvas, int width, int height)
 {
@@ -1283,14 +1325,12 @@
       <Docs>
         <param name="buffer">Contains a pointer to a region holding UTF-8 encoded text to draw.</param>
         <param name="length">Number of bytes to read from the <paramref name="buffer." /></param>
-        <param name="x">The x-coordinate of the origin of the text being drawn</param>
-        <param name="y">The y-coordinate of the origin of the text being drawn</param>
+        <param name="x">The x-coordinate of the origin of the text being drawn.</param>
+        <param name="y">The y-coordinate of the origin of the text being drawn.</param>
         <param name="paint">The paint used to draw the text.</param>
-        <summary>Draws text encoded in a UTF-8 buffer on the canvas.</summary>
+        <summary>Draws text encoded in a UTF-8 buffer on the canvas at the specified coordinates.</summary>
         <remarks>
-          <para>Draws the <paramref name="text" />, with origin at (<paramref name="x" />,<paramref name="y" />), using the specified <paramref name="paint" />. The origin is interpreted based on the Align setting in the paint.</para>
           <para></para>
-          <para>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains a UTF-8 encoded block of text.   This only consumes up to <paramref name="length" /> bytes from the buffer.</para>
         </remarks>
       </Docs>
     </Member>
@@ -1320,16 +1360,12 @@
       <Docs>
         <param name="text">The text to draw.</param>
         <param name="path">The path the text should follow for its baseline.</param>
-        <param name="hOffset">
-          <para>The distance along the path to add to the text’s starting position.</para>
-        </param>
-        <param name="vOffset">
-          <para>The distance above(-) or below(+) the path to position the text.</para>
-        </param>
+        <param name="hOffset">The distance along the path to add to the text’s starting position.</param>
+        <param name="vOffset">The distance above (-) or below (+) the path to position the text.</param>
         <param name="paint">The paint used to draw the text.</param>
-        <summary>Draws text on the canvas following a bezier path.</summary>
+        <summary>Draws text on the canvas following a path.</summary>
         <remarks>
-          <para>Draw the <paramref name="text" />, using the specified <paramref name="paint" />, along the specified <paramref name="path" />. The paint's Align setting determins where along the path to start the text.</para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1362,12 +1398,11 @@
         <param name="length">Number of bytes to read from the <paramref name="buffer." /></param>
         <param name="path">The path the text should follow for its baseline.</param>
         <param name="hOffset">The distance along the path to add to the text’s starting position.</param>
-        <param name="vOffset">The distance above(-) or below(+) the path to position the text.</param>
+        <param name="vOffset">The distance above (-) or below (+) the path to position the text.</param>
         <param name="paint">The paint used to draw the text.</param>
-        <summary>Draws text encoded in a UTF-8 buffer on the canvas following a bezier path.</summary>
+        <summary>Draws text encoded in a UTF-8 buffer on the canvas following a path.</summary>
         <remarks>
-          <para>Draw the <paramref name="text" />, using the specified <paramref name="paint" />, along the specified <paramref name="path" />. The paint's Align setting determins where along the path to start the text.</para>
-          <para>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains a UTF-8 encoded block of text.   This only consumes up to <paramref name="length" /> bytes from the buffer.</para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1385,8 +1420,8 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Trigger the immediate execution of all pending draw operations.</summary>
+        <remarks>For the GPU backend this will resolve all rendering to the GPU surface backing the surface that owns this canvas.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetClipBounds">
@@ -1408,10 +1443,10 @@
         <Parameter Name="bounds" Type="SkiaSharp.SKRect&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="bounds">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="bounds">The resulting clip bounds.</param>
+        <summary>Returns the bounds of the current clip (in local coordinates).</summary>
+        <returns>Returns true if the clip bounds are non-empty, otherwise false.</returns>
+        <remarks>This can be useful in that it tells you that drawing outside of these bounds will be clipped out.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetClipDeviceBounds">
@@ -1433,10 +1468,12 @@
         <Parameter Name="bounds" Type="SkiaSharp.SKRectI&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="bounds">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="bounds">The resulting clip bounds.</param>
+        <summary>Returns the bounds of the current clip (in device coordinates).</summary>
+        <returns>Returns true if the clip bounds are non-empty, otherwise false.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ResetMatrix">
@@ -1643,9 +1680,7 @@
       <Parameters />
       <Docs>
         <summary>Saves the canvas state.</summary>
-        <returns>
-          <para>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> to balance this save.</para>
-        </returns>
+        <returns>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> to balance this save.</returns>
         <remarks>
           <para>This call saves the current matrix, clip, and draw filter, and pushes a copy onto a private stack. </para>
           <para>Subsequent calls to translate, scale, rotate, skew, concat or clipping path or drawing filter all operate on this copy.</para>
