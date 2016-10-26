@@ -150,6 +150,46 @@
         </remarks>
       </Docs>
     </Member>
+    <Member MemberName="ClipBounds">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKRect ClipBounds { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKRect ClipBounds" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKRect</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the bounds of the current clip (in local coordinates).</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ClipDeviceBounds">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKRectI ClipDeviceBounds { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKRectI ClipDeviceBounds" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKRectI</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the bounds of the current clip (in device coordinates).</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
     <Member MemberName="ClipPath">
       <MemberSignature Language="C#" Value="public void ClipPath (SkiaSharp.SKPath path);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void ClipPath(class SkiaSharp.SKPath path) cil managed" />
@@ -1420,7 +1460,7 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Trigger the immediate execution of all pending draw operations.</summary>
+        <summary>Triggers the immediate execution of all pending draw operations.</summary>
         <remarks>For the GPU backend this will resolve all rendering to the GPU surface backing the surface that owns this canvas.</remarks>
       </Docs>
     </Member>
@@ -1494,9 +1534,9 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Helper for setMatrix(identity). Sets the current matrix to identity.</summary>
+        <summary>Sets the current matrix to identity.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1519,11 +1559,7 @@
       <Parameters />
       <Docs>
         <summary>Restore the canvas state.</summary>
-        <remarks>
-          <para>This call balances a previous call to <see cref="M:SkiaSharp.SKCanvas.Save" />, and is used to remove all modifications to the matrix, clip and draw filter state since the last Save call.</para>
-          <para></para>
-          <para>It is an error to call Restore() more times than Save() was called.</para>
-        </remarks>
+        <remarks>This call balances a previous call to <see cref="M:SkiaSharp.SKCanvas.Save" />, and is used to remove all modifications to the matrix, clip and draw filter state since the last save call. It is an error to restore more times than was previously saved.</remarks>
       </Docs>
     </Member>
     <Member MemberName="RestoreToCount">
@@ -1546,13 +1582,9 @@
         <Parameter Name="count" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="count">The number of Save() levels to restore from.  Or -1 to restore all the way back to the initial value.</param>
-        <summary>Efficiently restore the state to a specific level.</summary>
-        <remarks>
-          <para>Efficient way to pop any calls to <see cref="M:SkiaSharp.SKCanvas.Save" /> that happened after the save count reached <paramref name="count" />. </para>
-          <para />
-          <para>It is an error for <paramref name="count" /> to be greater than <see cref="P:SkiaSharp.SKCanvas.SaveCount" />. To pop all the way back to the initial matrix/clip context set count to -1.</para>
-        </remarks>
+        <param name="count">The number of <see cref="M:SkiaSharp.SKCanvas.Save" /> levels to restore from, or -1 to restore all the way back to the initial value.</param>
+        <summary>Efficiently restores the state to a specific level.</summary>
+        <remarks>Efficient way to pop any calls to <see cref="M:SkiaSharp.SKCanvas.Save" /> that happened after the save count reached <paramref name="count" />. It is an error for <paramref name="count" /> to be greater than <see cref="P:SkiaSharp.SKCanvas.SaveCount" />. To pop all the way back to the initial matrix/clip context set count to -1.</remarks>
       </Docs>
     </Member>
     <Member MemberName="RotateDegrees">
@@ -1576,7 +1608,7 @@
       </Parameters>
       <Docs>
         <param name="degrees">The number of degrees to rotate.</param>
-        <summary>Preconcat the current matrix with the specified rotation.</summary>
+        <summary>Pre-concats the current matrix with the specified rotation.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -1601,11 +1633,13 @@
         <Parameter Name="py" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="degrees">To be added.</param>
-        <param name="px">To be added.</param>
-        <param name="py">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="degrees">The number of degrees to rotate.</param>
+        <param name="px">The x-coordinate of the point to rotate about.</param>
+        <param name="py">The y-coordinate of the point to rotate about.</param>
+        <summary>Pre-concats the current matrix with the specified rotation, around the specified point.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="RotateRadians">
@@ -1628,8 +1662,8 @@
         <Parameter Name="radians" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="radians">The number of radiants to rotate.</param>
-        <summary>Preconcat the current matrix with the specified rotation.</summary>
+        <param name="radians">The number of radians to rotate.</param>
+        <summary>Pre-concats the current matrix with the specified rotation.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -1654,11 +1688,13 @@
         <Parameter Name="py" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="radians">To be added.</param>
-        <param name="px">To be added.</param>
-        <param name="py">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="radians">The number of radians to rotate.</param>
+        <param name="px">The x-coordinate of the point to rotate about.</param>
+        <param name="py">The y-coordinate of the point to rotate about.</param>
+        <summary>Pre-concats the current matrix with the specified rotation, around the specified point.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Save">
@@ -1681,11 +1717,7 @@
       <Docs>
         <summary>Saves the canvas state.</summary>
         <returns>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> to balance this save.</returns>
-        <remarks>
-          <para>This call saves the current matrix, clip, and draw filter, and pushes a copy onto a private stack. </para>
-          <para>Subsequent calls to translate, scale, rotate, skew, concat or clipping path or drawing filter all operate on this copy.</para>
-          <para>When the balancing call to <see cref="M:SkiaSharp.SKCanvas.Restore" /> is made, the previous matrix, clipping, and drawing filters are restored.</para>
-        </remarks>
+        <remarks>This call saves the current matrix, clip, and draw filter, and pushes a copy onto a private stack. Subsequent calls to translate, scale, rotate, skew, concat or clipping path or drawing filter all operate on this copy. When the balancing call to <see cref="M:SkiaSharp.SKCanvas.Restore" /> is made, the previous matrix, clipping, and drawing filters are restored.</remarks>
       </Docs>
     </Member>
     <Member MemberName="SaveCount">
@@ -1705,13 +1737,11 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Returns the number of matrix/clip states on the SkCanvas' private stack.</summary>
+        <summary>Gets the number of matrix/clip states on the canvas' private stack.</summary>
         <value>
-          <para>This will equal the number of Save calls minus Retore calls + 1. The save count on a new canvas is 1.</para>
-        </value>
-        <remarks>
           <para></para>
-        </remarks>
+        </value>
+        <remarks>This will equal the number of <see cref="M:SkiaSharp.SKCanvas.Save" /> calls minus <see cref="M:SkiaSharp.SKCanvas.Restore" /> calls + 1. The save count on a new canvas is 1.</remarks>
       </Docs>
     </Member>
     <Member MemberName="SaveLayer">
@@ -1736,10 +1766,8 @@
       <Docs>
         <param name="paint">This is copied, and is applied to the offscreen when <see cref="M:SkiaSharp.SKCanvas.Restore" /> is called.</param>
         <summary>Saves the canvas state and allocates an offscreen bitmap.</summary>
-        <returns>
-          <para>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> to balance this save.</para>
-        </returns>
-        <remarks>This behaves the same as save(), but in addition it allocates an offscreen bitmap. All drawing calls are directed there, and only when the balancing call to restore() is made is that offscreen transfered to the canvas (or the previous layer).</remarks>
+        <returns>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> to balance this save.</returns>
+        <remarks>This behaves the same as <see cref="M:SkiaSharp.SKCanvas.Save" /> but in addition it allocates an offscreen bitmap. All drawing calls are directed there, and only when the balancing call to <see cref="M:SkiaSharp.SKCanvas.Restore" /> is made is that offscreen transfered to the canvas (or the previous layer).</remarks>
       </Docs>
     </Member>
     <Member MemberName="SaveLayer">
@@ -1763,18 +1791,13 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="limit">
-          <para>This rectangle, is used as a hint to limit the size of the offscreen, and thus drawing may be clipped to it, though that clipping is not guaranteed to happen. If exact clipping is desired, use <see cref="M:SkiaSharp.SKCanvas.ClipRect" /></para>
-        </param>
-        <param name="paint">
-          <para>This is copied, and is applied to the offscreen when <see cref="M:SkiaSharp.SKCanvas.Restore" /> is called.</para>
-        </param>
+        <param name="limit">This clipping rectangle hint to limit the size of the offscreen bitmap.</param>
+        <param name="paint">This is copied, and is applied to the offscreen when <see cref="M:SkiaSharp.SKCanvas.Restore" /> is called.</param>
         <summary>Saves the canvas state and allocates an offscreen bitmap.</summary>
-        <returns>
-          <para>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> to balance this save.</para>
-        </returns>
+        <returns>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> to balance this save.</returns>
         <remarks>
-          <para>This behaves the same as save(), but in addition it allocates an offscreen bitmap. All drawing calls are directed there, and only when the balancing call to restore() is made is that offscreen transfered to the canvas (or the previous layer).</para>
+          <para>This behaves the same as <see cref="M:SkiaSharp.SKCanvas.Save" /> but in addition it allocates an offscreen bitmap. All drawing calls are directed there, and only when the balancing call to <see cref="M:SkiaSharp.SKCanvas.Restore" /> is made is that offscreen transfered to the canvas (or the previous layer).</para>
+          <para>The limit rectangle, is used as a hint to limit the size of the offscreen bitmap, and thus drawing may be clipped to it, though that clipping is not guaranteed to happen. If exact clipping is desired, use <see cref="M:SkiaSharp.SKCanvas.ClipRect" />.</para>
         </remarks>
       </Docs>
     </Member>
@@ -1799,9 +1822,9 @@
       </Parameters>
       <Docs>
         <param name="size">The amount to scale.</param>
-        <summary>Preconcat the current matrix with the specified scale.</summary>
+        <summary>Pre-concats the current matrix with the specified scale.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1819,9 +1842,11 @@
         <Parameter Name="s" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="s">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="s">The amount to scale.</param>
+        <summary>Pre-concats the current matrix with the specified scale.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Scale">
@@ -1845,11 +1870,11 @@
         <Parameter Name="sy" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="sx">The amount to scale in X</param>
-        <param name="sy">The amount to scale in Y</param>
-        <summary>Preconcat the current matrix with the specified scale.</summary>
+        <param name="sx">The amount to scale in the x-direction.</param>
+        <param name="sy">The amount to scale in the y-direction.</param>
+        <summary>Pre-concats the current matrix with the specified scale.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1873,12 +1898,14 @@
         <Parameter Name="py" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="sx">To be added.</param>
-        <param name="sy">To be added.</param>
-        <param name="px">To be added.</param>
-        <param name="py">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="sx">The amount to scale in the x-direction.</param>
+        <param name="sy">The amount to scale in the y-direction.</param>
+        <param name="px">The x-coordinate for the scaling center.</param>
+        <param name="py">The y-coordinate for the scaling center.</param>
+        <summary>Pre-concats the current matrix with the specified scale, at the specific offset.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="SetMatrix">
@@ -1902,9 +1929,9 @@
       </Parameters>
       <Docs>
         <param name="matrix">The matrix that will be copied into the current matrix.</param>
-        <summary>Replace the current matrix with a copy of the specified matrix.</summary>
+        <summary>Replaces the current matrix with a copy of the specified matrix.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1929,9 +1956,9 @@
       </Parameters>
       <Docs>
         <param name="skew">The amount to skew.</param>
-        <summary>Preconcat the current matrix with the specified skew.</summary>
+        <summary>Pre-concats the current matrix with the specified skew.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1956,11 +1983,11 @@
         <Parameter Name="sy" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="sx">The amount to skew in X.</param>
-        <param name="sy">The amount to skew in Y.</param>
-        <summary>Preconcat the current matrix with the specified skew.</summary>
+        <param name="sx">The amount to skew in the x-direction.</param>
+        <param name="sy">The amount to skew in the y-direction.</param>
+        <summary>Pre-concats the current matrix with the specified skew.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1981,8 +2008,10 @@
         <ReturnType>SkiaSharp.SKMatrix</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Return the current matrix on the canvas.</summary>
-        <value>The current matrix on the canvas.</value>
+        <summary>Gets the current matrix on the canvas.</summary>
+        <value>
+          <para></para>
+        </value>
         <remarks>This does not account for the translate in any of the devices.</remarks>
       </Docs>
     </Member>
@@ -2007,9 +2036,9 @@
       </Parameters>
       <Docs>
         <param name="point">The distance to translate.</param>
-        <summary>Preconcat the current matrix with the specified translation</summary>
+        <summary>Pre-concats the current matrix with the specified translation.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -2034,11 +2063,11 @@
         <Parameter Name="dy" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="dx">The distance to translate in X.</param>
-        <param name="dy">The distance to translate in Y.</param>
-        <summary>Preconcat the current matrix with the specified translation</summary>
+        <param name="dx">The distance to translate in the x-direction</param>
+        <param name="dy">The distance to translate in the y-direction.</param>
+        <summary>Pre-concats the current matrix with the specified translation.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
