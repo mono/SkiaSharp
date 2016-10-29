@@ -48,7 +48,6 @@ using sk_colortable_t = System.IntPtr;
 using gr_context_t = System.IntPtr;
 using gr_glinterface_t = System.IntPtr;
 using sk_opbuilder_t = System.IntPtr;
-using sk_region_t = System.IntPtr;
 
 namespace SkiaSharp
 {
@@ -131,10 +130,6 @@ namespace SkiaSharp
 		public extern static void sk_canvas_concat(sk_canvas_t t, ref SKMatrix m);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_clip_rect(sk_canvas_t t, ref SKRect rect);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_canvas_clip_rect2(sk_canvas_t t, ref SKRect rect, SKRegionOperation op);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_canvas_clip_region(sk_canvas_t t, sk_region_t region, SKRegionOperation op);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_clip_path(sk_canvas_t t, sk_path_t p);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -548,7 +543,7 @@ namespace SkiaSharp
 		public extern static float sk_path_rawiter_conic_weight (sk_path_iterator_t iterator);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_rawiter_destroy (sk_path_t path);
-								   
+							       
 		// SkMaskFilter
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_maskfilter_unref(sk_maskfilter_t t);
@@ -1125,42 +1120,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool gr_glinterface_has_extension (gr_glinterface_t glInterface, [MarshalAs(UnmanagedType.LPStr)] string extension);
-		
-		// SKRegion
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_region_t sk_region_new();
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_region_t sk_region_new2(sk_region_t r);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.I1)] 
-		public extern static bool sk_region_contains(sk_region_t r, sk_region_t region);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.I1)] 
-		public extern static bool sk_region_contains2(sk_region_t r, int x, int y);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.I1)] 
-		public extern static bool sk_region_intersects(sk_region_t r, sk_region_t src);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.I1)] 
-		public extern static bool sk_region_intersects(sk_region_t r, SKRectI rect);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.I1)] 
-		public extern static bool sk_region_set(sk_region_t r, sk_region_t src);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.I1)] 
-		public extern static bool sk_region_set_rect(sk_region_t r, ref SKRectI rect);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.I1)] 
-		public extern static bool sk_region_set_path(sk_region_t r, sk_path_t t);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.I1)] 
-		public extern static bool sk_region_op(sk_region_t r, int left, int top, int right, int bottom, SKRegionOperation op);
-		[return: MarshalAs(UnmanagedType.I1)] 
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.I1)] 
-		public extern static bool sk_region_op2(sk_region_t r, sk_region_t src, SKRegionOperation op);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static SKRectI sk_region_get_bounds(sk_region_t r);
+
 	}
 }
 
