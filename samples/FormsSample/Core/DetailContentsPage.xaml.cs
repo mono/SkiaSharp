@@ -62,20 +62,36 @@ namespace SkiaSharpSample.FormsSample
 		{
 			Sample?.DrawSample(e.Surface.Canvas, e.Info.Width, e.Info.Height);
 
-			e.Surface.Canvas.ResetMatrix();
 			var view = sender as SKCanvasView;
-			var paint = new SKPaint { TextSize = 20 };
-			e.Surface.Canvas.DrawText($"{view.CanvasSize.Width} / {view.Width} = {view.CanvasSize.Width / view.Width}", 10, 30, paint);
+			DrawScaling(view, e.Surface.Canvas, view.CanvasSize);
 		}
 
 		private void OnPaintGLSample(object sender, SKPaintGLSurfaceEventArgs e)
 		{
 			Sample?.DrawSample(e.Surface.Canvas, e.RenderTarget.Width, e.RenderTarget.Height);
 
-			e.Surface.Canvas.ResetMatrix();
 			var view = sender as SKGLView;
-			var paint = new SKPaint { TextSize = 20 };
-			e.Surface.Canvas.DrawText($"{view.CanvasSize.Width} / {view.Width} = {view.CanvasSize.Width / view.Width}", 10, 30, paint);
+			DrawScaling(view, e.Surface.Canvas, view.CanvasSize);
+		}
+
+		private void DrawScaling(View view, SKCanvas canvas, SKSize canvasSize)
+		{
+			// make sure no previous transforms still apply
+			canvas.ResetMatrix();
+
+			// get the current scale
+			var scale = canvasSize.Width / (float)view.Width;
+
+			// write the scale into the bottom left
+			using (var paint = new SKPaint())
+			{
+				paint.IsAntialias = true;
+				paint.TextSize = 20 * scale;
+
+				var text = $"Current scaling = {scale:0.0}x";
+				var padding = 10 * scale;
+				canvas.DrawText(text, padding, canvasSize.Height - padding, paint);
+			}
 		}
 
 		private void RefreshSamples()
