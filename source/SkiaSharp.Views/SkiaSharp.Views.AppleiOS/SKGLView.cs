@@ -5,7 +5,11 @@ using Foundation;
 using GLKit;
 using OpenGLES;
 
-namespace SkiaSharp.Views
+#if __IOS__
+namespace SkiaSharp.Views.iOS
+#elif __TVOS__
+namespace SkiaSharp.Views.tvOS
+#endif
 {
 	[Register(nameof(SKGLView))]
 	[DesignTimeVisible(true)]

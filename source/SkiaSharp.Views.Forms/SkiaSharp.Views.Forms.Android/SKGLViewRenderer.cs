@@ -7,7 +7,7 @@ using Xamarin.Forms;
 using Xamarin.Forms.Platform.Android;
 
 using SKFormsView = SkiaSharp.Views.Forms.SKGLView;
-using SKNativeView = SkiaSharp.Views.SKGLSurfaceView;
+using SKNativeView = SkiaSharp.Views.Android.SKGLSurfaceView;
 
 [assembly: ExportRenderer(typeof(SKFormsView), typeof(SkiaSharp.Views.Forms.SKGLViewRenderer))]
 

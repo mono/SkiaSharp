@@ -189,6 +189,31 @@ namespace SkiaSharp.Tests
 		}
 
 		[Test]
+		public void PathBoundsAndRegionBoundsMatch ()
+		{
+			const float EPSILON = 0.000001f;
+
+			var path = new SKPath ();
+			path.MoveTo (10, 10);
+			path.LineTo (90, 90);
+
+			var bounds = path.Bounds;
+			Assert.AreEqual (10f, bounds.Left, EPSILON);
+			Assert.AreEqual (10f, bounds.Top, EPSILON);
+			Assert.AreEqual (90f, bounds.Right, EPSILON);
+			Assert.AreEqual (90f, bounds.Bottom, EPSILON);
+
+			var region = new SKRegion ();
+			region.SetRect (new SKRectI (10, 10, 90, 90));
+
+			var regionBounds = region.Bounds;
+			Assert.AreEqual (10f, regionBounds.Left, EPSILON);
+			Assert.AreEqual (10f, regionBounds.Top, EPSILON);
+			Assert.AreEqual (90f, regionBounds.Right, EPSILON);
+			Assert.AreEqual (90f, regionBounds.Bottom, EPSILON);
+		}
+
+		[Test]
 		public void BoundsAndTightBoundAreCorrect ()
 		{
 			const float EPSILON = 0.000001f;
@@ -209,6 +234,29 @@ namespace SkiaSharp.Tests
 				Assert.AreEqual (-25.814698f, tightBounds.Top, EPSILON);
 				Assert.AreEqual (-6.2157825e-7f, tightBounds.Right, EPSILON);
 				Assert.AreEqual (14.185303f, tightBounds.Bottom, EPSILON);
+			}
+		}
+
+		[Test]
+		public void MeasuringSegementsWorks ()
+		{
+			const float EPSILON = 0.000001f;
+
+			using (SKPath path = new SKPath ())
+			{
+				path.MoveTo (10f, 10f);
+				path.LineTo (110f, 10f);
+
+				var measure = new SKPathMeasure (path);
+
+				Assert.AreEqual (100f, measure.Length, EPSILON);
+
+				var segment = new SKPath ();
+				var result = measure.GetSegment (20, 50, segment, true);
+				Assert.IsTrue (result);
+				Assert.AreEqual (2, segment.PointCount);
+				Assert.AreEqual (new SKPoint (30, 10), segment.Points [0]);
+				Assert.AreEqual (new SKPoint (60, 10), segment.Points [1]);
 			}
 		}
 	}

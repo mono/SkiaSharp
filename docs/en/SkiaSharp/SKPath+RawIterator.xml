@@ -8,15 +8,15 @@
     <AssemblyVersion>1.53.0.0</AssemblyVersion>
     <AssemblyVersion>1.54.0.0</AssemblyVersion>
     <AssemblyVersion>1.54.0.0</AssemblyVersion>
+    <AssemblyVersion>1.55.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>SkiaSharp.SKNativeObject</BaseTypeName>
   </Base>
-  <Interfaces>
-  </Interfaces>
+  <Interfaces></Interfaces>
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>Iterator object to scan through the verbs in the path, providing the associated points.</summary>
+    <remarks>Iterators are created by calling the <see cref="M:SkiaSharp.SKPath.CreateRawIterator" /> method.</remarks>
   </Docs>
   <Members>
     <Member MemberName="ConicWeight">
@@ -29,19 +29,16 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Return the weight for the current conic. Only valid if the current segment return by <see cref="M:SkiaSharp.SKPath+Iterator.Next" /> was a conic.</summary>
-        <returns>
-          <para />
-        </returns>
-        <remarks>
-          <para />
-        </remarks>
+        <summary>Returns the weight for the current conic.</summary>
+        <returns />
+        <remarks>Only valid if the current segment returned by <see cref="M:SkiaSharp.SKPath+RawIterator.Next" /> was <see cref="F:SkiaSharp.SKPath+Verb.Conic" />.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -58,10 +55,8 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Releases the iterator.</summary>
-        <remarks>
-          <para />
-        </remarks>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -70,6 +65,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -79,24 +75,6 @@
       </Parameters>
       <Docs>
         <param name="disposing">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Finalize">
-      <MemberSignature Language="C#" Value="~RawIterator ();" />
-      <MemberSignature Language="ILAsm" Value=".method familyhidebysig virtual instance void Finalize() cil managed" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.49.0.0</AssemblyVersion>
-        <AssemblyVersion>1.52.0.0</AssemblyVersion>
-        <AssemblyVersion>1.53.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
         <summary>To be added.</summary>
         <remarks>To be added.</remarks>
       </Docs>
@@ -111,6 +89,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPath+Verb</ReturnType>
@@ -119,10 +98,12 @@
         <Parameter Name="points" Type="SkiaSharp.SKPoint[]" />
       </Parameters>
       <Docs>
-        <param name="points">Outgoing parameter, should be an array of four points, on return this contains points representing the current verb and/or segment.</param>
-        <summary>Return the next verb in this iteration of the path.</summary>
+        <param name="points">The storage for the points representing the current verb and/or segment. Should be an array of four points.</param>
+        <summary>Returns the next verb in this iteration of the path.</summary>
         <returns>The verb of the current segment.</returns>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Peek">
@@ -135,16 +116,17 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPath+Verb</ReturnType>
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Return what the next verb will be, but do not visit the next segment.</summary>
-        <returns>The verb for the next segment</returns>
+        <summary>Returns what the next verb will be, but do not visit the next segment.</summary>
+        <returns>Returns the verb for the next segment.</returns>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>

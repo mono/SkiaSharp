@@ -1,7 +1,7 @@
 ﻿using System;
 using SkiaSharp.Views.GlesInterop;
 
-namespace SkiaSharp.Views
+namespace SkiaSharp.Views.UWP
 {
 	internal static class SKGLDrawable
 	{

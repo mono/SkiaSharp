@@ -1,6 +1,6 @@
 ﻿using AppKit;
 
-namespace SkiaSharp.Views
+namespace SkiaSharp.Views.Mac
 {
 	public static class MacExtensions
 	{

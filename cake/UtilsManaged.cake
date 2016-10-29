@@ -34,17 +34,23 @@ var RunTests = new Action<FilePath> ((testAssembly) =>
     }
 });
 
-var RunMdocUpdate = new Action<FilePath, DirectoryPath> ((assembly, docsRoot) =>
+var RunMdocUpdate = new Action<FilePath[], DirectoryPath, DirectoryPath[]> ((assemblies, docsRoot, refs) =>
 {
+    var refArgs = string.Empty;
+    if (refs != null) {
+        refArgs = string.Join (" ", refs.Select (r => string.Format ("--lib=\"{0}\"", r)));
+    }
+    var assemblyArgs = string.Join (" ", assemblies.Select (a => string.Format ("\"{0}\"", a)));
     StartProcess (MDocPath, new ProcessSettings {
-        Arguments = string.Format ("update --delete --out=\"{0}\" \"{1}\"", docsRoot, assembly),
+        Arguments = string.Format ("update --preserve --out=\"{0}\" {1} {2}", docsRoot, refArgs, assemblyArgs),
     });
 });
 
-var RunMdocMSXml = new Action<DirectoryPath, FilePath> ((docsRoot, output) =>
+var RunMdocMSXml = new Action<DirectoryPath, DirectoryPath> ((docsRoot, outputDir) =>
 {
     StartProcess (MDocPath, new ProcessSettings {
-        Arguments = string.Format ("export-msxdoc --out=\"{0}\" \"{1}\"", output, docsRoot),
+        Arguments = string.Format ("export-msxdoc \"{0}\"", MakeAbsolute (docsRoot)),
+        WorkingDirectory = MakeAbsolute (outputDir).ToString ()
     });
 });
 

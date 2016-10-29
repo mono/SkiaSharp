@@ -8,7 +8,7 @@ using EGLContext = System.IntPtr;
 using EGLConfig = System.IntPtr;
 using EGLSurface = System.IntPtr;
 
-namespace SkiaSharp.Views
+namespace SkiaSharp.Views.UWP
 {
 	public enum GlesMultisampling
 	{

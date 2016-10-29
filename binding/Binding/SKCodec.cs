@@ -85,6 +85,9 @@ namespace SkiaSharp
 
 		public SKCodecResult GetPixels (SKImageInfo info, byte[] pixels)
 		{
+			if (pixels == null)
+				throw new ArgumentNullException (nameof (pixels));
+
 			GCHandle handle = default (GCHandle);
 			try {
 				handle = GCHandle.Alloc (pixels, GCHandleType.Pinned);
@@ -96,9 +99,20 @@ namespace SkiaSharp
 			}
 		}
 
-		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
+		public unsafe SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
 		{
-			return SkiaApi.sk_codec_get_pixels (Handle, ref info, pixels, (IntPtr)rowBytes, ref options, colorTable, ref colorTableCount);
+			if (pixels == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (pixels));
+
+			var nativeOptions = new SKCodecOptionsInternal {
+				fZeroInitialized = options.ZeroInitialized,
+				fSubset = null
+			};
+			if (options.HasSubset) {
+				var subset = options.Subset.Value;
+				nativeOptions.fSubset = &subset;
+			}
+			return SkiaApi.sk_codec_get_pixels (Handle, ref info, pixels, (IntPtr)rowBytes, ref nativeOptions, colorTable, ref colorTableCount);
 		}
 
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
@@ -135,9 +149,7 @@ namespace SkiaSharp
 		public static SKCodec Create (SKStream stream)
 		{
 			if (stream == null)
-			{
-				throw new ArgumentNullException (nameof(stream));
-			}
+				throw new ArgumentNullException (nameof (stream));
 			var codec = GetObject<SKCodec> (SkiaApi.sk_codec_new_from_stream (stream.Handle));
 			stream.RevokeOwnership (codec);
 			return codec;
@@ -146,9 +158,7 @@ namespace SkiaSharp
 		public static SKCodec Create (SKData data)
 		{
 			if (data == null)
-			{
-				throw new ArgumentNullException (nameof(data));
-			}
+				throw new ArgumentNullException (nameof (data));
 			return GetObject<SKCodec> (SkiaApi.sk_codec_new_from_data (data.Handle));
 		}
 	}

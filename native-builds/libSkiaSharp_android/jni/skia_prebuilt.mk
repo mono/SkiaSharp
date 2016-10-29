@@ -217,6 +217,11 @@ ifeq ($(TARGET_ARCH_ABI),x86)
   LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_sse42.a
   include $(PREBUILT_STATIC_LIBRARY)
 
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libskia_opts_hsw
+  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_hsw.a
+  include $(PREBUILT_STATIC_LIBRARY)
+
 endif
 
 ifeq ($(TARGET_ARCH_ABI),x86_64)
@@ -239,6 +244,11 @@ ifeq ($(TARGET_ARCH_ABI),x86_64)
   include $(CLEAR_VARS)
   LOCAL_MODULE := libskia_opts_sse42
   LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_sse42.a
+  include $(PREBUILT_STATIC_LIBRARY)
+
+  include $(CLEAR_VARS)
+  LOCAL_MODULE := libskia_opts_hsw
+  LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_opts_hsw.a
   include $(PREBUILT_STATIC_LIBRARY)
 
 endif

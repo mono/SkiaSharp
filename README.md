@@ -1,6 +1,6 @@
 # SkiaSharp
 
-[![Gitter.im](https://img.shields.io/badge/gitter.im-xamarin%2FXamarinComponents-E60256.svg)](https://gitter.im/xamarin/XamarinComponents)  [![NuGet](https://img.shields.io/nuget/v/SkiaSharp.svg?maxAge=2592000)](https://www.nuget.org/packages/SkiaSharp)  [![NuGet Pre Release](https://img.shields.io/nuget/vpre/SkiaSharp.svg?maxAge=2592000)](https://www.nuget.org/packages/SkiaSharp)
+[![Gitter.im](https://img.shields.io/badge/gitter.im-xamarin%2FXamarinComponents-E60256.svg)](https://gitter.im/xamarin/XamarinComponents)  [![NuGet Pre Release](https://img.shields.io/nuget/vpre/SkiaSharp.svg?maxAge=2592000)](https://www.nuget.org/packages/SkiaSharp)  [![SkiaSharp.Views](https://img.shields.io/nuget/vpre/SkiaSharp.Views.svg?maxAge=2592000)](https://www.nuget.org/packages/SkiaSharp.Views)  [![SkiaSharp.Views.Forms](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Forms.svg?maxAge=2592000)](https://www.nuget.org/packages/SkiaSharp.Views.Forms)
 
 SkiaSharp is a cross-platform 2D graphics API for .NET platforms based on Google's
 Skia Graphics Library (https://skia.org/).   It provides a comprehensive 2D API that can
@@ -93,13 +93,18 @@ option in the bootstrapper script.
    - `clean-externals` - cleans externals only
    - `clean-managed` - cleans managed libraries/samples only
 
+## New Skia Features Roadmap
+
+Google has created a [nice doc with a collection of high level items](https://docs.google.com/document/d/1C9w8qpPpdgNGThqmgNnTToLZ5UYK4TsUGl5X3B_q6oM/edit)
+they have on tap the next 6-12 months. Note it is a living document that changes based on the requirements of the library's users.
+
 ## Compare Code
 
 Here are some links to show the differences in our code as compared to Google's.
 
-What version are we on? [**m54**](https://github.com/google/skia/tree/chrome/m54)  
-Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/xamarin-mobile-bindings...google:chrome/m54)  
-What have we added? [Compare](https://github.com/google/skia/compare/chrome/m54...mono:xamarin-mobile-bindings)  
+What version are we on? [**m55**](https://github.com/google/skia/tree/chrome/m55)  
+Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/update-m55...google:chrome/m55)  
+What have we added? [Compare](https://github.com/google/skia/compare/chrome/m55...mono:update-m55)  
 
 ## Where is Windows Phone 8 / Store 8
  

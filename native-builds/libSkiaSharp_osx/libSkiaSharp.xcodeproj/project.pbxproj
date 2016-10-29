@@ -46,6 +46,7 @@
 		3460AD401D0157F10051FEA0 /* libskia_pdf.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 34FEFEB91D015718002A83B6 /* libskia_pdf.a */; };
 		3460AD781D0158370051FEA0 /* libgiflib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 34FEFE981D015718002A83B6 /* libgiflib.a */; };
 		3460AD791D0158370051FEA0 /* libpng_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 34FEFEA51D015718002A83B6 /* libpng_static.a */; };
+		3474BFC81DAE8B8D00107695 /* libskia_opts_hsw.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3474BFC21DAE8B7900107695 /* libskia_opts_hsw.a */; };
 		3488AE1A1D1ADC7E00BE2DC3 /* libdng_sdk.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3488AE091D1ADC3F00BE2DC3 /* libdng_sdk.a */; };
 		3488AE1B1D1ADC7E00BE2DC3 /* libpiex.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3488AE0E1D1ADC3F00BE2DC3 /* libpiex.a */; };
 		3488AE1C1D1ADC7E00BE2DC3 /* libraw_codec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3488ADEB1D1ADC1000BE2DC3 /* libraw_codec.a */; };
@@ -117,13 +118,6 @@
 			proxyType = 2;
 			remoteGlobalIDString = 19C6A65284A050EDC662FB44;
 			remoteInfo = opts_avx;
-		};
-		21C9519D1C03D392003A1E1D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 21C951881C03D392003A1E1D /* opts.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 2F9F6435F7A79B5F2353658E;
-			remoteInfo = opts_avx2;
 		};
 		21C9519F1C03D392003A1E1D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -405,6 +399,20 @@
 			remoteGlobalIDString = C37161A72930D0F121229C3F;
 			remoteInfo = pdf;
 		};
+		3474BFAE1DAE8B7900107695 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21C951881C03D392003A1E1D /* opts.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 8ED4A5B769B4414D00844D19;
+			remoteInfo = opts_hsw;
+		};
+		3474BFC11DAE8B7900107695 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21C951881C03D392003A1E1D /* opts.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = F102D9F5D3036F3950CACDF7;
+			remoteInfo = opts_hsw;
+		};
 		3488ADEA1D1ADC1000BE2DC3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 34FEFE7B1D015718002A83B6 /* codec.xcodeproj */;
@@ -579,6 +587,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3474BFC81DAE8B8D00107695 /* libskia_opts_hsw.a in Frameworks */,
 				34C653D71D76017D000C1D5D /* libskia_opts_sse42.a in Frameworks */,
 				344B478A1D1ADD7400EFE6F9 /* libsfntly.a in Frameworks */,
 				3488AE1A1D1ADC7E00BE2DC3 /* libdng_sdk.a in Frameworks */,
@@ -718,7 +727,7 @@
 				21C951981C03D392003A1E1D /* libskia_opts_sse41.a */,
 				21C9519A1C03D392003A1E1D /* libskia_opts_sse42.a */,
 				21C9519C1C03D392003A1E1D /* libskia_opts_avx.a */,
-				21C9519E1C03D392003A1E1D /* libskia_opts_avx2.a */,
+				3474BFC21DAE8B7900107695 /* libskia_opts_hsw.a */,
 				21C951A01C03D392003A1E1D /* libskia_opts_neon.a */,
 			);
 			name = Products;
@@ -922,6 +931,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				3474BFAF1DAE8B7900107695 /* PBXTargetDependency */,
 				34C653D61D760173000C1D5D /* PBXTargetDependency */,
 				344B47891D1ADD6F00EFE6F9 /* PBXTargetDependency */,
 				3488AE131D1ADC6400BE2DC3 /* PBXTargetDependency */,
@@ -1153,13 +1163,6 @@
 			remoteRef = 21C9519B1C03D392003A1E1D /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		21C9519E1C03D392003A1E1D /* libskia_opts_avx2.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libskia_opts_avx2.a;
-			remoteRef = 21C9519D1C03D392003A1E1D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		21C951A01C03D392003A1E1D /* libskia_opts_neon.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -1256,6 +1259,13 @@
 			fileType = archive.ar;
 			path = libsfntly.a;
 			remoteRef = 344B47851D1ADD6A00EFE6F9 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		3474BFC21DAE8B7900107695 /* libskia_opts_hsw.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libskia_opts_hsw.a;
+			remoteRef = 3474BFC11DAE8B7900107695 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		3488ADEB1D1ADC1000BE2DC3 /* libraw_codec.a */ = {
@@ -1488,6 +1498,11 @@
 			isa = PBXTargetDependency;
 			name = pdf;
 			targetProxy = 3460AD761D0158270051FEA0 /* PBXContainerItemProxy */;
+		};
+		3474BFAF1DAE8B7900107695 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = opts_hsw;
+			targetProxy = 3474BFAE1DAE8B7900107695 /* PBXContainerItemProxy */;
 		};
 		3488AE131D1ADC6400BE2DC3 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;

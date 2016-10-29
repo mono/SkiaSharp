@@ -31,6 +31,9 @@ namespace SkiaSharp
 
 		public static GRContext Create (GRBackend backend, GRGlInterface backendContext)
 		{
+			if (backendContext == null) {
+				throw new ArgumentNullException (nameof (backendContext));
+			}
 			return GetObject<GRContext> (SkiaApi.gr_context_create_with_defaults (backend, backendContext.Handle));
 		}
 
@@ -41,6 +44,9 @@ namespace SkiaSharp
 
 		public static GRContext Create (GRBackend backend, GRGlInterface backendContext, GRContextOptions options)
 		{
+			if (backendContext == null) {
+				throw new ArgumentNullException (nameof (backendContext));
+			}
 			return GetObject<GRContext> (SkiaApi.gr_context_create (backend, backendContext.Handle, ref options));
 		}
 
@@ -72,9 +78,15 @@ namespace SkiaSharp
 			maxResourceBytes = (long)maxResourceBytesPtr;
 		}
 		
-		public void Flush (GRContextFlushBits flagsBitfield = GRContextFlushBits.None)
+		public void Flush ()
 		{
-			SkiaApi.gr_context_flush (Handle, flagsBitfield);
+			SkiaApi.gr_context_flush (Handle);
+		}
+
+		[Obsolete ("Use Flush() instead.")]
+		public void Flush (GRContextFlushBits flagsBitfield)
+		{
+			Flush ();
 		}
 
 		public int GetRecommendedSampleCount (GRPixelConfig config, float dpi)

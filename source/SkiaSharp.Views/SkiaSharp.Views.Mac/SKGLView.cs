@@ -5,7 +5,7 @@ using CoreGraphics;
 using Foundation;
 using OpenTK.Graphics.OpenGL;
 
-namespace SkiaSharp.Views
+namespace SkiaSharp.Views.Mac
 {
 	[Register(nameof(SKGLView))]
 	[DesignTimeVisible(true)]

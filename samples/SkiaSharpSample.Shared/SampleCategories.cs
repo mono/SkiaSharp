@@ -17,5 +17,6 @@ namespace SkiaSharpSample
 		ColorFilters = 1 << 8,
 		ImageFilters = 1 << 9,
 		PathEffects = 1 << 10,
+		SVG = 1 << 11,
 	}
 }

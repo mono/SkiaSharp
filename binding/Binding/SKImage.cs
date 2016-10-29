@@ -41,6 +41,8 @@ namespace SkiaSharp
 		
 		public static SKImage FromPixels (SKImageInfo info, IntPtr pixels, int rowBytes)
 		{
+			if (pixels == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (pixels));
 			var handle = SkiaApi.sk_image_new_raster_copy (ref info, pixels, (IntPtr) rowBytes);
 			return GetObject<SKImage> (handle);
 		}
@@ -48,8 +50,7 @@ namespace SkiaSharp
 		public static SKImage FromData (SKData data, SKRectI subset)
 		{
 			if (data == null)
-				throw new ArgumentNullException ("data");
-			
+				throw new ArgumentNullException (nameof (data));
 			var handle = SkiaApi.sk_image_new_from_encoded (data.Handle, ref subset);
 			return GetObject<SKImage> (handle);
 		}
@@ -57,8 +58,7 @@ namespace SkiaSharp
 		public static SKImage FromData (SKData data)
 		{
 			if (data == null)
-				throw new ArgumentNullException ("data");
-			
+				throw new ArgumentNullException (nameof (data));
 			var handle = SkiaApi.sk_image_new_from_encoded (data.Handle, IntPtr.Zero);
 			return GetObject<SKImage> (handle);
 		}

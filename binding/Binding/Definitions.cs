@@ -385,6 +385,79 @@ namespace SkiaSharp
 		{
 			return !(left == right);
 		}
+
+		public static SKColor Parse (string hexString)
+		{
+			SKColor color;
+			if (!TryParse (hexString, out color))
+				throw new ArgumentException ("Invalid hexadecimal color string.", nameof (hexString));
+			return color;
+		}
+
+		public static bool TryParse (string hexString, out SKColor color)
+		{
+			if (string.IsNullOrWhiteSpace (hexString)) {
+				// error
+				color = SKColor.Empty;
+				return false;
+			}
+
+			// clean up string
+			hexString = hexString.Trim ().ToUpperInvariant ();
+			if (hexString [0] == '#')
+				hexString = hexString.Substring (1);
+
+			var len = hexString.Length;
+			if (len == 3 || len == 4) {
+				byte a, r, g, b;
+				// parse [A]
+				if (len == 4) {
+					if (!byte.TryParse (string.Concat (hexString [len - 4], hexString [len - 4]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out a)) {
+						// error
+						color = SKColor.Empty;
+						return false;
+					}
+				} else {
+					a = 255;
+				}
+
+				// parse RGB
+				if (!byte.TryParse (string.Concat (hexString [len - 3], hexString [len - 3]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out r) ||
+					!byte.TryParse (string.Concat (hexString [len - 2], hexString [len - 2]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out g) ||
+					!byte.TryParse (string.Concat (hexString [len - 1], hexString [len - 1]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out b)) {
+					// error
+					color = SKColor.Empty;
+					return false;
+				}
+
+				// success
+				color = new SKColor(r, g, b, a);
+				return true;
+			}
+
+			if (len == 6 || len == 8) {
+				// parse [AA]RRGGBB
+				uint number;
+				if (!uint.TryParse (hexString, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out number)) {
+					// error
+					color = SKColor.Empty;
+					return false;
+				}
+
+				// success
+				color = (SKColor)number;
+
+				// alpha was not provided, so use 255
+				if (len == 6) {
+					color = color.WithAlpha (255);
+				}
+				return true;
+			}
+
+			// error
+			color = SKColor.Empty;
+			return false;
+		}
 	}
 
 	[Flags]
@@ -418,7 +491,9 @@ namespace SkiaSharp
 		SemiExpanded     = 6,
 		Expanded         = 7,
 		ExtraExpanded    = 8,
-		UltaExpanded     = 9
+		UltraExpanded    = 9,
+		[Obsolete("Use UltraExpanded instead.")]
+		UltaExpanded     = UltraExpanded
 	};
 
 	public enum SKFontStyleSlant {
@@ -513,6 +588,39 @@ namespace SkiaSharp
 		Luminosity,
 	}
 
+	public enum SKBlendMode {
+		Clear,
+		Src,
+		Dst,
+		SrcOver,
+		DstOver,
+		SrcIn,
+		DstIn,
+		SrcOut,
+		DstOut,
+		SrcATop,
+		DstATop,
+		Xor,
+		Plus,
+		Modulate,
+		Screen,
+		Overlay,
+		Darken,
+		Lighten,
+		ColorDodge,
+		ColorBurn,
+		HardLight,
+		SoftLight,
+		Difference,
+		Exclusion,
+		Multiply,
+		Hue,
+		Saturation,
+		Color,
+		Luminosity,
+	}
+
+	[Obsolete ("Use SKClipOperation instead.")]
 	public enum SKClipType {
 		Intersect, Difference 
 	}
@@ -637,6 +745,12 @@ namespace SkiaSharp
 		Replace,
 	}
 
+	public enum SKClipOperation
+	{
+		Difference,
+		Intersect,
+	}
+
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKImageInfo {
 		public static SKImageInfo Empty;
@@ -725,7 +839,7 @@ namespace SkiaSharp
 				case SKColorType.RgbaF16:
 					return 8;
 				}
-				throw new ArgumentOutOfRangeException ("ColorType");
+				throw new ArgumentOutOfRangeException (nameof (ColorType));
 			}
 		}
 
@@ -776,42 +890,33 @@ namespace SkiaSharp
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
+	internal unsafe struct SKCodecOptionsInternal {
+		public SKZeroInitialized fZeroInitialized;
+		public SKRectI* fSubset;
+	}
+
 	public struct SKCodecOptions {
 		public static readonly SKCodecOptions Default;
-
-		private SKZeroInitialized zeroInitialized;
-		private SKRectI subset;
-		[MarshalAs(UnmanagedType.I1)]
-		private bool hasSubset;
 
 		static SKCodecOptions ()
 		{
 			Default = new SKCodecOptions (SKZeroInitialized.No);
 		}
 		public SKCodecOptions (SKZeroInitialized zeroInitialized) {
-			this.zeroInitialized = zeroInitialized;
-			this.subset = SKRectI.Empty;
-			this.hasSubset = false;
+			ZeroInitialized = zeroInitialized;
+			Subset = null;
 		}
 		public SKCodecOptions (SKZeroInitialized zeroInitialized, SKRectI subset) {
-			this.zeroInitialized = zeroInitialized;
-			this.subset = subset;
-			this.hasSubset = true;
+			ZeroInitialized = zeroInitialized;
+			Subset = subset;
 		}
-		public SKZeroInitialized ZeroInitialized{
-			get { return zeroInitialized; }
-			set { zeroInitialized = value; }
+		public SKCodecOptions (SKRectI subset) {
+			ZeroInitialized = SKZeroInitialized.No;
+			Subset = subset;
 		}
-
-		public SKRectI Subset{
-			get { return subset; }
-			set { subset = value; }
-		}
-
-		public bool HasSubset{
-			get { return hasSubset; }
-			set { hasSubset = value; }
-		}
+		public SKZeroInitialized ZeroInitialized { get; set; }
+		public SKRectI? Subset { get; set; }
+		public bool HasSubset => Subset != null;
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -915,6 +1020,17 @@ namespace SkiaSharp
 				"{{X={0}, Y={1}}}", 
 				x.ToString (CultureInfo.CurrentCulture),
 				y.ToString (CultureInfo.CurrentCulture));
+		}
+		
+		public void Offset (SKPoint p)
+		{
+			Offset (p.X, p.Y);
+		}
+		
+		public void Offset (float dx, float dy)
+		{
+			x += dx;
+			y += dy;
 		}
 
 		public static SKPoint Add (SKPoint pt, SKSizeI sz) => pt + sz;
@@ -1907,7 +2023,7 @@ namespace SkiaSharp
 				if (value == null)
 					throw new ArgumentNullException (nameof (Values));
 				if (value.Length != Indices.Count)
-					throw new ArgumentOutOfRangeException (nameof (Values));
+					throw new ArgumentException ($"The matrix array must have a length of {Indices.Count}.", nameof (Values));
 
 				scaleX = value [Indices.ScaleX];
 				skewX = value [Indices.SkewX];
@@ -1928,7 +2044,7 @@ namespace SkiaSharp
 			if (values == null)
 				throw new ArgumentNullException (nameof (values));
 			if (values.Length != Indices.Count)
-				throw new ArgumentOutOfRangeException (nameof (values));
+				throw new ArgumentException ($"The matrix array must have a length of {Indices.Count}.", nameof (values));
 
 			values [Indices.ScaleX] = scaleX;
 			values [Indices.SkewX] = skewX;
@@ -2177,14 +2293,29 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			return SkiaApi.sk_matrix_try_invert (ref this, out inverse) != 0;
 		}
 
+		public static void Concat (ref SKMatrix target, SKMatrix first, SKMatrix second)
+		{
+			SkiaApi.sk_matrix_concat (ref target, ref first, ref second);
+		}
+
 		public static void Concat (ref SKMatrix target, ref SKMatrix first, ref SKMatrix second)
 		{
 			SkiaApi.sk_matrix_concat (ref target, ref first, ref second);
 		}
 
+		public static void PreConcat (ref SKMatrix target, SKMatrix matrix)
+		{
+			SkiaApi.sk_matrix_pre_concat (ref target, ref matrix);
+		}
+
 		public static void PreConcat (ref SKMatrix target, ref SKMatrix matrix)
 		{
 			SkiaApi.sk_matrix_pre_concat (ref target, ref matrix);
+		}
+
+		public static void PostConcat (ref SKMatrix target, SKMatrix matrix)
+		{
+			SkiaApi.sk_matrix_post_concat (ref target, ref matrix);
 		}
 
 		public static void PostConcat (ref SKMatrix target, ref SKMatrix matrix)
@@ -2212,7 +2343,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 				throw new ArgumentNullException (nameof (points));
 			int dl = result.Length;
 			if (dl != points.Length)
-				throw new ArgumentException ("buffers must be the same size");
+				throw new ArgumentException ("Buffers must be the same size.");
 			unsafe {
 				fixed (SKPoint *rp = &result[0]){
 					fixed (SKPoint *pp = &points[0]){
@@ -2239,7 +2370,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 				throw new ArgumentNullException (nameof (vectors));
 			int dl = result.Length;
 			if (dl != vectors.Length)
-				throw new ArgumentException ("buffers must be the same size");
+				throw new ArgumentException ("Buffers must be the same size.");
 			unsafe {
 				fixed (SKPoint *rp = &result[0]){
 					fixed (SKPoint *pp = &vectors[0]){
@@ -2513,6 +2644,14 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		private bool useShaderSwizzling;
 		[MarshalAs(UnmanagedType.I1)]
 		private bool doManualMipmapping;
+		[MarshalAs(UnmanagedType.I1)]
+		private bool enableInstancedRendering;
+		[MarshalAs(UnmanagedType.I1)]
+		private bool disableDistanceFieldPaths;
+		[MarshalAs(UnmanagedType.I1)]
+		private bool allowPathMaskCaching;
+		[MarshalAs(UnmanagedType.I1)]
+		private bool forceSWPathMasks;
 
 		public bool SuppressPrints {
 			get { return suppressPrints; }
@@ -2566,8 +2705,49 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			get { return doManualMipmapping; }
 			set { doManualMipmapping = value; }
 		}
+		public bool EnableInstancedRendering {
+			get { return enableInstancedRendering; }
+			set { enableInstancedRendering = value; }
+		}
+		public bool DisableDistanceFieldPaths {
+			get { return disableDistanceFieldPaths; }
+			set { disableDistanceFieldPaths = value; }
+		}
+		public bool AllowPathMaskCaching {
+			get { return allowPathMaskCaching; }
+			set { allowPathMaskCaching = value; }
+		}
+		public bool ForceSWPathMasks {
+			get { return forceSWPathMasks; }
+			set { forceSWPathMasks = value; }
+		}
+
+		public static GRContextOptions Default {
+			get {
+				return new GRContextOptions {
+					suppressPrints = false,
+					maxTextureSizeOverride = int.MaxValue,
+					maxTileSizeOverride = 0,
+					suppressDualSourceBlending = false,
+					bufferMapThreshold = -1,
+					useDrawInsteadOfPartialRenderTargetWrite = false,
+					immediateMode = false,
+					clipBatchToBounds = false,
+					drawBatchBounds = false,
+					maxBatchLookback = -1,
+					maxBatchLookahead = -1,
+					useShaderSwizzling = false,
+					doManualMipmapping = false,
+					enableInstancedRendering = false,
+					disableDistanceFieldPaths = false,
+					allowPathMaskCaching = false,
+					forceSWPathMasks = false
+				};
+			}
+		}
 	}
 	
+	[Obsolete ("Use GRContext.Flush() instead.")]
 	public enum GRContextFlushBits {
 		None = 0,
 		Discard = 0x2,
@@ -2586,5 +2766,28 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		Convex,
 		Concave,
 	};
+
+	public enum SKLatticeFlags {
+		Default,
+		Transparent = 1 << 0,
+	};
+
+	[StructLayout(LayoutKind.Sequential)]
+	internal unsafe struct SKLatticeInternal {
+		public int* fXDivs;
+		public int* fYDivs;
+		public SKLatticeFlags* fFlags;
+		public int fXCount;
+		public int fYCount;
+		public SKRectI* fBounds;
+	}
+
+	public struct SKLattice {
+		public int[] XDivs { get; set; }
+		public int[] YDivs { get; set; }
+		public SKLatticeFlags[] Flags { get; set; }
+		public SKRectI? Bounds { get; set; }
+	}
+
 }
 

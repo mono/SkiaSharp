@@ -1,0 +1,127 @@
+<Type Name="SKCanvasView" FullName="SkiaSharp.Views.Forms.SKCanvasView">
+  <TypeSignature Language="C#" Value="public class SKCanvasView : Xamarin.Forms.View" />
+  <TypeSignature Language="ILAsm" Value=".class public auto ansi beforefieldinit SKCanvasView extends Xamarin.Forms.View implements class Xamarin.Forms.IElementController, class Xamarin.Forms.IViewController, class Xamarin.Forms.IVisualElementController" />
+  <AssemblyInfo>
+    <AssemblyName>SkiaSharp.Views.Forms</AssemblyName>
+    <AssemblyVersion>1.55.0.0</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>Xamarin.Forms.View</BaseTypeName>
+  </Base>
+  <Interfaces />
+  <Attributes>
+    <Attribute>
+      <AttributeName>Xamarin.Forms.RenderWith(typeof(SkiaSharp.Views.Forms.SKCanvasViewRenderer))</AttributeName>
+    </Attribute>
+  </Attributes>
+  <Docs>
+    <summary>A view that can be drawn on using SkiaSharp drawing commands.</summary>
+    <remarks>
+      <para></para>
+    </remarks>
+  </Docs>
+  <Members>
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public SKCanvasView ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig specialname rtspecialname instance void .ctor() cil managed" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters />
+      <Docs>
+        <summary>Creates a new instance of the <see cref="T:SkiaSharp.Views.Forms.SKCanvasView" /> view.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="InvalidateSurface">
+      <MemberSignature Language="C#" Value="public void InvalidateSurface ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void InvalidateSurface() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Informs the canvas that it needs to redraw itself.</summary>
+        <remarks>This needs to be called from the main thread.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OnPaintSurface">
+      <MemberSignature Language="C#" Value="protected virtual void OnPaintSurface (SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs e);" />
+      <MemberSignature Language="ILAsm" Value=".method familyhidebysig newslot virtual instance void OnPaintSurface(class SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs e) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="e" Type="SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs" />
+      </Parameters>
+      <Docs>
+        <param name="e">The event arguments that contain the drawing surface and information.</param>
+        <summary>Implement this to draw on the canvas.</summary>
+        <remarks>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Forms.SKCanvasView.OnPaintSurface" /> method, or by attaching a handler to the  <see cref="E:SkiaSharp.Views.Forms.SKCanvasView.PaintSurface" /> event. If the method is overriden, then the base must be called.</para>
+          <para></para>
+          <example>
+            <code lang="C#"><![CDATA[protected override void OnPaintSurface (SKPaintSurfaceEventArgs e)
+{
+    // call the base method
+    base.OnPaintSurface (e);
+
+    var surface = e.Surface;
+    var surfaceWidth = e.Info.Width;
+    var surfaceHeight = e.Info.Height;
+
+    var canvas = surface.Canvas;
+    // draw on the canvas
+    canvas.Flush ();
+}]]></code>
+          </example>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="PaintSurface">
+      <MemberSignature Language="C#" Value="public event EventHandler&lt;SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs&gt; PaintSurface;" />
+      <MemberSignature Language="ILAsm" Value=".event class System.EventHandler`1&lt;class SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs&gt; PaintSurface" />
+      <MemberType>Event</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.EventHandler&lt;SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs&gt;</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Occurs when the the canvas needs to be re-drawn.</summary>
+        <remarks>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Forms.SKCanvasView.OnPaintSurface" /> method, or by attaching a handler to the  <see cref="E:SkiaSharp.Views.Forms.SKCanvasView.PaintSurface" /> event.
+              </para>
+          <para></para>
+          <example>
+            <code lang="C#"><![CDATA[SKCanvasView myView = ...;
+
+myView.PaintSurface += (sender, e) => {
+    var surface = e.Surface;
+    var surfaceWidth = e.Info.Width;
+    var surfaceHeight = e.Info.Height;
+
+    var canvas = surface.Canvas;
+    // draw on the canvas
+    canvas.Flush ();
+};]]></code>
+          </example>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+  </Members>
+</Type>

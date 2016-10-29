@@ -29,8 +29,8 @@
 		private void InitializeComponent()
 		{
 			this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
-			this.glview = new SkiaSharp.Views.SKGLControl();
-			this.canvas = new SkiaSharp.Views.SKControl();
+			this.glview = new SkiaSharp.Views.Desktop.SKGLControl();
+			this.canvas = new SkiaSharp.Views.Desktop.SKControl();
 			this.menuStrip1 = new System.Windows.Forms.MenuStrip();
 			this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -80,7 +80,7 @@
 			this.glview.TabIndex = 1;
 			this.glview.Visible = false;
 			this.glview.VSync = false;
-			this.glview.PaintSurface += new System.EventHandler<SkiaSharp.Views.SKPaintGLSurfaceEventArgs>(this.OnPaintGL);
+			this.glview.PaintSurface += new System.EventHandler<SkiaSharp.Views.Desktop.SKPaintGLSurfaceEventArgs>(this.OnPaintGL);
 			this.glview.Click += new System.EventHandler(this.OnSampleClicked);
 			// 
 			// canvas
@@ -91,7 +91,7 @@
 			this.canvas.Name = "canvas";
 			this.canvas.Size = new System.Drawing.Size(774, 489);
 			this.canvas.TabIndex = 0;
-			this.canvas.PaintSurface += new System.EventHandler<SkiaSharp.Views.SKPaintSurfaceEventArgs>(this.OnPaintCanvas);
+			this.canvas.PaintSurface += new System.EventHandler<SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs>(this.OnPaintCanvas);
 			this.canvas.Click += new System.EventHandler(this.OnSampleClicked);
 			// 
 			// menuStrip1
@@ -222,8 +222,8 @@
 		private System.Windows.Forms.ToolStripMenuItem memoryToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem openGLToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem vulkanToolStripMenuItem;
-		private SkiaSharp.Views.SKControl canvas;
-		private SkiaSharp.Views.SKGLControl glview;
+		private SkiaSharp.Views.Desktop.SKControl canvas;
+		private SkiaSharp.Views.Desktop.SKGLControl glview;
 	}
 }
 

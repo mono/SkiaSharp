@@ -9,7 +9,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 
-namespace SkiaSharp.Views
+namespace SkiaSharp.Views.UWP
 {
 	public partial class SKXamlCanvas : Canvas
 	{

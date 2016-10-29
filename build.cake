@@ -15,13 +15,14 @@ var NugetToolPath = GetToolPath ("nuget.exe");
 var XamarinComponentToolPath = GetToolPath ("xamarin-component.exe");
 var CakeToolPath = GetToolPath ("Cake/Cake.exe");
 var NUnitConsoleToolPath = GetToolPath ("NUnit.Console/tools/nunit3-console.exe");
-var GenApiToolPath = GetToolPath ("genapi.exe");
+var GenApiToolPath = GetToolPath ("Microsoft.DotNet.BuildTools.GenAPI/tools/GenAPI.exe");
 var MDocPath = GetToolPath ("mdoc/mdoc.exe");
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/depot_tools"));
 DirectoryPath SKIA_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia"));
 DirectoryPath ANGLE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/angle"));
+DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/en"));
 
 #load "cake/UtilsManaged.cake"
 #load "cake/UtilsMSBuild.cake"
@@ -59,6 +60,7 @@ Task ("libs")
         ReplaceTextInFiles ("./binding/Binding/Properties/SkiaSharpAssemblyInfo.cs", "{GIT_SHA}", sha);
         ReplaceTextInFiles ("./source/SkiaSharp.Views/SkiaSharp.Views.Shared/Properties/SkiaSharpViewsAssemblyInfo.cs", "{GIT_SHA}", sha);
         ReplaceTextInFiles ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Shared/Properties/SkiaSharpViewsFormsAssemblyInfo.cs", "{GIT_SHA}", sha);
+        ReplaceTextInFiles ("./source/SkiaSharp.Svg/SkiaSharp.Svg/Properties/SkiaSharpSvgAssemblyInfo.cs", "{GIT_SHA}", sha);
     }
 
     // create all the directories
@@ -103,6 +105,8 @@ Task ("libs")
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms/bin/Release/SkiaSharp.Views.Forms.dll", "./output/portable/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.UWP/bin/Release/SkiaSharp.Views.Forms.dll", "./output/uwp/");
 
+        // copy SVG
+        CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
     }
 
     if (IsRunningOnUnix ()) {
@@ -137,6 +141,9 @@ Task ("libs")
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms/bin/Release/SkiaSharp.Views.Forms.dll", "./output/portable/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Android/bin/Release/SkiaSharp.Views.Forms.dll", "./output/android/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.iOS/bin/Release/SkiaSharp.Views.Forms.dll", "./output/ios/");
+
+        // copy SVG
+        CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
     }
 });
 
@@ -227,17 +234,123 @@ Task ("samples")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("docs")
-    .IsDependentOn ("set-versions")
-    .IsDependentOn ("externals-genapi")
     .Does (() => 
 {
-    RunMdocUpdate ("./binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll", "./docs/en/");
-    
+    // log TODOs
+    var docFiles = GetFiles ("./docs/**/*.xml");
+    float typeCount = 0;
+    float memberCount = 0;
+    float totalTypes = 0;
+    float totalMembers = 0;
+    foreach (var file in docFiles) {
+        var xdoc = XDocument.Load (file.ToString ());
+
+        var typesWithDocs = xdoc.Root
+            .Elements ("Docs");
+
+        totalTypes += typesWithDocs.Count (); 
+        typeCount += typesWithDocs.Where (m => m.Value != null && m.Value.IndexOf ("To be added.") >= 0).Count ();
+
+        var membersWithDocs = xdoc.Root
+            .Elements ("Members")
+            .Elements ("Member")
+            .Where (m => m.Attribute ("MemberName") != null && m.Attribute ("MemberName").Value != "Dispose")
+            .Elements ("Docs");
+
+        totalMembers += membersWithDocs.Count ();
+        memberCount += membersWithDocs.Where (m => m.Value != null && m.Value.IndexOf ("To be added.") >= 0).Count ();
+    }
+    Information (
+        "Documentation missing in {0}/{1} ({2:0.0%}) types and {3}/{4} ({5:0.0%}) members.", 
+        typeCount, totalTypes, typeCount / totalTypes, 
+        memberCount, totalMembers, memberCount / totalMembers);
+
     if (!DirectoryExists ("./output/docs/msxml/")) CreateDirectory ("./output/docs/msxml/");
-    RunMdocMSXml ("./docs/en/", "./output/docs/msxml/SkiaSharp.xml");
+    RunMdocMSXml (DOCS_PATH, "./output/docs/msxml/");
     
     if (!DirectoryExists ("./output/docs/mdoc/")) CreateDirectory ("./output/docs/mdoc/");
-    RunMdocAssemble ("./docs/en/", "./output/docs/mdoc/SkiaSharp");
+    RunMdocAssemble (DOCS_PATH, "./output/docs/mdoc/SkiaSharp");
+
+    CopyFileToDirectory ("./docs/SkiaSharp.source", "./output/docs/mdoc/");
+});
+
+// we can only update the docs on the platform machines
+// becuase each requires platform features for the views 
+Task ("update-docs")
+    .IsDependentOn ("libs")
+    .Does (() => 
+{
+    // the reference folders to locate assemblies
+    IEnumerable<DirectoryPath> refs = new DirectoryPath [] {
+            // you never know
+        }
+        .Union (GetDirectories ("./source/packages/Xamarin.Forms.*/lib/portable*"))
+        .Union (GetDirectories ("./source/packages/OpenTK.*/lib/net40*"));
+    // add windows-specific references
+    if (IsRunningOnWindows ()) {
+        // Windows.Foundation.UniversalApiContract is a winmd, so fake the dll
+        // types aren't needed here
+        DotNetBuild ("./externals/Windows.Foundation.UniversalApiContract/Windows.Foundation.UniversalApiContract.csproj", c => {
+            c.Verbosity = Verbosity.Quiet;
+        });
+        refs = refs.Union (new DirectoryPath [] {
+            "./externals/Windows.Foundation.UniversalApiContract/bin/Release",
+            "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/MonoAndroid/v1.0",
+            "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/MonoAndroid/v2.3",
+            "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.iOS/v1.0",
+            "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.TVOS/v1.0",
+            "./externals",
+        });
+    }
+    // add mac-specific references
+    if (IsRunningOnUnix ()) {
+        refs = refs.Union (new DirectoryPath [] {
+            "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/xbuild-frameworks/.NETPortable/v4.5",
+            "/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xbuild-frameworks/MonoAndroid/v1.0",
+            "/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xbuild-frameworks/MonoAndroid/v4.5",
+            "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/lib/mono/Xamarin.TVOS",
+            "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/lib/mono/Xamarin.iOS",
+            "/Library/Frameworks/Xamarin.Mac.framework/Versions/Current/lib/mono/Xamarin.Mac",
+        });
+    }
+
+    // the assemblies to generate docs for
+    var assemblies = new FilePath [] {
+        "./output/portable/SkiaSharp.dll",
+        "./output/portable/SkiaSharp.Views.Forms.dll",
+    };
+    // add windows-specific assemblies
+    if (IsRunningOnWindows ()) {
+        assemblies = assemblies.Union (new FilePath [] {
+            "./output/windows/SkiaSharp.Views.Desktop.dll",
+            "./output/windows/SkiaSharp.Views.WPF.dll",
+            "./output/uwp/SkiaSharp.Views.UWP.dll",
+            "./output/android/SkiaSharp.Views.Android.dll",
+            "./output/ios/SkiaSharp.Views.iOS.dll",
+            "./output/osx/SkiaSharp.Views.Mac.dll",
+            "./output/tvos/SkiaSharp.Views.tvOS.dll",
+        }).ToArray ();
+    }
+    // add mac-specific assemblies
+    if (IsRunningOnUnix ()) {
+        assemblies = assemblies.Union (new FilePath [] {
+            "./output/android/SkiaSharp.Views.Android.dll",
+            "./output/ios/SkiaSharp.Views.iOS.dll",
+            "./output/osx/SkiaSharp.Views.Mac.dll",
+            "./output/tvos/SkiaSharp.Views.tvOS.dll",
+        }).ToArray ();
+    }
+
+    // print out the assemblies
+    foreach (var r in refs) {
+        Information ("Reference Directory: {0}", r);
+    }
+    foreach (var a in assemblies) {
+        Information ("Processing {0}...", a);
+    }
+
+    // generate doc files
+    RunMdocUpdate (assemblies, DOCS_PATH, refs.ToArray ());
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -266,6 +379,8 @@ Task ("nuget")
             PackageNuGet ("./nuget/SkiaSharp.Views.Forms.Mac.nuspec", "./output/");
         }
     }
+    // SVG is a PCL
+    PackageNuGet ("./nuget/SkiaSharp.Svg.nuspec", "./output/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -307,12 +422,13 @@ Task ("set-versions")
     }
 
     // the versions
-    var version = "1.54.0.0";
-    var fileVersion = "1.54.1.0";
+    var version = "1.55.0.0";
+    var fileVersion = "1.55.0.0";
     var versions = new Dictionary<string, string> {
-        { "SkiaSharp", "1.54.1" },
-        { "SkiaSharp.Views", "1.54.1-beta1" },
-        { "SkiaSharp.Views.Forms", "1.54.1-beta1" },
+        { "SkiaSharp", "1.55.0" },
+        { "SkiaSharp.Views", "1.55.0-beta1" },
+        { "SkiaSharp.Views.Forms", "1.55.0-beta1" },
+        { "SkiaSharp.Svg", "1.55.0-beta1" },
     };
 
     var files = new List<string> ();
@@ -348,6 +464,9 @@ Task ("set-versions")
     UpdateAssemblyInfo (
         "./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Shared/Properties/SkiaSharpViewsFormsAssemblyInfo.cs",
         version, fileVersion, sha);
+    UpdateAssemblyInfo (
+        "./source/SkiaSharp.Svg/SkiaSharp.Svg/Properties/SkiaSharpSvgAssemblyInfo.cs",
+        version, fileVersion, sha);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -380,6 +499,9 @@ Task ("clean-managed").Does (() =>
     CleanDirectories ("./source/*/*/obj");
     CleanDirectories ("./source/*/*/Generated Files");
     CleanDirectories ("./source/packages");
+
+    CleanDirectories ("./externals/Windows.Foundation.UniversalApiContract/bin");
+    CleanDirectories ("./externals/Windows.Foundation.UniversalApiContract/obj");
 
     if (DirectoryExists ("./output"))
         DeleteDirectory ("./output", true);

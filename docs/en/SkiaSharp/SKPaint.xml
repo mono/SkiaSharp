@@ -9,14 +9,17 @@
     <AssemblyVersion>1.53.0.0</AssemblyVersion>
     <AssemblyVersion>1.54.0.0</AssemblyVersion>
     <AssemblyVersion>1.54.0.0</AssemblyVersion>
+    <AssemblyVersion>1.55.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>SkiaSharp.SKObject</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>
-    <summary>The SKPaint class holds the style and color information about how to draw geometries, text and bitmaps.</summary>
-    <remarks />
+    <summary>Holds the style and color information about how to draw geometries, text and bitmaps.</summary>
+    <remarks>
+      <para></para>
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -30,13 +33,30 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
       <Docs>
-        <summary>Creates a new SKPaint with the default settings.</summary>
+        <summary>Creates a new paint with the default settings.</summary>
         <remarks>
           <para />
         </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="BlendMode">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKBlendMode BlendMode { get; set; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKBlendMode BlendMode" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKBlendMode</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
       </Docs>
     </Member>
     <Member MemberName="BreakText">
@@ -50,6 +70,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int64</ReturnType>
@@ -64,8 +85,7 @@
         <summary>Measure the text, stopping early if the measured width exceeds <paramref name="maxWidth" />.</summary>
         <returns>Return the number of characters of text that were measured. </returns>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -80,6 +100,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int64</ReturnType>
@@ -91,21 +112,12 @@
       </Parameters>
       <Docs>
         <param name="text">The text to be measured</param>
-        <param name="maxWidth">
-          <para>Maximum width. Only the subset of text whose accumulated widths are &lt;= <paramref name="maxWidth" /> are measured.</para>
-          <para>
-          </para>
-        </param>
+        <param name="maxWidth">Maximum width. Only the subset of text whose accumulated widths are &lt;= <paramref name="maxWidth" /> are measured.</param>
         <param name="measuredWidth">Returns the actual width of the measured text</param>
-        <summary>
-          <para>Measure the text, stopping early if the measured width exceeds <paramref name="maxWidth" />.</para>
-          <para>
-          </para>
-        </summary>
+        <summary>Measure the text, stopping early if the measured width exceeds <paramref name="maxWidth" />.</summary>
         <returns>Return the number of characters of text that were measured. </returns>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -120,6 +132,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int64</ReturnType>
@@ -140,6 +153,23 @@
         <remarks>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.   This only consumes up to <paramref name="length" /> bytes from the buffer.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="Clone">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPaint Clone ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKPaint Clone() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPaint</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Returns a copy of the current paint.</summary>
+        <returns>The copy.</returns>
+        <remarks>The copy is a shallow copy, all references will still point to the same objects.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="Color">
       <MemberSignature Language="C#" Value="public SkiaSharp.SKColor Color { get; set; }" />
       <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKColor Color" />
@@ -151,6 +181,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKColor</ReturnType>
@@ -158,12 +189,9 @@
       <Docs>
         <summary>The paint’s color.</summary>
         <value>
-          <para>
-          </para>
+          <para></para>
         </value>
-        <remarks>
-          <para>Note that the color is a 32bit value containing alpha as well as r,g,b. This 32bit value is not premultiplied, meaning that its alpha can be any value, regardless of the values of r,g,b.</para>
-        </remarks>
+        <remarks>The color is a 32bit value containing ARGB. This 32bit value is not premultiplied, meaning that its Alpha can be any value, regardless of the values of R, G and B.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ColorFilter">
@@ -177,6 +205,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKColorFilter</ReturnType>
@@ -194,6 +223,7 @@
       <AssemblyInfo>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -215,6 +245,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -235,6 +266,7 @@
       <AssemblyInfo>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -255,18 +287,16 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKFilterQuality</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>
-          <para>The <see cref="T:SkiaSharp.SKFilterQuality" /> of the current paint. This affects the quality (and performance) of drawing scaled images.</para>
-        </summary>
+        <summary>The <see cref="T:SkiaSharp.SKFilterQuality" /> of the current paint. This affects the quality (and performance) of drawing scaled images.</summary>
         <value>The <see cref="T:SkiaSharp.SKFilterQuality" /> of the current paint.</value>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -281,15 +311,116 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKFontMetrics</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>The <see cref="C:SkiaSharp.SKFontMetrics" /> for the current typeface and type size.</summary>
-        <value>The <see cref="C:SkiaSharp.SKFontMetrics" /> for the current typeface/pointsize/etc setting in this paint.</value>
+        <summary>Gets the font metrics for the current typeface.</summary>
+        <value>
+          <para></para>
+        </value>
         <remarks>
-          <para />
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FontSpacing">
+      <MemberSignature Language="C#" Value="public float FontSpacing { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance float32 FontSpacing" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Single</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the recommend line spacing.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetFillPath">
+      <MemberSignature Language="C#" Value="public bool GetFillPath (SkiaSharp.SKPath src, SkiaSharp.SKPath dst, float resScale = 1);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool GetFillPath(class SkiaSharp.SKPath src, class SkiaSharp.SKPath dst, float32 resScale) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="src" Type="SkiaSharp.SKPath" />
+        <Parameter Name="dst" Type="SkiaSharp.SKPath" />
+        <Parameter Name="resScale" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="src">The input path.</param>
+        <param name="dst">The output path.</param>
+        <param name="resScale">If &gt; 1, increase precision, else if (0 &lt; res &lt; 1) reduce precision in favor of speed/size.</param>
+        <summary>Applies any and all effects to a source path, returning the result in the destination.</summary>
+        <returns>Returns true if the path should be filled, or false if it should be drawn with a hairline.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetFillPath">
+      <MemberSignature Language="C#" Value="public bool GetFillPath (SkiaSharp.SKPath src, SkiaSharp.SKPath dst, SkiaSharp.SKRect cullRect, float resScale = 1);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool GetFillPath(class SkiaSharp.SKPath src, class SkiaSharp.SKPath dst, valuetype SkiaSharp.SKRect cullRect, float32 resScale) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="src" Type="SkiaSharp.SKPath" />
+        <Parameter Name="dst" Type="SkiaSharp.SKPath" />
+        <Parameter Name="cullRect" Type="SkiaSharp.SKRect" />
+        <Parameter Name="resScale" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="src">The input path.</param>
+        <param name="dst">The output path.</param>
+        <param name="cullRect">The destination path may be culled to this rectangle.</param>
+        <param name="resScale">If &gt; 1, increase precision, else if (0 &lt; res &lt; 1) reduce precision in favor of speed/size.</param>
+        <summary>Applies any and all effects to a source path, returning the result in the destination.</summary>
+        <returns>Returns true if the path should be filled, or false if it should be drawn with a hairline.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetFontMetrics">
+      <MemberSignature Language="C#" Value="public float GetFontMetrics (out SkiaSharp.SKFontMetrics metrics, float scale = 0);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance float32 GetFontMetrics(valuetype SkiaSharp.SKFontMetrics metrics, float32 scale) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Single</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="metrics" Type="SkiaSharp.SKFontMetrics&amp;" RefType="out" />
+        <Parameter Name="scale" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="metrics">The font metrics for the current typeface.</param>
+        <param name="scale">If not 0, return width as if the canvas were scaled by this value.</param>
+        <summary>Returns the font metrics and line spacing for the current typeface.</summary>
+        <returns>Returns the recommended spacing between lines.</returns>
+        <remarks>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -303,6 +434,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPath</ReturnType>
@@ -317,8 +449,7 @@
         <summary>Return the path (outline) for the specified text.</summary>
         <returns>A <see cref="T:SkiaSharp.SKPath" /> containing the outline of the text.</returns>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -332,6 +463,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPath</ReturnType>
@@ -348,8 +480,7 @@
         <summary>Return the path (outline) for the specified text.</summary>
         <returns>A <see cref="T:SkiaSharp.SKPath" /> containing the outline of the text.</returns>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -363,6 +494,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPath</ReturnType>
@@ -379,8 +511,7 @@
         <summary>Return the path (outline) for the specified text.</summary>
         <returns>A <see cref="T:SkiaSharp.SKPath" /> containing the outline of the text.</returns>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -394,6 +525,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPath</ReturnType>
@@ -412,8 +544,7 @@
         <summary>Return the path (outline) for the specified text.</summary>
         <returns>A <see cref="T:SkiaSharp.SKPath" /> containing the outline of the text.</returns>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -424,14 +555,19 @@
       <AssemblyInfo>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPaintHinting</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the level of hinting to be performed.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ImageFilter">
@@ -445,6 +581,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
@@ -466,6 +603,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -483,6 +621,7 @@
       <AssemblyInfo>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -503,6 +642,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -520,6 +660,7 @@
       <AssemblyInfo>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -537,6 +678,7 @@
       <AssemblyInfo>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -558,14 +700,17 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Controls stroke in the SKPaint.</summary>
-        <value>The current setting for the stroke setting.</value>
-        <remarks>If this property is set true, the style of the paint will be set to stroke paths instead of filling.</remarks>
+        <summary>Gets or sets a value indicating whether to paint a stroke or the fill.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>This is a shortcut way to set <see cref="P:SkiaSharp.SKPaint.Style" /> to either <see cref="F:SkiaSharp.SKPaintStyle.Stroke" /> or <see cref="F:SkiaSharp.SKPaintStyle.Fill" />.</remarks>
       </Docs>
     </Member>
     <Member MemberName="IsVerticalText">
@@ -578,6 +723,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -595,6 +741,7 @@
       <AssemblyInfo>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -616,14 +763,17 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKMaskFilter</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>The SKPaint’s MaskFilter.</summary>
-        <value>To be added.</value>
-        <remarks>Mask filters control the transformations on the alpha channel before primitives are drawn.  Blur and Emboss are both MaskFilters.</remarks>
+        <summary>Gets or sets the mask filter to use when painting.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>Mask filters control the transformations on the alpha channel before primitives are drawn. Examples are blur or emboss.</remarks>
       </Docs>
     </Member>
     <Member MemberName="MeasureText">
@@ -637,6 +787,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Single</ReturnType>
@@ -648,9 +799,7 @@
         <param name="text">The text to be measured</param>
         <summary>Measures the text</summary>
         <returns>Returns the width of the text.</returns>
-        <remarks>
-          <para>This will return the vertical measure if this is vertical text, in which case the returned value should be treated has a height instead of a width.</para>
-        </remarks>
+        <remarks>This will return the vertical measure if this is vertical text, in which case the returned value should be treated has a height instead of a width.</remarks>
       </Docs>
     </Member>
     <Member MemberName="MeasureText">
@@ -664,6 +813,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Single</ReturnType>
@@ -691,6 +841,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Single</ReturnType>
@@ -718,6 +869,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Single</ReturnType>
@@ -748,14 +900,19 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPathEffect</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the path effect to use when painting.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Shader">
@@ -769,14 +926,19 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKShader</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>The SKPaint’s shader.</summary>
-        <value>The current shader associated with this paint.</value>
-        <remarks>Shaders are effects like gradients, or bitmap patterns.</remarks>
+        <summary>Gets or sets the shader to use when painting.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="StrikeThruText">
@@ -786,6 +948,7 @@
       <AssemblyInfo>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -807,14 +970,17 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKStrokeCap</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Controls how the start and end of stroked lines and paths are treated.</summary>
-        <value>The current cap setting.</value>
-        <remarks>The default is SKStrokeCap.Butt</remarks>
+        <summary>Gets or sets a value indicating how the start and end of stroked lines and paths are treated.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks />
       </Docs>
     </Member>
     <Member MemberName="StrokeJoin">
@@ -828,14 +994,19 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKStrokeJoin</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Controls the path’s join type.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the path’s join type.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="StrokeMiter">
@@ -849,18 +1020,15 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>The paint's stroke miter value</summary>
-        <value>
-          <para>the paint's miter limit, used whenever the paint's style is Stroke or StrokeAndFill.</para>
-        </value>
-        <remarks>
-          <para>This is used to control the behavior of miter joins when the joins angle is sharp.</para>
-        </remarks>
+        <summary>Gets or sets the paint’s miter limit.</summary>
+        <value />
+        <remarks>This is used whenever the <see cref="P:SkiaSharp.SKPaint.Style" /> is <see cref="F:SkiaSharp.SKPaintStyle.Stroke" /> or <see cref="F:SkiaSharp.SKPaintStyle.StrokeAndFill" /> to control the behavior of miter joins when the joins' angle is sharp.</remarks>
       </Docs>
     </Member>
     <Member MemberName="StrokeWidth">
@@ -874,16 +1042,17 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>The paint’s stroke width.</summary>
+        <summary>Gets or sets the paint’s stroke width.</summary>
         <value>
-          <para>the paint's stroke width, used whenever the paint's style is Stroke or StrokeAndFill.</para>
+          <para></para>
         </value>
-        <remarks>The value of zero is the special hairline mode.   Hairlines always draw with a width of 1 pixel, regardless of the transformation matrix.</remarks>
+        <remarks>This is used whenever the <see cref="P:SkiaSharp.SKPaint.Style" /> is <see cref="F:SkiaSharp.SKPaintStyle.Stroke" /> or <see cref="F:SkiaSharp.SKPaintStyle.StrokeAndFill" />. The value of zero is the special hairline mode.   Hairlines always draw with a width of 1 pixel, regardless of the transformation matrix.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Style">
@@ -893,6 +1062,7 @@
       <AssemblyInfo>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPaintStyle</ReturnType>
@@ -910,6 +1080,7 @@
       <AssemblyInfo>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -931,14 +1102,19 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKTextAlign</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Controls the path’s align value.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the path’s align value.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="TextEncoding">
@@ -952,13 +1128,16 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKTextEncoding</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>The encoding used by the text.</summary>
-        <value>The encoding used by the various text measuring primitives.</value>
+        <summary>Gets or sets the encoding used when drawing or measuring text.</summary>
+        <value>
+          <para />
+        </value>
         <remarks>This defaults to UTF8 encoding.</remarks>
       </Docs>
     </Member>
@@ -973,15 +1152,18 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>The SKPaint’s horizontal scale factor for text.</summary>
-        <value>The current scale factor for drawing/measuring text in X.</value>
-        <remarks>
+        <summary>Gets or sets paint’s horizontal scale factor for text.</summary>
+        <value>
           <para />
+        </value>
+        <remarks>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -996,6 +1178,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Single</ReturnType>
@@ -1017,14 +1200,19 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>The SKPaint’s horizontal skew factor for text.</summary>
-        <value>The current skew factor along the X axis.</value>
-        <remarks>The default value is zero.</remarks>
+        <summary>Gets or sets paint’s horizontal skew factor for text.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Typeface">
@@ -1038,14 +1226,19 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKTypeface</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Controls the typeface used when painting using this SKPaint.</summary>
-        <value>The current type face, or <see langword="null" /> if not set.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the typeface used when painting text. May be <see langword="null" />.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="UnderlineText">
@@ -1055,6 +1248,7 @@
       <AssemblyInfo>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -1076,6 +1270,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>

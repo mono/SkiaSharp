@@ -121,5 +121,61 @@ namespace SkiaSharp.Tests
 				Assert.AreEqual(rgb.Alpha, back.Alpha, item.Item3 + " A");
 			}
 		}
+
+		[Test]
+		public void HexToColor()
+		{
+			var tuples = new List<Tuple<string, SKColor>> {
+				new Tuple<string, SKColor>("#ABC", (SKColor)0xFFAABBCC),
+				new Tuple<string, SKColor>("#ABCD", (SKColor)0xAABBCCDD),
+				new Tuple<string, SKColor>("#ABCDEF", (SKColor)0xFFABCDEF),
+				new Tuple<string, SKColor>("#AAABACAD", (SKColor)0xAAABACAD),
+				new Tuple<string, SKColor>("#A1C", (SKColor)0xFFAA11CC),
+				new Tuple<string, SKColor>("#A2C3", (SKColor)0xAA22CC33),
+				new Tuple<string, SKColor>("#A4C5E6", (SKColor)0xFFA4C5E6),
+				new Tuple<string, SKColor>("#A7A8A9A0", (SKColor)0xA7A8A9A0),
+				new Tuple<string, SKColor>("ABC", (SKColor)0xFFAABBCC),
+				new Tuple<string, SKColor>("ABCD", (SKColor)0xAABBCCDD),
+				new Tuple<string, SKColor>("ABCDEF", (SKColor)0xFFABCDEF),
+				new Tuple<string, SKColor>("AAABACAD", (SKColor)0xAAABACAD),
+				new Tuple<string, SKColor>("A1C", (SKColor)0xFFAA11CC),
+				new Tuple<string, SKColor>("A2C3", (SKColor)0xAA22CC33),
+				new Tuple<string, SKColor>("A4C5E6", (SKColor)0xFFA4C5E6),
+				new Tuple<string, SKColor>("A7A8A9A0", (SKColor)0xA7A8A9A0),
+			};
+
+			foreach (var item in tuples)
+			{
+				// values
+				string hex = item.Item1;
+				SKColor other = item.Item2;
+
+				SKColor color = SKColor.Parse(hex);
+
+				Assert.AreEqual(other, color, hex);
+			}
+		}
+
+		[Test]
+		public void InvalidHexToColor()
+		{
+			var tuples = new List<string> {
+				"#ABCDE",
+				"#123456ug",
+				"12sd",
+				"11111111111111",
+			};
+
+			foreach (var item in tuples)
+			{
+				// values
+				string hex = item;
+
+				SKColor color;
+				var result = SKColor.TryParse(hex, out color);
+
+				Assert.IsFalse(result, hex);
+			}
+		}
 	}
 }

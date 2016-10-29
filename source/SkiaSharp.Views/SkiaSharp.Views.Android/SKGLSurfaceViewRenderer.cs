@@ -4,7 +4,7 @@ using Android.Runtime;
 using Javax.Microedition.Khronos.Egl;
 using Javax.Microedition.Khronos.Opengles;
 
-namespace SkiaSharp.Views
+namespace SkiaSharp.Views.Android
 {
 	public abstract class SKGLSurfaceViewRenderer : Java.Lang.Object, GLSurfaceView.IRenderer
 	{
@@ -13,7 +13,7 @@ namespace SkiaSharp.Views
 
 		protected abstract void OnDrawFrame(SKSurface surface, GRBackendRenderTargetDesc renderTarget);
 
-		void GLSurfaceView.IRenderer.OnDrawFrame(IGL10 gl)
+		public void OnDrawFrame(IGL10 gl)
 		{
 			// create the surface
 			using (var surface = SKSurface.Create(context, renderTarget))
@@ -28,7 +28,7 @@ namespace SkiaSharp.Views
 			context.Flush();
 		}
 
-		void GLSurfaceView.IRenderer.OnSurfaceChanged(IGL10 gl, int width, int height)
+		public void OnSurfaceChanged(IGL10 gl, int width, int height)
 		{
 			GLES20.GlViewport(0, 0, width, height);
 
@@ -36,7 +36,7 @@ namespace SkiaSharp.Views
 			renderTarget.Height = height;
 		}
 
-		void GLSurfaceView.IRenderer.OnSurfaceCreated(IGL10 gl, EGLConfig config)
+		public void OnSurfaceCreated(IGL10 gl, EGLConfig config)
 		{
 			FreeContext();
 

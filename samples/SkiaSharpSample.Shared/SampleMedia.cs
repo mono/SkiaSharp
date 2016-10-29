@@ -22,6 +22,8 @@ namespace SkiaSharpSample
 			public static Stream Baboon => Embedded.Load("baboon.png");
 			public static Stream ColorWheel => Embedded.Load("color-wheel.png");
 			public static Stream NinePatch => Embedded.Load("nine-patch.png");
+			public static Stream BabyTux => Embedded.Load("baby_tux.webp");
+			public static Stream LogosSvg => Embedded.Load("logos.svg");
 		}
 
 		public static class Fonts

@@ -9,26 +9,17 @@
     <AssemblyVersion>1.53.0.0</AssemblyVersion>
     <AssemblyVersion>1.54.0.0</AssemblyVersion>
     <AssemblyVersion>1.54.0.0</AssemblyVersion>
+    <AssemblyVersion>1.55.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>System.Enum</BaseTypeName>
   </Base>
   <Docs>
-    <summary>Defines the transfer modes in the drawing pipeline.</summary>
+    <summary>Pre-defined blend modes.</summary>
     <remarks>
-      <para>The algebra for the modes uses the following symbols:</para>
-      <list type="bullet">
-        <item>
-          <term>Sa, Sc  - source alpha and color</term>
-        </item>
-        <item>
-          <term>Da, Dc - destination alpha and color (before compositing)</term>
-        </item>
-      </list>
-      <para>
-      </para>
-      <para>
-      </para>
+      <para>Porter Duff Compositing Operators - defined algebra of compositing. These operators control the results of mixing the four sub-pixel regions formed by the overlapping of graphical objects that have an alpha or pixel coverage channel/value.</para>
+      <para>Separable Blend Mode - each component of the result color is completely determined by the corresponding components of the constituent backdrop and source colors.</para>
+      <para>Non-Separable Blend Mode - considers all color components in combination as opposed to the separable ones that look at each component individually.</para>
     </remarks>
   </Docs>
   <Members>
@@ -43,12 +34,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Sets the color and alpha to zero.</summary>
+        <summary>No regions are enabled. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_clr.svg)</summary>
       </Docs>
     </Member>
     <Member MemberName="Color">
@@ -62,14 +54,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>
-          <para />
-        </summary>
+        <summary>Creates a color with the hue and saturation of the source color and the luminosity of the backdrop color. [Non-Separable Blend Modes]</summary>
       </Docs>
     </Member>
     <Member MemberName="ColorBurn">
@@ -83,14 +74,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>
-          <para />
-        </summary>
+        <summary>Darkens the backdrop color to reflect the source color. [Separable Blend Modes]</summary>
       </Docs>
     </Member>
     <Member MemberName="ColorDodge">
@@ -104,14 +94,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>
-          <para />
-        </summary>
+        <summary>Brightens the backdrop color to reflect the source color. [Separable Blend Modes]</summary>
       </Docs>
     </Member>
     <Member MemberName="Darken">
@@ -125,16 +114,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>
-          <para>[Sa + Da - Sa*Da, Sc*(1 - Da) + Dc*(1 - Sa) + min(Sc, Dc)]</para>
-          <para>
-          </para>
-        </summary>
+        <summary>Selects the darker of the backdrop and source colors. [Separable Blend Modes]</summary>
       </Docs>
     </Member>
     <Member MemberName="Difference">
@@ -148,12 +134,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Subtracts the darker of the two constituent colors from the lighter color. [Separable Blend Modes]</summary>
       </Docs>
     </Member>
     <Member MemberName="Dst">
@@ -167,12 +154,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>[Da, Dc] Destination alpha and destination color are kept.</summary>
+        <summary>Only the destination will be present. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_dst.svg)</summary>
       </Docs>
     </Member>
     <Member MemberName="DstATop">
@@ -186,12 +174,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>[Sa, Dc * Sa + Sc * (1 - Da)]</summary>
+        <summary>Destination which overlaps the source replaces the source. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_dst-atop.svg)</summary>
       </Docs>
     </Member>
     <Member MemberName="DstIn">
@@ -205,12 +194,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>[Da * Sa, Dc * Sa]</summary>
+        <summary>Destination which overlaps the source, replaces the source. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_dst-in.svg)</summary>
       </Docs>
     </Member>
     <Member MemberName="DstOut">
@@ -224,12 +214,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>[Da * (1 - Sa), Dc * (1 - Sa)]</summary>
+        <summary>Destination is placed, where it falls outside of the source. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_dst-out.svg)</summary>
       </Docs>
     </Member>
     <Member MemberName="DstOver">
@@ -243,12 +234,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>[Da + Sa * (1 - Da), Dc + Sc * (1 - Da)]</summary>
+        <summary>Destination is placed over the source. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_dst-over.svg)</summary>
       </Docs>
     </Member>
     <Member MemberName="Exclusion">
@@ -262,12 +254,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Produces an effect similar to that of the Difference mode but lower in contrast. [Separable Blend Modes]</summary>
       </Docs>
     </Member>
     <Member MemberName="HardLight">
@@ -281,12 +274,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Multiplies or screens the colors, depending on the source color value. [Separable Blend Modes]</summary>
       </Docs>
     </Member>
     <Member MemberName="Hue">
@@ -300,12 +294,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Creates a color with the hue of the source color and the saturation and luminosity of the backdrop color. [Non-Separable Blend Modes]</summary>
       </Docs>
     </Member>
     <Member MemberName="Lighten">
@@ -319,12 +314,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Selects the lighter of the backdrop and source colors. [Separable Blend Modes]</summary>
       </Docs>
     </Member>
     <Member MemberName="Luminosity">
@@ -338,12 +334,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Creates a color with the luminosity of the source color and the hue and saturation of the backdrop color. [Non-Separable Blend Modes]</summary>
       </Docs>
     </Member>
     <Member MemberName="Modulate">
@@ -357,12 +354,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Multiplies all components (= alpha and color). [Separable Blend Modes]</summary>
       </Docs>
     </Member>
     <Member MemberName="Multiply">
@@ -376,12 +374,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>[Sa * Da, Sc * Dc] </summary>
+        <summary>The source color is multiplied by the destination color and replaces the destination [Separable Blend Modes]</summary>
       </Docs>
     </Member>
     <Member MemberName="Overlay">
@@ -395,12 +394,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Multiplies or screens the colors, depending on the backdrop color value. [Separable Blend Modes]</summary>
       </Docs>
     </Member>
     <Member MemberName="Plus">
@@ -414,12 +414,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Display the sum of the source image and destination image. [Porter Duff Compositing Operators]</summary>
       </Docs>
     </Member>
     <Member MemberName="Saturation">
@@ -433,12 +434,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Creates a color with the saturation of the source color and the hue and luminosity of the backdrop color. [Non-Separable Blend Modes]</summary>
       </Docs>
     </Member>
     <Member MemberName="Screen">
@@ -452,12 +454,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>[Sa + Da - Sa * Da, Sc + Dc - Sc * Dc]  </summary>
+        <summary>Multiplies the complements of the backdrop and source color values, then complements the result. [Separable Blend Modes]</summary>
       </Docs>
     </Member>
     <Member MemberName="SoftLight">
@@ -471,12 +474,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Darkens or lightens the colors, depending on the source color value. [Separable Blend Modes]</summary>
       </Docs>
     </Member>
     <Member MemberName="Src">
@@ -490,12 +494,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>[Sa, Sc] Source alpha and source color are copied.</summary>
+        <summary>Only the source will be present. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_src.svg)</summary>
       </Docs>
     </Member>
     <Member MemberName="SrcATop">
@@ -509,12 +514,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>[Da, Sc * Da + Dc * (1 - Sa)]</summary>
+        <summary>Source which overlaps the destination, replaces the destination. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_src-atop.svg)</summary>
       </Docs>
     </Member>
     <Member MemberName="SrcIn">
@@ -528,12 +534,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>[Sa * Da, Sc * Da]</summary>
+        <summary>The source that overlaps the destination, replaces the destination. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_src-in.svg)</summary>
       </Docs>
     </Member>
     <Member MemberName="SrcOut">
@@ -547,12 +554,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>[Sa * (1 - Da), Sc * (1 - Da)]</summary>
+        <summary>Source is placed, where it falls outside of the destination. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_src-out.svg)</summary>
       </Docs>
     </Member>
     <Member MemberName="SrcOver">
@@ -566,12 +574,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>[Sa + Da * (1 - Sa), Sc + Dc * (1 - Sa)]</summary>
+        <summary>Source is placed over the destination. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_src-over.svg)</summary>
       </Docs>
     </Member>
     <Member MemberName="Xor">
@@ -585,12 +594,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>[Sa + Da - 2 * Sa * Da, Sc * (1 - Da) + Dc * (1 - Sa)]</summary>
+        <summary>The non-overlapping regions of source and destination are combined. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_xor.svg)</summary>
       </Docs>
     </Member>
   </Members>

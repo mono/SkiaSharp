@@ -2,7 +2,7 @@
 using Android.Opengl;
 using Android.Util;
 
-namespace SkiaSharp.Views
+namespace SkiaSharp.Views.Android
 {
 	public class SKGLSurfaceView : GLSurfaceView
 	{

@@ -6,7 +6,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 
-namespace SkiaSharp.Views
+namespace SkiaSharp.Views.UWP
 {
 	public class SKSwapChainPanel : AngleSwapChainPanel
 	{

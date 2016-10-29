@@ -3,7 +3,7 @@ using CoreAnimation;
 using CoreVideo;
 using OpenGL;
 
-namespace SkiaSharp.Views
+namespace SkiaSharp.Views.Mac
 {
 	public class SKGLLayer : CAOpenGLLayer
 	{

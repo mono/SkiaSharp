@@ -4,7 +4,7 @@ using AppKit;
 using CoreGraphics;
 using Foundation;
 
-namespace SkiaSharp.Views
+namespace SkiaSharp.Views.Mac
 {
 	[Register(nameof(SKCanvasView))]
 	[DesignTimeVisible(true)]

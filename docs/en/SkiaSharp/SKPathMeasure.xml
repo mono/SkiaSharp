@@ -1,0 +1,266 @@
+<Type Name="SKPathMeasure" FullName="SkiaSharp.SKPathMeasure">
+  <TypeSignature Language="C#" Value="public class SKPathMeasure : SkiaSharp.SKObject" />
+  <TypeSignature Language="ILAsm" Value=".class public auto ansi beforefieldinit SKPathMeasure extends SkiaSharp.SKObject" />
+  <AssemblyInfo>
+    <AssemblyName>SkiaSharp</AssemblyName>
+    <AssemblyVersion>1.55.0.0</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>SkiaSharp.SKObject</BaseTypeName>
+  </Base>
+  <Interfaces />
+  <Docs>
+    <summary>Represents a type that can be used to calculate the length of, and segments of, a path.</summary>
+    <remarks>
+      <para></para>
+    </remarks>
+  </Docs>
+  <Members>
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public SKPathMeasure ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig specialname rtspecialname instance void .ctor() cil managed" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters />
+      <Docs>
+        <summary>Create a new <see cref="T:SkiaSharp.SKPathMeasure" /> instance with a null path.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public SKPathMeasure (SkiaSharp.SKPath path, bool forceClosed = false, float resScale = 1);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig specialname rtspecialname instance void .ctor(class SkiaSharp.SKPath path, bool forceClosed, float32 resScale) cil managed" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters>
+        <Parameter Name="path" Type="SkiaSharp.SKPath" />
+        <Parameter Name="forceClosed" Type="System.Boolean" />
+        <Parameter Name="resScale" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="path">The path to use, or null.</param>
+        <param name="forceClosed">Controls whether or not the path is treated as closed.</param>
+        <param name="resScale">Controls the precision of the measure. Values greater 1 increase the precision (and possibly slow down the computation).</param>
+        <summary>Create a new <see cref="T:SkiaSharp.SKPathMeasure" /> instance with the specified path.</summary>
+        <remarks>The path must remain valid for the lifetime of the measure object, or until <see cref="M:SkiaSharp.SKPathMeasure.SetPath" /> is called with a different path (or null), since the measure object keeps a reference to the path object (does not copy its data).</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Dispose">
+      <MemberSignature Language="C#" Value="protected override void Dispose (bool disposing);" />
+      <MemberSignature Language="ILAsm" Value=".method familyhidebysig virtual instance void Dispose(bool disposing) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="disposing" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="disposing">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetMatrix">
+      <MemberSignature Language="C#" Value="public bool GetMatrix (float distance, out SkiaSharp.SKMatrix matrix, SkiaSharp.SKPathMeasure.MatrixFlags flags);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool GetMatrix(float32 distance, valuetype SkiaSharp.SKMatrix matrix, valuetype SkiaSharp.SKPathMeasure/MatrixFlags flags) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="distance" Type="System.Single" />
+        <Parameter Name="matrix" Type="SkiaSharp.SKMatrix&amp;" RefType="out" />
+        <Parameter Name="flags" Type="SkiaSharp.SKPathMeasure+MatrixFlags" />
+      </Parameters>
+      <Docs>
+        <param name="distance">The distance to use.</param>
+        <param name="matrix">The computed matrix.</param>
+        <param name="flags">Flags to indicate how to compute the matrix.</param>
+        <summary>Computes a <see cref="T:SkiaSharp.SKMatrix" /> from the specified distance along the path.</summary>
+        <returns>Returns false if there is no path, or a zero-length path was specified, in which case matrix is unchanged.</returns>
+        <remarks>Distance is pinned to 0 &lt;= distance &lt;= <see cref="P:SkiaSharp.SKPathMeasure.Length" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetPosition">
+      <MemberSignature Language="C#" Value="public bool GetPosition (float distance, out SkiaSharp.SKPoint position);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool GetPosition(float32 distance, valuetype SkiaSharp.SKPoint position) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="distance" Type="System.Single" />
+        <Parameter Name="position" Type="SkiaSharp.SKPoint&amp;" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="distance">The distance to use.</param>
+        <param name="position">The position of a point along the current contour.</param>
+        <summary>Computes the corresponding position from the specified distance along the path.</summary>
+        <returns>Returns false if there is no path, or a zero-length path was specified, in which case position is unchanged.</returns>
+        <remarks>Distance is pinned to 0 &lt;= distance &lt;= <see cref="P:SkiaSharp.SKPathMeasure.Length" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetPositionAndTangent">
+      <MemberSignature Language="C#" Value="public bool GetPositionAndTangent (float distance, out SkiaSharp.SKPoint position, out SkiaSharp.SKPoint tangent);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool GetPositionAndTangent(float32 distance, valuetype SkiaSharp.SKPoint position, valuetype SkiaSharp.SKPoint tangent) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="distance" Type="System.Single" />
+        <Parameter Name="position" Type="SkiaSharp.SKPoint&amp;" RefType="out" />
+        <Parameter Name="tangent" Type="SkiaSharp.SKPoint&amp;" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="distance">The distance to use. </param>
+        <param name="position">The position of a point along the current contour.</param>
+        <param name="tangent">The tangent along the current contour.</param>
+        <summary>Computes the corresponding position and tangent from the specified distance along the path.</summary>
+        <returns>Returns false if there is no path, or a zero-length path was specified, in which case position and tangent are unchanged.</returns>
+        <remarks>Distance is pinned to 0 &lt;= distance &lt;= <see cref="P:SkiaSharp.SKPathMeasure.Length" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetSegment">
+      <MemberSignature Language="C#" Value="public bool GetSegment (float start, float stop, SkiaSharp.SKPath dst, bool startWithMoveTo);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool GetSegment(float32 start, float32 stop, class SkiaSharp.SKPath dst, bool startWithMoveTo) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="start" Type="System.Single" />
+        <Parameter Name="stop" Type="System.Single" />
+        <Parameter Name="dst" Type="SkiaSharp.SKPath" />
+        <Parameter Name="startWithMoveTo" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="start">The starting offset of the segment.</param>
+        <param name="stop">The end offset of the segment.</param>
+        <param name="dst">The path to hold the new segment.</param>
+        <param name="startWithMoveTo">If true, begin the path segment with a <see cref="M:SkiaSharp.SKPath.MoveTo" />.</param>
+        <summary>Given a start and stop distance, update the destination path with the intervening segment(s).</summary>
+        <returns>Returns false if the segment is zero-length, otherwise returns true.</returns>
+        <remarks>The start and stop parameters are pinned to 0..<see cref="P:SkiaSharp.SKPathMeasure.Length" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetTangent">
+      <MemberSignature Language="C#" Value="public bool GetTangent (float distance, out SkiaSharp.SKPoint tangent);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool GetTangent(float32 distance, valuetype SkiaSharp.SKPoint tangent) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="distance" Type="System.Single" />
+        <Parameter Name="tangent" Type="SkiaSharp.SKPoint&amp;" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="distance">The distance to use.</param>
+        <param name="tangent">The tangent along the current contour.</param>
+        <summary>Computes the corresponding tangent from the specified distance along the path.</summary>
+        <returns>Returns false if there is no path, or a zero-length path was specified, in which case position and tangent are unchanged.</returns>
+        <remarks>Distance is pinned to 0 &lt;= distance &lt;= <see cref="P:SkiaSharp.SKPathMeasure.Length" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="IsClosed">
+      <MemberSignature Language="C#" Value="public bool IsClosed { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance bool IsClosed" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets a value indicating if the current contour is closed.</summary>
+        <value>Returns true if the current contour is closed.</value>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Length">
+      <MemberSignature Language="C#" Value="public float Length { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance float32 Length" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Single</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the total length of the current contour, or 0 if no path is associated.</summary>
+        <value>The total length of the current contour.</value>
+        <remarks />
+      </Docs>
+    </Member>
+    <Member MemberName="NextContour">
+      <MemberSignature Language="C#" Value="public bool NextContour ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool NextContour() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Move to the next contour in the path.</summary>
+        <returns>Returns true if another one exists, otherwise false.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SetPath">
+      <MemberSignature Language="C#" Value="public void SetPath (SkiaSharp.SKPath path, bool forceClosed);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void SetPath(class SkiaSharp.SKPath path, bool forceClosed) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="path" Type="SkiaSharp.SKPath" />
+        <Parameter Name="forceClosed" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="path">The path to use, or null.</param>
+        <param name="forceClosed">Controls whether or not the path is treated as closed.</param>
+        <summary>Reset the path measure with the specified path.</summary>
+        <remarks>The path must remain valid for the lifetime of the measure object, or until <see cref="M:SkiaSharp.SKPathMeasure.SetPath" /> is called with a different path (or null), since the measure object keeps a reference to the path object (does not copy its data).</remarks>
+      </Docs>
+    </Member>
+  </Members>
+</Type>

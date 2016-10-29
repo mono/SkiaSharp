@@ -126,6 +126,9 @@ namespace SkiaSharp
 
 		public SKPoint GetPoint (int index)
 		{
+			if (index < 0 || index >= PointCount)
+				throw new ArgumentOutOfRangeException (nameof (index));
+			
 			SKPoint point;
 			SkiaApi.sk_path_get_point (Handle, index, out point);
 			return point;
@@ -148,9 +151,19 @@ namespace SkiaSharp
 			return SkiaApi.sk_path_contains (Handle, x, y);
 		}
 
+		public void Offset (SKPoint offset)
+		{
+			Offset (offset.X, offset.Y);
+		}
+
 		public void Offset (float dx, float dy)
 		{
 			Transform (SKMatrix.MakeTranslation(dx, dy));
+		}
+
+		public void MoveTo (SKPoint point)
+		{
+			SkiaApi.sk_path_move_to (Handle, point.X, point.Y);
 		}
 
 		public void MoveTo (float x, float y)
@@ -158,9 +171,19 @@ namespace SkiaSharp
 			SkiaApi.sk_path_move_to (Handle, x, y);
 		}
 
+		public void RMoveTo (SKPoint point)
+		{
+			SkiaApi.sk_path_rmove_to (Handle, point.X, point.Y);
+		}
+
 		public void RMoveTo (float dx, float dy)
 		{
 			SkiaApi.sk_path_rmove_to (Handle, dx, dy);
+		}
+
+		public void LineTo (SKPoint point)
+		{
+			SkiaApi.sk_path_line_to (Handle, point.X, point.Y);
 		}
 
 		public void LineTo (float x, float y)
@@ -168,9 +191,19 @@ namespace SkiaSharp
 			SkiaApi.sk_path_line_to (Handle, x, y);
 		}
 
+		public void RLineTo (SKPoint point)
+		{
+			SkiaApi.sk_path_rline_to (Handle, point.X, point.Y);
+		}
+
 		public void RLineTo (float dx, float dy)
 		{
 			SkiaApi.sk_path_rline_to (Handle, dx, dy);
+		}
+
+		public void QuadTo (SKPoint point0, SKPoint point1)
+		{
+			SkiaApi.sk_path_quad_to (Handle, point0.X, point0.Y, point1.X, point1.Y);
 		}
 
 		public void QuadTo (float x0, float y0, float x1, float y1)
@@ -178,9 +211,19 @@ namespace SkiaSharp
 			SkiaApi.sk_path_quad_to (Handle, x0, y0, x1, y1);
 		}
 
+		public void RQuadTo (SKPoint point0, SKPoint point1)
+		{
+			SkiaApi.sk_path_rquad_to (Handle, point0.X, point0.Y, point1.X, point1.Y);
+		}
+
 		public void RQuadTo (float dx0, float dy0, float dx1, float dy1)
 		{
 			SkiaApi.sk_path_rquad_to (Handle, dx0, dy0, dx1, dy1);
+		}
+
+		public void ConicTo (SKPoint point0, SKPoint point1, float w)
+		{
+			SkiaApi.sk_path_conic_to (Handle, point0.X, point0.Y, point1.X, point1.Y, w);
 		}
 
 		public void ConicTo (float x0, float y0, float x1, float y1, float w)
@@ -188,9 +231,19 @@ namespace SkiaSharp
 			SkiaApi.sk_path_conic_to (Handle, x0, y0, x1, y1, w);
 		}
 
+		public void RConicTo (SKPoint point0, SKPoint point1, float w)
+		{
+			SkiaApi.sk_path_rconic_to (Handle, point0.X, point0.Y, point1.X, point1.Y, w);
+		}
+
 		public void RConicTo (float dx0, float dy0, float dx1, float dy1, float w)
 		{
 			SkiaApi.sk_path_rconic_to (Handle, dx0, dy0, dx1, dy1, w);
+		}
+
+		public void CubicTo (SKPoint point0, SKPoint point1, SKPoint point2)
+		{
+			SkiaApi.sk_path_cubic_to (Handle, point0.X, point0.Y, point1.X, point1.Y, point2.X, point2.Y);
 		}
 
 		public void CubicTo (float x0, float y0, float x1, float y1, float x2, float y2)
@@ -198,14 +251,44 @@ namespace SkiaSharp
 			SkiaApi.sk_path_cubic_to (Handle, x0, y0, x1, y1, x2, y2);
 		}
 
+		public void RCubicTo (SKPoint point0, SKPoint point1, SKPoint point2)
+		{
+			SkiaApi.sk_path_rcubic_to (Handle, point0.X, point0.Y, point1.X, point1.Y, point2.X, point2.Y);
+		}
+
 		public void RCubicTo (float dx0, float dy0, float dx1, float dy1, float dx2, float dy2)
 		{
 			SkiaApi.sk_path_rcubic_to (Handle, dx0, dy0, dx1, dy1, dx2, dy2);
 		}
 
+		public void ArcTo (SKPoint r, float xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, SKPoint xy)
+		{
+			SkiaApi.sk_path_arc_to (Handle, r.X, r.Y, xAxisRotate, largeArc, sweep, xy.X, xy.Y);
+		}
+
 		public void ArcTo (float rx, float ry, float xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, float x, float y)
 		{
 			SkiaApi.sk_path_arc_to (Handle, rx, ry, xAxisRotate, largeArc, sweep, x, y);
+		}
+
+		public void ArcTo (SKRect oval, float startAngle, float sweepAngle, bool forceMoveTo)
+		{
+			SkiaApi.sk_path_arc_to_with_oval (Handle, ref oval, startAngle, sweepAngle, forceMoveTo);
+		}
+
+		public void ArcTo (SKPoint point1, SKPoint point2, float radius)
+		{
+			SkiaApi.sk_path_arc_to_with_points (Handle, point1.X, point1.Y, point2.X, point2.Y, radius);
+		}
+
+		public void ArcTo (float x1, float y1, float x2, float y2, float radius)
+		{
+			SkiaApi.sk_path_arc_to_with_points (Handle, x1, y1, x2, y2, radius);
+		}
+
+		public void RArcTo (SKPoint r, float xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, SKPoint xy)
+		{
+			SkiaApi.sk_path_rarc_to (Handle, r.X, r.Y, xAxisRotate, largeArc, sweep, xy.X, xy.Y);
 		}
 
 		public void RArcTo (float rx, float ry, float xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, float x, float y)
@@ -218,14 +301,14 @@ namespace SkiaSharp
 			SkiaApi.sk_path_close (Handle);
 		}
 
-		public void Rewind()
+		public void Rewind ()
 		{
-			SkiaApi.sk_path_rewind(Handle);
+			SkiaApi.sk_path_rewind (Handle);
 		}
 
-		public void Reset()
+		public void Reset ()
 		{
-			SkiaApi.sk_path_reset(Handle);
+			SkiaApi.sk_path_reset (Handle);
 		}
 
 		public void AddRect (SKRect rect, SKPathDirection direction = SKPathDirection.Clockwise)
@@ -236,7 +319,7 @@ namespace SkiaSharp
 		public void AddRect (SKRect rect, SKPathDirection direction, uint startIndex)
 		{
 			if (startIndex > 3)
-				throw new ArgumentOutOfRangeException (nameof (startIndex), "startIndex must be 0 - 3");
+				throw new ArgumentOutOfRangeException (nameof (startIndex), "Starting index must be in the range of 0..3 (inclusive).");
 
 			SkiaApi.sk_path_add_rect_start (Handle, ref rect, direction, startIndex);
 		}
@@ -323,12 +406,34 @@ namespace SkiaSharp
 			return SkiaApi.sk_pathop_op (Handle, other.Handle, op, result.Handle);
 		}
 		
+		public SKPath Op (SKPath other, SKPathOp op)
+		{
+			var result = new SKPath ();
+			if (Op (other, op, result)) {
+				return result;
+			} else {
+				result.Dispose ();
+				return null;
+			}
+		}
+
 		public bool Simplify (SKPath result)
 		{
 			if (result == null)
 				throw new ArgumentNullException (nameof (result));
 
 			return SkiaApi.sk_pathop_simplify (Handle, result.Handle);
+		}
+		
+		public SKPath Simplify ()
+		{
+			var result = new SKPath ();
+			if (Simplify (result)) {
+				return result;
+			} else {
+				result.Dispose ();
+				return null;
+			}
 		}
 		
 		public bool GetTightBounds (out SKRect result)
@@ -352,6 +457,29 @@ namespace SkiaSharp
 				path = null;
 			}
 			return path;
+		}
+		
+		public static SKPoint [] ConvertConicToQuads (SKPoint p0, SKPoint p1, SKPoint p2, float w, int pow2)
+		{
+			SKPoint [] pts;
+			ConvertConicToQuads(p0, p1, p2, w, out pts, pow2);
+			return pts;
+		}
+		
+		public static int ConvertConicToQuads (SKPoint p0, SKPoint p1, SKPoint p2, float w, out SKPoint [] pts, int pow2)
+		{
+			int quadCount = 1 << pow2;
+			int ptCount = 2 * quadCount + 1;
+			pts = new SKPoint [ptCount];
+			return ConvertConicToQuads(p0, p1, p2, w, pts, pow2);
+		}
+		
+		public static int ConvertConicToQuads (SKPoint p0, SKPoint p1, SKPoint p2, float w, SKPoint [] pts, int pow2)
+		{
+			if (pts == null)
+				throw new ArgumentNullException (nameof (pts));
+
+			return SkiaApi.sk_path_convert_conic_to_quads(ref p0, ref p1, ref p2, w, pts, pow2);
 		}
 		
 		public class Iterator : SKNativeObject
@@ -380,7 +508,7 @@ namespace SkiaSharp
 				if (points == null)
 					throw new ArgumentNullException (nameof (points));
 				if (points.Length != 4)
-					throw new ArgumentException ("Must be an array of four elements", nameof (points));
+					throw new ArgumentException ("Must be an array of four elements.", nameof (points));
 				return SkiaApi.sk_path_iter_next (Handle, points, doConsumeDegenerates ? 1 : 0, exact ? 1 : 0);
 			}
 
@@ -415,7 +543,7 @@ namespace SkiaSharp
 				if (points == null)
 					throw new ArgumentNullException (nameof (points));
 				if (points.Length != 4)
-					throw new ArgumentException ("Must be an array of four elements", nameof (points));
+					throw new ArgumentException ("Must be an array of four elements.", nameof (points));
 				return SkiaApi.sk_path_rawiter_next (Handle, points);
 			}
 

@@ -1,6 +1,6 @@
 ﻿using Android.Graphics;
 
-namespace SkiaSharp.Views
+namespace SkiaSharp.Views.Android
 {
 	public static class AndroidExtensions
 	{

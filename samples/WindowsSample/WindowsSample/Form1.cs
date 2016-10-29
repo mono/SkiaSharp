@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using SkiaSharp;
-using SkiaSharp.Views;
+using SkiaSharp.Views.Desktop;
 
 namespace SkiaSharpSample.WindowsSample
 {

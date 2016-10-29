@@ -9,6 +9,7 @@
     <AssemblyVersion>1.53.0.0</AssemblyVersion>
     <AssemblyVersion>1.54.0.0</AssemblyVersion>
     <AssemblyVersion>1.54.0.0</AssemblyVersion>
+    <AssemblyVersion>1.55.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>SkiaSharp.SKObject</BaseTypeName>
@@ -18,22 +19,18 @@
     <summary>Encapsulates all of the state about drawing into a device (bitmap).</summary>
     <remarks>
       <para>Encapsulates all of the state about drawing into a device (bitmap).</para>
-      <para>
-      </para>
+      <para></para>
       <para>This includes a reference to the device itself, and a stack of matrix/clip values. For any given draw call (e.g. drawRect), the geometry of the object being drawn is transformed by the concatenation of all the matrices in the stack. The transformed geometry is clipped by the intersection of all of the clips in the stack.</para>
-      <para>
-      </para>
+      <para></para>
       <para>While the Canvas holds the state of the drawing device, the state (style) of the object being drawn is held by the Paint, which is provided as a parameter to each of the draw() methods. The Paint holds attributes such as color, typeface, the text size, the stroke width, the shader (for example, gradients, patterns), etc.</para>
-      <para>
-      </para>
+      <para></para>
       <para>The SkCanvas is returned when accessing the <see cref="P:SkiaSharp.SKSurface.Canvas" /> property of a surface.</para>
       <para>Transformations</para>
       <para>The <see cref="T:SkiaSharp.SKCanvas" /> supports a number of 2D transformations.   Unlike other 2D graphic systems like CoreGraphics or Cairo, SKCanvas extends the transformations to include perspectives.   </para>
       <para>You can use the <see cref="M:SkiaSharp.SKCanvas.Scale" />, <see cref="M:SkiaSharp.SKCanvas.Skew" />, <see cref="M:SkiaSharp.SKCanvas.Translate" />, <see cref="M:SkiaSharp.SKCanvas.RotateDegrees" />, <see cref="M:SkiaSharp.SKCanvas.RotateRadians" /> to perform some of the most common 2D transformations.   </para>
       <para>For more control you can use the <see cref="M:SkiaSharp.SKCanvas.SetMatrix" /> to set an arbitrary transformation using the <see cref="T:SkiaSharp.SKMatrix" /> and the <see cref="M:SkiaSharp.SKCanvas.Concat" /> to concatenate an <see cref="T:SkiaSharp.SKMatrix" /> transformation to the current matrix in use.</para>
       <para>The <see cref="M:SkiaSharp.SKCanvas.ResetMatrix" /> can be used to reset the state of the matrix</para>
-      <para>
-      </para>
+      <para></para>
       <para>Drawing</para>
       <para>The drawing operations can take a <see cref="T:SkiaSharp.SKPaint" /> parameter to affect their drawing.  You use <see cref="T:SkiaSharp.SKPaint" /> objects to cache the style and color information to draw geometries, texts and bitmaps.</para>
       <para>Clipping Path</para>
@@ -41,14 +38,11 @@
       <para>It is possible to save the current transformations by calling the <see cref="M:SkiaSharp.SKCanvas.Save" /> method which preserves the current transformation matrix, you can then alter the matrix and restore the previous state by using the <see cref="M:SkiaSharp.SKCanvas.Restore" /> or <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> methods.   </para>
       <para>Additionally, it is possible to push a new state with <see cref="M:SkiaSharp.SKCanvas.SaveLayer" /> which will make an offscreen copy of a region, and once the drawing is completed, calling the <see cref="M:SkiaSharp.SKCanvas.Restore" /> method which copies the offscreen bitmap into this canvas.</para>
       <para>The example below shows a typical use:</para>
-      <para>
-      </para>
-      <para>
-      </para>
-      <para>
-      </para>
+      <para></para>
+      <para></para>
+      <para></para>
       <example>
-        <code lang="C#"><![CDATA[using (var surface = SKSurface.Create (width: 640, height: 480, SKColorType.N_32, SKAlphaType.Premul)) {
+        <code lang="C#"><![CDATA[using (var surface = SKSurface.Create (width: 640, height: 480, SKImageInfo.PlatformColorType, SKAlphaType.Premul)) {
     SKCanvas canvas = surface.Canvas;
 
     canvas.Clear (SKColors.White);
@@ -92,14 +86,17 @@
       <AssemblyInfo>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="bitmap" Type="SkiaSharp.SKBitmap" />
       </Parameters>
       <Docs>
-        <param name="bitmap">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="bitmap">The bitmap for the canvas to draw into.</param>
+        <summary>Creates a canvas with the specified bitmap to draw into.</summary>
+        <remarks>
+          <para>The structure of the bitmap is copied into the canvas.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Clear">
@@ -113,6 +110,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -121,7 +119,7 @@
       <Docs>
         <summary>Replaces all the pixels in the canvas’ current clip with the <see cref="P:SkiaSharp.SKColors.Empty" /> color.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -136,6 +134,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -145,9 +144,49 @@
       </Parameters>
       <Docs>
         <param name="color">The color to use to replace the pixels in the current clipping region.</param>
-        <summary>Helper method for drawing a color in source mode, completely replacing all the pixels in the current clip with this color.</summary>
+        <summary>Replaces all the pixels in the canvas’ current clip with the specified color.</summary>
         <remarks>
-          <para />
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ClipBounds">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKRect ClipBounds { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKRect ClipBounds" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKRect</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the bounds of the current clip (in local coordinates).</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ClipDeviceBounds">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKRectI ClipDeviceBounds { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKRectI ClipDeviceBounds" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKRectI</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the bounds of the current clip (in device coordinates).</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -165,13 +204,40 @@
         <Parameter Name="path" Type="SkiaSharp.SKPath" />
       </Parameters>
       <Docs>
-        <param name="path">Path descrcibing the new clipping region.</param>
-        <summary>Set the current clipping region to the specified path.</summary>
-        <remarks>To be added.</remarks>
+        <param name="path">The path to combine with the current clip.</param>
+        <summary>Modify the current clip with the specified path.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ClipPath">
-      <MemberSignature Language="C#" Value="public void ClipPath (SkiaSharp.SKPath path, SkiaSharp.SKRegionOperation operation = SkiaSharp.SKRegionOperation.Intersect, bool antialias = false);" />
+      <MemberSignature Language="C#" Value="public void ClipPath (SkiaSharp.SKPath path, SkiaSharp.SKClipOperation operation = SkiaSharp.SKClipOperation.Intersect, bool antialias = false);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void ClipPath(class SkiaSharp.SKPath path, valuetype SkiaSharp.SKClipOperation operation, bool antialias) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="path" Type="SkiaSharp.SKPath" />
+        <Parameter Name="operation" Type="SkiaSharp.SKClipOperation" />
+        <Parameter Name="antialias" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="path">The path to combine with the current clip.</param>
+        <param name="operation">The clip operator to apply to the current clip</param>
+        <param name="antialias">Whether or not the clip should be antialiased.</param>
+        <summary>Modify the current clip with the specified path.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ClipPath">
+      <MemberSignature Language="C#" Value="public void ClipPath (SkiaSharp.SKPath path, SkiaSharp.SKRegionOperation operation, bool antialias = false);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void ClipPath(class SkiaSharp.SKPath path, valuetype SkiaSharp.SKRegionOperation operation, bool antialias) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
@@ -180,7 +246,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Obsolete("Use ClipPath(SKPath, SKClipOperation, bool) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
       </ReturnValue>
@@ -190,11 +262,13 @@
         <Parameter Name="antialias" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="path">To be added.</param>
-        <param name="operation">To be added.</param>
-        <param name="antialias">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="path">The path to combine with the current clip.</param>
+        <param name="operation">The region operator to apply to the current clip</param>
+        <param name="antialias">Whether or not the clip should be antialiased.</param>
+        <summary>Modify the current clip with the specified path.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ClipRect">
@@ -211,15 +285,40 @@
         <Parameter Name="rect" Type="SkiaSharp.SKRect" />
       </Parameters>
       <Docs>
-        <param name="rect">Clipping rectangle.</param>
-        <summary>Set the current clipping region to the specified rectangle.</summary>
+        <param name="rect">The rectangle to combine with the current clip.</param>
+        <summary>Modify the current clip with the specified rectangle.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
     <Member MemberName="ClipRect">
-      <MemberSignature Language="C#" Value="public void ClipRect (SkiaSharp.SKRect rect, SkiaSharp.SKRegionOperation operation = SkiaSharp.SKRegionOperation.Intersect, bool antialias = false);" />
+      <MemberSignature Language="C#" Value="public void ClipRect (SkiaSharp.SKRect rect, SkiaSharp.SKClipOperation operation = SkiaSharp.SKClipOperation.Intersect, bool antialias = false);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void ClipRect(valuetype SkiaSharp.SKRect rect, valuetype SkiaSharp.SKClipOperation operation, bool antialias) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="rect" Type="SkiaSharp.SKRect" />
+        <Parameter Name="operation" Type="SkiaSharp.SKClipOperation" />
+        <Parameter Name="antialias" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="rect">The rectangle to combine with the current clip.</param>
+        <param name="operation">The clip operator to apply to the current clip.</param>
+        <param name="antialias">Whether or not the clip should be antialiased.</param>
+        <summary>Modify the current clip with the specified rectangle.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ClipRect">
+      <MemberSignature Language="C#" Value="public void ClipRect (SkiaSharp.SKRect rect, SkiaSharp.SKRegionOperation operation, bool antialias = false);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void ClipRect(valuetype SkiaSharp.SKRect rect, valuetype SkiaSharp.SKRegionOperation operation, bool antialias) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
@@ -228,7 +327,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Obsolete("Use ClipRect(SKRect, SKClipOperation, bool) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
       </ReturnValue>
@@ -238,11 +343,13 @@
         <Parameter Name="antialias" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <param name="operation">To be added.</param>
-        <param name="antialias">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rect">The rectangle to combine with the current clip.</param>
+        <param name="operation">The region operator to apply to the current clip.</param>
+        <param name="antialias">Whether or not the clip should be antialiased.</param>
+        <summary>Modify the current clip with the specified rectangle.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Concat">
@@ -256,6 +363,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -264,10 +372,10 @@
         <Parameter Name="m" Type="SkiaSharp.SKMatrix&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="m">Transformation matrix to concatenate.</param>
+        <param name="m">Transformation matrix to pre-concatenate.</param>
         <summary>Pre-concatenates the provided transformation matrix with the current transformation matrix.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -282,6 +390,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -292,11 +401,13 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="bitmap">Bitmap to draw</param>
-        <param name="dest">Region to draw the bitmap into</param>
+        <param name="bitmap">The bitmap to draw.</param>
+        <param name="dest">The region to draw the bitmap into.</param>
         <param name="paint">The paint used to draw the bitmap.</param>
         <summary>Draws a bitmap on the canvas.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawBitmap">
@@ -310,6 +421,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -321,12 +433,14 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="bitmap">Bitmap to draw</param>
-        <param name="source">Source region to copy.</param>
-        <param name="dest">Region to draw the bitmap into.</param>
+        <param name="bitmap">The bitmap to draw.</param>
+        <param name="source">The source region to copy.</param>
+        <param name="dest">The region to draw the bitmap into.</param>
         <param name="paint">The paint used to draw the bitmap.</param>
         <summary>Draws a bitmap on the canvas.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawBitmap">
@@ -340,6 +454,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -356,7 +471,36 @@
         <param name="y">Target y coordinate destination for the bitmap.</param>
         <param name="paint">The paint used to draw the bitmap.</param>
         <summary>Draws a bitmap on the canvas.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawBitmapLattice">
+      <MemberSignature Language="C#" Value="public void DrawBitmapLattice (SkiaSharp.SKBitmap bitmap, SkiaSharp.SKLattice lattice, SkiaSharp.SKRect dst, SkiaSharp.SKPaint paint = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawBitmapLattice(class SkiaSharp.SKBitmap bitmap, valuetype SkiaSharp.SKLattice lattice, valuetype SkiaSharp.SKRect dst, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="bitmap" Type="SkiaSharp.SKBitmap" />
+        <Parameter Name="lattice" Type="SkiaSharp.SKLattice" />
+        <Parameter Name="dst" Type="SkiaSharp.SKRect" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="bitmap">The bitmap to draw.</param>
+        <param name="lattice">The lattice that describes the areas of the bitmap to stretch or shrink.</param>
+        <param name="dst">The region to draw the bitmap into.</param>
+        <param name="paint">The paint used to draw the bitmap.</param>
+        <summary>Draws the bitmap, stretched or shrunk differentially to fit into the destination rectangle.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawBitmapLattice">
@@ -366,6 +510,7 @@
       <AssemblyInfo>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -378,13 +523,15 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="bitmap">To be added.</param>
-        <param name="xDivs">To be added.</param>
-        <param name="yDivs">To be added.</param>
-        <param name="dst">To be added.</param>
-        <param name="paint">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="bitmap">The bitmap to draw.</param>
+        <param name="xDivs">The x-coordinates that divide the bitmap vertically, describing the areas to stretch or shrink.</param>
+        <param name="yDivs">The y-coordinates that divide the bitmap horizontally, describing the areas to stretch or shrink.</param>
+        <param name="dst">The region to draw the bitmap into.</param>
+        <param name="paint">The paint used to draw the bitmap.</param>
+        <summary>Draws the bitmap, stretched or shrunk differentially to fit into the destination rectangle.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawBitmapNinePatch">
@@ -394,6 +541,7 @@
       <AssemblyInfo>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -405,12 +553,14 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="bitmap">To be added.</param>
-        <param name="center">To be added.</param>
-        <param name="dst">To be added.</param>
-        <param name="paint">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="bitmap">The bitmap to draw.</param>
+        <param name="center">The center region within the bitmap to logically divide the bitmap into 9 sections (3x3).</param>
+        <param name="dst">The region to draw the bitmap into.</param>
+        <param name="paint">The paint used to draw the bitmap.</param>
+        <summary>Draws the bitmap, stretched or shrunk differentially to fit into the destination rectangle.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawCircle">
@@ -423,6 +573,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -434,16 +585,41 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="cx">Center X coordinate.</param>
-        <param name="cy">Center Y coordinate.</param>
-        <param name="radius">Radius for the circle.</param>
+        <param name="cx">The center x-coordinate.</param>
+        <param name="cy">The center y-coordinate.</param>
+        <param name="radius">The radius for the circle.</param>
         <param name="paint">The paint used to draw the bitmap.</param>
         <summary>Draws a circle on the canvas.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawColor">
-      <MemberSignature Language="C#" Value="public void DrawColor (SkiaSharp.SKColor color, SkiaSharp.SKXferMode mode = SkiaSharp.SKXferMode.Src);" />
+      <MemberSignature Language="C#" Value="public void DrawColor (SkiaSharp.SKColor color, SkiaSharp.SKBlendMode mode = SkiaSharp.SKBlendMode.Src);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawColor(valuetype SkiaSharp.SKColor color, valuetype SkiaSharp.SKBlendMode mode) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="color" Type="SkiaSharp.SKColor" />
+        <Parameter Name="mode" Type="SkiaSharp.SKBlendMode" />
+      </Parameters>
+      <Docs>
+        <param name="color">The color to use to paint the clipping region.</param>
+        <param name="mode">The blend mode for the color.</param>
+        <summary>Fills the current clipping area with the specified color using the specified color and blend mode.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawColor">
+      <MemberSignature Language="C#" Value="public void DrawColor (SkiaSharp.SKColor color, SkiaSharp.SKXferMode mode);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawColor(valuetype SkiaSharp.SKColor color, valuetype SkiaSharp.SKXferMode mode) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
@@ -453,7 +629,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Obsolete("Use DrawColor(SKColor, SKBlendMode) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
       </ReturnValue>
@@ -462,12 +644,11 @@
         <Parameter Name="mode" Type="SkiaSharp.SKXferMode" />
       </Parameters>
       <Docs>
-        <param name="color">Color to use to paint the clipping region (or the entire canvas if one is not set).</param>
+        <param name="color">The color to use to paint the clipping region.</param>
         <param name="mode">The transfer mode for the color.</param>
-        <summary>Fills the current clipping path with the specified color using the specified transfer mode.</summary>
+        <summary>Fills the current clipping area with the specified color using the specified color and transfer mode.</summary>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -482,6 +663,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -493,10 +675,12 @@
       </Parameters>
       <Docs>
         <param name="image">The image to draw.</param>
-        <param name="dest">Region to draw the bitmap into</param>
+        <param name="dest">The region to draw the image into.</param>
         <param name="paint">The paint used to draw the image, or <see langword="null" />.</param>
         <summary>Draws an image on the canvas.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawImage">
@@ -510,6 +694,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -521,12 +706,14 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="image">Draws an image on the canvas.</param>
-        <param name="source">Source region to copy.</param>
-        <param name="dest">Region to draw the bitmap into</param>
+        <param name="image">The image to draw.</param>
+        <param name="source">The source region to copy.</param>
+        <param name="dest">The region to draw the image into.</param>
         <param name="paint">The paint used to draw the image, or <see langword="null" />.</param>
         <summary>Draws an image on the canvas.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawImage">
@@ -540,6 +727,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -551,12 +739,41 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="image">Draws an image on the canvas.</param>
-        <param name="x">Targe x coordinate destination for the image.</param>
-        <param name="y">Targe y coordinate destination for the image.</param>
+        <param name="image">The image to draw.</param>
+        <param name="x">The x-coordinate destination for the image.</param>
+        <param name="y">The y-coordinate destination for the image.</param>
         <param name="paint">The paint used to draw the image, or <see langword="null" />.</param>
         <summary>Draws an image on the canvas.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawImageLattice">
+      <MemberSignature Language="C#" Value="public void DrawImageLattice (SkiaSharp.SKImage image, SkiaSharp.SKLattice lattice, SkiaSharp.SKRect dst, SkiaSharp.SKPaint paint = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawImageLattice(class SkiaSharp.SKImage image, valuetype SkiaSharp.SKLattice lattice, valuetype SkiaSharp.SKRect dst, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="image" Type="SkiaSharp.SKImage" />
+        <Parameter Name="lattice" Type="SkiaSharp.SKLattice" />
+        <Parameter Name="dst" Type="SkiaSharp.SKRect" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="image">The image to draw.</param>
+        <param name="lattice">The lattice that describes the areas of the image to stretch or shrink.</param>
+        <param name="dst">The region to draw the image into.</param>
+        <param name="paint">The paint used to draw the image, or <see langword="null" />.</param>
+        <summary>Draws the image, stretched or shrunk differentially to fit into the destination rectangle.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawImageLattice">
@@ -566,6 +783,7 @@
       <AssemblyInfo>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -578,13 +796,15 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="image">To be added.</param>
-        <param name="xDivs">To be added.</param>
-        <param name="yDivs">To be added.</param>
-        <param name="dst">To be added.</param>
-        <param name="paint">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="image">The image to draw.</param>
+        <param name="xDivs">The x-coordinates that divide the image vertically, describing the areas to stretch or shrink.</param>
+        <param name="yDivs">The Y-coordinates that divide the image horizontally, describing the areas to stretch or shrink.</param>
+        <param name="dst">The region to draw the image into.</param>
+        <param name="paint">The paint used to draw the image, or <see langword="null" />.</param>
+        <summary>Draws the image, stretched or shrunk differentially to fit into the destination rectangle.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawImageNinePatch">
@@ -594,6 +814,7 @@
       <AssemblyInfo>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -605,12 +826,14 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="image">To be added.</param>
-        <param name="center">To be added.</param>
-        <param name="dst">To be added.</param>
-        <param name="paint">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="image">The image to draw.</param>
+        <param name="center">The center region within the image to logically divide the image into 9 sections (3x3).</param>
+        <param name="dst">The region to draw the image into.</param>
+        <param name="paint">The paint used to draw the image, or <see langword="null" />.</param>
+        <summary>Draws the image, stretched or shrunk differentially to fit into the destination rectangle.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawLine">
@@ -624,6 +847,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -636,13 +860,15 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="x0">First point x coordinate.</param>
-        <param name="y0">First point y coordinate.</param>
-        <param name="x1">Second point x coordinate.</param>
-        <param name="y1">First point y coordinate.</param>
+        <param name="x0">The first point x-coordinate.</param>
+        <param name="y0">The first point y-coordinate.</param>
+        <param name="x1">The second point x-coordinate.</param>
+        <param name="y1">The second point y-coordinate.</param>
         <param name="paint">The paint used to draw the line.</param>
         <summary>Draws a line on the canvas.</summary>
-        <remarks>Draws a line from (x0,y0) to (x1,y1) using the specified <paramref name="paint" /> parameters.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawOval">
@@ -656,6 +882,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -665,11 +892,40 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="rect">Bounding box for the oval</param>
+        <param name="rect">The bounding box for the oval.</param>
         <param name="paint">The paint used to draw the oval.</param>
         <summary>Draws an oval on the canvas.</summary>
         <remarks>
-          <para />
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawOval">
+      <MemberSignature Language="C#" Value="public void DrawOval (float cx, float cy, float rx, float ry, SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawOval(float32 cx, float32 cy, float32 rx, float32 ry, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="cx" Type="System.Single" />
+        <Parameter Name="cy" Type="System.Single" />
+        <Parameter Name="rx" Type="System.Single" />
+        <Parameter Name="ry" Type="System.Single" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="cx">The center x-coordinate.</param>
+        <param name="cy">The center y-coordinate.</param>
+        <param name="rx">The vertical radius for the oval.</param>
+        <param name="ry">The horizontal radius for the oval.</param>
+        <param name="paint">The paint used to draw the oval.</param>
+        <summary>Draws an oval on the canvas.</summary>
+        <remarks>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -684,6 +940,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -695,7 +952,7 @@
         <param name="paint">The paint used to fill the current clipping path.</param>
         <summary>Fills the current clipping path with the specified paint.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -710,6 +967,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -719,11 +977,11 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="path">The path to draw</param>
+        <param name="path">The path to draw.</param>
         <param name="paint">The paint used to draw the path.</param>
-        <summary>Draws a bezier path in the canvas.</summary>
+        <summary>Draws a path in the canvas.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -738,6 +996,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -751,8 +1010,7 @@
         <param name="paint">The paint used to draw the picture, or <see langword="null" />.</param>
         <summary>Draws a picture on the canvas.</summary>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -767,6 +1025,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -778,13 +1037,13 @@
       </Parameters>
       <Docs>
         <param name="picture">The picture to draw.</param>
-        <param name="matrix">The matrix to apply while painting</param>
+        <param name="matrix">The matrix to apply while painting.</param>
         <param name="paint">The paint used to draw the picture, or <see langword="null" />.</param>
         <summary>Draws a picture on the canvas.</summary>
         <remarks>
-          <para>This is equivalent to calling Save, followed by Concat with the specified <paramref name="matrix" />, DrawPicture and then Restore.</para>
-          <para />
-          <para>If paint is non-null, draw the picture into a temporary buffer, and then apply the paint's alpha, color filter, image filter, xfermode to that buffer as it is drawn to the canvas.</para>
+          <para>This is equivalent to calling <see cref="M:SkiaSharp.SKCanvas.Save" />, followed by <see cref="M:SkiaSharp.SKCanvas.Concat" /> with the specified <paramref name="matrix" />, <see cref="M:SkiaSharp.SKCanvas.DrawPicture" /> and then <see cref="M:SkiaSharp.SKCanvas.Restore" />.</para>
+          <para></para>
+          <para>If paint is non-null, the picture is drawn into a temporary buffer, and then the paint's alpha, color filter, image filter, blend mode are applied to that buffer as it is drawn to the canvas.</para>
         </remarks>
       </Docs>
     </Member>
@@ -799,6 +1058,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -809,11 +1069,13 @@
         <Parameter Name="color" Type="SkiaSharp.SKColor" />
       </Parameters>
       <Docs>
-        <param name="x">x coordinate for the point to draw.</param>
-        <param name="y">y coordinate for the point to draw.</param>
-        <param name="color">Color to use.</param>
+        <param name="x">The x-coordinate for the point to draw.</param>
+        <param name="y">The y-coordinate for the point to draw.</param>
+        <param name="color">The color to use.</param>
         <summary>Draws a point in the canvas with the specified color.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawPoint">
@@ -827,6 +1089,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -837,12 +1100,12 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="x">x coordinate for the point to draw.</param>
-        <param name="y">y coordinate for the point to draw.</param>
+        <param name="x">The x-coordinate for the point to draw.</param>
+        <param name="y">The y-coordinate for the point to draw.</param>
         <param name="paint">The paint used to draw the point.</param>
         <summary>Draws a point in the canvas with the specified color.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -857,6 +1120,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -868,25 +1132,18 @@
       </Parameters>
       <Docs>
         <param name="mode">Determines how the points array will be interpreted: as points, as coordinates to draw lines, or as coordinates of a polygon.</param>
-        <param name="points">array of points to draw.</param>
+        <param name="points">The array of points to draw.</param>
         <param name="paint">The paint used to draw the points.</param>
-        <summary>Draws an array of points, lines or a polygon in the canvas.</summary>
+        <summary>Draws an array of points, lines or a polygon in the canvas, one at a time.</summary>
         <remarks>
-          <para>For all modes, the count parameter is interpreted as the total number of points. For kLine mode, count/2 line segments are drawn.</para>
-          <para>
-          </para>
-          <para>For point mode, each point is drawn centered at its coordinate, and its size is specified by the paint's stroke-width. It draws as a square, unless the paint's cap-type is round, in which the points are drawn as circles.</para>
-          <para>
-          </para>
-          <para>For line mode, each pair of points is drawn as a line segment, respecting the paint's settings for cap, join and width. </para>
-          <para>
-          </para>
-          <para>For polygon mode, the entire array is drawn as a series of connected line segments.</para>
-          <para>
-          </para>
-          <para>Note that, while similar, the line and polygon modes draw slightly differently than the equivalent path built with a series of move to, line to calls, in that the path will draw all of its contours at once, with no interactions if contours intersect each other (think XOR xfermode).  DrawPoints always draws each element one at a time.</para>
-          <para>
-          </para>
+          <para>For <see cref="F:SkiaSharp.SKPointMode.Points" />, each point is drawn centered at its coordinate, and its size is specified by the paint's stroke-width. It draws as a square, unless the paint's <see cref="P:SkiaSharp.SKPaint.StrokeCap" /> is <see cref="F:SkiaSharp.SKStrokeCap.Round" />, in which the points are drawn as circles.</para>
+          <para></para>
+          <para>For <see cref="F:SkiaSharp.SKPointMode.Lines" />, each pair of points is drawn as a line segment, respecting the paint's settings for cap, join and width. </para>
+          <para></para>
+          <para>For <see cref="F:SkiaSharp.SKPointMode.Polygon" />, the entire array is drawn as a series of connected line segments.</para>
+          <para></para>
+          <para>Note that, while similar, the line and polygon modes draw slightly differently than the equivalent path built with a series of move to, line to calls, in that the path will draw all of its contours at once, with no interactions if contours intersect each other (think <see cref="F:SkiaSharp.SKBlendMode.Xor" />).</para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -901,6 +1158,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -910,11 +1168,11 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="rect">The rectangle specification.</param>
+        <param name="rect">The rectangle to draw.</param>
         <param name="paint">The paint used to draw the rectagle.</param>
         <summary>Draws a rectangle in the canvas.</summary>
         <remarks>
-          <para>The rectangle will be filled or stroked based on the Style in the paint.</para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -928,6 +1186,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -939,12 +1198,14 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <param name="rx">To be added.</param>
-        <param name="ry">To be added.</param>
-        <param name="paint">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rect">The rectangle to draw.</param>
+        <param name="rx">The x-radius of the oval used to round the corners.</param>
+        <param name="ry">The y-radius of the oval used to round the corners.</param>
+        <param name="paint">The paint used to draw the rectagle.</param>
+        <summary>Draws a rounded rectangle in the canvas.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawText">
@@ -958,6 +1219,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -969,11 +1231,11 @@
       </Parameters>
       <Docs>
         <param name="text">The text to draw.</param>
-        <param name="points">Describes the position for each glyph in the <paramref name="text" /> string.</param>
+        <param name="points">The positions for each glyph in the <paramref name="text" /> string.</param>
         <param name="paint">The paint used to draw the text.</param>
         <summary>Draws glyphs of the text at specified locations on the canvas.</summary>
         <remarks>
-          <para>Draw the text, with each character/glyph origin specified by the <paramref name="points" /> array. The origin is interpreted by the Align setting in the paint.</para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -988,6 +1250,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -999,17 +1262,12 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="buffer">Contains a pointer to a region holding UTF-8 encoded text to draw.</param>
-        <param name="length">Number of bytes to read from the <paramref name="buffer." /></param>
-        <param name="points">Describes the position for each glyph in the <paramref name="text" /> string.</param>
+        <param name="buffer">The pointer to a region holding UTF-8 encoded text to draw.</param>
+        <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
+        <param name="points">The positions for each glyph in the <paramref name="buffer." /></param>
         <param name="paint">The paint used to draw the text.</param>
         <summary>Draws text from a UTF-8 buffer at specified locations on the canvas.</summary>
-        <remarks>
-          <para>Draw the text, with each character/glyph origin specified by the <paramref name="points" /> array. The origin is interpreted by the Align setting in the paint.</para>
-          <para>
-          </para>
-          <para>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains a UTF-8 encoded block of text.   This only consumes up to <paramref name="length" /> bytes from the buffer.</para>
-        </remarks>
+        <remarks />
       </Docs>
     </Member>
     <Member MemberName="DrawText">
@@ -1023,6 +1281,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -1035,12 +1294,12 @@
       </Parameters>
       <Docs>
         <param name="text">The text to draw.</param>
-        <param name="x">The x-coordinate of the origin of the text being drawn</param>
-        <param name="y">The y-coordinate of the origin of the text being drawn</param>
+        <param name="x">The x-coordinate of the origin of the text being drawn.</param>
+        <param name="y">The y-coordinate of the origin of the text being drawn.</param>
         <param name="paint">The paint used to draw the text.</param>
-        <summary>Draws text on the canvas</summary>
+        <summary>Draws text on the canvas at the specified coordinates.</summary>
         <remarks>
-          <para>Draws the <paramref name="text" />, with origin at (<paramref name="x" />,<paramref name="y" />), using the specified <paramref name="paint" />. The origin is interpreted based on the Align setting in the paint.</para>
+          <para></para>
           <example>
             <code lang="C#"><![CDATA[public static void TextSample (SKCanvas canvas, int width, int height)
 {
@@ -1091,6 +1350,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -1105,15 +1365,12 @@
       <Docs>
         <param name="buffer">Contains a pointer to a region holding UTF-8 encoded text to draw.</param>
         <param name="length">Number of bytes to read from the <paramref name="buffer." /></param>
-        <param name="x">The x-coordinate of the origin of the text being drawn</param>
-        <param name="y">The y-coordinate of the origin of the text being drawn</param>
+        <param name="x">The x-coordinate of the origin of the text being drawn.</param>
+        <param name="y">The y-coordinate of the origin of the text being drawn.</param>
         <param name="paint">The paint used to draw the text.</param>
-        <summary>Draws text encoded in a UTF-8 buffer on the canvas.</summary>
+        <summary>Draws text encoded in a UTF-8 buffer on the canvas at the specified coordinates.</summary>
         <remarks>
-          <para>Draws the <paramref name="text" />, with origin at (<paramref name="x" />,<paramref name="y" />), using the specified <paramref name="paint" />. The origin is interpreted based on the Align setting in the paint.</para>
-          <para>
-          </para>
-          <para>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains a UTF-8 encoded block of text.   This only consumes up to <paramref name="length" /> bytes from the buffer.</para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1128,6 +1385,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -1142,16 +1400,12 @@
       <Docs>
         <param name="text">The text to draw.</param>
         <param name="path">The path the text should follow for its baseline.</param>
-        <param name="hOffset">
-          <para>The distance along the path to add to the text’s starting position.</para>
-        </param>
-        <param name="vOffset">
-          <para>The distance above(-) or below(+) the path to position the text.</para>
-        </param>
+        <param name="hOffset">The distance along the path to add to the text’s starting position.</param>
+        <param name="vOffset">The distance above (-) or below (+) the path to position the text.</param>
         <param name="paint">The paint used to draw the text.</param>
-        <summary>Draws text on the canvas following a bezier path.</summary>
+        <summary>Draws text on the canvas following a path.</summary>
         <remarks>
-          <para>Draw the <paramref name="text" />, using the specified <paramref name="paint" />, along the specified <paramref name="path" />. The paint's Align setting determins where along the path to start the text.</para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1166,6 +1420,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -1183,12 +1438,11 @@
         <param name="length">Number of bytes to read from the <paramref name="buffer." /></param>
         <param name="path">The path the text should follow for its baseline.</param>
         <param name="hOffset">The distance along the path to add to the text’s starting position.</param>
-        <param name="vOffset">The distance above(-) or below(+) the path to position the text.</param>
+        <param name="vOffset">The distance above (-) or below (+) the path to position the text.</param>
         <param name="paint">The paint used to draw the text.</param>
-        <summary>Draws text encoded in a UTF-8 buffer on the canvas following a bezier path.</summary>
+        <summary>Draws text encoded in a UTF-8 buffer on the canvas following a path.</summary>
         <remarks>
-          <para>Draw the <paramref name="text" />, using the specified <paramref name="paint" />, along the specified <paramref name="path" />. The paint's Align setting determins where along the path to start the text.</para>
-          <para>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains a UTF-8 encoded block of text.   This only consumes up to <paramref name="length" /> bytes from the buffer.</para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1199,14 +1453,15 @@
       <AssemblyInfo>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Triggers the immediate execution of all pending draw operations.</summary>
+        <remarks>For the GPU backend this will resolve all rendering to the GPU surface backing the surface that owns this canvas.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetClipBounds">
@@ -1219,6 +1474,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -1227,10 +1483,10 @@
         <Parameter Name="bounds" Type="SkiaSharp.SKRect&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="bounds">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="bounds">The resulting clip bounds.</param>
+        <summary>Returns the bounds of the current clip (in local coordinates).</summary>
+        <returns>Returns true if the clip bounds are non-empty, otherwise false.</returns>
+        <remarks>This can be useful in that it tells you that drawing outside of these bounds will be clipped out.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetClipDeviceBounds">
@@ -1243,6 +1499,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -1251,10 +1508,12 @@
         <Parameter Name="bounds" Type="SkiaSharp.SKRectI&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="bounds">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="bounds">The resulting clip bounds.</param>
+        <summary>Returns the bounds of the current clip (in device coordinates).</summary>
+        <returns>Returns true if the clip bounds are non-empty, otherwise false.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ResetMatrix">
@@ -1268,15 +1527,16 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Helper for setMatrix(identity). Sets the current matrix to identity.</summary>
+        <summary>Sets the current matrix to identity.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1291,6 +1551,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -1298,12 +1559,7 @@
       <Parameters />
       <Docs>
         <summary>Restore the canvas state.</summary>
-        <remarks>
-          <para>This call balances a previous call to <see cref="M:SkiaSharp.SKCanvas.Save" />, and is used to remove all modifications to the matrix, clip and draw filter state since the last Save call.</para>
-          <para>
-          </para>
-          <para>It is an error to call Restore() more times than Save() was called.</para>
-        </remarks>
+        <remarks>This call balances a previous call to <see cref="M:SkiaSharp.SKCanvas.Save" />, and is used to remove all modifications to the matrix, clip and draw filter state since the last save call. It is an error to restore more times than was previously saved.</remarks>
       </Docs>
     </Member>
     <Member MemberName="RestoreToCount">
@@ -1317,6 +1573,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -1325,13 +1582,9 @@
         <Parameter Name="count" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="count">The number of Save() levels to restore from.  Or -1 to restore all the way back to the initial value.</param>
-        <summary>Efficiently restore the state to a specific level.</summary>
-        <remarks>
-          <para>Efficient way to pop any calls to <see cref="M:SkiaSharp.SKCanvas.Save" /> that happened after the save count reached <paramref name="count" />. </para>
-          <para />
-          <para>It is an error for <paramref name="count" /> to be greater than <see cref="P:SkiaSharp.SKCanvas.SaveCount" />. To pop all the way back to the initial matrix/clip context set count to -1.</para>
-        </remarks>
+        <param name="count">The number of <see cref="M:SkiaSharp.SKCanvas.Save" /> levels to restore from, or -1 to restore all the way back to the initial value.</param>
+        <summary>Efficiently restores the state to a specific level.</summary>
+        <remarks>Efficient way to pop any calls to <see cref="M:SkiaSharp.SKCanvas.Save" /> that happened after the save count reached <paramref name="count" />. It is an error for <paramref name="count" /> to be greater than <see cref="P:SkiaSharp.SKCanvas.SaveCount" />. To pop all the way back to the initial matrix/clip context set count to -1.</remarks>
       </Docs>
     </Member>
     <Member MemberName="RotateDegrees">
@@ -1345,6 +1598,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -1354,10 +1608,9 @@
       </Parameters>
       <Docs>
         <param name="degrees">The number of degrees to rotate.</param>
-        <summary>Preconcat the current matrix with the specified rotation.</summary>
+        <summary>Pre-concats the current matrix with the specified rotation.</summary>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1369,6 +1622,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -1379,11 +1633,13 @@
         <Parameter Name="py" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="degrees">To be added.</param>
-        <param name="px">To be added.</param>
-        <param name="py">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="degrees">The number of degrees to rotate.</param>
+        <param name="px">The x-coordinate of the point to rotate about.</param>
+        <param name="py">The y-coordinate of the point to rotate about.</param>
+        <summary>Pre-concats the current matrix with the specified rotation, around the specified point.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="RotateRadians">
@@ -1397,6 +1653,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -1405,11 +1662,10 @@
         <Parameter Name="radians" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="radians">The number of radiants to rotate.</param>
-        <summary>Preconcat the current matrix with the specified rotation.</summary>
+        <param name="radians">The number of radians to rotate.</param>
+        <summary>Pre-concats the current matrix with the specified rotation.</summary>
         <remarks>
-          <para>
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1421,6 +1677,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -1431,11 +1688,13 @@
         <Parameter Name="py" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="radians">To be added.</param>
-        <param name="px">To be added.</param>
-        <param name="py">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="radians">The number of radians to rotate.</param>
+        <param name="px">The x-coordinate of the point to rotate about.</param>
+        <param name="py">The y-coordinate of the point to rotate about.</param>
+        <summary>Pre-concats the current matrix with the specified rotation, around the specified point.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Save">
@@ -1449,6 +1708,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -1456,14 +1716,8 @@
       <Parameters />
       <Docs>
         <summary>Saves the canvas state.</summary>
-        <returns>
-          <para>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> to balance this save.</para>
-        </returns>
-        <remarks>
-          <para>This call saves the current matrix, clip, and draw filter, and pushes a copy onto a private stack. </para>
-          <para>Subsequent calls to translate, scale, rotate, skew, concat or clipping path or drawing filter all operate on this copy.</para>
-          <para>When the balancing call to <see cref="M:SkiaSharp.SKCanvas.Restore" /> is made, the previous matrix, clipping, and drawing filters are restored.</para>
-        </remarks>
+        <returns>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> to balance this save.</returns>
+        <remarks>This call saves the current matrix, clip, and draw filter, and pushes a copy onto a private stack. Subsequent calls to translate, scale, rotate, skew, concat or clipping path or drawing filter all operate on this copy. When the balancing call to <see cref="M:SkiaSharp.SKCanvas.Restore" /> is made, the previous matrix, clipping, and drawing filters are restored.</remarks>
       </Docs>
     </Member>
     <Member MemberName="SaveCount">
@@ -1477,19 +1731,17 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Returns the number of matrix/clip states on the SkCanvas' private stack.</summary>
+        <summary>Gets the number of matrix/clip states on the canvas' private stack.</summary>
         <value>
-          <para>This will equal the number of Save calls minus Retore calls + 1. The save count on a new canvas is 1.</para>
+          <para></para>
         </value>
-        <remarks>
-          <para>
-          </para>
-        </remarks>
+        <remarks>This will equal the number of <see cref="M:SkiaSharp.SKCanvas.Save" /> calls minus <see cref="M:SkiaSharp.SKCanvas.Restore" /> calls + 1. The save count on a new canvas is 1.</remarks>
       </Docs>
     </Member>
     <Member MemberName="SaveLayer">
@@ -1503,6 +1755,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -1513,10 +1766,8 @@
       <Docs>
         <param name="paint">This is copied, and is applied to the offscreen when <see cref="M:SkiaSharp.SKCanvas.Restore" /> is called.</param>
         <summary>Saves the canvas state and allocates an offscreen bitmap.</summary>
-        <returns>
-          <para>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> to balance this save.</para>
-        </returns>
-        <remarks>This behaves the same as save(), but in addition it allocates an offscreen bitmap. All drawing calls are directed there, and only when the balancing call to restore() is made is that offscreen transfered to the canvas (or the previous layer).</remarks>
+        <returns>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> to balance this save.</returns>
+        <remarks>This behaves the same as <see cref="M:SkiaSharp.SKCanvas.Save" /> but in addition it allocates an offscreen bitmap. All drawing calls are directed there, and only when the balancing call to <see cref="M:SkiaSharp.SKCanvas.Restore" /> is made is that offscreen transfered to the canvas (or the previous layer).</remarks>
       </Docs>
     </Member>
     <Member MemberName="SaveLayer">
@@ -1530,6 +1781,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -1539,18 +1791,13 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="limit">
-          <para>This rectangle, is used as a hint to limit the size of the offscreen, and thus drawing may be clipped to it, though that clipping is not guaranteed to happen. If exact clipping is desired, use <see cref="M:SkiaSharp.SKCanvas.ClipRect" /></para>
-        </param>
-        <param name="paint">
-          <para>This is copied, and is applied to the offscreen when <see cref="M:SkiaSharp.SKCanvas.Restore" /> is called.</para>
-        </param>
+        <param name="limit">This clipping rectangle hint to limit the size of the offscreen bitmap.</param>
+        <param name="paint">This is copied, and is applied to the offscreen when <see cref="M:SkiaSharp.SKCanvas.Restore" /> is called.</param>
         <summary>Saves the canvas state and allocates an offscreen bitmap.</summary>
-        <returns>
-          <para>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> to balance this save.</para>
-        </returns>
+        <returns>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> to balance this save.</returns>
         <remarks>
-          <para>This behaves the same as save(), but in addition it allocates an offscreen bitmap. All drawing calls are directed there, and only when the balancing call to restore() is made is that offscreen transfered to the canvas (or the previous layer).</para>
+          <para>This behaves the same as <see cref="M:SkiaSharp.SKCanvas.Save" /> but in addition it allocates an offscreen bitmap. All drawing calls are directed there, and only when the balancing call to <see cref="M:SkiaSharp.SKCanvas.Restore" /> is made is that offscreen transfered to the canvas (or the previous layer).</para>
+          <para>The limit rectangle, is used as a hint to limit the size of the offscreen bitmap, and thus drawing may be clipped to it, though that clipping is not guaranteed to happen. If exact clipping is desired, use <see cref="M:SkiaSharp.SKCanvas.ClipRect" />.</para>
         </remarks>
       </Docs>
     </Member>
@@ -1565,6 +1812,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -1574,9 +1822,30 @@
       </Parameters>
       <Docs>
         <param name="size">The amount to scale.</param>
-        <summary>Preconcat the current matrix with the specified scale.</summary>
+        <summary>Pre-concats the current matrix with the specified scale.</summary>
         <remarks>
-          <para />
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Scale">
+      <MemberSignature Language="C#" Value="public void Scale (float s);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Scale(float32 s) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="s" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="s">The amount to scale.</param>
+        <summary>Pre-concats the current matrix with the specified scale.</summary>
+        <remarks>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1591,6 +1860,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -1600,11 +1870,11 @@
         <Parameter Name="sy" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="sx">The amount to scale in X</param>
-        <param name="sy">The amount to scale in Y</param>
-        <summary>Preconcat the current matrix with the specified scale.</summary>
+        <param name="sx">The amount to scale in the x-direction.</param>
+        <param name="sy">The amount to scale in the y-direction.</param>
+        <summary>Pre-concats the current matrix with the specified scale.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1616,6 +1886,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -1627,12 +1898,14 @@
         <Parameter Name="py" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="sx">To be added.</param>
-        <param name="sy">To be added.</param>
-        <param name="px">To be added.</param>
-        <param name="py">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="sx">The amount to scale in the x-direction.</param>
+        <param name="sy">The amount to scale in the y-direction.</param>
+        <param name="px">The x-coordinate for the scaling center.</param>
+        <param name="py">The y-coordinate for the scaling center.</param>
+        <summary>Pre-concats the current matrix with the specified scale, at the specific offset.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="SetMatrix">
@@ -1646,6 +1919,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -1655,9 +1929,9 @@
       </Parameters>
       <Docs>
         <param name="matrix">The matrix that will be copied into the current matrix.</param>
-        <summary>Replace the current matrix with a copy of the specified matrix.</summary>
+        <summary>Replaces the current matrix with a copy of the specified matrix.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1672,6 +1946,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -1681,9 +1956,9 @@
       </Parameters>
       <Docs>
         <param name="skew">The amount to skew.</param>
-        <summary>Preconcat the current matrix with the specified skew.</summary>
+        <summary>Pre-concats the current matrix with the specified skew.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1698,6 +1973,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -1707,11 +1983,11 @@
         <Parameter Name="sy" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="sx">The amount to skew in X.</param>
-        <param name="sy">The amount to skew in Y.</param>
-        <summary>Preconcat the current matrix with the specified skew.</summary>
+        <param name="sx">The amount to skew in the x-direction.</param>
+        <param name="sy">The amount to skew in the y-direction.</param>
+        <summary>Pre-concats the current matrix with the specified skew.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1726,13 +2002,16 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKMatrix</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Return the current matrix on the canvas.</summary>
-        <value>The current matrix on the canvas.</value>
+        <summary>Gets the current matrix on the canvas.</summary>
+        <value>
+          <para></para>
+        </value>
         <remarks>This does not account for the translate in any of the devices.</remarks>
       </Docs>
     </Member>
@@ -1747,6 +2026,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -1756,9 +2036,9 @@
       </Parameters>
       <Docs>
         <param name="point">The distance to translate.</param>
-        <summary>Preconcat the current matrix with the specified translation</summary>
+        <summary>Pre-concats the current matrix with the specified translation.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1773,6 +2053,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -1782,11 +2063,11 @@
         <Parameter Name="dy" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="dx">The distance to translate in X.</param>
-        <param name="dy">The distance to translate in Y.</param>
-        <summary>Preconcat the current matrix with the specified translation</summary>
+        <param name="dx">The distance to translate in the x-direction</param>
+        <param name="dy">The distance to translate in the y-direction.</param>
+        <summary>Pre-concats the current matrix with the specified translation.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>

@@ -4,7 +4,11 @@ using CoreGraphics;
 using OpenGLES;
 using OpenTK.Graphics.ES20;
 
-namespace SkiaSharp.Views
+#if __IOS__
+namespace SkiaSharp.Views.iOS
+#elif __TVOS__
+namespace SkiaSharp.Views.tvOS
+#endif
 {
 	public class SKGLLayer : CAEAGLLayer
 	{

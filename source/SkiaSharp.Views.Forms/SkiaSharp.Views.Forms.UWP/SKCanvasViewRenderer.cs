@@ -3,7 +3,7 @@ using Xamarin.Forms;
 using Xamarin.Forms.Platform.UWP;
 
 using SKFormsView = SkiaSharp.Views.Forms.SKCanvasView;
-using SKNativeView = SkiaSharp.Views.SKXamlCanvas;
+using SKNativeView = SkiaSharp.Views.UWP.SKXamlCanvas;
 
 [assembly: ExportRenderer(typeof(SKFormsView), typeof(SkiaSharp.Views.Forms.SKCanvasViewRenderer))]
 
@@ -66,7 +66,7 @@ namespace SkiaSharp.Views.Forms
 				this.controller = controller;
 			}
 
-			protected override void OnPaintSurface(SkiaSharp.Views.SKPaintSurfaceEventArgs e)
+			protected override void OnPaintSurface(SkiaSharp.Views.UWP.SKPaintSurfaceEventArgs e)
 			{
 				base.OnPaintSurface(e);
 

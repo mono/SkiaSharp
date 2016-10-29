@@ -1,7 +1,7 @@
 using System;
 using AppKit;
 using SkiaSharp;
-using SkiaSharp.Views;
+using SkiaSharp.Views.Mac;
 
 namespace SkiaSharpSample.MacSample
 {

@@ -9,28 +9,17 @@
     <AssemblyVersion>1.53.0.0</AssemblyVersion>
     <AssemblyVersion>1.54.0.0</AssemblyVersion>
     <AssemblyVersion>1.54.0.0</AssemblyVersion>
+    <AssemblyVersion>1.55.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>SkiaSharp.SKObject</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>
-    <summary>The SKTypeface class specifies the typeface and intrinsic style of a font.</summary>
+    <summary>Represents a specific typeface and intrinsic style of a font.</summary>
     <remarks>
-      <para>This is used in the paint, along with optionally algorithmic settings like textSize, textSkewX, textScaleX, FakeBoldText, to specifyhow text appears when drawn (and measured).</para>
-      <para>
-      </para>
+      <para>This is used in the paint, along with optionally algorithmic settings like <see cref="P:SkiaSharp.SKPaint.TextSize" />, <see cref="P:SkiaSharp.SKPaint.TextSkewX" />  <see cref="P:SkiaSharp.SKPaint.TextScaleX" />  <see cref="P:SkiaSharp.SKPaint.FakeBoldText" />, to specify how text appears when drawn (and measured). </para>
       <para>Typeface objects are immutable, and so they can be shared between threads.</para>
-      <para>If you want to create type faces with specific weights not covered by the SKTypefaceStyle, you can pass a suffix to the font family name to trigger this, like this:</para>
-      <para>
-      </para>
-      <para>
-      </para>
-      <code lang="C#"><![CDATA[var myThinFace = SKTypeface.FromFamilyName ("sans-serif-thin");]]></code>
-      <para>
-      </para>
-      <para>
-      </para>
     </remarks>
   </Docs>
   <Members>
@@ -45,6 +34,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -54,13 +44,13 @@
         <Parameter Name="glyphs" Type="System.UInt16[]&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="chars">To be added.</param>
-        <param name="glyphs">To be added.</param>
-        <summary>
-          <para>Given a string, optionally return their corresponding glyph IDs.</para>
-        </summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="chars">The string containing characters.</param>
+        <param name="glyphs">Destination for the corresponding glyph IDs for each character.</param>
+        <summary>Given a string, optionally return their corresponding glyph IDs.</summary>
+        <returns>The number of number of continuous non-zero glyph IDs computed from the beginning of chars.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CharsToGlyphs">
@@ -74,6 +64,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -85,15 +76,15 @@
         <Parameter Name="glyphs" Type="System.UInt16[]&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="str">To be added.</param>
-        <param name="strlen">To be added.</param>
-        <param name="encoding">To be added.</param>
-        <param name="glyphs">To be added.</param>
-        <summary>
-          <para>Given a buffer containing character codes, of the specified encoding, optionally return their corresponding glyph IDs.</para>
-        </summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="str">The buffer of character codes.</param>
+        <param name="strlen">The length of the buffer.</param>
+        <param name="encoding">How the characters are encoded.</param>
+        <param name="glyphs">Destination for the corresponding glyph IDs for each character.</param>
+        <summary>Given a buffer containing character codes, of the specified encoding, optionally return their corresponding glyph IDs.</summary>
+        <returns>The number of number of continuous non-zero glyph IDs computed from the beginning of chars.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CountGlyphs">
@@ -107,6 +98,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -115,10 +107,12 @@
         <Parameter Name="str" Type="System.String" />
       </Parameters>
       <Docs>
-        <param name="str">To be added.</param>
+        <param name="str">The string containing characters.</param>
         <summary>Returns the number of glyphs on the string.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <returns>The number of number of continuous non-zero glyph IDs computed from the beginning of chars.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CountGlyphs">
@@ -132,6 +126,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -142,12 +137,14 @@
         <Parameter Name="encoding" Type="SkiaSharp.SKEncoding" />
       </Parameters>
       <Docs>
-        <param name="str">To be added.</param>
-        <param name="strLen">To be added.</param>
-        <param name="encoding">To be added.</param>
+        <param name="str">The buffer of character codes.</param>
+        <param name="strLen">The length of the buffer.</param>
+        <param name="encoding">How the characters are encoded.</param>
         <summary>Returns the number of glyphs on the specified buffer with the specified length and encoding.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <returns>The number of number of continuous non-zero glyph IDs computed from the beginning of chars.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -161,6 +158,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -184,14 +182,71 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.String</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the family name for the typeface.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>The family name will always be returned encoded as UTF8, but the language of the name is whatever the host platform chooses.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FontSlant">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKFontStyleSlant FontSlant { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKFontStyleSlant FontSlant" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKFontStyleSlant</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the font slant for the typeface.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>This may be one of the values in <see cref="T:SkiaSharp.SKFontStyleSlant" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FontWeight">
+      <MemberSignature Language="C#" Value="public int FontWeight { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance int32 FontWeight" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the font weight for the typeface.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>This may be one of the values in <see cref="T:SkiaSharp.SKFontStyleWeight" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FontWidth">
+      <MemberSignature Language="C#" Value="public int FontWidth { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance int32 FontWidth" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the font width for the typeface.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>This may be one of the values in <see cref="T:SkiaSharp.SKFontStyleWidth" />.</remarks>
       </Docs>
     </Member>
     <Member MemberName="FromFamilyName">
@@ -205,6 +260,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKTypeface</ReturnType>
@@ -214,13 +270,13 @@
         <Parameter Name="style" Type="SkiaSharp.SKTypefaceStyle" />
       </Parameters>
       <Docs>
-        <param name="familyName">May be <paramref name="null" />. The name of the font family.</param>
+        <param name="familyName">The name of the font family. May be <paramref name="null" />.</param>
         <param name="style">The style (normal, bold, italic) of the typeface.</param>
-        <summary>
-          <para>Return a new reference to the typeface that most closely matches the requested family name and style. </para>
-        </summary>
-        <returns>Reference to the closest-matching typeface. </returns>
-        <remarks>To be added.</remarks>
+        <summary>Returns a new instance to a typeface that most closely matches the requested family name and style.</summary>
+        <returns>Returns to the closest-matching typeface.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromFamilyName">
@@ -232,6 +288,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKTypeface</ReturnType>
@@ -243,13 +300,15 @@
         <Parameter Name="slant" Type="SkiaSharp.SKFontStyleSlant" />
       </Parameters>
       <Docs>
-        <param name="familyName">To be added.</param>
-        <param name="weight">To be added.</param>
-        <param name="width">To be added.</param>
-        <param name="slant">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="familyName">The name of the font family. May be <paramref name="null" />.</param>
+        <param name="weight">The weight of the typeface.</param>
+        <param name="width">The width of the typeface.</param>
+        <param name="slant">The slant of the typeface.</param>
+        <summary>Return a new instance to a typeface that most closely matches the requested family name and style.</summary>
+        <returns>Returns to the closest-matching typeface.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromFamilyName">
@@ -261,6 +320,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKTypeface</ReturnType>
@@ -272,13 +332,15 @@
         <Parameter Name="slant" Type="SkiaSharp.SKFontStyleSlant" />
       </Parameters>
       <Docs>
-        <param name="familyName">To be added.</param>
-        <param name="weight">To be added.</param>
-        <param name="width">To be added.</param>
-        <param name="slant">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="familyName">The name of the font family. May be <paramref name="null" />.</param>
+        <param name="weight">The weight of the typeface.</param>
+        <param name="width">The width of the typeface.</param>
+        <param name="slant">The slant of the typeface.</param>
+        <summary>Return a new instance to a typeface that most closely matches the requested family name and style.</summary>
+        <returns>Returns to the closest-matching typeface.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromFile">
@@ -292,6 +354,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKTypeface</ReturnType>
@@ -301,15 +364,12 @@
         <Parameter Name="index" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="path">path of the file.</param>
+        <param name="path">The path of the file.</param>
         <param name="index">The font face index.</param>
-        <summary>Return a new typeface given a file. </summary>
-        <returns>
-          <para>
-          </para>
-        </returns>
+        <summary>Returns a new typeface given a file. </summary>
+        <returns>Returns a new typeface, or <paramref name="null" /> if the file does not exist, or is not a valid font file.</returns>
         <remarks>
-          <para>If the file does not exist, or is not a valid font file, returns <paramref name="null" />.</para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -324,6 +384,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKTypeface</ReturnType>
@@ -335,11 +396,10 @@
       <Docs>
         <param name="stream">The input stream.</param>
         <param name="index">The font face index.</param>
-        <summary>Return a new typeface given a stream. Ownership of the stream is transferred, so the caller must not reference it again.</summary>
-        <returns>If the stream is not a valid font file, returns <paramref name="null" />. </returns>
+        <summary>Returns a new typeface given a stream. Ownership of the stream is transferred, so the caller must not reference it again.</summary>
+        <returns>Returns a new typeface, or <paramref name="null" /> if the file does not exist, or is not a valid font file.</returns>
         <remarks>
-          <para>
-          </para>
+          <para></para>
           <example>
             <code lang="C#"><![CDATA[var stream = new SKFileStream (“myfont.ttf”);
 using (var tf = SKTypeface.FromStream (stream)) {
@@ -350,7 +410,8 @@ using (var tf = SKTypeface.FromStream (stream)) {
     canvas.DrawText (text, 50, 100, paint);
 }
 ]]></code>
-          </example>.</remarks>
+          </example>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTypeface">
@@ -364,6 +425,7 @@ using (var tf = SKTypeface.FromStream (stream)) {
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKTypeface</ReturnType>
@@ -373,13 +435,13 @@ using (var tf = SKTypeface.FromStream (stream)) {
         <Parameter Name="style" Type="SkiaSharp.SKTypefaceStyle" />
       </Parameters>
       <Docs>
-        <param name="typeface">May be <paramref name="null" />. The name of the existing type face.</param>
+        <param name="typeface">The typeface to use for the family name.</param>
         <param name="style">The style (normal, bold, italic) of the type face.</param>
-        <summary>
-          <para>Return a new reference to the typeface that most closely matches the requested typeface and specified Style</para>
-        </summary>
-        <returns>reference to the closest-matching typeface. </returns>
-        <remarks>To be added.</remarks>
+        <summary>Return a new reference to the typeface that most closely matches the requested typeface and specified style</summary>
+        <returns>Returns to the closest-matching typeface.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetTableData">
@@ -392,6 +454,7 @@ using (var tf = SKTypeface.FromStream (stream)) {
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Byte[]</ReturnType>
@@ -400,10 +463,12 @@ using (var tf = SKTypeface.FromStream (stream)) {
         <Parameter Name="tag" Type="System.UInt32" />
       </Parameters>
       <Docs>
-        <param name="tag">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="tag">The table tag to get the data for.</param>
+        <summary>Returns the contents of the table data for the specified tag.</summary>
+        <returns>Returns the contents, if it exists, otherwise throws.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetTableTags">
@@ -416,15 +481,40 @@ using (var tf = SKTypeface.FromStream (stream)) {
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.UInt32[]</ReturnType>
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Returns the list of table tags in the font.</summary>
+        <returns>
+          <para></para>
+        </returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Style">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKTypefaceStyle Style { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKTypefaceStyle Style" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKTypefaceStyle</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the the typeface's intrinsic style attributes.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="TryGetTableData">
@@ -437,6 +527,7 @@ using (var tf = SKTypeface.FromStream (stream)) {
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -446,11 +537,13 @@ using (var tf = SKTypeface.FromStream (stream)) {
         <Parameter Name="tableData" Type="System.Byte[]&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="tag">To be added.</param>
-        <param name="tableData">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="tag">The table tag to get the data for.</param>
+        <param name="tableData">The contents of the table data for the specified tag.</param>
+        <summary>Returns the contents of the table data for the specified tag.</summary>
+        <returns>Returns true if the content exists, otherwise false.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
   </Members>

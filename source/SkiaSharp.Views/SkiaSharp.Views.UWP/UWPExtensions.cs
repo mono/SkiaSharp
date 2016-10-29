@@ -1,7 +1,7 @@
 ﻿using Windows.Foundation;
 using Windows.UI;
 
-namespace SkiaSharp.Views
+namespace SkiaSharp.Views.UWP
 {
 	public static class UWPExtensions
 	{

@@ -7,14 +7,17 @@
     <AssemblyVersion>1.53.0.0</AssemblyVersion>
     <AssemblyVersion>1.54.0.0</AssemblyVersion>
     <AssemblyVersion>1.54.0.0</AssemblyVersion>
+    <AssemblyVersion>1.55.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>SkiaSharp.SKObject</BaseTypeName>
   </Base>
   <Interfaces />
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>The base class for objects in the <see cref="T:SkiaSharp.SKPaint" /> that affect the geometry of a drawing primitive before it is transformed by the canvas' matrix and drawn.</summary>
+    <remarks>
+      <para></para>
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName="Create1DPath">
@@ -26,7 +29,13 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Obsolete("Use Create1DPath(SKPath, float, float, SKPath1DPathEffectStyle) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPathEffect</ReturnType>
       </ReturnValue>
@@ -37,13 +46,43 @@
         <Parameter Name="style" Type="SkiaSharp.SkPath1DPathEffectStyle" />
       </Parameters>
       <Docs>
-        <param name="path">To be added.</param>
-        <param name="advance">To be added.</param>
-        <param name="phase">To be added.</param>
-        <param name="style">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="path">The path to replicate (dash).</param>
+        <param name="advance">The space between instances of path.</param>
+        <param name="phase">The distance (mod advance) along path for its initial position.</param>
+        <param name="style">How to transform path at each point (based on the current position and tangent).</param>
+        <summary>Dash by replicating the specified path.</summary>
+        <returns>Returns the new path effect.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Create1DPath">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKPathEffect Create1DPath (SkiaSharp.SKPath path, float advance, float phase, SkiaSharp.SKPath1DPathEffectStyle style);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKPathEffect Create1DPath(class SkiaSharp.SKPath path, float32 advance, float32 phase, valuetype SkiaSharp.SKPath1DPathEffectStyle style) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPathEffect</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="path" Type="SkiaSharp.SKPath" />
+        <Parameter Name="advance" Type="System.Single" />
+        <Parameter Name="phase" Type="System.Single" />
+        <Parameter Name="style" Type="SkiaSharp.SKPath1DPathEffectStyle" />
+      </Parameters>
+      <Docs>
+        <param name="path">The path to replicate (dash).</param>
+        <param name="advance">The space between instances of path.</param>
+        <param name="phase">The distance (mod advance) along path for its initial position.</param>
+        <param name="style">How to transform path at each point (based on the current position and tangent).</param>
+        <summary>Dash by replicating the specified path.</summary>
+        <returns>Returns the new path effect.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Create2DLine">
@@ -55,6 +94,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPathEffect</ReturnType>
@@ -65,10 +105,12 @@
       </Parameters>
       <Docs>
         <param name="width">To be added.</param>
-        <param name="matrix">To be added.</param>
+        <param name="matrix">The matrix.</param>
         <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <returns>Returns the new path effect.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Create2DPath">
@@ -80,6 +122,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPathEffect</ReturnType>
@@ -89,11 +132,13 @@
         <Parameter Name="path" Type="SkiaSharp.SKPath" />
       </Parameters>
       <Docs>
-        <param name="matrix">To be added.</param>
-        <param name="path">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="matrix">The matrix.</param>
+        <param name="path">The path.</param>
+        <summary>Stamp the specified path to fill the shape, using the matrix to define the latice.</summary>
+        <returns>Returns the new path effect.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateCompose">
@@ -105,6 +150,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPathEffect</ReturnType>
@@ -114,11 +160,11 @@
         <Parameter Name="inner" Type="SkiaSharp.SKPathEffect" />
       </Parameters>
       <Docs>
-        <param name="outer">To be added.</param>
-        <param name="inner">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="outer">The second path effect to apply.</param>
+        <param name="inner">The first path effect to apply.</param>
+        <summary>Creates a compound path effect.</summary>
+        <returns>Returns the new path effect.</returns>
+        <remarks>The effect is to apply first the inner path effect and the the outer path effect (e.g. outer(inner(path))).</remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateCorner">
@@ -130,6 +176,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPathEffect</ReturnType>
@@ -138,10 +185,12 @@
         <Parameter Name="radius" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="radius">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="radius">The radius to use, must be &gt; 0 to have an effect.</param>
+        <summary>A path effect that can turn sharp corners into various treatments (e.g. rounded corners).</summary>
+        <returns>Returns the new path effect.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateDash">
@@ -153,6 +202,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPathEffect</ReturnType>
@@ -162,11 +212,15 @@
         <Parameter Name="phase" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="intervals">To be added.</param>
-        <param name="phase">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="intervals">The definition of the dash pattern via an even number of entries.</param>
+        <param name="phase">The offset into the intervals array. (mod the sum of all of the intervals).</param>
+        <summary>Dash by specifying the dash intervals.</summary>
+        <returns>Returns the new path effect.</returns>
+        <remarks>
+          <para>The dash pattern is defined via an array containing an even number of entries (&gt;=2), with the even indices specifying the length of "on" intervals, and the odd indices specifying the length of "off” intervals.</para>
+          <para>For example: if the intervals = new [] { 10, 20 } and the phase = 25, then the dash pattern will be: 5 pixels off, 10 pixels on, 20 pixels off, 10 pixels on, 20 pixels off, etc. A phase of -5, 25, 55, 85, etc. would all result in the same path, because the sum of all the intervals is 30.</para>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateDiscrete">
@@ -178,6 +232,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPathEffect</ReturnType>
@@ -188,12 +243,14 @@
         <Parameter Name="seedAssist" Type="System.UInt32" />
       </Parameters>
       <Docs>
-        <param name="segLength">To be added.</param>
-        <param name="deviation">To be added.</param>
-        <param name="seedAssist">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="segLength">The length of the segments to break the path into.</param>
+        <param name="deviation">The maximum distance to move the point away from the original path.</param>
+        <param name="seedAssist">The randomizer seed to use.</param>
+        <summary>Chops a path into discrete segments, and randomly displaces them.</summary>
+        <returns>Returns the new path effect.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateSum">
@@ -205,6 +262,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPathEffect</ReturnType>
@@ -214,11 +272,11 @@
         <Parameter Name="second" Type="SkiaSharp.SKPathEffect" />
       </Parameters>
       <Docs>
-        <param name="first">To be added.</param>
-        <param name="second">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="first">The first path effect to apply.</param>
+        <param name="second">The second path effect to apply.</param>
+        <summary>Creates a compound path effect.</summary>
+        <returns>Returns the new path effect.</returns>
+        <remarks>The effect is to apply one path after the other.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -230,6 +288,7 @@
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
