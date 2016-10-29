@@ -20,6 +20,8 @@ namespace SkiaSharp.Views.Desktop
 			designMode = DesignMode || LicenseManager.UsageMode == LicenseUsageMode.Designtime;
 		}
 
+		public SKSize CanvasSize => bitmap == null ? SKSize.Empty : new SKSize(bitmap.Width, bitmap.Height);
+
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
 		protected override void OnPaint(PaintEventArgs e)
