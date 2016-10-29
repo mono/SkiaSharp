@@ -1515,6 +1515,10 @@ namespace SkiaSharp
 			set { bottom = value; }
 		}
 
+		public int MidX => left + (Width / 2);
+
+		public int MidY => top + (Height / 2);
+
 		public int Width => right - left;
 
 		public int Height => bottom - top;
@@ -1536,6 +1540,28 @@ namespace SkiaSharp
 				top = value.Y; 
 			}
 		}
+
+		public SKRectI Standardized {
+			get {
+				if (left > right) {
+					if (top > bottom) {
+						return new SKRectI (right, bottom, left, top);
+					} else {
+						return new SKRectI (right, top, left, bottom);
+					}
+				} else {
+					if (top > bottom) {
+						return new SKRectI (left, bottom, right, top);
+					} else {
+						return new SKRectI (left, top, right, bottom);
+					}
+				}
+			}
+		}
+
+		public SKRectI AspectFit (SKSizeI size) => Truncate (((SKRect)this).AspectFit (size));
+
+		public SKRectI AspectFill (SKSizeI size) => Truncate (((SKRect)this).AspectFill (size));
 
 		public static SKRectI Ceiling (SKRect value)
 		{
@@ -1767,6 +1793,10 @@ namespace SkiaSharp
 			set { bottom = value; }
 		}
 
+		public float MidX => left + (Width / 2f);
+
+		public float MidY => top + (Height / 2f);
+
 		public float Width => right - left;
 
 		public float Height => bottom - top;
@@ -1787,6 +1817,52 @@ namespace SkiaSharp
 				left = value.X;
 				top = value.Y; 
 			}
+		}
+
+		public SKRect Standardized {
+			get {
+				if (left > right) {
+					if (top > bottom) {
+						return new SKRect (right, bottom, left, top);
+					} else {
+						return new SKRect (right, top, left, bottom);
+					}
+				} else {
+					if (top > bottom) {
+						return new SKRect (left, bottom, right, top);
+					} else {
+						return new SKRect (left, top, right, bottom);
+					}
+				}
+			}
+		}
+
+		public SKRect AspectFit (SKSize size) => AspectResize (size, true);
+
+		public SKRect AspectFill (SKSize size) => AspectResize (size, false);
+
+		private SKRect AspectResize (SKSize size, bool fit)
+		{
+			if (size.Width == 0 || size.Height == 0 || Width == 0 || Height == 0)
+				return SKRect.Create (MidX, MidY, 0, 0);
+
+			float aspectWidth = size.Width;
+			float aspectHeight = size.Height;
+			float imgAspect = aspectWidth / aspectHeight;
+			float fullRectAspect = Width / Height;
+
+			bool compare = fit ? (fullRectAspect > imgAspect) : (fullRectAspect < imgAspect);
+			if (compare) {
+				aspectHeight = Height;
+				aspectWidth = aspectHeight * imgAspect;
+			} else {
+				aspectWidth = Width;
+				aspectHeight = aspectWidth / imgAspect;
+			}
+			float aspectLeft = MidX - (aspectWidth / 2f);
+			float aspectTop = MidY - (aspectHeight / 2f);
+
+			return SKRect.Create (aspectLeft, aspectTop, aspectWidth, aspectHeight);
 		}
 
 		public static SKRect Inflate (SKRect rect, float x, float y)
