@@ -1,6 +1,7 @@
 ﻿using System;
 using Xamarin.Forms;
 
+using SkiaSharp;
 using SkiaSharp.Views.Forms;
 
 namespace SkiaSharpSample.FormsSample
@@ -60,11 +61,21 @@ namespace SkiaSharpSample.FormsSample
 		private void OnPaintSample(object sender, SKPaintSurfaceEventArgs e)
 		{
 			Sample?.DrawSample(e.Surface.Canvas, e.Info.Width, e.Info.Height);
+
+			e.Surface.Canvas.ResetMatrix();
+			var view = sender as SKCanvasView;
+			var paint = new SKPaint { TextSize = 20 };
+			e.Surface.Canvas.DrawText($"{view.CanvasSize.Width} / {view.Width} = {view.CanvasSize.Width / view.Width}", 10, 30, paint);
 		}
 
 		private void OnPaintGLSample(object sender, SKPaintGLSurfaceEventArgs e)
 		{
 			Sample?.DrawSample(e.Surface.Canvas, e.RenderTarget.Width, e.RenderTarget.Height);
+
+			e.Surface.Canvas.ResetMatrix();
+			var view = sender as SKGLView;
+			var paint = new SKPaint { TextSize = 20 };
+			e.Surface.Canvas.DrawText($"{view.CanvasSize.Width} / {view.Width} = {view.CanvasSize.Width / view.Width}", 10, 30, paint);
 		}
 
 		private void RefreshSamples()
