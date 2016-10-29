@@ -18,6 +18,8 @@ namespace SkiaSharp.Views.Mac
 		private IntPtr bitmapData;
 		private int lastLength;
 
+		public SKImageInfo Info { get; private set; }
+
 		public SKSurface CreateSurface(CGRect contentsBounds, nfloat scale, out SKImageInfo info)
 		{
 			// apply a scale
@@ -26,6 +28,7 @@ namespace SkiaSharp.Views.Mac
 
 			// get context details
 			info = new SKImageInfo((int)contentsBounds.Width, (int)contentsBounds.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
+			Info = info;
 
 			// allocate a memory block for the drawing process
 			var newLength = info.BytesSize;

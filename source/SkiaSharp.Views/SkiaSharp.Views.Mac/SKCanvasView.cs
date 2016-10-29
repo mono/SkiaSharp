@@ -43,6 +43,8 @@ namespace SkiaSharp.Views.Mac
 			drawable = new SKDrawable();
 		}
 
+		public SKSize CanvasSize => drawable.Info.Size;
+
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
 		public virtual void DrawInSurface(SKSurface surface, SKImageInfo info)

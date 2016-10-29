@@ -42,6 +42,8 @@ namespace SkiaSharp.Views.Android
 			info = new SKImageInfo(0, 0, SKColorType.Rgba8888, SKAlphaType.Premul);
 		}
 
+		public SKSize CanvasSize => info.Size;
+
 		protected override void OnDraw(Canvas canvas)
 		{
 			base.OnDraw(canvas);

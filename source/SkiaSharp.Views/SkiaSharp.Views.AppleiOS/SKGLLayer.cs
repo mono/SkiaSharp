@@ -26,6 +26,8 @@ namespace SkiaSharp.Views.tvOS
 
 		public ISKGLLayerDelegate SKDelegate { get; set; }
 
+		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
+
 		public virtual void Render()
 		{
 			if (glContext == null)
@@ -66,7 +68,7 @@ namespace SkiaSharp.Views.tvOS
 				if (glContext != null)
 				{
 					ResizeGLContexts();
-					renderTarget = default(GRBackendRenderTargetDesc);
+					renderTarget = SKGLDrawable.CreateRenderTarget();
 				}
 				Render();
 			}

@@ -44,6 +44,8 @@ namespace SkiaSharp.Views.Mac
 			WantsBestResolutionOpenGLSurface = true;
 		}
 
+		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
+
 		public override void PrepareOpenGL()
 		{
 			base.PrepareOpenGL();
