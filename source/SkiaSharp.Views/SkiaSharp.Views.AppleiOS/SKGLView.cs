@@ -63,6 +63,8 @@ namespace SkiaSharp.Views.tvOS
 			Delegate = this;
 		}
 
+		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
+
 		public new void DrawInRect(GLKView view, CGRect rect)
 		{
 			if (designMode)

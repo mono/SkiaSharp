@@ -24,6 +24,8 @@ namespace SkiaSharp.Views.Mac
 
 		public ISKCanvasLayerDelegate SKDelegate { get; set; }
 
+		public SKSize CanvasSize => drawable.Info.Size;
+
 		public override void DrawInContext(CGContext ctx)
 		{
 			base.DrawInContext(ctx);

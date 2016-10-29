@@ -1,6 +1,7 @@
 ﻿using System;
 using Xamarin.Forms;
 
+using SkiaSharp;
 using SkiaSharp.Views.Forms;
 
 namespace SkiaSharpSample.FormsSample
@@ -60,11 +61,37 @@ namespace SkiaSharpSample.FormsSample
 		private void OnPaintSample(object sender, SKPaintSurfaceEventArgs e)
 		{
 			Sample?.DrawSample(e.Surface.Canvas, e.Info.Width, e.Info.Height);
+
+			var view = sender as SKCanvasView;
+			DrawScaling(view, e.Surface.Canvas, view.CanvasSize);
 		}
 
 		private void OnPaintGLSample(object sender, SKPaintGLSurfaceEventArgs e)
 		{
 			Sample?.DrawSample(e.Surface.Canvas, e.RenderTarget.Width, e.RenderTarget.Height);
+
+			var view = sender as SKGLView;
+			DrawScaling(view, e.Surface.Canvas, view.CanvasSize);
+		}
+
+		private void DrawScaling(View view, SKCanvas canvas, SKSize canvasSize)
+		{
+			// make sure no previous transforms still apply
+			canvas.ResetMatrix();
+
+			// get the current scale
+			var scale = canvasSize.Width / (float)view.Width;
+
+			// write the scale into the bottom left
+			using (var paint = new SKPaint())
+			{
+				paint.IsAntialias = true;
+				paint.TextSize = 20 * scale;
+
+				var text = $"Current scaling = {scale:0.0}x";
+				var padding = 10 * scale;
+				canvas.DrawText(text, padding, canvasSize.Height - padding, paint);
+			}
 		}
 
 		private void RefreshSamples()

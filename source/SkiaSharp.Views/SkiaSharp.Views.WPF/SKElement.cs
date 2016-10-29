@@ -22,6 +22,8 @@ namespace SkiaSharp.Views.WPF
 			designMode = DesignerProperties.GetIsInDesignMode(this);
 		}
 
+		public SKSize CanvasSize => bitmap == null ? SKSize.Empty : new SKSize(bitmap.PixelWidth, bitmap.PixelHeight);
+
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
 		protected override void OnRender(DrawingContext drawingContext)

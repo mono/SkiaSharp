@@ -19,6 +19,8 @@ namespace SkiaSharp.Views.Desktop
 			ResizeRedraw = true;
 		}
 
+		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
+
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 		
 		protected override void OnPaint(PaintEventArgs e)

@@ -53,6 +53,8 @@ namespace SkiaSharp.Views.tvOS
 			drawable = new SKDrawable();
 		}
 
+		public SKSize CanvasSize => drawable.Info.Size;
+
 		public override void Draw(CGRect rect)
 		{
 			base.Draw(rect);

@@ -18,6 +18,8 @@ namespace SkiaSharp.Views.Mac
 
 		public ISKGLLayerDelegate SKDelegate { get; set; }
 
+		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
+
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
 		public virtual void DrawInSurface(SKSurface surface, GRBackendRenderTargetDesc renderTarget)

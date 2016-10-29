@@ -39,6 +39,8 @@ namespace SkiaSharp.Views.UWP
 			display.DpiChanged += OnDpiChanged;
 		}
 
+		public SKSize CanvasSize => bitmap == null ? SKSize.Empty : new SKSize(bitmap.PixelWidth, bitmap.PixelHeight);
+
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
 		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)

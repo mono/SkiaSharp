@@ -23,6 +23,8 @@ namespace SkiaSharp.Views.UWP
 			CompositionScaleChanged += OnCompositionScaleChanged;
 		}
 
+		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
+
 		protected override Size ArrangeOverride(Size finalSize)
 		{
 			var arrange = base.ArrangeOverride(finalSize);
