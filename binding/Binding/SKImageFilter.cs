@@ -59,7 +59,7 @@ namespace SkiaSharp
 			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_compose(outer.Handle, inner.Handle));
 		}
 
-		public static SKImageFilter CreateCompose(SKDisplacementMapEffectChannelSelectorType xChannelSelector, SKDisplacementMapEffectChannelSelectorType yChannelSelector, float scale, SKImageFilter displacement, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null)
+		public static SKImageFilter CreateDisplacementMapEffect(SKDisplacementMapEffectChannelSelectorType xChannelSelector, SKDisplacementMapEffectChannelSelectorType yChannelSelector, float scale, SKImageFilter displacement, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null)
 		{
 			if (displacement == null)
 				throw new ArgumentNullException(nameof(displacement));
