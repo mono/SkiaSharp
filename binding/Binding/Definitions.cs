@@ -536,6 +536,7 @@ namespace SkiaSharp
 		RgbaF16
 	}
 
+	[Obsolete("May be removed in the next version.")]
 	public enum SKColorProfileType {
 		Linear,
 		SRGB
