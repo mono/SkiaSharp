@@ -1030,7 +1030,8 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_codec_get_scaled_dimensions(sk_codec_t codec, float desiredScale, out SKSizeI dimensions);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_codec_get_valid_subset(sk_codec_t codec, ref SKRectI desiredSubset);
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_codec_get_valid_subset(sk_codec_t codec, ref SKRectI desiredSubset);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SKEncodedFormat sk_codec_get_encoded_format(sk_codec_t codec);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]

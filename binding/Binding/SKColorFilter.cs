@@ -12,8 +12,14 @@ namespace SkiaSharp
 {
 	public class SKColorFilter : SKObject
 	{
+		[Obsolete("Use MinColorCubeDimension instead.")]
 		public const int MinCubeSize = 4;
+		[Obsolete("Use MaxColorCubeDimension instead.")]
 		public const int MaxCubeSize = 64;
+
+		public const int MinColorCubeDimension = 4;
+		public const int MaxColorCubeDimension = 64;
+		public const int ColorMatrixSize = 20;
 
 		public static bool IsValid3DColorCube(SKData cubeData, int cubeDimension)
 		{

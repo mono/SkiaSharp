@@ -16,10 +16,8 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>Color filters for use in an <see cref="T:SkiaSharp.SKPaint" />.</summary>
-    <remarks>
-      <para></para>
-    </remarks>
+    <summary>Color filters for use with the <see cref="P:SkiaSharp.SKPaint.ColorFilter" /> property of a <see cref="T:SkiaSharp.SKPaint" />.</summary>
+    <remarks />
   </Docs>
   <Members>
     <Member MemberName="CreateColorCube">
@@ -43,14 +41,11 @@
         <Parameter Name="cubeDimension" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="cubeData">must containt a 3D data in the form of cube of the size: cubeDimension * cubeDimension * cubeDimension * sizeof(SkColor)</param>
-        <param name="cubeDimension">Cube dimension.</param>
-        <summary>Creates a 3D Look-Up-Table Color filter.</summary>
-        <returns>Filter created with the specified lookup table.</returns>
-        <remarks>
-          <para>This cube contains a transform where (x,y,z) maps to the (r,g,b).</para>
-          <para>The alpha components of the colors must be 0xFF.</para>
-        </remarks>
+        <param name="cubeData">The cube data in the form of a 3D cube.</param>
+        <param name="cubeDimension">The cube's dimension, between <see cref="F:SkiaSharp.SKColorFilter.MinCubeSize" /> and <see cref="F:SkiaSharp.SKColorFilter.MaxCubeSize" /> inclusive.</param>
+        <summary>Creates a new color cube look-up table color filter, where (x, y, z) maps to the (R, G, B).</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+        <remarks>The alpha components of the colors must be 255, or opaque.</remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateColorCube">
@@ -74,14 +69,11 @@
         <Parameter Name="cubeDimension" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="cubeData">must containt a 3D data in the form of cube of the size: cubeDimension * cubeDimension * cubeDimension * sizeof(SkColor)</param>
-        <param name="cubeDimension">Cube dimension.</param>
-        <summary>Creates a 3D Look-Up-Table Color filter.</summary>
-        <returns>Filter created with the specified lookup table.</returns>
-        <remarks>
-          <para>This cube contains a transform where (x,y,z) maps to the (r,g,b).</para>
-          <para>The alpha components of the colors must be 0xFF.</para>
-        </remarks>
+        <param name="cubeData">The cube data in the form of a 3D cube.</param>
+        <param name="cubeDimension">The cube's dimension, between <see cref="F:SkiaSharp.SKColorFilter.MinCubeSize" /> and <see cref="F:SkiaSharp.SKColorFilter.MaxCubeSize" /> inclusive.</param>
+        <summary>Creates a new color cube look-up table color filter, where (x, y, z) maps to the (R, G, B).</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+        <remarks>The alpha components of the colors must be 255, or opaque.</remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateColorMatrix">
@@ -104,10 +96,10 @@
         <Parameter Name="matrix" Type="System.Single[]" />
       </Parameters>
       <Docs>
-        <param name="matrix">An array of 20 elements.</param>
-        <summary>Creates a color matrix filter.</summary>
-        <returns>Filter created with the specified color matrix.</returns>
-        <remarks>To be added.</remarks>
+        <param name="matrix">An array of <see cref="F:SkiaSharp.SKColorFilter.ColorMatrixSize" /> elements.</param>
+        <summary>Creates a new color filter that transforms a color by a 4x5 (row-major) matrix.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+        <remarks>The matrix is in row-major order and the translation column is specified in unnormalized, 0...255, space.</remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateCompose">
@@ -131,11 +123,13 @@
         <Parameter Name="inner" Type="SkiaSharp.SKColorFilter" />
       </Parameters>
       <Docs>
-        <param name="outer">To be added.</param>
-        <param name="inner">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="outer">The outer (second) filter to apply.</param>
+        <param name="inner">The inner (first) filter to apply.</param>
+        <summary>Creates a new composition color filter, whose effect is to first apply the inner filter and then apply the outer filter to the result of the inner's.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateGamma">
@@ -154,10 +148,10 @@
         <Parameter Name="gamma" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="gamma">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="gamma">The gamma to use.</param>
+        <summary>Creates a new gamma color filter which can be used to perform pixel-by-pixel conversion between linear and power-law color spaces.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+        <remarks>A gamma of 2.2 is interpreted to mean convert from sRGB to linear while a gamma of 1/2.2 is interpreted to mean convert from linear to sRGB. Any other values are just directly applied (i.e., out = in ^ gamma).</remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateLighting">
@@ -181,11 +175,13 @@
         <Parameter Name="add" Type="SkiaSharp.SKColor" />
       </Parameters>
       <Docs>
-        <param name="mul">To be added.</param>
-        <param name="add">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="mul">The color to multiply the source color by. The alpha component is ignored.</param>
+        <param name="add">The color to add to the source color. The alpha component is ignored.</param>
+        <summary>Creates a new lighting color filter that multiplies the RGB channels by one color, and then adds a second color, pinning the result for each component to [0..255].</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateLumaColor">
@@ -206,9 +202,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Creates a new luminance-to-alpha color filter.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateTable">
@@ -231,10 +229,12 @@
         <Parameter Name="table" Type="System.Byte[]" />
       </Parameters>
       <Docs>
-        <param name="table">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="table">The table of values for each color component, with a length of <see cref="F:SkiaSharp.SKColorTable.MaxLength" />.</param>
+        <summary>Creates a new table color filter.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateTable">
@@ -260,13 +260,15 @@
         <Parameter Name="tableB" Type="System.Byte[]" />
       </Parameters>
       <Docs>
-        <param name="tableA">To be added.</param>
-        <param name="tableR">To be added.</param>
-        <param name="tableG">To be added.</param>
-        <param name="tableB">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="tableA">The table of values for the alpha component, with a length of <see cref="F:SkiaSharp.SKColorTable.MaxLength" />.</param>
+        <param name="tableR">The table of values for the red component, with a length of <see cref="F:SkiaSharp.SKColorTable.MaxLength" />.</param>
+        <param name="tableG">The table of values for the green component, with a length of <see cref="F:SkiaSharp.SKColorTable.MaxLength" />.</param>
+        <param name="tableB">The table of values for the blue component, with a length of <see cref="F:SkiaSharp.SKColorTable.MaxLength" />.</param>
+        <summary>Creates a new table color filter.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateXferMode">
@@ -290,11 +292,13 @@
         <Parameter Name="mode" Type="SkiaSharp.SKXferMode" />
       </Parameters>
       <Docs>
-        <param name="c">To be added.</param>
-        <param name="mode">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="c">The source color.</param>
+        <param name="mode">The transfer/blend mode to apply to each color.</param>
+        <summary>Creates a new transfer mode color filter that uses the specified color and transfer/blend mode.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -346,15 +350,15 @@
         <param name="cubeData">must containt a 3D data in the form of cube of the size: cubeDimension * cubeDimension * cubeDimension * sizeof(SkColor).</param>
         <param name="cubeDimension">Cube dimensions.</param>
         <summary>Determines if the provided cube data and dimensions represent a valid color cube.</summary>
-        <returns>true if the cube data and dimensions represent a valid color cube.</returns>
+        <returns>Returns true if the cube data and dimensions represent a valid color cube, otherwise false.</returns>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
-    <Member MemberName="MaxCubeSize">
-      <MemberSignature Language="C#" Value="public const int MaxCubeSize = 64;" />
-      <MemberSignature Language="ILAsm" Value=".field public static literal int32 MaxCubeSize = (64)" />
+    <Member MemberName="MaxColorCubeDimension">
+      <MemberSignature Language="C#" Value="public const int MaxColorCubeDimension = 64;" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal int32 MaxColorCubeDimension = (64)" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
@@ -370,13 +374,15 @@
       </ReturnValue>
       <MemberValue>64</MemberValue>
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>The maximum dimension for the color cube.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
-    <Member MemberName="MinCubeSize">
-      <MemberSignature Language="C#" Value="public const int MinCubeSize = 4;" />
-      <MemberSignature Language="ILAsm" Value=".field public static literal int32 MinCubeSize = (4)" />
+    <Member MemberName="MinColorCubeDimension">
+      <MemberSignature Language="C#" Value="public const int MinColorCubeDimension = 4;" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal int32 MinColorCubeDimension = (4)" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
@@ -392,8 +398,28 @@
       </ReturnValue>
       <MemberValue>4</MemberValue>
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>The minimum dimension for the color cube.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ColorMatrixSize">
+      <MemberSignature Language="C#" Value="public const int ColorMatrixSize = 20;" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal int32 ColorMatrixSize = (20)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <MemberValue>20</MemberValue>
+      <Docs>
+        <summary>The size of the color matrix.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
   </Members>

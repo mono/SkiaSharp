@@ -15,8 +15,8 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>A high-level API for creating a document-based canvas.</summary>
+    <remarks>For each page, call <see cref="M:SkiaSharp.SKDocument.BeginPage" /> to get the canvas, and then complete the page with a call to <see cref="M:SkiaSharp.SKDocument.EndPage" />. Finally, call <see cref="M:SkiaSharp.SKDocument.Close" /> to complete the document.</remarks>
   </Docs>
   <Members>
     <Member MemberName="Abort">
@@ -36,8 +36,10 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Stops producing the document immediately.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="BeginPage">
@@ -60,11 +62,11 @@
         <Parameter Name="height" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="width">To be added.</param>
-        <param name="height">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="width">The width of the page.</param>
+        <param name="height">The height of the page.</param>
+        <summary>Begins a new page for the document, returning the canvas that will draw into the page.</summary>
+        <returns>Returns a canvas for the new page.</returns>
+        <remarks>The document owns this canvas, and it will go out of scope when <see cref="M:SkiaSharp.SKDocument.EndPage" /> or <see cref="M:SkiaSharp.SKDocument.Close" /> is called, or the document is deleted.</remarks>
       </Docs>
     </Member>
     <Member MemberName="BeginPage">
@@ -88,33 +90,12 @@
         <Parameter Name="content" Type="SkiaSharp.SKRect" />
       </Parameters>
       <Docs>
-        <param name="width">To be added.</param>
-        <param name="height">To be added.</param>
-        <param name="content">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Close">
-      <MemberSignature Language="C#" Value="public bool Close ();" />
-      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool Close() cil managed" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.49.0.0</AssemblyVersion>
-        <AssemblyVersion>1.52.0.0</AssemblyVersion>
-        <AssemblyVersion>1.53.0.0</AssemblyVersion>
-        <AssemblyVersion>1.54.0.0</AssemblyVersion>
-        <AssemblyVersion>1.54.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="width">The width of the page.</param>
+        <param name="height">The height of the page.</param>
+        <param name="content">The area for the page contents.</param>
+        <summary>Begins a new page for the document, returning the canvas that will draw into the page.</summary>
+        <returns>Returns a canvas for the new page.</returns>
+        <remarks>The document owns this canvas, and it will go out of scope when <see cref="M:SkiaSharp.SKDocument.EndPage" /> or <see cref="M:SkiaSharp.SKDocument.Close" /> is called, or the document is deleted.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Close">
@@ -129,8 +110,10 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Closes the current file or stream holding the document’s contents.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreatePdf">
@@ -153,11 +136,11 @@
         <Parameter Name="dpi" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="stream">To be added.</param>
-        <param name="dpi">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="stream">The stream to write to.</param>
+        <param name="dpi">The DPI (pixels-per-inch) at which features without native PDF support will be rasterized.</param>
+        <summary>Create a PDF-backed document, writing the results into a stream.</summary>
+        <returns>Returns the new PDF-backed document.</returns>
+        <remarks>PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.</remarks>
       </Docs>
     </Member>
     <Member MemberName="CreatePdf">
@@ -180,11 +163,11 @@
         <Parameter Name="dpi" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="path">To be added.</param>
-        <param name="dpi">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="path">The path of the file to write to.</param>
+        <param name="dpi">The DPI (pixels-per-inch) at which features without native PDF support will be rasterized.</param>
+        <summary>Create a PDF-backed document, writing the results into a file.</summary>
+        <returns>Returns the new PDF-backed document.</returns>
+        <remarks>PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.</remarks>
       </Docs>
     </Member>
     <Member MemberName="DefaultRasterDpi">
@@ -204,8 +187,10 @@
       </ReturnValue>
       <MemberValue>72</MemberValue>
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Gets the default DPI for raster graphics.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -249,8 +234,10 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Completes the drawing for the current page created by <see cref="M:SkiaSharp.SKDocument.BeginPage" />.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
   </Members>

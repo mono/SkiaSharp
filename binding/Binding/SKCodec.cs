@@ -56,9 +56,9 @@ namespace SkiaSharp
 			return dimensions;
 		}
 
-		public void GetValidSubset (ref SKRectI desiredSubset)
+		public bool GetValidSubset (ref SKRectI desiredSubset)
 		{
-			SkiaApi.sk_codec_get_valid_subset (Handle, ref desiredSubset);
+			return SkiaApi.sk_codec_get_valid_subset (Handle, ref desiredSubset);
 		}
 
 		public byte[] Pixels {
