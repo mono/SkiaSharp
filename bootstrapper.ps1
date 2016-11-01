@@ -12,7 +12,8 @@ Param(
     [switch]$WhatIf
 )
 
-$TOOLS_DIR = Join-Path $PSScriptRoot "tools"
+$SCRIPT_DIR = if ($PSScriptRoot -eq $null) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Definition };
+$TOOLS_DIR = Join-Path $SCRIPT_DIR "tools"
 $NUGET_EXE = Join-Path $TOOLS_DIR "nuget.exe"
 $PACKAGES_CONFIG = Join-Path $TOOLS_DIR "packages.config"
 $CAKE_EXE = Join-Path $TOOLS_DIR "Cake/Cake.exe"
