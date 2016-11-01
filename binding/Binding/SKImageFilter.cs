@@ -178,7 +178,7 @@ namespace SkiaSharp
 			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_tile(ref src, ref dst, input.Handle));
 		}
 
-		public static SKImageFilter CreateXfermode(SKBlendMode mode, SKImageFilter background, SKImageFilter foreground = null, SKImageFilter.CropRect cropRect = null)
+		public static SKImageFilter CreateBlendMode(SKBlendMode mode, SKImageFilter background, SKImageFilter foreground = null, SKImageFilter.CropRect cropRect = null)
 		{
 			if (background == null)
 				throw new ArgumentNullException(nameof(background));
