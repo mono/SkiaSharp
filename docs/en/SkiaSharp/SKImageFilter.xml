@@ -17,9 +17,7 @@
   <Interfaces />
   <Docs>
     <summary>Image filters for use with the <see cref="P:SkiaSharp.SKPaint.ImageFilter" /> property of a <see cref="T:SkiaSharp.SKPaint" />.</summary>
-    <remarks>
-      <para></para>
-    </remarks>
+    <remarks />
   </Docs>
   <Members>
     <Member MemberName="CreateAlphaThreshold">
@@ -45,13 +43,13 @@
         <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
       </Parameters>
       <Docs>
-        <param name="region">To be added.</param>
-        <param name="innerThreshold">To be added.</param>
-        <param name="outerThreshold">To be added.</param>
-        <param name="input">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="region">The region to sample.</param>
+        <param name="innerThreshold">The minimum alpha for pixels within the region.</param>
+        <param name="outerThreshold">The maximum alpha for pixels outside the region.</param>
+        <param name="input">The input filter to use.</param>
+        <summary>Creates an image filter that samples a region.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>If the sample is inside the region the alpha of the image is boosted up to a threshold value. If it is outside the region then the alpha is decreased to the threshold value. The (0, 0) point of the region corresponds to the upper left corner of the source image.</remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateArithmetic">
@@ -75,17 +73,19 @@
         <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
       </Parameters>
       <Docs>
-        <param name="k1">To be added.</param>
-        <param name="k2">To be added.</param>
-        <param name="k3">To be added.</param>
-        <param name="k4">To be added.</param>
-        <param name="enforcePMColor">To be added.</param>
-        <param name="background">To be added.</param>
-        <param name="foreground">To be added.</param>
-        <param name="cropRect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="k1">The k1 constant value.</param>
+        <param name="k2">The k2 constant value.</param>
+        <param name="k3">The k3 constant value.</param>
+        <param name="k4">The k4 constant value.</param>
+        <param name="enforcePMColor">Whether or not premultiplied colors are enforced.</param>
+        <param name="background">The background image filter to use. If this is null, then the source bitmap is used.</param>
+        <param name="foreground">The foreground image filter to use. If this is null, then the source bitmap is used.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies the specified arithmetic blend.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateBlur">
@@ -111,13 +111,15 @@
         <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
       </Parameters>
       <Docs>
-        <param name="sigmaX">To be added.</param>
-        <param name="sigmaY">To be added.</param>
-        <param name="input">To be added.</param>
-        <param name="cropRect">To be added.</param>
-        <summary>Creates a blur filter</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="sigmaX">The standard deviation of the Gaussian blur to apply (greater than 0) in the horizontal direction.</param>
+        <param name="sigmaY">The standard deviation of the Gaussian blur to apply (greater than 0) in the vertical direction.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a blur.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateColorFilter">
@@ -142,12 +144,14 @@
         <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
       </Parameters>
       <Docs>
-        <param name="cf">To be added.</param>
-        <param name="input">To be added.</param>
-        <param name="cropRect">To be added.</param>
-        <summary>Creates a color filter</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="cf">The color filter to use.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a color filter.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateCompose">
@@ -171,11 +175,13 @@
         <Parameter Name="inner" Type="SkiaSharp.SKImageFilter" />
       </Parameters>
       <Docs>
-        <param name="outer">To be added.</param>
-        <param name="inner">To be added.</param>
-        <summary>Creates an image compositing filter</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="outer">The outer (second) filter to apply.</param>
+        <param name="inner">The inner (first) filter to apply.</param>
+        <summary>Creates an image filter, whose effect is to first apply the inner filter and then apply the outer filter to the result of the inner's.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateDisplacementMapEffect">
@@ -197,15 +203,17 @@
         <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
       </Parameters>
       <Docs>
-        <param name="xChannelSelector">To be added.</param>
-        <param name="yChannelSelector">To be added.</param>
-        <param name="scale">To be added.</param>
-        <param name="displacement">To be added.</param>
-        <param name="input">To be added.</param>
-        <param name="cropRect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="xChannelSelector">The channel in the x-direction to select for displacement.</param>
+        <param name="yChannelSelector">The channel in the y-direction to select for displacement.</param>
+        <param name="scale">The amount to displace by.</param>
+        <param name="displacement">The image filter to apply the displacement to.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a displacement map.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateDilate">
@@ -231,13 +239,15 @@
         <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
       </Parameters>
       <Docs>
-        <param name="radiusX">To be added.</param>
-        <param name="radiusY">To be added.</param>
-        <param name="input">To be added.</param>
-        <param name="cropRect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="radiusX">The amount of dilation in the x-direction.</param>
+        <param name="radiusY">The amount of dilation in the y-direction.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a dilation to pixels of a bitmap.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateDistantLitDiffuse">
@@ -265,15 +275,17 @@
         <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
       </Parameters>
       <Docs>
-        <param name="direction">To be added.</param>
-        <param name="lightColor">To be added.</param>
-        <param name="surfaceScale">To be added.</param>
-        <param name="kd">To be added.</param>
-        <param name="input">To be added.</param>
-        <param name="cropRect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="direction">The direction of the light.</param>
+        <param name="lightColor">The color of the light.</param>
+        <param name="surfaceScale">The surface height to use.</param>
+        <param name="kd">The diffuse lighting constant.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a distant diffuse lighting.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateDistantLitSpecular">
@@ -302,16 +314,18 @@
         <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
       </Parameters>
       <Docs>
-        <param name="direction">To be added.</param>
-        <param name="lightColor">To be added.</param>
-        <param name="surfaceScale">To be added.</param>
-        <param name="ks">To be added.</param>
-        <param name="shininess">To be added.</param>
-        <param name="input">To be added.</param>
-        <param name="cropRect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="direction">The direction of the light.</param>
+        <param name="lightColor">The color of the light.</param>
+        <param name="surfaceScale">The surface height to use.</param>
+        <param name="ks">The specular lighting constant.</param>
+        <param name="shininess">The shininess or specular exponent.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a distant specular lighting.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateDropShadow">
@@ -338,17 +352,19 @@
         <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
       </Parameters>
       <Docs>
-        <param name="dx">To be added.</param>
-        <param name="dy">To be added.</param>
-        <param name="sigmaX">To be added.</param>
-        <param name="sigmaY">To be added.</param>
-        <param name="color">To be added.</param>
-        <param name="shadowMode">To be added.</param>
-        <param name="input">To be added.</param>
-        <param name="cropRect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="dx">The shadow offset in the x-direction.</param>
+        <param name="dy">The shadow offset in the y-direction.</param>
+        <param name="sigmaX">The amount to blur in the x-direction.</param>
+        <param name="sigmaY">The amount to blur in the y-direction.</param>
+        <param name="color">The shadow color.</param>
+        <param name="shadowMode">The shadow mode.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a drop shadow.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateErode">
@@ -374,13 +390,13 @@
         <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
       </Parameters>
       <Docs>
-        <param name="radiusX">To be added.</param>
-        <param name="radiusY">To be added.</param>
-        <param name="input">To be added.</param>
-        <param name="cropRect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="radiusX">The amount to erode in the x-direction.</param>
+        <param name="radiusY">The amount to erode in the y-direction.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that erodes the pixels of a bitmap.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>To be added</remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateMagnifier">
@@ -405,12 +421,14 @@
         <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
       </Parameters>
       <Docs>
-        <param name="src">To be added.</param>
-        <param name="inset">To be added.</param>
-        <param name="input">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="src">The rectangle area to magnify.</param>
+        <param name="inset">The amount of magnification to apply</param>
+        <param name="input">The input filter to use.</param>
+        <summary>Creates an image filter that magnifies an area of a bitmap.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateMatrix">
@@ -435,12 +453,14 @@
         <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
       </Parameters>
       <Docs>
-        <param name="matrix">To be added.</param>
-        <param name="quality">To be added.</param>
-        <param name="input">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="matrix">The transformation matrix.</param>
+        <param name="quality">The quality.</param>
+        <param name="input">The input filter to use.</param>
+        <summary>Creates an image filter that applies a transformation matrix.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateMatrixConvolution">
@@ -471,18 +491,20 @@
         <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
       </Parameters>
       <Docs>
-        <param name="kernelSize">To be added.</param>
-        <param name="kernel">To be added.</param>
-        <param name="gain">To be added.</param>
-        <param name="bias">To be added.</param>
-        <param name="kernelOffset">To be added.</param>
-        <param name="tileMode">To be added.</param>
-        <param name="convolveAlpha">To be added.</param>
-        <param name="input">To be added.</param>
-        <param name="cropRect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="kernelSize">The kernel size in pixels, in each dimension (N by M).</param>
+        <param name="kernel">The image processing kernel, with N * M elements in row order.</param>
+        <param name="gain">A scale factor applied to each pixel after convolution.</param>
+        <param name="bias">A bias factor added to each pixel after convolution.</param>
+        <param name="kernelOffset">An offset applied to each pixel coordinate before convolution.</param>
+        <param name="tileMode">How accesses outside the image are treated.</param>
+        <param name="convolveAlpha">Whether or not all channels are convolved, or just the RGB channels.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image that filter applies an NxM image processing kernel.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateMerge">
@@ -507,12 +529,14 @@
         <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
       </Parameters>
       <Docs>
-        <param name="filters">To be added.</param>
-        <param name="modes">To be added.</param>
-        <param name="cropRect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="filters">The image filters to merge.</param>
+        <param name="modes">The transfer modes to merge the filters with.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that merges a set of image filters using transfer modes.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateOffset">
@@ -538,13 +562,15 @@
         <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
       </Parameters>
       <Docs>
-        <param name="dx">To be added.</param>
-        <param name="dy">To be added.</param>
-        <param name="input">To be added.</param>
-        <param name="cropRect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="dx">The amount to offset in the x-direction.</param>
+        <param name="dy">The amount to offset in the y-direction.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that translates the bitmap that is drawn.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreatePicture">
@@ -567,10 +593,12 @@
         <Parameter Name="picture" Type="SkiaSharp.SKPicture" />
       </Parameters>
       <Docs>
-        <param name="picture">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="picture">The picture to draw.</param>
+        <summary>Creates an image filter that draws a picture.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreatePicture">
@@ -594,11 +622,13 @@
         <Parameter Name="cropRect" Type="SkiaSharp.SKRect" />
       </Parameters>
       <Docs>
-        <param name="picture">To be added.</param>
-        <param name="cropRect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="picture">The picture to draw.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that draws a picture.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreatePictureForLocalspace">
@@ -623,12 +653,14 @@
         <Parameter Name="filterQuality" Type="SkiaSharp.SKFilterQuality" />
       </Parameters>
       <Docs>
-        <param name="picture">To be added.</param>
-        <param name="cropRect">To be added.</param>
-        <param name="filterQuality">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="picture">The picture to draw.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <param name="filterQuality">The quality.</param>
+        <summary>Creates an image filter that draws a picture at a resolution that matches the local coordinate space.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreatePointLitDiffuse">
@@ -656,15 +688,17 @@
         <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
       </Parameters>
       <Docs>
-        <param name="location">To be added.</param>
-        <param name="lightColor">To be added.</param>
-        <param name="surfaceScale">To be added.</param>
-        <param name="kd">To be added.</param>
-        <param name="input">To be added.</param>
-        <param name="cropRect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="location">The location of the light.</param>
+        <param name="lightColor">The color of the light.</param>
+        <param name="surfaceScale">The surface height to use.</param>
+        <param name="kd">The diffuse lighting constant.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a point diffuse lighting.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreatePointLitSpecular">
@@ -693,16 +727,18 @@
         <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
       </Parameters>
       <Docs>
-        <param name="location">To be added.</param>
-        <param name="lightColor">To be added.</param>
-        <param name="surfaceScale">To be added.</param>
-        <param name="ks">To be added.</param>
-        <param name="shininess">To be added.</param>
-        <param name="input">To be added.</param>
-        <param name="cropRect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="location">The location of the light.</param>
+        <param name="lightColor">The color of the light.</param>
+        <param name="surfaceScale">The surface height to use.</param>
+        <param name="ks">The specular lighting constant.</param>
+        <param name="shininess">The shininess or specular exponent.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a point specular lighting.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateSpotLitDiffuse">
@@ -733,18 +769,20 @@
         <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
       </Parameters>
       <Docs>
-        <param name="location">To be added.</param>
-        <param name="target">To be added.</param>
-        <param name="specularExponent">To be added.</param>
-        <param name="cutoffAngle">To be added.</param>
-        <param name="lightColor">To be added.</param>
-        <param name="surfaceScale">To be added.</param>
-        <param name="kd">To be added.</param>
-        <param name="input">To be added.</param>
-        <param name="cropRect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="location">The location of the light.</param>
+        <param name="target">The target location of the light.</param>
+        <param name="specularExponent">The specular exponent.</param>
+        <param name="cutoffAngle">The cutoff angle of the spotlight.</param>
+        <param name="lightColor">The color of the light.</param>
+        <param name="surfaceScale">The surface height to use.</param>
+        <param name="kd">The diffuse lighting constant.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a spot diffuse lighting.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateSpotLitSpecular">
@@ -776,19 +814,21 @@
         <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
       </Parameters>
       <Docs>
-        <param name="location">To be added.</param>
-        <param name="target">To be added.</param>
-        <param name="specularExponent">To be added.</param>
-        <param name="cutoffAngle">To be added.</param>
-        <param name="lightColor">To be added.</param>
-        <param name="surfaceScale">To be added.</param>
-        <param name="ks">To be added.</param>
-        <param name="shininess">To be added.</param>
-        <param name="input">To be added.</param>
-        <param name="cropRect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="location">The location of the light.</param>
+        <param name="target">The target location of the light.</param>
+        <param name="specularExponent">The specular exponent.</param>
+        <param name="cutoffAngle">The cutoff angle of the spotlight.</param>
+        <param name="lightColor">The color of the light.</param>
+        <param name="surfaceScale">The surface height to use.</param>
+        <param name="ks">The specular lighting constant.</param>
+        <param name="shininess">The shininess or specular exponent.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a spot specular lighting.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateTile">
@@ -807,17 +847,19 @@
         <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
       </Parameters>
       <Docs>
-        <param name="src">To be added.</param>
-        <param name="dst">To be added.</param>
-        <param name="input">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="src">The pixels to tile.</param>
+        <param name="dst">The pixels where the tiles are drawn</param>
+        <param name="input">The input filter to use.</param>
+        <summary>Creates an image filter that tiles the image being drawn.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
-    <Member MemberName="CreateXfermode">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateXfermode (SkiaSharp.SKBlendMode mode, SkiaSharp.SKImageFilter background, SkiaSharp.SKImageFilter foreground = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateXfermode(valuetype SkiaSharp.SKBlendMode mode, class SkiaSharp.SKImageFilter background, class SkiaSharp.SKImageFilter foreground, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+    <Member MemberName="CreateBlendMode">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateBlendMode (SkiaSharp.SKBlendMode mode, SkiaSharp.SKImageFilter background, SkiaSharp.SKImageFilter foreground = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateBlendMode(valuetype SkiaSharp.SKBlendMode mode, class SkiaSharp.SKImageFilter background, class SkiaSharp.SKImageFilter foreground, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
@@ -832,13 +874,15 @@
         <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
       </Parameters>
       <Docs>
-        <param name="mode">To be added.</param>
-        <param name="background">To be added.</param>
-        <param name="foreground">To be added.</param>
-        <param name="cropRect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="mode">The blend mode.</param>
+        <param name="background">The background filter.</param>
+        <param name="foreground">The forground filter.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a blend mode.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">

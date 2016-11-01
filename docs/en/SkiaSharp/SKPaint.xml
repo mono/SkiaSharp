@@ -116,8 +116,8 @@
       </Parameters>
       <Docs>
         <param name="text">The text to be measured.</param>
-        <param name="maxWidth">Maximum width. Only the subset of text whose accumulated widths are &lt;= <paramref name="maxWidth" /> are measured.</param>
-        <param name="measuredWidth">Returns the actual width of the measured text</param>
+        <param name="maxWidth">The maximum width. Only the subset of text whose accumulated widths are &lt;= <paramref name="maxWidth" /> are measured.</param>
+        <param name="measuredWidth">The actual width of the measured text.</param>
         <summary>Measure the text, stopping early if the measured width exceeds <paramref name="maxWidth" />.</summary>
         <returns>Return the number of characters of text that were measured. </returns>
         <remarks>
@@ -148,10 +148,10 @@
         <Parameter Name="measuredWidth" Type="System.Single&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="buffer">Contains a pointer to a region holding text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
-        <param name="length">Number of bytes to read from the <paramref name="buffer." /></param>
-        <param name="maxWidth">Maximum width. Only the subset of text whose accumulated widths are &lt;= <paramref name="maxWidth" /> are measured.</param>
-        <param name="measuredWidth">Returns the actual width of the measured text</param>
+        <param name="buffer">The pointer to a region holding text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
+        <param name="maxWidth">The maximum width. Only the subset of text whose accumulated widths are &lt;= <paramref name="maxWidth" /> are measured.</param>
+        <param name="measuredWidth">The actual width of the measured text.</param>
         <summary>Measure the text encoded as a UTF-8 buffer, stopping early if the measured width exceeds <paramref name="maxWidth" />.</summary>
         <returns>Return the number of characters of text that were measured. </returns>
         <remarks>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.   This only consumes up to <paramref name="length" /> bytes from the buffer.</remarks>
@@ -169,7 +169,7 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Returns a copy of the current paint.</summary>
+        <summary>Creates a copy of the current paint.</summary>
         <returns>Returns the copy.</returns>
         <remarks>The copy is a shallow copy, all references will still point to the same objects.</remarks>
       </Docs>
@@ -191,7 +191,7 @@
         <ReturnType>SkiaSharp.SKColor</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Gets or sets the paint’s color.</summary>
+        <summary>Gets or sets the paint’s foreground color.</summary>
         <value>
           <para></para>
         </value>
@@ -237,9 +237,13 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether device kerning is enabled.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -280,9 +284,13 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether fake bold text is enabled.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FilterQuality">
@@ -454,8 +462,8 @@
       <Docs>
         <param name="text">The text to generate an outline for.</param>
         <param name="points">The position to use for each glyph in the text.</param>
-        <summary>Return the path (outline) for the specified text.</summary>
-        <returns>A <see cref="T:SkiaSharp.SKPath" /> containing the outline of the text.</returns>
+        <summary>Returns the path (outline) for the specified text.</summary>
+        <returns>Returns the <see cref="T:SkiaSharp.SKPath" /> containing the outline of the text.</returns>
         <remarks>
           <para></para>
         </remarks>
@@ -482,11 +490,11 @@
         <Parameter Name="points" Type="SkiaSharp.SKPoint[]" />
       </Parameters>
       <Docs>
-        <param name="buffer">Contains a pointer to a region holding text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
-        <param name="length">Number of bytes to read from the <paramref name="buffer." /></param>
+        <param name="buffer">The pointer to a region holding text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
         <param name="points">The position to use for each glyph in the text.</param>
-        <summary>Return the path (outline) for the specified text.</summary>
-        <returns>A <see cref="T:SkiaSharp.SKPath" /> containing the outline of the text.</returns>
+        <summary>Returns the path (outline) for the specified text.</summary>
+        <returns>Returns the <see cref="T:SkiaSharp.SKPath" /> containing the outline of the text.</returns>
         <remarks>
           <para></para>
         </remarks>
@@ -516,8 +524,8 @@
         <param name="text">The text to generate an outline for.</param>
         <param name="x">The x-coordinate of the first glyph in the text.</param>
         <param name="y">The y-coordinate of the first glyph in the text.</param>
-        <summary>Return the path (outline) for the specified text.</summary>
-        <returns>A <see cref="T:SkiaSharp.SKPath" /> containing the outline of the text.</returns>
+        <summary>Returns the path (outline) for the specified text.</summary>
+        <returns>Returns the <see cref="T:SkiaSharp.SKPath" /> containing the outline of the text.</returns>
         <remarks>
           <para></para>
         </remarks>
@@ -545,12 +553,12 @@
         <Parameter Name="y" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="buffer">Contains a pointer to a region holding text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
-        <param name="length">Number of bytes to read from the <paramref name="buffer." /></param>
+        <param name="buffer">The pointer to a region holding text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
         <param name="x">The x-coordinate of the first glyph in the text.</param>
         <param name="y">The y-coordinate of the first glyph in the text.</param>
-        <summary>Return the path (outline) for the specified text.</summary>
-        <returns>A <see cref="T:SkiaSharp.SKPath" /> containing the outline of the text.</returns>
+        <summary>Returns the path (outline) for the specified text.</summary>
+        <returns>Returns the <see cref="T:SkiaSharp.SKPath" /> containing the outline of the text.</returns>
         <remarks>
           <para></para>
         </remarks>
@@ -571,10 +579,10 @@
       <Docs>
         <summary>Gets or sets the level of hinting to be performed.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -596,8 +604,12 @@
       </ReturnValue>
       <Docs>
         <summary>Gets or sets the image filter.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="IsAntialias">
@@ -617,9 +629,13 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Controls antialiasing in the SKPaint.</summary>
-        <value>The current setting for the anti-alias setting.</value>
-        <remarks>If this property is <see langword="true" />, the paint smooths out the edges of what is being drawn, but is has no impact on the interior of the shape. </remarks>
+        <summary>Gets or sets a value indicating whether anti-aliasing is enabled.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="IsAutohinted">
@@ -635,9 +651,13 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether auto-hinting is enabled.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="IsDither">
@@ -656,9 +676,13 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Controls dither in the SKPaint.</summary>
-        <value>The current setting for the dither setting.</value>
-        <remarks>If this property is set true, the flags of the paint will be set to enable dithering.</remarks>
+        <summary>Gets or sets a value indicating whether dithering is enabled.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="IsEmbeddedBitmapText">
@@ -674,9 +698,13 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether text is an embedded bitmap.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="IsLinearText">
@@ -692,9 +720,13 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether text is linear.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="IsStroke">
@@ -737,8 +769,10 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Controls antialiasing in the <see cref="T:SkiaSharp.SKPaint" />.</summary>
-        <value>The current setting for the vertical text setting.</value>
+        <summary>Gets or sets a value indicating whether the text is vertical or horizontal is enabled.</summary>
+        <value>
+          <para />
+        </value>
         <remarks>If this property is set true, then advances are treated as Y values rather than X values, and <see cref="M:SkiaSharp.SKCanvas.DrawText" /> will place its glyphs vertically rather than horizontally.</remarks>
       </Docs>
     </Member>
@@ -755,9 +789,12 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether LCD text rendering is enabled.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <see cref="P:SkiaSharp.SKPaint.IsAntialias" /> must also be enabled for LCD rendering to be enabled.</remarks>
       </Docs>
     </Member>
     <Member MemberName="MaskFilter">
@@ -805,7 +842,7 @@
       </Parameters>
       <Docs>
         <param name="text">The text to be measured</param>
-        <summary>Measures the text</summary>
+        <summary>Measures the text.</summary>
         <returns>Returns the width of the text.</returns>
         <remarks>This will return the vertical measure if this is vertical text, in which case the returned value should be treated has a height instead of a width.</remarks>
       </Docs>
@@ -831,8 +868,8 @@
         <Parameter Name="length" Type="System.IntPtr" />
       </Parameters>
       <Docs>
-        <param name="buffer">Contains a pointer to a region holding text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
-        <param name="length">Number of bytes to read from the <paramref name="buffer." /></param>
+        <param name="buffer">The pointer to a region holding text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
         <summary>Measures the UTF-8 encoded text.</summary>
         <returns>Returns the width of the text.</returns>
         <remarks>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.   This only consumes up to <paramref name="length" /> bytes from the buffer.</remarks>
@@ -860,7 +897,7 @@
       </Parameters>
       <Docs>
         <param name="text">The text to be measured</param>
-        <param name="bounds">Returns the bounds of the text relative to (0,0)</param>
+        <param name="bounds">The bounds of the text relative to (0, 0)</param>
         <summary>Measures the text</summary>
         <returns>Returns the width of the text.</returns>
         <remarks>This will return the vertical measure if this is vertical text, in which case the returned value should be treated has a height instead of a width.</remarks>
@@ -888,9 +925,9 @@
         <Parameter Name="bounds" Type="SkiaSharp.SKRect&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="buffer">Contains a pointer to a region holding text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
-        <param name="length">Number of bytes to read from the <paramref name="buffer." /></param>
-        <param name="bounds">Returns the bounds of the text relative to (0,0)</param>
+        <param name="buffer">The pointer to a region holding text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
+        <param name="bounds">The bounds of the text relative to (0, 0)</param>
         <summary>Measures the UTF-8 encoded text.</summary>
         <returns>Returns the width of the text.</returns>
         <remarks>
@@ -942,10 +979,10 @@
       <Docs>
         <summary>Gets or sets the shader to use when painting.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -962,9 +999,13 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether to strike through text.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="StrokeCap">
@@ -1076,9 +1117,11 @@
         <ReturnType>SkiaSharp.SKPaintStyle</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the painting style.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>Can also be set using <see cref="P:SkiaSharp.SKPaint.IsStroke" />.</remarks>
       </Docs>
     </Member>
     <Member MemberName="SubpixelText">
@@ -1094,9 +1137,13 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether to use subpixel text positioning.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="TextAlign">
@@ -1144,9 +1191,9 @@
       <Docs>
         <summary>Gets or sets the encoding used when drawing or measuring text.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
-        <remarks>This defaults to UTF8 encoding.</remarks>
+        <remarks>This defaults to UTF-8 encoding.</remarks>
       </Docs>
     </Member>
     <Member MemberName="TextScaleX">
@@ -1168,7 +1215,7 @@
       <Docs>
         <summary>Gets or sets paint’s horizontal scale factor for text.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
         <remarks>
           <para></para>
@@ -1192,9 +1239,13 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the text size.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="TextSkewX">
@@ -1216,10 +1267,10 @@
       <Docs>
         <summary>Gets or sets paint’s horizontal skew factor for text.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1242,10 +1293,10 @@
       <Docs>
         <summary>Gets or sets the typeface used when painting text. May be <see langword="null" />.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1262,9 +1313,13 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether to underline text.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="XferMode">
@@ -1284,9 +1339,13 @@
         <ReturnType>SkiaSharp.SKXferMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the transfer mode.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
   </Members>
