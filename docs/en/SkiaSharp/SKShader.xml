@@ -18,9 +18,9 @@
   <Docs>
     <summary>Shaders specify the source color(s) for what is being drawn in the <see cref="T:SkiaSharp.SKPaint" />.</summary>
     <remarks>
-      <para>Shaders specify the source color(s) for what is being drawn. If a paint has no shader, then the paint's color is used. If the paint has a shader, then the shader's color(s) are use instead, but they are modulated by the paint's alpha. </para>
+      <para>Shaders specify the source color(s) for what is being drawn. If a paint has no shader, then the paint's color is used. If the paint has a shader, then the shader's color(s) are used instead, but they are modulated by the paint's alpha. </para>
       <para></para>
-      <para>This makes it easy to create a shader once (e.g. bitmap tiling or gradient) and then change its transparency w/o having to modify the original shader, only the paint's alpha needs to be modified.</para>
+      <para>This makes it easy to create a shader once (e.g. bitmap tiling or gradient) and then change its transparency without having to modify the original shader, only the paint's alpha needs to be modified.</para>
     </remarks>
   </Docs>
   <Members>
@@ -46,12 +46,15 @@
         <Parameter Name="tmy" Type="SkiaSharp.SKShaderTileMode" />
       </Parameters>
       <Docs>
-        <param name="src">To be added.</param>
-        <param name="tmx">To be added.</param>
-        <param name="tmy">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="src">The bitmap to use inside the shader.</param>
+        <param name="tmx">The tiling mode to use when sampling the bitmap in the x-direction.</param>
+        <param name="tmy">The tiling mode to use when sampling the bitmap in the y-direction.</param>
+        <summary>Creates a new shader that will draw with the specified bitmap.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks>
+          <para>If the bitmap cannot be used (has no pixels, or its dimensions exceed implementation limits) then an empty shader may be returned. </para>
+          <para>If the source bitmap’s color type is <see cref="F:SkiaSharp.SKColorType.Alpha8" /> then that mask will be colorized using the color on the paint.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateBitmap">
@@ -77,13 +80,16 @@
         <Parameter Name="localMatrix" Type="SkiaSharp.SKMatrix" />
       </Parameters>
       <Docs>
-        <param name="src">To be added.</param>
-        <param name="tmx">To be added.</param>
-        <param name="tmy">To be added.</param>
-        <param name="localMatrix">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="src">The bitmap to use inside the shader.</param>
+        <param name="tmx">The tiling mode to use when sampling the bitmap in the x-direction.</param>
+        <param name="tmy">The tiling mode to use when sampling the bitmap in the y-direction.</param>
+        <param name="localMatrix">The matrix to apply before applying the shader.</param>
+        <summary>Creates a new shader that will draw with the specified bitmap.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks>
+          <para>If the bitmap cannot be used (has no pixels, or its dimensions exceed implementation limits) then an empty shader may be returned. </para>
+          <para>If the source bitmap’s color type is <see cref="F:SkiaSharp.SKColorType.Alpha8" /> then that mask will be colorized using the color on the paint.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateColor">
@@ -106,10 +112,12 @@
         <Parameter Name="color" Type="SkiaSharp.SKColor" />
       </Parameters>
       <Docs>
-        <param name="color">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="color">The color to paint.</param>
+        <summary>Creates a new shader that just draws the specified color.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateColorFilter">
@@ -133,11 +141,13 @@
         <Parameter Name="filter" Type="SkiaSharp.SKColorFilter" />
       </Parameters>
       <Docs>
-        <param name="shader">To be added.</param>
-        <param name="filter">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="shader">The shader to apply.</param>
+        <param name="filter">The color filter to apply.</param>
+        <summary>Creates a new shader that produces the same colors as invoking this shader and then applying the color filter.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateCompose">
@@ -161,11 +171,13 @@
         <Parameter Name="shaderB" Type="SkiaSharp.SKShader" />
       </Parameters>
       <Docs>
-        <param name="shaderA">To be added.</param>
-        <param name="shaderB">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="shaderA">The colors from this shader are seen as the destination by the blend mode.</param>
+        <param name="shaderB">The colors from this shader are seen as the source by the blend mode.</param>
+        <summary>Create a new compose shader, which combines two shaders by the <see cref="F:SkiaSharp.SKXferMode.SrcOver" /> blend mode.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateCompose">
@@ -190,12 +202,14 @@
         <Parameter Name="mode" Type="SkiaSharp.SKXferMode" />
       </Parameters>
       <Docs>
-        <param name="shaderA">To be added.</param>
-        <param name="shaderB">To be added.</param>
-        <param name="mode">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="shaderA">The colors from this shader are seen as the destination by the blend mode.</param>
+        <param name="shaderB">The colors from this shader are seen as the source by the blend mode.</param>
+        <param name="mode">The blend mode that combines the two shaders.</param>
+        <summary>Create a new compose shader, which combines two shaders by a blend mode.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateEmpty">
@@ -216,9 +230,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Creates a new "empty” shader that will not draw anything.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateLinearGradient">
@@ -245,14 +261,16 @@
         <Parameter Name="mode" Type="SkiaSharp.SKShaderTileMode" />
       </Parameters>
       <Docs>
-        <param name="start">To be added.</param>
-        <param name="end">To be added.</param>
-        <param name="colors">To be added.</param>
-        <param name="colorPos">To be added.</param>
-        <param name="mode">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="start">The start point for the gradient.</param>
+        <param name="end">The end point for the gradient.</param>
+        <param name="colors">The array colors to be distributed between the two points.</param>
+        <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
+        <param name="mode">The tiling mode.</param>
+        <summary>Creates a shader that generates a linear gradient between the two specified points.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateLinearGradient">
@@ -280,15 +298,17 @@
         <Parameter Name="localMatrix" Type="SkiaSharp.SKMatrix" />
       </Parameters>
       <Docs>
-        <param name="start">To be added.</param>
-        <param name="end">To be added.</param>
-        <param name="colors">To be added.</param>
-        <param name="colorPos">To be added.</param>
-        <param name="mode">To be added.</param>
-        <param name="localMatrix">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="start">The start point for the gradient.</param>
+        <param name="end">The end point for the gradient.</param>
+        <param name="colors">The array colors to be distributed between the two points.</param>
+        <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
+        <param name="mode">The tiling mode.</param>
+        <param name="localMatrix">The matrix to apply before applying the shader.</param>
+        <summary>Creates a shader that generates a linear gradient between the two specified points.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateLocalMatrix">
@@ -312,11 +332,13 @@
         <Parameter Name="localMatrix" Type="SkiaSharp.SKMatrix" />
       </Parameters>
       <Docs>
-        <param name="shader">To be added.</param>
-        <param name="localMatrix">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="shader">The shader to apply.</param>
+        <param name="localMatrix">The matrix to apply before applying the shader.</param>
+        <summary>Creates a shader that first applies the specified matrix and then applies the shader.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreatePerlinNoiseFractalNoise">
@@ -342,13 +364,15 @@
         <Parameter Name="seed" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="baseFrequencyX">To be added.</param>
-        <param name="baseFrequencyY">To be added.</param>
-        <param name="numOctaves">To be added.</param>
-        <param name="seed">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="baseFrequencyX">The frequency in the x-direction in the range of 0..1.</param>
+        <param name="baseFrequencyY">The frequency in the y-direction in the range of 0..1.</param>
+        <param name="numOctaves">The number of octaves, usually fairly small.</param>
+        <param name="seed">The randomization seed.</param>
+        <summary>Creates a new shader that draws Perlin fractal noise.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreatePerlinNoiseFractalNoise">
@@ -375,14 +399,16 @@
         <Parameter Name="tileSize" Type="SkiaSharp.SKPointI" />
       </Parameters>
       <Docs>
-        <param name="baseFrequencyX">To be added.</param>
-        <param name="baseFrequencyY">To be added.</param>
-        <param name="numOctaves">To be added.</param>
-        <param name="seed">To be added.</param>
-        <param name="tileSize">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="baseFrequencyX">The frequency in the x-direction in the range of 0..1.</param>
+        <param name="baseFrequencyY">The frequency in the y-direction in the range of 0..1.</param>
+        <param name="numOctaves">The number of octaves, usually fairly small.</param>
+        <param name="seed">The randomization seed.</param>
+        <param name="tileSize">The tile size used to modify the frequencies so that the noise will be tileable for the given size.</param>
+        <summary>Creates a new shader that draws Perlin fractal noise.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreatePerlinNoiseTurbulence">
@@ -408,13 +434,15 @@
         <Parameter Name="seed" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="baseFrequencyX">To be added.</param>
-        <param name="baseFrequencyY">To be added.</param>
-        <param name="numOctaves">To be added.</param>
-        <param name="seed">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="baseFrequencyX">The frequency in the x-direction in the range of 0..1.</param>
+        <param name="baseFrequencyY">The frequency in the y-direction in the range of 0..1.</param>
+        <param name="numOctaves">The number of octaves, usually fairly small.</param>
+        <param name="seed">The randomization seed.</param>
+        <summary>Creates a new shader that draws Perlin turbulence noise.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreatePerlinNoiseTurbulence">
@@ -441,14 +469,16 @@
         <Parameter Name="tileSize" Type="SkiaSharp.SKPointI" />
       </Parameters>
       <Docs>
-        <param name="baseFrequencyX">To be added.</param>
-        <param name="baseFrequencyY">To be added.</param>
-        <param name="numOctaves">To be added.</param>
-        <param name="seed">To be added.</param>
-        <param name="tileSize">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="baseFrequencyX">The frequency in the x-direction in the range of 0..1.</param>
+        <param name="baseFrequencyY">The frequency in the y-direction in the range of 0..1.</param>
+        <param name="numOctaves">The number of octaves, usually fairly small.</param>
+        <param name="seed">The randomization seed.</param>
+        <param name="tileSize">The tile size used to modify the frequencies so that the noise will be tileable for the given size.</param>
+        <summary>Creates a new shader that draws Perlin turbulence noise.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateRadialGradient">
@@ -475,14 +505,16 @@
         <Parameter Name="mode" Type="SkiaSharp.SKShaderTileMode" />
       </Parameters>
       <Docs>
-        <param name="center">To be added.</param>
-        <param name="radius">To be added.</param>
-        <param name="colors">To be added.</param>
-        <param name="colorPos">To be added.</param>
-        <param name="mode">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="center">The center of the circle for this gradient.</param>
+        <param name="radius">The positive radius of the circle for this gradient.</param>
+        <param name="colors">The array colors to be distributed between the center and edge of the circle.</param>
+        <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
+        <param name="mode">The tiling mode.</param>
+        <summary>Creates a shader that generates a radial gradient given the center and radius.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateRadialGradient">
@@ -510,15 +542,17 @@
         <Parameter Name="localMatrix" Type="SkiaSharp.SKMatrix" />
       </Parameters>
       <Docs>
-        <param name="center">To be added.</param>
-        <param name="radius">To be added.</param>
-        <param name="colors">To be added.</param>
-        <param name="colorPos">To be added.</param>
-        <param name="mode">To be added.</param>
-        <param name="localMatrix">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="center">The center of the circle for this gradient.</param>
+        <param name="radius">The positive radius of the circle for this gradient.</param>
+        <param name="colors">The array colors to be distributed between the center and edge of the circle.</param>
+        <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
+        <param name="mode">The tiling mode.</param>
+        <param name="localMatrix">The matrix to apply before applying the shader.</param>
+        <summary>Creates a shader that generates a radial gradient given the center and radius.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateSweepGradient">
@@ -543,12 +577,14 @@
         <Parameter Name="colorPos" Type="System.Single[]" />
       </Parameters>
       <Docs>
-        <param name="center">To be added.</param>
-        <param name="colors">To be added.</param>
-        <param name="colorPos">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="center">The coordinates of the center of the sweep.</param>
+        <param name="colors">The array colors to be distributed around the center.</param>
+        <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
+        <summary>Creates a shader that generates a sweep gradient given a center.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateSweepGradient">
@@ -574,13 +610,15 @@
         <Parameter Name="localMatrix" Type="SkiaSharp.SKMatrix" />
       </Parameters>
       <Docs>
-        <param name="center">To be added.</param>
-        <param name="colors">To be added.</param>
-        <param name="colorPos">To be added.</param>
-        <param name="localMatrix">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="center">The coordinates of the center of the sweep.</param>
+        <param name="colors">The array colors to be distributed around the center.</param>
+        <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
+        <param name="localMatrix">The matrix to apply before applying the shader.</param>
+        <summary>Creates a shader that generates a sweep gradient given a center.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateTwoPointConicalGradient">
@@ -609,16 +647,18 @@
         <Parameter Name="mode" Type="SkiaSharp.SKShaderTileMode" />
       </Parameters>
       <Docs>
-        <param name="start">To be added.</param>
-        <param name="startRadius">To be added.</param>
-        <param name="end">To be added.</param>
-        <param name="endRadius">To be added.</param>
-        <param name="colors">To be added.</param>
-        <param name="colorPos">To be added.</param>
-        <param name="mode">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="start">The coordinates for the starting point.</param>
+        <param name="startRadius">The radius at the starting point.</param>
+        <param name="end">The coordinates for the end point.</param>
+        <param name="endRadius">The radius at the end point.</param>
+        <param name="colors">The array colors to be distributed between the two points.</param>
+        <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
+        <param name="mode">The tiling mode.</param>
+        <summary>Creates a shader that generates a conical gradient given two circles.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateTwoPointConicalGradient">
@@ -648,17 +688,19 @@
         <Parameter Name="localMatrix" Type="SkiaSharp.SKMatrix" />
       </Parameters>
       <Docs>
-        <param name="start">To be added.</param>
-        <param name="startRadius">To be added.</param>
-        <param name="end">To be added.</param>
-        <param name="endRadius">To be added.</param>
-        <param name="colors">To be added.</param>
-        <param name="colorPos">To be added.</param>
-        <param name="mode">To be added.</param>
-        <param name="localMatrix">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="start">The coordinates for the starting point.</param>
+        <param name="startRadius">The radius at the starting point.</param>
+        <param name="end">The coordinates for the end point.</param>
+        <param name="endRadius">The radius at the end point.</param>
+        <param name="colors">The array colors to be distributed between the two points.</param>
+        <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
+        <param name="mode">The tiling mode.</param>
+        <param name="localMatrix">The matrix to apply before applying the shader.</param>
+        <summary>Creates a shader that generates a conical gradient given two circles.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
