@@ -16,12 +16,8 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>2D Transformation matrix with perspective.</summary>
-    <remarks>
-      <para>The SKMatrix is a full 3x3 matrix.</para>
-      <para></para>
-      <para>It extends the traditional 2D affine transformation matrix with three perspective components that allow simple 3D effects to be created with it.   Those components must be manually set by using the <see cref="P:SkiaSharp.SKMatrix.Persp0" />, <see cref="P:SkiaSharp.SKMatrix.Persp1" />, <see cref="P:SkiaSharp.SKMatrix.Persp2" /> fields of the matrix.</para>
-    </remarks>
+    <summary>A 3x3 transformation matrix with perspective.</summary>
+    <remarks>It extends the traditional 2D affine transformation matrix with three perspective components that allow simple 3D effects to be created with it. Those components must be manually set by using the <see cref="P:SkiaSharp.SKMatrix.Persp0" />, <see cref="P:SkiaSharp.SKMatrix.Persp1" />, <see cref="P:SkiaSharp.SKMatrix.Persp2" /> fields of the matrix.</remarks>
   </Docs>
   <Members>
     <Member MemberName="Concat">
@@ -40,11 +36,11 @@
         <Parameter Name="second" Type="SkiaSharp.SKMatrix" />
       </Parameters>
       <Docs>
-        <param name="target">To be added.</param>
-        <param name="first">To be added.</param>
-        <param name="second">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="target">The result matrix value.</param>
+        <param name="first">The first matrix to concatenate.</param>
+        <param name="second">The second matrix to concatenate.</param>
+        <summary>Concatenates the specified matrices into the resulting target matrix.</summary>
+        <remarks>Either source matrices can also be the target matrix.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Concat">
@@ -71,7 +67,7 @@
         <param name="target">The result matrix value.</param>
         <param name="first">The first matrix to concatenate.</param>
         <param name="second">The second matrix to concatenate.</param>
-        <summary>Concatenates the specified matrices into the resulting target matrix.   </summary>
+        <summary>Concatenates the specified matrices into the resulting target matrix.</summary>
         <remarks>Either source matrices can also be the target matrix.</remarks>
       </Docs>
     </Member>
@@ -90,9 +86,9 @@
         <Parameter Name="values" Type="System.Single[]" />
       </Parameters>
       <Docs>
-        <param name="values">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="values">The array to populate.</param>
+        <summary>Populates the specified array with the matrix values.</summary>
+        <remarks>The result will be the same as <see cref="P:SkiaSharp.SKMatrix.Values" />.</remarks>
       </Docs>
     </Member>
     <Member MemberName="MakeIdentity">
@@ -113,9 +109,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Returns the identity matrix.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Creates an identity matrix.</summary>
+        <returns>Returns the new matrix.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="MakeRotation">
@@ -139,9 +137,11 @@
       </Parameters>
       <Docs>
         <param name="radians">The angle for the rotation, in radians.</param>
-        <summary>Creates a rotation matrix</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Creates a matrix that represents a specific rotation in radians.</summary>
+        <returns>Returns the new matrix.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="MakeRotation">
@@ -166,10 +166,10 @@
       </Parameters>
       <Docs>
         <param name="radians">The angle for the rotation, in radians.</param>
-        <param name="pivotx">The X coordiate for the rotation pivot.</param>
-        <param name="pivoty">The Y coordiate for the rotation pivot.</param>
-        <summary>Creates an <see cref="T:SkiaSharp.SKMatrix" /> that represents a specific rotation in radians with a specific pivot point.</summary>
-        <returns>Returns a new matrix with the specific rotation at the pivot point.</returns>
+        <param name="pivotx">The x-coordiate for the rotation pivot.</param>
+        <param name="pivoty">The y-coordiate for the rotation pivot.</param>
+        <summary>Creates a matrix that represents a specific rotation in radians, around a pivot point.</summary>
+        <returns>Returns the new matrix.</returns>
         <remarks>
           <para></para>
         </remarks>
@@ -194,13 +194,12 @@
         <Parameter Name="degrees" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="degrees">
-          <para>The angle for the rotation, in degrees.</para>
+        <param name="degrees">The angle for the rotation, in degrees.</param>
+        <summary>Creates a matrix that represents a specific rotation in degrees.</summary>
+        <returns>Returns the new matrix.</returns>
+        <remarks>
           <para></para>
-        </param>
-        <summary>Creates an <see cref="T:SkiaSharp.SKMatrix" /> that represents a specific rotation in degrees.</summary>
-        <returns>Returns a new matrix with the specific rotation in degrees.</returns>
-        <remarks>To be added.</remarks>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="MakeRotationDegrees">
@@ -225,11 +224,13 @@
       </Parameters>
       <Docs>
         <param name="degrees">The angle for the rotation, in degrees.</param>
-        <param name="pivotx">The X coordiate for the rotation pivot.</param>
-        <param name="pivoty">The Y coordiate for the rotation pivot.</param>
-        <summary>Creates an <see cref="T:SkiaSharp.SKMatrix" /> that represents a specific rotation in degrees.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="pivotx">The x-coordiate for the rotation pivot.</param>
+        <param name="pivoty">The y-coordiate for the rotation pivot.</param>
+        <summary>Creates a matrix that represents a specific rotation in degrees, around a pivot point.</summary>
+        <returns>Returns the new matrix.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="MakeScale">
@@ -253,11 +254,13 @@
         <Parameter Name="sy" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="sx">Scale X component.</param>
-        <param name="sy">Scale Y component.</param>
+        <param name="sx">The scaling in the x-direction.</param>
+        <param name="sy">The scaling in the y-direction.</param>
         <summary>Creates a scaling matrix.</summary>
-        <returns>Returns a new matrix with the specific scale factor.</returns>
-        <remarks>To be added.</remarks>
+        <returns>Returns the new matrix.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="MakeScale">
@@ -283,13 +286,15 @@
         <Parameter Name="pivotY" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="sx">Scale X component.</param>
-        <param name="sy">Scale Y component.</param>
-        <param name="pivotX">The X coordiate for the rotation pivot.</param>
-        <param name="pivotY">The Y coordiate for the rotation pivot.</param>
-        <summary>Creates a scaling matrix with a pivot point.</summary>
-        <returns>Returns a new matrix with the specific scale factor at the pivot point.</returns>
-        <remarks>To be added.</remarks>
+        <param name="sx">The scaling in the x-direction.</param>
+        <param name="sy">The scaling in the y-direction.</param>
+        <param name="pivotX">The x-coordiate for the scaling pivot.</param>
+        <param name="pivotY">The y-coordiate for the scaling pivot.</param>
+        <summary>Creates a scaling matrix, around a pivot point.</summary>
+        <returns>Returns the new matrix.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="MakeSkew">
@@ -313,11 +318,13 @@
         <Parameter Name="sy" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="sx">Skew X component.</param>
-        <param name="sy">Skew Y component.</param>
+        <param name="sx">The skew in the x-direction.</param>
+        <param name="sy">The skew in the y-direction.</param>
         <summary>Creates a skewing matrix.</summary>
-        <returns>Returns a new matrix with the specific skewing factor.</returns>
-        <remarks>To be added.</remarks>
+        <returns>Returns the new matrix.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="MakeTranslation">
@@ -341,11 +348,55 @@
         <Parameter Name="dy" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="dx">The X offset for the translation.</param>
-        <param name="dy">The Y offset for the translation.</param>
+        <param name="dx">The translation/offset in the x-direction.</param>
+        <param name="dy">The translation/offset in the y-direction.</param>
         <summary>Creates a translation matrix.</summary>
-        <returns>Returns a new matrix with the specific translation factor.</returns>
-        <remarks>To be added.</remarks>
+        <returns>Returns the new matrix.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MapPoint">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPoint MapPoint (SkiaSharp.SKPoint point);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKPoint MapPoint(valuetype SkiaSharp.SKPoint point) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPoint</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="point" Type="SkiaSharp.SKPoint" />
+      </Parameters>
+      <Docs>
+        <param name="point">The point to map.</param>
+        <summary>Applies the matrix to a point.</summary>
+        <returns>Returns the mapped point.</returns>
+        <remarks>Mapping points uses all components of the matrix. Use <see cref="M:SkiaSharp.SKMatrix.MapVector" /> to ignore the translation.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MapPoint">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPoint MapPoint (float x, float y);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKPoint MapPoint(float32 x, float32 y) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPoint</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="x" Type="System.Single" />
+        <Parameter Name="y" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="x">The x-coordinate.</param>
+        <param name="y">The y-coordinate.</param>
+        <summary>Applies the matrix to a point.</summary>
+        <returns>Returns the mapped point.</returns>
+        <remarks>Mapping points uses all components of the matrix. Use <see cref="M:SkiaSharp.SKMatrix.MapVector" /> to ignore the translation.</remarks>
       </Docs>
     </Member>
     <Member MemberName="MapPoints">
@@ -367,15 +418,10 @@
         <Parameter Name="points" Type="SkiaSharp.SKPoint[]" />
       </Parameters>
       <Docs>
-        <param name="points">An array of points that you want to map.</param>
-        <summary>
-          <para>Apply the to the array of points and return the mapped results.</para>
-        </summary>
-        <returns>New array allocated with the mapped results.</returns>
-        <remarks>
-          <para>Mapping points uses all components of the matrix.   If you want to ignore the translation, use MapVectors.</para>
-          <para></para>
-        </remarks>
+        <param name="points">The array of points to be mapped.</param>
+        <summary>Applies the matrix to an array of points.</summary>
+        <returns>Returns the new array allocated with the mapped results.</returns>
+        <remarks>Mapping points uses all components of the matrix. Use <see cref="M:SkiaSharp.SKMatrix.MapVectors" /> to ignore the translation.</remarks>
       </Docs>
     </Member>
     <Member MemberName="MapPoints">
@@ -398,13 +444,10 @@
         <Parameter Name="points" Type="SkiaSharp.SKPoint[]" />
       </Parameters>
       <Docs>
-        <param name="result">Array where the mapped results will be stored, the array needs to have the same number of elements of the <paramref name="points" /> array.</param>
-        <param name="points">Source array with the points to convert.</param>
-        <summary>Apply the to the array of points and return the mapped results.</summary>
-        <remarks>
-          <para>Mapping points uses all components of the matrix.   If you want to ignore the translation, use MapVectors.</para>
-          <para></para>
-        </remarks>
+        <param name="result">The array where the mapped results waill be stored (needs to have the same number of elements of the <paramref name="points" /> array).</param>
+        <param name="points">The array of points to be mapped.</param>
+        <summary>Applies the matrix to an array of points.</summary>
+        <remarks>Mapping points uses all components of the matrix. Use <see cref="M:SkiaSharp.SKMatrix.MapVectors" /> to ignore the translation.</remarks>
       </Docs>
     </Member>
     <Member MemberName="MapRadius">
@@ -426,12 +469,12 @@
         <Parameter Name="radius" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="radius">Radius to map.</param>
-        <summary>
-          <para>Return the mean radius of a circle after it has been mapped by this matrix</para>
-        </summary>
-        <returns>Return the mean radius of a circle after it has been mapped by this matrix</returns>
-        <remarks>To be added.</remarks>
+        <param name="radius">The radius to map.</param>
+        <summary>Calculates the mean radius of a circle after it has been mapped by this matrix.</summary>
+        <returns>Returns the mean radius.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="MapRect">
@@ -453,15 +496,17 @@
         <Parameter Name="source" Type="SkiaSharp.SKRect" />
       </Parameters>
       <Docs>
-        <param name="source">Source recatngle to map.</param>
-        <summary>Apply the matrix to the source rectangle and return the mapped rectangle.</summary>
-        <returns>The rectangle with the matrix.</returns>
-        <remarks>To be added.</remarks>
+        <param name="source">The source rectangle to map.</param>
+        <summary>Applies the matrix to a rectangle.</summary>
+        <returns>Returns the mapped rectangle.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="MapRect">
-      <MemberSignature Language="C#" Value="public void MapRect (ref SkiaSharp.SKMatrix matrix, out SkiaSharp.SKRect dest, ref SkiaSharp.SKRect source);" />
-      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void MapRect(valuetype SkiaSharp.SKMatrix matrix, valuetype SkiaSharp.SKRect dest, valuetype SkiaSharp.SKRect source) cil managed" />
+      <MemberSignature Language="C#" Value="public static void MapRect (ref SkiaSharp.SKMatrix matrix, out SkiaSharp.SKRect dest, ref SkiaSharp.SKRect source);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig void MapRect(valuetype SkiaSharp.SKMatrix matrix, valuetype SkiaSharp.SKRect dest, valuetype SkiaSharp.SKRect source) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
@@ -478,11 +523,13 @@
         <Parameter Name="source" Type="SkiaSharp.SKRect&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="matrix">To be added.</param>
-        <param name="dest">To be added.</param>
-        <param name="source">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="matrix">The transformation matrix.</param>
+        <param name="dest">The mapped rectangle.</param>
+        <param name="source">The source rectangle to map.</param>
+        <summary>Applies the matrix to a rectangle.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="MapVector">
@@ -505,11 +552,11 @@
         <Parameter Name="y" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="x">X component of the vector.</param>
-        <param name="y">Y component of the vector.</param>
-        <summary>Applies the matrix to a vector.</summary>
+        <param name="x">The x-component of the vector.</param>
+        <param name="y">The y-component of the vector.</param>
+        <summary>Applies the matrix to a vector, ignoring translation.</summary>
         <returns>Returns the mapped point.</returns>
-        <remarks>Mapping vectors ignores the translation component in the matrix.   If you want to take the translation into consideration, use MapXY.</remarks>
+        <remarks>Mapping vectors ignores the translation component in the matrix. Use <see cref="M:SkiaSharp.SKMatrix.MapXY" /> to take the translation into consideration.</remarks>
       </Docs>
     </Member>
     <Member MemberName="MapVectors">
@@ -531,10 +578,10 @@
         <Parameter Name="vectors" Type="SkiaSharp.SKPoint[]" />
       </Parameters>
       <Docs>
-        <param name="vectors">An array of vectors that you want to map.</param>
-        <summary>Apply the to the array of vectors and return the mapped results..</summary>
-        <returns>New array allocated with the mapped results.</returns>
-        <remarks>Mapping vectors ignores the translation component in the matrix.   If you want to take the translation into consideration, use MapPoints.</remarks>
+        <param name="vectors">The array of vectors to map.</param>
+        <summary>Applies the matrix to the array of vectors, ignoring translation, and returns the mapped results.</summary>
+        <returns>Returns the new array allocated with the mapped results.</returns>
+        <remarks>Mapping vectors ignores the translation component in the matrix. Use <see cref="M:SkiaSharp.SKMatrix.MapPoints" /> to take the translation into consideration.</remarks>
       </Docs>
     </Member>
     <Member MemberName="MapVectors">
@@ -557,10 +604,10 @@
         <Parameter Name="vectors" Type="SkiaSharp.SKPoint[]" />
       </Parameters>
       <Docs>
-        <param name="result">Array where the mapped results will be stored, the array needs to have the same number of elements of the <paramref name="vectors" /> array.</param>
-        <param name="vectors">To be added.</param>
+        <param name="result">The array where the mapped results waill be stored (needs to have the same number of elements of the <paramref name="vectors" /> array).</param>
+        <param name="vectors">The array of vectors to map.</param>
         <summary>Apply the to the array of vectors and return the mapped results..</summary>
-        <remarks>Mapping vectors ignores the translation component in the matrix.   If you want to take the translation into consideration, use MapPoints.</remarks>
+        <remarks>Mapping vectors ignores the translation component in the matrix. Use <see cref="M:SkiaSharp.SKMatrix.MapPoints" /> to take the translation into consideration.</remarks>
       </Docs>
     </Member>
     <Member MemberName="MapXY">
@@ -575,6 +622,11 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Obsolete("Use MapPoint instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPoint</ReturnType>
       </ReturnValue>
@@ -583,29 +635,11 @@
         <Parameter Name="y" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="x">X coordinate.</param>
-        <param name="y">Y coordinate.</param>
+        <param name="x">The x-coordinate.</param>
+        <param name="y">The y-coordinate.</param>
         <summary>Applies the matrix to a point.</summary>
         <returns>Returns the mapped point.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Persp0">
-      <MemberSignature Language="C#" Value="public float Persp0;" />
-      <MemberSignature Language="ILAsm" Value=".field public float32 Persp0" />
-      <MemberType>Field</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <AssemblyVersion>1.49.0.0</AssemblyVersion>
-        <AssemblyVersion>1.52.0.0</AssemblyVersion>
-        <AssemblyVersion>1.53.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Single</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>Mapping uses all components in the matrix. Use <see cref="M:SkiaSharp.SKMatrix.MapVector" /> to ignore the translation.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Persp0">
@@ -620,27 +654,13 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Persp1">
-      <MemberSignature Language="C#" Value="public float Persp1;" />
-      <MemberSignature Language="ILAsm" Value=".field public float32 Persp1" />
-      <MemberType>Field</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <AssemblyVersion>1.49.0.0</AssemblyVersion>
-        <AssemblyVersion>1.52.0.0</AssemblyVersion>
-        <AssemblyVersion>1.53.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Single</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the x-perspective.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Persp1">
@@ -655,27 +675,13 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Persp2">
-      <MemberSignature Language="C#" Value="public float Persp2;" />
-      <MemberSignature Language="ILAsm" Value=".field public float32 Persp2" />
-      <MemberType>Field</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <AssemblyVersion>1.49.0.0</AssemblyVersion>
-        <AssemblyVersion>1.52.0.0</AssemblyVersion>
-        <AssemblyVersion>1.53.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Single</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the y-perspective.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Persp2">
@@ -690,9 +696,13 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the z-perspective.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="PostConcat">
@@ -710,10 +720,10 @@
         <Parameter Name="matrix" Type="SkiaSharp.SKMatrix" />
       </Parameters>
       <Docs>
-        <param name="target">To be added.</param>
-        <param name="matrix">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="target">The target matrix.</param>
+        <param name="matrix">The matrix to be post-concatenated.</param>
+        <summary>Post-concatenates the matrix to the target matrix.</summary>
+        <remarks>This represents: result = matrix * target</remarks>
       </Docs>
     </Member>
     <Member MemberName="PostConcat">
@@ -736,10 +746,10 @@
         <Parameter Name="matrix" Type="SkiaSharp.SKMatrix&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="target">Target matrix.</param>
+        <param name="target">The target matrix.</param>
         <param name="matrix">The matrix to be post-concatenated.</param>
-        <summary>Post-concatenates the matrix to the target matrix</summary>
-        <remarks>This represents newTarget = matrix * target</remarks>
+        <summary>Post-concatenates the matrix to the target matrix.</summary>
+        <remarks>This represents: result = matrix * target</remarks>
       </Docs>
     </Member>
     <Member MemberName="PreConcat">
@@ -757,10 +767,10 @@
         <Parameter Name="matrix" Type="SkiaSharp.SKMatrix" />
       </Parameters>
       <Docs>
-        <param name="target">To be added.</param>
-        <param name="matrix">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="target">The target matrix.</param>
+        <param name="matrix">The matrix to be post-concatenated.</param>
+        <summary>Pre-concatenates the matrix to the target matrix.</summary>
+        <remarks>This represents: result = target * matrix</remarks>
       </Docs>
     </Member>
     <Member MemberName="PreConcat">
@@ -783,10 +793,10 @@
         <Parameter Name="matrix" Type="SkiaSharp.SKMatrix&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="target">Target matrix.</param>
+        <param name="target">The target matrix.</param>
         <param name="matrix">The matrix to be post-concatenated.</param>
-        <summary>Pre-concatenates the matrix to the target matrix</summary>
-        <remarks>This represents newTarget = target * matrix</remarks>
+        <summary>Pre-concatenates the matrix to the target matrix.</summary>
+        <remarks>This represents: result = target * matrix</remarks>
       </Docs>
     </Member>
     <Member MemberName="Rotate">
@@ -809,10 +819,12 @@
         <Parameter Name="radians" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="matrix">Target matrix.</param>
+        <param name="matrix">The target matrix.</param>
         <param name="radians">The angle for the rotation, in radians.</param>
-        <summary>Rotates the spefixied matrix by the specified radians.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Rotates the specified matrix by the specified radians.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Rotate">
@@ -837,12 +849,14 @@
         <Parameter Name="pivoty" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="matrix">Target matrix.</param>
+        <param name="matrix">The target matrix.</param>
         <param name="radians">The angle for the rotation, in radians.</param>
-        <param name="pivotx">The X coordiate for the rotation pivot.</param>
-        <param name="pivoty">The Y coordiate for the rotation pivot.</param>
-        <summary>Rotates the spefixied matrix by the specified radians.</summary>
-        <remarks>To be added.</remarks>
+        <param name="pivotx">The x-coordiate for the rotation pivot.</param>
+        <param name="pivoty">The y-coordiate for the rotation pivot.</param>
+        <summary>Rotates the specified matrix by the specified radians.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="RotateDegrees">
@@ -865,10 +879,12 @@
         <Parameter Name="degrees" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="matrix">Target matrix.</param>
+        <param name="matrix">The target matrix.</param>
         <param name="degrees">The angle for the rotation, in degrees.</param>
         <summary>Rotates the spefixied matrix by the specified degrees.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="RotateDegrees">
@@ -893,30 +909,14 @@
         <Parameter Name="pivoty" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="matrix">Target matrix.</param>
+        <param name="matrix">The target matrix.</param>
         <param name="degrees">The angle for the rotation, in degrees.</param>
-        <param name="pivotx">The X coordiate for the rotation pivot.</param>
-        <param name="pivoty">The Y coordiate for the rotation pivot.</param>
+        <param name="pivotx">The x-coordiate for the rotation pivot.</param>
+        <param name="pivoty">The y-coordiate for the rotation pivot.</param>
         <summary>Rotates the spefixied matrix by the specified degrees.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ScaleX">
-      <MemberSignature Language="C#" Value="public float ScaleX;" />
-      <MemberSignature Language="ILAsm" Value=".field public float32 ScaleX" />
-      <MemberType>Field</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <AssemblyVersion>1.49.0.0</AssemblyVersion>
-        <AssemblyVersion>1.52.0.0</AssemblyVersion>
-        <AssemblyVersion>1.53.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Single</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>The ScaleX component of the SKMatrix.</summary>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ScaleX">
@@ -931,27 +931,13 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ScaleY">
-      <MemberSignature Language="C#" Value="public float ScaleY;" />
-      <MemberSignature Language="ILAsm" Value=".field public float32 ScaleY" />
-      <MemberType>Field</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <AssemblyVersion>1.49.0.0</AssemblyVersion>
-        <AssemblyVersion>1.52.0.0</AssemblyVersion>
-        <AssemblyVersion>1.53.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Single</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>The ScaleY component of the SKMatrix.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the scaling in the x-direction.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ScaleY">
@@ -966,9 +952,13 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the scaling in the y-direction.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="SetScaleTranslate">
@@ -994,30 +984,14 @@
         <Parameter Name="ty" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="sx">To be added.</param>
-        <param name="sy">To be added.</param>
-        <param name="tx">To be added.</param>
-        <param name="ty">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="SkewX">
-      <MemberSignature Language="C#" Value="public float SkewX;" />
-      <MemberSignature Language="ILAsm" Value=".field public float32 SkewX" />
-      <MemberType>Field</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <AssemblyVersion>1.49.0.0</AssemblyVersion>
-        <AssemblyVersion>1.52.0.0</AssemblyVersion>
-        <AssemblyVersion>1.53.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Single</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>The SkewX component of the SKMatrix.</summary>
-        <remarks>To be added.</remarks>
+        <param name="sx">The scaling in the x-direction.</param>
+        <param name="sy">The scaling in the y-direction.</param>
+        <param name="tx">The translation in the x-direction.</param>
+        <param name="ty">The translation in the y-direction.</param>
+        <summary>Initializes the matrix to be scale + post-translate.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="SkewX">
@@ -1032,27 +1006,13 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="SkewY">
-      <MemberSignature Language="C#" Value="public float SkewY;" />
-      <MemberSignature Language="ILAsm" Value=".field public float32 SkewY" />
-      <MemberType>Field</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <AssemblyVersion>1.49.0.0</AssemblyVersion>
-        <AssemblyVersion>1.52.0.0</AssemblyVersion>
-        <AssemblyVersion>1.53.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Single</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>The SkewY component of the SKMatrix.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the skew in the x-direction.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="SkewY">
@@ -1067,27 +1027,13 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="TransX">
-      <MemberSignature Language="C#" Value="public float TransX;" />
-      <MemberSignature Language="ILAsm" Value=".field public float32 TransX" />
-      <MemberType>Field</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <AssemblyVersion>1.49.0.0</AssemblyVersion>
-        <AssemblyVersion>1.52.0.0</AssemblyVersion>
-        <AssemblyVersion>1.53.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Single</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>The TransX component of the SKMatrix.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the skew in the y-direction.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="TransX">
@@ -1102,27 +1048,13 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="TransY">
-      <MemberSignature Language="C#" Value="public float TransY;" />
-      <MemberSignature Language="ILAsm" Value=".field public float32 TransY" />
-      <MemberType>Field</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <AssemblyVersion>1.49.0.0</AssemblyVersion>
-        <AssemblyVersion>1.52.0.0</AssemblyVersion>
-        <AssemblyVersion>1.53.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Single</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>The TransY component of the SKMatrix.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Get or sets the translation in the x-direction.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="TransY">
@@ -1137,9 +1069,13 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Get or sets the translation in the y-direction.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="TryInvert">
@@ -1164,7 +1100,9 @@
         <param name="inverse">The destination value to store the inverted matrix if the matrix can be inverted.</param>
         <summary>Attempts to invert the matrix, if possible the inverse matrix contains the result.</summary>
         <returns>True if the matrix can be inverted, and the inverse parameter is initialized with the inverted matrix, false otherwise.</returns>
-        <remarks>To be added.</remarks>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Values">
@@ -1179,9 +1117,13 @@
         <ReturnType>System.Single[]</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the matrix as a flat array: [ScaleX, SkewX, TransX, SkewY, ScaleY, TransY, Persp0, Persp1, Persp2].</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
   </Members>

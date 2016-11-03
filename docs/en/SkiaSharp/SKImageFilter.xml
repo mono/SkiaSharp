@@ -88,6 +88,34 @@
         </remarks>
       </Docs>
     </Member>
+    <Member MemberName="CreateBlendMode">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateBlendMode (SkiaSharp.SKBlendMode mode, SkiaSharp.SKImageFilter background, SkiaSharp.SKImageFilter foreground = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateBlendMode(valuetype SkiaSharp.SKBlendMode mode, class SkiaSharp.SKImageFilter background, class SkiaSharp.SKImageFilter foreground, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="mode" Type="SkiaSharp.SKBlendMode" />
+        <Parameter Name="background" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="foreground" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="mode">The blend mode.</param>
+        <param name="background">The background filter.</param>
+        <param name="foreground">The forground filter.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a blend mode.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
     <Member MemberName="CreateBlur">
       <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateBlur (float sigmaX, float sigmaY, SkiaSharp.SKImageFilter input = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
       <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateBlur(float32 sigmaX, float32 sigmaY, class SkiaSharp.SKImageFilter input, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
@@ -184,13 +212,18 @@
         </remarks>
       </Docs>
     </Member>
-    <Member MemberName="CreateDisplacementMapEffect">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateDisplacementMapEffect (SkiaSharp.SKDisplacementMapEffectChannelSelectorType xChannelSelector, SkiaSharp.SKDisplacementMapEffectChannelSelectorType yChannelSelector, float scale, SkiaSharp.SKImageFilter displacement, SkiaSharp.SKImageFilter input = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateDisplacementMapEffect(valuetype SkiaSharp.SKDisplacementMapEffectChannelSelectorType xChannelSelector, valuetype SkiaSharp.SKDisplacementMapEffectChannelSelectorType yChannelSelector, float32 scale, class SkiaSharp.SKImageFilter displacement, class SkiaSharp.SKImageFilter input, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+    <Member MemberName="CreateCompose">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateCompose (SkiaSharp.SKDisplacementMapEffectChannelSelectorType xChannelSelector, SkiaSharp.SKDisplacementMapEffectChannelSelectorType yChannelSelector, float scale, SkiaSharp.SKImageFilter displacement, SkiaSharp.SKImageFilter input = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateCompose(valuetype SkiaSharp.SKDisplacementMapEffectChannelSelectorType xChannelSelector, valuetype SkiaSharp.SKDisplacementMapEffectChannelSelectorType yChannelSelector, float32 scale, class SkiaSharp.SKImageFilter displacement, class SkiaSharp.SKImageFilter input, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Obsolete("Use CreateDisplacementMapEffect instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
       </ReturnValue>
@@ -203,14 +236,30 @@
         <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
       </Parameters>
       <Docs>
-        <param name="xChannelSelector">The channel in the x-direction to select for displacement.</param>
-        <param name="yChannelSelector">The channel in the y-direction to select for displacement.</param>
-        <param name="scale">The amount to displace by.</param>
-        <param name="displacement">The image filter to apply the displacement to.</param>
-        <param name="input">The input filter to use.</param>
-        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
-        <summary>Creates an image filter that applies a displacement map.</summary>
-        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <param name="xChannelSelector">
+          <para></para>
+        </param>
+        <param name="yChannelSelector">
+          <para></para>
+        </param>
+        <param name="scale">
+          <para></para>
+        </param>
+        <param name="displacement">
+          <para></para>
+        </param>
+        <param name="input">
+          <para></para>
+        </param>
+        <param name="cropRect">
+          <para></para>
+        </param>
+        <summary>
+          <para></para>
+        </summary>
+        <returns>
+          <para></para>
+        </returns>
         <remarks>
           <para></para>
         </remarks>
@@ -244,6 +293,38 @@
         <param name="input">The input filter to use.</param>
         <param name="cropRect">The rectangle to which the output processing will be limited.</param>
         <summary>Creates an image filter that applies a dilation to pixels of a bitmap.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateDisplacementMapEffect">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateDisplacementMapEffect (SkiaSharp.SKDisplacementMapEffectChannelSelectorType xChannelSelector, SkiaSharp.SKDisplacementMapEffectChannelSelectorType yChannelSelector, float scale, SkiaSharp.SKImageFilter displacement, SkiaSharp.SKImageFilter input = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateDisplacementMapEffect(valuetype SkiaSharp.SKDisplacementMapEffectChannelSelectorType xChannelSelector, valuetype SkiaSharp.SKDisplacementMapEffectChannelSelectorType yChannelSelector, float32 scale, class SkiaSharp.SKImageFilter displacement, class SkiaSharp.SKImageFilter input, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="xChannelSelector" Type="SkiaSharp.SKDisplacementMapEffectChannelSelectorType" />
+        <Parameter Name="yChannelSelector" Type="SkiaSharp.SKDisplacementMapEffectChannelSelectorType" />
+        <Parameter Name="scale" Type="System.Single" />
+        <Parameter Name="displacement" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="xChannelSelector">The channel in the x-direction to select for displacement.</param>
+        <param name="yChannelSelector">The channel in the y-direction to select for displacement.</param>
+        <param name="scale">The amount to displace by.</param>
+        <param name="displacement">The image filter to apply the displacement to.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a displacement map.</summary>
         <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
         <remarks>
           <para></para>
@@ -854,34 +935,6 @@
         <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
         <remarks>
           <para></para>
-        </remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="CreateBlendMode">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateBlendMode (SkiaSharp.SKBlendMode mode, SkiaSharp.SKImageFilter background, SkiaSharp.SKImageFilter foreground = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateBlendMode(valuetype SkiaSharp.SKBlendMode mode, class SkiaSharp.SKImageFilter background, class SkiaSharp.SKImageFilter foreground, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.55.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="mode" Type="SkiaSharp.SKBlendMode" />
-        <Parameter Name="background" Type="SkiaSharp.SKImageFilter" />
-        <Parameter Name="foreground" Type="SkiaSharp.SKImageFilter" />
-        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
-      </Parameters>
-      <Docs>
-        <param name="mode">The blend mode.</param>
-        <param name="background">The background filter.</param>
-        <param name="foreground">The forground filter.</param>
-        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
-        <summary>Creates an image filter that applies a blend mode.</summary>
-        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
-        <remarks>
-          <para />
         </remarks>
       </Docs>
     </Member>
