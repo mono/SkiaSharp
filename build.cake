@@ -248,17 +248,26 @@ Task ("docs")
         var typesWithDocs = xdoc.Root
             .Elements ("Docs");
 
-        totalTypes += typesWithDocs.Count (); 
-        typeCount += typesWithDocs.Where (m => m.Value != null && m.Value.IndexOf ("To be added.") >= 0).Count ();
+        totalTypes += typesWithDocs.Count ();
+        var currentTypeCount = typesWithDocs.Where (m => m.Value != null && m.Value.IndexOf ("To be added.") >= 0).Count (); 
+        typeCount += currentTypeCount;
 
         var membersWithDocs = xdoc.Root
             .Elements ("Members")
             .Elements ("Member")
-            .Where (m => m.Attribute ("MemberName") != null && m.Attribute ("MemberName").Value != "Dispose")
+            .Where (m => m.Attribute ("MemberName") != null && m.Attribute ("MemberName").Value != "Dispose"  && m.Attribute ("MemberName").Value != "Finalize")
             .Elements ("Docs");
 
         totalMembers += membersWithDocs.Count ();
-        memberCount += membersWithDocs.Where (m => m.Value != null && m.Value.IndexOf ("To be added.") >= 0).Count ();
+        var currentMemberCount = membersWithDocs.Where (m => m.Value != null && m.Value.IndexOf ("To be added.") >= 0).Count ();
+        memberCount += currentMemberCount;
+
+        currentMemberCount += currentTypeCount;
+        if (currentMemberCount > 0) {
+            var fullName = xdoc.Root.Attribute ("FullName");
+            if (fullName != null)
+                Information ("Docs missing on {0} = {1}", fullName.Value, currentMemberCount);
+        }
     }
     Information (
         "Documentation missing in {0}/{1} ({2:0.0%}) types and {3}/{4} ({5:0.0%}) members.", 
