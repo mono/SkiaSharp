@@ -2400,7 +2400,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			SkiaApi.sk_matrix_post_concat (ref target, ref matrix);
 		}
 
-		public void MapRect (ref SKMatrix matrix, out SKRect dest, ref SKRect source)
+		public static void MapRect (ref SKMatrix matrix, out SKRect dest, ref SKRect source)
 		{
 			SkiaApi.sk_matrix_map_rect (ref matrix, out dest, ref source);
 		}
@@ -2466,7 +2466,18 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			return res;
 		}
 
+		[Obsolete ("Use MapPoint instead.")]
 		public SKPoint MapXY (float x, float y)
+		{
+			return MapPoint (x, y);
+		}
+
+		public SKPoint MapPoint (SKPoint point)
+		{
+			return MapPoint (point.X, point.Y);
+		}
+
+		public SKPoint MapPoint (float x, float y)
 		{
 			SKPoint result;
 			SkiaApi.sk_matrix_map_xy (ref this, x, y, out result);
