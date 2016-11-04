@@ -10,8 +10,10 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>A view that can be drawn on using SkiaSharp drawing commands.</summary>
+    <remarks>
+      <para></para>
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -25,9 +27,11 @@
         <Parameter Name="context" Type="Android.Content.Context" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="context">The <see cref="T:Android.Content.Context" /> the view is running in, through which it can access the current theme, resources, etc.</param>
+        <summary>Simple constructor to use when creating a <see cref="T:SkiaSharp.Views.Android.SKCanvasView" /> from code.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -42,10 +46,12 @@
         <Parameter Name="attrs" Type="Android.Util.IAttributeSet" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="attrs">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="context">The <see cref="T:Android.Content.Context" /> the view is running in, through which it can access the current theme, resources, etc.</param>
+        <param name="attrs">The attributes of the XML tag that is inflating the view.</param>
+        <summary>Constructor that is called when inflating a <see cref="T:SkiaSharp.Views.Android.SKCanvasView" /> from XML.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -60,10 +66,12 @@
         <Parameter Name="transfer" Type="Android.Runtime.JniHandleOwnership" />
       </Parameters>
       <Docs>
-        <param name="javaReference">To be added.</param>
-        <param name="transfer">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="javaReference">A <see cref="T:System.IntPtr" /> a Java Native Interface (JNI) object reference.</param>
+        <param name="transfer">A <see cref="T:Android.Runtime.JniHandleOwnership" /> indicating how to handle Java reference.</param>
+        <summary>A constructor used when creating managed representations of JNI objects; called by the runtime.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -79,11 +87,13 @@
         <Parameter Name="defStyleAttr" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="attrs">To be added.</param>
-        <param name="defStyleAttr">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="context">The <see cref="T:Android.Content.Context" /> the view is running in, through which it can access the current theme, resources, etc.</param>
+        <param name="attrs">The attributes of the XML tag that is inflating the view.</param>
+        <param name="defStyleAttr">An attribute in the current theme that contains a reference to a style resource that supplies default values for the view. Can be 0 to not look for defaults.</param>
+        <summary>Perform inflation from XML and apply a class-specific base style from a theme attribute.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -119,9 +129,11 @@
         <Parameter Name="canvas" Type="Android.Graphics.Canvas" />
       </Parameters>
       <Docs>
-        <param name="canvas">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="canvas">The canvas on which the background will be drawn.</param>
+        <summary>Implement this to do your drawing.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="OnDraw">
@@ -139,10 +151,27 @@
         <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
       </Parameters>
       <Docs>
-        <param name="surface">To be added.</param>
-        <param name="info">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="surface">The surface to draw on.</param>
+        <param name="info">The information about the surface.</param>
+        <summary>Implement this to draw on the canvas.</summary>
+        <remarks>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Android.SKCanvasView.OnDraw" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Android.SKCanvasView.PaintSurface" /> event. If the method is overriden, then the base must be called.</para>
+          <para></para>
+          <example>
+            <code lang="C#"><![CDATA[protected override void OnDraw (SKSurface surface, SKImageInfo info)
+{
+    // call the base method
+    base.OnDraw (surface, info);
+
+    var surfaceWidth = info.Width;
+    var surfaceHeight = info.Height;
+
+    var canvas = surface.Canvas;
+    // draw on the canvas
+    canvas.Flush ();
+}]]></code>
+          </example>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="OnSizeChanged">
@@ -162,12 +191,14 @@
         <Parameter Name="oldh" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="w">To be added.</param>
-        <param name="h">To be added.</param>
-        <param name="oldw">To be added.</param>
-        <param name="oldh">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="w">Current width of this view.</param>
+        <param name="h">Current height of this view.</param>
+        <param name="oldw">Old width of this view.</param>
+        <param name="oldh">Old height of this view.</param>
+        <summary>This is called during layout when the size of this view has changed. If you were just added to the view hierarchy, you're called with the old values of 0.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="PaintSurface">
@@ -181,8 +212,24 @@
         <ReturnType>System.EventHandler&lt;SkiaSharp.Views.Android.SKPaintSurfaceEventArgs&gt;</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Occurs when the the canvas needs to be re-drawn.</summary>
+        <remarks>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Android.SKCanvasView.OnDraw" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Android.SKCanvasView.PaintSurface" /> event.</para>
+          <para></para>
+          <example>
+            <code lang="C#"><![CDATA[SKCanvasView myView = ...;
+
+myView.PaintSurface += (sender, e) => {
+    var surface = e.Surface;
+    var surfaceWidth = e.Info.Width;
+    var surfaceHeight = e.Info.Height;
+
+    var canvas = surface.Canvas;
+    // draw on the canvas
+    canvas.Flush ();
+};]]></code>
+          </example>
+        </remarks>
       </Docs>
     </Member>
   </Members>
