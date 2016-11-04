@@ -12,7 +12,10 @@ Param(
     [switch]$WhatIf
 )
 
-$SCRIPT_DIR = if ($PSScriptRoot -eq $null) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Definition };
+$SCRIPT_DIR = $PSScriptRoot
+if ($SCRIPT_DIR -eq $null) { 
+    $SCRIPT_DIR = (Split-Path -Parent $MyInvocation.MyCommand.Definition)
+}
 $TOOLS_DIR = Join-Path $SCRIPT_DIR "tools"
 $NUGET_EXE = Join-Path $TOOLS_DIR "nuget.exe"
 $PACKAGES_CONFIG = Join-Path $TOOLS_DIR "packages.config"
@@ -38,7 +41,7 @@ if (!(Test-Path $TOOLS_DIR)) {
 
 # Make sure NuGet exists where we expect it.
 if (!(Test-Path $NUGET_EXE)) {
-    Invoke-WebRequest -Uri https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile $NUGET_EXE
+    (New-Object System.Net.WebClient).DownloadFile("https://dist.nuget.org/win-x86-commandline/latest/nuget.exe", $NUGET_EXE)
 }
 
 # Make sure NuGet exists where we expect it.
@@ -48,9 +51,9 @@ if (!(Test-Path $NUGET_EXE)) {
 
 # Make sure xamarin-component exists where we expect it.
 if (!(Test-Path $XC_EXE)) {
-    Invoke-WebRequest -Uri https://components.xamarin.com/submit/xpkg -OutFile (Join-Path $TOOLS_DIR "xpkg.zip")    
-    Add-Type -AssemblyName System.IO.Compression.FileSystem
-    [System.IO.Compression.ZipFile]::ExtractToDirectory((Join-Path $TOOLS_DIR "xpkg.zip"), ($TOOLS_DIR))   
+    (New-Object System.Net.WebClient).DownloadFile("https://components.xamarin.com/submit/xpkg", (Join-Path $TOOLS_DIR "xpkg.zip"))
+    $shell = New-Object -ComObject Shell.Application
+    $shell.Namespace($TOOLS_DIR).copyhere(($shell.NameSpace((Join-Path $TOOLS_DIR "xpkg.zip"))).items())
 }
 
 # Restore tools from NuGet.
