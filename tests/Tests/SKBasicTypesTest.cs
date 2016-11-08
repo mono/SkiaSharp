@@ -27,6 +27,21 @@ namespace SkiaSharp.Tests
 		}
 
 		[Test]
+		public void RectanlgeOffsetsCorrectly()
+		{
+			var expected = new SKRect(25, 30, 65, 80);
+
+			var rect1 = new SKRect(15, 25, 55, 75);
+			rect1.Location = new SKPoint(25, 30);
+
+			var rect2 = new SKRect(15, 25, 55, 75);
+			rect2.Offset (10, 5);
+
+			Assert.AreEqual(expected, rect1, "SKRect.Location");
+			Assert.AreEqual(expected, rect2, "SKRect.Offset");
+		}
+
+		[Test]
 		public void RectanlgeInflatesCorrectly()
 		{
 			var rect = new SKRect(15, 25, 55, 75);

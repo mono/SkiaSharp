@@ -1536,10 +1536,7 @@ namespace SkiaSharp
 
 		public SKPointI Location {
 			get { return new SKPointI (left, top); }
-			set {
-				left = value.X;
-				top = value.Y; 
-			}
+			set { this = SKRectI.Create (value, Size); }
 		}
 
 		public SKRectI Standardized {
@@ -1814,10 +1811,7 @@ namespace SkiaSharp
 
 		public SKPoint Location {
 			get { return new SKPoint (left, top); }
-			set {
-				left = value.X;
-				top = value.Y; 
-			}
+			set { this = SKRect.Create (value, Size); }
 		}
 
 		public SKRect Standardized {
