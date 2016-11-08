@@ -190,6 +190,11 @@ Task ("samples")
 {
     ClearSkiaSharpNuGetCache ();
 
+    // zip the samples for the GitHub release notes
+    if (TARGET == "CI") {
+        Zip ("./samples", "./output/samples.zip");
+    }
+
     if (IsRunningOnUnix ()) {
         RunNuGetRestore ("./samples/MacSample/MacSample.sln");
         DotNetBuild ("./samples/MacSample/MacSample.sln", c => { 
