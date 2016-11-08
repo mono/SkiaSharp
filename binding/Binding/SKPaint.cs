@@ -251,6 +251,7 @@ namespace SkiaSharp
 			}
 		}
 
+		[Obsolete ("Use BlendMode instead.")]
 		public SKXferMode XferMode {
 			get {
 				return (SKXferMode)BlendMode;
