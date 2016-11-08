@@ -10,8 +10,10 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>A CoreAnimation layer that can be drawn on using SkiaSharp drawing commands.</summary>
+    <remarks>
+      <para />
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -23,8 +25,10 @@
       </AssemblyInfo>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Default constructor that initializes a new instance of <see cref="T:SkiaSharp.Views.Mac.SKCanvasLayer" />.</summary>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -60,9 +64,11 @@
         <Parameter Name="ctx" Type="CoreGraphics.CGContext" />
       </Parameters>
       <Docs>
-        <param name="ctx">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="ctx">The prepared context to draw into.</param>
+        <summary>Draws the layer on the specified context.</summary>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawInSurface">
@@ -80,10 +86,27 @@
         <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
       </Parameters>
       <Docs>
-        <param name="surface">To be added.</param>
-        <param name="info">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="surface">The surface to draw on.</param>
+        <param name="info">The information about the surface.</param>
+        <summary>Implement this to draw on the canvas.</summary>
+        <remarks>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Mac.SKCanvasLayer.DrawInSurface" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Mac.SKCanvasLayer.PaintSurface" /> event. If the method is overriden, then the base must be called.</para>
+          <para></para>
+          <example>
+            <code lang="C#"><![CDATA[public override void DrawInSurface (SKSurface surface, SKImageInfo info)
+{
+    // call the base method
+    base.DrawInSurface (surface, info);
+
+    var surfaceWidth = info.Width;
+    var surfaceHeight = info.Height;
+
+    var canvas = surface.Canvas;
+    // draw on the canvas
+    canvas.Flush ();
+}]]></code>
+          </example>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="PaintSurface">
@@ -97,8 +120,24 @@
         <ReturnType>System.EventHandler&lt;SkiaSharp.Views.Mac.SKPaintSurfaceEventArgs&gt;</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Occurs when the the canvas needs to be re-drawn.</summary>
+        <remarks>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Mac.SKCanvasLayer.DrawInSurface" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Mac.SKCanvasLayer.PaintSurface" /> event.</para>
+          <para></para>
+          <example>
+            <code lang="C#"><![CDATA[SKCanvasLayer myLayer = ...;
+
+myLayer.PaintSurface += (sender, e) => {
+    var surface = e.Surface;
+    var surfaceWidth = e.Info.Width;
+    var surfaceHeight = e.Info.Height;
+
+    var canvas = surface.Canvas;
+    // draw on the canvas
+    canvas.Flush ();
+};]]></code>
+          </example>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="SKDelegate">
@@ -112,9 +151,13 @@
         <ReturnType>SkiaSharp.Views.Mac.ISKCanvasLayerDelegate</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the layer’s delegate object.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
   </Members>

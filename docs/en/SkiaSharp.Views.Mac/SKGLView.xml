@@ -18,8 +18,10 @@
     </Attribute>
   </Attributes>
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>A hardware-accelerated view that can be drawn on using SkiaSharp drawing commands.</summary>
+    <remarks>
+      <para></para>
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -31,8 +33,10 @@
       </AssemblyInfo>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Default constructor that initializes a new instance of <see cref="T:SkiaSharp.Views.Mac.SKGLView" />.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -46,9 +50,11 @@
         <Parameter Name="frame" Type="CoreGraphics.CGRect" />
       </Parameters>
       <Docs>
-        <param name="frame">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="frame">The frame used by the view, expressed in iOS points.</param>
+        <summary>Initializes the <see cref="T:SkiaSharp.Views.Mac.SKGLView" /> with the specified frame.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -62,9 +68,11 @@
         <Parameter Name="p" Type="System.IntPtr" />
       </Parameters>
       <Docs>
-        <param name="p">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="p">The pointer (handle) to the unmanaged object.</param>
+        <summary>A constructor used when creating managed representations of unmanaged objects; Called by the runtime.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="AwakeFromNib">
@@ -79,8 +87,10 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Called after the object has been loaded from the nib file. Overriders must call the base method.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawInSurface">
@@ -98,10 +108,27 @@
         <Parameter Name="renderTarget" Type="SkiaSharp.GRBackendRenderTargetDesc" />
       </Parameters>
       <Docs>
-        <param name="surface">To be added.</param>
-        <param name="renderTarget">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="surface">The surface to draw on.</param>
+        <param name="renderTarget">The render target that is currently being drawn.</param>
+        <summary>Implement this to draw on the canvas.</summary>
+        <remarks>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Mac.SKGLView.DrawInSurface" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Mac.SKGLView.PaintSurface" /> event. If the method is overriden, then the base must be called.</para>
+          <para></para>
+          <example>
+            <code lang="C#"><![CDATA[public override void DrawInSurface (SKSurface surface, SKBackendRenderTargetDesc renderTarget)
+{
+    // call the base method
+    base.DrawInSurface (surface, renderTarget);
+
+    var surfaceWidth = renderTarget.Width;
+    var surfaceHeight = renderTarget.Height;
+
+    var canvas = surface.Canvas;
+    // draw on the canvas
+    canvas.Flush ();
+}]]></code>
+          </example>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawRect">
@@ -118,9 +145,11 @@
         <Parameter Name="dirtyRect" Type="CoreGraphics.CGRect" />
       </Parameters>
       <Docs>
-        <param name="dirtyRect">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="dirtyRect">The rectangle to draw.</param>
+        <summary>Draws the view within the passed-in rectangle.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="PaintSurface">
@@ -134,8 +163,24 @@
         <ReturnType>System.EventHandler&lt;SkiaSharp.Views.Mac.SKPaintGLSurfaceEventArgs&gt;</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Occurs when the surface needs to be re-drawn.</summary>
+        <remarks>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Mac.SKGLView.DrawInSurface" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Mac.SKGLView.PaintSurface" /> event.</para>
+          <para></para>
+          <example>
+            <code lang="C#"><![CDATA[SKGLView myView = ...;
+
+myView.PaintSurface += (sender, e) => {
+    var surface = e.Surface;
+    var surfaceWidth = e.RenderTarget.Width;
+    var surfaceHeight = e.RenderTarget.Height;
+
+    var canvas = surface.Canvas;
+    // draw on the canvas
+    canvas.Flush ();
+};]]></code>
+          </example>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="PrepareOpenGL">
@@ -150,8 +195,10 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Used by subclasses to initialize OpenGL state.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
   </Members>
