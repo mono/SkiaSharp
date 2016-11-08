@@ -15,8 +15,13 @@ namespace SkiaSharp.Views.tvOS
 	public class SKCanvasView : UIView, IComponent
 	{
 		// for IComponent
-		public ISite Site { get; set; }
-		public event EventHandler Disposed;
+		private event EventHandler DisposedInternal;
+		ISite IComponent.Site { get; set; }
+		event EventHandler IComponent.Disposed
+		{
+			add { DisposedInternal += value; }
+			remove { DisposedInternal -= value; }
+		}
 		private bool designMode;
 
 		private SKDrawable drawable;
@@ -43,7 +48,7 @@ namespace SkiaSharp.Views.tvOS
 		// created via designer
 		public override void AwakeFromNib()
 		{
-			designMode = Site?.DesignMode == true;
+			designMode = ((IComponent)this).Site?.DesignMode == true;
 
 			Initialize();
 		}

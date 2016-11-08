@@ -81,7 +81,7 @@ namespace SkiaSharp.Views.tvOS
 			PaintSurface?.Invoke(this, new SKPaintGLSurfaceEventArgs(surface, renderTarget));
 		}
 
-		public virtual void PrepareGLContexts()
+		private void PrepareGLContexts()
 		{
 			// create GL context
 			glContext = new EAGLContext(EAGLRenderingAPI.OpenGLES2);
@@ -105,7 +105,7 @@ namespace SkiaSharp.Views.tvOS
 			EAGLContext.SetCurrentContext(null);
 		}
 
-		public virtual void ResizeGLContexts()
+		private void ResizeGLContexts()
 		{
 			// nuke old buffers
 			GL.DeleteRenderbuffers(1, ref renderBuffer);
