@@ -360,6 +360,39 @@ Task ("update-docs")
 
     // generate doc files
     RunMdocUpdate (assemblies, DOCS_PATH, refs.ToArray ());
+
+    // apply some formatting
+    var docFiles = GetFiles ("./docs/**/*.xml");
+    foreach (var file in docFiles) {
+
+        var xdoc = XDocument.Load (file.ToString ());
+
+        // remove IComponent docs as this is just designer
+        var icomponents = xdoc.Root
+            .Elements ("Members")
+            .Elements ("Member")
+            .Where (e => e.Attribute ("MemberName") != null && e.Attribute ("MemberName").Value.StartsWith ("System.ComponentModel.IComponent."))
+            .ToArray ();
+        foreach (var ic in icomponents) {
+            Information ("Removing IComponent member '{0}' from '{1}'...", ic.Attribute ("MemberName").Value, file);
+            icomponents.Remove ();
+        }
+
+        // get the whitespaces right
+        var settings = new XmlWriterSettings {
+            Encoding = new UTF8Encoding (),
+            Indent = true,
+            NewLineChars = "\n",
+            OmitXmlDeclaration = true,
+        };
+        using (var writer = XmlWriter.Create (file.ToString (), settings)) {
+            xdoc.Save (writer);
+            writer.Flush ();
+        }
+
+        // empty line at the end
+        System.IO.File.AppendAllText (file.ToString (), "\n");
+    }
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
