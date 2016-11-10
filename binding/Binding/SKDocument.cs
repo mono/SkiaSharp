@@ -36,12 +36,12 @@ namespace SkiaSharp
 
 		public SKCanvas BeginPage (float width, float height)
 		{
-			return GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, IntPtr.Zero));
+			return GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, IntPtr.Zero), false);
 		}
 
 		public SKCanvas BeginPage (float width, float height, SKRect content)
 		{
-			return GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, ref content));
+			return GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, ref content), false);
 		}
 
 		public void EndPage ()

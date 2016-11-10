@@ -213,6 +213,8 @@ namespace SkiaSharp
 		public extern static void sk_canvas_draw_bitmap_lattice(sk_canvas_t t, sk_bitmap_t bitmap, ref SKLatticeInternal lattice, ref SKRect dst, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_image_lattice(sk_canvas_t t, sk_image_t image, ref SKLatticeInternal lattice, ref SKRect dst, sk_paint_t paint);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_canvas_unref(sk_canvas_t canvas);
 
 		// Paint
 

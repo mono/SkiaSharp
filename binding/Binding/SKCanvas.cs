@@ -27,6 +27,15 @@ namespace SkiaSharp
 			Handle = SkiaApi.sk_canvas_new_from_bitmap (bitmap.Handle);
 		}
 
+		protected override void Dispose (bool disposing)
+		{
+			if (Handle != IntPtr.Zero && OwnsHandle) {
+				SkiaApi.sk_canvas_unref (Handle);
+			}
+
+			base.Dispose (disposing);
+		}
+
 		public int Save ()
 		{
 			if (Handle == IntPtr.Zero)
