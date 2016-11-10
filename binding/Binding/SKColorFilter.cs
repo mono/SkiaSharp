@@ -110,22 +110,13 @@ namespace SkiaSharp
 
 		public static SKColorFilter CreateTable(byte[] tableA, byte[] tableR, byte[] tableG, byte[] tableB)
 		{
-			if (tableA == null)
-				throw new ArgumentNullException(nameof(tableA));
-			if (tableR == null)
-				throw new ArgumentNullException(nameof(tableR));
-			if (tableG == null)
-				throw new ArgumentNullException(nameof(tableG));
-			if (tableB == null)
-				throw new ArgumentNullException(nameof(tableB));
-
-			if (tableA.Length != SKColorTable.MaxLength)
+			if (tableA != null && tableA.Length != SKColorTable.MaxLength)
 				throw new ArgumentException($"Table A must have a length of {SKColorTable.MaxLength}.", nameof(tableA));
-			if (tableR.Length != SKColorTable.MaxLength)
+			if (tableR != null && tableR.Length != SKColorTable.MaxLength)
 				throw new ArgumentException($"Table R must have a length of {SKColorTable.MaxLength}.", nameof(tableR));
-			if (tableG.Length != SKColorTable.MaxLength)
+			if (tableG != null && tableG.Length != SKColorTable.MaxLength)
 				throw new ArgumentException($"Table G must have a length of {SKColorTable.MaxLength}.", nameof(tableG));
-			if (tableB.Length != SKColorTable.MaxLength)
+			if (tableB != null && tableB.Length != SKColorTable.MaxLength)
 				throw new ArgumentException($"Table B must have a length of {SKColorTable.MaxLength}.", nameof(tableB));
 
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_table_argb(tableA, tableR, tableG, tableB));
