@@ -58,6 +58,31 @@ namespace SkiaSharpSample.FormsSample
 			Sample?.Tap();
 		}
 
+		private void OnPanSample(object sender, PanUpdatedEventArgs e)
+		{
+			var scale = canvas.CanvasSize.Width / (float)canvas.Width;
+			if (glview.IsVisible)
+				scale = glview.CanvasSize.Width / (float)glview.Width;
+			
+			Sample?.Pan(
+				(GestureState)(int)e.StatusType,
+				new SKPoint((float)e.TotalX * scale, (float)e.TotalY * scale));
+			RefreshSamples();
+		}
+
+		private void OnPinchSample(object sender, PinchGestureUpdatedEventArgs e)
+		{
+			var size = canvas.CanvasSize;
+			if (glview.IsVisible)
+				size = glview.CanvasSize;
+
+			Sample?.Pinch(
+				(GestureState)(int)e.Status,
+				(float)e.Scale,
+				new SKPoint((float)e.ScaleOrigin.X * size.Width, (float)e.ScaleOrigin.Y * size.Height));
+			RefreshSamples();
+		}
+
 		private void OnPaintSample(object sender, SKPaintSurfaceEventArgs e)
 		{
 			Sample?.DrawSample(e.Surface.Canvas, e.Info.Width, e.Info.Height);
