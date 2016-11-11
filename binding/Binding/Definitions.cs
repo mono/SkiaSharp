@@ -2650,6 +2650,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			get { return renderTargetHandle; }
 			set { renderTargetHandle = value; }
 		}
+		public SKSizeI Size => new SKSizeI (width, height);
 	}
 	
 	public enum GRBackend {
