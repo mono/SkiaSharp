@@ -11,6 +11,7 @@ namespace SkiaSharp.Views.Mac
 	public class SKCanvasView : NSView
 	{
 		private SKDrawable drawable;
+		private bool ignorePixelScaling;
 
 		// created in code
 		public SKCanvasView()
@@ -45,6 +46,16 @@ namespace SkiaSharp.Views.Mac
 
 		public SKSize CanvasSize => drawable.Info.Size;
 
+		public bool IgnorePixelScaling
+		{
+			get { return ignorePixelScaling; }
+			set
+			{
+				ignorePixelScaling = value;
+				NeedsDisplay = true;
+			}
+		}
+
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
 		public virtual void DrawInSurface(SKSurface surface, SKImageInfo info)
@@ -60,7 +71,7 @@ namespace SkiaSharp.Views.Mac
 
 			// create the skia context
 			SKImageInfo info;
-			var surface = drawable.CreateSurface(Bounds, Window.BackingScaleFactor, out info);
+			var surface = drawable.CreateSurface(Bounds, IgnorePixelScaling ? 1 : Window.BackingScaleFactor, out info);
 
 			// draw on the image using SKiaSharp
 			DrawInSurface(surface, info);
