@@ -16,6 +16,7 @@ namespace SkiaSharp.Views.WPF
 		private readonly bool designMode;
 
 		private WriteableBitmap bitmap;
+		private bool ignorePixelScaling;
 
 		public SKElement()
 		{
@@ -23,6 +24,16 @@ namespace SkiaSharp.Views.WPF
 		}
 
 		public SKSize CanvasSize => bitmap == null ? SKSize.Empty : new SKSize(bitmap.PixelWidth, bitmap.PixelHeight);
+
+		public bool IgnorePixelScaling
+		{
+			get { return ignorePixelScaling; }
+			set
+			{
+				ignorePixelScaling = value;
+				InvalidateVisual();
+			}
+		}
 
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
@@ -33,11 +44,22 @@ namespace SkiaSharp.Views.WPF
 
 			base.OnRender(drawingContext);
 
-			var m = PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice;
-			var dpiX = m.M11;
-			var dpiY = m.M22;
-			var width = (int)(ActualWidth * dpiX);
-			var height = (int)(ActualHeight * dpiY);
+			int width, height;
+			double dpiX = 1.0;
+			double dpiY = 1.0;
+			if (IgnorePixelScaling)
+			{
+				width = (int)ActualWidth;
+				height = (int)ActualHeight;
+			}
+			else
+			{
+				var m = PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice;
+				dpiX = m.M11;
+				dpiY = m.M22;
+				width = (int)(ActualWidth * dpiX);
+				height = (int)(ActualHeight * dpiY);
+			}
 
 			var info = new SKImageInfo(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
 
