@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using Android.Content;
 using Xamarin.Forms;
 using Xamarin.Forms.Platform.Android;
@@ -29,6 +30,7 @@ namespace SkiaSharp.Views.Forms
 
 				// create the native view
 				var view = new InternalView(Context, newController);
+				view.IgnorePixelScaling = e.NewElement.IgnorePixelScaling;
 				SetNativeControl(view);
 
 				// subscribe to events from the user
@@ -40,6 +42,16 @@ namespace SkiaSharp.Views.Forms
 			}
 
 			base.OnElementChanged(e);
+		}
+
+		protected override void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
+		{
+			base.OnElementPropertyChanged(sender, e);
+
+			if (e.PropertyName == nameof(SKFormsView.IgnorePixelScaling))
+			{
+				Control.IgnorePixelScaling = Element.IgnorePixelScaling;
+			}
 		}
 
 		protected override void Dispose(bool disposing)
