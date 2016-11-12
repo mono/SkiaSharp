@@ -40,6 +40,7 @@ namespace SkiaSharpSample.FormsSample
 					canvas.IsVisible = true;
 					canvas.InvalidateSurface();
 					glview.IsVisible = false;
+					canvas.IgnorePixelScaling = !canvas.IgnorePixelScaling;
 					break;
 				case SampleBackends.OpenGL:
 					glview.IsVisible = true;
