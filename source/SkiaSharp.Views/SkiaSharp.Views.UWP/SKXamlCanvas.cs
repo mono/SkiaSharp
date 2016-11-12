@@ -19,6 +19,7 @@ namespace SkiaSharp.Views.UWP
 		private GCHandle buff;
 		private WriteableBitmap bitmap;
 		private double dpi;
+		private bool ignorePixelScaling;
 
 		public SKXamlCanvas()
 		{
@@ -40,6 +41,16 @@ namespace SkiaSharp.Views.UWP
 		}
 
 		public SKSize CanvasSize => bitmap == null ? SKSize.Empty : new SKSize(bitmap.PixelWidth, bitmap.PixelHeight);
+
+		public bool IgnorePixelScaling
+		{
+			get { return ignorePixelScaling; }
+			set
+			{
+				ignorePixelScaling = value;
+				Invalidate();
+			}
+		}
 
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
@@ -72,7 +83,19 @@ namespace SkiaSharp.Views.UWP
 			if (ActualWidth == 0 || ActualHeight == 0 || Visibility != Visibility.Visible)
 				return;
 
-			var info = new SKImageInfo((int)(ActualWidth * dpi), (int)(ActualHeight * dpi), SKImageInfo.PlatformColorType, SKAlphaType.Premul);
+			int width, height;
+			if (IgnorePixelScaling)
+			{
+				width = (int)ActualWidth;
+				height = (int)ActualHeight;
+			}
+			else
+			{
+				width = (int)(ActualWidth * dpi);
+				height = (int)(ActualHeight * dpi);
+			}
+
+			var info = new SKImageInfo(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
 			CreateBitmap(info);
 			using (var surface = SKSurface.Create(info, buff.AddrOfPinnedObject(), info.RowBytes))
 			{
@@ -101,15 +124,23 @@ namespace SkiaSharp.Views.UWP
 				}
 				bitmap = new WriteableBitmap(info.Width, info.Height);
 
-				var scale = 1.0 / dpi;
-				Background = new ImageBrush
+				var brush = new ImageBrush
 				{
 					ImageSource = bitmap,
 					AlignmentX = AlignmentX.Left,
 					AlignmentY = AlignmentY.Top,
-					Stretch = Stretch.None,
-					Transform = new ScaleTransform { ScaleX = scale, ScaleY = scale }
+					Stretch = Stretch.None
 				};
+				if (!IgnorePixelScaling)
+				{
+					var scale = 1.0 / dpi;
+					brush.Transform = new ScaleTransform
+					{
+						ScaleX = scale,
+						ScaleY = scale
+					};
+				}
+				Background = brush;
 			}
 		}
 
