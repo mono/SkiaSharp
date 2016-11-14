@@ -2651,6 +2651,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			set { renderTargetHandle = value; }
 		}
 		public SKSizeI Size => new SKSizeI (width, height);
+		public SKRectI Rect => new SKRectI (0, 0, width, height);
 	}
 	
 	public enum GRBackend {
