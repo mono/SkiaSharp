@@ -189,6 +189,19 @@ namespace SkiaSharp
 		{
 			return SkiaApi.sk_bitmap_get_pixels (Handle, out length);
 		}
+
+		public void SetPixels(IntPtr pixels) {
+			SetPixels(pixels, this.ColorTable);
+		}
+
+		public void SetPixels(IntPtr pixels, SKColorTable ct = null) {
+			SkiaApi.sk_bitmap_set_pixels(Handle, pixels, ct != null ? ct.Handle : IntPtr.Zero);
+		}
+
+		public void SetColorTable(SKColorTable ct) {
+			IntPtr length;
+			SetPixels(this.GetPixels(out length), ct);
+		}
 		
 		public byte[] Bytes {
 			get { 
@@ -240,11 +253,6 @@ namespace SkiaSharp
 
 		public SKColorTable ColorTable {
 			get { return GetObject<SKColorTable> (SkiaApi.sk_bitmap_get_colortable (Handle)); }
-			set
-			{
-				if (value != null)
-					SkiaApi.sk_bitmap_set_colortable(Handle, value.Handle);
-			}
 		}
 
 		public static SKImageInfo DecodeBounds (SKStream stream)
