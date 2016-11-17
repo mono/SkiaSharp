@@ -227,8 +227,8 @@ namespace SkiaSharp
 			SetPixels(pixels, this.ColorTable);
 		}
 
-		public void SetPixels(IntPtr pixels, SKColorTable ct = null) {
-			if (ct != null && ColorType != SKColorType.Index8)
+		public void SetPixels(IntPtr pixels, SKColorTable ct) {
+			if (ColorType != SKColorType.Index8)
 			{
 				throw new NotSupportedException(UNSUPPORTED_CLR_TYPE_MSG);
 			}
@@ -236,10 +236,6 @@ namespace SkiaSharp
 		}
 
 		public void SetColorTable(SKColorTable ct) {
-			if (ColorType != SKColorType.Index8)
-			{
-				throw new NotSupportedException(UNSUPPORTED_CLR_TYPE_MSG);
-			}
 			IntPtr length;
 			SetPixels(this.GetPixels(out length), ct);
 		}
