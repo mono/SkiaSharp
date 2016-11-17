@@ -22,13 +22,15 @@ namespace SkiaSharp
 
 	public class SKBitmap : SKObject
 	{
+		private const string UnsupportedColorTypeMessage = "Setting the ColorTable is only supported for bitmaps with ColorTypes of Index8.";
+		private const string UnableToAllocatePixelsMessage = "Unable to allocate pixels for the bitmap.";
+
 		// so the GC doesn't collect the delegate
 		private static readonly SKBitmapReleaseDelegateInternal releaseDelegate;
 		static SKBitmap ()
 		{
 			releaseDelegate = new SKBitmapReleaseDelegateInternal (SKBitmapReleaseInternal);
 		}
-		const string UNSUPPORTED_CLR_TYPE_MSG = "Setting the ColorTable is only supported for bitmaps with ColorTypes of Index8.";
 
 		[Preserve]
 		internal SKBitmap (IntPtr handle, bool owns)
@@ -63,7 +65,7 @@ namespace SkiaSharp
 			: this ()
 		{
 			if (!SkiaApi.sk_bitmap_try_alloc_pixels (Handle, ref info, (IntPtr)rowBytes)) {
-				throw new Exception ("Unable to allocate pixels for the bitmap.");
+				throw new Exception (UnableToAllocatePixelsMessage);
 			}
 		}
 
@@ -71,7 +73,7 @@ namespace SkiaSharp
 			: this ()
 		{
 			if (!SkiaApi.sk_bitmap_try_alloc_pixels_with_color_table (Handle, ref info, IntPtr.Zero, ctable != null ? ctable.Handle : IntPtr.Zero)) {
-				throw new Exception ("Unable to allocate pixels for the bitmap.");
+				throw new Exception (UnableToAllocatePixelsMessage);
 			}
 		}
 
@@ -118,14 +120,14 @@ namespace SkiaSharp
 		{
 			if (ColorType == SKColorType.Index8)
 			{
-				throw new NotSupportedException("This method is not supported for bitmaps with ColorTypes of Index8.");
+				throw new NotSupportedException ("This method is not supported for bitmaps with ColorTypes of Index8.");
 			}
 			SkiaApi.sk_bitmap_set_pixel_color (Handle, x, y, color);
 		}
 
 		public bool CopyPixelsTo(IntPtr dst, int dstSize, int dstRowBytes = 0, bool preserveDstPad = false)
 		{
-			return SkiaApi.sk_bitmap_copy_pixels_to(Handle, dst, (IntPtr)dstSize, (IntPtr)dstRowBytes, preserveDstPad);
+			return SkiaApi.sk_bitmap_copy_pixels_to (Handle, dst, (IntPtr)dstSize, (IntPtr)dstRowBytes, preserveDstPad);
 		}
 
 		public bool CanCopyTo (SKColorType colorType)
@@ -223,21 +225,22 @@ namespace SkiaSharp
 			return SkiaApi.sk_bitmap_get_pixels (Handle, out length);
 		}
 
-		public void SetPixels(IntPtr pixels) {
-			SetPixels(pixels, this.ColorTable);
+		public void SetPixels(IntPtr pixels)
+		{
+			SetPixels (pixels, ColorTable);
 		}
 
-		public void SetPixels(IntPtr pixels, SKColorTable ct) {
-			if (ColorType != SKColorType.Index8)
-			{
-				throw new NotSupportedException(UNSUPPORTED_CLR_TYPE_MSG);
+		public void SetPixels(IntPtr pixels, SKColorTable ct)
+		{
+			if (ColorType != SKColorType.Index8) {
+				throw new NotSupportedException (UnsupportedColorTypeMessage);
 			}
-			SkiaApi.sk_bitmap_set_pixels(Handle, pixels, ct != null ? ct.Handle : IntPtr.Zero);
+			SkiaApi.sk_bitmap_set_pixels (Handle, pixels, ct != null ? ct.Handle : IntPtr.Zero);
 		}
 
-		public void SetColorTable(SKColorTable ct) {
-			IntPtr length;
-			SetPixels(this.GetPixels(out length), ct);
+		public void SetColorTable(SKColorTable ct)
+		{
+			SetPixels (GetPixels (), ct);
 		}
 		
 		public byte[] Bytes {
@@ -246,7 +249,7 @@ namespace SkiaSharp
 				try {
 					IntPtr length;
 					var pixelsPtr = GetPixels (out length);
-					byte[] bytes = new byte[(int)length];
+					byte [] bytes = new byte [(int)length];
 					Marshal.Copy (pixelsPtr, bytes, 0, (int)length);
 					return bytes; 
 				} finally {
@@ -258,7 +261,7 @@ namespace SkiaSharp
 		public SKColor[] Pixels {
 			get { 
 				var info = Info;
-				var pixels = new SKColor[info.Width * info.Height];
+				var pixels = new SKColor [info.Width * info.Height];
 				SkiaApi.sk_bitmap_get_pixel_colors (Handle, pixels);
 				return pixels;
 			}

@@ -50,6 +50,11 @@ namespace SkiaSharp
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_mode(c, mode));
 		}
 
+		public static SKColorFilter CreateBlendMode(SKColor c, SKBlendMode mode)
+		{
+			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_mode(c, (SKXferMode)mode));
+		}
+
 		public static SKColorFilter CreateLighting(SKColor mul, SKColor add)
 		{
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_lighting(mul, add));

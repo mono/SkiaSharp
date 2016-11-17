@@ -15,6 +15,8 @@ namespace SkiaSharp
 {
 	public class SKData : SKObject
 	{
+		private const int CopyBufferSize = 8192;
+
 		protected override void Dispose (bool disposing)
 		{
 			if (Handle != IntPtr.Zero && OwnsHandle) {
@@ -75,12 +77,30 @@ namespace SkiaSharp
 			return GetObject<SKData> (SkiaApi.sk_data_new_subset (Handle, (IntPtr) offset, (IntPtr) length));
 		}
 
+		public byte [] ToArray ()
+		{
+			var size = (int)Size;
+			var bytes = new byte [size];
+
+			if (size > 0) {
+				Marshal.Copy (Data, bytes, 0, size);
+			}
+
+			return bytes;
+		}
+
+		public bool IsEmpty => Size == 0;
+
 		public long Size => (long)SkiaApi.sk_data_get_size (Handle);
+
 		public IntPtr Data => SkiaApi.sk_data_get_data (Handle);
 
-		unsafe class MyUnmanagedMemoryStream : UnmanagedMemoryStream {
-			SKData host;
-			public MyUnmanagedMemoryStream (SKData host) : base((byte *) host.Data, host.Size)
+		private unsafe class MyUnmanagedMemoryStream : UnmanagedMemoryStream
+		{
+			private SKData host;
+
+			public MyUnmanagedMemoryStream (SKData host)
+				: base((byte *) host.Data, host.Size)
 			{
 				this.host = host;
 			}
@@ -88,6 +108,7 @@ namespace SkiaSharp
 			protected override void Dispose (bool disposing)
 			{
 				base.Dispose (disposing);
+
 				host = null;
 			}
 		}
@@ -100,20 +121,20 @@ namespace SkiaSharp
 		public void SaveTo (Stream target)
 		{
 			if (target == null)
-				throw new ArgumentNullException ("target");
-			var buffer = new byte [8192];
+				throw new ArgumentNullException (nameof (target));
+
+			var buffer = new byte [CopyBufferSize];
 			var ptr = Data;
 			var total = Size;
 
-			for (var left = total; left > 0; ){
-				var copyCount = (int) Math.Min (8192, left);
+			for (var left = total; left > 0; ) {
+				var copyCount = (int) Math.Min (CopyBufferSize, left);
 				Marshal.Copy (ptr, buffer, 0, copyCount);
 				left -= copyCount;
 				ptr += copyCount;
 				target.Write (buffer, 0, copyCount);
 			}
 		}
-		
 	}
 }
 
