@@ -28,6 +28,7 @@ namespace SkiaSharp
 		{
 			releaseDelegate = new SKBitmapReleaseDelegateInternal (SKBitmapReleaseInternal);
 		}
+		const string UNSUPPORTED_CLR_TYPE_MSG = "Setting the ColorTable is only supported for bitmaps with ColorTypes of Index8";
 
 		[Preserve]
 		internal SKBitmap (IntPtr handle, bool owns)
@@ -223,10 +224,18 @@ namespace SkiaSharp
 		}
 
 		public void SetPixels(IntPtr pixels, SKColorTable ct = null) {
+			if (ct != null && ColorType != SKColorType.Index8)
+			{
+				throw new NotSupportedException(UNSUPPORTED_CLR_TYPE_MSG);
+			}
 			SkiaApi.sk_bitmap_set_pixels(Handle, pixels, ct != null ? ct.Handle : IntPtr.Zero);
 		}
 
 		public void SetColorTable(SKColorTable ct) {
+			if (ColorType != SKColorType.Index8)
+			{
+				throw new NotSupportedException(UNSUPPORTED_CLR_TYPE_MSG);
+			}
 			IntPtr length;
 			SetPixels(this.GetPixels(out length), ct);
 		}
