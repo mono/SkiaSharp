@@ -146,6 +146,49 @@ namespace SkiaSharp
 			return GetPixels (info, pixels, info.RowBytes, SKCodecOptions.Default, colorTable, ref colorTableCount);
 		}
 
+		public unsafe SKCodecResult StartIncrementalDecode(SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
+		{
+			if (pixels == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (pixels));
+
+			var nativeOptions = new SKCodecOptionsInternal {
+				fZeroInitialized = options.ZeroInitialized,
+				fSubset = null
+			};
+			if (options.HasSubset) {
+				var subset = options.Subset.Value;
+				nativeOptions.fSubset = &subset;
+			}
+			return SkiaApi.sk_codec_start_incremental_decode (Handle, ref info, pixels, (IntPtr)rowBytes, ref nativeOptions, colorTable, ref colorTableCount);
+		}
+
+		public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options)
+		{
+			int colorTableCount = 0;
+			return StartIncrementalDecode (info, pixels, rowBytes, options, IntPtr.Zero, ref colorTableCount);
+		}
+
+		public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes)
+		{
+			return SkiaApi.sk_codec_start_incremental_decode (Handle, ref info, pixels, (IntPtr)rowBytes, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+		}
+
+		public unsafe SKCodecResult StartIncrementalDecode(SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount)
+		{
+			return StartIncrementalDecode (info, pixels, rowBytes, options, colorTable == null ? IntPtr.Zero : colorTable.ReadColors (), ref colorTableCount);
+		}
+
+		public SKCodecResult IncrementalDecode (out int rowsDecoded)
+		{
+			return SkiaApi.sk_codec_incremental_decode (Handle, out rowsDecoded);
+		}
+
+		public SKCodecResult IncrementalDecode ()
+		{
+			int rowsDecoded;
+			return SkiaApi.sk_codec_incremental_decode (Handle, out rowsDecoded);
+		}
+
 		public static SKCodec Create (SKStream stream)
 		{
 			if (stream == null)
