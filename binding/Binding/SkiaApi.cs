@@ -131,11 +131,16 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_concat(sk_canvas_t t, ref SKMatrix m);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_canvas_quick_reject(sk_canvas_t t, ref SKRect rect);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_clip_rect(sk_canvas_t t, ref SKRect rect);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_clip_path(sk_canvas_t t, sk_path_t p);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_paint(sk_canvas_t t, sk_paint_t p);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_canvas_draw_region(sk_canvas_t t, sk_region_t region, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_rect(sk_canvas_t t, ref SKRect rect, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -500,6 +505,8 @@ namespace SkiaSharp
 		public extern static void sk_path_add_rounded_rect (sk_path_t t, ref SKRect rect, float rx, float ry, SKPathDirection dir);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_add_circle (sk_path_t t, float x, float y, float radius, SKPathDirection dir);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_path_count_verbs (sk_path_t path);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_path_count_points (sk_path_t path);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1093,6 +1100,12 @@ namespace SkiaSharp
 		public extern static void sk_bitmap_set_pixel_color(sk_bitmap_t cbitmap, int x, int y, SKColor color);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_bitmap_ready_to_draw(sk_bitmap_t b);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_bitmap_copy_pixels_to(sk_bitmap_t cbitmap, IntPtr dst, IntPtr dstSize, IntPtr dstRowBytes, bool preserveDstPad);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_bitmap_copy(sk_bitmap_t cbitmap, sk_bitmap_t dst, SKColorType ct);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
@@ -1101,6 +1114,9 @@ namespace SkiaSharp
 		public extern static void sk_bitmap_lock_pixels(sk_bitmap_t b);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_bitmap_unlock_pixels(sk_bitmap_t b);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_bitmap_install_pixels(sk_bitmap_t cbitmap, ref SKImageInfo cinfo, IntPtr pixels, IntPtr rowBytes, sk_colortable_t ctable, IntPtr releaseProc, IntPtr context);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_bitmap_try_alloc_pixels(sk_bitmap_t cbitmap, ref SKImageInfo requestedInfo, IntPtr rowBytes);

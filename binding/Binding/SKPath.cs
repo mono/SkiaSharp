@@ -75,6 +75,14 @@ namespace SkiaSharp
 		
 		public bool IsConcave => Convexity == SKPathConvexity.Concave;
 
+		public bool IsEmpty => VerbCount == 0;
+
+		public int VerbCount {
+			get {
+				return SkiaApi.sk_path_count_verbs (Handle);
+			}
+		}
+
 		public int PointCount {
 			get {
 				return SkiaApi.sk_path_count_points (Handle);

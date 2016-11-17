@@ -36,6 +36,18 @@ namespace SkiaSharp
 			base.Dispose (disposing);
 		}
 
+		public bool QuickReject (SKRect rect)
+		{
+			return SkiaApi.sk_canvas_quick_reject (Handle, ref rect);
+		}
+
+		public bool QuickReject (SKPath path)
+		{
+			if (path == null)
+				throw new ArgumentNullException (nameof (path));
+			return path.IsEmpty || QuickReject (path.Bounds);
+		}
+
 		public int Save ()
 		{
 			if (Handle == IntPtr.Zero)
@@ -234,6 +246,15 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_paint (Handle, paint.Handle);
 		}
 
+		public void DrawRegion (SKRegion region, SKPaint paint)
+		{
+			if (region == null)
+				throw new ArgumentNullException (nameof (region));
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
+			SkiaApi.sk_canvas_draw_region (Handle, region.Handle, paint.Handle);
+		}
+
 		public void DrawRect (SKRect rect, SKPaint paint)
 		{
 			if (paint == null)
@@ -364,7 +385,13 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_text (Handle, bytes, bytes.Length, x, y, paint.Handle);
 		}
 
+		[Obsolete ("Use DrawPositionedText instead.")]
 		public void DrawText (string text, SKPoint [] points, SKPaint paint)
+		{
+			DrawPositionedText (text, points, paint);
+		}
+
+		public void DrawPositionedText (string text, SKPoint [] points, SKPaint paint)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
@@ -399,7 +426,13 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_text (Handle, buffer, length, x, y, paint.Handle);
 		}
 
+		[Obsolete ("Use DrawPositionedText instead.")]
 		public void DrawText (IntPtr buffer, int length, SKPoint[] points, SKPaint paint)
+		{
+			DrawPositionedText (buffer, length, points, paint);
+		}
+
+		public void DrawPositionedText (IntPtr buffer, int length, SKPoint[] points, SKPaint paint)
 		{
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (buffer));
@@ -558,6 +591,11 @@ namespace SkiaSharp
 	{
 		private SKCanvas canvas;
 		private readonly int saveCount;
+
+		public SKAutoCanvasRestore (SKCanvas canvas)
+			: this (canvas, true)
+		{
+		}
 
 		public SKAutoCanvasRestore (SKCanvas canvas, bool doSave)
 		{

@@ -8,12 +8,27 @@
 //
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
+	// public delegates
+	public delegate void SKBitmapReleaseDelegate (IntPtr address, object context);
+
+	// internal proxy delegates
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal delegate void SKBitmapReleaseDelegateInternal (IntPtr address, IntPtr context);
+
 	public class SKBitmap : SKObject
 	{
+		// so the GC doesn't collect the delegate
+		private static readonly SKBitmapReleaseDelegateInternal releaseDelegate;
+		static SKBitmap ()
+		{
+			releaseDelegate = new SKBitmapReleaseDelegateInternal (SKBitmapReleaseInternal);
+		}
+
 		[Preserve]
 		internal SKBitmap (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -103,6 +118,11 @@ namespace SkiaSharp
 			SkiaApi.sk_bitmap_set_pixel_color (Handle, x, y, color);
 		}
 
+		public bool CopyPixelsTo(IntPtr dst, int dstSize, int dstRowBytes = 0, bool preserveDstPad = false)
+		{
+			return SkiaApi.sk_bitmap_copy_pixels_to(Handle, dst, (IntPtr)dstSize, (IntPtr)dstRowBytes, preserveDstPad);
+		}
+
 		public bool CanCopyTo (SKColorType colorType)
 		{
 			return SkiaApi.sk_bitmap_can_copy_to (Handle, colorType);
@@ -138,6 +158,8 @@ namespace SkiaSharp
 			}
 			return SkiaApi.sk_bitmap_copy (Handle, destination.Handle, colorType);
 		}
+
+		public bool ReadyToDraw => SkiaApi.sk_bitmap_ready_to_draw (Handle); 
 
 		public SKImageInfo Info {
 			get {
@@ -183,6 +205,12 @@ namespace SkiaSharp
 		public void UnlockPixels ()
 		{
 			SkiaApi.sk_bitmap_unlock_pixels (Handle);
+		}
+
+		public IntPtr GetPixels ()
+		{
+			IntPtr length;
+			return GetPixels (out length);
 		}
 
 		public IntPtr GetPixels (out IntPtr length)
@@ -381,6 +409,142 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (buffer));
 			}
 			return Decode (new SKMemoryStream (buffer), bitmapInfo);
+		}
+
+		public bool InstallPixels (SKImageInfo info, IntPtr pixels)
+		{
+			return InstallPixels (info, pixels, info.RowBytes);
+		}
+
+		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes)
+		{
+			return InstallPixels (info, pixels, rowBytes, null);
+		}
+
+		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable)
+		{
+			return InstallPixels (info, pixels, rowBytes, ctable, null, null);
+		}
+
+		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable, SKBitmapReleaseDelegate releaseProc, object context)
+		{
+			IntPtr ct = ctable == null ? IntPtr.Zero : ctable.Handle;
+			if (releaseProc == null) {
+				return SkiaApi.sk_bitmap_install_pixels (Handle, ref info, pixels, (IntPtr)rowBytes, ct, IntPtr.Zero, IntPtr.Zero);
+			} else {
+				var del = Marshal.GetFunctionPointerForDelegate (releaseDelegate);
+
+				var ctx = new SKBitmapReleaseDelegateContext (releaseProc, context);
+				var ctxPtr = ctx.Wrap ();
+
+				return SkiaApi.sk_bitmap_install_pixels (Handle, ref info, pixels, (IntPtr)rowBytes, ct, del, ctxPtr);
+			}
+		}
+
+		// internal proxy
+		#if __IOS__
+		[ObjCRuntime.MonoPInvokeCallback (typeof (SKBitmapReleaseDelegateInternal))]
+		#endif
+		private static void SKBitmapReleaseInternal (IntPtr address, IntPtr context)
+		{
+			var ctx = SKBitmapReleaseDelegateContext.Unwrap (context);
+			ctx.Release (address, ctx.Context);
+
+			SKBitmapReleaseDelegateContext.Free (context);
+		}
+
+		// This is the actual context passed to native code.
+		// Instead of marshalling the user's data as an IntPtr and requiring 
+		// him to wrap/unwarp, we do it via a proxy class. This also prevents 
+		// us from having to marshal the user's callback too. 
+		private struct SKBitmapReleaseDelegateContext
+		{
+			// instead of pinning the struct, we pin a GUID which is paired to the struct
+			private static readonly IDictionary<Guid, SKBitmapReleaseDelegateContext> contexts = new Dictionary<Guid, SKBitmapReleaseDelegateContext>();
+
+			// the "managed version" of the callback 
+			public readonly SKBitmapReleaseDelegate Release;
+			public readonly object Context;
+
+			public SKBitmapReleaseDelegateContext (SKBitmapReleaseDelegate releaseProc, object context)
+			{
+				Release = releaseProc;
+				Context = context;
+			}
+
+			// wrap this context into a "native" pointer
+			public IntPtr Wrap ()
+			{
+				var guid = Guid.NewGuid ();
+				lock (contexts) {
+					contexts.Add (guid, this);
+				}
+				var gc = GCHandle.Alloc (guid, GCHandleType.Pinned);
+				return GCHandle.ToIntPtr (gc);
+			}
+
+			// unwrap the "native" pointer into a managed context
+			public static SKBitmapReleaseDelegateContext Unwrap (IntPtr ptr)
+			{
+				var gchandle = GCHandle.FromIntPtr (ptr);
+				var guid = (Guid) gchandle.Target;
+				lock (contexts) {
+					SKBitmapReleaseDelegateContext value;
+					contexts.TryGetValue (guid, out value);
+					return value;
+				}
+			}
+
+			// unwrap and free the context
+			public static void Free (IntPtr ptr)
+			{
+				var gchandle = GCHandle.FromIntPtr (ptr);
+				var guid = (Guid) gchandle.Target;
+				lock (contexts) {
+					contexts.Remove (guid);
+				}
+				gchandle.Free ();
+			}
+		}
+	}
+
+	public class SKAutoLockPixels : IDisposable
+	{
+		private SKBitmap bitmap;
+		private readonly bool doLock;
+
+		public SKAutoLockPixels (SKBitmap bitmap)
+			: this (bitmap, true)
+		{
+		}
+
+		public SKAutoLockPixels (SKBitmap bitmap, bool doLock)
+		{
+			this.bitmap = bitmap;
+			this.doLock = doLock;
+
+			if (bitmap != null && doLock) {
+				bitmap.LockPixels ();
+			}
+		}
+
+		public void Dispose ()
+		{
+			if (bitmap != null && doLock) {
+				bitmap.UnlockPixels ();
+			}
+		}
+
+		/// <summary>
+		/// Perform the unlock now, instead of waiting for the Dispose.
+		/// Will only do this once.
+		/// </summary>
+		public void Unlock ()
+		{
+			if (bitmap != null && doLock) {
+				bitmap.UnlockPixels ();
+				bitmap = null;
+			}
 		}
 	}
 }
