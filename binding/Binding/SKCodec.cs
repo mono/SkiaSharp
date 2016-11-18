@@ -106,7 +106,9 @@ namespace SkiaSharp
 
 			var nativeOptions = new SKCodecOptionsInternal {
 				fZeroInitialized = options.ZeroInitialized,
-				fSubset = null
+				fSubset = null,
+				fFrameIndex = (IntPtr) options.FrameIndex,
+				fHasPriorFrame = options.HasPriorFrame
 			};
 			if (options.HasSubset) {
 				var subset = options.Subset.Value;
@@ -153,7 +155,9 @@ namespace SkiaSharp
 
 			var nativeOptions = new SKCodecOptionsInternal {
 				fZeroInitialized = options.ZeroInitialized,
-				fSubset = null
+				fSubset = null,
+				fFrameIndex = (IntPtr) options.FrameIndex,
+				fHasPriorFrame = options.HasPriorFrame
 			};
 			if (options.HasSubset) {
 				var subset = options.Subset.Value;

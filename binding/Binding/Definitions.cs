@@ -536,7 +536,7 @@ namespace SkiaSharp
 		RgbaF16
 	}
 
-	[Obsolete("May be removed in the next version.")]
+	[Obsolete ("May be removed in the next version.")]
 	public enum SKColorProfileType {
 		Linear,
 		SRGB
@@ -557,6 +557,7 @@ namespace SkiaSharp
 		Normal, Solid, Outer, Inner
 	}
 
+	[Obsolete ("Use SKBlendMode instead. May be removed in the next version.")]
 	public enum SKXferMode {
 		Clear,
 		Src,
@@ -894,6 +895,9 @@ namespace SkiaSharp
 	internal unsafe struct SKCodecOptionsInternal {
 		public SKZeroInitialized fZeroInitialized;
 		public SKRectI* fSubset;
+		public IntPtr fFrameIndex;
+		[MarshalAs(UnmanagedType.I1)]
+		public bool fHasPriorFrame;
 	}
 
 	public struct SKCodecOptions {
@@ -906,18 +910,26 @@ namespace SkiaSharp
 		public SKCodecOptions (SKZeroInitialized zeroInitialized) {
 			ZeroInitialized = zeroInitialized;
 			Subset = null;
+			FrameIndex = 0;
+			HasPriorFrame = false;
 		}
 		public SKCodecOptions (SKZeroInitialized zeroInitialized, SKRectI subset) {
 			ZeroInitialized = zeroInitialized;
 			Subset = subset;
+			FrameIndex = 0;
+			HasPriorFrame = false;
 		}
 		public SKCodecOptions (SKRectI subset) {
 			ZeroInitialized = SKZeroInitialized.No;
 			Subset = subset;
+			FrameIndex = 0;
+			HasPriorFrame = false;
 		}
 		public SKZeroInitialized ZeroInitialized { get; set; }
 		public SKRectI? Subset { get; set; }
 		public bool HasSubset => Subset != null;
+		public int FrameIndex { get; set; }
+		public bool HasPriorFrame { get; set; }
 	}
 
 	[StructLayout(LayoutKind.Sequential)]

@@ -200,7 +200,13 @@ namespace SkiaSharp
 			return GetObject<SKShader> (SkiaApi.sk_shader_new_compose (shaderA.Handle, shaderB.Handle));
 		}
 
+		[Obsolete ("Use CreateCompose(SKShader, SKShader, SKBlendMode) instead.")]
 		public static SKShader CreateCompose (SKShader shaderA, SKShader shaderB, SKXferMode mode)
+		{
+			return CreateCompose (shaderA, shaderA, (SKBlendMode)mode);
+		}
+
+		public static SKShader CreateCompose (SKShader shaderA, SKShader shaderB, SKBlendMode mode)
 		{
 			if (shaderA == null)
 				throw new ArgumentNullException (nameof (shaderA));
