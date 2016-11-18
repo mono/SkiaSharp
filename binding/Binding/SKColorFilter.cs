@@ -25,7 +25,7 @@ namespace SkiaSharp
 		{
 			var minMemorySize = 4 * cubeDimension * cubeDimension * cubeDimension;
 			return
-				(cubeDimension >= MinCubeSize) && (cubeDimension <= MaxCubeSize) &&
+				(cubeDimension >= MinColorCubeDimension) && (cubeDimension <= MaxColorCubeDimension) &&
 				(null != cubeData) && (cubeData.Size >= minMemorySize);
 		}
 
