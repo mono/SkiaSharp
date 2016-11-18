@@ -19,6 +19,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Test]
+		[Ignore]
 		public void DataDisposedReturnsInvalidStream()
 		{
 			// create data
