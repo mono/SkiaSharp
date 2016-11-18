@@ -95,29 +95,16 @@ namespace SkiaSharp
 
 		public IntPtr Data => SkiaApi.sk_data_get_data (Handle);
 
-		private unsafe class MyUnmanagedMemoryStream : UnmanagedMemoryStream
-		{
-			private SKData host;
-
-			public MyUnmanagedMemoryStream (SKData host)
-				: base((byte *) host.Data, host.Size)
-			{
-				this.host = host;
-			}
-
-			protected override void Dispose (bool disposing)
-			{
-				base.Dispose (disposing);
-
-				host = null;
-			}
-		}
-		
 		public Stream AsStream ()
 		{
-			return new MyUnmanagedMemoryStream (this);
+			return new SKDataStream (this, false);
 		}
-		
+
+		public Stream AsStream (bool streamDisposesData)
+		{
+			return new SKDataStream (this, streamDisposesData);
+		}
+
 		public void SaveTo (Stream target)
 		{
 			if (target == null)
@@ -133,6 +120,29 @@ namespace SkiaSharp
 				left -= copyCount;
 				ptr += copyCount;
 				target.Write (buffer, 0, copyCount);
+			}
+		}
+
+		private class SKDataStream : UnmanagedMemoryStream
+		{
+			private SKData host;
+			private readonly bool disposeHost;
+
+			public unsafe SKDataStream (SKData host, bool disposeHost = false)
+				: base((byte *) host.Data, host.Size)
+			{
+				this.host = host;
+				this.disposeHost = disposeHost;
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				base.Dispose (disposing);
+
+				if (disposeHost) {
+					host?.Dispose ();
+				}
+				host = null;
 			}
 		}
 	}
