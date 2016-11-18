@@ -232,9 +232,6 @@ namespace SkiaSharp
 
 		public void SetPixels(IntPtr pixels, SKColorTable ct)
 		{
-			if (ColorType != SKColorType.Index8) {
-				throw new NotSupportedException (UnsupportedColorTypeMessage);
-			}
 			SkiaApi.sk_bitmap_set_pixels (Handle, pixels, ct != null ? ct.Handle : IntPtr.Zero);
 		}
 
