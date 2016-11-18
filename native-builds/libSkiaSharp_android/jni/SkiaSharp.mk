@@ -10,7 +10,7 @@ LOCAL_STATIC_LIBRARIES := libskia_ports libskia_skgpu libskia_images libskia_opt
                           libfreetype_static  libSkKTX libetc1                           \
                           libskia_sfnt libskia_opts_avx libskia_opts_ssse3               \
                           libskia_opts_sse41 libskia_codec libraw_codec libskia_pdf      \
-                          libjpeg-turbo libcpu_features libgiflib libsfntly libicuuc     \
+                          libjpeg-turbo libcpu_features libsksl   libsfntly libicuuc     \
                           libpiex libwebp_enc libwebp_dec libwebp_dsp libwebp_utils      \
                           libwebp_demux libwebp_dsp_enc libwebp_dsp_neon                 \
                           libpng_static_neon libpng_static libdng_sdk libzlib            \
