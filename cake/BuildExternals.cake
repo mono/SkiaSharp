@@ -278,14 +278,14 @@ Task ("externals-watchos")
     RunGyp ("skia_os='ios' skia_arch_type='arm' armv7=1 arm_neon=0 skia_gpu=1 ios_sdk_version=2.0", "xcode");
     TransformToWatchOS ("./externals/skia/out/gyp");
 
-    // buildArch ("watchsimulator", "i386");
+    buildArch ("watchsimulator", "i386");
     buildArch ("watchos", "armv7k");
 
     // create the fat framework
     CopyDirectory ("native-builds/lib/watchos/armv7k/libSkiaSharp.framework/", "native-builds/lib/watchos/libSkiaSharp.framework/");
     DeleteFile ("native-builds/lib/watchos/libSkiaSharp.framework/libSkiaSharp");
     RunLipo ("native-builds/lib/watchos/", "libSkiaSharp.framework/libSkiaSharp", new [] {
-        // (FilePath) "i386/libSkiaSharp.framework/libSkiaSharp", 
+        (FilePath) "i386/libSkiaSharp.framework/libSkiaSharp", 
         (FilePath) "armv7k/libSkiaSharp.framework/libSkiaSharp"
     }); 
 }); 
