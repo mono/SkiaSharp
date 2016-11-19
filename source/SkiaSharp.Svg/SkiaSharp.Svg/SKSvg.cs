@@ -27,22 +27,39 @@ namespace SkiaSharp
 		private readonly Dictionary<string, XElement> defs = new Dictionary<string, XElement>();
 
 		public SKSvg()
-			: this(DefaultPPI)
+			: this(DefaultPPI, SKSize.Empty)
 		{
 		}
 
 		public SKSvg(float pixelsPerInch)
+			: this(pixelsPerInch, SKSize.Empty)
 		{
+		}
+
+		public SKSvg(SKSize canvasSize)
+			: this(DefaultPPI, canvasSize)
+		{
+		}
+
+		public SKSvg(float pixelsPerInch, SKSize canvasSize)
+		{
+			CanvasSize = canvasSize;
 			PixelsPerInch = pixelsPerInch;
 			ThrowOnUnsupportedElement = DefaultThrowOnUnsupportedElement;
 		}
 
 		public float PixelsPerInch { get; set; }
 		public bool ThrowOnUnsupportedElement { get; set; }
+		public SKSize CanvasSize { get; private set; }
 		public SKPicture Picture { get; private set; }
 		public string Description { get; private set; }
 		public string Title { get; private set; }
 		public string Version { get; private set; }
+
+		public SKPicture Load(string filename)
+		{
+			return Load(XDocument.Load(filename));
+		}
 
 		public SKPicture Load(Stream stream)
 		{
@@ -66,32 +83,38 @@ namespace SkiaSharp
 			Title = svg.Element(ns + "title")?.Value;
 			Description = svg.Element(ns + "desc")?.Value ?? svg.Element(ns + "description")?.Value;
 
-			// get the dimensions
-			var widthA = svg.Attribute("width");
-			var heightA = svg.Attribute("height");
-			var width = ReadNumber(widthA);
-			var height = ReadNumber(heightA);
-			var size = new SKSize(width, height);
-
-			var viewBox = SKRect.Create(size);
-			var viewBoxA = svg.Attribute("viewBox") ?? svg.Attribute("viewPort");
-			if (viewBoxA != null)
+			if (CanvasSize.IsEmpty)
 			{
-				viewBox = ReadRectangle(viewBoxA.Value);
+				// get the dimensions
+				var widthA = svg.Attribute("width");
+				var heightA = svg.Attribute("height");
+				var width = ReadNumber(widthA);
+				var height = ReadNumber(heightA);
+				var size = new SKSize(width, height);
+
+				var viewBox = SKRect.Create(size);
+				var viewBoxA = svg.Attribute("viewBox") ?? svg.Attribute("viewPort");
+				if (viewBoxA != null)
+				{
+					viewBox = ReadRectangle(viewBoxA.Value);
+				}
+
+				if (widthA != null && widthA.Value.Contains("%"))
+				{
+					size.Width *= viewBox.Width;
+				}
+				if (heightA != null && heightA.Value.Contains("%"))
+				{
+					size.Height *= viewBox.Height;
+				}
+
+				// set the property
+				CanvasSize = size;
 			}
 
-			if (widthA != null && widthA.Value.Contains("%"))
-			{
-				size.Width *= viewBox.Width;
-			}
-			if (heightA != null && heightA.Value.Contains("%"))
-			{
-				size.Height *= viewBox.Height;
-			}
-
-			// craete the picture from the elements
+			// create the picture from the elements
 			using (var recorder = new SKPictureRecorder())
-			using (var canvas = recorder.BeginRecording(SKRect.Create(size)))
+			using (var canvas = recorder.BeginRecording(SKRect.Create(CanvasSize)))
 			{
 				LoadElements(svg.Elements(), canvas);
 
@@ -801,8 +824,6 @@ namespace SkiaSharp
 					return SKTextAlign.Left;
 			}
 		}
-
-		private readonly Dictionary<string, SKPaint> linearGradients = new Dictionary<string, SKPaint>();
 
 		private SKShader ReadGradient(XElement defE)
 		{

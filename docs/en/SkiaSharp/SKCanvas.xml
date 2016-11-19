@@ -369,7 +369,7 @@
         <param name="operation">The region operator to apply to the current clip.</param>
         <summary>Modify the current clip with the specified region.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1187,6 +1187,58 @@
         </remarks>
       </Docs>
     </Member>
+    <Member MemberName="DrawPositionedText">
+      <MemberSignature Language="C#" Value="public void DrawPositionedText (string text, SkiaSharp.SKPoint[] points, SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawPositionedText(string text, valuetype SkiaSharp.SKPoint[] points, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="text" Type="System.String" />
+        <Parameter Name="points" Type="SkiaSharp.SKPoint[]" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="text">The text to draw.</param>
+        <param name="points">The positions for each glyph in the <paramref name="text" /> string.</param>
+        <param name="paint">The paint used to draw the text.</param>
+        <summary>Draws glyphs of the text at specified locations on the canvas.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawPositionedText">
+      <MemberSignature Language="C#" Value="public void DrawPositionedText (IntPtr buffer, int length, SkiaSharp.SKPoint[] points, SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawPositionedText(native int buffer, int32 length, valuetype SkiaSharp.SKPoint[] points, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="buffer" Type="System.IntPtr" />
+        <Parameter Name="length" Type="System.Int32" />
+        <Parameter Name="points" Type="SkiaSharp.SKPoint[]" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="buffer">The pointer to a region holding UTF-8 encoded text to draw.</param>
+        <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
+        <param name="points">The positions for each glyph in the <paramref name="buffer." /></param>
+        <param name="paint">The paint used to draw the text.</param>
+        <summary>Draws text from a UTF-8 buffer at specified locations on the canvas.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
     <Member MemberName="DrawRect">
       <MemberSignature Language="C#" Value="public void DrawRect (SkiaSharp.SKRect rect, SkiaSharp.SKPaint paint);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawRect(valuetype SkiaSharp.SKRect rect, class SkiaSharp.SKPaint paint) cil managed" />
@@ -1213,6 +1265,29 @@
         <summary>Draws a rectangle in the canvas.</summary>
         <remarks>
           <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawRegion">
+      <MemberSignature Language="C#" Value="public void DrawRegion (SkiaSharp.SKRegion region, SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawRegion(class SkiaSharp.SKRegion region, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="region" Type="SkiaSharp.SKRegion" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="region">The region to be drawn.</param>
+        <param name="paint">The paint used to draw the region.</param>
+        <summary>Draws the outline of the specified region using the specified paint.</summary>
+        <remarks>
+          <para />
         </remarks>
       </Docs>
     </Member>
@@ -1261,6 +1336,11 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Obsolete("Use DrawPositionedText instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
       </ReturnValue>
@@ -1292,6 +1372,11 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Obsolete("Use DrawPositionedText instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
       </ReturnValue>
@@ -1403,8 +1488,8 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="buffer">Contains a pointer to a region holding UTF-8 encoded text to draw.</param>
-        <param name="length">Number of bytes to read from the <paramref name="buffer." /></param>
+        <param name="buffer">The pointer to a region holding UTF-8 encoded text to draw.</param>
+        <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
         <param name="x">The x-coordinate of the origin of the text being drawn.</param>
         <param name="y">The y-coordinate of the origin of the text being drawn.</param>
         <param name="paint">The paint used to draw the text.</param>
@@ -1474,8 +1559,8 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="buffer">Contains a pointer to a region holding UTF-8 encoded text to draw.</param>
-        <param name="length">Number of bytes to read from the <paramref name="buffer." /></param>
+        <param name="buffer">The pointer to a region holding UTF-8 encoded text to draw.</param>
+        <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
         <param name="path">The path the text should follow for its baseline.</param>
         <param name="hOffset">The distance along the path to add to the text’s starting position.</param>
         <param name="vOffset">The distance above (-) or below (+) the path to position the text.</param>
@@ -1554,6 +1639,46 @@
         <remarks>
           <para></para>
         </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="QuickReject">
+      <MemberSignature Language="C#" Value="public bool QuickReject (SkiaSharp.SKPath path);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool QuickReject(class SkiaSharp.SKPath path) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="path" Type="SkiaSharp.SKPath" />
+      </Parameters>
+      <Docs>
+        <param name="path">The path to compare with the current clip.</param>
+        <summary>Checks to see if the specified path, after being transformed by the current matrix, would lie completely outside of the current clip.</summary>
+        <returns>Returns true if the path (transformed by the canvas' matrix) does not intersect with the canvas’ clip.</returns>
+        <remarks>Call this to check if an area you intend to draw into is clipped out (and therefore you can skip making the draw calls).</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="QuickReject">
+      <MemberSignature Language="C#" Value="public bool QuickReject (SkiaSharp.SKRect rect);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool QuickReject(valuetype SkiaSharp.SKRect rect) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="rect" Type="SkiaSharp.SKRect" />
+      </Parameters>
+      <Docs>
+        <param name="rect">The rectangle to compare with the current clip.</param>
+        <summary>Checks to see if the specified rectangle, after being transformed by the current matrix, would lie completely outside of the current clip.</summary>
+        <returns>Returns true if the rectangle (transformed by the canvas' matrix) does not intersect with the canvas’ clip.</returns>
+        <remarks>Call this to check if an area you intend to draw into is clipped out (and therefore you can skip making the draw calls).</remarks>
       </Docs>
     </Member>
     <Member MemberName="ResetMatrix">

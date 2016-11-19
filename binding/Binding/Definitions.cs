@@ -91,7 +91,7 @@ namespace SkiaSharp
 
 		private uint color;
 
-		internal SKColor (uint value)
+		public SKColor (uint value)
 		{
 			color = value;
 		}
