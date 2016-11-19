@@ -1,9 +1,9 @@
 ﻿using UIKit;
 
-#if __IOS__
-namespace SkiaSharp.Views.iOS
-#elif __TVOS__
+#if __TVOS__
 namespace SkiaSharp.Views.tvOS
+#elif __IOS__
+namespace SkiaSharp.Views.iOS
 #endif
 {
 	public static class iOSExtensions

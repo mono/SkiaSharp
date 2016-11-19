@@ -4,10 +4,10 @@ using CoreGraphics;
 using OpenGLES;
 using OpenTK.Graphics.ES20;
 
-#if __IOS__
-namespace SkiaSharp.Views.iOS
-#elif __TVOS__
+#if __TVOS__
 namespace SkiaSharp.Views.tvOS
+#elif __IOS__
+namespace SkiaSharp.Views.iOS
 #endif
 {
 	public class SKGLLayer : CAEAGLLayer
