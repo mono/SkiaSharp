@@ -825,8 +825,6 @@ namespace SkiaSharp
 			}
 		}
 
-		private readonly Dictionary<string, SKPaint> linearGradients = new Dictionary<string, SKPaint>();
-
 		private SKShader ReadGradient(XElement defE)
 		{
 			switch (defE.Name.LocalName)
