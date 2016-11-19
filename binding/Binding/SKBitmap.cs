@@ -242,15 +242,12 @@ namespace SkiaSharp
 		
 		public byte[] Bytes {
 			get { 
-				LockPixels ();
-				try {
+				using (new SKAutoLockPixels (this)) {
 					IntPtr length;
 					var pixelsPtr = GetPixels (out length);
 					byte [] bytes = new byte [(int)length];
 					Marshal.Copy (pixelsPtr, bytes, 0, (int)length);
 					return bytes; 
-				} finally {
-					UnlockPixels ();
 				}
 			}
 		}
