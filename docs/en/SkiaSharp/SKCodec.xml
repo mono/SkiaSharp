@@ -506,9 +506,9 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Start or continue the incremental decode.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> if all lines requested in <see cref="M:SkiaSharp.SKCodec.StartIncrementalDecode" /> have been completely decoded. <see cref="F:SkiaSharp.SKCodecResult.IncompleteInput" /> otherwise.</returns>
+        <remarks>Unlike <see cref="M:SkiaSharp.SKCodec.GetPixels" />, this does not do any filling. This is left up to the caller, since they may be skipping lines or continuing the decode later.</remarks>
       </Docs>
     </Member>
     <Member MemberName="IncrementalDecode">
@@ -525,10 +525,10 @@
         <Parameter Name="rowsDecoded" Type="System.Int32&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="rowsDecoded">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="rowsDecoded">The total number of lines initialized. Only meaningful if this method returns <see cref="F:SkiaSharp.SKCodecResult.IncompleteInput" />.</param>
+        <summary>Start or continue the incremental decode.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> if all lines requested in <see cref="M:SkiaSharp.SKCodec.StartIncrementalDecode" /> have been completely decoded. <see cref="F:SkiaSharp.SKCodecResult.IncompleteInput" /> otherwise.</returns>
+        <remarks>Unlike <see cref="M:SkiaSharp.SKCodec.GetPixels" />, this does not do any filling. This is left up to the caller, since they may be skipping lines or continuing the decode later.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Info">
@@ -643,12 +643,14 @@
         <Parameter Name="rowBytes" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <param name="rowBytes">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+        <param name="pixels">The memory to write to. Needs to be large enough to hold the subset, if present, or the full image.</param>
+        <param name="rowBytes">The stride of the memory to write to.</param>
+        <summary>Prepare for an incremental decode with the specified options.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="StartIncrementalDecode">
@@ -668,13 +670,15 @@
         <Parameter Name="options" Type="SkiaSharp.SKCodecOptions" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <param name="rowBytes">To be added.</param>
-        <param name="options">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+        <param name="pixels">The memory to write to. Needs to be large enough to hold the subset, if present, or the full image.</param>
+        <param name="rowBytes">The stride of the memory to write to.</param>
+        <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
+        <summary>Prepare for an incremental decode with the specified options.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="StartIncrementalDecode">
@@ -696,15 +700,17 @@
         <Parameter Name="colorTableCount" Type="System.Int32&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <param name="rowBytes">To be added.</param>
-        <param name="options">To be added.</param>
-        <param name="colorTable">To be added.</param>
-        <param name="colorTableCount">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+        <param name="pixels">The memory to write to. Needs to be large enough to hold the subset, if present, or the full image.</param>
+        <param name="rowBytes">The stride of the memory to write to.</param>
+        <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
+        <param name="colorTable">The color table to use.</param>
+        <param name="colorTableCount">The size of the color table.</param>
+        <summary>Prepare for an incremental decode with the specified options.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="StartIncrementalDecode">
@@ -726,15 +732,17 @@
         <Parameter Name="colorTableCount" Type="System.Int32&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <param name="rowBytes">To be added.</param>
-        <param name="options">To be added.</param>
-        <param name="colorTable">To be added.</param>
-        <param name="colorTableCount">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+        <param name="pixels">The memory to write to. Needs to be large enough to hold the subset, if present, or the full image.</param>
+        <param name="rowBytes">The stride of the memory to write to.</param>
+        <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
+        <param name="colorTable">The pointer to the color table to use.</param>
+        <param name="colorTableCount">The size of the color table.</param>
+        <summary>Prepare for an incremental decode with the specified options.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
   </Members>

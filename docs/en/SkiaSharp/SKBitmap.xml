@@ -402,13 +402,13 @@
         <Parameter Name="preserveDstPad" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="dst">To be added.</param>
-        <param name="dstSize">To be added.</param>
-        <param name="dstRowBytes">To be added.</param>
-        <param name="preserveDstPad">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="dst">The location of destination buffer.</param>
+        <param name="dstSize">The size of destination buffer. Must be large enough to hold pixels using indicated stride.</param>
+        <param name="dstRowBytes">The width of each line in the buffer. If 0, uses bitmap's internal stride.</param>
+        <param name="preserveDstPad">Whether or not to preserve padding in the destination.</param>
+        <summary>Copies the pixels of the bitmap to the specified memory location.</summary>
+        <returns>Returns true if possible, returns false otherwise.</returns>
+        <remarks>In the case when the <paramref name="dstRowBytes" /> matches the bitmap's <paramref name="rowBytes" />, the copy may be made faster by copying over the <paramref name="dst" />'s per-row padding (for all rows but the last). By setting <paramref name="preserveDstPad" /> to true the caller can disable this optimization and ensure that pixels in the padding are not overwritten.</remarks>
       </Docs>
     </Member>
     <Member MemberName="CopyTo">
@@ -991,9 +991,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Returns the address of the pixels for this bitmap.</summary>
+        <returns>Returns a pointer to the region that contains the pixel data for this bitmap. This might return <see langword="IntPtr.Zero" /> if there is no pixel buffer associated with this bitmap.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPixels">
@@ -1091,11 +1093,13 @@
         <Parameter Name="pixels" Type="System.IntPtr" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information describing the pixels.</param>
+        <param name="pixels">The pixels to install.</param>
+        <summary>Installs the specified pixels into the bitmap.</summary>
+        <returns>Returns true on success, or false on failure. If there was an error, the bitmap will be set to empty.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="InstallPixels">
@@ -1114,12 +1118,14 @@
         <Parameter Name="rowBytes" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <param name="rowBytes">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information describing the pixels.</param>
+        <param name="pixels">The pixels to install.</param>
+        <param name="rowBytes">The stride of the pixels being installed.</param>
+        <summary>Installs the specified pixels into the bitmap.</summary>
+        <returns>Returns true on success, or false on failure. If there was an error, the bitmap will be set to empty.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="InstallPixels">
@@ -1139,13 +1145,15 @@
         <Parameter Name="ctable" Type="SkiaSharp.SKColorTable" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <param name="rowBytes">To be added.</param>
-        <param name="ctable">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information describing the pixels.</param>
+        <param name="pixels">The pixels to install.</param>
+        <param name="rowBytes">The stride of the pixels being installed.</param>
+        <param name="ctable">The color table to use, if installing <see cref="F:SkiaSharp.SKColorType.Index8" /> pixels.</param>
+        <summary>Installs the specified pixels into the bitmap.</summary>
+        <returns>Returns true on success, or false on failure. If there was an error, the bitmap will be set to empty.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="InstallPixels">
@@ -1167,15 +1175,17 @@
         <Parameter Name="context" Type="System.Object" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <param name="rowBytes">To be added.</param>
-        <param name="ctable">To be added.</param>
-        <param name="releaseProc">To be added.</param>
-        <param name="context">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information describing the pixels.</param>
+        <param name="pixels">The pixels to install.</param>
+        <param name="rowBytes">The stride of the pixels being installed.</param>
+        <param name="ctable">The color table to use, if installing <see cref="F:SkiaSharp.SKColorType.Index8" /> pixels.</param>
+        <param name="releaseProc">The delegate to invoke when the pixels are no longer referenced.</param>
+        <param name="context">The user data to use when invoking the delegate.</param>
+        <summary>Installs the specified pixels into the bitmap.</summary>
+        <returns>Returns true on success, or false on failure. If there was an error, the bitmap will be set to empty.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="IsEmpty">
@@ -1292,7 +1302,7 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Call this to ensure that the bitmap points to the current pixel address in the pixelref. </summary>
+        <summary>Call this to ensure that the bitmap points to the current pixel address in the pixelref.</summary>
         <remarks>
           <para>This allows pixelrefs that implement cached/deferred image decoding to know when there are active clients of a given image.</para>
           <para>Balance it with a call to <see cref="M:SkiaSharp.SKBitmap.UnlockPixels" />. These calls are harmless if there is no pixelref.</para>
@@ -1318,10 +1328,10 @@
       <Docs>
         <summary>Gets all the pixels as an array of colors.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1336,9 +1346,13 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a value indicating whether or not the bitmap is valid enough to be drawn.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Reset">
@@ -1401,9 +1415,11 @@
         <Parameter Name="ct" Type="SkiaSharp.SKColorTable" />
       </Parameters>
       <Docs>
-        <param name="ct">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="ct">The new color table.</param>
+        <summary>Replaces the current color table of the bitmap.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="SetImmutable">
@@ -1471,9 +1487,11 @@
         <Parameter Name="pixels" Type="System.IntPtr" />
       </Parameters>
       <Docs>
-        <param name="pixels">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="pixels">The new pixel address.</param>
+        <summary>Replaces the current pixel address for the bitmap.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="SetPixels">
@@ -1491,10 +1509,12 @@
         <Parameter Name="ct" Type="SkiaSharp.SKColorTable" />
       </Parameters>
       <Docs>
-        <param name="pixels">To be added.</param>
-        <param name="ct">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="pixels">The new pixel address.</param>
+        <param name="ct">The color table to use, if changing <see cref="F:SkiaSharp.SKColorType.Index8" /> pixels, or <see langword="null" />.</param>
+        <summary>Replaces the current pixel address for the bitmap.</summary>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="UnlockPixels">

@@ -14,8 +14,24 @@
     </Interface>
   </Interfaces>
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>Convenience class used to lock and unlock the bitmap pixels in a using statement.</summary>
+    <remarks>
+      <para>This class can be used in a using statement to lock the pixels of the bitmap allowing you to read those pixels. The pixels are automatically unlocked by virtue of having the <see cref="M:SkiaSharp.SKAutoLockPixels.Dispose" /> method unlock the bitmap pixels.</para>
+      <para></para>
+      <example>
+        <code lang="C#"><![CDATA[SKBitmap bitmap = ...;
+
+using (new SKAutoLockPixels(bitmap)) {
+    // get a pointer to the pixels
+    bitmap.GetPixels();
+
+    // use the pointer
+
+    // automatically unlock the pixels
+}]]></code>
+      </example>
+      <para></para>
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -29,9 +45,11 @@
         <Parameter Name="bitmap" Type="SkiaSharp.SKBitmap" />
       </Parameters>
       <Docs>
-        <param name="bitmap">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="bitmap">The bitmap whose pixels to lock.</param>
+        <summary>Lock the bitmaps pixels.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -46,10 +64,12 @@
         <Parameter Name="doLock" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="bitmap">To be added.</param>
-        <param name="doLock">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="bitmap">The bitmap whose pixels to lock.</param>
+        <param name="doLock">Whether or not to invoke <see cref="M:SkiaSharp.SKBitmap.LockPixels" /> method at this point.</param>
+        <summary>Lock the bitmaps pixels.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -64,8 +84,13 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>
+          <para>Disposes the pixel locker, unlocking the pixels of the bitmap. </para>
+          <para>This operation will not do anything if you had previously manually called the <see cref="M:SkiaSharp.SKAutoLockPixels.Unlock" /> method.</para>
+        </summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Unlock">
@@ -80,8 +105,10 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Unlocks the pixels of the bitmap.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
   </Members>

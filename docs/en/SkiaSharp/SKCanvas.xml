@@ -369,7 +369,7 @@
         <param name="operation">The region operator to apply to the current clip.</param>
         <summary>Modify the current clip with the specified region.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1203,11 +1203,13 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="points">To be added.</param>
-        <param name="paint">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="text">The text to draw.</param>
+        <param name="points">The positions for each glyph in the <paramref name="text" /> string.</param>
+        <param name="paint">The paint used to draw the text.</param>
+        <summary>Draws glyphs of the text at specified locations on the canvas.</summary>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawPositionedText">
@@ -1227,12 +1229,14 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="buffer">To be added.</param>
-        <param name="length">To be added.</param>
-        <param name="points">To be added.</param>
-        <param name="paint">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="buffer">The pointer to a region holding UTF-8 encoded text to draw.</param>
+        <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
+        <param name="points">The positions for each glyph in the <paramref name="buffer." /></param>
+        <param name="paint">The paint used to draw the text.</param>
+        <summary>Draws text from a UTF-8 buffer at specified locations on the canvas.</summary>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawRect">
@@ -1279,10 +1283,12 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="region">To be added.</param>
-        <param name="paint">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="region">The region to be drawn.</param>
+        <param name="paint">The paint used to draw the region.</param>
+        <summary>Draws the outline of the specified region using the specified paint.</summary>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawRoundRect">
@@ -1482,8 +1488,8 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="buffer">Contains a pointer to a region holding UTF-8 encoded text to draw.</param>
-        <param name="length">Number of bytes to read from the <paramref name="buffer." /></param>
+        <param name="buffer">The pointer to a region holding UTF-8 encoded text to draw.</param>
+        <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
         <param name="x">The x-coordinate of the origin of the text being drawn.</param>
         <param name="y">The y-coordinate of the origin of the text being drawn.</param>
         <param name="paint">The paint used to draw the text.</param>
@@ -1553,8 +1559,8 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="buffer">Contains a pointer to a region holding UTF-8 encoded text to draw.</param>
-        <param name="length">Number of bytes to read from the <paramref name="buffer." /></param>
+        <param name="buffer">The pointer to a region holding UTF-8 encoded text to draw.</param>
+        <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
         <param name="path">The path the text should follow for its baseline.</param>
         <param name="hOffset">The distance along the path to add to the text’s starting position.</param>
         <param name="vOffset">The distance above (-) or below (+) the path to position the text.</param>
@@ -1649,10 +1655,10 @@
         <Parameter Name="path" Type="SkiaSharp.SKPath" />
       </Parameters>
       <Docs>
-        <param name="path">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="path">The path to compare with the current clip.</param>
+        <summary>Checks to see if the specified path, after being transformed by the current matrix, would lie completely outside of the current clip.</summary>
+        <returns>Returns true if the path (transformed by the canvas' matrix) does not intersect with the canvas’ clip.</returns>
+        <remarks>Call this to check if an area you intend to draw into is clipped out (and therefore you can skip making the draw calls).</remarks>
       </Docs>
     </Member>
     <Member MemberName="QuickReject">
@@ -1669,10 +1675,10 @@
         <Parameter Name="rect" Type="SkiaSharp.SKRect" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="rect">The rectangle to compare with the current clip.</param>
+        <summary>Checks to see if the specified rectangle, after being transformed by the current matrix, would lie completely outside of the current clip.</summary>
+        <returns>Returns true if the rectangle (transformed by the canvas' matrix) does not intersect with the canvas’ clip.</returns>
+        <remarks>Call this to check if an area you intend to draw into is clipped out (and therefore you can skip making the draw calls).</remarks>
       </Docs>
     </Member>
     <Member MemberName="ResetMatrix">
