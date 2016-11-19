@@ -57,6 +57,8 @@ namespace SkiaSharp
 	{
 #if __TVOS__ && __UNIFIED__
 		private const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
+#elif __WATCHOS__ && __UNIFIED__
+		private const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
 #elif __IOS__ && __UNIFIED__
 		private const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
 #elif __ANDROID__
