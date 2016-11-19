@@ -274,13 +274,13 @@ Task ("externals-watchos")
     
     // set up the gyp environment variables
     AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
-    
-    RunGyp ("skia_os='ios' skia_arch_type='arm' armv7=1 arm_neon=0 skia_gpu=1 ios_sdk_version=3.0", "xcode");
+
+    RunGyp ("skia_os='ios' skia_arch_type='arm' armv7=1 arm_neon=0 skia_gpu=1 ios_sdk_version=2.0", "xcode");
     TransformToWatchOS ("./externals/skia/out/gyp");
-    
-    buildArch ("watchsimulator", "i386");
-    // buildArch ("watchos", "armv7k");
-    
+
+    // buildArch ("watchsimulator", "i386");
+    buildArch ("watchos", "armv7k");
+
     // // create the fat framework
     // CopyDirectory ("native-builds/lib/watchos/arm64/libSkiaSharp.framework/", "native-builds/lib/watchos/libSkiaSharp.framework/");
     // DeleteFile ("native-builds/lib/watchos/libSkiaSharp.framework/libSkiaSharp");
