@@ -281,13 +281,13 @@ Task ("externals-watchos")
     // buildArch ("watchsimulator", "i386");
     buildArch ("watchos", "armv7k");
 
-    // // create the fat framework
-    // CopyDirectory ("native-builds/lib/watchos/arm64/libSkiaSharp.framework/", "native-builds/lib/watchos/libSkiaSharp.framework/");
-    // DeleteFile ("native-builds/lib/watchos/libSkiaSharp.framework/libSkiaSharp");
-    // RunLipo ("native-builds/lib/watchos/", "libSkiaSharp.framework/libSkiaSharp", new [] {
-    //     (FilePath) "x86_64/libSkiaSharp.framework/libSkiaSharp", 
-    //     (FilePath) "arm64/libSkiaSharp.framework/libSkiaSharp"
-    // }); 
+    // create the fat framework
+    CopyDirectory ("native-builds/lib/watchos/armv7k/libSkiaSharp.framework/", "native-builds/lib/watchos/libSkiaSharp.framework/");
+    DeleteFile ("native-builds/lib/watchos/libSkiaSharp.framework/libSkiaSharp");
+    RunLipo ("native-builds/lib/watchos/", "libSkiaSharp.framework/libSkiaSharp", new [] {
+        // (FilePath) "i386/libSkiaSharp.framework/libSkiaSharp", 
+        (FilePath) "armv7k/libSkiaSharp.framework/libSkiaSharp"
+    }); 
 }); 
 
 // this builds the native C and C++ externals for iOS
