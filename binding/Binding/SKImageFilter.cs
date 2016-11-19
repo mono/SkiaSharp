@@ -46,23 +46,29 @@ namespace SkiaSharp
 		public static SKImageFilter CreateColorFilter(SKColorFilter cf, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null)
 		{
 			if (cf == null)
-				throw new ArgumentNullException("cf");
+				throw new ArgumentNullException(nameof(cf));
 			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_color_filter(cf.Handle, input == null ? IntPtr.Zero : input.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
 		}
 
 		public static SKImageFilter CreateCompose(SKImageFilter outer, SKImageFilter inner)
 		{
 			if (outer == null)
-				throw new ArgumentNullException("outer");
+				throw new ArgumentNullException(nameof(outer));
 			if (inner == null)
-				throw new ArgumentNullException("inner");
+				throw new ArgumentNullException(nameof(inner));
 			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_compose(outer.Handle, inner.Handle));
 		}
 
+		[Obsolete("Use CreateDisplacementMapEffect instead.")]
 		public static SKImageFilter CreateCompose(SKDisplacementMapEffectChannelSelectorType xChannelSelector, SKDisplacementMapEffectChannelSelectorType yChannelSelector, float scale, SKImageFilter displacement, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null)
 		{
+			return CreateDisplacementMapEffect(xChannelSelector, yChannelSelector, scale, displacement, input, cropRect);
+		}
+
+		public static SKImageFilter CreateDisplacementMapEffect(SKDisplacementMapEffectChannelSelectorType xChannelSelector, SKDisplacementMapEffectChannelSelectorType yChannelSelector, float scale, SKImageFilter displacement, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null)
+		{
 			if (displacement == null)
-				throw new ArgumentNullException("displacement");
+				throw new ArgumentNullException(nameof(displacement));
 			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_displacement_map_effect(xChannelSelector, yChannelSelector, scale, displacement.Handle, input == null ? IntPtr.Zero : input.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
 		}
 
@@ -109,18 +115,18 @@ namespace SkiaSharp
 		public static SKImageFilter CreateMatrixConvolution(SKSizeI kernelSize, float[] kernel, float gain, float bias, SKPointI kernelOffset, SKMatrixConvolutionTileMode tileMode, bool convolveAlpha, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null)
 		{
 			if (kernel == null)
-				throw new ArgumentNullException("kernel");
+				throw new ArgumentNullException(nameof(kernel));
 			if (kernel.Length != kernelSize.Width * kernelSize.Height)
-				throw new ArgumentException("Kernel length must match the dimensions of the kernel size (Width * Height).", "kernel");
+				throw new ArgumentException("Kernel length must match the dimensions of the kernel size (Width * Height).", nameof(kernel));
 			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_matrix_convolution(ref kernelSize, kernel, gain, bias, ref kernelOffset, tileMode, convolveAlpha, input == null ? IntPtr.Zero : input.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
 		}
 
 		public static SKImageFilter CreateMerge(SKImageFilter[] filters, SKXferMode[] modes = null, SKImageFilter.CropRect cropRect = null)
 		{
 			if (filters == null)
-				throw new ArgumentNullException("filters");
+				throw new ArgumentNullException(nameof(filters));
 			if (modes != null && modes.Length != filters.Length)
-				throw new ArgumentException("The numbers of modes must match the number of filters.", "modes");
+				throw new ArgumentException("The numbers of modes must match the number of filters.", nameof(modes));
 			var f = new IntPtr[filters.Length];
 			for (int i = 0; i < filters.Length; i++)
 			{
@@ -147,21 +153,21 @@ namespace SkiaSharp
 		public static SKImageFilter CreatePicture(SKPicture picture)
 		{
 			if (picture == null)
-				throw new ArgumentNullException("picture");
+				throw new ArgumentNullException(nameof(picture));
 			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_picture(picture.Handle));
 		}
 
 		public static SKImageFilter CreatePicture(SKPicture picture, SKRect cropRect)
 		{
 			if (picture == null)
-				throw new ArgumentNullException("picture");
+				throw new ArgumentNullException(nameof(picture));
 			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_picture_with_croprect(picture.Handle, ref cropRect));
 		}
 
 		public static SKImageFilter CreatePictureForLocalspace(SKPicture picture, SKRect cropRect, SKFilterQuality filterQuality)
 		{
 			if (picture == null)
-				throw new ArgumentNullException("picture");
+				throw new ArgumentNullException(nameof(picture));
 			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_picture_for_localspace(picture.Handle, ref cropRect, filterQuality));
 		}
 
@@ -172,7 +178,7 @@ namespace SkiaSharp
 			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_tile(ref src, ref dst, input.Handle));
 		}
 
-		public static SKImageFilter CreateXfermode(SKBlendMode mode, SKImageFilter background, SKImageFilter foreground = null, SKImageFilter.CropRect cropRect = null)
+		public static SKImageFilter CreateBlendMode(SKBlendMode mode, SKImageFilter background, SKImageFilter foreground = null, SKImageFilter.CropRect cropRect = null)
 		{
 			if (background == null)
 				throw new ArgumentNullException(nameof(background));

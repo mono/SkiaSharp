@@ -16,12 +16,12 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>SkData holds an immutable data buffer.</summary>
+    <summary>The <see cref="T:SkiaSharp.SKData" /> holds an immutable data buffer.</summary>
     <remarks>
       <para>Not only is the data immutable, but the actual pointer that is returned by the <see cref="P:SkiaSharp.SKData.Data" /> property is guaranteed to always be the same for the life of this instance.</para>
-      <para>The <see cref="M:SkiaSharp.SKData.AsStream" /> method can be used to return a <see cref="T:System.IO.Stream" /> that wraps this SKData and allows for .NET APIs to scan the contents of the SKData as a stream.</para>
+      <para>The <see cref="M:SkiaSharp.SKData.AsStream" /> method can be used to return a <see cref="T:System.IO.Stream" /> that wraps this <see cref="T:SkiaSharp.SKData" /> and allows for .NET APIs to scan the contents of the <see cref="T:SkiaSharp.SKData" /> as a stream.</para>
       <para></para>
-      <para>You can use the constructors for this object to make copies of the data, or you can use the <see cref="M:SkiaSharp.SKData.FromMallocMemory" /> to wrap a block of memory that has been allocated with the platform malloc function.</para>
+      <para>You can use the constructors for this object to make copies of the data, or you can use the <see cref="M:SkiaSharp.SKData.FromMallocMemory" /> to wrap a block of memory that has been allocated with the platform “malloc" function.</para>
     </remarks>
   </Docs>
   <Members>
@@ -40,9 +40,9 @@
       </AssemblyInfo>
       <Parameters />
       <Docs>
-        <summary>Creates an empty SKData object.</summary>
+        <summary>Creates an empty <see cref="T:SkiaSharp.SKData" /> object.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -63,8 +63,8 @@
         <Parameter Name="bytes" Type="System.Byte[]" />
       </Parameters>
       <Docs>
-        <param name="bytes">Array of bytes that will be copied.</param>
-        <summary>Creates an SKData by copying the provided byte array.</summary>
+        <param name="bytes">The array of bytes that will be copied.</param>
+        <summary>Creates an <see cref="T:SkiaSharp.SKData" /> by copying the provided byte array.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -88,9 +88,9 @@
         <Parameter Name="length" Type="System.UInt64" />
       </Parameters>
       <Docs>
-        <param name="bytes">Pointer to a buffer</param>
-        <param name="length">Length of the buffer.</param>
-        <summary>Creates an SKData by copying the provided byte buffer for the specified length.</summary>
+        <param name="bytes">The pointer to a buffer.</param>
+        <param name="length">The length of the buffer.</param>
+        <summary>Creates an <see cref="T:SkiaSharp.SKData" /> by copying the provided byte buffer for the specified length.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -114,9 +114,33 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Wraps the SKData as a <see cref="T:System.IO.Stream" /></summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Wraps the <see cref="T:SkiaSharp.SKData" /> as a <see cref="T:System.IO.Stream" />.</summary>
+        <returns>Returns the new <see cref="T:System.IO.Stream" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="AsStream">
+      <MemberSignature Language="C#" Value="public System.IO.Stream AsStream (bool streamDisposesData);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class System.IO.Stream AsStream(bool streamDisposesData) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.IO.Stream</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="streamDisposesData" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="streamDisposesData">Whether or not to dispose the data object when the stream is disposed.</param>
+        <summary>Wraps the <see cref="T:SkiaSharp.SKData" /> as a <see cref="T:System.IO.Stream" />.</summary>
+        <returns>Returns the new <see cref="T:System.IO.Stream" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Data">
@@ -136,9 +160,13 @@
         <ReturnType>System.IntPtr</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Returns a pointer to the data wrapped by this.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a pointer to the data wrapped by this <see cref="T:SkiaSharp.SKData" />.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -161,9 +189,11 @@
         <Parameter Name="disposing" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="disposing">To be added.</param>
-        <summary>Releases the resources associated with the data.   If this <see cref="T:SkiaSharp.SKData" /> was created with one of the <see cref="M:SkiaSharp.SKData.FromMallocMemory" /> method, then the operating system’s “free” method will be called on the data.</summary>
-        <remarks>To be added.</remarks>
+        <param name="disposing">Specify true to release both managed and unmanaged resources, false to release only unmanaged resources.</param>
+        <summary>Releases the resources associated with the data. If this <see cref="T:SkiaSharp.SKData" /> was created with one of the <see cref="M:SkiaSharp.SKData.FromMallocMemory" /> methods, then the operating system’s “free” method will be called on the data.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromMallocMemory">
@@ -187,11 +217,31 @@
         <Parameter Name="length" Type="System.UInt64" />
       </Parameters>
       <Docs>
-        <param name="bytes">Pointer to memory that has been allocated with the operating system’s malloc or <see cref="M:System.Runtime.InteropServices.Marshal.AllocHGlobal" /> method.</param>
-        <param name="length">The size of the buffer allocated</param>
-        <summary>Creates an SKData from a buffer that was previously allocated with the operating system malloc (or <see cref="M:System.Runtime.InteropServices.Marshal.AllocHGlobal" /> method.</summary>
-        <returns>An SKData instance that wraps it</returns>
+        <param name="bytes">Pointer to memory that has been allocated with the operating system’s “malloc" or <see cref="M:System.Runtime.InteropServices.Marshal.AllocHGlobal" /> method.</param>
+        <param name="length">The size of the buffer allocated.</param>
+        <summary>Creates an <see cref="T:SkiaSharp.SKData" /> from a buffer that was previously allocated with the operating system “malloc" (or <see cref="M:System.Runtime.InteropServices.Marshal.AllocHGlobal" /> method.</summary>
+        <returns>An <see cref="T:SkiaSharp.SKData" /> instance that wraps a memory block.</returns>
         <remarks>When this SKData is cleared, the free method will be called on the provided buffer.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="IsEmpty">
+      <MemberSignature Language="C#" Value="public bool IsEmpty { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance bool IsEmpty" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets a value indicating whether or not the data is empty.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="SaveTo">
@@ -214,10 +264,10 @@
         <Parameter Name="target" Type="System.IO.Stream" />
       </Parameters>
       <Docs>
-        <param name="target">Stream to save the data into.</param>
+        <param name="target">The stream to save the data into.</param>
         <summary>Saves the buffer into the provided stream.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -238,10 +288,12 @@
         <ReturnType>System.Int64</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>The size of this SKData object.</summary>
-        <value>Size in bytes.</value>
+        <summary>Gets the size of this data object in bytes.</summary>
+        <value>
+          <para></para>
+        </value>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -267,11 +319,30 @@
       </Parameters>
       <Docs>
         <param name="offset">The offset of the data.</param>
-        <param name="length">The length for the new SKData</param>
-        <summary>Creates a new SKData that points to a slice in this SKData.</summary>
+        <param name="length">The length for the new <see cref="T:SkiaSharp.SKData" />.</param>
+        <summary>Creates a new <see cref="T:SkiaSharp.SKData" /> that points to a slice in this <see cref="T:SkiaSharp.SKData" />.</summary>
         <returns>
-          <para />
+          <para></para>
         </returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ToArray">
+      <MemberSignature Language="C#" Value="public byte[] ToArray ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance unsigned int8[] ToArray() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Byte[]</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Copies the data object into a byte array.</summary>
+        <returns>Returns the byte array of the data.</returns>
         <remarks>
           <para />
         </remarks>

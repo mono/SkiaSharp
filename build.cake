@@ -194,6 +194,11 @@ Task ("samples")
 {
     ClearSkiaSharpNuGetCache ();
 
+    // zip the samples for the GitHub release notes
+    if (TARGET == "CI") {
+        Zip ("./samples", "./output/samples.zip");
+    }
+
     if (IsRunningOnUnix ()) {
         RunNuGetRestore ("./samples/MacSample/MacSample.sln");
         DotNetBuild ("./samples/MacSample/MacSample.sln", c => { 
@@ -252,17 +257,26 @@ Task ("docs")
         var typesWithDocs = xdoc.Root
             .Elements ("Docs");
 
-        totalTypes += typesWithDocs.Count (); 
-        typeCount += typesWithDocs.Where (m => m.Value?.IndexOf ("To be added.") >= 0).Count ();
+        totalTypes += typesWithDocs.Count ();
+        var currentTypeCount = typesWithDocs.Where (m => m.Value != null && m.Value.IndexOf ("To be added.") >= 0).Count (); 
+        typeCount += currentTypeCount;
 
         var membersWithDocs = xdoc.Root
             .Elements ("Members")
             .Elements ("Member")
-            .Where (m => m.Attribute ("MemberName")?.Value != "Dispose")
+            .Where (m => m.Attribute ("MemberName") != null && m.Attribute ("MemberName").Value != "Dispose"  && m.Attribute ("MemberName").Value != "Finalize")
             .Elements ("Docs");
 
         totalMembers += membersWithDocs.Count ();
-        memberCount += membersWithDocs.Where (m => m.Value?.IndexOf ("To be added.") >= 0).Count ();
+        var currentMemberCount = membersWithDocs.Where (m => m.Value != null && m.Value.IndexOf ("To be added.") >= 0).Count ();
+        memberCount += currentMemberCount;
+
+        currentMemberCount += currentTypeCount;
+        if (currentMemberCount > 0) {
+            var fullName = xdoc.Root.Attribute ("FullName");
+            if (fullName != null)
+                Information ("Docs missing on {0} = {1}", fullName.Value, currentMemberCount);
+        }
     }
     Information (
         "Documentation missing in {0}/{1} ({2:0.0%}) types and {3}/{4} ({5:0.0%}) members.", 
@@ -359,6 +373,39 @@ Task ("update-docs")
 
     // generate doc files
     RunMdocUpdate (assemblies, DOCS_PATH, refs.ToArray ());
+
+    // apply some formatting
+    var docFiles = GetFiles ("./docs/**/*.xml");
+    foreach (var file in docFiles) {
+
+        var xdoc = XDocument.Load (file.ToString ());
+
+        // remove IComponent docs as this is just designer
+        var icomponents = xdoc.Root
+            .Elements ("Members")
+            .Elements ("Member")
+            .Where (e => e.Attribute ("MemberName") != null && e.Attribute ("MemberName").Value.StartsWith ("System.ComponentModel.IComponent."))
+            .ToArray ();
+        foreach (var ic in icomponents) {
+            Information ("Removing IComponent member '{0}' from '{1}'...", ic.Attribute ("MemberName").Value, file);
+            icomponents.Remove ();
+        }
+
+        // get the whitespaces right
+        var settings = new XmlWriterSettings {
+            Encoding = new UTF8Encoding (),
+            Indent = true,
+            NewLineChars = "\n",
+            OmitXmlDeclaration = true,
+        };
+        using (var writer = XmlWriter.Create (file.ToString (), settings)) {
+            xdoc.Save (writer);
+            writer.Flush ();
+        }
+
+        // empty line at the end
+        System.IO.File.AppendAllText (file.ToString (), "\n");
+    }
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -431,12 +478,12 @@ Task ("set-versions")
 
     // the versions
     var version = "1.55.0.0";
-    var fileVersion = "1.55.0.0";
+    var fileVersion = "1.55.1.0";
     var versions = new Dictionary<string, string> {
-        { "SkiaSharp", "1.55.0" },
-        { "SkiaSharp.Views", "1.55.0-beta1" },
-        { "SkiaSharp.Views.Forms", "1.55.0-beta1" },
-        { "SkiaSharp.Svg", "1.55.0-beta1" },
+        { "SkiaSharp", "1.55.1" },
+        { "SkiaSharp.Views", "1.55.1" },
+        { "SkiaSharp.Views.Forms", "1.55.1" },
+        { "SkiaSharp.Svg", "1.55.1-beta1" },
     };
 
     var files = new List<string> ();

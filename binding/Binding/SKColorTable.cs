@@ -65,11 +65,27 @@ namespace SkiaSharp
 				var type = typeof(SKColor);
 				var size = Marshal.SizeOf (type);
 				var pointer = ReadColors ();
-				for (var i = 0; i < count; i++)
-				{
+				for (var i = 0; i < count; i++) {
 					colors[i] = (SKColor)Marshal.PtrToStructure (pointer + (i * size), type);
 				}
 				return colors;
+			}
+		}
+
+		public SKColor this [int index]
+		{
+			get
+			{
+				var count = Count;
+				var pointer = ReadColors ();
+
+				if (index < 0 || index >= count || pointer == IntPtr.Zero) {
+					throw new ArgumentOutOfRangeException (nameof (index));
+				}
+
+				var type = typeof(SKColor);
+				var size = Marshal.SizeOf (type);
+				return (SKColor)Marshal.PtrToStructure (pointer + (index * size), type);
 			}
 		}
 

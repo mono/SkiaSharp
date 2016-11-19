@@ -25,8 +25,10 @@
     </Attribute>
   </Attributes>
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>A UIKit view that can be drawn on using SkiaSharp drawing commands.</summary>
+    <remarks>
+      <para></para>
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -38,8 +40,10 @@
       </AssemblyInfo>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Default constructor that initializes a new instance of <see cref="T:SkiaSharp.Views.tvOS.SKCanvasView" />.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -53,9 +57,11 @@
         <Parameter Name="frame" Type="CoreGraphics.CGRect" />
       </Parameters>
       <Docs>
-        <param name="frame">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="frame">The frame used by the view, expressed in tvOS points.</param>
+        <summary>Initializes the <see cref="T:SkiaSharp.Views.tvOS.SKCanvasView" /> with the specified frame.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -69,9 +75,11 @@
         <Parameter Name="p" Type="System.IntPtr" />
       </Parameters>
       <Docs>
-        <param name="p">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="p">The pointer (handle) to the unmanaged object.</param>
+        <summary>A constructor used when creating managed representations of unmanaged objects; Called by the runtime.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="AwakeFromNib">
@@ -86,8 +94,26 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Called after the object has been loaded from the nib file. Overriders must call the base method.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CanvasSize">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKSize CanvasSize { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKSize CanvasSize" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKSize</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the current canvas size.</summary>
+        <value></value>
+        <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -109,21 +135,6 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="Disposed">
-      <MemberSignature Language="C#" Value="public event EventHandler Disposed;" />
-      <MemberSignature Language="ILAsm" Value=".event class System.EventHandler Disposed" />
-      <MemberType>Event</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.55.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.EventHandler</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
     <Member MemberName="Draw">
       <MemberSignature Language="C#" Value="public override void Draw (CoreGraphics.CGRect rect);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig virtual instance void Draw(valuetype CoreGraphics.CGRect rect) cil managed" />
@@ -138,9 +149,11 @@
         <Parameter Name="rect" Type="CoreGraphics.CGRect" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rect">The rectangle to draw.</param>
+        <summary>Draws the view within the passed-in rectangle.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawInSurface">
@@ -158,10 +171,45 @@
         <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
       </Parameters>
       <Docs>
-        <param name="surface">To be added.</param>
-        <param name="info">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="surface">The surface to draw on.</param>
+        <param name="info">The information about the surface.</param>
+        <summary>Implement this to draw on the canvas.</summary>
+        <remarks>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.tvOS.SKCanvasView.DrawInSurface" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.tvOS.SKCanvasView.PaintSurface" /> event. If the method is overriden, then the base must be called.</para>
+          <para></para>
+          <example>
+            <code lang="C#"><![CDATA[protected override void DrawInSurface (SKSurface surface, SKImageInfo info)
+{
+    // call the base method
+    base.DrawInSurface (surface, info);
+
+    var surfaceWidth = info.Width;
+    var surfaceHeight = info.Height;
+
+    var canvas = surface.Canvas;
+    // draw on the canvas
+    canvas.Flush ();
+}]]></code>
+          </example>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="IgnorePixelScaling">
+      <MemberSignature Language="C#" Value="public bool IgnorePixelScaling { get; set; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance bool IgnorePixelScaling" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets or sets a value indicating whether the drawing canvas should be resized on high resolution displays.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>By default, when false, the canvas is resized to 1 canvas pixel per display pixel. When true, the canvas is resized to device independent pixels, and then stretched to fill the view. Although performance is improved and all objects are the same size on different display densities, blurring and pixellation may occur.</remarks>
       </Docs>
     </Member>
     <Member MemberName="LayoutSubviews">
@@ -176,8 +224,10 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Lays out subviews.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="PaintSurface">
@@ -191,24 +241,24 @@
         <ReturnType>System.EventHandler&lt;SkiaSharp.Views.tvOS.SKPaintSurfaceEventArgs&gt;</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="Site">
-      <MemberSignature Language="C#" Value="public System.ComponentModel.ISite Site { get; set; }" />
-      <MemberSignature Language="ILAsm" Value=".property instance class System.ComponentModel.ISite Site" />
-      <MemberType>Property</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.55.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.ComponentModel.ISite</ReturnType>
-      </ReturnValue>
-      <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Occurs when the the canvas needs to be re-drawn.</summary>
+        <remarks>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.tvOS.SKCanvasView.DrawInSurface" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.tvOS.SKCanvasView.PaintSurface" /> event.</para>
+          <para></para>
+          <example>
+            <code lang="C#"><![CDATA[SKCanvasView myView = ...;
+
+myView.PaintSurface += (sender, e) => {
+    var surface = e.Surface;
+    var surfaceWidth = e.Info.Width;
+    var surfaceHeight = e.Info.Height;
+
+    var canvas = surface.Canvas;
+    // draw on the canvas
+    canvas.Flush ();
+};]]></code>
+          </example>
+        </remarks>
       </Docs>
     </Member>
   </Members>

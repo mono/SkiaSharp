@@ -189,6 +189,31 @@ namespace SkiaSharp.Tests
 		}
 
 		[Test]
+		public void PathBoundsAndRegionBoundsMatch ()
+		{
+			const float EPSILON = 0.000001f;
+
+			var path = new SKPath ();
+			path.MoveTo (10, 10);
+			path.LineTo (90, 90);
+
+			var bounds = path.Bounds;
+			Assert.AreEqual (10f, bounds.Left, EPSILON);
+			Assert.AreEqual (10f, bounds.Top, EPSILON);
+			Assert.AreEqual (90f, bounds.Right, EPSILON);
+			Assert.AreEqual (90f, bounds.Bottom, EPSILON);
+
+			var region = new SKRegion ();
+			region.SetRect (new SKRectI (10, 10, 90, 90));
+
+			var regionBounds = region.Bounds;
+			Assert.AreEqual (10f, regionBounds.Left, EPSILON);
+			Assert.AreEqual (10f, regionBounds.Top, EPSILON);
+			Assert.AreEqual (90f, regionBounds.Right, EPSILON);
+			Assert.AreEqual (90f, regionBounds.Bottom, EPSILON);
+		}
+
+		[Test]
 		public void BoundsAndTightBoundAreCorrect ()
 		{
 			const float EPSILON = 0.000001f;

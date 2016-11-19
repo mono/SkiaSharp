@@ -31,6 +31,9 @@ namespace SkiaSharp
 
 		public static GRContext Create (GRBackend backend, GRGlInterface backendContext)
 		{
+			if (backendContext == null) {
+				throw new ArgumentNullException (nameof (backendContext));
+			}
 			return GetObject<GRContext> (SkiaApi.gr_context_create_with_defaults (backend, backendContext.Handle));
 		}
 
@@ -41,6 +44,9 @@ namespace SkiaSharp
 
 		public static GRContext Create (GRBackend backend, GRGlInterface backendContext, GRContextOptions options)
 		{
+			if (backendContext == null) {
+				throw new ArgumentNullException (nameof (backendContext));
+			}
 			return GetObject<GRContext> (SkiaApi.gr_context_create (backend, backendContext.Handle, ref options));
 		}
 

@@ -16,14 +16,28 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>32 bit ARGB color value, not premultiplied. </summary>
-    <remarks>
-      <para>The color components are always in a known order. </para>
-      <para></para>
-      <para>SkColor is the type used to specify colors in SkPaint and in gradients.</para>
-    </remarks>
+    <summary>32 bit ARGB color value, not premultiplied.</summary>
+    <remarks>The color components are always in a known order.</remarks>
   </Docs>
   <Members>
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public SKColor (uint value);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig specialname rtspecialname instance void .ctor(unsigned int32 value) cil managed" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters>
+        <Parameter Name="value" Type="System.UInt32" />
+      </Parameters>
+      <Docs>
+        <param name="value">The integer value of the color.</param>
+        <summary>Creates a color from the specified integer.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
     <Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public SKColor (byte red, byte green, byte blue);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig specialname rtspecialname instance void .ctor(unsigned int8 red, unsigned int8 green, unsigned int8 blue) cil managed" />
@@ -43,11 +57,13 @@
         <Parameter Name="blue" Type="System.Byte" />
       </Parameters>
       <Docs>
-        <param name="red">To be added.</param>
-        <param name="green">To be added.</param>
-        <param name="blue">To be added.</param>
-        <summary>Creates a color from the specified red, green and blue values.</summary>
-        <remarks>To be added.</remarks>
+        <param name="red">The red component.</param>
+        <param name="green">The green component.</param>
+        <param name="blue">The blue component.</param>
+        <summary>Creates a color from the specified red, green and blue components.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -70,12 +86,14 @@
         <Parameter Name="alpha" Type="System.Byte" />
       </Parameters>
       <Docs>
-        <param name="red">To be added.</param>
-        <param name="green">To be added.</param>
-        <param name="blue">To be added.</param>
-        <param name="alpha">To be added.</param>
-        <summary>Creates a color from the specified red, green, blue and alpha values.</summary>
-        <remarks>To be added.</remarks>
+        <param name="red">The red component.</param>
+        <param name="green">The green component.</param>
+        <param name="blue">The blue component.</param>
+        <param name="alpha">The alpha component.</param>
+        <summary>Creates a color from the specified red, green, blue and alpha components.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Alpha">
@@ -95,9 +113,13 @@
         <ReturnType>System.Byte</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>The alpha component of the color.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the alpha component of the color.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Blue">
@@ -117,9 +139,13 @@
         <ReturnType>System.Byte</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>The blue component of the color.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the blue component of the color.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Empty">
@@ -135,8 +161,10 @@
         <ReturnType>SkiaSharp.SKColor</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Gets an “empty” color, with zero for all the components.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Equals">
@@ -159,10 +187,12 @@
         <Parameter Name="other" Type="System.Object" />
       </Parameters>
       <Docs>
-        <param name="other">To be added.</param>
-        <summary>Determines if this object is equal to the provided one</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="other">The object to compare with the current object.</param>
+        <summary>Determines whether the specified object is equal to the current object.</summary>
+        <returns>Returns true if the specified object is equal to the current object; otherwise, false.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromHsl">
@@ -184,13 +214,15 @@
         <Parameter Name="a" Type="System.Byte" />
       </Parameters>
       <Docs>
-        <param name="h">To be added.</param>
-        <param name="s">To be added.</param>
-        <param name="l">To be added.</param>
-        <param name="a">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="h">The hue value.</param>
+        <param name="s">The saturation value.</param>
+        <param name="l">The lightness/luminosity value.</param>
+        <param name="a">The alpha value.</param>
+        <summary>Creates a color from the specified hue, saturation, lightness/luminosity and alpha values.</summary>
+        <returns>The new <see cref="T:SkiaSharp.SKColor" /> instance.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromHsv">
@@ -212,13 +244,15 @@
         <Parameter Name="a" Type="System.Byte" />
       </Parameters>
       <Docs>
-        <param name="h">To be added.</param>
-        <param name="s">To be added.</param>
-        <param name="v">To be added.</param>
-        <param name="a">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="h">The hue value.</param>
+        <param name="s">The saturation value.</param>
+        <param name="v">The value/brightness value.</param>
+        <param name="a">The alpha value.</param>
+        <summary>Creates a color from the specified hue, saturation, value/brightness and alpha values.</summary>
+        <returns>The new <see cref="T:SkiaSharp.SKColor" /> instance.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetHashCode">
@@ -239,9 +273,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Returns the object hash code.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Serves as the default hash function.</summary>
+        <returns>Returns a hash code for the current object.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Green">
@@ -261,9 +297,13 @@
         <ReturnType>System.Byte</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>The green component of the color.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the green component of the color.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Hue">
@@ -279,9 +319,13 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the hue value.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="op_Equality">
@@ -301,11 +345,13 @@
         <Parameter Name="right" Type="SkiaSharp.SKColor" />
       </Parameters>
       <Docs>
-        <param name="left">To be added.</param>
-        <param name="right">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="left">The first color to compare.</param>
+        <param name="right">The second color to compare.</param>
+        <summary>Indicates whether two <see cref="T:SkiaSharp.SKColor" /> objects are equal.</summary>
+        <returns>Returns true if left is equal to right, otherwise false.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="op_Explicit">
@@ -324,10 +370,12 @@
         <Parameter Name="color" Type="SkiaSharp.SKColor" />
       </Parameters>
       <Docs>
-        <param name="color">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="color">The color to convert.</param>
+        <summary>Converts a <see cref="T:SkiaSharp.SKColor" /> to a UInt32.</summary>
+        <returns>The UInt32 value for the color.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="op_Implicit">
@@ -346,10 +394,12 @@
         <Parameter Name="color" Type="System.UInt32" />
       </Parameters>
       <Docs>
-        <param name="color">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="color">The UInt32 representation of a color.</param>
+        <summary>Converts a UInt32 to a <see cref="T:SkiaSharp.SKColor" />.</summary>
+        <returns>The new <see cref="T:SkiaSharp.SKColor" /> instance.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="op_Inequality">
@@ -369,11 +419,13 @@
         <Parameter Name="right" Type="SkiaSharp.SKColor" />
       </Parameters>
       <Docs>
-        <param name="left">To be added.</param>
-        <param name="right">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="left">The first color to compare.</param>
+        <param name="right">The second color to compare.</param>
+        <summary>Indicates whether two <see cref="T:SkiaSharp.SKColor" /> objects are different.</summary>
+        <returns>Returns true if left is not equal to right, otherwise false.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Parse">
@@ -390,10 +442,10 @@
         <Parameter Name="hexString" Type="System.String" />
       </Parameters>
       <Docs>
-        <param name="hexString">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="hexString">The hexadecimal string representation of a color.</param>
+        <summary>Converts the hexadecimal string representation of a color to its <see cref="T:SkiaSharp.SKColor" /> equivalent.</summary>
+        <returns>The new <see cref="T:SkiaSharp.SKColor" /> instance.</returns>
+        <remarks>This method can parse a string in the forms with or without a preceding ‘#’ character: AARRGGB, RRGGBB, ARGB, RGB.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Red">
@@ -413,9 +465,13 @@
         <ReturnType>System.Byte</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>The red component of the color.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the red component of the color.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ToHsl">
@@ -436,11 +492,11 @@
         <Parameter Name="l" Type="System.Single&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="h">To be added.</param>
-        <param name="s">To be added.</param>
-        <param name="l">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="h">The hue value.</param>
+        <param name="s">The saturation value.</param>
+        <param name="l">The lightness/luminosity value.</param>
+        <summary>Converts the current color into it’s hue, saturation and lightness/luminosity values.</summary>
+        <remarks>The alpha value is separate from the HSL calculation and will always be the same as <see cref="P:SkiaSharp.SKColor.Alpha" />.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ToHsv">
@@ -461,11 +517,11 @@
         <Parameter Name="v" Type="System.Single&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="h">To be added.</param>
-        <param name="s">To be added.</param>
-        <param name="v">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="h">The hue value.</param>
+        <param name="s">The saturation value.</param>
+        <param name="v">The value/brightness value.</param>
+        <summary>Converts the current color into it’s hue, saturation and value/brightness values.</summary>
+        <remarks>The alpha value is separate from the HSV/HSB calculation and will always be the same as <see cref="P:SkiaSharp.SKColor.Alpha" />.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ToString">
@@ -486,9 +542,13 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Returns a string with the #AARRGGBB format.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Returns the color as a string in the format: #AARRGGBB.</summary>
+        <returns>
+          <para></para>
+        </returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="TryParse">
@@ -506,11 +566,11 @@
         <Parameter Name="color" Type="SkiaSharp.SKColor&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="hexString">To be added.</param>
-        <param name="color">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="hexString">The hexadecimal string representation of a color.</param>
+        <param name="color">The new <see cref="T:SkiaSharp.SKColor" /> instance.</param>
+        <summary>Converts the hexadecimal string representation of a color to its <see cref="T:SkiaSharp.SKColor" /> equivalent.</summary>
+        <returns>Returns tru if the conversion was successful, otherwise false.</returns>
+        <remarks>This method can parse a string in the forms with or without a preceding ‘#’ character: AARRGGB, RRGGBB, ARGB, RGB.</remarks>
       </Docs>
     </Member>
     <Member MemberName="WithAlpha">
@@ -533,10 +593,14 @@
         <Parameter Name="alpha" Type="System.Byte" />
       </Parameters>
       <Docs>
-        <param name="alpha">To be added.</param>
-        <summary>Returns a new SKColor based on this current instance that has a new Alpha channel value.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="alpha">The new alpha component.</param>
+        <summary>Returns a new color based on this current instance, but with the new alpha channel value.</summary>
+        <returns>
+          <para></para>
+        </returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="WithBlue">
@@ -555,10 +619,14 @@
         <Parameter Name="blue" Type="System.Byte" />
       </Parameters>
       <Docs>
-        <param name="blue">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="blue">The new blue component.</param>
+        <summary>Returns a new color based on this current instance, but with the new blue channel value.</summary>
+        <returns>
+          <para></para>
+        </returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="WithGreen">
@@ -577,10 +645,14 @@
         <Parameter Name="green" Type="System.Byte" />
       </Parameters>
       <Docs>
-        <param name="green">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="green">The new green component.</param>
+        <summary>Returns a new color based on this current instance, but with the new green channel value.</summary>
+        <returns>
+          <para></para>
+        </returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="WithRed">
@@ -599,10 +671,14 @@
         <Parameter Name="red" Type="System.Byte" />
       </Parameters>
       <Docs>
-        <param name="red">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="red">The new red component.</param>
+        <summary>Returns a new color based on this current instance, but with the new red channel value.</summary>
+        <returns>
+          <para></para>
+        </returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
   </Members>

@@ -30,6 +30,8 @@ namespace SkiaSharp.Views.Android
 			SetRenderer(renderer);
 		}
 
+		public SKSize CanvasSize => renderer.CanvasSize;
+
 		public virtual void SetRenderer(ISKRenderer renderer)
 		{
 			skRenderer = renderer;

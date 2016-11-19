@@ -16,8 +16,8 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>Same as <see cref="M:SkiaSharp.SKPath.ConicTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
-    <remarks> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0,0).</remarks>
+    <summary>A compound geometric path.</summary>
+    <remarks>A path encapsulates compound (multiple contour) geometric paths consisting of straight line segments, quadratic curves, and cubic curves.</remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -58,7 +58,7 @@
       </Parameters>
       <Docs>
         <param name="path">The path to clone.</param>
-        <summary>Creates an SKPath by making a copy of an existing path</summary>
+        <summary>Creates a path by making a copy of an existing path</summary>
         <remarks>This constructor can throw InvalidOperationException if there is a problem copying the source path.</remarks>
       </Docs>
     </Member>
@@ -355,6 +355,110 @@
       </Docs>
     </Member>
     <Member MemberName="ArcTo">
+      <MemberSignature Language="C#" Value="public void ArcTo (SkiaSharp.SKPoint point1, SkiaSharp.SKPoint point2, float radius);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void ArcTo(valuetype SkiaSharp.SKPoint point1, valuetype SkiaSharp.SKPoint point2, float32 radius) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="point1" Type="SkiaSharp.SKPoint" />
+        <Parameter Name="point2" Type="SkiaSharp.SKPoint" />
+        <Parameter Name="radius" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="point1">The corner coordinates.</param>
+        <param name="point2">The destination coordinates.</param>
+        <param name="radius">The corner radius.</param>
+        <summary>Appends a line and arc to the current path.</summary>
+        <remarks>This is the same as the PostScript call "arct".</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ArcTo">
+      <MemberSignature Language="C#" Value="public void ArcTo (SkiaSharp.SKRect oval, float startAngle, float sweepAngle, bool forceMoveTo);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void ArcTo(valuetype SkiaSharp.SKRect oval, float32 startAngle, float32 sweepAngle, bool forceMoveTo) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="oval" Type="SkiaSharp.SKRect" />
+        <Parameter Name="startAngle" Type="System.Single" />
+        <Parameter Name="sweepAngle" Type="System.Single" />
+        <Parameter Name="forceMoveTo" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="oval">The bounding oval defining the shape and size of the arc.</param>
+        <param name="startAngle">The starting angle (in degrees) where the arc begins.</param>
+        <param name="sweepAngle">The sweep angle (in degrees) measured clockwise.</param>
+        <param name="forceMoveTo">Whether to always begin a new contour with the arc.</param>
+        <summary>Appends the specified arc to the path.</summary>
+        <remarks>If the start of the arc is different from the path’s current last point, then an automatic <see cref="M:SkiaSharp.SKPath.LineTo" /> is added to connect the current contour to the start of the arc. However, if the path is empty, then we call <see cref="M:SkiaSharp.SKPath.MoveTo" /> with the first point of the arc.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ArcTo">
+      <MemberSignature Language="C#" Value="public void ArcTo (SkiaSharp.SKPoint r, float xAxisRotate, SkiaSharp.SKPathArcSize largeArc, SkiaSharp.SKPathDirection sweep, SkiaSharp.SKPoint xy);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void ArcTo(valuetype SkiaSharp.SKPoint r, float32 xAxisRotate, valuetype SkiaSharp.SKPathArcSize largeArc, valuetype SkiaSharp.SKPathDirection sweep, valuetype SkiaSharp.SKPoint xy) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="r" Type="SkiaSharp.SKPoint" />
+        <Parameter Name="xAxisRotate" Type="System.Single" />
+        <Parameter Name="largeArc" Type="SkiaSharp.SKPathArcSize" />
+        <Parameter Name="sweep" Type="SkiaSharp.SKPathDirection" />
+        <Parameter Name="xy" Type="SkiaSharp.SKPoint" />
+      </Parameters>
+      <Docs>
+        <param name="r">The radius.</param>
+        <param name="xAxisRotate">The angle in degrees relative to the x-axis.</param>
+        <param name="largeArc">Determines whether the smallest or largest arc possible is drawn.</param>
+        <param name="sweep">Determines if the arc should be swept in an anti-clockwise or clockwise direction.</param>
+        <param name="xy">The destination coordinate.</param>
+        <summary>Appends an elliptical arc from the current point in the format used by SVG.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ArcTo">
+      <MemberSignature Language="C#" Value="public void ArcTo (float x1, float y1, float x2, float y2, float radius);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void ArcTo(float32 x1, float32 y1, float32 x2, float32 y2, float32 radius) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="x1" Type="System.Single" />
+        <Parameter Name="y1" Type="System.Single" />
+        <Parameter Name="x2" Type="System.Single" />
+        <Parameter Name="y2" Type="System.Single" />
+        <Parameter Name="radius" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="x1">The corner x-coordinate.</param>
+        <param name="y1">The corner y-coordinate.</param>
+        <param name="x2">The destination x-coordinate.</param>
+        <param name="y2">The destination y-coordinate.</param>
+        <param name="radius">The corner radius.</param>
+        <summary>Appends a line and arc to the current path.</summary>
+        <remarks>This is the same as the PostScript call "arct".</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ArcTo">
       <MemberSignature Language="C#" Value="public void ArcTo (float rx, float ry, float xAxisRotate, SkiaSharp.SKPathArcSize largeArc, SkiaSharp.SKPathDirection sweep, float x, float y);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void ArcTo(float32 rx, float32 ry, float32 xAxisRotate, valuetype SkiaSharp.SKPathArcSize largeArc, valuetype SkiaSharp.SKPathDirection sweep, float32 x, float32 y) cil managed" />
       <MemberType>Method</MemberType>
@@ -613,7 +717,7 @@
         <ReturnType>SkiaSharp.SKPathConvexity</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Gets the path's convexity, as stored in the path.</summary>
+        <summary>Gets or sets the path's convexity.</summary>
         <value>
           <para></para>
         </value>
@@ -641,7 +745,7 @@
       <Docs>
         <param name="forceClose">When this is true, each contour (as defined by a new starting move command) will be completed with a close verb regardless of the contour's contents.</param>
         <summary>Creates an iterator object to scan the all of the segments (lines, quadratics, cubics) of each contours in a path.</summary>
-        <returns>An object that can be used to iterate over the various elements of the path.</returns>
+        <returns>Returns an object that can be used to iterate over the various elements of the path.</returns>
         <remarks>This iterator is able to clean up the path as the values are returned. If you do not desire to get verbs that have been cleaned up, use the <see cref="M:SkiaSharp.SKPath.CreateRawIterator" /> method instead.</remarks>
       </Docs>
     </Member>
@@ -663,7 +767,7 @@
       <Parameters />
       <Docs>
         <summary>Creates a raw iterator object to scan the all of the segments (lines, quadratics, cubics) of each contours in a path.</summary>
-        <returns>An object that can be used to iterate over the various elements of the path.</returns>
+        <returns>Returns an object that can be used to iterate over the various elements of the path.</returns>
         <remarks>Unlike the <see cref="M:SkiaSharp.SKPath.CreateIterator" /> method, this iterator does not clean up or normalize the values in the path. It returns the raw elements contained in the path.</remarks>
       </Docs>
     </Member>
@@ -767,8 +871,10 @@
         <ReturnType>SkiaSharp.SKPathFillType</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>The path's fill type.</summary>
-        <value>The current fill type.</value>
+        <summary>Gets or sets the path's fill type.</summary>
+        <value>
+          <para />
+        </value>
         <remarks>This is used to define how "inside" is computed. The default value is <see cref="F:SkiaSharp.SKPathFillType.Winding" />.</remarks>
       </Docs>
     </Member>
@@ -792,9 +898,9 @@
         <Parameter Name="rect" Type="SkiaSharp.SKRect&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="rect">The bounds.</param>
+        <param name="rect">The bounds, if the path contains any points.</param>
         <summary>Returns the bounds of the path's points.</summary>
-        <returns>If the path contains zero points/verbs, this will return the empty rectangle.</returns>
+        <returns>Returns true if the path is not empty, otherwise false.</returns>
         <remarks>This bounds may be larger than the actual shape, since curves do not extend as far as their control points. Additionally this bound encompases all points, even isolated MoveTo either preceeding or following the last non-degenerate contour.</remarks>
       </Docs>
     </Member>
@@ -885,7 +991,7 @@
       <Docs>
         <param name="result">The tight bounds of the path.</param>
         <summary>Gets the “tight” bounds of the path. Unlike <see cref="M:SkiaSharp.SKPath.GetBounds" />, the control points of curves are excluded.</summary>
-        <returns>True if the bounds could be computed, otherwise false.</returns>
+        <returns>Returns true if the bounds could be computed, otherwise false.</returns>
         <remarks>
           <para></para>
         </remarks>
@@ -903,7 +1009,7 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Gets a value indicating whether the path is concave, as stored in the path.</summary>
+        <summary>Gets a value indicating whether the path is concave.</summary>
         <value />
         <remarks>If it is currently unknown, then this function will attempt to compute the convexity (and cache the result).</remarks>
       </Docs>
@@ -920,11 +1026,31 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Gets a value indicating whether the path is convex, as stored in the path.</summary>
+        <summary>Gets a value indicating whether the path is convex.</summary>
         <value>
           <para></para>
         </value>
         <remarks>If it is currently unknown, then this function will attempt to compute the convexity (and cache the result).</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="IsEmpty">
+      <MemberSignature Language="C#" Value="public bool IsEmpty { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance bool IsEmpty" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets a value indicating whether or not the path is empty (contains no lines or curves).</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Item">
@@ -962,9 +1088,7 @@
         <ReturnType>SkiaSharp.SKPoint</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>
-          <para>Return the last point on the path. If no points have been added, (0, 0) is returned.</para>
-        </summary>
+        <summary>Return the last point on the path. If no points have been added, (0, 0) is returned.</summary>
         <value>
           <para></para>
         </value>
@@ -987,7 +1111,7 @@
         <Parameter Name="point" Type="SkiaSharp.SKPoint" />
       </Parameters>
       <Docs>
-        <param name="point">The coordinates of the end of a line</param>
+        <param name="point">The coordinates of the end of a line.</param>
         <summary>Add a line from the last point to the specified point (x, y).</summary>
         <remarks>If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0, 0).</remarks>
       </Docs>
@@ -1107,8 +1231,8 @@
         <Parameter Name="dy" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="dx">The amount in the X direction to offset the entire path.</param>
-        <param name="dy">The amount in the Y direction to offset the entire path.</param>
+        <param name="dx">The amount in the x-direction to offset the entire path.</param>
+        <param name="dy">The amount in the y-direction to offset the entire path.</param>
         <summary>Offset the path by the specifid distance.</summary>
         <remarks>
           <para></para>
@@ -1203,7 +1327,9 @@
       </ReturnValue>
       <Docs>
         <summary>Gets the number of points on the path.</summary>
-        <value>The number of points on the path.</value>
+        <value>
+          <para />
+        </value>
         <remarks />
       </Docs>
     </Member>
@@ -1277,6 +1403,35 @@
         <param name="y1">The y-coordinate of the end point on a quadratic curve.</param>
         <summary>Add a quadratic bezier from the last point.</summary>
         <remarks>Add a quadratic bezier from the last point, approaching control point (x0, y0), and ending at (x1, y1). If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0, 0).</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="RArcTo">
+      <MemberSignature Language="C#" Value="public void RArcTo (SkiaSharp.SKPoint r, float xAxisRotate, SkiaSharp.SKPathArcSize largeArc, SkiaSharp.SKPathDirection sweep, SkiaSharp.SKPoint xy);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void RArcTo(valuetype SkiaSharp.SKPoint r, float32 xAxisRotate, valuetype SkiaSharp.SKPathArcSize largeArc, valuetype SkiaSharp.SKPathDirection sweep, valuetype SkiaSharp.SKPoint xy) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="r" Type="SkiaSharp.SKPoint" />
+        <Parameter Name="xAxisRotate" Type="System.Single" />
+        <Parameter Name="largeArc" Type="SkiaSharp.SKPathArcSize" />
+        <Parameter Name="sweep" Type="SkiaSharp.SKPathDirection" />
+        <Parameter Name="xy" Type="SkiaSharp.SKPoint" />
+      </Parameters>
+      <Docs>
+        <param name="r">The radius.</param>
+        <param name="xAxisRotate">The angle in degrees relative to the x-axis.</param>
+        <param name="largeArc">Determines whether the smallest or largest arc possible is drawn.</param>
+        <param name="sweep">Determines if the arc should be swept in an anti-clockwise or clockwise direction.</param>
+        <param name="xy">The destination coordinates relative to the last point.</param>
+        <summary>The same as <see cref="M:SkiaSharp.SKPath.ArcTo" />, but the coordinates are considered relative to the last point on this contour.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="RArcTo">
@@ -1716,6 +1871,26 @@
         <summary>Applies a transformation matrix to the all the elements in the path.</summary>
         <remarks>
           <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="VerbCount">
+      <MemberSignature Language="C#" Value="public int VerbCount { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance int32 VerbCount" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the number of verbs in the path.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
         </remarks>
       </Docs>
     </Member>

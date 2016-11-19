@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using Android.Content;
 using Xamarin.Forms;
 using Xamarin.Forms.Platform.Android;
@@ -20,6 +21,7 @@ namespace SkiaSharp.Views.Forms
 
 				// unsubscribe from events
 				oldController.SurfaceInvalidated -= OnSurfaceInvalidated;
+				oldController.GetCanvasSize -= OnGetCanvasSize;
 			}
 
 			if (e.NewElement != null)
@@ -28,16 +30,28 @@ namespace SkiaSharp.Views.Forms
 
 				// create the native view
 				var view = new InternalView(Context, newController);
+				view.IgnorePixelScaling = e.NewElement.IgnorePixelScaling;
 				SetNativeControl(view);
 
 				// subscribe to events from the user
 				newController.SurfaceInvalidated += OnSurfaceInvalidated;
+				newController.GetCanvasSize += OnGetCanvasSize;
 
 				// paint for the first time
 				Control.Invalidate();
 			}
 
 			base.OnElementChanged(e);
+		}
+
+		protected override void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
+		{
+			base.OnElementPropertyChanged(sender, e);
+
+			if (e.PropertyName == nameof(SKFormsView.IgnorePixelScaling))
+			{
+				Control.IgnorePixelScaling = Element.IgnorePixelScaling;
+			}
 		}
 
 		protected override void Dispose(bool disposing)
@@ -56,6 +70,12 @@ namespace SkiaSharp.Views.Forms
 		{
 			// repaint the native control
 			Control.Invalidate();
+		}
+
+		// the user asked for the size
+		private void OnGetCanvasSize(object sender, GetCanvasSizeEventArgs e)
+		{
+			e.CanvasSize = Control?.CanvasSize ?? SKSize.Empty;
 		}
 
 		private class InternalView : SKNativeView

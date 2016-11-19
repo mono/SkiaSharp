@@ -46,21 +46,21 @@ namespace SkiaSharp
 		public static SKTypeface FromTypeface (SKTypeface typeface, SKTypefaceStyle style = SKTypefaceStyle.Normal)
 		{
 			if (typeface == null)
-				throw new ArgumentNullException ("typeface");
+				throw new ArgumentNullException (nameof (typeface));
 			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_typeface (typeface.Handle, style));
 		}
 
 		public static SKTypeface FromFile (string path, int index = 0)
 		{
 			if (path == null)
-				throw new ArgumentNullException ("path");
+				throw new ArgumentNullException (nameof (path));
 			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_file (path, index));
 		}
 
 		public static SKTypeface FromStream (SKStreamAsset stream, int index = 0)
 		{
 			if (stream == null)
-				throw new ArgumentNullException ("stream");
+				throw new ArgumentNullException (nameof (stream));
 			var typeface = GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_stream (stream.Handle, index));
 			stream.RevokeOwnership (typeface);
 			return typeface;
@@ -69,7 +69,7 @@ namespace SkiaSharp
 		public int CountGlyphs (string str)
 		{
 			if (str == null)
-				throw new ArgumentNullException ("chars");
+				throw new ArgumentNullException (nameof (str));
 			
 			unsafe {
 				fixed (char *p = str) {
@@ -81,7 +81,7 @@ namespace SkiaSharp
 		public int CountGlyphs (IntPtr str, int strLen, SKEncoding encoding)
 		{
 			if (str == IntPtr.Zero)
-				throw new ArgumentNullException ("str");
+				throw new ArgumentNullException (nameof (str));
 
 			return  SkiaApi.sk_typeface_chars_to_glyphs (Handle, str, encoding, IntPtr.Zero, strLen);
 		}
@@ -89,8 +89,7 @@ namespace SkiaSharp
 		public int CharsToGlyphs (string chars, out ushort [] glyphs)
 		{
 			if (chars == null)
-				throw new ArgumentNullException ("chars");
-			
+				throw new ArgumentNullException (nameof (chars));
 
 			unsafe {
 				fixed (char *p = chars){
@@ -106,6 +105,9 @@ namespace SkiaSharp
 
 		public int CharsToGlyphs (IntPtr str, int strlen, SKEncoding encoding, out ushort [] glyphs)
 		{
+			if (str == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (str));
+
 			unsafe {
 				var n = SkiaApi.sk_typeface_chars_to_glyphs (Handle, str, encoding, IntPtr.Zero, strlen);
 				glyphs = new ushort[n];

@@ -23,6 +23,7 @@ namespace SkiaSharp.Views.Forms
 
 				// unsubscribe from events
 				oldController.SurfaceInvalidated -= OnSurfaceInvalidated;
+				oldController.GetCanvasSize -= OnGetCanvasSize;
 			}
 
 			if (e.NewElement != null)
@@ -36,6 +37,7 @@ namespace SkiaSharp.Views.Forms
 
 				// subscribe to events from the user
 				newController.SurfaceInvalidated += OnSurfaceInvalidated;
+				newController.GetCanvasSize += OnGetCanvasSize;
 
 				// start the rendering
 				SetRenderMode();
@@ -75,6 +77,12 @@ namespace SkiaSharp.Views.Forms
 			{
 				Control.RequestRender();
 			}
+		}
+
+		// the user asked for the size
+		private void OnGetCanvasSize(object sender, GetCanvasSizeEventArgs e)
+		{
+			e.CanvasSize = Control?.CanvasSize ?? SKSize.Empty;
 		}
 
 		private void SetRenderMode()

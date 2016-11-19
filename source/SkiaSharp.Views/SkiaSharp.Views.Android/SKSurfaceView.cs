@@ -33,6 +33,8 @@ namespace SkiaSharp.Views.Android
 			Holder.AddCallback(this);
 		}
 
+		public SKSize CanvasSize => bitmap == null ? SKSize.Empty : new SKSize(bitmap.Width, bitmap.Height);
+
 		// ISurfaceHolderCallback
 
 		public virtual void SurfaceChanged(ISurfaceHolder holder, [GeneratedEnum] Format format, int width, int height)

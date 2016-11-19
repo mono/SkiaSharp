@@ -12,8 +12,14 @@ namespace SkiaSharp
 {
 	public class SKColorFilter : SKObject
 	{
+		[Obsolete("Use MinColorCubeDimension instead.")]
 		public const int MinCubeSize = 4;
+		[Obsolete("Use MaxColorCubeDimension instead.")]
 		public const int MaxCubeSize = 64;
+
+		public const int MinColorCubeDimension = 4;
+		public const int MaxColorCubeDimension = 64;
+		public const int ColorMatrixSize = 20;
 
 		public static bool IsValid3DColorCube(SKData cubeData, int cubeDimension)
 		{
@@ -44,6 +50,11 @@ namespace SkiaSharp
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_mode(c, mode));
 		}
 
+		public static SKColorFilter CreateBlendMode(SKColor c, SKBlendMode mode)
+		{
+			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_mode(c, (SKXferMode)mode));
+		}
+
 		public static SKColorFilter CreateLighting(SKColor mul, SKColor add)
 		{
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_lighting(mul, add));
@@ -52,30 +63,34 @@ namespace SkiaSharp
 		public static SKColorFilter CreateCompose(SKColorFilter outer, SKColorFilter inner)
 		{
 			if (outer == null)
-				throw new ArgumentNullException("outer");
+				throw new ArgumentNullException(nameof(outer));
 			if (inner == null)
-				throw new ArgumentNullException("inner");
+				throw new ArgumentNullException(nameof(inner));
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_compose(outer.Handle, inner.Handle));
 		}
 
 		public static SKColorFilter CreateColorCube(byte[] cubeData, int cubeDimension)
 		{
+			if (cubeData == null)
+				throw new ArgumentNullException(nameof(cubeData));
 			return CreateColorCube(new SKData(cubeData), cubeDimension);
 		}
 
 		public static SKColorFilter CreateColorCube(SKData cubeData, int cubeDimension)
 		{
+			if (cubeData == null)
+				throw new ArgumentNullException(nameof(cubeData));
 			if (!IsValid3DColorCube(cubeData, cubeDimension))
-				throw new ArgumentNullException("cubeData");
+				throw new ArgumentException("Invalid cube data.", nameof(cubeData));
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_color_cube(cubeData.Handle, cubeDimension));
 		}
 
 		public static SKColorFilter CreateColorMatrix(float[] matrix)
 		{
 			if (matrix == null)
-				throw new ArgumentNullException("matrix");
+				throw new ArgumentNullException(nameof(matrix));
 			if (matrix.Length != 20)
-				throw new ArgumentException("Matrix must have a length of 20.", "matrix");
+				throw new ArgumentException("Matrix must have a length of 20.", nameof(matrix));
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_color_matrix(matrix));
 		}
 
@@ -92,22 +107,23 @@ namespace SkiaSharp
 		public static SKColorFilter CreateTable(byte[] table)
 		{
 			if (table == null)
-				throw new ArgumentNullException("table");
+				throw new ArgumentNullException(nameof(table));
 			if (table.Length != SKColorTable.MaxLength)
-				throw new ArgumentException("Table must have a length of 256.", "table");
+				throw new ArgumentException($"Table must have a length of {SKColorTable.MaxLength}.", nameof(table));
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_table(table));
 		}
 
 		public static SKColorFilter CreateTable(byte[] tableA, byte[] tableR, byte[] tableG, byte[] tableB)
 		{
 			if (tableA != null && tableA.Length != SKColorTable.MaxLength)
-				throw new ArgumentException("Table A must have a length of 256.", "tableA");
+				throw new ArgumentException($"Table A must have a length of {SKColorTable.MaxLength}.", nameof(tableA));
 			if (tableR != null && tableR.Length != SKColorTable.MaxLength)
-				throw new ArgumentException("Table R must have a length of 256.", "tableR");
+				throw new ArgumentException($"Table R must have a length of {SKColorTable.MaxLength}.", nameof(tableR));
 			if (tableG != null && tableG.Length != SKColorTable.MaxLength)
-				throw new ArgumentException("Table G must have a length of 256.", "tableG");
+				throw new ArgumentException($"Table G must have a length of {SKColorTable.MaxLength}.", nameof(tableG));
 			if (tableB != null && tableB.Length != SKColorTable.MaxLength)
-				throw new ArgumentException("Table B must have a length of 256.", "tableB");
+				throw new ArgumentException($"Table B must have a length of {SKColorTable.MaxLength}.", nameof(tableB));
+
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_table_argb(tableA, tableR, tableG, tableB));
 		}
 	}

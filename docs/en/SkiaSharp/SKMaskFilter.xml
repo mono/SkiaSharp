@@ -16,8 +16,8 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>Modifications to the alpha mask in the <see cref="T:SkiaSharp.SKPaint." /></summary>
-    <remarks>To be added.</remarks>
+    <summary>Mask filters perform transformations on an alpha-channel mask before drawing. A mask filter is set using the <see cref="P:SkiaSharp.SKPaint.MaskFilter" /> property on <see cref="T:SkiaSharp.SKPaint." /></summary>
+    <remarks />
   </Docs>
   <Members>
     <Member MemberName="ConvertRadiusToSigma">
@@ -40,10 +40,12 @@
         <Parameter Name="radius" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="radius">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="radius">The radius.</param>
+        <summary>Converts from the (legacy) idea of specifying the blur "radius" to the standard notion of specifying its sigma.</summary>
+        <returns>The sigma.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ConvertSigmaToRadius">
@@ -66,10 +68,12 @@
         <Parameter Name="sigma" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="sigma">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="sigma">The sigma.</param>
+        <summary>Converts from the standard notion of specifying the blur sigma to the (legacy) idea of specifying its “radius”.</summary>
+        <returns>The radius.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateBlur">
@@ -93,11 +97,13 @@
         <Parameter Name="sigma" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="blurStyle">To be added.</param>
-        <param name="sigma">To be added.</param>
-        <summary>Creates a blur filter.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="blurStyle">The style of blurring.</param>
+        <param name="sigma">The standard deviation (greater than 0) of the Gaussian blur to apply.</param>
+        <summary>Creates a mask filter that applies a blur.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKMaskFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateClip">
@@ -121,11 +127,13 @@
         <Parameter Name="max" Type="System.Byte" />
       </Parameters>
       <Docs>
-        <param name="min">To be added.</param>
-        <param name="max">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="min">The minimum alpha value.</param>
+        <param name="max">The maximum alpha value.</param>
+        <summary>Creates a mask filter that clips the alpha channel to the specified minimum and maximum alpha values.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKMaskFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateEmboss">
@@ -151,13 +159,15 @@
         <Parameter Name="specular" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="blurSigma">To be added.</param>
-        <param name="direction">To be added.</param>
-        <param name="ambient">To be added.</param>
-        <param name="specular">To be added.</param>
-        <summary>Creates an emboss filter</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="blurSigma">The standard deviation (greater than 0) of the Gaussian blur to apply before applying lighting.</param>
+        <param name="direction">The direction of the light source.</param>
+        <param name="ambient">The amount of ambient light, in the range of 0..1.</param>
+        <param name="specular">The coefficient for specular highlights.</param>
+        <summary>Creates a mask filter that applies an embossing effect.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKMaskFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateEmboss">
@@ -185,15 +195,17 @@
         <Parameter Name="specular" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="blurSigma">To be added.</param>
-        <param name="directionX">To be added.</param>
-        <param name="directionY">To be added.</param>
-        <param name="directionZ">To be added.</param>
-        <param name="ambient">To be added.</param>
-        <param name="specular">To be added.</param>
-        <summary>Creates an emboss filter</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="blurSigma">The standard deviation (greater than 0) of the Gaussian blur to apply before applying lighting.</param>
+        <param name="directionX">The direction of the light source in the x-direction.</param>
+        <param name="directionY">The direction of the light source in the y-direction.</param>
+        <param name="directionZ">The direction of the light source in the z-direction.</param>
+        <param name="ambient">The amount of ambient light, in the range of 0..1.</param>
+        <param name="specular">The coefficient for specular highlights.</param>
+        <summary>Creates a mask filter that applies an embossing effect.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKMaskFilter" />, or null on error.</returns>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateGamma">
@@ -216,10 +228,12 @@
         <Parameter Name="gamma" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="gamma">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="gamma">The gamma.</param>
+        <summary>Creates a mask filter that applies gamma.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKMaskFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateTable">
@@ -242,10 +256,12 @@
         <Parameter Name="table" Type="System.Byte[]" />
       </Parameters>
       <Docs>
-        <param name="table">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="table">The lookup table with exactly 256 elements.</param>
+        <summary>Creates a mask filter that applies a table lookup on each of the alpha values in the mask.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKMaskFilter" />, or null on error.</returns>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">

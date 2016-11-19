@@ -75,6 +75,14 @@ namespace SkiaSharp
 		
 		public bool IsConcave => Convexity == SKPathConvexity.Concave;
 
+		public bool IsEmpty => VerbCount == 0;
+
+		public int VerbCount {
+			get {
+				return SkiaApi.sk_path_count_verbs (Handle);
+			}
+		}
+
 		public int PointCount {
 			get {
 				return SkiaApi.sk_path_count_points (Handle);
@@ -126,6 +134,9 @@ namespace SkiaSharp
 
 		public SKPoint GetPoint (int index)
 		{
+			if (index < 0 || index >= PointCount)
+				throw new ArgumentOutOfRangeException (nameof (index));
+			
 			SKPoint point;
 			SkiaApi.sk_path_get_point (Handle, index, out point);
 			return point;
@@ -298,14 +309,14 @@ namespace SkiaSharp
 			SkiaApi.sk_path_close (Handle);
 		}
 
-		public void Rewind()
+		public void Rewind ()
 		{
-			SkiaApi.sk_path_rewind(Handle);
+			SkiaApi.sk_path_rewind (Handle);
 		}
 
-		public void Reset()
+		public void Reset ()
 		{
-			SkiaApi.sk_path_reset(Handle);
+			SkiaApi.sk_path_reset (Handle);
 		}
 
 		public void AddRect (SKRect rect, SKPathDirection direction = SKPathDirection.Clockwise)
@@ -316,7 +327,7 @@ namespace SkiaSharp
 		public void AddRect (SKRect rect, SKPathDirection direction, uint startIndex)
 		{
 			if (startIndex > 3)
-				throw new ArgumentOutOfRangeException (nameof (startIndex), "startIndex must be 0 - 3");
+				throw new ArgumentOutOfRangeException (nameof (startIndex), "Starting index must be in the range of 0..3 (inclusive).");
 
 			SkiaApi.sk_path_add_rect_start (Handle, ref rect, direction, startIndex);
 		}
@@ -473,6 +484,9 @@ namespace SkiaSharp
 		
 		public static int ConvertConicToQuads (SKPoint p0, SKPoint p1, SKPoint p2, float w, SKPoint [] pts, int pow2)
 		{
+			if (pts == null)
+				throw new ArgumentNullException (nameof (pts));
+
 			return SkiaApi.sk_path_convert_conic_to_quads(ref p0, ref p1, ref p2, w, pts, pow2);
 		}
 		
@@ -502,7 +516,7 @@ namespace SkiaSharp
 				if (points == null)
 					throw new ArgumentNullException (nameof (points));
 				if (points.Length != 4)
-					throw new ArgumentException ("Must be an array of four elements", nameof (points));
+					throw new ArgumentException ("Must be an array of four elements.", nameof (points));
 				return SkiaApi.sk_path_iter_next (Handle, points, doConsumeDegenerates ? 1 : 0, exact ? 1 : 0);
 			}
 
@@ -537,7 +551,7 @@ namespace SkiaSharp
 				if (points == null)
 					throw new ArgumentNullException (nameof (points));
 				if (points.Length != 4)
-					throw new ArgumentException ("Must be an array of four elements", nameof (points));
+					throw new ArgumentException ("Must be an array of four elements.", nameof (points));
 				return SkiaApi.sk_path_rawiter_next (Handle, points);
 			}
 

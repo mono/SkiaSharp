@@ -10,8 +10,10 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>A CoreAnimation OpenGL layer that can be drawn on using SkiaSharp drawing commands.</summary>
+    <remarks>
+      <para></para>
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -23,8 +25,26 @@
       </AssemblyInfo>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Default constructor that initializes a new instance of <see cref="T:SkiaSharp.Views.Mac.SKGLLayer" />.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CanvasSize">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKSize CanvasSize { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKSize CanvasSize" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKSize</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the current canvas size.</summary>
+        <value></value>
+        <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawInCGLContext">
@@ -44,12 +64,14 @@
         <Parameter Name="timeStamp" Type="CoreVideo.CVTimeStamp&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="glContext">To be added.</param>
-        <param name="pixelFormat">To be added.</param>
-        <param name="timeInterval">To be added.</param>
-        <param name="timeStamp">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="glContext">The rendering context in to which the OpenGL content should be rendered.</param>
+        <param name="pixelFormat">The pixel format used when the context was created.</param>
+        <param name="timeInterval">The current layer time.</param>
+        <param name="timeStamp">The display timestamp associated with the time interval. Can be null.</param>
+        <summary>Draws the OpenGL content for the specified time.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawInSurface">
@@ -67,10 +89,27 @@
         <Parameter Name="renderTarget" Type="SkiaSharp.GRBackendRenderTargetDesc" />
       </Parameters>
       <Docs>
-        <param name="surface">To be added.</param>
-        <param name="renderTarget">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="surface">The surface to draw on.</param>
+        <param name="renderTarget">The render target that is currently being drawn.</param>
+        <summary>Implement this to draw on the canvas.</summary>
+        <remarks>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Mac.SKGLLayer.DrawInSurface" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Mac.SKGLLayer.PaintSurface" /> event. If the method is overriden, then the base must be called.</para>
+          <para></para>
+          <example>
+            <code lang="C#"><![CDATA[public override void DrawInSurface (SKSurface surface, SKBackendRenderTargetDesc renderTarget)
+{
+    // call the base method
+    base.DrawInSurface (surface, renderTarget);
+
+    var surfaceWidth = renderTarget.Width;
+    var surfaceHeight = renderTarget.Height;
+
+    var canvas = surface.Canvas;
+    // draw on the canvas
+    canvas.Flush ();
+}]]></code>
+          </example>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="PaintSurface">
@@ -84,8 +123,24 @@
         <ReturnType>System.EventHandler&lt;SkiaSharp.Views.Mac.SKPaintGLSurfaceEventArgs&gt;</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Occurs when the the canvas needs to be re-drawn.</summary>
+        <remarks>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Mac.SKGLLayer.DrawInSurface" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Mac.SKGLLayer.PaintSurface" /> event.</para>
+          <para></para>
+          <example>
+            <code lang="C#"><![CDATA[SKGLLayer myLayer = ...;
+
+myLayer.PaintSurface += (sender, e) => {
+    var surface = e.Surface;
+    var surfaceWidth = e.Info.Width;
+    var surfaceHeight = e.Info.Height;
+
+    var canvas = surface.Canvas;
+    // draw on the canvas
+    canvas.Flush ();
+};]]></code>
+          </example>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Release">
@@ -102,9 +157,11 @@
         <Parameter Name="glContext" Type="OpenGL.CGLContext" />
       </Parameters>
       <Docs>
-        <param name="glContext">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="glContext">The rendering context to release.</param>
+        <summary>Releases the specified rendering context.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="SKDelegate">
@@ -118,9 +175,13 @@
         <ReturnType>SkiaSharp.Views.Mac.ISKGLLayerDelegate</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the layer’s delegate object.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
   </Members>

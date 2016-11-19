@@ -15,11 +15,17 @@ namespace SkiaSharp.Views.tvOS
 	public class SKCanvasView : UIView, IComponent
 	{
 		// for IComponent
-		public ISite Site { get; set; }
-		public event EventHandler Disposed;
+		private event EventHandler DisposedInternal;
+		ISite IComponent.Site { get; set; }
+		event EventHandler IComponent.Disposed
+		{
+			add { DisposedInternal += value; }
+			remove { DisposedInternal -= value; }
+		}
 		private bool designMode;
 
 		private SKDrawable drawable;
+		private bool ignorePixelScaling;
 
 		// created in code
 		public SKCanvasView()
@@ -43,7 +49,7 @@ namespace SkiaSharp.Views.tvOS
 		// created via designer
 		public override void AwakeFromNib()
 		{
-			designMode = Site?.DesignMode == true;
+			designMode = ((IComponent)this).Site?.DesignMode == true;
 
 			Initialize();
 		}
@@ -51,6 +57,18 @@ namespace SkiaSharp.Views.tvOS
 		private void Initialize()
 		{
 			drawable = new SKDrawable();
+		}
+
+		public SKSize CanvasSize => drawable.Info.Size;
+
+		public bool IgnorePixelScaling
+		{
+			get { return ignorePixelScaling; }
+			set
+			{
+				ignorePixelScaling = value;
+				SetNeedsDisplay();
+			}
 		}
 
 		public override void Draw(CGRect rect)
@@ -64,7 +82,7 @@ namespace SkiaSharp.Views.tvOS
 
 			// create the skia context
 			SKImageInfo info;
-			var surface = drawable.CreateSurface(Bounds, ContentScaleFactor, out info);
+			var surface = drawable.CreateSurface(Bounds, IgnorePixelScaling ? 1 : ContentScaleFactor, out info);
 
 			// draw on the image using SKiaSharp
 			DrawInSurface(surface, info);

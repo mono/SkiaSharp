@@ -412,6 +412,7 @@
       <Type Name="SKPointMode" Kind="Enumeration" />
       <Type Name="SKRect" Kind="Structure" />
       <Type Name="SKRectI" Kind="Structure" />
+      <Type Name="SKRegion" Kind="Class" />
       <Type Name="SKRegionOperation" Kind="Enumeration" />
       <Type Name="SKShader" Kind="Class" />
       <Type Name="SKShaderTileMode" Kind="Enumeration" />
@@ -537,8 +538,8 @@
           <Parameter Name="pg" Type="SkiaSharp.SKPixelGeometry" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="pg">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="pg">The pixel geometry to test.</param>
+          <summary>Returns true if the pixel geometry is BGR.</summary>
         </Docs>
         <Link Type="SkiaSharp.SkiaExtensions" Member="M:SkiaSharp.SkiaExtensions.IsBgr(SkiaSharp.SKPixelGeometry)" />
       </Member>
@@ -558,8 +559,8 @@
           <Parameter Name="pg" Type="SkiaSharp.SKPixelGeometry" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="pg">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="pg">The pixel geometry to test.</param>
+          <summary>Returns true if the pixel geometry is horizontal.</summary>
         </Docs>
         <Link Type="SkiaSharp.SkiaExtensions" Member="M:SkiaSharp.SkiaExtensions.IsHorizontal(SkiaSharp.SKPixelGeometry)" />
       </Member>
@@ -579,8 +580,8 @@
           <Parameter Name="pg" Type="SkiaSharp.SKPixelGeometry" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="pg">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="pg">The pixel geometry to test.</param>
+          <summary>Returns true if the pixel geometry is RGB.</summary>
         </Docs>
         <Link Type="SkiaSharp.SkiaExtensions" Member="M:SkiaSharp.SkiaExtensions.IsRgb(SkiaSharp.SKPixelGeometry)" />
       </Member>
@@ -600,8 +601,8 @@
           <Parameter Name="pg" Type="SkiaSharp.SKPixelGeometry" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="pg">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="pg">The pixel geometry to test.</param>
+          <summary>Returns true if the pixel geometry is vertical.</summary>
         </Docs>
         <Link Type="SkiaSharp.SkiaExtensions" Member="M:SkiaSharp.SkiaExtensions.IsVertical(SkiaSharp.SKPixelGeometry)" />
       </Member>
@@ -621,8 +622,8 @@
           <Parameter Name="color" Type="SkiaSharp.SKColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The SkiaSharp color.</param>
+          <summary>Converts a SkiaSharp color into a Xamarin.Android color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.AndroidExtensions" Member="M:SkiaSharp.Views.Android.AndroidExtensions.ToColor(SkiaSharp.SKColor)" />
       </Member>
@@ -642,8 +643,8 @@
           <Parameter Name="matrix" Type="SkiaSharp.SKMatrix" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="matrix">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="matrix">The SkiaSharp matrix.</param>
+          <summary>Converts a SkiaSharp matrix into a Xamarin.Android matrix.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.AndroidExtensions" Member="M:SkiaSharp.Views.Android.AndroidExtensions.ToMatrix(SkiaSharp.SKMatrix)" />
       </Member>
@@ -663,8 +664,8 @@
           <Parameter Name="point" Type="SkiaSharp.SKPoint" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The SkiaSharp point.</param>
+          <summary>Converts a SkiaSharp point into a Xamarin.Android point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.AndroidExtensions" Member="M:SkiaSharp.Views.Android.AndroidExtensions.ToPoint(SkiaSharp.SKPoint)" />
       </Member>
@@ -684,8 +685,8 @@
           <Parameter Name="point" Type="SkiaSharp.SKPointI" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The SkiaSharp point.</param>
+          <summary>Converts a SkiaSharp point into a Xamarin.Android point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.AndroidExtensions" Member="M:SkiaSharp.Views.Android.AndroidExtensions.ToPoint(SkiaSharp.SKPointI)" />
       </Member>
@@ -705,8 +706,8 @@
           <Parameter Name="rect" Type="SkiaSharp.SKRect" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The SkiaSharp rectangle.</param>
+          <summary>Converts a SkiaSharp rectangle into a Xamarin.Android rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.AndroidExtensions" Member="M:SkiaSharp.Views.Android.AndroidExtensions.ToRect(SkiaSharp.SKRect)" />
       </Member>
@@ -726,8 +727,8 @@
           <Parameter Name="rect" Type="SkiaSharp.SKRectI" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The SkiaSharp rectangle.</param>
+          <summary>Converts a SkiaSharp rectangle into a Xamarin.Android rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.AndroidExtensions" Member="M:SkiaSharp.Views.Android.AndroidExtensions.ToRect(SkiaSharp.SKRectI)" />
       </Member>
@@ -747,8 +748,8 @@
           <Parameter Name="color" Type="Android.Graphics.Color" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The Xamarin.Android color.</param>
+          <summary>Converts a Xamarin.Android color into a SkiaSharp color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.AndroidExtensions" Member="M:SkiaSharp.Views.Android.AndroidExtensions.ToSKColor(Android.Graphics.Color)" />
       </Member>
@@ -768,8 +769,8 @@
           <Parameter Name="matrix" Type="Android.Graphics.Matrix" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="matrix">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="matrix">The Xamarin.Android matrix.</param>
+          <summary>Converts a Xamarin.Android matrix into a SkiaSharp matrix.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.AndroidExtensions" Member="M:SkiaSharp.Views.Android.AndroidExtensions.ToSKMatrix(Android.Graphics.Matrix)" />
       </Member>
@@ -789,8 +790,8 @@
           <Parameter Name="point" Type="Android.Graphics.Point" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The Xamarin.Android point.</param>
+          <summary>Converts a Xamarin.Android point into a SkiaSharp point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.AndroidExtensions" Member="M:SkiaSharp.Views.Android.AndroidExtensions.ToSKPoint(Android.Graphics.Point)" />
       </Member>
@@ -810,8 +811,8 @@
           <Parameter Name="point" Type="Android.Graphics.PointF" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The Xamarin.Android point.</param>
+          <summary>Converts a Xamarin.Android point into a SkiaSharp point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.AndroidExtensions" Member="M:SkiaSharp.Views.Android.AndroidExtensions.ToSKPoint(Android.Graphics.PointF)" />
       </Member>
@@ -831,8 +832,8 @@
           <Parameter Name="rect" Type="Android.Graphics.Rect" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The Xamarin.Android rectangle.</param>
+          <summary>Converts a Xamarin.Android rectangle into a SkiaSharp rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.AndroidExtensions" Member="M:SkiaSharp.Views.Android.AndroidExtensions.ToSKRect(Android.Graphics.Rect)" />
       </Member>
@@ -852,8 +853,8 @@
           <Parameter Name="rect" Type="Android.Graphics.RectF" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The Xamarin.Android rectangle.</param>
+          <summary>Converts a Xamarin.Android rectangle into a SkiaSharp rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.AndroidExtensions" Member="M:SkiaSharp.Views.Android.AndroidExtensions.ToSKRect(Android.Graphics.RectF)" />
       </Member>
@@ -873,8 +874,8 @@
           <Parameter Name="color" Type="SkiaSharp.SKColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The SkiaSharp color.</param>
+          <summary>Converts a SkiaSharp color into a System.Drawing color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.Extensions" Member="M:SkiaSharp.Views.Android.Extensions.ToDrawingColor(SkiaSharp.SKColor)" />
       </Member>
@@ -894,8 +895,8 @@
           <Parameter Name="point" Type="SkiaSharp.SKPoint" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The SkiaSharp point.</param>
+          <summary>Converts a SkiaSharp point into a System.Drawing point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.Extensions" Member="M:SkiaSharp.Views.Android.Extensions.ToDrawingPoint(SkiaSharp.SKPoint)" />
       </Member>
@@ -915,8 +916,8 @@
           <Parameter Name="point" Type="SkiaSharp.SKPointI" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The SkiaSharp point.</param>
+          <summary>Converts a SkiaSharp point into a System.Drawing point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.Extensions" Member="M:SkiaSharp.Views.Android.Extensions.ToDrawingPoint(SkiaSharp.SKPointI)" />
       </Member>
@@ -936,8 +937,8 @@
           <Parameter Name="rect" Type="SkiaSharp.SKRect" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The SkiaSharp rectangle.</param>
+          <summary>Converts a SkiaSharp rectangle into a System.Drawing rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.Extensions" Member="M:SkiaSharp.Views.Android.Extensions.ToDrawingRect(SkiaSharp.SKRect)" />
       </Member>
@@ -957,8 +958,8 @@
           <Parameter Name="rect" Type="SkiaSharp.SKRectI" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The SkiaSharp rectangle.</param>
+          <summary>Converts a SkiaSharp rectangle into a System.Drawing rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.Extensions" Member="M:SkiaSharp.Views.Android.Extensions.ToDrawingRect(SkiaSharp.SKRectI)" />
       </Member>
@@ -978,8 +979,8 @@
           <Parameter Name="size" Type="SkiaSharp.SKSize" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The SkiaSharp size.</param>
+          <summary>Converts a SkiaSharp size into a System.Drawing size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.Extensions" Member="M:SkiaSharp.Views.Android.Extensions.ToDrawingSize(SkiaSharp.SKSize)" />
       </Member>
@@ -999,8 +1000,8 @@
           <Parameter Name="size" Type="SkiaSharp.SKSizeI" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The SkiaSharp size.</param>
+          <summary>Converts a SkiaSharp size into a System.Drawing size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.Extensions" Member="M:SkiaSharp.Views.Android.Extensions.ToDrawingSize(SkiaSharp.SKSizeI)" />
       </Member>
@@ -1020,8 +1021,8 @@
           <Parameter Name="color" Type="System.Drawing.Color" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The System.Drawing color.</param>
+          <summary>Converts a System.Drawing color into a SkiaSharp color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.Extensions" Member="M:SkiaSharp.Views.Android.Extensions.ToSKColor(System.Drawing.Color)" />
       </Member>
@@ -1041,8 +1042,8 @@
           <Parameter Name="point" Type="System.Drawing.Point" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The System.Drawing point.</param>
+          <summary>Converts a System.Drawing point into a SkiaSharp point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.Extensions" Member="M:SkiaSharp.Views.Android.Extensions.ToSKPoint(System.Drawing.Point)" />
       </Member>
@@ -1062,8 +1063,8 @@
           <Parameter Name="point" Type="System.Drawing.PointF" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The System.Drawing point.</param>
+          <summary>Converts a System.Drawing point into a SkiaSharp point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.Extensions" Member="M:SkiaSharp.Views.Android.Extensions.ToSKPoint(System.Drawing.PointF)" />
       </Member>
@@ -1083,8 +1084,8 @@
           <Parameter Name="rect" Type="System.Drawing.Rectangle" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The System.Drawing rectangle.</param>
+          <summary>Converts a System.Drawing rectangle into a SkiaSharp rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.Extensions" Member="M:SkiaSharp.Views.Android.Extensions.ToSKRect(System.Drawing.Rectangle)" />
       </Member>
@@ -1104,8 +1105,8 @@
           <Parameter Name="rect" Type="System.Drawing.RectangleF" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The System.Drawing rectangle.</param>
+          <summary>Converts a System.Drawing rectangle into a SkiaSharp rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.Extensions" Member="M:SkiaSharp.Views.Android.Extensions.ToSKRect(System.Drawing.RectangleF)" />
       </Member>
@@ -1125,8 +1126,8 @@
           <Parameter Name="size" Type="System.Drawing.Size" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The System.Drawing size.</param>
+          <summary>Converts a System.Drawing size into a SkiaSharp size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.Extensions" Member="M:SkiaSharp.Views.Android.Extensions.ToSKSize(System.Drawing.Size)" />
       </Member>
@@ -1146,8 +1147,8 @@
           <Parameter Name="size" Type="System.Drawing.SizeF" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The System.Drawing size.</param>
+          <summary>Converts a System.Drawing size into a SkiaSharp size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Android.Extensions" Member="M:SkiaSharp.Views.Android.Extensions.ToSKSize(System.Drawing.SizeF)" />
       </Member>
@@ -1167,8 +1168,8 @@
           <Parameter Name="color" Type="SkiaSharp.SKColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The SkiaSharp color.</param>
+          <summary>Converts a SkiaSharp color into a System.Drawing color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Desktop.Extensions" Member="M:SkiaSharp.Views.Desktop.Extensions.ToDrawingColor(SkiaSharp.SKColor)" />
       </Member>
@@ -1188,8 +1189,8 @@
           <Parameter Name="point" Type="SkiaSharp.SKPoint" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The SkiaSharp point.</param>
+          <summary>Converts a SkiaSharp point into a System.Drawing point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Desktop.Extensions" Member="M:SkiaSharp.Views.Desktop.Extensions.ToDrawingPoint(SkiaSharp.SKPoint)" />
       </Member>
@@ -1209,8 +1210,8 @@
           <Parameter Name="point" Type="SkiaSharp.SKPointI" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The SkiaSharp point.</param>
+          <summary>Converts a SkiaSharp point into a System.Drawing point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Desktop.Extensions" Member="M:SkiaSharp.Views.Desktop.Extensions.ToDrawingPoint(SkiaSharp.SKPointI)" />
       </Member>
@@ -1230,8 +1231,8 @@
           <Parameter Name="rect" Type="SkiaSharp.SKRect" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The SkiaSharp rectangle.</param>
+          <summary>Converts a SkiaSharp rectangle into a System.Drawing rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Desktop.Extensions" Member="M:SkiaSharp.Views.Desktop.Extensions.ToDrawingRect(SkiaSharp.SKRect)" />
       </Member>
@@ -1251,8 +1252,8 @@
           <Parameter Name="rect" Type="SkiaSharp.SKRectI" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The SkiaSharp rectangle.</param>
+          <summary>Converts a SkiaSharp rectangle into a System.Drawing rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Desktop.Extensions" Member="M:SkiaSharp.Views.Desktop.Extensions.ToDrawingRect(SkiaSharp.SKRectI)" />
       </Member>
@@ -1272,8 +1273,8 @@
           <Parameter Name="size" Type="SkiaSharp.SKSize" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The SkiaSharp size.</param>
+          <summary>Converts a SkiaSharp size into a System.Drawing size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Desktop.Extensions" Member="M:SkiaSharp.Views.Desktop.Extensions.ToDrawingSize(SkiaSharp.SKSize)" />
       </Member>
@@ -1293,8 +1294,8 @@
           <Parameter Name="size" Type="SkiaSharp.SKSizeI" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The SkiaSharp size.</param>
+          <summary>Converts a SkiaSharp size into a System.Drawing size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Desktop.Extensions" Member="M:SkiaSharp.Views.Desktop.Extensions.ToDrawingSize(SkiaSharp.SKSizeI)" />
       </Member>
@@ -1314,8 +1315,8 @@
           <Parameter Name="color" Type="System.Drawing.Color" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The System.Drawing color.</param>
+          <summary>Converts a System.Drawing color into a SkiaSharp color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Desktop.Extensions" Member="M:SkiaSharp.Views.Desktop.Extensions.ToSKColor(System.Drawing.Color)" />
       </Member>
@@ -1335,8 +1336,8 @@
           <Parameter Name="point" Type="System.Drawing.Point" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The System.Drawing point.</param>
+          <summary>Converts a System.Drawing point into a SkiaSharp point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Desktop.Extensions" Member="M:SkiaSharp.Views.Desktop.Extensions.ToSKPoint(System.Drawing.Point)" />
       </Member>
@@ -1356,8 +1357,8 @@
           <Parameter Name="point" Type="System.Drawing.PointF" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The System.Drawing point.</param>
+          <summary>Converts a System.Drawing point into a SkiaSharp point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Desktop.Extensions" Member="M:SkiaSharp.Views.Desktop.Extensions.ToSKPoint(System.Drawing.PointF)" />
       </Member>
@@ -1377,8 +1378,8 @@
           <Parameter Name="rect" Type="System.Drawing.Rectangle" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The System.Drawing rectangle.</param>
+          <summary>Converts a System.Drawing rectangle into a SkiaSharp rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Desktop.Extensions" Member="M:SkiaSharp.Views.Desktop.Extensions.ToSKRect(System.Drawing.Rectangle)" />
       </Member>
@@ -1398,8 +1399,8 @@
           <Parameter Name="rect" Type="System.Drawing.RectangleF" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The System.Drawing rectangle.</param>
+          <summary>Converts a System.Drawing rectangle into a SkiaSharp rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Desktop.Extensions" Member="M:SkiaSharp.Views.Desktop.Extensions.ToSKRect(System.Drawing.RectangleF)" />
       </Member>
@@ -1419,8 +1420,8 @@
           <Parameter Name="size" Type="System.Drawing.Size" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The System.Drawing size.</param>
+          <summary>Converts a System.Drawing size into a SkiaSharp size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Desktop.Extensions" Member="M:SkiaSharp.Views.Desktop.Extensions.ToSKSize(System.Drawing.Size)" />
       </Member>
@@ -1440,8 +1441,8 @@
           <Parameter Name="size" Type="System.Drawing.SizeF" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The System.Drawing size.</param>
+          <summary>Converts a System.Drawing size into a SkiaSharp size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Desktop.Extensions" Member="M:SkiaSharp.Views.Desktop.Extensions.ToSKSize(System.Drawing.SizeF)" />
       </Member>
@@ -1461,8 +1462,8 @@
           <Parameter Name="color" Type="SkiaSharp.SKColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The SkiaSharp color.</param>
+          <summary>Converts a SkiaSharp color into a Xamarin.Forms color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Forms.Extensions" Member="M:SkiaSharp.Views.Forms.Extensions.ToFormsColor(SkiaSharp.SKColor)" />
       </Member>
@@ -1482,8 +1483,8 @@
           <Parameter Name="point" Type="SkiaSharp.SKPoint" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The SkiaSharp point.</param>
+          <summary>Converts a SkiaSharp point into a Xamarin.Forms point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Forms.Extensions" Member="M:SkiaSharp.Views.Forms.Extensions.ToFormsPoint(SkiaSharp.SKPoint)" />
       </Member>
@@ -1503,8 +1504,8 @@
           <Parameter Name="point" Type="SkiaSharp.SKPointI" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The SkiaSharp point.</param>
+          <summary>Converts a SkiaSharp point into a Xamarin.Forms point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Forms.Extensions" Member="M:SkiaSharp.Views.Forms.Extensions.ToFormsPoint(SkiaSharp.SKPointI)" />
       </Member>
@@ -1524,8 +1525,8 @@
           <Parameter Name="rect" Type="SkiaSharp.SKRect" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The SkiaSharp rectangle.</param>
+          <summary>Converts a SkiaSharp rectangle into a Xamarin.Forms rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Forms.Extensions" Member="M:SkiaSharp.Views.Forms.Extensions.ToFormsRect(SkiaSharp.SKRect)" />
       </Member>
@@ -1545,8 +1546,8 @@
           <Parameter Name="rect" Type="SkiaSharp.SKRectI" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The SkiaSharp rectangle.</param>
+          <summary>Converts a SkiaSharp rectangle into a Xamarin.Forms rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Forms.Extensions" Member="M:SkiaSharp.Views.Forms.Extensions.ToFormsRect(SkiaSharp.SKRectI)" />
       </Member>
@@ -1566,8 +1567,8 @@
           <Parameter Name="size" Type="SkiaSharp.SKSize" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The SkiaSharp size.</param>
+          <summary>Converts a SkiaSharp size into a Xamarin.Forms size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Forms.Extensions" Member="M:SkiaSharp.Views.Forms.Extensions.ToFormsSize(SkiaSharp.SKSize)" />
       </Member>
@@ -1587,8 +1588,8 @@
           <Parameter Name="size" Type="SkiaSharp.SKSizeI" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The SkiaSharp size.</param>
+          <summary>Converts a SkiaSharp size into a Xamarin.Forms size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Forms.Extensions" Member="M:SkiaSharp.Views.Forms.Extensions.ToFormsSize(SkiaSharp.SKSizeI)" />
       </Member>
@@ -1608,8 +1609,8 @@
           <Parameter Name="color" Type="Xamarin.Forms.Color" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The Xamarin.Forms color.</param>
+          <summary>Converts a Xamarin.Forms color into a SkiaSharp color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Forms.Extensions" Member="M:SkiaSharp.Views.Forms.Extensions.ToSKColor(Xamarin.Forms.Color)" />
       </Member>
@@ -1629,8 +1630,8 @@
           <Parameter Name="point" Type="Xamarin.Forms.Point" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The Xamarin.Forms point.</param>
+          <summary>Converts a Xamarin.Forms point into a SkiaSharp point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Forms.Extensions" Member="M:SkiaSharp.Views.Forms.Extensions.ToSKPoint(Xamarin.Forms.Point)" />
       </Member>
@@ -1650,8 +1651,8 @@
           <Parameter Name="rect" Type="Xamarin.Forms.Rectangle" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The Xamarin.Forms rectangle.</param>
+          <summary>Converts a Xamarin.Forms rectangle into a SkiaSharp rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Forms.Extensions" Member="M:SkiaSharp.Views.Forms.Extensions.ToSKRect(Xamarin.Forms.Rectangle)" />
       </Member>
@@ -1671,8 +1672,8 @@
           <Parameter Name="size" Type="Xamarin.Forms.Size" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The Xamarin.Forms size.</param>
+          <summary>Converts a Xamarin.Forms size into a SkiaSharp size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Forms.Extensions" Member="M:SkiaSharp.Views.Forms.Extensions.ToSKSize(Xamarin.Forms.Size)" />
       </Member>
@@ -1692,8 +1693,8 @@
           <Parameter Name="color" Type="SkiaSharp.SKColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The SkiaSharp color.</param>
+          <summary>Converts a SkiaSharp color into a CoreGraphics color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.AppleExtensions" Member="M:SkiaSharp.Views.iOS.AppleExtensions.ToCGColor(SkiaSharp.SKColor)" />
       </Member>
@@ -1713,8 +1714,8 @@
           <Parameter Name="color" Type="SkiaSharp.SKColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The SkiaSharp color.</param>
+          <summary>Converts a SkiaSharp color into a CoreImage color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.AppleExtensions" Member="M:SkiaSharp.Views.iOS.AppleExtensions.ToCIColor(SkiaSharp.SKColor)" />
       </Member>
@@ -1734,8 +1735,8 @@
           <Parameter Name="point" Type="SkiaSharp.SKPoint" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The SkiaSharp point.</param>
+          <summary>Converts a SkiaSharp point into a CoreGraphics point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.AppleExtensions" Member="M:SkiaSharp.Views.iOS.AppleExtensions.ToPoint(SkiaSharp.SKPoint)" />
       </Member>
@@ -1755,8 +1756,8 @@
           <Parameter Name="rect" Type="SkiaSharp.SKRect" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The SkiaSharp rectangle.</param>
+          <summary>Converts a SkiaSharp rectangle into a CoreGraphics rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.AppleExtensions" Member="M:SkiaSharp.Views.iOS.AppleExtensions.ToRect(SkiaSharp.SKRect)" />
       </Member>
@@ -1776,8 +1777,8 @@
           <Parameter Name="size" Type="SkiaSharp.SKSize" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The SkiaSharp size.</param>
+          <summary>Converts a SkiaSharp size into a CoreGraphics size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.AppleExtensions" Member="M:SkiaSharp.Views.iOS.AppleExtensions.ToSize(SkiaSharp.SKSize)" />
       </Member>
@@ -1797,8 +1798,8 @@
           <Parameter Name="color" Type="CoreGraphics.CGColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The CoreGraphics color.</param>
+          <summary>Converts a CoreGraphics color into a SkiaSharp color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.AppleExtensions" Member="M:SkiaSharp.Views.iOS.AppleExtensions.ToSKColor(CoreGraphics.CGColor)" />
       </Member>
@@ -1818,8 +1819,8 @@
           <Parameter Name="color" Type="CoreImage.CIColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The CoreImage color.</param>
+          <summary>Converts a CoreImage color into a SkiaSharp color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.AppleExtensions" Member="M:SkiaSharp.Views.iOS.AppleExtensions.ToSKColor(CoreImage.CIColor)" />
       </Member>
@@ -1839,8 +1840,8 @@
           <Parameter Name="point" Type="CoreGraphics.CGPoint" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The CoreGraphics point.</param>
+          <summary>Converts a CoreGraphics point into a SkiaSharp point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.AppleExtensions" Member="M:SkiaSharp.Views.iOS.AppleExtensions.ToSKPoint(CoreGraphics.CGPoint)" />
       </Member>
@@ -1860,8 +1861,8 @@
           <Parameter Name="rect" Type="CoreGraphics.CGRect" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The CoreGraphics rectangle.</param>
+          <summary>Converts a CoreGraphics rectangle into a SkiaSharp rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.AppleExtensions" Member="M:SkiaSharp.Views.iOS.AppleExtensions.ToSKRect(CoreGraphics.CGRect)" />
       </Member>
@@ -1881,8 +1882,8 @@
           <Parameter Name="size" Type="CoreGraphics.CGSize" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The CoreGraphics size.</param>
+          <summary>Converts a CoreGraphics size into a SkiaSharp size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.AppleExtensions" Member="M:SkiaSharp.Views.iOS.AppleExtensions.ToSKSize(CoreGraphics.CGSize)" />
       </Member>
@@ -1902,8 +1903,8 @@
           <Parameter Name="color" Type="SkiaSharp.SKColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The SkiaSharp color.</param>
+          <summary>Converts a SkiaSharp color into a System.Drawing color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.Extensions" Member="M:SkiaSharp.Views.iOS.Extensions.ToDrawingColor(SkiaSharp.SKColor)" />
       </Member>
@@ -1923,8 +1924,8 @@
           <Parameter Name="point" Type="SkiaSharp.SKPoint" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The SkiaSharp point.</param>
+          <summary>Converts a SkiaSharp point into a System.Drawing point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.Extensions" Member="M:SkiaSharp.Views.iOS.Extensions.ToDrawingPoint(SkiaSharp.SKPoint)" />
       </Member>
@@ -1944,8 +1945,8 @@
           <Parameter Name="point" Type="SkiaSharp.SKPointI" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The SkiaSharp point.</param>
+          <summary>Converts a SkiaSharp point into a System.Drawing point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.Extensions" Member="M:SkiaSharp.Views.iOS.Extensions.ToDrawingPoint(SkiaSharp.SKPointI)" />
       </Member>
@@ -1965,8 +1966,8 @@
           <Parameter Name="rect" Type="SkiaSharp.SKRect" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The SkiaSharp rectangle.</param>
+          <summary>Converts a SkiaSharp rectangle into a System.Drawing rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.Extensions" Member="M:SkiaSharp.Views.iOS.Extensions.ToDrawingRect(SkiaSharp.SKRect)" />
       </Member>
@@ -1986,8 +1987,8 @@
           <Parameter Name="rect" Type="SkiaSharp.SKRectI" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The SkiaSharp rectangle.</param>
+          <summary>Converts a SkiaSharp rectangle into a System.Drawing rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.Extensions" Member="M:SkiaSharp.Views.iOS.Extensions.ToDrawingRect(SkiaSharp.SKRectI)" />
       </Member>
@@ -2007,8 +2008,8 @@
           <Parameter Name="size" Type="SkiaSharp.SKSize" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The SkiaSharp size.</param>
+          <summary>Converts a SkiaSharp size into a System.Drawing size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.Extensions" Member="M:SkiaSharp.Views.iOS.Extensions.ToDrawingSize(SkiaSharp.SKSize)" />
       </Member>
@@ -2028,8 +2029,8 @@
           <Parameter Name="size" Type="SkiaSharp.SKSizeI" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The SkiaSharp size.</param>
+          <summary>Converts a SkiaSharp size into a System.Drawing size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.Extensions" Member="M:SkiaSharp.Views.iOS.Extensions.ToDrawingSize(SkiaSharp.SKSizeI)" />
       </Member>
@@ -2049,8 +2050,8 @@
           <Parameter Name="color" Type="System.Drawing.Color" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The System.Drawing color.</param>
+          <summary>Converts a System.Drawing color into a SkiaSharp color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.Extensions" Member="M:SkiaSharp.Views.iOS.Extensions.ToSKColor(System.Drawing.Color)" />
       </Member>
@@ -2070,8 +2071,8 @@
           <Parameter Name="point" Type="System.Drawing.Point" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The System.Drawing point.</param>
+          <summary>Converts a System.Drawing point into a SkiaSharp point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.Extensions" Member="M:SkiaSharp.Views.iOS.Extensions.ToSKPoint(System.Drawing.Point)" />
       </Member>
@@ -2091,8 +2092,8 @@
           <Parameter Name="point" Type="System.Drawing.PointF" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The System.Drawing point.</param>
+          <summary>Converts a System.Drawing point into a SkiaSharp point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.Extensions" Member="M:SkiaSharp.Views.iOS.Extensions.ToSKPoint(System.Drawing.PointF)" />
       </Member>
@@ -2112,8 +2113,8 @@
           <Parameter Name="rect" Type="System.Drawing.Rectangle" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The System.Drawing rectangle.</param>
+          <summary>Converts a System.Drawing rectangle into a SkiaSharp rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.Extensions" Member="M:SkiaSharp.Views.iOS.Extensions.ToSKRect(System.Drawing.Rectangle)" />
       </Member>
@@ -2133,8 +2134,8 @@
           <Parameter Name="rect" Type="System.Drawing.RectangleF" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The System.Drawing rectangle.</param>
+          <summary>Converts a System.Drawing rectangle into a SkiaSharp rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.Extensions" Member="M:SkiaSharp.Views.iOS.Extensions.ToSKRect(System.Drawing.RectangleF)" />
       </Member>
@@ -2154,8 +2155,8 @@
           <Parameter Name="size" Type="System.Drawing.Size" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The System.Drawing size.</param>
+          <summary>Converts a System.Drawing size into a SkiaSharp size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.Extensions" Member="M:SkiaSharp.Views.iOS.Extensions.ToSKSize(System.Drawing.Size)" />
       </Member>
@@ -2175,8 +2176,8 @@
           <Parameter Name="size" Type="System.Drawing.SizeF" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The System.Drawing size.</param>
+          <summary>Converts a System.Drawing size into a SkiaSharp size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.Extensions" Member="M:SkiaSharp.Views.iOS.Extensions.ToSKSize(System.Drawing.SizeF)" />
       </Member>
@@ -2196,8 +2197,8 @@
           <Parameter Name="color" Type="UIKit.UIColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The UIKit color</param>
+          <summary>Converts a UIKit color into a SkiaSharp color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.iOSExtensions" Member="M:SkiaSharp.Views.iOS.iOSExtensions.ToSKColor(UIKit.UIColor)" />
       </Member>
@@ -2217,8 +2218,8 @@
           <Parameter Name="color" Type="SkiaSharp.SKColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The SkiaSharp color</param>
+          <summary>Converts a SkiaSharp color into a UIKit color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.iOSExtensions" Member="M:SkiaSharp.Views.iOS.iOSExtensions.ToUIColor(SkiaSharp.SKColor)" />
       </Member>
@@ -2238,8 +2239,8 @@
           <Parameter Name="color" Type="SkiaSharp.SKColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The SkiaSharp color.</param>
+          <summary>Converts a SkiaSharp color into a CoreGraphics color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.AppleExtensions" Member="M:SkiaSharp.Views.Mac.AppleExtensions.ToCGColor(SkiaSharp.SKColor)" />
       </Member>
@@ -2259,8 +2260,8 @@
           <Parameter Name="color" Type="SkiaSharp.SKColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The SkiaSharp color.</param>
+          <summary>Converts a SkiaSharp color into a CoreImage color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.AppleExtensions" Member="M:SkiaSharp.Views.Mac.AppleExtensions.ToCIColor(SkiaSharp.SKColor)" />
       </Member>
@@ -2280,8 +2281,8 @@
           <Parameter Name="point" Type="SkiaSharp.SKPoint" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The SkiaSharp point.</param>
+          <summary>Converts a SkiaSharp point into a CoreGraphics point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.AppleExtensions" Member="M:SkiaSharp.Views.Mac.AppleExtensions.ToPoint(SkiaSharp.SKPoint)" />
       </Member>
@@ -2301,8 +2302,8 @@
           <Parameter Name="rect" Type="SkiaSharp.SKRect" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The SkiaSharp rectangle.</param>
+          <summary>Converts a SkiaSharp rectangle into a CoreGraphics rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.AppleExtensions" Member="M:SkiaSharp.Views.Mac.AppleExtensions.ToRect(SkiaSharp.SKRect)" />
       </Member>
@@ -2322,8 +2323,8 @@
           <Parameter Name="size" Type="SkiaSharp.SKSize" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The SkiaSharp size.</param>
+          <summary>Converts a SkiaSharp size into a CoreGraphics size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.AppleExtensions" Member="M:SkiaSharp.Views.Mac.AppleExtensions.ToSize(SkiaSharp.SKSize)" />
       </Member>
@@ -2343,8 +2344,8 @@
           <Parameter Name="color" Type="CoreGraphics.CGColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The CoreGraphics color.</param>
+          <summary>Converts a CoreGraphics color into a SkiaSharp color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.AppleExtensions" Member="M:SkiaSharp.Views.Mac.AppleExtensions.ToSKColor(CoreGraphics.CGColor)" />
       </Member>
@@ -2364,8 +2365,8 @@
           <Parameter Name="color" Type="CoreImage.CIColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The CoreImage color.</param>
+          <summary>Converts a CoreImage color into a SkiaSharp color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.AppleExtensions" Member="M:SkiaSharp.Views.Mac.AppleExtensions.ToSKColor(CoreImage.CIColor)" />
       </Member>
@@ -2385,8 +2386,8 @@
           <Parameter Name="point" Type="CoreGraphics.CGPoint" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The CoreGraphics point.</param>
+          <summary>Converts a CoreGraphics point into a SkiaSharp point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.AppleExtensions" Member="M:SkiaSharp.Views.Mac.AppleExtensions.ToSKPoint(CoreGraphics.CGPoint)" />
       </Member>
@@ -2406,8 +2407,8 @@
           <Parameter Name="rect" Type="CoreGraphics.CGRect" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The CoreGraphics rectangle.</param>
+          <summary>Converts a CoreGraphics rectangle into a SkiaSharp rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.AppleExtensions" Member="M:SkiaSharp.Views.Mac.AppleExtensions.ToSKRect(CoreGraphics.CGRect)" />
       </Member>
@@ -2427,8 +2428,8 @@
           <Parameter Name="size" Type="CoreGraphics.CGSize" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The CoreGraphics size.</param>
+          <summary>Converts a CoreGraphics size into a SkiaSharp size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.AppleExtensions" Member="M:SkiaSharp.Views.Mac.AppleExtensions.ToSKSize(CoreGraphics.CGSize)" />
       </Member>
@@ -2448,8 +2449,8 @@
           <Parameter Name="color" Type="SkiaSharp.SKColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The SkiaSharp color.</param>
+          <summary>Converts a SkiaSharp color into a System.Drawing color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.Extensions" Member="M:SkiaSharp.Views.Mac.Extensions.ToDrawingColor(SkiaSharp.SKColor)" />
       </Member>
@@ -2469,8 +2470,8 @@
           <Parameter Name="point" Type="SkiaSharp.SKPoint" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The SkiaSharp point.</param>
+          <summary>Converts a SkiaSharp point into a System.Drawing point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.Extensions" Member="M:SkiaSharp.Views.Mac.Extensions.ToDrawingPoint(SkiaSharp.SKPoint)" />
       </Member>
@@ -2490,8 +2491,8 @@
           <Parameter Name="point" Type="SkiaSharp.SKPointI" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The SkiaSharp point.</param>
+          <summary>Converts a SkiaSharp point into a System.Drawing point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.Extensions" Member="M:SkiaSharp.Views.Mac.Extensions.ToDrawingPoint(SkiaSharp.SKPointI)" />
       </Member>
@@ -2511,8 +2512,8 @@
           <Parameter Name="rect" Type="SkiaSharp.SKRect" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The SkiaSharp rectangle.</param>
+          <summary>Converts a SkiaSharp rectangle into a System.Drawing rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.Extensions" Member="M:SkiaSharp.Views.Mac.Extensions.ToDrawingRect(SkiaSharp.SKRect)" />
       </Member>
@@ -2532,8 +2533,8 @@
           <Parameter Name="rect" Type="SkiaSharp.SKRectI" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The SkiaSharp rectangle.</param>
+          <summary>Converts a SkiaSharp rectangle into a System.Drawing rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.Extensions" Member="M:SkiaSharp.Views.Mac.Extensions.ToDrawingRect(SkiaSharp.SKRectI)" />
       </Member>
@@ -2553,8 +2554,8 @@
           <Parameter Name="size" Type="SkiaSharp.SKSize" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The SkiaSharp size.</param>
+          <summary>Converts a SkiaSharp size into a System.Drawing size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.Extensions" Member="M:SkiaSharp.Views.Mac.Extensions.ToDrawingSize(SkiaSharp.SKSize)" />
       </Member>
@@ -2574,8 +2575,8 @@
           <Parameter Name="size" Type="SkiaSharp.SKSizeI" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The SkiaSharp size.</param>
+          <summary>Converts a SkiaSharp size into a System.Drawing size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.Extensions" Member="M:SkiaSharp.Views.Mac.Extensions.ToDrawingSize(SkiaSharp.SKSizeI)" />
       </Member>
@@ -2595,8 +2596,8 @@
           <Parameter Name="color" Type="System.Drawing.Color" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The System.Drawing color.</param>
+          <summary>Converts a System.Drawing color into a SkiaSharp color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.Extensions" Member="M:SkiaSharp.Views.Mac.Extensions.ToSKColor(System.Drawing.Color)" />
       </Member>
@@ -2616,8 +2617,8 @@
           <Parameter Name="point" Type="System.Drawing.Point" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The System.Drawing point.</param>
+          <summary>Converts a System.Drawing point into a SkiaSharp point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.Extensions" Member="M:SkiaSharp.Views.Mac.Extensions.ToSKPoint(System.Drawing.Point)" />
       </Member>
@@ -2637,8 +2638,8 @@
           <Parameter Name="point" Type="System.Drawing.PointF" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The System.Drawing point.</param>
+          <summary>Converts a System.Drawing point into a SkiaSharp point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.Extensions" Member="M:SkiaSharp.Views.Mac.Extensions.ToSKPoint(System.Drawing.PointF)" />
       </Member>
@@ -2658,8 +2659,8 @@
           <Parameter Name="rect" Type="System.Drawing.Rectangle" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The System.Drawing rectangle.</param>
+          <summary>Converts a System.Drawing rectangle into a SkiaSharp rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.Extensions" Member="M:SkiaSharp.Views.Mac.Extensions.ToSKRect(System.Drawing.Rectangle)" />
       </Member>
@@ -2679,8 +2680,8 @@
           <Parameter Name="rect" Type="System.Drawing.RectangleF" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The System.Drawing rectangle.</param>
+          <summary>Converts a System.Drawing rectangle into a SkiaSharp rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.Extensions" Member="M:SkiaSharp.Views.Mac.Extensions.ToSKRect(System.Drawing.RectangleF)" />
       </Member>
@@ -2700,8 +2701,8 @@
           <Parameter Name="size" Type="System.Drawing.Size" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The System.Drawing size.</param>
+          <summary>Converts a System.Drawing size into a SkiaSharp size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.Extensions" Member="M:SkiaSharp.Views.Mac.Extensions.ToSKSize(System.Drawing.Size)" />
       </Member>
@@ -2721,8 +2722,8 @@
           <Parameter Name="size" Type="System.Drawing.SizeF" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The System.Drawing size.</param>
+          <summary>Converts a System.Drawing size into a SkiaSharp size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.Extensions" Member="M:SkiaSharp.Views.Mac.Extensions.ToSKSize(System.Drawing.SizeF)" />
       </Member>
@@ -2742,8 +2743,8 @@
           <Parameter Name="color" Type="SkiaSharp.SKColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The SkiaSharp color.</param>
+          <summary>Converts a SkiaSharp color into an AppKit color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.MacExtensions" Member="M:SkiaSharp.Views.Mac.MacExtensions.ToNSColor(SkiaSharp.SKColor)" />
       </Member>
@@ -2763,8 +2764,8 @@
           <Parameter Name="color" Type="AppKit.NSColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The UIKit color.</param>
+          <summary>Converts a UIKit color into an AppKit color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.MacExtensions" Member="M:SkiaSharp.Views.Mac.MacExtensions.ToSKColor(AppKit.NSColor)" />
       </Member>
@@ -2784,8 +2785,8 @@
           <Parameter Name="color" Type="SkiaSharp.SKColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The SkiaSharp color.</param>
+          <summary>Converts a SkiaSharp color into a CoreGraphics color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.AppleExtensions" Member="M:SkiaSharp.Views.tvOS.AppleExtensions.ToCGColor(SkiaSharp.SKColor)" />
       </Member>
@@ -2805,8 +2806,8 @@
           <Parameter Name="color" Type="SkiaSharp.SKColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The SkiaSharp color.</param>
+          <summary>Converts a SkiaSharp color into a CoreImage color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.AppleExtensions" Member="M:SkiaSharp.Views.tvOS.AppleExtensions.ToCIColor(SkiaSharp.SKColor)" />
       </Member>
@@ -2826,8 +2827,8 @@
           <Parameter Name="point" Type="SkiaSharp.SKPoint" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The SkiaSharp point.</param>
+          <summary>Converts a SkiaSharp point into a CoreGraphics point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.AppleExtensions" Member="M:SkiaSharp.Views.tvOS.AppleExtensions.ToPoint(SkiaSharp.SKPoint)" />
       </Member>
@@ -2847,8 +2848,8 @@
           <Parameter Name="rect" Type="SkiaSharp.SKRect" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The SkiaSharp rectangle.</param>
+          <summary>Converts a SkiaSharp rectangle into a CoreGraphics rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.AppleExtensions" Member="M:SkiaSharp.Views.tvOS.AppleExtensions.ToRect(SkiaSharp.SKRect)" />
       </Member>
@@ -2868,8 +2869,8 @@
           <Parameter Name="size" Type="SkiaSharp.SKSize" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The SkiaSharp size.</param>
+          <summary>Converts a SkiaSharp size into a CoreGraphics size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.AppleExtensions" Member="M:SkiaSharp.Views.tvOS.AppleExtensions.ToSize(SkiaSharp.SKSize)" />
       </Member>
@@ -2889,8 +2890,8 @@
           <Parameter Name="color" Type="CoreGraphics.CGColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The CoreGraphics color.</param>
+          <summary>Converts a CoreGraphics color into a SkiaSharp color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.AppleExtensions" Member="M:SkiaSharp.Views.tvOS.AppleExtensions.ToSKColor(CoreGraphics.CGColor)" />
       </Member>
@@ -2910,8 +2911,8 @@
           <Parameter Name="color" Type="CoreImage.CIColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The CoreImage color.</param>
+          <summary>Converts a CoreImage color into a SkiaSharp color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.AppleExtensions" Member="M:SkiaSharp.Views.tvOS.AppleExtensions.ToSKColor(CoreImage.CIColor)" />
       </Member>
@@ -2931,8 +2932,8 @@
           <Parameter Name="point" Type="CoreGraphics.CGPoint" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The CoreGraphics point.</param>
+          <summary>Converts a CoreGraphics point into a SkiaSharp point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.AppleExtensions" Member="M:SkiaSharp.Views.tvOS.AppleExtensions.ToSKPoint(CoreGraphics.CGPoint)" />
       </Member>
@@ -2952,8 +2953,8 @@
           <Parameter Name="rect" Type="CoreGraphics.CGRect" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The CoreGraphics rectangle.</param>
+          <summary>Converts a CoreGraphics rectangle into a SkiaSharp rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.AppleExtensions" Member="M:SkiaSharp.Views.tvOS.AppleExtensions.ToSKRect(CoreGraphics.CGRect)" />
       </Member>
@@ -2973,8 +2974,8 @@
           <Parameter Name="size" Type="CoreGraphics.CGSize" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The CoreGraphics size.</param>
+          <summary>Converts a CoreGraphics size into a SkiaSharp size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.AppleExtensions" Member="M:SkiaSharp.Views.tvOS.AppleExtensions.ToSKSize(CoreGraphics.CGSize)" />
       </Member>
@@ -2994,8 +2995,8 @@
           <Parameter Name="color" Type="SkiaSharp.SKColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The SkiaSharp color.</param>
+          <summary>Converts a SkiaSharp color into a System.Drawing color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.Extensions" Member="M:SkiaSharp.Views.tvOS.Extensions.ToDrawingColor(SkiaSharp.SKColor)" />
       </Member>
@@ -3015,8 +3016,8 @@
           <Parameter Name="point" Type="SkiaSharp.SKPoint" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The SkiaSharp point.</param>
+          <summary>Converts a SkiaSharp point into a System.Drawing point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.Extensions" Member="M:SkiaSharp.Views.tvOS.Extensions.ToDrawingPoint(SkiaSharp.SKPoint)" />
       </Member>
@@ -3036,8 +3037,8 @@
           <Parameter Name="point" Type="SkiaSharp.SKPointI" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The SkiaSharp point.</param>
+          <summary>Converts a SkiaSharp point into a System.Drawing point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.Extensions" Member="M:SkiaSharp.Views.tvOS.Extensions.ToDrawingPoint(SkiaSharp.SKPointI)" />
       </Member>
@@ -3057,8 +3058,8 @@
           <Parameter Name="rect" Type="SkiaSharp.SKRect" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The SkiaSharp rectangle.</param>
+          <summary>Converts a SkiaSharp rectangle into a System.Drawing rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.Extensions" Member="M:SkiaSharp.Views.tvOS.Extensions.ToDrawingRect(SkiaSharp.SKRect)" />
       </Member>
@@ -3078,8 +3079,8 @@
           <Parameter Name="rect" Type="SkiaSharp.SKRectI" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The SkiaSharp rectangle.</param>
+          <summary>Converts a SkiaSharp rectangle into a System.Drawing rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.Extensions" Member="M:SkiaSharp.Views.tvOS.Extensions.ToDrawingRect(SkiaSharp.SKRectI)" />
       </Member>
@@ -3099,8 +3100,8 @@
           <Parameter Name="size" Type="SkiaSharp.SKSize" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The SkiaSharp size.</param>
+          <summary>Converts a SkiaSharp size into a System.Drawing size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.Extensions" Member="M:SkiaSharp.Views.tvOS.Extensions.ToDrawingSize(SkiaSharp.SKSize)" />
       </Member>
@@ -3120,8 +3121,8 @@
           <Parameter Name="size" Type="SkiaSharp.SKSizeI" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The SkiaSharp size.</param>
+          <summary>Converts a SkiaSharp size into a System.Drawing size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.Extensions" Member="M:SkiaSharp.Views.tvOS.Extensions.ToDrawingSize(SkiaSharp.SKSizeI)" />
       </Member>
@@ -3141,8 +3142,8 @@
           <Parameter Name="color" Type="System.Drawing.Color" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The System.Drawing color.</param>
+          <summary>Converts a System.Drawing color into a SkiaSharp color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.Extensions" Member="M:SkiaSharp.Views.tvOS.Extensions.ToSKColor(System.Drawing.Color)" />
       </Member>
@@ -3162,8 +3163,8 @@
           <Parameter Name="point" Type="System.Drawing.Point" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The System.Drawing point.</param>
+          <summary>Converts a System.Drawing point into a SkiaSharp point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.Extensions" Member="M:SkiaSharp.Views.tvOS.Extensions.ToSKPoint(System.Drawing.Point)" />
       </Member>
@@ -3183,8 +3184,8 @@
           <Parameter Name="point" Type="System.Drawing.PointF" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The System.Drawing point.</param>
+          <summary>Converts a System.Drawing point into a SkiaSharp point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.Extensions" Member="M:SkiaSharp.Views.tvOS.Extensions.ToSKPoint(System.Drawing.PointF)" />
       </Member>
@@ -3204,8 +3205,8 @@
           <Parameter Name="rect" Type="System.Drawing.Rectangle" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The System.Drawing rectangle.</param>
+          <summary>Converts a System.Drawing rectangle into a SkiaSharp rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.Extensions" Member="M:SkiaSharp.Views.tvOS.Extensions.ToSKRect(System.Drawing.Rectangle)" />
       </Member>
@@ -3225,8 +3226,8 @@
           <Parameter Name="rect" Type="System.Drawing.RectangleF" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The System.Drawing rectangle.</param>
+          <summary>Converts a System.Drawing rectangle into a SkiaSharp rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.Extensions" Member="M:SkiaSharp.Views.tvOS.Extensions.ToSKRect(System.Drawing.RectangleF)" />
       </Member>
@@ -3246,8 +3247,8 @@
           <Parameter Name="size" Type="System.Drawing.Size" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The System.Drawing size.</param>
+          <summary>Converts a System.Drawing size into a SkiaSharp size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.Extensions" Member="M:SkiaSharp.Views.tvOS.Extensions.ToSKSize(System.Drawing.Size)" />
       </Member>
@@ -3267,8 +3268,8 @@
           <Parameter Name="size" Type="System.Drawing.SizeF" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The System.Drawing size.</param>
+          <summary>Converts a System.Drawing size into a SkiaSharp size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.Extensions" Member="M:SkiaSharp.Views.tvOS.Extensions.ToSKSize(System.Drawing.SizeF)" />
       </Member>
@@ -3288,8 +3289,8 @@
           <Parameter Name="color" Type="UIKit.UIColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The UIKit color</param>
+          <summary>Converts a UIKit color into a SkiaSharp color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.iOSExtensions" Member="M:SkiaSharp.Views.tvOS.iOSExtensions.ToSKColor(UIKit.UIColor)" />
       </Member>
@@ -3309,8 +3310,8 @@
           <Parameter Name="color" Type="SkiaSharp.SKColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The SkiaSharp color</param>
+          <summary>Converts a SkiaSharp color into a UIKit color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.iOSExtensions" Member="M:SkiaSharp.Views.tvOS.iOSExtensions.ToUIColor(SkiaSharp.SKColor)" />
       </Member>
@@ -3330,8 +3331,8 @@
           <Parameter Name="color" Type="SkiaSharp.SKColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The SkiaSharp color.</param>
+          <summary>Converts a SkiaSharp color into a Windows color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.UWP.UWPExtensions" Member="M:SkiaSharp.Views.UWP.UWPExtensions.ToColor(SkiaSharp.SKColor)" />
       </Member>
@@ -3351,8 +3352,8 @@
           <Parameter Name="point" Type="SkiaSharp.SKPoint" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The SkiaSharp point.</param>
+          <summary>Converts a SkiaSharp point into a Windows point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.UWP.UWPExtensions" Member="M:SkiaSharp.Views.UWP.UWPExtensions.ToPoint(SkiaSharp.SKPoint)" />
       </Member>
@@ -3372,8 +3373,8 @@
           <Parameter Name="rect" Type="SkiaSharp.SKRect" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The SkiaSharp rectangle.</param>
+          <summary>Converts a SkiaSharp rectangle into a Windows rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.UWP.UWPExtensions" Member="M:SkiaSharp.Views.UWP.UWPExtensions.ToRect(SkiaSharp.SKRect)" />
       </Member>
@@ -3393,8 +3394,8 @@
           <Parameter Name="size" Type="SkiaSharp.SKSize" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The SkiaSharp size.</param>
+          <summary>Converts a SkiaSharp size into a Windows size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.UWP.UWPExtensions" Member="M:SkiaSharp.Views.UWP.UWPExtensions.ToSize(SkiaSharp.SKSize)" />
       </Member>
@@ -3414,8 +3415,8 @@
           <Parameter Name="color" Type="Windows.UI.Color" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The Windows color.</param>
+          <summary>Converts a Windows color into a SkiaSharp color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.UWP.UWPExtensions" Member="M:SkiaSharp.Views.UWP.UWPExtensions.ToSKColor(Windows.UI.Color)" />
       </Member>
@@ -3435,8 +3436,8 @@
           <Parameter Name="point" Type="Windows.Foundation.Point" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The Windows point.</param>
+          <summary>Converts a Windows point into a SkiaSharp point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.UWP.UWPExtensions" Member="M:SkiaSharp.Views.UWP.UWPExtensions.ToSKPoint(Windows.Foundation.Point)" />
       </Member>
@@ -3456,8 +3457,8 @@
           <Parameter Name="rect" Type="Windows.Foundation.Rect" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The Windows rectangle</param>
+          <summary>Converts a Windows rectangle into a SkiaSharp rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.UWP.UWPExtensions" Member="M:SkiaSharp.Views.UWP.UWPExtensions.ToSKRect(Windows.Foundation.Rect)" />
       </Member>
@@ -3477,8 +3478,8 @@
           <Parameter Name="size" Type="Windows.Foundation.Size" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The Windows size.</param>
+          <summary>Converts a Windows size into a SkiaSharp size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.UWP.UWPExtensions" Member="M:SkiaSharp.Views.UWP.UWPExtensions.ToSKSize(Windows.Foundation.Size)" />
       </Member>
@@ -3498,8 +3499,8 @@
           <Parameter Name="color" Type="SkiaSharp.SKColor" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The SkiaSharp color.</param>
+          <summary>Converts a SkiaSharp color into a Windows color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.WPF.WPFExtensions" Member="M:SkiaSharp.Views.WPF.WPFExtensions.ToColor(SkiaSharp.SKColor)" />
       </Member>
@@ -3519,8 +3520,8 @@
           <Parameter Name="point" Type="SkiaSharp.SKPoint" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The SkiaSharp point.</param>
+          <summary>Converts a SkiaSharp point into a Windows point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.WPF.WPFExtensions" Member="M:SkiaSharp.Views.WPF.WPFExtensions.ToPoint(SkiaSharp.SKPoint)" />
       </Member>
@@ -3540,8 +3541,8 @@
           <Parameter Name="rect" Type="SkiaSharp.SKRect" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The SkiaSharp rectangle.</param>
+          <summary>Converts a SkiaSharp rectangle into a Windows rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.WPF.WPFExtensions" Member="M:SkiaSharp.Views.WPF.WPFExtensions.ToRect(SkiaSharp.SKRect)" />
       </Member>
@@ -3561,8 +3562,8 @@
           <Parameter Name="size" Type="SkiaSharp.SKSize" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The SkiaSharp size.</param>
+          <summary>Converts a SkiaSharp size into a Windows size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.WPF.WPFExtensions" Member="M:SkiaSharp.Views.WPF.WPFExtensions.ToSize(SkiaSharp.SKSize)" />
       </Member>
@@ -3582,8 +3583,8 @@
           <Parameter Name="color" Type="System.Windows.Media.Color" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="color">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="color">The Windows color.</param>
+          <summary>Converts a Windows color into a SkiaSharp color.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.WPF.WPFExtensions" Member="M:SkiaSharp.Views.WPF.WPFExtensions.ToSKColor(System.Windows.Media.Color)" />
       </Member>
@@ -3603,8 +3604,8 @@
           <Parameter Name="point" Type="System.Windows.Point" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="point">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="point">The Windows point.</param>
+          <summary>Converts a Windows point into a SkiaSharp point.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.WPF.WPFExtensions" Member="M:SkiaSharp.Views.WPF.WPFExtensions.ToSKPoint(System.Windows.Point)" />
       </Member>
@@ -3624,8 +3625,8 @@
           <Parameter Name="rect" Type="System.Windows.Rect" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="rect">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="rect">The Windows rectangle</param>
+          <summary>Converts a Windows rectangle into a SkiaSharp rectangle.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.WPF.WPFExtensions" Member="M:SkiaSharp.Views.WPF.WPFExtensions.ToSKRect(System.Windows.Rect)" />
       </Member>
@@ -3645,8 +3646,8 @@
           <Parameter Name="size" Type="System.Windows.Size" RefType="this" />
         </Parameters>
         <Docs>
-          <param name="size">To be added.</param>
-          <summary>To be added.</summary>
+          <param name="size">The Windows size.</param>
+          <summary>Converts a Windows size into a SkiaSharp size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.WPF.WPFExtensions" Member="M:SkiaSharp.Views.WPF.WPFExtensions.ToSKSize(System.Windows.Size)" />
       </Member>

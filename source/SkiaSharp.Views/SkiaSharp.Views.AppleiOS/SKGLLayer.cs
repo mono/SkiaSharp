@@ -26,6 +26,8 @@ namespace SkiaSharp.Views.tvOS
 
 		public ISKGLLayerDelegate SKDelegate { get; set; }
 
+		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
+
 		public virtual void Render()
 		{
 			if (glContext == null)
@@ -66,7 +68,7 @@ namespace SkiaSharp.Views.tvOS
 				if (glContext != null)
 				{
 					ResizeGLContexts();
-					renderTarget = default(GRBackendRenderTargetDesc);
+					renderTarget = SKGLDrawable.CreateRenderTarget();
 				}
 				Render();
 			}
@@ -79,7 +81,7 @@ namespace SkiaSharp.Views.tvOS
 			PaintSurface?.Invoke(this, new SKPaintGLSurfaceEventArgs(surface, renderTarget));
 		}
 
-		public virtual void PrepareGLContexts()
+		private void PrepareGLContexts()
 		{
 			// create GL context
 			glContext = new EAGLContext(EAGLRenderingAPI.OpenGLES2);
@@ -103,7 +105,7 @@ namespace SkiaSharp.Views.tvOS
 			EAGLContext.SetCurrentContext(null);
 		}
 
-		public virtual void ResizeGLContexts()
+		private void ResizeGLContexts()
 		{
 			// nuke old buffers
 			GL.DeleteRenderbuffers(1, ref renderBuffer);

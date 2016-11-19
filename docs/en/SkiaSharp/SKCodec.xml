@@ -14,7 +14,7 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>Abstraction layer directly on top of an image codec.</summary>
+    <summary>An abstraction layer directly on top of an image codec.</summary>
     <remarks>
       <para></para>
     </remarks>
@@ -38,10 +38,12 @@
         <Parameter Name="data" Type="SkiaSharp.SKData" />
       </Parameters>
       <Docs>
-        <param name="data">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="data">The data to create the codec with.</param>
+        <summary>Creates a codec from the specified data.</summary>
+        <returns>Returns the new instance of the codec, or null if there was an error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -62,10 +64,12 @@
         <Parameter Name="stream" Type="SkiaSharp.SKStream" />
       </Parameters>
       <Docs>
-        <param name="stream">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="stream">The stream to create the codec with.</param>
+        <summary>Creates a codec from the specified stream.</summary>
+        <returns>Returns the new instance of the codec, or null if there was an error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -106,9 +110,13 @@
         <ReturnType>SkiaSharp.SKEncodedFormat</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the image encoding from the codec.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPixels">
@@ -129,10 +137,12 @@
         <Parameter Name="pixels" Type="System.Byte[]&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="pixels">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="pixels">The memory block with the decoded bitmap.</param>
+        <summary>Decode the bitmap into the specified memory block.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPixels">
@@ -154,11 +164,15 @@
         <Parameter Name="pixels" Type="System.Byte[]" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The description of the desired output format expected by the caller.</param>
+        <param name="pixels">The memory block to hold the decoded bitmap, with a length of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
+        <summary>Decode the bitmap into the specified memory block.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPixels">
@@ -180,11 +194,14 @@
         <Parameter Name="pixels" Type="System.Byte[]&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The description of the desired output format expected by the caller.</param>
+        <param name="pixels">The memory block with the decoded bitmap.</param>
+        <summary>Decode the bitmap into the specified memory block.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPixels">
@@ -206,11 +223,14 @@
         <Parameter Name="pixels" Type="System.IntPtr" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The description of the desired output format expected by the caller.</param>
+        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
+        <summary>Decode the bitmap into the specified memory block.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPixels">
@@ -233,13 +253,18 @@
         <Parameter Name="colorTableCount" Type="System.Int32&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <param name="colorTable">To be added.</param>
-        <param name="colorTableCount">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The description of the desired output format expected by the caller.</param>
+        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
+        <param name="colorTable">The color table to hold the color entries.</param>
+        <param name="colorTableCount">The logical number of color table entries.</param>
+        <summary>Decode the bitmap into the specified memory block.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a <see cref="T:SkiaSharp.SKColorTable" />. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPixels">
@@ -262,13 +287,17 @@
         <Parameter Name="colorTableCount" Type="System.Int32&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <param name="colorTable">To be added.</param>
-        <param name="colorTableCount">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The description of the desired output format expected by the caller.</param>
+        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
+        <param name="colorTable">The pointer to the color table to hold the color entries, with a length of at least <see cref="F:SkiaSharp.SKColorTable.MaxLength" /> (256).</param>
+        <param name="colorTableCount">The logical number of color table entries.</param>
+        <summary>Decode the bitmap into the specified memory block.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a color table array, with a length of at least 256. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPixels">
@@ -292,14 +321,18 @@
         <Parameter Name="colorTableCount" Type="System.Int32&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <param name="options">To be added.</param>
-        <param name="colorTable">To be added.</param>
-        <param name="colorTableCount">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The description of the desired output format expected by the caller.</param>
+        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
+        <param name="options">The bitmap decoding options.</param>
+        <param name="colorTable">The color table to hold the color entries.</param>
+        <param name="colorTableCount">The logical number of color table entries.</param>
+        <summary>Decode the bitmap into the specified memory block.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a <see cref="T:SkiaSharp.SKColorTable" />. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPixels">
@@ -323,14 +356,18 @@
         <Parameter Name="colorTableCount" Type="System.Int32&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <param name="options">To be added.</param>
-        <param name="colorTable">To be added.</param>
-        <param name="colorTableCount">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The description of the desired output format expected by the caller.</param>
+        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
+        <param name="options">The bitmap decoding options.</param>
+        <param name="colorTable">The pointer to the color table to hold the color entries, with a length of at least <see cref="F:SkiaSharp.SKColorTable.MaxLength" /> (256).</param>
+        <param name="colorTableCount">The logical number of color table entries.</param>
+        <summary>Decode the bitmap into the specified memory block.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a color table array, with a length of at least 256. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPixels">
@@ -355,15 +392,19 @@
         <Parameter Name="colorTableCount" Type="System.Int32&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <param name="rowBytes">To be added.</param>
-        <param name="options">To be added.</param>
-        <param name="colorTable">To be added.</param>
-        <param name="colorTableCount">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The description of the desired output format expected by the caller.</param>
+        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
+        <param name="rowBytes">The number of bytes in a row, typically <see cref="P:SkiaSharp.SKImageInfo.RowBytes" />.</param>
+        <param name="options">The bitmap decoding options.</param>
+        <param name="colorTable">The color table to hold the color entries.</param>
+        <param name="colorTableCount">The logical number of color table entries.</param>
+        <summary>Decode the bitmap into the specified memory block.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a <see cref="T:SkiaSharp.SKColorTable" />. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPixels">
@@ -388,15 +429,19 @@
         <Parameter Name="colorTableCount" Type="System.Int32&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <param name="rowBytes">To be added.</param>
-        <param name="options">To be added.</param>
-        <param name="colorTable">To be added.</param>
-        <param name="colorTableCount">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The description of the desired output format expected by the caller.</param>
+        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
+        <param name="rowBytes">The number of bytes in a row, typically <see cref="P:SkiaSharp.SKImageInfo.RowBytes" />.</param>
+        <param name="options">The bitmap decoding options.</param>
+        <param name="colorTable">The pointer to the color table to hold the color entries, with a length of at least <see cref="F:SkiaSharp.SKColorTable.MaxLength" /> (256).</param>
+        <param name="colorTableCount">The logical number of color table entries.</param>
+        <summary>Decode the bitmap into the specified memory block.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a color table array, with a length of at least 256. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetScaledDimensions">
@@ -417,15 +462,15 @@
         <Parameter Name="desiredScale" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="desiredScale">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="desiredScale">The desired scale factor.</param>
+        <summary>Returns a size that approximately supports the desired scale factor.</summary>
+        <returns>Returns a supported size.</returns>
+        <remarks>The codec may not be able to scale efficiently to the exact scale factor requested, so return a size that approximates that scale. Upscaling is not supported, so the original size will be returned.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetValidSubset">
-      <MemberSignature Language="C#" Value="public void GetValidSubset (ref SkiaSharp.SKRectI desiredSubset);" />
-      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void GetValidSubset(valuetype SkiaSharp.SKRectI desiredSubset) cil managed" />
+      <MemberSignature Language="C#" Value="public bool GetValidSubset (ref SkiaSharp.SKRectI desiredSubset);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool GetValidSubset(valuetype SkiaSharp.SKRectI desiredSubset) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.52.0.0</AssemblyVersion>
@@ -435,15 +480,55 @@
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
+        <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Parameters>
         <Parameter Name="desiredSubset" Type="SkiaSharp.SKRectI&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="desiredSubset">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="desiredSubset">The desired subset of the original bounds, which may be modified to a subset which is supported.</param>
+        <summary>Modifies the specified subset to one that can decoded from this codec.</summary>
+        <returns>Returns true if this codec supports decoding the desired subset, otherwise false. The final subset can be used with <see cref="P:SkiaSharp.SKCodecOptions.Subset" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="IncrementalDecode">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKCodecResult IncrementalDecode ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKCodecResult IncrementalDecode() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Start or continue the incremental decode.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> if all lines requested in <see cref="M:SkiaSharp.SKCodec.StartIncrementalDecode" /> have been completely decoded. <see cref="F:SkiaSharp.SKCodecResult.IncompleteInput" /> otherwise.</returns>
+        <remarks>Unlike <see cref="M:SkiaSharp.SKCodec.GetPixels" />, this does not do any filling. This is left up to the caller, since they may be skipping lines or continuing the decode later.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="IncrementalDecode">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKCodecResult IncrementalDecode (out int rowsDecoded);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKCodecResult IncrementalDecode(int32 rowsDecoded) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="rowsDecoded" Type="System.Int32&amp;" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="rowsDecoded">The total number of lines initialized. Only meaningful if this method returns <see cref="F:SkiaSharp.SKCodecResult.IncompleteInput" />.</param>
+        <summary>Start or continue the incremental decode.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> if all lines requested in <see cref="M:SkiaSharp.SKCodec.StartIncrementalDecode" /> have been completely decoded. <see cref="F:SkiaSharp.SKCodecResult.IncompleteInput" /> otherwise.</returns>
+        <remarks>Unlike <see cref="M:SkiaSharp.SKCodec.GetPixels" />, this does not do any filling. This is left up to the caller, since they may be skipping lines or continuing the decode later.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Info">
@@ -461,9 +546,13 @@
         <ReturnType>SkiaSharp.SKImageInfo</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the image information from the codec.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="MinBufferedBytesNeeded">
@@ -481,7 +570,7 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Minimum number of bytes that must be buffered in stream input.</summary>
+        <summary>Gets the minimum number of bytes that must be buffered in stream input.</summary>
         <value>
           <para></para>
         </value>
@@ -505,9 +594,13 @@
         <ReturnType>SkiaSharp.SKCodecOrigin</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the image origin from the codec.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Pixels">
@@ -525,9 +618,131 @@
         <ReturnType>System.Byte[]</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the image data from the codec using the current <see cref="P:SkiaSharp.SKCodec.Info" />.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="StartIncrementalDecode">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKCodecResult StartIncrementalDecode (SkiaSharp.SKImageInfo info, IntPtr pixels, int rowBytes);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKCodecResult StartIncrementalDecode(valuetype SkiaSharp.SKImageInfo info, native int pixels, int32 rowBytes) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="pixels" Type="System.IntPtr" />
+        <Parameter Name="rowBytes" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+        <param name="pixels">The memory to write to. Needs to be large enough to hold the subset, if present, or the full image.</param>
+        <param name="rowBytes">The stride of the memory to write to.</param>
+        <summary>Prepare for an incremental decode with the specified options.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="StartIncrementalDecode">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKCodecResult StartIncrementalDecode (SkiaSharp.SKImageInfo info, IntPtr pixels, int rowBytes, SkiaSharp.SKCodecOptions options);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKCodecResult StartIncrementalDecode(valuetype SkiaSharp.SKImageInfo info, native int pixels, int32 rowBytes, valuetype SkiaSharp.SKCodecOptions options) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="pixels" Type="System.IntPtr" />
+        <Parameter Name="rowBytes" Type="System.Int32" />
+        <Parameter Name="options" Type="SkiaSharp.SKCodecOptions" />
+      </Parameters>
+      <Docs>
+        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+        <param name="pixels">The memory to write to. Needs to be large enough to hold the subset, if present, or the full image.</param>
+        <param name="rowBytes">The stride of the memory to write to.</param>
+        <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
+        <summary>Prepare for an incremental decode with the specified options.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="StartIncrementalDecode">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKCodecResult StartIncrementalDecode (SkiaSharp.SKImageInfo info, IntPtr pixels, int rowBytes, SkiaSharp.SKCodecOptions options, SkiaSharp.SKColorTable colorTable, ref int colorTableCount);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKCodecResult StartIncrementalDecode(valuetype SkiaSharp.SKImageInfo info, native int pixels, int32 rowBytes, valuetype SkiaSharp.SKCodecOptions options, class SkiaSharp.SKColorTable colorTable, int32 colorTableCount) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="pixels" Type="System.IntPtr" />
+        <Parameter Name="rowBytes" Type="System.Int32" />
+        <Parameter Name="options" Type="SkiaSharp.SKCodecOptions" />
+        <Parameter Name="colorTable" Type="SkiaSharp.SKColorTable" />
+        <Parameter Name="colorTableCount" Type="System.Int32&amp;" RefType="ref" />
+      </Parameters>
+      <Docs>
+        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+        <param name="pixels">The memory to write to. Needs to be large enough to hold the subset, if present, or the full image.</param>
+        <param name="rowBytes">The stride of the memory to write to.</param>
+        <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
+        <param name="colorTable">The color table to use.</param>
+        <param name="colorTableCount">The size of the color table.</param>
+        <summary>Prepare for an incremental decode with the specified options.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="StartIncrementalDecode">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKCodecResult StartIncrementalDecode (SkiaSharp.SKImageInfo info, IntPtr pixels, int rowBytes, SkiaSharp.SKCodecOptions options, IntPtr colorTable, ref int colorTableCount);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKCodecResult StartIncrementalDecode(valuetype SkiaSharp.SKImageInfo info, native int pixels, int32 rowBytes, valuetype SkiaSharp.SKCodecOptions options, native int colorTable, int32 colorTableCount) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="pixels" Type="System.IntPtr" />
+        <Parameter Name="rowBytes" Type="System.Int32" />
+        <Parameter Name="options" Type="SkiaSharp.SKCodecOptions" />
+        <Parameter Name="colorTable" Type="System.IntPtr" />
+        <Parameter Name="colorTableCount" Type="System.Int32&amp;" RefType="ref" />
+      </Parameters>
+      <Docs>
+        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+        <param name="pixels">The memory to write to. Needs to be large enough to hold the subset, if present, or the full image.</param>
+        <param name="rowBytes">The stride of the memory to write to.</param>
+        <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
+        <param name="colorTable">The pointer to the color table to use.</param>
+        <param name="colorTableCount">The size of the color table.</param>
+        <summary>Prepare for an incremental decode with the specified options.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
   </Members>

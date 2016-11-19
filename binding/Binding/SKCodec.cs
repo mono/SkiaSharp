@@ -56,9 +56,9 @@ namespace SkiaSharp
 			return dimensions;
 		}
 
-		public void GetValidSubset (ref SKRectI desiredSubset)
+		public bool GetValidSubset (ref SKRectI desiredSubset)
 		{
-			SkiaApi.sk_codec_get_valid_subset (Handle, ref desiredSubset);
+			return SkiaApi.sk_codec_get_valid_subset (Handle, ref desiredSubset);
 		}
 
 		public byte[] Pixels {
@@ -85,6 +85,9 @@ namespace SkiaSharp
 
 		public SKCodecResult GetPixels (SKImageInfo info, byte[] pixels)
 		{
+			if (pixels == null)
+				throw new ArgumentNullException (nameof (pixels));
+
 			GCHandle handle = default (GCHandle);
 			try {
 				handle = GCHandle.Alloc (pixels, GCHandleType.Pinned);
@@ -98,6 +101,9 @@ namespace SkiaSharp
 
 		public unsafe SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
 		{
+			if (pixels == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (pixels));
+
 			var nativeOptions = new SKCodecOptionsInternal {
 				fZeroInitialized = options.ZeroInitialized,
 				fSubset = null
@@ -140,12 +146,53 @@ namespace SkiaSharp
 			return GetPixels (info, pixels, info.RowBytes, SKCodecOptions.Default, colorTable, ref colorTableCount);
 		}
 
+		public unsafe SKCodecResult StartIncrementalDecode(SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
+		{
+			if (pixels == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (pixels));
+
+			var nativeOptions = new SKCodecOptionsInternal {
+				fZeroInitialized = options.ZeroInitialized,
+				fSubset = null
+			};
+			if (options.HasSubset) {
+				var subset = options.Subset.Value;
+				nativeOptions.fSubset = &subset;
+			}
+			return SkiaApi.sk_codec_start_incremental_decode (Handle, ref info, pixels, (IntPtr)rowBytes, ref nativeOptions, colorTable, ref colorTableCount);
+		}
+
+		public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options)
+		{
+			int colorTableCount = 0;
+			return StartIncrementalDecode (info, pixels, rowBytes, options, IntPtr.Zero, ref colorTableCount);
+		}
+
+		public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes)
+		{
+			return SkiaApi.sk_codec_start_incremental_decode (Handle, ref info, pixels, (IntPtr)rowBytes, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+		}
+
+		public unsafe SKCodecResult StartIncrementalDecode(SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount)
+		{
+			return StartIncrementalDecode (info, pixels, rowBytes, options, colorTable == null ? IntPtr.Zero : colorTable.ReadColors (), ref colorTableCount);
+		}
+
+		public SKCodecResult IncrementalDecode (out int rowsDecoded)
+		{
+			return SkiaApi.sk_codec_incremental_decode (Handle, out rowsDecoded);
+		}
+
+		public SKCodecResult IncrementalDecode ()
+		{
+			int rowsDecoded;
+			return SkiaApi.sk_codec_incremental_decode (Handle, out rowsDecoded);
+		}
+
 		public static SKCodec Create (SKStream stream)
 		{
 			if (stream == null)
-			{
-				throw new ArgumentNullException (nameof(stream));
-			}
+				throw new ArgumentNullException (nameof (stream));
 			var codec = GetObject<SKCodec> (SkiaApi.sk_codec_new_from_stream (stream.Handle));
 			stream.RevokeOwnership (codec);
 			return codec;
@@ -154,9 +201,7 @@ namespace SkiaSharp
 		public static SKCodec Create (SKData data)
 		{
 			if (data == null)
-			{
-				throw new ArgumentNullException (nameof(data));
-			}
+				throw new ArgumentNullException (nameof (data));
 			return GetObject<SKCodec> (SkiaApi.sk_codec_new_from_data (data.Handle));
 		}
 	}

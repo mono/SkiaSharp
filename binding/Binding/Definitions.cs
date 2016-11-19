@@ -91,7 +91,7 @@ namespace SkiaSharp
 
 		private uint color;
 
-		internal SKColor (uint value)
+		public SKColor (uint value)
 		{
 			color = value;
 		}
@@ -390,7 +390,7 @@ namespace SkiaSharp
 		{
 			SKColor color;
 			if (!TryParse (hexString, out color))
-				throw new ArgumentOutOfRangeException (nameof (hexString));
+				throw new ArgumentException ("Invalid hexadecimal color string.", nameof (hexString));
 			return color;
 		}
 
@@ -536,6 +536,7 @@ namespace SkiaSharp
 		RgbaF16
 	}
 
+	[Obsolete("May be removed in the next version.")]
 	public enum SKColorProfileType {
 		Linear,
 		SRGB
@@ -839,7 +840,7 @@ namespace SkiaSharp
 				case SKColorType.RgbaF16:
 					return 8;
 				}
-				throw new ArgumentOutOfRangeException ("ColorType");
+				throw new ArgumentOutOfRangeException (nameof (ColorType));
 			}
 		}
 
@@ -1515,6 +1516,10 @@ namespace SkiaSharp
 			set { bottom = value; }
 		}
 
+		public int MidX => left + (Width / 2);
+
+		public int MidY => top + (Height / 2);
+
 		public int Width => right - left;
 
 		public int Height => bottom - top;
@@ -1531,11 +1536,30 @@ namespace SkiaSharp
 
 		public SKPointI Location {
 			get { return new SKPointI (left, top); }
-			set {
-				left = value.X;
-				top = value.Y; 
+			set { this = SKRectI.Create (value, Size); }
+		}
+
+		public SKRectI Standardized {
+			get {
+				if (left > right) {
+					if (top > bottom) {
+						return new SKRectI (right, bottom, left, top);
+					} else {
+						return new SKRectI (right, top, left, bottom);
+					}
+				} else {
+					if (top > bottom) {
+						return new SKRectI (left, bottom, right, top);
+					} else {
+						return new SKRectI (left, top, right, bottom);
+					}
+				}
 			}
 		}
+
+		public SKRectI AspectFit (SKSizeI size) => Truncate (((SKRect)this).AspectFit (size));
+
+		public SKRectI AspectFill (SKSizeI size) => Truncate (((SKRect)this).AspectFill (size));
 
 		public static SKRectI Ceiling (SKRect value)
 		{
@@ -1767,6 +1791,10 @@ namespace SkiaSharp
 			set { bottom = value; }
 		}
 
+		public float MidX => left + (Width / 2f);
+
+		public float MidY => top + (Height / 2f);
+
 		public float Width => right - left;
 
 		public float Height => bottom - top;
@@ -1783,10 +1811,53 @@ namespace SkiaSharp
 
 		public SKPoint Location {
 			get { return new SKPoint (left, top); }
-			set {
-				left = value.X;
-				top = value.Y; 
+			set { this = SKRect.Create (value, Size); }
+		}
+
+		public SKRect Standardized {
+			get {
+				if (left > right) {
+					if (top > bottom) {
+						return new SKRect (right, bottom, left, top);
+					} else {
+						return new SKRect (right, top, left, bottom);
+					}
+				} else {
+					if (top > bottom) {
+						return new SKRect (left, bottom, right, top);
+					} else {
+						return new SKRect (left, top, right, bottom);
+					}
+				}
 			}
+		}
+
+		public SKRect AspectFit (SKSize size) => AspectResize (size, true);
+
+		public SKRect AspectFill (SKSize size) => AspectResize (size, false);
+
+		private SKRect AspectResize (SKSize size, bool fit)
+		{
+			if (size.Width == 0 || size.Height == 0 || Width == 0 || Height == 0)
+				return SKRect.Create (MidX, MidY, 0, 0);
+
+			float aspectWidth = size.Width;
+			float aspectHeight = size.Height;
+			float imgAspect = aspectWidth / aspectHeight;
+			float fullRectAspect = Width / Height;
+
+			bool compare = fit ? (fullRectAspect > imgAspect) : (fullRectAspect < imgAspect);
+			if (compare) {
+				aspectHeight = Height;
+				aspectWidth = aspectHeight * imgAspect;
+			} else {
+				aspectWidth = Width;
+				aspectHeight = aspectWidth / imgAspect;
+			}
+			float aspectLeft = MidX - (aspectWidth / 2f);
+			float aspectTop = MidY - (aspectHeight / 2f);
+
+			return SKRect.Create (aspectLeft, aspectTop, aspectWidth, aspectHeight);
 		}
 
 		public static SKRect Inflate (SKRect rect, float x, float y)
@@ -2023,7 +2094,7 @@ namespace SkiaSharp
 				if (value == null)
 					throw new ArgumentNullException (nameof (Values));
 				if (value.Length != Indices.Count)
-					throw new ArgumentOutOfRangeException (nameof (Values));
+					throw new ArgumentException ($"The matrix array must have a length of {Indices.Count}.", nameof (Values));
 
 				scaleX = value [Indices.ScaleX];
 				skewX = value [Indices.SkewX];
@@ -2044,7 +2115,7 @@ namespace SkiaSharp
 			if (values == null)
 				throw new ArgumentNullException (nameof (values));
 			if (values.Length != Indices.Count)
-				throw new ArgumentOutOfRangeException (nameof (values));
+				throw new ArgumentException ($"The matrix array must have a length of {Indices.Count}.", nameof (values));
 
 			values [Indices.ScaleX] = scaleX;
 			values [Indices.SkewX] = skewX;
@@ -2323,7 +2394,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			SkiaApi.sk_matrix_post_concat (ref target, ref matrix);
 		}
 
-		public void MapRect (ref SKMatrix matrix, out SKRect dest, ref SKRect source)
+		public static void MapRect (ref SKMatrix matrix, out SKRect dest, ref SKRect source)
 		{
 			SkiaApi.sk_matrix_map_rect (ref matrix, out dest, ref source);
 		}
@@ -2343,7 +2414,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 				throw new ArgumentNullException (nameof (points));
 			int dl = result.Length;
 			if (dl != points.Length)
-				throw new ArgumentException ("buffers must be the same size");
+				throw new ArgumentException ("Buffers must be the same size.");
 			unsafe {
 				fixed (SKPoint *rp = &result[0]){
 					fixed (SKPoint *pp = &points[0]){
@@ -2370,7 +2441,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 				throw new ArgumentNullException (nameof (vectors));
 			int dl = result.Length;
 			if (dl != vectors.Length)
-				throw new ArgumentException ("buffers must be the same size");
+				throw new ArgumentException ("Buffers must be the same size.");
 			unsafe {
 				fixed (SKPoint *rp = &result[0]){
 					fixed (SKPoint *pp = &vectors[0]){
@@ -2389,7 +2460,18 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			return res;
 		}
 
+		[Obsolete ("Use MapPoint instead.")]
 		public SKPoint MapXY (float x, float y)
+		{
+			return MapPoint (x, y);
+		}
+
+		public SKPoint MapPoint (SKPoint point)
+		{
+			return MapPoint (point.X, point.Y);
+		}
+
+		public SKPoint MapPoint (float x, float y)
 		{
 			SKPoint result;
 			SkiaApi.sk_matrix_map_xy (ref this, x, y, out result);
@@ -2568,6 +2650,8 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			get { return renderTargetHandle; }
 			set { renderTargetHandle = value; }
 		}
+		public SKSizeI Size => new SKSizeI (width, height);
+		public SKRectI Rect => new SKRectI (0, 0, width, height);
 	}
 	
 	public enum GRBackend {

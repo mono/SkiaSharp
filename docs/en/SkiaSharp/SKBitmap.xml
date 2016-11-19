@@ -275,10 +275,12 @@
         <Parameter Name="colorType" Type="SkiaSharp.SKColorType" />
       </Parameters>
       <Docs>
-        <param name="colorType">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="colorType">The color type to check with.</param>
+        <summary>Returns true if this bitmap's pixels can be converted into the requested color type, such that <see cref="M:SkiaSharp.SKBitmap.Copy" /> or <see cref="M:SkiaSharp.SKBitmap.CopyTo" /> could succeed.</summary>
+        <returns>Returns true if this bitmap's pixels can be converted into the requested color type.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ColorTable">
@@ -383,6 +385,32 @@
         </remarks>
       </Docs>
     </Member>
+    <Member MemberName="CopyPixelsTo">
+      <MemberSignature Language="C#" Value="public bool CopyPixelsTo (IntPtr dst, int dstSize, int dstRowBytes = 0, bool preserveDstPad = false);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool CopyPixelsTo(native int dst, int32 dstSize, int32 dstRowBytes, bool preserveDstPad) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dst" Type="System.IntPtr" />
+        <Parameter Name="dstSize" Type="System.Int32" />
+        <Parameter Name="dstRowBytes" Type="System.Int32" />
+        <Parameter Name="preserveDstPad" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="dst">The location of destination buffer.</param>
+        <param name="dstSize">The size of destination buffer. Must be large enough to hold pixels using indicated stride.</param>
+        <param name="dstRowBytes">The width of each line in the buffer. If 0, uses bitmap's internal stride.</param>
+        <param name="preserveDstPad">Whether or not to preserve padding in the destination.</param>
+        <summary>Copies the pixels of the bitmap to the specified memory location.</summary>
+        <returns>Returns true if possible, returns false otherwise.</returns>
+        <remarks>In the case when the <paramref name="dstRowBytes" /> matches the bitmap's <paramref name="rowBytes" />, the copy may be made faster by copying over the <paramref name="dst" />'s per-row padding (for all rows but the last). By setting <paramref name="preserveDstPad" /> to true the caller can disable this optimization and ensure that pixels in the padding are not overwritten.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="CopyTo">
       <MemberSignature Language="C#" Value="public bool CopyTo (SkiaSharp.SKBitmap destination);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool CopyTo(class SkiaSharp.SKBitmap destination) cil managed" />
@@ -403,10 +431,12 @@
         <Parameter Name="destination" Type="SkiaSharp.SKBitmap" />
       </Parameters>
       <Docs>
-        <param name="destination">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="destination">The bitmap to recieved the copied contents.</param>
+        <summary>Copies the contents of the bitmap into the specified bitmap.</summary>
+        <returns>Returns true if the copy was made.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CopyTo">
@@ -430,11 +460,13 @@
         <Parameter Name="colorType" Type="SkiaSharp.SKColorType" />
       </Parameters>
       <Docs>
-        <param name="destination">To be added.</param>
-        <param name="colorType">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="destination">The bitmap to recieved the copied contents.</param>
+        <param name="colorType">The color type to use for the copy of the bitmap.</param>
+        <summary>Copies the contents of the bitmap into the specified bitmap.</summary>
+        <returns>Returns true if the copy was made.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Decode">
@@ -455,10 +487,12 @@
         <Parameter Name="codec" Type="SkiaSharp.SKCodec" />
       </Parameters>
       <Docs>
-        <param name="codec">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="codec">The codec to decode.</param>
+        <summary>Decode a bitmap using the specified codec.</summary>
+        <returns>The the decoded bitmap, or <paramref name="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Decode">
@@ -479,10 +513,12 @@
         <Parameter Name="data" Type="SkiaSharp.SKData" />
       </Parameters>
       <Docs>
-        <param name="data">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="data">The data to decode.</param>
+        <summary>Decode a bitmap using the specified data.</summary>
+        <returns>The the decoded bitmap, or <paramref name="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Decode">
@@ -503,10 +539,12 @@
         <Parameter Name="stream" Type="SkiaSharp.SKStream" />
       </Parameters>
       <Docs>
-        <param name="stream">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="stream">The stream to decode.</param>
+        <summary>Decode a bitmap using the specified stream.</summary>
+        <returns>The the decoded bitmap, or <paramref name="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Decode">
@@ -527,10 +565,12 @@
         <Parameter Name="buffer" Type="System.Byte[]" />
       </Parameters>
       <Docs>
-        <param name="buffer">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="buffer">The byte buffer to decode.</param>
+        <summary>Decode a bitmap using the specified byte buffer.</summary>
+        <returns>The the decoded bitmap, or <paramref name="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Decode">
@@ -551,79 +591,132 @@
         <Parameter Name="filename" Type="System.String" />
       </Parameters>
       <Docs>
-        <param name="filename">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="filename">The filename of the bitmap to decode.</param>
+        <summary>Decode a bitmap for the specified filename.</summary>
+        <returns>The the decoded bitmap, or <paramref name="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Decode">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKBitmap Decode (SkiaSharp.SKStreamRewindable stream, SkiaSharp.SKColorType pref = SkiaSharp.SKColorType.Unknown);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKBitmap Decode(class SkiaSharp.SKStreamRewindable stream, valuetype SkiaSharp.SKColorType pref) cil managed" />
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKBitmap Decode (SkiaSharp.SKCodec codec, SkiaSharp.SKImageInfo bitmapInfo);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKBitmap Decode(class SkiaSharp.SKCodec codec, valuetype SkiaSharp.SKImageInfo bitmapInfo) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKBitmap</ReturnType>
       </ReturnValue>
       <Parameters>
-        <Parameter Name="stream" Type="SkiaSharp.SKStreamRewindable" />
-        <Parameter Name="pref" Type="SkiaSharp.SKColorType" />
+        <Parameter Name="codec" Type="SkiaSharp.SKCodec" />
+        <Parameter Name="bitmapInfo" Type="SkiaSharp.SKImageInfo" />
       </Parameters>
       <Docs>
-        <param name="stream">To be added.</param>
-        <param name="pref">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="codec">The codec to decode.</param>
+        <param name="bitmapInfo">The destination image information.</param>
+        <summary>Decode a bitmap using the specified codec and destination image information.</summary>
+        <returns>The the decoded bitmap, or <paramref name="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Decode">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKBitmap Decode (byte[] buffer, SkiaSharp.SKColorType pref = SkiaSharp.SKColorType.Unknown);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKBitmap Decode(unsigned int8[] buffer, valuetype SkiaSharp.SKColorType pref) cil managed" />
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKBitmap Decode (SkiaSharp.SKData data, SkiaSharp.SKImageInfo bitmapInfo);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKBitmap Decode(class SkiaSharp.SKData data, valuetype SkiaSharp.SKImageInfo bitmapInfo) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKBitmap</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="data" Type="SkiaSharp.SKData" />
+        <Parameter Name="bitmapInfo" Type="SkiaSharp.SKImageInfo" />
+      </Parameters>
+      <Docs>
+        <param name="data">The data to decode.</param>
+        <param name="bitmapInfo">The destination image information.</param>
+        <summary>Decode a bitmap using the specified data and destination image information.</summary>
+        <returns>The the decoded bitmap, or <paramref name="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Decode">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKBitmap Decode (SkiaSharp.SKStream stream, SkiaSharp.SKImageInfo bitmapInfo);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKBitmap Decode(class SkiaSharp.SKStream stream, valuetype SkiaSharp.SKImageInfo bitmapInfo) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKBitmap</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="stream" Type="SkiaSharp.SKStream" />
+        <Parameter Name="bitmapInfo" Type="SkiaSharp.SKImageInfo" />
+      </Parameters>
+      <Docs>
+        <param name="stream">The stream to decode.</param>
+        <param name="bitmapInfo">The destination image information.</param>
+        <summary>Decode a bitmap using the specified stream and destination image information.</summary>
+        <returns>The the decoded bitmap, or <paramref name="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Decode">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKBitmap Decode (byte[] buffer, SkiaSharp.SKImageInfo bitmapInfo);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKBitmap Decode(unsigned int8[] buffer, valuetype SkiaSharp.SKImageInfo bitmapInfo) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKBitmap</ReturnType>
       </ReturnValue>
       <Parameters>
         <Parameter Name="buffer" Type="System.Byte[]" />
-        <Parameter Name="pref" Type="SkiaSharp.SKColorType" />
+        <Parameter Name="bitmapInfo" Type="SkiaSharp.SKImageInfo" />
       </Parameters>
       <Docs>
-        <param name="buffer">To be added.</param>
-        <param name="pref">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="buffer">The byte buffer to decode.</param>
+        <param name="bitmapInfo">The destination image information.</param>
+        <summary>Decode a bitmap using the specified byte buffer and destination image information.</summary>
+        <returns>The the decoded bitmap, or <paramref name="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Decode">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKBitmap Decode (string filename, SkiaSharp.SKColorType pref = SkiaSharp.SKColorType.Unknown);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKBitmap Decode(string filename, valuetype SkiaSharp.SKColorType pref) cil managed" />
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKBitmap Decode (string filename, SkiaSharp.SKImageInfo bitmapInfo);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKBitmap Decode(string filename, valuetype SkiaSharp.SKImageInfo bitmapInfo) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKBitmap</ReturnType>
       </ReturnValue>
       <Parameters>
         <Parameter Name="filename" Type="System.String" />
-        <Parameter Name="pref" Type="SkiaSharp.SKColorType" />
+        <Parameter Name="bitmapInfo" Type="SkiaSharp.SKImageInfo" />
       </Parameters>
       <Docs>
-        <param name="filename">To be added.</param>
-        <param name="pref">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="filename">The filename of the bitmap to decode.</param>
+        <param name="bitmapInfo">The destination image information.</param>
+        <summary>Decode a bitmap for the specified filename and destination image information.</summary>
+        <returns>The the decoded bitmap, or <paramref name="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DecodeBounds">
@@ -644,10 +737,12 @@
         <Parameter Name="data" Type="SkiaSharp.SKData" />
       </Parameters>
       <Docs>
-        <param name="data">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="data">The data to decode.</param>
+        <summary>Decode the bitmap information using the specified data.</summary>
+        <returns>The the decoded bitmap information, or <see cref="F:SkiaSharp.SKImageInfo.Empty" /> if there was an error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DecodeBounds">
@@ -668,10 +763,12 @@
         <Parameter Name="stream" Type="SkiaSharp.SKStream" />
       </Parameters>
       <Docs>
-        <param name="stream">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="stream">The stream to decode.</param>
+        <summary>Decode the bitmap information using the specified stream.</summary>
+        <returns>The the decoded bitmap information, or <see cref="F:SkiaSharp.SKImageInfo.Empty" /> if there was an error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DecodeBounds">
@@ -692,10 +789,12 @@
         <Parameter Name="buffer" Type="System.Byte[]" />
       </Parameters>
       <Docs>
-        <param name="buffer">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="buffer">The byte buffer to decode.</param>
+        <summary>Decode the bitmap information using the specified byte buffer.</summary>
+        <returns>The the decoded bitmap information, or <see cref="F:SkiaSharp.SKImageInfo.Empty" /> if there was an error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DecodeBounds">
@@ -716,79 +815,12 @@
         <Parameter Name="filename" Type="System.String" />
       </Parameters>
       <Docs>
-        <param name="filename">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="DecodeBounds">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageInfo DecodeBounds (SkiaSharp.SKStreamRewindable stream, SkiaSharp.SKColorType pref = SkiaSharp.SKColorType.Unknown);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig valuetype SkiaSharp.SKImageInfo DecodeBounds(class SkiaSharp.SKStreamRewindable stream, valuetype SkiaSharp.SKColorType pref) cil managed" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <AssemblyVersion>1.49.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>SkiaSharp.SKImageInfo</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="stream" Type="SkiaSharp.SKStreamRewindable" />
-        <Parameter Name="pref" Type="SkiaSharp.SKColorType" />
-      </Parameters>
-      <Docs>
-        <param name="stream">To be added.</param>
-        <param name="pref">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="DecodeBounds">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageInfo DecodeBounds (byte[] buffer, SkiaSharp.SKColorType pref = SkiaSharp.SKColorType.Unknown);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig valuetype SkiaSharp.SKImageInfo DecodeBounds(unsigned int8[] buffer, valuetype SkiaSharp.SKColorType pref) cil managed" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <AssemblyVersion>1.49.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>SkiaSharp.SKImageInfo</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="buffer" Type="System.Byte[]" />
-        <Parameter Name="pref" Type="SkiaSharp.SKColorType" />
-      </Parameters>
-      <Docs>
-        <param name="buffer">To be added.</param>
-        <param name="pref">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="DecodeBounds">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageInfo DecodeBounds (string filename, SkiaSharp.SKColorType pref = SkiaSharp.SKColorType.Unknown);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig valuetype SkiaSharp.SKImageInfo DecodeBounds(string filename, valuetype SkiaSharp.SKColorType pref) cil managed" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <AssemblyVersion>1.49.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>SkiaSharp.SKImageInfo</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="filename" Type="System.String" />
-        <Parameter Name="pref" Type="SkiaSharp.SKColorType" />
-      </Parameters>
-      <Docs>
-        <param name="filename">To be added.</param>
-        <param name="pref">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="filename">The filename of the bitmap to decode.</param>
+        <summary>Decode the bitmap information for the specified filename.</summary>
+        <returns>The the decoded bitmap information, or <see cref="F:SkiaSharp.SKImageInfo.Empty" /> if there was an error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -833,9 +865,11 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a value indicating whether drawing this bitmap has any effect.</summary>
+        <value>Returns true if drawing this bitmap would have no effect.</value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Erase">
@@ -858,9 +892,9 @@
         <Parameter Name="color" Type="SkiaSharp.SKColor" />
       </Parameters>
       <Docs>
-        <param name="color">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="color">The color to fill.</param>
+        <summary>Fill the entire bitmap with the specified color.</summary>
+        <remarks>If the bitmap's colortype does not support alpha (e.g. 565) then the alpha of the color is ignored (treated as opaque). If the colortype only supports alpha (e.g. A1 or A8) then the color's R, G, B components are ignored.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Erase">
@@ -884,10 +918,10 @@
         <Parameter Name="rect" Type="SkiaSharp.SKRectI" />
       </Parameters>
       <Docs>
-        <param name="color">To be added.</param>
-        <param name="rect">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="color">The color to fill.</param>
+        <param name="rect">The area to fill.</param>
+        <summary>Fill the specified area of this bitmap with the specified color.</summary>
+        <remarks>If the bitmap's colortype does not support alpha (e.g. 565) then the alpha of the color is ignored (treated as opaque). If the colortype only supports alpha (e.g. A1 or A8) then the color's R, G, B components are ignored.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetIndex8Color">
@@ -908,11 +942,13 @@
         <Parameter Name="y" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="x">The x-cordinate.</param>
+        <param name="y">The y-cordinate.</param>
+        <summary>Returns the color corresponding to the pixel specified by the coordinates for colortable based bitmaps.</summary>
+        <returns>Returns the color corresponding to the pixel specified by the coordinates.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPixel">
@@ -936,11 +972,30 @@
         <Parameter Name="y" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="x">X coordinate</param>
-        <param name="y">Y coordinate</param>
-        <summary>Returns the color for the pixel at the specified location</summary>
-        <returns>Alpha only colortypes return black with the appropriate alpha set.  The value is undefined for the Unknown SkColorType or if x or y are out of bounds, or if the bitmap does not have any pixels (or has not be locked with <see cref="M:SkiaSharp.SKBitmap.LockPixels" />)</returns>
-        <remarks>In most cases this will require un-premultiplying the color.  </remarks>
+        <param name="x">The x-cordinate.</param>
+        <param name="y">The y-cordinate.</param>
+        <summary>Returns the color for the pixel at the specified location.</summary>
+        <returns>Alpha only color types return black with the appropriate alpha set. The value is undefined for <see cref="F:SkiaSharp.SKColorType.Unknown" />, if the coordinates are out of bounds, if the bitmap does not have any pixels, or has not be locked with <see cref="M:SkiaSharp.SKBitmap.LockPixels" />.</returns>
+        <remarks>In most cases this will require un-premultiplying the color.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetPixels">
+      <MemberSignature Language="C#" Value="public IntPtr GetPixels ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance native int GetPixels() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.IntPtr</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Returns the address of the pixels for this bitmap.</summary>
+        <returns>Returns a pointer to the region that contains the pixel data for this bitmap. This might return <see langword="IntPtr.Zero" /> if there is no pixel buffer associated with this bitmap.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPixels">
@@ -963,9 +1018,9 @@
         <Parameter Name="length" Type="System.IntPtr&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="length">The length of the pixel buffer returned.</param>
-        <summary>Returns the address of the pixels for this SKBitmap</summary>
-        <returns>Returns a pointer to the region that contains the pixel data for this bitmap. This might return <see langword="null" /> if there is no pixel buffer associated with this bitmap.</returns>
+        <param name="length">The length of the pixel buffer of the bitmap.</param>
+        <summary>Returns the address of the pixels for this bitmap.</summary>
+        <returns>Returns a pointer to the region that contains the pixel data for this bitmap. This might return <see langword="IntPtr.Zero" /> if there is no pixel buffer associated with this bitmap.</returns>
         <remarks>
           <para></para>
         </remarks>
@@ -1016,10 +1071,120 @@
       <Docs>
         <summary>Gets an instance of <see cref="T:SkiaSharp.SKImageInfo" /> with all the properties of the bitmap.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
         <remarks>
-          <para />
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="InstallPixels">
+      <MemberSignature Language="C#" Value="public bool InstallPixels (SkiaSharp.SKImageInfo info, IntPtr pixels);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool InstallPixels(valuetype SkiaSharp.SKImageInfo info, native int pixels) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="pixels" Type="System.IntPtr" />
+      </Parameters>
+      <Docs>
+        <param name="info">The image information describing the pixels.</param>
+        <param name="pixels">The pixels to install.</param>
+        <summary>Installs the specified pixels into the bitmap.</summary>
+        <returns>Returns true on success, or false on failure. If there was an error, the bitmap will be set to empty.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="InstallPixels">
+      <MemberSignature Language="C#" Value="public bool InstallPixels (SkiaSharp.SKImageInfo info, IntPtr pixels, int rowBytes);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool InstallPixels(valuetype SkiaSharp.SKImageInfo info, native int pixels, int32 rowBytes) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="pixels" Type="System.IntPtr" />
+        <Parameter Name="rowBytes" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="info">The image information describing the pixels.</param>
+        <param name="pixels">The pixels to install.</param>
+        <param name="rowBytes">The stride of the pixels being installed.</param>
+        <summary>Installs the specified pixels into the bitmap.</summary>
+        <returns>Returns true on success, or false on failure. If there was an error, the bitmap will be set to empty.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="InstallPixels">
+      <MemberSignature Language="C#" Value="public bool InstallPixels (SkiaSharp.SKImageInfo info, IntPtr pixels, int rowBytes, SkiaSharp.SKColorTable ctable);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool InstallPixels(valuetype SkiaSharp.SKImageInfo info, native int pixels, int32 rowBytes, class SkiaSharp.SKColorTable ctable) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="pixels" Type="System.IntPtr" />
+        <Parameter Name="rowBytes" Type="System.Int32" />
+        <Parameter Name="ctable" Type="SkiaSharp.SKColorTable" />
+      </Parameters>
+      <Docs>
+        <param name="info">The image information describing the pixels.</param>
+        <param name="pixels">The pixels to install.</param>
+        <param name="rowBytes">The stride of the pixels being installed.</param>
+        <param name="ctable">The color table to use, if installing <see cref="F:SkiaSharp.SKColorType.Index8" /> pixels.</param>
+        <summary>Installs the specified pixels into the bitmap.</summary>
+        <returns>Returns true on success, or false on failure. If there was an error, the bitmap will be set to empty.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="InstallPixels">
+      <MemberSignature Language="C#" Value="public bool InstallPixels (SkiaSharp.SKImageInfo info, IntPtr pixels, int rowBytes, SkiaSharp.SKColorTable ctable, SkiaSharp.SKBitmapReleaseDelegate releaseProc, object context);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool InstallPixels(valuetype SkiaSharp.SKImageInfo info, native int pixels, int32 rowBytes, class SkiaSharp.SKColorTable ctable, class SkiaSharp.SKBitmapReleaseDelegate releaseProc, object context) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="pixels" Type="System.IntPtr" />
+        <Parameter Name="rowBytes" Type="System.Int32" />
+        <Parameter Name="ctable" Type="SkiaSharp.SKColorTable" />
+        <Parameter Name="releaseProc" Type="SkiaSharp.SKBitmapReleaseDelegate" />
+        <Parameter Name="context" Type="System.Object" />
+      </Parameters>
+      <Docs>
+        <param name="info">The image information describing the pixels.</param>
+        <param name="pixels">The pixels to install.</param>
+        <param name="rowBytes">The stride of the pixels being installed.</param>
+        <param name="ctable">The color table to use, if installing <see cref="F:SkiaSharp.SKColorType.Index8" /> pixels.</param>
+        <param name="releaseProc">The delegate to invoke when the pixels are no longer referenced.</param>
+        <param name="context">The user data to use when invoking the delegate.</param>
+        <summary>Installs the specified pixels into the bitmap.</summary>
+        <returns>Returns true on success, or false on failure. If there was an error, the bitmap will be set to empty.</returns>
+        <remarks>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1040,9 +1205,11 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a value indicating whether the bitmap has empty dimensions.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>In most cases, <see cref="P:SkiaSharp.SKBitmap.DrawsNothing" /> will return the desired result as it checks <see cref="P:SkiaSharp.SKBitmap.IsNull" /> as well.</remarks>
       </Docs>
     </Member>
     <Member MemberName="IsImmutable">
@@ -1062,12 +1229,9 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Indicates if the bitmap contents are immutable, meaning that the contents of its pixels will not change for the lifetime of the bitmap.</summary>
-        <value>
-          <see langword="true" /> if it is immutable, <see langword="false" /> otherwise.</value>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Indicates if the bitmap contents are immutable.</summary>
+        <value>Returns <see langword="true" /> if it is immutable, <see langword="false" /> otherwise.</value>
+        <remarks>Immutability means that the contents of its pixels will not change for the lifetime of the bitmap.</remarks>
       </Docs>
     </Member>
     <Member MemberName="IsNull">
@@ -1087,9 +1251,11 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a value indicating whether the bitmap has any pixelref. </summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>This can return true even if the dimensions of the bitmap are not empty. In most cases, <see cref="P:SkiaSharp.SKBitmap.DrawsNothing" /> will return the desired result as it checks <see cref="P:SkiaSharp.SKBitmap.IsEmpty" /> as well.</remarks>
       </Docs>
     </Member>
     <Member MemberName="IsVolatile">
@@ -1109,9 +1275,13 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a value indicating whether the bitmap should not be cached by devices.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="LockPixels">
@@ -1132,7 +1302,7 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Call this to ensure that the bitmap points to the current pixel address in the pixelref. </summary>
+        <summary>Call this to ensure that the bitmap points to the current pixel address in the pixelref.</summary>
         <remarks>
           <para>This allows pixelrefs that implement cached/deferred image decoding to know when there are active clients of a given image.</para>
           <para>Balance it with a call to <see cref="M:SkiaSharp.SKBitmap.UnlockPixels" />. These calls are harmless if there is no pixelref.</para>
@@ -1156,9 +1326,33 @@
         <ReturnType>SkiaSharp.SKColor[]</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets all the pixels as an array of colors.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ReadyToDraw">
+      <MemberSignature Language="C#" Value="public bool ReadyToDraw { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance bool ReadyToDraw" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets a value indicating whether or not the bitmap is valid enough to be drawn.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Reset">
@@ -1179,12 +1373,8 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>
-          <para>Reset the bitmap to its initial state (see default constructor). </para>
-        </summary>
-        <remarks>
-          <para>If we are a (shared) owner of the pixels, that ownership is decremented.</para>
-        </remarks>
+        <summary>Reset the bitmap to its initial state.</summary>
+        <remarks>The result is a bitmap with zero width and height, and no pixels. Its colortype is set to <see cref="E:SkiaSharp.SKColorType.Unknown." /> If we are a (shared) owner of the pixels, that ownership is decremented.</remarks>
       </Docs>
     </Member>
     <Member MemberName="RowBytes">
@@ -1209,6 +1399,27 @@
           <para></para>
         </value>
         <remarks>The same as <see cref="P:SkiaSharp.SKImageInfo.RowBytes" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SetColorTable">
+      <MemberSignature Language="C#" Value="public void SetColorTable (SkiaSharp.SKColorTable ct);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void SetColorTable(class SkiaSharp.SKColorTable ct) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="ct" Type="SkiaSharp.SKColorTable" />
+      </Parameters>
+      <Docs>
+        <param name="ct">The new color table.</param>
+        <summary>Replaces the current color table of the bitmap.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="SetImmutable">
@@ -1262,6 +1473,50 @@
         <remarks>This method will set the color of the pixel on the bitmap to the specified <paramref name="color" /> performing any necessary color conversions to the format of the bitmap.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="SetPixels">
+      <MemberSignature Language="C#" Value="public void SetPixels (IntPtr pixels);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void SetPixels(native int pixels) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pixels" Type="System.IntPtr" />
+      </Parameters>
+      <Docs>
+        <param name="pixels">The new pixel address.</param>
+        <summary>Replaces the current pixel address for the bitmap.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SetPixels">
+      <MemberSignature Language="C#" Value="public void SetPixels (IntPtr pixels, SkiaSharp.SKColorTable ct);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void SetPixels(native int pixels, class SkiaSharp.SKColorTable ct) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pixels" Type="System.IntPtr" />
+        <Parameter Name="ct" Type="SkiaSharp.SKColorTable" />
+      </Parameters>
+      <Docs>
+        <param name="pixels">The new pixel address.</param>
+        <param name="ct">The color table to use, if changing <see cref="F:SkiaSharp.SKColorType.Index8" /> pixels, or <see langword="null" />.</param>
+        <summary>Replaces the current pixel address for the bitmap.</summary>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
     <Member MemberName="UnlockPixels">
       <MemberSignature Language="C#" Value="public void UnlockPixels ();" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void UnlockPixels() cil managed" />
@@ -1303,10 +1558,10 @@
       <Docs>
         <summary>Gets the width of the bitmap.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>

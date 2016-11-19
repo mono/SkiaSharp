@@ -11,6 +11,7 @@ namespace SkiaSharp.Views.Android
 	{
 		private Bitmap bitmap;
 		private SKImageInfo info;
+		private bool ignorePixelScaling;
 
 		public SKCanvasView(Context context)
 			: base(context)
@@ -42,6 +43,19 @@ namespace SkiaSharp.Views.Android
 			info = new SKImageInfo(0, 0, SKColorType.Rgba8888, SKAlphaType.Premul);
 		}
 
+		public SKSize CanvasSize => info.Size;
+
+		public bool IgnorePixelScaling
+		{
+			get { return ignorePixelScaling; }
+			set
+			{
+				ignorePixelScaling = value;
+				UpdateCanvasSize(Width, Height);
+				Invalidate();
+			}
+		}
+
 		protected override void OnDraw(Canvas canvas)
 		{
 			base.OnDraw(canvas);
@@ -64,7 +78,10 @@ namespace SkiaSharp.Views.Android
 			bitmap.UnlockPixels();
 
 			// draw bitmap to canvas
-			canvas.DrawBitmap(bitmap, 0, 0, null);
+			if (IgnorePixelScaling)
+				canvas.DrawBitmap(bitmap, info.Rect.ToRect(), new RectF(0, 0, Width, Height), null);
+			else
+				canvas.DrawBitmap(bitmap, 0, 0, null);
 		}
 
 		protected override void OnSizeChanged(int w, int h, int oldw, int oldh)
@@ -72,8 +89,22 @@ namespace SkiaSharp.Views.Android
 			base.OnSizeChanged(w, h, oldw, oldh);
 
 			// update the info with the new sizes
-			info.Width = w;
-			info.Height = h;
+			UpdateCanvasSize(w, h);
+		}
+
+		private void UpdateCanvasSize(int w, int h)
+		{
+			if (IgnorePixelScaling)
+			{
+				var scale = Resources.DisplayMetrics.Density;
+				info.Width = (int)(w / scale);
+				info.Height = (int)(h / scale);
+			}
+			else
+			{
+				info.Width = w;
+				info.Height = h;
+			}
 		}
 
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
