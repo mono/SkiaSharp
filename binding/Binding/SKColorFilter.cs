@@ -46,6 +46,12 @@ namespace SkiaSharp
 		}
 
 		[Obsolete("Use CreateBlendMode(SKColor, SKBlendMode) instead.")]
+		public static SKColorFilter CreateXferMode(SKColor c, SKXferMode mode)
+		{
+			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_mode(c, (SKBlendMode)mode));
+		}
+
+		[Obsolete("Use CreateBlendMode(SKColor, SKBlendMode) instead.")]
 		public static SKColorFilter CreateBlendMode(SKColor c, SKXferMode mode)
 		{
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_mode(c, (SKBlendMode)mode));
