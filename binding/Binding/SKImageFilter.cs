@@ -121,7 +121,12 @@ namespace SkiaSharp
 			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_matrix_convolution(ref kernelSize, kernel, gain, bias, ref kernelOffset, tileMode, convolveAlpha, input == null ? IntPtr.Zero : input.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
 		}
 
-		public static SKImageFilter CreateMerge(SKImageFilter[] filters, SKXferMode[] modes = null, SKImageFilter.CropRect cropRect = null)
+		public static SKImageFilter CreateMerge(SKImageFilter first, SKImageFilter second, SKBlendMode mode, SKImageFilter.CropRect cropRect = null)
+		{
+			return CreateMerge(new [] { first, second }, new [] { mode, mode }, cropRect);
+		}
+
+		public static SKImageFilter CreateMerge(SKImageFilter[] filters, SKBlendMode[] modes = null, SKImageFilter.CropRect cropRect = null)
 		{
 			if (filters == null)
 				throw new ArgumentNullException(nameof(filters));
