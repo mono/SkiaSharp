@@ -28,6 +28,7 @@ DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/en"));
 #load "cake/UtilsMSBuild.cake"
 #load "cake/UtilsNative.cake"
 #load "cake/TransformToTvOS.cake"
+#load "cake/TransformToWatchOS.cake"
 #load "cake/TransformToUWP.cake"
 #load "cake/BuildExternals.cake"
 
@@ -69,6 +70,7 @@ Task ("libs")
     if (!DirectoryExists ("./output/android/")) CreateDirectory ("./output/android/");
     if (!DirectoryExists ("./output/ios/")) CreateDirectory ("./output/ios/");
     if (!DirectoryExists ("./output/tvos/")) CreateDirectory ("./output/tvos/");
+    if (!DirectoryExists ("./output/watchos/")) CreateDirectory ("./output/watchos/");
     if (!DirectoryExists ("./output/osx/")) CreateDirectory ("./output/osx/");
     if (!DirectoryExists ("./output/portable/")) CreateDirectory ("./output/portable/");
     if (!DirectoryExists ("./output/mac/")) CreateDirectory ("./output/mac/");
@@ -120,6 +122,7 @@ Task ("libs")
         CopyFileToDirectory ("./binding/SkiaSharp.Android/bin/Release/SkiaSharp.dll", "./output/android/");
         CopyFileToDirectory ("./binding/SkiaSharp.iOS/bin/Release/SkiaSharp.dll", "./output/ios/");
         CopyFileToDirectory ("./binding/SkiaSharp.tvOS/bin/Release/SkiaSharp.dll", "./output/tvos/");
+        CopyFileToDirectory ("./binding/SkiaSharp.watchOS/bin/Release/SkiaSharp.dll", "./output/watchos/");
         CopyFileToDirectory ("./binding/SkiaSharp.OSX/bin/Release/SkiaSharp.dll", "./output/osx/");
         CopyFileToDirectory ("./binding/SkiaSharp.OSX/bin/Release/SkiaSharp.OSX.targets", "./output/osx/");
         CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
@@ -137,6 +140,7 @@ Task ("libs")
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Android/bin/Release/SkiaSharp.Views.Android.dll", "./output/android/");
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.iOS/bin/Release/SkiaSharp.Views.iOS.dll", "./output/ios/");
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.tvOS/bin/Release/SkiaSharp.Views.tvOS.dll", "./output/tvos/");
+        // CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.watchOS/bin/Release/SkiaSharp.Views.watchOS.dll", "./output/watchos/");
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Mac/bin/Release/SkiaSharp.Views.Mac.dll", "./output/osx/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms/bin/Release/SkiaSharp.Views.Forms.dll", "./output/portable/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Android/bin/Release/SkiaSharp.Views.Forms.dll", "./output/android/");
@@ -313,6 +317,7 @@ Task ("update-docs")
             "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/MonoAndroid/v2.3",
             "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.iOS/v1.0",
             "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.TVOS/v1.0",
+            "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.WatchOS/v1.0",
             "./externals",
         });
     }
@@ -323,6 +328,7 @@ Task ("update-docs")
             "/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xbuild-frameworks/MonoAndroid/v1.0",
             "/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xbuild-frameworks/MonoAndroid/v4.5",
             "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/lib/mono/Xamarin.TVOS",
+            "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/lib/mono/Xamarin.WatchOS",
             "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/lib/mono/Xamarin.iOS",
             "/Library/Frameworks/Xamarin.Mac.framework/Versions/Current/lib/mono/Xamarin.Mac",
         });
@@ -343,6 +349,7 @@ Task ("update-docs")
             "./output/ios/SkiaSharp.Views.iOS.dll",
             "./output/osx/SkiaSharp.Views.Mac.dll",
             "./output/tvos/SkiaSharp.Views.tvOS.dll",
+            "./output/watchos/SkiaSharp.Views.watchOS.dll",
         }).ToArray ();
     }
     // add mac-specific assemblies
@@ -352,6 +359,7 @@ Task ("update-docs")
             "./output/ios/SkiaSharp.Views.iOS.dll",
             "./output/osx/SkiaSharp.Views.Mac.dll",
             "./output/tvos/SkiaSharp.Views.tvOS.dll",
+            "./output/watchos/SkiaSharp.Views.watchOS.dll",
         }).ToArray ();
     }
 

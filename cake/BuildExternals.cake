@@ -99,6 +99,7 @@ Task ("externals-native")
     .IsDependentOn ("externals-osx")
     .IsDependentOn ("externals-ios")
     .IsDependentOn ("externals-tvos")
+    .IsDependentOn ("externals-watchos")
     .IsDependentOn ("externals-android")
     .Does (() => 
 {
@@ -249,6 +250,45 @@ Task ("externals-osx")
         (FilePath) "x86_64/libSkiaSharp.dylib"
     });
 });
+
+// this builds the native C and C++ externals for watchOS
+Task ("externals-watchos")
+    .WithCriteria (IsRunningOnUnix ())
+    .WithCriteria (
+        !FileExists ("native-builds/lib/watchos/libSkiaSharp.framework/libSkiaSharp"))
+    .Does (() => 
+{
+    var buildArch = new Action<string, string> ((sdk, arch) => {
+        XCodeBuild (new XCodeBuildSettings {
+            Project = "native-builds/libSkiaSharp_watchos/libSkiaSharp.xcodeproj",
+            Target = "libSkiaSharp",
+            Sdk = sdk,
+            Arch = arch,
+            Configuration = "Release",
+        });
+        if (!DirectoryExists ("native-builds/lib/watchos/" + arch)) {
+            CreateDirectory ("native-builds/lib/watchos/" + arch);
+        }
+        CopyDirectory ("native-builds/libSkiaSharp_watchos/build/Release-" + sdk, "native-builds/lib/watchos/" + arch);
+    });
+    
+    // set up the gyp environment variables
+    AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
+
+    RunGyp ("skia_os='ios' skia_arch_type='arm' armv7=1 arm_neon=0 skia_gpu=1 ios_sdk_version=2.0", "xcode");
+    TransformToWatchOS ("./externals/skia/out/gyp");
+
+    buildArch ("watchsimulator", "i386");
+    buildArch ("watchos", "armv7k");
+
+    // create the fat framework
+    CopyDirectory ("native-builds/lib/watchos/armv7k/libSkiaSharp.framework/", "native-builds/lib/watchos/libSkiaSharp.framework/");
+    DeleteFile ("native-builds/lib/watchos/libSkiaSharp.framework/libSkiaSharp");
+    RunLipo ("native-builds/lib/watchos/", "libSkiaSharp.framework/libSkiaSharp", new [] {
+        (FilePath) "i386/libSkiaSharp.framework/libSkiaSharp", 
+        (FilePath) "armv7k/libSkiaSharp.framework/libSkiaSharp"
+    }); 
+}); 
 
 // this builds the native C and C++ externals for iOS
 Task ("externals-ios")
@@ -428,6 +468,8 @@ Task ("clean-externals").Does (() =>
     CleanDirectories ("native-builds/libSkiaSharp_ios/build");
     // tvos
     CleanDirectories ("native-builds/libSkiaSharp_tvos/build");
+    // watchos
+    CleanDirectories ("native-builds/libSkiaSharp_watchos/build");
     // osx
     CleanDirectories ("native-builds/libSkiaSharp_osx/build");
     // windows
