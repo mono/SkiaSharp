@@ -91,7 +91,7 @@ namespace SkiaSharp
 
 		private uint color;
 
-		internal SKColor (uint value)
+		public SKColor (uint value)
 		{
 			color = value;
 		}
@@ -103,7 +103,7 @@ namespace SkiaSharp
 
 		public SKColor (byte red, byte green, byte blue)
 		{
-			color = (uint)(0xff000000u | (red << 16) | (green << 8) | blue);
+			color = (0xff000000u | (uint)(red << 16) | (uint)(green << 8) | blue);
 		}
 
 		public SKColor WithRed (byte red)

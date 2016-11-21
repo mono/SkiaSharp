@@ -232,9 +232,6 @@ namespace SkiaSharp
 
 		public void SetPixels(IntPtr pixels, SKColorTable ct)
 		{
-			if (ColorType != SKColorType.Index8) {
-				throw new NotSupportedException (UnsupportedColorTypeMessage);
-			}
 			SkiaApi.sk_bitmap_set_pixels (Handle, pixels, ct != null ? ct.Handle : IntPtr.Zero);
 		}
 
@@ -245,15 +242,12 @@ namespace SkiaSharp
 		
 		public byte[] Bytes {
 			get { 
-				LockPixels ();
-				try {
+				using (new SKAutoLockPixels (this)) {
 					IntPtr length;
 					var pixelsPtr = GetPixels (out length);
 					byte [] bytes = new byte [(int)length];
 					Marshal.Copy (pixelsPtr, bytes, 0, (int)length);
 					return bytes; 
-				} finally {
-					UnlockPixels ();
 				}
 			}
 		}

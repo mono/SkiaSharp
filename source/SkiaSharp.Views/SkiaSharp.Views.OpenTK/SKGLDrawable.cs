@@ -7,12 +7,12 @@ using OpenTK.Graphics.OpenGL;
 
 #if __ANDROID__
 namespace SkiaSharp.Views.Android
+#elif __TVOS__
+namespace SkiaSharp.Views.tvOS
 #elif __IOS__
 namespace SkiaSharp.Views.iOS
 #elif __DESKTOP__ || __WPF__
 namespace SkiaSharp.Views.Desktop
-#elif __TVOS__
-namespace SkiaSharp.Views.tvOS
 #elif __MACOS__
 namespace SkiaSharp.Views.Mac
 #endif

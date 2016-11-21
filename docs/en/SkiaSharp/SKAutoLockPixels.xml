@@ -1,0 +1,115 @@
+<Type Name="SKAutoLockPixels" FullName="SkiaSharp.SKAutoLockPixels">
+  <TypeSignature Language="C#" Value="public class SKAutoLockPixels : IDisposable" />
+  <TypeSignature Language="ILAsm" Value=".class public auto ansi beforefieldinit SKAutoLockPixels extends System.Object implements class System.IDisposable" />
+  <AssemblyInfo>
+    <AssemblyName>SkiaSharp</AssemblyName>
+    <AssemblyVersion>1.55.0.0</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.Object</BaseTypeName>
+  </Base>
+  <Interfaces>
+    <Interface>
+      <InterfaceName>System.IDisposable</InterfaceName>
+    </Interface>
+  </Interfaces>
+  <Docs>
+    <summary>Convenience class used to lock and unlock the bitmap pixels in a using statement.</summary>
+    <remarks>
+      <para>This class can be used in a using statement to lock the pixels of the bitmap allowing you to read those pixels. The pixels are automatically unlocked by virtue of having the <see cref="M:SkiaSharp.SKAutoLockPixels.Dispose" /> method unlock the bitmap pixels.</para>
+      <para></para>
+      <example>
+        <code lang="C#"><![CDATA[SKBitmap bitmap = ...;
+
+using (new SKAutoLockPixels(bitmap)) {
+    // get a pointer to the pixels
+    bitmap.GetPixels();
+
+    // use the pointer
+
+    // automatically unlock the pixels
+}]]></code>
+      </example>
+      <para></para>
+    </remarks>
+  </Docs>
+  <Members>
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public SKAutoLockPixels (SkiaSharp.SKBitmap bitmap);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig specialname rtspecialname instance void .ctor(class SkiaSharp.SKBitmap bitmap) cil managed" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters>
+        <Parameter Name="bitmap" Type="SkiaSharp.SKBitmap" />
+      </Parameters>
+      <Docs>
+        <param name="bitmap">The bitmap whose pixels to lock.</param>
+        <summary>Lock the bitmaps pixels.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public SKAutoLockPixels (SkiaSharp.SKBitmap bitmap, bool doLock);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig specialname rtspecialname instance void .ctor(class SkiaSharp.SKBitmap bitmap, bool doLock) cil managed" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters>
+        <Parameter Name="bitmap" Type="SkiaSharp.SKBitmap" />
+        <Parameter Name="doLock" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="bitmap">The bitmap whose pixels to lock.</param>
+        <param name="doLock">Whether or not to invoke <see cref="M:SkiaSharp.SKBitmap.LockPixels" /> method at this point.</param>
+        <summary>Lock the bitmaps pixels.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Dispose">
+      <MemberSignature Language="C#" Value="public void Dispose ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig newslot virtual instance void Dispose() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>
+          <para>Disposes the pixel locker, unlocking the pixels of the bitmap. </para>
+          <para>This operation will not do anything if you had previously manually called the <see cref="M:SkiaSharp.SKAutoLockPixels.Unlock" /> method.</para>
+        </summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Unlock">
+      <MemberSignature Language="C#" Value="public void Unlock ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Unlock() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Unlocks the pixels of the bitmap.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+  </Members>
+</Type>

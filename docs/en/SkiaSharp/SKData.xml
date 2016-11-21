@@ -114,10 +114,30 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Wraps the <see cref="T:SkiaSharp.SKData" /> as a <see cref="T:System.IO.Stream" /></summary>
-        <returns>
+        <summary>Wraps the <see cref="T:SkiaSharp.SKData" /> as a <see cref="T:System.IO.Stream" />.</summary>
+        <returns>Returns the new <see cref="T:System.IO.Stream" />.</returns>
+        <remarks>
           <para></para>
-        </returns>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="AsStream">
+      <MemberSignature Language="C#" Value="public System.IO.Stream AsStream (bool streamDisposesData);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class System.IO.Stream AsStream(bool streamDisposesData) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.IO.Stream</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="streamDisposesData" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="streamDisposesData">Whether or not to dispose the data object when the stream is disposed.</param>
+        <summary>Wraps the <see cref="T:SkiaSharp.SKData" /> as a <see cref="T:System.IO.Stream" />.</summary>
+        <returns>Returns the new <see cref="T:System.IO.Stream" />.</returns>
         <remarks>
           <para></para>
         </remarks>
@@ -204,6 +224,26 @@
         <remarks>When this SKData is cleared, the free method will be called on the provided buffer.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="IsEmpty">
+      <MemberSignature Language="C#" Value="public bool IsEmpty { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance bool IsEmpty" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets a value indicating whether or not the data is empty.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
     <Member MemberName="SaveTo">
       <MemberSignature Language="C#" Value="public void SaveTo (System.IO.Stream target);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void SaveTo(class System.IO.Stream target) cil managed" />
@@ -286,6 +326,25 @@
         </returns>
         <remarks>
           <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ToArray">
+      <MemberSignature Language="C#" Value="public byte[] ToArray ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance unsigned int8[] ToArray() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Byte[]</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Copies the data object into a byte array.</summary>
+        <returns>Returns the byte array of the data.</returns>
+        <remarks>
+          <para />
         </remarks>
       </Docs>
     </Member>

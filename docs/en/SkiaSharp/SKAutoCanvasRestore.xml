@@ -27,7 +27,7 @@
       <example>
         <code lang="C#"><![CDATA[SKCanvas canvas = ...;
 
-using (new SKAutoCanvasRestore(canvas, true)) {
+using (new SKAutoCanvasRestore(canvas)) {
     // perform some transform
     canvas.RotateDegrees(45);
 
@@ -42,6 +42,24 @@ using (new SKAutoCanvasRestore(canvas, true)) {
     </remarks>
   </Docs>
   <Members>
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public SKAutoCanvasRestore (SkiaSharp.SKCanvas canvas);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig specialname rtspecialname instance void .ctor(class SkiaSharp.SKCanvas canvas) cil managed" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters>
+        <Parameter Name="canvas" Type="SkiaSharp.SKCanvas" />
+      </Parameters>
+      <Docs>
+        <param name="canvas">The canvas whose state will be preserved.</param>
+        <summary>Creates a canvas restore point, invoking the <see cref="M:SkiaSharp.SKCanvas.Save" /> method.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
     <Member MemberName=".ctor">
       <MemberSignature Language="C#" Value="public SKAutoCanvasRestore (SkiaSharp.SKCanvas canvas, bool doSave);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig specialname rtspecialname instance void .ctor(class SkiaSharp.SKCanvas canvas, bool doSave) cil managed" />
@@ -60,8 +78,8 @@ using (new SKAutoCanvasRestore(canvas, true)) {
         <Parameter Name="doSave" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="canvas">The canvas whose state will be preserved</param>
-        <param name="doSave">Determines whether you want the <see cref="M:SkiaSharp.SKCanvas.Save" /> method to be invoked on your behalf at this point.</param>
+        <param name="canvas">The canvas whose state will be preserved.</param>
+        <param name="doSave">Whether or not to invoke <see cref="M:SkiaSharp.SKCanvas.Save" /> method at this point.</param>
         <summary>Creates a canvas restore point.</summary>
         <remarks>
           <para></para>
@@ -86,7 +104,10 @@ using (new SKAutoCanvasRestore(canvas, true)) {
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Disposes the canvas restore point, restoring the state of the canvas (matrix, clip and draw filter) to the state it was when the object was created.  This operation will not do anything if you had previously manually called the <see cref="M:SkiaSharp.SKAutoCanvasRestore.Restore" /> method.</summary>
+        <summary>
+          <para>Disposes the canvas restore point, restoring the state of the canvas (matrix, clip and draw filter) to the state it was when the object was created.</para>
+          <para>This operation will not do anything if you had previously manually called the <see cref="M:SkiaSharp.SKAutoCanvasRestore.Restore" /> method.</para>
+        </summary>
         <remarks>
           <para></para>
         </remarks>
