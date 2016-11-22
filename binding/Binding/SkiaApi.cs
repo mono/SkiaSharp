@@ -618,6 +618,8 @@ namespace SkiaSharp
 		public extern static sk_maskfilter_t sk_maskfilter_new_gamma(float gamma);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_maskfilter_t sk_maskfilter_new_clip(byte min, byte max);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_maskfilter_t sk_maskfilter_new_shadow(float occluderHeight, ref SKPoint3 lightPos, float lightRadius, float ambientAlpha, float spotAlpha, SKShadowMaskFilterShadowFlags flags);
 
 		// SkImageFilter::CropRect
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]

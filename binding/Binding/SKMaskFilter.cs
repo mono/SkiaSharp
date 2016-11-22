@@ -72,6 +72,11 @@ namespace SkiaSharp
 		{
 			return GetObject<SKMaskFilter>(SkiaApi.sk_maskfilter_new_clip(min, max));
 		}
+
+		public static SKMaskFilter CreateShadow(float occluderHeight, SKPoint3 lightPos, float lightRadius, float ambientAlpha, float spotAlpha, SKShadowMaskFilterShadowFlags flags = SKShadowMaskFilterShadowFlags.None)
+		{
+			return GetObject<SKMaskFilter>(SkiaApi.sk_maskfilter_new_shadow(occluderHeight, ref lightPos, lightRadius, ambientAlpha, spotAlpha, flags));
+		}
 	}
 }
 
