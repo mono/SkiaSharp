@@ -2885,6 +2885,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		public SKRectI? Bounds { get; set; }
 	}
 
+	[Flags]
 	public enum SKShadowMaskFilterShadowFlags {
 		None = 0x00,
 		TransparentOccluder = 0x01,
