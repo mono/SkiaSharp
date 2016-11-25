@@ -27,6 +27,7 @@ namespace SkiaSharpSample.Samples
 			using (var tf = SKTypeface.FromFamilyName("Arial"))
 			{
 				var info = codec.Info;
+				var encodedInfo = codec.EncodedInfo;
 
 				paint.IsAntialias = true;
 				paint.TextSize = 14;
@@ -54,6 +55,9 @@ namespace SkiaSharpSample.Samples
 						y += 20;
 
 						canvas.DrawText(string.Format("Pixels: {0} @ {1}b/px", bitmap.Pixels.Length, bitmap.BytesPerPixel), x, y, paint);
+						y += 20;
+
+						canvas.DrawText(string.Format("Encoding: {0} ({1}) @ {2}b/px", encodedInfo.Color, encodedInfo.Alpha, encodedInfo.BytesPerPixel), x, y, paint);
 					}
 				}
 			}
