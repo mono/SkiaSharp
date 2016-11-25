@@ -32,6 +32,17 @@ namespace SkiaSharp.Tests
 		}
 
 		[Test]
+		public void GetEncodedInfo ()
+		{
+			var stream = new SKFileStream (Path.Combine (PathToImages, "color-wheel.png"));
+			using (var codec = SKCodec.Create (stream)) {
+				Assert.AreEqual (SKEncodedInfoColor.Rgba, codec.EncodedInfo.Color);
+				Assert.AreEqual (SKEncodedInfoAlpha.Unpremul, codec.EncodedInfo.Alpha);
+				Assert.AreEqual (8, codec.EncodedInfo.BitsPerComponent);
+			}
+		}
+
+		[Test]
 		public void CanGetPixels ()
 		{
 			var stream = new SKFileStream (Path.Combine (PathToImages, "baboon.png"));
