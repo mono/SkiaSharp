@@ -41,6 +41,14 @@ namespace SkiaSharp
 			}
 		}
 
+		public SKEncodedInfo EncodedInfo {
+			get {
+				SKEncodedInfo info;
+				SkiaApi.sk_codec_get_encodedinfo (Handle, out info);
+				return info;
+			}
+		}
+
 		public SKCodecOrigin Origin {
 			get { return SkiaApi.sk_codec_get_origin (Handle); }
 		}
