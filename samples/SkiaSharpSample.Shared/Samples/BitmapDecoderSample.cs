@@ -57,7 +57,7 @@ namespace SkiaSharpSample.Samples
 						canvas.DrawText(string.Format("Pixels: {0} @ {1}b/px", bitmap.Pixels.Length, bitmap.BytesPerPixel), x, y, paint);
 						y += 20;
 
-						canvas.DrawText(string.Format("Encoding: {0} ({1}) @ {2}b/px", encodedInfo.Color, encodedInfo.Alpha, encodedInfo.BytesPerPixel), x, y, paint);
+						canvas.DrawText(string.Format("Encoding: {0} ({1}) @ {2}-bit color", encodedInfo.Color, encodedInfo.Alpha, encodedInfo.BitsPerComponent), x, y, paint);
 					}
 				}
 			}

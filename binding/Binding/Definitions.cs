@@ -2985,7 +2985,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		public SKEncodedInfoColor Color => color;
 		public SKEncodedInfoAlpha Alpha => alpha;
 		public byte BitsPerComponent => bitsPerComponent;
-		public byte PitsPerPixel {
+		public byte BitsPerPixel {
 			get {
 				switch (color) {
 					case SKEncodedInfoColor.Gray:
