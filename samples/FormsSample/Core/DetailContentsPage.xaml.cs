@@ -23,12 +23,25 @@ namespace SkiaSharpSample.FormsSample
 			get { return sample; }
 			set
 			{
+				// clean up the old sample
+				if (sample != null)
+				{
+					sample.RefreshRequested -= OnRefreshRequested;
+					sample.Destroy();
+				}
+
 				sample = value;
+				Title = sample?.Title;
 
-				sample.Init(RefreshSamples);
+				// prepare the sample
+				if (sample != null)
+				{
+					sample.RefreshRequested += OnRefreshRequested;
+					sample.Init();
+				}
 
-				Title = sample.Title;
-				RefreshSamples();
+				// refresh the view
+				OnRefreshRequested(null, null);
 			}
 		}
 
@@ -118,6 +131,11 @@ namespace SkiaSharpSample.FormsSample
 				var padding = 10 * scale;
 				canvas.DrawText(text, padding, canvasSize.Height - padding, paint);
 			}
+		}
+
+		private void OnRefreshRequested(object sender, EventArgs e)
+		{
+			RefreshSamples();
 		}
 
 		private void RefreshSamples()
