@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.ApplicationModel;
 using Windows.Graphics.Display;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
@@ -76,6 +77,11 @@ namespace SkiaSharp.Views.UWP
 		}
 
 		public void Invalidate()
+		{
+			var action = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate);
+		}
+
+		private void DoInvalidate()
 		{
 			if (designMode)
 				return;
