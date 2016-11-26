@@ -30,6 +30,47 @@ namespace SkiaSharp.Tests
 				}
 			}
 		}
+		
+		[Test]
+		public void GetGifFrames ()
+		{
+			const int FrameCount = 16;
+
+			var stream = new SKFileStream (Path.Combine (PathToImages, "animated-heart.gif"));
+			using (var codec = SKCodec.Create (stream)) {
+				Assert.AreEqual (-1, codec.RepetitionCount);
+
+				var frameInfos = codec.FrameInfo;
+				Assert.AreEqual (FrameCount, frameInfos.Length);
+
+				Assert.AreEqual (-1, frameInfos [0].RequiredFrame);
+
+				var cachedFrames = new SKBitmap [FrameCount];
+				var info = new SKImageInfo (codec.Info.Width, codec.Info.Height);
+
+				var decode = new Action<SKBitmap, bool, int> ((bm, cached, index) => {
+					if (cached) {
+						var requiredFrame = frameInfos [index].RequiredFrame;
+						if (requiredFrame != -1) {
+							Assert.IsTrue (cachedFrames [requiredFrame].CopyTo (bm));
+						}
+					}
+					var opts = new SKCodecOptions (index, cached);
+					var result = codec.GetPixels (info, bm.GetPixels (), opts);
+					Assert.AreEqual (SKCodecResult.Success, result);
+				});
+
+				for (var i = 0; i < FrameCount; i++) {
+					var cachedFrame = cachedFrames [i] = new SKBitmap (info);
+					decode (cachedFrame, true, i);
+
+					var uncachedFrame = new SKBitmap (info);
+					decode (uncachedFrame, false, i);
+
+					CollectionAssert.AreEqual (cachedFrame.Bytes, uncachedFrame.Bytes);
+				}
+			}
+		}
 
 		[Test]
 		public void GetEncodedInfo ()

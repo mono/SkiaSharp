@@ -925,11 +925,33 @@ namespace SkiaSharp
 			FrameIndex = 0;
 			HasPriorFrame = false;
 		}
+		public SKCodecOptions (int frameIndex, bool hasPriorFrame) {
+			ZeroInitialized = SKZeroInitialized.No;
+			Subset = null;
+			FrameIndex = frameIndex;
+			HasPriorFrame = hasPriorFrame;
+		}
 		public SKZeroInitialized ZeroInitialized { get; set; }
 		public SKRectI? Subset { get; set; }
 		public bool HasSubset => Subset != null;
 		public int FrameIndex { get; set; }
 		public bool HasPriorFrame { get; set; }
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct SKCodecFrameInfo {
+		private IntPtr requiredFrame;
+		private IntPtr duration;
+
+		public int RequiredFrame {
+			get { return (int)requiredFrame; }
+			set { requiredFrame = (IntPtr)value; }
+		}
+
+		public int Duration {
+			get { return (int)duration; }
+			set { duration = (IntPtr)value; }
+		}
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -2922,7 +2944,6 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 					break;
 				default:
 					throw new ArgumentOutOfRangeException (nameof (color));
-					break;
 			}
 		}
 
