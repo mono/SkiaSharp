@@ -40,7 +40,8 @@ namespace SkiaSharpSample.Samples
 
 			cts = new CancellationTokenSource();
 
-			scheduler = TaskScheduler.Current;
+			scheduler = TaskScheduler.FromCurrentSynchronizationContext();
+
 			var loop = Task.Run(async () =>
 			{
 				while (!cts.IsCancellationRequested)
