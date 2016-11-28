@@ -18,20 +18,29 @@ namespace SkiaSharpSample.Samples
 		{
 			canvas.DrawColor(SKColors.White);
 
-			SKPoint3 lightPos = new SKPoint3(-700, -700, 2800);
-			float lightWidth = 2800;
-			float ambientAlpha = 0.25f;
-			float spotAlpha = 0.25f;
+			var rect = SKRect.Create(width / 3, height / 3, width / 3, height / 3);
+
+			float occluderHeight = 2.0f;
+			SKPoint3 lightPos = new SKPoint3(0, 0, 50);
+			float lightWidth = 500;
+			float ambientAlpha = 0.75f;
+			float spotAlpha = 0.75f;
 
 			using (var paint = new SKPaint())
-			using (var filter = SKMaskFilter.CreateShadow(2.0f, lightPos, lightWidth, ambientAlpha, spotAlpha))
+			using (var filter = SKMaskFilter.CreateShadow(occluderHeight, lightPos, lightWidth, ambientAlpha, spotAlpha))
 			{
 				paint.IsAntialias = true;
-				paint.TextSize = 120;
-				paint.TextAlign = SKTextAlign.Center;
+				paint.Color = SKColors.Black;
 				paint.MaskFilter = filter;
 
-				canvas.DrawText("SkiaSharp", width / 2f, height / 2f, paint);
+				// draw the shadow
+				canvas.DrawRect(rect, paint);
+
+				paint.Color = SKColors.DarkBlue;
+				paint.MaskFilter = null;
+
+				// draw the rectangle
+				canvas.DrawRect(rect, paint);
 			}
 		}
 	}
