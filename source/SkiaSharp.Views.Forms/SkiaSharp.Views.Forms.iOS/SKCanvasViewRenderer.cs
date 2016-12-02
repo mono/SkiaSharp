@@ -86,6 +86,9 @@ namespace SkiaSharp.Views.Forms
 				UserInteractionEnabled = false;
 
 				this.controller = controller;
+
+				// Force the opacity to false for consistency with the other platforms
+				Opaque = false;
 			}
 
 			public override void DrawInSurface(SKSurface surface, SKImageInfo info)
