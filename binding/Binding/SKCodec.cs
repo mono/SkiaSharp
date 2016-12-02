@@ -41,6 +41,14 @@ namespace SkiaSharp
 			}
 		}
 
+		public SKEncodedInfo EncodedInfo {
+			get {
+				SKEncodedInfo info;
+				SkiaApi.sk_codec_get_encodedinfo (Handle, out info);
+				return info;
+			}
+		}
+
 		public SKCodecOrigin Origin {
 			get { return SkiaApi.sk_codec_get_origin (Handle); }
 		}
@@ -72,6 +80,19 @@ namespace SkiaSharp
 			}
 		}
 
+		public int RepetitionCount => SkiaApi.sk_codec_get_repetition_count (Handle);
+
+		public int FrameCount => SkiaApi.sk_codec_get_frame_count (Handle);
+
+		public SKCodecFrameInfo[] FrameInfo {
+			get {
+				var length = SkiaApi.sk_codec_get_frame_count (Handle);
+				var info = new SKCodecFrameInfo [length];
+				SkiaApi.sk_codec_get_frame_info (Handle, info);
+				return info;
+			}
+		}
+
 		public SKCodecResult GetPixels (out byte[] pixels)
 		{
 			return GetPixels (Info, out pixels);
@@ -99,6 +120,12 @@ namespace SkiaSharp
 			}
 		}
 
+		public unsafe SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options)
+		{
+			var colorTableCount = 0;
+			return GetPixels (info, pixels, rowBytes, options, IntPtr.Zero, ref colorTableCount);
+		}
+
 		public unsafe SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
 		{
 			if (pixels == IntPtr.Zero)
@@ -106,13 +133,21 @@ namespace SkiaSharp
 
 			var nativeOptions = new SKCodecOptionsInternal {
 				fZeroInitialized = options.ZeroInitialized,
-				fSubset = null
+				fSubset = null,
+				fFrameIndex = (IntPtr) options.FrameIndex,
+				fHasPriorFrame = options.HasPriorFrame
 			};
 			if (options.HasSubset) {
 				var subset = options.Subset.Value;
 				nativeOptions.fSubset = &subset;
 			}
 			return SkiaApi.sk_codec_get_pixels (Handle, ref info, pixels, (IntPtr)rowBytes, ref nativeOptions, colorTable, ref colorTableCount);
+		}
+
+		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options)
+		{
+			var colorTableCount = 0;
+			return GetPixels (info, pixels, options, IntPtr.Zero, ref colorTableCount);
 		}
 
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
@@ -153,7 +188,9 @@ namespace SkiaSharp
 
 			var nativeOptions = new SKCodecOptionsInternal {
 				fZeroInitialized = options.ZeroInitialized,
-				fSubset = null
+				fSubset = null,
+				fFrameIndex = (IntPtr) options.FrameIndex,
+				fHasPriorFrame = options.HasPriorFrame
 			};
 			if (options.HasSubset) {
 				var subset = options.Subset.Value;

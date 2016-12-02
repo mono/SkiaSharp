@@ -176,20 +176,31 @@ namespace SkiaSharpSample.WPFSample
 
 		private void SetSample(SampleBase newSample)
 		{
+			// clean up the old sample
+			if (sample != null)
+			{
+				sample.RefreshRequested -= OnRefreshRequested;
+				sample.Destroy();
+			}
+
 			sample = newSample;
 
 			// set the title
 			Title = sample?.Title ?? "SkiaSharp for WPF";
 
 			// prepare the sample
-			sample?.Init(() =>
+			if (sample != null)
 			{
-				// refresh the view
-				canvas.InvalidateVisual();
-				glhost.Child?.Invalidate();
-			});
+				sample.RefreshRequested += OnRefreshRequested;
+				sample.Init();
+			}
 
 			// refresh the view
+			OnRefreshRequested(null, null);
+		}
+
+		private void OnRefreshRequested(object sender, EventArgs e)
+		{
 			canvas.InvalidateVisual();
 			glhost.Child?.Invalidate();
 		}

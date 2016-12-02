@@ -536,7 +536,7 @@ namespace SkiaSharp
 		RgbaF16
 	}
 
-	[Obsolete("May be removed in the next version.")]
+	[Obsolete ("May be removed in the next version.")]
 	public enum SKColorProfileType {
 		Linear,
 		SRGB
@@ -557,6 +557,7 @@ namespace SkiaSharp
 		Normal, Solid, Outer, Inner
 	}
 
+	[Obsolete ("Use SKBlendMode instead. May be removed in the next version.")]
 	public enum SKXferMode {
 		Clear,
 		Src,
@@ -894,6 +895,9 @@ namespace SkiaSharp
 	internal unsafe struct SKCodecOptionsInternal {
 		public SKZeroInitialized fZeroInitialized;
 		public SKRectI* fSubset;
+		public IntPtr fFrameIndex;
+		[MarshalAs(UnmanagedType.I1)]
+		public bool fHasPriorFrame;
 	}
 
 	public struct SKCodecOptions {
@@ -906,18 +910,48 @@ namespace SkiaSharp
 		public SKCodecOptions (SKZeroInitialized zeroInitialized) {
 			ZeroInitialized = zeroInitialized;
 			Subset = null;
+			FrameIndex = 0;
+			HasPriorFrame = false;
 		}
 		public SKCodecOptions (SKZeroInitialized zeroInitialized, SKRectI subset) {
 			ZeroInitialized = zeroInitialized;
 			Subset = subset;
+			FrameIndex = 0;
+			HasPriorFrame = false;
 		}
 		public SKCodecOptions (SKRectI subset) {
 			ZeroInitialized = SKZeroInitialized.No;
 			Subset = subset;
+			FrameIndex = 0;
+			HasPriorFrame = false;
+		}
+		public SKCodecOptions (int frameIndex, bool hasPriorFrame) {
+			ZeroInitialized = SKZeroInitialized.No;
+			Subset = null;
+			FrameIndex = frameIndex;
+			HasPriorFrame = hasPriorFrame;
 		}
 		public SKZeroInitialized ZeroInitialized { get; set; }
 		public SKRectI? Subset { get; set; }
 		public bool HasSubset => Subset != null;
+		public int FrameIndex { get; set; }
+		public bool HasPriorFrame { get; set; }
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct SKCodecFrameInfo {
+		private IntPtr requiredFrame;
+		private IntPtr duration;
+
+		public int RequiredFrame {
+			get { return (int)requiredFrame; }
+			set { requiredFrame = (IntPtr)value; }
+		}
+
+		public int Duration {
+			get { return (int)duration; }
+			set { duration = (IntPtr)value; }
+		}
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -2873,5 +2907,151 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		public SKRectI? Bounds { get; set; }
 	}
 
+	[Flags]
+	public enum SKShadowMaskFilterShadowFlags {
+		None = 0x00,
+		TransparentOccluder = 0x01,
+		LargerUmbra = 0x02,
+		GaussianEdge = 0x04,
+		All = 0x07
+	}
+
+	public struct SKEncodedInfo {
+		private SKEncodedInfoColor color;
+		private SKEncodedInfoAlpha alpha;
+		private byte bitsPerComponent;
+
+		public SKEncodedInfo (SKEncodedInfoColor color) {
+			this.color = color;
+			this.bitsPerComponent = 8;
+
+			switch (color) {
+				case SKEncodedInfoColor.Gray:
+				case SKEncodedInfoColor.Rgb:
+				case SKEncodedInfoColor.bgr:
+				case SKEncodedInfoColor.bgrx:
+				case SKEncodedInfoColor.Yuv:
+				case SKEncodedInfoColor.InvertedCmyk:
+				case SKEncodedInfoColor.Ycck:
+					this.alpha = SKEncodedInfoAlpha.Opaque;
+					break;
+				case SKEncodedInfoColor.GrayAlpha:
+				case SKEncodedInfoColor.Palette:
+				case SKEncodedInfoColor.Rgba:
+				case SKEncodedInfoColor.bgra:
+				case SKEncodedInfoColor.Yuva:
+					this.alpha = SKEncodedInfoAlpha.Unpremul;
+					break;
+				default:
+					throw new ArgumentOutOfRangeException (nameof (color));
+			}
+		}
+
+		public SKEncodedInfo (SKEncodedInfoColor color, SKEncodedInfoAlpha alpha, byte bitsPerComponent) {
+			if (bitsPerComponent != 1 && bitsPerComponent != 2 && bitsPerComponent != 4 && bitsPerComponent != 8 && bitsPerComponent != 16) {
+				throw new ArgumentException ("The bits per component must be 1, 2, 4, 8 or 16.", nameof (bitsPerComponent));
+			}
+
+			switch (color) {
+				case SKEncodedInfoColor.Gray:
+					if (alpha != SKEncodedInfoAlpha.Opaque)
+						throw new ArgumentException ("The alpha must be opaque.", nameof (alpha));
+					break;
+				case SKEncodedInfoColor.GrayAlpha:
+					if (alpha == SKEncodedInfoAlpha.Opaque)
+						throw new ArgumentException ("The alpha must not be opaque.", nameof (alpha));
+					break;
+				case SKEncodedInfoColor.Palette:
+					if (bitsPerComponent == 16)
+						throw new ArgumentException ("The bits per component must be 1, 2, 4 or 8.", nameof (bitsPerComponent));
+					break;
+				case SKEncodedInfoColor.Rgb:
+				case SKEncodedInfoColor.bgr:
+				case SKEncodedInfoColor.bgrx:
+					if (alpha != SKEncodedInfoAlpha.Opaque)
+						throw new ArgumentException ("The alpha must be opaque.", nameof (alpha));
+					if (bitsPerComponent < 8)
+						throw new ArgumentException ("The bits per component must be 8 or 16.", nameof (bitsPerComponent));
+					break;
+				case SKEncodedInfoColor.Yuv:
+				case SKEncodedInfoColor.InvertedCmyk:
+				case SKEncodedInfoColor.Ycck:
+					if (alpha != SKEncodedInfoAlpha.Opaque)
+						throw new ArgumentException ("The alpha must be opaque.", nameof (alpha));
+					if (bitsPerComponent != 8)
+						throw new ArgumentException ("The bits per component must be 8.", nameof (bitsPerComponent));
+					break;
+				case SKEncodedInfoColor.Rgba:
+					if (alpha == SKEncodedInfoAlpha.Opaque)
+						throw new ArgumentException ("The alpha must not be opaque.", nameof (alpha));
+					if (bitsPerComponent < 8)
+						throw new ArgumentException ("The bits per component must be 8 or 16.", nameof (bitsPerComponent));
+					break;
+				case SKEncodedInfoColor.bgra:
+				case SKEncodedInfoColor.Yuva:
+					if (alpha == SKEncodedInfoAlpha.Opaque)
+						throw new ArgumentException ("The alpha must not be opaque.", nameof (alpha));
+					if (bitsPerComponent != 8)
+						throw new ArgumentException ("The bits per component must be 8.", nameof (bitsPerComponent));
+					break;
+				default:
+					throw new ArgumentOutOfRangeException (nameof (color));
+			}
+
+			this.color = color;
+			this.alpha = alpha;
+			this.bitsPerComponent = bitsPerComponent;
+		}
+
+		public SKEncodedInfoColor Color => color;
+		public SKEncodedInfoAlpha Alpha => alpha;
+		public byte BitsPerComponent => bitsPerComponent;
+		public byte BitsPerPixel {
+			get {
+				switch (color) {
+					case SKEncodedInfoColor.Gray:
+						return bitsPerComponent;
+					case SKEncodedInfoColor.GrayAlpha:
+						return (byte)(2 * bitsPerComponent);
+					case SKEncodedInfoColor.Palette:
+						return bitsPerComponent;
+					case SKEncodedInfoColor.Rgb:
+					case SKEncodedInfoColor.bgr:
+					case SKEncodedInfoColor.Yuv:
+						return (byte)(3 * bitsPerComponent);
+					case SKEncodedInfoColor.Rgba:
+					case SKEncodedInfoColor.bgra:
+					case SKEncodedInfoColor.bgrx:
+					case SKEncodedInfoColor.Yuva:
+					case SKEncodedInfoColor.InvertedCmyk:
+					case SKEncodedInfoColor.Ycck:
+						return (byte)(4 * bitsPerComponent);
+					default:
+						return (byte)0;
+				}
+			}
+		}
+	}
+
+	public enum SKEncodedInfoAlpha {
+		Opaque,
+		Unpremul,
+		Binary,
+	}
+
+	public enum SKEncodedInfoColor {
+		Gray,
+		GrayAlpha,
+		Palette,
+		Rgb,
+		Rgba,
+		bgr,
+		bgrx,
+		bgra,
+		Yuv,
+		Yuva,
+		InvertedCmyk,
+		Ycck,
+	}
 }
 

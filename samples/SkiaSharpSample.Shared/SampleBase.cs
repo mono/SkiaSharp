@@ -36,7 +36,7 @@ namespace SkiaSharpSample
 
 		protected abstract void OnDrawSample(SKCanvas canvas, int width, int height);
 
-		public async void Init(Action callback = null)
+		public async void Init()
 		{
 			// reset the matrix for the new sample
 			Matrix = SKMatrix.MakeIdentity();
@@ -47,13 +47,27 @@ namespace SkiaSharpSample
 
 				IsInitialized = true;
 
-				callback?.Invoke();
+				Refresh();
+			}
+		}
+
+		public void Destroy()
+		{
+			if (IsInitialized)
+			{
+				OnDestroy();
+
+				IsInitialized = false;
 			}
 		}
 
 		protected virtual Task OnInit()
 		{
 			return Task.FromResult(true);
+		}
+
+		protected virtual void OnDestroy()
+		{
 		}
 
 		public void Tap()
@@ -119,6 +133,13 @@ namespace SkiaSharpSample
 			return
 				Title.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) != -1 ||
 				Description.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) != -1;
+		}
+
+		public event EventHandler RefreshRequested;
+
+		protected void Refresh()
+		{
+			RefreshRequested?.Invoke(this, EventArgs.Empty);
 		}
 	}
 

@@ -30,7 +30,7 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing)
 		{
 			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_canvas_unref (Handle);
+				SkiaApi.sk_canvas_destroy (Handle);
 			}
 
 			base.Dispose (disposing);

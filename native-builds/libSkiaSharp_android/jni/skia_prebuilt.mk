@@ -118,8 +118,8 @@ LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libwebp_utils.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := libgiflib
-LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libgiflib.a
+LOCAL_MODULE := libsksl
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libsksl.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)

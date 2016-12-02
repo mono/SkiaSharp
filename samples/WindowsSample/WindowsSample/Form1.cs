@@ -41,7 +41,6 @@ namespace SkiaSharpSample.WindowsSample
 				{
 					// create the sample item
 					var menuItem = new ToolStripMenuItem(sample.Title, null, OnSampleSelected) { Tag = sample };
-					menuItem.Click += OnSampleSelected;
 					menu.DropDownItems.Add(menuItem);
 				}
 				// add to the menu bar
@@ -157,20 +156,31 @@ namespace SkiaSharpSample.WindowsSample
 
 		private void SetSample(SampleBase newSample)
 		{
+			// clean up the old sample
+			if (sample != null)
+			{
+				sample.RefreshRequested -= OnRefreshRequested;
+				sample.Destroy();
+			}
+
 			sample = newSample;
 
 			// set the title
 			Text = sample?.Title ?? "SkiaSharp for Windows";
 
 			// prepare the sample
-			sample?.Init(() =>
+			if (sample != null)
 			{
-				// refresh the view
-				canvas.Invalidate();
-				glview.Invalidate();
-			});
+				sample.RefreshRequested += OnRefreshRequested;
+				sample.Init();
+			}
 
 			// refresh the view
+			OnRefreshRequested(null, null);
+		}
+
+		private void OnRefreshRequested(object sender, EventArgs e)
+		{
 			canvas.Invalidate();
 			glview.Invalidate();
 		}

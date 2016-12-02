@@ -18,6 +18,13 @@ namespace SkiaSharpSample.MacSample
 
 		public void SetSample(SampleBase newSample)
 		{
+			// clean up the old sample
+			if (sample != null)
+			{
+				sample.RefreshRequested -= OnRefreshRequested;
+				sample.Destroy();
+			}
+
 			sample = newSample;
 
 			// set the title
@@ -30,14 +37,18 @@ namespace SkiaSharpSample.MacSample
 			}
 
 			// prepare the sample
-			sample?.Init(() =>
+			if (sample != null)
 			{
-				// refresh the view
-				canvas.SetNeedsDisplayInRect(canvas.Bounds);
-				glview.SetNeedsDisplayInRect(glview.Bounds);
-			});
+				sample.RefreshRequested += OnRefreshRequested;
+				sample.Init();
+			}
 
 			// refresh the view
+			OnRefreshRequested(null, null);
+		}
+
+		private void OnRefreshRequested(object sender, EventArgs e)
+		{
 			canvas.SetNeedsDisplayInRect(canvas.Bounds);
 			glview.SetNeedsDisplayInRect(glview.Bounds);
 		}

@@ -259,7 +259,7 @@ Task ("externals-ios")
 {
     var buildArch = new Action<string, string> ((sdk, arch) => {
         XCodeBuild (new XCodeBuildSettings {
-            Project = "native-builds/libSkiaSharp_ios/libSkiaSharp.xcodeproj",
+            Project = "native-builds/libSkiaSharp_ios/libSkiaSharp" + (arch.StartsWith ("arm") ? "_arm" : "_x86") + ".xcodeproj",
             Target = "libSkiaSharp",
             Sdk = sdk,
             Arch = arch,
@@ -303,7 +303,7 @@ Task ("externals-tvos")
 {
     var buildArch = new Action<string, string> ((sdk, arch) => {
         XCodeBuild (new XCodeBuildSettings {
-            Project = "native-builds/libSkiaSharp_tvos/libSkiaSharp.xcodeproj",
+            Project = "native-builds/libSkiaSharp_tvos/libSkiaSharp" + (arch.StartsWith ("arm") ? "_arm" : "_x86") + ".xcodeproj",
             Target = "libSkiaSharp",
             Sdk = sdk,
             Arch = arch,
