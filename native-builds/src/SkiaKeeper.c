@@ -18,6 +18,7 @@
 #include "sk_image.h"
 #include "sk_imagefilter.h"
 #include "sk_maskfilter.h"
+#include "sk_mask.h"
 #include "sk_matrix.h"
 #include "sk_paint.h"
 #include "sk_path.h"
@@ -54,6 +55,7 @@ void** KeepSkiaCSymbols ()
         (void*)sk_colortype_get_default_8888,
         (void*)sk_bitmap_new,
         (void*)sk_canvas_clear,
+        (void*)sk_mask_new,
         (void*)sk_colorfilter_unref,
         (void*)sk_data_new_from_file,
         (void*)sk_image_encode_specific,

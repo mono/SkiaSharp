@@ -50,6 +50,7 @@ using gr_context_t = System.IntPtr;
 using gr_glinterface_t = System.IntPtr;
 using sk_opbuilder_t = System.IntPtr;
 using sk_region_t = System.IntPtr;
+using sk_mask_t = System.IntPtr;
 
 namespace SkiaSharp
 {
@@ -1137,6 +1138,26 @@ namespace SkiaSharp
 		public extern static sk_colortable_t sk_bitmap_get_colortable(sk_bitmap_t cbitmap);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_bitmap_set_pixels(sk_bitmap_t cbitmap, IntPtr pixels, sk_colortable_t ctable);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_bitmap_blit_mask(sk_bitmap_t cbitmap, sk_mask_t cmask, ref SKRect clip, sk_paint_t cpaint);
+
+		// Masks
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_mask_t sk_mask_new(IntPtr pixels, SKMaskFormat format, UInt32 rowBytes, ref SKRectI bounds);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_mask_destructor(sk_mask_t cmask);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static IntPtr sk_mask_get_image(sk_mask_t cmask);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKRectI sk_mask_get_bounds(sk_mask_t cmask);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static IntPtr sk_mask_get_image_size(sk_mask_t cmask);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static UInt32 sk_mask_get_row_bytes(sk_mask_t cmask);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKMaskFormat sk_mask_get_format(sk_mask_t cmask);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static UInt32 sk_mask_get_pixel_color(sk_mask_t mask, int x, int y);
 
 		// Matrix
 

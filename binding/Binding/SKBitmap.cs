@@ -460,6 +460,11 @@ namespace SkiaSharp
 			}
 		}
 
+		public void ApplyMask(SKMask mask, SKRect clip, SKPaint paint)
+		{
+			SkiaApi.sk_bitmap_blit_mask(Handle, mask.Handle, ref clip, paint.Handle);
+		}
+
 		// internal proxy
 		#if __IOS__
 		[ObjCRuntime.MonoPInvokeCallback (typeof (SKBitmapReleaseDelegateInternal))]
