@@ -152,6 +152,7 @@ namespace SkiaSharp.Views.UWP
 
 		private void FreeBitmap(bool freeArray)
 		{
+		    Background = null;
 			if (bitmap != null)
 			{
 				bitmap = null;
