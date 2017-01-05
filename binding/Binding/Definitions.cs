@@ -2928,8 +2928,8 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			switch (color) {
 				case SKEncodedInfoColor.Gray:
 				case SKEncodedInfoColor.Rgb:
-				case SKEncodedInfoColor.bgr:
-				case SKEncodedInfoColor.bgrx:
+				case SKEncodedInfoColor.Bgr:
+				case SKEncodedInfoColor.Bgrx:
 				case SKEncodedInfoColor.Yuv:
 				case SKEncodedInfoColor.InvertedCmyk:
 				case SKEncodedInfoColor.Ycck:
@@ -2938,7 +2938,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 				case SKEncodedInfoColor.GrayAlpha:
 				case SKEncodedInfoColor.Palette:
 				case SKEncodedInfoColor.Rgba:
-				case SKEncodedInfoColor.bgra:
+				case SKEncodedInfoColor.Bgra:
 				case SKEncodedInfoColor.Yuva:
 					this.alpha = SKEncodedInfoAlpha.Unpremul;
 					break;
@@ -2966,8 +2966,8 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 						throw new ArgumentException ("The bits per component must be 1, 2, 4 or 8.", nameof (bitsPerComponent));
 					break;
 				case SKEncodedInfoColor.Rgb:
-				case SKEncodedInfoColor.bgr:
-				case SKEncodedInfoColor.bgrx:
+				case SKEncodedInfoColor.Bgr:
+				case SKEncodedInfoColor.Bgrx:
 					if (alpha != SKEncodedInfoAlpha.Opaque)
 						throw new ArgumentException ("The alpha must be opaque.", nameof (alpha));
 					if (bitsPerComponent < 8)
@@ -2987,7 +2987,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 					if (bitsPerComponent < 8)
 						throw new ArgumentException ("The bits per component must be 8 or 16.", nameof (bitsPerComponent));
 					break;
-				case SKEncodedInfoColor.bgra:
+				case SKEncodedInfoColor.Bgra:
 				case SKEncodedInfoColor.Yuva:
 					if (alpha == SKEncodedInfoAlpha.Opaque)
 						throw new ArgumentException ("The alpha must not be opaque.", nameof (alpha));
@@ -3016,12 +3016,12 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 					case SKEncodedInfoColor.Palette:
 						return bitsPerComponent;
 					case SKEncodedInfoColor.Rgb:
-					case SKEncodedInfoColor.bgr:
+					case SKEncodedInfoColor.Bgr:
 					case SKEncodedInfoColor.Yuv:
 						return (byte)(3 * bitsPerComponent);
 					case SKEncodedInfoColor.Rgba:
-					case SKEncodedInfoColor.bgra:
-					case SKEncodedInfoColor.bgrx:
+					case SKEncodedInfoColor.Bgra:
+					case SKEncodedInfoColor.Bgrx:
 					case SKEncodedInfoColor.Yuva:
 					case SKEncodedInfoColor.InvertedCmyk:
 					case SKEncodedInfoColor.Ycck:
@@ -3045,9 +3045,9 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		Palette,
 		Rgb,
 		Rgba,
-		bgr,
-		bgrx,
-		bgra,
+		Bgr,
+		Bgrx,
+		Bgra,
 		Yuv,
 		Yuva,
 		InvertedCmyk,
