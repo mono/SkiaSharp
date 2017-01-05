@@ -119,6 +119,62 @@
         </remarks>
       </Docs>
     </Member>
+    <Member MemberName="EncodedInfo">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKEncodedInfo EncodedInfo { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKEncodedInfo EncodedInfo" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKEncodedInfo</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the encoded image information from the codec.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FrameCount">
+      <MemberSignature Language="C#" Value="public int FrameCount { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance int32 FrameCount" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the number of frames in the encoded image.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>May require reading through the stream to determine info about the frames. As such, future decoding calls may require a rewind. For single-frame images, this will be zero.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FrameInfo">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKCodecFrameInfo[] FrameInfo { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKCodecFrameInfo[] FrameInfo" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKCodecFrameInfo[]</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets information about the frames in the encoded image.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>May require reading through the stream to determine info about the frames. As such, future decoding calls may require a rewind. For single-frame images, this will be an empty array.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="GetPixels">
       <MemberSignature Language="C#" Value="public SkiaSharp.SKCodecResult GetPixels (out byte[] pixels);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKCodecResult GetPixels(unsigned int8[] pixels) cil managed" />
@@ -234,6 +290,33 @@
       </Docs>
     </Member>
     <Member MemberName="GetPixels">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKCodecResult GetPixels (SkiaSharp.SKImageInfo info, IntPtr pixels, SkiaSharp.SKCodecOptions options);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKCodecResult GetPixels(valuetype SkiaSharp.SKImageInfo info, native int pixels, valuetype SkiaSharp.SKCodecOptions options) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="pixels" Type="System.IntPtr" />
+        <Parameter Name="options" Type="SkiaSharp.SKCodecOptions" />
+      </Parameters>
+      <Docs>
+        <param name="info">The description of the desired output format expected by the caller.</param>
+        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
+        <param name="options">The bitmap decoding options.</param>
+        <summary>Decode the bitmap into the specified memory block.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetPixels">
       <MemberSignature Language="C#" Value="public SkiaSharp.SKCodecResult GetPixels (SkiaSharp.SKImageInfo info, IntPtr pixels, SkiaSharp.SKColorTable colorTable, ref int colorTableCount);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKCodecResult GetPixels(valuetype SkiaSharp.SKImageInfo info, native int pixels, class SkiaSharp.SKColorTable colorTable, int32 colorTableCount) cil managed" />
       <MemberType>Method</MemberType>
@@ -264,6 +347,35 @@
           <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
           <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a <see cref="T:SkiaSharp.SKColorTable" />. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
           <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetPixels">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKCodecResult GetPixels (SkiaSharp.SKImageInfo info, IntPtr pixels, int rowBytes, SkiaSharp.SKCodecOptions options);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKCodecResult GetPixels(valuetype SkiaSharp.SKImageInfo info, native int pixels, int32 rowBytes, valuetype SkiaSharp.SKCodecOptions options) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="pixels" Type="System.IntPtr" />
+        <Parameter Name="rowBytes" Type="System.Int32" />
+        <Parameter Name="options" Type="SkiaSharp.SKCodecOptions" />
+      </Parameters>
+      <Docs>
+        <param name="info">The description of the desired output format expected by the caller.</param>
+        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
+        <param name="rowBytes">The number of bytes in a row, typically <see cref="P:SkiaSharp.SKImageInfo.RowBytes" />.</param>
+        <param name="options">The bitmap decoding options.</param>
+        <summary>Decode the bitmap into the specified memory block.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
         </remarks>
       </Docs>
     </Member>
@@ -624,6 +736,27 @@
         </value>
         <remarks>
           <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="RepetitionCount">
+      <MemberSignature Language="C#" Value="public int RepetitionCount { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance int32 RepetitionCount" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the number of times to repeat, if this image is animated.</summary>
+        <value>
+          <para />
+        </value>
+        <remarks>
+          <para>For infinite repetition of frames, this will be -1.</para>
+          <para>May require reading the stream to find the repetition count. As such, future decoding calls may require a rewind. For single-frame images, this will be 0.</para>
         </remarks>
       </Docs>
     </Member>

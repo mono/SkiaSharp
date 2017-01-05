@@ -82,6 +82,24 @@
         </remarks>
       </Docs>
     </Member>
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public SKCodecOptions (int frameIndex, bool hasPriorFrame);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig specialname rtspecialname instance void .ctor(int32 frameIndex, bool hasPriorFrame) cil managed" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters>
+        <Parameter Name="frameIndex" Type="System.Int32" />
+        <Parameter Name="hasPriorFrame" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="frameIndex">The frame to decode.</param>
+        <param name="hasPriorFrame">Whether the decode destination already contains the prior frame.</param>
+        <summary>Create a new instance of <see cref="T:SkiaSharp.SKCodecOptions" />.</summary>
+        <remarks>Only meaningful for multi-frame images.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="Default">
       <MemberSignature Language="C#" Value="public static readonly SkiaSharp.SKCodecOptions Default;" />
       <MemberSignature Language="ILAsm" Value=".field public static initonly valuetype SkiaSharp.SKCodecOptions Default" />
@@ -98,6 +116,42 @@
       <Docs>
         <summary>Gets the default options.</summary>
         <remarks>The default value is not zero-initialized and without a subset rectangle.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FrameIndex">
+      <MemberSignature Language="C#" Value="public int FrameIndex { get; set; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance int32 FrameIndex" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets or sets the frame to decode.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>Only meaningful for multi-frame images.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="HasPriorFrame">
+      <MemberSignature Language="C#" Value="public bool HasPriorFrame { get; set; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance bool HasPriorFrame" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets or sets a value indicating whether the decode destination already contains the prior frame.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>Only meaningful for multi-frame images.</remarks>
       </Docs>
     </Member>
     <Member MemberName="HasSubset">
