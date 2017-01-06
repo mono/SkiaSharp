@@ -37,7 +37,7 @@ namespace SkiaSharpSample.Samples
 			paint.Color = SKColors.LightGray;
 
 			// draw a rectangle
-			canvas.DrawRect(SKRect.Create(width, height), paint);
+			canvas.DrawRect(SKRect.Create(width + blockSize, height + blockSize), paint);
 		}
 	}
 }
