@@ -536,7 +536,17 @@ namespace SkiaSharp
 		RgbaF16
 	}
 
-	[Obsolete ("May be removed in the next version.")]
+	public enum SKResizeMode {
+		Box,
+		Triangle,
+		Lanczos3,
+		Hamming,
+		Mitchell,
+ 		FirstMethod = Box,
+ 		LastMethod = Mitchell
+	}
+
+	[Obsolete("May be removed in the next version.")]
 	public enum SKColorProfileType {
 		Linear,
 		SRGB
