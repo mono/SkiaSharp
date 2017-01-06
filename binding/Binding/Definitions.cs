@@ -3053,5 +3053,13 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		InvertedCmyk,
 		Ycck,
 	}
+
+	public enum SKMaskFormat {
+		BW_FORMAT,
+	 	ALPHA8_FORMAT,
+	 	THREE_D_FORMAT,          
+	 	ARGB32_FORMAT,
+	 	LCD16_FORMAT, 
+	};
 }
 
