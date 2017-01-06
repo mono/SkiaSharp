@@ -11,6 +11,8 @@ namespace SkiaSharp.Views.iOS
 namespace SkiaSharp.Views.Desktop
 #elif __MACOS__
 namespace SkiaSharp.Views.Mac
+#elif WINDOWS_UWP
+namespace SkiaSharp.Views.UWP
 #endif
 {
 	internal static class SKGLDrawable
