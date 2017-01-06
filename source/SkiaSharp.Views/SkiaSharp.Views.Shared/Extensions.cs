@@ -81,6 +81,7 @@ namespace SkiaSharp.Views.Mac
 			return new System.Drawing.Size(size.Width, size.Height);
 		}
 
+#if __ANDROID__ || __DESKTOP__ || __WPF__
 		// System.Drawing.Color
 
 		public static SKColor ToSKColor(this System.Drawing.Color color)
@@ -92,6 +93,8 @@ namespace SkiaSharp.Views.Mac
 		{
 			return System.Drawing.Color.FromArgb((int)(uint)color);
 		}
+#endif
+
 #endif
 	}
 }

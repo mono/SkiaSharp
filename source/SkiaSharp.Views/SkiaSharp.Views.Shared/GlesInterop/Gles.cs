@@ -1,10 +1,20 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace SkiaSharp.Views.GlesInterop
 {
 	internal static class Gles
 	{
+#if __MACOS__
+		private const string libGLESv2 = "/System/Library/Frameworks/OpenGL.framework/OpenGL";
+#elif __IOS__ || __TVOS__
+		private const string libGLESv2 = "/System/Library/Frameworks/OpenGLES.framework/OpenGLES";
+#elif __DESKTOP__ || __WPF__
+		private const string libGLESv2 = "opengl32.dll";
+#elif __ANDROID__
+		private const string libGLESv2 = "libGLESv2.so";
+#elif WINDOWS_UWP
 		private const string libGLESv2 = "libGLESv2.dll";
+#endif
 
 		public const int GL_FRAMEBUFFER_BINDING = 0x8CA6;
 		public const int GL_RENDERBUFFER_BINDING = 0x8CA7;
