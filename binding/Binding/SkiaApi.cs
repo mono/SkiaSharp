@@ -35,6 +35,7 @@ using sk_wstream_t = System.IntPtr;
 using sk_wstream_dynamicmemorystream_t = System.IntPtr;
 using sk_wstream_filestream_t = System.IntPtr;
 using sk_bitmap_t = System.IntPtr;
+using sk_pixmap_t = System.IntPtr;
 using sk_codec_t = System.IntPtr;
 using sk_imagefilter_croprect_t = System.IntPtr;
 using sk_imagefilter_t = System.IntPtr;
@@ -1129,6 +1130,9 @@ namespace SkiaSharp
 		public extern static bool sk_bitmap_install_pixels(sk_bitmap_t cbitmap, ref SKImageInfo cinfo, IntPtr pixels, IntPtr rowBytes, sk_colortable_t ctable, IntPtr releaseProc, IntPtr context);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_bitmap_install_pixels_with_pixmap(sk_bitmap_t cbitmap, sk_pixmap_t cpixmap);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_bitmap_try_alloc_pixels(sk_bitmap_t cbitmap, ref SKImageInfo requestedInfo, IntPtr rowBytes);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
@@ -1137,6 +1141,30 @@ namespace SkiaSharp
 		public extern static sk_colortable_t sk_bitmap_get_colortable(sk_bitmap_t cbitmap);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_bitmap_set_pixels(sk_bitmap_t cbitmap, IntPtr pixels, sk_colortable_t ctable);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_bitmap_peek_pixels(sk_bitmap_t cbitmap, sk_pixmap_t cpixmap);
+
+		// SkPixmap
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_pixmap_destructor(sk_pixmap_t cpixmap);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_pixmap_t sk_pixmap_new();
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_pixmap_t sk_pixmap_new_with_params(ref SKImageInfo cinfo, IntPtr addr, IntPtr rowBytes, sk_colortable_t ctable);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_pixmap_reset(sk_pixmap_t cpixmap);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_pixmap_reset_with_params(sk_pixmap_t cpixmap, ref SKImageInfo cinfo, IntPtr addr, IntPtr rowBytes, sk_colortable_t ctable);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_pixmap_get_info(sk_pixmap_t cpixmap, out SKImageInfo cinfo);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static IntPtr sk_pixmap_get_row_bytes(sk_pixmap_t cpixmap);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static IntPtr sk_pixmap_get_pixels(sk_pixmap_t cpixmap);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_colortable_t sk_pixmap_get_colortable(sk_pixmap_t cpixmap);
 
 		// Matrix
 

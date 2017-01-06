@@ -460,6 +460,23 @@ namespace SkiaSharp
 			}
 		}
 
+		public bool InstallPixels (SKPixmap pixmap)
+		{
+			return SkiaApi.sk_bitmap_install_pixels_with_pixmap (Handle, pixmap.Handle);
+		}
+
+		public SKPixmap PeekPixels ()
+		{
+			SKPixmap pixmap = new SKPixmap ();
+			var result = SkiaApi.sk_bitmap_peek_pixels (Handle, pixmap.Handle);
+			if (result) {
+				return pixmap;
+			} else {
+				pixmap.Dispose ();
+				return null;
+			}
+		}
+
 		// internal proxy
 		#if __IOS__
 		[ObjCRuntime.MonoPInvokeCallback (typeof (SKBitmapReleaseDelegateInternal))]

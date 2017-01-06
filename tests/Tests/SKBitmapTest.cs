@@ -39,5 +39,25 @@ namespace SkiaSharp.Tests
 
 			Marshal.FreeCoTaskMem(pixels);
 		}
+
+		[Test]
+		public void BitmapAndPixmapAreValid()
+		{
+			var info = new SKImageInfo(10, 10);
+			using (var bitmap = new SKBitmap(info)) {
+				Assert.AreEqual(10, bitmap.Width);
+				Assert.AreEqual(10, bitmap.Height);
+
+				var pixmap = bitmap.PeekPixels();
+				Assert.IsNotNull(pixmap);
+
+				Assert.AreEqual(10, pixmap.Width);
+				Assert.AreEqual(10, pixmap.Height);
+
+				Assert.IsTrue(bitmap.GetPixels() != IntPtr.Zero);
+				Assert.IsTrue(pixmap.GetPixels() != IntPtr.Zero);
+				Assert.AreEqual(bitmap.GetPixels(), pixmap.GetPixels());
+			}
+		}
 	}
 }
