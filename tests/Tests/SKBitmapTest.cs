@@ -59,5 +59,29 @@ namespace SkiaSharp.Tests
 				Assert.AreEqual(bitmap.GetPixels(), pixmap.GetPixels());
 			}
 		}
+
+		[Test]
+		public void BitmapResizes()
+		{
+			var srcInfo = new SKImageInfo(200, 200);
+			var dstInfo = new SKImageInfo(100, 100);
+
+			var srcBmp = new SKBitmap(srcInfo);
+
+			using (var canvas = new SKCanvas(srcBmp))
+			using (var paint = new SKPaint { Color = SKColors.Green }) {
+				canvas.Clear(SKColors.Blue);
+				canvas.DrawRect(new SKRect(0, 0, 100, 200), paint);
+			}
+
+			Assert.AreEqual(SKColors.Green, srcBmp.GetPixel(75, 75));
+			Assert.AreEqual(SKColors.Blue, srcBmp.GetPixel(175, 175));
+
+			var dstBmp = srcBmp.Resize(dstInfo, SKBitmapResizeMethod.Mitchell);
+			Assert.IsNotNull(dstBmp);
+
+			Assert.AreEqual(SKColors.Green, dstBmp.GetPixel(25, 25));
+			Assert.AreEqual(SKColors.Blue, dstBmp.GetPixel(75, 75));
+		}
 	}
 }

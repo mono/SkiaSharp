@@ -477,6 +477,31 @@ namespace SkiaSharp
 			}
 		}
 
+		public SKBitmap Resize (SKImageInfo info, SKBitmapResizeMethod method)
+		{
+			var dst = new SKBitmap (info);
+			var result = Resize (dst, this, method);
+			if (result) {
+				return dst;
+			} else {
+				dst.Dispose ();
+				return null;
+			}
+		}
+
+		public bool Resize (SKBitmap dst, SKBitmapResizeMethod method)
+		{
+			return Resize (dst, this, method);
+		}
+
+		public static bool Resize (SKBitmap dst, SKBitmap src, SKBitmapResizeMethod method)
+		{
+			using (var srcPix = src.PeekPixels ())
+			using (var dstPix = dst.PeekPixels ()) {
+				return SKPixmap.Resize (dstPix, srcPix, method);// && dst.InstallPixels (dstPix); 
+			}
+		}
+
 		// internal proxy
 		#if __IOS__
 		[ObjCRuntime.MonoPInvokeCallback (typeof (SKBitmapReleaseDelegateInternal))]

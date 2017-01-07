@@ -98,5 +98,10 @@ namespace SkiaSharp
 		public SKColorTable ColorTable {
 			get { return GetObject<SKColorTable> (SkiaApi.sk_pixmap_get_colortable (Handle)); }
 		}
+
+		public static bool Resize (SKPixmap dst, SKPixmap src, SKBitmapResizeMethod method)
+		{
+			return SkiaApi.sk_bitmapscaler_resize (dst.Handle, src.Handle, method);
+		}
 	}
 }

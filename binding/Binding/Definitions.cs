@@ -635,6 +635,14 @@ namespace SkiaSharp
 		BgrVertical
 	}
 
+	public enum SKBitmapResizeMethod {
+		Box,
+		Triangle,
+		Lanczos3,
+		Hamming,
+		Mitchell
+	}
+
 	[Flags]
 	public enum SKSurfacePropsFlags {
 		UseDeviceIndependentFonts = 1 << 0,
