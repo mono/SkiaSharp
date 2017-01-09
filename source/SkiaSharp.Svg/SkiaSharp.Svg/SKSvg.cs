@@ -139,15 +139,19 @@ namespace SkiaSharp
 
 		private void ReadElement(XElement e, SKCanvas canvas, SKPaint stroke, SKPaint fill)
 		{
-			ReadPaints(e, ref stroke, ref fill);
-
 			// transform matrix
 			var transform = ReadTransform(e.Attribute("transform")?.Value ?? string.Empty);
 			canvas.Save();
 			canvas.Concat(ref transform);
 
-			// SVG elements
+			// SVG element
 			var elementName = e.Name.LocalName;
+			var isGroup = elementName == "g";
+
+			// read style
+			var style = ReadPaints(e, ref stroke, ref fill, isGroup);
+
+			// parse elements
 			switch (elementName)
 			{
 				case "text":
@@ -240,10 +244,25 @@ namespace SkiaSharp
 				case "g":
 					if (e.HasElements)
 					{
+						// get current group opacity
+						float groupOpacity = ReadOpacity(style);
+						if (groupOpacity != 1.0f)
+						{
+							var opacity = (byte)(255 * groupOpacity);
+							var opacityPaint = new SKPaint { Color = SKColors.Black.WithAlpha(opacity) };
+
+							// apply the opacity
+							canvas.SaveLayer(opacityPaint);
+						}
+
 						foreach (var gElement in e.Elements())
 						{
 							ReadElement(gElement, canvas, stroke?.Clone(), fill?.Clone());
 						}
+
+						// restore state
+						if (groupOpacity != 1.0f)
+							canvas.Restore();
 					}
 					break;
 				case "use":
@@ -556,13 +575,18 @@ namespace SkiaSharp
 			return dic;
 		}
 
-		private void ReadPaints(XElement e, ref SKPaint stroke, ref SKPaint fill)
+		private Dictionary<string, string> ReadPaints(XElement e, ref SKPaint stroke, ref SKPaint fill, bool isGroup)
 		{
-			ReadPaints(ReadStyle(e), ref stroke, ref fill);
+			var style = ReadStyle(e);
+			ReadPaints(style, ref stroke, ref fill, isGroup);
+			return style;
 		}
 
-		private void ReadPaints(Dictionary<string, string> style, ref SKPaint strokePaint, ref SKPaint fillPaint)
+		private void ReadPaints(Dictionary<string, string> style, ref SKPaint strokePaint, ref SKPaint fillPaint, bool isGroup)
 		{
+			// get current element opacity, but ignore for groups (special case)
+			float elementOpacity = isGroup ? 1.0f : ReadOpacity(style);
+
 			// stroke
 			var stroke = GetString(style, "stroke").Trim();
 			if (stroke.Equals("none", StringComparison.OrdinalIgnoreCase))
@@ -606,6 +630,11 @@ namespace SkiaSharp
 					if (strokePaint == null)
 						strokePaint = CreatePaint(true);
 					strokePaint.Color = strokePaint.Color.WithAlpha((byte)(ReadNumber(strokeOpacity) * 255));
+				}
+
+				if (strokePaint != null)
+				{
+					strokePaint.Color = strokePaint.Color.WithAlpha((byte)(strokePaint.Color.Alpha * elementOpacity));
 				}
 			}
 
@@ -677,6 +706,11 @@ namespace SkiaSharp
 						fillPaint = CreatePaint();
 
 					fillPaint.Color = fillPaint.Color.WithAlpha((byte)(ReadNumber(fillOpacity) * 255));
+				}
+
+				if (fillPaint != null)
+				{
+					fillPaint.Color = fillPaint.Color.WithAlpha((byte)(fillPaint.Color.Alpha * elementOpacity));
 				}
 			}
 		}
@@ -954,6 +988,22 @@ namespace SkiaSharp
 			}
 
 			return stops;
+		}
+
+		private float ReadOpacity(Dictionary<string, string> style)
+		{
+			return Math.Min(Math.Max(0.0f, ReadNumber(style, "opacity", 1.0f)), 1.0f);
+		}
+
+		private float ReadNumber(Dictionary<string, string> style, string key, float defaultValue)
+		{
+			float value = defaultValue;
+			string strValue;
+			if (style.TryGetValue(key, out strValue))
+			{
+				value = ReadNumber(strValue);
+			}
+			return value;
 		}
 
 		private float ReadNumber(string raw)
