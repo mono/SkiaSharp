@@ -19,7 +19,7 @@ namespace SkiaSharpSample.Samples
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 		{
-			var modes = Enum.GetValues(typeof(SKXferMode)).Cast<SKXferMode>().ToArray();
+			var modes = Enum.GetValues(typeof(SKBlendMode)).Cast<SKBlendMode>().ToArray();
 
 			var cols = width < height ? 3 : 5;
 			var rows = (modes.Length - 1) / cols + 1;
@@ -73,7 +73,7 @@ namespace SkiaSharpSample.Samples
 						canvas.Clear(SKColors.Transparent);
 						canvas.DrawPaint(dst);
 
-						src.XferMode = modes[i];
+						src.BlendMode = modes[i];
 						canvas.DrawPaint(src);
 						canvas.DrawRect(rect, stroke);
 

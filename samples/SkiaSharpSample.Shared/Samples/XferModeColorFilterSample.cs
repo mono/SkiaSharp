@@ -21,7 +21,7 @@ namespace SkiaSharpSample.Samples
 			// load the image from the embedded resource stream
 			using (var stream = new SKManagedStream(SampleMedia.Images.Baboon))
 			using (var bitmap = SKBitmap.Decode(stream))
-			using (var cf = SKColorFilter.CreateXferMode(SKColors.Red, SKXferMode.ColorDodge))
+			using (var cf = SKColorFilter.CreateBlendMode(SKColors.Red, SKBlendMode.ColorDodge))
 			using (var paint = new SKPaint())
 			{
 				paint.ColorFilter = cf;
