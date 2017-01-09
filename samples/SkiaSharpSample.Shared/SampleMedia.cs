@@ -25,6 +25,7 @@ namespace SkiaSharpSample
 			public static Stream BabyTux => Embedded.Load("baby_tux.webp");
 			public static Stream LogosSvg => Embedded.Load("logos.svg");
 			public static Stream AnimatedHeartGif => Embedded.Load("animated-heart.gif");
+			public static Stream OpacitySvg => Embedded.Load("opacity.svg");
 		}
 
 		public static class Fonts
