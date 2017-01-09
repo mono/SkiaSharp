@@ -19,9 +19,88 @@
   <Docs>
     <summary>Shaders specify the source color(s) for what is being drawn in the <see cref="T:SkiaSharp.SKPaint" />.</summary>
     <remarks>
-      <para>Shaders specify the source color(s) for what is being drawn. If a paint has no shader, then the paint's color is used. If the paint has a shader, then the shader's color(s) are used instead, but they are modulated by the paint's alpha. </para>
+      <para>Shaders specify the source colors for what is being drawn. If a paint has no shader, then the paint's color is used. If the paint has a shader, then the shader's colors are used instead, but they are modulated by the paint's alpha. </para>
       <para></para>
       <para>This makes it easy to create a shader once (e.g. bitmap tiling or gradient) and then change its transparency without having to modify the original shader, only the paint's alpha needs to be modified.</para>
+      <para>Shaders are created by calling one of the static “Create” methods in the SKShader method that create a shader of the appropriate type.</para>
+      <format type="text/html">
+        <h2>Radial Gradient Shader</h2>
+      </format>
+      <example>
+	<code lang="c#"><![CDATA[var colors = new SKColor [] {
+    new SKColor (0, 0, 255),
+    new SKColor (0, 255, 0)
+};
+var shader = SKShader.CreateRadialGradient (new SKPoint (128, 128), 180, colors, null, SKShaderTileMode.Clamp);
+var paint = new SKPaint () {
+    Shader = shader,
+};
+canvas.DrawPaint (paint);]]></code>
+      </example>
+      <img src="/cvs/SkiaSharp/docs/en/SkiaSharp/_images/radial.png" />
+      <format type="text/html">
+	<h2>Two-point Conical Gradient Shader</h2>
+      </format>
+      <example>
+	<code lang="c#"><![CDATA[var colors = new SKColor [] {
+    new SKColor (0, 0, 255),
+    new SKColor (0, 255, 0)
+};
+var shader = SKShader.CreateTwoPointConicalGradient (new SKPoint (128, 128), 128, new SKPoint (128, 16), 16, colors, null, SKShaderTileMode.Clamp);
+var paint = new SKPaint () {
+    Shader = shader,
+};
+canvas.DrawPaint (paint);]]></code>
+      </example>
+      <img src="/cvs/SkiaSharp/docs/en/SkiaSharp/_images/twopoint.png" />
+      <format type="text/html">
+        <h2>Sweep Gradient Shader</h2>
+      </format>
+      <example>
+	<code lang="c#"><![CDATA[var colors = new SKColor [] {
+    new SKColor (0, 255, 255),
+    new SKColor (255, 0, 255),
+    new SKColor (255, 255, 0),
+    new SKColor (0, 255, 255)
+};
+var shader = SKShader.CreateSweepGradient (new SKPoint (128, 128), colors, null);
+var paint = new SKPaint () {
+    Shader = shader
+};
+canvas.DrawPaint (paint);]]></code>
+      </example>
+      <format>
+	<h2>Fractal Perlin Noise</h2>
+      </format>
+      <example>
+	<code lang="c#"><![CDATA[var shader = SKShader.CreatePerlinNoiseFractalNoise (0.5f, 0.5f, 4, 0);
+var paint = new SKPaint () { Shader = shader };
+canvas.DrawPaint (paint);</code>
+      </example>
+      <img src="/cvs/SkiaSharp/docs/en/SkiaSharp/_images/fractalnoise.png" />
+      <format>
+	<h2>Turbulence Perlin Noise</h2>
+      </format>
+      <example>
+	<code lang="c#"><![CDATA[var turbulence = SKShader.CreatePerlinNoiseTurbulence (0.05f, 0.05f, 4, 0);
+var paint = new SKPaint () { Shader = turbulence };
+canvas.DrawPaint (paint);</code>
+      </example>
+      <img src="/cvs/SkiaSharp/docs/en/SkiaSharp/_images/turbulence.png" />
+      <format>
+	<h2>Compose Shader</h2>
+      </format>
+      <example>
+	<code lang="c#"><![CDATA[
+var colors = new SKColor [] { new SKColor (0, 255, 255), new SKColor (255, 0, 255), new SKColor (255, 255, 0), new SKColor (0, 255, 255)};
+var sweep = SKShader.CreateSweepGradient (new SKPoint (128, 128), colors, null);
+var turbulence = SKShader.CreatePerlinNoiseTurbulence (0.05f, 0.05f, 4, 0);
+var shader = SKShader.CreateCompose (sweep, turbulence);
+var paint = new SKPaint () { Shader = shader };
+canvas.DrawPaint (paint);
+</code>
+      </example>
+      <img src="/cvs/SkiaSharp/docs/en/SkiaSharp/_images/compose.png" />
     </remarks>
   </Docs>
   <Members>
