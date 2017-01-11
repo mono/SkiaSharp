@@ -81,3 +81,11 @@ var ClearSkiaSharpNuGetCache = new Action (() => {
         CleanDirectory (installedNuGet);
     }
 });
+
+var IsRunningOnMac = new Func<bool> (() => {
+    return System.Environment.OSVersion.Platform == PlatformID.MacOSX;
+});
+
+var IsRunningOnLinux = new Func<bool> (() => {
+    return IsRunningOnUnix () && !IsRunningOnMac ();
+});

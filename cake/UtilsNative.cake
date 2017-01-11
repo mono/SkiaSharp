@@ -19,7 +19,7 @@ var RunGyp = new Action<string, string> ((defines, generators) =>
 
 var RunInstallNameTool = new Action<DirectoryPath, string, string, FilePath> ((directory, oldName, newName, library) =>
 {
-    if (!IsRunningOnUnix ()) {
+    if (!IsRunningOnMac ()) {
         throw new InvalidOperationException ("install_name_tool is only available on Unix.");
     }
     
@@ -31,7 +31,7 @@ var RunInstallNameTool = new Action<DirectoryPath, string, string, FilePath> ((d
 
 var RunLipo = new Action<DirectoryPath, FilePath, FilePath[]> ((directory, output, inputs) =>
 {
-    if (!IsRunningOnUnix ()) {
+    if (!IsRunningOnMac ()) {
         throw new InvalidOperationException ("lipo is only available on Unix.");
     }
     

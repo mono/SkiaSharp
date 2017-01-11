@@ -130,11 +130,13 @@ Task ("externals-native")
         CopyFileToDirectory (ANGLE_PATH.CombineWithFilePath ("uwp/bin/UAP/x64/libEGL.dll"), "./output/uwp/x64/");
         CopyFileToDirectory (ANGLE_PATH.CombineWithFilePath ("uwp/bin/UAP/x64/libGLESv2.dll"), "./output/uwp/x64/");
     }
-    if (IsRunningOnUnix ()) {
+    if (IsRunningOnMac ()) {
         if (!DirectoryExists ("./output/osx")) CreateDirectory ("./output/osx");
         if (!DirectoryExists ("./output/mac")) CreateDirectory ("./output/mac");
         CopyFileToDirectory ("./native-builds/lib/osx/libSkiaSharp.dylib", "./output/osx/");
         CopyFileToDirectory ("./native-builds/lib/osx/libSkiaSharp.dylib", "./output/mac/");
+    }
+    if (IsRunningOnLinux ()) {
     }
 });
 
@@ -215,7 +217,7 @@ Task ("externals-uwp")
 
 // this builds the native C and C++ externals for Mac OS X
 Task ("externals-osx")
-    .WithCriteria (IsRunningOnUnix ())
+    .WithCriteria (IsRunningOnMac ())
     .WithCriteria (
         !FileExists ("native-builds/lib/osx/libSkiaSharp.dylib"))
     .Does (() =>  
@@ -252,7 +254,7 @@ Task ("externals-osx")
 
 // this builds the native C and C++ externals for iOS
 Task ("externals-ios")
-    .WithCriteria (IsRunningOnUnix ())
+    .WithCriteria (IsRunningOnMac ())
     .WithCriteria (
         !FileExists ("native-builds/lib/ios/libSkiaSharp.framework/libSkiaSharp"))
     .Does (() => 
@@ -296,7 +298,7 @@ Task ("externals-ios")
 
 // this builds the native C and C++ externals for tvOS
 Task ("externals-tvos")
-    .WithCriteria (IsRunningOnUnix ())
+    .WithCriteria (IsRunningOnMac ())
     .WithCriteria (
         !FileExists ("native-builds/lib/tvos/libSkiaSharp.framework/libSkiaSharp"))
     .Does (() => 
@@ -335,7 +337,7 @@ Task ("externals-tvos")
 
 // this builds the native C and C++ externals for Android
 Task ("externals-android")
-    .WithCriteria (IsRunningOnUnix ())
+    .WithCriteria (IsRunningOnMac ())
     .WithCriteria (
         !FileExists ("native-builds/lib/android/x86/libSkiaSharp.so") ||
         !FileExists ("native-builds/lib/android/x86_64/libSkiaSharp.so") ||

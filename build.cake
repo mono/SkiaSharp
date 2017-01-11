@@ -109,7 +109,7 @@ Task ("libs")
         CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
     }
 
-    if (IsRunningOnUnix ()) {
+    if (IsRunningOnMac ()) {
         // build
         RunNuGetRestore ("binding/SkiaSharp.Mac.sln");
         DotNetBuild ("binding/SkiaSharp.Mac.sln", c => { 
@@ -145,6 +145,9 @@ Task ("libs")
         // copy SVG
         CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
     }
+
+    if (IsRunningOnLinux ()) {
+    }
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -171,7 +174,7 @@ Task ("tests")
         RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Desktop.Tests.dll");
     }
     // Mac OSX (Any CPU)
-    if (IsRunningOnUnix ()) {
+    if (IsRunningOnMac () || IsRunningOnLinux ()) {
         DotNetBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", c => { 
             c.Configuration = "Release"; 
         });
@@ -195,7 +198,11 @@ Task ("samples")
         Zip ("./samples", "./output/samples.zip");
     }
 
-    if (IsRunningOnUnix ()) {
+    if (IsRunningOnLinux ()) {
+
+    }
+
+    if (IsRunningOnMac ()) {
         RunNuGetRestore ("./samples/MacSample/MacSample.sln");
         DotNetBuild ("./samples/MacSample/MacSample.sln", c => { 
             c.Configuration = "Release"; 
@@ -317,7 +324,7 @@ Task ("update-docs")
         });
     }
     // add mac-specific references
-    if (IsRunningOnUnix ()) {
+    if (IsRunningOnMac ()) {
         refs = refs.Union (new DirectoryPath [] {
             "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/xbuild-frameworks/.NETPortable/v4.5",
             "/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xbuild-frameworks/MonoAndroid/v1.0",
@@ -346,7 +353,7 @@ Task ("update-docs")
         }).ToArray ();
     }
     // add mac-specific assemblies
-    if (IsRunningOnUnix ()) {
+    if (IsRunningOnMac ()) {
         assemblies = assemblies.Union (new FilePath [] {
             "./output/android/SkiaSharp.Views.Android.dll",
             "./output/ios/SkiaSharp.Views.iOS.dll",
@@ -420,10 +427,13 @@ Task ("nuget")
             PackageNuGet ("./nuget/SkiaSharp.Views.Windows.nuspec", "./output/");
             PackageNuGet ("./nuget/SkiaSharp.Views.Forms.Windows.nuspec", "./output/");
         }
-        if (IsRunningOnUnix ()) {
+        if (IsRunningOnMac ()) {
             PackageNuGet ("./nuget/SkiaSharp.Mac.nuspec", "./output/");
             PackageNuGet ("./nuget/SkiaSharp.Views.Mac.nuspec", "./output/");
             PackageNuGet ("./nuget/SkiaSharp.Views.Forms.Mac.nuspec", "./output/");
+        }
+        if (IsRunningOnLinux ()) {
+            
         }
     }
     // SVG is a PCL
