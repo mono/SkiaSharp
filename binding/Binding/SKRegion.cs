@@ -35,8 +35,8 @@ namespace SkiaSharp
 
 		public SKRectI Bounds {
 			get {
-				SKRectI rect = SKRectI.Empty;
-				SkiaApi.sk_region_get_bounds(Handle, ref rect);
+				SKRectI rect;
+				SkiaApi.sk_region_get_bounds(Handle, out rect);
 				return rect;
 			}
 		}

@@ -35,8 +35,8 @@ namespace SkiaSharp
 
 		public SKRect CullRect {
 			get {
-				SKRect rect = SKRect.Empty;
- 				SkiaApi.sk_picture_get_cull_rect (Handle, ref rect);
+				SKRect rect;
+ 				SkiaApi.sk_picture_get_cull_rect (Handle, out rect);
 				return rect;
 			}
 		}
