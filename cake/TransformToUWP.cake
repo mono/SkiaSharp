@@ -50,6 +50,7 @@ var TransformToUWP = new Action<FilePath, string> ((projectFilePath, platform) =
     SetXValue (properties, "IgnoreImportLibrary","false");
 
     SetXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "CompileAsWinRT", "false");
+    SetXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "DebugInformationFormat", "ProgramDatabase");
     AddXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", ";SK_BUILD_FOR_WINRT;WINAPI_FAMILY=WINAPI_FAMILY_APP;");
     // if (platform.ToUpper () == "ARM") {
     //     AddXValues (xdoc.Root, new [] { "ItemDefinitionGroup", "ClCompile" }, "PreprocessorDefinitions", ";__ARM_NEON;__ARM_NEON__;");

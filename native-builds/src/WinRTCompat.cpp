@@ -69,4 +69,10 @@ DWORD WINAPI GetTickCountCompat(VOID)
 	return (long)GetTickCount64();
 }
 
+int WINAPI MessageBoxACompat(_In_opt_ HWND hWnd, _In_opt_ LPCSTR lpText, _In_opt_ LPCSTR lpCaption, _In_ UINT uType)
+{
+	// TODO: implementation
+	return 0;
+}
+
 #endif // SK_BUILD_FOR_WINRT
