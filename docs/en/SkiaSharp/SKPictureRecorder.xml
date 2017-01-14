@@ -46,8 +46,8 @@
       </Docs>
     </Member>
     <Member MemberName="BeginRecording">
-      <MemberSignature Language="C#" Value="public SkiaSharp.SKCanvas BeginRecording (SkiaSharp.SKRect rect);" />
-      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKCanvas BeginRecording(valuetype SkiaSharp.SKRect rect) cil managed" />
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKCanvas BeginRecording (SkiaSharp.SKRect cullRect);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKCanvas BeginRecording(valuetype SkiaSharp.SKRect cullRect) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
@@ -63,10 +63,10 @@
         <ReturnType>SkiaSharp.SKCanvas</ReturnType>
       </ReturnValue>
       <Parameters>
-        <Parameter Name="rect" Type="SkiaSharp.SKRect" />
+        <Parameter Name="cullRect" Type="SkiaSharp.SKRect" />
       </Parameters>
       <Docs>
-        <param name="rect">The culling rectangle for the new picture.</param>
+        <param name="cullRect">The culling rectangle for the new picture.</param>
         <summary>Start the recording process and return the recording canvas.</summary>
         <returns>Returns the current recording canvas. The same can be retrieved using <see cref="P:SkiaSharp.SKPictureRecorder.RecordingCanvas" />.</returns>
         <remarks>

@@ -33,7 +33,13 @@ namespace SkiaSharp
 		{
 		}
 
-		public SKRectI Bounds => SkiaApi.sk_region_get_bounds(Handle);
+		public SKRectI Bounds {
+			get {
+				SKRectI rect = SKRectI.Empty;
+				SkiaApi.sk_region_get_bounds(Handle, ref rect);
+				return rect;
+			}
+		}
 
 		public bool Contains(SKRegion src)
 		{

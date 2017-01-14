@@ -29,7 +29,17 @@ namespace SkiaSharp
 		}
 		
 		public uint UniqueId => SkiaApi.sk_picture_get_unique_id (Handle);
-		public SKRect Bounds => SkiaApi.sk_picture_get_bounds (Handle);
+
+		[Obsolete("Use CullRect instead.")]
+		public SKRect Bounds => CullRect;
+
+		public SKRect CullRect {
+			get {
+				SKRect rect = SKRect.Empty;
+ 				SkiaApi.sk_picture_get_cull_rect (Handle, ref rect);
+				return rect;
+			}
+		}
 	}
 }
 

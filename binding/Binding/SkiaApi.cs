@@ -763,7 +763,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static uint sk_picture_get_unique_id(sk_picture_t p);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static SKRect sk_picture_get_bounds(sk_picture_t p);
+		public extern static void sk_picture_get_cull_rect(sk_picture_t p, ref SKRect rect);
 
 		// SkShader
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1305,7 +1305,7 @@ namespace SkiaSharp
 		[return: MarshalAs(UnmanagedType.I1)] 
 		public extern static bool sk_region_op2(sk_region_t r, sk_region_t src, SKRegionOperation op);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static SKRectI sk_region_get_bounds(sk_region_t r);
+		public extern static void sk_region_get_bounds(sk_region_t r, ref SKRectI rect);
 	}
 }
 
