@@ -17,6 +17,8 @@ namespace SkiaSharp.Views.Android
 
 		public void OnDrawFrame(IGL10 gl)
 		{
+			GLES10.GlClear(GLES10.GlStencilBufferBit);
+
 			// create the surface
 			using (var surface = SKSurface.Create(context, renderTarget))
 			{
