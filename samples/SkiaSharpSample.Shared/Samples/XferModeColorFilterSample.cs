@@ -10,7 +10,7 @@ namespace SkiaSharpSample.Samples
 		{
 		}
 
-		public override string Title => "Xfer Mode Color Filter";
+		public override string Title => "Blend Mode Color Filter";
 
 		public override SampleCategories Category => SampleCategories.ColorFilters;
 

@@ -13,7 +13,7 @@ namespace SkiaSharpSample.Samples
 		{
 		}
 
-		public override string Title => "Xfermode";
+		public override string Title => "Blend Mode";
 
 		public override SampleCategories Category => SampleCategories.Shaders;
 
