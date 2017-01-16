@@ -10,8 +10,8 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>Pairs <see cref="T:SkiaSharp.SKImageInfo" /> with actual pixels and rowbytes.</summary>
+    <remarks>This class does not try to manage the lifetime of the pixel memory (nor the colortable if provided).</remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -23,8 +23,8 @@
       </AssemblyInfo>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Creates an empty instance of <see cref="T:SkiaSharp.SKPixmap" />.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -41,12 +41,12 @@
         <Parameter Name="ctable" Type="SkiaSharp.SKColorTable" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="addr">To be added.</param>
-        <param name="rowBytes">To be added.</param>
-        <param name="ctable">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information of the pixels.</param>
+        <param name="addr">The memory address of the pixels.</param>
+        <param name="rowBytes">The number of bytes per row.</param>
+        <param name="ctable">The color table.</param>
+        <summary>Creates an instance of <see cref="T:SkiaSharp.SKPixmap" />.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="AlphaType">
@@ -60,9 +60,9 @@
         <ReturnType>SkiaSharp.SKAlphaType</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the alpha type.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="BytesPerPixel">
@@ -76,9 +76,9 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the number of bytes per pixel.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="ColorTable">
@@ -92,9 +92,9 @@
         <ReturnType>SkiaSharp.SKColorTable</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the color table.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="ColorType">
@@ -108,9 +108,9 @@
         <ReturnType>SkiaSharp.SKColorType</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the color type.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -144,9 +144,9 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Returns the memory address of the pixels.</summary>
+        <returns></returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Height">
@@ -160,9 +160,9 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the image height.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Info">
@@ -176,9 +176,9 @@
         <ReturnType>SkiaSharp.SKImageInfo</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the image info.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Reset">
@@ -193,8 +193,8 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Reset the pixmap to an empty pixmap.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Reset">
@@ -214,12 +214,12 @@
         <Parameter Name="ctable" Type="SkiaSharp.SKColorTable" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="addr">To be added.</param>
-        <param name="rowBytes">To be added.</param>
-        <param name="ctable">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information of the pixels.</param>
+        <param name="addr">The memory address of the pixels.</param>
+        <param name="rowBytes">The number of bytes per row.</param>
+        <param name="ctable">The color table.</param>
+        <summary>Resets the pixmap to the specified pixels.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Resize">
@@ -238,12 +238,12 @@
         <Parameter Name="method" Type="SkiaSharp.SKBitmapResizeMethod" />
       </Parameters>
       <Docs>
-        <param name="dst">To be added.</param>
-        <param name="src">To be added.</param>
-        <param name="method">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="dst">The pixmap to store the resized pixels.</param>
+        <param name="src">The pixmap to resize.</param>
+        <param name="method">The resize method.</param>
+        <summary>Resize the specified pixmap using the specified method.</summary>
+        <returns>Returns <see langword="true" /> if the resize operation can be performed, otherwise <see langword="false" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="RowBytes">
@@ -257,9 +257,9 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the number of bytes per row.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Width">
@@ -273,9 +273,9 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the image width.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
   </Members>

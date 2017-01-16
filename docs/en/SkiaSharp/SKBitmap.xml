@@ -1135,10 +1135,12 @@
         <Parameter Name="pixmap" Type="SkiaSharp.SKPixmap" />
       </Parameters>
       <Docs>
-        <param name="pixmap">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="pixmap">The pixels to install.</param>
+        <summary>Installs the specified pixels into the bitmap.</summary>
+        <returns>Returns true on success, or false on failure. If there was an error, the bitmap will be set to empty.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="InstallPixels">
@@ -1393,9 +1395,9 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Returns the pixels if they are available without having to lock the bitmap.</summary>
+        <returns>Returns the pixels if they are available, otherwise <see langword="null" />.</returns>
+        <remarks>If the pixels are available without locking, then the pixmap is only valid until the bitmap changes in any way, in which case the pixmap becomes invalid.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Pixels">
@@ -1484,11 +1486,11 @@
         <Parameter Name="method" Type="SkiaSharp.SKBitmapResizeMethod" />
       </Parameters>
       <Docs>
-        <param name="dst">To be added.</param>
-        <param name="method">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="dst">The bitmap to store the resized pixels.</param>
+        <param name="method">The resize method.</param>
+        <summary>Resizes the current bitmap using the specified resize method.</summary>
+        <returns>Returns <see langword="true" /> if the resize operation can be performed, otherwise <see langword="false" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Resize">
@@ -1506,11 +1508,11 @@
         <Parameter Name="method" Type="SkiaSharp.SKBitmapResizeMethod" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="method">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information of the desired bitmap.</param>
+        <param name="method">The resize method.</param>
+        <summary>Resizes the current bitmap using the specified resize method.</summary>
+        <returns>Returns the resized bitmap if the resize operation could be performed, otherwise <see langword="null" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Resize">
@@ -1529,12 +1531,12 @@
         <Parameter Name="method" Type="SkiaSharp.SKBitmapResizeMethod" />
       </Parameters>
       <Docs>
-        <param name="dst">To be added.</param>
-        <param name="src">To be added.</param>
-        <param name="method">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="dst">The bitmap to store the resized pixels.</param>
+        <param name="src">The bitmap to resize.</param>
+        <param name="method">The resize method.</param>
+        <summary>Resizes the provided bitmap using the specified resize method.</summary>
+        <returns>Returns <see langword="true" /> if the resize operation can be performed, otherwise <see langword="false" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="RowBytes">
