@@ -30,6 +30,7 @@
 		340303961C4053E500630F26 /* SkManagedStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 340303921C4053E500630F26 /* SkManagedStream.cpp */; };
 		340303971C4053E500630F26 /* SkManagedStream.h in Headers */ = {isa = PBXBuildFile; fileRef = 340303931C4053E500630F26 /* SkManagedStream.h */; };
 		340303DB1C40877300630F26 /* sk_xamarin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 340303DA1C40877300630F26 /* sk_xamarin.cpp */; };
+		340AE8361E2D2D2000CBDCEA /* libwebp_dsp_neon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 340AE8351E2D2D2000CBDCEA /* libwebp_dsp_neon.a */; };
 		343DAE471C3F285700FAD826 /* SkiaKeeper.c in Sources */ = {isa = PBXBuildFile; fileRef = 343DAE451C3F285700FAD826 /* SkiaKeeper.c */; };
 		3454C33E1D011F78008A8A1A /* libsksl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3454C32C1D011F5F008A8A1A /* libsksl.a */; };
 		3454C3411D011F78008A8A1A /* libpng_static.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3454C3321D011F5F008A8A1A /* libpng_static.a */; };
@@ -171,6 +172,13 @@
 			proxyType = 2;
 			remoteGlobalIDString = 58D65910B589341DD97198F8;
 			remoteInfo = libetc1;
+		};
+		340AE8341E2D2D2000CBDCEA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 148B376C56BB5FE1630143B1;
+			remoteInfo = libwebp_dsp_neon;
 		};
 		342DF2121D7BBBB00078246B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -512,7 +520,7 @@
 			isa = PBXContainerItemProxy;
 			containerPortal = 34F1978B1C61883C00B41B54 /* libwebp.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = D16C845E9062B0AF1B1D310C;
+			remoteGlobalIDString = 1B6986FB36482648B3A1881E;
 			remoteInfo = libwebp_dsp_neon;
 		};
 		345D70721D1AAF43005BBE1D /* PBXContainerItemProxy */ = {
@@ -727,6 +735,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				340AE8361E2D2D2000CBDCEA /* libwebp_dsp_neon.a in Frameworks */,
 				3485354D1E2D0EAF00D35EB3 /* libexpat_static.a in Frameworks */,
 				34FECA191E2D076A00896AE4 /* libskia_svg.a in Frameworks */,
 				34FECA1A1E2D076A00896AE4 /* libskia_xml.a in Frameworks */,
@@ -772,9 +781,9 @@
 			isa = PBXGroup;
 			children = (
 				21FD2D411C015F780023CFAE /* libc++.tbd */,
+				21FD2B311C014C000023CFAE /* Products */,
 				21FD2B3B1C014C110023CFAE /* skia_libs */,
 				21FD2B321C014C000023CFAE /* Source */,
-				21FD2B311C014C000023CFAE /* Products */,
 			);
 			sourceTree = "<group>";
 		};
@@ -806,9 +815,6 @@
 		21FD2B3B1C014C110023CFAE /* skia_libs */ = {
 			isa = PBXGroup;
 			children = (
-				348535281E2D0E9D00D35EB3 /* expat.xcodeproj */,
-				34FEC9E91E2D075400896AE4 /* svg.xcodeproj */,
-				34FEC9ED1E2D075400896AE4 /* xml.xcodeproj */,
 				21FD2CE11C015ED60023CFAE /* codec_android.xcodeproj */,
 				21FD2CE41C015ED60023CFAE /* codec.xcodeproj */,
 				21FD2CEC1C015ED60023CFAE /* core.xcodeproj */,
@@ -818,6 +824,7 @@
 				34BEEE591D1AAC73002A1E48 /* dng_sdk.xcodeproj */,
 				21FD2CEF1C015ED60023CFAE /* effects.xcodeproj */,
 				21FD2D781C0163130023CFAE /* etc1.xcodeproj */,
+				348535281E2D0E9D00D35EB3 /* expat.xcodeproj */,
 				21FD2CF21C015ED60023CFAE /* gpu.xcodeproj */,
 				21FD2DA41C01677B0023CFAE /* ImageIO.framework */,
 				21FD2CF51C015ED60023CFAE /* images.xcodeproj */,
@@ -834,7 +841,9 @@
 				21FD2D001C015ED60023CFAE /* sfnt.xcodeproj */,
 				3454C31A1D011F5F008A8A1A /* skia_lib.xcodeproj */,
 				3454C3231D011F5F008A8A1A /* sksl.xcodeproj */,
+				34FEC9E91E2D075400896AE4 /* svg.xcodeproj */,
 				21FD2D031C015ED70023CFAE /* utils.xcodeproj */,
+				34FEC9ED1E2D075400896AE4 /* xml.xcodeproj */,
 				3454C3201D011F5F008A8A1A /* zlib.xcodeproj */,
 			);
 			name = skia_libs;
@@ -1029,6 +1038,7 @@
 				34F197A11C61883C00B41B54 /* libwebp_dec.a */,
 				34F197A31C61883C00B41B54 /* libwebp_demux.a */,
 				34F197A51C61883C00B41B54 /* libwebp_dsp.a */,
+				340AE8351E2D2D2000CBDCEA /* libwebp_dsp_neon.a */,
 				34F197A91C61883C00B41B54 /* libwebp_dsp_enc.a */,
 				34F197AB1C61883C00B41B54 /* libwebp_enc.a */,
 				34F197AD1C61883C00B41B54 /* libwebp_utils.a */,
@@ -1390,6 +1400,13 @@
 			fileType = archive.ar;
 			path = libetc1.a;
 			remoteRef = 21FD2D7C1C0163140023CFAE /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		340AE8351E2D2D2000CBDCEA /* libwebp_dsp_neon.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libwebp_dsp_neon.a;
+			remoteRef = 340AE8341E2D2D2000CBDCEA /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		342DF2131D7BBBB00078246B /* libskia_opts_crc32.a */ = {
