@@ -15,7 +15,8 @@ LOCAL_STATIC_LIBRARIES := libskia_ports libskia_skgpu libskia_images libskia_opt
                           libwebp_demux libwebp_dsp_enc libwebp_dsp_neon                 \
                           libpng_static_neon libpng_static libdng_sdk libzlib            \
                           libskia_core libskia_effects libskia_utils libexpat_static     \
-                          libskia_opts_crc32 libskia_opts_sse42 libskia_opts_hsw
+                          libskia_opts_crc32 libskia_opts_sse42 libskia_opts_hsw         \
+                          libskia_svg libskia_xml
                           
 LOCAL_LDLIBS           := -llog -landroid -lEGL -lGLESv2 -lz
 
@@ -29,6 +30,8 @@ LOCAL_C_INCLUDES       := ../../externals/skia/src/c           \
                           ../../externals/skia/include/pathops \
                           ../../externals/skia/include/gpu     \
                           ../../externals/skia/include/config  \
+                          ../../externals/skia/include/xml     \
+                          ../../externals/skia/include/svg     \
                           ../../externals/skia/include/utils   \
                           ../../externals/skia/include/images
 

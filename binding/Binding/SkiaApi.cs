@@ -51,6 +51,9 @@ using gr_context_t = System.IntPtr;
 using gr_glinterface_t = System.IntPtr;
 using sk_opbuilder_t = System.IntPtr;
 using sk_region_t = System.IntPtr;
+using sk_wstream_managedstream_t = System.IntPtr;
+using sk_xmlstreamwriter_t = System.IntPtr;
+using sk_xmlwriter_t = System.IntPtr;
 
 namespace SkiaSharp
 {
@@ -938,6 +941,14 @@ namespace SkiaSharp
 		public extern static sk_stream_managedstream_t sk_managedstream_new();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_managedstream_set_delegates(IntPtr pRead, IntPtr pPeek, IntPtr pIsAtEnd, IntPtr pRewind, IntPtr pGetPosition, IntPtr pSeek, IntPtr pMove, IntPtr pGetLength, IntPtr pCreateNew, IntPtr pDestroy);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_managedstream_destroy(sk_stream_managedstream_t stream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_wstream_managedstream_t sk_managedwstream_new();
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_managedwstream_destroy(sk_wstream_managedstream_t stream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_managedwstream_set_delegates(IntPtr pWrite, IntPtr pFlush, IntPtr pBytesWritten, IntPtr pDestroy);
 
 		// Writeable streams
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1272,6 +1283,16 @@ namespace SkiaSharp
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool gr_glinterface_has_extension (gr_glinterface_t glInterface, [MarshalAs(UnmanagedType.LPStr)] string extension);
 		
+		// XML
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_xmlstreamwriter_t sk_xmlstreamwriter_new (sk_wstream_t stream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_xmlstreamwriter_delete (sk_xmlstreamwriter_t writer);
+
+		// SVG
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_canvas_t sk_svgcanvas_create (ref SKRect bounds, sk_xmlwriter_t writer);
+
 		// SKRegion
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_region_t sk_region_new();

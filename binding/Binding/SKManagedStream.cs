@@ -118,7 +118,7 @@ namespace SkiaSharp
 
 		protected override void Dispose (bool disposing)
 		{
-			lock (managedStreams){
+			lock (managedStreams) {
 				if (managedStreams.ContainsKey(Handle)) {
 					managedStreams.Remove (Handle);
 				}
@@ -129,7 +129,7 @@ namespace SkiaSharp
 			}
 
 			if (!isDisposed && Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_memorystream_destroy (Handle);
+				SkiaApi.sk_managedstream_destroy (Handle);
 			}
 
 			base.Dispose (disposing);
