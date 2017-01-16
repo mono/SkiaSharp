@@ -26,22 +26,22 @@
       <format type="text/html">
         <h2>Linear Gradient Shader</h2>
       </format>
-<example>
-<code lang="c#"><![CDATA[
+      <example>
+        <code lang="c#"><![CDATA[
 var colors = new SKColor [] { new SKColor (0, 255, 255), new SKColor (255, 0, 255), new SKColor (255, 255, 0), new SKColor (0, 255, 255)};
 var shader = SKShader.CreateLinearGradient (new SKPoint (0, 0), new SKPoint (255, 255), colors, null, SKShaderTileMode.Clamp);
 var paint = new SKPaint () { Shader = shader };
 canvas.DrawPaint (paint);
 ]]></code>
-</example>
-<para>
-      <img href="linear.png"/>
-</para>
+      </example>
+      <para>
+        <img href="linear.png" />
+      </para>
       <format type="text/html">
         <h2>Radial Gradient Shader</h2>
       </format>
       <example>
-	<code lang="c#"><![CDATA[var colors = new SKColor [] {
+        <code lang="c#"><![CDATA[var colors = new SKColor [] {
     new SKColor (0, 0, 255),
     new SKColor (0, 255, 0)
 };
@@ -51,12 +51,14 @@ var paint = new SKPaint () {
 };
 canvas.DrawPaint (paint);]]></code>
       </example>
-<para>      <img href="radial.png" /></para>
+      <para>
+        <img href="radial.png" />
+      </para>
       <format type="text/html">
-	<h2>Two-point Conical Gradient Shader</h2>
+        <h2>Two-point Conical Gradient Shader</h2>
       </format>
       <example>
-	<code lang="c#"><![CDATA[var colors = new SKColor [] {
+        <code lang="c#"><![CDATA[var colors = new SKColor [] {
     new SKColor (0, 0, 255),
     new SKColor (0, 255, 0)
 };
@@ -66,12 +68,14 @@ var paint = new SKPaint () {
 };
 canvas.DrawPaint (paint);]]></code>
       </example>
-<para>      <img href="twopoint.png" /></para>
+      <para>
+        <img href="twopoint.png" />
+      </para>
       <format type="text/html">
         <h2>Sweep Gradient Shader</h2>
       </format>
       <example>
-	<code lang="c#"><![CDATA[var colors = new SKColor [] {
+        <code lang="c#"><![CDATA[var colors = new SKColor [] {
     new SKColor (0, 255, 255),
     new SKColor (255, 0, 255),
     new SKColor (255, 255, 0),
@@ -84,37 +88,42 @@ var paint = new SKPaint () {
 canvas.DrawPaint (paint);]]></code>
       </example>
       <format type="text/html">
-	<h2>Fractal Perlin Noise</h2>
+        <h2>Fractal Perlin Noise</h2>
       </format>
       <example>
-	<code lang="c#"><![CDATA[var shader = SKShader.CreatePerlinNoiseFractalNoise (0.5f, 0.5f, 4, 0);
+        <code lang="c#"><![CDATA[var shader = SKShader.CreatePerlinNoiseFractalNoise (0.5f, 0.5f, 4, 0);
 var paint = new SKPaint () { Shader = shader };
 canvas.DrawPaint (paint);]]></code>
       </example>
-<para>      <img href="fractalnoise.png" /></para>
+      <para>
+        <img href="fractalnoise.png" />
+      </para>
       <format type="text/html">
-	<h2>Turbulence Perlin Noise</h2>
+        <h2>Turbulence Perlin Noise</h2>
       </format>
       <example>
-	<code lang="c#"><![CDATA[var turbulence = SKShader.CreatePerlinNoiseTurbulence (0.05f, 0.05f, 4, 0);
+        <code lang="c#"><![CDATA[var turbulence = SKShader.CreatePerlinNoiseTurbulence (0.05f, 0.05f, 4, 0);
 var paint = new SKPaint () { Shader = turbulence };
 canvas.DrawPaint (paint);]]></code>
       </example>
-<para>      <img href="turbulence.png" /></para>
+      <para>
+        <img href="turbulence.png" />
+      </para>
       <format type="text/html">
-	<h2>Compose Shader</h2>
+        <h2>Compose Shader</h2>
       </format>
       <example>
-	<code lang="c#"><![CDATA[
+        <code lang="c#"><![CDATA[
 var colors = new SKColor [] { new SKColor (0, 255, 255), new SKColor (255, 0, 255), new SKColor (255, 255, 0), new SKColor (0, 255, 255)};
 var sweep = SKShader.CreateSweepGradient (new SKPoint (128, 128), colors, null);
 var turbulence = SKShader.CreatePerlinNoiseTurbulence (0.05f, 0.05f, 4, 0);
 var shader = SKShader.CreateCompose (sweep, turbulence);
 var paint = new SKPaint () { Shader = shader };
-canvas.DrawPaint (paint);]]>
-</code>
+canvas.DrawPaint (paint);]]></code>
       </example>
-<para>      <img href="compose.png" /></para>
+      <para>
+        <img href="compose.png" />
+      </para>
     </remarks>
   </Docs>
   <Members>
@@ -212,8 +221,7 @@ canvas.DrawPaint (paint);]]>
         <param name="color">The color to paint.</param>
         <summary>Creates a new shader that just draws the specified color.</summary>
         <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
-        <remarks>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateColorFilter">
@@ -274,17 +282,18 @@ canvas.DrawPaint (paint);]]>
         <summary>Create a new compose shader, which combines two shaders by the <see cref="F:SkiaSharp.SKXferMode.SrcOver" /> blend mode.</summary>
         <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
         <remarks>
-	  <example>
-	    <code lang="c#"><![CDATA[
+          <example>
+            <code lang="c#"><![CDATA[
 var colors = new SKColor [] { new SKColor (0, 255, 255), new SKColor (255, 0, 255), new SKColor (255, 255, 0), new SKColor (0, 255, 255)};
 var sweep = SKShader.CreateSweepGradient (new SKPoint (128, 128), colors, null);
 var turbulence = SKShader.CreatePerlinNoiseTurbulence (0.05f, 0.05f, 4, 0);
 var shader = SKShader.CreateCompose (sweep, turbulence);
 var paint = new SKPaint () { Shader = shader };
-canvas.DrawPaint (paint);]]>
-	    </code>
-	  </example>
-<para>	  <img href="compose.png" /></para>
+canvas.DrawPaint (paint);]]></code>
+          </example>
+          <para>
+            <img href="compose.png" />
+          </para>
         </remarks>
       </Docs>
     </Member>
@@ -411,15 +420,17 @@ canvas.DrawPaint (paint);]]>
         <summary>Creates a shader that generates a linear gradient between the two specified points.</summary>
         <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
         <remarks>
-	  <example>
-<code lang="c#"><![CDATA[
+          <example>
+            <code lang="c#"><![CDATA[
 var colors = new SKColor [] { new SKColor (0, 255, 255), new SKColor (255, 0, 255), new SKColor (255, 255, 0), new SKColor (0, 255, 255)};
 var shader = SKShader.CreateLinearGradient (new SKPoint (0, 0), new SKPoint (255, 255), colors, null, SKShaderTileMode.Clamp);
 var paint = new SKPaint () { Shader = shader };
 canvas.DrawPaint (paint);
 ]]></code>
-	  </example>     
-	  <para><img href="linear.png"/></para>
+          </example>
+          <para>
+            <img href="linear.png" />
+          </para>
         </remarks>
       </Docs>
     </Member>

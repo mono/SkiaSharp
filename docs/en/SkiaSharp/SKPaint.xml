@@ -32,13 +32,14 @@
       <para>For example, to draw using a gradient instead of a single color, assign a SkShader to the paint.</para>
       <para>
         <example>
-          <code lang="C#"><![CDATA[canvas.Clear (canvasColor);]]>
-<![CDATA[var points = new SKPoint (0, 0), new SKPoint (256, 256);]]>
-<![CDATA[var colors = new SKColor [] { new SKColor (0, 0, 255), new SKColor (0, 255, 0)};]]>
-<![CDATA[var offsets = new float [] { 0, 1 };
-var shader = SKShader.CreateLinearGradient (points, colors, offsets, SKShaderTileMode.Clamp);
-var paint = new SKPaint () {
-    Shader = shader,
+          <code lang="C#"><![CDATA[canvas.Clear (canvasColor);
+var start = new SKPoint (0, 0);
+var end = new SKPoint (256, 256);
+var colors = new SKColor[] { new SKColor (0, 0, 255), new SKColor (0, 255, 0) };
+var offsets = new float[] { 0, 1 };
+var shader = SKShader.CreateLinearGradient (start, end, colors, offsets, SKShaderTileMode.Clamp);
+var paint = new SKPaint {
+    Shader = shader
 };
 canvas.DrawPaint (paint);]]></code>
         </example>
