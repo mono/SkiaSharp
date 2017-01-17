@@ -65,7 +65,41 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof(stream));
 			}
 
-			return GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream(stream.Handle, dpi));
+			return GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream (stream.Handle, dpi));
+		}
+
+		public unsafe static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata, float dpi = DefaultRasterDpi)
+		{
+			if (stream == null) {
+				throw new ArgumentNullException (nameof(stream));
+			}
+
+			using (var title = SKString.Create (metadata.Title))
+			using (var author = SKString.Create (metadata.Author))
+			using (var subject = SKString.Create (metadata.Subject))
+			using (var keywords = SKString.Create (metadata.Keywords))
+			using (var creator = SKString.Create (metadata.Creator))
+			using (var producer = SKString.Create (metadata.Producer)) {
+
+				var cmetadata = new SKDocumentPdfMetadataInternal {
+					Title = title?.Handle ?? IntPtr.Zero,
+					Author = author?.Handle ?? IntPtr.Zero,
+					Subject = subject?.Handle ?? IntPtr.Zero,
+					Keywords = keywords?.Handle ?? IntPtr.Zero,
+					Creator = creator?.Handle ?? IntPtr.Zero,
+					Producer = producer?.Handle ?? IntPtr.Zero
+				};
+				if (metadata.Creation != null) {
+					var creation = SKTimeDateTimeInternal.Create (metadata.Creation.Value);
+					cmetadata.Creation = &creation;
+				}
+				if (metadata.Modified != null) {
+					var modified = SKTimeDateTimeInternal.Create (metadata.Modified.Value);
+					cmetadata.Modified = &modified;
+				}
+
+				return GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream_with_metadata (stream.Handle, dpi, ref cmetadata));
+			}
 		}
 	}
 }

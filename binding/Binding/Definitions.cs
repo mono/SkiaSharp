@@ -44,6 +44,7 @@ using System.Globalization;
 
 using GRBackendObject = System.IntPtr;
 using GRBackendContext = System.IntPtr;
+using sk_string_t = System.IntPtr;
  	
 namespace SkiaSharp
 {
@@ -2913,6 +2914,55 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		public int[] YDivs { get; set; }
 		public SKLatticeFlags[] Flags { get; set; }
 		public SKRectI? Bounds { get; set; }
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	internal struct SKTimeDateTimeInternal {
+		public Int16 TimeZoneMinutes;
+		public UInt16 Year;
+		public Byte Month;
+		public Byte DayOfWeek;
+		public Byte Day;
+		public Byte Hour;
+		public Byte Minute;
+		public Byte Second;
+
+		public static SKTimeDateTimeInternal Create (DateTime datetime) {
+			var zone = datetime.Hour - datetime.ToUniversalTime().Hour;
+			return new SKTimeDateTimeInternal {
+				TimeZoneMinutes = (Int16)(zone * 60),
+				Year = (UInt16)datetime.Year,
+				Month = (Byte)datetime.Month,
+				DayOfWeek = (Byte)datetime.DayOfWeek,
+				Day = (Byte)datetime.Day,
+				Hour = (Byte)datetime.Hour,
+				Minute = (Byte)datetime.Minute,
+				Second = (Byte)datetime.Second
+			};
+		}
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	internal unsafe struct SKDocumentPdfMetadataInternal {
+		public sk_string_t Title;
+		public sk_string_t Author;
+		public sk_string_t Subject;
+		public sk_string_t Keywords;
+		public sk_string_t Creator;
+		public sk_string_t Producer;
+		public SKTimeDateTimeInternal* Creation;
+		public SKTimeDateTimeInternal* Modified;
+	}
+
+	public struct SKDocumentPdfMetadata {
+		public string Title { get; set; }
+		public string Author { get; set; }
+		public string Subject { get; set; }
+		public string Keywords { get; set; }
+		public string Creator { get; set; }
+		public string Producer { get; set; }
+		public DateTime? Creation { get; set; }
+		public DateTime? Modified { get; set; }
 	}
 
 	[Flags]
