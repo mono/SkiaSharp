@@ -23,14 +23,8 @@ namespace SkiaSharpSample.Samples
 
 			// create the folder for this sample
 			var local = FileSystem.Current.LocalStorage;
-			if (await local.CheckExistsAsync("SkiaSharpSample") == ExistenceCheckResult.NotFound)
-			{
-				local = await local.CreateFolderAsync("SkiaSharpSample", CreationCollisionOption.OpenIfExists);
-			}
-			if (await local.CheckExistsAsync("CreatePdfSample") == ExistenceCheckResult.NotFound)
-			{
-				local = await local.CreateFolderAsync("CreatePdfSample", CreationCollisionOption.OpenIfExists);
-			}
+			local = await local.CreateFolderAsync("SkiaSharpSample", CreationCollisionOption.OpenIfExists);
+			local = await local.CreateFolderAsync("CreatePdfSample", CreationCollisionOption.OpenIfExists);
 			root = local.Path;
 		}
 
@@ -58,8 +52,20 @@ namespace SkiaSharpSample.Samples
 
 			var path = Path.Combine(root, $"{Guid.NewGuid().ToString("N")}.pdf");
 
+			var metadata = new SKDocumentPdfMetadata
+			{
+				Author = "Cool Developer",
+				Creation = DateTime.Now,
+				Creator = "Cool Developer Library",
+				Keywords = "SkiaSharp, Sample, PDF, Developer, Library",
+				Modified = DateTime.Now,
+				Producer = "SkiaSharp",
+				Subject = "SkiaSharp Sample PDF",
+				Title = "Sample PDF",
+			};
+
 			using (var stream = new SKFileWStream(path))
-			using (var document = SKDocument.CreatePdf(stream))
+			using (var document = SKDocument.CreatePdf(stream, metadata))
 			using (var paint = new SKPaint())
 			{
 				paint.TextSize = 64.0f;
@@ -75,6 +81,20 @@ namespace SkiaSharpSample.Samples
 				// draw page 1
 				using (var pdfCanvas = document.BeginPage(width, height))
 				{
+					// draw button
+					var nextPagePaint = new SKPaint
+					{
+						IsAntialias = true,
+						TextSize = 16,
+						Color = SKColors.OrangeRed
+					};
+					var nextText = "Next Page >>";
+					var btn = new SKRect(width - nextPagePaint.MeasureText(nextText) - 24, 0, width, nextPagePaint.TextSize + 24);
+					pdfCanvas.DrawText(nextText, btn.Left + 12, btn.Bottom - 12, nextPagePaint);
+					// make button link
+					pdfCanvas.DrawLinkDestinationAnnotation(btn, "next-page");
+
+					// draw contents
 					pdfCanvas.DrawText("...PDF 1/2...", width / 2, height / 4, paint);
 					document.EndPage();
 				}
@@ -82,6 +102,10 @@ namespace SkiaSharpSample.Samples
 				// draw page 2
 				using (var pdfCanvas = document.BeginPage(width, height))
 				{
+					// draw link destintion
+					pdfCanvas.DrawNamedDestinationAnnotation(SKPoint.Empty, "next-page");
+
+					// draw contents
 					pdfCanvas.DrawText("...PDF 2/2...", width / 2, height / 4, paint);
 					document.EndPage();
 				}
