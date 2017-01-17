@@ -462,6 +462,47 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_flush (Handle);
 		}
 
+		public void DrawAnnotation (SKRect rect, string key, SKData value)
+		{
+			SkiaApi.sk_canvas_draw_annotation (Handle, ref rect, Util.GetEncodedText (key, SKTextEncoding.Utf8), value == null ? IntPtr.Zero : value.Handle);
+		}
+
+		public void DrawUrlAnnotation (SKRect rect, SKData value)
+		{
+			SkiaApi.sk_canvas_draw_url_annotation (Handle, ref rect, value == null ? IntPtr.Zero : value.Handle);
+		}
+
+		public SKData DrawUrlAnnotation (SKRect rect, string value)
+		{
+			var data = SKData.FromCString (value);
+			DrawUrlAnnotation (rect, data);
+			return data;
+		}
+
+		public void DrawNamedDestinationAnnotation (SKPoint point, SKData value)
+		{
+			SkiaApi.sk_canvas_draw_named_destination_annotation (Handle, ref point, value == null ? IntPtr.Zero : value.Handle);
+		}
+
+		public SKData DrawNamedDestinationAnnotation (SKPoint point, string value)
+		{
+			var data = SKData.FromCString (value);
+			DrawNamedDestinationAnnotation (point, data);
+			return data;
+		}
+
+		public void DrawLinkDestinationAnnotation (SKRect rect, SKData value)
+		{
+			SkiaApi.sk_canvas_draw_link_destination_annotation (Handle, ref rect, value == null ? IntPtr.Zero : value.Handle);
+		}
+
+		public SKData DrawLinkDestinationAnnotation (SKRect rect, string value)
+		{
+			var data = SKData.FromCString (value);
+			DrawLinkDestinationAnnotation (rect, data);
+			return data;
+		}
+
 		public void DrawBitmapNinePatch (SKBitmap bitmap, SKRectI center, SKRect dst, SKPaint paint = null)
 		{
 			if (bitmap == null)
