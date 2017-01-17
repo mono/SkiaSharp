@@ -10,6 +10,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.IO;
+using System.Text;
 
 namespace SkiaSharp
 {
@@ -52,7 +53,12 @@ namespace SkiaSharp
 		}
 
 		public SKData (byte[] bytes)
-			: this (SkiaApi.sk_data_new_with_copy (bytes, (IntPtr) bytes.Length), true)
+			: this (bytes, (ulong) bytes.Length)
+		{
+		}
+
+		public SKData (byte[] bytes, ulong length)
+			: this (SkiaApi.sk_data_new_with_copy (bytes, (IntPtr) length), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to copy the SKData instance.");
@@ -64,6 +70,12 @@ namespace SkiaSharp
 			if (Marshal.SizeOf (typeof(IntPtr)) == 4 && length > UInt32.MaxValue)
 				throw new ArgumentOutOfRangeException (nameof (length), "The length exceeds the size of pointers.");
 			return GetObject<SKData> (SkiaApi.sk_data_new_from_malloc (bytes, (IntPtr) length));
+		}
+
+		internal static SKData FromCString (string str)
+		{
+			var bytes = Encoding.ASCII.GetBytes (str ?? string.Empty);
+			return new SKData (bytes, (ulong)(bytes.Length + 1)); // + 1 for the terminating char
 		}
 
 		public SKData Subset (ulong offset, ulong length)

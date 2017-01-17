@@ -203,6 +203,15 @@ namespace SkiaSharp
 		public extern static void sk_canvas_get_total_matrix(sk_canvas_t canvas, ref SKMatrix matrix);
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_canvas_draw_annotation(sk_canvas_t t, ref SKRect rect, byte[] key, sk_data_t value);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_canvas_draw_url_annotation(sk_canvas_t t, ref SKRect rect, sk_data_t value);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_canvas_draw_named_destination_annotation(sk_canvas_t t, ref SKPoint point, sk_data_t value);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_canvas_draw_link_destination_annotation(sk_canvas_t t, ref SKRect rect, sk_data_t value);
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_clip_rect_with_operation(sk_canvas_t t, ref SKRect crect, SKClipOperation op, bool doAA);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_clip_path_with_operation(sk_canvas_t t, sk_path_t cpath, SKClipOperation op, bool doAA);
