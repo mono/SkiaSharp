@@ -2533,8 +2533,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		}
 	}
 
-	public enum SKMaskFormat
-	{
+	public enum SKMaskFormat {
 		BW_Format,
 		A8_Format,
 		THREE_D_Format,
@@ -2543,8 +2542,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct SKMask : IDisposable
-	{
+	public struct SKMask : IDisposable {
 		IntPtr image;
 		SKRectI bounds;
 		UInt32 rowBytes;
