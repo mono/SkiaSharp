@@ -17,6 +17,7 @@
 #include "sk_document.h"
 #include "sk_image.h"
 #include "sk_imagefilter.h"
+#include "sk_mask.h"
 #include "sk_maskfilter.h"
 #include "sk_matrix.h"
 #include "sk_paint.h"
@@ -86,6 +87,7 @@ void** KeepSkiaCSymbols ()
         (void*)sk_matrix_map_vector,
         (void*)sk_matrix_map_radius,
         (void*)sk_matrix_try_invert,
+        (void*)sk_mask_get_addr,
         (void*)sk_colortable_new,
         (void*)gr_context_unref,
         (void*)sk_xmlstreamwriter_new,

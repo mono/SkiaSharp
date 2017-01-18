@@ -2533,6 +2533,70 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		}
 	}
 
+	public enum SKMaskFormat
+	{
+		BW_Format,
+		A8_Format,
+		THREE_D_Format,
+		ARGB32_Format,
+		LCD16_Format,
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct SKMask : IDisposable
+	{
+		IntPtr image;
+		SKRectI bounds;
+		UInt32 rowBytes;
+		SKMaskFormat format;
+
+		public SKMask(byte[] buffer, SKRectI bounds, UInt32 rowBytes, SKMaskFormat format)
+		{
+			this.bounds = bounds;
+			this.rowBytes = rowBytes;
+			this.format = format;
+			this.image = IntPtr.Zero;
+
+			if (buffer.Length != (int)ComputeImageSize()) {
+				// Note: buffer.Length must match bounds.Height * rowBytes
+				var expectedHeight = bounds.Height * rowBytes;
+				var message = $"Length of buffer ({buffer.Length}) does not match the computed size of the mask ({expectedHeight}). Check bounds and rowBytes";
+				throw new System.ArgumentException(message);
+			}
+
+			AllocateImage();
+			Marshal.Copy(buffer, 0, this.image, buffer.Length);
+		}
+
+		public IntPtr Image => image;
+		public SKRectI Bounds => bounds;
+		public UInt32 RowBytes => rowBytes;
+		public SKMaskFormat Format => format;
+
+		
+		private void AllocateImage()
+		{
+			if (this.format == SKMaskFormat.THREE_D_Format) {
+				this.image = SkiaApi.sk_mask_alloc_image(ComputeTotalImageSize());
+			} else {
+				this.image = SkiaApi.sk_mask_alloc_image(ComputeImageSize());
+			}
+		}
+		public void Dispose()
+		{
+			SkiaApi.sk_mask_free_image(this.image);
+		}
+		public bool IsEmpty() => SkiaApi.sk_mask_is_empty(ref this);
+		public IntPtr ComputeImageSize() => SkiaApi.sk_mask_compute_image_size(ref this);
+		public IntPtr ComputeTotalImageSize() => SkiaApi.sk_mask_compute_total_image_size(ref this);
+		public byte GetAddr1(int x, int y) => SkiaApi.sk_mask_get_addr_1(ref this, x, y);
+		public byte GetAddr8(int x, int y) => SkiaApi.sk_mask_get_addr_8(ref this, x, y);
+		public UInt16 GetAddr16(int x, int y) => SkiaApi.sk_mask_get_addr_lcd_16(ref this, x, y);
+		public UInt32 GetAddr32(int x, int y) => SkiaApi.sk_mask_get_addr_32(ref this, x, y);
+		public IntPtr GetAddr(int x, int y) => SkiaApi.sk_mask_get_addr(ref this, x, y);
+
+	}
+
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKFontMetrics
 	{
