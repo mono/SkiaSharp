@@ -131,7 +131,7 @@ namespace SkiaSharp.Tests
 			var buffer = new byte[] { rawMask };
 			var bounds = new SKRectI(0, 0, 8, 1);
 			UInt32 rowBytes = 1;
-			var format = SKMaskFormat.BW_Format;
+			var format = SKMaskFormat.BW;
 
 			var mask = new SKMask(buffer, bounds, rowBytes, format);
 
@@ -144,7 +144,7 @@ namespace SkiaSharp.Tests
 			var buffer = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
 			var bounds = new SKRectI(0, 0, 4, 2);
 			UInt32 rowBytes = 4;
-			var format = SKMaskFormat.A8_Format;
+			var format = SKMaskFormat.A8;
 
 			var mask = new SKMask(buffer, bounds, rowBytes, format);
 
@@ -174,7 +174,7 @@ namespace SkiaSharp.Tests
 			};
 			var bounds = new SKRectI(0, 0, 4, 2);
 			UInt32 rowBytes = 16;
-			var format = SKMaskFormat.ARGB32_Format;
+			var format = SKMaskFormat.Argb32;
 
 			var mask = new SKMask(buffer, bounds, rowBytes, format);
 

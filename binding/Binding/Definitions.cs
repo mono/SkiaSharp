@@ -2056,19 +2056,19 @@ namespace SkiaSharp
 	}
 
 	public enum SKMaskFormat {
-		BW_Format,
-		A8_Format,
-		THREE_D_Format,
-		ARGB32_Format,
-		LCD16_Format,
+		BW,
+		A8,
+		ThreeD,
+		Argb32,
+		Lcd16,
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKMask : IDisposable {
-		IntPtr image;
-		SKRectI bounds;
-		UInt32 rowBytes;
-		SKMaskFormat format;
+		private IntPtr image;
+		private SKRectI bounds;
+		private UInt32 rowBytes;
+		private SKMaskFormat format;
 
 		public SKMask(byte[] buffer, SKRectI bounds, UInt32 rowBytes, SKMaskFormat format)
 		{
@@ -2092,29 +2092,23 @@ namespace SkiaSharp
 		public SKRectI Bounds => bounds;
 		public UInt32 RowBytes => rowBytes;
 		public SKMaskFormat Format => format;
+		public bool IsEmpty => SkiaApi.sk_mask_is_empty(ref this);
 
-		
 		private void AllocateImage()
 		{
-			if (this.format == SKMaskFormat.THREE_D_Format) {
-				this.image = SkiaApi.sk_mask_alloc_image(ComputeTotalImageSize());
-			} else {
-				this.image = SkiaApi.sk_mask_alloc_image(ComputeImageSize());
-			}
+			this.image = SkiaApi.sk_mask_alloc_image((IntPtr)ComputeTotalImageSize());
 		}
 		public void Dispose()
 		{
 			SkiaApi.sk_mask_free_image(this.image);
 		}
-		public bool IsEmpty() => SkiaApi.sk_mask_is_empty(ref this);
-		public IntPtr ComputeImageSize() => SkiaApi.sk_mask_compute_image_size(ref this);
-		public IntPtr ComputeTotalImageSize() => SkiaApi.sk_mask_compute_total_image_size(ref this);
+		public long ComputeImageSize() => (long)SkiaApi.sk_mask_compute_image_size(ref this);
+		public long ComputeTotalImageSize() => (long)SkiaApi.sk_mask_compute_total_image_size(ref this);
 		public byte GetAddr1(int x, int y) => SkiaApi.sk_mask_get_addr_1(ref this, x, y);
 		public byte GetAddr8(int x, int y) => SkiaApi.sk_mask_get_addr_8(ref this, x, y);
 		public UInt16 GetAddr16(int x, int y) => SkiaApi.sk_mask_get_addr_lcd_16(ref this, x, y);
 		public UInt32 GetAddr32(int x, int y) => SkiaApi.sk_mask_get_addr_32(ref this, x, y);
 		public IntPtr GetAddr(int x, int y) => SkiaApi.sk_mask_get_addr(ref this, x, y);
-
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
