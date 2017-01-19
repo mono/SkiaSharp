@@ -1156,6 +1156,9 @@ namespace SkiaSharp
 		public extern static bool sk_bitmap_install_pixels_with_pixmap(sk_bitmap_t cbitmap, sk_pixmap_t cpixmap);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_bitmap_install_mask_pixels(sk_bitmap_t cbitmap, ref SKMask cmask);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_bitmap_try_alloc_pixels(sk_bitmap_t cbitmap, ref SKImageInfo requestedInfo, IntPtr rowBytes);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
@@ -1191,6 +1194,29 @@ namespace SkiaSharp
 		public extern static IntPtr sk_pixmap_get_pixels(sk_pixmap_t cpixmap);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_colortable_t sk_pixmap_get_colortable(sk_pixmap_t cpixmap);
+
+		// Mask
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static IntPtr sk_mask_alloc_image(IntPtr bytes);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_mask_free_image(IntPtr image);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_mask_is_empty(ref SKMask cmask);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static IntPtr sk_mask_compute_image_size(ref SKMask cmask);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static IntPtr sk_mask_compute_total_image_size(ref SKMask cmask);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static byte sk_mask_get_addr_1(ref SKMask cmask, int x, int y);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static byte sk_mask_get_addr_8(ref SKMask cmask, int x, int y);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static UInt16 sk_mask_get_addr_lcd_16(ref SKMask cmask, int x, int y);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static UInt32 sk_mask_get_addr_32(ref SKMask cmask, int x, int y);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static IntPtr sk_mask_get_addr(ref SKMask cmask, int x, int y);
 
 		// Matrix
 
