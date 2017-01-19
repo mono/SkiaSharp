@@ -54,6 +54,7 @@ using sk_region_t = System.IntPtr;
 using sk_wstream_managedstream_t = System.IntPtr;
 using sk_xmlstreamwriter_t = System.IntPtr;
 using sk_xmlwriter_t = System.IntPtr;
+using sk_3dview_t = System.IntPtr;
 
 namespace SkiaSharp
 {
@@ -1213,6 +1214,35 @@ namespace SkiaSharp
 		public extern static void sk_matrix_map_vector (ref SKMatrix matrix, float x, float y, out SKPoint result);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static float sk_matrix_map_radius (ref SKMatrix matrix, float radius);
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_3dview_t sk_3dview_new ();
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_3dview_destroy (sk_3dview_t cview);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_3dview_save (sk_3dview_t cview);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_3dview_restore (sk_3dview_t cview);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_3dview_translate (sk_3dview_t cview, float x, float y, float z);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_3dview_rotate_x_degrees (sk_3dview_t cview, float degrees);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_3dview_rotate_y_degrees (sk_3dview_t cview, float degrees);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_3dview_rotate_z_degrees (sk_3dview_t cview, float degrees);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_3dview_rotate_x_radians (sk_3dview_t cview, float radians);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_3dview_rotate_y_radians (sk_3dview_t cview, float radians);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_3dview_rotate_z_radians (sk_3dview_t cview, float radians);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_3dview_get_matrix (sk_3dview_t cview, ref SKMatrix cmatrix);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_3dview_apply_to_canvas (sk_3dview_t cview, sk_canvas_t ccanvas);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static float sk_3dview_dot_with_normal (sk_3dview_t cview, float dx, float dy, float dz);
 
 		// Path Effect
 
