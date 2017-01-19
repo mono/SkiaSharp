@@ -50,7 +50,7 @@ namespace SkiaSharp.Views.Forms
 
 		public static SKRect ToSKRect(this Rectangle rect)
 		{
-			return new SKRect((float)rect.Left, (float)rect.Top, (float)rect.Width, (float)rect.Height);
+			return new SKRect((float)rect.Left, (float)rect.Top, (float)rect.Right, (float)rect.Bottom);
 		}
 
 		// Xamarin.Forms.Color
