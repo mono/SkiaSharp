@@ -1,5 +1,5 @@
 //
-// Bindings for GRContext
+// Bindings for SkMatrix
 //
 // Author:
 //   Matthew Leibowitz

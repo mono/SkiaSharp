@@ -107,9 +107,11 @@ namespace SkiaSharp.Tests
 			var bounds = new SKRectI(0, 0, 4, 4);
 			uint rowBytes = 4;
 			var format = SKMaskFormat.A8;
-			var mask = new SKMask(maskBuffer, bounds, rowBytes, format);
+			var mask = SKMask.Create(maskBuffer, bounds, rowBytes, format);
 
 			srcBmp.InstallMaskPixels(mask);
+
+			mask.FreeImage();
 
 			pixels = srcBmp.Pixels;
 			Assert.AreEqual(128, pixels[0].Alpha);
