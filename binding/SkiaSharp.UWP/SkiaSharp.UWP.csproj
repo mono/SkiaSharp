@@ -46,36 +46,12 @@
       <Link>arm\libSkiaSharp.dll</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="..\..\native-builds\lib\uwp\arm\libSkiaSharp.lib">
-      <Link>arm\libSkiaSharp.lib</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="..\..\native-builds\lib\uwp\arm\libSkiaSharp.pdb">
-      <Link>arm\libSkiaSharp.pdb</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Include="..\..\native-builds\lib\uwp\x64\libSkiaSharp.dll">
       <Link>x64\libSkiaSharp.dll</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="..\..\native-builds\lib\uwp\x64\libSkiaSharp.lib">
-      <Link>x64\libSkiaSharp.lib</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="..\..\native-builds\lib\uwp\x64\libSkiaSharp.pdb">
-      <Link>x64\libSkiaSharp.pdb</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Include="..\..\native-builds\lib\uwp\x86\libSkiaSharp.dll">
       <Link>x86\libSkiaSharp.dll</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="..\..\native-builds\lib\uwp\x86\libSkiaSharp.lib">
-      <Link>x86\libSkiaSharp.lib</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="..\..\native-builds\lib\uwp\x86\libSkiaSharp.pdb">
-      <Link>x86\libSkiaSharp.pdb</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="project.json" />
@@ -87,6 +63,30 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\SkiaSharp.UWP.rd.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\externals\angle\uwp\bin\UAP\ARM\libEGL.dll">
+      <Link>arm\libEGL.dll</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\externals\angle\uwp\bin\UAP\ARM\libGLESv2.dll">
+      <Link>arm\libGLESv2.dll</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\externals\angle\uwp\bin\UAP\Win32\libEGL.dll">
+      <Link>x86\libEGL.dll</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\externals\angle\uwp\bin\UAP\Win32\libGLESv2.dll">
+      <Link>x86\libGLESv2.dll</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="x64\libEGL.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="x64\libGLESv2.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="..\Binding\Binding.projitems" Label="Shared" />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
