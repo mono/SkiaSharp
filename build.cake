@@ -61,7 +61,7 @@ Task ("libs")
         ReplaceTextInFiles ("./binding/Binding/Properties/SkiaSharpAssemblyInfo.cs", "{GIT_SHA}", sha);
         ReplaceTextInFiles ("./source/SkiaSharp.Views/SkiaSharp.Views.Shared/Properties/SkiaSharpViewsAssemblyInfo.cs", "{GIT_SHA}", sha);
         ReplaceTextInFiles ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Shared/Properties/SkiaSharpViewsFormsAssemblyInfo.cs", "{GIT_SHA}", sha);
-        ReplaceTextInFiles ("./source/SkiaSharp.Svg/SkiaSharp.Svg/Properties/SkiaSharpSvgAssemblyInfo.cs", "{GIT_SHA}", sha);
+        ReplaceTextInFiles ("./source/SkiaSharp.Svg/SkiaSharp.Svg.Shared/Properties/SkiaSharpSvgAssemblyInfo.cs", "{GIT_SHA}", sha);
     }
 
     // create all the directories
@@ -109,6 +109,7 @@ Task ("libs")
 
         // copy SVG
         CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
+        CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard/bin/Release/SkiaSharp.Svg.dll", "./output/netstandard/");
     }
 
     if (IsRunningOnMac ()) {
@@ -147,6 +148,7 @@ Task ("libs")
 
         // copy SVG
         CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
+        CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard/bin/Release/SkiaSharp.Svg.dll", "./output/netstandard/");
     }
 
     if (IsRunningOnLinux ()) {
@@ -525,7 +527,7 @@ Task ("set-versions")
         "./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Shared/Properties/SkiaSharpViewsFormsAssemblyInfo.cs",
         version, fileVersion, sha);
     UpdateAssemblyInfo (
-        "./source/SkiaSharp.Svg/SkiaSharp.Svg/Properties/SkiaSharpSvgAssemblyInfo.cs",
+        "./source/SkiaSharp.Svg/SkiaSharp.Svg.Shared/Properties/SkiaSharpSvgAssemblyInfo.cs",
         version, fileVersion, sha);
 });
 
