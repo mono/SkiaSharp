@@ -9,6 +9,14 @@ var RunNuGetRestore = new Action<FilePath> ((solution) =>
     });
 });
 
+var RunDotNetCoreRestore = new Action<string> ((solution) =>
+{
+    DotNetCoreRestore (solution, new DotNetCoreRestoreSettings { 
+        Sources = NuGetSources,
+        Verbosity = DotNetCoreRestoreVerbosity.Verbose
+    });
+});
+
 var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath) =>
 {
     if (!DirectoryExists (outputPath)) {

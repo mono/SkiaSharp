@@ -9,7 +9,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void StringIsMarshaledCorrectly ()
 		{
-			using (var typeface = SKTypeface.FromFile (Path.Combine ("fonts", "SpiderSymbol.ttf")))
+			using (var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "SpiderSymbol.ttf")))
 			{
 				Assert.Equal ("SpiderSymbol", typeface.FamilyName);
 			}

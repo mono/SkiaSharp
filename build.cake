@@ -161,8 +161,11 @@ Task ("libs")
 
 Task ("tests")
     .IsDependentOn ("libs")
+    .IsDependentOn ("nuget")
     .Does (() => 
 {
+    ClearSkiaSharpNuGetCache ();
+
     RunNuGetRestore ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
     
     // Windows (x86 and x64)
@@ -185,6 +188,11 @@ Task ("tests")
         });
         RunTests("./tests/SkiaSharp.Desktop.Tests/bin/AnyCPU/Release/SkiaSharp.Desktop.Tests.dll", false);
     }
+    // .NET Core
+    RunDotNetCoreRestore ("./tests/SkiaSharp.NetCore.Tests");
+    DotNetCoreTest ("./tests/SkiaSharp.NetCore.Tests", new DotNetCoreTestSettings {
+        Configuration = "Release"
+    });
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
