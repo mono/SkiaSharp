@@ -72,6 +72,8 @@ namespace SkiaSharp
 		private const string SKIA = "libSkiaSharp.dll"; // redirected using .dll.config to 'libSkiaSharp.dylib' on OS X
 #elif WINDOWS_UWP
 		private const string SKIA = "libSkiaSharp.dll";
+#elif NET_STANDARD
+		private const string SKIA = "libSkiaSharp";
 #else
 		private const string SKIA = "libSkiaSharp";
 #endif
@@ -1394,6 +1396,26 @@ namespace SkiaSharp
 		public extern static bool sk_region_op2(sk_region_t r, sk_region_t src, SKRegionOperation op);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_region_get_bounds(sk_region_t r, out SKRectI rect);
+	}
+
+	internal static class PlatformConfiguration
+	{
+		public static bool IsUnix { get; }
+		public static bool IsWindows { get; }
+
+		static PlatformConfiguration()
+		{
+#if WINDOWS_UWP
+			IsUnix = false;
+			IsWindows = true;
+#elif NET_STANDARD
+			IsUnix = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+			IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+#else
+			IsUnix = Environment.OSVersion.Platform == PlatformID.MacOSX || Environment.OSVersion.Platform == PlatformID.Unix;
+			IsWindows = !IsUnix;
+#endif
+		}
 	}
 }
 

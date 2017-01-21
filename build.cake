@@ -73,6 +73,7 @@ Task ("libs")
     if (!DirectoryExists ("./output/osx/")) CreateDirectory ("./output/osx/");
     if (!DirectoryExists ("./output/portable/")) CreateDirectory ("./output/portable/");
     if (!DirectoryExists ("./output/mac/")) CreateDirectory ("./output/mac/");
+    if (!DirectoryExists ("./output/netstandard/")) CreateDirectory ("./output/netstandard/");
 
     if (IsRunningOnWindows ()) {
         // build bindings
@@ -91,6 +92,7 @@ Task ("libs")
         CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.pdb", "./output/uwp/");
         CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.pri", "./output/uwp/");
         CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.UWP.targets", "./output/uwp/");
+        CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
 
         // build other source
         RunNuGetRestore ("./source/SkiaSharpSource.Windows.sln");
