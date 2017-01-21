@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using NUnit.Framework;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	[TestFixture]
 	public class SKColorTableTest : SKTest
 	{
 		private readonly static SKColor[] Colors = new SKColor[] 
@@ -16,38 +15,42 @@ namespace SkiaSharp.Tests
 			SKColors.Blue 
 		};
 
-		[Test]
+		[Fact]
 		public void MembersRetrieveColors()
 		{
 			var colorTable = new SKColorTable(Colors);
 
-			Assert.AreEqual(Colors.Length, colorTable.Count);
+			Assert.Equal(Colors.Length, colorTable.Count);
 
-			CollectionAssert.AreEqual(Colors, colorTable.Colors);
+			Assert.Equal(Colors, colorTable.Colors);
 
-			Assert.AreEqual(Colors[0], colorTable[0]);
-			Assert.AreEqual(Colors[1], colorTable[1]);
-			Assert.AreEqual(Colors[2], colorTable[2]);
-			Assert.AreEqual(Colors[3], colorTable[3]);
-			Assert.AreEqual(Colors[4], colorTable[4]);
+			Assert.Equal(Colors[0], colorTable[0]);
+			Assert.Equal(Colors[1], colorTable[1]);
+			Assert.Equal(Colors[2], colorTable[2]);
+			Assert.Equal(Colors[3], colorTable[3]);
+			Assert.Equal(Colors[4], colorTable[4]);
 		}
 
-		[Test]
-		[ExpectedException(typeof(ArgumentOutOfRangeException))]
+		[Fact]
 		public void IndexerOutOfRangeBelow()
 		{
 			var colorTable = new SKColorTable(Colors);
 
-			var color = colorTable[-1];
+			Assert.Throws<ArgumentOutOfRangeException>(() =>
+			{
+				var color = colorTable[-1];
+			});
 		}
 
-		[Test]
-		[ExpectedException(typeof(ArgumentOutOfRangeException))]
+		[Fact]
 		public void IndexerOutOfRangeAbove()
 		{
 			var colorTable = new SKColorTable(Colors);
 
-			var color = colorTable[5];
+			Assert.Throws<ArgumentOutOfRangeException>(() =>
+			{
+				var color = colorTable[5];
+			});
 		}
 	}
 }

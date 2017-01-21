@@ -1,14 +1,13 @@
 ﻿using System;
 using System.IO;
-using NUnit.Framework;
+using Xunit;
 using System.Xml.Linq;
 
 namespace SkiaSharp.Tests
 {
-	[TestFixture]
 	public class SKSvgTest : SKTest
 	{
-		[Test]
+		[Fact]
 		public void LoadSvgCanvasSize()
 		{
 			var path = Path.Combine(PathToImages, "logos.svg");
@@ -16,10 +15,10 @@ namespace SkiaSharp.Tests
 			var svg = new SKSvg();
 			svg.Load(path);
 
-			Assert.AreEqual(new SKSize(300, 300), svg.CanvasSize);
+			Assert.Equal(new SKSize(300, 300), svg.CanvasSize);
 		}
 
-		[Test]
+		[Fact]
 		public void LoadSvgCustomCanvasSize()
 		{
 			var path = Path.Combine(PathToImages, "logos.svg");
@@ -27,10 +26,10 @@ namespace SkiaSharp.Tests
 			var svg = new SKSvg(new SKSize(150, 150));
 			svg.Load(path);
 
-			Assert.AreEqual(new SKSize(150, 150), svg.CanvasSize);
+			Assert.Equal(new SKSize(150, 150), svg.CanvasSize);
 		}
 
-		[Test]
+		[Fact]
 		public void SvgLoadsToBitmap()
 		{
 			var path = Path.Combine(PathToImages, "logos.svg");
@@ -44,10 +43,10 @@ namespace SkiaSharp.Tests
 			canvas.DrawPicture(svg.Picture);
 			canvas.Flush();
 
-			Assert.AreEqual(background, bmp.GetPixel(0, 0));
+			Assert.Equal(background, bmp.GetPixel(0, 0));
 		}
 
-		[Test]
+		[Fact]
 		public void SvgCanvasCreatesValidDrawing()
 		{
 			using (var stream = new MemoryStream())
@@ -75,23 +74,23 @@ namespace SkiaSharp.Tests
 
 				var ns = (XNamespace)"http://www.w3.org/2000/svg";
 
-				Assert.AreEqual(ns, svg.GetDefaultNamespace());
-				Assert.AreEqual("200", svg.Attribute("width").Value);
-				Assert.AreEqual("150", svg.Attribute("height").Value);
+				Assert.Equal(ns, svg.GetDefaultNamespace());
+				Assert.Equal("200", svg.Attribute("width").Value);
+				Assert.Equal("150", svg.Attribute("height").Value);
 
 				var rect = svg.Element(ns + "rect");
-				Assert.AreEqual("rgb(0,0,255)", rect.Attribute("fill").Value);
-				Assert.AreEqual("50", rect.Attribute("x").Value);
-				Assert.AreEqual("70", rect.Attribute("y").Value);
-				Assert.AreEqual("100", rect.Attribute("width").Value);
-				Assert.AreEqual("30", rect.Attribute("height").Value);
+				Assert.Equal("rgb(0,0,255)", rect.Attribute("fill").Value);
+				Assert.Equal("50", rect.Attribute("x").Value);
+				Assert.Equal("70", rect.Attribute("y").Value);
+				Assert.Equal("100", rect.Attribute("width").Value);
+				Assert.Equal("30", rect.Attribute("height").Value);
 
 				var ellipse = svg.Element(ns + "ellipse");
-				Assert.AreEqual("rgb(255,0,0)", ellipse.Attribute("fill").Value);
-				Assert.AreEqual("100", ellipse.Attribute("cx").Value);
-				Assert.AreEqual("85", ellipse.Attribute("cy").Value);
-				Assert.AreEqual("50", ellipse.Attribute("rx").Value);
-				Assert.AreEqual("15", ellipse.Attribute("ry").Value);
+				Assert.Equal("rgb(255,0,0)", ellipse.Attribute("fill").Value);
+				Assert.Equal("100", ellipse.Attribute("cx").Value);
+				Assert.Equal("85", ellipse.Attribute("cy").Value);
+				Assert.Equal("50", ellipse.Attribute("rx").Value);
+				Assert.Equal("15", ellipse.Attribute("ry").Value);
 			}
 		}
 	}

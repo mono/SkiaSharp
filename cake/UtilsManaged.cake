@@ -23,15 +23,15 @@ var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath)
     });                
 });
 
-var RunTests = new Action<FilePath> ((testAssembly) =>
+var RunTests = new Action<FilePath, bool> ((testAssembly, is64) =>
 {
     var dir = testAssembly.GetDirectory ();
-    var result = StartProcess (NUnitConsoleToolPath, new ProcessSettings {
-        Arguments = string.Format ("\"{0}\" --work=\"{1}\"", testAssembly, dir),
+    var result = StartProcess (is64 ? TestConsoleToolPath_x64 : TestConsoleToolPath_x86, new ProcessSettings {
+        Arguments = string.Format ("\"{0}\"", testAssembly),
     });
     
     if (result != 0) {
-        throw new Exception ("NUnit test failed with error: " + result);
+        throw new Exception ("Test runner failed with error: " + result);
     }
 });
 

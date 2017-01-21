@@ -1,49 +1,48 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using NUnit.Framework;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	[TestFixture]
 	public class SKCodecTest : SKTest
 	{
-		[Test]
+		[Fact]
 		public void MinBufferedBytesNeededHasAValue ()
 		{
-			Assert.IsTrue (SKCodec.MinBufferedBytesNeeded > 0);
+			Assert.True (SKCodec.MinBufferedBytesNeeded > 0);
 		}
 
-		[Test]
+		[Fact]
 		public void CanCreateStreamCodec ()
 		{
 			var stream = new SKFileStream (Path.Combine (PathToImages, "color-wheel.png"));
 			using (var codec = SKCodec.Create (stream)) {
-				Assert.AreEqual (SKEncodedFormat.Png, codec.EncodedFormat);
-				Assert.AreEqual (128, codec.Info.Width);
-				Assert.AreEqual (128, codec.Info.Height);
-				Assert.AreEqual (SKAlphaType.Unpremul, codec.Info.AlphaType);
+				Assert.Equal (SKEncodedFormat.Png, codec.EncodedFormat);
+				Assert.Equal (128, codec.Info.Width);
+				Assert.Equal (128, codec.Info.Height);
+				Assert.Equal (SKAlphaType.Unpremul, codec.Info.AlphaType);
 				if (IsUnix) {
-					Assert.AreEqual (SKColorType.Rgba8888, codec.Info.ColorType);
+					Assert.Equal (SKColorType.Rgba8888, codec.Info.ColorType);
 				} else {
-					Assert.AreEqual (SKColorType.Bgra8888, codec.Info.ColorType);
+					Assert.Equal (SKColorType.Bgra8888, codec.Info.ColorType);
 				}
 			}
 		}
 		
-		[Test]
+		[Fact]
 		public void GetGifFrames ()
 		{
 			const int FrameCount = 16;
 
 			var stream = new SKFileStream (Path.Combine (PathToImages, "animated-heart.gif"));
 			using (var codec = SKCodec.Create (stream)) {
-				Assert.AreEqual (-1, codec.RepetitionCount);
+				Assert.Equal (-1, codec.RepetitionCount);
 
 				var frameInfos = codec.FrameInfo;
-				Assert.AreEqual (FrameCount, frameInfos.Length);
+				Assert.Equal (FrameCount, frameInfos.Length);
 
-				Assert.AreEqual (-1, frameInfos [0].RequiredFrame);
+				Assert.Equal (-1, frameInfos [0].RequiredFrame);
 
 				var cachedFrames = new SKBitmap [FrameCount];
 				var info = new SKImageInfo (codec.Info.Width, codec.Info.Height);
@@ -52,12 +51,12 @@ namespace SkiaSharp.Tests
 					if (cached) {
 						var requiredFrame = frameInfos [index].RequiredFrame;
 						if (requiredFrame != -1) {
-							Assert.IsTrue (cachedFrames [requiredFrame].CopyTo (bm));
+							Assert.True (cachedFrames [requiredFrame].CopyTo (bm));
 						}
 					}
 					var opts = new SKCodecOptions (index, cached);
 					var result = codec.GetPixels (info, bm.GetPixels (), opts);
-					Assert.AreEqual (SKCodecResult.Success, result);
+					Assert.Equal (SKCodecResult.Success, result);
 				});
 
 				for (var i = 0; i < FrameCount; i++) {
@@ -67,33 +66,33 @@ namespace SkiaSharp.Tests
 					var uncachedFrame = new SKBitmap (info);
 					decode (uncachedFrame, false, i);
 
-					CollectionAssert.AreEqual (cachedFrame.Bytes, uncachedFrame.Bytes);
+					Assert.Equal (cachedFrame.Bytes, uncachedFrame.Bytes);
 				}
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void GetEncodedInfo ()
 		{
 			var stream = new SKFileStream (Path.Combine (PathToImages, "color-wheel.png"));
 			using (var codec = SKCodec.Create (stream)) {
-				Assert.AreEqual (SKEncodedInfoColor.Rgba, codec.EncodedInfo.Color);
-				Assert.AreEqual (SKEncodedInfoAlpha.Unpremul, codec.EncodedInfo.Alpha);
-				Assert.AreEqual (8, codec.EncodedInfo.BitsPerComponent);
+				Assert.Equal (SKEncodedInfoColor.Rgba, codec.EncodedInfo.Color);
+				Assert.Equal (SKEncodedInfoAlpha.Unpremul, codec.EncodedInfo.Alpha);
+				Assert.Equal (8, codec.EncodedInfo.BitsPerComponent);
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void CanGetPixels ()
 		{
 			var stream = new SKFileStream (Path.Combine (PathToImages, "baboon.png"));
 			using (var codec = SKCodec.Create (stream)) {
 				var pixels = codec.Pixels;
-				Assert.AreEqual (codec.Info.BytesSize, pixels.Length);
+				Assert.Equal (codec.Info.BytesSize, pixels.Length);
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void DecodePartialImage ()
 		{
 			// read the data here, so we can fake a throttle/download
@@ -125,7 +124,7 @@ namespace SkiaSharp.Tests
 					var result = codec.StartIncrementalDecode (info, pixels, info.RowBytes);
 
 					// make sure the start was successful
-					Assert.AreEqual (SKCodecResult.Success, result);
+					Assert.Equal (SKCodecResult.Success, result);
 					result = SKCodecResult.IncompleteInput;
 
 					while (result == SKCodecResult.IncompleteInput) {
@@ -141,12 +140,12 @@ namespace SkiaSharp.Tests
 					}
 
 					// compare to original
-					CollectionAssert.AreEqual (correctBytes, incremental.Pixels);
+					Assert.Equal (correctBytes, incremental.Pixels);
 				}
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void BitmapDecodesCorrectly ()
 		{
 			byte[] codecPixels;
@@ -160,10 +159,10 @@ namespace SkiaSharp.Tests
 				bitmapPixels = bitmap.Bytes;
 			}
 
-			CollectionAssert.AreEqual (codecPixels, bitmapPixels);
+			Assert.Equal (codecPixels, bitmapPixels);
 		}
 
-		[Test]
+		[Fact]
 		public void BitmapDecodesCorrectlyWithManagedStream ()
 		{
 			byte[] codecPixels;
@@ -178,7 +177,7 @@ namespace SkiaSharp.Tests
 				bitmapPixels = bitmap.Bytes;
 			}
 
-			CollectionAssert.AreEqual (codecPixels, bitmapPixels);
+			Assert.Equal (codecPixels, bitmapPixels);
 		}
 	}
 }
