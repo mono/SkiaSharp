@@ -110,8 +110,6 @@ namespace SkiaSharp.Tests
 
 			srcBmp.InstallMaskPixels(mask);
 
-			mask.FreeImage();
-
 			pixels = srcBmp.Pixels;
 			Assert.Equal(128, pixels[0].Alpha);
 			Assert.Equal(127, pixels[1].Alpha);
@@ -129,6 +127,8 @@ namespace SkiaSharp.Tests
 			Assert.Equal(73, pixels[13].Alpha);
 			Assert.Equal(74, pixels[14].Alpha);
 			Assert.Equal(75, pixels[15].Alpha);
+
+			mask.FreeImage();
 		}
 	}
 }
