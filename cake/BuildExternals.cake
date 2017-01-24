@@ -85,7 +85,7 @@ Task ("externals-genapi")
     // generate the PCL
     FilePath input = "binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll";
     var libPath = "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/4.5/,.";
-    StartProcess (GenApiToolPath, new ProcessSettings {
+    RunProcess (GenApiToolPath, new ProcessSettings {
         Arguments = string.Format("-libPath:{2} -out \"{0}\" \"{1}\"", input.GetFilename () + ".cs", input.GetFilename (), libPath),
         WorkingDirectory = input.GetDirectory ().FullPath,
     });
@@ -350,7 +350,7 @@ Task ("externals-android")
     var ANDROID_NDK_HOME = EnvironmentVariable ("ANDROID_NDK_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-ndk";
     
     var buildArch = new Action<string, string> ((arch, folder) => {
-        StartProcess (SKIA_PATH.CombineWithFilePath ("platform_tools/android/bin/android_ninja").FullPath, new ProcessSettings {
+        RunProcess (SKIA_PATH.CombineWithFilePath ("platform_tools/android/bin/android_ninja").FullPath, new ProcessSettings {
             Arguments = "-d " + arch + " skia_lib pdf sfntly icuuc svg xml",
             WorkingDirectory = SKIA_PATH.FullPath,
         });
@@ -375,7 +375,7 @@ Task ("externals-android")
     buildArch ("arm64", "arm64-v8a");
         
     var ndkbuild = MakeAbsolute (Directory (ANDROID_NDK_HOME)).CombineWithFilePath ("ndk-build").FullPath;
-    StartProcess (ndkbuild, new ProcessSettings {
+    RunProcess (ndkbuild, new ProcessSettings {
         Arguments = "",
         WorkingDirectory = ROOT_PATH.Combine ("native-builds/libSkiaSharp_android").FullPath,
     }); 

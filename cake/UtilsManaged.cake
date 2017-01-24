@@ -31,16 +31,20 @@ var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath)
     });                
 });
 
+var RunProcess = new Action<FilePath, ProcessSettings> ((process, settings) =>
+{
+    var result = StartProcess (process, settings);
+    if (result != 0) {
+        throw new Exception ("Process '" + process + "' failed with error: " + result);
+    }
+});
+
 var RunTests = new Action<FilePath, bool> ((testAssembly, is64) =>
 {
     var dir = testAssembly.GetDirectory ();
-    var result = StartProcess (is64 ? TestConsoleToolPath_x64 : TestConsoleToolPath_x86, new ProcessSettings {
+    RunProcess (is64 ? TestConsoleToolPath_x64 : TestConsoleToolPath_x86, new ProcessSettings {
         Arguments = string.Format ("\"{0}\"", testAssembly),
     });
-    
-    if (result != 0) {
-        throw new Exception ("Test runner failed with error: " + result);
-    }
 });
 
 var RunMdocUpdate = new Action<FilePath[], DirectoryPath, DirectoryPath[]> ((assemblies, docsRoot, refs) =>
@@ -50,14 +54,14 @@ var RunMdocUpdate = new Action<FilePath[], DirectoryPath, DirectoryPath[]> ((ass
         refArgs = string.Join (" ", refs.Select (r => string.Format ("--lib=\"{0}\"", r)));
     }
     var assemblyArgs = string.Join (" ", assemblies.Select (a => string.Format ("\"{0}\"", a)));
-    StartProcess (MDocPath, new ProcessSettings {
+    RunProcess (MDocPath, new ProcessSettings {
         Arguments = string.Format ("update --preserve --out=\"{0}\" {1} {2}", docsRoot, refArgs, assemblyArgs),
     });
 });
 
 var RunMdocMSXml = new Action<DirectoryPath, DirectoryPath> ((docsRoot, outputDir) =>
 {
-    StartProcess (MDocPath, new ProcessSettings {
+    RunProcess (MDocPath, new ProcessSettings {
         Arguments = string.Format ("export-msxdoc \"{0}\"", MakeAbsolute (docsRoot)),
         WorkingDirectory = MakeAbsolute (outputDir).ToString ()
     });
@@ -65,7 +69,7 @@ var RunMdocMSXml = new Action<DirectoryPath, DirectoryPath> ((docsRoot, outputDi
 
 var RunMdocAssemble = new Action<DirectoryPath, FilePath> ((docsRoot, output) =>
 {
-    StartProcess (MDocPath, new ProcessSettings {
+    RunProcess (MDocPath, new ProcessSettings {
         Arguments = string.Format ("assemble --out=\"{0}\" \"{1}\"", output, docsRoot),
     });
 });
