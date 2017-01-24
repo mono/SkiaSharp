@@ -74,6 +74,7 @@ Task ("libs")
     if (!DirectoryExists ("./output/portable/")) CreateDirectory ("./output/portable/");
     if (!DirectoryExists ("./output/mac/")) CreateDirectory ("./output/mac/");
     if (!DirectoryExists ("./output/netstandard/")) CreateDirectory ("./output/netstandard/");
+    if (!DirectoryExists ("./output/linux/")) CreateDirectory ("./output/linux/");
 
     if (IsRunningOnWindows ()) {
         // build bindings
@@ -152,6 +153,27 @@ Task ("libs")
     }
 
     if (IsRunningOnLinux ()) {
+        // build
+        // RunNuGetRestore ("binding/SkiaSharp.Linux.sln");
+        RunDotNetCoreRestore ("binding/SkiaSharp.NetStandard");
+        DotNetBuild ("binding/SkiaSharp.Linux.sln", c => { 
+            c.Configuration = "Release"; 
+        });
+
+        // copy build output
+        CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
+        CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
+
+        // build other source
+        // RunNuGetRestore ("./source/SkiaSharpSource.Linux.sln");
+        RunDotNetCoreRestore ("source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard");
+        DotNetBuild ("./source/SkiaSharpSource.Linux.sln", c => { 
+            c.Configuration = "Release"; 
+        });
+
+        // copy SVG
+        CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
+        CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard/bin/Release/SkiaSharp.Svg.dll", "./output/netstandard/");
     }
 });
 
@@ -182,7 +204,7 @@ Task ("tests")
         RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Desktop.Tests.dll", true);
     }
     // Mac OSX (Any CPU)
-    if (IsRunningOnMac () || IsRunningOnLinux ()) {
+    if (IsRunningOnMac ()) {
         DotNetBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", c => { 
             c.Configuration = "Release"; 
         });
@@ -446,7 +468,7 @@ Task ("nuget")
             PackageNuGet ("./nuget/SkiaSharp.Views.Forms.Mac.nuspec", "./output/");
         }
         if (IsRunningOnLinux ()) {
-            
+            PackageNuGet ("./nuget/SkiaSharp.Linux.nuspec", "./output/");
         }
     }
     // SVG is a PCL

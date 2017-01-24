@@ -100,6 +100,7 @@ Task ("externals-native")
     .IsDependentOn ("externals-ios")
     .IsDependentOn ("externals-tvos")
     .IsDependentOn ("externals-android")
+    .IsDependentOn ("externals-linux")
     .Does (() => 
 {
     // copy all the native files into the output
@@ -137,6 +138,9 @@ Task ("externals-native")
         CopyFileToDirectory ("./native-builds/lib/osx/libSkiaSharp.dylib", "./output/mac/");
     }
     if (IsRunningOnLinux ()) {
+        if (!DirectoryExists ("./output/linux/x64/")) CreateDirectory ("./output/linux/x64/");
+        if (!DirectoryExists ("./output/linux/x86/")) CreateDirectory ("./output/linux/x86/");
+        CopyFileToDirectory ("./native-builds/lib/linux/x64/libSkiaSharp.so", "./output/linux/x64/");
     }
 });
 
@@ -168,6 +172,7 @@ Task ("externals-windows")
 
     // set up the gyp environment variables
     AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
+    SetEnvironmentVariable ("SKIA_OUT", "");
     
     buildArch ("Win32", "x86", "x86");
     buildArch ("x64", "x86_64", "x64");
@@ -204,6 +209,7 @@ Task ("externals-uwp")
 
     // set up the gyp environment variables
     AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
+    SetEnvironmentVariable ("SKIA_OUT", "");
 
     RunGyp ("skia_arch_type='x86_64' skia_gpu=1", "msvs");
     buildArch ("x64", "x64");
@@ -241,6 +247,7 @@ Task ("externals-osx")
     
     // set up the gyp environment variables
     AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
+    SetEnvironmentVariable ("SKIA_OUT", "");
     
     buildArch ("i386", "x86");
     buildArch ("x86_64", "x86_64");
@@ -275,6 +282,7 @@ Task ("externals-ios")
     
     // set up the gyp environment variables
     AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
+    SetEnvironmentVariable ("SKIA_OUT", "");
     
     RunGyp ("skia_os='ios' skia_arch_type='arm' armv7=1 arm_neon=0 skia_gpu=1 ios_sdk_version=8.0", "xcode");
     
@@ -319,6 +327,7 @@ Task ("externals-tvos")
     
     // set up the gyp environment variables
     AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
+    SetEnvironmentVariable ("SKIA_OUT", "");
     
     RunGyp ("skia_os='ios' skia_arch_type='arm' armv7=1 arm_neon=0 skia_gpu=1 ios_sdk_version=9.0", "xcode");
     TransformToTvOS ("./externals/skia/out/gyp");
@@ -364,6 +373,7 @@ Task ("externals-android")
     SetEnvironmentVariable ("ANDROID_HOME", ANDROID_HOME);
     SetEnvironmentVariable ("ANDROID_SDK_ROOT", ANDROID_SDK_ROOT);
     SetEnvironmentVariable ("ANDROID_NDK_HOME", ANDROID_NDK_HOME);
+    SetEnvironmentVariable ("SKIA_OUT", "");
     
     SetEnvironmentVariable ("GYP_DEFINES", "skia_gpu=1");
     buildArch ("x86", "x86");
@@ -385,6 +395,58 @@ Task ("externals-android")
             CreateDirectory ("native-builds/lib/android/" + folder);
         }
         CopyFileToDirectory ("native-builds/libSkiaSharp_android/libs/" + folder + "/libSkiaSharp.so", "native-builds/lib/android/" + folder);
+    }
+});
+
+// this builds the native C and C++ externals for Linux
+Task ("externals-linux")
+    .WithCriteria (
+        !FileExists ("native-builds/lib/linux/x64/libSkiaSharp.so"))
+    .WithCriteria (IsRunningOnLinux ())
+    .Does (() => 
+{
+    var ninja = DEPOT_PATH.CombineWithFilePath ("ninja").FullPath;
+
+    // set up the gyp environment variables
+    AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
+
+    var targets = 
+        "skia_lib pdf sfntly icuuc dng_sdk libSkKTX sksl piex raw_codec zlib libetc1 " +
+        "libwebp_dsp_enc opts_avx opts_sse42 opts_hsw xml svg";
+
+    var buildArch = new Action<string, string> ((arch, folder) => {
+        // setup outputs
+        var outPath = SKIA_PATH.Combine ("out").Combine (folder).FullPath;
+        CreateDirectory (outPath);
+        SetEnvironmentVariable ("SKIA_OUT", outPath);
+
+        // build skia_lib
+        RunGyp ("skia_os='linux' skia_arch_type='" + arch + "' skia_gpu=1 skia_pic=1", "ninja");
+        RunProcess (ninja, new ProcessSettings {
+            Arguments = "-C out/" + folder + "/Release " + targets,
+            WorkingDirectory = SKIA_PATH.FullPath,
+        });
+        // build libSkiaSharp
+        RunProcess ("make", new ProcessSettings {
+            Arguments = "",
+            WorkingDirectory = "native-builds/libSkiaSharp_linux",
+        });
+        // strip
+        RunProcess ("strip", new ProcessSettings {
+            Arguments = "libSkiaSharp.so",
+            WorkingDirectory = "native-builds/libSkiaSharp_linux/bin/" + folder,
+        });
+
+    });
+
+    buildArch ("x86_64", "x64");
+        
+    // copy output
+    foreach (var folder in new [] { "x64" }) {
+        if (!DirectoryExists ("native-builds/lib/linux/" + folder)) {
+            CreateDirectory ("native-builds/lib/linux/" + folder);
+        }
+        CopyFileToDirectory ("native-builds/libSkiaSharp_linux/bin/" + folder + "/libSkiaSharp.so", "native-builds/lib/linux/" + folder);
     }
 });
 
@@ -439,6 +501,9 @@ Task ("clean-externals").Does (() =>
     CleanDirectories ("native-builds/libSkiaSharp_uwp/bin");
     CleanDirectories ("native-builds/libSkiaSharp_uwp/obj");
     CleanDirectories ("externals/angle/uwp");
+    // linux
+    CleanDirectories ("native-builds/libSkiaSharp_linux/bin");
+    CleanDirectories ("native-builds/libSkiaSharp_linux/obj");
     
     // remove compatibility
     InjectCompatibilityExternals (false);
