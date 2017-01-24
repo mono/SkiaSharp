@@ -768,13 +768,7 @@ namespace SkiaSharp
 
 		static SKImageInfo ()
 		{
-			if (PlatformConfiguration.IsUnix) {
-				// Unix depends on the CPU endianess, but we use RGBA
-				PlatformColorType = SKColorType.Rgba8888;
-			} else {
-				// Windows is always BGRA
-				PlatformColorType = SKColorType.Bgra8888;
-			}
+			PlatformColorType = SkiaApi.sk_colortype_get_default_8888 ();
 		}
 
 		public int Width {

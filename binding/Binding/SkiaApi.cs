@@ -79,6 +79,9 @@ namespace SkiaSharp
 #endif
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKColorType sk_colortype_get_default_8888();
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_surface_unref(sk_surface_t t);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_surface_t sk_surface_new_raster(ref SKImageInfo info, ref SKSurfaceProps pros);
