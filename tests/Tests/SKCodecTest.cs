@@ -22,11 +22,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal (128, codec.Info.Width);
 				Assert.Equal (128, codec.Info.Height);
 				Assert.Equal (SKAlphaType.Unpremul, codec.Info.AlphaType);
-				if (IsUnix) {
-					Assert.Equal (SKColorType.Rgba8888, codec.Info.ColorType);
-				} else {
-					Assert.Equal (SKColorType.Bgra8888, codec.Info.ColorType);
-				}
+				Assert.Equal (SKImageInfo.PlatformColorType, codec.Info.ColorType);
 			}
 		}
 		
