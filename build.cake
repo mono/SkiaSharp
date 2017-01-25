@@ -574,20 +574,24 @@ Task ("clean-managed").Does (() =>
 {
     CleanDirectories ("./binding/*/bin");
     CleanDirectories ("./binding/*/obj");
+    DeleteFiles ("./binding/*/project.lock.json");
 
     CleanDirectories ("./samples/*/bin");
     CleanDirectories ("./samples/*/obj");
     CleanDirectories ("./samples/*/AppPackages");
     CleanDirectories ("./samples/*/*/bin");
     CleanDirectories ("./samples/*/*/obj");
+    DeleteFiles ("./samples/*/*/project.lock.json");
     CleanDirectories ("./samples/*/*/AppPackages");
     CleanDirectories ("./samples/*/packages");
 
     CleanDirectories ("./tests/**/bin");
     CleanDirectories ("./tests/**/obj");
+    DeleteFiles ("./tests/**/project.lock.json");
 
     CleanDirectories ("./source/*/*/bin");
     CleanDirectories ("./source/*/*/obj");
+    DeleteFiles ("./source/*/*/project.lock.json");
     CleanDirectories ("./source/*/*/Generated Files");
     CleanDirectories ("./source/packages");
 
