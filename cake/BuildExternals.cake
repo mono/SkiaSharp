@@ -242,6 +242,10 @@ Task ("externals-osx")
             CreateDirectory ("native-builds/lib/osx/" + arch);
         }
         CopyDirectory ("native-builds/libSkiaSharp_osx/build/Release/", "native-builds/lib/osx/" + arch);
+        RunProcess ("strip", new ProcessSettings {
+            Arguments = "-x -S libSkiaSharp.dylib",
+            WorkingDirectory = "native-builds/lib/osx/" + arch,
+        });
         RunInstallNameTool ("native-builds/lib/osx/" + arch, "lib/libSkiaSharp.dylib", "@loader_path/libSkiaSharp.dylib", "libSkiaSharp.dylib");
     });
     
@@ -278,6 +282,14 @@ Task ("externals-ios")
             CreateDirectory ("native-builds/lib/ios/" + arch);
         }
         CopyDirectory ("native-builds/libSkiaSharp_ios/build/Release-" + sdk, "native-builds/lib/ios/" + arch);
+        RunProcess ("strip", new ProcessSettings {
+            Arguments = "-x -S libSkiaSharp",
+            WorkingDirectory = "native-builds/lib/ios/" + arch + "/libSkiaSharp.framework",
+        });
+        RunProcess ("codesign", new ProcessSettings {
+            Arguments = "--force --sign - --timestamp=none libSkiaSharp.framework",
+            WorkingDirectory = "native-builds/lib/ios/" + arch,
+        });
     });
     
     // set up the gyp environment variables
@@ -323,6 +335,14 @@ Task ("externals-tvos")
             CreateDirectory ("native-builds/lib/tvos/" + arch);
         }
         CopyDirectory ("native-builds/libSkiaSharp_tvos/build/Release-" + sdk, "native-builds/lib/tvos/" + arch);
+        RunProcess ("strip", new ProcessSettings {
+            Arguments = "-x -S libSkiaSharp",
+            WorkingDirectory = "native-builds/lib/tvos/" + arch + "/libSkiaSharp.framework",
+        });
+        RunProcess ("codesign", new ProcessSettings {
+            Arguments = "--force --sign - --timestamp=none libSkiaSharp.framework",
+            WorkingDirectory = "native-builds/lib/tvos/" + arch,
+        });
     });
     
     // set up the gyp environment variables

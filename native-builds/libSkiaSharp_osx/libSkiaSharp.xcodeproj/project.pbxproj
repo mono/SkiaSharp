@@ -311,13 +311,6 @@
 			remoteGlobalIDString = 43AF69108FDDD0AB4332A1ED;
 			remoteInfo = libwebp_dsp_enc;
 		};
-		34312B9A1E2D2DB300525459 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 342959D41C61737400BF1BB6 /* libwebp.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 148B376C56BB5FE1630143B1;
-			remoteInfo = libwebp_dsp_neon;
-		};
 		344B47851D1ADD6A00EFE6F9 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 344B476D1D1ADD6A00EFE6F9 /* sfntly.xcodeproj */;
@@ -862,7 +855,6 @@
 				342959E11C61737400BF1BB6 /* libwebp_dec.a */,
 				342959E31C61737400BF1BB6 /* libwebp_demux.a */,
 				342959E51C61737400BF1BB6 /* libwebp_dsp.a */,
-				34312B9B1E2D2DB300525459 /* libwebp_dsp_neon.a */,
 				342959E71C61737400BF1BB6 /* libwebp_dsp_enc.a */,
 				342959E91C61737400BF1BB6 /* libwebp_enc.a */,
 				342959EB1C61737400BF1BB6 /* libwebp_utils.a */,
@@ -1363,13 +1355,6 @@
 			remoteRef = 342959EA1C61737400BF1BB6 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		34312B9B1E2D2DB300525459 /* libwebp_dsp_neon.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libwebp_dsp_neon.a;
-			remoteRef = 34312B9A1E2D2DB300525459 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		344B47861D1ADD6A00EFE6F9 /* libsfntly.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -1732,7 +1717,8 @@
 					"SK_FORCE_DISTANCE_FIELD_TEXT=0",
 					SK_BUILD_FOR_MAC,
 					"SK_DEVELOPER=1",
-					SKIA_DLL,
+					SKIA_C_DLL,
+					"SKIA_IMPLEMENTATION=1",
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -1781,7 +1767,8 @@
 					"SK_FORCE_DISTANCE_FIELD_TEXT=0",
 					SK_BUILD_FOR_MAC,
 					NDEBUG,
-					SKIA_DLL,
+					SKIA_C_DLL,
+					"SKIA_IMPLEMENTATION=1",
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -1789,6 +1776,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
@@ -1829,6 +1818,7 @@
 		21C951601C03D27A003A1E1D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				DEAD_CODE_STRIPPING = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXECUTABLE_PREFIX = "";
