@@ -140,7 +140,9 @@ Task ("externals-native")
     if (IsRunningOnLinux ()) {
         if (!DirectoryExists ("./output/linux/x64/")) CreateDirectory ("./output/linux/x64/");
         if (!DirectoryExists ("./output/linux/x86/")) CreateDirectory ("./output/linux/x86/");
-        CopyFileToDirectory ("./native-builds/lib/linux/x64/libSkiaSharp.so", "./output/linux/x64/");
+        CopyFileToDirectory ("./native-builds/lib/linux/x64/libSkiaSharp.so." + VERSION_SONAME, "./output/linux/x64/");
+        // the second copy excludes the file version
+        CopyFile ("./native-builds/lib/linux/x64/libSkiaSharp.so." + VERSION_SONAME, "./output/linux/x64/libSkiaSharp.so");
     }
 });
 
@@ -448,15 +450,9 @@ Task ("externals-linux")
         });
         // build libSkiaSharp
         RunProcess ("make", new ProcessSettings {
-            Arguments = "",
+            Arguments = "ARCH=" + folder + " VERSION=" + VERSION_FILE,
             WorkingDirectory = "native-builds/libSkiaSharp_linux",
         });
-        // strip
-        RunProcess ("strip", new ProcessSettings {
-            Arguments = "libSkiaSharp.so",
-            WorkingDirectory = "native-builds/libSkiaSharp_linux/bin/" + folder,
-        });
-
     });
 
     buildArch ("x86_64", "x64");
@@ -466,7 +462,7 @@ Task ("externals-linux")
         if (!DirectoryExists ("native-builds/lib/linux/" + folder)) {
             CreateDirectory ("native-builds/lib/linux/" + folder);
         }
-        CopyFileToDirectory ("native-builds/libSkiaSharp_linux/bin/" + folder + "/libSkiaSharp.so", "native-builds/lib/linux/" + folder);
+        CopyFileToDirectory ("native-builds/libSkiaSharp_linux/bin/" + folder + "/libSkiaSharp.so." + VERSION_SONAME, "native-builds/lib/linux/" + folder);
     }
 });
 

@@ -19,6 +19,16 @@ var TestConsoleToolPath_x64 = GetToolPath ("xunit.runner.console/tools/xunit.con
 var GenApiToolPath = GetToolPath ("Microsoft.DotNet.BuildTools.GenAPI/tools/GenAPI.exe");
 var MDocPath = GetToolPath ("mdoc/mdoc.exe");
 
+var VERSION_ASSEMBLY = "1.56.0.0";
+var VERSION_FILE = "1.56.0.0";
+var VERSION_SONAME = VERSION_FILE.Substring(VERSION_FILE.IndexOf(".") + 1);
+var VERSION_PACKAGES = new Dictionary<string, string> {
+    { "SkiaSharp", "1.56.0" },
+    { "SkiaSharp.Views", "1.56.0" },
+    { "SkiaSharp.Views.Forms", "1.56.0" },
+    { "SkiaSharp.Svg", "1.56.0-beta1" },
+};
+
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/depot_tools"));
 DirectoryPath SKIA_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia"));
@@ -512,16 +522,6 @@ Task ("set-versions")
         sha = "{GIT_SHA}";
     }
 
-    // the versions
-    var version = "1.56.0.0";
-    var fileVersion = "1.56.0.0";
-    var versions = new Dictionary<string, string> {
-        { "SkiaSharp", "1.56.0" },
-        { "SkiaSharp.Views", "1.56.0" },
-        { "SkiaSharp.Views.Forms", "1.56.0" },
-        { "SkiaSharp.Svg", "1.56.0-beta1" },
-    };
-
     var files = new List<string> ();
     var add = new Action<string> (glob => {
         files.AddRange (GetFiles (glob).Select (p => MakeAbsolute (p).ToString ()));
@@ -542,22 +542,22 @@ Task ("set-versions")
     add ("./samples/*/*/*.csproj");
     // update
     foreach (var file in files) {
-        UpdateSkiaSharpVersion (file, versions);
+        UpdateSkiaSharpVersion (file, VERSION_PACKAGES);
     }
 
     // assembly infos
     UpdateAssemblyInfo (
         "./binding/Binding/Properties/SkiaSharpAssemblyInfo.cs",
-        version, fileVersion, sha);
+        VERSION_ASSEMBLY, VERSION_FILE, sha);
     UpdateAssemblyInfo (
         "./source/SkiaSharp.Views/SkiaSharp.Views.Shared/Properties/SkiaSharpViewsAssemblyInfo.cs",
-        version, fileVersion, sha);
+        VERSION_ASSEMBLY, VERSION_FILE, sha);
     UpdateAssemblyInfo (
         "./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Shared/Properties/SkiaSharpViewsFormsAssemblyInfo.cs",
-        version, fileVersion, sha);
+        VERSION_ASSEMBLY, VERSION_FILE, sha);
     UpdateAssemblyInfo (
         "./source/SkiaSharp.Svg/SkiaSharp.Svg.Shared/Properties/SkiaSharpSvgAssemblyInfo.cs",
-        version, fileVersion, sha);
+        VERSION_ASSEMBLY, VERSION_FILE, sha);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
