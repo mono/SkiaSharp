@@ -33,7 +33,10 @@ namespace SkiaSharp.Tests
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf")))
 			{
-				Assert.Equal("Roboto2", typeface.FamilyName);
+				if (IsLinux) // see issue #225
+					Assert.Equal("", typeface.FamilyName);
+				else
+					Assert.Equal("Roboto2", typeface.FamilyName);
 			}
 		}
 
@@ -60,7 +63,10 @@ namespace SkiaSharp.Tests
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "SpiderSymbol.ttf")))
 			{
-				Assert.Equal("SpiderSymbol", typeface.FamilyName);
+				if (IsLinux) // see issue #225
+					Assert.Equal("", typeface.FamilyName);
+				else
+					Assert.Equal("SpiderSymbol", typeface.FamilyName);
 				var tables = typeface.GetTableTags();
 				Assert.Equal(ExpectedTablesSpiderFont.Length, tables.Length);
 
@@ -75,7 +81,10 @@ namespace SkiaSharp.Tests
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "ReallyBigA.ttf")))
 			{
-				Assert.Equal("ReallyBigA", typeface.FamilyName);
+				if (IsLinux) // see issue #225
+					Assert.Equal("", typeface.FamilyName);
+				else
+					Assert.Equal("ReallyBigA", typeface.FamilyName);
 				var tables = typeface.GetTableTags();
 
 				for (int i = 0; i < tables.Length; i++) {

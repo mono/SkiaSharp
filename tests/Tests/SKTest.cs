@@ -13,13 +13,17 @@ namespace SkiaSharp.Tests
 		protected static readonly string PathToFonts = Path.Combine(PathToAssembly, "fonts");
 		protected static readonly string PathToImages = Path.Combine(PathToAssembly, "images");
 
-		protected static bool IsUnix => RuntimeInformation.IsOSPlatform(OSPlatform.OSX) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+		protected static bool IsLinux => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+		protected static bool IsMac => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+		protected static bool IsUnix => IsLinux || IsMac;
 		protected static bool IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 #else
 		protected const string PathToFonts = "fonts";
 		protected const string PathToImages = "images";
 
-		protected static bool IsUnix => Environment.OSVersion.Platform == PlatformID.MacOSX || Environment.OSVersion.Platform == PlatformID.Unix;
+		protected static bool IsMac => Environment.OSVersion.Platform == PlatformID.MacOSX;
+		protected static bool IsUnix => Environment.OSVersion.Platform == PlatformID.Unix || IsMac;
+		protected static bool IsLinux => IsUnix && !IsMac;
 		protected static bool IsWindows => !IsUnix;
 #endif
 	}
