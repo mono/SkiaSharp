@@ -102,7 +102,6 @@ Task ("libs")
         CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.dll", "./output/uwp/");
         CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.pdb", "./output/uwp/");
         CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.pri", "./output/uwp/");
-        CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
 
         // build other source
         RunNuGetRestore ("./source/SkiaSharpSource.Windows.sln");
@@ -119,7 +118,6 @@ Task ("libs")
 
         // copy SVG
         CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
-        CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard/bin/Release/SkiaSharp.Svg.dll", "./output/netstandard/");
     }
 
     if (IsRunningOnMac ()) {
@@ -139,7 +137,6 @@ Task ("libs")
         CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll", "./output/mac/");
         CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.Desktop.targets", "./output/mac/");
         CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.dll.config", "./output/mac/");
-        CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
 
         // build other source
         RunNuGetRestore ("./source/SkiaSharpSource.Mac.sln");
@@ -158,32 +155,43 @@ Task ("libs")
 
         // copy SVG
         CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
-        CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard/bin/Release/SkiaSharp.Svg.dll", "./output/netstandard/");
     }
 
     if (IsRunningOnLinux ()) {
         // build
-        // RunNuGetRestore ("binding/SkiaSharp.Linux.sln");
-        RunDotNetCoreRestore ("binding/SkiaSharp.NetStandard");
+        RunNuGetRestore ("binding/SkiaSharp.Linux.sln");
         DotNetBuild ("binding/SkiaSharp.Linux.sln", c => { 
             c.Configuration = "Release"; 
         });
 
         // copy build output
         CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
-        CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
 
         // build other source
-        // RunNuGetRestore ("./source/SkiaSharpSource.Linux.sln");
-        RunDotNetCoreRestore ("source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard");
+        RunNuGetRestore ("./source/SkiaSharpSource.Linux.sln");
         DotNetBuild ("./source/SkiaSharpSource.Linux.sln", c => { 
             c.Configuration = "Release"; 
         });
 
         // copy SVG
         CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
-        CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard/bin/Release/SkiaSharp.Svg.dll", "./output/netstandard/");
     }
+
+    // .NET Standard / .NET Core
+    // build
+    RunDotNetCoreRestore ("binding/SkiaSharp.NetStandard");
+    DotNetBuild ("binding/SkiaSharp.NetStandard.sln", c => { 
+        c.Configuration = "Release"; 
+    });
+    // copy build output
+    CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
+    // build other source
+    RunDotNetCoreRestore ("source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard");
+    DotNetBuild ("./source/SkiaSharpSource.Linux.sln", c => { 
+        c.Configuration = "Release"; 
+    });
+    // copy SVG
+    CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard/bin/Release/SkiaSharp.Svg.dll", "./output/netstandard/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
