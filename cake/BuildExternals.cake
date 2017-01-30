@@ -376,10 +376,6 @@ Task ("externals-android")
         !FileExists ("native-builds/lib/android/arm64-v8a/libSkiaSharp.so"))
     .Does (() => 
 {
-    var ANDROID_HOME = EnvironmentVariable ("ANDROID_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-sdk-macosx";
-    var ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? ANDROID_HOME;
-    var ANDROID_NDK_HOME = EnvironmentVariable ("ANDROID_NDK_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-ndk";
-    
     var buildArch = new Action<string, string> ((arch, folder) => {
         RunProcess (SKIA_PATH.CombineWithFilePath ("platform_tools/android/bin/android_ninja").FullPath, new ProcessSettings {
             Arguments = "-d " + arch + " skia_lib pdf sfntly icuuc svg xml",
