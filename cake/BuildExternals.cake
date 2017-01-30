@@ -231,7 +231,7 @@ Task ("externals-osx")
     .Does (() =>  
 {
     var buildArch = new Action<string, string> ((arch, skiaArch) => {
-        RunGyp ("skia_arch_type='" + skiaArch + "' skia_gpu=1 skia_pdf_use_sfntly=0 skia_osx_deployment_target=10.8", "xcode");
+        RunGyp ("skia_arch_type='" + skiaArch + "' skia_gpu=1 skia_osx_deployment_target=10.8", "xcode");
         
         XCodeBuild (new XCodeBuildSettings {
             Project = "native-builds/libSkiaSharp_osx/libSkiaSharp.xcodeproj",
@@ -429,7 +429,7 @@ Task ("externals-linux")
     AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
 
     var targets = 
-        "skia_lib pdf sfntly icuuc dng_sdk libSkKTX sksl piex raw_codec zlib libetc1 " +
+        "skia_lib pdf dng_sdk libSkKTX sksl piex raw_codec zlib libetc1 " +
         "libwebp_dsp_enc opts_avx opts_sse42 opts_hsw xml svg";
 
     var buildArch = new Action<string, string> ((arch, folder) => {
@@ -439,7 +439,7 @@ Task ("externals-linux")
         SetEnvironmentVariable ("SKIA_OUT", outPath);
 
         // build skia_lib
-        RunGyp ("skia_os='linux' skia_arch_type='" + arch + "' skia_gpu=1 skia_pic=1", "ninja");
+        RunGyp ("skia_os='linux' skia_arch_type='" + arch + "' skia_gpu=1 skia_pic=1 skia_pdf_use_sfntly=0", "ninja");
         RunProcess (ninja, new ProcessSettings {
             Arguments = "-C out/" + folder + "/Release " + targets,
             WorkingDirectory = SKIA_PATH.FullPath,

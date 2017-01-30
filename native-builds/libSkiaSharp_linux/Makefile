@@ -61,8 +61,6 @@ library_paths = \
 	../../externals/skia/out/${ARCH}/Release/obj/gyp/libjpeg-turbo.a            \
 	../../externals/skia/out/${ARCH}/Release/obj/gyp/libzlib.a                  \
 	../../externals/skia/out/${ARCH}/Release/obj/gyp/libetc1.a                  \
-	../../externals/skia/out/${ARCH}/Release/obj/gyp/libsfntly.a                \
-	../../externals/skia/out/${ARCH}/Release/obj/gyp/libicuuc.a                 \
 	../../externals/skia/out/${ARCH}/Release/obj/gyp/libraw_codec.a             \
 	../../externals/skia/out/${ARCH}/Release/obj/gyp/libSkKTX.a                 \
 	../../externals/skia/out/${ARCH}/Release/obj/gyp/libdng_sdk.a               \
