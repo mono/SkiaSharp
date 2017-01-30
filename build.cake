@@ -191,7 +191,7 @@ Task ("libs")
     CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
     // build other source
     RunDotNetCoreRestore ("source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard");
-    DotNetBuild ("./source/SkiaSharpSource.Linux.sln", c => { 
+    DotNetBuild ("./source/SkiaSharpSource.NetStandard.sln", c => { 
         c.Configuration = "Release"; 
     });
     // copy SVG
