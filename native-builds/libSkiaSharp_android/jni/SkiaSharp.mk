@@ -30,8 +30,6 @@ LOCAL_STATIC_LIBRARIES := libcpu_features \
                           libraw_codec \
                           libfreetype_static \
                           libSkKTX \
-                          libsfntly \
-                          libicuuc \
                           libpiex \
                           libdng_sdk \
                           libpng_static \

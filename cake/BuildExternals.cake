@@ -378,7 +378,7 @@ Task ("externals-android")
 {
     var buildArch = new Action<string, string> ((arch, folder) => {
         RunProcess (SKIA_PATH.CombineWithFilePath ("platform_tools/android/bin/android_ninja").FullPath, new ProcessSettings {
-            Arguments = "-d " + arch + " skia_lib pdf sfntly icuuc svg xml",
+            Arguments = "-d " + arch + " skia_lib pdf svg xml",
             WorkingDirectory = SKIA_PATH.FullPath,
         });
     });
@@ -393,13 +393,13 @@ Task ("externals-android")
     SetEnvironmentVariable ("ANDROID_NDK_HOME", ANDROID_NDK_HOME);
     SetEnvironmentVariable ("SKIA_OUT", "");
     
-    SetEnvironmentVariable ("GYP_DEFINES", "skia_gpu=1");
+    SetEnvironmentVariable ("GYP_DEFINES", "skia_gpu=1 skia_pdf_use_sfntly=0");
     buildArch ("x86", "x86");
-    SetEnvironmentVariable ("GYP_DEFINES", "skia_gpu=1");
+    SetEnvironmentVariable ("GYP_DEFINES", "skia_gpu=1 skia_pdf_use_sfntly=0");
     buildArch ("x86_64", "x86_64");
-    SetEnvironmentVariable ("GYP_DEFINES", "arm_neon=1 arm_version=7 skia_gpu=1");
+    SetEnvironmentVariable ("GYP_DEFINES", "arm_neon=1 arm_version=7 skia_gpu=1 skia_pdf_use_sfntly=0");
     buildArch ("arm_v7_neon", "armeabi-v7a");
-    SetEnvironmentVariable ("GYP_DEFINES", "arm_neon=0 arm_version=8 skia_gpu=1");
+    SetEnvironmentVariable ("GYP_DEFINES", "arm_neon=0 arm_version=8 skia_gpu=1 skia_pdf_use_sfntly=0");
     buildArch ("arm64", "arm64-v8a");
         
     var ndkbuild = MakeAbsolute (Directory (ANDROID_NDK_HOME)).CombineWithFilePath ("ndk-build").FullPath;
