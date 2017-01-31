@@ -552,6 +552,12 @@ Task ("set-versions")
     // sample project files
     add ("./samples/*/*/*.nuget.targets");
     add ("./samples/*/*/*.csproj");
+    // tests packages files
+    add ("./tests/*/packages.config");
+    add ("./tests/*/project.json");
+    // tests project files
+    add ("./tests/*/*.nuget.targets");
+    add ("./tests/*/*.csproj");
     // update
     foreach (var file in files) {
         UpdateSkiaSharpVersion (file, VERSION_PACKAGES);
