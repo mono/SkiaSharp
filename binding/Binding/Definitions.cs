@@ -674,7 +674,9 @@ namespace SkiaSharp
 	}
 
 	public enum SKStrokeJoin {
-		Mitter, Round, Bevel
+		Miter, Round, Bevel,
+		[Obsolete ("Use SKStrokeJoin.Miter instead.")]
+		Mitter = Miter,
 	}
 
 	public enum SKTextAlign {
