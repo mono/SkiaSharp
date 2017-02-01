@@ -14,8 +14,23 @@
     </Interface>
   </Interfaces>
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>Convenience class used to automatically free the image data for a mask in a using statement.</summary>
+    <remarks>
+      <para>This class can be used in a using statement to automatically free the image data of a mask by virtue of having the <see cref="M:SkiaSharp.SKAutoMaskFreeImage.Dispose" /> method.</para>
+      <para></para>
+      <example>
+        <code lang="C#"><![CDATA[// some buffer
+byte[] buffer = ...;
+
+// create the mask, allocating the image
+var mask = SKMask.Create(buffer, bounds, rowBytes, format);
+using (new SKAutoMaskFreeImage(mask.Image)) {
+    // use the mask
+
+    // automatically release the image data
+}]]></code>
+      </example>
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -29,9 +44,11 @@
         <Parameter Name="maskImage" Type="System.IntPtr" />
       </Parameters>
       <Docs>
-        <param name="maskImage">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="maskImage">The image to free.</param>
+        <summary>Create a new instance of <see cref="T:SkiaSharp.SKAutoMaskFreeImage" /> with the specified image to free.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -46,8 +63,10 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Disposes the object, releasing the image data.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
   </Members>

@@ -23,9 +23,9 @@
       <para></para>
       <para>This includes a reference to the device itself, and a stack of matrix/clip values. For any given draw call (e.g. drawRect), the geometry of the object being drawn is transformed by the concatenation of all the matrices in the stack. The transformed geometry is clipped by the intersection of all of the clips in the stack.</para>
       <para></para>
-      <para>While the Canvas holds the state of the drawing device, the state (style) of the object being drawn is held by the Paint, which is provided as a parameter to each of the draw() methods. The Paint holds attributes such as color, typeface, the text size, the stroke width, the shader (for example, gradients, patterns), etc.</para>
+      <para>While the canvas holds the state of the drawing device, the state (style) of the object being drawn is held by the Paint, which is provided as a parameter to each of the draw() methods. The Paint holds attributes such as color, typeface, the text size, the stroke width, the shader (for example, gradients, patterns), etc.</para>
       <para></para>
-      <para>The SkCanvas is returned when accessing the <see cref="P:SkiaSharp.SKSurface.Canvas" /> property of a surface.</para>
+      <para>The SKCanvas is returned when accessing the <see cref="P:SkiaSharp.SKSurface.Canvas" /> property of a surface.</para>
       <para>Transformations</para>
       <para>The <see cref="T:SkiaSharp.SKCanvas" /> supports a number of 2D transformations.   Unlike other 2D graphic systems like CoreGraphics or Cairo, SKCanvas extends the transformations to include perspectives.   </para>
       <para>You can use the <see cref="M:SkiaSharp.SKCanvas.Scale" />, <see cref="M:SkiaSharp.SKCanvas.Skew" />, <see cref="M:SkiaSharp.SKCanvas.Translate" />, <see cref="M:SkiaSharp.SKCanvas.RotateDegrees" />, <see cref="M:SkiaSharp.SKCanvas.RotateRadians" /> to perform some of the most common 2D transformations.   </para>
@@ -448,11 +448,14 @@
         <Parameter Name="value" Type="SkiaSharp.SKData" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <param name="key">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rect">The bounds of the annotation.</param>
+        <param name="key">The name of the annotation.</param>
+        <param name="value">The blob of data to attach to the annotation.</param>
+        <summary>Send an key/value pair "annotation" to the canvas.</summary>
+        <remarks>
+          <para>The caller still retains its ownership of the data (if any).</para>
+          <para>Note: on may canvas types, this information is ignored, but some canvases (e.g. recording a picture or drawing to a PDF document) will pass on this information.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawBitmap">
@@ -978,10 +981,13 @@
         <Parameter Name="value" Type="SkiaSharp.SKData" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rect">The bounds of the annotation.</param>
+        <param name="value">The data that specifies the name of the link’s destination.</param>
+        <summary>Annotates the canvas by making the specified rectangle link to a named destination (see <see cref="M:SkiaSharp.SKCanvas.DrawNamedDestinationAnnotation" />).</summary>
+        <remarks>
+          <para>The caller is responsible for managing its ownership of the data.</para>
+          <para>If the backend of this canvas does not support annotations, this call is safely ignored.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawLinkDestinationAnnotation">
@@ -999,11 +1005,11 @@
         <Parameter Name="value" Type="System.String" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="rect">The bounds of the annotation.</param>
+        <param name="value">The name of the link’s destination.</param>
+        <summary>Annotates the canvas by making the specified rectangle link to a named destination (see <see cref="M:SkiaSharp.SKCanvas.DrawNamedDestinationAnnotation" />).</summary>
+        <returns>Returns the actual data object that was attached to the canvas.</returns>
+        <remarks>If the backend of this canvas does not support annotations, this call is safely ignored.</remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawNamedDestinationAnnotation">
@@ -1021,10 +1027,13 @@
         <Parameter Name="value" Type="SkiaSharp.SKData" />
       </Parameters>
       <Docs>
-        <param name="point">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="point">The location of the destination.</param>
+        <param name="value">The data that specifies the name of the destination.</param>
+        <summary>Annotates the canvas by associating a name with the specified point (see <see cref="M:SkiaSharp.SKCanvas.DrawLinkDestinationAnnotation" />).</summary>
+        <remarks>
+          <para>The caller is responsible for managing its ownership of the data.</para>
+          <para>If the backend of this canvas does not support annotations, this call is safely ignored.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawNamedDestinationAnnotation">
@@ -1042,11 +1051,11 @@
         <Parameter Name="value" Type="System.String" />
       </Parameters>
       <Docs>
-        <param name="point">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="point">The location of the destination.</param>
+        <param name="value">The name of the destination.</param>
+        <summary>Annotates the canvas by associating a name with the specified point (see <see cref="M:SkiaSharp.SKCanvas.DrawLinkDestinationAnnotation" />).</summary>
+        <returns>Returns the actual data object that was attached to the canvas.</returns>
+        <remarks>If the backend of this canvas does not support annotations, this call is safely ignored.</remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawOval">
@@ -1744,10 +1753,13 @@
         <Parameter Name="value" Type="SkiaSharp.SKData" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rect">The bounds of the annotation.</param>
+        <param name="value">The data that specifies the URL.</param>
+        <summary>Annotates the canvas by associating the specified URL with the specified rectangle (in local coordinates, just like <see cref="M:SkiaSharp.SKCanvas.DrawRect" />).</summary>
+        <remarks>
+          <para>The caller is responsible for managing its ownership of the data.</para>
+          <para>If the backend of this canvas does not support annotations, this call is safely ignored.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawUrlAnnotation">
@@ -1765,11 +1777,11 @@
         <Parameter Name="value" Type="System.String" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="rect">The bounds of the annotation.</param>
+        <param name="value">The URL.</param>
+        <summary>Annotates the canvas by associating the specified URL with the specified rectangle (in local coordinates, just like <see cref="M:SkiaSharp.SKCanvas.DrawRect" />).</summary>
+        <returns>Returns the actual data object that was attached to the canvas.</returns>
+        <remarks>If the backend of this canvas does not support annotations, this call is safely ignored.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Flush">
