@@ -10,8 +10,10 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>A mask is used to describe alpha bitmaps, either 1-bit, 8-bit, or the 3-channel 3D format.</summary>
+    <remarks>
+      <para></para>
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -27,11 +29,13 @@
         <Parameter Name="format" Type="SkiaSharp.SKMaskFormat" />
       </Parameters>
       <Docs>
-        <param name="bounds">To be added.</param>
-        <param name="rowBytes">To be added.</param>
-        <param name="format">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="bounds">The bounds of the mask in the image.</param>
+        <param name="rowBytes">The number of bytes per row.</param>
+        <param name="format">The format of the mask image.</param>
+        <summary>Creates an instance of <see cref="T:SkiaSharp.SKMask" /> with the specified configuration, but a null <see cref="P:SkiaSharp.SKMask.Image" />.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -48,12 +52,14 @@
         <Parameter Name="format" Type="SkiaSharp.SKMaskFormat" />
       </Parameters>
       <Docs>
-        <param name="image">To be added.</param>
-        <param name="bounds">To be added.</param>
-        <param name="rowBytes">To be added.</param>
-        <param name="format">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="image">The pointer to the image data to use as the mask.</param>
+        <param name="bounds">The bounds of the mask in the image.</param>
+        <param name="rowBytes">The number of bytes per row.</param>
+        <param name="format">The format of the mask image.</param>
+        <summary>Creates an instance of <see cref="T:SkiaSharp.SKMask" /> with the specified configuration.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="AllocateImage">
@@ -68,9 +74,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Allocates a memory block for the mask’s image.</summary>
+        <returns>Returns the total size of the allocated memory.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="AllocateImage">
@@ -87,10 +95,12 @@
         <Parameter Name="size" Type="System.Int64" />
       </Parameters>
       <Docs>
-        <param name="size">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="size">The amount of memory to allocate.</param>
+        <summary>Allocates a memory block for a mask’s image.</summary>
+        <returns>Returns a pointer to the allocated memory.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Bounds">
@@ -104,9 +114,13 @@
         <ReturnType>SkiaSharp.SKRectI</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the bounds of the mask in the image.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ComputeImageSize">
@@ -121,9 +135,12 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Calculates the byte size of the mask, assuming only 1 plane.</summary>
+        <returns>Returns the byte size of the mask.</returns>
+        <remarks>
+          <para>Does not account for <see cref="F:SkiaSharp.SKMaskFormat.ThreeD" />. For that, use <see cref="M:SkiaSharp.SKMask.ComputeTotalImageSize" />.</para>
+          <para>If there is an overflow of 32bits, then returns 0.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ComputeTotalImageSize">
@@ -138,9 +155,9 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Calculates the byte size of the mask, taking into account any extra planes (e.g. <see cref="F:SkiaSharp.SKMaskFormat.ThreeD" />).</summary>
+        <returns>Returns the byte size of the mask.</returns>
+        <remarks>If there is an overflow of 32bits, then returns 0.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -160,13 +177,15 @@
         <Parameter Name="format" Type="SkiaSharp.SKMaskFormat" />
       </Parameters>
       <Docs>
-        <param name="image">To be added.</param>
-        <param name="bounds">To be added.</param>
-        <param name="rowBytes">To be added.</param>
-        <param name="format">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="image">The image data to copy into the mask.</param>
+        <param name="bounds">The bounds of the mask in the image.</param>
+        <param name="rowBytes">The number of bytes per row.</param>
+        <param name="format">The format of the mask image.</param>
+        <summary>Creates an instance of <see cref="T:SkiaSharp.SKMask" /> with the specified configuration, and copies the image data.</summary>
+        <returns>Returns the instance of the mask.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Format">
@@ -180,9 +199,13 @@
         <ReturnType>SkiaSharp.SKMaskFormat</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the format of the mask image.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FreeImage">
@@ -197,8 +220,10 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>De-allocate the mask’s image data.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FreeImage">
@@ -215,9 +240,11 @@
         <Parameter Name="image" Type="System.IntPtr" />
       </Parameters>
       <Docs>
-        <param name="image">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="image">The pointer to a mask’s image data.</param>
+        <summary>De-allocate the specified mask image data.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetAddr">
@@ -235,11 +262,14 @@
         <Parameter Name="y" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="x">The x-cordinate, which must be contained by the mask's bounds.</param>
+        <param name="y">The y-cordinate, which must be contained by the mask's bounds.</param>
+        <summary>Returns the address of the specified pixel, computing the pixel-size at runtime based on the mask format.</summary>
+        <returns>Returns the address of the specified pixel.</returns>
+        <remarks>
+          <para>This will be slightly slower than using one of the routines where the format is implied by the name (e.g. <see cref="M:SkiaSharp.SKMask.GetAddr8" /> or <see cref="M:SkiaSharp.SKMask.GetAddr32" />).</para>
+          <para>This should not be called with <see cref="F:SkiaSharp.SKMaskFormat.BW" />, as it will give unspecified results.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetAddr1">
@@ -257,11 +287,13 @@
         <Parameter Name="y" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="x">The x-cordinate, which must be contained by the mask's bounds.</param>
+        <param name="y">The y-cordinate, which must be contained by the mask's bounds.</param>
+        <summary>Returns the bit value of the specified specified pixel.</summary>
+        <returns>Returns the bit value of the specified specified pixel.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetAddr16">
@@ -279,11 +311,13 @@
         <Parameter Name="y" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="x">The x-cordinate, which must be contained by the mask's bounds.</param>
+        <param name="y">The y-cordinate, which must be contained by the mask's bounds.</param>
+        <summary>Returns the 16-bit value of the specified specified pixel.</summary>
+        <returns>Returns the 16-bit value of the specified specified pixel.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetAddr32">
@@ -301,11 +335,13 @@
         <Parameter Name="y" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="x">The x-cordinate, which must be contained by the mask's bounds.</param>
+        <param name="y">The y-cordinate, which must be contained by the mask's bounds.</param>
+        <summary>Returns the 32-bit value of the specified specified pixel.</summary>
+        <returns>Returns the 32-bit value of the specified specified pixel.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetAddr8">
@@ -323,11 +359,13 @@
         <Parameter Name="y" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="x">The x-cordinate, which must be contained by the mask's bounds.</param>
+        <param name="y">The y-cordinate, which must be contained by the mask's bounds.</param>
+        <summary>Returns the 8-bit value of the specified specified pixel.</summary>
+        <returns>Returns the 8-bit value of the specified specified pixel.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Image">
@@ -341,9 +379,13 @@
         <ReturnType>System.IntPtr</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Get the pointer to the mask’s image data location.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="IsEmpty">
@@ -357,9 +399,13 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a value indicating whether the mask’s bounds are empty.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="RowBytes">
@@ -373,9 +419,13 @@
         <ReturnType>System.UInt32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the number of bytes per row.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
   </Members>
