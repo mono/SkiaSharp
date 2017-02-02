@@ -50,6 +50,7 @@ namespace SkiaSharp
 
 		public float PixelsPerInch { get; set; }
 		public bool ThrowOnUnsupportedElement { get; set; }
+		public SKRect ViewBox { get; private set; }
 		public SKSize CanvasSize { get; private set; }
 		public SKPicture Picture { get; private set; }
 		public string Description { get; private set; }
@@ -83,29 +84,40 @@ namespace SkiaSharp
 			Title = svg.Element(ns + "title")?.Value;
 			Description = svg.Element(ns + "desc")?.Value ?? svg.Element(ns + "description")?.Value;
 
+			// TODO: parse the "preserveAspectRatio" values properly
+			var preserveAspectRatio = svg.Attribute("preserveAspectRatio")?.Value;
+
+			// get the SVG dimensions
+			var viewBoxA = svg.Attribute("viewBox") ?? svg.Attribute("viewPort");
+			if (viewBoxA != null)
+			{
+				ViewBox = ReadRectangle(viewBoxA.Value);
+			}
+
 			if (CanvasSize.IsEmpty)
 			{
-				// get the dimensions
+				// get the user dimensions
 				var widthA = svg.Attribute("width");
 				var heightA = svg.Attribute("height");
 				var width = ReadNumber(widthA);
 				var height = ReadNumber(heightA);
 				var size = new SKSize(width, height);
 
-				var viewBox = SKRect.Create(size);
-				var viewBoxA = svg.Attribute("viewBox") ?? svg.Attribute("viewPort");
-				if (viewBoxA != null)
+				if (widthA == null)
 				{
-					viewBox = ReadRectangle(viewBoxA.Value);
+					size.Width = ViewBox.Width;
 				}
-
-				if (widthA != null && widthA.Value.Contains("%"))
+				else if (widthA.Value.Contains("%"))
 				{
-					size.Width *= viewBox.Width;
+					size.Width *= ViewBox.Width;
 				}
-				if (heightA != null && heightA.Value.Contains("%"))
+				if (heightA == null)
 				{
-					size.Height *= viewBox.Height;
+					size.Height = ViewBox.Height;
+				}
+				else if (heightA != null && heightA.Value.Contains("%"))
+				{
+					size.Height *= ViewBox.Height;
 				}
 
 				// set the property
@@ -116,6 +128,23 @@ namespace SkiaSharp
 			using (var recorder = new SKPictureRecorder())
 			using (var canvas = recorder.BeginRecording(SKRect.Create(CanvasSize)))
 			{
+				// scale the SVG dimensions to fit inside the user dimensions
+				if (ViewBox.Width != CanvasSize.Width || ViewBox.Height != CanvasSize.Height)
+				{
+					if (preserveAspectRatio == "none")
+					{
+						canvas.Scale(CanvasSize.Width / ViewBox.Width, CanvasSize.Height / ViewBox.Height);
+					}
+					else
+					{
+						// TODO: just center scale for now
+						var scale = Math.Min(CanvasSize.Width / ViewBox.Width, CanvasSize.Height / ViewBox.Height);
+						var centered = SKRect.Create(CanvasSize).AspectFit(ViewBox.Size);
+						canvas.Translate(centered.Left, centered.Top);
+						canvas.Scale(scale, scale);
+					}
+				}
+
 				LoadElements(svg.Elements(), canvas);
 
 				Picture = recorder.EndRecording();
