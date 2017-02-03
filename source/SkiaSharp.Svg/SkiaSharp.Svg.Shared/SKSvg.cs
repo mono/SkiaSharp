@@ -145,6 +145,9 @@ namespace SkiaSharp
 					}
 				}
 
+				// translate the canvas by the viewBox origin
+				canvas.Translate(-ViewBox.Left, -ViewBox.Top);
+
 				LoadElements(svg.Elements(), canvas);
 
 				Picture = recorder.EndRecording();
