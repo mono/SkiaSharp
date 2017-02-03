@@ -64,6 +64,7 @@ LOCAL_C_INCLUDES       := ../../externals/skia/src/c           \
                           ../../externals/skia/include/xml     \
                           ../../externals/skia/include/svg     \
                           ../../externals/skia/include/utils   \
+                          ../../externals/skia/include/ports   \
                           ../../externals/skia/include/images
 
 LOCAL_CFLAGS           := -DSK_INTERNAL -DSK_GAMMA_APPLY_TO_A8                                   \
