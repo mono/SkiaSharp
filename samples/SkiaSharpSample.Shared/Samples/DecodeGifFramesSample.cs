@@ -6,15 +6,13 @@ using SkiaSharp;
 namespace SkiaSharpSample.Samples
 {
 	[Preserve(AllMembers = true)]
-	public class DecodeGifFramesSample : SampleBase
+	public class DecodeGifFramesSample : AnimatedSampleBase
 	{
 		private int currentFrame = 0;
 		private SKCodec codec = null;
 		private SKImageInfo info = SKImageInfo.Empty;
 		private SKBitmap bitmap = null;
-		private CancellationTokenSource cts;
 		private SKCodecFrameInfo[] frames;
-		private TaskScheduler scheduler;
 
 		[Preserve]
 		public DecodeGifFramesSample()
@@ -27,8 +25,6 @@ namespace SkiaSharpSample.Samples
 
 		protected override async Task OnInit()
 		{
-			await base.OnInit();
-
 			var stream = new SKManagedStream(SampleMedia.Images.AnimatedHeartGif, true);
 			codec = SKCodec.Create(stream);
 			frames = codec.FrameInfo;
@@ -38,28 +34,21 @@ namespace SkiaSharpSample.Samples
 
 			bitmap = new SKBitmap(info);
 
-			cts = new CancellationTokenSource();
+			await base.OnInit();
+		}
 
-			scheduler = TaskScheduler.FromCurrentSynchronizationContext();
+		protected override async Task OnUpdate(CancellationToken token, TaskScheduler mainScheduler)
+		{
+			var duration = frames[currentFrame].Duration;
+			if (duration <= 0)
+				duration = 100;
 
-			var loop = Task.Run(async () =>
-			{
-				while (!cts.IsCancellationRequested)
-				{
-					var duration = frames[currentFrame].Duration;
-					if (duration <= 0)
-						duration = 100;
+			await Task.Delay(duration, token);
 
-					await Task.Delay(duration, cts.Token);
-
-					// next frame
-					currentFrame++;
-					if (currentFrame >= frames.Length)
-						currentFrame = 0;
-
-					new Task(Refresh).Start(scheduler);
-				}
-			}, cts.Token);
+			// next frame
+			currentFrame++;
+			if (currentFrame >= frames.Length)
+				currentFrame = 0;
 		}
 
 		protected override void OnDestroy()
@@ -68,8 +57,6 @@ namespace SkiaSharpSample.Samples
 
 			codec?.Dispose();
 			codec = null;
-
-			cts.Cancel();
 		}
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)

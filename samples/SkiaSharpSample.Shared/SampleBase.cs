@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using SkiaSharp;
 
@@ -141,6 +142,42 @@ namespace SkiaSharpSample
 		{
 			RefreshRequested?.Invoke(this, EventArgs.Empty);
 		}
+	}
+
+	public abstract class AnimatedSampleBase : SampleBase
+	{
+		private CancellationTokenSource cts;
+
+		[Preserve]
+		public AnimatedSampleBase()
+		{
+		}
+
+		protected override async Task OnInit()
+		{
+			await base.OnInit();
+
+			var scheduler = TaskScheduler.FromCurrentSynchronizationContext();
+			cts = new CancellationTokenSource();
+			var loop = Task.Run(async () =>
+			{
+				while (!cts.IsCancellationRequested)
+				{
+					await OnUpdate(cts.Token, scheduler);
+
+					new Task(Refresh).Start(scheduler);
+				}
+			}, cts.Token);
+		}
+
+		protected override void OnDestroy()
+		{
+			base.OnDestroy();
+
+			cts.Cancel();
+		}
+
+		protected abstract Task OnUpdate(CancellationToken token, TaskScheduler mainScheduler);
 	}
 
 	public enum GestureState

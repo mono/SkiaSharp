@@ -6,10 +6,9 @@ using SkiaSharp;
 namespace SkiaSharpSample.Samples
 {
 	[Preserve(AllMembers = true)]
-	public class ThreeDSample : SampleBase
+	public class ThreeDSample : AnimatedSampleBase
 	{
 		private float rotation;
-		private CancellationTokenSource cts;
 
 		[Preserve]
 		public ThreeDSample()
@@ -20,29 +19,16 @@ namespace SkiaSharpSample.Samples
 
 		protected override async Task OnInit()
 		{
-			await base.OnInit();
-
-			var scheduler = TaskScheduler.FromCurrentSynchronizationContext();
-			cts = new CancellationTokenSource();
 			rotation = 30;
-			var loop = Task.Run(async () =>
-			{
-				while (!cts.IsCancellationRequested)
-				{
-					await Task.Delay(25, cts.Token);
 
-					rotation = (rotation + 5) % 360;
-
-					new Task(Refresh).Start(scheduler);
-				}
-			}, cts.Token);
+			await base.OnInit();
 		}
 
-		protected override void OnDestroy()
+		protected override async Task OnUpdate(CancellationToken token, TaskScheduler mainScheduler)
 		{
-			base.OnDestroy();
+			await Task.Delay(25, token);
 
-			cts.Cancel();
+			rotation = (rotation + 5) % 360;
 		}
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)

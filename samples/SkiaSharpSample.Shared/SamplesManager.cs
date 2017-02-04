@@ -15,7 +15,7 @@ namespace SkiaSharpSample
 			var assembly = samplesBase.GetTypeInfo().Assembly;
 
 			sampleList = assembly.DefinedTypes
-				.Where(t => t.BaseType == samplesBase)
+				.Where(t => samplesBase.IsAssignableFrom(t) && !t.IsAbstract)
 				.Select(t => (SampleBase)Activator.CreateInstance(t.AsType()))
 				.ToArray();
 		}
