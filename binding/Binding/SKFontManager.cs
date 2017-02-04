@@ -92,6 +92,12 @@ namespace SkiaSharp
 		
 		public SKTypeface MatchCharacter (string familyName, int weight, int width, SKFontStyleSlant slant, string[] bcp47, int character)
 		{
+			// TODO: work around for https://bugs.chromium.org/p/skia/issues/detail?id=6196
+			if (familyName == null)
+			{
+				familyName = string.Empty;
+			}
+
 			return GetObject<SKTypeface> (SkiaApi.sk_fontmgr_match_family_style_character (Handle, familyName, weight, width, slant, bcp47, bcp47?.Length ?? 0, character));
 		}
 	}

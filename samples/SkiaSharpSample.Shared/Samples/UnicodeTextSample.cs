@@ -27,7 +27,7 @@ namespace SkiaSharpSample.Samples
 			using (var courier = SKTypeface.FromFamilyName("Courier New"))
 			{
 				paint.Typeface = courier;
-				canvas.DrawText("'A' and 'ݐ' and '年'", 40, 100, paint);
+				canvas.DrawText("'A', 'ݐ', '年'", 40, 100, paint);
 			}
 
 			// the font manager finds fonts
@@ -38,7 +38,7 @@ namespace SkiaSharpSample.Samples
 			using (var courier = fontManager.MatchCharacter("Courier New", 'ݐ'))
 			{
 				paint.Typeface = courier;
-				canvas.DrawText("'A' and 'ݐ' and '年'", 40, 200, paint);
+				canvas.DrawText("'A', 'ݐ', '年'", 40, 200, paint);
 			}
 
 			// if we know the font doesn't have the character, or don't want to fall back
@@ -46,7 +46,7 @@ namespace SkiaSharpSample.Samples
 			using (var courier = SKTypeface.FromFamilyName("Courier New"))
 			using (var japanese = fontManager.MatchCharacter("Courier New", '年'))
 			{
-				var first = "'A' and 'ݐ' and '";
+				var first = "'A', 'ݐ', '";
 				var mid = "年";
 				var last = "'";
 
@@ -73,7 +73,7 @@ namespace SkiaSharpSample.Samples
 			using (var emoji = fontManager.MatchCharacter(emojiChar))
 			{
 				paint.Typeface = emoji;
-				canvas.DrawText("🌐  🍪  🍕  🚀", 40, 400, paint);
+				canvas.DrawText("🌐 🍪 🍕 🚀", 40, 400, paint);
 			}
 		}
 	}
