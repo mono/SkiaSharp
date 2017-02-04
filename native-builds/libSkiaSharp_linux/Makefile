@@ -28,6 +28,7 @@ include_dirs = \
 	../../externals/skia/include/gpu     \
 	../../externals/skia/include/config  \
 	../../externals/skia/include/utils   \
+	../../externals/skia/include/ports   \
 	../../externals/skia/include/images  \
 	../../externals/skia/include/svg     \
 	../../externals/skia/include/xml

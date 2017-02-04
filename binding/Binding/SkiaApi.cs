@@ -24,6 +24,7 @@ using sk_data_t = System.IntPtr;
 using sk_string_t = System.IntPtr;
 using sk_picture_recorder_t = System.IntPtr;
 using sk_typeface_t = System.IntPtr;
+using sk_fontmgr_t = System.IntPtr;
 using sk_font_table_tag_t = System.UInt32;
 using sk_stream_t = System.IntPtr;
 using sk_stream_filestream_t = System.IntPtr;
@@ -884,6 +885,18 @@ namespace SkiaSharp
 		public extern static SKFontStyleSlant sk_typeface_get_font_slant(sk_typeface_t typeface);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SKTypefaceStyle sk_typeface_get_style(sk_typeface_t typeface);
+
+		// FontMgr
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_fontmgr_t sk_fontmgr_ref_default();
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_fontmgr_unref(sk_fontmgr_t fontmgr);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_fontmgr_count_families(sk_fontmgr_t fontmgr);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_fontmgr_get_family_name(sk_fontmgr_t fontmgr, int index, sk_string_t familyName);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_typeface_t sk_fontmgr_match_family_style_character(sk_fontmgr_t fontmgr, [MarshalAs(UnmanagedType.LPStr)] string familyName, int weight, int width, SKFontStyleSlant slant, [In] [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] bcp47, int bcp47Count, int character);
 
 		// Streams
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]

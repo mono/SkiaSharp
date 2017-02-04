@@ -381,8 +381,18 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
-			var bytes = Util.GetEncodedText (text, paint.TextEncoding);
-			SkiaApi.sk_canvas_draw_text (Handle, bytes, bytes.Length, x, y, paint.Handle);
+			var bytes = StringUtilities.GetEncodedText (text, paint.TextEncoding);
+			DrawText (bytes, x, y, paint);
+		}
+
+		public void DrawText (byte[] text, float x, float y, SKPaint paint)
+		{
+			if (text == null)
+				throw new ArgumentNullException (nameof (text));
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
+
+			SkiaApi.sk_canvas_draw_text (Handle, text, text.Length, x, y, paint.Handle);
 		}
 
 		[Obsolete ("Use DrawPositionedText instead.")]
@@ -400,11 +410,29 @@ namespace SkiaSharp
 			if (points == null)
 				throw new ArgumentNullException (nameof (points));
 
-			var bytes = Util.GetEncodedText (text, paint.TextEncoding);
-			SkiaApi.sk_canvas_draw_pos_text (Handle, bytes, bytes.Length, points, paint.Handle);
+			var bytes = StringUtilities.GetEncodedText (text, paint.TextEncoding);
+			DrawPositionedText (bytes, points, paint);
 		}
 
+		public void DrawPositionedText (byte[] text, SKPoint [] points, SKPaint paint)
+		{
+			if (text == null)
+				throw new ArgumentNullException (nameof (text));
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
+			if (points == null)
+				throw new ArgumentNullException (nameof (points));
+
+			SkiaApi.sk_canvas_draw_pos_text (Handle, text, text.Length, points, paint.Handle);
+		}
+
+		[Obsolete ("Use DrawTextOnPath instead.")]
 		public void DrawText (IntPtr buffer, int length, SKPath path, float hOffset, float vOffset, SKPaint paint)
+		{
+			DrawTextOnPath (buffer, length, path, hOffset, vOffset, paint);
+		}
+
+		public void DrawTextOnPath (IntPtr buffer, int length, SKPath path, float hOffset, float vOffset, SKPaint paint)
 		{
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (buffer));
@@ -444,7 +472,13 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_pos_text (Handle, buffer, length, points, paint.Handle);
 		}
 
+		[Obsolete ("Use DrawTextOnPath instead.")]
 		public void DrawText (string text, SKPath path, float hOffset, float vOffset, SKPaint paint)
+		{
+			DrawTextOnPath (text, path, hOffset, vOffset, paint);
+		}
+
+		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKPaint paint)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
@@ -453,8 +487,26 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
-			var bytes = Util.GetEncodedText (text, paint.TextEncoding);
-			SkiaApi.sk_canvas_draw_text_on_path (Handle, bytes, bytes.Length, path.Handle, hOffset, vOffset, paint.Handle);
+			var bytes = StringUtilities.GetEncodedText (text, paint.TextEncoding);
+			DrawTextOnPath (bytes, path, hOffset, vOffset, paint);
+		}
+
+		[Obsolete ("Use DrawTextOnPath instead.")]
+		public void DrawText (byte[] text, SKPath path, float hOffset, float vOffset, SKPaint paint)
+		{
+			DrawTextOnPath (text, path, hOffset, vOffset, paint);
+		}
+
+		public void DrawTextOnPath (byte[] text, SKPath path, float hOffset, float vOffset, SKPaint paint)
+		{
+			if (text == null)
+				throw new ArgumentNullException (nameof (text));
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
+
+			SkiaApi.sk_canvas_draw_text_on_path (Handle, text, text.Length, path.Handle, hOffset, vOffset, paint.Handle);
 		}
 
 		public void Flush ()
@@ -464,7 +516,7 @@ namespace SkiaSharp
 
 		public void DrawAnnotation (SKRect rect, string key, SKData value)
 		{
-			SkiaApi.sk_canvas_draw_annotation (Handle, ref rect, Util.GetEncodedText (key, SKTextEncoding.Utf8), value == null ? IntPtr.Zero : value.Handle);
+			SkiaApi.sk_canvas_draw_annotation (Handle, ref rect, StringUtilities.GetEncodedText (key, SKTextEncoding.Utf8), value == null ? IntPtr.Zero : value.Handle);
 		}
 
 		public void DrawUrlAnnotation (SKRect rect, SKData value)
