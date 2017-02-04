@@ -33,7 +33,7 @@ namespace SkiaSharpSample.Samples
 			// the font manager finds fonts
 			var fontManager = SKFontManager.Default;
 
-			// or, we can try and make sure (fallback to default font)
+			// or, we can try and make sure that we have the character, and hope it has the others
 			using (var paint = basePaint.Clone())
 			using (var courier = fontManager.MatchCharacter("Courier New", 'ݐ'))
 			{
@@ -44,10 +44,13 @@ namespace SkiaSharpSample.Samples
 			// if we know the font doesn't have the character, or don't want to fall back
 			using (var paint = basePaint.Clone())
 			using (var courier = SKTypeface.FromFamilyName("Courier New"))
+			using (var arabic = fontManager.MatchCharacter("Courier New", 'ݐ'))
 			using (var japanese = fontManager.MatchCharacter("Courier New", '年'))
 			{
-				var first = "'A', 'ݐ', '";
-				var mid = "年";
+				var first = "'A', '";
+				var arabChar = "ݐ";
+				var mid = "', '";
+				var japChar = "年";
 				var last = "'";
 
 				float x = 40;
@@ -57,10 +60,20 @@ namespace SkiaSharpSample.Samples
 				canvas.DrawText(first, x, 300, paint);
 				x += paint.MeasureText(first);
 
-				// the japanese character
-				paint.Typeface = japanese;
+				// the arab character
+				paint.Typeface = arabic;
+				canvas.DrawText(arabChar, x, 300, paint);
+				x += paint.MeasureText(arabChar);
+
+				// draw the next bit
+				paint.Typeface = courier;
 				canvas.DrawText(mid, x, 300, paint);
 				x += paint.MeasureText(mid);
+
+				// the japanese character
+				paint.Typeface = japanese;
+				canvas.DrawText(japChar, x, 300, paint);
+				x += paint.MeasureText(japChar);
 
 				// the end
 				paint.Typeface = courier;
