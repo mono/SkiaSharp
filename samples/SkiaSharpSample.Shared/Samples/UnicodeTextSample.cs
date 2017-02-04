@@ -16,29 +16,64 @@ namespace SkiaSharpSample.Samples
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 		{
-			// stops at 0x530 on Android
-			string text = "\u03A3 and \u0750";
+			canvas.DrawColor(SKColors.White);
 
-			using (var paint = new SKPaint())
-			using (var tf = SKTypeface.FromFamilyName("Tahoma"))
+			var basePaint = new SKPaint();
+			basePaint.IsAntialias = true;
+			basePaint.TextSize = 60;
+
+			// first, we can just use a font (system default if not exists)
+			using (var paint = basePaint.Clone())
+			using (var courier = SKTypeface.FromFamilyName("Courier New"))
 			{
-				canvas.DrawColor(SKColors.White);
-
-				paint.IsAntialias = true;
-				paint.TextSize = 60;
-				paint.Typeface = tf;
-				canvas.DrawText(text, 50, 100, paint);
+				paint.Typeface = courier;
+				canvas.DrawText("'A' and 'ݐ' and '年'", 40, 100, paint);
 			}
 
-			using (var paint = new SKPaint())
-			using (var tf = SKTypeface.FromFamilyName("Times New Roman"))
-			{
-				paint.Color = SampleMedia.Colors.XamarinDarkBlue;
+			// the font manager finds fonts
+			var fontManager = SKFontManager.Default;
 
-				paint.IsAntialias = true;
-				paint.TextSize = 60;
-				paint.Typeface = tf;
-				canvas.DrawText(text, 50, 200, paint);
+			// or, we can try and make sure (fallback to default font)
+			using (var paint = basePaint.Clone())
+			using (var courier = fontManager.MatchCharacter("Courier New", 'ݐ'))
+			{
+				paint.Typeface = courier;
+				canvas.DrawText("'A' and 'ݐ' and '年'", 40, 200, paint);
+			}
+
+			// if we know the font doesn't have the character, or don't want to fall back
+			using (var paint = basePaint.Clone())
+			using (var courier = SKTypeface.FromFamilyName("Courier New"))
+			using (var japanese = fontManager.MatchCharacter("Courier New", '年'))
+			{
+				var first = "'A' and 'ݐ' and '";
+				var mid = "年";
+				var last = "'";
+
+				float x = 40;
+
+				// draw the first bit
+				paint.Typeface = courier;
+				canvas.DrawText(first, x, 300, paint);
+				x += paint.MeasureText(first);
+
+				// the japanese character
+				paint.Typeface = japanese;
+				canvas.DrawText(mid, x, 300, paint);
+				x += paint.MeasureText(mid);
+
+				// the end
+				paint.Typeface = courier;
+				canvas.DrawText(last, x, 300, paint);
+			}
+
+			// let's draw some emojis (UTF-32 characters)
+			var emojiChar = StringUtilities.GetUnicodeCharacterCode("🚀", SKTextEncoding.Utf32);
+			using (var paint = basePaint.Clone())
+			using (var emoji = fontManager.MatchCharacter(emojiChar))
+			{
+				paint.Typeface = emoji;
+				canvas.DrawText("🌐  🍪  🍕  🚀", 40, 400, paint);
 			}
 		}
 	}
