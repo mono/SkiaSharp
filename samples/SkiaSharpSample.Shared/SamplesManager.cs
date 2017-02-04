@@ -11,8 +11,8 @@ namespace SkiaSharpSample
 
 		static SamplesManager()
 		{
-			var samplesBase = typeof(SampleBase);
-			var assembly = samplesBase.GetTypeInfo().Assembly;
+			var samplesBase = typeof(SampleBase).GetTypeInfo();
+			var assembly = samplesBase.Assembly;
 
 			sampleList = assembly.DefinedTypes
 				.Where(t => samplesBase.IsAssignableFrom(t) && !t.IsAbstract)
