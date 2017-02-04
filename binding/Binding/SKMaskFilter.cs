@@ -44,6 +44,21 @@ namespace SkiaSharp
 			return GetObject<SKMaskFilter> (SkiaApi.sk_maskfilter_new_blur (blurStyle, sigma));
 		}
 
+		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKBlurMaskFilterFlags flags)
+		{
+			return CreateBlur (blurStyle, sigma, SKRect.Empty, flags);
+		}
+
+		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder)
+		{
+			return CreateBlur (blurStyle, sigma, occluder, SKBlurMaskFilterFlags.None);
+		}
+
+		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder, SKBlurMaskFilterFlags flags)
+		{
+			return GetObject<SKMaskFilter> (SkiaApi.sk_maskfilter_new_blur_with_flags (blurStyle, sigma, ref occluder, flags));
+		}
+
 		public static SKMaskFilter CreateEmboss(float blurSigma, SKPoint3 direction, float ambient, float specular)
 		{
 			return CreateEmboss(blurSigma, direction.X, direction.Y, direction.Z, ambient, specular);

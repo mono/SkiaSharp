@@ -631,6 +631,8 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_maskfilter_t sk_maskfilter_new_blur(SKBlurStyle style, float sigma);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_maskfilter_t sk_maskfilter_new_blur_with_flags(SKBlurStyle style, float sigma, ref SKRect occluder, SKBlurMaskFilterFlags flags);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_maskfilter_t sk_maskfilter_new_emboss(float blurSigma, float[] direction, float ambient, float specular);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_maskfilter_t sk_maskfilter_new_table(byte[] table /*[256]*/);

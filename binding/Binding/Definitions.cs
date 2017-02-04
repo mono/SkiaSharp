@@ -552,6 +552,14 @@ namespace SkiaSharp
 		Normal, Solid, Outer, Inner
 	}
 
+	[Flags]
+	public enum SKBlurMaskFilterFlags {
+		None = 0x00,
+		IgnoreTransform = 0x01,
+		HighQuality = 0x02,
+		All = IgnoreTransform | HighQuality,
+	}
+
 	[Obsolete ("Use SKBlendMode instead. May be removed in the next version.")]
 	public enum SKXferMode {
 		Clear,
