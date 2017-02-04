@@ -41,7 +41,7 @@ namespace SkiaSharp
 		}
 		
 		public SKString (string str)
-			: this (Util.GetEncodedText (str, SKTextEncoding.Utf8))
+			: this (StringUtilities.GetEncodedText (str, SKTextEncoding.Utf8))
 		{
 		}
 		
@@ -49,7 +49,7 @@ namespace SkiaSharp
 		{
 			var cstr = SkiaApi.sk_string_get_c_str (Handle);
 			var clen = SkiaApi.sk_string_get_size (Handle);
-			return Util.GetString (cstr, (int)clen, SKTextEncoding.Utf8); 
+			return StringUtilities.GetString (cstr, (int)clen, SKTextEncoding.Utf8); 
 		}
 
 		public static explicit operator string (SKString skString)

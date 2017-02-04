@@ -50,27 +50,47 @@ namespace SkiaSharp
 			return families;
 		}
 
-		public SKTypeface MatchFamilyStyleCharacter (string familyName, string[] bcp47, char character)
+		public SKTypeface MatchCharacter (char character)
 		{
-			return MatchFamilyStyleCharacter (familyName, (int)SKFontStyleWeight.Normal, (int)SKFontStyleWidth.Normal, SKFontStyleSlant.Upright, bcp47, (int)character);
+			return MatchCharacter ((int)character);
 		}
 		
-		public SKTypeface MatchFamilyStyleCharacter (string familyName, string[] bcp47, int character)
+		public SKTypeface MatchCharacter (int character)
 		{
-			return MatchFamilyStyleCharacter (familyName, (int)SKFontStyleWeight.Normal, (int)SKFontStyleWidth.Normal, SKFontStyleSlant.Upright, bcp47, character);
+			return MatchCharacter (null, character);
 		}
 		
-		public SKTypeface MatchFamilyStyleCharacter (string familyName, SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant, string[] bcp47, char character)
+		public SKTypeface MatchCharacter (string familyName, char character)
 		{
-			return MatchFamilyStyleCharacter (familyName, (int)weight, (int)width, slant, bcp47, (int)character);
+			return MatchCharacter (familyName, (int)character);
 		}
 		
-		public SKTypeface MatchFamilyStyleCharacter (string familyName, SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant, string[] bcp47, int character)
+		public SKTypeface MatchCharacter (string familyName, int character)
 		{
-			return MatchFamilyStyleCharacter (familyName, (int)weight, (int)width, slant, bcp47, character);
+			return MatchCharacter (familyName, null, character);
 		}
 		
-		public SKTypeface MatchFamilyStyleCharacter (string familyName, int weight, int width, SKFontStyleSlant slant, string[] bcp47, int character)
+		public SKTypeface MatchCharacter (string familyName, string[] bcp47, char character)
+		{
+			return MatchCharacter (familyName, bcp47, (int)character);
+		}
+		
+		public SKTypeface MatchCharacter (string familyName, string[] bcp47, int character)
+		{
+			return MatchCharacter (familyName, SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright, bcp47, character);
+		}
+		
+		public SKTypeface MatchCharacter (string familyName, SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant, string[] bcp47, char character)
+		{
+			return MatchCharacter (familyName, weight, width, slant, bcp47, (int)character);
+		}
+		
+		public SKTypeface MatchCharacter (string familyName, SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant, string[] bcp47, int character)
+		{
+			return MatchCharacter (familyName, (int)weight, (int)width, slant, bcp47, character);
+		}
+		
+		public SKTypeface MatchCharacter (string familyName, int weight, int width, SKFontStyleSlant slant, string[] bcp47, int character)
 		{
 			return GetObject<SKTypeface> (SkiaApi.sk_fontmgr_match_family_style_character (Handle, familyName, weight, width, slant, bcp47, bcp47?.Length ?? 0, character));
 		}
