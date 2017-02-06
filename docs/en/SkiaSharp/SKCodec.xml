@@ -180,6 +180,26 @@
         <remarks>May require reading through the stream to determine info about the frames. As such, future decoding calls may require a rewind. For single-frame images, this will be an empty array.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="GetOutputScanline">
+      <MemberSignature Language="C#" Value="public int GetOutputScanline (int inputScanline);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance int32 GetOutputScanline(int32 inputScanline) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="inputScanline" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="inputScanline">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="GetPixels">
       <MemberSignature Language="C#" Value="public SkiaSharp.SKCodecResult GetPixels (out byte[] pixels);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKCodecResult GetPixels(unsigned int8[] pixels) cil managed" />
@@ -596,6 +616,30 @@
         <remarks>The codec may not be able to scale efficiently to the exact scale factor requested, so return a size that approximates that scale. Upscaling is not supported, so the original size will be returned.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="GetScanlines">
+      <MemberSignature Language="C#" Value="public int GetScanlines (IntPtr dst, int countLines, int rowBytes);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance int32 GetScanlines(native int dst, int32 countLines, int32 rowBytes) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dst" Type="System.IntPtr" />
+        <Parameter Name="countLines" Type="System.Int32" />
+        <Parameter Name="rowBytes" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="dst">To be added.</param>
+        <param name="countLines">To be added.</param>
+        <param name="rowBytes">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="GetValidSubset">
       <MemberSignature Language="C#" Value="public bool GetValidSubset (ref SkiaSharp.SKRectI desiredSubset);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool GetValidSubset(valuetype SkiaSharp.SKRectI desiredSubset) cil managed" />
@@ -712,6 +756,22 @@
         </remarks>
       </Docs>
     </Member>
+    <Member MemberName="NextScanline">
+      <MemberSignature Language="C#" Value="public int NextScanline { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance int32 NextScanline" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="Origin">
       <MemberSignature Language="C#" Value="public SkiaSharp.SKCodecOrigin Origin { get; }" />
       <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKCodecOrigin Origin" />
@@ -781,6 +841,42 @@
           <para>For infinite repetition of frames, this will be -1.</para>
           <para>May require reading the stream to find the repetition count. As such, future decoding calls may require a rewind. For single-frame images, this will be 0.</para>
         </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ScanlineOrder">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKCodecScanlineOrder ScanlineOrder { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKCodecScanlineOrder ScanlineOrder" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKCodecScanlineOrder</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>To be added.</summary>
+        <value>To be added.</value>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SkipScanlines">
+      <MemberSignature Language="C#" Value="public bool SkipScanlines (int countLines);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool SkipScanlines(int32 countLines) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="countLines" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="countLines">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
       </Docs>
     </Member>
     <Member MemberName="StartIncrementalDecode">
@@ -903,6 +999,100 @@
         <remarks>
           <para></para>
         </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="StartScanlineDecode">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKCodecResult StartScanlineDecode (SkiaSharp.SKImageInfo info);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKCodecResult StartScanlineDecode(valuetype SkiaSharp.SKImageInfo info) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+      </Parameters>
+      <Docs>
+        <param name="info">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="StartScanlineDecode">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKCodecResult StartScanlineDecode (SkiaSharp.SKImageInfo info, SkiaSharp.SKCodecOptions options);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKCodecResult StartScanlineDecode(valuetype SkiaSharp.SKImageInfo info, valuetype SkiaSharp.SKCodecOptions options) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="options" Type="SkiaSharp.SKCodecOptions" />
+      </Parameters>
+      <Docs>
+        <param name="info">To be added.</param>
+        <param name="options">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="StartScanlineDecode">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKCodecResult StartScanlineDecode (SkiaSharp.SKImageInfo info, SkiaSharp.SKCodecOptions options, SkiaSharp.SKColorTable colorTable, ref int colorTableCount);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKCodecResult StartScanlineDecode(valuetype SkiaSharp.SKImageInfo info, valuetype SkiaSharp.SKCodecOptions options, class SkiaSharp.SKColorTable colorTable, int32 colorTableCount) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="options" Type="SkiaSharp.SKCodecOptions" />
+        <Parameter Name="colorTable" Type="SkiaSharp.SKColorTable" />
+        <Parameter Name="colorTableCount" Type="System.Int32&amp;" RefType="ref" />
+      </Parameters>
+      <Docs>
+        <param name="info">To be added.</param>
+        <param name="options">To be added.</param>
+        <param name="colorTable">To be added.</param>
+        <param name="colorTableCount">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="StartScanlineDecode">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKCodecResult StartScanlineDecode (SkiaSharp.SKImageInfo info, SkiaSharp.SKCodecOptions options, IntPtr colorTable, ref int colorTableCount);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKCodecResult StartScanlineDecode(valuetype SkiaSharp.SKImageInfo info, valuetype SkiaSharp.SKCodecOptions options, native int colorTable, int32 colorTableCount) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="options" Type="SkiaSharp.SKCodecOptions" />
+        <Parameter Name="colorTable" Type="System.IntPtr" />
+        <Parameter Name="colorTableCount" Type="System.Int32&amp;" RefType="ref" />
+      </Parameters>
+      <Docs>
+        <param name="info">To be added.</param>
+        <param name="options">To be added.</param>
+        <param name="colorTable">To be added.</param>
+        <param name="colorTableCount">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
       </Docs>
     </Member>
   </Members>
