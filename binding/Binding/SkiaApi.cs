@@ -1221,6 +1221,9 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_bitmap_extract_subset(sk_bitmap_t cbitmap, sk_bitmap_t cdst, ref SKRectI subset);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_bitmap_extract_alpha(sk_bitmap_t cbitmap, sk_bitmap_t dst, sk_paint_t paint, out SKPointI offset);
 
 		// SkPixmap
 

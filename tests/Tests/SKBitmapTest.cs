@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using Xunit;
 
@@ -37,6 +38,24 @@ namespace SkiaSharp.Tests
 			}
 
 			Marshal.FreeCoTaskMem(pixels);
+		}
+
+		[Fact]
+		public void TestExtractAlpha()
+		{
+			var path = Path.Combine(PathToImages, "color-wheel.png");
+			var bitmap = SKBitmap.Decode(path);
+
+			var alpha = new SKBitmap();
+
+			SKPointI offset;
+			SKPaint paint = new SKPaint {
+				MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 5.0f)
+			};
+
+			Assert.True(bitmap.ExtractAlpha(alpha, paint, out offset));
+
+			Assert.Equal(new SKPointI(-7, -7), offset);
 		}
 
 		[Fact]

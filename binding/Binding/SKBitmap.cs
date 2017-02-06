@@ -179,6 +179,31 @@ namespace SkiaSharp
 			return SkiaApi.sk_bitmap_extract_subset (Handle, destination.Handle, ref subset);
 		}
 
+		public bool ExtractAlpha(SKBitmap destination)
+		{
+			SKPointI offset;
+			return ExtractAlpha (destination, null, out offset);
+		}
+
+		public bool ExtractAlpha(SKBitmap destination, out SKPointI offset)
+		{
+			return ExtractAlpha (destination, null, out offset);
+		}
+
+		public bool ExtractAlpha(SKBitmap destination, SKPaint paint)
+		{
+			SKPointI offset;
+			return ExtractAlpha (destination, paint, out offset);
+		}
+
+		public bool ExtractAlpha(SKBitmap destination, SKPaint paint, out SKPointI offset)
+		{
+			if (destination == null) {
+				throw new ArgumentNullException (nameof (destination));
+			}
+			return SkiaApi.sk_bitmap_extract_alpha (Handle, destination.Handle, paint == null ? IntPtr.Zero : paint.Handle, out offset);
+		}
+
 		public bool ReadyToDraw => SkiaApi.sk_bitmap_ready_to_draw (Handle); 
 
 		public SKImageInfo Info {
