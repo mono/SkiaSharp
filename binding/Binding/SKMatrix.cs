@@ -593,9 +593,9 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			SkiaApi.sk_3dview_apply_to_canvas (Handle, canvas.Handle);
 		}
 
-		public void DotWithNormal (float dx, float dy, float dz)
+		public float DotWithNormal (float dx, float dy, float dz)
 		{
-			SkiaApi.sk_3dview_dot_with_normal (Handle, dx, dy, dz);
+			return SkiaApi.sk_3dview_dot_with_normal (Handle, dx, dy, dz);
 		}
 	}
 }
