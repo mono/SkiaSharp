@@ -40,7 +40,7 @@
       </AssemblyInfo>
       <Parameters />
       <Docs>
-        <summary>Default construct creates a bitmap with zero width and height, and no pixels. Its colortype is set to <see cref="E:SkiaSharp.SKColorType.Unknown." /></summary>
+        <summary>Default constructor that creates a bitmap with zero width and height, and no pixels. Its colortype is set to <see cref="E:SkiaSharp.SKColorType.Unknown." /></summary>
         <remarks>This constructor does not allocate a backing store for the bitmap.</remarks>
       </Docs>
     </Member>
@@ -901,7 +901,9 @@
       </ReturnValue>
       <Docs>
         <summary>Gets a value indicating whether drawing this bitmap has any effect.</summary>
-        <value>Returns true if drawing this bitmap would have no effect.</value>
+        <value>
+          <para />
+        </value>
         <remarks>
           <para></para>
         </remarks>
@@ -975,10 +977,12 @@
         <Parameter Name="destination" Type="SkiaSharp.SKBitmap" />
       </Parameters>
       <Docs>
-        <param name="destination">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="destination">The bitmap to be filled with alpha layer.</param>
+        <summary>Retrieve the alpha layer of this bitmap.</summary>
+        <returns>Returns true if the alpha layer was retrieved, false otherwise.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ExtractAlpha">
@@ -996,11 +1000,13 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="destination">To be added.</param>
-        <param name="paint">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="destination">The bitmap to be filled with alpha layer.</param>
+        <param name="paint">The paint to draw with.</param>
+        <summary>Retrieve the alpha layer of this bitmap after applying the specified paint.</summary>
+        <returns>Returns true if the alpha layer was retrieved, false otherwise.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ExtractAlpha">
@@ -1018,11 +1024,13 @@
         <Parameter Name="offset" Type="SkiaSharp.SKPointI&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="destination">To be added.</param>
-        <param name="offset">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="destination">The bitmap to be filled with alpha layer.</param>
+        <param name="offset">The top-left coordinate to position the retrieved bitmap so that it visually lines up with the original.</param>
+        <summary>Retrieve the alpha layer of this bitmap.</summary>
+        <returns>Returns true if the alpha layer was retrieved, false otherwise.</returns>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ExtractAlpha">
@@ -1041,12 +1049,14 @@
         <Parameter Name="offset" Type="SkiaSharp.SKPointI&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="destination">To be added.</param>
-        <param name="paint">To be added.</param>
-        <param name="offset">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="destination">The bitmap to be filled with alpha layer.</param>
+        <param name="paint">The paint to draw with.</param>
+        <param name="offset">The top-left coordinate to position the retrieved bitmap so that it visually lines up with the original.</param>
+        <summary>Retrieve the alpha layer of this bitmap after applying the specified paint.</summary>
+        <returns>Returns true if the alpha layer was retrieved, false otherwise.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ExtractSubset">
@@ -1064,11 +1074,11 @@
         <Parameter Name="subset" Type="SkiaSharp.SKRectI" />
       </Parameters>
       <Docs>
-        <param name="destination">To be added.</param>
-        <param name="subset">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="destination">The bitmap that will be set to a subset of this bitmap.</param>
+        <param name="subset">The rectangle of pixels in this bitmap that the destination will reference.</param>
+        <summary>Retrieve a subset of this bitmap.</summary>
+        <returns>Returns true if the subset was retrieved, false otherwise.</returns>
+        <remarks>If possible, the retrieved bitmap will share the pixel memory, and just point into a subset of it. However, if the color type does not support this, a local copy will be made and associated with the destination bitmap.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetAddr">
@@ -1086,11 +1096,13 @@
         <Parameter Name="y" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="x">The x-coordinate of the pixel.</param>
+        <param name="y">The y-coordinate of the pixel.</param>
+        <summary>Returns the address of the specified pixel.</summary>
+        <returns>Returns the address of the specified pixel.</returns>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetAddr16">
@@ -1108,11 +1120,13 @@
         <Parameter Name="y" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="x">The x-coordinate of the pixel.</param>
+        <param name="y">The y-coordinate of the pixel.</param>
+        <summary>Returns the 16-bit value of the specified pixel.</summary>
+        <returns>Returns the 16-bit value of the specified pixel.</returns>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetAddr32">
@@ -1130,11 +1144,13 @@
         <Parameter Name="y" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="x">The x-coordinate of the pixel.</param>
+        <param name="y">The y-coordinate of the pixel.</param>
+        <summary>Returns the 32-bit value of the specified pixel.</summary>
+        <returns>Returns the 32-bit value of the specified pixel.</returns>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetAddr8">
@@ -1152,11 +1168,13 @@
         <Parameter Name="y" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="x">The x-coordinate of the pixel.</param>
+        <param name="y">The y-coordinate of the pixel.</param>
+        <summary>Returns the 8-bit value of the specified pixel.</summary>
+        <returns>Returns the 8-bit value of the specified pixel.</returns>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetIndex8Color">

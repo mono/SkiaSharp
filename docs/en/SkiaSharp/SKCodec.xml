@@ -40,7 +40,7 @@
         <Parameter Name="data" Type="SkiaSharp.SKData" />
       </Parameters>
       <Docs>
-        <param name="data">The data to create the codec with.</param>
+        <param name="data">The data to use when creating the codec.</param>
         <summary>Creates a codec from the specified data.</summary>
         <returns>Returns the new instance of the codec, or null if there was an error.</returns>
         <remarks>
@@ -67,12 +67,10 @@
         <Parameter Name="stream" Type="SkiaSharp.SKStream" />
       </Parameters>
       <Docs>
-        <param name="stream">The stream to create the codec with.</param>
+        <param name="stream">The stream to use when creating the codec.</param>
         <summary>Creates a codec from the specified stream.</summary>
         <returns>Returns the new instance of the codec, or null if there was an error.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks>If null is returned, the stream is deleted immediately. Otherwise, the codec takes ownership of it, and will delete it when done with it.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -194,10 +192,10 @@
         <Parameter Name="inputScanline" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="inputScanline">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="inputScanline">The scanline that is located in the encoded data.</param>
+        <summary>Returns the output y-coordinate of the row that corresponds to an input y-coordinate.</summary>
+        <returns>Returns the output y-coordinate of the row.</returns>
+        <remarks>This will equal <paramref name="inputScanline" />, except in the case of strangely encoded image types (bottom-up bmps, interlaced gifs).</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPixels">
@@ -632,12 +630,12 @@
         <Parameter Name="rowBytes" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="dst">To be added.</param>
-        <param name="countLines">To be added.</param>
-        <param name="rowBytes">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="dst">The memory location to store the scanlines.</param>
+        <param name="countLines">The number of lines to write.</param>
+        <param name="rowBytes">The number of bytes per row.</param>
+        <summary>Writes the next set of scanlines into the destination.</summary>
+        <returns>Returns the number of lines successfully decoded.</returns>
+        <remarks>If number of lines successfully decoded is less than <paramref name="countLines" />, this will fill the remaining lines with a default value.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetValidSubset">
@@ -767,9 +765,13 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the y-coordinate of the next row to be returned by the scanline decoder.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Origin">
@@ -835,7 +837,7 @@
       <Docs>
         <summary>Gets the number of times to repeat, if this image is animated.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
         <remarks>
           <para>For infinite repetition of frames, this will be -1.</para>
@@ -854,9 +856,13 @@
         <ReturnType>SkiaSharp.SKCodecScanlineOrder</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the order in which scanlines will be returned by the scanline decoder.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="SkipScanlines">
@@ -873,10 +879,12 @@
         <Parameter Name="countLines" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="countLines">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="countLines">The number of scanlines to skip.</param>
+        <summary>Skip the specified number of scanlines.</summary>
+        <returns>Returns <see langword="true" /> if the scanlines were successfully skipped, otherwise <see langword="false" /> on failure (incomplete input, the number of lines is less than zero, read all the lines).</returns>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="StartIncrementalDecode">
@@ -1015,10 +1023,10 @@
         <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+        <summary>Prepare for a scanline decode.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>Not all codecs support this.</remarks>
       </Docs>
     </Member>
     <Member MemberName="StartScanlineDecode">
@@ -1036,11 +1044,11 @@
         <Parameter Name="options" Type="SkiaSharp.SKCodecOptions" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="options">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+        <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
+        <summary>Prepare for a scanline decode with the specified options.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>Not all codecs support this.</remarks>
       </Docs>
     </Member>
     <Member MemberName="StartScanlineDecode">
@@ -1060,13 +1068,13 @@
         <Parameter Name="colorTableCount" Type="System.Int32&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="options">To be added.</param>
-        <param name="colorTable">To be added.</param>
-        <param name="colorTableCount">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+        <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
+        <param name="colorTable">The color table to use.</param>
+        <param name="colorTableCount">The size of the color table.</param>
+        <summary>Prepare for a scanline decode with the specified options.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>Not all codecs support this.</remarks>
       </Docs>
     </Member>
     <Member MemberName="StartScanlineDecode">
@@ -1086,13 +1094,13 @@
         <Parameter Name="colorTableCount" Type="System.Int32&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="options">To be added.</param>
-        <param name="colorTable">To be added.</param>
-        <param name="colorTableCount">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+        <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
+        <param name="colorTable">The pointer to the color table to use.</param>
+        <param name="colorTableCount">The size of the color table.</param>
+        <summary>Prepare for a scanline decode with the specified options.</summary>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks>Not all codecs support this.</remarks>
       </Docs>
     </Member>
   </Members>

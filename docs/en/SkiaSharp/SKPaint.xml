@@ -30,44 +30,31 @@
       <para>This shows three different paints, each set up to draw in a different style. Now the caller can intermix these paints freely, either using them as is, or modifying them as the drawing proceeds.</para>
       <para>Beyond simple attributes such as color, strokes, and text values, paints support effects. These are subclasses of different aspects of the drawing pipeline, that when referenced by a paint (each of them is reference-counted), are called to override some part of the drawing pipeline.</para>
       <para>For example, to draw using a gradient instead of a single color, assign a SkShader to the paint.</para>
-      <para>
-        <example>
-          <code lang="C#"><![CDATA[canvas.Clear (canvasColor);
-var start = new SKPoint (0, 0);
-var end = new SKPoint (256, 256);
-var colors = new SKColor[] { new SKColor (0, 0, 255), new SKColor (0, 255, 0) };
-var offsets = new float[] { 0, 1 };
-var shader = SKShader.CreateLinearGradient (start, end, colors, offsets, SKShaderTileMode.Clamp);
-var paint = new SKPaint {
-    Shader = shader
-};
-canvas.DrawPaint (paint);]]></code>
-        </example>
-      </para>
+      <para></para>
       <para>
         <img href="gradient.png" />
       </para>
       <para>Now, anything drawn with that paint will be drawn with the gradient specified in the call to CreateLinearGradient.</para>
       <para>There are five types of effects that can be assigned to an <see cref="T:SkiaSharp.SKPaint" /> object:</para>
-      <para>
-        <list type="bullet">
-          <item>
-            <term>BlendMode - Blend modes and Duff-Porter transfer modes.</term>
-          </item>
-          <item>
-            <term>ColorFilter - Modifies the source colors before applying the BlendMode.</term>
-          </item>
-          <item>
-            <term>MaskFilter - Modification of the alpha mask before it is colorized and drawn (for example, blur)</term>
-          </item>
-          <item>
-            <term>PathEffect - Modification of the geometry (path) before the alpha mask is generated (for example, dashing)</term>
-          </item>
-          <item>
-            <term>Shader - Gradients and bitmap patterns.</term>
-          </item>
-        </list>
-      </para>
+      <para></para>
+      <list type="bullet">
+        <item>
+          <term>BlendMode - Blend modes and Duff-Porter transfer modes.</term>
+        </item>
+        <item>
+          <term>ColorFilter - Modifies the source colors before applying the BlendMode.</term>
+        </item>
+        <item>
+          <term>MaskFilter - Modification of the alpha mask before it is colorized and drawn (for example, blur)</term>
+        </item>
+        <item>
+          <term>PathEffect - Modification of the geometry (path) before the alpha mask is generated (for example, dashing)</term>
+        </item>
+        <item>
+          <term>Shader - Gradients and bitmap patterns.</term>
+        </item>
+      </list>
+      <para></para>
       <para></para>
       <para></para>
     </remarks>
@@ -163,12 +150,14 @@ canvas.DrawPaint (paint);]]></code>
         <Parameter Name="measuredWidth" Type="System.Single&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="maxWidth">To be added.</param>
-        <param name="measuredWidth">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text to be measured.</param>
+        <param name="maxWidth">The maximum width. Only the subset of text whose accumulated widths are &lt;= <paramref name="maxWidth" /> are measured.</param>
+        <param name="measuredWidth">The actual width of the measured text.</param>
+        <summary>Measure the text, stopping early if the measured width exceeds <paramref name="maxWidth" />.</summary>
+        <returns>Return the number of characters of text that were measured. </returns>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="BreakText">
@@ -547,11 +536,13 @@ canvas.DrawPaint (paint);]]></code>
         <Parameter Name="points" Type="SkiaSharp.SKPoint[]" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="points">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text to generate an outline for.</param>
+        <param name="points">The position to use for each glyph in the text.</param>
+        <summary>Returns the path (outline) for the specified text.</summary>
+        <returns>Returns the <see cref="T:SkiaSharp.SKPath" /> containing the outline of the text.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetTextPath">
@@ -600,12 +591,14 @@ canvas.DrawPaint (paint);]]></code>
         <Parameter Name="y" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text to generate an outline for.</param>
+        <param name="x">The x-coordinate of the first glyph in the text.</param>
+        <param name="y">The y-coordinate of the first glyph in the text.</param>
+        <summary>Returns the path (outline) for the specified text.</summary>
+        <returns>Returns the <see cref="T:SkiaSharp.SKPath" /> containing the outline of the text.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetTextPath">
@@ -749,10 +742,10 @@ canvas.DrawPaint (paint);]]></code>
       <Docs>
         <summary>Gets or sets the image filter.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -799,10 +792,10 @@ canvas.DrawPaint (paint);]]></code>
       <Docs>
         <summary>Gets or sets a value indicating whether auto-hinting is enabled.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -848,10 +841,10 @@ canvas.DrawPaint (paint);]]></code>
       <Docs>
         <summary>Gets or sets a value indicating whether text is an embedded bitmap.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -871,10 +864,10 @@ canvas.DrawPaint (paint);]]></code>
       <Docs>
         <summary>Gets or sets a value indicating whether text is linear.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -922,7 +915,7 @@ canvas.DrawPaint (paint);]]></code>
       <Docs>
         <summary>Gets or sets a value indicating whether the text is vertical or horizontal is enabled.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
         <remarks>If this property is set true, then advances are treated as Y values rather than X values, and <see cref="M:SkiaSharp.SKCanvas.DrawText" /> will place its glyphs vertically rather than horizontally.</remarks>
       </Docs>
@@ -988,10 +981,10 @@ canvas.DrawPaint (paint);]]></code>
         <Parameter Name="text" Type="System.Byte[]" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text to be measured.</param>
+        <summary>Measures the specified text.</summary>
+        <returns>Returns the width of the text.</returns>
+        <remarks>This will return the vertical measure if this is vertical text, in which case the returned value should be treated has a height instead of a width.</remarks>
       </Docs>
     </Member>
     <Member MemberName="MeasureText">
@@ -1015,8 +1008,8 @@ canvas.DrawPaint (paint);]]></code>
         <Parameter Name="text" Type="System.String" />
       </Parameters>
       <Docs>
-        <param name="text">The text to be measured</param>
-        <summary>Measures the text.</summary>
+        <param name="text">The text to be measured.</param>
+        <summary>Measures the specified text.</summary>
         <returns>Returns the width of the text.</returns>
         <remarks>This will return the vertical measure if this is vertical text, in which case the returned value should be treated has a height instead of a width.</remarks>
       </Docs>
@@ -1036,11 +1029,11 @@ canvas.DrawPaint (paint);]]></code>
         <Parameter Name="bounds" Type="SkiaSharp.SKRect&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="bounds">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text to be measured.</param>
+        <param name="bounds">The bounds of the text relative to (0, 0)</param>
+        <summary>Measures the specified text.</summary>
+        <returns>Returns the width of the text.</returns>
+        <remarks>This will return the vertical measure if this is vertical text, in which case the returned value should be treated has a height instead of a width.</remarks>
       </Docs>
     </Member>
     <Member MemberName="MeasureText">
@@ -1067,7 +1060,7 @@ canvas.DrawPaint (paint);]]></code>
       <Docs>
         <param name="buffer">The pointer to a region holding text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
         <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
-        <summary>Measures the UTF-8 encoded text.</summary>
+        <summary>Measures the specified UTF-8 encoded text.</summary>
         <returns>Returns the width of the text.</returns>
         <remarks>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.   This only consumes up to <paramref name="length" /> bytes from the buffer.</remarks>
       </Docs>
@@ -1094,9 +1087,9 @@ canvas.DrawPaint (paint);]]></code>
         <Parameter Name="bounds" Type="SkiaSharp.SKRect&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="text">The text to be measured</param>
+        <param name="text">The text to be measured.</param>
         <param name="bounds">The bounds of the text relative to (0, 0)</param>
-        <summary>Measures the text</summary>
+        <summary>Measures the specified text.</summary>
         <returns>Returns the width of the text.</returns>
         <remarks>This will return the vertical measure if this is vertical text, in which case the returned value should be treated has a height instead of a width.</remarks>
       </Docs>
@@ -1127,7 +1120,7 @@ canvas.DrawPaint (paint);]]></code>
         <param name="buffer">The pointer to a region holding text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
         <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
         <param name="bounds">The bounds of the text relative to (0, 0)</param>
-        <summary>Measures the UTF-8 encoded text.</summary>
+        <summary>Measures the specified UTF-8 encoded text.</summary>
         <returns>Returns the width of the text.</returns>
         <remarks>
           <para>This will return the vertical measure if this is vertical text, in which case the returned value should be treated has a height instead of a width.</para>
@@ -1347,10 +1340,10 @@ canvas.DrawPaint (paint);]]></code>
       <Docs>
         <summary>Gets or sets a value indicating whether to use subpixel text positioning.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
