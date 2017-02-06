@@ -106,6 +106,11 @@ namespace SkiaSharp
 			SkiaApi.sk_bitmap_erase_rect (Handle, color, ref rect);
 		}
 
+		public byte GetAddr8(int x, int y) => SkiaApi.sk_bitmap_get_addr_8 (Handle, x, y);
+		public UInt16 GetAddr16(int x, int y) => SkiaApi.sk_bitmap_get_addr_16 (Handle, x, y);
+		public UInt32 GetAddr32(int x, int y) => SkiaApi.sk_bitmap_get_addr_32 (Handle, x, y);
+		public IntPtr GetAddr(int x, int y) => SkiaApi.sk_bitmap_get_addr (Handle, x, y);
+
 		public SKColor GetIndex8Color (int x, int y)
 		{
 			return SkiaApi.sk_bitmap_get_index8_color (Handle, x, y);

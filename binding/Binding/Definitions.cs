@@ -893,6 +893,11 @@ namespace SkiaSharp
 		No,
 	}
 
+	public enum SKCodecScanlineOrder {
+		TopDown,
+		BottomUp
+	}
+
 	[StructLayout(LayoutKind.Sequential)]
 	internal unsafe struct SKCodecOptionsInternal {
 		public SKZeroInitialized fZeroInitialized;

@@ -89,6 +89,52 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		public void DecodeImageScanlines ()
+		{
+			var path = Path.Combine (PathToImages, "CMYK.jpg");
+			var imageHeight = 516;
+
+			var fileData = File.ReadAllBytes (path);
+			var correctBitmap = SKBitmap.Decode (path);
+
+			var stream = new SKFileStream (path);
+			using (var codec = SKCodec.Create (stream)) {
+				var info = new SKImageInfo (codec.Info.Width, codec.Info.Height);
+				using (var scanlineBitmap = new SKBitmap (info)) {
+					scanlineBitmap.Erase (SKColors.Fuchsia);
+
+					var result = codec.StartScanlineDecode (info);
+					Assert.Equal (SKCodecResult.Success, result);
+
+					Assert.Equal (SKCodecScanlineOrder.TopDown, codec.ScanlineOrder);
+					Assert.Equal (0, codec.NextScanline);
+
+					// only decode every second line
+					for	(int y = 0; y < info.Height; y += 2) {
+						Assert.Equal (1, codec.GetScanlines (scanlineBitmap.GetAddr (0, y), 1, info.RowBytes));
+						Assert.Equal (y + 1, codec.NextScanline);
+						if (codec.SkipScanlines (1))
+							Assert.Equal (y + 2, codec.NextScanline);
+						else
+							Assert.Equal (imageHeight, codec.NextScanline); // reached the end
+					}
+
+					Assert.False (codec.SkipScanlines (1));
+					Assert.Equal (imageHeight, codec.NextScanline);
+
+					for (var x = 0; x < info.Width; x++) {
+						for (var y = 0; y < info.Height; y++) {
+							if (y % 2 == 0)
+								Assert.Equal (correctBitmap.GetPixel (x, y), scanlineBitmap.GetPixel (x, y));
+							else
+								Assert.Equal (SKColors.Fuchsia, scanlineBitmap.GetPixel (x, y));
+						}
+					}
+				}
+			}
+		}
+
+		[Fact]
 		public void DecodePartialImage ()
 		{
 			// read the data here, so we can fake a throttle/download

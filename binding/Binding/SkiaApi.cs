@@ -1109,6 +1109,23 @@ namespace SkiaSharp
 		public extern static int sk_codec_get_frame_count(sk_codec_t codec);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_codec_get_frame_info(sk_codec_t codec, [Out] SKCodecFrameInfo[] frameInfo);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKCodecResult sk_codec_start_scanline_decode(sk_codec_t codec, ref SKImageInfo info, ref SKCodecOptionsInternal options, IntPtr ctable, ref int ctableCount);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKCodecResult sk_codec_start_scanline_decode(sk_codec_t codec, ref SKImageInfo info, ref SKCodecOptionsInternal options, IntPtr ctableZero, IntPtr ctableCountZero);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKCodecResult sk_codec_start_scanline_decode(sk_codec_t codec, ref SKImageInfo info, IntPtr optionsZero, IntPtr ctableZero, IntPtr ctableCountZero);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_codec_get_scanlines(sk_codec_t codec, IntPtr dst, int countLines, IntPtr rowBytes);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_codec_skip_scanlines(sk_codec_t codec, int countLines);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKCodecScanlineOrder sk_codec_get_scanline_order(sk_codec_t codec);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_codec_next_scanline(sk_codec_t codec);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_codec_output_scanline(sk_codec_t codec, int inputScanline);
 
 		// Bitmap
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1146,6 +1163,14 @@ namespace SkiaSharp
 		public extern static void sk_bitmap_erase(sk_bitmap_t cbitmap, SKColor color);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_bitmap_erase_rect(sk_bitmap_t cbitmap, SKColor color, ref SKRectI rect);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static byte sk_bitmap_get_addr_8(sk_bitmap_t cbitmap, int x, int y);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static UInt16 sk_bitmap_get_addr_16(sk_bitmap_t cbitmap, int x, int y);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static UInt32 sk_bitmap_get_addr_32(sk_bitmap_t cbitmap, int x, int y);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static IntPtr sk_bitmap_get_addr(sk_bitmap_t cbitmap, int x, int y);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static UInt32 sk_bitmap_get_pixel_color(sk_bitmap_t cbitmap, int x, int y);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]

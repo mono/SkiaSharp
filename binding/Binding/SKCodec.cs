@@ -226,6 +226,53 @@ namespace SkiaSharp
 			return SkiaApi.sk_codec_incremental_decode (Handle, out rowsDecoded);
 		}
 
+		public unsafe SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
+		{
+			var nativeOptions = new SKCodecOptionsInternal {
+				fZeroInitialized = options.ZeroInitialized,
+				fSubset = null,
+				fFrameIndex = (IntPtr) options.FrameIndex,
+				fHasPriorFrame = options.HasPriorFrame
+			};
+			if (options.HasSubset) {
+				var subset = options.Subset.Value;
+				nativeOptions.fSubset = &subset;
+			}
+			return SkiaApi.sk_codec_start_scanline_decode (Handle, ref info, ref nativeOptions, colorTable, ref colorTableCount);
+		}
+
+		public SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options)
+		{
+			int colorTableCount = 0;
+			return StartScanlineDecode (info, options, IntPtr.Zero, ref colorTableCount);
+		}
+
+		public SKCodecResult StartScanlineDecode (SKImageInfo info)
+		{
+			return SkiaApi.sk_codec_start_scanline_decode (Handle, ref info, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+		}
+
+		public SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount)
+		{
+			return StartScanlineDecode (info, options, colorTable == null ? IntPtr.Zero : colorTable.ReadColors (), ref colorTableCount);
+		}
+
+		public int GetScanlines (IntPtr dst, int countLines, int rowBytes)
+		{
+			if (dst == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (dst));
+
+			return SkiaApi.sk_codec_get_scanlines (Handle, dst, countLines, (IntPtr)rowBytes);
+		}
+
+		public bool SkipScanlines (int countLines) => SkiaApi.sk_codec_skip_scanlines (Handle, countLines);
+
+		public SKCodecScanlineOrder ScanlineOrder => SkiaApi.sk_codec_get_scanline_order (Handle);
+
+		public int NextScanline => SkiaApi.sk_codec_next_scanline (Handle);
+
+		public int GetOutputScanline (int inputScanline) => SkiaApi.sk_codec_output_scanline (Handle, inputScanline);
+
 		public static SKCodec Create (SKStream stream)
 		{
 			if (stream == null)
