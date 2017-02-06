@@ -1218,6 +1218,9 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_bitmapscaler_resize(sk_pixmap_t cdst, sk_pixmap_t csrc, SKBitmapResizeMethod method);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_bitmap_extract_subset(sk_bitmap_t cbitmap, sk_bitmap_t cdst, ref SKRectI subset);
 
 		// SkPixmap
 
