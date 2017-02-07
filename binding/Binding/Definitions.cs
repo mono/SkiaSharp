@@ -519,6 +519,14 @@ namespace SkiaSharp
 		InverseEvenOdd
 	}
 
+	[Flags]
+	public enum SKPathSegmentMask {
+		Line  = 1 << 0,
+		Quad  = 1 << 1,
+		Conic = 1 << 2,
+		Cubic = 1 << 3,
+	}
+
 	public enum SKColorType {
 		Unknown,
 		Alpha8,

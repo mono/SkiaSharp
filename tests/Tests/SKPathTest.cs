@@ -64,6 +64,9 @@ namespace SkiaSharp.Tests
 				// the right value
 				Assert.Equal (new SKPoint (68.6763107f, 56.0058575f), path.GetPoint (1));
 				Assert.Equal (new SKPoint (68.6763107f, 56.0058575f), path.Points [1]);
+
+				// the right segment masks
+				Assert.Equal (SKPathSegmentMask.Cubic | SKPathSegmentMask.Line, path.SegmentMasks);
 			}
 		}
 
@@ -239,6 +242,8 @@ namespace SkiaSharp.Tests
 			{
 				path.MoveTo (10f, 10f);
 				path.LineTo (110f, 10f);
+
+				Assert.Equal (SKPathSegmentMask.Line, path.SegmentMasks);
 
 				var measure = new SKPathMeasure (path);
 

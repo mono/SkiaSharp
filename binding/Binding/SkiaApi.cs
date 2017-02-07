@@ -544,6 +544,11 @@ namespace SkiaSharp
 		public extern static void sk_path_to_svg_string (sk_path_t cpath, sk_string_t str);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_path_convert_conic_to_quads(ref SKPoint p0, ref SKPoint p1, ref SKPoint p2, float w, [Out] SKPoint[] pts, int pow2);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_add_poly (sk_path_t cpath, [In] SKPoint[] points, int count, bool close);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKPathSegmentMask sk_path_get_segment_masks (sk_path_t t);
+		
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_pathmeasure_t sk_pathmeasure_new();
