@@ -277,6 +277,29 @@
         </remarks>
       </Docs>
     </Member>
+    <Member MemberName="AddPoly">
+      <MemberSignature Language="C#" Value="public void AddPoly (SkiaSharp.SKPoint[] points, bool close = true);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void AddPoly(valuetype SkiaSharp.SKPoint[] points, bool close) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="points" Type="SkiaSharp.SKPoint[]" />
+        <Parameter Name="close" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="points">The points that make up the polygon.</param>
+        <param name="close">Whether or not to close the path.</param>
+        <summary>Adds a new contour made of just lines.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
     <Member MemberName="AddRect">
       <MemberSignature Language="C#" Value="public void AddRect (SkiaSharp.SKRect rect, SkiaSharp.SKPathDirection direction = SkiaSharp.SKPathDirection.Clockwise);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void AddRect(valuetype SkiaSharp.SKRect rect, valuetype SkiaSharp.SKPathDirection direction) cil managed" />
@@ -1837,6 +1860,26 @@
         <param name="dy1">The amount to add to the y-coordinate of the last point on this contour, to specify end point on a quadratic curve.</param>
         <summary>Same as <see cref="M:SkiaSharp.SKPath.QuadTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
         <remarks> If no <see cref="M:SkiaSharp.SKPath.MoveTo" /> call has been made for this contour, the first point is automatically set to (0, 0).</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SegmentMasks">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPathSegmentMask SegmentMasks { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKPathSegmentMask SegmentMasks" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPathSegmentMask</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets a set of flags indicating if the path contains one or more segments of that type.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Simplify">
