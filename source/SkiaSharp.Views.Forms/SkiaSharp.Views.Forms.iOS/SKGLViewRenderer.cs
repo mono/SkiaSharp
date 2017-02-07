@@ -12,7 +12,7 @@ using SKNativeView = SkiaSharp.Views.iOS.SKGLView;
 
 namespace SkiaSharp.Views.Forms
 {
-	internal class SKGLViewRenderer : ViewRenderer<SKFormsView, SKNativeView>
+	public class SKGLViewRenderer : ViewRenderer<SKFormsView, SKNativeView>
 	{
 		private CADisplayLink displayLink;
 

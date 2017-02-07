@@ -10,7 +10,7 @@ using SKNativeView = SkiaSharp.Views.UWP.SKXamlCanvas;
 
 namespace SkiaSharp.Views.Forms
 {
-	internal class SKCanvasViewRenderer : ViewRenderer<SKFormsView, SKNativeView>
+	public class SKCanvasViewRenderer : ViewRenderer<SKFormsView, SKNativeView>
 	{
 		protected override void OnElementChanged(ElementChangedEventArgs<SKFormsView> e)
 		{
