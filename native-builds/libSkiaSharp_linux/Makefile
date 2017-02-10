@@ -66,7 +66,8 @@ library_paths = \
 	../../externals/skia/out/${ARCH}/Release/obj/gyp/libSkKTX.a                 \
 	../../externals/skia/out/${ARCH}/Release/obj/gyp/libdng_sdk.a               \
 	../../externals/skia/out/${ARCH}/Release/obj/gyp/libpiex.a                  \
-	../../externals/skia/out/${ARCH}/Release/obj/gyp/libexpat_static.a
+	../../externals/skia/out/${ARCH}/Release/obj/gyp/libexpat_static.a          \
+        ../../externals/skia/out/${ARCH}/Release/libfreetype_static.a
 defines = \
 	-DSK_INTERNAL -DSK_GAMMA_APPLY_TO_A8 -DQT_NO_KEYWORDS             \
 	-DSK_ALLOW_STATIC_GLOBAL_INITIALIZERS=1 -DSK_SUPPORT_GPU=1        \
@@ -81,7 +82,7 @@ cflags = \
 	-fPIC -fdata-sections -ffunction-sections
 cflags_c = 
 cflags_cc = -std=c++11 -fno-rtti -fno-threadsafe-statics -Wnon-virtual-dtor
-ldflags = $(library_dirs:%=-L%) -lpthread -ldl -lfontconfig -lfreetype -lGL -lGLU -lX11
+ldflags = $(library_dirs:%=-L%) -lpthread -ldl -lfontconfig -lGL -lGLU -lX11
 includes = $(include_dirs:%=-I%)
 library_names = $(notdir ${library_paths})
 libraries = $(library_names:lib%.a=-l%)
