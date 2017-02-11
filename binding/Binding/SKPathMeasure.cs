@@ -10,13 +10,23 @@ using System;
 
 namespace SkiaSharp
 {
+	[Flags]
+	public enum SKPathMeasureMatrixFlags
+	{
+		GetPosition = 0x01,
+		GetTangent = 0x02,
+		GetPositionAndTangent = GetPosition | GetTangent,
+	}
+
 	public class SKPathMeasure : SKObject
 	{
 		[Flags]
-		public enum MatrixFlags {
-			GetPosition = 0x01,
-			GetTangent = 0x02,
-			GetPositionAndTangent = GetPosition | GetTangent,
+		[Obsolete ("Use SKPathMeasureMatrixFlags instead.")]
+		public enum MatrixFlags
+		{
+			GetPosition = SKPathMeasureMatrixFlags.GetPosition,
+			GetTangent = SKPathMeasureMatrixFlags.GetTangent,
+			GetPositionAndTangent = SKPathMeasureMatrixFlags.GetPositionAndTangent,
 		}
 
 		[Preserve]
@@ -82,7 +92,13 @@ namespace SkiaSharp
 			return SkiaApi.sk_pathmeasure_get_pos_tan (Handle, distance, IntPtr.Zero, out tangent);
 		}
 
+		[Obsolete ("Use GetMatrix(float, out SKMatrix, SKPathMeasureMatrixFlags) instead.")]
 		public bool GetMatrix (float distance, out SKMatrix matrix, MatrixFlags flags)
+		{
+			return GetMatrix (distance, out matrix, (SKPathMeasureMatrixFlags)flags);
+		}
+
+		public bool GetMatrix (float distance, out SKMatrix matrix, SKPathMeasureMatrixFlags flags)
 		{
 			return SkiaApi.sk_pathmeasure_get_matrix (Handle, distance, out matrix, flags);
 		}

@@ -496,11 +496,11 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_add_arc(sk_path_t t, ref SKRect rect, float startAngle, float sweepAngle);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_path_add_path_offset (sk_path_t t, sk_path_t other, float dx, float dy, SKPath.AddMode mode);
+		public extern static void sk_path_add_path_offset (sk_path_t t, sk_path_t other, float dx, float dy, SKPathAddMode mode);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_path_add_path_matrix (sk_path_t t, sk_path_t other, ref SKMatrix matrix, SKPath.AddMode mode);
+		public extern static void sk_path_add_path_matrix (sk_path_t t, sk_path_t other, ref SKMatrix matrix, SKPathAddMode mode);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_path_add_path (sk_path_t t, sk_path_t other, SKPath.AddMode mode);
+		public extern static void sk_path_add_path (sk_path_t t, sk_path_t other, SKPathAddMode mode);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_add_path_reverse (sk_path_t t, sk_path_t other);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -572,7 +572,7 @@ namespace SkiaSharp
 		public extern static bool sk_pathmeasure_get_pos_tan(sk_pathmeasure_t pathMeasure, float distance, out SKPoint position, IntPtr tangentZero);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		public extern static bool sk_pathmeasure_get_matrix(sk_pathmeasure_t pathMeasure, float distance, out SKMatrix matrix, SKPathMeasure.MatrixFlags flags);
+		public extern static bool sk_pathmeasure_get_matrix(sk_pathmeasure_t pathMeasure, float distance, out SKMatrix matrix, SKPathMeasureMatrixFlags flags);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_pathmeasure_get_segment(sk_pathmeasure_t pathMeasure, float start, float stop, sk_path_t dst, bool startWithMoveTo);
@@ -609,7 +609,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_path_iterator_t sk_path_create_iter (sk_path_t path, int forceClose);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static SKPath.Verb sk_path_iter_next (sk_path_iterator_t iterator, [Out] SKPoint [] points, int doConsumeDegenerates, int exact);
+		public extern static SKPathVerb sk_path_iter_next (sk_path_iterator_t iterator, [Out] SKPoint [] points, int doConsumeDegenerates, int exact);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static float sk_path_iter_conic_weight (sk_path_iterator_t iterator);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -623,9 +623,9 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_path_iterator_t sk_path_create_rawiter (sk_path_t path);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static SKPath.Verb sk_path_rawiter_next (sk_path_iterator_t iterator, [Out] SKPoint [] points);
+		public extern static SKPathVerb sk_path_rawiter_next (sk_path_iterator_t iterator, [Out] SKPoint [] points);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static SKPath.Verb sk_path_rawiter_peek (sk_path_iterator_t iterator);
+		public extern static SKPathVerb sk_path_rawiter_peek (sk_path_iterator_t iterator);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static float sk_path_rawiter_conic_weight (sk_path_iterator_t iterator);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

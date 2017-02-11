@@ -10,18 +10,44 @@ using System;
 
 namespace SkiaSharp
 {
+	public enum SKPathVerb
+	{
+		Move,
+		Line,
+		Quad,
+		Conic,
+		Cubic,
+		Close,
+		Done
+	}
+
+	public enum SKPathAddMode
+	{
+		Append,
+		Extend
+	}
+
 	public class SKPath : SKObject
 	{
-		public enum Verb {
-			Move, Line, Quad, Conic, Cubic, Close, Done
+		[Obsolete ("Use SKPathVerb instead.")]
+		public enum Verb
+		{
+			Move = SKPathVerb.Move,
+			Line = SKPathVerb.Line,
+			Quad = SKPathVerb.Quad,
+			Conic = SKPathVerb.Conic,
+			Cubic = SKPathVerb.Cubic,
+			Close = SKPathVerb.Close,
+			Done = SKPathVerb.Done
 		}
 
-		public enum AddMode {
-			Append,
-			Extend
+		[Obsolete ("Use SKPathAddMode instead.")]
+		public enum AddMode
+		{
+			Append = SKPathAddMode.Append,
+			Extend = SKPathAddMode.Extend
 		}
 
-		
 		[Preserve]
 		internal SKPath (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -354,7 +380,13 @@ namespace SkiaSharp
 			SkiaApi.sk_path_transform (Handle, ref matrix);
 		}
 
-		public void AddPath (SKPath other, float dx, float dy, AddMode mode = AddMode.Append)
+		[Obsolete ("Use AddPath(SKPath, float, float, SKPathAddMode) instead.")]
+		public void AddPath (SKPath other, float dx, float dy, SKPath.AddMode mode)
+		{
+			AddPath (other, dx, dy, (SKPathAddMode)mode);
+		}
+
+		public void AddPath (SKPath other, float dx, float dy, SKPathAddMode mode = SKPathAddMode.Append)
 		{
 			if (other == null)
 				throw new ArgumentNullException (nameof (other));
@@ -362,7 +394,13 @@ namespace SkiaSharp
 			SkiaApi.sk_path_add_path_offset (Handle, other.Handle, dx, dy, mode);
 		}
 
-		public void AddPath (SKPath other, ref SKMatrix matrix, AddMode mode = AddMode.Append)
+		[Obsolete ("Use AddPath(SKPath, ref SKMatrix, SKPathAddMode) instead.")]
+		public void AddPath (SKPath other, ref SKMatrix matrix, AddMode mode)
+		{
+			AddPath (other, ref matrix, (SKPathAddMode)mode);
+		}
+
+		public void AddPath (SKPath other, ref SKMatrix matrix, SKPathAddMode mode = SKPathAddMode.Append)
 		{
 			if (other == null)
 				throw new ArgumentNullException (nameof (other));
@@ -370,7 +408,13 @@ namespace SkiaSharp
 			SkiaApi.sk_path_add_path_matrix (Handle, other.Handle, ref matrix, mode);
 		}
 
-		public void AddPath (SKPath other, AddMode mode = AddMode.Append)
+		[Obsolete ("Use AddPath(SKPath, SKPathAddMode) instead.")]
+		public void AddPath (SKPath other, AddMode mode)
+		{
+			AddPath (other, (SKPathAddMode)mode);
+		}
+
+		public void AddPath (SKPath other, SKPathAddMode mode = SKPathAddMode.Append)
 		{
 			if (other == null)
 				throw new ArgumentNullException (nameof (other));
@@ -520,7 +564,7 @@ namespace SkiaSharp
 				base.Dispose (disposing);
 			}
 			
-			public Verb Next (SKPoint [] points, bool doConsumeDegenerates = true, bool exact = false)
+			public SKPathVerb Next (SKPoint [] points, bool doConsumeDegenerates = true, bool exact = false)
 			{
 				if (points == null)
 					throw new ArgumentNullException (nameof (points));
@@ -555,7 +599,7 @@ namespace SkiaSharp
 				base.Dispose (disposing);
 			}
 			
-			public Verb Next (SKPoint [] points)
+			public SKPathVerb Next (SKPoint [] points)
 			{
 				if (points == null)
 					throw new ArgumentNullException (nameof (points));
@@ -565,7 +609,7 @@ namespace SkiaSharp
 			}
 
 			public float ConicWeight () => SkiaApi.sk_path_rawiter_conic_weight (Handle);
-			public Verb Peek () => SkiaApi.sk_path_rawiter_peek (Handle);
+			public SKPathVerb Peek () => SkiaApi.sk_path_rawiter_peek (Handle);
 		}
 
 		public class OpBuilder : SKNativeObject
