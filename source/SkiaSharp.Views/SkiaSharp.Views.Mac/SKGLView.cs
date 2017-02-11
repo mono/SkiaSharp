@@ -3,7 +3,7 @@ using System.ComponentModel;
 using AppKit;
 using CoreGraphics;
 using Foundation;
-using OpenTK.Graphics.OpenGL;
+using SkiaSharp.Views.GlesInterop;
 
 namespace SkiaSharp.Views.Mac
 {
@@ -42,6 +42,23 @@ namespace SkiaSharp.Views.Mac
 		private void Initialize()
 		{
 			WantsBestResolutionOpenGLSurface = true;
+
+			var attrs = new object[]
+			{
+				//NSOpenGLPixelFormatAttribute.OpenGLProfile, (NSOpenGLPixelFormatAttribute)NSOpenGLProfile.VersionLegacy,
+				NSOpenGLPixelFormatAttribute.Accelerated,
+				NSOpenGLPixelFormatAttribute.DoubleBuffer,
+				NSOpenGLPixelFormatAttribute.Multisample,
+
+				NSOpenGLPixelFormatAttribute.ColorSize, (NSOpenGLPixelFormatAttribute)32,
+				NSOpenGLPixelFormatAttribute.AlphaSize, (NSOpenGLPixelFormatAttribute)8,
+				NSOpenGLPixelFormatAttribute.DepthSize, (NSOpenGLPixelFormatAttribute)24,
+				NSOpenGLPixelFormatAttribute.StencilSize, (NSOpenGLPixelFormatAttribute)8,
+				NSOpenGLPixelFormatAttribute.SampleBuffers, (NSOpenGLPixelFormatAttribute)1,
+				NSOpenGLPixelFormatAttribute.Samples, (NSOpenGLPixelFormatAttribute)4,
+				(NSOpenGLPixelFormatAttribute)0,
+			};
+			PixelFormat = new NSOpenGLPixelFormat(attrs);
 		}
 
 		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
@@ -65,6 +82,8 @@ namespace SkiaSharp.Views.Mac
 			renderTarget.Width = (int)size.Width;
 			renderTarget.Height = (int)size.Height;
 
+			Gles.glClear(Gles.GL_STENCIL_BUFFER_BIT);
+
 			using (var surface = SKSurface.Create(context, renderTarget))
 			{
 				// draw on the surface
@@ -76,7 +95,7 @@ namespace SkiaSharp.Views.Mac
 			// flush the SkiaSharp contents to GL
 			context.Flush();
 
-			GL.Flush();
+			OpenGLContext.FlushBuffer();
 		}
 
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;

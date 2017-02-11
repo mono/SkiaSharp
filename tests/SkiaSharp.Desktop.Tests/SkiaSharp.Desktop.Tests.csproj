@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="packages\xunit.runner.visualstudio.2.1.0\build\net20\xunit.runner.visualstudio.props" Condition="Exists('packages\xunit.runner.visualstudio.2.1.0\build\net20\xunit.runner.visualstudio.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -21,6 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,6 +31,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -38,6 +41,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <DebugType>pdbonly</DebugType>
@@ -47,6 +51,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -56,6 +61,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <DebugType>pdbonly</DebugType>
@@ -65,12 +71,9 @@
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="nunit.framework">
-      <HintPath>packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -80,6 +83,22 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="xunit.abstractions">
+      <HintPath>packages\xunit.abstractions.2.0.0\lib\net35\xunit.abstractions.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="xunit.assert">
+      <HintPath>packages\xunit.assert.2.1.0\lib\dotnet\xunit.assert.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="xunit.core">
+      <HintPath>packages\xunit.extensibility.core.2.1.0\lib\dotnet\xunit.core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="xunit.execution.desktop">
+      <HintPath>packages\xunit.extensibility.execution.2.1.0\lib\net45\xunit.execution.desktop.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Tests\SKCodecTest.cs">
@@ -98,65 +117,89 @@
     <Compile Include="..\Tests\SKTest.cs">
       <Link>SKTest.cs</Link>
     </Compile>
-    <Compile Include="..\Tests\SKTypefaceTest.cs" >
+    <Compile Include="..\Tests\SKTypefaceTest.cs">
       <Link>SKTypefaceTest.cs</Link>
     </Compile>
-    <Compile Include="..\Tests\SKPaintTest.cs" >
+    <Compile Include="..\Tests\SKPaintTest.cs">
       <Link>SKPaintTest.cs</Link>
     </Compile>
-    <Compile Include="..\Tests\SKPathTest.cs" >
+    <Compile Include="..\Tests\SKPathTest.cs">
       <Link>SKPathTest.cs</Link>
     </Compile>
-    <Compile Include="..\Tests\SKColorTest.cs" >
+    <Compile Include="..\Tests\SKColorTest.cs">
       <Link>SKColorTest.cs</Link>
     </Compile>
-    <Compile Include="..\Tests\SKBasicTypesTest.cs" >
+    <Compile Include="..\Tests\SKBasicTypesTest.cs">
       <Link>SKBasicTypesTest.cs</Link>
+    </Compile>
+    <Compile Include="..\Tests\SKBitmapTest.cs">
+      <Link>SKBitmapTest.cs</Link>
+    </Compile>
+    <Compile Include="..\Tests\SKDataTest.cs">
+      <Link>SKDataTest.cs</Link>
+    </Compile>
+    <Compile Include="..\Tests\SKColorTableTest.cs">
+      <Link>SKColorTableTest.cs</Link>
+    </Compile>
+    <Compile Include="..\Tests\SKSvgTest.cs">
+      <Link>SKSvgTest.cs</Link>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\..\samples\SkiaSharpSample.Shared\Media\content-font.ttf">
+    <Content Include="..\Content\fonts\content-font.ttf">
       <Link>fonts\content-font.ttf</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\externals\skia\resources\fonts\Distortable.ttf">
+    <Content Include="..\Content\fonts\Distortable.ttf">
       <Link>fonts\Distortable.ttf</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\externals\skia\resources\fonts\Em.ttf">
+    <Content Include="..\Content\fonts\Em.ttf">
       <Link>fonts\Em.ttf</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\externals\skia\resources\fonts\Funkster.ttf">
+    <Content Include="..\Content\fonts\Funkster.ttf">
       <Link>fonts\Funkster.ttf</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\externals\skia\resources\fonts\HangingS.ttf">
+    <Content Include="..\Content\fonts\HangingS.ttf">
       <Link>fonts\HangingS.ttf</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\externals\skia\resources\fonts\ReallyBigA.ttf">
+    <Content Include="..\Content\fonts\ReallyBigA.ttf">
       <Link>fonts\ReallyBigA.ttf</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\externals\skia\resources\fonts\Roboto2-Regular_NoEmbed.ttf">
+    <Content Include="..\Content\fonts\Roboto2-Regular_NoEmbed.ttf">
       <Link>fonts\Roboto2-Regular_NoEmbed.ttf</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\externals\skia\resources\fonts\SpiderSymbol.ttf">
+    <Content Include="..\Content\fonts\SpiderSymbol.ttf">
       <Link>fonts\SpiderSymbol.ttf</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\externals\skia\resources\fonts\test.ttc">
+    <Content Include="..\Content\fonts\test.ttc">
       <Link>fonts\test.ttc</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\samples\SkiaSharpSample.Shared\Media\baboon.png">
+    <Content Include="..\Content\images\baboon.png">
       <Link>images\baboon.png</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\samples\SkiaSharpSample.Shared\Media\color-wheel.png">
+    <Content Include="..\Content\images\color-wheel.png">
       <Link>images\color-wheel.png</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Content\images\logos.svg">
+      <Link>images\logos.svg</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Content\images\animated-heart.gif">
+      <Link>images\animated-heart.gif</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Content\images\CMYK.jpg">
+      <Link>images\CMYK.jpg</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Include="packages.config" />
@@ -169,9 +212,19 @@
       <Project>{eb1bbdcc-fb07-40d5-8b9e-0079e2c2f2df}</Project>
       <Name>SkiaSharp.Desktop</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\source\SkiaSharp.Svg\SkiaSharp.Svg\SkiaSharp.Svg.csproj">
+      <Project>{04C4399A-6740-4733-B6B7-F968232A76C8}</Project>
+      <Name>SkiaSharp.Svg</Name>
+    </ProjectReference>
   </ItemGroup>
-  <Import Project="..\..\binding\SkiaSharp.Desktop\bin\$(Configuration)\SkiaSharp.Desktop.targets" />
+  <Import Project="..\..\binding\SkiaSharp.Desktop\bin\$(Configuration)\nuget\build\net45\SkiaSharp.Desktop.targets" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\xunit.runner.visualstudio.2.1.0\build\net20\xunit.runner.visualstudio.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\xunit.runner.visualstudio.2.1.0\build\net20\xunit.runner.visualstudio.props'))" />
+  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

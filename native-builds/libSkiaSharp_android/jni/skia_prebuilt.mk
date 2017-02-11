@@ -118,23 +118,13 @@ LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libwebp_utils.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := libgiflib
-LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libgiflib.a
+LOCAL_MODULE := libsksl
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libsksl.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := libskia_pdf
 LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_pdf.a
-include $(PREBUILT_STATIC_LIBRARY)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := libsfntly
-LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libsfntly.a
-include $(PREBUILT_STATIC_LIBRARY)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := libicuuc
-LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libicuuc.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -160,6 +150,16 @@ include $(PREBUILT_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 LOCAL_MODULE := libdng_sdk
 LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/obj/gyp/libdng_sdk.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libskia_svg
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_svg.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libskia_xml
+LOCAL_SRC_FILES := $(SKIA_ANDROID_RELEASE)/libskia_xml.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 

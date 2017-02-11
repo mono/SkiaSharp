@@ -69,11 +69,29 @@ namespace SkiaSharpSample.TvSample
 
 		private void OnSampleSelected(SampleBase sample)
 		{
+			// clean up the old sample
+			if (currentSample != null)
+			{
+				currentSample.RefreshRequested -= OnRefreshRequested;
+				currentSample.Destroy();
+			}
+
 			// update the selected sample
 			currentSample = sample;
-			currentSample?.Init(canvas.SetNeedsDisplay);
 
-			// refresh the canvas
+			// prepare the sample
+			if (sample != null)
+			{
+				sample.RefreshRequested += OnRefreshRequested;
+				sample.Init();
+			}
+
+			// refresh the view
+			OnRefreshRequested(null, null);
+		}
+
+		private void OnRefreshRequested(object sender, EventArgs e)
+		{
 			canvas.SetNeedsDisplay();
 		}
 	}

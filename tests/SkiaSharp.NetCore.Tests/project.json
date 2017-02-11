@@ -1,0 +1,49 @@
+{
+    "version": "1.0.0-*",
+    "buildOptions": {
+        "debugType": "portable",
+        "define": [
+            "NET_STANDARD"
+        ],
+        "allowUnsafe": true,
+        "compile": {
+            "include": "../Tests/*.cs",
+            "excludeFiles":[
+                "../Tests/SKSurfaceTest.cs"
+            ]
+        },
+        "copyToOutput": {
+            "mappings": {
+                "fonts/": { "include": "../Content/fonts/" },
+                "images/": { "include": "../Content/images/" }
+            }
+        }
+    },
+    "dependencies": {
+        "xunit": "2.2.0-beta5-build3474",
+        "dotnet-test-xunit": "2.2.0-preview2-build1029",
+
+        "SkiaSharp": "1.56.1",
+        "SkiaSharp.Svg": "1.56.1"
+    },
+    "testRunner": "xunit",
+    "frameworks": {
+        "netcoreapp1.0": {
+            "dependencies": {
+                "Microsoft.NETCore.App": {
+                    "version": "1.0.0"
+                }
+            },
+            "imports": [
+                "portable-net451+win8"
+            ]
+        }
+    },
+    "runtimes": {
+        "win7-x64": { },
+        "win7-x86": { },
+        "osx.10.10-x64": { },
+        "osx.10.11-x64": { },
+        "ubuntu.14.04-x64": { }
+    }
+}

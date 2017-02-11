@@ -1,27 +1,24 @@
 ﻿using System;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.Linq;
-using NUnit.Framework;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	[TestFixture]
 	public class SKPaintTest : SKTest
 	{
-		[Test]
+		[Fact]
 		public void StrokePropertyValuesAreCorrect()
 		{
 			var paint = new SKPaint();
 
 			paint.IsStroke = true;
-			Assert.IsTrue(paint.IsStroke);
+			Assert.True(paint.IsStroke);
 
 			paint.IsStroke = false;
-			Assert.IsFalse(paint.IsStroke);
+			Assert.False(paint.IsStroke);
 		}
 
-		[Test]
+		[Fact]
 		public void GetFillPathIsWorking()
 		{
 			var paint = new SKPaint();
@@ -34,12 +31,12 @@ namespace SkiaSharp.Tests
 			var fillPath = new SKPath();
 			var isFilled = paint.GetFillPath(path, fillPath);
 
-			Assert.IsTrue(isFilled);
-			Assert.AreEqual(rect, fillPath.Bounds);
-			Assert.AreEqual(4, fillPath.PointCount);
+			Assert.True(isFilled);
+			Assert.Equal(rect, fillPath.Bounds);
+			Assert.Equal(4, fillPath.PointCount);
 		}
 
-		[Test]
+		[Fact]
 		public void GetFillPathIsWorkingWithLine()
 		{
 			var paint = new SKPaint();
@@ -54,18 +51,18 @@ namespace SkiaSharp.Tests
 			var fillPath = new SKPath();
 			var isFilled = paint.GetFillPath(path, fillPath);
 
-			Assert.IsTrue(isFilled);
-			Assert.AreEqual(thinRect, fillPath.Bounds);
-			Assert.AreEqual(2, fillPath.PointCount);
+			Assert.True(isFilled);
+			Assert.Equal(thinRect, fillPath.Bounds);
+			Assert.Equal(2, fillPath.PointCount);
 
 			paint.StrokeWidth = 20;
 			paint.IsStroke = true;
 			isFilled = paint.GetFillPath(path, fillPath);
 
-			Assert.IsTrue(isFilled);
-			Assert.AreEqual(rect, fillPath.Bounds);
-			Assert.AreEqual(4 + 1, fillPath.PointCount); // +1 becuase the last point is the same as the first
-			Assert.AreEqual(4, fillPath.Points.Distinct().Count());
+			Assert.True(isFilled);
+			Assert.Equal(rect, fillPath.Bounds);
+			Assert.Equal(4 + 1, fillPath.PointCount); // +1 becuase the last point is the same as the first
+			Assert.Equal(4, fillPath.Points.Distinct().Count());
 		}
 	}
 }

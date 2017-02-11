@@ -1,47 +1,57 @@
 ﻿using System;
-using System.Drawing;
-using System.Drawing.Imaging;
-using NUnit.Framework;
+using System.IO;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	[TestFixture]
 	public abstract class SKTest
 	{
+#if NET_STANDARD
+		protected static readonly string PathToAssembly = Path.GetDirectoryName(typeof(SKTest).GetTypeInfo().Assembly.Location);
+		protected static readonly string PathToFonts = Path.Combine(PathToAssembly, "fonts");
+		protected static readonly string PathToImages = Path.Combine(PathToAssembly, "images");
+
+		protected static bool IsLinux => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+		protected static bool IsMac => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+		protected static bool IsUnix => IsLinux || IsMac;
+		protected static bool IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+#else
+		private static class MacPlatformDetector
+		{
+			internal static readonly Lazy<bool> IsMac = new Lazy<bool> (IsRunningOnMac);
+
+			[DllImport ("libc")]
+			static extern int uname (IntPtr buf);
+
+			static bool IsRunningOnMac ()
+			{
+				IntPtr buf = IntPtr.Zero;
+				try {
+					buf = Marshal.AllocHGlobal (8192);
+					// This is a hacktastic way of getting sysname from uname ()
+					if (uname (buf) == 0) {
+						string os = Marshal.PtrToStringAnsi (buf);
+						if (os == "Darwin")
+							return true;
+					}
+				} catch {
+				} finally {
+					if (buf != IntPtr.Zero)
+						Marshal.FreeHGlobal (buf);
+				}
+				return false;
+			}
+		}
+
 		protected const string PathToFonts = "fonts";
 		protected const string PathToImages = "images";
 
-		protected const int width = 100;
-		protected const int height = 100;
-
-		protected static bool IsUnix => Environment.OSVersion.Platform == PlatformID.MacOSX || Environment.OSVersion.Platform == PlatformID.Unix;
+		protected static bool IsMac => MacPlatformDetector.IsMac.Value;
+		protected static bool IsUnix => Environment.OSVersion.Platform == PlatformID.Unix || IsMac;
+		protected static bool IsLinux => IsUnix && !IsMac;
 		protected static bool IsWindows => !IsUnix;
-
-		protected Bitmap bitmap;
-
-		[SetUp]
-		public void Setup()
-		{
-			bitmap = new Bitmap(width, height, PixelFormat.Format32bppPArgb);
-		}
-
-		[TearDown]
-		public void TearDown()
-		{
-			bitmap.Dispose();
-			bitmap = null;
-		}
-		
-		public void Draw(Action<SKSurface> draw)
-		{
-			var data = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
-
-			using (var surface = SKSurface.Create(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, data.Scan0, data.Stride))
-			{
-				draw(surface);
-			}
-
-			bitmap.UnlockBits(data);
-		}
+#endif
 	}
 }

@@ -36,9 +36,9 @@ namespace SkiaSharp
 			}
 		}
 
-		public SKCanvas BeginRecording (SKRect rect)
+		public SKCanvas BeginRecording (SKRect cullRect)
 		{
-			return GetObject<SKCanvas> (SkiaApi.sk_picture_recorder_begin_recording (Handle, ref rect), false);
+			return GetObject<SKCanvas> (SkiaApi.sk_picture_recorder_begin_recording (Handle, ref cullRect), false);
 		}
 
 		public SKPicture EndRecording ()

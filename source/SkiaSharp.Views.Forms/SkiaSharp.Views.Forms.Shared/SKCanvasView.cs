@@ -6,6 +6,9 @@ namespace SkiaSharp.Views.Forms
 	[RenderWith(typeof(SKCanvasViewRenderer))]
 	public class SKCanvasView : View, ISKCanvasViewController
 	{
+		public static readonly BindableProperty IgnorePixelScalingProperty = 
+			BindableProperty.Create(nameof(IgnorePixelScaling), typeof(bool), typeof(SKCanvasView), default(bool));
+
 		// the user can subscribe to repaint
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
@@ -23,6 +26,12 @@ namespace SkiaSharp.Views.Forms
 				GetCanvasSize?.Invoke(this, args);
 				return args.CanvasSize;
 			}
+		}
+
+		public bool IgnorePixelScaling
+		{
+			get { return (bool)GetValue(IgnorePixelScalingProperty); }
+			set { SetValue(IgnorePixelScalingProperty, value); }
 		}
 
 		// the user asks to repaint

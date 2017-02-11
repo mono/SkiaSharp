@@ -6,12 +6,6 @@
 //
 // Copyright 2016 Xamarin Inc
 //
-// TODO: 
-//   Add more ToString, operators, convenience methods to various structures here (point, rect, etc)
-//   Sadly, the Rectangles are not binary compatible with the System.Drawing ones.
-//
-// SkMatrix could benefit from bringing some of the operators defined in C++
-//
 // Augmented primitives come from Mono:
 // Author:
 //   Mike Kestner (mkestner@speakeasy.net)
@@ -44,6 +38,7 @@ using System.Globalization;
 
 using GRBackendObject = System.IntPtr;
 using GRBackendContext = System.IntPtr;
+using sk_string_t = System.IntPtr;
  	
 namespace SkiaSharp
 {
@@ -91,7 +86,7 @@ namespace SkiaSharp
 
 		private uint color;
 
-		internal SKColor (uint value)
+		public SKColor (uint value)
 		{
 			color = value;
 		}
@@ -103,7 +98,7 @@ namespace SkiaSharp
 
 		public SKColor (byte red, byte green, byte blue)
 		{
-			color = (uint)(0xff000000u | (red << 16) | (green << 8) | blue);
+			color = (0xff000000u | (uint)(red << 16) | (uint)(green << 8) | blue);
 		}
 
 		public SKColor WithRed (byte red)
@@ -524,6 +519,14 @@ namespace SkiaSharp
 		InverseEvenOdd
 	}
 
+	[Flags]
+	public enum SKPathSegmentMask {
+		Line  = 1 << 0,
+		Quad  = 1 << 1,
+		Conic = 1 << 2,
+		Cubic = 1 << 3,
+	}
+
 	public enum SKColorType {
 		Unknown,
 		Alpha8,
@@ -536,7 +539,7 @@ namespace SkiaSharp
 		RgbaF16
 	}
 
-	[Obsolete("May be removed in the next version.")]
+	[Obsolete ("May be removed in the next version.")]
 	public enum SKColorProfileType {
 		Linear,
 		SRGB
@@ -557,6 +560,15 @@ namespace SkiaSharp
 		Normal, Solid, Outer, Inner
 	}
 
+	[Flags]
+	public enum SKBlurMaskFilterFlags {
+		None = 0x00,
+		IgnoreTransform = 0x01,
+		HighQuality = 0x02,
+		All = IgnoreTransform | HighQuality,
+	}
+
+	[Obsolete ("Use SKBlendMode instead. May be removed in the next version.")]
 	public enum SKXferMode {
 		Clear,
 		Src,
@@ -634,6 +646,14 @@ namespace SkiaSharp
 		BgrVertical
 	}
 
+	public enum SKBitmapResizeMethod {
+		Box,
+		Triangle,
+		Lanczos3,
+		Hamming,
+		Mitchell
+	}
+
 	[Flags]
 	public enum SKSurfacePropsFlags {
 		UseDeviceIndependentFonts = 1 << 0,
@@ -670,7 +690,9 @@ namespace SkiaSharp
 	}
 
 	public enum SKStrokeJoin {
-		Mitter, Round, Bevel
+		Miter, Round, Bevel,
+		[Obsolete ("Use SKStrokeJoin.Miter instead.")]
+		Mitter = Miter,
 	}
 
 	public enum SKTextAlign {
@@ -764,18 +786,7 @@ namespace SkiaSharp
 
 		static SKImageInfo ()
 		{
-#if WINDOWS_UWP
-			var isUnix = false;
-#else
-			var isUnix = Environment.OSVersion.Platform == PlatformID.MacOSX || Environment.OSVersion.Platform == PlatformID.Unix;
-#endif
-			if (isUnix) {
-				// Unix depends on the CPU endianess, but we use RGBA
-				PlatformColorType = SKColorType.Rgba8888;
-			} else {
-				// Windows is always BGRA
-				PlatformColorType = SKColorType.Bgra8888;
-			}
+			PlatformColorType = SkiaApi.sk_colortype_get_default_8888 ();
 		}
 
 		public int Width {
@@ -890,10 +901,18 @@ namespace SkiaSharp
 		No,
 	}
 
+	public enum SKCodecScanlineOrder {
+		TopDown,
+		BottomUp
+	}
+
 	[StructLayout(LayoutKind.Sequential)]
 	internal unsafe struct SKCodecOptionsInternal {
 		public SKZeroInitialized fZeroInitialized;
 		public SKRectI* fSubset;
+		public IntPtr fFrameIndex;
+		[MarshalAs(UnmanagedType.I1)]
+		public bool fHasPriorFrame;
 	}
 
 	public struct SKCodecOptions {
@@ -906,18 +925,48 @@ namespace SkiaSharp
 		public SKCodecOptions (SKZeroInitialized zeroInitialized) {
 			ZeroInitialized = zeroInitialized;
 			Subset = null;
+			FrameIndex = 0;
+			HasPriorFrame = false;
 		}
 		public SKCodecOptions (SKZeroInitialized zeroInitialized, SKRectI subset) {
 			ZeroInitialized = zeroInitialized;
 			Subset = subset;
+			FrameIndex = 0;
+			HasPriorFrame = false;
 		}
 		public SKCodecOptions (SKRectI subset) {
 			ZeroInitialized = SKZeroInitialized.No;
 			Subset = subset;
+			FrameIndex = 0;
+			HasPriorFrame = false;
+		}
+		public SKCodecOptions (int frameIndex, bool hasPriorFrame) {
+			ZeroInitialized = SKZeroInitialized.No;
+			Subset = null;
+			FrameIndex = frameIndex;
+			HasPriorFrame = hasPriorFrame;
 		}
 		public SKZeroInitialized ZeroInitialized { get; set; }
 		public SKRectI? Subset { get; set; }
 		public bool HasSubset => Subset != null;
+		public int FrameIndex { get; set; }
+		public bool HasPriorFrame { get; set; }
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct SKCodecFrameInfo {
+		private IntPtr requiredFrame;
+		private IntPtr duration;
+
+		public int RequiredFrame {
+			get { return (int)requiredFrame; }
+			set { requiredFrame = (IntPtr)value; }
+		}
+
+		public int Duration {
+			get { return (int)duration; }
+			set { duration = (IntPtr)value; }
+		}
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -2019,479 +2068,6 @@ namespace SkiaSharp
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct SKMatrix {
-		private float scaleX, skewX, transX;
-		private float skewY, scaleY, transY;
-		private float persp0, persp1, persp2;
-
-		private class Indices {
-			public const int ScaleX = 0;
-			public const int SkewX = 1;
-			public const int TransX = 2;
-			public const int SkewY = 3;
-			public const int ScaleY = 4;
-			public const int TransY = 5;
-			public const int Persp0 = 6;
-			public const int Persp1 = 7;
-			public const int Persp2 = 8;
-
-			public const int Count = 9;
-		};
-
-		public float ScaleX {
-			get { return scaleX; }
-			set { scaleX = value; }
-		}
-
-		public float SkewX {
-			get { return skewX; }
-			set { skewX = value; }
-		}
-
-		public float TransX {
-			get { return transX; }
-			set { transX = value; }
-		}
-
-		public float SkewY {
-			get { return skewY; }
-			set { skewY = value; }
-		}
-
-		public float ScaleY {
-			get { return scaleY; }
-			set { scaleY = value; }
-		}
-
-		public float TransY {
-			get { return transY; }
-			set { transY = value; }
-		}
-
-		public float Persp0 {
-			get { return persp0; }
-			set { persp0 = value; }
-		}
-
-		public float Persp1 {
-			get { return persp1; }
-			set { persp1 = value; }
-		}
-
-		public float Persp2 {
-			get { return persp2; }
-			set { persp2 = value; }
-		}
-
-		public float [] Values {
-			get {
-				return new float [9] {
-					scaleX, skewX, transX,
-					skewY, scaleY, transY,
-					persp0, persp1, persp2 };
-			}
-			set {
-				if (value == null)
-					throw new ArgumentNullException (nameof (Values));
-				if (value.Length != Indices.Count)
-					throw new ArgumentException ($"The matrix array must have a length of {Indices.Count}.", nameof (Values));
-
-				scaleX = value [Indices.ScaleX];
-				skewX = value [Indices.SkewX];
-				transX = value [Indices.TransX];
-
-				skewY = value [Indices.SkewY];
-				scaleY = value [Indices.ScaleY];
-				transY = value [Indices.TransY];
-
-				persp0 = value [Indices.Persp0];
-				persp1 = value [Indices.Persp1];
-				persp2 = value [Indices.Persp2];
-			}
-		}
-
-		public void GetValues(float[] values)
-		{
-			if (values == null)
-				throw new ArgumentNullException (nameof (values));
-			if (values.Length != Indices.Count)
-				throw new ArgumentException ($"The matrix array must have a length of {Indices.Count}.", nameof (values));
-
-			values [Indices.ScaleX] = scaleX;
-			values [Indices.SkewX] = skewX;
-			values [Indices.TransX] = transX;
-			values [Indices.SkewY] = skewY;
-			values [Indices.ScaleY] = scaleY;
-			values [Indices.TransY] = transY;
-			values [Indices.Persp0] = persp0;
-			values [Indices.Persp1] = persp1;
-			values [Indices.Persp2] = persp2;
-		}
-
-#if OPTIMIZED_SKMATRIX
-
-		//
-		// If we manage to get an sk_matrix_t that contains the extra
-		// the fTypeMask flag, we could accelerate various operations
-		// as well, as this caches state of what is needed to be done.
-		//
-	
-		[Flags]
-		enum Mask : uint {
-			Identity = 0,
-			Translate = 1,
-			Scale = 2,
-			Affine = 4,
-			Perspective = 8,
-			RectStaysRect = 0x10,
-			OnlyPerspectiveValid = 0x40,
-			Unknown = 0x80,
-			OrableMasks = Translate | Scale | Affine | Perspective,
-			AllMasks = OrableMasks | RectStaysRect
-		}
-		Mask typeMask;
-
-		Mask GetMask ()
-		{
-			if (typeMask.HasFlag (Mask.Unknown))
-				typeMask = (Mask) SkiaApi.sk_matrix_get_type (ref this);
-
-		        // only return the public masks
-			return (Mask) ((uint)typeMask & 0xf);
-		}
-#endif
-
-		static float sdot (float a, float b, float c, float d) => a * b + c * d;
-		static float scross(float a, float b, float c, float d) => a * b - c * d;
-
-		public static SKMatrix MakeIdentity ()
-		{
-			return new SKMatrix () { scaleX = 1, scaleY = 1, persp2 = 1
-#if OPTIMIZED_SKMATRIX
-					, typeMask = Mask.Identity | Mask.RectStaysRect
-#endif
-                        };
-		}
-
-		public void SetScaleTranslate (float sx, float sy, float tx, float ty)
-		{
-			scaleX = sx;
-			skewX = 0;
-			transX = tx;
-
-			skewY = 0;
-			scaleY = sy;
-			transY = ty;
-
-			persp0 = 0;
-			persp1 = 0;
-			persp2 = 1;
-
-#if OPTIMIZED_SKMATRIX
-			typeMask = Mask.RectStaysRect | 
-				((sx != 1 || sy != 1) ? Mask.Scale : 0) |
-				((tx != 0 || ty != 0) ? Mask.Translate : 0);
-#endif
-		}
-
-		public static SKMatrix MakeScale (float sx, float sy)
-		{
-			if (sx == 1 && sy == 1)
-				return MakeIdentity ();
-			return new SKMatrix () { scaleX = sx, scaleY = sy, persp2 = 1, 
-#if OPTIMIZED_SKMATRIX
-typeMask = Mask.Scale | Mask.RectStaysRect
-#endif
-			};
-				
-		}
-
-		/// <summary>
-		/// Set the matrix to scale by sx and sy, with a pivot point at (px, py).
-		/// The pivot point is the coordinate that should remain unchanged by the
-		/// specified transformation.
-		public static SKMatrix MakeScale (float sx, float sy, float pivotX, float pivotY)
-		{
-			if (sx == 1 && sy == 1)
-				return MakeIdentity ();
-			float tx = pivotX - sx * pivotX;
-			float ty = pivotY - sy * pivotY;
-
-#if OPTIMIZED_SKMATRIX
-			Mask mask = Mask.RectStaysRect | 
-				((sx != 1 || sy != 1) ? Mask.Scale : 0) |
-				((tx != 0 || ty != 0) ? Mask.Translate : 0);
-#endif
-			return new SKMatrix () { 
-				scaleX = sx, scaleY = sy, 
-				transX = tx, transY = ty,
-				persp2 = 1,
-#if OPTIMIZED_SKMATRIX
-				typeMask = mask
-#endif
-			};
-		}
-
-		public static SKMatrix MakeTranslation (float dx, float dy)
-		{
-			if (dx == 0 && dy == 0)
-				return MakeIdentity ();
-			
-			return new SKMatrix () { 
-				scaleX = 1, scaleY = 1,
-				transX = dx, transY = dy,
-				persp2 = 1,
-#if OPTIMIZED_SKMATRIX
-				typeMask = Mask.Translate | Mask.RectStaysRect
-#endif
-			};
-		}
-
-		public static SKMatrix MakeRotation (float radians)
-		{
-			var sin = (float) Math.Sin (radians);
-			var cos = (float) Math.Cos (radians);
-
-			var matrix = new SKMatrix ();
-			SetSinCos (ref matrix, sin, cos);
-			return matrix;
-		}
-
-		public static SKMatrix MakeRotation (float radians, float pivotx, float pivoty)
-		{
-			var sin = (float) Math.Sin (radians);
-			var cos = (float) Math.Cos (radians);
-
-			var matrix = new SKMatrix ();
-			SetSinCos (ref matrix, sin, cos, pivotx, pivoty);
-			return matrix;
-		}
-
-		const float degToRad = (float)System.Math.PI / 180.0f;
-		
-		public static SKMatrix MakeRotationDegrees (float degrees)
-		{
-			return MakeRotation (degrees * degToRad);
-		}
-
-		public static SKMatrix MakeRotationDegrees (float degrees, float pivotx, float pivoty)
-		{
-			return MakeRotation (degrees * degToRad, pivotx, pivoty);
-		}
-
-		static void SetSinCos (ref SKMatrix matrix, float sin, float cos)
-		{
-			matrix.scaleX = cos;
-			matrix.skewX = -sin;
-			matrix.transX = 0;
-			matrix.skewY = sin;
-			matrix.scaleY = cos;
-			matrix.transY = 0;
-			matrix.persp0 = 0;
-			matrix.persp1 = 0;
-			matrix.persp2 = 1;
-#if OPTIMIZED_SKMATRIX
-			matrix.typeMask = Mask.Unknown | Mask.OnlyPerspectiveValid;
-#endif
-		}
-
-		static void SetSinCos (ref SKMatrix matrix, float sin, float cos, float pivotx, float pivoty)
-		{
-			float oneMinusCos = 1-cos;
-			
-			matrix.scaleX = cos;
-			matrix.skewX = -sin;
-			matrix.transX = sdot(sin, pivoty, oneMinusCos, pivotx);
-			matrix.skewY = sin;
-			matrix.scaleY = cos;
-			matrix.transY = sdot(-sin, pivotx, oneMinusCos, pivoty);
-			matrix.persp0 = 0;
-			matrix.persp1 = 0;
-			matrix.persp2 = 1;
-#if OPTIMIZED_SKMATRIX
-			matrix.typeMask = Mask.Unknown | Mask.OnlyPerspectiveValid;
-#endif
-		}
-		
-		public static void Rotate (ref SKMatrix matrix, float radians, float pivotx, float pivoty)
-		{
-			var sin = (float) Math.Sin (radians);
-			var cos = (float) Math.Cos (radians);
-			SetSinCos (ref matrix, sin, cos, pivotx, pivoty);
-		}
-
-		public static void RotateDegrees (ref SKMatrix matrix, float degrees, float pivotx, float pivoty)
-		{
-			var sin = (float) Math.Sin (degrees * degToRad);
-			var cos = (float) Math.Cos (degrees * degToRad);
-			SetSinCos (ref matrix, sin, cos, pivotx, pivoty);
-		}
-
-		public static void Rotate (ref SKMatrix matrix, float radians)
-		{
-			var sin = (float) Math.Sin (radians);
-			var cos = (float) Math.Cos (radians);
-			SetSinCos (ref matrix, sin, cos);
-		}
-
-		public static void RotateDegrees (ref SKMatrix matrix, float degrees)
-		{
-			var sin = (float) Math.Sin (degrees * degToRad);
-			var cos = (float) Math.Cos (degrees * degToRad);
-			SetSinCos (ref matrix, sin, cos);
-		}
-
-		public static SKMatrix MakeSkew (float sx, float sy)
-		{
-			return new SKMatrix () {
-				scaleX = 1,
-				skewX = sx,
-				transX = 0,
-				skewY = sy,
-				scaleY = 1,
-				transY = 0,
-				persp0 = 0,
-				persp1 = 0,
-				persp2 = 1,
-#if OPTIMIZED_SKMATRIX
-				typeMask = Mask.Unknown | Mask.OnlyPerspectiveValid
-#endif
-			};
-		}
-
-		public bool TryInvert (out SKMatrix inverse)
-		{
-			return SkiaApi.sk_matrix_try_invert (ref this, out inverse) != 0;
-		}
-
-		public static void Concat (ref SKMatrix target, SKMatrix first, SKMatrix second)
-		{
-			SkiaApi.sk_matrix_concat (ref target, ref first, ref second);
-		}
-
-		public static void Concat (ref SKMatrix target, ref SKMatrix first, ref SKMatrix second)
-		{
-			SkiaApi.sk_matrix_concat (ref target, ref first, ref second);
-		}
-
-		public static void PreConcat (ref SKMatrix target, SKMatrix matrix)
-		{
-			SkiaApi.sk_matrix_pre_concat (ref target, ref matrix);
-		}
-
-		public static void PreConcat (ref SKMatrix target, ref SKMatrix matrix)
-		{
-			SkiaApi.sk_matrix_pre_concat (ref target, ref matrix);
-		}
-
-		public static void PostConcat (ref SKMatrix target, SKMatrix matrix)
-		{
-			SkiaApi.sk_matrix_post_concat (ref target, ref matrix);
-		}
-
-		public static void PostConcat (ref SKMatrix target, ref SKMatrix matrix)
-		{
-			SkiaApi.sk_matrix_post_concat (ref target, ref matrix);
-		}
-
-		public static void MapRect (ref SKMatrix matrix, out SKRect dest, ref SKRect source)
-		{
-			SkiaApi.sk_matrix_map_rect (ref matrix, out dest, ref source);
-		}
-
-		public SKRect MapRect (SKRect source)
-		{
-			SKRect result;
-			MapRect (ref this, out result, ref source);
-			return result;
-		}
-
-		public void MapPoints (SKPoint [] result, SKPoint [] points)
-		{
-			if (result == null)
-				throw new ArgumentNullException (nameof (result));
-			if (points == null)
-				throw new ArgumentNullException (nameof (points));
-			int dl = result.Length;
-			if (dl != points.Length)
-				throw new ArgumentException ("Buffers must be the same size.");
-			unsafe {
-				fixed (SKPoint *rp = &result[0]){
-					fixed (SKPoint *pp = &points[0]){
-						SkiaApi.sk_matrix_map_points (ref this, (IntPtr) rp, (IntPtr) pp, dl);
-					}
-				}
-			}
-		}
-
-		public SKPoint [] MapPoints (SKPoint [] points)
-		{
-			if (points == null)
-				throw new ArgumentNullException (nameof (points));
-			var res = new SKPoint [points.Length];
-			MapPoints (res, points);
-			return res;
-		}
-
-		public void MapVectors (SKPoint [] result, SKPoint [] vectors)
-		{
-			if (result == null)
-				throw new ArgumentNullException (nameof (result));
-			if (vectors == null)
-				throw new ArgumentNullException (nameof (vectors));
-			int dl = result.Length;
-			if (dl != vectors.Length)
-				throw new ArgumentException ("Buffers must be the same size.");
-			unsafe {
-				fixed (SKPoint *rp = &result[0]){
-					fixed (SKPoint *pp = &vectors[0]){
-						SkiaApi.sk_matrix_map_vectors (ref this, (IntPtr) rp, (IntPtr) pp, dl);
-					}
-				}
-			}
-		}
-
-		public SKPoint [] MapVectors (SKPoint [] vectors)
-		{
-			if (vectors == null)
-				throw new ArgumentNullException (nameof (vectors));
-			var res = new SKPoint [vectors.Length];
-			MapVectors (res, vectors);
-			return res;
-		}
-
-		[Obsolete ("Use MapPoint instead.")]
-		public SKPoint MapXY (float x, float y)
-		{
-			return MapPoint (x, y);
-		}
-
-		public SKPoint MapPoint (SKPoint point)
-		{
-			return MapPoint (point.X, point.Y);
-		}
-
-		public SKPoint MapPoint (float x, float y)
-		{
-			SKPoint result;
-			SkiaApi.sk_matrix_map_xy (ref this, x, y, out result);
-			return result;
-		}
-
-		public SKPoint MapVector (float x, float y)
-		{
-			SKPoint result;
-			SkiaApi.sk_matrix_map_vector(ref this, x, y, out result);
-			return result;
-		}
-
-		public float MapRadius (float radius)
-		{
-			return SkiaApi.sk_matrix_map_radius (ref this, radius);
-		}
-	}
-
-	[StructLayout(LayoutKind.Sequential)]
 	public struct SKFontMetrics
 	{
 		uint flags;                     // Bit field to identify which values are unknown
@@ -2650,6 +2226,8 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			get { return renderTargetHandle; }
 			set { renderTargetHandle = value; }
 		}
+		public SKSizeI Size => new SKSizeI (width, height);
+		public SKRectI Rect => new SKRectI (0, 0, width, height);
 	}
 	
 	public enum GRBackend {
@@ -2871,5 +2449,207 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		public SKRectI? Bounds { get; set; }
 	}
 
-}
+	[StructLayout(LayoutKind.Sequential)]
+	internal struct SKTimeDateTimeInternal {
+		public Int16 TimeZoneMinutes;
+		public UInt16 Year;
+		public Byte Month;
+		public Byte DayOfWeek;
+		public Byte Day;
+		public Byte Hour;
+		public Byte Minute;
+		public Byte Second;
 
+		public static SKTimeDateTimeInternal Create (DateTime datetime) {
+			var zone = datetime.Hour - datetime.ToUniversalTime().Hour;
+			return new SKTimeDateTimeInternal {
+				TimeZoneMinutes = (Int16)(zone * 60),
+				Year = (UInt16)datetime.Year,
+				Month = (Byte)datetime.Month,
+				DayOfWeek = (Byte)datetime.DayOfWeek,
+				Day = (Byte)datetime.Day,
+				Hour = (Byte)datetime.Hour,
+				Minute = (Byte)datetime.Minute,
+				Second = (Byte)datetime.Second
+			};
+		}
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	internal unsafe struct SKDocumentPdfMetadataInternal {
+		public sk_string_t Title;
+		public sk_string_t Author;
+		public sk_string_t Subject;
+		public sk_string_t Keywords;
+		public sk_string_t Creator;
+		public sk_string_t Producer;
+		public SKTimeDateTimeInternal* Creation;
+		public SKTimeDateTimeInternal* Modified;
+	}
+
+	public struct SKDocumentPdfMetadata {
+		public string Title { get; set; }
+		public string Author { get; set; }
+		public string Subject { get; set; }
+		public string Keywords { get; set; }
+		public string Creator { get; set; }
+		public string Producer { get; set; }
+		public DateTime? Creation { get; set; }
+		public DateTime? Modified { get; set; }
+	}
+
+	[Flags]
+	public enum SKShadowMaskFilterShadowFlags {
+		None = 0x00,
+		TransparentOccluder = 0x01,
+		LargerUmbra = 0x02,
+		GaussianEdge = 0x04,
+		All = 0x07
+	}
+
+	public struct SKEncodedInfo {
+		private SKEncodedInfoColor color;
+		private SKEncodedInfoAlpha alpha;
+		private byte bitsPerComponent;
+
+		public SKEncodedInfo (SKEncodedInfoColor color) {
+			this.color = color;
+			this.bitsPerComponent = 8;
+
+			switch (color) {
+				case SKEncodedInfoColor.Gray:
+				case SKEncodedInfoColor.Rgb:
+				case SKEncodedInfoColor.Bgr:
+				case SKEncodedInfoColor.Bgrx:
+				case SKEncodedInfoColor.Yuv:
+				case SKEncodedInfoColor.InvertedCmyk:
+				case SKEncodedInfoColor.Ycck:
+					this.alpha = SKEncodedInfoAlpha.Opaque;
+					break;
+				case SKEncodedInfoColor.GrayAlpha:
+				case SKEncodedInfoColor.Palette:
+				case SKEncodedInfoColor.Rgba:
+				case SKEncodedInfoColor.Bgra:
+				case SKEncodedInfoColor.Yuva:
+					this.alpha = SKEncodedInfoAlpha.Unpremul;
+					break;
+				default:
+					throw new ArgumentOutOfRangeException (nameof (color));
+			}
+		}
+
+		public SKEncodedInfo (SKEncodedInfoColor color, SKEncodedInfoAlpha alpha, byte bitsPerComponent) {
+			if (bitsPerComponent != 1 && bitsPerComponent != 2 && bitsPerComponent != 4 && bitsPerComponent != 8 && bitsPerComponent != 16) {
+				throw new ArgumentException ("The bits per component must be 1, 2, 4, 8 or 16.", nameof (bitsPerComponent));
+			}
+
+			switch (color) {
+				case SKEncodedInfoColor.Gray:
+					if (alpha != SKEncodedInfoAlpha.Opaque)
+						throw new ArgumentException ("The alpha must be opaque.", nameof (alpha));
+					break;
+				case SKEncodedInfoColor.GrayAlpha:
+					if (alpha == SKEncodedInfoAlpha.Opaque)
+						throw new ArgumentException ("The alpha must not be opaque.", nameof (alpha));
+					break;
+				case SKEncodedInfoColor.Palette:
+					if (bitsPerComponent == 16)
+						throw new ArgumentException ("The bits per component must be 1, 2, 4 or 8.", nameof (bitsPerComponent));
+					break;
+				case SKEncodedInfoColor.Rgb:
+				case SKEncodedInfoColor.Bgr:
+				case SKEncodedInfoColor.Bgrx:
+					if (alpha != SKEncodedInfoAlpha.Opaque)
+						throw new ArgumentException ("The alpha must be opaque.", nameof (alpha));
+					if (bitsPerComponent < 8)
+						throw new ArgumentException ("The bits per component must be 8 or 16.", nameof (bitsPerComponent));
+					break;
+				case SKEncodedInfoColor.Yuv:
+				case SKEncodedInfoColor.InvertedCmyk:
+				case SKEncodedInfoColor.Ycck:
+					if (alpha != SKEncodedInfoAlpha.Opaque)
+						throw new ArgumentException ("The alpha must be opaque.", nameof (alpha));
+					if (bitsPerComponent != 8)
+						throw new ArgumentException ("The bits per component must be 8.", nameof (bitsPerComponent));
+					break;
+				case SKEncodedInfoColor.Rgba:
+					if (alpha == SKEncodedInfoAlpha.Opaque)
+						throw new ArgumentException ("The alpha must not be opaque.", nameof (alpha));
+					if (bitsPerComponent < 8)
+						throw new ArgumentException ("The bits per component must be 8 or 16.", nameof (bitsPerComponent));
+					break;
+				case SKEncodedInfoColor.Bgra:
+				case SKEncodedInfoColor.Yuva:
+					if (alpha == SKEncodedInfoAlpha.Opaque)
+						throw new ArgumentException ("The alpha must not be opaque.", nameof (alpha));
+					if (bitsPerComponent != 8)
+						throw new ArgumentException ("The bits per component must be 8.", nameof (bitsPerComponent));
+					break;
+				default:
+					throw new ArgumentOutOfRangeException (nameof (color));
+			}
+
+			this.color = color;
+			this.alpha = alpha;
+			this.bitsPerComponent = bitsPerComponent;
+		}
+
+		public SKEncodedInfoColor Color => color;
+		public SKEncodedInfoAlpha Alpha => alpha;
+		public byte BitsPerComponent => bitsPerComponent;
+		public byte BitsPerPixel {
+			get {
+				switch (color) {
+					case SKEncodedInfoColor.Gray:
+						return bitsPerComponent;
+					case SKEncodedInfoColor.GrayAlpha:
+						return (byte)(2 * bitsPerComponent);
+					case SKEncodedInfoColor.Palette:
+						return bitsPerComponent;
+					case SKEncodedInfoColor.Rgb:
+					case SKEncodedInfoColor.Bgr:
+					case SKEncodedInfoColor.Yuv:
+						return (byte)(3 * bitsPerComponent);
+					case SKEncodedInfoColor.Rgba:
+					case SKEncodedInfoColor.Bgra:
+					case SKEncodedInfoColor.Bgrx:
+					case SKEncodedInfoColor.Yuva:
+					case SKEncodedInfoColor.InvertedCmyk:
+					case SKEncodedInfoColor.Ycck:
+						return (byte)(4 * bitsPerComponent);
+					default:
+						return (byte)0;
+				}
+			}
+		}
+	}
+
+	public enum SKEncodedInfoAlpha {
+		Opaque,
+		Unpremul,
+		Binary,
+	}
+
+	public enum SKEncodedInfoColor {
+		Gray,
+		GrayAlpha,
+		Palette,
+		Rgb,
+		Rgba,
+		Bgr,
+		Bgrx,
+		Bgra,
+		Yuv,
+		Yuva,
+		InvertedCmyk,
+		Ycck,
+	}
+
+	public enum SKMaskFormat {
+		BW,
+		A8,
+		ThreeD,
+		Argb32,
+		Lcd16,
+	}
+}

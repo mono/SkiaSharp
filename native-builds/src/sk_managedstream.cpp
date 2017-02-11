@@ -11,6 +11,62 @@
 #include "sk_types_priv.h"
 
 
+static sk_managedwstream_write_delegate        gWrite;
+static sk_managedwstream_flush_delegate        gFlush;
+static sk_managedwstream_bytesWritten_delegate gBytesWritten;
+static sk_managedwstream_destroy_delegate      gWDestroy;
+
+static inline SkManagedWStream* AsManagedWStream(sk_wstream_managedstream_t* cstream) {
+    return reinterpret_cast<SkManagedWStream*>(cstream);
+}
+static inline sk_wstream_managedstream_t* ToManagedWStream(SkManagedWStream* stream) {
+    return reinterpret_cast<sk_wstream_managedstream_t*>(stream);
+}
+static inline const sk_wstream_managedstream_t* ToManagedWStream(const SkManagedWStream* stream) {
+    return reinterpret_cast<const sk_wstream_managedstream_t*>(stream);
+}
+
+bool dWrite(SkManagedWStream* managedStream, const void* buffer, size_t size)
+{
+    return gWrite(ToManagedWStream(managedStream), buffer, size);
+}
+void dFlush(SkManagedWStream* managedStream)
+{
+    gFlush(ToManagedWStream(managedStream));
+}
+size_t dBytesWritten(const SkManagedWStream* managedStream)
+{
+    return gBytesWritten(ToManagedWStream(managedStream));
+}
+void dWDestroy(size_t managedStream)
+{
+    gWDestroy(managedStream);
+}
+
+sk_wstream_managedstream_t* sk_managedwstream_new()
+{
+    return ToManagedWStream(new SkManagedWStream());
+}
+
+void sk_managedwstream_destroy(sk_wstream_managedstream_t* stream)
+{
+    delete AsManagedWStream(stream);
+}
+
+void sk_managedwstream_set_delegates(const sk_managedwstream_write_delegate pWrite,
+                                     const sk_managedwstream_flush_delegate pFlush,
+                                     const sk_managedwstream_bytesWritten_delegate pBytesWritten,
+                                     const sk_managedwstream_destroy_delegate pDestroy)
+{
+    gWrite = pWrite;
+    gFlush = pFlush;
+    gBytesWritten = pBytesWritten;
+    gWDestroy = pDestroy;
+
+    SkManagedWStream::setDelegates(dWrite, dFlush, dBytesWritten, dWDestroy);
+}
+
+
 static sk_managedstream_read_delegate         gRead;
 static sk_managedstream_peek_delegate         gPeek;
 static sk_managedstream_isAtEnd_delegate      gIsAtEnd;
@@ -26,43 +82,49 @@ static sk_managedstream_destroy_delegate      gDestroy;
 static inline SkManagedStream* AsManagedStream(sk_stream_managedstream_t* cstream) {
     return reinterpret_cast<SkManagedStream*>(cstream);
 }
+static inline sk_stream_managedstream_t* ToManagedStream(SkManagedStream* stream) {
+    return reinterpret_cast<sk_stream_managedstream_t*>(stream);
+}
+static inline const sk_stream_managedstream_t* ToManagedStream(const SkManagedStream* stream) {
+    return reinterpret_cast<const sk_stream_managedstream_t*>(stream);
+}
 
 
 size_t dRead(SkManagedStream* managedStream, void* buffer, size_t size)
 {
-    return gRead((sk_stream_managedstream_t*)managedStream, buffer, size);
+    return gRead(ToManagedStream(managedStream), buffer, size);
 }
 size_t dPeek(SkManagedStream* managedStream, void* buffer, size_t size)
 {
-    return gPeek((sk_stream_managedstream_t*)managedStream, buffer, size);
+    return gPeek(ToManagedStream(managedStream), buffer, size);
 }
 bool dIsAtEnd(const SkManagedStream* managedStream)
 {
-    return gIsAtEnd((sk_stream_managedstream_t*)managedStream);
+    return gIsAtEnd(ToManagedStream(managedStream));
 }
 bool dRewind(SkManagedStream* managedStream)
 {
-    return gRewind((sk_stream_managedstream_t*)managedStream);
+    return gRewind(ToManagedStream(managedStream));
 }
 size_t dGetPosition(const SkManagedStream* managedStream)
 {
-    return gGetPosition((sk_stream_managedstream_t*)managedStream);
+    return gGetPosition(ToManagedStream(managedStream));
 }
 bool dSeek(SkManagedStream* managedStream, size_t position)
 {
-    return gSeek((sk_stream_managedstream_t*)managedStream, position);
+    return gSeek(ToManagedStream(managedStream), position);
 }
 bool dMove(SkManagedStream* managedStream, long offset)
 {
-    return gMove((sk_stream_managedstream_t*)managedStream, offset);
+    return gMove(ToManagedStream(managedStream), offset);
 }
 size_t dGetLength(const SkManagedStream* managedStream)
 {
-    return gGetLength((sk_stream_managedstream_t*)managedStream);
+    return gGetLength(ToManagedStream(managedStream));
 }
 SkManagedStream* dCreateNew(const SkManagedStream* managedStream)
 {
-    return AsManagedStream(gCreateNew((sk_stream_managedstream_t*)managedStream));
+    return AsManagedStream(gCreateNew(ToManagedStream(managedStream)));
 }
 void dDestroy(size_t managedStream)
 {
@@ -72,7 +134,12 @@ void dDestroy(size_t managedStream)
 
 sk_stream_managedstream_t* sk_managedstream_new ()
 {
-    return (sk_stream_managedstream_t*)new SkManagedStream();
+    return ToManagedStream (new SkManagedStream ());
+}
+
+void sk_managedstream_destroy (sk_stream_managedstream_t* stream)
+{
+    delete AsManagedStream (stream);
 }
 
 void sk_managedstream_set_delegates (const sk_managedstream_read_delegate pRead,

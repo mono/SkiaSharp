@@ -17,12 +17,14 @@
 #include "sk_document.h"
 #include "sk_image.h"
 #include "sk_imagefilter.h"
+#include "sk_mask.h"
 #include "sk_maskfilter.h"
 #include "sk_matrix.h"
 #include "sk_paint.h"
 #include "sk_path.h"
 #include "sk_patheffect.h"
 #include "sk_picture.h"
+#include "sk_pixmap.h"
 #include "sk_region.h"
 #include "sk_shader.h"
 #include "sk_shader.h"
@@ -31,6 +33,8 @@
 #include "sk_surface.h"
 #include "sk_typeface.h"
 #include "gr_context.h"
+#include "sk_xml.h"
+#include "sk_svg.h"
 
 // Xamarin
 #include "sk_managedstream.h"
@@ -53,6 +57,7 @@ void** KeepSkiaCSymbols ()
         (void*)sk_surface_new_raster,
         (void*)sk_colortype_get_default_8888,
         (void*)sk_bitmap_new,
+        (void*)sk_pixmap_new,
         (void*)sk_canvas_clear,
         (void*)sk_colorfilter_unref,
         (void*)sk_data_new_from_file,
@@ -82,8 +87,11 @@ void** KeepSkiaCSymbols ()
         (void*)sk_matrix_map_vector,
         (void*)sk_matrix_map_radius,
         (void*)sk_matrix_try_invert,
+        (void*)sk_mask_get_addr,
         (void*)sk_colortable_new,
         (void*)gr_context_unref,
+        (void*)sk_xmlstreamwriter_new,
+        (void*)sk_svgcanvas_create,
 
         // Xamarin
         (void*)sk_managedstream_new,

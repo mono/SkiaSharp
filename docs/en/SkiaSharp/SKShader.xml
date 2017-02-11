@@ -10,6 +10,7 @@
     <AssemblyVersion>1.54.0.0</AssemblyVersion>
     <AssemblyVersion>1.54.0.0</AssemblyVersion>
     <AssemblyVersion>1.55.0.0</AssemblyVersion>
+    <AssemblyVersion>1.56.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>SkiaSharp.SKObject</BaseTypeName>
@@ -18,9 +19,111 @@
   <Docs>
     <summary>Shaders specify the source color(s) for what is being drawn in the <see cref="T:SkiaSharp.SKPaint" />.</summary>
     <remarks>
-      <para>Shaders specify the source color(s) for what is being drawn. If a paint has no shader, then the paint's color is used. If the paint has a shader, then the shader's color(s) are used instead, but they are modulated by the paint's alpha. </para>
+      <para>Shaders specify the source colors for what is being drawn. If a paint has no shader, then the paint's color is used. If the paint has a shader, then the shader's colors are used instead, but they are modulated by the paint's alpha. </para>
       <para></para>
       <para>This makes it easy to create a shader once (e.g. bitmap tiling or gradient) and then change its transparency without having to modify the original shader, only the paint's alpha needs to be modified.</para>
+      <para>Shaders are created by calling one of the static “Create” methods in the SKShader method that create a shader of the appropriate type.</para>
+      <format type="text/html">
+        <h2>Linear Gradient Shader</h2>
+      </format>
+      <example>
+        <code lang="c#"><![CDATA[
+var colors = new SKColor [] { new SKColor (0, 255, 255), new SKColor (255, 0, 255), new SKColor (255, 255, 0), new SKColor (0, 255, 255)};
+var shader = SKShader.CreateLinearGradient (new SKPoint (0, 0), new SKPoint (255, 255), colors, null, SKShaderTileMode.Clamp);
+var paint = new SKPaint () { Shader = shader };
+canvas.DrawPaint (paint);
+]]></code>
+      </example>
+      <para>
+        <img href="linear.png" />
+      </para>
+      <format type="text/html">
+        <h2>Radial Gradient Shader</h2>
+      </format>
+      <example>
+        <code lang="c#"><![CDATA[var colors = new SKColor [] {
+    new SKColor (0, 0, 255),
+    new SKColor (0, 255, 0)
+};
+var shader = SKShader.CreateRadialGradient (new SKPoint (128, 128), 180, colors, null, SKShaderTileMode.Clamp);
+var paint = new SKPaint () {
+    Shader = shader,
+};
+canvas.DrawPaint (paint);]]></code>
+      </example>
+      <para>
+        <img href="radial.png" />
+      </para>
+      <format type="text/html">
+        <h2>Two-point Conical Gradient Shader</h2>
+      </format>
+      <example>
+        <code lang="c#"><![CDATA[var colors = new SKColor [] {
+    new SKColor (0, 0, 255),
+    new SKColor (0, 255, 0)
+};
+var shader = SKShader.CreateTwoPointConicalGradient (new SKPoint (128, 128), 128, new SKPoint (128, 16), 16, colors, null, SKShaderTileMode.Clamp);
+var paint = new SKPaint () {
+    Shader = shader,
+};
+canvas.DrawPaint (paint);]]></code>
+      </example>
+      <para>
+        <img href="twopoint.png" />
+      </para>
+      <format type="text/html">
+        <h2>Sweep Gradient Shader</h2>
+      </format>
+      <example>
+        <code lang="c#"><![CDATA[var colors = new SKColor [] {
+    new SKColor (0, 255, 255),
+    new SKColor (255, 0, 255),
+    new SKColor (255, 255, 0),
+    new SKColor (0, 255, 255)
+};
+var shader = SKShader.CreateSweepGradient (new SKPoint (128, 128), colors, null);
+var paint = new SKPaint () {
+    Shader = shader
+};
+canvas.DrawPaint (paint);]]></code>
+      </example>
+      <format type="text/html">
+        <h2>Fractal Perlin Noise</h2>
+      </format>
+      <example>
+        <code lang="c#"><![CDATA[var shader = SKShader.CreatePerlinNoiseFractalNoise (0.5f, 0.5f, 4, 0);
+var paint = new SKPaint () { Shader = shader };
+canvas.DrawPaint (paint);]]></code>
+      </example>
+      <para>
+        <img href="fractalnoise.png" />
+      </para>
+      <format type="text/html">
+        <h2>Turbulence Perlin Noise</h2>
+      </format>
+      <example>
+        <code lang="c#"><![CDATA[var turbulence = SKShader.CreatePerlinNoiseTurbulence (0.05f, 0.05f, 4, 0);
+var paint = new SKPaint () { Shader = turbulence };
+canvas.DrawPaint (paint);]]></code>
+      </example>
+      <para>
+        <img href="turbulence.png" />
+      </para>
+      <format type="text/html">
+        <h2>Compose Shader</h2>
+      </format>
+      <example>
+        <code lang="c#"><![CDATA[
+var colors = new SKColor [] { new SKColor (0, 255, 255), new SKColor (255, 0, 255), new SKColor (255, 255, 0), new SKColor (0, 255, 255)};
+var sweep = SKShader.CreateSweepGradient (new SKPoint (128, 128), colors, null);
+var turbulence = SKShader.CreatePerlinNoiseTurbulence (0.05f, 0.05f, 4, 0);
+var shader = SKShader.CreateCompose (sweep, turbulence);
+var paint = new SKPaint () { Shader = shader };
+canvas.DrawPaint (paint);]]></code>
+      </example>
+      <para>
+        <img href="compose.png" />
+      </para>
     </remarks>
   </Docs>
   <Members>
@@ -36,6 +139,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKShader</ReturnType>
@@ -69,6 +173,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKShader</ReturnType>
@@ -104,6 +209,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKShader</ReturnType>
@@ -115,9 +221,7 @@
         <param name="color">The color to paint.</param>
         <summary>Creates a new shader that just draws the specified color.</summary>
         <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateColorFilter">
@@ -132,6 +236,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKShader</ReturnType>
@@ -162,6 +267,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKShader</ReturnType>
@@ -174,6 +280,43 @@
         <param name="shaderA">The colors from this shader are seen as the destination by the blend mode.</param>
         <param name="shaderB">The colors from this shader are seen as the source by the blend mode.</param>
         <summary>Create a new compose shader, which combines two shaders by the <see cref="F:SkiaSharp.SKXferMode.SrcOver" /> blend mode.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks>
+          <example>
+            <code lang="c#"><![CDATA[
+var colors = new SKColor [] { new SKColor (0, 255, 255), new SKColor (255, 0, 255), new SKColor (255, 255, 0), new SKColor (0, 255, 255)};
+var sweep = SKShader.CreateSweepGradient (new SKPoint (128, 128), colors, null);
+var turbulence = SKShader.CreatePerlinNoiseTurbulence (0.05f, 0.05f, 4, 0);
+var shader = SKShader.CreateCompose (sweep, turbulence);
+var paint = new SKPaint () { Shader = shader };
+canvas.DrawPaint (paint);]]></code>
+          </example>
+          <para>
+            <img href="compose.png" />
+          </para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateCompose">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKShader CreateCompose (SkiaSharp.SKShader shaderA, SkiaSharp.SKShader shaderB, SkiaSharp.SKBlendMode mode);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKShader CreateCompose(class SkiaSharp.SKShader shaderA, class SkiaSharp.SKShader shaderB, valuetype SkiaSharp.SKBlendMode mode) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKShader</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="shaderA" Type="SkiaSharp.SKShader" />
+        <Parameter Name="shaderB" Type="SkiaSharp.SKShader" />
+        <Parameter Name="mode" Type="SkiaSharp.SKBlendMode" />
+      </Parameters>
+      <Docs>
+        <param name="shaderA">The colors from this shader are seen as the destination by the blend mode.</param>
+        <param name="shaderB">The colors from this shader are seen as the source by the blend mode.</param>
+        <param name="mode">The blend mode that combines the two shaders.</param>
+        <summary>Create a new compose shader, which combines two shaders by a blend mode.</summary>
         <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
         <remarks>
           <para></para>
@@ -192,7 +335,13 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Obsolete("Use CreateCompose(SKShader, SKShader, SKBlendMode) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKShader</ReturnType>
       </ReturnValue>
@@ -202,10 +351,10 @@
         <Parameter Name="mode" Type="SkiaSharp.SKXferMode" />
       </Parameters>
       <Docs>
-        <param name="shaderA">The colors from this shader are seen as the destination by the blend mode.</param>
-        <param name="shaderB">The colors from this shader are seen as the source by the blend mode.</param>
-        <param name="mode">The blend mode that combines the two shaders.</param>
-        <summary>Create a new compose shader, which combines two shaders by a blend mode.</summary>
+        <param name="shaderA">The colors from this shader are seen as the destination by the transfer mode.</param>
+        <param name="shaderB">The colors from this shader are seen as the source by the transfer mode.</param>
+        <param name="mode">The transfer mode that combines the two shaders.</param>
+        <summary>Create a new compose shader, which combines two shaders by a transfer mode.</summary>
         <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
         <remarks>
           <para></para>
@@ -224,6 +373,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKShader</ReturnType>
@@ -249,6 +399,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKShader</ReturnType>
@@ -269,7 +420,17 @@
         <summary>Creates a shader that generates a linear gradient between the two specified points.</summary>
         <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
         <remarks>
-          <para></para>
+          <example>
+            <code lang="c#"><![CDATA[
+var colors = new SKColor [] { new SKColor (0, 255, 255), new SKColor (255, 0, 255), new SKColor (255, 255, 0), new SKColor (0, 255, 255)};
+var shader = SKShader.CreateLinearGradient (new SKPoint (0, 0), new SKPoint (255, 255), colors, null, SKShaderTileMode.Clamp);
+var paint = new SKPaint () { Shader = shader };
+canvas.DrawPaint (paint);
+]]></code>
+          </example>
+          <para>
+            <img href="linear.png" />
+          </para>
         </remarks>
       </Docs>
     </Member>
@@ -285,6 +446,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKShader</ReturnType>
@@ -323,6 +485,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKShader</ReturnType>
@@ -353,6 +516,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKShader</ReturnType>
@@ -387,6 +551,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKShader</ReturnType>
@@ -423,6 +588,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKShader</ReturnType>
@@ -457,6 +623,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKShader</ReturnType>
@@ -493,6 +660,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKShader</ReturnType>
@@ -529,6 +697,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKShader</ReturnType>
@@ -567,6 +736,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKShader</ReturnType>
@@ -599,6 +769,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKShader</ReturnType>
@@ -633,6 +804,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKShader</ReturnType>
@@ -673,6 +845,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKShader</ReturnType>
@@ -715,6 +888,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>

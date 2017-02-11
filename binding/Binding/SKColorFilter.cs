@@ -25,7 +25,7 @@ namespace SkiaSharp
 		{
 			var minMemorySize = 4 * cubeDimension * cubeDimension * cubeDimension;
 			return
-				(cubeDimension >= MinCubeSize) && (cubeDimension <= MaxCubeSize) &&
+				(cubeDimension >= MinColorCubeDimension) && (cubeDimension <= MaxColorCubeDimension) &&
 				(null != cubeData) && (cubeData.Size >= minMemorySize);
 		}
 
@@ -44,8 +44,20 @@ namespace SkiaSharp
 
 			base.Dispose(disposing);
 		}
-		
+
+		[Obsolete("Use CreateBlendMode(SKColor, SKBlendMode) instead.")]
 		public static SKColorFilter CreateXferMode(SKColor c, SKXferMode mode)
+		{
+			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_mode(c, (SKBlendMode)mode));
+		}
+
+		[Obsolete("Use CreateBlendMode(SKColor, SKBlendMode) instead.")]
+		public static SKColorFilter CreateBlendMode(SKColor c, SKXferMode mode)
+		{
+			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_mode(c, (SKBlendMode)mode));
+		}
+
+		public static SKColorFilter CreateBlendMode(SKColor c, SKBlendMode mode)
 		{
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_mode(c, mode));
 		}

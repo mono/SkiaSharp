@@ -45,6 +45,8 @@ UINT WINAPI GetACPCompat(void);
 HANDLE WINAPI OpenThreadCompat(_In_ DWORD dwDesiredAccess, _In_ BOOL bInheritHandle, _In_ DWORD dwThreadId);
 // used in: dng_utils.cpp
 DWORD  WINAPI GetTickCountCompat(VOID);
+// used in: dng_utils.cpp
+int WINAPI MessageBoxACompat(_In_opt_ HWND hWnd, _In_opt_ LPCSTR lpText, _In_opt_ LPCSTR lpCaption, _In_ UINT uType);
 // used in: dng_pthread.cpp
 DWORD WINAPI TlsAllocCompat(VOID);
 // used in: dng_pthread.cpp
@@ -58,6 +60,7 @@ char *getenvCompat(const char *name);
 
 // override any previous declaration with ours
 
+#define MessageBoxA MessageBoxACompat
 #define CompareStringW CompareStringWCompat
 #define GetACP GetACPCompat
 #define OpenThread OpenThreadCompat

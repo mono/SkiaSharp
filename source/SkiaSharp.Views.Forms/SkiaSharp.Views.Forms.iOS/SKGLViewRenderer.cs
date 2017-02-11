@@ -12,7 +12,7 @@ using SKNativeView = SkiaSharp.Views.iOS.SKGLView;
 
 namespace SkiaSharp.Views.Forms
 {
-	internal class SKGLViewRenderer : ViewRenderer<SKFormsView, SKNativeView>
+	public class SKGLViewRenderer : ViewRenderer<SKFormsView, SKNativeView>
 	{
 		private CADisplayLink displayLink;
 
@@ -132,6 +132,9 @@ namespace SkiaSharp.Views.Forms
 				UserInteractionEnabled = false;
 
 				this.controller = controller;
+
+				// Force the opacity to false for consistency with the other platforms
+				Opaque = false;
 			}
 
 			public override void DrawInSurface(SKSurface surface, GRBackendRenderTargetDesc renderTarget)

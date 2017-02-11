@@ -1,11 +1,11 @@
 ﻿#if __ANDROID__
 namespace SkiaSharp.Views.Android
+#elif __TVOS__
+namespace SkiaSharp.Views.tvOS
 #elif __IOS__
 namespace SkiaSharp.Views.iOS
 #elif __DESKTOP__ || __WPF__
 namespace SkiaSharp.Views.Desktop
-#elif __TVOS__
-namespace SkiaSharp.Views.tvOS
 #elif WINDOWS_UWP
 namespace SkiaSharp.Views.UWP
 #elif __MACOS__
@@ -81,6 +81,7 @@ namespace SkiaSharp.Views.Mac
 			return new System.Drawing.Size(size.Width, size.Height);
 		}
 
+#if __ANDROID__ || __DESKTOP__ || __WPF__
 		// System.Drawing.Color
 
 		public static SKColor ToSKColor(this System.Drawing.Color color)
@@ -92,6 +93,8 @@ namespace SkiaSharp.Views.Mac
 		{
 			return System.Drawing.Color.FromArgb((int)(uint)color);
 		}
+#endif
+
 #endif
 	}
 }

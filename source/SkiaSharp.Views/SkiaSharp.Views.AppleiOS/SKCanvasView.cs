@@ -4,10 +4,10 @@ using CoreGraphics;
 using Foundation;
 using UIKit;
 
-#if __IOS__
-namespace SkiaSharp.Views.iOS
-#elif __TVOS__
+#if __TVOS__
 namespace SkiaSharp.Views.tvOS
+#elif __IOS__
+namespace SkiaSharp.Views.iOS
 #endif
 {
 	[Register(nameof(SKCanvasView))]
@@ -25,6 +25,7 @@ namespace SkiaSharp.Views.tvOS
 		private bool designMode;
 
 		private SKDrawable drawable;
+		private bool ignorePixelScaling;
 
 		// created in code
 		public SKCanvasView()
@@ -60,6 +61,16 @@ namespace SkiaSharp.Views.tvOS
 
 		public SKSize CanvasSize => drawable.Info.Size;
 
+		public bool IgnorePixelScaling
+		{
+			get { return ignorePixelScaling; }
+			set
+			{
+				ignorePixelScaling = value;
+				SetNeedsDisplay();
+			}
+		}
+
 		public override void Draw(CGRect rect)
 		{
 			base.Draw(rect);
@@ -71,7 +82,7 @@ namespace SkiaSharp.Views.tvOS
 
 			// create the skia context
 			SKImageInfo info;
-			var surface = drawable.CreateSurface(Bounds, ContentScaleFactor, out info);
+			var surface = drawable.CreateSurface(Bounds, IgnorePixelScaling ? 1 : ContentScaleFactor, out info);
 
 			// draw on the image using SKiaSharp
 			DrawInSurface(surface, info);

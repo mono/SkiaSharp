@@ -41,6 +41,14 @@ namespace SkiaSharp
 			}
 		}
 
+		public SKEncodedInfo EncodedInfo {
+			get {
+				SKEncodedInfo info;
+				SkiaApi.sk_codec_get_encodedinfo (Handle, out info);
+				return info;
+			}
+		}
+
 		public SKCodecOrigin Origin {
 			get { return SkiaApi.sk_codec_get_origin (Handle); }
 		}
@@ -72,6 +80,19 @@ namespace SkiaSharp
 			}
 		}
 
+		public int RepetitionCount => SkiaApi.sk_codec_get_repetition_count (Handle);
+
+		public int FrameCount => SkiaApi.sk_codec_get_frame_count (Handle);
+
+		public SKCodecFrameInfo[] FrameInfo {
+			get {
+				var length = SkiaApi.sk_codec_get_frame_count (Handle);
+				var info = new SKCodecFrameInfo [length];
+				SkiaApi.sk_codec_get_frame_info (Handle, info);
+				return info;
+			}
+		}
+
 		public SKCodecResult GetPixels (out byte[] pixels)
 		{
 			return GetPixels (Info, out pixels);
@@ -99,6 +120,12 @@ namespace SkiaSharp
 			}
 		}
 
+		public unsafe SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options)
+		{
+			var colorTableCount = 0;
+			return GetPixels (info, pixels, rowBytes, options, IntPtr.Zero, ref colorTableCount);
+		}
+
 		public unsafe SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
 		{
 			if (pixels == IntPtr.Zero)
@@ -106,13 +133,21 @@ namespace SkiaSharp
 
 			var nativeOptions = new SKCodecOptionsInternal {
 				fZeroInitialized = options.ZeroInitialized,
-				fSubset = null
+				fSubset = null,
+				fFrameIndex = (IntPtr) options.FrameIndex,
+				fHasPriorFrame = options.HasPriorFrame
 			};
 			if (options.HasSubset) {
 				var subset = options.Subset.Value;
 				nativeOptions.fSubset = &subset;
 			}
 			return SkiaApi.sk_codec_get_pixels (Handle, ref info, pixels, (IntPtr)rowBytes, ref nativeOptions, colorTable, ref colorTableCount);
+		}
+
+		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options)
+		{
+			var colorTableCount = 0;
+			return GetPixels (info, pixels, options, IntPtr.Zero, ref colorTableCount);
 		}
 
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
@@ -145,6 +180,98 @@ namespace SkiaSharp
 		{
 			return GetPixels (info, pixels, info.RowBytes, SKCodecOptions.Default, colorTable, ref colorTableCount);
 		}
+
+		public unsafe SKCodecResult StartIncrementalDecode(SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
+		{
+			if (pixels == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (pixels));
+
+			var nativeOptions = new SKCodecOptionsInternal {
+				fZeroInitialized = options.ZeroInitialized,
+				fSubset = null,
+				fFrameIndex = (IntPtr) options.FrameIndex,
+				fHasPriorFrame = options.HasPriorFrame
+			};
+			if (options.HasSubset) {
+				var subset = options.Subset.Value;
+				nativeOptions.fSubset = &subset;
+			}
+			return SkiaApi.sk_codec_start_incremental_decode (Handle, ref info, pixels, (IntPtr)rowBytes, ref nativeOptions, colorTable, ref colorTableCount);
+		}
+
+		public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options)
+		{
+			int colorTableCount = 0;
+			return StartIncrementalDecode (info, pixels, rowBytes, options, IntPtr.Zero, ref colorTableCount);
+		}
+
+		public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes)
+		{
+			return SkiaApi.sk_codec_start_incremental_decode (Handle, ref info, pixels, (IntPtr)rowBytes, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+		}
+
+		public unsafe SKCodecResult StartIncrementalDecode(SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount)
+		{
+			return StartIncrementalDecode (info, pixels, rowBytes, options, colorTable == null ? IntPtr.Zero : colorTable.ReadColors (), ref colorTableCount);
+		}
+
+		public SKCodecResult IncrementalDecode (out int rowsDecoded)
+		{
+			return SkiaApi.sk_codec_incremental_decode (Handle, out rowsDecoded);
+		}
+
+		public SKCodecResult IncrementalDecode ()
+		{
+			int rowsDecoded;
+			return SkiaApi.sk_codec_incremental_decode (Handle, out rowsDecoded);
+		}
+
+		public unsafe SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
+		{
+			var nativeOptions = new SKCodecOptionsInternal {
+				fZeroInitialized = options.ZeroInitialized,
+				fSubset = null,
+				fFrameIndex = (IntPtr) options.FrameIndex,
+				fHasPriorFrame = options.HasPriorFrame
+			};
+			if (options.HasSubset) {
+				var subset = options.Subset.Value;
+				nativeOptions.fSubset = &subset;
+			}
+			return SkiaApi.sk_codec_start_scanline_decode (Handle, ref info, ref nativeOptions, colorTable, ref colorTableCount);
+		}
+
+		public SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options)
+		{
+			int colorTableCount = 0;
+			return StartScanlineDecode (info, options, IntPtr.Zero, ref colorTableCount);
+		}
+
+		public SKCodecResult StartScanlineDecode (SKImageInfo info)
+		{
+			return SkiaApi.sk_codec_start_scanline_decode (Handle, ref info, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+		}
+
+		public SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount)
+		{
+			return StartScanlineDecode (info, options, colorTable == null ? IntPtr.Zero : colorTable.ReadColors (), ref colorTableCount);
+		}
+
+		public int GetScanlines (IntPtr dst, int countLines, int rowBytes)
+		{
+			if (dst == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (dst));
+
+			return SkiaApi.sk_codec_get_scanlines (Handle, dst, countLines, (IntPtr)rowBytes);
+		}
+
+		public bool SkipScanlines (int countLines) => SkiaApi.sk_codec_skip_scanlines (Handle, countLines);
+
+		public SKCodecScanlineOrder ScanlineOrder => SkiaApi.sk_codec_get_scanline_order (Handle);
+
+		public int NextScanline => SkiaApi.sk_codec_next_scanline (Handle);
+
+		public int GetOutputScanline (int inputScanline) => SkiaApi.sk_codec_output_scanline (Handle, inputScanline);
 
 		public static SKCodec Create (SKStream stream)
 		{

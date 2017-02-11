@@ -1,10 +1,9 @@
 ﻿using System;
-using NUnit.Framework;
+using Xunit;
 using System.IO;
 
 namespace SkiaSharp.Tests
 {
-	[TestFixture]
 	public class SKTypefaceTest : SKTest
 	{
 		static readonly string[] ExpectedTablesSpiderFont = new string[] {
@@ -23,18 +22,21 @@ namespace SkiaSharp.Tests
 			0x02, 0x00, 0x24, 0x00, 0x44,
 		};
 
-		[Test]
+		[Fact]
 		public void NullInWrongFileName()
 		{
-			Assert.IsNull(SKTypeface.FromFile(Path.Combine(PathToFonts, "font that doesn't exist.ttf")));
+			Assert.Null(SKTypeface.FromFile(Path.Combine(PathToFonts, "font that doesn't exist.ttf")));
 		}
 
-		[Test]
+		[Fact]
 		public void TestFamilyName()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf")))
 			{
-				Assert.AreEqual("Roboto2", typeface.FamilyName, "Family name must be Roboto2.");
+				if (IsLinux) // see issue #225
+					Assert.Equal("", typeface.FamilyName);
+				else
+					Assert.Equal("Roboto2", typeface.FamilyName);
 			}
 		}
 
@@ -56,40 +58,63 @@ namespace SkiaSharp.Tests
 				(UInt32)(v[3]) << 00;
 		}
 
-		[Test]
+		[Fact]
 		public void TestGetTableTags()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "SpiderSymbol.ttf")))
 			{
-				Assert.AreEqual("SpiderSymbol", typeface.FamilyName, "Family name must be SpiderSymbol");
+				if (IsLinux) // see issue #225
+					Assert.Equal("", typeface.FamilyName);
+				else
+					Assert.Equal("SpiderSymbol", typeface.FamilyName);
 				var tables = typeface.GetTableTags();
-				Assert.AreEqual(ExpectedTablesSpiderFont.Length, tables.Length, "The font doesn't have the expected number of tables.");
+				Assert.Equal(ExpectedTablesSpiderFont.Length, tables.Length);
 
 				for (int i = 0; i < tables.Length; i++) {
-					Assert.AreEqual(ExpectedTablesSpiderFont[i], GetReadableTag(tables[i]), "Unexpected Font tag.");
+					Assert.Equal(ExpectedTablesSpiderFont[i], GetReadableTag(tables[i]));
 				}
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void TestGetTableData()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "ReallyBigA.ttf")))
 			{
-				Assert.AreEqual("ReallyBigA", typeface.FamilyName, "Family name must be ReallyBigA");
+				if (IsLinux) // see issue #225
+					Assert.Equal("", typeface.FamilyName);
+				else
+					Assert.Equal("ReallyBigA", typeface.FamilyName);
 				var tables = typeface.GetTableTags();
 
 				for (int i = 0; i < tables.Length; i++) {
 					byte[] tableData = typeface.GetTableData(tables[i]);
-					Assert.AreEqual(ExpectedTableLengthsReallyBigAFont[i], tableData.Length, "Unexpected length for table: " + GetReadableTag(tables[i]));
+					Assert.Equal(ExpectedTableLengthsReallyBigAFont[i], tableData.Length);
 				}
 
-				Assert.AreEqual(ExpectedTableDataPostReallyBigAFont, typeface.GetTableData(GetIntTag("post")));
+				Assert.Equal(ExpectedTableDataPostReallyBigAFont, typeface.GetTableData(GetIntTag("post")));
 
 			}
 		}
 
-		[Test]
+		[Fact]
+		public void TestFontManagerMatchCharacter()
+		{
+			var fonts = SKFontManager.Default;
+			var emoji = "🚀";
+			var emojiChar = StringUtilities.GetUnicodeCharacterCode(emoji, SKTextEncoding.Utf32);
+			using (var typeface = fonts.MatchCharacter(emojiChar))
+			{
+				if (IsLinux)
+					Assert.Equal("", typeface.FamilyName);  // see issue #225
+				else if (IsMac)
+					Assert.Equal("Apple Color Emoji", typeface.FamilyName);
+				else if (IsWindows)
+					Assert.Equal("Segoe UI Emoji", typeface.FamilyName);
+			}
+		}
+
+		[Fact]
 		public void ExceptionInInvalidGetTableData()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Distortable.ttf")))
@@ -98,7 +123,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void TestTryGetTableData()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "ReallyBigA.ttf")))
@@ -106,23 +131,23 @@ namespace SkiaSharp.Tests
 				var tables = typeface.GetTableTags();
 				for (int i = 0; i < tables.Length; i++) {
 					byte[] tableData;
-					Assert.IsTrue(typeface.TryGetTableData(tables[i], out tableData));
-					Assert.AreEqual(ExpectedTableLengthsReallyBigAFont[i], tableData.Length, "Unexpected length for table: " + GetReadableTag(tables[i]));
+					Assert.True(typeface.TryGetTableData(tables[i], out tableData));
+					Assert.Equal(ExpectedTableLengthsReallyBigAFont[i], tableData.Length);
 				}
 
-				Assert.AreEqual(ExpectedTableDataPostReallyBigAFont, typeface.GetTableData(GetIntTag("post")));
+				Assert.Equal(ExpectedTableDataPostReallyBigAFont, typeface.GetTableData(GetIntTag("post")));
 
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void InvalidTryGetTableData()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Distortable.ttf")))
 			{
 				byte[] tableData;
-				Assert.IsFalse(typeface.TryGetTableData(8, out tableData));
-				Assert.IsNull(tableData);
+				Assert.False(typeface.TryGetTableData(8, out tableData));
+				Assert.Null(tableData);
 			}
 		}
 

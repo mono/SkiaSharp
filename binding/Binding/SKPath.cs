@@ -75,6 +75,16 @@ namespace SkiaSharp
 		
 		public bool IsConcave => Convexity == SKPathConvexity.Concave;
 
+		public bool IsEmpty => VerbCount == 0;
+
+		public SKPathSegmentMask SegmentMasks => SkiaApi.sk_path_get_segment_masks (Handle);
+
+		public int VerbCount {
+			get {
+				return SkiaApi.sk_path_count_verbs (Handle);
+			}
+		}
+
 		public int PointCount {
 			get {
 				return SkiaApi.sk_path_count_points (Handle);
@@ -384,6 +394,13 @@ namespace SkiaSharp
 		public void AddCircle (float x, float y, float radius, SKPathDirection dir = SKPathDirection.Clockwise)
 		{
 			SkiaApi.sk_path_add_circle (Handle, x, y, radius, dir);
+		}
+
+		public void AddPoly (SKPoint[] points, bool close = true)
+		{
+			if (points == null)
+				throw new ArgumentNullException (nameof (points));
+			SkiaApi.sk_path_add_poly (Handle, points, points.Length, close);
 		}
 
 		public Iterator CreateIterator (bool forceClose)

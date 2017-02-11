@@ -23,12 +23,25 @@ namespace SkiaSharpSample.FormsSample
 			get { return sample; }
 			set
 			{
+				// clean up the old sample
+				if (sample != null)
+				{
+					sample.RefreshRequested -= OnRefreshRequested;
+					sample.Destroy();
+				}
+
 				sample = value;
+				Title = sample?.Title;
 
-				sample.Init(RefreshSamples);
+				// prepare the sample
+				if (sample != null)
+				{
+					sample.RefreshRequested += OnRefreshRequested;
+					sample.Init();
+				}
 
-				Title = sample.Title;
-				RefreshSamples();
+				// refresh the view
+				OnRefreshRequested(null, null);
 			}
 		}
 
@@ -40,6 +53,7 @@ namespace SkiaSharpSample.FormsSample
 					canvas.IsVisible = true;
 					canvas.InvalidateSurface();
 					glview.IsVisible = false;
+					canvas.IgnorePixelScaling = !canvas.IgnorePixelScaling;
 					break;
 				case SampleBackends.OpenGL:
 					glview.IsVisible = true;
@@ -56,6 +70,31 @@ namespace SkiaSharpSample.FormsSample
 		private void OnTapSample(object sender, EventArgs e)
 		{
 			Sample?.Tap();
+		}
+
+		private void OnPanSample(object sender, PanUpdatedEventArgs e)
+		{
+			var scale = canvas.CanvasSize.Width / (float)canvas.Width;
+			if (glview.IsVisible)
+				scale = glview.CanvasSize.Width / (float)glview.Width;
+			
+			Sample?.Pan(
+				(GestureState)(int)e.StatusType,
+				new SKPoint((float)e.TotalX * scale, (float)e.TotalY * scale));
+			RefreshSamples();
+		}
+
+		private void OnPinchSample(object sender, PinchGestureUpdatedEventArgs e)
+		{
+			var size = canvas.CanvasSize;
+			if (glview.IsVisible)
+				size = glview.CanvasSize;
+
+			Sample?.Pinch(
+				(GestureState)(int)e.Status,
+				(float)e.Scale,
+				new SKPoint((float)e.ScaleOrigin.X * size.Width, (float)e.ScaleOrigin.Y * size.Height));
+			RefreshSamples();
 		}
 
 		private void OnPaintSample(object sender, SKPaintSurfaceEventArgs e)
@@ -92,6 +131,11 @@ namespace SkiaSharpSample.FormsSample
 				var padding = 10 * scale;
 				canvas.DrawText(text, padding, canvasSize.Height - padding, paint);
 			}
+		}
+
+		private void OnRefreshRequested(object sender, EventArgs e)
+		{
+			RefreshSamples();
 		}
 
 		private void RefreshSamples()

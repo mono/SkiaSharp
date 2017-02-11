@@ -32,7 +32,7 @@ namespace SkiaSharpSample.Samples
 			canvas.Clear(SKColors.White);
 
 			float canvasMin = Math.Min(width, height);
-			float svgMax = Math.Max(svg.Picture.Bounds.Width, svg.Picture.Bounds.Height);
+			float svgMax = Math.Max(svg.Picture.CullRect.Width, svg.Picture.CullRect.Height);
 			float scale = canvasMin / svgMax;
 			var matrix = SKMatrix.MakeScale(scale, scale);
 

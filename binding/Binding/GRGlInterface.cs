@@ -55,12 +55,12 @@ namespace SkiaSharp
 		
 		public static GRGlInterface CreateNativeAngleInterface ()
 		{
-#if DESKTOP || WINDOWS_UWP
-			return AssembleAngleInterface (AngleLoader.GetProc);
-#else
-			// return null on non-DirectX platforms: everything except Windows
-			return null;
-#endif
+			if (PlatformConfiguration.IsWindows) {
+				return AssembleAngleInterface (AngleLoader.GetProc);
+			} else {
+				// return null on non-DirectX platforms: everything except Windows
+				return null;
+			}
 		}
 
 		public static GRGlInterface AssembleInterface (GRGlGetProcDelegate get)
@@ -70,19 +70,15 @@ namespace SkiaSharp
 
 		public static GRGlInterface AssembleInterface (object context, GRGlGetProcDelegate get)
 		{
-#if DESKTOP || WINDOWS_UWP
-			var angle = AssembleAngleInterface (context, get);
-#endif
-			// always use ANGLE on UWP
-#if WINDOWS_UWP
-			return angle;
-#else
-			// first try ANGLE on Desktop
-#if DESKTOP
-			if (angle != null)
-				return angle;
-#endif
-			// always use the default on non-Windows
+			// if on Windows, try ANGLE
+			if (PlatformConfiguration.IsWindows) {
+				var angle = AssembleAngleInterface (context, get);
+				if (angle != null) {
+					return angle;
+				}
+			}
+
+			// try the native default
 			var del = Marshal.GetFunctionPointerForDelegate (getProcDelegate);
 
 			var ctx = new GRGlGetProcDelegateContext (context, get);
@@ -90,7 +86,6 @@ namespace SkiaSharp
 			var glInterface = GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_interface (ptr, del));
 			GRGlGetProcDelegateContext.Free (ptr);
 			return glInterface;
-#endif
 		}
 
 		public static GRGlInterface AssembleAngleInterface (GRGlGetProcDelegate get)
@@ -224,7 +219,6 @@ namespace SkiaSharp
 			}
 		}
 
-#if DESKTOP || WINDOWS_UWP
 		private static class AngleLoader
 		{
 			private static readonly IntPtr libEGL;
@@ -253,6 +247,11 @@ namespace SkiaSharp
 
 			static AngleLoader()
 			{
+				// this is not supported at all on non-Windows platforms
+				if (!PlatformConfiguration.IsWindows) {
+					return;
+				}
+
 				libEGL = LoadLibrary ("libEGL.dll");
 				if (Marshal.GetLastWin32Error () != 0 || libEGL == IntPtr.Zero)
 					throw new DllNotFoundException ("Unable to load libEGL.dll.");
@@ -265,6 +264,11 @@ namespace SkiaSharp
 			// function to assemble the ANGLE interface
 			public static IntPtr GetProc (object context, string name)
 			{
+				// this is not supported at all on non-Windows platforms
+				if (!PlatformConfiguration.IsWindows) {
+					return IntPtr.Zero;
+				}
+
 				IntPtr proc = GetProcAddress (libGLESv2, name);
 				if (proc == IntPtr.Zero)
 				{
@@ -277,7 +281,6 @@ namespace SkiaSharp
 				return proc;
 			}
 		}
-#endif
 	}
 }
 

@@ -9,7 +9,7 @@ using SKNativeView = SkiaSharp.Views.UWP.SKSwapChainPanel;
 
 namespace SkiaSharp.Views.Forms
 {
-	internal class SKGLViewRenderer : ViewRenderer<SKFormsView, SKNativeView>
+	public class SKGLViewRenderer : ViewRenderer<SKFormsView, SKNativeView>
 	{
 		protected override void OnElementChanged(ElementChangedEventArgs<SKFormsView> e)
 		{

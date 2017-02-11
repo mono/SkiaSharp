@@ -27,6 +27,27 @@ namespace SkiaSharp
 			Handle = SkiaApi.sk_canvas_new_from_bitmap (bitmap.Handle);
 		}
 
+		protected override void Dispose (bool disposing)
+		{
+			if (Handle != IntPtr.Zero && OwnsHandle) {
+				SkiaApi.sk_canvas_destroy (Handle);
+			}
+
+			base.Dispose (disposing);
+		}
+
+		public bool QuickReject (SKRect rect)
+		{
+			return SkiaApi.sk_canvas_quick_reject (Handle, ref rect);
+		}
+
+		public bool QuickReject (SKPath path)
+		{
+			if (path == null)
+				throw new ArgumentNullException (nameof (path));
+			return path.IsEmpty || QuickReject (path.Bounds);
+		}
+
 		public int Save ()
 		{
 			if (Handle == IntPtr.Zero)
@@ -225,6 +246,15 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_paint (Handle, paint.Handle);
 		}
 
+		public void DrawRegion (SKRegion region, SKPaint paint)
+		{
+			if (region == null)
+				throw new ArgumentNullException (nameof (region));
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
+			SkiaApi.sk_canvas_draw_region (Handle, region.Handle, paint.Handle);
+		}
+
 		public void DrawRect (SKRect rect, SKPaint paint)
 		{
 			if (paint == null)
@@ -351,11 +381,27 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
-			var bytes = Util.GetEncodedText (text, paint.TextEncoding);
-			SkiaApi.sk_canvas_draw_text (Handle, bytes, bytes.Length, x, y, paint.Handle);
+			var bytes = StringUtilities.GetEncodedText (text, paint.TextEncoding);
+			DrawText (bytes, x, y, paint);
 		}
 
+		public void DrawText (byte[] text, float x, float y, SKPaint paint)
+		{
+			if (text == null)
+				throw new ArgumentNullException (nameof (text));
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
+
+			SkiaApi.sk_canvas_draw_text (Handle, text, text.Length, x, y, paint.Handle);
+		}
+
+		[Obsolete ("Use DrawPositionedText instead.")]
 		public void DrawText (string text, SKPoint [] points, SKPaint paint)
+		{
+			DrawPositionedText (text, points, paint);
+		}
+
+		public void DrawPositionedText (string text, SKPoint [] points, SKPaint paint)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
@@ -364,11 +410,29 @@ namespace SkiaSharp
 			if (points == null)
 				throw new ArgumentNullException (nameof (points));
 
-			var bytes = Util.GetEncodedText (text, paint.TextEncoding);
-			SkiaApi.sk_canvas_draw_pos_text (Handle, bytes, bytes.Length, points, paint.Handle);
+			var bytes = StringUtilities.GetEncodedText (text, paint.TextEncoding);
+			DrawPositionedText (bytes, points, paint);
 		}
 
+		public void DrawPositionedText (byte[] text, SKPoint [] points, SKPaint paint)
+		{
+			if (text == null)
+				throw new ArgumentNullException (nameof (text));
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
+			if (points == null)
+				throw new ArgumentNullException (nameof (points));
+
+			SkiaApi.sk_canvas_draw_pos_text (Handle, text, text.Length, points, paint.Handle);
+		}
+
+		[Obsolete ("Use DrawTextOnPath instead.")]
 		public void DrawText (IntPtr buffer, int length, SKPath path, float hOffset, float vOffset, SKPaint paint)
+		{
+			DrawTextOnPath (buffer, length, path, hOffset, vOffset, paint);
+		}
+
+		public void DrawTextOnPath (IntPtr buffer, int length, SKPath path, float hOffset, float vOffset, SKPaint paint)
 		{
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (buffer));
@@ -390,7 +454,13 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_text (Handle, buffer, length, x, y, paint.Handle);
 		}
 
+		[Obsolete ("Use DrawPositionedText instead.")]
 		public void DrawText (IntPtr buffer, int length, SKPoint[] points, SKPaint paint)
+		{
+			DrawPositionedText (buffer, length, points, paint);
+		}
+
+		public void DrawPositionedText (IntPtr buffer, int length, SKPoint[] points, SKPaint paint)
 		{
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (buffer));
@@ -402,7 +472,13 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_pos_text (Handle, buffer, length, points, paint.Handle);
 		}
 
+		[Obsolete ("Use DrawTextOnPath instead.")]
 		public void DrawText (string text, SKPath path, float hOffset, float vOffset, SKPaint paint)
+		{
+			DrawTextOnPath (text, path, hOffset, vOffset, paint);
+		}
+
+		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKPaint paint)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
@@ -411,13 +487,72 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
-			var bytes = Util.GetEncodedText (text, paint.TextEncoding);
-			SkiaApi.sk_canvas_draw_text_on_path (Handle, bytes, bytes.Length, path.Handle, hOffset, vOffset, paint.Handle);
+			var bytes = StringUtilities.GetEncodedText (text, paint.TextEncoding);
+			DrawTextOnPath (bytes, path, hOffset, vOffset, paint);
+		}
+
+		[Obsolete ("Use DrawTextOnPath instead.")]
+		public void DrawText (byte[] text, SKPath path, float hOffset, float vOffset, SKPaint paint)
+		{
+			DrawTextOnPath (text, path, hOffset, vOffset, paint);
+		}
+
+		public void DrawTextOnPath (byte[] text, SKPath path, float hOffset, float vOffset, SKPaint paint)
+		{
+			if (text == null)
+				throw new ArgumentNullException (nameof (text));
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
+
+			SkiaApi.sk_canvas_draw_text_on_path (Handle, text, text.Length, path.Handle, hOffset, vOffset, paint.Handle);
 		}
 
 		public void Flush ()
 		{
 			SkiaApi.sk_canvas_flush (Handle);
+		}
+
+		public void DrawAnnotation (SKRect rect, string key, SKData value)
+		{
+			SkiaApi.sk_canvas_draw_annotation (Handle, ref rect, StringUtilities.GetEncodedText (key, SKTextEncoding.Utf8), value == null ? IntPtr.Zero : value.Handle);
+		}
+
+		public void DrawUrlAnnotation (SKRect rect, SKData value)
+		{
+			SkiaApi.sk_canvas_draw_url_annotation (Handle, ref rect, value == null ? IntPtr.Zero : value.Handle);
+		}
+
+		public SKData DrawUrlAnnotation (SKRect rect, string value)
+		{
+			var data = SKData.FromCString (value);
+			DrawUrlAnnotation (rect, data);
+			return data;
+		}
+
+		public void DrawNamedDestinationAnnotation (SKPoint point, SKData value)
+		{
+			SkiaApi.sk_canvas_draw_named_destination_annotation (Handle, ref point, value == null ? IntPtr.Zero : value.Handle);
+		}
+
+		public SKData DrawNamedDestinationAnnotation (SKPoint point, string value)
+		{
+			var data = SKData.FromCString (value);
+			DrawNamedDestinationAnnotation (point, data);
+			return data;
+		}
+
+		public void DrawLinkDestinationAnnotation (SKRect rect, SKData value)
+		{
+			SkiaApi.sk_canvas_draw_link_destination_annotation (Handle, ref rect, value == null ? IntPtr.Zero : value.Handle);
+		}
+
+		public SKData DrawLinkDestinationAnnotation (SKRect rect, string value)
+		{
+			var data = SKData.FromCString (value);
+			DrawLinkDestinationAnnotation (rect, data);
+			return data;
 		}
 
 		public void DrawBitmapNinePatch (SKBitmap bitmap, SKRectI center, SKRect dst, SKPaint paint = null)
@@ -549,6 +684,11 @@ namespace SkiaSharp
 	{
 		private SKCanvas canvas;
 		private readonly int saveCount;
+
+		public SKAutoCanvasRestore (SKCanvas canvas)
+			: this (canvas, true)
+		{
+		}
 
 		public SKAutoCanvasRestore (SKCanvas canvas, bool doSave)
 		{

@@ -135,11 +135,6 @@ namespace SkiaSharp
 				WeakReference reference;
 				if (instances.TryGetValue(handle, out reference))
 				{
-					var shouldRemove =
-						reference == null ||
-						reference.Target == null ||
-						reference.Target == instance;
-
 					// remove it if it is dead or the correct object
 					instances.Remove(handle);
 				}

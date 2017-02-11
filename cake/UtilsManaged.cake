@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 
 var RunNuGetRestore = new Action<FilePath> ((solution) =>
 {
@@ -5,6 +6,14 @@ var RunNuGetRestore = new Action<FilePath> ((solution) =>
         ToolPath = NugetToolPath,
         Source = NuGetSources,
         Verbosity = NuGetVerbosity.Detailed
+    });
+});
+
+var RunDotNetCoreRestore = new Action<string> ((solution) =>
+{
+    DotNetCoreRestore (solution, new DotNetCoreRestoreSettings { 
+        Sources = NuGetSources,
+        Verbosity = DotNetCoreRestoreVerbosity.Verbose
     });
 });
 
@@ -22,16 +31,20 @@ var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath)
     });                
 });
 
-var RunTests = new Action<FilePath> ((testAssembly) =>
+var RunProcess = new Action<FilePath, ProcessSettings> ((process, settings) =>
+{
+    var result = StartProcess (process, settings);
+    if (result != 0) {
+        throw new Exception ("Process '" + process + "' failed with error: " + result);
+    }
+});
+
+var RunTests = new Action<FilePath, bool> ((testAssembly, is64) =>
 {
     var dir = testAssembly.GetDirectory ();
-    var result = StartProcess (NUnitConsoleToolPath, new ProcessSettings {
-        Arguments = string.Format ("\"{0}\" --work=\"{1}\"", testAssembly, dir),
+    RunProcess (is64 ? TestConsoleToolPath_x64 : TestConsoleToolPath_x86, new ProcessSettings {
+        Arguments = string.Format ("\"{0}\"", testAssembly),
     });
-    
-    if (result != 0) {
-        throw new Exception ("NUnit test failed with error: " + result);
-    }
 });
 
 var RunMdocUpdate = new Action<FilePath[], DirectoryPath, DirectoryPath[]> ((assemblies, docsRoot, refs) =>
@@ -41,14 +54,14 @@ var RunMdocUpdate = new Action<FilePath[], DirectoryPath, DirectoryPath[]> ((ass
         refArgs = string.Join (" ", refs.Select (r => string.Format ("--lib=\"{0}\"", r)));
     }
     var assemblyArgs = string.Join (" ", assemblies.Select (a => string.Format ("\"{0}\"", a)));
-    StartProcess (MDocPath, new ProcessSettings {
+    RunProcess (MDocPath, new ProcessSettings {
         Arguments = string.Format ("update --preserve --out=\"{0}\" {1} {2}", docsRoot, refArgs, assemblyArgs),
     });
 });
 
 var RunMdocMSXml = new Action<DirectoryPath, DirectoryPath> ((docsRoot, outputDir) =>
 {
-    StartProcess (MDocPath, new ProcessSettings {
+    RunProcess (MDocPath, new ProcessSettings {
         Arguments = string.Format ("export-msxdoc \"{0}\"", MakeAbsolute (docsRoot)),
         WorkingDirectory = MakeAbsolute (outputDir).ToString ()
     });
@@ -56,7 +69,7 @@ var RunMdocMSXml = new Action<DirectoryPath, DirectoryPath> ((docsRoot, outputDi
 
 var RunMdocAssemble = new Action<DirectoryPath, FilePath> ((docsRoot, output) =>
 {
-    StartProcess (MDocPath, new ProcessSettings {
+    RunProcess (MDocPath, new ProcessSettings {
         Arguments = string.Format ("assemble --out=\"{0}\" \"{1}\"", output, docsRoot),
     });
 });
@@ -80,4 +93,39 @@ var ClearSkiaSharpNuGetCache = new Action (() => {
         Warning ("SkiaSharp nugets were installed at '{0}', removing...", installedNuGet);
         CleanDirectory (installedNuGet);
     }
+});
+
+internal static class MacPlatformDetector
+{
+    internal static readonly Lazy<bool> IsMac = new Lazy<bool> (IsRunningOnMac);
+
+    [DllImport ("libc")]
+    static extern int uname (IntPtr buf);
+
+    static bool IsRunningOnMac ()
+    {
+        IntPtr buf = IntPtr.Zero;
+        try {
+            buf = Marshal.AllocHGlobal (8192);
+            // This is a hacktastic way of getting sysname from uname ()
+            if (uname (buf) == 0) {
+                string os = Marshal.PtrToStringAnsi (buf);
+                if (os == "Darwin")
+                    return true;
+            }
+        } catch {
+        } finally {
+            if (buf != IntPtr.Zero)
+                Marshal.FreeHGlobal (buf);
+        }
+        return false;
+    }
+}
+
+var IsRunningOnMac = new Func<bool> (() => {
+    return System.Environment.OSVersion.Platform == PlatformID.MacOSX || MacPlatformDetector.IsMac.Value;
+});
+
+var IsRunningOnLinux = new Func<bool> (() => {
+    return IsRunningOnUnix () && !IsRunningOnMac ();
 });

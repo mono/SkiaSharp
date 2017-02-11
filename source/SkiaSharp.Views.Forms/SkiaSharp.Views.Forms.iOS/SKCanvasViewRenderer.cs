@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using Xamarin.Forms;
 using Xamarin.Forms.Platform.iOS;
 
@@ -9,7 +10,7 @@ using SKNativeView = SkiaSharp.Views.iOS.SKCanvasView;
 
 namespace SkiaSharp.Views.Forms
 {
-	internal class SKCanvasViewRenderer : ViewRenderer<SKFormsView, SKNativeView>
+	public class SKCanvasViewRenderer : ViewRenderer<SKFormsView, SKNativeView>
 	{
 		protected override void OnElementChanged(ElementChangedEventArgs<SKFormsView> e)
 		{
@@ -28,6 +29,7 @@ namespace SkiaSharp.Views.Forms
 
 				// create the native view
 				var view = new InternalView(newController);
+				view.IgnorePixelScaling = e.NewElement.IgnorePixelScaling;
 				SetNativeControl(view);
 
 				// subscribe to events from the user
@@ -39,6 +41,16 @@ namespace SkiaSharp.Views.Forms
 			}
 
 			base.OnElementChanged(e);
+		}
+
+		protected override void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
+		{
+			base.OnElementPropertyChanged(sender, e);
+
+			if (e.PropertyName == nameof(SKFormsView.IgnorePixelScaling))
+			{
+				Control.IgnorePixelScaling = Element.IgnorePixelScaling;
+			}
 		}
 
 		protected override void Dispose(bool disposing)
@@ -74,6 +86,9 @@ namespace SkiaSharp.Views.Forms
 				UserInteractionEnabled = false;
 
 				this.controller = controller;
+
+				// Force the opacity to false for consistency with the other platforms
+				Opaque = false;
 			}
 
 			public override void DrawInSurface(SKSurface surface, SKImageInfo info)

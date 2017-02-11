@@ -18,6 +18,24 @@
 SK_C_PLUS_PLUS_BEGIN_GUARD
 
 
+typedef struct sk_wstream_managedstream_t sk_wstream_managedstream_t;
+
+
+typedef bool   (*sk_managedwstream_write_delegate)        (sk_wstream_managedstream_t* cmanagedStream, const void* buffer, size_t size);
+typedef void   (*sk_managedwstream_flush_delegate)        (sk_wstream_managedstream_t* cmanagedStream);
+typedef size_t (*sk_managedwstream_bytesWritten_delegate) (const sk_wstream_managedstream_t* cmanagedStream);
+typedef void   (*sk_managedwstream_destroy_delegate)      (size_t cmanagedStream);
+
+
+SK_X_API sk_wstream_managedstream_t* sk_managedwstream_new ();
+SK_X_API void sk_managedwstream_destroy (sk_wstream_managedstream_t*);
+
+SK_X_API void sk_managedwstream_set_delegates (const sk_managedwstream_write_delegate pWrite,
+                                               const sk_managedwstream_flush_delegate pFlush,
+                                               const sk_managedwstream_bytesWritten_delegate pBytesWritten,
+                                               const sk_managedwstream_destroy_delegate pDestroy);
+
+
 typedef struct sk_stream_managedstream_t sk_stream_managedstream_t;
 
 
@@ -35,6 +53,7 @@ typedef void                       (*sk_managedstream_destroy_delegate)      (si
 
 // c API
 SK_X_API sk_stream_managedstream_t* sk_managedstream_new ();
+SK_X_API void sk_managedstream_destroy (sk_stream_managedstream_t*);
 
 SK_X_API void sk_managedstream_set_delegates (const sk_managedstream_read_delegate pRead,
                                               const sk_managedstream_peek_delegate pPeek,

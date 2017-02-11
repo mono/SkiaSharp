@@ -10,6 +10,7 @@
     <AssemblyVersion>1.54.0.0</AssemblyVersion>
     <AssemblyVersion>1.54.0.0</AssemblyVersion>
     <AssemblyVersion>1.55.0.0</AssemblyVersion>
+    <AssemblyVersion>1.56.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>SkiaSharp.SKObject</BaseTypeName>
@@ -26,9 +27,25 @@
       <para></para>
       <example>
         <code lang="C#"><![CDATA[using (var surface = SKSurface.Create (width: 640, height: 480, SKImageInfo.PlatformColorType, SKAlphaType.Premul)) {
+    // fetch the canvas where we draw into
     SKCanvas myCanvas = surface.Canvas;
 
-    // Your drawing code goes here.
+    // Configure our brush
+    var redBrush = new SKPaint () {
+        Color = new SKColor (0xff, 0, 0),
+	IsStroke = true
+    };
+    var blueBrush = new SKPaint () {
+        Color = new SKColor (0, 0, 0xff),
+	IsStroke = true
+    };
+
+    for (int i = 0; i < 64; i += 8)
+        canvas.DrawRect (new SKRect (i, i, 256-i, 256-i), (i % 16 == 0) ? redBrush : blueBrush);
+
+    // Save the artwork
+    var pngEncodedFile = surface.Snapshot().Encode();
+    File.WriteAllBytes ("demo.png", pngEncodedFile);
 }
 ]]></code>
       </example>
@@ -48,6 +65,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCanvas</ReturnType>
@@ -74,6 +92,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurface</ReturnType>
@@ -96,6 +115,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurface</ReturnType>
@@ -122,6 +142,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurface</ReturnType>
@@ -152,6 +173,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurface</ReturnType>
@@ -176,6 +198,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurface</ReturnType>
@@ -204,6 +227,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurface</ReturnType>
@@ -232,6 +256,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurface</ReturnType>
@@ -264,6 +289,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurface</ReturnType>
@@ -290,6 +316,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurface</ReturnType>
@@ -324,6 +351,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurface</ReturnType>
@@ -356,6 +384,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurface</ReturnType>
@@ -384,6 +413,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurface</ReturnType>
@@ -420,6 +450,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurface</ReturnType>
@@ -456,6 +487,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurface</ReturnType>
@@ -494,6 +526,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurface</ReturnType>
@@ -530,6 +563,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurface</ReturnType>
@@ -554,6 +588,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurface</ReturnType>
@@ -584,6 +619,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -609,6 +645,7 @@
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.54.0.0</AssemblyVersion>
         <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKImage</ReturnType>
@@ -617,9 +654,11 @@
       <Docs>
         <summary>Takes a snapshot of the surface and returns it as an image.</summary>
         <returns>
+          <para>An <see cref="T:SkiaSharp.SKImage" /> that contains a snapshot of the current image.</para>
           <para></para>
         </returns>
         <remarks>
+          <para>You can use this method to take a snapshot of the image</para>
           <para></para>
         </remarks>
       </Docs>

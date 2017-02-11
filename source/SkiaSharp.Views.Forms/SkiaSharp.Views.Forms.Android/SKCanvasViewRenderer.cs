@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using Android.Content;
 using Xamarin.Forms;
 using Xamarin.Forms.Platform.Android;
@@ -10,7 +11,7 @@ using SKNativeView = SkiaSharp.Views.Android.SKCanvasView;
 
 namespace SkiaSharp.Views.Forms
 {
-	internal class SKCanvasViewRenderer : ViewRenderer<SKFormsView, SKNativeView>
+	public class SKCanvasViewRenderer : ViewRenderer<SKFormsView, SKNativeView>
 	{
 		protected override void OnElementChanged(ElementChangedEventArgs<SKFormsView> e)
 		{
@@ -29,6 +30,7 @@ namespace SkiaSharp.Views.Forms
 
 				// create the native view
 				var view = new InternalView(Context, newController);
+				view.IgnorePixelScaling = e.NewElement.IgnorePixelScaling;
 				SetNativeControl(view);
 
 				// subscribe to events from the user
@@ -40,6 +42,16 @@ namespace SkiaSharp.Views.Forms
 			}
 
 			base.OnElementChanged(e);
+		}
+
+		protected override void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
+		{
+			base.OnElementPropertyChanged(sender, e);
+
+			if (e.PropertyName == nameof(SKFormsView.IgnorePixelScaling))
+			{
+				Control.IgnorePixelScaling = Element.IgnorePixelScaling;
+			}
 		}
 
 		protected override void Dispose(bool disposing)

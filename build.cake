@@ -14,9 +14,24 @@ var NuGetSources = new [] { MakeAbsolute (Directory ("./output")).FullPath, "htt
 var NugetToolPath = GetToolPath ("nuget.exe");
 var XamarinComponentToolPath = GetToolPath ("xamarin-component.exe");
 var CakeToolPath = GetToolPath ("Cake/Cake.exe");
-var NUnitConsoleToolPath = GetToolPath ("NUnit.Console/tools/nunit3-console.exe");
+var TestConsoleToolPath_x86 = GetToolPath ("xunit.runner.console/tools/xunit.console.x86.exe");
+var TestConsoleToolPath_x64 = GetToolPath ("xunit.runner.console/tools/xunit.console.exe");
 var GenApiToolPath = GetToolPath ("Microsoft.DotNet.BuildTools.GenAPI/tools/GenAPI.exe");
 var MDocPath = GetToolPath ("mdoc/mdoc.exe");
+
+var VERSION_ASSEMBLY = "1.56.0.0";
+var VERSION_FILE = "1.56.1.0";
+var VERSION_SONAME = VERSION_FILE.Substring(VERSION_FILE.IndexOf(".") + 1);
+var VERSION_PACKAGES = new Dictionary<string, string> {
+    { "SkiaSharp", "1.56.1" },
+    { "SkiaSharp.Views", "1.56.1" },
+    { "SkiaSharp.Views.Forms", "1.56.1" },
+    { "SkiaSharp.Svg", "1.56.1" },
+};
+
+string ANDROID_HOME = EnvironmentVariable ("ANDROID_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-sdk-macosx";
+string ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? ANDROID_HOME;
+string ANDROID_NDK_HOME = EnvironmentVariable ("ANDROID_NDK_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-ndk";
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/depot_tools"));
@@ -60,7 +75,7 @@ Task ("libs")
         ReplaceTextInFiles ("./binding/Binding/Properties/SkiaSharpAssemblyInfo.cs", "{GIT_SHA}", sha);
         ReplaceTextInFiles ("./source/SkiaSharp.Views/SkiaSharp.Views.Shared/Properties/SkiaSharpViewsAssemblyInfo.cs", "{GIT_SHA}", sha);
         ReplaceTextInFiles ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Shared/Properties/SkiaSharpViewsFormsAssemblyInfo.cs", "{GIT_SHA}", sha);
-        ReplaceTextInFiles ("./source/SkiaSharp.Svg/SkiaSharp.Svg/Properties/SkiaSharpSvgAssemblyInfo.cs", "{GIT_SHA}", sha);
+        ReplaceTextInFiles ("./source/SkiaSharp.Svg/SkiaSharp.Svg.Shared/Properties/SkiaSharpSvgAssemblyInfo.cs", "{GIT_SHA}", sha);
     }
 
     // create all the directories
@@ -72,6 +87,8 @@ Task ("libs")
     if (!DirectoryExists ("./output/osx/")) CreateDirectory ("./output/osx/");
     if (!DirectoryExists ("./output/portable/")) CreateDirectory ("./output/portable/");
     if (!DirectoryExists ("./output/mac/")) CreateDirectory ("./output/mac/");
+    if (!DirectoryExists ("./output/netstandard/")) CreateDirectory ("./output/netstandard/");
+    if (!DirectoryExists ("./output/linux/")) CreateDirectory ("./output/linux/");
 
     if (IsRunningOnWindows ()) {
         // build bindings
@@ -84,12 +101,11 @@ Task ("libs")
         CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
         CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll", "./output/windows/");
         CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.pdb", "./output/windows/");
-        CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll.config", "./output/windows/");
-        CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.Desktop.targets", "./output/windows/");
+        CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.dll.config", "./output/windows/");
+        CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.Desktop.targets", "./output/windows/");
         CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.dll", "./output/uwp/");
         CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.pdb", "./output/uwp/");
         CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.pri", "./output/uwp/");
-        CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.UWP.targets", "./output/uwp/");
 
         // build other source
         RunNuGetRestore ("./source/SkiaSharpSource.Windows.sln");
@@ -99,7 +115,6 @@ Task ("libs")
 
         // copy the managed views
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.UWP/bin/Release/SkiaSharp.Views.UWP.dll", "./output/uwp/");
-        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.UWP/bin/Release/SkiaSharp.Views.UWP.targets", "./output/uwp/");
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Desktop/bin/Release/SkiaSharp.Views.Desktop.dll", "./output/windows/");
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.WPF/bin/Release/SkiaSharp.Views.WPF.dll", "./output/windows/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms/bin/Release/SkiaSharp.Views.Forms.dll", "./output/portable/");
@@ -109,7 +124,7 @@ Task ("libs")
         CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
     }
 
-    if (IsRunningOnUnix ()) {
+    if (IsRunningOnMac ()) {
         // build
         RunNuGetRestore ("binding/SkiaSharp.Mac.sln");
         DotNetBuild ("binding/SkiaSharp.Mac.sln", c => { 
@@ -121,11 +136,11 @@ Task ("libs")
         CopyFileToDirectory ("./binding/SkiaSharp.iOS/bin/Release/SkiaSharp.dll", "./output/ios/");
         CopyFileToDirectory ("./binding/SkiaSharp.tvOS/bin/Release/SkiaSharp.dll", "./output/tvos/");
         CopyFileToDirectory ("./binding/SkiaSharp.OSX/bin/Release/SkiaSharp.dll", "./output/osx/");
-        CopyFileToDirectory ("./binding/SkiaSharp.OSX/bin/Release/SkiaSharp.OSX.targets", "./output/osx/");
+        CopyFileToDirectory ("./binding/SkiaSharp.OSX/bin/Release/nuget/build/XamarinMac/SkiaSharp.OSX.targets", "./output/osx/");
         CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
         CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll", "./output/mac/");
-        CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.Desktop.targets", "./output/mac/");
-        CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll.config", "./output/mac/");
+        CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.Desktop.targets", "./output/mac/");
+        CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.dll.config", "./output/mac/");
 
         // build other source
         RunNuGetRestore ("./source/SkiaSharpSource.Mac.sln");
@@ -145,6 +160,42 @@ Task ("libs")
         // copy SVG
         CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
     }
+
+    if (IsRunningOnLinux ()) {
+        // build
+        RunNuGetRestore ("binding/SkiaSharp.Linux.sln");
+        DotNetBuild ("binding/SkiaSharp.Linux.sln", c => { 
+            c.Configuration = "Release"; 
+        });
+
+        // copy build output
+        CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
+
+        // build other source
+        RunNuGetRestore ("./source/SkiaSharpSource.Linux.sln");
+        DotNetBuild ("./source/SkiaSharpSource.Linux.sln", c => { 
+            c.Configuration = "Release"; 
+        });
+
+        // copy SVG
+        CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
+    }
+
+    // .NET Standard / .NET Core
+    // build
+    RunDotNetCoreRestore ("binding/SkiaSharp.NetStandard");
+    DotNetBuild ("binding/SkiaSharp.NetStandard.sln", c => { 
+        c.Configuration = "Release"; 
+    });
+    // copy build output
+    CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
+    // build other source
+    RunDotNetCoreRestore ("source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard");
+    DotNetBuild ("./source/SkiaSharpSource.NetStandard.sln", c => { 
+        c.Configuration = "Release"; 
+    });
+    // copy SVG
+    CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard/bin/Release/SkiaSharp.Svg.dll", "./output/netstandard/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -153,8 +204,11 @@ Task ("libs")
 
 Task ("tests")
     .IsDependentOn ("libs")
+    .IsDependentOn ("nuget")
     .Does (() => 
 {
+    ClearSkiaSharpNuGetCache ();
+
     RunNuGetRestore ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
     
     // Windows (x86 and x64)
@@ -163,20 +217,25 @@ Task ("tests")
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "x86" };
         });
-        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/SkiaSharp.Desktop.Tests.dll");
+        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/SkiaSharp.Desktop.Tests.dll", false);
         DotNetBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "x64" };
         });
-        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Desktop.Tests.dll");
+        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Desktop.Tests.dll", true);
     }
     // Mac OSX (Any CPU)
-    if (IsRunningOnUnix ()) {
+    if (IsRunningOnMac ()) {
         DotNetBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", c => { 
             c.Configuration = "Release"; 
         });
-        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/AnyCPU/Release/SkiaSharp.Desktop.Tests.dll");
+        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/AnyCPU/Release/SkiaSharp.Desktop.Tests.dll", false);
     }
+    // .NET Core
+    RunDotNetCoreRestore ("./tests/SkiaSharp.NetCore.Tests");
+    DotNetCoreTest ("./tests/SkiaSharp.NetCore.Tests", new DotNetCoreTestSettings {
+        Configuration = "Release"
+    });
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -195,7 +254,11 @@ Task ("samples")
         Zip ("./samples", "./output/samples.zip");
     }
 
-    if (IsRunningOnUnix ()) {
+    if (IsRunningOnLinux ()) {
+
+    }
+
+    if (IsRunningOnMac ()) {
         RunNuGetRestore ("./samples/MacSample/MacSample.sln");
         DotNetBuild ("./samples/MacSample/MacSample.sln", c => { 
             c.Configuration = "Release"; 
@@ -317,7 +380,7 @@ Task ("update-docs")
         });
     }
     // add mac-specific references
-    if (IsRunningOnUnix ()) {
+    if (IsRunningOnMac ()) {
         refs = refs.Union (new DirectoryPath [] {
             "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/xbuild-frameworks/.NETPortable/v4.5",
             "/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xbuild-frameworks/MonoAndroid/v1.0",
@@ -346,7 +409,7 @@ Task ("update-docs")
         }).ToArray ();
     }
     // add mac-specific assemblies
-    if (IsRunningOnUnix ()) {
+    if (IsRunningOnMac ()) {
         assemblies = assemblies.Union (new FilePath [] {
             "./output/android/SkiaSharp.Views.Android.dll",
             "./output/ios/SkiaSharp.Views.iOS.dll",
@@ -420,10 +483,13 @@ Task ("nuget")
             PackageNuGet ("./nuget/SkiaSharp.Views.Windows.nuspec", "./output/");
             PackageNuGet ("./nuget/SkiaSharp.Views.Forms.Windows.nuspec", "./output/");
         }
-        if (IsRunningOnUnix ()) {
+        if (IsRunningOnMac ()) {
             PackageNuGet ("./nuget/SkiaSharp.Mac.nuspec", "./output/");
             PackageNuGet ("./nuget/SkiaSharp.Views.Mac.nuspec", "./output/");
             PackageNuGet ("./nuget/SkiaSharp.Views.Forms.Mac.nuspec", "./output/");
+        }
+        if (IsRunningOnLinux ()) {
+            PackageNuGet ("./nuget/SkiaSharp.Linux.nuspec", "./output/");
         }
     }
     // SVG is a PCL
@@ -468,16 +534,6 @@ Task ("set-versions")
         sha = "{GIT_SHA}";
     }
 
-    // the versions
-    var version = "1.55.0.0";
-    var fileVersion = "1.55.0.0";
-    var versions = new Dictionary<string, string> {
-        { "SkiaSharp", "1.55.0" },
-        { "SkiaSharp.Views", "1.55.0" },
-        { "SkiaSharp.Views.Forms", "1.55.0" },
-        { "SkiaSharp.Svg", "1.55.0-beta1" },
-    };
-
     var files = new List<string> ();
     var add = new Action<string> (glob => {
         files.AddRange (GetFiles (glob).Select (p => MakeAbsolute (p).ToString ()));
@@ -496,24 +552,30 @@ Task ("set-versions")
     // sample project files
     add ("./samples/*/*/*.nuget.targets");
     add ("./samples/*/*/*.csproj");
+    // tests packages files
+    add ("./tests/*/packages.config");
+    add ("./tests/*/project.json");
+    // tests project files
+    add ("./tests/*/*.nuget.targets");
+    add ("./tests/*/*.csproj");
     // update
     foreach (var file in files) {
-        UpdateSkiaSharpVersion (file, versions);
+        UpdateSkiaSharpVersion (file, VERSION_PACKAGES);
     }
 
     // assembly infos
     UpdateAssemblyInfo (
         "./binding/Binding/Properties/SkiaSharpAssemblyInfo.cs",
-        version, fileVersion, sha);
+        VERSION_ASSEMBLY, VERSION_FILE, sha);
     UpdateAssemblyInfo (
         "./source/SkiaSharp.Views/SkiaSharp.Views.Shared/Properties/SkiaSharpViewsAssemblyInfo.cs",
-        version, fileVersion, sha);
+        VERSION_ASSEMBLY, VERSION_FILE, sha);
     UpdateAssemblyInfo (
         "./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Shared/Properties/SkiaSharpViewsFormsAssemblyInfo.cs",
-        version, fileVersion, sha);
+        VERSION_ASSEMBLY, VERSION_FILE, sha);
     UpdateAssemblyInfo (
-        "./source/SkiaSharp.Svg/SkiaSharp.Svg/Properties/SkiaSharpSvgAssemblyInfo.cs",
-        version, fileVersion, sha);
+        "./source/SkiaSharp.Svg/SkiaSharp.Svg.Shared/Properties/SkiaSharpSvgAssemblyInfo.cs",
+        VERSION_ASSEMBLY, VERSION_FILE, sha);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -530,20 +592,24 @@ Task ("clean-managed").Does (() =>
 {
     CleanDirectories ("./binding/*/bin");
     CleanDirectories ("./binding/*/obj");
+    DeleteFiles ("./binding/*/project.lock.json");
 
     CleanDirectories ("./samples/*/bin");
     CleanDirectories ("./samples/*/obj");
     CleanDirectories ("./samples/*/AppPackages");
     CleanDirectories ("./samples/*/*/bin");
     CleanDirectories ("./samples/*/*/obj");
+    DeleteFiles ("./samples/*/*/project.lock.json");
     CleanDirectories ("./samples/*/*/AppPackages");
     CleanDirectories ("./samples/*/packages");
 
     CleanDirectories ("./tests/**/bin");
     CleanDirectories ("./tests/**/obj");
+    DeleteFiles ("./tests/**/project.lock.json");
 
     CleanDirectories ("./source/*/*/bin");
     CleanDirectories ("./source/*/*/obj");
+    DeleteFiles ("./source/*/*/project.lock.json");
     CleanDirectories ("./source/*/*/Generated Files");
     CleanDirectories ("./source/packages");
 
@@ -598,7 +664,8 @@ Task ("Windows-CI")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Information ("Cake.exe ToolPath: {0}", CakeToolPath);
-Information ("Cake.exe NUnitConsoleToolPath: {0}", NUnitConsoleToolPath);
+Information ("Cake.exe TestConsoleToolPath_x86: {0}", TestConsoleToolPath_x86);
+Information ("Cake.exe TestConsoleToolPath_x64: {0}", TestConsoleToolPath_x64);
 Information ("NuGet.exe ToolPath: {0}", NugetToolPath);
 Information ("Xamarin-Component.exe ToolPath: {0}", XamarinComponentToolPath);
 Information ("genapi.exe ToolPath: {0}", GenApiToolPath);

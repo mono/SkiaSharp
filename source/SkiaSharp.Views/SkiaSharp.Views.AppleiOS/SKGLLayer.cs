@@ -2,19 +2,19 @@ using System;
 using CoreAnimation;
 using CoreGraphics;
 using OpenGLES;
-using OpenTK.Graphics.ES20;
+using SkiaSharp.Views.GlesInterop;
 
-#if __IOS__
-namespace SkiaSharp.Views.iOS
-#elif __TVOS__
+#if __TVOS__
 namespace SkiaSharp.Views.tvOS
+#elif __IOS__
+namespace SkiaSharp.Views.iOS
 #endif
 {
 	public class SKGLLayer : CAEAGLLayer
 	{
 		private EAGLContext glContext;
-		private int renderBuffer;
-		private int framebuffer;
+		private uint renderBuffer;
+		private uint framebuffer;
 
 		private GRContext context;
 		private GRBackendRenderTargetDesc renderTarget;
@@ -55,7 +55,7 @@ namespace SkiaSharp.Views.tvOS
 			context.Flush();
 
 			// present the GL buffers
-			glContext.PresentRenderBuffer((uint)RenderbufferTarget.Renderbuffer);
+			glContext.PresentRenderBuffer(Gles.GL_RENDERBUFFER);
 			EAGLContext.SetCurrentContext(null);
 		}
 
@@ -88,14 +88,14 @@ namespace SkiaSharp.Views.tvOS
 			EAGLContext.SetCurrentContext(glContext);
 
 			// create render buffer
-			GL.GenRenderbuffers(1, out renderBuffer);
-			GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, renderBuffer);
-			glContext.RenderBufferStorage((uint)RenderbufferTarget.Renderbuffer, this);
+			Gles.glGenRenderbuffers(1, ref renderBuffer);
+			Gles.glBindRenderbuffer(Gles.GL_RENDERBUFFER, renderBuffer);
+			glContext.RenderBufferStorage(Gles.GL_RENDERBUFFER, this);
 
 			// create frame buffer
-			GL.GenFramebuffers(1, out framebuffer);
-			GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);
-			GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferSlot.ColorAttachment0, RenderbufferTarget.Renderbuffer, renderBuffer);
+			Gles.glGenFramebuffers(1, ref framebuffer);
+			Gles.glBindFramebuffer(Gles.GL_FRAMEBUFFER, framebuffer);
+			Gles.glFramebufferRenderbuffer(Gles.GL_FRAMEBUFFER, Gles.GL_COLOR_ATTACHMENT0, Gles.GL_RENDERBUFFER, renderBuffer);
 
 			// get the bits for SkiaSharp
 			var glInterface = GRGlInterface.CreateNativeGlInterface();
@@ -108,15 +108,15 @@ namespace SkiaSharp.Views.tvOS
 		private void ResizeGLContexts()
 		{
 			// nuke old buffers
-			GL.DeleteRenderbuffers(1, ref renderBuffer);
+			Gles.glDeleteRenderbuffers(1, ref renderBuffer);
 
 			// re-create render buffer
-			GL.GenRenderbuffers(1, out renderBuffer);
-			GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, renderBuffer);
-			glContext.RenderBufferStorage((uint)RenderbufferTarget.Renderbuffer, this);
+			Gles.glGenRenderbuffers(1, ref renderBuffer);
+			Gles.glBindRenderbuffer(Gles.GL_RENDERBUFFER, renderBuffer);
+			glContext.RenderBufferStorage(Gles.GL_RENDERBUFFER, this);
 
 			// re-link
-			GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferSlot.ColorAttachment0, RenderbufferTarget.Renderbuffer, renderBuffer);
+			Gles.glFramebufferRenderbuffer(Gles.GL_FRAMEBUFFER, Gles.GL_COLOR_ATTACHMENT0, Gles.GL_RENDERBUFFER, renderBuffer);
 		}
 
 		protected override void Dispose(bool disposing)
