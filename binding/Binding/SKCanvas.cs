@@ -678,6 +678,39 @@ namespace SkiaSharp
 		}
 
 		public int SaveCount => SkiaApi.sk_canvas_get_save_count (Handle);
+
+		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKColor[] colors, SKPaint paint)
+		{
+			DrawVertices (vmode, vertices, null, colors, null, paint);
+		}
+
+		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKPoint[] texs, SKColor[] colors, SKPaint paint)
+		{
+			DrawVertices (vmode, vertices, texs, colors, null, paint);
+		}
+
+		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKPoint[] texs, SKColor[] colors, UInt16[] indices, SKPaint paint)
+		{
+			DrawVertices (vmode, vertices, texs, colors, SKBlendMode.Modulate, indices, paint);
+		}
+
+		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKPoint[] texs, SKColor[] colors, SKBlendMode mode, UInt16[] indices, SKPaint paint)
+		{
+			if (vertices == null)
+				throw new ArgumentNullException (nameof (vertices));
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
+
+			if (texs != null && vertices.Length != texs.Length)
+				throw new ArgumentException ("The number of texture coordinates must match the number of vertices.", nameof (texs));
+			if (colors != null && vertices.Length != colors.Length)
+				throw new ArgumentException ("The number of colors must match the number of vertices.", nameof (colors));
+
+			var vertexCount = vertices.Length;
+			var indexCount = indices?.Length ?? 0;
+
+			SkiaApi.sk_canvas_draw_vertices (Handle, vmode, vertexCount, vertices, texs, colors, mode, indices, indexCount, paint.Handle);
+		}
 	}
 
 	public class SKAutoCanvasRestore : IDisposable

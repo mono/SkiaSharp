@@ -2660,4 +2660,10 @@ namespace SkiaSharp
 		Affine = 0x04,
 		Perspective = 0x08 
 	}
+
+	public enum SKVertexMode {
+		Triangles,
+		TriangleStrip,
+		TriangleFan,
+	}
 }

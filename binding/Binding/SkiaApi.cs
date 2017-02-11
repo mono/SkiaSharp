@@ -241,6 +241,8 @@ namespace SkiaSharp
 		public extern static void sk_canvas_draw_image_lattice(sk_canvas_t t, sk_image_t image, ref SKLatticeInternal lattice, ref SKRect dst, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_destroy(sk_canvas_t canvas);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_canvas_draw_vertices(sk_canvas_t canvas, SKVertexMode vmode, int vertexCount, [In] SKPoint[] vertices, [In] SKPoint[] texs, [In] SKColor[] colors, SKBlendMode mode, UInt16[] indices, int indexCount, sk_paint_t paint);
 
 		// Paint
 
