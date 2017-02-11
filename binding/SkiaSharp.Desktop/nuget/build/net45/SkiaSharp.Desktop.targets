@@ -10,7 +10,7 @@
     <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and '$(PlatformTarget)' == 'x86' and '$(OS)' != 'Unix' ">
         <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win7-x86\native\libSkiaSharp.dll">
             <Link>libSkiaSharp.dll</Link>
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
@@ -18,7 +18,7 @@
     <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and '$(PlatformTarget)' == 'x64' and '$(OS)' != 'Unix' ">
         <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win7-x64\native\libSkiaSharp.dll">
             <Link>libSkiaSharp.dll</Link>
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
@@ -26,11 +26,11 @@
     <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and '$(PlatformTarget)' != 'x64' and '$(PlatformTarget)' != 'x86' and '$(OS)' != 'Unix' ">
         <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win7-x86\native\libSkiaSharp.dll">
             <Link>x86\libSkiaSharp.dll</Link>
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win7-x64\native\libSkiaSharp.dll">
             <Link>x64\libSkiaSharp.dll</Link>
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
@@ -38,11 +38,11 @@
     <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and '$(OS)' == 'Unix' ">
         <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\osx\native\libSkiaSharp.dylib">
             <Link>libSkiaSharp.dylib</Link>
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Include="$(MSBuildThisFileDirectory)SkiaSharp.dll.config">
             <Link>SkiaSharp.dll.config</Link>
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
