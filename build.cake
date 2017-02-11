@@ -27,6 +27,7 @@ var VERSION_PACKAGES = new Dictionary<string, string> {
     { "SkiaSharp.Views", "1.56.1" },
     { "SkiaSharp.Views.Forms", "1.56.1" },
     { "SkiaSharp.Svg", "1.56.1" },
+    { "SkiaSharp.Extended", "1.56.1-beta" },
 };
 
 string ANDROID_HOME = EnvironmentVariable ("ANDROID_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-sdk-macosx";
@@ -76,6 +77,7 @@ Task ("libs")
         ReplaceTextInFiles ("./source/SkiaSharp.Views/SkiaSharp.Views.Shared/Properties/SkiaSharpViewsAssemblyInfo.cs", "{GIT_SHA}", sha);
         ReplaceTextInFiles ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Shared/Properties/SkiaSharpViewsFormsAssemblyInfo.cs", "{GIT_SHA}", sha);
         ReplaceTextInFiles ("./source/SkiaSharp.Svg/SkiaSharp.Svg.Shared/Properties/SkiaSharpSvgAssemblyInfo.cs", "{GIT_SHA}", sha);
+        ReplaceTextInFiles ("./source/SkiaSharp.Extended/SkiaSharp.Extended.Shared/Properties/SkiaSharpExtendedAssemblyInfo.cs", "{GIT_SHA}", sha);
     }
 
     // create all the directories
@@ -122,6 +124,9 @@ Task ("libs")
 
         // copy SVG
         CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
+
+        // copy Extended
+        CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended/bin/Release/SkiaSharp.Extended.dll", "./output/portable/");
     }
 
     if (IsRunningOnMac ()) {
@@ -159,6 +164,9 @@ Task ("libs")
 
         // copy SVG
         CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
+
+        // copy Extended
+        CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended/bin/Release/SkiaSharp.Extended.dll", "./output/portable/");
     }
 
     if (IsRunningOnLinux ()) {
@@ -179,6 +187,9 @@ Task ("libs")
 
         // copy SVG
         CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
+
+        // copy Extended
+        CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended/bin/Release/SkiaSharp.Extended.dll", "./output/portable/");
     }
 
     // .NET Standard / .NET Core
@@ -191,11 +202,14 @@ Task ("libs")
     CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
     // build other source
     RunDotNetCoreRestore ("source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard");
+    RunDotNetCoreRestore ("source/SkiaSharp.Extended/SkiaSharp.Extended.NetStandard");
     DotNetBuild ("./source/SkiaSharpSource.NetStandard.sln", c => { 
         c.Configuration = "Release"; 
     });
     // copy SVG
     CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard/bin/Release/SkiaSharp.Svg.dll", "./output/netstandard/");
+    // copy Extended
+    CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended.NetStandard/bin/Release/SkiaSharp.Extended.dll", "./output/netstandard/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -494,6 +508,8 @@ Task ("nuget")
     }
     // SVG is a PCL
     PackageNuGet ("./nuget/SkiaSharp.Svg.nuspec", "./output/");
+    // Extended is a PCL
+    PackageNuGet ("./nuget/SkiaSharp.Extended.nuspec", "./output/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -575,6 +591,9 @@ Task ("set-versions")
         VERSION_ASSEMBLY, VERSION_FILE, sha);
     UpdateAssemblyInfo (
         "./source/SkiaSharp.Svg/SkiaSharp.Svg.Shared/Properties/SkiaSharpSvgAssemblyInfo.cs",
+        VERSION_ASSEMBLY, VERSION_FILE, sha);
+    UpdateAssemblyInfo (
+        "./source/SkiaSharp.Extended/SkiaSharp.Extended.Shared/Properties/SkiaSharpExtendedAssemblyInfo.cs",
         VERSION_ASSEMBLY, VERSION_FILE, sha);
 });
 
