@@ -212,6 +212,29 @@ Task ("libs")
     CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended.NetStandard/bin/Release/SkiaSharp.Extended.dll", "./output/netstandard/");
 });
 
+Task ("workbooks")
+    .IsDependentOn ("externals")
+    .IsDependentOn ("libs")
+    .Does (() => 
+{
+    // the dir
+    if (!DirectoryExists ("./output/workbooks/")) CreateDirectory ("./output/workbooks/");
+
+    // the managed bits
+    CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.dll.config", "./output/workbooks/");
+    CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/workbooks/");
+    CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard/bin/Release/SkiaSharp.Svg.dll", "./output/workbooks/");
+    CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended.NetStandard/bin/Release/SkiaSharp.Extended.dll", "./output/workbooks/");
+
+    // the native bits
+    if (IsRunningOnWindows ()) {
+        CopyFileToDirectory ("./native-builds/lib/windows/x64/libSkiaSharp.dll", "./output/workbooks/");
+    }
+    if (IsRunningOnMac ()) {
+        CopyFileToDirectory ("./native-builds/lib/osx/libSkiaSharp.dylib", "./output/workbooks/");
+    }
+});
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // TESTS - some test cases to make sure it works
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -1,0 +1,40 @@
+---
+uti: com.xamarin.workbook
+platforms:
+- Console
+---
+
+```csharp
+#r "../../output/workbooks/SkiaSharp.dll"
+#r "../../output/workbooks/SkiaSharp.Svg.dll"
+#r "../../output/workbooks/SkiaSharp.Extended.dll"
+
+using SkiaSharp;
+using SkiaSharp.Extended;
+```
+
+```csharp
+var bitmap = new SKBitmap(256, 256);
+var canvas = new SKCanvas(bitmap);
+
+canvas.Clear(SKColors.Transparent);
+```
+
+```csharp
+canvas.Clear(SKColors.Transparent);
+
+var paint = new SKPaint {
+    IsAntialias = true,
+    TextSize = 50,
+    TextAlign = SKTextAlign.Center,
+    Color = 0xFF3498DB, // Xamarin light blue
+    Style = SKPaintStyle.Fill,
+    Typeface = SKTypeface.FromFamilyName("Trebuchet")
+};
+
+canvas.DrawText("SkiaSharp", 128, 128 + (paint.TextSize / 2), paint);
+```
+
+```csharp
+bitmap
+```
