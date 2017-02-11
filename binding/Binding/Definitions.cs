@@ -2652,4 +2652,12 @@ namespace SkiaSharp
 		Argb32,
 		Lcd16,
 	}
+
+	public enum SKMatrix44TypeMask {
+		Identity = 0,
+		Translate = 0x01,
+		Scale = 0x02,
+		Affine = 0x04,
+		Perspective = 0x08 
+	}
 }

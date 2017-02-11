@@ -56,6 +56,7 @@ using sk_wstream_managedstream_t = System.IntPtr;
 using sk_xmlstreamwriter_t = System.IntPtr;
 using sk_xmlwriter_t = System.IntPtr;
 using sk_3dview_t = System.IntPtr;
+using sk_matrix44_t = System.IntPtr;
 
 namespace SkiaSharp
 {
@@ -1325,6 +1326,80 @@ namespace SkiaSharp
 		public extern static void sk_3dview_apply_to_canvas (sk_3dview_t cview, sk_canvas_t ccanvas);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static float sk_3dview_dot_with_normal (sk_3dview_t cview, float dx, float dy, float dz);
+
+		// Matrix44
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_destroy (sk_matrix44_t matrix);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_matrix44_t sk_matrix44_new ();
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_matrix44_t sk_matrix44_new_identity ();
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_matrix44_t sk_matrix44_new_copy (sk_matrix44_t src);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_matrix44_t sk_matrix44_new_concat (sk_matrix44_t a, sk_matrix44_t b);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_matrix44_t sk_matrix44_new_matrix (ref SKMatrix src);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_matrix44_equals (sk_matrix44_t matrix, sk_matrix44_t other);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_to_matrix (sk_matrix44_t matrix, out SKMatrix dst);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKMatrix44TypeMask sk_matrix44_get_type (sk_matrix44_t matrix);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_set_identity (sk_matrix44_t matrix);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static float sk_matrix44_get (sk_matrix44_t matrix, int row, int col);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_set (sk_matrix44_t matrix, int row, int col, float value);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_as_col_major (sk_matrix44_t matrix, [Out] float[] dst);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_as_row_major (sk_matrix44_t matrix, [Out] float[] dst);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_set_col_major (sk_matrix44_t matrix, [In] float[] src);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_set_row_major (sk_matrix44_t matrix, [In] float[] src);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_set_translate (sk_matrix44_t matrix, float dx, float dy, float dz);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_pre_translate (sk_matrix44_t matrix, float dx, float dy, float dz);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_post_translate (sk_matrix44_t matrix, float dx, float dy, float dz);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_set_scale (sk_matrix44_t matrix, float sx, float sy, float sz);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_pre_scale (sk_matrix44_t matrix, float sx, float sy, float sz);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_post_scale (sk_matrix44_t matrix, float sx, float sy, float sz);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_set_rotate_about_degrees (sk_matrix44_t matrix, float x, float y, float z, float degrees);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_set_rotate_about_radians (sk_matrix44_t matrix, float x, float y, float z, float radians);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_set_rotate_about_radians_unit (sk_matrix44_t matrix, float x, float y, float z, float radians);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_set_concat (sk_matrix44_t matrix, sk_matrix44_t a, sk_matrix44_t b);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_pre_concat (sk_matrix44_t matrix, sk_matrix44_t m);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_post_concat (sk_matrix44_t matrix, sk_matrix44_t m);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_matrix44_invert (sk_matrix44_t matrix, sk_matrix44_t inverse);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_transpose (sk_matrix44_t matrix);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_map_scalars (sk_matrix44_t matrix, [In] float[] src, float[] dst);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_matrix44_map2 (sk_matrix44_t matrix, [In] float[] src2, int count, float[] dst);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_matrix44_preserves_2d_axis_alignment (sk_matrix44_t matrix, float epsilon);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static double sk_matrix44_determinant (sk_matrix44_t matrix);
 
 		// Path Effect
 
