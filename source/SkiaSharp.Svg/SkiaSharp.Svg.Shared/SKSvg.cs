@@ -93,15 +93,6 @@ namespace SkiaSharp
 			{
 				ViewBox = ReadRectangle(viewBoxA.Value);
 			}
-			else
-			{
-				var widthA = svg.Attribute("width");
-				var heightA = svg.Attribute("height");
-				var width = ReadNumber(widthA);
-				var height = ReadNumber(heightA);
-				var size = new SKSize(width, height);
-				ViewBox = SKRect.Create(size);
-			}
 
 			if (CanvasSize.IsEmpty)
 			{
