@@ -1,11 +1,30 @@
 using System.Runtime.InteropServices;
 
+var VERBOSITY_NUGET = NuGetVerbosity.Detailed;
+var VERBOSITY_NUGETCORE = DotNetCoreRestoreVerbosity.Verbose;
+switch (VERBOSITY) {
+    case Verbosity.Quiet:
+    case Verbosity.Minimal:
+        VERBOSITY_NUGET = NuGetVerbosity.Quiet;
+        VERBOSITY_NUGETCORE = DotNetCoreRestoreVerbosity.Minimal;
+        break;
+    case Verbosity.Normal:
+        VERBOSITY_NUGET = NuGetVerbosity.Normal;
+        VERBOSITY_NUGETCORE = DotNetCoreRestoreVerbosity.Warning;
+        break;
+    case Verbosity.Verbose:
+    case Verbosity.Diagnostic:
+        VERBOSITY_NUGET = NuGetVerbosity.Detailed;
+        VERBOSITY_NUGETCORE = DotNetCoreRestoreVerbosity.Verbose;
+        break;
+};
+
 var RunNuGetRestore = new Action<FilePath> ((solution) =>
 {
     NuGetRestore (solution, new NuGetRestoreSettings { 
         ToolPath = NugetToolPath,
         Source = NuGetSources,
-        Verbosity = NuGetVerbosity.Detailed
+        Verbosity = VERBOSITY_NUGET
     });
 });
 
@@ -13,7 +32,7 @@ var RunDotNetCoreRestore = new Action<string> ((solution) =>
 {
     DotNetCoreRestore (solution, new DotNetCoreRestoreSettings { 
         Sources = NuGetSources,
-        Verbosity = DotNetCoreRestoreVerbosity.Verbose
+        Verbosity = VERBOSITY_NUGETCORE
     });
 });
 
@@ -24,7 +43,7 @@ var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath)
     }
 
     NuGetPack (nuspecPath, new NuGetPackSettings { 
-        Verbosity = NuGetVerbosity.Detailed,
+        Verbosity = VERBOSITY_NUGET,
         OutputDirectory = outputPath,        
         BasePath = "./",
         ToolPath = NugetToolPath

@@ -80,6 +80,7 @@ Task ("externals-genapi")
     DotNetBuild ("binding/SkiaSharp.Generic.sln", c => { 
         c.Configuration = "Release"; 
         c.Properties ["Platform"] = new [] { "\"Any CPU\"" };
+        c.Verbosity = VERBOSITY;
     });
     
     // generate the PCL
@@ -165,6 +166,7 @@ Task ("externals-windows")
         DotNetBuild ("native-builds/libSkiaSharp_windows/libSkiaSharp_" + dir + ".sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { platform };
+            c.Verbosity = VERBOSITY;
         });
         if (!DirectoryExists ("native-builds/lib/windows/" + dir)) CreateDirectory ("native-builds/lib/windows/" + dir);
         CopyFileToDirectory ("native-builds/libSkiaSharp_windows/bin/" + platform + "/Release/libSkiaSharp.lib", "native-builds/lib/windows/" + dir);
@@ -202,6 +204,7 @@ Task ("externals-uwp")
         DotNetBuild ("native-builds/libSkiaSharp_uwp/libSkiaSharp_" + arch + ".sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { platform };
+            c.Verbosity = VERBOSITY;
         });
         if (!DirectoryExists ("native-builds/lib/uwp/" + arch)) CreateDirectory ("native-builds/lib/uwp/" + arch);
         CopyFileToDirectory ("native-builds/libSkiaSharp_uwp/bin/" + platform + "/Release/libSkiaSharp.lib", "native-builds/lib/uwp/" + arch);

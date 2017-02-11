@@ -9,6 +9,7 @@ using System.Xml;
 using System.Xml.Linq;
 
 var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")));
+var VERBOSITY = (Verbosity) Enum.Parse (typeof(Verbosity), Argument ("v", Argument ("verbosity", Argument ("Verbosity", "Verbose"))), true);
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NugetToolPath = GetToolPath ("nuget.exe");
@@ -97,6 +98,7 @@ Task ("libs")
         RunNuGetRestore ("binding/SkiaSharp.Windows.sln");
         DotNetBuild ("binding/SkiaSharp.Windows.sln", c => { 
             c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
         });
 
         // copy build output
@@ -113,6 +115,7 @@ Task ("libs")
         RunNuGetRestore ("./source/SkiaSharpSource.Windows.sln");
         DotNetBuild ("./source/SkiaSharpSource.Windows.sln", c => { 
             c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
         });
 
         // copy the managed views
@@ -134,6 +137,7 @@ Task ("libs")
         RunNuGetRestore ("binding/SkiaSharp.Mac.sln");
         DotNetBuild ("binding/SkiaSharp.Mac.sln", c => { 
             c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
         });
 
         // copy build output
@@ -151,6 +155,7 @@ Task ("libs")
         RunNuGetRestore ("./source/SkiaSharpSource.Mac.sln");
         DotNetBuild ("./source/SkiaSharpSource.Mac.sln", c => { 
             c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
         });
 
         // copy other outputs
@@ -174,6 +179,7 @@ Task ("libs")
         RunNuGetRestore ("binding/SkiaSharp.Linux.sln");
         DotNetBuild ("binding/SkiaSharp.Linux.sln", c => { 
             c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
         });
 
         // copy build output
@@ -183,6 +189,7 @@ Task ("libs")
         RunNuGetRestore ("./source/SkiaSharpSource.Linux.sln");
         DotNetBuild ("./source/SkiaSharpSource.Linux.sln", c => { 
             c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
         });
 
         // copy SVG
@@ -197,6 +204,7 @@ Task ("libs")
     RunDotNetCoreRestore ("binding/SkiaSharp.NetStandard");
     DotNetBuild ("binding/SkiaSharp.NetStandard.sln", c => { 
         c.Configuration = "Release"; 
+        c.Verbosity = VERBOSITY;
     });
     // copy build output
     CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
@@ -205,6 +213,7 @@ Task ("libs")
     RunDotNetCoreRestore ("source/SkiaSharp.Extended/SkiaSharp.Extended.NetStandard");
     DotNetBuild ("./source/SkiaSharpSource.NetStandard.sln", c => { 
         c.Configuration = "Release"; 
+        c.Verbosity = VERBOSITY;
     });
     // copy SVG
     CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard/bin/Release/SkiaSharp.Svg.dll", "./output/netstandard/");
@@ -253,11 +262,13 @@ Task ("tests")
         DotNetBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "x86" };
+            c.Verbosity = VERBOSITY;
         });
         RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/SkiaSharp.Desktop.Tests.dll", false);
         DotNetBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "x64" };
+            c.Verbosity = VERBOSITY;
         });
         RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Desktop.Tests.dll", true);
     }
@@ -265,6 +276,7 @@ Task ("tests")
     if (IsRunningOnMac ()) {
         DotNetBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", c => { 
             c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
         });
         RunTests("./tests/SkiaSharp.Desktop.Tests/bin/AnyCPU/Release/SkiaSharp.Desktop.Tests.dll", false);
     }
@@ -299,16 +311,19 @@ Task ("samples")
         RunNuGetRestore ("./samples/MacSample/MacSample.sln");
         DotNetBuild ("./samples/MacSample/MacSample.sln", c => { 
             c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
         });
         RunNuGetRestore ("./samples/FormsSample/FormsSample.Mac.sln");
         DotNetBuild ("./samples/FormsSample/FormsSample.Mac.sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "iPhone" };
+            c.Verbosity = VERBOSITY;
         });
         RunNuGetRestore ("./samples/TvSample/TvSample.sln");
         DotNetBuild ("./samples/TvSample/TvSample.sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "iPhoneSimulator" };
+            c.Verbosity = VERBOSITY;
         });
     }
     
@@ -317,19 +332,23 @@ Task ("samples")
         DotNetBuild ("./samples/WPFSample/WPFSample.sln", c => { 
             c.Configuration = "Release";
             c.Properties ["Platform"] = new [] { "x86" };
+            c.Verbosity = VERBOSITY;
         });
         RunNuGetRestore ("./samples/UWPSample/UWPSample.sln");
         DotNetBuild ("./samples/UWPSample/UWPSample.sln", c => { 
             c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
         });
         RunNuGetRestore ("./samples/FormsSample/FormsSample.Windows.sln");
         DotNetBuild ("./samples/FormsSample/FormsSample.Windows.sln", c => { 
             c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
         });
         RunNuGetRestore ("./samples/WindowsSample/WindowsSample.sln");
         DotNetBuild ("./samples/WindowsSample/WindowsSample.sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "x86" };
+            c.Verbosity = VERBOSITY;
         });
     }
 });
@@ -406,6 +425,7 @@ Task ("update-docs")
         // types aren't needed here
         DotNetBuild ("./externals/Windows.Foundation.UniversalApiContract/Windows.Foundation.UniversalApiContract.csproj", c => {
             c.Verbosity = Verbosity.Quiet;
+            c.Verbosity = VERBOSITY;
         });
         refs = refs.Union (new DirectoryPath [] {
             "./externals/Windows.Foundation.UniversalApiContract/bin/Release",
