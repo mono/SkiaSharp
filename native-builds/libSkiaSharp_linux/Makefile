@@ -80,6 +80,11 @@ cflags = \
 	-Wextra -Winit-self -Wpointer-arith -Wsign-compare -Wvla       \
 	-Wno-unused-parameter -Werror -Os                              \
 	-fPIC -fdata-sections -ffunction-sections
+ifeq "${ARCH}" "x86"
+  arch_cflags = -m32
+else
+  arch_cflags = 
+endif
 cflags_c = 
 cflags_cc = -std=c++11 -fno-rtti -fno-threadsafe-statics -Wnon-virtual-dtor
 ldflags = $(library_dirs:%=-L%) -lpthread -ldl -lfontconfig -lGL -lGLU -lX11
@@ -95,13 +100,13 @@ deps = $(objs:.o=.d)
 ${objarch_root}/%.o: ${src_root}/%
 # build the local source
 	mkdir -p $(dir $@)
-	c++ -MMD -MF $@.d ${defines} ${includes} ${cflags} ${cflags_cc} -c $< -o $@
+	c++ -MMD -MF $@.d ${defines} ${includes} ${cflags} ${cflags_cc} ${arch_cflags} -c $< -o $@
 
 ${target}: ${objs}
 # link with skia
 	mkdir -p $(dir $@)
 	c++ -shared -rdynamic -s -o $@                                                \
-		${defines} ${includes} ${cflags} ${cflags_cc}                             \
+		${defines} ${includes} ${cflags} ${cflags_cc} ${arch_cflags}              \
 		-Wl,--start-group ${objarch_root}/*.o  ${library_paths} -Wl,--end-group   \
 		${ldflags} -Wl,--gc-sections -Wl,--no-undefined                           \
 		-Wl,-soname,libSkiaSharp.so.${soname_version}
