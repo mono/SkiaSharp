@@ -439,7 +439,7 @@ Task ("externals-linux")
         SetEnvironmentVariable ("SKIA_OUT", outPath);
 
         // build skia_lib
-        RunGyp ("skia_os='linux' skia_arch_type='" + arch + "' skia_gpu=1 skia_pic=1 skia_pdf_use_sfntly=0 freetype_static=1 skia_freetype_static=1", "ninja");
+        RunGyp ("skia_os='linux' skia_arch_type='" + arch + "' skia_gpu=1 skia_pic=1 skia_pdf_use_sfntly=0 skia_freetype_static=1", "ninja");
         RunProcess (ninja, new ProcessSettings {
             Arguments = "-C out/" + folder + "/Release " + targets,
             WorkingDirectory = SKIA_PATH.FullPath,

@@ -53,6 +53,7 @@ library_paths = \
 	../../externals/skia/out/${ARCH}/Release/libskia_sfnt.a                     \
 	../../externals/skia/out/${ARCH}/Release/libskia_svg.a                      \
 	../../externals/skia/out/${ARCH}/Release/libskia_xml.a                      \
+    ../../externals/skia/out/${ARCH}/Release/libfreetype_static.a               \
 	../../externals/skia/out/${ARCH}/Release/obj/gyp/libwebp_enc.a              \
 	../../externals/skia/out/${ARCH}/Release/obj/gyp/libwebp_dec.a              \
 	../../externals/skia/out/${ARCH}/Release/obj/gyp/libwebp_dsp.a              \
@@ -66,8 +67,7 @@ library_paths = \
 	../../externals/skia/out/${ARCH}/Release/obj/gyp/libSkKTX.a                 \
 	../../externals/skia/out/${ARCH}/Release/obj/gyp/libdng_sdk.a               \
 	../../externals/skia/out/${ARCH}/Release/obj/gyp/libpiex.a                  \
-	../../externals/skia/out/${ARCH}/Release/obj/gyp/libexpat_static.a          \
-        ../../externals/skia/out/${ARCH}/Release/libfreetype_static.a
+	../../externals/skia/out/${ARCH}/Release/obj/gyp/libexpat_static.a
 defines = \
 	-DSK_INTERNAL -DSK_GAMMA_APPLY_TO_A8 -DQT_NO_KEYWORDS             \
 	-DSK_ALLOW_STATIC_GLOBAL_INITIALIZERS=1 -DSK_SUPPORT_GPU=1        \
