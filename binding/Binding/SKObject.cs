@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
@@ -174,6 +175,25 @@ namespace SkiaSharp
 				this.RevokeOwnership ();
 			}
 		}
+
+		internal static int SizeOf <T> ()
+		{
+#if WINDOWS_UWP || NET_STANDARD
+			return Marshal.SizeOf <IntPtr> ();
+#else
+			return Marshal.SizeOf (typeof (IntPtr));
+#endif
+		}
+
+		internal T PtrToStructure <T> (IntPtr intPtr)
+		{
+#if WINDOWS_UWP || NET_STANDARD
+			return Marshal.PtrToStructure <T> (intPtr);
+#else
+			return (T) Marshal.PtrToStructure (intPtr, typeof (T));
+#endif
+		}
+
 	}
 
 	public class SKNativeObject : IDisposable
