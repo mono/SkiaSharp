@@ -1,5 +1,6 @@
 ARCH = x64
 VERSION = 1.0.0.0
+SUPPORT_GPU = 1
 
 noop = 
 space = ${noop} ${noop}
@@ -35,7 +36,6 @@ include_dirs = \
 library_paths = \
 	../../externals/skia/out/${ARCH}/Release/libskia_core.a                     \
 	../../externals/skia/out/${ARCH}/Release/libskia_effects.a                  \
-	../../externals/skia/out/${ARCH}/Release/libskia_skgpu.a                    \
 	../../externals/skia/out/${ARCH}/Release/libskia_opts.a                     \
 	../../externals/skia/out/${ARCH}/Release/libskia_opts_sse41.a               \
 	../../externals/skia/out/${ARCH}/Release/libskia_opts_sse42.a               \
@@ -45,7 +45,6 @@ library_paths = \
 	../../externals/skia/out/${ARCH}/Release/libskia_utils.a                    \
 	../../externals/skia/out/${ARCH}/Release/libskia_ports.a                    \
 	../../externals/skia/out/${ARCH}/Release/libskia_images.a                   \
-	../../externals/skia/out/${ARCH}/Release/libsksl.a                          \
 	../../externals/skia/out/${ARCH}/Release/libskia_pdf.a                      \
 	../../externals/skia/out/${ARCH}/Release/libskia_codec.a                    \
 	../../externals/skia/out/${ARCH}/Release/libskia_codec_android.a            \
@@ -69,11 +68,11 @@ library_paths = \
 	../../externals/skia/out/${ARCH}/Release/obj/gyp/libpiex.a                  \
 	../../externals/skia/out/${ARCH}/Release/obj/gyp/libexpat_static.a
 defines = \
-	-DSK_INTERNAL -DSK_GAMMA_APPLY_TO_A8 -DQT_NO_KEYWORDS             \
-	-DSK_ALLOW_STATIC_GLOBAL_INITIALIZERS=1 -DSK_SUPPORT_GPU=1        \
-	-DSK_FORCE_DISTANCE_FIELD_TEXT=0 -DSK_HAS_JPEG_LIBRARY            \
-	-DSK_HAS_PNG_LIBRARY -DSK_HAS_WEBP_LIBRARY -DSKIA_C_DLL           \
-	-DSKIA_IMPLEMENTATION=1 -DSK_CODEC_DECODES_RAW -DSK_SAMPLES_FOR_X \
+	-DSK_INTERNAL -DSK_GAMMA_APPLY_TO_A8 -DQT_NO_KEYWORDS                   \
+	-DSK_ALLOW_STATIC_GLOBAL_INITIALIZERS=1 -DSK_SUPPORT_GPU=${SUPPORT_GPU} \
+	-DSK_FORCE_DISTANCE_FIELD_TEXT=0 -DSK_HAS_JPEG_LIBRARY                  \
+	-DSK_HAS_PNG_LIBRARY -DSK_HAS_WEBP_LIBRARY -DSKIA_C_DLL                 \
+	-DSKIA_IMPLEMENTATION=1 -DSK_CODEC_DECODES_RAW -DSK_SAMPLES_FOR_X       \
 	-DSK_BUILD_FOR_UNIX -DNDEBUG
 cflags = \
 	-msse2 -mfpmath=sse -g -fno-exceptions -fstrict-aliasing -Wall \
@@ -87,10 +86,19 @@ else
 endif
 cflags_c = 
 cflags_cc = -std=c++11 -fno-rtti -fno-threadsafe-statics -Wnon-virtual-dtor
-ldflags = $(library_dirs:%=-L%) -lpthread -ldl -lfontconfig -lGL -lGLU -lX11
+ldflags = $(library_dirs:%=-L%) -lpthread -ldl -lfontconfig
 includes = $(include_dirs:%=-I%)
 library_names = $(notdir ${library_paths})
 libraries = $(library_names:lib%.a=-l%)
+
+# add the extras for GPU 
+ifeq "${SUPPORT_GPU}" "1"
+library_paths += \
+	../../externals/skia/out/${ARCH}/Release/libskia_skgpu.a       \
+	../../externals/skia/out/${ARCH}/Release/libsksl.a
+ldflags += \
+    -lGL -lGLU -lX11
+endif
 
 src = $(shell find ${src_root} -name *.cpp -or -name *.c)
 src_names = $(notdir ${src})
