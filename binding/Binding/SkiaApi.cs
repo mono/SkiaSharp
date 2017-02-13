@@ -1459,6 +1459,8 @@ namespace SkiaSharp
 		public extern static int gr_context_get_recommended_sample_count (gr_context_t context, GRPixelConfig config, float dpi);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void gr_context_flush (gr_context_t context);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void gr_context_reset_context (gr_context_t context, UInt32 state);
 		
 		// GLInterface
 		
