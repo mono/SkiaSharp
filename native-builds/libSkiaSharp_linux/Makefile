@@ -82,7 +82,7 @@ cflags = \
 	-fPIC -fdata-sections -ffunction-sections
 cflags_c = 
 cflags_cc = -std=c++11 -fno-rtti -fno-threadsafe-statics -Wnon-virtual-dtor
-ldflags = $(library_dirs:%=-L%) -lpthread -ldl -lfontconfig -lGL -lGLU -lX11
+ldflags = $(LDFLAGS) $(library_dirs:%=-L%) -lpthread -ldl -lfontconfig
 includes = $(include_dirs:%=-I%)
 library_names = $(notdir ${library_paths})
 libraries = $(library_names:lib%.a=-l%)
