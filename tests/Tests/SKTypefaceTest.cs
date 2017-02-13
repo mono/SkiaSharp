@@ -106,7 +106,7 @@ namespace SkiaSharp.Tests
 			using (var typeface = fonts.MatchCharacter(emojiChar))
 			{
 				if (IsLinux)
-					Assert.Equal("", typeface.FamilyName);  // see issue #225
+					Assert.Equal("Symbola", typeface.FamilyName);
 				else if (IsMac)
 					Assert.Equal("Apple Color Emoji", typeface.FamilyName);
 				else if (IsWindows)
