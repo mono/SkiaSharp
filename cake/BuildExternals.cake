@@ -450,6 +450,10 @@ Task ("externals-linux")
             WorkingDirectory = SKIA_PATH.FullPath,
         });
         // build libSkiaSharp
+        // RunProcess ("make", new ProcessSettings {
+        //     Arguments = "clean",
+        //     WorkingDirectory = "native-builds/libSkiaSharp_linux",
+        // });
         RunProcess ("make", new ProcessSettings {
             Arguments = "ARCH=" + folder + " VERSION=" + VERSION_FILE + " SUPPORT_GPU=" + SUPPORT_GPU,
             WorkingDirectory = "native-builds/libSkiaSharp_linux",

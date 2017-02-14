@@ -96,8 +96,6 @@ ifeq "${SUPPORT_GPU}" "1"
 library_paths += \
 	../../externals/skia/out/${ARCH}/Release/libskia_skgpu.a       \
 	../../externals/skia/out/${ARCH}/Release/libsksl.a
-ldflags += \
-    -lGL -lGLU -lX11
 endif
 
 src = $(shell find ${src_root} -name *.cpp -or -name *.c)
