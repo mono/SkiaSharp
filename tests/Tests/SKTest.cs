@@ -53,5 +53,27 @@ namespace SkiaSharp.Tests
 		protected static bool IsLinux => IsUnix && !IsMac;
 		protected static bool IsWindows => !IsUnix;
 #endif
+
+		protected GlContext CreateGlContext()
+		{
+			if (IsLinux) {
+				return new GlxContext();
+			} else if (IsMac) {
+				return null;
+			} else if (IsWindows) {
+				return null;
+			} else {
+				return null;
+			}
+		}
 	}
+
+    public abstract class GlContext : IDisposable
+    {
+        public abstract void MakeCurrent();
+        public abstract void SwapBuffers();
+        public abstract void Destroy();
+
+		void IDisposable.Dispose() => Destroy();
+    }
 }
