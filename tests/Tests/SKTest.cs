@@ -59,7 +59,7 @@ namespace SkiaSharp.Tests
 			if (IsLinux) {
 				return new GlxContext();
 			} else if (IsMac) {
-				return null;
+				return new CglContext();
 			} else if (IsWindows) {
 				return null;
 			} else {

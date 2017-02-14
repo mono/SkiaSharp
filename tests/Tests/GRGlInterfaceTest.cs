@@ -5,7 +5,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	public class GGlInterfaceTest : SKTest
+	public class GRGlInterfaceTest : SKTest
 	{
 		[Fact]
 		public void CreateDefaultInterfaceIsValid()
