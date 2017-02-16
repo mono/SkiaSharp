@@ -61,19 +61,10 @@ namespace SkiaSharp.Tests
 			} else if (IsMac) {
 				return new CglContext();
 			} else if (IsWindows) {
-				return null;
+				return new WglContext();
 			} else {
 				return null;
 			}
 		}
 	}
-
-    public abstract class GlContext : IDisposable
-    {
-        public abstract void MakeCurrent();
-        public abstract void SwapBuffers();
-        public abstract void Destroy();
-
-		void IDisposable.Dispose() => Destroy();
-    }
 }
