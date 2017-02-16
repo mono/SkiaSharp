@@ -1,13 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using Xunit;
+using NUnit.Framework;
 
 namespace SkiaSharp.Tests
 {
 	public class SKManagedStreamTest : SKTest
 	{
-		[Fact]
+		[Test]
 		public void ManagedStreamReadsByteCorrectly()
 		{
 			var data = new byte[1024];
@@ -20,25 +20,25 @@ namespace SkiaSharp.Tests
 			var skManagedStream = new SKManagedStream(stream);
 
 			skManagedStream.Rewind();
-			Assert.Equal(0, stream.Position);
-			Assert.Equal(0, skManagedStream.Position);
+			Assert.AreEqual(0, stream.Position);
+			Assert.AreEqual(0, skManagedStream.Position);
 
 			for (int i = 0; i < data.Length; i++)
 			{
 				skManagedStream.Position = i;
 
-				Assert.Equal(i, stream.Position);
-				Assert.Equal(i, skManagedStream.Position);
+				Assert.AreEqual(i, stream.Position);
+				Assert.AreEqual(i, skManagedStream.Position);
 
-				Assert.Equal((byte)(i % byte.MaxValue), data[i]);
-				Assert.Equal((byte)(i % byte.MaxValue), skManagedStream.ReadByte());
+				Assert.AreEqual((byte)(i % byte.MaxValue), data[i]);
+				Assert.AreEqual((byte)(i % byte.MaxValue), skManagedStream.ReadByte());
 
-				Assert.Equal(i + 1, stream.Position);
-				Assert.Equal(i + 1, skManagedStream.Position);
+				Assert.AreEqual(i + 1, stream.Position);
+				Assert.AreEqual(i + 1, skManagedStream.Position);
 			}
 		}
 
-		[Fact]
+		[Test]
 		public void ManagedStreamReadsChunkCorrectly()
 		{
 			var data = new byte[1024];
@@ -51,16 +51,16 @@ namespace SkiaSharp.Tests
 			var skManagedStream = new SKManagedStream(stream);
 
 			skManagedStream.Rewind();
-			Assert.Equal(0, stream.Position);
-			Assert.Equal(0, skManagedStream.Position);
+			Assert.AreEqual(0, stream.Position);
+			Assert.AreEqual(0, skManagedStream.Position);
 
 			var buffer = new byte[data.Length / 2];
 			skManagedStream.Read(buffer, buffer.Length);
 
-			Assert.Equal(data.Take(buffer.Length), buffer);
+			Assert.AreEqual(data.Take(buffer.Length), buffer);
 		}
 
-		[Fact]
+		[Test]
 		public void ManagedStreamReadsOffsetChunkCorrectly()
 		{
 			var data = new byte[1024];
@@ -79,11 +79,11 @@ namespace SkiaSharp.Tests
 			var buffer = new byte[data.Length];
 			var taken = skManagedStream.Read(buffer, buffer.Length);
 
-			Assert.Equal(data.Length - offset, taken);
+			Assert.AreEqual(data.Length - offset, taken);
 
 			var resultData = data.Skip(offset).Take(buffer.Length).ToArray();
 			resultData = resultData.Concat(Enumerable.Repeat<byte>(0, offset)).ToArray();
-			Assert.Equal(resultData, buffer);
+			Assert.AreEqual(resultData, buffer);
 		}
 	}
 }

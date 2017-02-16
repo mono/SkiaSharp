@@ -39,11 +39,11 @@ var RunProcess = new Action<FilePath, ProcessSettings> ((process, settings) =>
     }
 });
 
-var RunTests = new Action<FilePath, bool> ((testAssembly, is64) =>
+var RunTests = new Action<FilePath> ((testAssembly) =>
 {
     var dir = testAssembly.GetDirectory ();
-    RunProcess (is64 ? TestConsoleToolPath_x64 : TestConsoleToolPath_x86, new ProcessSettings {
-        Arguments = string.Format ("\"{0}\"", testAssembly),
+    RunProcess (NUnitConsoleToolPath, new ProcessSettings {
+        Arguments = string.Format ("\"{0}\" --work=\"{1}\"", testAssembly, dir),
     });
 });
 
