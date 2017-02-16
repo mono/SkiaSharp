@@ -426,6 +426,8 @@ Task ("externals-linux")
     .WithCriteria (IsRunningOnLinux ())
     .Does (() => 
 {
+    var SUPPORT_GPU = "1"; // 1 == true, 0 == false
+
     var ninja = DEPOT_PATH.CombineWithFilePath ("ninja").FullPath;
 
     // set up the gyp environment variables
@@ -442,14 +444,18 @@ Task ("externals-linux")
         SetEnvironmentVariable ("SKIA_OUT", outPath);
 
         // build skia_lib
-        RunGyp ("skia_os='linux' skia_arch_type='" + arch + "' skia_gpu=1 skia_pic=1 skia_pdf_use_sfntly=0 skia_freetype_static=1", "ninja");
+        RunGyp ("skia_os='linux' skia_arch_type='" + arch + "' skia_gpu=" + SUPPORT_GPU + " skia_pic=1 skia_pdf_use_sfntly=0 skia_freetype_static=1", "ninja");
         RunProcess (ninja, new ProcessSettings {
             Arguments = "-C out/" + folder + "/Release " + targets,
             WorkingDirectory = SKIA_PATH.FullPath,
         });
         // build libSkiaSharp
+        // RunProcess ("make", new ProcessSettings {
+        //     Arguments = "clean",
+        //     WorkingDirectory = "native-builds/libSkiaSharp_linux",
+        // });
         RunProcess ("make", new ProcessSettings {
-            Arguments = "ARCH=" + folder + " VERSION=" + VERSION_FILE,
+            Arguments = "ARCH=" + folder + " VERSION=" + VERSION_FILE + " SUPPORT_GPU=" + SUPPORT_GPU,
             WorkingDirectory = "native-builds/libSkiaSharp_linux",
         });
     });
