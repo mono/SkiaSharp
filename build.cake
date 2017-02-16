@@ -14,7 +14,7 @@ var NuGetSources = new [] { MakeAbsolute (Directory ("./output")).FullPath, "htt
 var NugetToolPath = GetToolPath ("nuget.exe");
 var XamarinComponentToolPath = GetToolPath ("xamarin-component.exe");
 var CakeToolPath = GetToolPath ("Cake/Cake.exe");
-var NUnitConsoleToolPath = GetToolPath ("NUnit.Console/tools/nunit3-console.exe");
+var NUnitConsoleToolPath = GetToolPath ("NUnit.ConsoleRunner/tools/nunit3-console.exe");
 var GenApiToolPath = GetToolPath ("Microsoft.DotNet.BuildTools.GenAPI/tools/GenAPI.exe");
 var MDocPath = GetToolPath ("mdoc/mdoc.exe");
 
