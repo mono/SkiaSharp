@@ -7,6 +7,7 @@
 // Copyright 2015 Xamarin Inc
 //
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 using GRBackendObject = System.IntPtr;
@@ -427,28 +428,80 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_paint_t sk_paint_clone(sk_paint_t cpaint);
 
+		// Image
 
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_image_ref(sk_image_t image);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_image_unref(sk_image_t image);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_image_t sk_image_new_raster_copy(ref SKImageInfo info, IntPtr pixels, IntPtr rowBytes);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_image_t sk_image_new_raster_copy_with_pixmap(sk_pixmap_t pixmap);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_image_t sk_image_new_raster_copy_with_colortable(ref SKImageInfo info, IntPtr pixels, IntPtr rowBytes, sk_colortable_t ctable);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_image_t sk_image_new_raster_data(ref SKImageInfo info, sk_data_t pixels, IntPtr rowBytes);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_image_t sk_image_new_raster(sk_pixmap_t pixmap, IntPtr releaseProc, IntPtr context);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_image_t sk_image_new_from_bitmap(sk_bitmap_t cbitmap);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_image_t sk_image_new_from_encoded(sk_data_t encoded, ref SKRectI subset);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_image_t sk_image_new_from_encoded(sk_data_t encoded, IntPtr subsetPtr);
+		public extern static sk_image_t sk_image_new_from_encoded(sk_data_t encoded, IntPtr subsetZero);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_data_t sk_image_encode(sk_image_t t);
+		public extern static sk_image_t sk_image_new_from_texture(gr_context_t context, ref GRBackendTextureDesc desc, SKAlphaType alpha, sk_colorspace_t colorSpace, IntPtr releaseProc, IntPtr releaseContext);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_data_t sk_image_encode_specific(sk_image_t t, SKImageEncodeFormat format, int quality);
+		public extern static sk_image_t sk_image_new_from_adopted_texture(gr_context_t context, ref GRBackendTextureDesc desc, SKAlphaType alpha, sk_colorspace_t colorSpace);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_image_t sk_image_new_from_bitmap(sk_bitmap_t b);
+		public extern static sk_image_t sk_image_new_from_picture(sk_picture_t picture, ref SKSizeI dimensions, ref SKMatrix matrix, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_image_unref(sk_image_t t);
+		public extern static sk_image_t sk_image_new_from_picture(sk_picture_t picture, ref SKSizeI dimensions, IntPtr matrixZero, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static int sk_image_get_width(sk_image_t t);
+		public extern static int sk_image_get_width(sk_image_t image);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static int sk_image_get_height(sk_image_t t);
+		public extern static int sk_image_get_height(sk_image_t image);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static uint sk_image_get_unique_id(sk_image_t t);
+		public extern static uint sk_image_get_unique_id(sk_image_t image);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKAlphaType sk_image_get_alpha_type(sk_image_t image);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_image_is_alpha_only(sk_image_t image);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_shader_t sk_image_make_shader(sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, ref SKMatrix localMatrix);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_shader_t sk_image_make_shader(sk_image_t image, SKShaderTileMode tileX, SKShaderTileMode tileY, IntPtr localMatrixZero);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_image_peek_pixels(sk_image_t image, sk_pixmap_t pixmap);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_image_is_texture_backed(sk_image_t image);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_image_read_pixels(sk_image_t image, ref SKImageInfo dstInfo, IntPtr dstPixels, IntPtr dstRowBytes, int srcX, int srcY, SKImageCachingHint cachingHint);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_image_read_pixels_into_pixmap(sk_image_t image, sk_pixmap_t dst, int srcX, int srcY, SKImageCachingHint cachingHint);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_image_scale_pixels(sk_image_t image, sk_pixmap_t dst, SKFilterQuality quality, SKImageCachingHint cachingHint);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_data_t sk_image_encode(sk_image_t image);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_data_t sk_image_encode_specific(sk_image_t image, SKImageEncodeFormat encoder, int quality);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_image_t sk_image_make_subset(sk_image_t image, ref SKRectI subset);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_image_t sk_image_make_texture_image(sk_image_t image, gr_context_t context);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_image_t sk_image_make_non_texture_image(sk_image_t image);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_image_t sk_image_make_with_filter(sk_image_t image, sk_imagefilter_t filter, ref SKRectI subset, ref SKRectI clipbounds, out SKRectI outSubset, out SKPoint outOffset);
 
+		// Path
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
@@ -1450,6 +1503,79 @@ namespace SkiaSharp
 		public extern static bool sk_region_op2(sk_region_t r, sk_region_t src, SKRegionOperation op);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_region_get_bounds(sk_region_t r, out SKRectI rect);
+	}
+
+	// This is the actual context passed to native code.
+	// Instead of marshalling the user's data as an IntPtr and requiring 
+	// him to wrap/unwarp, we do it via a proxy class. This also prevents 
+	// us from having to marshal the user's callback too. 
+	internal class NativeDelegateContext : IDisposable
+	{
+		// instead of pinning the struct, we pin a GUID which is paired to the struct
+		private static readonly IDictionary<Guid, NativeDelegateContext> contexts = new Dictionary<Guid, NativeDelegateContext>();
+
+		// the "managed version" of the callback 
+		private readonly Delegate managedDelegate;
+
+		public NativeDelegateContext(object context, Delegate get)
+		{
+			managedDelegate = get;
+			ManagedContext = context;
+			NativeContext = Wrap();
+		}
+
+		public object ManagedContext { get; }
+
+		public IntPtr NativeContext { get; }
+
+		public T GetDelegate<T>()
+		{
+			return (T)(object)managedDelegate;
+		}
+
+		// wrap this context into a "native" pointer
+		public IntPtr Wrap()
+		{
+			var guid = Guid.NewGuid();
+			lock (contexts)
+			{
+				contexts.Add(guid, this);
+			}
+			var gc = GCHandle.Alloc(guid, GCHandleType.Pinned);
+			return GCHandle.ToIntPtr(gc);
+		}
+
+		// unwrap the "native" pointer into a managed context
+		public static NativeDelegateContext Unwrap(IntPtr ptr)
+		{
+			var gchandle = GCHandle.FromIntPtr(ptr);
+			var guid = (Guid)gchandle.Target;
+			lock (contexts)
+			{
+				NativeDelegateContext value;
+				contexts.TryGetValue(guid, out value);
+				return value;
+			}
+		}
+
+		public void Free()
+		{
+			Free(NativeContext);
+		}
+
+		// unwrap and free the context
+		public static void Free(IntPtr ptr)
+		{
+			var gchandle = GCHandle.FromIntPtr(ptr);
+			var guid = (Guid)gchandle.Target;
+			lock (contexts)
+			{
+				contexts.Remove(guid);
+			}
+			gchandle.Free();
+		}
+
+		void IDisposable.Dispose() => Free();
 	}
 
 	internal static class PlatformConfiguration

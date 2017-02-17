@@ -2652,4 +2652,9 @@ namespace SkiaSharp
 		Argb32,
 		Lcd16,
 	}
+
+	public enum SKImageCachingHint {
+		Allow,
+		Disallow,
+	}
 }
