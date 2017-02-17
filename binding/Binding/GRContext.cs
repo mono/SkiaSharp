@@ -78,6 +78,21 @@ namespace SkiaSharp
 			maxResourceBytes = (long)maxResourceBytesPtr;
 		}
 		
+		public void ResetContext (GRGlBackendState state)
+		{
+			ResetContext ((uint) state);
+		}
+
+		public void ResetContext (GRBackendState state = GRBackendState.All)
+		{
+			ResetContext ((uint) state);
+		}
+
+		public void ResetContext (uint state)
+		{
+			SkiaApi.gr_context_reset_context (Handle, state);
+		}
+
 		public void Flush ()
 		{
 			SkiaApi.gr_context_flush (Handle);

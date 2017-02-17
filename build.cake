@@ -9,6 +9,7 @@ using System.Xml;
 using System.Xml.Linq;
 
 var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")));
+var VERBOSITY = (Verbosity) Enum.Parse (typeof(Verbosity), Argument ("v", Argument ("verbosity", Argument ("Verbosity", "Verbose"))), true);
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NugetToolPath = GetToolPath ("nuget.exe");
@@ -26,6 +27,7 @@ var VERSION_PACKAGES = new Dictionary<string, string> {
     { "SkiaSharp.Views", "1.56.1" },
     { "SkiaSharp.Views.Forms", "1.56.1" },
     { "SkiaSharp.Svg", "1.56.1" },
+    { "SkiaSharp.Extended", "1.56.1-beta" },
 };
 
 string ANDROID_HOME = EnvironmentVariable ("ANDROID_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-sdk-macosx";
@@ -75,6 +77,7 @@ Task ("libs")
         ReplaceTextInFiles ("./source/SkiaSharp.Views/SkiaSharp.Views.Shared/Properties/SkiaSharpViewsAssemblyInfo.cs", "{GIT_SHA}", sha);
         ReplaceTextInFiles ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Shared/Properties/SkiaSharpViewsFormsAssemblyInfo.cs", "{GIT_SHA}", sha);
         ReplaceTextInFiles ("./source/SkiaSharp.Svg/SkiaSharp.Svg.Shared/Properties/SkiaSharpSvgAssemblyInfo.cs", "{GIT_SHA}", sha);
+        ReplaceTextInFiles ("./source/SkiaSharp.Extended/SkiaSharp.Extended.Shared/Properties/SkiaSharpExtendedAssemblyInfo.cs", "{GIT_SHA}", sha);
     }
 
     // create all the directories
@@ -94,6 +97,7 @@ Task ("libs")
         RunNuGetRestore ("binding/SkiaSharp.Windows.sln");
         DotNetBuild ("binding/SkiaSharp.Windows.sln", c => { 
             c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
         });
 
         // copy build output
@@ -110,6 +114,7 @@ Task ("libs")
         RunNuGetRestore ("./source/SkiaSharpSource.Windows.sln");
         DotNetBuild ("./source/SkiaSharpSource.Windows.sln", c => { 
             c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
         });
 
         // copy the managed views
@@ -121,6 +126,9 @@ Task ("libs")
 
         // copy SVG
         CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
+
+        // copy Extended
+        CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended/bin/Release/SkiaSharp.Extended.dll", "./output/portable/");
     }
 
     if (IsRunningOnMac ()) {
@@ -128,6 +136,7 @@ Task ("libs")
         RunNuGetRestore ("binding/SkiaSharp.Mac.sln");
         DotNetBuild ("binding/SkiaSharp.Mac.sln", c => { 
             c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
         });
 
         // copy build output
@@ -145,6 +154,7 @@ Task ("libs")
         RunNuGetRestore ("./source/SkiaSharpSource.Mac.sln");
         DotNetBuild ("./source/SkiaSharpSource.Mac.sln", c => { 
             c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
         });
 
         // copy other outputs
@@ -158,6 +168,9 @@ Task ("libs")
 
         // copy SVG
         CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
+
+        // copy Extended
+        CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended/bin/Release/SkiaSharp.Extended.dll", "./output/portable/");
     }
 
     if (IsRunningOnLinux ()) {
@@ -165,6 +178,7 @@ Task ("libs")
         RunNuGetRestore ("binding/SkiaSharp.Linux.sln");
         DotNetBuild ("binding/SkiaSharp.Linux.sln", c => { 
             c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
         });
 
         // copy build output
@@ -174,10 +188,14 @@ Task ("libs")
         RunNuGetRestore ("./source/SkiaSharpSource.Linux.sln");
         DotNetBuild ("./source/SkiaSharpSource.Linux.sln", c => { 
             c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
         });
 
         // copy SVG
         CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
+
+        // copy Extended
+        CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended/bin/Release/SkiaSharp.Extended.dll", "./output/portable/");
     }
 
     // .NET Standard / .NET Core
@@ -185,16 +203,44 @@ Task ("libs")
     RunDotNetCoreRestore ("binding/SkiaSharp.NetStandard");
     DotNetBuild ("binding/SkiaSharp.NetStandard.sln", c => { 
         c.Configuration = "Release"; 
+        c.Verbosity = VERBOSITY;
     });
     // copy build output
     CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
     // build other source
     RunDotNetCoreRestore ("source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard");
+    RunDotNetCoreRestore ("source/SkiaSharp.Extended/SkiaSharp.Extended.NetStandard");
     DotNetBuild ("./source/SkiaSharpSource.NetStandard.sln", c => { 
         c.Configuration = "Release"; 
+        c.Verbosity = VERBOSITY;
     });
     // copy SVG
     CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard/bin/Release/SkiaSharp.Svg.dll", "./output/netstandard/");
+    // copy Extended
+    CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended.NetStandard/bin/Release/SkiaSharp.Extended.dll", "./output/netstandard/");
+});
+
+Task ("workbooks")
+    .IsDependentOn ("externals")
+    .IsDependentOn ("libs")
+    .Does (() => 
+{
+    // the dir
+    if (!DirectoryExists ("./output/workbooks/")) CreateDirectory ("./output/workbooks/");
+
+    // the managed bits
+    CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.dll.config", "./output/workbooks/");
+    CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/workbooks/");
+    CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard/bin/Release/SkiaSharp.Svg.dll", "./output/workbooks/");
+    CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended.NetStandard/bin/Release/SkiaSharp.Extended.dll", "./output/workbooks/");
+
+    // the native bits
+    if (IsRunningOnWindows ()) {
+        CopyFileToDirectory ("./native-builds/lib/windows/x64/libSkiaSharp.dll", "./output/workbooks/");
+    }
+    if (IsRunningOnMac ()) {
+        CopyFileToDirectory ("./native-builds/lib/osx/libSkiaSharp.dylib", "./output/workbooks/");
+    }
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -215,11 +261,13 @@ Task ("tests")
         DotNetBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "x86" };
+            c.Verbosity = VERBOSITY;
         });
         RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/SkiaSharp.Desktop.Tests.dll");
         DotNetBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "x64" };
+            c.Verbosity = VERBOSITY;
         });
         RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Desktop.Tests.dll");
     }
@@ -227,6 +275,7 @@ Task ("tests")
     if (IsRunningOnMac ()) {
         DotNetBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", c => { 
             c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
         });
         RunTests("./tests/SkiaSharp.Desktop.Tests/bin/AnyCPU/Release/SkiaSharp.Desktop.Tests.dll");
     }
@@ -261,16 +310,19 @@ Task ("samples")
         RunNuGetRestore ("./samples/MacSample/MacSample.sln");
         DotNetBuild ("./samples/MacSample/MacSample.sln", c => { 
             c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
         });
         RunNuGetRestore ("./samples/FormsSample/FormsSample.Mac.sln");
         DotNetBuild ("./samples/FormsSample/FormsSample.Mac.sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "iPhone" };
+            c.Verbosity = VERBOSITY;
         });
         RunNuGetRestore ("./samples/TvSample/TvSample.sln");
         DotNetBuild ("./samples/TvSample/TvSample.sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "iPhoneSimulator" };
+            c.Verbosity = VERBOSITY;
         });
     }
     
@@ -279,19 +331,23 @@ Task ("samples")
         DotNetBuild ("./samples/WPFSample/WPFSample.sln", c => { 
             c.Configuration = "Release";
             c.Properties ["Platform"] = new [] { "x86" };
+            c.Verbosity = VERBOSITY;
         });
         RunNuGetRestore ("./samples/UWPSample/UWPSample.sln");
         DotNetBuild ("./samples/UWPSample/UWPSample.sln", c => { 
             c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
         });
         RunNuGetRestore ("./samples/FormsSample/FormsSample.Windows.sln");
         DotNetBuild ("./samples/FormsSample/FormsSample.Windows.sln", c => { 
             c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
         });
         RunNuGetRestore ("./samples/WindowsSample/WindowsSample.sln");
         DotNetBuild ("./samples/WindowsSample/WindowsSample.sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "x86" };
+            c.Verbosity = VERBOSITY;
         });
     }
 });
@@ -368,6 +424,7 @@ Task ("update-docs")
         // types aren't needed here
         DotNetBuild ("./externals/Windows.Foundation.UniversalApiContract/Windows.Foundation.UniversalApiContract.csproj", c => {
             c.Verbosity = Verbosity.Quiet;
+            c.Verbosity = VERBOSITY;
         });
         refs = refs.Union (new DirectoryPath [] {
             "./externals/Windows.Foundation.UniversalApiContract/bin/Release",
@@ -493,6 +550,8 @@ Task ("nuget")
     }
     // SVG is a PCL
     PackageNuGet ("./nuget/SkiaSharp.Svg.nuspec", "./output/");
+    // Extended is a PCL
+    PackageNuGet ("./nuget/SkiaSharp.Extended.nuspec", "./output/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -574,6 +633,9 @@ Task ("set-versions")
         VERSION_ASSEMBLY, VERSION_FILE, sha);
     UpdateAssemblyInfo (
         "./source/SkiaSharp.Svg/SkiaSharp.Svg.Shared/Properties/SkiaSharpSvgAssemblyInfo.cs",
+        VERSION_ASSEMBLY, VERSION_FILE, sha);
+    UpdateAssemblyInfo (
+        "./source/SkiaSharp.Extended/SkiaSharp.Extended.Shared/Properties/SkiaSharpExtendedAssemblyInfo.cs",
         VERSION_ASSEMBLY, VERSION_FILE, sha);
 });
 

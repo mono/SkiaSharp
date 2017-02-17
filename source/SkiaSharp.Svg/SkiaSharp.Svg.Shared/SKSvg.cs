@@ -128,8 +128,9 @@ namespace SkiaSharp
 			using (var recorder = new SKPictureRecorder())
 			using (var canvas = recorder.BeginRecording(SKRect.Create(CanvasSize)))
 			{
+				// if there is no viewbox, then we don't do anything, otherwise
 				// scale the SVG dimensions to fit inside the user dimensions
-				if (ViewBox.Width != CanvasSize.Width || ViewBox.Height != CanvasSize.Height)
+				if (!ViewBox.IsEmpty && (ViewBox.Width != CanvasSize.Width || ViewBox.Height != CanvasSize.Height))
 				{
 					if (preserveAspectRatio == "none")
 					{
@@ -147,6 +148,12 @@ namespace SkiaSharp
 
 				// translate the canvas by the viewBox origin
 				canvas.Translate(-ViewBox.Left, -ViewBox.Top);
+
+				// if the viewbox was specified, then crop to that
+				if (!ViewBox.IsEmpty)
+				{
+					canvas.ClipRect(ViewBox);
+				}
 
 				LoadElements(svg.Elements(), canvas);
 

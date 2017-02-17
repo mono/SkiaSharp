@@ -537,6 +537,7 @@ namespace SkiaSharp
 
 		public static bool Resize (SKBitmap dst, SKBitmap src, SKBitmapResizeMethod method)
 		{
+			using (new SKAutoLockPixels (src))
 			using (var srcPix = src.PeekPixels ())
 			using (var dstPix = dst.PeekPixels ()) {
 				return SKPixmap.Resize (dstPix, srcPix, method);// && dst.InstallPixels (dstPix); 

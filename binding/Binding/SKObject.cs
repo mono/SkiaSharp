@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
@@ -173,6 +174,42 @@ namespace SkiaSharp
 			} else {
 				this.RevokeOwnership ();
 			}
+		}
+
+		internal static int SizeOf <T> ()
+		{
+#if WINDOWS_UWP || NET_STANDARD
+			return Marshal.SizeOf <T> ();
+#else
+			return Marshal.SizeOf (typeof (IntPtr));
+#endif
+		}
+
+		internal T PtrToStructure <T> (IntPtr intPtr)
+		{
+#if WINDOWS_UWP || NET_STANDARD
+			return Marshal.PtrToStructure <T> (intPtr);
+#else
+			return (T) Marshal.PtrToStructure (intPtr, typeof (T));
+#endif
+		}
+
+		internal T[] PtrToStructureArray <T> (IntPtr intPtr, int count)
+		{
+			var items = new T[count];
+			var size = SizeOf <T> ();
+			for (var i = 0; i < count; i++) {
+				var newPtr = new IntPtr (intPtr.ToInt64 () + (i * size));
+				items[i] = PtrToStructure <T> (newPtr);
+			}
+			return items;
+		}
+
+		internal T PtrToStructure <T> (IntPtr intPtr, int index)
+		{
+			var size = SizeOf <T> ();
+			var newPtr = new IntPtr (intPtr.ToInt64 () + (index * size));
+			return PtrToStructure <T> (newPtr);
 		}
 	}
 
