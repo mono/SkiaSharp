@@ -970,7 +970,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			var src4Length = count * 4;
 
 			var src2 = new float [src2Length];
-			for	(int i = 0, i2 = 0; i < count; i++, i2 += 2) {
+			for (int i = 0, i2 = 0; i < count; i++, i2 += 2) {
 				src2 [i2] = src [i].X;
 				src2 [i2 + 1] = src [i].Y;
 			}
@@ -978,8 +978,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			var dst4 = MapVector2 (src2);
 
 			var dst = new SKPoint [count];
-			for	(int i = 0, i4 = 0; i < count; i++, i4 += 4) {
-				//dst [i] = new SKPoint (dst4 [i4], dst4 [i4 + 1]);
+			for (int i = 0, i4 = 0; i < count; i++, i4 += 4) {
 				dst [i].X = dst4 [i4];
 				dst [i].Y = dst4 [i4 + 1];
 			}
