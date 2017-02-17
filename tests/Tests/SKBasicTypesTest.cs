@@ -217,7 +217,7 @@ namespace SkiaSharp.Tests
 		[Test]
 		public void Matrix44CreatesIdentity()
 		{
-			var matrix = SKMatrix44.MakeIdentity();
+			var matrix = SKMatrix44.CreateIdentity();
 
 			var expectedRowMajor = new float[] {
 				1, 0, 0, 0,
@@ -247,7 +247,7 @@ namespace SkiaSharp.Tests
 			};
 			var determinant = 2f;
 
-			var matrix = SKMatrix44.MakeFromRowMajor(rowMajor);
+			var matrix = SKMatrix44.FromRowMajor(rowMajor);
 
 			Assert.AreEqual(rowMajor, matrix.ToRowMajor());
 			Assert.AreEqual(determinant, matrix.Determinant());
@@ -275,11 +275,11 @@ namespace SkiaSharp.Tests
 				rowMajor44[12], rowMajor44[13], rowMajor44[15],
 			};
 
-			var matrix44 = SKMatrix44.MakeFromRowMajor(rowMajor44);
+			var matrix44 = SKMatrix44.FromRowMajor(rowMajor44);
 
 			Assert.AreEqual(rowMajor, matrix44.Matrix.Values);
 
-			matrix44 = SKMatrix44.MakeRotationDegrees(0, 0, 1, 45);
+			matrix44 = SKMatrix44.CreateRotationDegrees(0, 0, 1, 45);
 			Assert.AreEqual(SKMatrix.MakeRotationDegrees(45).Values, matrix44.Matrix.Values);
 		}
 
@@ -287,7 +287,7 @@ namespace SkiaSharp.Tests
 		public void Matrix44MapsScalars()
 		{
 			// translate
-			var matrixTranslate = SKMatrix44.MakeTranslate(10, 20, 0);
+			var matrixTranslate = SKMatrix44.CreateTranslate(10, 20, 0);
 
 			var resultTranslateZero = matrixTranslate.MapScalars(0, 0, 0, 1);
 			var resultTranslateValue = matrixTranslate.MapScalars(5, 25, 0, 1);
@@ -296,7 +296,7 @@ namespace SkiaSharp.Tests
 			Assert.AreEqual(new[] { 15f, 45f, 0f, 1f }, resultTranslateValue);
 
 			// rotate
-			var matrixRotate = SKMatrix44.MakeRotationDegrees(0, 1, 0, 90);
+			var matrixRotate = SKMatrix44.CreateRotationDegrees(0, 1, 0, 90);
 
 			var resultRotateZero = matrixRotate.MapScalars(0, 0, 0, 1);
 			var resultRotateValue = matrixRotate.MapScalars(5, 25, 0, 1);
@@ -309,7 +309,7 @@ namespace SkiaSharp.Tests
 		public void Matrix44MapsPoints()
 		{
 			// translate
-			var matrixTranslate = SKMatrix44.MakeTranslate(10, 20, 0);
+			var matrixTranslate = SKMatrix44.CreateTranslate(10, 20, 0);
 
 			var resultTranslateZero = matrixTranslate.MapPoint(SKPoint.Empty);
 			var resultTranslateValue = matrixTranslate.MapPoint(new SKPoint(5, 25));
@@ -318,7 +318,7 @@ namespace SkiaSharp.Tests
 			Assert.AreEqual(new SKPoint(15f, 45f), resultTranslateValue);
 
 			// rotate
-			var matrixRotate = SKMatrix44.MakeRotationDegrees(0, 1, 0, 90);
+			var matrixRotate = SKMatrix44.CreateRotationDegrees(0, 1, 0, 90);
 
 			var resultRotateZero = matrixRotate.MapPoint(SKPoint.Empty);
 			var resultRotateValue = matrixRotate.MapPoint(new SKPoint(5, 25));
@@ -333,7 +333,7 @@ namespace SkiaSharp.Tests
 		{
 			var rnd = new Random();
 
-			var matrixTranslate = SKMatrix44.MakeTranslate(10, 25, 0);
+			var matrixTranslate = SKMatrix44.CreateTranslate(10, 25, 0);
 
 			// generate some points
 			var points = new SKPoint[1000];
