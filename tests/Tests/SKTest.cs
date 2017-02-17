@@ -53,6 +53,39 @@ namespace SkiaSharp.Tests
 		protected static bool IsWindows => !IsUnix;
 #endif
 
+		public static class MacDynamicLibraries
+		{
+			private const string SystemLibrary = "/usr/lib/libSystem.dylib";
+			[DllImport(SystemLibrary)]
+			public static extern IntPtr dlopen(string path, int mode);
+			[DllImport(SystemLibrary)]
+			public static extern IntPtr dlsym(IntPtr handle, string symbol);
+			[DllImport(SystemLibrary)]
+			public static extern void dlclose(IntPtr handle);
+		}
+
+		public static class LinuxDynamicLibraries
+		{
+			private const string SystemLibrary = "libdl.so";
+			[DllImport(SystemLibrary)]
+			public static extern IntPtr dlopen(string path, int mode);
+			[DllImport(SystemLibrary)]
+			public static extern IntPtr dlsym(IntPtr handle, string symbol);
+			[DllImport(SystemLibrary)]
+			public static extern void dlclose(IntPtr handle);
+		}
+
+		public static class WindowsDynamicLibraries
+		{
+			private const string SystemLibrary = "Kernel32.dll";
+			[DllImport (SystemLibrary, SetLastError = true, CharSet = CharSet.Ansi)]
+			public static extern IntPtr LoadLibrary(string lpFileName);
+			[DllImport (SystemLibrary, SetLastError = true, CharSet = CharSet.Ansi)]
+			public static extern IntPtr GetProcAddress(IntPtr hModule, string lpProcName);
+			[DllImport (SystemLibrary, SetLastError = true, CharSet = CharSet.Ansi)]
+			public static extern void FreeLibrary(IntPtr hModule);
+		}
+
 		protected GlContext CreateGlContext()
 		{
 			if (IsLinux) {
