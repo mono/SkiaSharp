@@ -23,10 +23,12 @@ namespace SkiaSharp
 	public class GRGlInterface : SKObject
 	{
 		// so the GC doesn't collect the delegate
-		private static readonly GRGlGetProcDelegateInternal getProcDelegate;
+		private static readonly GRGlGetProcDelegateInternal getProcDelegateInternal;
+		private static readonly IntPtr getProcDelegate;
 		static GRGlInterface ()
 		{
-			getProcDelegate = new GRGlGetProcDelegateInternal (GrGLGetProcInternal);
+			getProcDelegateInternal = new GRGlGetProcDelegateInternal (GrGLGetProcInternal);
+			getProcDelegate = Marshal.GetFunctionPointerForDelegate (getProcDelegateInternal);
 		}
 
 		[Preserve]
@@ -79,13 +81,9 @@ namespace SkiaSharp
 			}
 
 			// try the native default
-			var del = Marshal.GetFunctionPointerForDelegate (getProcDelegate);
-
-			var ctx = new GRGlGetProcDelegateContext (context, get);
-			var ptr = ctx.Wrap ();
-			var glInterface = GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_interface (ptr, del));
-			GRGlGetProcDelegateContext.Free (ptr);
-			return glInterface;
+			using (var ctx = new NativeDelegateContext (context, get)) {
+				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_interface (ctx.NativeContext, getProcDelegate));
+			}
 		}
 
 		public static GRGlInterface AssembleAngleInterface (GRGlGetProcDelegate get)
@@ -106,13 +104,9 @@ namespace SkiaSharp
 
 		public static GRGlInterface AssembleGlInterface (object context, GRGlGetProcDelegate get)
 		{
-			var del = Marshal.GetFunctionPointerForDelegate (getProcDelegate);
-
-			var ctx = new GRGlGetProcDelegateContext (context, get);
-			var ptr = ctx.Wrap ();
-			var glInterface = GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gl_interface (ptr, del));
-			GRGlGetProcDelegateContext.Free (ptr);
-			return glInterface;
+			using (var ctx = new NativeDelegateContext (context, get)) {
+				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gl_interface (ctx.NativeContext, getProcDelegate));
+			}
 		}
 
 		public static GRGlInterface AssembleGlesInterface (GRGlGetProcDelegate get)
@@ -122,13 +116,9 @@ namespace SkiaSharp
 
 		public static GRGlInterface AssembleGlesInterface (object context, GRGlGetProcDelegate get)
 		{
-			var del = Marshal.GetFunctionPointerForDelegate (getProcDelegate);
-
-			var ctx = new GRGlGetProcDelegateContext (context, get);
-			var ptr = ctx.Wrap ();
-			var glInterface = GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gles_interface (ptr, del));
-			GRGlGetProcDelegateContext.Free (ptr);
-			return glInterface;
+			using (var ctx = new NativeDelegateContext (context, get)) {
+				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gles_interface (ctx.NativeContext, getProcDelegate));
+			}
 		}
 
 		public GRGlInterface Clone ()
@@ -161,62 +151,8 @@ namespace SkiaSharp
 		#endif
 		private static IntPtr GrGLGetProcInternal (IntPtr context, string name)
 		{
-			var ctx = GRGlGetProcDelegateContext.Unwrap (context);
-			return ctx.GetProc (ctx.Context, name);
-		}
-
-		// This is the actual context passed to native code.
-		// Instead of marshalling the user's data as an IntPtr and requiring 
-		// him to wrap/unwarp, we do it via a proxy class. This also prevents 
-		// us from having to marshal the user's callback too. 
-		private struct GRGlGetProcDelegateContext
-		{
-			// instead of pinning the struct, we pin a GUID which is paired to the struct
-			private static readonly IDictionary<Guid, GRGlGetProcDelegateContext> contexts = new Dictionary<Guid, GRGlGetProcDelegateContext>();
-
-			// the "managed version" of the callback 
-			public readonly GRGlGetProcDelegate GetProc;
-			public readonly object Context;
-
-			public GRGlGetProcDelegateContext (object context, GRGlGetProcDelegate get)
-			{
-				Context = context;
-				GetProc = get;
-			}
-
-			// wrap this context into a "native" pointer
-			public IntPtr Wrap ()
-			{
-				var guid = Guid.NewGuid ();
-				lock (contexts) {
-					contexts.Add (guid, this);
-				}
-				var gc = GCHandle.Alloc (guid, GCHandleType.Pinned);
-				return GCHandle.ToIntPtr (gc);
-			}
-
-			// unwrap the "native" pointer into a managed context
-			public static GRGlGetProcDelegateContext Unwrap (IntPtr ptr)
-			{
-				var gchandle = GCHandle.FromIntPtr (ptr);
-				var guid = (Guid) gchandle.Target;
-				lock (contexts) {
-					GRGlGetProcDelegateContext value;
-					contexts.TryGetValue (guid, out value);
-					return value;
-				}
-			}
-
-			// unwrap and free the context
-			public static void Free (IntPtr ptr)
-			{
-				var gchandle = GCHandle.FromIntPtr (ptr);
-				var guid = (Guid) gchandle.Target;
-				lock (contexts) {
-					contexts.Remove (guid);
-				}
-				gchandle.Free ();
-			}
+			var ctx = NativeDelegateContext.Unwrap (context);
+			return ctx.GetDelegate<GRGlGetProcDelegate> () (ctx.ManagedContext, name);
 		}
 
 		private static class AngleLoader
