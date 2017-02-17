@@ -678,49 +678,49 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			}
 		}
 
-		public static SKMatrix44 MakeIdentity ()
+		public static SKMatrix44 CreateIdentity ()
 		{
 			var matrix = new SKMatrix44();
 			matrix.SetIdentity ();
 			return matrix;
 		}
 
-		public static SKMatrix44 MakeTranslate (float x, float y, float z)
+		public static SKMatrix44 CreateTranslate (float x, float y, float z)
 		{
 			var matrix = new SKMatrix44();
 			matrix.SetTranslate (x, y, z);
 			return matrix;
 		}
 
-		public static SKMatrix44 MakeScale (float x, float y, float z)
+		public static SKMatrix44 CreateScale (float x, float y, float z)
 		{
 			var matrix = new SKMatrix44();
 			matrix.SetScale (x, y, z);
 			return matrix;
 		}
 
-		public static SKMatrix44 MakeRotation (float x, float y, float z, float radians)
+		public static SKMatrix44 CreateRotation (float x, float y, float z, float radians)
 		{
 			var matrix = new SKMatrix44();
 			matrix.SetRotationAbout (x, y, z, radians);
 			return matrix;
 		}
 
-		public static SKMatrix44 MakeRotationDegrees (float x, float y, float z, float degrees)
+		public static SKMatrix44 CreateRotationDegrees (float x, float y, float z, float degrees)
 		{
 			var matrix = new SKMatrix44();
 			matrix.SetRotationAboutDegrees (x, y, z, degrees);
 			return matrix;
 		}
 
-		public static SKMatrix44 MakeFromRowMajor (float [] src)
+		public static SKMatrix44 FromRowMajor (float [] src)
 		{
 			var matrix = new SKMatrix44();
 			matrix.SetRowMajor (src);
 			return matrix;
 		}
 
-		public static SKMatrix44 MakeFromColumnMajor (float [] src)
+		public static SKMatrix44 FromColumnMajor (float [] src)
 		{
 			var matrix = new SKMatrix44();
 			matrix.SetColumnMajor (src);
