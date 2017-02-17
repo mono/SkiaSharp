@@ -66,6 +66,7 @@ namespace SkiaSharp.Tests
 					LinuxDynamicLibraries.dlclose(lib);
 				} else {
 					// more platforms !!!
+					throw new Exception("Some strange platform that is not Windows, macOS nor Linux...");
 				}
 			}
 		}
