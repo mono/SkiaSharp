@@ -1,13 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using Xunit;
+using NUnit.Framework;
 
 namespace SkiaSharp.Tests
 {
 	public class SKBitmapTest : SKTest
 	{
-		[Fact]
+		[Test]
 		public void ReleaseBitmapPixelsWasInvoked()
 		{
 			bool released = false;
@@ -27,7 +27,7 @@ namespace SkiaSharp.Tests
 			Assert.True(released, "The SKBitmapReleaseDelegate was not called.");
 		}
 
-		[Fact]
+		[Test]
 		public void ReleaseBitmapPixelsWithNullDelegate()
 		{
 			var info = new SKImageInfo(1, 1);
@@ -40,7 +40,7 @@ namespace SkiaSharp.Tests
 			Marshal.FreeCoTaskMem(pixels);
 		}
 
-		[Fact]
+		[Test]
 		public void TestExtractAlpha()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -55,30 +55,30 @@ namespace SkiaSharp.Tests
 
 			Assert.True(bitmap.ExtractAlpha(alpha, paint, out offset));
 
-			Assert.Equal(new SKPointI(-7, -7), offset);
+			Assert.AreEqual(new SKPointI(-7, -7), offset);
 		}
 
-		[Fact]
+		[Test]
 		public void BitmapAndPixmapAreValid()
 		{
 			var info = new SKImageInfo(10, 10);
 			using (var bitmap = new SKBitmap(info)) {
-				Assert.Equal(10, bitmap.Width);
-				Assert.Equal(10, bitmap.Height);
+				Assert.AreEqual(10, bitmap.Width);
+				Assert.AreEqual(10, bitmap.Height);
 
 				var pixmap = bitmap.PeekPixels();
 				Assert.NotNull(pixmap);
 
-				Assert.Equal(10, pixmap.Width);
-				Assert.Equal(10, pixmap.Height);
+				Assert.AreEqual(10, pixmap.Width);
+				Assert.AreEqual(10, pixmap.Height);
 
 				Assert.True(bitmap.GetPixels() != IntPtr.Zero);
 				Assert.True(pixmap.GetPixels() != IntPtr.Zero);
-				Assert.Equal(bitmap.GetPixels(), pixmap.GetPixels());
+				Assert.AreEqual(bitmap.GetPixels(), pixmap.GetPixels());
 			}
 		}
 
-		[Fact]
+		[Test]
 		public void BitmapResizes()
 		{
 			var srcInfo = new SKImageInfo(200, 200);
@@ -92,17 +92,17 @@ namespace SkiaSharp.Tests
 				canvas.DrawRect(new SKRect(0, 0, 100, 200), paint);
 			}
 
-			Assert.Equal(SKColors.Green, srcBmp.GetPixel(75, 75));
-			Assert.Equal(SKColors.Blue, srcBmp.GetPixel(175, 175));
+			Assert.AreEqual(SKColors.Green, srcBmp.GetPixel(75, 75));
+			Assert.AreEqual(SKColors.Blue, srcBmp.GetPixel(175, 175));
 
 			var dstBmp = srcBmp.Resize(dstInfo, SKBitmapResizeMethod.Mitchell);
 			Assert.NotNull(dstBmp);
 
-			Assert.Equal(SKColors.Green, dstBmp.GetPixel(25, 25));
-			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
+			Assert.AreEqual(SKColors.Green, dstBmp.GetPixel(25, 25));
+			Assert.AreEqual(SKColors.Blue, dstBmp.GetPixel(75, 75));
 		}
 
-		[Fact]
+		[Test]
 		public void AlphaMaskIsApplied()
 		{
 			var srcInfo = new SKImageInfo(4, 4);
@@ -112,7 +112,7 @@ namespace SkiaSharp.Tests
 
 			foreach (var pixel in pixels)
 			{
-				Assert.Equal(255, pixel.Alpha);
+				Assert.AreEqual(255, pixel.Alpha);
 			}
 			
 			var maskBuffer = new byte[]
@@ -130,22 +130,22 @@ namespace SkiaSharp.Tests
 			srcBmp.InstallMaskPixels(mask);
 
 			pixels = srcBmp.Pixels;
-			Assert.Equal(128, pixels[0].Alpha);
-			Assert.Equal(127, pixels[1].Alpha);
-			Assert.Equal(126, pixels[2].Alpha);
-			Assert.Equal(125, pixels[3].Alpha);
-			Assert.Equal(101, pixels[4].Alpha);
-			Assert.Equal(102, pixels[5].Alpha);
-			Assert.Equal(103, pixels[6].Alpha);
-			Assert.Equal(104, pixels[7].Alpha);
-			Assert.Equal(96, pixels[8].Alpha);
-			Assert.Equal(95, pixels[9].Alpha);
-			Assert.Equal(94, pixels[10].Alpha);
-			Assert.Equal(93, pixels[11].Alpha);
-			Assert.Equal(72, pixels[12].Alpha);
-			Assert.Equal(73, pixels[13].Alpha);
-			Assert.Equal(74, pixels[14].Alpha);
-			Assert.Equal(75, pixels[15].Alpha);
+			Assert.AreEqual(128, pixels[0].Alpha);
+			Assert.AreEqual(127, pixels[1].Alpha);
+			Assert.AreEqual(126, pixels[2].Alpha);
+			Assert.AreEqual(125, pixels[3].Alpha);
+			Assert.AreEqual(101, pixels[4].Alpha);
+			Assert.AreEqual(102, pixels[5].Alpha);
+			Assert.AreEqual(103, pixels[6].Alpha);
+			Assert.AreEqual(104, pixels[7].Alpha);
+			Assert.AreEqual(96, pixels[8].Alpha);
+			Assert.AreEqual(95, pixels[9].Alpha);
+			Assert.AreEqual(94, pixels[10].Alpha);
+			Assert.AreEqual(93, pixels[11].Alpha);
+			Assert.AreEqual(72, pixels[12].Alpha);
+			Assert.AreEqual(73, pixels[13].Alpha);
+			Assert.AreEqual(74, pixels[14].Alpha);
+			Assert.AreEqual(75, pixels[15].Alpha);
 
 			mask.FreeImage();
 		}

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Xunit;
+using NUnit.Framework;
 
 using SKOtherColor = System.Tuple<float, float, float>;
 using ToOtherColor = System.Tuple<SkiaSharp.SKColor, System.Tuple<float, float, float>, string>;
@@ -11,41 +11,41 @@ namespace SkiaSharp.Tests
 	{
 		private const int Precision = 2;
 
-		[Fact]
+		[Test]
 		public void ColorWithComponent()
 		{
 			var color = new SKColor();
-			Assert.Equal(0, color.Red);
-			Assert.Equal(0, color.Green);
-			Assert.Equal(0, color.Blue);
-			Assert.Equal(0, color.Alpha);
+			Assert.AreEqual(0, color.Red);
+			Assert.AreEqual(0, color.Green);
+			Assert.AreEqual(0, color.Blue);
+			Assert.AreEqual(0, color.Alpha);
 
 			var red = color.WithRed(255);
-			Assert.Equal(255, red.Red);
-			Assert.Equal(0, red.Green);
-			Assert.Equal(0, red.Blue);
-			Assert.Equal(0, red.Alpha);
+			Assert.AreEqual(255, red.Red);
+			Assert.AreEqual(0, red.Green);
+			Assert.AreEqual(0, red.Blue);
+			Assert.AreEqual(0, red.Alpha);
 
 			var green = color.WithGreen(255);
-			Assert.Equal(0, green.Red);
-			Assert.Equal(255, green.Green);
-			Assert.Equal(0, green.Blue);
-			Assert.Equal(0, green.Alpha);
+			Assert.AreEqual(0, green.Red);
+			Assert.AreEqual(255, green.Green);
+			Assert.AreEqual(0, green.Blue);
+			Assert.AreEqual(0, green.Alpha);
 
 			var blue = color.WithBlue(255);
-			Assert.Equal(0, blue.Red);
-			Assert.Equal(0, blue.Green);
-			Assert.Equal(255, blue.Blue);
-			Assert.Equal(0, blue.Alpha);
+			Assert.AreEqual(0, blue.Red);
+			Assert.AreEqual(0, blue.Green);
+			Assert.AreEqual(255, blue.Blue);
+			Assert.AreEqual(0, blue.Alpha);
 
 			var alpha = color.WithAlpha(255);
-			Assert.Equal(0, alpha.Red);
-			Assert.Equal(0, alpha.Green);
-			Assert.Equal(0, alpha.Blue);
-			Assert.Equal(255, alpha.Alpha);
+			Assert.AreEqual(0, alpha.Red);
+			Assert.AreEqual(0, alpha.Green);
+			Assert.AreEqual(0, alpha.Blue);
+			Assert.AreEqual(255, alpha.Alpha);
 		}
 
-		[Fact]
+		[Test]
 		public void ColorRgbToHsl()
 		{
 			var tuples = new List<ToOtherColor> {
@@ -69,21 +69,21 @@ namespace SkiaSharp.Tests
 				float h, s, l;
 				rgb.ToHsl(out h, out s, out l);
 
-				Assert.Equal(other.Item1, h, Precision);
-				Assert.Equal(other.Item2, s, Precision);
-				Assert.Equal(other.Item3, l, Precision);
+				Assert.AreEqual(other.Item1, h, Precision);
+				Assert.AreEqual(other.Item2, s, Precision);
+				Assert.AreEqual(other.Item3, l, Precision);
 
 				// to RGB
 				SKColor back = SKColor.FromHsl(other.Item1, other.Item2, other.Item3);
 
-				Assert.Equal(rgb.Red, back.Red);
-				Assert.Equal(rgb.Green, back.Green);
-				Assert.Equal(rgb.Blue, back.Blue);
-				Assert.Equal(rgb.Alpha, back.Alpha);
+				Assert.AreEqual(rgb.Red, back.Red);
+				Assert.AreEqual(rgb.Green, back.Green);
+				Assert.AreEqual(rgb.Blue, back.Blue);
+				Assert.AreEqual(rgb.Alpha, back.Alpha);
 			}
 		}
 
-		[Fact]
+		[Test]
 		public void ColorRgbToHsv()
 		{
 			var tuples = new List<ToOtherColor> {
@@ -107,21 +107,21 @@ namespace SkiaSharp.Tests
 				float h, s, v;
 				rgb.ToHsv(out h, out s, out v);
 
-				Assert.Equal(other.Item1, h, Precision);
-				Assert.Equal(other.Item2, s, Precision);
-				Assert.Equal(other.Item3, v, Precision);
+				Assert.AreEqual(other.Item1, h, Precision);
+				Assert.AreEqual(other.Item2, s, Precision);
+				Assert.AreEqual(other.Item3, v, Precision);
 
 				// to RGB
 				SKColor back = SKColor.FromHsv(other.Item1, other.Item2, other.Item3);
 
-				Assert.Equal(rgb.Red, back.Red);
-				Assert.Equal(rgb.Green, back.Green);
-				Assert.Equal(rgb.Blue, back.Blue);
-				Assert.Equal(rgb.Alpha, back.Alpha);
+				Assert.AreEqual(rgb.Red, back.Red);
+				Assert.AreEqual(rgb.Green, back.Green);
+				Assert.AreEqual(rgb.Blue, back.Blue);
+				Assert.AreEqual(rgb.Alpha, back.Alpha);
 			}
 		}
 
-		[Fact]
+		[Test]
 		public void HexToColor()
 		{
 			var tuples = new List<Tuple<string, SKColor>> {
@@ -151,11 +151,11 @@ namespace SkiaSharp.Tests
 
 				SKColor color = SKColor.Parse(hex);
 
-				Assert.Equal(other, color);
+				Assert.AreEqual(other, color);
 			}
 		}
 
-		[Fact]
+		[Test]
 		public void InvalidHexToColor()
 		{
 			var tuples = new List<string> {

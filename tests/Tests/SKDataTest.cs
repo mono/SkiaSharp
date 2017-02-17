@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using Xunit;
+using NUnit.Framework;
 
 namespace SkiaSharp.Tests
 {
@@ -8,16 +8,17 @@ namespace SkiaSharp.Tests
 	{
 		private readonly static byte[] OddData = new byte[] { 1, 3, 5, 7, 9 };
 
-		[Fact]
+		[Test]
 		public void ValidDataProperties()
 		{
 			var data = new SKData(OddData);
 
-			Assert.Equal(OddData.Length, data.Size);
-			Assert.Equal(OddData, data.ToArray());
+			Assert.AreEqual(OddData.Length, data.Size);
+			Assert.AreEqual(OddData, data.ToArray());
 		}
 
-		[Fact(Skip = "Doesn't work as it relies on memory being overwritten by an external process.")]
+		[Test]
+		[Ignore("Doesn't work as it relies on memory being overwritten by an external process.")]
 		public void DataDisposedReturnsInvalidStream()
 		{
 			// create data
@@ -28,14 +29,14 @@ namespace SkiaSharp.Tests
 
 			// nuke the data
 			data.Dispose();
-			Assert.Equal(IntPtr.Zero, data.Handle);
+			Assert.AreEqual(IntPtr.Zero, data.Handle);
 
 			// read the stream
 			var buffer = new byte[OddData.Length];
 			stream.Read(buffer, 0, buffer.Length);
 
 			// since the data was nuked, they will differ
-			Assert.NotEqual(OddData, buffer);
+			Assert.AreNotEqual(OddData, buffer);
 		}
 	}
 }

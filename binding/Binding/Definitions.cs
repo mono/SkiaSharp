@@ -2688,4 +2688,9 @@ namespace SkiaSharp
 		TriangleStrip,
 		TriangleFan,
 	}
+
+	public enum SKImageCachingHint {
+		Allow,
+		Disallow,
+	}
 }

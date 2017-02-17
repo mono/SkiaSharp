@@ -1,20 +1,20 @@
 ﻿using System;
 using System.IO;
-using Xunit;
+using NUnit.Framework;
 
 namespace SkiaSharp.Tests
 {
 	public class SKStringTest : SKTest
 	{
-		[Fact]
+		[Test]
 		public void StringIsMarshaledCorrectly ()
 		{
 			using (var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "SpiderSymbol.ttf")))
 			{
 				if (IsLinux) // see issue #225
-					Assert.Equal("", typeface.FamilyName);
+					Assert.AreEqual("", typeface.FamilyName);
 				else
-					Assert.Equal ("SpiderSymbol", typeface.FamilyName);
+					Assert.AreEqual ("SpiderSymbol", typeface.FamilyName);
 			}
 		}
 	}

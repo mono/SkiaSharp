@@ -26,10 +26,12 @@ namespace SkiaSharp
 		private const string UnableToAllocatePixelsMessage = "Unable to allocate pixels for the bitmap.";
 
 		// so the GC doesn't collect the delegate
-		private static readonly SKBitmapReleaseDelegateInternal releaseDelegate;
+		private static readonly SKBitmapReleaseDelegateInternal releaseDelegateInternal;
+		private static readonly IntPtr releaseDelegate;
 		static SKBitmap ()
 		{
-			releaseDelegate = new SKBitmapReleaseDelegateInternal (SKBitmapReleaseInternal);
+			releaseDelegateInternal = new SKBitmapReleaseDelegateInternal (SKBitmapReleaseInternal);
+			releaseDelegate = Marshal.GetFunctionPointerForDelegate (releaseDelegateInternal);
 		}
 
 		[Preserve]
@@ -489,12 +491,8 @@ namespace SkiaSharp
 			if (releaseProc == null) {
 				return SkiaApi.sk_bitmap_install_pixels (Handle, ref info, pixels, (IntPtr)rowBytes, ct, IntPtr.Zero, IntPtr.Zero);
 			} else {
-				var del = Marshal.GetFunctionPointerForDelegate (releaseDelegate);
-
-				var ctx = new SKBitmapReleaseDelegateContext (releaseProc, context);
-				var ctxPtr = ctx.Wrap ();
-
-				return SkiaApi.sk_bitmap_install_pixels (Handle, ref info, pixels, (IntPtr)rowBytes, ct, del, ctxPtr);
+				var ctx = new NativeDelegateContext (context, releaseProc);
+				return SkiaApi.sk_bitmap_install_pixels (Handle, ref info, pixels, (IntPtr)rowBytes, ct, releaseDelegate, ctx.NativeContext);
 			}
 		}
 
@@ -552,63 +550,8 @@ namespace SkiaSharp
 		#endif
 		private static void SKBitmapReleaseInternal (IntPtr address, IntPtr context)
 		{
-			var ctx = SKBitmapReleaseDelegateContext.Unwrap (context);
-			ctx.Release (address, ctx.Context);
-
-			SKBitmapReleaseDelegateContext.Free (context);
-		}
-
-		// This is the actual context passed to native code.
-		// Instead of marshalling the user's data as an IntPtr and requiring 
-		// him to wrap/unwarp, we do it via a proxy class. This also prevents 
-		// us from having to marshal the user's callback too. 
-		private struct SKBitmapReleaseDelegateContext
-		{
-			// instead of pinning the struct, we pin a GUID which is paired to the struct
-			private static readonly IDictionary<Guid, SKBitmapReleaseDelegateContext> contexts = new Dictionary<Guid, SKBitmapReleaseDelegateContext>();
-
-			// the "managed version" of the callback 
-			public readonly SKBitmapReleaseDelegate Release;
-			public readonly object Context;
-
-			public SKBitmapReleaseDelegateContext (SKBitmapReleaseDelegate releaseProc, object context)
-			{
-				Release = releaseProc;
-				Context = context;
-			}
-
-			// wrap this context into a "native" pointer
-			public IntPtr Wrap ()
-			{
-				var guid = Guid.NewGuid ();
-				lock (contexts) {
-					contexts.Add (guid, this);
-				}
-				var gc = GCHandle.Alloc (guid, GCHandleType.Pinned);
-				return GCHandle.ToIntPtr (gc);
-			}
-
-			// unwrap the "native" pointer into a managed context
-			public static SKBitmapReleaseDelegateContext Unwrap (IntPtr ptr)
-			{
-				var gchandle = GCHandle.FromIntPtr (ptr);
-				var guid = (Guid) gchandle.Target;
-				lock (contexts) {
-					SKBitmapReleaseDelegateContext value;
-					contexts.TryGetValue (guid, out value);
-					return value;
-				}
-			}
-
-			// unwrap and free the context
-			public static void Free (IntPtr ptr)
-			{
-				var gchandle = GCHandle.FromIntPtr (ptr);
-				var guid = (Guid) gchandle.Target;
-				lock (contexts) {
-					contexts.Remove (guid);
-				}
-				gchandle.Free ();
+			using (var ctx = NativeDelegateContext.Unwrap (context)) {
+				ctx.GetDelegate<SKBitmapReleaseDelegate> () (address, ctx.ManagedContext);
 			}
 		}
 	}

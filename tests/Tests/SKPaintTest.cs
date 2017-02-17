@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq;
-using Xunit;
+using NUnit.Framework;
 
 namespace SkiaSharp.Tests
 {
 	public class SKPaintTest : SKTest
 	{
-		[Fact]
+		[Test]
 		public void StrokePropertyValuesAreCorrect()
 		{
 			var paint = new SKPaint();
@@ -18,7 +18,7 @@ namespace SkiaSharp.Tests
 			Assert.False(paint.IsStroke);
 		}
 
-		[Fact]
+		[Test]
 		public void GetFillPathIsWorking()
 		{
 			var paint = new SKPaint();
@@ -32,11 +32,11 @@ namespace SkiaSharp.Tests
 			var isFilled = paint.GetFillPath(path, fillPath);
 
 			Assert.True(isFilled);
-			Assert.Equal(rect, fillPath.Bounds);
-			Assert.Equal(4, fillPath.PointCount);
+			Assert.AreEqual(rect, fillPath.Bounds);
+			Assert.AreEqual(4, fillPath.PointCount);
 		}
 
-		[Fact]
+		[Test]
 		public void GetFillPathIsWorkingWithLine()
 		{
 			var paint = new SKPaint();
@@ -52,17 +52,17 @@ namespace SkiaSharp.Tests
 			var isFilled = paint.GetFillPath(path, fillPath);
 
 			Assert.True(isFilled);
-			Assert.Equal(thinRect, fillPath.Bounds);
-			Assert.Equal(2, fillPath.PointCount);
+			Assert.AreEqual(thinRect, fillPath.Bounds);
+			Assert.AreEqual(2, fillPath.PointCount);
 
 			paint.StrokeWidth = 20;
 			paint.IsStroke = true;
 			isFilled = paint.GetFillPath(path, fillPath);
 
 			Assert.True(isFilled);
-			Assert.Equal(rect, fillPath.Bounds);
-			Assert.Equal(4 + 1, fillPath.PointCount); // +1 becuase the last point is the same as the first
-			Assert.Equal(4, fillPath.Points.Distinct().Count());
+			Assert.AreEqual(rect, fillPath.Bounds);
+			Assert.AreEqual(4 + 1, fillPath.PointCount); // +1 becuase the last point is the same as the first
+			Assert.AreEqual(4, fillPath.Points.Distinct().Count());
 		}
 	}
 }

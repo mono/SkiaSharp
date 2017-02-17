@@ -15,8 +15,7 @@ var NuGetSources = new [] { MakeAbsolute (Directory ("./output")).FullPath, "htt
 var NugetToolPath = GetToolPath ("nuget.exe");
 var XamarinComponentToolPath = GetToolPath ("xamarin-component.exe");
 var CakeToolPath = GetToolPath ("Cake/Cake.exe");
-var TestConsoleToolPath_x86 = GetToolPath ("xunit.runner.console/tools/xunit.console.x86.exe");
-var TestConsoleToolPath_x64 = GetToolPath ("xunit.runner.console/tools/xunit.console.exe");
+var NUnitConsoleToolPath = GetToolPath ("NUnit.ConsoleRunner/tools/nunit3-console.exe");
 var GenApiToolPath = GetToolPath ("Microsoft.DotNet.BuildTools.GenAPI/tools/GenAPI.exe");
 var MDocPath = GetToolPath ("mdoc/mdoc.exe");
 
@@ -264,13 +263,13 @@ Task ("tests")
             c.Properties ["Platform"] = new [] { "x86" };
             c.Verbosity = VERBOSITY;
         });
-        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/SkiaSharp.Desktop.Tests.dll", false);
+        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/SkiaSharp.Desktop.Tests.dll");
         DotNetBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", c => { 
             c.Configuration = "Release"; 
             c.Properties ["Platform"] = new [] { "x64" };
             c.Verbosity = VERBOSITY;
         });
-        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Desktop.Tests.dll", true);
+        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Desktop.Tests.dll");
     }
     // Mac OSX (Any CPU)
     if (IsRunningOnMac ()) {
@@ -278,7 +277,7 @@ Task ("tests")
             c.Configuration = "Release"; 
             c.Verbosity = VERBOSITY;
         });
-        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/AnyCPU/Release/SkiaSharp.Desktop.Tests.dll", false);
+        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/AnyCPU/Release/SkiaSharp.Desktop.Tests.dll");
     }
     // .NET Core
     RunDotNetCoreRestore ("./tests/SkiaSharp.NetCore.Tests");
@@ -726,8 +725,7 @@ Task ("Windows-CI")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Information ("Cake.exe ToolPath: {0}", CakeToolPath);
-Information ("Cake.exe TestConsoleToolPath_x86: {0}", TestConsoleToolPath_x86);
-Information ("Cake.exe TestConsoleToolPath_x64: {0}", TestConsoleToolPath_x64);
+Information ("Cake.exe NUnitConsoleToolPath: {0}", NUnitConsoleToolPath);
 Information ("NuGet.exe ToolPath: {0}", NugetToolPath);
 Information ("Xamarin-Component.exe ToolPath: {0}", XamarinComponentToolPath);
 Information ("genapi.exe ToolPath: {0}", GenApiToolPath);

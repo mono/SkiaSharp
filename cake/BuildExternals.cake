@@ -142,8 +142,10 @@ Task ("externals-native")
         if (!DirectoryExists ("./output/linux/x64/")) CreateDirectory ("./output/linux/x64/");
         if (!DirectoryExists ("./output/linux/x86/")) CreateDirectory ("./output/linux/x86/");
         CopyFileToDirectory ("./native-builds/lib/linux/x64/libSkiaSharp.so." + VERSION_SONAME, "./output/linux/x64/");
+//        CopyFileToDirectory ("./native-builds/lib/linux/x86/libSkiaSharp.so." + VERSION_SONAME, "./output/linux/x86/");
         // the second copy excludes the file version
         CopyFile ("./native-builds/lib/linux/x64/libSkiaSharp.so." + VERSION_SONAME, "./output/linux/x64/libSkiaSharp.so");
+//        CopyFile ("./native-builds/lib/linux/x86/libSkiaSharp.so." + VERSION_SONAME, "./output/linux/x86/libSkiaSharp.so");
     }
 });
 
@@ -422,10 +424,13 @@ Task ("externals-android")
 // this builds the native C and C++ externals for Linux
 Task ("externals-linux")
     .WithCriteria (
+//        !FileExists ("native-builds/lib/linux/x86/libSkiaSharp.so") ||
         !FileExists ("native-builds/lib/linux/x64/libSkiaSharp.so"))
     .WithCriteria (IsRunningOnLinux ())
     .Does (() => 
 {
+    var SUPPORT_GPU = "1"; // 1 == true, 0 == false
+
     var ninja = DEPOT_PATH.CombineWithFilePath ("ninja").FullPath;
 
     // set up the gyp environment variables
@@ -442,22 +447,27 @@ Task ("externals-linux")
         SetEnvironmentVariable ("SKIA_OUT", outPath);
 
         // build skia_lib
-        RunGyp ("skia_os='linux' skia_arch_type='" + arch + "' skia_gpu=1 skia_pic=1 skia_pdf_use_sfntly=0", "ninja");
+        RunGyp ("skia_os='linux' skia_arch_type='" + arch + "' skia_gpu=" + SUPPORT_GPU + " skia_pic=1 skia_pdf_use_sfntly=0 skia_freetype_static=1", "ninja");
         RunProcess (ninja, new ProcessSettings {
             Arguments = "-C out/" + folder + "/Release " + targets,
             WorkingDirectory = SKIA_PATH.FullPath,
         });
         // build libSkiaSharp
+        // RunProcess ("make", new ProcessSettings {
+        //     Arguments = "clean",
+        //     WorkingDirectory = "native-builds/libSkiaSharp_linux",
+        // });
         RunProcess ("make", new ProcessSettings {
-            Arguments = "ARCH=" + folder + " VERSION=" + VERSION_FILE,
+            Arguments = "ARCH=" + folder + " VERSION=" + VERSION_FILE + " SUPPORT_GPU=" + SUPPORT_GPU,
             WorkingDirectory = "native-builds/libSkiaSharp_linux",
         });
     });
 
     buildArch ("x86_64", "x64");
+//    buildArch ("x86", "x86");
         
     // copy output
-    foreach (var folder in new [] { "x64" }) {
+    foreach (var folder in new [] { "x64" /* , "x86" */ }) {
         if (!DirectoryExists ("native-builds/lib/linux/" + folder)) {
             CreateDirectory ("native-builds/lib/linux/" + folder);
         }
