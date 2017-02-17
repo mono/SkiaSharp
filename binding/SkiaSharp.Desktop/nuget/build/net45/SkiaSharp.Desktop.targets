@@ -6,6 +6,15 @@
         <ShouldIncludeNativeSkiaSharp Condition=" '$(ShouldIncludeNativeSkiaSharp)' == '' ">True</ShouldIncludeNativeSkiaSharp>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(PlatformTarget)' != 'x64' and '$(PlatformTarget)' != 'x86' ">
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$(Prefer32Bit)' == 'False' ">x64</PreferredNativeSkiaSharp>
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' ">x86</PreferredNativeSkiaSharp>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(PlatformTarget)' == 'x64' or '$(PlatformTarget)' == 'x86' ">
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' ">$(PlatformTarget)</PreferredNativeSkiaSharp>
+    </PropertyGroup>
+
     <!-- add the native x86 Windows library -->
     <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and '$(PlatformTarget)' == 'x86' and '$(OS)' != 'Unix' ">
         <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win7-x86\native\libSkiaSharp.dll">
@@ -31,6 +40,10 @@
         <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win7-x64\native\libSkiaSharp.dll">
             <Link>x64\libSkiaSharp.dll</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win7-$(PreferredNativeSkiaSharp)\native\libSkiaSharp.dll" Condition=" '$(PreferredNativeSkiaSharp)' == 'x86' or '$(PreferredNativeSkiaSharp)' == 'x64' ">
+            <Link>libSkiaSharp.dll</Link>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
