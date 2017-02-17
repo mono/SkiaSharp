@@ -54,16 +54,12 @@ namespace SkiaSharp.Tests
 
 					WindowsDynamicLibraries.FreeLibrary(lib);
 				} else if (IsLinux) {
-					var lib = LinuxDynamicLibraries.dlopen("libGL.so.1", 1);
-
 					var glInterface = GRGlInterface.AssembleGlInterface((context, name) => {
-						return LinuxDynamicLibraries.dlsym(lib, name);
+						return glXGetProcAddress(name);
 					});
 
 					Assert.NotNull(glInterface);
 					Assert.True(glInterface.Validate());
-
-					LinuxDynamicLibraries.dlclose(lib);
 				} else {
 					// more platforms !!!
 					throw new Exception("Some strange platform that is not Windows, macOS nor Linux...");
@@ -73,5 +69,8 @@ namespace SkiaSharp.Tests
 
 		[DllImport("opengl32.dll", CallingConvention = CallingConvention.Winapi)]
 		public static extern IntPtr wglGetProcAddress([MarshalAs(UnmanagedType.LPStr)] string lpszProc);
+
+		[DllImport("libGL.so.1")]
+		public static extern IntPtr glXGetProcAddress([MarshalAs(UnmanagedType.LPStr)] string lpszProc);
 	}
 }
