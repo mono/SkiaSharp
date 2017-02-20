@@ -181,7 +181,7 @@ namespace SkiaSharp
 #if WINDOWS_UWP || NET_STANDARD
 			return Marshal.SizeOf <T> ();
 #else
-			return Marshal.SizeOf (typeof (IntPtr));
+			return Marshal.SizeOf (typeof (T));
 #endif
 		}
 
