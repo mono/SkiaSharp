@@ -1,8 +1,8 @@
-ARCH = x64
-VERSION = 1.0.0.0
-SUPPORT_GPU = 1
-CC = gcc
-CXX = g++
+ARCH ?= x64
+VERSION ?= 1.0.0.0
+SUPPORT_GPU ?= 1
+CC ?= gcc
+CXX ?= g++
 
 noop = 
 space = ${noop} ${noop}
