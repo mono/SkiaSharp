@@ -1,6 +1,8 @@
 ARCH = x64
 VERSION = 1.0.0.0
 SUPPORT_GPU = 1
+CC = gcc
+CXX = g++
 
 noop = 
 space = ${noop} ${noop}
@@ -106,12 +108,12 @@ deps = $(objs:.o=.d)
 ${objarch_root}/%.o: ${src_root}/%
 # build the local source
 	mkdir -p $(dir $@)
-	c++ -MMD -MF $@.d ${defines} ${includes} ${cflags} ${cflags_cc} ${arch_cflags} -c $< -o $@
+	$(CXX) -MMD -MF $@.d ${defines} ${includes} ${cflags} ${cflags_cc} ${arch_cflags} -c $< -o $@
 
 ${target}: ${objs}
 # link with skia
 	mkdir -p $(dir $@)
-	c++ -shared -rdynamic -s -o $@                                                \
+	$(CXX) -shared -rdynamic -s -o $@                                                \
 		${defines} ${includes} ${cflags} ${cflags_cc} ${arch_cflags}              \
 		-Wl,--start-group ${objarch_root}/*.o  ${library_paths} -Wl,--end-group   \
 		${ldflags} -Wl,--gc-sections -Wl,--no-undefined                           \
