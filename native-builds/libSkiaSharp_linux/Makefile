@@ -108,13 +108,17 @@ deps = $(objs:.o=.d)
 ${objarch_root}/%.o: ${src_root}/%
 # build the local source
 	mkdir -p $(dir $@)
-	$(CXX) -MMD -MF $@.d ${defines} ${includes} ${cflags} ${cflags_cc} ${arch_cflags} -c $< -o $@
+	$(CXX) -MMD -MF $@.d                                             \
+	    ${defines} ${includes} ${cflags} ${cflags_cc} ${arch_cflags} \
+		${CFLAGS} ${CXXFLAGS}                                        \
+		-c $< -o $@
 
 ${target}: ${objs}
 # link with skia
 	mkdir -p $(dir $@)
-	$(CXX) -shared -rdynamic -s -o $@                                                \
+	$(CXX) -shared -rdynamic -s -o $@                                             \
 		${defines} ${includes} ${cflags} ${cflags_cc} ${arch_cflags}              \
+		${CFLAGS} ${CXXFLAGS} ${LDXXFLAGS} ${LDFLAGS}                             \
 		-Wl,--start-group ${objarch_root}/*.o  ${library_paths} -Wl,--end-group   \
 		${ldflags} -Wl,--gc-sections -Wl,--no-undefined                           \
 		-Wl,-soname,libSkiaSharp.so.${soname_version}
