@@ -3,6 +3,7 @@ VERSION ?= 1.0.0.0
 SUPPORT_GPU ?= 1
 CC ?= gcc
 CXX ?= g++
+LDFLAGS ?= -lpthread -ldl -lfontconfig
 
 noop = 
 space = ${noop} ${noop}
@@ -86,9 +87,9 @@ ifeq "${ARCH}" "x86"
 else
   arch_cflags = 
 endif
-cflags_c = 
-cflags_cc = -std=c++11 -fno-rtti -fno-threadsafe-statics -Wnon-virtual-dtor
-ldflags = $(library_dirs:%=-L%) -lpthread -ldl -lfontconfig
+cflags_c = ${cflags} ${CFLAGS}
+cflags_cc = -std=c++11 -fno-rtti -fno-threadsafe-statics -Wnon-virtual-dtor ${CXXFLAGS}
+ldflags = $(library_dirs:%=-L%) ${LDFLAGS}
 includes = $(include_dirs:%=-I%)
 library_names = $(notdir ${library_paths})
 libraries = $(library_names:lib%.a=-l%)
@@ -108,17 +109,15 @@ deps = $(objs:.o=.d)
 ${objarch_root}/%.o: ${src_root}/%
 # build the local source
 	mkdir -p $(dir $@)
-	$(CXX) -MMD -MF $@.d                                             \
-	    ${defines} ${includes} ${cflags} ${cflags_cc} ${arch_cflags} \
-		${CFLAGS} ${CXXFLAGS}                                        \
+	$(CXX) -MMD -MF $@.d                                                 \
+		${defines} ${includes} ${arch_cflags} ${cflags_c} ${cflags_cc}   \
 		-c $< -o $@
 
 ${target}: ${objs}
 # link with skia
 	mkdir -p $(dir $@)
 	$(CXX) -shared -rdynamic -s -o $@                                             \
-		${defines} ${includes} ${cflags} ${cflags_cc} ${arch_cflags}              \
-		${CFLAGS} ${CXXFLAGS} ${LDXXFLAGS} ${LDFLAGS}                             \
+		${defines} ${includes} ${arch_cflags} ${cflags_c} ${cflags_cc}            \
 		-Wl,--start-group ${objarch_root}/*.o  ${library_paths} -Wl,--end-group   \
 		${ldflags} -Wl,--gc-sections -Wl,--no-undefined                           \
 		-Wl,-soname,libSkiaSharp.so.${soname_version}
