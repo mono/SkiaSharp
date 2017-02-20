@@ -429,7 +429,7 @@ Task ("externals-linux")
     .WithCriteria (IsRunningOnLinux ())
     .Does (() => 
 {
-    var SUPPORT_GPU = "1"; // 1 == true, 0 == false
+    var SUPPORT_GPU = EnvironmentVariable ("SUPPORT_GPU") ?? "1"; // 1 == true, 0 == false
 
     var ninja = DEPOT_PATH.CombineWithFilePath ("ninja").FullPath;
 
