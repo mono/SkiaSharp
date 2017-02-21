@@ -110,7 +110,7 @@ namespace SkiaSharp.Tests
 				else if (IsMac)
 					Assert.AreEqual("Apple Color Emoji", typeface.FamilyName);
 				else if (IsWindows)
-					Assert.AreEqual("Segoe UI Emoji", typeface.FamilyName);
+					Assert.Contains(typeface.FamilyName, new[] { "Segoe UI Emoji", "Segoe UI Symbol" });
 			}
 		}
 
