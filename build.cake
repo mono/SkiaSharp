@@ -720,6 +720,15 @@ Task ("Windows-CI")
     .IsDependentOn ("tests")
     .IsDependentOn ("samples");
 
+Task ("Linux-CI")
+    .IsDependentOn ("externals")
+    .IsDependentOn ("libs")
+    .IsDependentOn ("docs")
+    .IsDependentOn ("nuget")
+    .IsDependentOn ("component")
+    .IsDependentOn ("tests")
+    .IsDependentOn ("samples");
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // BUILD NOW 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
