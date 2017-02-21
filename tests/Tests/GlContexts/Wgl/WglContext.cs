@@ -141,9 +141,9 @@ namespace SkiaSharp.Tests
 
 			Wgl.wglDeleteContext(fPbufferGlContext);
 
-			Wgl.wglReleasePbufferDCARB(fPbuffer, fPbufferDC);
+			Wgl.wglReleasePbufferDCARB?.Invoke(fPbuffer, fPbufferDC);
 
-			Wgl.wglDestroyPbufferARB(fPbuffer);
+			Wgl.wglDestroyPbufferARB?.Invoke(fPbuffer);
 
 			if (fWindow != IntPtr.Zero)
 			{

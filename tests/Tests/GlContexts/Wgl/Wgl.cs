@@ -12,6 +12,9 @@ namespace SkiaSharp.Tests
 		public const int FALSE = 0;
 		public const int TRUE = 1;
 
+		public const int GL_VERSION = 0x1F02;
+		public const int GL_EXTENSIONS = 0x1F03;
+
 		public const int WGL_NUMBER_PIXEL_FORMATS_ARB = 0x2000;
 		public const int WGL_DRAW_TO_WINDOW_ARB = 0x2001;
 		public const int WGL_DRAW_TO_BITMAP_ARB = 0x2002;
@@ -138,10 +141,6 @@ namespace SkiaSharp.Tests
 			wglGetPbufferDCARB = Wgl.wglGetProcAddress<wglGetPbufferDCARBDelegate>("wglGetPbufferDCARB");
 			wglReleasePbufferDCARB = Wgl.wglGetProcAddress<wglReleasePbufferDCARBDelegate>("wglReleasePbufferDCARB");
 			wglSwapIntervalEXT = Wgl.wglGetProcAddress<wglSwapIntervalEXTDelegate>("wglSwapIntervalEXT");
-			// GET_PROC(ChoosePixelFormat, ARB);
-			// GET_PROC(GetPixelFormatAttribiv, ARB);
-			// GET_PROC(GetPixelFormatAttribfv, ARB);
-			// GET_PROC(CreateContextAttribs, ARB);
 
 			// destroy the dummy GL context 
 			Wgl.wglMakeCurrent(dummyDC, IntPtr.Zero);
@@ -154,9 +153,14 @@ namespace SkiaSharp.Tests
 			// reset the initial GL context
 			Wgl.wglMakeCurrent(prevDC, prevGLRC);
 		}
-
+		
 		public static bool HasExtension(IntPtr dc, string ext)
 		{
+			if (wglGetExtensionsStringARB == null)
+			{
+				return false;
+			}
+
 			if (ext == "WGL_ARB_extensions_string")
 			{
 				return true;
@@ -211,9 +215,18 @@ namespace SkiaSharp.Tests
 			var ptr = wglGetProcAddress(lpszProc);
 			if (ptr == IntPtr.Zero)
 			{
-				throw new Exception("Unable to load proc: " + lpszProc);
+				return default(T);
 			}
 			return (T)(object)Marshal.GetDelegateForFunctionPointer(ptr, typeof(T));
+		}
+
+		[DllImport(opengl32, CallingConvention = CallingConvention.Winapi)]
+		public static extern IntPtr glGetString(uint value);
+
+		public static string GetString(uint value)
+		{
+			var intPtr = glGetString(value);
+			return Marshal.PtrToStringAnsi(intPtr);
 		}
 	}
 
