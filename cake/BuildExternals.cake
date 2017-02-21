@@ -423,12 +423,14 @@ Task ("externals-android")
 
 // this builds the native C and C++ externals for Linux
 Task ("externals-linux")
-    .WithCriteria (
-//        !FileExists ("native-builds/lib/linux/x86/libSkiaSharp.so") ||
-        !FileExists ("native-builds/lib/linux/x64/libSkiaSharp.so"))
+    // .WithCriteria (
+    //     !FileExists ("native-builds/lib/linux/x86/libSkiaSharp.so") ||
+    //     !FileExists ("native-builds/lib/linux/x64/libSkiaSharp.so"))
     .WithCriteria (IsRunningOnLinux ())
     .Does (() => 
 {
+    var arches = EnvironmentVariable ("BUILD_ARCH") ?? "x64";
+    var BUILD_ARCH = arches.Split (',').Select (a => a.Trim ()).ToArray (); // x64, x86, ARM
     var SUPPORT_GPU = EnvironmentVariable ("SUPPORT_GPU") ?? "1"; // 1 == true, 0 == false
 
     var ninja = DEPOT_PATH.CombineWithFilePath ("ninja").FullPath;
@@ -440,7 +442,16 @@ Task ("externals-linux")
         "skia_lib pdf dng_sdk libSkKTX sksl piex raw_codec zlib libetc1 " +
         "libwebp_dsp_enc opts_avx opts_sse42 opts_hsw xml svg";
 
-    var buildArch = new Action<string, string> ((arch, folder) => {
+    var buildArch = new Action<string> ((folder) => {
+        // select the SKIA arch
+        var arch = "x86_64";
+        switch (folder.ToLower ()) {
+            case "x86": arch = "x86"; break;
+            case "arm": arch = "arm"; break;
+            case "x64":
+            default: arch = "x86_64"; break;
+        }
+
         // setup outputs
         var outPath = SKIA_PATH.Combine ("out").Combine (folder).FullPath;
         CreateDirectory (outPath);
@@ -463,11 +474,10 @@ Task ("externals-linux")
         });
     });
 
-    buildArch ("x86_64", "x64");
-//    buildArch ("x86", "x86");
-        
     // copy output
-    foreach (var folder in new [] { "x64" /* , "x86" */ }) {
+    foreach (var folder in BUILD_ARCH) {
+        buildArch (folder);
+
         if (!DirectoryExists ("native-builds/lib/linux/" + folder)) {
             CreateDirectory ("native-builds/lib/linux/" + folder);
         }
