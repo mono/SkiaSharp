@@ -133,6 +133,8 @@ namespace SkiaSharp.Tests
 			}
 			Wgl.wglMakeCurrent(dummyDC, dummyGLRC);
 
+			VersionString = Wgl.GetString(Wgl.GL_VERSION);
+
 			// get the extension methods using the dummy context
 			wglGetExtensionsStringARB = Wgl.wglGetProcAddress<wglGetExtensionsStringARBDelegate>("wglGetExtensionsStringARB");
 			wglChoosePixelFormatARB = Wgl.wglGetProcAddress<wglChoosePixelFormatARBDelegate>("wglChoosePixelFormatARB");
@@ -153,7 +155,9 @@ namespace SkiaSharp.Tests
 			// reset the initial GL context
 			Wgl.wglMakeCurrent(prevDC, prevGLRC);
 		}
-		
+
+		public static string VersionString { get; }
+
 		public static bool HasExtension(IntPtr dc, string ext)
 		{
 			if (wglGetExtensionsStringARB == null)
