@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using NUnit.Framework;
@@ -88,6 +89,8 @@ namespace SkiaSharp.Tests
 
 		protected GlContext CreateGlContext()
 		{
+			TestGlVersion();
+
 			if (IsLinux) {
 				return new GlxContext();
 			} else if (IsMac) {
@@ -96,6 +99,29 @@ namespace SkiaSharp.Tests
 				return new WglContext();
 			} else {
 				return null;
+			}
+		}
+
+		private void TestGlVersion()
+		{
+			var minimumVersion = new Version(1, 5);
+			string versionString = null;
+
+			if (IsLinux) {
+			} else if (IsMac) {
+			} else if (IsWindows) {
+				versionString = Wgl.VersionString;
+			} else {
+			}
+
+			// OpenGL version number is 'MAJOR.MINOR***'
+			var versionNumber = versionString?.Trim()?.Split(' ')?.FirstOrDefault();
+
+			Version version;
+			if (versionNumber != null && Version.TryParse(versionNumber, out version)) {
+				if (version < minimumVersion) {
+					Assert.Ignore($"Available OpenGL version ({versionString}) is below minimum ({minimumVersion}).");
+				}
 			}
 		}
 	}
