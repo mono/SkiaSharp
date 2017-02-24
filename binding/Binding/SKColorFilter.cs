@@ -80,7 +80,7 @@ namespace SkiaSharp
 		{
 			if (cubeData == null)
 				throw new ArgumentNullException(nameof(cubeData));
-			return CreateColorCube(new SKData(cubeData), cubeDimension);
+			return CreateColorCube(SKData.CreateCopy(cubeData), cubeDimension);
 		}
 
 		public static SKColorFilter CreateColorCube(SKData cubeData, int cubeDimension)

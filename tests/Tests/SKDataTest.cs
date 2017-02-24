@@ -11,7 +11,7 @@ namespace SkiaSharp.Tests
 		[Test]
 		public void ValidDataProperties()
 		{
-			var data = new SKData(OddData);
+			var data = SKData.CreateCopy(OddData);
 
 			Assert.AreEqual(OddData.Length, data.Size);
 			Assert.AreEqual(OddData, data.ToArray());
@@ -43,7 +43,7 @@ namespace SkiaSharp.Tests
 		public void DataDisposedReturnsInvalidStream()
 		{
 			// create data
-			var data = new SKData(OddData);
+			var data = SKData.CreateCopy(OddData);
 
 			// get the stream
 			var stream = data.AsStream();

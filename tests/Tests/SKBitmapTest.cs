@@ -15,6 +15,7 @@ namespace SkiaSharp.Tests
 			var onRelease = new SKBitmapReleaseDelegate((addr, ctx) => {
 				Marshal.FreeCoTaskMem(addr);
 				released = true;
+				Assert.AreEqual("RELEASING!", ctx);
 			});
 
 			using (var bitmap = new SKBitmap()) {

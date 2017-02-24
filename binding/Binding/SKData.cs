@@ -11,6 +11,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.IO;
 using System.Text;
+using System.ComponentModel;
 
 namespace SkiaSharp
 {
@@ -25,6 +26,8 @@ namespace SkiaSharp
 	{
 		private const int CopyBufferSize = 8192;
 
+		private static Lazy<SKData> empty;
+
 		// so the GC doesn't collect the delegate
 		private static readonly SKDataReleaseDelegateInternal releaseDelegateInternal;
 		private static readonly IntPtr releaseDelegate;
@@ -32,6 +35,8 @@ namespace SkiaSharp
 		{
 			releaseDelegateInternal = new SKDataReleaseDelegateInternal (ReleaseInternal);
 			releaseDelegate = Marshal.GetFunctionPointerForDelegate (releaseDelegateInternal);
+
+			empty = new Lazy<SKData> (() => GetObject<SKData> (SkiaApi.sk_data_new_empty ()));
 		}
 
 		protected override void Dispose (bool disposing)
@@ -49,6 +54,7 @@ namespace SkiaSharp
 		{
 		}
 
+		[Obsolete ("Use SKData.Empty instead.")]
 		public SKData ()
 			: this (SkiaApi.sk_data_new_empty (), true)
 		{
@@ -57,6 +63,7 @@ namespace SkiaSharp
 			}
 		}
 			
+		[Obsolete ("Use SKData.CreateCopy(IntPtr, ulong) instead.")]
 		public SKData (IntPtr bytes, ulong length)
 			: this (IntPtr.Zero, true)
 		{
@@ -68,17 +75,38 @@ namespace SkiaSharp
 			}
 		}
 
+		[Obsolete ("Use SKData.CreateCopy(byte[]) instead.")]
 		public SKData (byte[] bytes)
 			: this (bytes, (ulong) bytes.Length)
 		{
 		}
 
+		[Obsolete ("Use SKData.CreateCopy(byte[], ulong) instead.")]
 		public SKData (byte[] bytes, ulong length)
 			: this (SkiaApi.sk_data_new_with_copy (bytes, (IntPtr) length), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to copy the SKData instance.");
 			}
+		}
+
+		public static SKData Empty => empty.Value;
+
+		public static SKData CreateCopy (IntPtr bytes, ulong length)
+		{
+			if (SizeOf <IntPtr> () == 4 && length > UInt32.MaxValue)
+				throw new ArgumentOutOfRangeException (nameof (length), "The length exceeds the size of pointers.");
+			return GetObject<SKData> (SkiaApi.sk_data_new_with_copy (bytes, (IntPtr) length));
+		}
+
+		public static SKData CreateCopy (byte[] bytes)
+		{
+			return CreateCopy (bytes, (ulong) bytes.Length);
+		}
+
+		public static SKData CreateCopy (byte[] bytes, ulong length)
+		{
+			return GetObject<SKData> (SkiaApi.sk_data_new_with_copy (bytes, (IntPtr) length));
 		}
 
 		public static SKData Create (IntPtr address, int length)
@@ -101,6 +129,8 @@ namespace SkiaSharp
 			}
 		}
 
+		[Obsolete]
+		[EditorBrowsable (EditorBrowsableState.Never)]
 		public static SKData FromMallocMemory (IntPtr bytes, ulong length)
 		{
 			if (SizeOf <IntPtr> () == 4 && length > UInt32.MaxValue)
@@ -111,7 +141,7 @@ namespace SkiaSharp
 		internal static SKData FromCString (string str)
 		{
 			var bytes = Encoding.ASCII.GetBytes (str ?? string.Empty);
-			return new SKData (bytes, (ulong)(bytes.Length + 1)); // + 1 for the terminating char
+			return SKData.CreateCopy (bytes, (ulong)(bytes.Length + 1)); // + 1 for the terminating char
 		}
 
 		public SKData Subset (ulong offset, ulong length)
