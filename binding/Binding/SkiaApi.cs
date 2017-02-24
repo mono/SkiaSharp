@@ -811,6 +811,9 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_data_t sk_data_new_from_stream(sk_stream_t stream, IntPtr length);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_data_t sk_data_new_with_proc(IntPtr ptr, IntPtr length, IntPtr proc, IntPtr ctx);
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_data_unref(sk_data_t d);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_data_get_size(sk_data_t d);

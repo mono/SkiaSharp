@@ -14,9 +14,25 @@ using System.Text;
 
 namespace SkiaSharp
 {
+	// public delegates
+	public delegate void SKDataReleaseDelegate (IntPtr address, object context);
+
+	// internal proxy delegates
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal delegate void SKDataReleaseDelegateInternal (IntPtr address, IntPtr context);
+
 	public class SKData : SKObject
 	{
 		private const int CopyBufferSize = 8192;
+
+		// so the GC doesn't collect the delegate
+		private static readonly SKDataReleaseDelegateInternal releaseDelegateInternal;
+		private static readonly IntPtr releaseDelegate;
+		static SKData ()
+		{
+			releaseDelegateInternal = new SKDataReleaseDelegateInternal (ReleaseInternal);
+			releaseDelegate = Marshal.GetFunctionPointerForDelegate (releaseDelegateInternal);
+		}
 
 		protected override void Dispose (bool disposing)
 		{
@@ -62,6 +78,26 @@ namespace SkiaSharp
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to copy the SKData instance.");
+			}
+		}
+
+		public static SKData Create (IntPtr address, int length)
+		{
+			return Create (address, length, null, null);
+		}
+
+		public static SKData Create (IntPtr address, int length, SKDataReleaseDelegate releaseProc)
+		{
+			return Create (address, length, releaseProc, null);
+		}
+
+		public static SKData Create (IntPtr address, int length, SKDataReleaseDelegate releaseProc, object context)
+		{
+			if (releaseProc == null) {
+				return GetObject<SKData> (SkiaApi.sk_data_new_with_proc (address, (IntPtr) length, IntPtr.Zero, IntPtr.Zero));
+			} else {
+				var ctx = new NativeDelegateContext (context, releaseProc);
+				return GetObject<SKData> (SkiaApi.sk_data_new_with_proc (address, (IntPtr) length, releaseDelegate, ctx.NativeContext));
 			}
 		}
 
@@ -132,6 +168,17 @@ namespace SkiaSharp
 				left -= copyCount;
 				ptr += copyCount;
 				target.Write (buffer, 0, copyCount);
+			}
+		}
+
+		// internal proxy
+		#if __IOS__
+		[ObjCRuntime.MonoPInvokeCallback (typeof (SKDataReleaseDelegateInternal))]
+		#endif
+		private static void ReleaseInternal (IntPtr address, IntPtr context)
+		{
+			using (var ctx = NativeDelegateContext.Unwrap (context)) {
+				ctx.GetDelegate<SKDataReleaseDelegate> () (address, ctx.ManagedContext);
 			}
 		}
 

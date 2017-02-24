@@ -18,6 +18,27 @@ namespace SkiaSharp.Tests
 		}
 
 		[Test]
+		public void ReleaseDataWasInvoked()
+		{
+			bool released = false;
+
+			var onRelease = new SKDataReleaseDelegate((addr, ctx) => {
+				Marshal.FreeCoTaskMem(addr);
+				released = true;
+				Assert.AreEqual("RELEASING!", ctx);
+			});
+
+			var memory = Marshal.AllocCoTaskMem(10);
+
+			using (var data = SKData.Create(memory, 10, onRelease, "RELEASING!")) {
+				Assert.AreEqual(memory, data.Data);
+				Assert.AreEqual(10, data.Size);
+			}
+
+			Assert.True(released, "The SKDataReleaseDelegate was not called.");
+		}
+
+		[Test]
 		[Ignore("Doesn't work as it relies on memory being overwritten by an external process.")]
 		public void DataDisposedReturnsInvalidStream()
 		{
