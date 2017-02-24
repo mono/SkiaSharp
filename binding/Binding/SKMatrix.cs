@@ -967,7 +967,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			
 			var count = src.Length;
 			var src2Length = count * 2;
-			var src4Length = count * 4;
+			//var src4Length = count * 4;
 
 			var src2 = new float [src2Length];
 			for (int i = 0, i2 = 0; i < count; i++, i2 += 2) {

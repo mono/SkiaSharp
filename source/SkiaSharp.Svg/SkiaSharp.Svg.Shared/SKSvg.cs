@@ -917,7 +917,7 @@ namespace SkiaSharp
 			//var focusX = ReadOptionalNumber(e.Attribute("fx")) ?? centerX;
 			//var focusY = ReadOptionalNumber(e.Attribute("fy")) ?? centerY;
 			var radius = ReadNumber(e.Attribute("r"));
-			var absolute = e.Attribute("gradientUnits")?.Value == "userSpaceOnUse";
+			//var absolute = e.Attribute("gradientUnits")?.Value == "userSpaceOnUse";
 			var tileMode = ReadSpreadMethod(e);
 			var stops = ReadStops(e);
 
@@ -938,7 +938,7 @@ namespace SkiaSharp
 			var startY = ReadNumber(e.Attribute("y1"));
 			var endX = ReadNumber(e.Attribute("x2"));
 			var endY = ReadNumber(e.Attribute("y2"));
-			var absolute = e.Attribute("gradientUnits")?.Value == "userSpaceOnUse";
+			//var absolute = e.Attribute("gradientUnits")?.Value == "userSpaceOnUse";
 			var tileMode = ReadSpreadMethod(e);
 			var stops = ReadStops(e);
 
