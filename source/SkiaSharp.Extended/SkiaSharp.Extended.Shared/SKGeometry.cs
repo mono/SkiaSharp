@@ -41,8 +41,8 @@ namespace SkiaSharp.Extended
 			var large = endAngle - startAngle > PI ? SKPathArcSize.Large : SKPathArcSize.Small;
 			var sectorCenterAngle = (endAngle - startAngle) / 2f + startAngle;
 
-			// get the radius bits
-			var cectorCenterRadius = (outerRadius - innerRadius) / 2f + innerRadius;
+			//// get the radius bits
+			//var sectorCenterRadius = (outerRadius - innerRadius) / 2f + innerRadius;
 
 			// move explosion around 90 degrees, since matrix use down as 0
 			var explosionMatrix = SKMatrix.MakeRotation(sectorCenterAngle - (PI / 2f));
@@ -83,14 +83,14 @@ namespace SkiaSharp.Extended
 			var path = new SKPath();
 
 			float cursor = 0;
-			var sum = sectorSizes.Sum();
+			//var sum = sectorSizes.Sum();
 			foreach (var sectorSize in sectorSizes)
 			{
 				var sector = CreateSectorPath(cursor, cursor + sectorSize, outerRadius, innerRadius, spacing / 2f, explodeDistance, direction);
 
 				cursor += sectorSize;
 
-				path.AddPath(sector, SKPath.AddMode.Append);
+				path.AddPath(sector, SKPathAddMode.Append);
 			}
 
 			return path;
