@@ -296,6 +296,7 @@ Task ("samples")
     .Does (() => 
 {
     ClearSkiaSharpNuGetCache ();
+    CleanDirectories ("./samples/*/packages/SkiaSharp.*");
 
     // zip the samples for the GitHub release notes
     if (TARGET == "CI") {
