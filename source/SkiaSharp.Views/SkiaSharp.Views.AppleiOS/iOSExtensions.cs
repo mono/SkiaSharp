@@ -21,5 +21,79 @@ namespace SkiaSharp.Views.iOS
 		{
 			return UIColor.FromRGBA(color.Red, color.Green, color.Blue, color.Alpha);
 		}
+
+		// UIImage
+
+		public static SKImage ToSKImage(this UIImage uiImage)
+		{
+			var cgImage = uiImage.CGImage;
+			if (cgImage != null)
+			{
+				return cgImage.ToSKImage();
+			}
+			var ciImage = uiImage.CIImage;
+			if (ciImage != null)
+			{
+				return ciImage.ToSKImage();
+			}
+			return null;
+		}
+
+		public static SKBitmap ToSKBitmap(this UIImage uiImage)
+		{
+			var cgImage = uiImage.CGImage;
+			if (cgImage != null)
+			{
+				return cgImage.ToSKBitmap();
+			}
+			var ciImage = uiImage.CIImage;
+			if (ciImage != null)
+			{
+				return ciImage.ToSKBitmap();
+			}
+			return null;
+		}
+
+		public static bool ToSKPixmap(this UIImage uiImage, SKPixmap pixmap)
+		{
+			var cgImage = uiImage.CGImage;
+			if (cgImage != null)
+			{
+				cgImage.ToSKPixmap(pixmap);
+				return true;
+			}
+			var ciImage = uiImage.CIImage;
+			if (ciImage != null)
+			{
+				ciImage.ToSKPixmap(pixmap);
+				return true;
+			}
+			return false;
+		}
+
+		public static UIImage ToUIImage(this SKPicture skiaPicture, SKSizeI dimensions)
+		{
+			var cgImage = skiaPicture.ToCGImage(dimensions);
+			return new UIImage(cgImage);
+		}
+
+		public static UIImage ToUIImage(this SKImage skiaImage)
+		{
+			var cgImage = skiaImage.ToCGImage();
+			return new UIImage(cgImage);
+		}
+
+		public static UIImage ToUIImage(this SKPixmap skiaPixmap)
+		{
+			var cgImage = skiaPixmap.ToCGImage();
+			return new UIImage(cgImage);
+		}
+
+		public static UIImage ToUIImage(this SKBitmap skiaBitmap)
+		{
+			var cgImage = skiaBitmap.ToCGImage();
+			return new UIImage(cgImage);
+		}
+
 	}
 }

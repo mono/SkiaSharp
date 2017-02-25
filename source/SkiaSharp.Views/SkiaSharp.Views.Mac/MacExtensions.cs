@@ -1,4 +1,5 @@
 ﻿using AppKit;
+using CoreGraphics;
 
 namespace SkiaSharp.Views.Mac
 {
@@ -17,5 +18,64 @@ namespace SkiaSharp.Views.Mac
 		{
 			return NSColor.FromRgba(color.Red, color.Green, color.Blue, color.Alpha);
 		}
+
+
+		// NSImage
+
+		public static SKImage ToSKImage(this NSImage nsImage)
+		{
+			var cgImage = nsImage.CGImage;
+			if (cgImage != null)
+			{
+				return cgImage.ToSKImage();
+			}
+			return null;
+		}
+
+		public static SKBitmap ToSKBitmap(this NSImage nsImage)
+		{
+			var cgImage = nsImage.CGImage;
+			if (cgImage != null)
+			{
+				return cgImage.ToSKBitmap();
+			}
+			return null;
+		}
+
+		public static bool ToSKPixmap(this NSImage nsImage, SKPixmap pixmap)
+		{
+			var cgImage = nsImage.CGImage;
+			if (cgImage != null)
+			{
+				cgImage.ToSKPixmap(pixmap);
+				return true;
+			}
+			return false;
+		}
+
+		public static NSImage ToNSImage(this SKPicture skiaPicture, SKSizeI dimensions)
+		{
+			var cgImage = skiaPicture.ToCGImage(dimensions);
+			return new NSImage(cgImage, CGSize.Empty);
+		}
+
+		public static NSImage ToNSImage(this SKImage skiaImage)
+		{
+			var cgImage = skiaImage.ToCGImage();
+			return new NSImage(cgImage, CGSize.Empty);
+		}
+
+		public static NSImage ToNSImage(this SKPixmap skiaPixmap)
+		{
+			var cgImage = skiaPixmap.ToCGImage();
+			return new NSImage(cgImage, CGSize.Empty);
+		}
+
+		public static NSImage ToNSImage(this SKBitmap skiaBitmap)
+		{
+			var cgImage = skiaBitmap.ToCGImage();
+			return new NSImage(cgImage, CGSize.Empty);
+		}
+
 	}
 }
