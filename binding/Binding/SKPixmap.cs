@@ -31,6 +31,11 @@ namespace SkiaSharp
 			}
 		}
 
+		public SKPixmap (SKImageInfo info, IntPtr addr)
+			: this (info, addr, info.RowBytes)
+		{
+		}
+
 		public SKPixmap (SKImageInfo info, IntPtr addr, int rowBytes, SKColorTable ctable = null)
 			: this (SkiaApi.sk_pixmap_new_with_params (ref info, addr, (IntPtr)rowBytes, ctable == null ? IntPtr.Zero : ctable.Handle), true)
 		{

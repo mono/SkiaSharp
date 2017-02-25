@@ -855,12 +855,42 @@ namespace SkiaSharp
 			}
 		}
 
+		public int BitsPerPixel {
+			get {
+				switch (ColorType) {
+				case SKColorType.Unknown:
+					return 0;
+				case SKColorType.Alpha8:
+				case SKColorType.Index8:
+				case SKColorType.Gray8:
+					return 8;
+				case SKColorType.Rgb565:
+				case SKColorType.Argb4444:
+					return 16;
+				case SKColorType.Bgra8888:
+				case SKColorType.Rgba8888:
+					return 32;
+				case SKColorType.RgbaF16:
+					return 64;
+				}
+				throw new ArgumentOutOfRangeException (nameof (ColorType));
+			}
+		}
+
 		public int BytesSize {
 			get { return Width * Height * BytesPerPixel; }
 		}
 
+		public long BytesSize64 {
+			get { return (long)Width * (long)Height * (long)BytesPerPixel; }
+		}
+
 		public int RowBytes {
 			get { return Width * BytesPerPixel; }
+		}
+
+		public long RowBytes64 {
+			get { return (long)Width * (long)BytesPerPixel; }
 		}
 
 		public bool IsEmpty {

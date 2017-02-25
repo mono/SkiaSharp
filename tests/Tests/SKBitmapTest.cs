@@ -29,6 +29,39 @@ namespace SkiaSharp.Tests
 		}
 
 		[Test]
+		public void ImageCreateDoesNotThrow()
+		{
+			var info = new SKImageInfo(1, 1);
+			using (var image = SKImage.Create(info)) {
+				Assert.IsFalse(image.IsTextureBacked);
+				Assert.AreEqual(image, image.ToRasterImage());
+			}
+		}
+
+		[Test]
+		public void ReleaseImagePixelsWasInvoked()
+		{
+			bool released = false;
+
+			var onRelease = new SKImageRasterReleaseDelegate((addr, ctx) => {
+				Marshal.FreeCoTaskMem(addr);
+				released = true;
+				Assert.AreEqual("RELEASING!", ctx);
+			});
+
+			var info = new SKImageInfo(1, 1);
+			var pixels = Marshal.AllocCoTaskMem(info.BytesSize);
+
+			using (var pixmap = new SKPixmap(info, pixels))
+			using (var image = SKImage.FromPixels(pixmap, onRelease, "RELEASING!")) {
+				Assert.IsFalse(image.IsTextureBacked);
+				Assert.AreEqual(image, image.ToRasterImage());
+			}
+
+			Assert.True(released, "The SKImageRasterReleaseDelegate was not called.");
+		}
+
+		[Test]
 		public void ReleaseBitmapPixelsWithNullDelegate()
 		{
 			var info = new SKImageInfo(1, 1);
