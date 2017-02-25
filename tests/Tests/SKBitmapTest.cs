@@ -55,7 +55,10 @@ namespace SkiaSharp.Tests
 			using (var pixmap = new SKPixmap(info, pixels))
 			using (var image = SKImage.FromPixels(pixmap, onRelease, "RELEASING!")) {
 				Assert.IsFalse(image.IsTextureBacked);
-				Assert.AreEqual(image, image.ToRasterImage());
+				using (var raster = image.ToRasterImage()) {
+					Assert.AreEqual(image, raster);
+				}
+				Assert.False(released, "The SKImageRasterReleaseDelegate was called too soon.");
 			}
 
 			Assert.True(released, "The SKImageRasterReleaseDelegate was not called.");

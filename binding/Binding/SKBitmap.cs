@@ -326,7 +326,7 @@ namespace SkiaSharp
 		}
 
 		public SKColorTable ColorTable {
-			get { return GetObject<SKColorTable> (SkiaApi.sk_bitmap_get_colortable (Handle)); }
+			get { return GetObject<SKColorTable> (SkiaApi.sk_bitmap_get_colortable (Handle), false); }
 		}
 
 		public static SKImageInfo DecodeBounds (SKStream stream)

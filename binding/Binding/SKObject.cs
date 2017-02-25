@@ -13,6 +13,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace SkiaSharp
 {
@@ -21,15 +22,31 @@ namespace SkiaSharp
 		private static readonly Dictionary<IntPtr, WeakReference> instances = new Dictionary<IntPtr, WeakReference>();
 
 		private readonly List<SKObject> ownedObjects = new List<SKObject>();
+		private int referenceCount = 0;
+		private bool ownsHandle = false;
 
 		[Preserve]
 		internal SKObject(IntPtr handle, bool owns)
-			: base(handle)
+			: base(handle, false)
 		{
 			OwnsHandle = owns;
 		}
 
-		protected bool OwnsHandle { get; private set; }
+		protected bool OwnsHandle
+		{
+			get { return ownsHandle; }
+			private set
+			{
+				if (ownsHandle != value)
+				{
+					ownsHandle = value;
+					if (value)
+						Interlocked.Increment(ref referenceCount);
+					else
+						Interlocked.Decrement(ref referenceCount);
+				}
+			}
+		}
 
 		public override IntPtr Handle
 		{
@@ -53,9 +70,12 @@ namespace SkiaSharp
 				ownedObjects.Clear();
 			}
 
-			DeregisterHandle(Handle, this);
+			var zero = DeregisterHandle(Handle, this);
 
 			base.Dispose(disposing);
+
+			if (zero)
+				Handle = IntPtr.Zero;
 		}
 
 		internal static TSkiaObject GetObject<TSkiaObject>(IntPtr handle, bool owns = true)
@@ -75,6 +95,8 @@ namespace SkiaSharp
 					var instance = reference.Target as TSkiaObject;
 					if (instance != null && instance.Handle != IntPtr.Zero)
 					{
+						if (owns)
+							Interlocked.Increment(ref instance.referenceCount);
 						return instance;
 					}
 				}
@@ -123,23 +145,25 @@ namespace SkiaSharp
 			}
 		}
 
-		internal static void DeregisterHandle(IntPtr handle, SKObject instance)
+		internal static bool DeregisterHandle(IntPtr handle, SKObject instance)
 		{
 			if (handle == IntPtr.Zero)
 			{
-				return;
+				return false;
 			}
 
 			lock (instances)
 			{
 				// find any references
 				WeakReference reference;
-				if (instances.TryGetValue(handle, out reference))
+				if (Interlocked.Decrement(ref instance.referenceCount) <= 0 && instances.TryGetValue(handle, out reference))
 				{
 					// remove it if it is dead or the correct object
 					instances.Remove(handle);
+					return true;
 				}
 			}
+			return false;
 		}
 
 		/// <summary>
@@ -215,9 +239,18 @@ namespace SkiaSharp
 
 	public class SKNativeObject : IDisposable
 	{
+		private readonly bool zero;
+
 		internal SKNativeObject(IntPtr handle)
 		{
 			Handle = handle;
+			zero = true;
+		}
+
+		internal SKNativeObject(IntPtr handle, bool zero)
+		{
+			Handle = handle;
+			this.zero = zero;
 		}
 
 		~SKNativeObject()
@@ -229,7 +262,8 @@ namespace SkiaSharp
 
 		protected virtual void Dispose(bool disposing)
 		{
-			Handle = IntPtr.Zero;
+			if (zero)
+				Handle = IntPtr.Zero;
 		}
 
 		public void Dispose()

@@ -338,7 +338,7 @@ namespace SkiaSharp
 
 		public SKPathEffect PathEffect {
 			get {
-				return GetObject<SKPathEffect> (SkiaApi.sk_paint_get_path_effect (Handle));
+				return GetObject<SKPathEffect> (SkiaApi.sk_paint_get_path_effect (Handle), false);
 			}
 			set {
 				SkiaApi.sk_paint_set_path_effect (Handle, value == null ? IntPtr.Zero : value.Handle);
