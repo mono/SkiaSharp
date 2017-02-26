@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace SkiaSharp.Views.WPF
 {
@@ -51,6 +52,99 @@ namespace SkiaSharp.Views.WPF
 		public static Color ToColor(this SKColor color)
 		{
 			return Color.FromArgb(color.Alpha, color.Red, color.Green, color.Blue);
+		}
+
+		// WriteableBitmap
+
+		public static WriteableBitmap ToWriteableBitmap(this SKPicture picture, SKSizeI dimensions)
+		{
+			using (var image = SKImage.FromPicture(picture, dimensions))
+			{
+				return image.ToWriteableBitmap();
+			}
+		}
+
+		public static WriteableBitmap ToWriteableBitmap(this SKImage skiaImage)
+		{
+			// TODO: maybe keep the same color types where we can, instead of just going to the platform default
+
+			var info = new SKImageInfo(skiaImage.Width, skiaImage.Height);
+			var bitmap = new WriteableBitmap(info.Width, info.Height, 96, 96, PixelFormats.Pbgra32, null);
+			bitmap.Lock();
+
+			// copy
+			using (var pixmap = new SKPixmap(info, bitmap.BackBuffer, bitmap.BackBufferStride))
+			{
+				skiaImage.ReadPixels(pixmap, 0, 0);
+			}
+
+			bitmap.AddDirtyRect(new Int32Rect(0, 0, info.Width, info.Height));
+			bitmap.Unlock();
+			return bitmap;
+		}
+
+		public static WriteableBitmap ToWriteableBitmap(this SKBitmap skiaBitmap)
+		{
+			using (var image = SKImage.FromPixels(skiaBitmap.PeekPixels()))
+			{
+				return image.ToWriteableBitmap();
+			}
+		}
+
+		public static WriteableBitmap ToWriteableBitmap(this SKPixmap pixmap)
+		{
+			using (var image = SKImage.FromPixels(pixmap))
+			{
+				return image.ToWriteableBitmap();
+			}
+		}
+
+		public static SKBitmap ToSKBitmap(this BitmapSource bitmap)
+		{
+			// TODO: maybe keep the same color types where we can, instead of just going to the platform default
+
+			var info = new SKImageInfo(bitmap.PixelWidth, bitmap.PixelHeight);
+			var skiaBitmap = new SKBitmap(info);
+			using (var pixmap = skiaBitmap.PeekPixels())
+			{
+				bitmap.ToSKPixmap(pixmap);
+			}
+			return skiaBitmap;
+		}
+
+		public static SKImage ToSKImage(this BitmapSource bitmap)
+		{
+			// TODO: maybe keep the same color types where we can, instead of just going to the platform default
+
+			var info = new SKImageInfo(bitmap.PixelWidth, bitmap.PixelHeight);
+			var image = SKImage.Create(info);
+			using (var pixmap = image.PeekPixels())
+			{
+				bitmap.ToSKPixmap(pixmap);
+			}
+			return image;
+		}
+
+		public static void ToSKPixmap(this BitmapSource bitmap, SKPixmap pixmap)
+		{
+			// TODO: maybe keep the same color types where we can, instead of just going to the platform default
+
+			if (pixmap.ColorType == SKImageInfo.PlatformColorType)
+			{
+				var info = pixmap.Info;
+				var converted = new FormatConvertedBitmap(bitmap, PixelFormats.Pbgra32, null, 0);
+				converted.CopyPixels(new Int32Rect(0, 0, info.Width, info.Height), pixmap.GetPixels(), info.BytesSize, info.RowBytes);
+			}
+			else
+			{
+				// we have to copy the pixels into a format that we understand
+				// and then into a desired format
+				// TODO: we can still do a bit more for other cases where the color types are the same
+				using (var tempImage = bitmap.ToSKImage())
+				{
+					tempImage.ReadPixels(pixmap, 0, 0);
+				}
+			}
 		}
 	}
 }

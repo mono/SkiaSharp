@@ -12,7 +12,7 @@ namespace SkiaSharp.Views.UWP
 namespace SkiaSharp.Views.Mac
 #endif
 {
-    public static class Extensions
+	public static class Extensions
 	{
 #if !WINDOWS_UWP
 		// System.Drawing.Point*
@@ -79,6 +79,100 @@ namespace SkiaSharp.Views.Mac
 		public static System.Drawing.Size ToDrawingSize(this SKSizeI size)
 		{
 			return new System.Drawing.Size(size.Width, size.Height);
+		}
+
+		// System.Drawing.Bitmap
+
+		public static System.Drawing.Bitmap ToBitmap(this SKPicture picture, SKSizeI dimensions)
+		{
+			using (var image = SKImage.FromPicture(picture, dimensions))
+			{
+				return image.ToBitmap();
+			}
+		}
+
+		public static System.Drawing.Bitmap ToBitmap(this SKImage skiaImage)
+		{
+			// TODO: maybe keep the same color types where we can, instead of just going to the platform default
+
+			var bitmap = new System.Drawing.Bitmap(skiaImage.Width, skiaImage.Height, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+			var data = bitmap.LockBits(new System.Drawing.Rectangle(0, 0, bitmap.Width, bitmap.Height), System.Drawing.Imaging.ImageLockMode.WriteOnly, bitmap.PixelFormat);
+
+			// copy
+			using (var pixmap = new SKPixmap(new SKImageInfo(data.Width, data.Height), data.Scan0, data.Stride))
+			{
+				skiaImage.ReadPixels(pixmap, 0, 0);
+			}
+
+			bitmap.UnlockBits(data);
+			return bitmap;
+		}
+
+		public static System.Drawing.Bitmap ToBitmap(this SKBitmap skiaBitmap)
+		{
+			using (var image = SKImage.FromPixels(skiaBitmap.PeekPixels()))
+			{
+				return image.ToBitmap();
+			}
+		}
+
+		public static System.Drawing.Bitmap ToBitmap(this SKPixmap pixmap)
+		{
+			using (var image = SKImage.FromPixels(pixmap))
+			{
+				return image.ToBitmap();
+			}
+		}
+
+		public static SKBitmap ToSKBitmap(this System.Drawing.Bitmap bitmap)
+		{
+			// TODO: maybe keep the same color types where we can, instead of just going to the platform default
+
+			var info = new SKImageInfo(bitmap.Width, bitmap.Height);
+			var skiaBitmap = new SKBitmap(info);
+			using (var pixmap = skiaBitmap.PeekPixels())
+			{
+				bitmap.ToSKPixmap(pixmap);
+			}
+			return skiaBitmap;
+		}
+
+		public static SKImage ToSKImage(this System.Drawing.Bitmap bitmap)
+		{
+			// TODO: maybe keep the same color types where we can, instead of just going to the platform default
+
+			var info = new SKImageInfo(bitmap.Width, bitmap.Height);
+			var image = SKImage.Create(info);
+			using (var pixmap = image.PeekPixels())
+			{
+				bitmap.ToSKPixmap(pixmap);
+			}
+			return image;
+		}
+
+		public static void ToSKPixmap(this System.Drawing.Bitmap bitmap, SKPixmap pixmap)
+		{
+			// TODO: maybe keep the same color types where we can, instead of just going to the platform default
+
+			if (pixmap.ColorType == SKImageInfo.PlatformColorType)
+			{
+				var info = pixmap.Info;
+				using (var tempBitmap = new System.Drawing.Bitmap(info.Width, info.Height, info.RowBytes, System.Drawing.Imaging.PixelFormat.Format32bppPArgb, pixmap.GetPixels()))
+				using (var gr = System.Drawing.Graphics.FromImage(tempBitmap))
+				{
+					gr.DrawImageUnscaled(bitmap, 0, 0);
+				}
+			}
+			else
+			{
+				// we have to copy the pixels into a format that we understand
+				// and then into a desired format
+				// TODO: we can still do a bit more for other cases where the color types are the same
+				using (var tempImage = bitmap.ToSKImage())
+				{
+					tempImage.ReadPixels(pixmap, 0, 0);
+				}
+			}
 		}
 
 #if __ANDROID__ || __DESKTOP__ || __WPF__
