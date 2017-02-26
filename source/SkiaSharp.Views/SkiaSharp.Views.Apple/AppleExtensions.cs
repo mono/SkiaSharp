@@ -91,7 +91,7 @@ namespace SkiaSharp.Views.Mac
 			using (var colorSpace = CGColorSpace.CreateDeviceRGB())
 			using (var context = new CGBitmapContext(pixmap.GetPixels(), pixmap.Width, pixmap.Height, 8, pixmap.RowBytes, colorSpace, CGBitmapFlags.PremultipliedLast | CGBitmapFlags.ByteOrder32Big))
 			{
-				context.DrawImage(new CGRect(0, 0, pixmap.Width, pixmap.Height), cgImage);
+				context.DrawImage(new CGRect(0, 0, cgImage.Width, cgImage.Height), cgImage);
 			}
 		}
 
@@ -175,7 +175,7 @@ namespace SkiaSharp.Views.Mac
 			using (var colorSpace = CGColorSpace.CreateDeviceRGB())
 			using (var context = new CIContext(null))
 			{
-				context.RenderToBitmap(ciImage, pixmap.GetPixels(), pixmap.RowBytes, new CGRect(0, 0, pixmap.Width, pixmap.Height), (int)CIFormat.kRGBA8, colorSpace);
+				context.RenderToBitmap(ciImage, pixmap.GetPixels(), pixmap.RowBytes, ciImage.Extent, (int)CIFormat.kRGBA8, colorSpace);
 			}
 		}
 
