@@ -368,18 +368,6 @@ namespace SkiaSharp
 			return GetObject<SKImage> (SkiaApi.sk_image_make_with_filter (Handle, filter.Handle, ref subset, ref clipBounds, out outSubset, out outOffset));
 		}
 
-		public SKBitmap ToBitmap ()
-		{
-			var info = new SKImageInfo (Width, Height, SKImageInfo.PlatformColorType, AlphaType);
-			var bmp = new SKBitmap (info);
-			if (!ReadPixels (info, bmp.GetPixels (), info.RowBytes, 0, 0))
-			{
-				bmp.Dispose ();
-				bmp = null;
-			}
-			return bmp;
-		}
-
 
 		// internal proxies
 

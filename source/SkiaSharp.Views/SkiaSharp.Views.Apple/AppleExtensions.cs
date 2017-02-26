@@ -119,7 +119,7 @@ namespace SkiaSharp.Views.Mac
 
 		public static CGImage ToCGImage(this SKImage skiaImage)
 		{
-			var bmp = skiaImage.ToBitmap();
+			var bmp = SKBitmap.FromImage(skiaImage);
 			return bmp.ToCGImage();
 		}
 
@@ -215,7 +215,7 @@ namespace SkiaSharp.Views.Mac
 
 		public static NSData ToNSData(this SKData skiaData)
 		{
-			return new NSData(skiaData.Data, (nuint)skiaData.Size, null);
+			return NSData.FromBytes(skiaData.Data, (nuint)skiaData.Size);
 		}
 
 		public static SKData ToSKData(this NSData nsData)

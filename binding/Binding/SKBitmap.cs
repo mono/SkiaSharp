@@ -544,6 +544,23 @@ namespace SkiaSharp
 			}
 		}
 
+		public static SKBitmap FromImage (SKImage image)
+		{
+			if (image == null) {
+				throw new ArgumentNullException (nameof (image));
+			}
+
+			var info = new SKImageInfo (image.Width, image.Height, SKImageInfo.PlatformColorType, image.AlphaType);
+			var bmp = new SKBitmap (info);
+			if (!image.ReadPixels (info, bmp.GetPixels (), info.RowBytes, 0, 0))
+			{
+				bmp.Dispose ();
+				bmp = null;
+			}
+			return bmp;
+		}
+
+
 		// internal proxy
 		#if __IOS__
 		[ObjCRuntime.MonoPInvokeCallback (typeof (SKBitmapReleaseDelegateInternal))]
