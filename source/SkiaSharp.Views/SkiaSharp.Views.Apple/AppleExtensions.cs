@@ -99,7 +99,10 @@ namespace SkiaSharp.Views.Mac
 		{
 			var info = new SKImageInfo((int)cgImage.Width, (int)cgImage.Height);
 			var image = SKImage.Create(info);
-			cgImage.ToSKPixmap(image.PeekPixels());
+			using (var pixmap = image.PeekPixels())
+			{
+				cgImage.ToSKPixmap(pixmap);
+			}
 			return image;
 		}
 
@@ -107,7 +110,10 @@ namespace SkiaSharp.Views.Mac
 		{
 			var info = new SKImageInfo((int)cgImage.Width, (int)cgImage.Height);
 			var bitmap = new SKBitmap(info);
-			cgImage.ToSKPixmap(bitmap.PeekPixels());
+			using (var pixmap = bitmap.PeekPixels())
+			{
+				cgImage.ToSKPixmap(pixmap);
+			}
 			return bitmap;
 		}
 
@@ -178,7 +184,10 @@ namespace SkiaSharp.Views.Mac
 			var extent = ciImage.Extent;
 			var info = new SKImageInfo((int)extent.Width, (int)extent.Height);
 			var image = SKImage.Create(info);
-			ciImage.ToSKPixmap(image.PeekPixels());
+			using (var pixmap = image.PeekPixels())
+			{
+				ciImage.ToSKPixmap(pixmap);
+			}
 			return image;
 		}
 
@@ -187,7 +196,10 @@ namespace SkiaSharp.Views.Mac
 			var extent = ciImage.Extent;
 			var info = new SKImageInfo((int)extent.Width, (int)extent.Height);
 			var image = new SKBitmap(info);
-			ciImage.ToSKPixmap(image.PeekPixels());
+			using (var pixmap = image.PeekPixels())
+			{
+				ciImage.ToSKPixmap(image.PeekPixels());
+			}
 			return image;
 		}
 
