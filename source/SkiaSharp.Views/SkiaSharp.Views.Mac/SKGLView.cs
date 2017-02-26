@@ -43,7 +43,7 @@ namespace SkiaSharp.Views.Mac
 		{
 			WantsBestResolutionOpenGLSurface = true;
 
-			var attrs = new object[]
+			var attrs = new NSOpenGLPixelFormatAttribute[]
 			{
 				//NSOpenGLPixelFormatAttribute.OpenGLProfile, (NSOpenGLPixelFormatAttribute)NSOpenGLProfile.VersionLegacy,
 				NSOpenGLPixelFormatAttribute.Accelerated,
