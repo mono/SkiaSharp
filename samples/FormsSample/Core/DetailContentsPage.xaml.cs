@@ -9,6 +9,7 @@ namespace SkiaSharpSample.FormsSample
 	public partial class DetailContentsPage : ContentPage
 	{
 		private SampleBase sample;
+		private SKImage lastImage;
 
 		public DetailContentsPage(SampleBase showcase)
 		{
@@ -70,6 +71,19 @@ namespace SkiaSharpSample.FormsSample
 		private void OnTapSample(object sender, EventArgs e)
 		{
 			Sample?.Tap();
+
+			//// mostly for testing, but also useful
+			//Navigation.PushAsync(new ContentPage
+			//{
+			//	Title = "Preview",
+			//	Content = new Image
+			//	{
+			//		Source = new SKImageImageSource
+			//		{
+			//			Image = lastImage
+			//		}
+			//	}
+			//});
 		}
 
 		private void OnPanSample(object sender, PanUpdatedEventArgs e)
@@ -101,6 +115,8 @@ namespace SkiaSharpSample.FormsSample
 		{
 			Sample?.DrawSample(e.Surface.Canvas, e.Info.Width, e.Info.Height);
 
+			lastImage = e.Surface.Snapshot();
+
 			var view = sender as SKCanvasView;
 			DrawScaling(view, e.Surface.Canvas, view.CanvasSize);
 		}
@@ -108,6 +124,8 @@ namespace SkiaSharpSample.FormsSample
 		private void OnPaintGLSample(object sender, SKPaintGLSurfaceEventArgs e)
 		{
 			Sample?.DrawSample(e.Surface.Canvas, e.RenderTarget.Width, e.RenderTarget.Height);
+
+			lastImage = e.Surface.Snapshot();
 
 			var view = sender as SKGLView;
 			DrawScaling(view, e.Surface.Canvas, view.CanvasSize);
