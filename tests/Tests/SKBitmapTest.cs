@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using NUnit.Framework;
 
@@ -186,5 +188,52 @@ namespace SkiaSharp.Tests
 
 			mask.FreeImage();
 		}
+
+		[Test]
+		[Ignore("This test takes a long time (~3mins), so ignore this most of the time.")]
+		public static void ImageScalingMultipleThreadsTest()
+		{
+			const int numThreads = 100;
+			const int numIterationsPerThread = 1000;
+
+			var referenceFile = Path.Combine(PathToImages, "baboon.jpg");
+
+			var tasks = new List<Task>();
+
+			for (int i = 0; i < numThreads; i++)
+			{
+				var task = Task.Run(() =>
+				{
+					for (int j = 0; j < numIterationsPerThread; j++)
+					{
+						var imageData = ComputeThumbnail(referenceFile);
+					}
+				});
+				tasks.Add(task);
+			}
+
+			Task.WaitAll(tasks.ToArray());
+
+			Console.WriteLine($"Test completed for {numThreads} tasks, {numIterationsPerThread} each.");
+		}
+
+		private static byte[] ComputeThumbnail(string fileName)
+		{
+			using (var ms = new MemoryStream())
+			using (var bitmap = SKBitmap.Decode(fileName))
+			using (var scaledBitmap = new SKBitmap(60, 40, bitmap.ColorType, bitmap.AlphaType))
+			{
+				SKBitmap.Resize(scaledBitmap, bitmap, SKBitmapResizeMethod.Hamming);
+
+				using (var image = SKImage.FromBitmap(scaledBitmap))
+				using (var data = image.Encode(SKImageEncodeFormat.Png, 80))
+				{
+					data.SaveTo(ms);
+
+					return ms.ToArray();
+				}
+			}
+		}
+
 	}
 }
