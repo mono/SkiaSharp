@@ -1,7 +1,4 @@
 ﻿using System;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.ApplicationModel;
 using Windows.Graphics.Display;
 using Windows.UI.Core;
@@ -16,8 +13,7 @@ namespace SkiaSharp.Views.UWP
 	{
 		private static bool designMode = DesignMode.DesignModeEnabled;
 
-		private byte[] pixels;
-		private GCHandle buff;
+		private IntPtr pixels;
 		private WriteableBitmap bitmap;
 		private double dpi;
 		private bool ignorePixelScaling;
@@ -73,7 +69,7 @@ namespace SkiaSharp.Views.UWP
 
 		private void OnUnloaded(object sender, RoutedEventArgs e)
 		{
-			FreeBitmap(true);
+			FreeBitmap();
 		}
 
 		public void Invalidate()
@@ -103,15 +99,10 @@ namespace SkiaSharp.Views.UWP
 
 			var info = new SKImageInfo(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
 			CreateBitmap(info);
-			using (var surface = SKSurface.Create(info, buff.AddrOfPinnedObject(), info.RowBytes))
+			using (var surface = SKSurface.Create(info, pixels, info.RowBytes))
 			{
 				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
 			}
-
-			var stream = bitmap.PixelBuffer.AsStream();
-			stream.Seek(0, SeekOrigin.Begin);
-			stream.Write(pixels, 0, pixels.Length);
-
 			bitmap.Invalidate();
 		}
 
@@ -119,16 +110,10 @@ namespace SkiaSharp.Views.UWP
 		{
 			if (bitmap == null || bitmap.PixelWidth != info.Width || bitmap.PixelHeight != info.Height)
 			{
-				var recreateArray = pixels == null || pixels.Length != info.BytesSize;
+				FreeBitmap();
 
-				FreeBitmap(recreateArray);
-
-				if (recreateArray)
-				{
-					pixels = new byte[info.BytesSize];
-					buff = GCHandle.Alloc(pixels, GCHandleType.Pinned);
-				}
 				bitmap = new WriteableBitmap(info.Width, info.Height);
+				pixels = bitmap.GetPixels();
 
 				var brush = new ImageBrush
 				{
@@ -150,22 +135,11 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
-		private void FreeBitmap(bool freeArray)
+		private void FreeBitmap()
 		{
-		    Background = null;
-			if (bitmap != null)
-			{
-				bitmap = null;
-			}
-			if (freeArray)
-			{
-				if (buff.IsAllocated)
-				{
-					buff.Free();
-					buff = default(GCHandle);
-				}
-				pixels = null;
-			}
+			Background = null;
+			bitmap = null;
+			pixels = IntPtr.Zero;
 		}
 	}
 }
