@@ -1,5 +1,9 @@
-﻿using Windows.Foundation;
+﻿using System;
+using Windows.Foundation;
 using Windows.UI;
+using Windows.UI.Xaml.Media.Imaging;
+
+using SkiaSharp.Views.UWP.Interop;
 
 namespace SkiaSharp.Views.UWP
 {
@@ -51,6 +55,122 @@ namespace SkiaSharp.Views.UWP
 		public static Color ToColor(this SKColor color)
 		{
 			return Color.FromArgb(color.Alpha, color.Red, color.Green, color.Blue);
+		}
+
+
+		// WriteableBitmap
+
+		public static WriteableBitmap ToWriteableBitmap(this SKPicture picture, SKSizeI dimensions)
+		{
+			using (var image = SKImage.FromPicture(picture, dimensions))
+			{
+				return image.ToWriteableBitmap();
+			}
+		}
+
+		public static WriteableBitmap ToWriteableBitmap(this SKImage skiaImage)
+		{
+			// TODO: maybe keep the same color types where we can, instead of just going to the platform default
+
+			// TODO: remove this as it is old/default logic
+			//using (var tempImage = SKImage.Create(info))
+			//using (var pixmap = tempImage.PeekPixels())
+			//using (var data = SKData.Create(pixmap.GetPixels(), info.BytesSize))
+			//{
+			//	skiaImage.ReadPixels(pixmap, 0, 0);
+			//	using (var stream = bitmap.PixelBuffer.AsStream())
+			//	{
+			//		data.SaveTo(stream);
+			//	}
+			//}
+
+			var info = new SKImageInfo(skiaImage.Width, skiaImage.Height);
+			var bitmap = new WriteableBitmap(info.Width, info.Height);
+			using (var pixmap = new SKPixmap(info, bitmap.GetPixels()))
+			{
+				skiaImage.ReadPixels(pixmap, 0, 0);
+			}
+			bitmap.Invalidate();
+			return bitmap;
+		}
+
+		public static WriteableBitmap ToWriteableBitmap(this SKBitmap skiaBitmap)
+		{
+			using (var image = SKImage.FromPixels(skiaBitmap.PeekPixels()))
+			{
+				return image.ToWriteableBitmap();
+			}
+		}
+
+		public static WriteableBitmap ToWriteableBitmap(this SKPixmap pixmap)
+		{
+			using (var image = SKImage.FromPixels(pixmap))
+			{
+				return image.ToWriteableBitmap();
+			}
+		}
+
+		public static SKBitmap ToSKBitmap(this WriteableBitmap bitmap)
+		{
+			// TODO: maybe keep the same color types where we can, instead of just going to the platform default
+
+			var info = new SKImageInfo(bitmap.PixelWidth, bitmap.PixelHeight);
+			var skiaBitmap = new SKBitmap(info);
+			using (var pixmap = skiaBitmap.PeekPixels())
+			{
+				bitmap.ToSKPixmap(pixmap);
+			}
+			return skiaBitmap;
+		}
+
+		public static SKImage ToSKImage(this WriteableBitmap bitmap)
+		{
+			// TODO: maybe keep the same color types where we can, instead of just going to the platform default
+
+			var info = new SKImageInfo(bitmap.PixelWidth, bitmap.PixelHeight);
+			var image = SKImage.Create(info);
+			using (var pixmap = image.PeekPixels())
+			{
+				bitmap.ToSKPixmap(pixmap);
+			}
+			return image;
+		}
+
+		public static bool ToSKPixmap(this WriteableBitmap bitmap, SKPixmap pixmap)
+		{
+			// TODO: maybe keep the same color types where we can, instead of just going to the platform default
+
+			if (pixmap.ColorType == SKImageInfo.PlatformColorType)
+			{
+				using (var image = SKImage.FromPixels(pixmap.Info, bitmap.GetPixels()))
+				{
+					return image.ReadPixels(pixmap, 0, 0);
+				}
+			}
+			else
+			{
+				// we have to copy the pixels into a format that we understand
+				// and then into a desired format
+				// TODO: we can still do a bit more for other cases where the color types are the same
+				using (var tempImage = bitmap.ToSKImage())
+				{
+					return tempImage.ReadPixels(pixmap, 0, 0);
+				}
+			}
+		}
+
+		internal static IntPtr GetPixels(this WriteableBitmap bitmap)
+		{
+			var buffer = bitmap.PixelBuffer as IBufferByteAccess;
+			if (buffer == null)
+				throw new InvalidCastException("Unable to convert WriteableBitmap.PixelBuffer to IBufferByteAccess.");
+
+			IntPtr ptr;
+			var hr = buffer.Buffer(out ptr);
+			if (hr < 0)
+				throw new InvalidCastException("Unable to retrieve pixel address from WriteableBitmap.PixelBuffer.");
+
+			return ptr;
 		}
 	}
 }
