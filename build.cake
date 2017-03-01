@@ -20,14 +20,14 @@ var GenApiToolPath = GetToolPath ("Microsoft.DotNet.BuildTools.GenAPI/tools/GenA
 var MDocPath = GetToolPath ("mdoc/mdoc.exe");
 
 var VERSION_ASSEMBLY = "1.56.0.0";
-var VERSION_FILE = "1.56.1.0";
+var VERSION_FILE = "1.56.2.0";
 var VERSION_SONAME = VERSION_FILE.Substring(VERSION_FILE.IndexOf(".") + 1);
 var VERSION_PACKAGES = new Dictionary<string, string> {
-    { "SkiaSharp", "1.56.1" },
-    { "SkiaSharp.Views", "1.56.1" },
-    { "SkiaSharp.Views.Forms", "1.56.1" },
-    { "SkiaSharp.Svg", "1.56.1" },
-    { "SkiaSharp.Extended", "1.56.1-beta" },
+    { "SkiaSharp", "1.56.2" },
+    { "SkiaSharp.Views", "1.56.2" },
+    { "SkiaSharp.Views.Forms", "1.56.2" },
+    { "SkiaSharp.Svg", "1.56.2" },
+    { "SkiaSharp.Extended", "1.56.2-beta" },
 };
 
 string ANDROID_HOME = EnvironmentVariable ("ANDROID_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-sdk-macosx";
