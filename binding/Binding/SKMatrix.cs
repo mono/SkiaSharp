@@ -560,15 +560,9 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			SkiaApi.sk_3dview_rotate_x_degrees (Handle, degrees);
 		}
 		
-		public void RotateX (float radians)
-		{
-			SkiaApi.sk_3dview_rotate_x_radians (Handle, radians);
-		}
-		
-		[Obsolete ("Use RotateX instead.")]
 		public void RotateXRadians (float radians)
 		{
-			RotateX (radians);
+			SkiaApi.sk_3dview_rotate_x_radians (Handle, radians);
 		}
 		
 		public void RotateYDegrees (float degrees)
@@ -576,15 +570,9 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			SkiaApi.sk_3dview_rotate_y_degrees (Handle, degrees);
 		}
 		
-		public void RotateY (float radians)
-		{
-			SkiaApi.sk_3dview_rotate_y_radians (Handle, radians);
-		}
-		
-		[Obsolete ("Use RotateY instead.")]
 		public void RotateYRadians (float radians)
 		{
-			RotateY (radians);
+			SkiaApi.sk_3dview_rotate_y_radians (Handle, radians);
 		}
 		
 		public void RotateZDegrees (float degrees)
@@ -592,15 +580,9 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			SkiaApi.sk_3dview_rotate_z_degrees (Handle, degrees);
 		}
 		
-		public void RotateZ (float radians)
-		{
-			SkiaApi.sk_3dview_rotate_z_radians (Handle, radians);
-		}
-		
-		[Obsolete ("Use RotateZ instead.")]
 		public void RotateZRadians (float radians)
 		{
-			RotateZ (radians);
+			SkiaApi.sk_3dview_rotate_z_radians (Handle, radians);
 		}
 		
 		public void ApplyToCanvas (SKCanvas canvas)
