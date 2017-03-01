@@ -81,6 +81,8 @@ namespace SkiaSharp.Views.Mac
 			return new System.Drawing.Size(size.Width, size.Height);
 		}
 
+#if __DESKTOP__ || __WPF__
+
 		// System.Drawing.Bitmap
 
 		public static System.Drawing.Bitmap ToBitmap(this SKPicture picture, SKSizeI dimensions)
@@ -174,6 +176,7 @@ namespace SkiaSharp.Views.Mac
 				}
 			}
 		}
+#endif
 
 #if __ANDROID__ || __DESKTOP__ || __WPF__
 		// System.Drawing.Color
