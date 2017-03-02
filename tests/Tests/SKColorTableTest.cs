@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using NUnit.Framework;
 
@@ -91,5 +92,44 @@ namespace SkiaSharp.Tests
 				var color = colorTable[250];
 			});
 		}
+
+		[Test]
+		[Ignore("Waiting for https://groups.google.com/forum/#!topic/skia-discuss/mNUxQon5OMY")]
+		public void Index8ImageHasColorTable()
+		{
+			var path = Path.Combine(PathToImages, "index8.png");
+
+			var bitmap = SKBitmap.Decode(path);
+
+			var pixel = bitmap.GetPixel(182, 348);
+
+
+			var surface = new SKBitmap(1024, 1218);
+			var canvas = new SKCanvas(surface);
+			canvas.DrawBitmap(bitmap, 0, 0);
+			//canvas.Clear(0x7e4c9173);
+
+			var newPixel = surface.GetPixel(182, 348);
+
+			using (var fs = File.OpenWrite(path + ".test.png"))
+			{
+				SKImage.FromBitmap(surface).Encode().SaveTo(fs);
+			}
+
+
+			var colorTable = bitmap.ColorTable;
+
+			Assert.IsNotNull(colorTable);
+
+			Assert.AreEqual((SKPMColor)0x000000, colorTable[0]);
+			Assert.AreEqual((SKColor)0x000000, colorTable.GetUnPreMultipliedColor(0));
+
+			Assert.AreEqual((SKPMColor)0xFFA4C639, colorTable[255]);
+			Assert.AreEqual((SKColor)0xFFA4C639, colorTable.GetUnPreMultipliedColor(255));
+
+			Assert.AreEqual((SKPMColor)0x7EA4C639, colorTable[140]);
+			Assert.AreEqual((SKColor)0x7e4c9173, colorTable.GetUnPreMultipliedColor(140));
+		}
+
 	}
 }
