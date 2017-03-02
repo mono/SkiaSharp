@@ -88,7 +88,7 @@ namespace SkiaSharp.Tests
 
 			Assert.Throws<ArgumentOutOfRangeException>(() =>
 			{
-				var color = colorTable[5];
+				var color = colorTable[250];
 			});
 		}
 	}
