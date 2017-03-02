@@ -38,7 +38,7 @@ namespace SkiaSharp.Tests
 			Assert.AreEqual(new SKPMColor(0x33001A00), pm);
 			Assert.AreEqual(new SKColor(0x33008200), upm);
 
-			var ctContents = new [] { pm };
+			var ctContents = new[] { pm };
 			var ct = new SKColorTable(ctContents, 1);
 
 			Assert.AreEqual(1, ct.Count);
@@ -94,28 +94,17 @@ namespace SkiaSharp.Tests
 		}
 
 		[Test]
-		[Ignore("Waiting for https://groups.google.com/forum/#!topic/skia-discuss/mNUxQon5OMY")]
 		public void Index8ImageHasColorTable()
 		{
 			var path = Path.Combine(PathToImages, "index8.png");
 
-			var bitmap = SKBitmap.Decode(path);
+			var codec = SKCodec.Create(new SKFileStream(path));
 
-			var pixel = bitmap.GetPixel(182, 348);
+			// It appears I can't use Unpremul as the alpha type, as the color table is not premultiplied then
+			// https://groups.google.com/forum/#!topic/skia-discuss/mNUxQon5OMY
+			var info = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Index8, SKAlphaType.Premul);
 
-
-			var surface = new SKBitmap(1024, 1218);
-			var canvas = new SKCanvas(surface);
-			canvas.DrawBitmap(bitmap, 0, 0);
-			//canvas.Clear(0x7e4c9173);
-
-			var newPixel = surface.GetPixel(182, 348);
-
-			using (var fs = File.OpenWrite(path + ".test.png"))
-			{
-				SKImage.FromBitmap(surface).Encode().SaveTo(fs);
-			}
-
+			var bitmap = SKBitmap.Decode(codec, info);
 
 			var colorTable = bitmap.ColorTable;
 
@@ -127,9 +116,8 @@ namespace SkiaSharp.Tests
 			Assert.AreEqual((SKPMColor)0xFFA4C639, colorTable[255]);
 			Assert.AreEqual((SKColor)0xFFA4C639, colorTable.GetUnPreMultipliedColor(255));
 
-			Assert.AreEqual((SKPMColor)0x7EA4C639, colorTable[140]);
-			Assert.AreEqual((SKColor)0x7e4c9173, colorTable.GetUnPreMultipliedColor(140));
+			Assert.AreEqual((SKPMColor)0x7E51621C, colorTable[140]);
+			Assert.AreEqual((SKColor)0x7EA4C639, colorTable.GetUnPreMultipliedColor(140));
 		}
-
 	}
 }
