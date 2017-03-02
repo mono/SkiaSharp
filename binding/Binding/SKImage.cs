@@ -322,16 +322,6 @@ namespace SkiaSharp
 			return SkiaApi.sk_image_read_pixels_into_pixmap (Handle, pixmap.Handle, srcX, srcY, cachingHint);
 		}
 
-		public SKPixmap ScalePixels (SKFilterQuality quality, SKImageCachingHint cachingHint)
-		{
-			var pixmap = new SKPixmap ();
-			if (!ScalePixels (pixmap, quality, cachingHint)) {
-				pixmap.Dispose ();
-				pixmap = null;
-			}
-			return pixmap;
-		}
-
 		public bool ScalePixels (SKPixmap dst, SKFilterQuality quality)
 		{
 			return ScalePixels (dst, quality, SKImageCachingHint.Allow);
