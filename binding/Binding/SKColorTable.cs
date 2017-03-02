@@ -32,12 +32,12 @@ namespace SkiaSharp
 		}
 
 		public SKColorTable ()
-			: this (new SKColor [MaxLength])
+			: this (new SKPMColor[MaxLength])
 		{
 		}
 
 		public SKColorTable (int count)
-			: this (new SKColor [count])
+			: this (new SKPMColor[count])
 		{
 		}
 
@@ -47,6 +47,16 @@ namespace SkiaSharp
 		}
 
 		public SKColorTable (SKColor[] colors, int count)
+			: this (SKPMColor.PreMultiply (colors), count)
+		{
+		}
+
+		public SKColorTable (SKPMColor[] colors)
+			: this (colors, colors.Length)
+		{
+		}
+
+		public SKColorTable (SKPMColor[] colors, int count)
 			: this (SkiaApi.sk_colortable_new (colors, count), true)
 		{
 			if (Handle == IntPtr.Zero) {
@@ -56,7 +66,7 @@ namespace SkiaSharp
 
 		public int Count => SkiaApi.sk_colortable_count (Handle);
 
-		public SKColor[] Colors
+		public SKPMColor[] Colors
 		{
 			get
 			{
@@ -64,14 +74,16 @@ namespace SkiaSharp
 				var pointer = ReadColors ();
 
 				if (count == 0 || pointer == IntPtr.Zero) {
-					return new SKColor[0];
+					return new SKPMColor[0];
 				}
 
-				return PtrToStructureArray <SKColor> (pointer, count);
+				return PtrToStructureArray <SKPMColor> (pointer, count);
 			}
 		}
 
-		public SKColor this [int index]
+		public SKColor[] UnPreMultipledColors => SKPMColor.UnPreMultiply (Colors);
+
+		public SKPMColor this [int index]
 		{
 			get
 			{
@@ -82,9 +94,11 @@ namespace SkiaSharp
 					throw new ArgumentOutOfRangeException (nameof (index));
 				}
 
-				return PtrToStructure <SKColor> (pointer, index);
+				return PtrToStructure <SKPMColor> (pointer, index);
 			}
 		}
+
+		public SKColor GetUnPreMultipliedColor (int index) => SKPMColor.UnPreMultiply (this [index]);
 
 		public IntPtr ReadColors ()
 		{

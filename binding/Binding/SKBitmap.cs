@@ -113,7 +113,7 @@ namespace SkiaSharp
 		public UInt32 GetAddr32(int x, int y) => SkiaApi.sk_bitmap_get_addr_32 (Handle, x, y);
 		public IntPtr GetAddr(int x, int y) => SkiaApi.sk_bitmap_get_addr (Handle, x, y);
 
-		public SKColor GetIndex8Color (int x, int y)
+		public SKPMColor GetIndex8Color (int x, int y)
 		{
 			return SkiaApi.sk_bitmap_get_index8_color (Handle, x, y);
 		}

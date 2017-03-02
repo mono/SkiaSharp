@@ -267,7 +267,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_paint_set_verticaltext(sk_paint_t t, bool v);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static UInt32 sk_paint_get_color(sk_paint_t t);
+		public extern static SKColor sk_paint_get_color(sk_paint_t t);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_paint_set_color(sk_paint_t t, SKColor color);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1236,9 +1236,9 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_bitmap_get_addr(sk_bitmap_t cbitmap, int x, int y);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static UInt32 sk_bitmap_get_pixel_color(sk_bitmap_t cbitmap, int x, int y);
+		public extern static SKColor sk_bitmap_get_pixel_color(sk_bitmap_t cbitmap, int x, int y);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static UInt32 sk_bitmap_get_index8_color(sk_bitmap_t cbitmap, int x, int y);
+		public extern static SKPMColor sk_bitmap_get_index8_color(sk_bitmap_t cbitmap, int x, int y);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_bitmap_set_pixel_color(sk_bitmap_t cbitmap, int x, int y, SKColor color);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1288,6 +1288,17 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_bitmap_extract_alpha(sk_bitmap_t cbitmap, sk_bitmap_t dst, sk_paint_t paint, out SKPointI offset);
+
+		// SKColor
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKColor sk_color_unpremultiply(SKPMColor pmcolor);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKPMColor sk_color_premultiply(SKColor color);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_color_unpremultiply_array(SKPMColor[] pmcolors, int size, [Out] SKColor[] colors);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKPMColor sk_color_premultiply_array(SKColor[] colors, int size, [Out] SKPMColor[] pmcolors);
 
 		// SkPixmap
 
@@ -1485,11 +1496,11 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_colortable_unref (sk_colortable_t ctable);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_colortable_t sk_colortable_new ([In] SKColor[] colors, int count);
+		public extern static sk_colortable_t sk_colortable_new ([In] SKPMColor[] colors, int count);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_colortable_count (sk_colortable_t ctable);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_colortable_read_colors (sk_colortable_t ctable, [Out] SKColor[] colors);
+		public extern static void sk_colortable_read_colors (sk_colortable_t ctable, [Out] SKPMColor[] colors);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_colortable_read_colors (sk_colortable_t ctable, out IntPtr colors);
 
