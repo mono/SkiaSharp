@@ -118,6 +118,9 @@ namespace SkiaSharp.Tests
 
 			Assert.AreEqual((SKPMColor)0x7E51621C, colorTable[140]);
 			Assert.AreEqual((SKColor)0x7EA4C639, colorTable.GetUnPreMultipliedColor(140));
+
+			Assert.AreEqual((SKPMColor)0x7E51621C, bitmap.GetIndex8Color(182, 348));
+			Assert.AreEqual((SKColor)0x7EA4C639, bitmap.GetPixel(182, 348));
 		}
 	}
 }
