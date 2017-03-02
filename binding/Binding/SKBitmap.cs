@@ -9,6 +9,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp
@@ -329,6 +330,14 @@ namespace SkiaSharp
 			get { return GetObject<SKColorTable> (SkiaApi.sk_bitmap_get_colortable (Handle), false); }
 		}
 
+		public static SKImageInfo DecodeBounds (Stream stream)
+		{
+			if (stream == null) {
+				throw new ArgumentNullException (nameof (stream));
+			}
+			return DecodeBounds (WrapManagedStream (stream));
+		}
+
 		public static SKImageInfo DecodeBounds (SKStream stream)
 		{
 			if (stream == null) {
@@ -398,12 +407,31 @@ namespace SkiaSharp
 			return Decode (codec, codec.Info);
 		}
 
+		public static SKBitmap Decode (Stream stream)
+		{
+			if (stream == null) {
+				throw new ArgumentNullException (nameof (stream));
+			}
+			return Decode (WrapManagedStream (stream));
+		}
+
+		public static SKBitmap Decode (Stream stream, SKImageInfo bitmapInfo)
+		{
+			if (stream == null) {
+				throw new ArgumentNullException (nameof (stream));
+			}
+			return Decode (WrapManagedStream (stream), bitmapInfo);
+		}
+
 		public static SKBitmap Decode (SKStream stream)
 		{
 			if (stream == null) {
 				throw new ArgumentNullException (nameof (stream));
 			}
 			using (var codec = SKCodec.Create (stream)) {
+				if (codec == null) {
+					return null;
+				}
 				return Decode (codec);
 			}
 		}
@@ -414,6 +442,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 			}
 			using (var codec = SKCodec.Create (stream)) {
+				if (codec == null) {
+					return null;
+				}
 				return Decode (codec, bitmapInfo);
 			}
 		}
@@ -424,6 +455,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (data));
 			}
 			using (var codec = SKCodec.Create (data)) {
+				if (codec == null) {
+					return null;
+				}
 				return Decode (codec);
 			}
 		}
@@ -434,6 +468,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (data));
 			}
 			using (var codec = SKCodec.Create (data)) {
+				if (codec == null) {
+					return null;
+				}
 				return Decode (codec, bitmapInfo);
 			}
 		}
@@ -558,6 +595,21 @@ namespace SkiaSharp
 				bmp = null;
 			}
 			return bmp;
+		}
+
+		private static SKStream WrapManagedStream (Stream stream)
+		{
+			if (stream == null) {
+				throw new ArgumentNullException (nameof (stream));
+			}
+
+			// we will need a seekable stream, so buffer it if need be
+			if (stream.CanSeek) {
+				return new SKManagedStream (stream, true);
+			} else {
+				var buffered = new SKFrontBufferedStream (stream, SKCodec.MinBufferedBytesNeeded, true);
+				return new SKManagedStream (buffered, true);
+			}
 		}
 
 

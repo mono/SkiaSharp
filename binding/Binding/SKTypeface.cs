@@ -7,6 +7,7 @@
 // Copyright 2016 Xamarin Inc
 //
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp
@@ -55,6 +56,13 @@ namespace SkiaSharp
 			if (path == null)
 				throw new ArgumentNullException (nameof (path));
 			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_file (path, index));
+		}
+
+		public static SKTypeface FromStream (Stream stream, int index = 0)
+		{
+			if (stream == null)
+				throw new ArgumentNullException (nameof (stream));
+			return FromStream (new SKManagedStream (stream, true), index);
 		}
 
 		public static SKTypeface FromStream (SKStreamAsset stream, int index = 0)
