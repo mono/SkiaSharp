@@ -2329,6 +2329,7 @@ namespace SkiaSharp
 		Lcd16,
 	}
 
+	[Flags]
 	public enum SKMatrix44TypeMask {
 		Identity = 0,
 		Translate = 0x01,

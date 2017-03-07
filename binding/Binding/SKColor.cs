@@ -74,6 +74,16 @@ namespace SkiaSharp
 			return !(left == right);
 		}
 
+		public static explicit operator SKPMColor (SKColor color)
+		{
+			return SKPMColor.PreMultiply (color);
+		}
+
+		public static explicit operator SKColor (SKPMColor color)
+		{
+			return SKPMColor.UnPreMultiply (color);
+		}
+
 		public static implicit operator SKPMColor (uint color)
 		{
 			return new SKPMColor (color);
@@ -381,16 +391,6 @@ namespace SkiaSharp
 		public static explicit operator uint (SKColor color)
 		{
 			return color.color;
-		}
-
-		public static explicit operator SKPMColor (SKColor color)
-		{
-			return SKPMColor.PreMultiply (color);
-		}
-
-		public static explicit operator SKColor (SKPMColor color)
-		{
-			return SKPMColor.UnPreMultiply (color);
 		}
 
 		public static bool operator == (SKColor left, SKColor right)
