@@ -10,8 +10,8 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>32-bit ARGB premultiplied color value.</summary>
+    <remarks>The color components are always in a known order.</remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -25,9 +25,11 @@
         <Parameter Name="value" Type="System.UInt32" />
       </Parameters>
       <Docs>
-        <param name="value">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="value">The integer value of the premultiplied color.</param>
+        <summary>Creates a color from the specified integer.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Alpha">
@@ -41,9 +43,13 @@
         <ReturnType>System.Byte</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the alpha component of the color.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Blue">
@@ -57,9 +63,13 @@
         <ReturnType>System.Byte</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the blue component of the color.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Equals">
@@ -76,10 +86,12 @@
         <Parameter Name="other" Type="System.Object" />
       </Parameters>
       <Docs>
-        <param name="other">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="other">The object to compare with the current object.</param>
+        <summary>Determines whether the specified object is equal to the current object.</summary>
+        <returns>Returns <see langword="true" /> if the specified object is equal to the current object; otherwise, <see langword="false" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetHashCode">
@@ -94,9 +106,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Serves as the default hash function.</summary>
+        <returns>Returns a hash code for the current object.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Green">
@@ -110,9 +124,13 @@
         <ReturnType>System.Byte</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the green component of the color.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="op_Equality">
@@ -130,11 +148,35 @@
         <Parameter Name="right" Type="SkiaSharp.SKPMColor" />
       </Parameters>
       <Docs>
-        <param name="left">To be added.</param>
-        <param name="right">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="left">The first color to compare.</param>
+        <param name="right">The second color to compare.</param>
+        <summary>Indicates whether two <see cref="T:SkiaSharp.SKPMColor" /> objects are equal.</summary>
+        <returns>Returns <see langword="true" /> if <paramref name="left" /> is equal to <paramref name="right" />, otherwise <see langword="false" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="op_Explicit">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKPMColor op_Explicit (SkiaSharp.SKColor color);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig specialname valuetype SkiaSharp.SKPMColor op_Explicit(valuetype SkiaSharp.SKColor color) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPMColor</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="color" Type="SkiaSharp.SKColor" />
+      </Parameters>
+      <Docs>
+        <param name="color">The unpremultiplied color to convert.</param>
+        <summary>Converts an unpremultiplied <see cref="T:SkiaSharp.SKColor" /> to the premultiplied <see cref="T:SkiaSharp.SKPMColor" />.</summary>
+        <returns>Returns the new premultiplied <see cref="T:SkiaSharp.SKPMColor" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="op_Explicit">
@@ -151,10 +193,34 @@
         <Parameter Name="color" Type="SkiaSharp.SKPMColor" />
       </Parameters>
       <Docs>
-        <param name="color">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="color">The color to convert.</param>
+        <summary>Converts a <see cref="T:SkiaSharp.SKPMColor" /> to a UInt32.</summary>
+        <returns>The UInt32 value for the color.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="op_Explicit">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKColor op_Explicit (SkiaSharp.SKPMColor color);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig specialname valuetype SkiaSharp.SKColor op_Explicit(valuetype SkiaSharp.SKPMColor color) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKColor</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="color" Type="SkiaSharp.SKPMColor" />
+      </Parameters>
+      <Docs>
+        <param name="color">The premultiplied color to convert.</param>
+        <summary>Converts a premultiplied <see cref="T:SkiaSharp.SKPMColor" /> to the unpremultiplied <see cref="T:SkiaSharp.SKColor" />.</summary>
+        <returns>Returns the new unpremultiplied <see cref="T:SkiaSharp.SKColor" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="op_Implicit">
@@ -171,10 +237,12 @@
         <Parameter Name="color" Type="System.UInt32" />
       </Parameters>
       <Docs>
-        <param name="color">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="color">The UInt32 representation of a color.</param>
+        <summary>Converts a UInt32 to a <see cref="T:SkiaSharp.SKPMColor" />.</summary>
+        <returns>The new <see cref="T:SkiaSharp.SKPMColor" /> instance.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="op_Inequality">
@@ -192,11 +260,13 @@
         <Parameter Name="right" Type="SkiaSharp.SKPMColor" />
       </Parameters>
       <Docs>
-        <param name="left">To be added.</param>
-        <param name="right">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="left">The first color to compare.</param>
+        <param name="right">The second color to compare.</param>
+        <summary>Indicates whether two <see cref="T:SkiaSharp.SKPMColor" /> objects are different.</summary>
+        <returns>Returns <see langword="true" /> if <paramref name="left" /> is not equal to <paramref name="right" />, otherwise <see langword="false" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="PreMultiply">
@@ -213,10 +283,12 @@
         <Parameter Name="color" Type="SkiaSharp.SKColor" />
       </Parameters>
       <Docs>
-        <param name="color">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="color">The unpremultiplied color to convert.</param>
+        <summary>Converts an unpremultiplied <see cref="T:SkiaSharp.SKColor" /> to a premultiplied <see cref="T:SkiaSharp.SKPMColor" />.</summary>
+        <returns>Returns the new premultiplied <see cref="T:SkiaSharp.SKPMColor" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="PreMultiply">
@@ -233,10 +305,12 @@
         <Parameter Name="colors" Type="SkiaSharp.SKColor[]" />
       </Parameters>
       <Docs>
-        <param name="colors">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="colors">The unpremultiplied colors to convert.</param>
+        <summary>Converts an array of unpremultiplied <see cref="T:SkiaSharp.SKColor" />s to an array of premultiplied <see cref="T:SkiaSharp.SKPMColor" />s.</summary>
+        <returns>Returns the new array of premultiplied <see cref="T:SkiaSharp.SKPMColor" />s.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Red">
@@ -250,9 +324,13 @@
         <ReturnType>System.Byte</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the red component of the color.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ToString">
@@ -267,9 +345,13 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Returns the color as a string in the format: #AARRGGBB.</summary>
+        <returns>
+          <para></para>
+        </returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="UnPreMultiply">
@@ -286,10 +368,12 @@
         <Parameter Name="pmcolor" Type="SkiaSharp.SKPMColor" />
       </Parameters>
       <Docs>
-        <param name="pmcolor">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="pmcolor">The premultiplied color to convert.</param>
+        <summary>Converts a premultiplied <see cref="T:SkiaSharp.SKPMColor" /> to the unpremultiplied <see cref="T:SkiaSharp.SKColor" />.</summary>
+        <returns>Returns the new unpremultiplied <see cref="T:SkiaSharp.SKColor" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="UnPreMultiply">
@@ -306,10 +390,12 @@
         <Parameter Name="pmcolors" Type="SkiaSharp.SKPMColor[]" />
       </Parameters>
       <Docs>
-        <param name="pmcolors">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="pmcolors">The premultiplied colors to convert.</param>
+        <summary>Converts an array of premultiplied <see cref="T:SkiaSharp.SKPMColor" />s to an array of unpremultiplied <see cref="T:SkiaSharp.SKColor" />s.</summary>
+        <returns>Returns the new array of unpremultiplied <see cref="T:SkiaSharp.SKColor" />s.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
   </Members>

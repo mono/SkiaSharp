@@ -104,7 +104,7 @@
         <param name="length">The size of the buffer to create.</param>
         <summary>Creates an <see cref="T:SkiaSharp.SKData" /> by copying the provided byte array for the specified size.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -204,11 +204,11 @@
         <Parameter Name="length" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="address">To be added.</param>
-        <param name="length">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="address">The pointer to a buffer.</param>
+        <param name="length">The length of the buffer.</param>
+        <summary>Returns the new <see cref="T:SkiaSharp.SKData" /> instance with reference to the specified data.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance with reference to the specified data.</returns>
+        <remarks>The caller is responsible for ensuring the data buffer lives as long as the <see cref="T:SkiaSharp.SKData" /> instance.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -227,12 +227,12 @@
         <Parameter Name="releaseProc" Type="SkiaSharp.SKDataReleaseDelegate" />
       </Parameters>
       <Docs>
-        <param name="address">To be added.</param>
-        <param name="length">To be added.</param>
-        <param name="releaseProc">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="address">The pointer to a buffer.</param>
+        <param name="length">The length of the buffer.</param>
+        <param name="releaseProc">The delegate to invoke when the <see cref="T:SkiaSharp.SKData" /> instance is ready to be discarded.</param>
+        <summary>Returns the new <see cref="T:SkiaSharp.SKData" /> instance with reference to the specified data.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance with reference to the specified data.</returns>
+        <remarks>The caller is responsible for ensuring the data buffer lives as long as the <see cref="T:SkiaSharp.SKData" /> instance.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -252,13 +252,13 @@
         <Parameter Name="context" Type="System.Object" />
       </Parameters>
       <Docs>
-        <param name="address">To be added.</param>
-        <param name="length">To be added.</param>
-        <param name="releaseProc">To be added.</param>
-        <param name="context">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="address">The pointer to a buffer.</param>
+        <param name="length">The length of the buffer.</param>
+        <param name="releaseProc">The delegate to invoke when the <see cref="T:SkiaSharp.SKData" /> instance is ready to be discarded.</param>
+        <param name="context">The user state to pass to the delegate when it is invoked.</param>
+        <summary>Returns the new <see cref="T:SkiaSharp.SKData" /> instance with reference to the specified data.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance with reference to the specified data.</returns>
+        <remarks>The caller is responsible for ensuring the data buffer lives as long as the <see cref="T:SkiaSharp.SKData" /> instance.</remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateCopy">
@@ -275,10 +275,12 @@
         <Parameter Name="bytes" Type="System.Byte[]" />
       </Parameters>
       <Docs>
-        <param name="bytes">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="bytes">The array of bytes that will be copied.</param>
+        <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the provided byte array.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateCopy">
@@ -296,11 +298,13 @@
         <Parameter Name="length" Type="System.UInt64" />
       </Parameters>
       <Docs>
-        <param name="bytes">To be added.</param>
-        <param name="length">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="bytes">The array of bytes that will be copied.</param>
+        <param name="length">The size of the buffer to create.</param>
+        <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the provided byte array.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateCopy">
@@ -318,11 +322,13 @@
         <Parameter Name="length" Type="System.UInt64" />
       </Parameters>
       <Docs>
-        <param name="bytes">To be added.</param>
-        <param name="length">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="bytes">The pointer to a buffer.</param>
+        <param name="length">The length of the buffer.</param>
+        <summary>Returns a new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the provided byte buffer.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKData" /> instance with a copy of the data.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Data">
@@ -391,9 +397,13 @@
         <ReturnType>SkiaSharp.SKData</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a reference to the empty data instance.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromMallocMemory">
@@ -430,7 +440,7 @@
         <param name="length">The size of the buffer allocated.</param>
         <summary>Creates an <see cref="T:SkiaSharp.SKData" /> from a buffer that was previously allocated with the operating system “malloc" (or <see cref="M:System.Runtime.InteropServices.Marshal.AllocHGlobal" /> method.</summary>
         <returns>An <see cref="T:SkiaSharp.SKData" /> instance that wraps a memory block.</returns>
-        <remarks>When this SKData is cleared, the free method will be called on the provided buffer.</remarks>
+        <remarks>When this <see cref="T:SkiaSharp.SKData" /> instance is cleared, the free method will be called on the provided buffer.</remarks>
       </Docs>
     </Member>
     <Member MemberName="IsEmpty">
@@ -447,10 +457,10 @@
       <Docs>
         <summary>Gets a value indicating whether or not the data is empty.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -558,7 +568,7 @@
         <summary>Copies the data object into a byte array.</summary>
         <returns>Returns the byte array of the data.</returns>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>

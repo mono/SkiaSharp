@@ -38,9 +38,13 @@
         <ReturnType>SkiaSharp.SKAlphaType</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the configured <see cref="T:SkiaSharp.SKAlphaType" /> for the bitmap.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ApplyImageFilter">
@@ -61,14 +65,16 @@
         <Parameter Name="outOffset" Type="SkiaSharp.SKPoint&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="filter">To be added.</param>
-        <param name="subset">To be added.</param>
-        <param name="clipBounds">To be added.</param>
-        <param name="outSubset">To be added.</param>
-        <param name="outOffset">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="filter">The filter to apply to the current image.</param>
+        <param name="subset">The active portion of this image.</param>
+        <param name="clipBounds">Constrains the device-space extent of the image to the given rectangle.</param>
+        <param name="outSubset">The active portion of the resulting image</param>
+        <param name="outOffset">The amount to translate the resulting image relative to the source when it is drawn.</param>
+        <summary>Applies a given image filter to this image, and return the filtered result.</summary>
+        <returns>Returns the resulting image after the filter is applied, or <see langword="null" /> if the image could not be created or would be transparent black (#00000000).</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -85,10 +91,12 @@
         <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information to use.</param>
+        <summary>Creates a new raster-based <see cref="T:SkiaSharp.SKImage" /> using the specified information.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImage" /> instance.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -138,10 +146,7 @@
       <Docs>
         <summary>Encodes the image using the <see cref="F:SkiaSharp.SKImageEncodeFormat.Png" /> format.</summary>
         <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded image.</returns>
-        <remarks>
-          <para>Use the overload that takes a <see cref="T:SkiaSharp.SKImageEncodeFormat" /> if you want to encode in a different format.</para>
-          <para></para>
-        </remarks>
+        <remarks>Use the overload that takes a <see cref="T:SkiaSharp.SKImageEncodeFormat" /> if you want to encode in a different format.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Encode">
@@ -190,11 +195,11 @@
         <Parameter Name="desc" Type="SkiaSharp.GRBackendTextureDesc" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="desc">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing texture.</param>
+        <summary>Creates a new image from the specified texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>SkiaSharp will delete or recycle the texture when the image is released.</remarks>
       </Docs>
     </Member>
     <Member MemberName="FromAdoptedTexture">
@@ -213,12 +218,12 @@
         <Parameter Name="alpha" Type="SkiaSharp.SKAlphaType" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="desc">To be added.</param>
-        <param name="alpha">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing texture.</param>
+        <param name="alpha">The alpha type of the texture.</param>
+        <summary>Creates a new image from the specified texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>SkiaSharp will delete or recycle the texture when the image is released.</remarks>
       </Docs>
     </Member>
     <Member MemberName="FromBitmap">
@@ -330,10 +335,12 @@
         <Parameter Name="data" Type="SkiaSharp.SKData" />
       </Parameters>
       <Docs>
-        <param name="data">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="data">The data holding the encoded image.</param>
+        <summary>Creates a new image from an encoded image wrapped by the data.</summary>
+        <returns>The decoded image, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromEncodedData">
@@ -351,11 +358,13 @@
         <Parameter Name="subset" Type="SkiaSharp.SKRectI" />
       </Parameters>
       <Docs>
-        <param name="data">To be added.</param>
-        <param name="subset">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="data">The data holding the encoded image.</param>
+        <param name="subset">The bounds for a subset of the image.</param>
+        <summary>Creates a new image from an encoded image wrapped by the data.</summary>
+        <returns>The decoded image, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPicture">
@@ -373,11 +382,13 @@
         <Parameter Name="dimensions" Type="SkiaSharp.SKSizeI" />
       </Parameters>
       <Docs>
-        <param name="picture">To be added.</param>
-        <param name="dimensions">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="picture">The picture.</param>
+        <param name="dimensions">The size of the raster surface.</param>
+        <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.</summary>
+        <returns>An image whose contents is the picture.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPicture">
@@ -396,12 +407,14 @@
         <Parameter Name="matrix" Type="SkiaSharp.SKMatrix" />
       </Parameters>
       <Docs>
-        <param name="picture">To be added.</param>
-        <param name="dimensions">To be added.</param>
-        <param name="matrix">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="picture">The picture.</param>
+        <param name="dimensions">The size of the raster surface.</param>
+        <param name="matrix">The matrix to use when reading the image.</param>
+        <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.</summary>
+        <returns>An image whose contents is the picture.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPicture">
@@ -420,12 +433,14 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="picture">To be added.</param>
-        <param name="dimensions">To be added.</param>
-        <param name="paint">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="picture">The picture.</param>
+        <param name="dimensions">The size of the raster surface.</param>
+        <param name="paint">The paint to use when reading the image.</param>
+        <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.</summary>
+        <returns>An image whose contents is the picture.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPicture">
@@ -445,13 +460,15 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="picture">To be added.</param>
-        <param name="dimensions">To be added.</param>
-        <param name="matrix">To be added.</param>
-        <param name="paint">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="picture">The picture.</param>
+        <param name="dimensions">The size of the raster surface.</param>
+        <param name="matrix">The matrix to use when reading the image.</param>
+        <param name="paint">The paint to use when reading the image.</param>
+        <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.</summary>
+        <returns>An image whose contents is the picture.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPixelCopy">
@@ -468,10 +485,12 @@
         <Parameter Name="pixmap" Type="SkiaSharp.SKPixmap" />
       </Parameters>
       <Docs>
-        <param name="pixmap">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="pixmap">The pixmap that contains the image information and buffer location.</param>
+        <summary>Creates a new image from a copy of an in-memory buffer.</summary>
+        <returns>A new image with a copy of the contents of the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPixelCopy">
@@ -489,11 +508,13 @@
         <Parameter Name="pixels" Type="System.IntPtr" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information describing the encoding of the image in memory.</param>
+        <param name="pixels">The pointer to the image in memory.</param>
+        <summary>Creates a new image from a copy of an in-memory buffer.</summary>
+        <returns>A new image with a copy of the contents of the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPixelCopy">
@@ -512,12 +533,14 @@
         <Parameter Name="rowBytes" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <param name="rowBytes">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information describing the encoding of the image in memory.</param>
+        <param name="pixels">The pointer to the image in memory.</param>
+        <param name="rowBytes">The specified the number of bytes used per row in the image.</param>
+        <summary>Creates a new image from a copy of an in-memory buffer.</summary>
+        <returns>A new image with a copy of the contents of the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPixelCopy">
@@ -537,13 +560,15 @@
         <Parameter Name="ctable" Type="SkiaSharp.SKColorTable" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <param name="rowBytes">To be added.</param>
-        <param name="ctable">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information describing the encoding of the image in memory.</param>
+        <param name="pixels">The pointer to the image in memory.</param>
+        <param name="rowBytes">The specified the number of bytes used per row in the image.</param>
+        <param name="ctable">The color table to use with the image data.</param>
+        <summary>Creates a new image from a copy of an in-memory buffer.</summary>
+        <returns>A new image with a copy of the contents of the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPixelData">
@@ -562,12 +587,14 @@
         <Parameter Name="rowBytes" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="data">To be added.</param>
-        <param name="rowBytes">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information describing the encoding of the image in memory.</param>
+        <param name="data">The data object that contains the pixel data.</param>
+        <param name="rowBytes">The specified the number of bytes used per row in the image.</param>
+        <summary>Creates a new image from an in-memory buffer.</summary>
+        <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPixels">
@@ -584,10 +611,12 @@
         <Parameter Name="pixmap" Type="SkiaSharp.SKPixmap" />
       </Parameters>
       <Docs>
-        <param name="pixmap">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="pixmap">The pixmap that contains the image information and buffer location.</param>
+        <summary>Creates a new image from an in-memory buffer.</summary>
+        <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPixels">
@@ -605,11 +634,13 @@
         <Parameter Name="pixels" Type="System.IntPtr" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information describing the encoding of the image in memory.</param>
+        <param name="pixels">The pointer to the image in memory.</param>
+        <summary>Creates a new image from an in-memory buffer.</summary>
+        <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPixels">
@@ -627,11 +658,13 @@
         <Parameter Name="releaseProc" Type="SkiaSharp.SKImageRasterReleaseDelegate" />
       </Parameters>
       <Docs>
-        <param name="pixmap">To be added.</param>
-        <param name="releaseProc">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="pixmap">The pixmap that contains the image information and buffer location.</param>
+        <param name="releaseProc">The delegate to invoke when the image is about to be destroyed.</param>
+        <summary>Creates a new image from an in-memory buffer.</summary>
+        <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPixels">
@@ -660,7 +693,7 @@
         <param name="info">The image information describing the encoding of the image in memory.</param>
         <param name="pixels">The pointer to the image in memory.</param>
         <param name="rowBytes">The specified the number of bytes used per row in the image.</param>
-        <summary>Creates a new image from an in-memory buffer</summary>
+        <summary>Creates a new image from an in-memory buffer.</summary>
         <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
         <remarks>
           <para></para>
@@ -683,12 +716,14 @@
         <Parameter Name="releaseContext" Type="System.Object" />
       </Parameters>
       <Docs>
-        <param name="pixmap">To be added.</param>
-        <param name="releaseProc">To be added.</param>
-        <param name="releaseContext">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="pixmap">The pixmap that contains the image information and buffer location.</param>
+        <param name="releaseProc">The delegate to invoke when the image is about to be destroyed.</param>
+        <param name="releaseContext">The user data to use when invoking the delegate.</param>
+        <summary>Creates a new image from an in-memory buffer.</summary>
+        <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTexture">
@@ -706,11 +741,13 @@
         <Parameter Name="desc" Type="SkiaSharp.GRBackendTextureDesc" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="desc">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing texture.</param>
+        <summary>Creates a new image from the specified texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTexture">
@@ -729,12 +766,14 @@
         <Parameter Name="alpha" Type="SkiaSharp.SKAlphaType" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="desc">To be added.</param>
-        <param name="alpha">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing texture.</param>
+        <param name="alpha">The alpha type of the texture.</param>
+        <summary>Creates a new image from the specified texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTexture">
@@ -754,13 +793,15 @@
         <Parameter Name="releaseProc" Type="SkiaSharp.SKImageTextureReleaseDelegate" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="desc">To be added.</param>
-        <param name="alpha">To be added.</param>
-        <param name="releaseProc">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing texture.</param>
+        <param name="alpha">The alpha type of the texture.</param>
+        <param name="releaseProc">The delegate to invoke when the image is about to be destroyed.</param>
+        <summary>Creates a new image from the specified texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTexture">
@@ -781,14 +822,16 @@
         <Parameter Name="releaseContext" Type="System.Object" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="desc">To be added.</param>
-        <param name="alpha">To be added.</param>
-        <param name="releaseProc">To be added.</param>
-        <param name="releaseContext">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing texture.</param>
+        <param name="alpha">The alpha type of the texture.</param>
+        <param name="releaseProc">The delegate to invoke when the image is about to be destroyed.</param>
+        <param name="releaseContext">The user data to use when invoking the delegate.</param>
+        <summary>Creates a new image from the specified texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Height">
@@ -829,9 +872,13 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a value indicating whether the image will be drawn as a mask, with no intrinsic color of its own</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="IsTextureBacked">
@@ -845,9 +892,13 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a value indicating whether the image is texture backed.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="PeekPixels">
@@ -862,9 +913,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Returns the pixmap if the image is raster-based.</summary>
+        <returns>Returns the pixmap, or <see langword="null" /> if the image does not have access to pixel data.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="PeekPixels">
@@ -881,10 +934,12 @@
         <Parameter Name="pixmap" Type="SkiaSharp.SKPixmap" />
       </Parameters>
       <Docs>
-        <param name="pixmap">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="pixmap">The pixmap to receive the pixel information.</param>
+        <summary>Returns the pixmap if the image is raster-based.</summary>
+        <returns>Returns <see langword="true" /> on success, or <see langword="false" /> if the image does not have access to pixel data.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ReadPixels">
@@ -903,12 +958,12 @@
         <Parameter Name="srcY" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="pixmap">To be added.</param>
-        <param name="srcX">To be added.</param>
-        <param name="srcY">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="pixmap">The pixmap to read the pixel data into.</param>
+        <param name="srcX">The source x-coordinate to start reading from.</param>
+        <param name="srcY">The source y-coordinate to start reading from.</param>
+        <summary>Copies the pixels from the image into the specified buffer.</summary>
+        <returns>Returns <see langword="true" /> if the pexels were read, or <see langword="false" /> if there was an error.</returns>
+        <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dst.Info.Width, dst.Info.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ReadPixels">
@@ -928,13 +983,13 @@
         <Parameter Name="cachingHint" Type="SkiaSharp.SKImageCachingHint" />
       </Parameters>
       <Docs>
-        <param name="pixmap">To be added.</param>
-        <param name="srcX">To be added.</param>
-        <param name="srcY">To be added.</param>
-        <param name="cachingHint">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="pixmap">The pixmap to read the pixel data into.</param>
+        <param name="srcX">The source x-coordinate to start reading from.</param>
+        <param name="srcY">The source y-coordinate to start reading from.</param>
+        <param name="cachingHint">Whether or not to cache intermediate results.</param>
+        <summary>Copies the pixels from the image into the specified buffer.</summary>
+        <returns>Returns <see langword="true" /> if the pexels were read, or <see langword="false" /> if there was an error.</returns>
+        <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dst.Info.Width, dst.Info.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ReadPixels">
@@ -955,14 +1010,14 @@
         <Parameter Name="srcY" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="dstInfo">To be added.</param>
-        <param name="dstPixels">To be added.</param>
-        <param name="dstRowBytes">To be added.</param>
-        <param name="srcX">To be added.</param>
-        <param name="srcY">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="dstInfo">The image information describing the destination pixel buffer.</param>
+        <param name="dstPixels">The pixel buffer to read the pixel data into.</param>
+        <param name="dstRowBytes">The number of bytes in each row of in the destination buffer.</param>
+        <param name="srcX">The source x-coordinate to start reading from.</param>
+        <param name="srcY">The source y-coordinate to start reading from.</param>
+        <summary>Copies the pixels from the image into the specified buffer.</summary>
+        <returns>Returns <see langword="true" /> if the pexels were read, or <see langword="false" /> if there was an error.</returns>
+        <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dstInfo.Width, dstInfo.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ReadPixels">
@@ -984,37 +1039,15 @@
         <Parameter Name="cachingHint" Type="SkiaSharp.SKImageCachingHint" />
       </Parameters>
       <Docs>
-        <param name="dstInfo">To be added.</param>
-        <param name="dstPixels">To be added.</param>
-        <param name="dstRowBytes">To be added.</param>
-        <param name="srcX">To be added.</param>
-        <param name="srcY">To be added.</param>
-        <param name="cachingHint">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ScalePixels">
-      <MemberSignature Language="C#" Value="public SkiaSharp.SKPixmap ScalePixels (SkiaSharp.SKFilterQuality quality, SkiaSharp.SKImageCachingHint cachingHint);" />
-      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKPixmap ScalePixels(valuetype SkiaSharp.SKFilterQuality quality, valuetype SkiaSharp.SKImageCachingHint cachingHint) cil managed" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.56.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>SkiaSharp.SKPixmap</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="quality" Type="SkiaSharp.SKFilterQuality" />
-        <Parameter Name="cachingHint" Type="SkiaSharp.SKImageCachingHint" />
-      </Parameters>
-      <Docs>
-        <param name="quality">To be added.</param>
-        <param name="cachingHint">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="dstInfo">The image information describing the destination pixel buffer.</param>
+        <param name="dstPixels">The pixel buffer to read the pixel data into.</param>
+        <param name="dstRowBytes">The number of bytes in each row of in the destination buffer.</param>
+        <param name="srcX">The source x-coordinate to start reading from.</param>
+        <param name="srcY">The source y-coordinate to start reading from.</param>
+        <param name="cachingHint">Whether or not to cache intermediate results.</param>
+        <summary>Copies the pixels from the image into the specified buffer.</summary>
+        <returns>Returns <see langword="true" /> if the pexels were read, or <see langword="false" /> if there was an error.</returns>
+        <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dstInfo.Width, dstInfo.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ScalePixels">
@@ -1032,11 +1065,13 @@
         <Parameter Name="quality" Type="SkiaSharp.SKFilterQuality" />
       </Parameters>
       <Docs>
-        <param name="dst">To be added.</param>
-        <param name="quality">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="dst">The pixmap describing the destination pixel buffer.</param>
+        <param name="quality">The quality of scaling to use.</param>
+        <summary>Copies the pixels from this image into the destination pixmap, scaling the image if the dimensions differ.</summary>
+        <returns>Rreturns <see langword="true" /> on success, or <see langword="false" /> if the color type/alpha type could not be converted to the destination types.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ScalePixels">
@@ -1055,12 +1090,14 @@
         <Parameter Name="cachingHint" Type="SkiaSharp.SKImageCachingHint" />
       </Parameters>
       <Docs>
-        <param name="dst">To be added.</param>
-        <param name="quality">To be added.</param>
-        <param name="cachingHint">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="dst">The pixmap describing the destination pixel buffer.</param>
+        <param name="quality">The quality of scaling to use.</param>
+        <param name="cachingHint">Whether or not to cache intermediate results.</param>
+        <summary>Copies the pixels from this image into the destination pixmap, scaling the image if the dimensions differ.</summary>
+        <returns>Rreturns <see langword="true" /> on success, or <see langword="false" /> if the color type/alpha type could not be converted to the destination types.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Subset">
@@ -1077,10 +1114,10 @@
         <Parameter Name="subset" Type="SkiaSharp.SKRectI" />
       </Parameters>
       <Docs>
-        <param name="subset">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="subset">The rectangle indicating the subset to obtain.</param>
+        <summary>Returns a new image that is a subset of this image.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if there was an error or the rectangle does not intersct the image.</returns>
+        <remarks>The underlying implementation may share the pixels, or it may make a copy.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ToRasterImage">
@@ -1095,9 +1132,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Returns a raster-based image of the current image.</summary>
+        <returns>Returns a raster-based copy of a texture image, or the same image if it already raster-based.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ToShader">
@@ -1115,11 +1154,13 @@
         <Parameter Name="tileY" Type="SkiaSharp.SKShaderTileMode" />
       </Parameters>
       <Docs>
-        <param name="tileX">To be added.</param>
-        <param name="tileY">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="tileX">The method in which to tile along the x-axis.</param>
+        <param name="tileY">The method in which to tile along the y-axis.</param>
+        <summary>Creates a new bitmap shader from the current image.</summary>
+        <returns>Returns a new bitmap shader that will draw the current image.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ToShader">
@@ -1138,12 +1179,14 @@
         <Parameter Name="localMatrix" Type="SkiaSharp.SKMatrix" />
       </Parameters>
       <Docs>
-        <param name="tileX">To be added.</param>
-        <param name="tileY">To be added.</param>
-        <param name="localMatrix">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="tileX">The method in which to tile along the x-axis.</param>
+        <param name="tileY">The method in which to tile along the y-axis.</param>
+        <param name="localMatrix">The local matrix to use with the shader.</param>
+        <summary>Creates a new bitmap shader from the current image.</summary>
+        <returns>Returns a new bitmap shader that will draw the current image.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ToTextureImage">
@@ -1160,10 +1203,10 @@
         <Parameter Name="context" Type="SkiaSharp.GRContext" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <summary>Returns a texture-based image of the current image.</summary>
+        <returns>Returns a raster-based copy of a texture image, or the same image if it already raster-based.</returns>
+        <remarks>If the this image is from a different context, this will fail.</remarks>
       </Docs>
     </Member>
     <Member MemberName="UniqueId">

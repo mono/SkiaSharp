@@ -62,7 +62,7 @@
         <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
       </Parameters>
       <Docs>
-        <param name="info">Description of the desired image format.</param>
+        <param name="info">The description of the desired image format.</param>
         <summary>Constructor that configures the bitmap based on an <see cref="T:SkiaSharp.SKImageInfo" /> specification.</summary>
         <remarks>This constructor might throw an exception if it is not possible to create a bitmap with the specified configuration (for example, the image info requires a color table, and there is no color table).</remarks>
       </Docs>
@@ -108,7 +108,7 @@
         <Parameter Name="rowBytes" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="info">Description of the desired image format.</param>
+        <param name="info">The description of the desired image format.</param>
         <param name="rowBytes">The number of bytes per row.</param>
         <summary>Constructor that configures the bitmap based on an <see cref="T:SkiaSharp.SKImageInfo" /> specification, and the specified number of bytes per row (the stride size)</summary>
         <remarks>This constructor might throw an exception if it is not possible to create a bitmap with the specified configuration (for example, the image info requires a color table, and there is no color table).</remarks>
@@ -134,8 +134,8 @@
         <Parameter Name="isOpaque" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="width">Desired width in pixels.</param>
-        <param name="height">Desired height in pixels.</param>
+        <param name="width">The desired width in pixels.</param>
+        <param name="height">The desired height in pixels.</param>
         <param name="isOpaque">If true, sets the <see cref="T:SkiaSharp.SKAlphaType" /> to <see cref="F:SkiaSharp.SKAlphaType.Opaque" />, otherwise it sets it to <see cref="F:SkiaSharp.SKAlphaType.Premul" />.</param>
         <summary>Creates a bitmap with the given width, height and opacity with color type set to <see cref="F:SkiaSharp.SKImageInfo.PlatformColorType" /></summary>
         <remarks>This constructor might throw an exception if it is not possible to create a bitmap with the specified configuration (for example, the image info requires a color table, and there is no color table).</remarks>
@@ -162,8 +162,8 @@
         <Parameter Name="alphaType" Type="SkiaSharp.SKAlphaType" />
       </Parameters>
       <Docs>
-        <param name="width">Desired width in pixels.</param>
-        <param name="height">Desired height in pixels.</param>
+        <param name="width">The desired width in pixels.</param>
+        <param name="height">The desired height in pixels.</param>
         <param name="colorType">The desired <see cref="T:SkiaSharp.SKColorType" />.</param>
         <param name="alphaType">The desired <see cref="T:SkiaSharp.SKAlphaType" />.</param>
         <summary>Creates a bitmap with the given width, height, color type and alpha type.</summary>
@@ -211,7 +211,7 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Return the byte size of the pixels, based on the <see cref="P:SkiaSharp.SKBitmap.Height" /> and <see cref="P:SkiaSharp.SKBitmap.RowBytes" />.</summary>
+        <summary>Returns the byte size of the pixels, based on the <see cref="P:SkiaSharp.SKBitmap.Height" /> and <see cref="P:SkiaSharp.SKBitmap.RowBytes" />.</summary>
         <value>The byte size of the pixels.</value>
         <remarks>Note: this truncates the result to 32-bits.</remarks>
       </Docs>
@@ -902,7 +902,7 @@
       <Docs>
         <summary>Gets a value indicating whether drawing this bitmap has any effect.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
         <remarks>
           <para></para>
@@ -1029,7 +1029,7 @@
         <summary>Retrieve the alpha layer of this bitmap.</summary>
         <returns>Returns true if the alpha layer was retrieved, false otherwise.</returns>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1095,10 +1095,12 @@
         <Parameter Name="image" Type="SkiaSharp.SKImage" />
       </Parameters>
       <Docs>
-        <param name="image">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="image">The image to use to create a bitmap.</param>
+        <summary>Creates a new bitmap from a copy of the pixel data in the specified image.</summary>
+        <returns>Returns a new instance of <see cref="T:SkiaSharp.SKBitmap" />, or null if the bitmap could not be created.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetAddr">
@@ -1121,7 +1123,7 @@
         <summary>Returns the address of the specified pixel.</summary>
         <returns>Returns the address of the specified pixel.</returns>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1145,7 +1147,7 @@
         <summary>Returns the 16-bit value of the specified pixel.</summary>
         <returns>Returns the 16-bit value of the specified pixel.</returns>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1169,7 +1171,7 @@
         <summary>Returns the 32-bit value of the specified pixel.</summary>
         <returns>Returns the 32-bit value of the specified pixel.</returns>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1193,13 +1195,13 @@
         <summary>Returns the 8-bit value of the specified pixel.</summary>
         <returns>Returns the 8-bit value of the specified pixel.</returns>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetIndex8Color">
-      <MemberSignature Language="C#" Value="public SkiaSharp.SKColor GetIndex8Color (int x, int y);" />
-      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKColor GetIndex8Color(int32 x, int32 y) cil managed" />
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPMColor GetIndex8Color (int x, int y);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKPMColor GetIndex8Color(int32 x, int32 y) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.53.0.0</AssemblyVersion>
@@ -1209,7 +1211,7 @@
         <AssemblyVersion>1.56.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>SkiaSharp.SKColor</ReturnType>
+        <ReturnType>SkiaSharp.SKPMColor</ReturnType>
       </ReturnValue>
       <Parameters>
         <Parameter Name="x" Type="System.Int32" />
@@ -1218,7 +1220,7 @@
       <Docs>
         <param name="x">The x-cordinate.</param>
         <param name="y">The y-cordinate.</param>
-        <summary>Returns the color corresponding to the pixel specified by the coordinates for colortable based bitmaps.</summary>
+        <summary>Returns the color corresponding to the pixel specified by the coordinates for palette-based (color table) bitmaps.</summary>
         <returns>Returns the color corresponding to the pixel specified by the coordinates.</returns>
         <remarks>
           <para></para>
@@ -1697,10 +1699,10 @@
       <Docs>
         <summary>Gets a value indicating whether or not the bitmap is valid enough to be drawn.</summary>
         <value>
-          <para />
+          <para></para>
         </value>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -1746,7 +1748,7 @@
         <param name="method">The resize method.</param>
         <summary>Resizes the current bitmap using the specified resize method.</summary>
         <returns>Returns <see langword="true" /> if the resize operation can be performed, otherwise <see langword="false" />.</returns>
-        <remarks></remarks>
+        <remarks />
       </Docs>
     </Member>
     <Member MemberName="Resize">
@@ -1768,7 +1770,7 @@
         <param name="method">The resize method.</param>
         <summary>Resizes the current bitmap using the specified resize method.</summary>
         <returns>Returns the resized bitmap if the resize operation could be performed, otherwise <see langword="null" />.</returns>
-        <remarks></remarks>
+        <remarks />
       </Docs>
     </Member>
     <Member MemberName="Resize">
@@ -1792,7 +1794,7 @@
         <param name="method">The resize method.</param>
         <summary>Resizes the provided bitmap using the specified resize method.</summary>
         <returns>Returns <see langword="true" /> if the resize operation can be performed, otherwise <see langword="false" />.</returns>
-        <remarks></remarks>
+        <remarks />
       </Docs>
     </Member>
     <Member MemberName="RowBytes">
@@ -1937,7 +1939,7 @@
         <param name="ct">The color table to use, if changing <see cref="F:SkiaSharp.SKColorType.Index8" /> pixels, or <see langword="null" />.</param>
         <summary>Replaces the current pixel address for the bitmap.</summary>
         <remarks>
-          <para />
+          <para></para>
         </remarks>
       </Docs>
     </Member>
