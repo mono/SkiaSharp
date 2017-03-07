@@ -21,10 +21,10 @@ namespace SkiaSharp
 			color = value;
 		}
 
-		public byte Alpha => (byte)((color >> 24) & 0xff);
-		public byte Red => (byte)((color >> 16) & 0xff);
-		public byte Green => (byte)((color >> 8) & 0xff);
-		public byte Blue => (byte)((color) & 0xff);
+		public byte Alpha => (byte)((color >> SKImageInfo.PlatformColorAlphaShift) & 0xff);
+		public byte Red => (byte)((color >> SKImageInfo.PlatformColorRedShift) & 0xff);
+		public byte Green => (byte)((color >> SKImageInfo.PlatformColorGreenShift) & 0xff);
+		public byte Blue => (byte)((color >> SKImageInfo.PlatformColorBlueShift) & 0xff);
 
 		public static SKPMColor PreMultiply (SKColor color)
 		{

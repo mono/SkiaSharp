@@ -1299,6 +1299,8 @@ namespace SkiaSharp
 		public extern static void sk_color_unpremultiply_array(SKPMColor[] pmcolors, int size, [Out] SKColor[] colors);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SKPMColor sk_color_premultiply_array(SKColor[] colors, int size, [Out] SKPMColor[] pmcolors);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_color_get_bit_shift(out int a, out int r, out int g, out int b);
 
 		// SkPixmap
 

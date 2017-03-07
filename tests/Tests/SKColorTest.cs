@@ -176,5 +176,46 @@ namespace SkiaSharp.Tests
 				Assert.False(result, hex);
 			}
 		}
+
+		[Test]
+		public void PremultipliedColorsHaveCorrectBitShift()
+		{
+			var color = (SKColor)0x12345678;
+
+			Assert.AreEqual(new SKColor(0x34, 0x56, 0x78, 0x12), color);
+
+			SKPMColor pmcolor;
+			if (IsWindows) {
+				pmcolor = (SKPMColor)0x12345678;
+			} else {
+				pmcolor = (SKPMColor)0x12785634;
+			}
+
+			Assert.AreEqual(0x12, color.Alpha);
+			Assert.AreEqual(0x12, pmcolor.Alpha);
+
+			Assert.AreEqual(0x34, color.Red);
+			Assert.AreEqual(0x34, pmcolor.Red);
+
+			Assert.AreEqual(0x56, color.Green);
+			Assert.AreEqual(0x56, pmcolor.Green);
+
+			Assert.AreEqual(0x78, color.Blue);
+			Assert.AreEqual(0x78, pmcolor.Blue);
+
+			if (IsWindows) {
+				// ARGB
+				Assert.AreEqual(24, SKImageInfo.PlatformColorAlphaShift);
+				Assert.AreEqual(16, SKImageInfo.PlatformColorRedShift);
+				Assert.AreEqual(8, SKImageInfo.PlatformColorGreenShift);
+				Assert.AreEqual(0, SKImageInfo.PlatformColorBlueShift);
+			} else {
+				// ABGR
+				Assert.AreEqual(24, SKImageInfo.PlatformColorAlphaShift);
+				Assert.AreEqual(0, SKImageInfo.PlatformColorRedShift);
+				Assert.AreEqual(8, SKImageInfo.PlatformColorGreenShift);
+				Assert.AreEqual(16, SKImageInfo.PlatformColorBlueShift);
+			}
+		}
 	}
 }
