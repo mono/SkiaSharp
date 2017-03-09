@@ -487,6 +487,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		}
 	}
 
+	[Obsolete ("Use SKMatrix44 instead.")]
 	public class SK3dView : SKObject
 	{
 		protected override void Dispose (bool disposing)

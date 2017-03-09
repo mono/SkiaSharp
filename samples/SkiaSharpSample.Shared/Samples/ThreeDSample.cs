@@ -8,8 +8,9 @@ namespace SkiaSharpSample.Samples
 	[Preserve(AllMembers = true)]
 	public class ThreeDSample : AnimatedSampleBase
 	{
-		private float rotation;
-
+		private SKMatrix44 rotationMatrix;
+		private SKMatrix44 rotationStep;
+		
 		[Preserve]
 		public ThreeDSample()
 		{
@@ -19,7 +20,9 @@ namespace SkiaSharpSample.Samples
 
 		protected override async Task OnInit()
 		{
-			rotation = 30;
+			// create the base and step 3D rotation matrices (around the y-axis)
+			rotationMatrix = SKMatrix44.CreateRotationDegrees(0, 1, 0, 30);
+			rotationStep = SKMatrix44.CreateRotationDegrees(0, 1, 0, 5);
 
 			await base.OnInit();
 		}
@@ -28,22 +31,24 @@ namespace SkiaSharpSample.Samples
 		{
 			await Task.Delay(25, token);
 
-			rotation = (rotation + 5) % 360;
+			// step the rotation matrix
+			rotationMatrix.PostConcat(rotationStep);
 		}
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 		{
-			canvas.Translate(width / 2, height / 2);
-
 			var length = Math.Min(width / 6, height / 6);
 			var rect = new SKRect(-length, -length, length, length);
-			var side = rotation > 90 && rotation < 270;
+			var side = rotationMatrix.MapPoint(new SKPoint(1, 0)).X > 0;
 
 			canvas.Clear(SampleMedia.Colors.XamarinLightBlue);
 
-			var view = new SK3dView();
-			view.RotateYDegrees(rotation);
-			view.ApplyToCanvas(canvas);
+			// first do 2D translation to the center of the screen
+			canvas.Translate(width / 2, height / 2);
+
+			// then apply the 3D rotation
+			var matrix = rotationMatrix.Matrix;
+			canvas.Concat(ref matrix);
 
 			var paint = new SKPaint
 			{
