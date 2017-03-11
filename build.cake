@@ -280,10 +280,12 @@ Task ("tests")
         RunTests("./tests/SkiaSharp.Desktop.Tests/bin/AnyCPU/Release/SkiaSharp.Desktop.Tests.dll");
     }
     // .NET Core
-    RunDotNetCoreRestore ("./tests/SkiaSharp.NetCore.Tests");
-    DotNetCoreTest ("./tests/SkiaSharp.NetCore.Tests", new DotNetCoreTestSettings {
-        Configuration = "Release"
+    RunDotNetCoreRestore ("./tests/SkiaSharp.NetCore.Tests.Runner/SkiaSharp.NetCore.Tests.Runner.sln");
+    DotNetCorePublish ("./tests/SkiaSharp.NetCore.Tests.Runner", new DotNetCorePublishSettings {
+        Configuration = "Release",
+        OutputDirectory = "./tests/SkiaSharp.NetCore.Tests.Runner/artifacts/"
     });
+    DotNetCoreExecute ("./tests/SkiaSharp.NetCore.Tests.Runner/artifacts/SkiaSharp.NetCore.Tests.Runner.dll");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -667,6 +669,7 @@ Task ("clean-managed").Does (() =>
 
     CleanDirectories ("./tests/**/bin");
     CleanDirectories ("./tests/**/obj");
+    CleanDirectories ("./tests/**/artifacts");
     DeleteFiles ("./tests/**/project.lock.json");
 
     CleanDirectories ("./source/*/*/bin");
