@@ -32,7 +32,7 @@ var RunDotNetCoreRestore = new Action<string> ((solution) =>
 {
     DotNetCoreRestore (solution, new DotNetCoreRestoreSettings { 
         Sources = NuGetSources,
-        Verbosity = VERBOSITY_NUGETCORE
+        // Verbosity = VERBOSITY_NUGETCORE // TODO: v1.1.1 has different values ???
     });
 });
 
