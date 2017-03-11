@@ -7,7 +7,8 @@
     <AssemblyName>SkiaSharp.Svg</AssemblyName>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
-    <SignAssembly>true</SignAssembly>
+    <!-- TODO: remove this when CoreCLR supports signing on non-Windows -->
+    <SignAssembly Condition=" '$(OS)' == 'Windows_NT' ">true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\mono.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

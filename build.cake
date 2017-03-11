@@ -200,24 +200,27 @@ Task ("libs")
 
     // .NET Standard / .NET Core
     // build
-    RunDotNetCoreRestore ("binding/SkiaSharp.NetStandard");
-    DotNetBuild ("binding/SkiaSharp.NetStandard.sln", c => { 
-        c.Configuration = "Release"; 
-        c.Verbosity = VERBOSITY;
+    RunDotNetCoreRestore ("binding/SkiaSharp.NetStandard.sln");
+    DotNetCoreBuild ("binding/SkiaSharp.NetStandard.sln", new DotNetCoreBuildSettings { 
+        Configuration = "Release",
     });
     // copy build output
     CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
     // build other source
-    RunDotNetCoreRestore ("source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard");
-    RunDotNetCoreRestore ("source/SkiaSharp.Extended/SkiaSharp.Extended.NetStandard");
-    DotNetBuild ("./source/SkiaSharpSource.NetStandard.sln", c => { 
-        c.Configuration = "Release"; 
-        c.Verbosity = VERBOSITY;
+    RunDotNetCoreRestore ("source/SkiaSharpSource.NetStandard.sln");
+    DotNetCoreBuild ("./source/SkiaSharpSource.NetStandard.sln", new DotNetCoreBuildSettings { 
+        Configuration = "Release",
     });
-    // copy SVG
-    CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard/bin/Release/SkiaSharp.Svg.dll", "./output/netstandard/");
-    // copy Extended
-    CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended.NetStandard/bin/Release/SkiaSharp.Extended.dll", "./output/netstandard/");
+
+    // TODO: move out for all builds
+    // Assembly signing is not supported on non-Windows, so we can't really use the output
+    // See: https://github.com/dotnet/roslyn/issues/8210
+    if (IsRunningOnWindows ()) {
+        // copy SVG
+        CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard/bin/Release/SkiaSharp.Svg.dll", "./output/netstandard/");
+        // copy Extended
+        CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended.NetStandard/bin/Release/SkiaSharp.Extended.dll", "./output/netstandard/");
+    }
 });
 
 Task ("workbooks")
