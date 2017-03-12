@@ -1,9 +1,11 @@
 #addin "Cake.Xamarin"
 #addin "Cake.XCode"
 #addin "Cake.FileHelpers"
+#addin "Cake.StrongNameTool"
 
 #load "cake/Utils.cake"
 
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
@@ -30,9 +32,14 @@ var VERSION_PACKAGES = new Dictionary<string, string> {
     { "SkiaSharp.Extended", "1.56.2-beta" },
 };
 
+var CI_TARGETS = new string[] { "CI", "WINDOWS-CI", "LINUX-CI", "MAC-CI" };
+var IS_ON_CI = CI_TARGETS.Contains (TARGET.ToUpper ());
+var IS_ON_FINAL_CI = TARGET.ToUpper () == "CI";
+
 string ANDROID_HOME = EnvironmentVariable ("ANDROID_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-sdk-macosx";
 string ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? ANDROID_HOME;
 string ANDROID_NDK_HOME = EnvironmentVariable ("ANDROID_NDK_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-ndk";
+string SN_EXE = EnvironmentVariable ("SN_EXE") ?? (IsRunningOnWindows () ? null : "/usr/lib/mono/4.5/sn.exe");
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/depot_tools"));
@@ -198,24 +205,30 @@ Task ("libs")
         CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended/bin/Release/SkiaSharp.Extended.dll", "./output/portable/");
     }
 
+    // TODO: remove this nonsense !!!
+    // Assembly signing is not supported on non-Windows ???, so we MUST NOT use the output
+    // See: https://github.com/dotnet/roslyn/issues/8210
+    var CopyNetStandardOutput = true;
+    if (IS_ON_CI && !IsRunningOnWindows ()) {
+        CopyNetStandardOutput = false;
+    }
+
     // .NET Standard / .NET Core
     // build
     RunDotNetCoreRestore ("binding/SkiaSharp.NetStandard.sln");
     DotNetCoreBuild ("binding/SkiaSharp.NetStandard.sln", new DotNetCoreBuildSettings { 
         Configuration = "Release",
     });
-    // copy build output
-    CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
+    if (CopyNetStandardOutput) {
+        // copy build output
+        CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
+    }
     // build other source
     RunDotNetCoreRestore ("source/SkiaSharpSource.NetStandard.sln");
     DotNetCoreBuild ("./source/SkiaSharpSource.NetStandard.sln", new DotNetCoreBuildSettings { 
         Configuration = "Release",
     });
-
-    // TODO: move out for all builds
-    // Assembly signing is not supported on non-Windows, so we can't really use the output
-    // See: https://github.com/dotnet/roslyn/issues/8210
-    if (IsRunningOnWindows ()) {
+    if (CopyNetStandardOutput) {
         // copy SVG
         CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard/bin/Release/SkiaSharp.Svg.dll", "./output/netstandard/");
         // copy Extended
@@ -304,7 +317,7 @@ Task ("samples")
     CleanDirectories ("./samples/*/packages/SkiaSharp.*");
 
     // zip the samples for the GitHub release notes
-    if (TARGET == "CI") {
+    if (IS_ON_CI) {
         Zip ("./samples", "./output/samples.zip");
     }
 
@@ -534,8 +547,22 @@ Task ("nuget")
     .IsDependentOn ("docs")
     .Does (() => 
 {
+    // Because some platforms don't support signing,
+    // we must make sure the final package only contains signed assemblies
+    // And, we want to make sure all is well on Windows too
+    if (IS_ON_FINAL_CI || IsRunningOnWindows ()) {
+        var assemblies = GetFiles("./output/*/*.dll");
+        foreach(var f in assemblies) {
+            Information("Making sure that '{0}' is signed.", f);
+        }
+        StrongNameVerify(assemblies, new StrongNameToolSettings {
+            ForceVerification = true,
+            ToolPath = SN_EXE
+        });
+    }
+
     // we can only build the combined package on CI
-    if (TARGET == "CI") {
+    if (IS_ON_FINAL_CI) {
         PackageNuGet ("./nuget/SkiaSharp.nuspec", "./output/");
         PackageNuGet ("./nuget/SkiaSharp.Views.nuspec", "./output/");
         PackageNuGet ("./nuget/SkiaSharp.Views.Forms.nuspec", "./output/");
@@ -718,33 +745,30 @@ Task ("CI")
     .IsDependentOn ("tests")
     .IsDependentOn ("samples");
 
+Task ("Mac-CI")
+    .IsDependentOn ("CI");
+
 Task ("Windows-CI")
-    .IsDependentOn ("externals")
-    .IsDependentOn ("libs")
-    .IsDependentOn ("docs")
-    .IsDependentOn ("nuget")
-    .IsDependentOn ("component")
-    .IsDependentOn ("tests")
-    .IsDependentOn ("samples");
+    .IsDependentOn ("CI");
 
 Task ("Linux-CI")
-    .IsDependentOn ("externals")
-    .IsDependentOn ("libs")
-    .IsDependentOn ("docs")
-    .IsDependentOn ("nuget")
-    .IsDependentOn ("component")
-    .IsDependentOn ("tests")
-    .IsDependentOn ("samples");
+    .IsDependentOn ("CI");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // BUILD NOW 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Information ("Cake.exe ToolPath: {0}", CakeToolPath);
-Information ("Cake.exe NUnitConsoleToolPath: {0}", NUnitConsoleToolPath);
+Information ("NUnitConsole ToolPath: {0}", NUnitConsoleToolPath);
 Information ("NuGet.exe ToolPath: {0}", NugetToolPath);
 Information ("Xamarin-Component.exe ToolPath: {0}", XamarinComponentToolPath);
 Information ("genapi.exe ToolPath: {0}", GenApiToolPath);
+
+if (IS_ON_CI) {
+    Information ("Detected that we are building on CI, {0}.", IS_ON_FINAL_CI ? "and on FINAL CI" : "but NOT on final CI");
+} else {
+    Information ("Detected that we are {0} on CI.", "NOT");
+}
 
 ListEnvironmentVariables ();
 
