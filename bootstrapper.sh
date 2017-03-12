@@ -107,7 +107,7 @@ fi
 
 TEMP_TARGET=`echo "${TARGET}" | tr '[A-Z]' '[a-z]'`
 if [ "$TEMP_TARGET" == "clean" ] && [ $? -eq 0 ]; then
-    echo "Removing cake bits too..."
+    echo "Removing Cake bits too..."
     rm -rf "$TOOLS_DIR/Addins/" "$TOOLS_DIR/Cake/"
     rm -rf "$TOOLS_DIR/Microsoft.DotNet.BuildTools.GenAPI/"
     rm -rf "$TOOLS_DIR/NUnit.ConsoleRunner/" "$TOOLS_DIR/xunit.runner.console/"

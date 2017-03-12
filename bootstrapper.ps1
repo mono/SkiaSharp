@@ -88,4 +88,17 @@ if ($ForceBuild -eq "True") {
 
 # Start Cake
 Invoke-Expression "$CAKE_EXE `"$Script`" -target=`"$Target`" -configuration=`"$Configuration`" -verbosity=`"$Verbosity`" $UseDryRun $UseExperimental $buildForce $buildNames $buildTargets"
+
+if ($Target.ToLower() -eq "clean" -and $LASTEXITCODE -eq 0) {
+    echo "Removing Cake bits too..."
+    Remove-Item -Recurse -Force (Join-Path $TOOLS_DIR "Addins")
+    Remove-Item -Recurse -Force (Join-Path $TOOLS_DIR "Cake")
+    Remove-Item -Recurse -Force (Join-Path $TOOLS_DIR "Microsoft.DotNet.BuildTools.GenAPI")
+    Remove-Item -Recurse -Force (Join-Path $TOOLS_DIR "NUnit.ConsoleRunner")
+    Remove-Item -Force (Join-Path $TOOLS_DIR "nuget.exe")
+    Remove-Item -Recurse -Force (Join-Path $TOOLS_DIR "__MACOSX")
+    Remove-Item -Force (Join-Path $TOOLS_DIR "xamarin-component.exe")
+    Remove-Item -Force (Join-Path $TOOLS_DIR "xpkg.zip")
+}
+
 exit $LASTEXITCODE
