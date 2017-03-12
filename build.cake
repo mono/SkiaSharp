@@ -20,6 +20,7 @@ var CakeToolPath = GetToolPath ("Cake/Cake.exe");
 var NUnitConsoleToolPath = GetToolPath ("NUnit.ConsoleRunner/tools/nunit3-console.exe");
 var GenApiToolPath = GetToolPath ("Microsoft.DotNet.BuildTools.GenAPI/tools/GenAPI.exe");
 var MDocPath = GetToolPath ("mdoc/mdoc.exe");
+var SNToolPath = GetSNToolPath (EnvironmentVariable ("SN_EXE"));
 
 var VERSION_ASSEMBLY = "1.56.0.0";
 var VERSION_FILE = "1.56.2.0";
@@ -39,32 +40,6 @@ var IS_ON_FINAL_CI = TARGET.ToUpper () == "CI";
 string ANDROID_HOME = EnvironmentVariable ("ANDROID_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-sdk-macosx";
 string ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? ANDROID_HOME;
 string ANDROID_NDK_HOME = EnvironmentVariable ("ANDROID_NDK_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-ndk";
-string SNToolPath = EnvironmentVariable ("SN_EXE");
-if (string.IsNullOrEmpty (SNToolPath)) {
-    if (IsRunningOnLinux ()) {
-        SNToolPath = "/usr/lib/mono/4.5/sn.exe";
-    } else if (IsRunningOnMac ()) {
-        SNToolPath = "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/4.5/sn.exe";
-    } else if (IsRunningOnWindows ()) {
-        // search through all the SDKs to find the latest
-        var snExes = new List<string> ();
-        var arch = Environment.Is64BitOperatingSystem ? "x64" : "";
-        var progFiles = (DirectoryPath)Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
-        var dirPath = progFiles.Combine ("Microsoft SDKs/Windows").FullPath + "/v*A";
-        var dirs = GetDirectories (dirPath).OrderBy (d => {
-            var version = d.GetDirectoryName ();
-            return double.Parse (version.Substring (1, version.Length - 2));
-        });
-        foreach (var dir in dirs) {
-            var path = dir.FullPath + "/bin/*/" + arch + "/sn.exe";
-            var files = GetFiles (path).Select (p => p.FullPath).ToList ();
-            files.Sort ();
-            snExes.AddRange (files);
-        }
-
-        SNToolPath = snExes.LastOrDefault ();
-    }
-}
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/depot_tools"));

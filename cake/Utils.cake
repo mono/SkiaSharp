@@ -66,3 +66,33 @@ var IsRunningOnMac = new Func<bool> (() => {
 var IsRunningOnLinux = new Func<bool> (() => {
     return IsRunningOnUnix () && !IsRunningOnMac ();
 });
+
+FilePath GetSNToolPath (string possible)
+{
+    if (string.IsNullOrEmpty (possible)) {
+        if (IsRunningOnLinux ()) {
+            possible = "/usr/lib/mono/4.5/sn.exe";
+        } else if (IsRunningOnMac ()) {
+            possible = "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/4.5/sn.exe";
+        } else if (IsRunningOnWindows ()) {
+            // search through all the SDKs to find the latest
+            var snExes = new List<string> ();
+            var arch = Environment.Is64BitOperatingSystem ? "x64" : "";
+            var progFiles = (DirectoryPath)Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
+            var dirPath = progFiles.Combine ("Microsoft SDKs/Windows").FullPath + "/v*A";
+            var dirs = GetDirectories (dirPath).OrderBy (d => {
+                var version = d.GetDirectoryName ();
+                return double.Parse (version.Substring (1, version.Length - 2));
+            });
+            foreach (var dir in dirs) {
+                var path = dir.FullPath + "/bin/*/" + arch + "/sn.exe";
+                var files = GetFiles (path).Select (p => p.FullPath).ToList ();
+                files.Sort ();
+                snExes.AddRange (files);
+            }
+
+            possible = snExes.LastOrDefault ();
+        }
+    }
+    return possible;
+}
