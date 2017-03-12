@@ -59,13 +59,15 @@ internal static class MacPlatformDetector
     }
 }
 
-var IsRunningOnMac = new Func<bool> (() => {
+bool IsRunningOnMac ()
+{
     return System.Environment.OSVersion.Platform == PlatformID.MacOSX || MacPlatformDetector.IsMac.Value;
-});
+}
 
-var IsRunningOnLinux = new Func<bool> (() => {
+bool IsRunningOnLinux ()
+{
     return IsRunningOnUnix () && !IsRunningOnMac ();
-});
+}
 
 FilePath GetSNToolPath (string possible)
 {
