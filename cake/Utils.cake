@@ -31,3 +31,38 @@ FilePath GetToolPath (FilePath toolPath)
          return appRootExe;
     throw new FileNotFoundException ("Unable to find tool: " + appRootExe); 
 }
+
+internal static class MacPlatformDetector
+{
+    internal static readonly Lazy<bool> IsMac = new Lazy<bool> (IsRunningOnMac);
+
+    [DllImport ("libc")]
+    static extern int uname (IntPtr buf);
+
+    static bool IsRunningOnMac ()
+    {
+        IntPtr buf = IntPtr.Zero;
+        try {
+            buf = Marshal.AllocHGlobal (8192);
+            // This is a hacktastic way of getting sysname from uname ()
+            if (uname (buf) == 0) {
+                string os = Marshal.PtrToStringAnsi (buf);
+                if (os == "Darwin")
+                    return true;
+            }
+        } catch {
+        } finally {
+            if (buf != IntPtr.Zero)
+                Marshal.FreeHGlobal (buf);
+        }
+        return false;
+    }
+}
+
+var IsRunningOnMac = new Func<bool> (() => {
+    return System.Environment.OSVersion.Platform == PlatformID.MacOSX || MacPlatformDetector.IsMac.Value;
+});
+
+var IsRunningOnLinux = new Func<bool> (() => {
+    return IsRunningOnUnix () && !IsRunningOnMac ();
+});

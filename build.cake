@@ -41,9 +41,11 @@ string ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? ANDROID_HO
 string ANDROID_NDK_HOME = EnvironmentVariable ("ANDROID_NDK_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-ndk";
 string SNToolPath = EnvironmentVariable ("SN_EXE");
 if (string.IsNullOrEmpty (SNToolPath)) {
-    if (!IsRunningOnWindows ()) {
+    if (IsRunningOnLinux ()) {
         SNToolPath = "/usr/lib/mono/4.5/sn.exe";
-    } else {
+    } else if (IsRunningOnMac ()) {
+        SNToolPath = "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/4.5/sn.exe";
+    } else if (IsRunningOnWindows ()) {
         // search through all the SDKs to find the latest
         var snExes = new List<string> ();
         var arch = Environment.Is64BitOperatingSystem ? "x64" : "";
