@@ -39,7 +39,30 @@ var IS_ON_FINAL_CI = TARGET.ToUpper () == "CI";
 string ANDROID_HOME = EnvironmentVariable ("ANDROID_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-sdk-macosx";
 string ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? ANDROID_HOME;
 string ANDROID_NDK_HOME = EnvironmentVariable ("ANDROID_NDK_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-ndk";
-string SN_EXE = EnvironmentVariable ("SN_EXE") ?? (IsRunningOnWindows () ? null : "/usr/lib/mono/4.5/sn.exe");
+string SNToolPath = EnvironmentVariable ("SN_EXE");
+if (string.IsNullOrEmpty (SNToolPath)) {
+    if (!IsRunningOnWindows ()) {
+        SNToolPath = "/usr/lib/mono/4.5/sn.exe";
+    } else {
+        // search through all the SDKs to find the latest
+        var snExes = new List<string> ();
+        var arch = Environment.Is64BitOperatingSystem ? "x64" : "";
+        var progFiles = (DirectoryPath)Environment.GetFolderPath (Environment.SpecialFolder.ProgramFilesX86);
+        var dirPath = progFiles.Combine ("Microsoft SDKs/Windows").FullPath + "/v*A";
+        var dirs = GetDirectories (dirPath).OrderBy (d => {
+            var version = d.GetDirectoryName ();
+            return double.Parse (version.Substring (1, version.Length - 2));
+        });
+        foreach (var dir in dirs) {
+            var path = dir.FullPath + "/bin/*/" + arch + "/sn.exe";
+            var files = GetFiles (path).Select (p => p.FullPath).ToList ();
+            files.Sort ();
+            snExes.AddRange (files);
+        }
+
+        SNToolPath = snExes.LastOrDefault ();
+    }
+}
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/depot_tools"));
@@ -551,14 +574,27 @@ Task ("nuget")
     // we must make sure the final package only contains signed assemblies
     // And, we want to make sure all is well on Windows too
     if (IS_ON_FINAL_CI || IsRunningOnWindows ()) {
-        var assemblies = GetFiles("./output/*/*.dll");
-        foreach(var f in assemblies) {
-            Information("Making sure that '{0}' is signed.", f);
+        var excludedAssemblies = new string[] {
+            "/SkiaSharp.Views.Forms.dll" // Xamarin.Forms is not sigend, so we can't sign
+        };
+        foreach (var f in GetFiles("./output/*/*.dll")) {
+            // skip the excluded assemblies
+            var excluded = false;
+            foreach (var assembly in excludedAssemblies) {
+                if (f.FullPath.EndsWith (assembly)) {
+                    excluded = true;
+                    break;
+                }
+            }
+            // verify
+            if (!excluded) {
+                Information("Making sure that '{0}' is signed.", f);
+                StrongNameVerify(f, new StrongNameToolSettings {
+                    ForceVerification = true,
+                    ToolPath = SNToolPath
+                });
+            }
         }
-        StrongNameVerify(assemblies, new StrongNameToolSettings {
-            ForceVerification = true,
-            ToolPath = SN_EXE
-        });
     }
 
     // we can only build the combined package on CI
@@ -763,6 +799,7 @@ Information ("NUnitConsole ToolPath: {0}", NUnitConsoleToolPath);
 Information ("NuGet.exe ToolPath: {0}", NugetToolPath);
 Information ("Xamarin-Component.exe ToolPath: {0}", XamarinComponentToolPath);
 Information ("genapi.exe ToolPath: {0}", GenApiToolPath);
+Information ("sn.exe ToolPath: {0}", SNToolPath);
 
 if (IS_ON_CI) {
     Information ("Detected that we are building on CI, {0}.", IS_ON_FINAL_CI ? "and on FINAL CI" : "but NOT on final CI");
