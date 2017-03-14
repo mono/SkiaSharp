@@ -64,8 +64,7 @@ namespace SkiaSharp
 		LeftBottom = 8,
 	}
 
-	public enum SKEncodedFormat {
-		Unknown,
+	public enum SKEncodedImageFormat {
 		Bmp,
 		Gif,
 		Ico,
@@ -475,6 +474,8 @@ namespace SkiaSharp
 	public struct SKCodecFrameInfo {
 		private IntPtr requiredFrame;
 		private IntPtr duration;
+		[MarshalAs (UnmanagedType.I1)]
+		private bool fullyRecieved;
 
 		public int RequiredFrame {
 			get { return (int)requiredFrame; }
@@ -484,6 +485,11 @@ namespace SkiaSharp
 		public int Duration {
 			get { return (int)duration; }
 			set { duration = (IntPtr)value; }
+		}
+
+		public bool FullyRecieved {
+			get { return fullyRecieved; }
+			set { fullyRecieved = value; }
 		}
 	}
 
@@ -1690,7 +1696,7 @@ namespace SkiaSharp
 	public enum GRPixelConfig {
 		Unknown,
 		Alpha8,
-		Index8,
+		Gray8,
 		Rgb565,
 		Rgba4444,
 		Rgba8888,
@@ -2036,15 +2042,6 @@ namespace SkiaSharp
 		public string Producer { get; set; }
 		public DateTime? Creation { get; set; }
 		public DateTime? Modified { get; set; }
-	}
-
-	[Flags]
-	public enum SKShadowMaskFilterShadowFlags {
-		None = 0x00,
-		TransparentOccluder = 0x01,
-		LargerUmbra = 0x02,
-		GaussianEdge = 0x04,
-		All = 0x07
 	}
 
 	public struct SKEncodedInfo {

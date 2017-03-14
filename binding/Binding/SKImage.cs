@@ -11,16 +11,16 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
+	[Obsolete ("Use SKEncodedImageFormat instead.")]
 	public enum SKImageEncodeFormat {
-		Unknown,
-		Bmp,
-		Gif,
-		Ico,
-		Jpeg,
-		Png,
-		Wbmp,
-		Webp,
-		Ktx,
+		Bmp = SKEncodedImageFormat.Bmp,
+		Gif = SKEncodedImageFormat.Gif,
+		Ico = SKEncodedImageFormat.Ico,
+		Jpeg = SKEncodedImageFormat.Jpeg,
+		Png = SKEncodedImageFormat.Png,
+		Wbmp = SKEncodedImageFormat.Wbmp,
+		Webp = SKEncodedImageFormat.Webp,
+		Ktx = SKEncodedImageFormat.Ktx,
 	}
 
 	// public delegates
@@ -260,7 +260,13 @@ namespace SkiaSharp
 			return GetObject<SKData> (SkiaApi.sk_image_encode (Handle));
 		}
 
+		[Obsolete ("Use Encode(SKEncodedImageFormat, int) instead.")]
 		public SKData Encode (SKImageEncodeFormat format, int quality)
+		{
+			return Encode ((SKEncodedImageFormat)format, quality);
+		}
+
+		public SKData Encode (SKEncodedImageFormat format, int quality)
 		{
 			return GetObject<SKData> (SkiaApi.sk_image_encode_specific (Handle, format, quality));
 		}
@@ -337,13 +343,6 @@ namespace SkiaSharp
 		public SKImage Subset (SKRectI subset)
 		{
 			return GetObject<SKImage> (SkiaApi.sk_image_make_subset (Handle, ref subset));
-		}
-
-		public SKImage ToTextureImage (GRContext context)
-		{
-			if (context == null)
-				throw new ArgumentNullException (nameof (context));
-			return GetObject<SKImage> (SkiaApi.sk_image_make_texture_image (Handle, context.Handle));
 		}
 
 		public SKImage ToRasterImage ()

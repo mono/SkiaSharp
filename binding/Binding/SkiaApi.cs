@@ -494,11 +494,9 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_data_t sk_image_encode(sk_image_t image);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_data_t sk_image_encode_specific(sk_image_t image, SKImageEncodeFormat encoder, int quality);
+		public extern static sk_data_t sk_image_encode_specific(sk_image_t image, SKEncodedImageFormat encoder, int quality);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_image_t sk_image_make_subset(sk_image_t image, ref SKRectI subset);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_image_t sk_image_make_texture_image(sk_image_t image, gr_context_t context);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_image_t sk_image_make_non_texture_image(sk_image_t image);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -694,15 +692,11 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_maskfilter_t sk_maskfilter_new_blur_with_flags(SKBlurStyle style, float sigma, ref SKRect occluder, SKBlurMaskFilterFlags flags);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_maskfilter_t sk_maskfilter_new_emboss(float blurSigma, float[] direction, float ambient, float specular);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_maskfilter_t sk_maskfilter_new_table(byte[] table /*[256]*/);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_maskfilter_t sk_maskfilter_new_gamma(float gamma);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_maskfilter_t sk_maskfilter_new_clip(byte min, byte max);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_maskfilter_t sk_maskfilter_new_shadow(float occluderHeight, ref SKPoint3 lightPos, float lightRadius, float ambientAlpha, float spotAlpha, SKShadowMaskFilterShadowFlags flags);
 
 		// SkImageFilter::CropRect
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1055,8 +1049,6 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_wstream_dynamicmemorystream_t sk_dynamicmemorywstream_new();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_data_t sk_dynamicmemorywstream_copy_to_data(sk_wstream_dynamicmemorystream_t cstream);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_stream_assetstream_t sk_dynamicmemorywstream_detach_as_stream(sk_wstream_dynamicmemorystream_t cstream);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
@@ -1065,7 +1057,8 @@ namespace SkiaSharp
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_wstream_write(sk_wstream_t cstream, byte[] buffer, IntPtr size);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_wstream_newline(sk_wstream_t cstream);
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_wstream_newline(sk_wstream_t cstream);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_wstream_flush(sk_wstream_t cstream);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1154,7 +1147,7 @@ namespace SkiaSharp
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_codec_get_valid_subset(sk_codec_t codec, ref SKRectI desiredSubset);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static SKEncodedFormat sk_codec_get_encoded_format(sk_codec_t codec);
+		public extern static SKEncodedImageFormat sk_codec_get_encoded_format(sk_codec_t codec);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SKCodecResult sk_codec_get_pixels(sk_codec_t codec, ref SKImageInfo info, IntPtr pixels, IntPtr rowBytes, ref SKCodecOptionsInternal options, IntPtr ctable, ref int ctableCount);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]

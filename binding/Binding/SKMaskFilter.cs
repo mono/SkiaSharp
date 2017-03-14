@@ -59,16 +59,6 @@ namespace SkiaSharp
 			return GetObject<SKMaskFilter> (SkiaApi.sk_maskfilter_new_blur_with_flags (blurStyle, sigma, ref occluder, flags));
 		}
 
-		public static SKMaskFilter CreateEmboss(float blurSigma, SKPoint3 direction, float ambient, float specular)
-		{
-			return CreateEmboss(blurSigma, direction.X, direction.Y, direction.Z, ambient, specular);
-		}
-
-		public static SKMaskFilter CreateEmboss(float blurSigma, float directionX, float directionY, float directionZ, float ambient, float specular)
-		{
-			return GetObject<SKMaskFilter>(SkiaApi.sk_maskfilter_new_emboss(blurSigma, new[] { directionX, directionY, directionZ }, ambient, specular));
-		}
-
 		public static SKMaskFilter CreateTable(byte[] table)
 		{
 			if (table == null)
@@ -86,11 +76,6 @@ namespace SkiaSharp
 		public static SKMaskFilter CreateClip(byte min, byte max)
 		{
 			return GetObject<SKMaskFilter>(SkiaApi.sk_maskfilter_new_clip(min, max));
-		}
-
-		public static SKMaskFilter CreateShadow(float occluderHeight, SKPoint3 lightPos, float lightRadius, float ambientAlpha, float spotAlpha, SKShadowMaskFilterShadowFlags flags = SKShadowMaskFilterShadowFlags.None)
-		{
-			return GetObject<SKMaskFilter>(SkiaApi.sk_maskfilter_new_shadow(occluderHeight, ref lightPos, lightRadius, ambientAlpha, spotAlpha, flags));
 		}
 	}
 }

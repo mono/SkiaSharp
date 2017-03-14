@@ -53,7 +53,7 @@ namespace SkiaSharp
 			get { return SkiaApi.sk_codec_get_origin (Handle); }
 		}
 
-		public SKEncodedFormat EncodedFormat {
+		public SKEncodedImageFormat EncodedFormat {
 			get { return SkiaApi.sk_codec_get_encoded_format (Handle); }
 		}
 

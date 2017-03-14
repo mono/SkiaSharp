@@ -11,8 +11,6 @@
 
 #include "sk_types_priv.h"
 
-#include "../images/SkForceLinking.h"
-
 #ifdef NEED_INIT_NEON
 
 namespace SkOpts {
@@ -20,7 +18,3 @@ namespace SkOpts {
 }
 
 #endif
-
-void sk_force_linking () {
-    SkForceLinking(false);
-}

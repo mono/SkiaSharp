@@ -279,9 +279,9 @@ namespace SkiaSharp
 			}
 		}
 
-		public void NewLine ()
+		public bool NewLine ()
 		{
-			SkiaApi.sk_wstream_newline (Handle);
+			return SkiaApi.sk_wstream_newline (Handle);
 		}
 
 		public virtual void Flush ()
@@ -399,11 +399,6 @@ namespace SkiaSharp
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKDynamicMemoryWStream instance.");
 			}
-		}
-
-		public SKData CopyToData ()
-		{
-			return GetObject<SKData> (SkiaApi.sk_dynamicmemorywstream_copy_to_data (Handle));
 		}
 
 		public SKStreamAsset DetachAsStream ()

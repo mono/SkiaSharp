@@ -22,8 +22,6 @@ SK_C_PLUS_PLUS_BEGIN_GUARD
 #  define SK_X_API __attribute__((visibility("default")))
 #endif
 
-SK_X_API void sk_force_linking ();
-
 SK_C_PLUS_PLUS_END_GUARD
 
 #endif
