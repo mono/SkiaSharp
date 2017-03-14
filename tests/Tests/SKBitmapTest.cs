@@ -226,7 +226,7 @@ namespace SkiaSharp.Tests
 				SKBitmap.Resize(scaledBitmap, bitmap, SKBitmapResizeMethod.Hamming);
 
 				using (var image = SKImage.FromBitmap(scaledBitmap))
-				using (var data = image.Encode(SKImageEncodeFormat.Png, 80))
+				using (var data = image.Encode(SKEncodedImageFormat.Png, 80))
 				{
 					data.SaveTo(ms);
 
