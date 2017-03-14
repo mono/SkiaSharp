@@ -5,47 +5,9 @@ include $(CLEAR_VARS)
 
 cmd-strip = $(PRIVATE_STRIP) --strip-all $(call host-path,$1)
 
-LOCAL_WHOLE_STATIC_LIBRARIES := libskia_core
+# LOCAL_WHOLE_STATIC_LIBRARIES := libskia
 
-LOCAL_STATIC_LIBRARIES := libcpu_features \
-                          libskia_ports \
-                          libskia_effects \
-                          libskia_skgpu \
-                          libsksl \
-                          libskia_codec \
-                          libskia_opts \
-                          libskia_opts_avx \
-                          libskia_opts_ssse3 \
-                          libskia_opts_sse41 \
-                          libskia_opts_neon \
-                          libskia_opts_crc32 \
-                          libskia_opts_sse42 \
-                          libskia_opts_hsw \
-                          libskia_pdf \
-                          libskia_svg \
-                          libskia_xml \
-                          libskia_utils \
-                          libskia_images \
-                          libskia_sfnt \
-                          libraw_codec \
-                          libfreetype_static \
-                          libSkKTX \
-                          libpiex \
-                          libdng_sdk \
-                          libpng_static \
-                          libpng_static_neon \
-                          libjpeg-turbo \
-                          libwebp_enc \
-                          libwebp_dec \
-                          libwebp_dsp \
-                          libwebp_utils \
-                          libwebp_demux \
-                          libwebp_dsp_enc \
-                          libwebp_dsp_neon \
-                          libzlib \
-                          libexpat_static \
-                          libetc1 \
-                          libskia_core 
+LOCAL_STATIC_LIBRARIES := libskia
 
 LOCAL_LDLIBS           := -llog -lEGL -lGLESv2
 
