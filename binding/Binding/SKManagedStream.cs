@@ -36,7 +36,7 @@ namespace SkiaSharp
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		internal delegate bool    seek_delegate         (IntPtr managedStreamPtr, IntPtr position);
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		internal delegate bool    move_delegate         (IntPtr managedStreamPtr, long offset);
+		internal delegate bool    move_delegate         (IntPtr managedStreamPtr, int offset);
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		internal delegate IntPtr  getLength_delegate    (IntPtr managedStreamPtr);
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -219,7 +219,7 @@ namespace SkiaSharp
 		#if __IOS__
 		[MonoPInvokeCallback(typeof(move_delegate))]
 		#endif
-		private static bool MoveInternal (IntPtr managedStreamPtr, long offset)
+		private static bool MoveInternal (IntPtr managedStreamPtr, int offset)
 		{
 			var managedStream = AsManagedStream (managedStreamPtr);
 			if (!managedStream.stream.CanSeek) {
