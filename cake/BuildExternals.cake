@@ -153,90 +153,103 @@ Task ("externals-native")
         if (!DirectoryExists ("./output/linux/x64/")) CreateDirectory ("./output/linux/x64/");
         if (!DirectoryExists ("./output/linux/x86/")) CreateDirectory ("./output/linux/x86/");
         CopyFileToDirectory ("./native-builds/lib/linux/x64/libSkiaSharp.so." + VERSION_SONAME, "./output/linux/x64/");
-//        CopyFileToDirectory ("./native-builds/lib/linux/x86/libSkiaSharp.so." + VERSION_SONAME, "./output/linux/x86/");
+        //CopyFileToDirectory ("./native-builds/lib/linux/x86/libSkiaSharp.so." + VERSION_SONAME, "./output/linux/x86/");
         // the second copy excludes the file version
         CopyFile ("./native-builds/lib/linux/x64/libSkiaSharp.so." + VERSION_SONAME, "./output/linux/x64/libSkiaSharp.so");
-//        CopyFile ("./native-builds/lib/linux/x86/libSkiaSharp.so." + VERSION_SONAME, "./output/linux/x86/libSkiaSharp.so");
+        //CopyFile ("./native-builds/lib/linux/x86/libSkiaSharp.so." + VERSION_SONAME, "./output/linux/x86/libSkiaSharp.so");
     }
 });
 
 // this builds the native C and C++ externals for Windows
 Task ("externals-windows")
+    .IsDependentOn ("externals-init")
     .WithCriteria (IsRunningOnWindows ())
-    .WithCriteria (
-        !FileExists ("native-builds/lib/windows/x86/libSkiaSharp.dll") ||
-        !FileExists ("native-builds/lib/windows/x64/libSkiaSharp.dll"))
     .Does (() =>  
 {
-    var buildArch = new Action<string, string, string> ((platform, skiaArch, dir) => {
-        RunGyp ("skia_arch_type='" + skiaArch + "' skia_gpu=1", "msvs");
-        ProcessSolutionProjects ("native-builds/libSkiaSharp_windows/libSkiaSharp_" + dir + ".sln", (projectName, projectPath) => {
-            if (projectName != "libSkiaSharp") {
-                RedirectBuildOutputs (projectPath);
-            }
+    var buildArch = new Action<string, string, string> ((arch, skiaArch, dir) => {
+        // generate native skia build files
+        RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn.exe"), new ProcessSettings {
+            Arguments = 
+                @"gen out/win/" + arch + @" " + 
+                @"--args=""" +
+                @"  is_official_build=true skia_enable_tools=false" +
+                @"  target_os=\""win\"" target_cpu=\""" + skiaArch + @"\""" +
+                @"  skia_use_icu=false skia_use_sfntly=false" +
+                @"  extra_cflags=[ \""-DSKIA_C_DLL\"", \""/MD\"" ]" +
+                @"  extra_ldflags=[ ]" +
+                @"""",
+            WorkingDirectory = SKIA_PATH.FullPath,
         });
-        VisualStudioPathFixup ();
-        DotNetBuild ("native-builds/libSkiaSharp_windows/libSkiaSharp_" + dir + ".sln", c => { 
-            c.Configuration = "Release"; 
-            c.Properties ["Platform"] = new [] { platform };
-            c.Verbosity = VERBOSITY;
+
+        // build native skia
+        RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja.exe"), new ProcessSettings {
+            Arguments = "-C out/win/" + arch,
+            WorkingDirectory = SKIA_PATH.FullPath,
         });
+
+        // build libSkiaSharp
+        MSBuild ("native-builds/libSkiaSharp_windows/libSkiaSharp.sln", new MSBuildSettings { 
+            Configuration = "Release",
+            PlatformTarget = (PlatformTarget)Enum.Parse(typeof(PlatformTarget), arch),
+        });
+
+        // copy libSkiaSharp to output
         if (!DirectoryExists ("native-builds/lib/windows/" + dir)) CreateDirectory ("native-builds/lib/windows/" + dir);
-        CopyFileToDirectory ("native-builds/libSkiaSharp_windows/bin/" + platform + "/Release/libSkiaSharp.lib", "native-builds/lib/windows/" + dir);
-        CopyFileToDirectory ("native-builds/libSkiaSharp_windows/bin/" + platform + "/Release/libSkiaSharp.dll", "native-builds/lib/windows/" + dir);
-        CopyFileToDirectory ("native-builds/libSkiaSharp_windows/bin/" + platform + "/Release/libSkiaSharp.pdb", "native-builds/lib/windows/" + dir);
+        CopyFileToDirectory ("native-builds/libSkiaSharp_windows/bin/" + arch + "/Release/libSkiaSharp.lib", "native-builds/lib/windows/" + dir);
+        CopyFileToDirectory ("native-builds/libSkiaSharp_windows/bin/" + arch + "/Release/libSkiaSharp.dll", "native-builds/lib/windows/" + dir);
+        CopyFileToDirectory ("native-builds/libSkiaSharp_windows/bin/" + arch + "/Release/libSkiaSharp.pdb", "native-builds/lib/windows/" + dir);
     });
 
-    // set up the gyp environment variables
-    AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
-    SetEnvironmentVariable ("SKIA_OUT", "");
-    
     buildArch ("Win32", "x86", "x86");
-    buildArch ("x64", "x86_64", "x64");
+    buildArch ("x64", "x64", "x64");
 });
 
 // this builds the native C and C++ externals for Windows UWP
 Task ("externals-uwp")
     .IsDependentOn ("externals-angle-uwp")
+    .IsDependentOn ("externals-init")
     .WithCriteria (IsRunningOnWindows ())
-    .WithCriteria (
-        !FileExists ("native-builds/lib/uwp/ARM/libSkiaSharp.dll") ||
-        !FileExists ("native-builds/lib/uwp/x86/libSkiaSharp.dll") ||
-        !FileExists ("native-builds/lib/uwp/x64/libSkiaSharp.dll"))
     .Does (() =>  
 {
-    var buildArch = new Action<string, string> ((platform, arch) => {
-        ProcessSolutionProjects ("native-builds/libSkiaSharp_uwp/libSkiaSharp_" + arch + ".sln", (projectName, projectPath) => {
-            if (projectName != "libSkiaSharp") {
-                RedirectBuildOutputs (projectPath);
-                TransformToUWP (projectPath, platform);
-            }
+    var buildArch = new Action<string, string, string> ((arch, skiaArch, dir) => {
+        // generate native skia build files
+        RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn.exe"), new ProcessSettings {
+            Arguments = 
+                @"gen out/winrt/" + arch + @" " + 
+                @"--args=""" +
+                @"  is_official_build=true skia_enable_tools=false" +
+                @"  target_os=\""winrt\"" target_cpu=\""" + skiaArch + @"\""" +
+                @"  skia_use_icu=false skia_use_sfntly=false" +
+                @"  extra_cflags=[ " + 
+                @"    \""-DSKIA_C_DLL\"", \""/MD\"", " + 
+                @"    \""-DWINAPI_FAMILY=WINAPI_FAMILY_APP\"", \""-DSK_BUILD_FOR_WINRT\"", \""-DSK_HAS_DWRITE_1_H\"", \""-DSK_HAS_DWRITE_2_H\"" ]" +
+                @"  extra_ldflags=[ \""/APPCONTAINER\"" ]" +
+                @"""",
+            WorkingDirectory = SKIA_PATH.FullPath,
         });
-        InjectCompatibilityExternals (true);
-        VisualStudioPathFixup ();
-        DotNetBuild ("native-builds/libSkiaSharp_uwp/libSkiaSharp_" + arch + ".sln", c => { 
-            c.Configuration = "Release"; 
-            c.Properties ["Platform"] = new [] { platform };
-            c.Verbosity = VERBOSITY;
+
+        // build native skia
+        RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja.exe"), new ProcessSettings {
+            Arguments = "-C out/winrt/" + arch,
+            WorkingDirectory = SKIA_PATH.FullPath,
         });
-        if (!DirectoryExists ("native-builds/lib/uwp/" + arch)) CreateDirectory ("native-builds/lib/uwp/" + arch);
-        CopyFileToDirectory ("native-builds/libSkiaSharp_uwp/bin/" + platform + "/Release/libSkiaSharp.lib", "native-builds/lib/uwp/" + arch);
-        CopyFileToDirectory ("native-builds/libSkiaSharp_uwp/bin/" + platform + "/Release/libSkiaSharp.dll", "native-builds/lib/uwp/" + arch);
-        CopyFileToDirectory ("native-builds/libSkiaSharp_uwp/bin/" + platform + "/Release/libSkiaSharp.pdb", "native-builds/lib/uwp/" + arch);
+
+        // build libSkiaSharp
+        MSBuild ("native-builds/libSkiaSharp_uwp/libSkiaSharp.sln", new MSBuildSettings { 
+            Configuration = "Release",
+            PlatformTarget = (PlatformTarget)Enum.Parse(typeof(PlatformTarget), arch),
+        });
+
+        // copy libSkiaSharp to output
+        if (!DirectoryExists ("native-builds/lib/uwp/" + dir)) CreateDirectory ("native-builds/lib/uwp/" + dir);
+        CopyFileToDirectory ("native-builds/libSkiaSharp_uwp/bin/" + arch + "/Release/libSkiaSharp.lib", "native-builds/lib/uwp/" + dir);
+        CopyFileToDirectory ("native-builds/libSkiaSharp_uwp/bin/" + arch + "/Release/libSkiaSharp.dll", "native-builds/lib/uwp/" + dir);
+        CopyFileToDirectory ("native-builds/libSkiaSharp_uwp/bin/" + arch + "/Release/libSkiaSharp.pdb", "native-builds/lib/uwp/" + dir);
     });
 
-    // set up the gyp environment variables
-    AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
-    SetEnvironmentVariable ("SKIA_OUT", "");
-
-    RunGyp ("skia_arch_type='x86_64' skia_gpu=1", "msvs");
-    buildArch ("x64", "x64");
-    
-    RunGyp ("skia_arch_type='x86' skia_gpu=1", "msvs");
-    buildArch ("Win32", "x86");
-    
-    RunGyp ("skia_arch_type='arm' arm_version=7 arm_neon=0 skia_gpu=1", "msvs");
-    buildArch ("ARM", "arm");
+    buildArch ("x64", "x64", "x64");
+    buildArch ("Win32", "x86", "x86");
+    buildArch ("ARM", "arm", "ARM");
 });
 
 // this builds the native C and C++ externals for Mac OS X

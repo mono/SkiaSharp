@@ -33,7 +33,7 @@
     <DefaultLanguage>en-US</DefaultLanguage>
     <AppContainerApplication>true</AppContainerApplication>
     <ApplicationType>Windows Store</ApplicationType>
-    <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformMinVersion>10.0.10240.0</WindowsTargetPlatformMinVersion>
     <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
   </PropertyGroup>
@@ -143,14 +143,15 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;SK_INTERNAL;SK_GAMMA_SRGB;SK_GAMMA_APPLY_TO_A8;SK_ALLOW_STATIC_GLOBAL_INITIALIZERS=1;SK_SUPPORT_GPU=1;SK_SUPPORT_OPENCL=0;SK_FORCE_DISTANCE_FIELD_TEXT=0;SK_BUILD_FOR_WIN32;SK_BUILD_FOR_WINRT;_CRT_SECURE_NO_WARNINGS;GR_GL_FUNCTION_TYPE=__stdcall;_HAS_EXCEPTIONS=0;SK_DEVELOPER=1;;_WINDOWS;_USRDLL;LIBSKIA_WINDOWS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\externals\skia\include\c;..\..\externals\skia\include\config;..\..\externals\skia\include\ports;..\..\externals\skia\include\core;..\..\externals\skia\include\effects;..\..\externals\skia\include\xml;..\..\skia\include\svg;..\..\externals\skia\include\pathops;..\..\externals\skia\include\codec;..\..\externals\skia\include\pathops;..\..\externals\skia\include\pipe;..\..\externals\skia\include\ports;..\..\externals\skia\include\private;..\..\externals\skia\include\utils;..\..\externals\skia\include\images;..\..\externals\skia\src\c;..\..\externals\skia\src\core;..\..\externals\skia\src\sfnt;..\..\externals\skia\src\image;..\..\externals\skia\src\opts;..\..\externals\skia\src\utils;..\..\gyp\config\win;..\..\externals\skia\include\gpu;..\..\externals\skia\src\gpu;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\externals\skia\include\c;..\..\externals\skia\include\codec;..\..\externals\skia\include\config;..\..\externals\skia\include\core;..\..\externals\skia\include\effects;..\..\externals\skia\include\gpu;..\..\externals\skia\include\images;..\..\externals\skia\include\pathops;..\..\externals\skia\include\pathops;..\..\externals\skia\include\pipe;..\..\externals\skia\include\ports;..\..\externals\skia\include\ports;..\..\externals\skia\include\private;..\..\externals\skia\include\utils;..\..\externals\skia\include\xml;..\..\externals\skia\src\c;..\..\externals\skia\src\core;..\..\externals\skia\src\gpu;..\..\externals\skia\src\image;..\..\externals\skia\src\opts;..\..\externals\skia\src\sfnt;..\..\externals\skia\src\utils;..\..\gyp\config\win;..\..\skia\include\svg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>skia.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\externals\skia\out\winrt\$(Platform)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|arm'">
@@ -163,13 +164,14 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>SK_INTERNAL;SK_GAMMA_SRGB;SK_GAMMA_APPLY_TO_A8;SK_ALLOW_STATIC_GLOBAL_INITIALIZERS=1;SK_SUPPORT_GPU=1;SK_SUPPORT_OPENCL=0;SK_FORCE_DISTANCE_FIELD_TEXT=0;SK_BUILD_FOR_WIN32;SK_BUILD_FOR_WINRT;_CRT_SECURE_NO_WARNINGS;GR_GL_FUNCTION_TYPE=__stdcall;_HAS_EXCEPTIONS=0;;WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBSKIA_WINDOWS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\externals\skia\include\c;..\..\externals\skia\include\config;..\..\externals\skia\include\ports;..\..\externals\skia\include\core;..\..\externals\skia\include\effects;..\..\externals\skia\include\xml;..\..\skia\include\svg;..\..\externals\skia\include\pathops;..\..\externals\skia\include\codec;..\..\externals\skia\include\pathops;..\..\externals\skia\include\pipe;..\..\externals\skia\include\ports;..\..\externals\skia\include\private;..\..\externals\skia\include\utils;..\..\externals\skia\include\images;..\..\externals\skia\src\c;..\..\externals\skia\src\core;..\..\externals\skia\src\sfnt;..\..\externals\skia\src\image;..\..\externals\skia\src\opts;..\..\externals\skia\src\utils;..\..\gyp\config\win;..\..\externals\skia\include\gpu;..\..\externals\skia\src\gpu;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\externals\skia\include\c;..\..\externals\skia\include\codec;..\..\externals\skia\include\config;..\..\externals\skia\include\core;..\..\externals\skia\include\effects;..\..\externals\skia\include\gpu;..\..\externals\skia\include\images;..\..\externals\skia\include\pathops;..\..\externals\skia\include\pathops;..\..\externals\skia\include\pipe;..\..\externals\skia\include\ports;..\..\externals\skia\include\ports;..\..\externals\skia\include\private;..\..\externals\skia\include\utils;..\..\externals\skia\include\xml;..\..\externals\skia\src\c;..\..\externals\skia\src\core;..\..\externals\skia\src\gpu;..\..\externals\skia\src\image;..\..\externals\skia\src\opts;..\..\externals\skia\src\sfnt;..\..\externals\skia\src\utils;..\..\gyp\config\win;..\..\skia\include\svg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>skia.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\externals\skia\out\winrt\$(Platform)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -181,14 +183,15 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;SK_INTERNAL;SK_GAMMA_SRGB;SK_GAMMA_APPLY_TO_A8;SK_ALLOW_STATIC_GLOBAL_INITIALIZERS=1;SK_SUPPORT_GPU=1;SK_SUPPORT_OPENCL=0;SK_FORCE_DISTANCE_FIELD_TEXT=0;SK_BUILD_FOR_WIN32;SK_BUILD_FOR_WINRT;_CRT_SECURE_NO_WARNINGS;GR_GL_FUNCTION_TYPE=__stdcall;_HAS_EXCEPTIONS=0;SK_DEVELOPER=1;;WIN32;_DEBUG;_WINDOWS;_USRDLL;LIBSKIA_WINDOWS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\externals\skia\include\c;..\..\externals\skia\include\config;..\..\externals\skia\include\ports;..\..\externals\skia\include\core;..\..\externals\skia\include\effects;..\..\externals\skia\include\xml;..\..\skia\include\svg;..\..\externals\skia\include\pathops;..\..\externals\skia\include\codec;..\..\externals\skia\include\pathops;..\..\externals\skia\include\pipe;..\..\externals\skia\include\ports;..\..\externals\skia\include\private;..\..\externals\skia\include\utils;..\..\externals\skia\include\images;..\..\externals\skia\src\c;..\..\externals\skia\src\core;..\..\externals\skia\src\sfnt;..\..\externals\skia\src\image;..\..\externals\skia\src\opts;..\..\externals\skia\src\utils;..\..\gyp\config\win;..\..\externals\skia\include\gpu;..\..\externals\skia\src\gpu;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\externals\skia\include\c;..\..\externals\skia\include\codec;..\..\externals\skia\include\config;..\..\externals\skia\include\core;..\..\externals\skia\include\effects;..\..\externals\skia\include\gpu;..\..\externals\skia\include\images;..\..\externals\skia\include\pathops;..\..\externals\skia\include\pathops;..\..\externals\skia\include\pipe;..\..\externals\skia\include\ports;..\..\externals\skia\include\ports;..\..\externals\skia\include\private;..\..\externals\skia\include\utils;..\..\externals\skia\include\xml;..\..\externals\skia\src\c;..\..\externals\skia\src\core;..\..\externals\skia\src\gpu;..\..\externals\skia\src\image;..\..\externals\skia\src\opts;..\..\externals\skia\src\sfnt;..\..\externals\skia\src\utils;..\..\gyp\config\win;..\..\skia\include\svg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>skia.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\externals\skia\out\winrt\$(Platform)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -202,7 +205,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>SK_INTERNAL;SK_GAMMA_SRGB;SK_GAMMA_APPLY_TO_A8;SK_ALLOW_STATIC_GLOBAL_INITIALIZERS=1;SK_SUPPORT_GPU=1;SK_SUPPORT_OPENCL=0;SK_FORCE_DISTANCE_FIELD_TEXT=0;SK_BUILD_FOR_WIN32;SK_BUILD_FOR_WINRT;_CRT_SECURE_NO_WARNINGS;GR_GL_FUNCTION_TYPE=__stdcall;_HAS_EXCEPTIONS=0;;WIN32;NDEBUG;_WINDOWS;_USRDLL;LIBSKIA_WINDOWS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\externals\skia\include\c;..\..\externals\skia\include\config;..\..\externals\skia\include\ports;..\..\externals\skia\include\core;..\..\externals\skia\include\effects;..\..\externals\skia\include\xml;..\..\skia\include\svg;..\..\externals\skia\include\pathops;..\..\externals\skia\include\codec;..\..\externals\skia\include\pathops;..\..\externals\skia\include\pipe;..\..\externals\skia\include\ports;..\..\externals\skia\include\private;..\..\externals\skia\include\utils;..\..\externals\skia\include\images;..\..\externals\skia\src\c;..\..\externals\skia\src\core;..\..\externals\skia\src\sfnt;..\..\externals\skia\src\image;..\..\externals\skia\src\opts;..\..\externals\skia\src\utils;..\..\gyp\config\win;..\..\externals\skia\include\gpu;..\..\externals\skia\src\gpu;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\externals\skia\include\c;..\..\externals\skia\include\codec;..\..\externals\skia\include\config;..\..\externals\skia\include\core;..\..\externals\skia\include\effects;..\..\externals\skia\include\gpu;..\..\externals\skia\include\images;..\..\externals\skia\include\pathops;..\..\externals\skia\include\pathops;..\..\externals\skia\include\pipe;..\..\externals\skia\include\ports;..\..\externals\skia\include\ports;..\..\externals\skia\include\private;..\..\externals\skia\include\utils;..\..\externals\skia\include\xml;..\..\externals\skia\src\c;..\..\externals\skia\src\core;..\..\externals\skia\src\gpu;..\..\externals\skia\src\image;..\..\externals\skia\src\opts;..\..\externals\skia\src\sfnt;..\..\externals\skia\src\utils;..\..\gyp\config\win;..\..\skia\include\svg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -211,7 +214,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>skia.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\externals\skia\out\winrt\$(Platform)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -223,14 +227,15 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;SK_INTERNAL;SK_GAMMA_SRGB;SK_GAMMA_APPLY_TO_A8;SK_ALLOW_STATIC_GLOBAL_INITIALIZERS=1;SK_SUPPORT_GPU=1;SK_SUPPORT_OPENCL=0;SK_FORCE_DISTANCE_FIELD_TEXT=0;SK_BUILD_FOR_WIN32;SK_BUILD_FOR_WINRT;_CRT_SECURE_NO_WARNINGS;GR_GL_FUNCTION_TYPE=__stdcall;_HAS_EXCEPTIONS=0;SK_DEVELOPER=1;;_WINDOWS;_USRDLL;LIBSKIA_WINDOWS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\externals\skia\include\c;..\..\externals\skia\include\config;..\..\externals\skia\include\ports;..\..\externals\skia\include\core;..\..\externals\skia\include\effects;..\..\externals\skia\include\xml;..\..\skia\include\svg;..\..\externals\skia\include\pathops;..\..\externals\skia\include\codec;..\..\externals\skia\include\pathops;..\..\externals\skia\include\pipe;..\..\externals\skia\include\ports;..\..\externals\skia\include\private;..\..\externals\skia\include\utils;..\..\externals\skia\include\images;..\..\externals\skia\src\c;..\..\externals\skia\src\core;..\..\externals\skia\src\sfnt;..\..\externals\skia\src\image;..\..\externals\skia\src\opts;..\..\externals\skia\src\utils;..\..\gyp\config\win;..\..\externals\skia\include\gpu;..\..\externals\skia\src\gpu;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\externals\skia\include\c;..\..\externals\skia\include\codec;..\..\externals\skia\include\config;..\..\externals\skia\include\core;..\..\externals\skia\include\effects;..\..\externals\skia\include\gpu;..\..\externals\skia\include\images;..\..\externals\skia\include\pathops;..\..\externals\skia\include\pathops;..\..\externals\skia\include\pipe;..\..\externals\skia\include\ports;..\..\externals\skia\include\ports;..\..\externals\skia\include\private;..\..\externals\skia\include\utils;..\..\externals\skia\include\xml;..\..\externals\skia\src\c;..\..\externals\skia\src\core;..\..\externals\skia\src\gpu;..\..\externals\skia\src\image;..\..\externals\skia\src\opts;..\..\externals\skia\src\sfnt;..\..\externals\skia\src\utils;..\..\gyp\config\win;..\..\skia\include\svg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>skia.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\externals\skia\out\winrt\$(Platform)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -244,7 +249,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>SK_INTERNAL;SK_GAMMA_SRGB;SK_GAMMA_APPLY_TO_A8;SK_ALLOW_STATIC_GLOBAL_INITIALIZERS=1;SK_SUPPORT_GPU=1;SK_SUPPORT_OPENCL=0;SK_FORCE_DISTANCE_FIELD_TEXT=0;SK_BUILD_FOR_WIN32;SK_BUILD_FOR_WINRT;_CRT_SECURE_NO_WARNINGS;GR_GL_FUNCTION_TYPE=__stdcall;_HAS_EXCEPTIONS=0;;NDEBUG;_WINDOWS;_USRDLL;LIBSKIA_WINDOWS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\externals\skia\include\c;..\..\externals\skia\include\config;..\..\externals\skia\include\ports;..\..\externals\skia\include\core;..\..\externals\skia\include\effects;..\..\externals\skia\include\xml;..\..\skia\include\svg;..\..\externals\skia\include\pathops;..\..\externals\skia\include\codec;..\..\externals\skia\include\pathops;..\..\externals\skia\include\pipe;..\..\externals\skia\include\ports;..\..\externals\skia\include\private;..\..\externals\skia\include\utils;..\..\externals\skia\include\images;..\..\externals\skia\src\c;..\..\externals\skia\src\core;..\..\externals\skia\src\sfnt;..\..\externals\skia\src\image;..\..\externals\skia\src\opts;..\..\externals\skia\src\utils;..\..\gyp\config\win;..\..\externals\skia\include\gpu;..\..\externals\skia\src\gpu;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\externals\skia\include\c;..\..\externals\skia\include\codec;..\..\externals\skia\include\config;..\..\externals\skia\include\core;..\..\externals\skia\include\effects;..\..\externals\skia\include\gpu;..\..\externals\skia\include\images;..\..\externals\skia\include\pathops;..\..\externals\skia\include\pathops;..\..\externals\skia\include\pipe;..\..\externals\skia\include\ports;..\..\externals\skia\include\ports;..\..\externals\skia\include\private;..\..\externals\skia\include\utils;..\..\externals\skia\include\xml;..\..\externals\skia\src\c;..\..\externals\skia\src\core;..\..\externals\skia\src\gpu;..\..\externals\skia\src\image;..\..\externals\skia\src\opts;..\..\externals\skia\src\sfnt;..\..\externals\skia\src\utils;..\..\gyp\config\win;..\..\skia\include\svg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -253,7 +258,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>skia.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\externals\skia\out\winrt\$(Platform)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -268,113 +274,6 @@
     <ClInclude Include="..\src\sk_managedstream.h" />
     <ClInclude Include="..\src\sk_xamarin.h" />
     <ClInclude Include="..\src\WinRTCompat.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\codec.vcxproj">
-      <Project>{949bbb56-926a-4e3e-0f16-be317cef7cf0}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\codec_android.vcxproj">
-      <Project>{5f0016a6-7a8d-87a7-88ab-6007706fddd2}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\core.vcxproj">
-      <Project>{b7760b5e-bfa8-486b-acfd-49e3a6de8e76}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\dng_sdk.vcxproj">
-      <Project>{5872e505-13e7-bedd-06bd-fc5ce091ca42}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\effects.vcxproj">
-      <Project>{dcc74aa9-4a8e-eeca-0fc0-6d4d5d3fe614}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\expat_static.vcxproj">
-      <Project>{3c2c891d-de3c-256a-b229-e17d46acdf92}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\sksl.vcxproj">
-      <Project>{4B207B8E-C2DC-1BC9-EB67-68E291126A07}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\images.vcxproj">
-      <Project>{f48a0aba-1ea4-b3af-9ace-5632d3b7dac8}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\libetc1.vcxproj">
-      <Project>{10a7c1e0-0614-a535-be9d-2825e85e5148}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\libjpeg-turbo.vcxproj">
-      <Project>{72a3e1a9-8633-5e7f-07e2-5609e5bcd2d0}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\libpng_static.vcxproj">
-      <Project>{6adf0bae-b793-3206-5d60-9806be1b1cc1}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\libSkKTX.vcxproj">
-      <Project>{7a8b21c2-777e-5bf3-f510-30677356cf3b}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\libwebp_dec.vcxproj">
-      <Project>{47236663-c501-44fd-2bdb-6677a2a1dade}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\libwebp_demux.vcxproj">
-      <Project>{f61bf52c-115d-1f26-da58-dddf668d38b8}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\libwebp_dsp.vcxproj">
-      <Project>{3eaa8edc-b97c-727e-bd94-2a8234fd8dd8}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\libwebp_dsp_enc.vcxproj">
-      <Project>{56dce062-b033-7925-9287-ef8b201d0e04}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\libwebp_dsp_neon.vcxproj">
-      <Project>{88f69383-d45d-6e4b-e635-4b450d5df365}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\libwebp_enc.vcxproj">
-      <Project>{3cc86e3e-92d7-f81f-7a5a-76cbfcd3707e}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\libwebp_utils.vcxproj">
-      <Project>{5c77eb8b-2ce5-6617-331f-f7bd94e0b640}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\opts.vcxproj">
-      <Project>{f02858df-6c95-84de-e9ad-54c2739f6c61}</Project>
-    </ProjectReference>
-    <ProjectReference Condition="'$(Platform)'!='ARM'" Include="..\..\externals\skia\out\gyp\opts_avx.vcxproj">
-      <Project>{5a857073-3122-dbc6-9946-d5cd07fe994c}</Project>
-    </ProjectReference>
-    <ProjectReference Condition="'$(Platform)'!='ARM'" Include="..\..\externals\skia\out\gyp\opts_hsw.vcxproj">
-      <Project>{343ebb06-55c8-160c-acda-ba8544d1c88c}</Project>
-    </ProjectReference>
-    <ProjectReference Condition="'$(Platform)'!='ARM'" Include="..\..\externals\skia\out\gyp\opts_sse41.vcxproj">
-      <Project>{53f5b863-846e-3839-692b-c69c8cae93e4}</Project>
-    </ProjectReference>
-    <ProjectReference Condition="'$(Platform)'!='ARM'" Include="..\..\externals\skia\out\gyp\opts_sse42.vcxproj">
-      <Project>{89bbe093-2274-050d-cb55-69552ea420b4}</Project>
-    </ProjectReference>
-    <ProjectReference Condition="'$(Platform)'!='ARM'" Include="..\..\externals\skia\out\gyp\opts_ssse3.vcxproj">
-      <Project>{a2080d9c-77fc-a264-2191-0516758ccc81}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\pdf.vcxproj">
-      <Project>{c0628bb3-e5e5-627f-7e67-a346afe34257}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\piex.vcxproj">
-      <Project>{31b66b14-df71-61ae-2aff-9d7721defccc}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\ports.vcxproj">
-      <Project>{2ea19d89-5c08-95b1-7b28-6200d31cd84e}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\raw_codec.vcxproj">
-      <Project>{5873d1a0-0173-4ab2-aead-b1efa36da6d2}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\sfnt.vcxproj">
-      <Project>{45079855-7f44-ed5f-594f-3b7988d833e4}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\skgpu.vcxproj">
-      <Project>{3b308151-8bdf-978d-a17e-765823247775}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\svg.vcxproj">
-      <Project>{767FE7E9-D632-207E-8D61-83BE476FCAFA}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\utils.vcxproj">
-      <Project>{09729750-35a8-9d7a-131e-a994e186f433}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\xml.vcxproj">
-      <Project>{2EB2AFE6-91F3-0398-170A-BD846A863585}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\..\externals\skia\out\gyp\zlib.vcxproj">
-      <Project>{57ab22ed-3649-9575-7a2a-58adf4a7bea4}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
