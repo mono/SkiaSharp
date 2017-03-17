@@ -50,7 +50,6 @@ DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/en"));
 #load "cake/UtilsManaged.cake"
 #load "cake/UtilsMSBuild.cake"
 #load "cake/UtilsNative.cake"
-#load "cake/TransformToUWP.cake"
 #load "cake/BuildExternals.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

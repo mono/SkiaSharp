@@ -3,22 +3,6 @@
 // TOOLS & FUNCTIONS - the bits to make it all work
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// find a better place for this / or fix the path issue
-var VisualStudioPathFixup = new Action (() => {
-    var props = SKIA_PATH.CombineWithFilePath ("out/gyp/libjpeg-turbo.props").FullPath;
-    var xdoc = XDocument.Load (props);
-    var temp = xdoc.Root
-        .Elements (MSBuildNS + "ItemDefinitionGroup")
-        .Elements (MSBuildNS + "assemble")
-        .Elements (MSBuildNS + "CommandLineTemplate")
-        .Single ();
-    var newInclude = SKIA_PATH.Combine ("third_party/externals/libjpeg-turbo/win/").FullPath;
-    if (!temp.Value.Contains (newInclude)) {
-        temp.Value += " \"-I" + newInclude + "\"";
-        xdoc.Save (props);
-    }
-});
-
 var InjectCompatibilityExternals = new Action<bool> ((inject) => {
     // some methods don't yet exist, so we must add the compat layer to them.
     // we need this as we can't modify the third party files
@@ -47,6 +31,7 @@ var InjectCompatibilityExternals = new Action<bool> ((inject) => {
         var contents = FileReadLines (file).ToList ();
         var index = contents.IndexOf (include);
         if (index == -1 && inject) {
+            Information ("Injecting modifications into third party code: {0}...", file);
             if (string.IsNullOrEmpty (filePair.Value)) {
                 contents.Insert (0, include);
             } else {
@@ -54,6 +39,7 @@ var InjectCompatibilityExternals = new Action<bool> ((inject) => {
             }
             FileWriteLines (file, contents.ToArray ());
         } else if (index != -1 && !inject) {
+            Information ("Removing injected modifications from third party code: {0}...", file);
             int idx = 0;
             if (string.IsNullOrEmpty (filePair.Value)) {
                 idx = 0;
@@ -99,9 +85,12 @@ Task ("externals-init")
     .Does (() =>  
 {
     RunProcess ("python", new ProcessSettings {
-        Arguments = SKIA_PATH.CombineWithFilePath("tools/git-sync-deps").FullPath,
+        Arguments = SKIA_PATH.CombineWithFilePath ("tools/git-sync-deps").FullPath,
         WorkingDirectory = SKIA_PATH.FullPath,
     });
+
+    // insert compatibility modifications for external code
+    InjectCompatibilityExternals (true);
 });
 
 // this builds the native C and C++ externals 
@@ -174,8 +163,8 @@ Task ("externals-windows")
                 @"--args=""" +
                 @"  is_official_build=true skia_enable_tools=false" +
                 @"  target_os=\""win\"" target_cpu=\""" + skiaArch + @"\""" +
-                @"  skia_use_icu=false skia_use_sfntly=false" +
-                @"  extra_cflags=[ \""-DSKIA_C_DLL\"", \""/MD\"" ]" +
+                @"  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true" +
+                @"  extra_cflags=[ \""-DSKIA_C_DLL\"", \""/MD\"", \""/EHsc\"" ]" +
                 @"  extra_ldflags=[ ]" +
                 @"""",
             WorkingDirectory = SKIA_PATH.FullPath,
@@ -219,10 +208,10 @@ Task ("externals-uwp")
                 @"--args=""" +
                 @"  is_official_build=true skia_enable_tools=false" +
                 @"  target_os=\""winrt\"" target_cpu=\""" + skiaArch + @"\""" +
-                @"  skia_use_icu=false skia_use_sfntly=false" +
+                @"  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true" +
                 @"  extra_cflags=[ " + 
-                @"    \""-DSKIA_C_DLL\"", \""/MD\"", " + 
-                @"    \""-DWINAPI_FAMILY=WINAPI_FAMILY_APP\"", \""-DSK_BUILD_FOR_WINRT\"", \""-DSK_HAS_DWRITE_1_H\"", \""-DSK_HAS_DWRITE_2_H\"" ]" +
+                @"    \""-DSKIA_C_DLL\"", \""/MD\"", \""/EHsc\"", " + 
+                @"    \""-DWINAPI_FAMILY=WINAPI_FAMILY_APP\"", \""-DSK_BUILD_FOR_WINRT\"", \""-DSK_HAS_DWRITE_1_H\"", \""-DSK_HAS_DWRITE_2_H\"", \""-DNO_GETENV\"" ]" +
                 @"  extra_ldflags=[ \""/APPCONTAINER\"" ]" +
                 @"""",
             WorkingDirectory = SKIA_PATH.FullPath,
@@ -604,7 +593,15 @@ Task ("externals-angle-uwp")
 // CLEAN - remove all the build artefacts
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Task ("clean-externals").Does (() =>
+Task ("externals-deinit").Does (() =>
+{
+    // remove compatibility
+    InjectCompatibilityExternals (false);
+});
+
+Task ("clean-externals")
+    .IsDependentOn ("externals-deinit")
+    .Does (() =>
 {
     // skia
     CleanDirectories ("externals/skia/out");
@@ -631,7 +628,4 @@ Task ("clean-externals").Does (() =>
     // linux
     CleanDirectories ("native-builds/libSkiaSharp_linux/bin");
     CleanDirectories ("native-builds/libSkiaSharp_linux/obj");
-    
-    // remove compatibility
-    InjectCompatibilityExternals (false);
 });
