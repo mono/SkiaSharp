@@ -261,6 +261,20 @@ var UpdateSkiaSharpVersion = new Action<FilePath, Dictionary<string, string>> ((
                 hint.Value = replace (hint.Value);
             }
         }
+        var packageReferences = xdoc.Root
+            .Elements ("ItemGroup")
+            .Elements ("PackageReference");
+        foreach (var package in packageReferences) {
+            var id = package.Attribute ("Include").Value;
+            // check to see what it matches
+            string version;
+            if (versions.TryGetValue (id, out version) && 
+                version != package.Attribute ("Version").Value) {
+                // replace with the new version
+                package.Attribute ("Version").Value = version;
+                modified = true;
+            }
+        }
         var imports = xdoc.Root
             .Elements (MSBuildNS + "Import");
         foreach (var package in imports) {

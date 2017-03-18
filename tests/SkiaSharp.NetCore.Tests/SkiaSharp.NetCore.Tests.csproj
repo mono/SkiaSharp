@@ -1,5 +1,5 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
     <DefineConstants>$(DefineConstants);NET_STANDARD</DefineConstants>
@@ -12,7 +12,6 @@
     <PackageTargetFallback>$(PackageTargetFallback);portable-net451+win8</PackageTargetFallback>
     <RuntimeFrameworkVersion>1.1.1</RuntimeFrameworkVersion>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Include="..\Tests\*.cs" Link="%(FileName)%(Extension)" />
     <Compile Include="..\Tests\GlContexts\*.cs" Link="GlContexts\%(FileName)%(Extension)" />
@@ -20,11 +19,9 @@
     <Compile Include="..\Tests\GlContexts\Glx\*.cs" Link="GlContexts\Glx\%(FileName)%(Extension)" />
     <Compile Include="..\Tests\GlContexts\Wgl\*.cs" Link="GlContexts\Wgl\%(FileName)%(Extension)" />
   </ItemGroup>
-
   <ItemGroup>
     <Compile Remove="..\Tests\SKSurfaceTest.cs" />
   </ItemGroup>
-
   <ItemGroup>
     <None Include="..\Content\images\*" Link="images/%(FileName)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -33,12 +30,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="NUnit" Version="3.6.1" />
-    <PackageReference Include="SkiaSharp" Version="1.56.2" />
-    <PackageReference Include="SkiaSharp.Svg" Version="1.56.2" />
-    <PackageReference Include="SkiaSharp.Extended" Version="1.56.2-beta" />
+    <PackageReference Include="SkiaSharp" Version="1.57.0-beta" />
+    <PackageReference Include="SkiaSharp.Svg" Version="1.57.0-beta" />
+    <PackageReference Include="SkiaSharp.Extended" Version="1.57.0-beta" />
   </ItemGroup>
-
 </Project>
