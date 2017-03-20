@@ -20,8 +20,7 @@ target_name = libSkiaSharp.so
 target = ${bin_root}/${ARCH}/${target_name}.${file_version}
 
 library_dirs = \
-	../../externals/skia/out/${ARCH}/Release         \
-	../../externals/skia/out/${ARCH}/Release/obj/gyp
+	../../externals/skia/out/linux/${ARCH}
 include_dirs = \
 	../../externals/skia/src/c           \
 	../../externals/skia/include/c       \
@@ -37,39 +36,7 @@ include_dirs = \
 	../../externals/skia/include/svg     \
 	../../externals/skia/include/xml
 library_paths = \
-	../../externals/skia/out/${ARCH}/Release/libskia_core.a                     \
-	../../externals/skia/out/${ARCH}/Release/libskia_effects.a                  \
-	../../externals/skia/out/${ARCH}/Release/libskia_opts.a                     \
-	../../externals/skia/out/${ARCH}/Release/libskia_opts_sse41.a               \
-	../../externals/skia/out/${ARCH}/Release/libskia_opts_sse42.a               \
-	../../externals/skia/out/${ARCH}/Release/libskia_opts_ssse3.a               \
-	../../externals/skia/out/${ARCH}/Release/libskia_opts_avx.a                 \
-	../../externals/skia/out/${ARCH}/Release/libskia_opts_hsw.a                 \
-	../../externals/skia/out/${ARCH}/Release/libskia_utils.a                    \
-	../../externals/skia/out/${ARCH}/Release/libskia_ports.a                    \
-	../../externals/skia/out/${ARCH}/Release/libskia_images.a                   \
-	../../externals/skia/out/${ARCH}/Release/libskia_pdf.a                      \
-	../../externals/skia/out/${ARCH}/Release/libskia_codec.a                    \
-	../../externals/skia/out/${ARCH}/Release/libskia_codec_android.a            \
-	../../externals/skia/out/${ARCH}/Release/libpng_static.a                    \
-	../../externals/skia/out/${ARCH}/Release/libskia_sfnt.a                     \
-	../../externals/skia/out/${ARCH}/Release/libskia_svg.a                      \
-	../../externals/skia/out/${ARCH}/Release/libskia_xml.a                      \
-    ../../externals/skia/out/${ARCH}/Release/libfreetype_static.a               \
-	../../externals/skia/out/${ARCH}/Release/obj/gyp/libwebp_enc.a              \
-	../../externals/skia/out/${ARCH}/Release/obj/gyp/libwebp_dec.a              \
-	../../externals/skia/out/${ARCH}/Release/obj/gyp/libwebp_dsp.a              \
-	../../externals/skia/out/${ARCH}/Release/obj/gyp/libwebp_utils.a            \
-	../../externals/skia/out/${ARCH}/Release/obj/gyp/libwebp_demux.a            \
-	../../externals/skia/out/${ARCH}/Release/obj/gyp/libwebp_dsp_enc.a          \
-	../../externals/skia/out/${ARCH}/Release/obj/gyp/libjpeg-turbo.a            \
-	../../externals/skia/out/${ARCH}/Release/obj/gyp/libzlib.a                  \
-	../../externals/skia/out/${ARCH}/Release/obj/gyp/libetc1.a                  \
-	../../externals/skia/out/${ARCH}/Release/obj/gyp/libraw_codec.a             \
-	../../externals/skia/out/${ARCH}/Release/obj/gyp/libSkKTX.a                 \
-	../../externals/skia/out/${ARCH}/Release/obj/gyp/libdng_sdk.a               \
-	../../externals/skia/out/${ARCH}/Release/obj/gyp/libpiex.a                  \
-	../../externals/skia/out/${ARCH}/Release/obj/gyp/libexpat_static.a
+	../../externals/skia/out/linux/${ARCH}/libskia.a
 defines = \
 	-DSK_INTERNAL -DSK_GAMMA_APPLY_TO_A8 -DQT_NO_KEYWORDS                   \
 	-DSK_ALLOW_STATIC_GLOBAL_INITIALIZERS=1 -DSK_SUPPORT_GPU=${SUPPORT_GPU} \
@@ -93,13 +60,6 @@ ldflags = $(library_dirs:%=-L%) ${LDFLAGS}
 includes = $(include_dirs:%=-I%)
 library_names = $(notdir ${library_paths})
 libraries = $(library_names:lib%.a=-l%)
-
-# add the extras for GPU 
-ifeq "${SUPPORT_GPU}" "1"
-library_paths += \
-	../../externals/skia/out/${ARCH}/Release/libskia_skgpu.a       \
-	../../externals/skia/out/${ARCH}/Release/libsksl.a
-endif
 
 src = $(shell find ${src_root} -name *.cpp -or -name *.c)
 src_names = $(notdir ${src})

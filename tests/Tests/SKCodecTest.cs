@@ -18,7 +18,7 @@ namespace SkiaSharp.Tests
 		{
 			var stream = new SKFileStream (Path.Combine (PathToImages, "color-wheel.png"));
 			using (var codec = SKCodec.Create (stream)) {
-				Assert.AreEqual (SKEncodedFormat.Png, codec.EncodedFormat);
+				Assert.AreEqual (SKEncodedImageFormat.Png, codec.EncodedFormat);
 				Assert.AreEqual (128, codec.Info.Width);
 				Assert.AreEqual (128, codec.Info.Height);
 				Assert.AreEqual (SKAlphaType.Unpremul, codec.Info.AlphaType);

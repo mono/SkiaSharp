@@ -3,22 +3,6 @@
 // TOOLS & FUNCTIONS - the bits to make it all work
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// find a better place for this / or fix the path issue
-var VisualStudioPathFixup = new Action (() => {
-    var props = SKIA_PATH.CombineWithFilePath ("out/gyp/libjpeg-turbo.props").FullPath;
-    var xdoc = XDocument.Load (props);
-    var temp = xdoc.Root
-        .Elements (MSBuildNS + "ItemDefinitionGroup")
-        .Elements (MSBuildNS + "assemble")
-        .Elements (MSBuildNS + "CommandLineTemplate")
-        .Single ();
-    var newInclude = SKIA_PATH.Combine ("third_party/externals/libjpeg-turbo/win/").FullPath;
-    if (!temp.Value.Contains (newInclude)) {
-        temp.Value += " \"-I" + newInclude + "\"";
-        xdoc.Save (props);
-    }
-});
-
 var InjectCompatibilityExternals = new Action<bool> ((inject) => {
     // some methods don't yet exist, so we must add the compat layer to them.
     // we need this as we can't modify the third party files
@@ -47,6 +31,7 @@ var InjectCompatibilityExternals = new Action<bool> ((inject) => {
         var contents = FileReadLines (file).ToList ();
         var index = contents.IndexOf (include);
         if (index == -1 && inject) {
+            Information ("Injecting modifications into third party code: {0}...", file);
             if (string.IsNullOrEmpty (filePair.Value)) {
                 contents.Insert (0, include);
             } else {
@@ -54,6 +39,7 @@ var InjectCompatibilityExternals = new Action<bool> ((inject) => {
             }
             FileWriteLines (file, contents.ToArray ());
         } else if (index != -1 && !inject) {
+            Information ("Removing injected modifications from third party code: {0}...", file);
             int idx = 0;
             if (string.IsNullOrEmpty (filePair.Value)) {
                 idx = 0;
@@ -93,6 +79,18 @@ Task ("externals-genapi")
     // bug in the generator whicj doesn't use enums in attributes
     ReplaceTextInFiles ("binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll.cs", "[System.ComponentModel.EditorBrowsableAttribute(1)]", "[System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Never)]");
     CopyFile ("binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll.cs", "binding/SkiaSharp.Portable/SkiaPortable.cs");
+});
+
+Task ("externals-init")
+    .Does (() =>  
+{
+    RunProcess ("python", new ProcessSettings {
+        Arguments = SKIA_PATH.CombineWithFilePath ("tools/git-sync-deps").FullPath,
+        WorkingDirectory = SKIA_PATH.FullPath,
+    });
+
+    // insert compatibility modifications for external code
+    InjectCompatibilityExternals (true);
 });
 
 // this builds the native C and C++ externals 
@@ -143,103 +141,138 @@ Task ("externals-native")
     if (IsRunningOnLinux ()) {
         if (!DirectoryExists ("./output/linux/x64/")) CreateDirectory ("./output/linux/x64/");
         if (!DirectoryExists ("./output/linux/x86/")) CreateDirectory ("./output/linux/x86/");
-        CopyFileToDirectory ("./native-builds/lib/linux/x64/libSkiaSharp.so." + VERSION_SONAME, "./output/linux/x64/");
-//        CopyFileToDirectory ("./native-builds/lib/linux/x86/libSkiaSharp.so." + VERSION_SONAME, "./output/linux/x86/");
-        // the second copy excludes the file version
-        CopyFile ("./native-builds/lib/linux/x64/libSkiaSharp.so." + VERSION_SONAME, "./output/linux/x64/libSkiaSharp.so");
-//        CopyFile ("./native-builds/lib/linux/x86/libSkiaSharp.so." + VERSION_SONAME, "./output/linux/x86/libSkiaSharp.so");
+        if (!DirectoryExists ("./output/linux/arm/")) CreateDirectory ("./output/linux/arm/");
+        foreach (var arch in new [] { "x64", "x86", "arm" }) {
+            var so = "./native-builds/lib/linux/" + arch + "/libSkiaSharp.so." + VERSION_SONAME;
+            if (FileExists (so)) {
+                CopyFileToDirectory (so, "./output/linux/" + arch + "/");
+                // the second copy excludes the file version
+                CopyFile (so, "./output/linux/" + arch + "/libSkiaSharp.so");
+            }
+        }
     }
 });
 
 // this builds the native C and C++ externals for Windows
 Task ("externals-windows")
+    .IsDependentOn ("externals-init")
     .WithCriteria (IsRunningOnWindows ())
-    .WithCriteria (
-        !FileExists ("native-builds/lib/windows/x86/libSkiaSharp.dll") ||
-        !FileExists ("native-builds/lib/windows/x64/libSkiaSharp.dll"))
     .Does (() =>  
 {
-    var buildArch = new Action<string, string, string> ((platform, skiaArch, dir) => {
-        RunGyp ("skia_arch_type='" + skiaArch + "' skia_gpu=1", "msvs");
-        ProcessSolutionProjects ("native-builds/libSkiaSharp_windows/libSkiaSharp_" + dir + ".sln", (projectName, projectPath) => {
-            if (projectName != "libSkiaSharp") {
-                RedirectBuildOutputs (projectPath);
-            }
+    var buildArch = new Action<string, string, string> ((arch, skiaArch, dir) => {
+        // generate native skia build files
+        RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn.exe"), new ProcessSettings {
+            Arguments = 
+                "gen out/win/" + arch + " " + 
+                "--args=\"" +
+                "  is_official_build=true skia_enable_tools=false" +
+                "  target_os=\\\"win\\\" target_cpu=\\\"" + skiaArch + "\\\"" +
+                "  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true" +
+                "  extra_cflags=[ \\\"-DSKIA_C_DLL\\\", \\\"/MD\\\", \\\"/EHsc\\\" ]" +
+                "  extra_ldflags=[ ]" +
+                "\"",
+            WorkingDirectory = SKIA_PATH.FullPath,
         });
-        VisualStudioPathFixup ();
-        DotNetBuild ("native-builds/libSkiaSharp_windows/libSkiaSharp_" + dir + ".sln", c => { 
-            c.Configuration = "Release"; 
-            c.Properties ["Platform"] = new [] { platform };
-            c.Verbosity = VERBOSITY;
+
+        // build native skia
+        RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja.exe"), new ProcessSettings {
+            Arguments = "-C out/win/" + arch,
+            WorkingDirectory = SKIA_PATH.FullPath,
         });
+
+        // build libSkiaSharp
+        MSBuild ("native-builds/libSkiaSharp_windows/libSkiaSharp.sln", new MSBuildSettings { 
+            Configuration = "Release",
+            PlatformTarget = (PlatformTarget)Enum.Parse(typeof(PlatformTarget), arch),
+        });
+
+        // copy libSkiaSharp to output
         if (!DirectoryExists ("native-builds/lib/windows/" + dir)) CreateDirectory ("native-builds/lib/windows/" + dir);
-        CopyFileToDirectory ("native-builds/libSkiaSharp_windows/bin/" + platform + "/Release/libSkiaSharp.lib", "native-builds/lib/windows/" + dir);
-        CopyFileToDirectory ("native-builds/libSkiaSharp_windows/bin/" + platform + "/Release/libSkiaSharp.dll", "native-builds/lib/windows/" + dir);
-        CopyFileToDirectory ("native-builds/libSkiaSharp_windows/bin/" + platform + "/Release/libSkiaSharp.pdb", "native-builds/lib/windows/" + dir);
+        CopyFileToDirectory ("native-builds/libSkiaSharp_windows/bin/" + arch + "/Release/libSkiaSharp.lib", "native-builds/lib/windows/" + dir);
+        CopyFileToDirectory ("native-builds/libSkiaSharp_windows/bin/" + arch + "/Release/libSkiaSharp.dll", "native-builds/lib/windows/" + dir);
+        CopyFileToDirectory ("native-builds/libSkiaSharp_windows/bin/" + arch + "/Release/libSkiaSharp.pdb", "native-builds/lib/windows/" + dir);
     });
 
-    // set up the gyp environment variables
-    AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
-    SetEnvironmentVariable ("SKIA_OUT", "");
-    
     buildArch ("Win32", "x86", "x86");
-    buildArch ("x64", "x86_64", "x64");
+    buildArch ("x64", "x64", "x64");
 });
 
 // this builds the native C and C++ externals for Windows UWP
 Task ("externals-uwp")
     .IsDependentOn ("externals-angle-uwp")
+    .IsDependentOn ("externals-init")
     .WithCriteria (IsRunningOnWindows ())
-    .WithCriteria (
-        !FileExists ("native-builds/lib/uwp/ARM/libSkiaSharp.dll") ||
-        !FileExists ("native-builds/lib/uwp/x86/libSkiaSharp.dll") ||
-        !FileExists ("native-builds/lib/uwp/x64/libSkiaSharp.dll"))
     .Does (() =>  
 {
-    var buildArch = new Action<string, string> ((platform, arch) => {
-        ProcessSolutionProjects ("native-builds/libSkiaSharp_uwp/libSkiaSharp_" + arch + ".sln", (projectName, projectPath) => {
-            if (projectName != "libSkiaSharp") {
-                RedirectBuildOutputs (projectPath);
-                TransformToUWP (projectPath, platform);
-            }
+    var buildArch = new Action<string, string, string> ((arch, skiaArch, dir) => {
+        // generate native skia build files
+        RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn.exe"), new ProcessSettings {
+            Arguments = 
+                "gen out/winrt/" + arch + " " + 
+                "--args=\"" +
+                "  is_official_build=true skia_enable_tools=false" +
+                "  target_os=\\\"winrt\\\" target_cpu=\\\"" + skiaArch + "\\\"" +
+                "  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true" +
+                "  extra_cflags=[ " + 
+                "    \\\"-DSKIA_C_DLL\\\", \\\"/MD\\\", \\\"/EHsc\\\", " + 
+                "    \\\"-DWINAPI_FAMILY=WINAPI_FAMILY_APP\\\", \\\"-DSK_BUILD_FOR_WINRT\\\", \\\"-DSK_HAS_DWRITE_1_H\\\", \\\"-DSK_HAS_DWRITE_2_H\\\", \\\"-DNO_GETENV\\\" ]" +
+                "  extra_ldflags=[ \\\"/APPCONTAINER\\\" ]" +
+                "\"",
+            WorkingDirectory = SKIA_PATH.FullPath,
         });
-        InjectCompatibilityExternals (true);
-        VisualStudioPathFixup ();
-        DotNetBuild ("native-builds/libSkiaSharp_uwp/libSkiaSharp_" + arch + ".sln", c => { 
-            c.Configuration = "Release"; 
-            c.Properties ["Platform"] = new [] { platform };
-            c.Verbosity = VERBOSITY;
+
+        // build native skia
+        RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja.exe"), new ProcessSettings {
+            Arguments = "-C out/winrt/" + arch,
+            WorkingDirectory = SKIA_PATH.FullPath,
         });
-        if (!DirectoryExists ("native-builds/lib/uwp/" + arch)) CreateDirectory ("native-builds/lib/uwp/" + arch);
-        CopyFileToDirectory ("native-builds/libSkiaSharp_uwp/bin/" + platform + "/Release/libSkiaSharp.lib", "native-builds/lib/uwp/" + arch);
-        CopyFileToDirectory ("native-builds/libSkiaSharp_uwp/bin/" + platform + "/Release/libSkiaSharp.dll", "native-builds/lib/uwp/" + arch);
-        CopyFileToDirectory ("native-builds/libSkiaSharp_uwp/bin/" + platform + "/Release/libSkiaSharp.pdb", "native-builds/lib/uwp/" + arch);
+
+        // build libSkiaSharp
+        MSBuild ("native-builds/libSkiaSharp_uwp/libSkiaSharp.sln", new MSBuildSettings { 
+            Configuration = "Release",
+            PlatformTarget = (PlatformTarget)Enum.Parse(typeof(PlatformTarget), arch),
+        });
+
+        // copy libSkiaSharp to output
+        if (!DirectoryExists ("native-builds/lib/uwp/" + dir)) CreateDirectory ("native-builds/lib/uwp/" + dir);
+        CopyFileToDirectory ("native-builds/libSkiaSharp_uwp/bin/" + arch + "/Release/libSkiaSharp.lib", "native-builds/lib/uwp/" + dir);
+        CopyFileToDirectory ("native-builds/libSkiaSharp_uwp/bin/" + arch + "/Release/libSkiaSharp.dll", "native-builds/lib/uwp/" + dir);
+        CopyFileToDirectory ("native-builds/libSkiaSharp_uwp/bin/" + arch + "/Release/libSkiaSharp.pdb", "native-builds/lib/uwp/" + dir);
     });
 
-    // set up the gyp environment variables
-    AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
-    SetEnvironmentVariable ("SKIA_OUT", "");
-
-    RunGyp ("skia_arch_type='x86_64' skia_gpu=1", "msvs");
-    buildArch ("x64", "x64");
-    
-    RunGyp ("skia_arch_type='x86' skia_gpu=1", "msvs");
-    buildArch ("Win32", "x86");
-    
-    RunGyp ("skia_arch_type='arm' arm_version=7 arm_neon=0 skia_gpu=1", "msvs");
-    buildArch ("ARM", "arm");
+    buildArch ("x64", "x64", "x64");
+    buildArch ("Win32", "x86", "x86");
+    buildArch ("ARM", "arm", "ARM");
 });
 
 // this builds the native C and C++ externals for Mac OS X
 Task ("externals-osx")
+    .IsDependentOn ("externals-init")
     .WithCriteria (IsRunningOnMac ())
-    .WithCriteria (
-        !FileExists ("native-builds/lib/osx/libSkiaSharp.dylib"))
     .Does (() =>  
 {
     var buildArch = new Action<string, string> ((arch, skiaArch) => {
-        RunGyp ("skia_arch_type='" + skiaArch + "' skia_gpu=1 skia_pdf_use_sfntly=0 skia_osx_deployment_target=10.8", "xcode");
-        
+        // generate native skia build files
+        RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn"), new ProcessSettings {
+            Arguments = 
+                "gen out/mac/" + arch + " " + 
+                "--args='" +
+                "  is_official_build=true skia_enable_tools=false" +
+                "  target_os=\"mac\" target_cpu=\"" + skiaArch + "\"" +
+                "  skia_use_icu=false skia_use_sfntly=false" +
+                "  extra_cflags=[ \"-DSKIA_C_DLL\", \"-ffunction-sections\", \"-fdata-sections\", \"-mmacosx-version-min=10.9\" ]" +
+                "  extra_ldflags=[ \"-Wl,macosx_version_min=10.9\" ]" +
+                "'",
+            WorkingDirectory = SKIA_PATH.FullPath,
+        });
+
+        // build native skia
+        RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja"), new ProcessSettings {
+            Arguments = "-C out/mac/" + arch,
+            WorkingDirectory = SKIA_PATH.FullPath,
+        });
+
+        // build libSkiaSharp
         XCodeBuild (new XCodeBuildSettings {
             Project = "native-builds/libSkiaSharp_osx/libSkiaSharp.xcodeproj",
             Target = "libSkiaSharp",
@@ -247,23 +280,28 @@ Task ("externals-osx")
             Arch = arch,
             Configuration = "Release",
         });
+
+        // copy libSkiaSharp to output
         if (!DirectoryExists ("native-builds/lib/osx/" + arch)) {
             CreateDirectory ("native-builds/lib/osx/" + arch);
         }
         CopyDirectory ("native-builds/libSkiaSharp_osx/build/Release/", "native-builds/lib/osx/" + arch);
+
+        // strip anything we can
         RunProcess ("strip", new ProcessSettings {
             Arguments = "-x -S libSkiaSharp.dylib",
             WorkingDirectory = "native-builds/lib/osx/" + arch,
         });
-        RunInstallNameTool ("native-builds/lib/osx/" + arch, "lib/libSkiaSharp.dylib", "@loader_path/libSkiaSharp.dylib", "libSkiaSharp.dylib");
+
+        // re-sign with empty
+        RunProcess ("codesign", new ProcessSettings {
+            Arguments = "--force --sign - --timestamp=none libSkiaSharp.dylib",
+            WorkingDirectory = "native-builds/lib/osx/" + arch,
+        });
     });
-    
-    // set up the gyp environment variables
-    AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
-    SetEnvironmentVariable ("SKIA_OUT", "");
-    
+
     buildArch ("i386", "x86");
-    buildArch ("x86_64", "x86_64");
+    buildArch ("x86_64", "x64");
     
     // create the fat dylib
     RunLipo ("native-builds/lib/osx/", "libSkiaSharp.dylib", new [] {
@@ -274,44 +312,71 @@ Task ("externals-osx")
 
 // this builds the native C and C++ externals for iOS
 Task ("externals-ios")
+    .IsDependentOn ("externals-init")
     .WithCriteria (IsRunningOnMac ())
-    .WithCriteria (
-        !FileExists ("native-builds/lib/ios/libSkiaSharp.framework/libSkiaSharp"))
     .Does (() => 
 {
-    var buildArch = new Action<string, string> ((sdk, arch) => {
+    var buildArch = new Action<string, string, string> ((sdk, arch, skiaArch) => {
+        // generate native skia build files
+
+        var specifics = "";
+        // several instances of "error: type 'XXX' requires 8 bytes of alignment and the default allocator only guarantees 4 bytes [-Werror,-Wover-aligned]
+        // https://groups.google.com/forum/#!topic/skia-discuss/hU1IPFwU6bI
+        if (arch == "armv7" || arch == "armv7s") {
+            specifics += ", \"-Wno-over-aligned\"";
+        }
+
+        RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn"), new ProcessSettings {
+            Arguments = 
+                "gen out/ios/" + arch + " " + 
+                "--args='" +
+                "  is_official_build=true skia_enable_tools=false" +
+                "  target_os=\"ios\" target_cpu=\"" + skiaArch + "\"" +
+                "  skia_use_icu=false skia_use_sfntly=false" +
+                "  extra_cflags=[ \"-DSKIA_C_DLL\", \"-ffunction-sections\", \"-fdata-sections\", \"-mios-version-min=8.0\" " + specifics + " ]" +
+                "  extra_ldflags=[ \"-Wl,ios_version_min=8.0\" ]" +
+                "'",
+            WorkingDirectory = SKIA_PATH.FullPath,
+        });
+
+        // build native skia
+        RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja"), new ProcessSettings {
+            Arguments = "-C out/ios/" + arch,
+            WorkingDirectory = SKIA_PATH.FullPath,
+        });
+
+        // build libSkiaSharp
         XCodeBuild (new XCodeBuildSettings {
-            Project = "native-builds/libSkiaSharp_ios/libSkiaSharp" + (arch.StartsWith ("arm") ? "_arm" : "_x86") + ".xcodeproj",
+            Project = "native-builds/libSkiaSharp_ios/libSkiaSharp.xcodeproj",
             Target = "libSkiaSharp",
             Sdk = sdk,
             Arch = arch,
             Configuration = "Release",
         });
+
+        // copy libSkiaSharp to output
         if (!DirectoryExists ("native-builds/lib/ios/" + arch)) {
             CreateDirectory ("native-builds/lib/ios/" + arch);
         }
         CopyDirectory ("native-builds/libSkiaSharp_ios/build/Release-" + sdk, "native-builds/lib/ios/" + arch);
+
+        // strip anything we can
         RunProcess ("strip", new ProcessSettings {
             Arguments = "-x -S libSkiaSharp",
             WorkingDirectory = "native-builds/lib/ios/" + arch + "/libSkiaSharp.framework",
         });
+
+        // re-sign with empty
         RunProcess ("codesign", new ProcessSettings {
             Arguments = "--force --sign - --timestamp=none libSkiaSharp.framework",
             WorkingDirectory = "native-builds/lib/ios/" + arch,
         });
     });
-    
-    // set up the gyp environment variables
-    AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
-    SetEnvironmentVariable ("SKIA_OUT", "");
-    
-    RunGyp ("skia_os='ios' skia_arch_type='arm' armv7=1 arm_neon=0 skia_gpu=1 ios_sdk_version=8.0", "xcode");
-    
-    buildArch ("iphonesimulator", "i386");
-    buildArch ("iphonesimulator", "x86_64");
-    buildArch ("iphoneos", "armv7");
-    buildArch ("iphoneos", "armv7s");
-    buildArch ("iphoneos", "arm64");
+
+    buildArch ("iphonesimulator", "i386", "x86");
+    buildArch ("iphonesimulator", "x86_64", "x64");
+    buildArch ("iphoneos", "armv7", "arm");
+    buildArch ("iphoneos", "arm64", "arm64");
     
     // create the fat framework
     CopyDirectory ("native-builds/lib/ios/armv7/libSkiaSharp.framework/", "native-builds/lib/ios/libSkiaSharp.framework/");
@@ -320,49 +385,67 @@ Task ("externals-ios")
         (FilePath) "i386/libSkiaSharp.framework/libSkiaSharp", 
         (FilePath) "x86_64/libSkiaSharp.framework/libSkiaSharp", 
         (FilePath) "armv7/libSkiaSharp.framework/libSkiaSharp", 
-        (FilePath) "armv7s/libSkiaSharp.framework/libSkiaSharp", 
         (FilePath) "arm64/libSkiaSharp.framework/libSkiaSharp"
     });
 });
 
 // this builds the native C and C++ externals for tvOS
 Task ("externals-tvos")
+    .IsDependentOn ("externals-init")
     .WithCriteria (IsRunningOnMac ())
-    .WithCriteria (
-        !FileExists ("native-builds/lib/tvos/libSkiaSharp.framework/libSkiaSharp"))
     .Does (() => 
 {
-    var buildArch = new Action<string, string> ((sdk, arch) => {
+    var buildArch = new Action<string, string, string> ((sdk, arch, skiaArch) => {
+        // generate native skia build files
+        RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn"), new ProcessSettings {
+            Arguments = 
+                "gen out/tvos/" + arch + " " + 
+                "--args='" +
+                "  is_official_build=true skia_enable_tools=false" +
+                "  target_os=\"tvos\" target_cpu=\"" + skiaArch + "\"" +
+                "  skia_use_icu=false skia_use_sfntly=false" +
+                "  extra_cflags=[ \"-DSKIA_C_DLL\", \"-mtvos-version-min=9.0\" ]" +
+                "  extra_ldflags=[ \"-Wl,tvos_version_min=9.0\" ]" +
+                "'",
+            WorkingDirectory = SKIA_PATH.FullPath,
+        });
+
+        // build native skia
+        RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja"), new ProcessSettings {
+            Arguments = "-C out/tvos/" + arch,
+            WorkingDirectory = SKIA_PATH.FullPath,
+        });
+
+        // build libSkiaSharp
         XCodeBuild (new XCodeBuildSettings {
-            Project = "native-builds/libSkiaSharp_tvos/libSkiaSharp" + (arch.StartsWith ("arm") ? "_arm" : "_x86") + ".xcodeproj",
+            Project = "native-builds/libSkiaSharp_tvos/libSkiaSharp.xcodeproj",
             Target = "libSkiaSharp",
             Sdk = sdk,
             Arch = arch,
             Configuration = "Release",
         });
+
+        // copy libSkiaSharp to output
         if (!DirectoryExists ("native-builds/lib/tvos/" + arch)) {
             CreateDirectory ("native-builds/lib/tvos/" + arch);
         }
         CopyDirectory ("native-builds/libSkiaSharp_tvos/build/Release-" + sdk, "native-builds/lib/tvos/" + arch);
+
+        // strip anything we can
         RunProcess ("strip", new ProcessSettings {
             Arguments = "-x -S libSkiaSharp",
             WorkingDirectory = "native-builds/lib/tvos/" + arch + "/libSkiaSharp.framework",
         });
+
+        // re-sign with empty
         RunProcess ("codesign", new ProcessSettings {
             Arguments = "--force --sign - --timestamp=none libSkiaSharp.framework",
             WorkingDirectory = "native-builds/lib/tvos/" + arch,
         });
     });
-    
-    // set up the gyp environment variables
-    AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
-    SetEnvironmentVariable ("SKIA_OUT", "");
-    
-    RunGyp ("skia_os='ios' skia_arch_type='arm' armv7=1 arm_neon=0 skia_gpu=1 ios_sdk_version=9.0", "xcode");
-    TransformToTvOS ("./externals/skia/out/gyp");
-    
-    buildArch ("appletvsimulator", "x86_64");
-    buildArch ("appletvos", "arm64");
+
+    buildArch ("appletvsimulator", "x86_64", "x64");
+    buildArch ("appletvos", "arm64", "arm64");
     
     // create the fat framework
     CopyDirectory ("native-builds/lib/tvos/arm64/libSkiaSharp.framework/", "native-builds/lib/tvos/libSkiaSharp.framework/");
@@ -375,46 +458,46 @@ Task ("externals-tvos")
 
 // this builds the native C and C++ externals for Android
 Task ("externals-android")
+    .IsDependentOn ("externals-init")
     .WithCriteria (IsRunningOnMac ())
-    .WithCriteria (
-        !FileExists ("native-builds/lib/android/x86/libSkiaSharp.so") ||
-        !FileExists ("native-builds/lib/android/x86_64/libSkiaSharp.so") ||
-        !FileExists ("native-builds/lib/android/armeabi-v7a/libSkiaSharp.so") ||
-        !FileExists ("native-builds/lib/android/arm64-v8a/libSkiaSharp.so"))
     .Does (() => 
 {
-    var buildArch = new Action<string, string> ((arch, folder) => {
-        RunProcess (SKIA_PATH.CombineWithFilePath ("platform_tools/android/bin/android_ninja").FullPath, new ProcessSettings {
-            Arguments = "-d " + arch + " skia_lib pdf svg xml",
+    var buildArch = new Action<string, string> ((arch, skiaArch) => {
+        // generate native skia build files
+        RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn"), new ProcessSettings {
+            Arguments = 
+                "gen out/android/" + arch + " " + 
+                "--args='" +
+                "  is_official_build=true skia_enable_tools=false" +
+                "  target_os=\"android\" target_cpu=\"" + skiaArch + "\"" +
+                "  skia_use_icu=false skia_use_sfntly=false" +
+                "  extra_cflags=[ \"-DSKIA_C_DLL\", \"-ffunction-sections\", \"-fdata-sections\" ]" +
+                "  ndk=\"" + ANDROID_NDK_HOME + "\"" + 
+                "  ndk_api=" + (skiaArch == "x64" || skiaArch == "arm64" ? 21 : 9) +
+                "'",
+            WorkingDirectory = SKIA_PATH.FullPath,
+        });
+
+        // build native skia
+        RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja"), new ProcessSettings {
+            Arguments = "-C out/android/" + arch,
             WorkingDirectory = SKIA_PATH.FullPath,
         });
     });
-    
-    // set up the gyp environment variables
-    AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
-    SetEnvironmentVariable ("GYP_DEFINES", "");
-    SetEnvironmentVariable ("GYP_GENERATORS", "");
-    SetEnvironmentVariable ("BUILDTYPE", "Release");
-    SetEnvironmentVariable ("ANDROID_HOME", ANDROID_HOME);
-    SetEnvironmentVariable ("ANDROID_SDK_ROOT", ANDROID_SDK_ROOT);
-    SetEnvironmentVariable ("ANDROID_NDK_HOME", ANDROID_NDK_HOME);
-    SetEnvironmentVariable ("SKIA_OUT", "");
-    
-    SetEnvironmentVariable ("GYP_DEFINES", "skia_gpu=1 skia_pdf_use_sfntly=0");
+
     buildArch ("x86", "x86");
-    SetEnvironmentVariable ("GYP_DEFINES", "skia_gpu=1 skia_pdf_use_sfntly=0");
-    buildArch ("x86_64", "x86_64");
-    SetEnvironmentVariable ("GYP_DEFINES", "arm_neon=1 arm_version=7 skia_gpu=1 skia_pdf_use_sfntly=0");
-    buildArch ("arm_v7_neon", "armeabi-v7a");
-    SetEnvironmentVariable ("GYP_DEFINES", "arm_neon=0 arm_version=8 skia_gpu=1 skia_pdf_use_sfntly=0");
-    buildArch ("arm64", "arm64-v8a");
-        
+    buildArch ("x86_64", "x64");
+    buildArch ("armeabi-v7a", "arm");
+    buildArch ("arm64-v8a", "arm64");
+
+    // build libSkiaSharp
     var ndkbuild = MakeAbsolute (Directory (ANDROID_NDK_HOME)).CombineWithFilePath ("ndk-build").FullPath;
     RunProcess (ndkbuild, new ProcessSettings {
         Arguments = "",
         WorkingDirectory = ROOT_PATH.Combine ("native-builds/libSkiaSharp_android").FullPath,
     }); 
 
+    // copy libSkiaSharp to output
     foreach (var folder in new [] { "x86", "x86_64", "armeabi-v7a", "arm64-v8a" }) {
         if (!DirectoryExists ("native-builds/lib/android/" + folder)) {
             CreateDirectory ("native-builds/lib/android/" + folder);
@@ -425,65 +508,55 @@ Task ("externals-android")
 
 // this builds the native C and C++ externals for Linux
 Task ("externals-linux")
-    // .WithCriteria (
-    //     !FileExists ("native-builds/lib/linux/x86/libSkiaSharp.so") ||
-    //     !FileExists ("native-builds/lib/linux/x64/libSkiaSharp.so"))
+    .IsDependentOn ("externals-init")
     .WithCriteria (IsRunningOnLinux ())
     .Does (() => 
 {
-    var arches = EnvironmentVariable ("BUILD_ARCH") ?? "x64";
-    var BUILD_ARCH = arches.Split (',').Select (a => a.Trim ()).ToArray (); // x64, x86, ARM
-    var SUPPORT_GPU = EnvironmentVariable ("SUPPORT_GPU") ?? "1"; // 1 == true, 0 == false
+    var arches = EnvironmentVariable ("BUILD_ARCH") ?? (Environment.Is64BitOperatingSystem ? "x64" : "x86");  // x64, x86, ARM
+    var BUILD_ARCH = arches.Split (',').Select (a => a.Trim ()).ToArray ();
+    var SUPPORT_GPU = (EnvironmentVariable ("SUPPORT_GPU") ?? "1") == "1"; // 1 == true, 0 == false
 
-    var ninja = DEPOT_PATH.CombineWithFilePath ("ninja").FullPath;
-
-    // set up the gyp environment variables
-    AppendEnvironmentVariable ("PATH", DEPOT_PATH.FullPath);
-
-    var targets = 
-        "skia_lib pdf dng_sdk libSkKTX sksl piex raw_codec zlib libetc1 " +
-        "libwebp_dsp_enc opts_avx opts_sse42 opts_hsw xml svg";
-
-    var buildArch = new Action<string> ((folder) => {
-        // select the SKIA arch
-        var arch = "x86_64";
-        switch (folder.ToLower ()) {
-            case "x86": arch = "x86"; break;
-            case "arm": arch = "arm"; break;
-            case "x64":
-            default: arch = "x86_64"; break;
-        }
-
-        // setup outputs
-        var outPath = SKIA_PATH.Combine ("out").Combine (folder).FullPath;
-        CreateDirectory (outPath);
-        SetEnvironmentVariable ("SKIA_OUT", outPath);
-
-        // build skia_lib
-        RunGyp ("skia_os='linux' skia_arch_type='" + arch + "' skia_gpu=" + SUPPORT_GPU + " skia_pic=1 skia_pdf_use_sfntly=0 skia_freetype_static=1", "ninja");
-        RunProcess (ninja, new ProcessSettings {
-            Arguments = "-C out/" + folder + "/Release " + targets,
+    var buildArch = new Action<string> ((arch) => {
+        // generate native skia build files
+        RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn"), new ProcessSettings {
+            Arguments = 
+                "gen out/linux/" + arch + " " + 
+                "--args='" +
+                "  is_official_build=true skia_enable_tools=false" +
+                "  target_os=\"linux\" target_cpu=\"" + arch + "\"" +
+                "  skia_use_icu=false skia_use_sfntly=false skia_use_system_freetype2=false" +
+                "  skia_enable_gpu=" + (SUPPORT_GPU ? "true" : "false") +
+                "  extra_cflags=[ \"-DSKIA_C_DLL\", \"-ffunction-sections\", \"-fdata-sections\" ]" +
+                "  extra_ldflags=[ ]" +
+                "'",
             WorkingDirectory = SKIA_PATH.FullPath,
         });
+
+        // build native skia
+        RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja"), new ProcessSettings {
+            Arguments = "-C out/linux/" + arch,
+            WorkingDirectory = SKIA_PATH.FullPath,
+        });
+
         // build libSkiaSharp
         // RunProcess ("make", new ProcessSettings {
         //     Arguments = "clean",
         //     WorkingDirectory = "native-builds/libSkiaSharp_linux",
         // });
         RunProcess ("make", new ProcessSettings {
-            Arguments = "ARCH=" + folder + " VERSION=" + VERSION_FILE + " SUPPORT_GPU=" + SUPPORT_GPU,
+            Arguments = "ARCH=" + arch + " VERSION=" + VERSION_FILE + " SUPPORT_GPU=" + SUPPORT_GPU,
             WorkingDirectory = "native-builds/libSkiaSharp_linux",
         });
+
+        // copy libSkiaSharp to output
+        if (!DirectoryExists ("native-builds/lib/linux/" + arch)) {
+            CreateDirectory ("native-builds/lib/linux/" + arch);
+        }
+        CopyFileToDirectory ("native-builds/libSkiaSharp_linux/bin/" + arch + "/libSkiaSharp.so." + VERSION_SONAME, "native-builds/lib/linux/" + arch);
     });
 
-    // copy output
-    foreach (var folder in BUILD_ARCH) {
-        buildArch (folder);
-
-        if (!DirectoryExists ("native-builds/lib/linux/" + folder)) {
-            CreateDirectory ("native-builds/lib/linux/" + folder);
-        }
-        CopyFileToDirectory ("native-builds/libSkiaSharp_linux/bin/" + folder + "/libSkiaSharp.so." + VERSION_SONAME, "native-builds/lib/linux/" + folder);
+    foreach (var arch in BUILD_ARCH) {
+        buildArch (arch);
     }
 });
 
@@ -514,7 +587,15 @@ Task ("externals-angle-uwp")
 // CLEAN - remove all the build artefacts
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Task ("clean-externals").Does (() =>
+Task ("externals-deinit").Does (() =>
+{
+    // remove compatibility
+    InjectCompatibilityExternals (false);
+});
+
+Task ("clean-externals")
+    .IsDependentOn ("externals-deinit")
+    .Does (() =>
 {
     // skia
     CleanDirectories ("externals/skia/out");
@@ -541,7 +622,4 @@ Task ("clean-externals").Does (() =>
     // linux
     CleanDirectories ("native-builds/libSkiaSharp_linux/bin");
     CleanDirectories ("native-builds/libSkiaSharp_linux/obj");
-    
-    // remove compatibility
-    InjectCompatibilityExternals (false);
 });
