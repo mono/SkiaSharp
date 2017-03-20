@@ -54,6 +54,20 @@ namespace SkiaSharp
 			SkiaApi.sk_document_close (Handle);
 		}
 
+		public static SKDocument CreateXps (string path, float dpi = DefaultRasterDpi)
+		{
+			return GetObject<SKDocument> (SkiaApi.sk_document_create_xps_from_filename (path, dpi));
+		}
+
+		public static SKDocument CreateXps (SKWStream stream, float dpi = DefaultRasterDpi)
+		{
+			if (stream == null) {
+				throw new ArgumentNullException (nameof(stream));
+			}
+
+			return GetObject<SKDocument> (SkiaApi.sk_document_create_xps_from_stream (stream.Handle, dpi));
+		}
+
 		public static SKDocument CreatePdf (string path, float dpi = DefaultRasterDpi)
 		{
 			return GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_filename (path, dpi));

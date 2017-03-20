@@ -1111,10 +1111,10 @@ namespace SkiaSharp
 		public extern static sk_document_t sk_document_create_pdf_from_stream_with_metadata(sk_wstream_t stream, float dpi, ref SKDocumentPdfMetadataInternal metadata);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_document_t sk_document_create_pdf_from_filename([MarshalAs(UnmanagedType.LPStr)] string path, float dpi);
-		//[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		//public extern static sk_document_t sk_document_create_xps_from_stream(sk_wstream_t stream, float dpi);
-		//[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		//public extern static sk_document_t sk_document_create_xps_from_filename([MarshalAs(UnmanagedType.LPStr)] string path, float dpi);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_document_t sk_document_create_xps_from_stream(sk_wstream_t stream, float dpi);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_document_t sk_document_create_xps_from_filename([MarshalAs(UnmanagedType.LPStr)] string path, float dpi);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_canvas_t sk_document_begin_page(sk_document_t document, float width, float height, ref SKRect content);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
