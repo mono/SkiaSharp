@@ -104,9 +104,9 @@ they have on tap the next 6-12 months. Note it is a living document that changes
 
 Here are some links to show the differences in our code as compared to Google's.
 
-What version are we on? [**m56**](https://github.com/google/skia/tree/chrome/m56)  
-Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/xamarin-mobile-bindings...google:chrome/m56)  
-What have we added? [Compare](https://github.com/google/skia/compare/chrome/m56...mono:xamarin-mobile-bindings)  
+What version are we on? [**m57**](https://github.com/google/skia/tree/chrome/m57)  
+Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/xamarin-mobile-bindings...google:chrome/m57)  
+What have we added? [Compare](https://github.com/google/skia/compare/chrome/m57...mono:xamarin-mobile-bindings)  
 
 ## Where is Windows Phone 8 / Store 8
  
