@@ -185,7 +185,7 @@ namespace SkiaSharp.Tests
 			Assert.AreEqual(new SKColor(0x34, 0x56, 0x78, 0x12), color);
 
 			SKPMColor pmcolor;
-			if (IsWindows) {
+			if (IsWindows || IsLinux) {
 				pmcolor = (SKPMColor)0x12345678;
 			} else {
 				pmcolor = (SKPMColor)0x12785634;
@@ -203,7 +203,7 @@ namespace SkiaSharp.Tests
 			Assert.AreEqual(0x78, color.Blue);
 			Assert.AreEqual(0x78, pmcolor.Blue);
 
-			if (IsWindows) {
+			if (IsWindows || IsLinux) {
 				// ARGB
 				Assert.AreEqual(24, SKImageInfo.PlatformColorAlphaShift);
 				Assert.AreEqual(16, SKImageInfo.PlatformColorRedShift);

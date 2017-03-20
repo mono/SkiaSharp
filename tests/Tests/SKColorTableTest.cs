@@ -113,21 +113,21 @@ namespace SkiaSharp.Tests
 			Assert.AreEqual((SKPMColor)0x000000, colorTable[0]);
 			Assert.AreEqual((SKColor)0x000000, colorTable.GetUnPreMultipliedColor(0));
 
-			if (IsWindows) {
+			if (IsWindows || IsLinux) {
 				Assert.AreEqual((SKPMColor)0xFFA4C639, colorTable[255]);
 			} else {
 				Assert.AreEqual((SKPMColor)0xFF39C6A4, colorTable[255]);
 			}
 			Assert.AreEqual((SKColor)0xFFA4C639, colorTable.GetUnPreMultipliedColor(255));
 
-			if (IsWindows) {
+			if (IsWindows || IsLinux) {
 				Assert.AreEqual((SKPMColor)0x7E51621C, colorTable[140]);
 			} else {
 				Assert.AreEqual((SKPMColor)0x7E1C6251, colorTable[140]);
 			}
 			Assert.AreEqual((SKColor)0x7EA4C639, colorTable.GetUnPreMultipliedColor(140));
 
-			if (IsWindows) {
+			if (IsWindows || IsLinux) {
 				Assert.AreEqual((SKPMColor)0x7E51621C, bitmap.GetIndex8Color(182, 348));
 			} else {
 				Assert.AreEqual((SKPMColor)0x7E1C6251, bitmap.GetIndex8Color(182, 348));

@@ -257,5 +257,19 @@ namespace SkiaSharp.Tests
 				Assert.AreEqual (new SKPoint (60, 10), segment.Points [1]);
 			}
 		}
+
+		// based on https://groups.google.com/forum/#!topic/skia-discuss/bhQCWsmARzo
+		[Test]
+		public void TightBoundsForEnclosedPathIsNotZero ()
+		{
+			var path = new SKPath();
+			path.MoveTo(10, 20);
+			path.CubicTo(10, 20, 30, 40, 30, 40);
+			path.CubicTo(50, 60, 30, 40, 30, 40);
+
+			var bounds = path.TightBounds;
+
+			Assert.AreEqual(SKRect.Create(10, 20, 20, 20), bounds);
+		}
 	}
 }

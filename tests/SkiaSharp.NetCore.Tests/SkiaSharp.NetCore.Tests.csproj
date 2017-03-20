@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <DefineConstants>$(DefineConstants);NET_STANDARD</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>portable</DebugType>
+    <AssemblyName>SkiaSharp.NetCore.Tests</AssemblyName>
+    <PackageId>SkiaSharp.NetCore.Tests</PackageId>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <RuntimeIdentifiers>win7-x64;win7-x86;osx.10.10-x64;osx.10.11-x64;ubuntu.14.04-x64;ubuntu.14.10-x64;ubuntu.16.04-x64;ubuntu.16.10-x64</RuntimeIdentifiers>
+    <PackageTargetFallback>$(PackageTargetFallback);portable-net451+win8</PackageTargetFallback>
+    <RuntimeFrameworkVersion>1.1.1</RuntimeFrameworkVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Tests\*.cs" Link="%(FileName)%(Extension)" />
+    <Compile Include="..\Tests\GlContexts\*.cs" Link="GlContexts\%(FileName)%(Extension)" />
+    <Compile Include="..\Tests\GlContexts\Cgl\*.cs" Link="GlContexts\Cgl\%(FileName)%(Extension)" />
+    <Compile Include="..\Tests\GlContexts\Glx\*.cs" Link="GlContexts\Glx\%(FileName)%(Extension)" />
+    <Compile Include="..\Tests\GlContexts\Wgl\*.cs" Link="GlContexts\Wgl\%(FileName)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="..\Tests\SKSurfaceTest.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\Content\images\*" Link="images/%(FileName)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Content\fonts\*" Link="fonts/%(FileName)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NUnit" Version="3.6.1" />
+    <PackageReference Include="SkiaSharp" Version="1.56.2" />
+    <PackageReference Include="SkiaSharp.Svg" Version="1.56.2" />
+    <PackageReference Include="SkiaSharp.Extended" Version="1.56.2-beta" />
+  </ItemGroup>
+
+</Project>

@@ -1,9 +1,11 @@
 #addin "Cake.Xamarin"
 #addin "Cake.XCode"
 #addin "Cake.FileHelpers"
+#addin "Cake.StrongNameTool"
 
 #load "cake/Utils.cake"
 
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
@@ -18,6 +20,7 @@ var CakeToolPath = GetToolPath ("Cake/Cake.exe");
 var NUnitConsoleToolPath = GetToolPath ("NUnit.ConsoleRunner/tools/nunit3-console.exe");
 var GenApiToolPath = GetToolPath ("Microsoft.DotNet.BuildTools.GenAPI/tools/GenAPI.exe");
 var MDocPath = GetToolPath ("mdoc/mdoc.exe");
+var SNToolPath = GetSNToolPath (EnvironmentVariable ("SN_EXE"));
 
 var VERSION_ASSEMBLY = "1.56.0.0";
 var VERSION_FILE = "1.56.2.0";
@@ -29,6 +32,10 @@ var VERSION_PACKAGES = new Dictionary<string, string> {
     { "SkiaSharp.Svg", "1.56.2" },
     { "SkiaSharp.Extended", "1.56.2-beta" },
 };
+
+var CI_TARGETS = new string[] { "CI", "WINDOWS-CI", "LINUX-CI", "MAC-CI" };
+var IS_ON_CI = CI_TARGETS.Contains (TARGET.ToUpper ());
+var IS_ON_FINAL_CI = TARGET.ToUpper () == "CI";
 
 string ANDROID_HOME = EnvironmentVariable ("ANDROID_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-sdk-macosx";
 string ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? ANDROID_HOME;
@@ -198,26 +205,35 @@ Task ("libs")
         CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended/bin/Release/SkiaSharp.Extended.dll", "./output/portable/");
     }
 
+    // TODO: remove this nonsense !!!
+    // Assembly signing is not supported on non-Windows ???, so we MUST NOT use the output
+    // See: https://github.com/dotnet/roslyn/issues/8210
+    var CopyNetStandardOutput = true;
+    if (IS_ON_CI && !IsRunningOnWindows ()) {
+        CopyNetStandardOutput = false;
+    }
+
     // .NET Standard / .NET Core
     // build
-    RunDotNetCoreRestore ("binding/SkiaSharp.NetStandard");
-    DotNetBuild ("binding/SkiaSharp.NetStandard.sln", c => { 
-        c.Configuration = "Release"; 
-        c.Verbosity = VERBOSITY;
+    RunDotNetCoreRestore ("binding/SkiaSharp.NetStandard.sln");
+    DotNetCoreBuild ("binding/SkiaSharp.NetStandard.sln", new DotNetCoreBuildSettings { 
+        Configuration = "Release",
     });
-    // copy build output
-    CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
+    if (CopyNetStandardOutput) {
+        // copy build output
+        CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
+    }
     // build other source
-    RunDotNetCoreRestore ("source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard");
-    RunDotNetCoreRestore ("source/SkiaSharp.Extended/SkiaSharp.Extended.NetStandard");
-    DotNetBuild ("./source/SkiaSharpSource.NetStandard.sln", c => { 
-        c.Configuration = "Release"; 
-        c.Verbosity = VERBOSITY;
+    RunDotNetCoreRestore ("source/SkiaSharpSource.NetStandard.sln");
+    DotNetCoreBuild ("./source/SkiaSharpSource.NetStandard.sln", new DotNetCoreBuildSettings { 
+        Configuration = "Release",
     });
-    // copy SVG
-    CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard/bin/Release/SkiaSharp.Svg.dll", "./output/netstandard/");
-    // copy Extended
-    CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended.NetStandard/bin/Release/SkiaSharp.Extended.dll", "./output/netstandard/");
+    if (CopyNetStandardOutput) {
+        // copy SVG
+        CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard/bin/Release/SkiaSharp.Svg.dll", "./output/netstandard/");
+        // copy Extended
+        CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended.NetStandard/bin/Release/SkiaSharp.Extended.dll", "./output/netstandard/");
+    }
 });
 
 Task ("workbooks")
@@ -280,10 +296,12 @@ Task ("tests")
         RunTests("./tests/SkiaSharp.Desktop.Tests/bin/AnyCPU/Release/SkiaSharp.Desktop.Tests.dll");
     }
     // .NET Core
-    RunDotNetCoreRestore ("./tests/SkiaSharp.NetCore.Tests");
-    DotNetCoreTest ("./tests/SkiaSharp.NetCore.Tests", new DotNetCoreTestSettings {
-        Configuration = "Release"
+    RunDotNetCoreRestore ("./tests/SkiaSharp.NetCore.Tests.Runner/SkiaSharp.NetCore.Tests.Runner.sln");
+    DotNetCorePublish ("./tests/SkiaSharp.NetCore.Tests.Runner", new DotNetCorePublishSettings {
+        Configuration = "Release",
+        OutputDirectory = "./tests/SkiaSharp.NetCore.Tests.Runner/artifacts/"
     });
+    DotNetCoreExecute ("./tests/SkiaSharp.NetCore.Tests.Runner/artifacts/SkiaSharp.NetCore.Tests.Runner.dll");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -299,7 +317,7 @@ Task ("samples")
     CleanDirectories ("./samples/*/packages/SkiaSharp.*");
 
     // zip the samples for the GitHub release notes
-    if (TARGET == "CI") {
+    if (IS_ON_CI) {
         Zip ("./samples", "./output/samples.zip");
     }
 
@@ -529,8 +547,35 @@ Task ("nuget")
     .IsDependentOn ("docs")
     .Does (() => 
 {
+    // Because some platforms don't support signing,
+    // we must make sure the final package only contains signed assemblies
+    // And, we want to make sure all is well on Windows too
+    if (IS_ON_FINAL_CI || IsRunningOnWindows ()) {
+        var excludedAssemblies = new string[] {
+            "/SkiaSharp.Views.Forms.dll" // Xamarin.Forms is not sigend, so we can't sign
+        };
+        foreach (var f in GetFiles("./output/*/*.dll")) {
+            // skip the excluded assemblies
+            var excluded = false;
+            foreach (var assembly in excludedAssemblies) {
+                if (f.FullPath.EndsWith (assembly)) {
+                    excluded = true;
+                    break;
+                }
+            }
+            // verify
+            if (!excluded) {
+                Information("Making sure that '{0}' is signed.", f);
+                StrongNameVerify(f, new StrongNameToolSettings {
+                    ForceVerification = true,
+                    ToolPath = SNToolPath
+                });
+            }
+        }
+    }
+
     // we can only build the combined package on CI
-    if (TARGET == "CI") {
+    if (IS_ON_FINAL_CI) {
         PackageNuGet ("./nuget/SkiaSharp.nuspec", "./output/");
         PackageNuGet ("./nuget/SkiaSharp.Views.nuspec", "./output/");
         PackageNuGet ("./nuget/SkiaSharp.Views.Forms.nuspec", "./output/");
@@ -667,6 +712,7 @@ Task ("clean-managed").Does (() =>
 
     CleanDirectories ("./tests/**/bin");
     CleanDirectories ("./tests/**/obj");
+    CleanDirectories ("./tests/**/artifacts");
     DeleteFiles ("./tests/**/project.lock.json");
 
     CleanDirectories ("./source/*/*/bin");
@@ -712,33 +758,31 @@ Task ("CI")
     .IsDependentOn ("tests")
     .IsDependentOn ("samples");
 
+Task ("Mac-CI")
+    .IsDependentOn ("CI");
+
 Task ("Windows-CI")
-    .IsDependentOn ("externals")
-    .IsDependentOn ("libs")
-    .IsDependentOn ("docs")
-    .IsDependentOn ("nuget")
-    .IsDependentOn ("component")
-    .IsDependentOn ("tests")
-    .IsDependentOn ("samples");
+    .IsDependentOn ("CI");
 
 Task ("Linux-CI")
-    .IsDependentOn ("externals")
-    .IsDependentOn ("libs")
-    .IsDependentOn ("docs")
-    .IsDependentOn ("nuget")
-    .IsDependentOn ("component")
-    .IsDependentOn ("tests")
-    .IsDependentOn ("samples");
+    .IsDependentOn ("CI");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // BUILD NOW 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Information ("Cake.exe ToolPath: {0}", CakeToolPath);
-Information ("Cake.exe NUnitConsoleToolPath: {0}", NUnitConsoleToolPath);
+Information ("NUnitConsole ToolPath: {0}", NUnitConsoleToolPath);
 Information ("NuGet.exe ToolPath: {0}", NugetToolPath);
 Information ("Xamarin-Component.exe ToolPath: {0}", XamarinComponentToolPath);
 Information ("genapi.exe ToolPath: {0}", GenApiToolPath);
+Information ("sn.exe ToolPath: {0}", SNToolPath);
+
+if (IS_ON_CI) {
+    Information ("Detected that we are building on CI, {0}.", IS_ON_FINAL_CI ? "and on FINAL CI" : "but NOT on final CI");
+} else {
+    Information ("Detected that we are {0} on CI.", "NOT");
+}
 
 ListEnvironmentVariables ();
 
