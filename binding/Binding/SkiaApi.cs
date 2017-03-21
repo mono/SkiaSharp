@@ -813,6 +813,8 @@ namespace SkiaSharp
 		public extern static IntPtr sk_data_get_size(sk_data_t d);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_data_get_data(sk_data_t d);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_data_t sk_data_new_uninitialized(IntPtr size);
 
 		// SkString
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]

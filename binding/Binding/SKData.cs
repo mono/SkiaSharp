@@ -109,6 +109,19 @@ namespace SkiaSharp
 			return GetObject<SKData> (SkiaApi.sk_data_new_with_copy (bytes, (IntPtr) length));
 		}
 
+		public static SKData Create (int size)
+		{
+			return GetObject<SKData> (SkiaApi.sk_data_new_uninitialized ((IntPtr) size));
+		}
+
+		public static SKData Create (ulong size)
+		{
+			if (SizeOf <IntPtr> () == 4 && size > UInt32.MaxValue)
+				throw new ArgumentOutOfRangeException (nameof (size), "The size exceeds the size of pointers.");
+				
+			return GetObject<SKData> (SkiaApi.sk_data_new_uninitialized ((IntPtr) size));
+		}
+
 		public static SKData Create (IntPtr address, int length)
 		{
 			return Create (address, length, null, null);
