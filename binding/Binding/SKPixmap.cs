@@ -108,5 +108,28 @@ namespace SkiaSharp
 		{
 			return SkiaApi.sk_bitmapscaler_resize (dst.Handle, src.Handle, method);
 		}
+
+		public SKData Encode (SKEncodedImageFormat encoder, int quality)
+		{
+			using (var stream = new SKDynamicMemoryWStream ()) {
+				var result = Encode (stream, this, encoder, quality);
+				return result ? stream.DetachAsData () : null;
+			}
+		}
+
+		public bool Encode (SKWStream dst, SKEncodedImageFormat encoder, int quality)
+		{
+			return Encode (dst, this, encoder, quality);
+		}
+
+		public static bool Encode (SKWStream dst, SKPixmap src, SKEncodedImageFormat encoder, int quality)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
+
+			return SkiaApi.sk_pixmap_encode_image (dst.Handle, src.Handle, encoder, quality);
+		}
 	}
 }

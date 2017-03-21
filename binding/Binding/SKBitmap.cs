@@ -546,13 +546,21 @@ namespace SkiaSharp
 		public SKPixmap PeekPixels ()
 		{
 			SKPixmap pixmap = new SKPixmap ();
-			var result = SkiaApi.sk_bitmap_peek_pixels (Handle, pixmap.Handle);
+			var result = PeekPixels (pixmap);
 			if (result) {
 				return pixmap;
 			} else {
 				pixmap.Dispose ();
 				return null;
 			}
+		}
+
+		public bool PeekPixels (SKPixmap pixmap)
+		{
+			if (pixmap == null) {
+				throw new ArgumentNullException (nameof (pixmap));
+			}
+			return SkiaApi.sk_bitmap_peek_pixels (Handle, pixmap.Handle);
 		}
 
 		public SKBitmap Resize (SKImageInfo info, SKBitmapResizeMethod method)
@@ -595,6 +603,14 @@ namespace SkiaSharp
 				bmp = null;
 			}
 			return bmp;
+		}
+
+		public bool Encode (SKWStream dst, SKEncodedImageFormat format, int quality)
+		{
+			using (new SKAutoLockPixels (this))
+			using (var pixmap = new SKPixmap ()) {
+				return PeekPixels (pixmap) && pixmap.Encode (dst, format, quality);
+			}
 		}
 
 		private static SKStream WrapManagedStream (Stream stream)
