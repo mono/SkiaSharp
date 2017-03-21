@@ -1053,6 +1053,12 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_stream_assetstream_t sk_dynamicmemorywstream_detach_as_stream(sk_wstream_dynamicmemorystream_t cstream);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_data_t sk_dynamicmemorywstream_detach_as_data(sk_wstream_dynamicmemorystream_t cstream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_dynamicmemorywstream_copy_to(sk_wstream_dynamicmemorystream_t cstream, IntPtr data);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_dynamicmemorywstream_write_to_stream(sk_wstream_dynamicmemorystream_t cstream, sk_wstream_t dst);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_wstream_write(sk_wstream_t cstream, IntPtr buffer, IntPtr size);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]

@@ -401,9 +401,33 @@ namespace SkiaSharp
 			}
 		}
 
+		public SKData CopyToData ()
+		{
+			var data = SKData.Create (BytesWritten);
+			CopyTo (data.Data);
+			return data;
+		}
+
 		public SKStreamAsset DetachAsStream ()
 		{
 			return GetObject<SKStreamAssetImplementation> (SkiaApi.sk_dynamicmemorywstream_detach_as_stream (Handle));
+		}
+
+		public SKData DetachAsData ()
+		{
+			return GetObject<SKData> (SkiaApi.sk_dynamicmemorywstream_detach_as_data (Handle));
+		}
+
+		public void CopyTo (IntPtr data)
+		{
+			SkiaApi.sk_dynamicmemorywstream_copy_to (Handle, data);
+		}
+
+		public void CopyTo (SKWStream dst)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+			SkiaApi.sk_dynamicmemorywstream_write_to_stream (Handle, dst.Handle);
 		}
 
 		protected override void Dispose (bool disposing)
