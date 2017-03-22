@@ -13,5 +13,12 @@ namespace SkiaSharpSample
 		tvOS = 1 << 5,
 
 		All = iOS | Android | OSX | WindowsDesktop | UWP | tvOS,
+
+		AllWindows = WindowsDesktop | UWP,
+		AllAndroid = Android,
+		AlliOS = iOS | tvOS,
+		AllApple = iOS | tvOS | OSX,
+		AllMobile = iOS | tvOS | Android | UWP,
+		AllDesktop = WindowsDesktop | OSX,
 	}
 }

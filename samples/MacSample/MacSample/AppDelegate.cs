@@ -19,7 +19,7 @@ namespace SkiaSharpSample.MacSample
 
 		public AppDelegate()
 		{
-			samples = SamplesManager.GetSamples(SamplePlatforms.iOS).ToList();
+			samples = SamplesManager.GetSamples(SamplePlatforms.OSX).ToList();
 			sampleGroups = Enum.GetValues(typeof(SampleCategories))
 				.Cast<SampleCategories>()
 				.Select(c => new GroupedSamples(c, samples.Where(s => s.Category.HasFlag(c))))
