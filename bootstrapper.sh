@@ -105,15 +105,17 @@ else
     mono $CAKE_EXE $SCRIPT -verbosity=$VERBOSITY -configuration=$CONFIGURATION -target=$TARGET $EXTRA_ARGS
 fi
 
-TEMP_TARGET=`echo "${TARGET}" | tr '[A-Z]' '[a-z]'`
-if [ "$TEMP_TARGET" == "clean" ] && [ $? -eq 0 ]; then
-    echo "Removing Cake bits too..."
-    rm -rf "$TOOLS_DIR/Addins/" "$TOOLS_DIR/Cake/"
-    rm -rf "$TOOLS_DIR/Microsoft.DotNet.BuildTools.GenAPI/"
-    rm -rf "$TOOLS_DIR/NUnit.ConsoleRunner/" "$TOOLS_DIR/xunit.runner.console/"
-    rm -rf "$TOOLS_DIR/System.IO.Compression.dll"
-    rm -rf "$TOOLS_DIR/nuget.exe"
-    rm -rf "$TOOLS_DIR/__MACOSX/" "$TOOLS_DIR/xamarin-component.exe" "$TOOLS_DIR/xpkg.zip"
+if [ $? -eq 0 ]; then
+    TEMP_TARGET=`echo "${TARGET}" | tr '[A-Z]' '[a-z]'`
+    if [ "$TEMP_TARGET" == "clean" ]; then
+        echo "Removing Cake bits too..."
+        rm -rf "$TOOLS_DIR/Addins/" "$TOOLS_DIR/Cake/"
+        rm -rf "$TOOLS_DIR/Microsoft.DotNet.BuildTools.GenAPI/"
+        rm -rf "$TOOLS_DIR/NUnit.ConsoleRunner/" "$TOOLS_DIR/xunit.runner.console/"
+        rm -rf "$TOOLS_DIR/System.IO.Compression.dll"
+        rm -rf "$TOOLS_DIR/nuget.exe"
+        rm -rf "$TOOLS_DIR/__MACOSX/" "$TOOLS_DIR/xamarin-component.exe" "$TOOLS_DIR/xpkg.zip"
+    fi
 fi
 
 exit $?
