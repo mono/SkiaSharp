@@ -1,9 +1,6 @@
-﻿using System;
-using System.ComponentModel;
-using CoreAnimation;
+﻿using CoreAnimation;
 using Foundation;
 using Xamarin.Forms;
-using Xamarin.Forms.Platform.iOS;
 
 using SKFormsView = SkiaSharp.Views.Forms.SKGLView;
 using SKNativeView = SkiaSharp.Views.iOS.SKGLView;
@@ -12,49 +9,19 @@ using SKNativeView = SkiaSharp.Views.iOS.SKGLView;
 
 namespace SkiaSharp.Views.Forms
 {
-	public class SKGLViewRenderer : ViewRenderer<SKFormsView, SKNativeView>
+	public class SKGLViewRenderer : SKGLViewRendererBase<SKFormsView, SKNativeView>
 	{
 		private CADisplayLink displayLink;
 
-		protected override void OnElementChanged(ElementChangedEventArgs<SKFormsView> e)
+		protected override SKNativeView CreateNativeControl()
 		{
-			if (e.OldElement != null)
-			{
-				var oldController = (ISKGLViewController)e.OldElement;
+			var view = base.CreateNativeControl();
 
-				// unsubscribe from events
-				oldController.SurfaceInvalidated -= OnSurfaceInvalidated;
-				oldController.GetCanvasSize -= OnGetCanvasSize;
-			}
+			view.UserInteractionEnabled = false;
+			// Force the opacity to false for consistency with the other platforms
+			view.Opaque = false;
 
-			if (e.NewElement != null)
-			{
-				var newController = (ISKGLViewController)e.NewElement;
-
-				// create the native view
-				var view = new InternalView(newController);
-				SetNativeControl(view);
-
-				// subscribe to events from the user
-				newController.SurfaceInvalidated += OnSurfaceInvalidated;
-				newController.GetCanvasSize += OnGetCanvasSize;
-
-				// start the rendering
-				SetupRenderLoop(false);
-			}
-
-			base.OnElementChanged(e);
-		}
-
-		protected override void OnElementPropertyChanged(object sender, PropertyChangedEventArgs e)
-		{
-			base.OnElementPropertyChanged(sender, e);
-
-			// refresh the render loop
-			if (e.PropertyName == SKFormsView.HasRenderLoopProperty.PropertyName)
-			{
-				SetupRenderLoop(false);
-			}
+			return view;
 		}
 
 		protected override void Dispose(bool disposing)
@@ -66,18 +33,11 @@ namespace SkiaSharp.Views.Forms
 				displayLink.Dispose();
 				displayLink = null;
 			}
-
-			// detach all events before disposing
-			var controller = (ISKGLViewController)Element;
-			if (controller != null)
-			{
-				controller.SurfaceInvalidated -= OnSurfaceInvalidated;
-			}
-
+			
 			base.Dispose(disposing);
 		}
 
-		private void SetupRenderLoop(bool oneShot)
+		protected override void SetupRenderLoop(bool oneShot)
 		{
 			// only start if we haven't already
 			if (displayLink != null)
@@ -105,45 +65,6 @@ namespace SkiaSharp.Views.Forms
 				}
 			});
 			displayLink.AddToRunLoop(NSRunLoop.Current, NSRunLoop.NSDefaultRunLoopMode);
-		}
-
-		// the user asked to repaint
-		private void OnSurfaceInvalidated(object sender, EventArgs eventArgs)
-		{
-			// if we aren't in a loop, then refresh once
-			if (!Element.HasRenderLoop)
-			{
-				SetupRenderLoop(true);
-			}
-		}
-
-		// the user asked for the size
-		private void OnGetCanvasSize(object sender, GetCanvasSizeEventArgs e)
-		{
-			e.CanvasSize = Control?.CanvasSize ?? SKSize.Empty;
-		}
-
-		private class InternalView : SKNativeView
-		{
-			private readonly ISKGLViewController controller;
-
-			public InternalView(ISKGLViewController controller)
-			{
-				UserInteractionEnabled = false;
-
-				this.controller = controller;
-
-				// Force the opacity to false for consistency with the other platforms
-				Opaque = false;
-			}
-
-			public override void DrawInSurface(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
-			{
-				base.DrawInSurface(surface, renderTarget);
-
-				// the control is being repainted, let the user know
-				controller.OnPaintSurface(new SKPaintGLSurfaceEventArgs(surface, renderTarget));
-			}
 		}
 	}
 }
