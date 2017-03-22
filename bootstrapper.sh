@@ -105,7 +105,9 @@ else
     mono $CAKE_EXE $SCRIPT -verbosity=$VERBOSITY -configuration=$CONFIGURATION -target=$TARGET $EXTRA_ARGS
 fi
 
-if [ $? -eq 0 ]; then
+code=$?
+
+if [ $code -eq 0 ]; then
     TEMP_TARGET=`echo "${TARGET}" | tr '[A-Z]' '[a-z]'`
     if [ "$TEMP_TARGET" == "clean" ]; then
         echo "Removing Cake bits too..."
@@ -118,4 +120,4 @@ if [ $? -eq 0 ]; then
     fi
 fi
 
-exit $?
+exit $code
