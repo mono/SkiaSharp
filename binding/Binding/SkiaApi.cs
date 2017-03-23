@@ -114,6 +114,16 @@ namespace SkiaSharp
 		public extern static sk_surface_t sk_surface_new_render_target (gr_context_t context, bool budgeted, ref SKImageInfo info, int sampleCount, ref SKSurfaceProps props);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_surface_t sk_surface_new_render_target (gr_context_t context, bool budgeted, ref SKImageInfo info, int sampleCount, IntPtr propsZero);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_surface_draw(sk_surface_t surface, sk_canvas_t canvas, float x, float y, sk_paint_t paint);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_surface_peek_pixels(sk_surface_t surface, sk_pixmap_t pixmap);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_surface_read_pixels(sk_surface_t surface, ref SKImageInfo dstInfo, IntPtr dstPixels, IntPtr dstRowBytes, int srcX, int srcY);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_surface_get_props(sk_surface_t surface, out SKSurfaceProps props);
 
 
 		// Canvas

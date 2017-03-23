@@ -374,6 +374,14 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_bitmap_rect (Handle, bitmap.Handle, ref source, ref dest, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
+		public void DrawSurface (SKSurface surface, float x, float y, SKPaint paint = null)
+		{
+			if (surface == null)
+				throw new ArgumentNullException (nameof (surface));
+
+			surface.Draw (this, x, y, paint);
+		}
+
 		public void DrawText (string text, float x, float y, SKPaint paint)
 		{
 			if (text == null)
