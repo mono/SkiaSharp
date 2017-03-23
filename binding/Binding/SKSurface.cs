@@ -104,9 +104,50 @@ namespace SkiaSharp
 			}
 		}
 
+		public SKSurfaceProps SurfaceProps {
+			get {
+				SKSurfaceProps props;
+				SkiaApi.sk_surface_get_props (Handle, out props);
+				return props;
+			}
+		}
+
 		public SKImage Snapshot ()
 		{
 			return GetObject<SKImage> (SkiaApi.sk_surface_new_image_snapshot (Handle));
+		}
+
+		public void Draw (SKCanvas canvas, float x, float y, SKPaint paint)
+		{
+			if (canvas == null)
+				throw new ArgumentNullException (nameof (canvas));
+
+			SkiaApi.sk_surface_draw (Handle, canvas.Handle, x, y, paint == null ? IntPtr.Zero : paint.Handle);
+		}
+
+		public SKPixmap PeekPixels ()
+		{
+			SKPixmap pixmap = new SKPixmap ();
+			var result = PeekPixels (pixmap);
+			if (result) {
+				return pixmap;
+			} else {
+				pixmap.Dispose ();
+				return null;
+			}
+		}
+
+		public bool PeekPixels (SKPixmap pixmap)
+		{
+			if (pixmap == null) {
+				throw new ArgumentNullException (nameof (pixmap));
+			}
+			return SkiaApi.sk_surface_peek_pixels (Handle, pixmap.Handle);
+		}
+
+		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)
+		{
+			return SkiaApi.sk_surface_read_pixels (Handle, ref dstInfo, dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
 		}
 	}
 }
