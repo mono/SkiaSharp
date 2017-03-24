@@ -8,21 +8,18 @@ SkiaSharp is a cross-platform 2D graphics API for .NET platforms based on Google
 Skia Graphics Library (https://skia.org/). It provides a comprehensive 2D API that can
 be used across mobile, server and desktop models to render images.
 
-## What is Included
-
 SkiaSharp provides a PCL and platform-specific bindings for:
 
+ - .NET Core / .NET Standard 1.3
  - Xamarin.Android
  - Xamarin.iOS
  - Xamarin.tvOS
  - Xamarin.Mac
  - Windows Classic Desktop (Windows.Forms / WPF)
- - Windows UWP
- - .NET Core / .NET Standard 1.3
- - Mac/Linux/Windows (Full Framework)
+ - Windows UWP (Desktop / Mobile / Xbox / HoloLens)
 
-You can also build this on your particular variant of Unix
-to create your native libraries.
+The [API Documentation](https://developer.xamarin.com/api/namespace/SkiaSharp/) is
+available on the web to browse.
 
 ## Using SkiaSharp
 
@@ -32,14 +29,11 @@ SkiaSharp is available as a convenience NuGet package, to use install the packag
 nuget install SkiaSharp
 ```
 
-The [API Documentation](https://developer.xamarin.com/api/namespace/SkiaSharp/) is
-available on the web to browse.
-
-### Prerequisites
-
-Make sure the [Visual C++ Redistributable for Visual Studio 2015](https://www.microsoft.com/en-us/download/details.aspx?id=48145) 
-is installed if this error occurs: 
+_Make sure the [Visual C++ Redistributable for Visual Studio 2015](https://www.microsoft.com/en-us/download/details.aspx?id=48145) 
+is installed if this error occurs on Windows:_
  > Unable to load DLL 'libSkiaSharp.dll': The specified module could not be found.
+
+_At this point in time, we do not ship a native Linux binary, but you can build your own using the directions below._
 
 ## Building SkiaSharp
 
@@ -60,7 +54,11 @@ Next, set up the submodules:
 
 Finally, build everything:
 
+Mac/Linux:
+
     $ ./bootstrapper.sh -t everything
+
+Windows:
 
     > .\bootstrapper.ps1 -Target everything
 
