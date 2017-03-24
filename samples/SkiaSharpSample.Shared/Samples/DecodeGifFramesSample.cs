@@ -66,6 +66,7 @@ namespace SkiaSharpSample.Samples
 			var opts = new SKCodecOptions(currentFrame, false);
 			if (codec?.GetPixels(info, bitmap.GetPixels(), opts) == SKCodecResult.Success)
 			{
+				bitmap.NotifyPixelsChanged();
 				canvas.DrawBitmap(bitmap, 0, 0);
 			}
 		}
