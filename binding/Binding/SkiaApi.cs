@@ -1300,6 +1300,9 @@ namespace SkiaSharp
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_bitmap_extract_alpha(sk_bitmap_t cbitmap, sk_bitmap_t dst, sk_paint_t paint, out SKPointI offset);
 
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_bitmap_notify_pixels_changed(sk_bitmap_t cbitmap);
+
 		// SKColor
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
