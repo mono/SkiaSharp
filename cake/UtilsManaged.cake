@@ -81,7 +81,7 @@ var RunMdocUpdate = new Action<FilePath[], DirectoryPath, DirectoryPath[]> ((ass
 var RunMdocMSXml = new Action<DirectoryPath, DirectoryPath> ((docsRoot, outputDir) =>
 {
     RunProcess (MDocPath, new ProcessSettings {
-        Arguments = string.Format ("export-msxdoc \"{0}\"", MakeAbsolute (docsRoot)),
+        Arguments = string.Format ("export-msxdoc \"{0}\" --debug", MakeAbsolute (docsRoot)),
         WorkingDirectory = MakeAbsolute (outputDir).ToString ()
     });
 });
@@ -89,7 +89,7 @@ var RunMdocMSXml = new Action<DirectoryPath, DirectoryPath> ((docsRoot, outputDi
 var RunMdocAssemble = new Action<DirectoryPath, FilePath> ((docsRoot, output) =>
 {
     RunProcess (MDocPath, new ProcessSettings {
-        Arguments = string.Format ("assemble --out=\"{0}\" \"{1}\"", output, docsRoot),
+        Arguments = string.Format ("assemble --out=\"{0}\" \"{1}\" --debug", output, docsRoot),
     });
 });
 
