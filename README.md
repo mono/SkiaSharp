@@ -5,20 +5,21 @@
 [![API Docs](https://img.shields.io/badge/docs-api-1faece.svg)](https://developer.xamarin.com/api/root/SkiaSharp/)  [![API Docs](https://img.shields.io/badge/docs-guides-1faece.svg)](https://developer.xamarin.com/guides/cross-platform/drawing/)  
 
 SkiaSharp is a cross-platform 2D graphics API for .NET platforms based on Google's
-Skia Graphics Library (https://skia.org/).   It provides a comprehensive 2D API that can
+Skia Graphics Library (https://skia.org/). It provides a comprehensive 2D API that can
 be used across mobile, server and desktop models to render images.
 
 ## What is Included
 
 SkiaSharp provides a PCL and platform-specific bindings for:
 
- - Mac (Console or using the Xamarin.Mac)
  - Xamarin.Android
  - Xamarin.iOS
  - Xamarin.tvOS
  - Xamarin.Mac
- - Windows Desktop (Windows.Forms / WPF)
+ - Windows Classic Desktop (Windows.Forms / WPF)
  - Windows UWP
+ - .NET Core / .NET Standard 1.3
+ - Mac/Linux/Windows (Full Framework)
 
 You can also build this on your particular variant of Unix
 to create your native libraries.
@@ -31,69 +32,39 @@ SkiaSharp is available as a convenience NuGet package, to use install the packag
 nuget install SkiaSharp
 ```
 
-Our [getting started guide](https://developer.xamarin.com/guides/cross-platform/drawing/) will walk you 
-through both the basic setup as well as the platform specific capabilties.
-
-The [API Documentation](https://developer.xamarin.com/api/namespace/SkiaSharp/) is also available on the
-web to browse.
+The [API Documentation](https://developer.xamarin.com/api/namespace/SkiaSharp/) is
+available on the web to browse.
 
 ### Prerequisites
 
-Make sure the [Microsoft Visual C++ 2015 Redistributable](https://www.microsoft.com/en-us/download/details.aspx?id=52982) is installed if this error occurs: 
+Make sure the [Visual C++ Redistributable for Visual Studio 2015](https://www.microsoft.com/en-us/download/details.aspx?id=48145) 
+is installed if this error occurs: 
  > Unable to load DLL 'libSkiaSharp.dll': The specified module could not be found.
 
 ## Building SkiaSharp
 
-First clone the repository:
+Before building SkiaSharp:
+
+ * [Python 2.7](https://www.python.org/downloads) is available in the `PATH` environment variable on Windows
+ * [Android NDK r14](https://developer.android.com/ndk/downloads/index.html) is available in the `ANDROID_NDK_HOME` environment variable on macOS
+ * [.NET Core](https://www.microsoft.com/net/core) is installed on all platforms
+
+First, clone the repository:
 
     $ git clone https://github.com/mono/SkiaSharp.git
 
 Next, set up the submodules:
 
     $ cd SkiaSharp
-    $ git submodule init && git submodule update
-    
-Then follow the platform-specific instructions below.
+    $ git submodule update --init --recursive
 
-### Mac OS X
+Finally, build everything:
 
-Run from Bash
+    $ ./bootstrapper.sh -t everything
 
-    $ ./bootstrapper.sh -t libs
+    > .\bootstrapper.ps1 -Target everything
 
-This runs the build process by using the `libs` build target.
-
-### Windows
-
-You need Python 2.7 in `PATH` environment variable. Then you can build it:
-
-    > .\bootstrapper.ps1 -Target libs
-
-This runs the build process by using the `libs` build target.
-
-### Build Targets
-
-There are several targets available, you can specify the target as the argument to the `-t` command line
-option in the bootstrapper script.
-
- - `Everything` - builds everything for the current platform
- - `externals` - builds all the native libraries
-   - [win] `externals-windows` - builds the native libraries for Windows
-   - [win] `externals-uwp` - builds the native libraries for Windows UWP
-   - [mac] `externals-osx` - builds the native libraries for Mac OS X
-   - [mac] `externals-ios` - builds the native libraries for iOS
-   - [mac] `externals-tvos` - builds the native libraries for tvOS
-   - [mac] `externals-andoid` - builds the native libraries for Android
- - `libs` - builds all the managed libraries
-   - [win] `libs-windows` - builds the managed libraries that can be built on Windows
-   - [mac] `libs-osx` - builds the managed libraries that can be built on Mac OS X
- - `tests` - builds and runs the tests
- - `samples` - builds the samples available for the current platform
- - `docs` - updates the mdoc files
- - `nuget` - packages the libraries into a NuGet
- - `clean` - cleans everything
-   - `clean-externals` - cleans externals only
-   - `clean-managed` - cleans managed libraries/samples only
+_If you are updating the source using a previous checkout, make sure to run the `clean` target before building._
 
 ## New Skia Features Roadmap
 
@@ -107,8 +78,3 @@ Here are some links to show the differences in our code as compared to Google's.
 What version are we on? [**m57**](https://github.com/google/skia/tree/chrome/m57)  
 Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/xamarin-mobile-bindings...google:chrome/m57)  
 What have we added? [Compare](https://github.com/google/skia/compare/chrome/m57...mono:xamarin-mobile-bindings)  
-
-## Where is Windows Phone 8 / Store 8
- 
-We are working to add binaries for these platforms, stay tuned for a future release
-(or check the pull requests and branches, where we are working on those)
