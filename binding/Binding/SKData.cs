@@ -54,7 +54,7 @@ namespace SkiaSharp
 		{
 		}
 
-		[Obsolete ("Use SKData.Empty instead.")]
+		[Obsolete ("Use SKData.Empty instead.", true)]
 		public SKData ()
 			: this (SkiaApi.sk_data_new_empty (), true)
 		{
@@ -63,7 +63,7 @@ namespace SkiaSharp
 			}
 		}
 			
-		[Obsolete ("Use SKData.CreateCopy(IntPtr, ulong) instead.")]
+		[Obsolete ("Use SKData.CreateCopy(IntPtr, ulong) instead.", true)]
 		public SKData (IntPtr bytes, ulong length)
 			: this (IntPtr.Zero, true)
 		{
@@ -75,13 +75,13 @@ namespace SkiaSharp
 			}
 		}
 
-		[Obsolete ("Use SKData.CreateCopy(byte[]) instead.")]
+		[Obsolete ("Use SKData.CreateCopy(byte[]) instead.", true)]
 		public SKData (byte[] bytes)
 			: this (bytes, (ulong) bytes.Length)
 		{
 		}
 
-		[Obsolete ("Use SKData.CreateCopy(byte[], ulong) instead.")]
+		[Obsolete ("Use SKData.CreateCopy(byte[], ulong) instead.", true)]
 		public SKData (byte[] bytes, ulong length)
 			: this (SkiaApi.sk_data_new_with_copy (bytes, (IntPtr) length), true)
 		{
@@ -142,7 +142,7 @@ namespace SkiaSharp
 			}
 		}
 
-		[Obsolete]
+		[Obsolete ("Not supported.", true)]
 		[EditorBrowsable (EditorBrowsableState.Never)]
 		public static SKData FromMallocMemory (IntPtr bytes, ulong length)
 		{

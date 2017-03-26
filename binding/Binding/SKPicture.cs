@@ -30,7 +30,7 @@ namespace SkiaSharp
 		
 		public uint UniqueId => SkiaApi.sk_picture_get_unique_id (Handle);
 
-		[Obsolete("Use CullRect instead.")]
+		[Obsolete("Use CullRect instead.", true)]
 		public SKRect Bounds => CullRect;
 
 		public SKRect CullRect {

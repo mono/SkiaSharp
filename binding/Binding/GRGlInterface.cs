@@ -43,7 +43,7 @@ namespace SkiaSharp
 			return CreateNativeAngleInterface () ?? CreateNativeGlInterface ();
 		}
 
-		[Obsolete ("Use CreateNativeGlInterface() or CreateDefaultInterface() instead. This method will be removed in the next release.")]
+		[Obsolete ("Use CreateNativeGlInterface() or CreateDefaultInterface() instead.", true)]
 		public static GRGlInterface CreateNativeInterface ()
 		{
 			return CreateNativeGlInterface ();

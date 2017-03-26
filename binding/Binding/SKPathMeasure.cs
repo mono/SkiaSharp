@@ -21,7 +21,7 @@ namespace SkiaSharp
 	public class SKPathMeasure : SKObject
 	{
 		[Flags]
-		[Obsolete ("Use SKPathMeasureMatrixFlags instead.")]
+		[Obsolete ("Use SKPathMeasureMatrixFlags instead.", true)]
 		public enum MatrixFlags
 		{
 			GetPosition = SKPathMeasureMatrixFlags.GetPosition,
@@ -92,7 +92,7 @@ namespace SkiaSharp
 			return SkiaApi.sk_pathmeasure_get_pos_tan (Handle, distance, IntPtr.Zero, out tangent);
 		}
 
-		[Obsolete ("Use GetMatrix(float, out SKMatrix, SKPathMeasureMatrixFlags) instead.")]
+		[Obsolete ("Use GetMatrix(float, out SKMatrix, SKPathMeasureMatrixFlags) instead.", true)]
 		public bool GetMatrix (float distance, out SKMatrix matrix, MatrixFlags flags)
 		{
 			return GetMatrix (distance, out matrix, (SKPathMeasureMatrixFlags)flags);
