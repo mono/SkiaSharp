@@ -65,6 +65,11 @@ namespace SkiaSharp.Views.Forms
 		{
 			OnPaintSurface(e);
 		}
+
+		protected override SizeRequest OnMeasure(double widthConstraint, double heightConstraint)
+		{
+			return new SizeRequest(new Size(40.0, 40.0));
+		}
 	}
 
 	internal interface ISKCanvasViewController : IViewController
