@@ -670,12 +670,14 @@
         <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
       </Parameters>
       <Docs>
-        <param name="canvas">To be added.</param>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <param name="paint">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="canvas">The canvas to draw on.</param>
+        <param name="x">The x-coordinate destination for the surface.</param>
+        <param name="y">The y-coordinate destination for the surface.</param>
+        <param name="paint">The paint to use when drawing the surface, or <see langword="null" />.</param>
+        <summary>Draws the current surface on the specified canvas.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="PeekPixels">
@@ -690,9 +692,9 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Returns the pixels, if they are available.</summary>
+        <returns>Returns the pixels, if they are available, otherwise <see langword="null" />.</returns>
+        <remarks>If the pixels are available, then the surface is only valid until the surface changes in any way, in which case the pixmap becomes invalid.</remarks>
       </Docs>
     </Member>
     <Member MemberName="PeekPixels">
@@ -709,10 +711,12 @@
         <Parameter Name="pixmap" Type="SkiaSharp.SKPixmap" />
       </Parameters>
       <Docs>
-        <param name="pixmap">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="pixmap">The pixmap to receive the pixel information.</param>
+        <summary>Returns the pixmap of the surface.</summary>
+        <returns>Returns <see langword="true" /> on success, or <see langword="false" /> if the surface does not have access to pixel data.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ReadPixels">
@@ -733,14 +737,14 @@
         <Parameter Name="srcY" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="dstInfo">To be added.</param>
-        <param name="dstPixels">To be added.</param>
-        <param name="dstRowBytes">To be added.</param>
-        <param name="srcX">To be added.</param>
-        <param name="srcY">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="dstInfo">The image information describing the destination pixel buffer.</param>
+        <param name="dstPixels">The pixel buffer to read the pixel data into.</param>
+        <param name="dstRowBytes">The number of bytes in each row of in the destination buffer.</param>
+        <param name="srcX">The source x-coordinate to start reading from.</param>
+        <param name="srcY">The source y-coordinate to start reading from.</param>
+        <summary>Copies the pixels from the surface into the specified buffer.</summary>
+        <returns>Returns <see langword="true" /> if the pixels were read, or <see langword="false" /> if there was an error.</returns>
+        <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dstInfo.Width, dstInfo.Height] does not intersect the surface, or if the color type/alpha type could not be converted to the destination types.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Snapshot">
@@ -785,9 +789,13 @@
         <ReturnType>SkiaSharp.SKSurfaceProps</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the surface property configuration.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
   </Members>
