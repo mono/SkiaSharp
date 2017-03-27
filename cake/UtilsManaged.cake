@@ -97,19 +97,16 @@ var ClearSkiaSharpNuGetCache = new Action (() => {
     // first we need to add our new nuget to the cache so we can restore
     // we first need to delete the old stuff
     DirectoryPath home = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
-    var installedNuGet = home.Combine (".nuget").Combine ("packages").Combine ("SkiaSharp");
-    if (DirectoryExists (installedNuGet)) {
-        Warning ("SkiaSharp nugets were installed at '{0}', removing...", installedNuGet);
-        CleanDirectory (installedNuGet);
-    }
-    installedNuGet = home.Combine (".nuget").Combine ("packages").Combine ("SkiaSharp.Views");
-    if (DirectoryExists (installedNuGet)) {
-        Warning ("SkiaSharp nugets were installed at '{0}', removing...", installedNuGet);
-        CleanDirectory (installedNuGet);
-    }
-    installedNuGet = home.Combine (".nuget").Combine ("packages").Combine ("SkiaSharp.Views.Forms");
-    if (DirectoryExists (installedNuGet)) {
-        Warning ("SkiaSharp nugets were installed at '{0}', removing...", installedNuGet);
-        CleanDirectory (installedNuGet);
+    var installedNuGet = home.Combine (".nuget").Combine ("packages").FullPath + "/*";
+    var packages = VERSION_PACKAGES.Keys;
+    var dirs = GetDirectories (installedNuGet);
+    foreach (var dir in dirs) {
+        var dirName = dir.GetDirectoryName ();
+        foreach (var pkg in packages) {
+            if (string.Equals (pkg, dirName, StringComparison.OrdinalIgnoreCase)) {
+                Warning ("SkiaSharp nugets were installed at '{0}', removing...", dir);
+                CleanDirectory (dir);
+            }
+        }
     }
 });
