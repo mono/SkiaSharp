@@ -58,6 +58,7 @@ using sk_xmlstreamwriter_t = System.IntPtr;
 using sk_xmlwriter_t = System.IntPtr;
 using sk_3dview_t = System.IntPtr;
 using sk_matrix44_t = System.IntPtr;
+using sk_svgdom_t = System.IntPtr;
 
 namespace SkiaSharp
 {
@@ -1581,6 +1582,19 @@ namespace SkiaSharp
 		// SVG
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_canvas_t sk_svgcanvas_create (ref SKRect bounds, sk_xmlwriter_t writer);
+
+		// SVG DOM
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_svgdom_t sk_svgdom_create_from_stream(sk_stream_t stream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_svgdom_unref(sk_svgdom_t dom);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_svgdom_get_container_size(sk_svgdom_t dom, out SKSize size);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_svgdom_set_container_size(sk_svgdom_t dom, ref SKSize size);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_svgdom_render(sk_svgdom_t dom, sk_canvas_t canvas);
+
 
 		// SKRegion
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]

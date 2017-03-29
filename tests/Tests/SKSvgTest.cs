@@ -47,6 +47,20 @@ namespace SkiaSharp.Tests
 		}
 
 		[Test]
+		public void SvgDomLoadsToBitmap()
+		{
+			var path = Path.Combine(PathToImages, "logos.svg");
+			var background = (SKColor)0xfff8f8f8;
+
+			using (var stream = File.OpenRead(path))
+			using (var bmp = SKSvg.CreateBitmap(stream))
+			{
+				Assert.AreEqual(new SKSizeI(300, 300), bmp.Info.Size);
+				Assert.AreEqual(background, bmp.GetPixel(0, 0));
+			}
+		}
+
+		[Test]
 		public void SvgCanvasCreatesValidDrawing()
 		{
 			using (var stream = new MemoryStream())

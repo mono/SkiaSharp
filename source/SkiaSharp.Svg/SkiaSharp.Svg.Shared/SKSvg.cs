@@ -1109,5 +1109,136 @@ namespace SkiaSharp
 				r.Bottom = r.Top + ReadNumber(p[3]);
 			return r;
 		}
+
+		public static SKPicture CreatePicture(Stream stream)
+		{
+			using (var managedStream = new SKManagedStream(stream))
+			{
+				return CreatePicture(managedStream);
+			}
+		}
+
+		public static SKPicture CreatePicture(SKStream stream)
+		{
+			using (var dom = SKSvgDomInternal.Create(stream))
+			using (var recorder = new SKPictureRecorder())
+			using (var canvas = recorder.BeginRecording(SKRect.Create(dom.ContainerSize)))
+			{
+				dom.Render(canvas);
+				return recorder.EndRecording();
+			}
+		}
+
+		public static SKPicture CreatePicture(Stream stream, SKSize size)
+		{
+			using (var managedStream = new SKManagedStream(stream))
+			{
+				return CreatePicture(managedStream, size);
+			}
+		}
+
+		public static SKPicture CreatePicture(SKStream stream, SKSize size)
+		{
+			using (var dom = SKSvgDomInternal.Create(stream))
+			using (var recorder = new SKPictureRecorder())
+			using (var canvas = recorder.BeginRecording(SKRect.Create(size)))
+			{
+				dom.ContainerSize = size;
+				dom.Render(canvas);
+				return recorder.EndRecording();
+			}
+		}
+
+		public static SKBitmap CreateBitmap(Stream stream)
+		{
+			using (var managedStream = new SKManagedStream(stream))
+			{
+				return CreateBitmap(managedStream);
+			}
+		}
+
+		public static SKBitmap CreateBitmap(SKStream stream)
+		{
+			using (var dom = SKSvgDomInternal.Create(stream))
+			{
+				var size = dom.ContainerSize;
+				var bitmap = new SKBitmap((int)size.Width, (int)size.Height);
+				using (var canvas = new SKCanvas(bitmap))
+				{
+					dom.Render(canvas);
+					return bitmap;
+				}
+			}
+		}
+
+		public static SKBitmap CreateBitmap(Stream stream, SKSize size)
+		{
+			using (var managedStream = new SKManagedStream(stream))
+			{
+				return CreateBitmap(managedStream, size);
+			}
+		}
+
+		public static SKBitmap CreateBitmap(SKStream stream, SKSize size)
+		{
+			using (var dom = SKSvgDomInternal.Create(stream))
+			{
+				var bitmap = new SKBitmap((int)size.Width, (int)size.Height);
+				using (var canvas = new SKCanvas(bitmap))
+				{
+					dom.ContainerSize = size;
+					dom.Render(canvas);
+					return bitmap;
+				}
+			}
+		}
+
+		public static SKImage CreateImage(Stream stream)
+		{
+			using (var managedStream = new SKManagedStream(stream))
+			{
+				return CreateImage(managedStream);
+			}
+		}
+
+		public static SKImage CreateImage(SKStream stream)
+		{
+			using (var dom = SKSvgDomInternal.Create(stream))
+			{
+				var size = dom.ContainerSize;
+				var info = new SKImageInfo((int)size.Width, (int)size.Height);
+				var image = SKImage.Create(info);
+				using (var pixmap = image.PeekPixels())
+				using (var surface = SKSurface.Create(pixmap.Info, pixmap.GetPixels(), pixmap.RowBytes))
+				{
+					dom.Render(surface.Canvas);
+					return image;
+				}
+			}
+		}
+
+		public static SKImage CreateImage(Stream stream, SKSize size)
+		{
+			using (var managedStream = new SKManagedStream(stream))
+			{
+				return CreateImage(managedStream, size);
+			}
+		}
+
+		public static SKImage CreateImage(SKStream stream, SKSize size)
+		{
+			using (var dom = SKSvgDomInternal.Create(stream))
+			{
+				var info = new SKImageInfo((int)size.Width, (int)size.Height);
+				var image = SKImage.Create(info);
+				using (var pixmap = image.PeekPixels())
+				using (var surface = SKSurface.Create(pixmap.Info, pixmap.GetPixels(), pixmap.RowBytes))
+				{
+					dom.ContainerSize = size;
+					dom.Render(surface.Canvas);
+					return image;
+				}
+			}
+		}
 	}
 }
