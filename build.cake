@@ -468,29 +468,29 @@ Task ("update-docs")
     // the assemblies to generate docs for
     var assemblies = new FilePath [] {
         "./output/portable/SkiaSharp.dll",
-        // "./output/portable/SkiaSharp.Views.Forms.dll",
+        "./output/portable/SkiaSharp.Views.Forms.dll",
     };
-    // // add windows-specific assemblies
-    // if (IsRunningOnWindows ()) {
-    //     assemblies = assemblies.Union (new FilePath [] {
-    //         "./output/windows/SkiaSharp.Views.Desktop.dll",
-    //         "./output/windows/SkiaSharp.Views.WPF.dll",
-    //         "./output/uwp/SkiaSharp.Views.UWP.dll",
-    //         "./output/android/SkiaSharp.Views.Android.dll",
-    //         "./output/ios/SkiaSharp.Views.iOS.dll",
-    //         "./output/osx/SkiaSharp.Views.Mac.dll",
-    //         "./output/tvos/SkiaSharp.Views.tvOS.dll",
-    //     }).ToArray ();
-    // }
-    // // add mac-specific assemblies
-    // if (IsRunningOnMac ()) {
-    //     assemblies = assemblies.Union (new FilePath [] {
-    //         "./output/android/SkiaSharp.Views.Android.dll",
-    //         "./output/ios/SkiaSharp.Views.iOS.dll",
-    //         "./output/osx/SkiaSharp.Views.Mac.dll",
-    //         "./output/tvos/SkiaSharp.Views.tvOS.dll",
-    //     }).ToArray ();
-    // }
+    // add windows-specific assemblies
+    if (IsRunningOnWindows ()) {
+        assemblies = assemblies.Union (new FilePath [] {
+            "./output/windows/SkiaSharp.Views.Desktop.dll",
+            "./output/windows/SkiaSharp.Views.WPF.dll",
+            "./output/uwp/SkiaSharp.Views.UWP.dll",
+            "./output/android/SkiaSharp.Views.Android.dll",
+            "./output/ios/SkiaSharp.Views.iOS.dll",
+            "./output/osx/SkiaSharp.Views.Mac.dll",
+            "./output/tvos/SkiaSharp.Views.tvOS.dll",
+        }).ToArray ();
+    }
+    // add mac-specific assemblies
+    if (IsRunningOnMac ()) {
+        assemblies = assemblies.Union (new FilePath [] {
+            "./output/android/SkiaSharp.Views.Android.dll",
+            "./output/ios/SkiaSharp.Views.iOS.dll",
+            "./output/osx/SkiaSharp.Views.Mac.dll",
+            "./output/tvos/SkiaSharp.Views.tvOS.dll",
+        }).ToArray ();
+    }
 
     // print out the assemblies
     foreach (var r in refs) {
