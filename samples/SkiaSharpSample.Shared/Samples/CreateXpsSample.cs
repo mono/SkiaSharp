@@ -28,7 +28,9 @@ namespace SkiaSharpSample.Samples
 			root = local.Path;
 		}
 
-		public override string Title => "Create XPS";
+		public override string Title => "Create XPS Document";
+
+		public override SampleCategories Category => SampleCategories.Documents;
 
 		public override SamplePlatforms SupportedPlatform => SamplePlatforms.AllWindows;
 
