@@ -219,7 +219,7 @@ namespace SkiaSharp
 		}
 
 		public SKMemoryStream (SKData data)
-			: this(SkiaApi.sk_memorystream_new_with_skdata (data), true)
+			: this(SkiaApi.sk_memorystream_new_with_skdata (data.Handle), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKMemoryStream instance.");

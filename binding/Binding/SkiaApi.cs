@@ -1030,7 +1030,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_stream_memorystream_t sk_memorystream_new_with_data(byte[] data, IntPtr length, bool copyData);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_stream_memorystream_t sk_memorystream_new_with_skdata(SKData data);
+		public extern static sk_stream_memorystream_t sk_memorystream_new_with_skdata(IntPtr data);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_memorystream_set_memory(sk_stream_memorystream_t s, IntPtr data, IntPtr length, bool copyData);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
