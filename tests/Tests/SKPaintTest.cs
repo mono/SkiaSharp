@@ -64,5 +64,34 @@ namespace SkiaSharp.Tests
 			Assert.AreEqual(4 + 1, fillPath.PointCount); // +1 becuase the last point is the same as the first
 			Assert.AreEqual(4, fillPath.Points.Distinct().Count());
 		}
+
+		// Test for issue #276
+		[Test]
+		public void NonAntiAliasedTextOnScaledCanvasIsCorrect()
+		{
+			using (var bitmap = new SKBitmap(new SKImageInfo(200, 100)))
+			using (var canvas = new SKCanvas(bitmap))
+			using (var paint = new SKPaint { TextSize = 50, IsAntialias = true })
+			{
+				canvas.Clear(SKColors.White);
+				canvas.Scale(1, 2);
+				canvas.DrawText("Skia", 10, 60, paint);
+
+				Assert.AreEqual(SKColors.Black, bitmap.GetPixel(43, 50));
+				Assert.AreEqual(SKColors.White, bitmap.GetPixel(120, 50));
+			}
+
+			using (var bitmap = new SKBitmap(new SKImageInfo(200, 100)))
+			using (var canvas = new SKCanvas(bitmap))
+			using (var paint = new SKPaint { TextSize = 50 })
+			{
+				canvas.Clear(SKColors.White);
+				canvas.Scale(1, 2);
+				canvas.DrawText("Skia", 10, 60, paint);
+
+				Assert.AreEqual(SKColors.Black, bitmap.GetPixel(43, 50));
+				Assert.AreEqual(SKColors.White, bitmap.GetPixel(120, 50));
+			}
+		}
 	}
 }
