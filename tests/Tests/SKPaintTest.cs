@@ -77,8 +77,8 @@ namespace SkiaSharp.Tests
 				canvas.Scale(1, 2);
 				canvas.DrawText("Skia", 10, 60, paint);
 
-				Assert.AreEqual(SKColors.Black, bitmap.GetPixel(43, 50));
-				Assert.AreEqual(SKColors.White, bitmap.GetPixel(120, 50));
+				Assert.AreEqual(SKColors.Black, bitmap.GetPixel(43, 50), "Antialias (43, 50)");
+				Assert.AreEqual(SKColors.White, bitmap.GetPixel(120, 50), "Antialias (120, 50)");
 			}
 
 			using (var bitmap = new SKBitmap(new SKImageInfo(200, 100)))
@@ -89,8 +89,8 @@ namespace SkiaSharp.Tests
 				canvas.Scale(1, 2);
 				canvas.DrawText("Skia", 10, 60, paint);
 
-				Assert.AreEqual(SKColors.Black, bitmap.GetPixel(43, 50));
-				Assert.AreEqual(SKColors.White, bitmap.GetPixel(120, 50));
+				Assert.AreEqual(SKColors.Black, bitmap.GetPixel(43, 50), "Non-Antialias (43, 50)");
+				Assert.AreEqual(SKColors.White, bitmap.GetPixel(120, 50), "Non-Antialias (120, 50)");
 			}
 		}
 	}
