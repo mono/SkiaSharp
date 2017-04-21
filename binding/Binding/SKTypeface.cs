@@ -137,6 +137,8 @@ namespace SkiaSharp
 		public SKFontStyleSlant FontSlant => SkiaApi.sk_typeface_get_font_slant (Handle);
 		public SKTypefaceStyle Style => SkiaApi.sk_typeface_get_style (Handle);
 
+		public int UnitsPerEm => SkiaApi.sk_typeface_get_units_per_em(Handle);
+
 		public UInt32[] GetTableTags()
 		{
 			int tableCount = SkiaApi.sk_typeface_count_tables(Handle);
@@ -171,6 +173,16 @@ namespace SkiaSharp
 			return true;
 		}
 
+		public SKStreamAsset OpenStream()
+		{
+			int ttcIndex;
+			return OpenStream(out ttcIndex);
+		}
+
+		public SKStreamAsset OpenStream(out int ttcIndex)
+		{
+			return GetObject<SKStreamAssetImplementation>(SkiaApi.sk_typeface_open_stream(Handle, out ttcIndex));
+		}
 	}
 }
 
