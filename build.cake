@@ -171,6 +171,7 @@ Task ("libs")
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms/bin/Release/SkiaSharp.Views.Forms.dll", "./output/portable/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Android/bin/Release/SkiaSharp.Views.Forms.dll", "./output/android/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.iOS/bin/Release/SkiaSharp.Views.Forms.dll", "./output/ios/");
+        CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Mac/bin/Release/SkiaSharp.Views.Forms.dll", "./output/osx/");
 
         // copy SVG
         CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");

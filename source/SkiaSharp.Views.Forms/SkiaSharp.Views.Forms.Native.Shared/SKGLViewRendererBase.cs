@@ -16,6 +16,10 @@ using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.iOS.SKPaintGLSurfaceEven
 using Xamarin.Forms.Platform.UWP;
 using SKNativeView = SkiaSharp.Views.UWP.SKSwapChainPanel;
 using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.UWP.SKPaintGLSurfaceEventArgs;
+#elif __MACOS__
+using Xamarin.Forms.Platform.MacOS;
+using SKNativeView = SkiaSharp.Views.Mac.SKGLView;
+using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.Mac.SKPaintGLSurfaceEventArgs;
 #endif
 
 namespace SkiaSharp.Views.Forms

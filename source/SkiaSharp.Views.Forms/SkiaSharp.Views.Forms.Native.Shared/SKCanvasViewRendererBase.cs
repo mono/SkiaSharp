@@ -15,6 +15,10 @@ using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.iOS.SKPaintSurfaceEventArg
 using Xamarin.Forms.Platform.UWP;
 using SKNativeView = SkiaSharp.Views.UWP.SKXamlCanvas;
 using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.UWP.SKPaintSurfaceEventArgs;
+#elif __MACOS__
+using Xamarin.Forms.Platform.MacOS;
+using SKNativeView = SkiaSharp.Views.Mac.SKCanvasView;
+using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Mac.SKPaintSurfaceEventArgs;
 #endif
 
 namespace SkiaSharp.Views.Forms
@@ -115,6 +119,8 @@ namespace SkiaSharp.Views.Forms
 			// repaint the native control
 #if __IOS__
 			Control.SetNeedsDisplay();
+#elif __MACOS__
+			Control.NeedsDisplay = true;
 #else
 			Control.Invalidate();
 #endif
