@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	[Obsolete ("Use SKEncodedImageFormat instead.")]
+	[Obsolete ("Use SKEncodedImageFormat instead.", true)]
 	public enum SKImageEncodeFormat {
 		Bmp = SKEncodedImageFormat.Bmp,
 		Gif = SKEncodedImageFormat.Gif,
@@ -166,13 +166,13 @@ namespace SkiaSharp
 			return GetObject<SKImage> (handle);
 		}
 
-		[Obsolete ("Use FromEncodedData instead.")]
+		[Obsolete ("Use FromEncodedData instead.", true)]
 		public static SKImage FromData (SKData data, SKRectI subset)
 		{
 			return FromEncodedData (data, subset);
 		}
 
-		[Obsolete ("Use FromEncodedData instead.")]
+		[Obsolete ("Use FromEncodedData instead.", true)]
 		public static SKImage FromData (SKData data)
 		{
 			return FromEncodedData (data);
@@ -260,7 +260,7 @@ namespace SkiaSharp
 			return GetObject<SKData> (SkiaApi.sk_image_encode (Handle));
 		}
 
-		[Obsolete ("Use Encode(SKEncodedImageFormat, int) instead.")]
+		[Obsolete ("Use Encode(SKEncodedImageFormat, int) instead.", true)]
 		public SKData Encode (SKImageEncodeFormat format, int quality)
 		{
 			return Encode ((SKEncodedImageFormat)format, quality);

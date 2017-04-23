@@ -10,7 +10,7 @@ using System;
 
 namespace SkiaSharp
 {
-	[Obsolete("Use SKPath1DPathEffectStyle instead.")]
+	[Obsolete("Use SKPath1DPathEffectStyle instead.", true)]
 	public enum SkPath1DPathEffectStyle
 	{
 		Translate,
@@ -77,7 +77,7 @@ namespace SkiaSharp
 			return GetObject<SKPathEffect>(SkiaApi.sk_path_effect_create_1d_path(path.Handle, advance, phase, style));
 		}
 
-		[Obsolete("Use Create1DPath(SKPath, float, float, SKPath1DPathEffectStyle) instead.")]
+		[Obsolete("Use Create1DPath(SKPath, float, float, SKPath1DPathEffectStyle) instead.", true)]
 		public static SKPathEffect Create1DPath(SKPath path, float advance, float phase, SkPath1DPathEffectStyle style)
 		{
 			return Create1DPath(path, advance, phase, (SKPath1DPathEffectStyle)style);

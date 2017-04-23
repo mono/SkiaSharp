@@ -64,5 +64,38 @@ namespace SkiaSharp.Tests
 			Assert.AreEqual(4 + 1, fillPath.PointCount); // +1 becuase the last point is the same as the first
 			Assert.AreEqual(4, fillPath.Points.Distinct().Count());
 		}
+
+		// Test for issue #276
+		[Test]
+		public void NonAntiAliasedTextOnScaledCanvasIsCorrect()
+		{
+			using (var bitmap = new SKBitmap(new SKImageInfo(200, 200)))
+			using (var canvas = new SKCanvas(bitmap))
+			using (var tf = SKTypeface.FromFamilyName("Arial"))
+			using (var paint = new SKPaint { TextSize = 50, IsAntialias = true, Typeface = tf })
+			{
+				canvas.Clear(SKColors.White);
+				canvas.Scale(1, 2);
+				canvas.DrawText("Skia", 10, 60, paint);
+
+				Assert.AreEqual(SKColors.Black, bitmap.GetPixel(49, 92), "Antialias (1)");
+				Assert.AreEqual(SKColors.White, bitmap.GetPixel(73, 63), "Antialias (2)");
+				Assert.AreEqual(SKColors.Black, bitmap.GetPixel(100, 89), "Antialias (3)");
+			}
+
+			using (var bitmap = new SKBitmap(new SKImageInfo(200, 200)))
+			using (var canvas = new SKCanvas(bitmap))
+			using (var tf = SKTypeface.FromFamilyName("Arial"))
+			using (var paint = new SKPaint { TextSize = 50, Typeface = tf })
+			{
+				canvas.Clear(SKColors.White);
+				canvas.Scale(1, 2);
+				canvas.DrawText("Skia", 10, 60, paint);
+
+				Assert.AreEqual(SKColors.Black, bitmap.GetPixel(49, 92), "Non-Antialias (1)");
+				Assert.AreEqual(SKColors.White, bitmap.GetPixel(73, 63), "Non-Antialias (2)");
+				Assert.AreEqual(SKColors.Black, bitmap.GetPixel(100, 89), "Non-Antialias (3)");
+			}
+		}
 	}
 }

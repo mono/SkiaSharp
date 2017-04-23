@@ -57,9 +57,14 @@ namespace SkiaSharp
 		{
 			unsafe {
 				fixed (byte *b = &buffer [0]) {
-					return (int)SkiaApi.sk_stream_read (Handle, (IntPtr) b, (IntPtr)size);
+					return Read ((IntPtr) b, size);
 				}
 			}
+		}
+
+		public int Read (IntPtr buffer, int size)
+		{
+			return (int)SkiaApi.sk_stream_read (Handle, buffer, (IntPtr)size);
 		}
 
 		public int Skip (int size)
@@ -80,6 +85,11 @@ namespace SkiaSharp
 		public bool Move (long offset)
 		{
 			return SkiaApi.sk_stream_move (Handle, offset);
+		}
+		
+		public IntPtr GetMemoryBase ()
+		{
+			return SkiaApi.sk_stream_get_memory_base (Handle);
 		}
 
 		public bool HasPosition {
@@ -219,7 +229,7 @@ namespace SkiaSharp
 		}
 
 		public SKMemoryStream (SKData data)
-			: this(SkiaApi.sk_memorystream_new_with_skdata (data), true)
+			: this(SkiaApi.sk_memorystream_new_with_skdata (data.Handle), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKMemoryStream instance.");

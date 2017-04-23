@@ -98,7 +98,7 @@ namespace SkiaSharp
 			SkiaApi.gr_context_flush (Handle);
 		}
 
-		[Obsolete ("Use Flush() instead.")]
+		[Obsolete ("Use Flush() instead.", true)]
 		public void Flush (GRContextFlushBits flagsBitfield)
 		{
 			Flush ();

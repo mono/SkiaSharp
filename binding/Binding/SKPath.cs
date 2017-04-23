@@ -29,7 +29,7 @@ namespace SkiaSharp
 
 	public class SKPath : SKObject
 	{
-		[Obsolete ("Use SKPathVerb instead.")]
+		[Obsolete ("Use SKPathVerb instead.", true)]
 		public enum Verb
 		{
 			Move = SKPathVerb.Move,
@@ -41,7 +41,7 @@ namespace SkiaSharp
 			Done = SKPathVerb.Done
 		}
 
-		[Obsolete ("Use SKPathAddMode instead.")]
+		[Obsolete ("Use SKPathAddMode instead.", true)]
 		public enum AddMode
 		{
 			Append = SKPathAddMode.Append,
@@ -380,7 +380,7 @@ namespace SkiaSharp
 			SkiaApi.sk_path_transform (Handle, ref matrix);
 		}
 
-		[Obsolete ("Use AddPath(SKPath, float, float, SKPathAddMode) instead.")]
+		[Obsolete ("Use AddPath(SKPath, float, float, SKPathAddMode) instead.", true)]
 		public void AddPath (SKPath other, float dx, float dy, SKPath.AddMode mode)
 		{
 			AddPath (other, dx, dy, (SKPathAddMode)mode);
@@ -394,7 +394,7 @@ namespace SkiaSharp
 			SkiaApi.sk_path_add_path_offset (Handle, other.Handle, dx, dy, mode);
 		}
 
-		[Obsolete ("Use AddPath(SKPath, ref SKMatrix, SKPathAddMode) instead.")]
+		[Obsolete ("Use AddPath(SKPath, ref SKMatrix, SKPathAddMode) instead.", true)]
 		public void AddPath (SKPath other, ref SKMatrix matrix, AddMode mode)
 		{
 			AddPath (other, ref matrix, (SKPathAddMode)mode);
@@ -408,7 +408,7 @@ namespace SkiaSharp
 			SkiaApi.sk_path_add_path_matrix (Handle, other.Handle, ref matrix, mode);
 		}
 
-		[Obsolete ("Use AddPath(SKPath, SKPathAddMode) instead.")]
+		[Obsolete ("Use AddPath(SKPath, SKPathAddMode) instead.", true)]
 		public void AddPath (SKPath other, AddMode mode)
 		{
 			AddPath (other, (SKPathAddMode)mode);

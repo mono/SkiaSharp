@@ -12,9 +12,9 @@ namespace SkiaSharp
 {
 	public class SKColorFilter : SKObject
 	{
-		[Obsolete("Use MinColorCubeDimension instead.")]
+		[Obsolete("Use MinColorCubeDimension instead.", true)]
 		public const int MinCubeSize = 4;
-		[Obsolete("Use MaxColorCubeDimension instead.")]
+		[Obsolete("Use MaxColorCubeDimension instead.", true)]
 		public const int MaxCubeSize = 64;
 
 		public const int MinColorCubeDimension = 4;
@@ -45,13 +45,13 @@ namespace SkiaSharp
 			base.Dispose(disposing);
 		}
 
-		[Obsolete("Use CreateBlendMode(SKColor, SKBlendMode) instead.")]
+		[Obsolete("Use CreateBlendMode(SKColor, SKBlendMode) instead.", true)]
 		public static SKColorFilter CreateXferMode(SKColor c, SKXferMode mode)
 		{
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_mode(c, (SKBlendMode)mode));
 		}
 
-		[Obsolete("Use CreateBlendMode(SKColor, SKBlendMode) instead.")]
+		[Obsolete("Use CreateBlendMode(SKColor, SKBlendMode) instead.", true)]
 		public static SKColorFilter CreateBlendMode(SKColor c, SKXferMode mode)
 		{
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_mode(c, (SKBlendMode)mode));

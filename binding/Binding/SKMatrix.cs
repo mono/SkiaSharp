@@ -456,7 +456,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			return res;
 		}
 
-		[Obsolete ("Use MapPoint instead.")]
+		[Obsolete ("Use MapPoint instead.", true)]
 		public SKPoint MapXY (float x, float y)
 		{
 			return MapPoint (x, y);
@@ -487,7 +487,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		}
 	}
 
-	[Obsolete ("Use SKMatrix44 instead.")]
+	[Obsolete ("Use SKMatrix44 instead.", true)]
 	public class SK3dView : SKObject
 	{
 		protected override void Dispose (bool disposing)

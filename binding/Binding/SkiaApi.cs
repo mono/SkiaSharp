@@ -957,6 +957,10 @@ namespace SkiaSharp
 		public extern static SKFontStyleSlant sk_typeface_get_font_slant(sk_typeface_t typeface);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SKTypefaceStyle sk_typeface_get_style(sk_typeface_t typeface);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_stream_assetstream_t sk_typeface_open_stream(sk_typeface_t typeface, out int ttcIndex);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_typeface_get_units_per_em(sk_typeface_t typeface);
 
 		// FontMgr
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1020,6 +1024,8 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_stream_get_length(sk_stream_t stream);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static IntPtr sk_stream_get_memory_base(sk_stream_t cstream);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_stream_filestream_t sk_filestream_new([MarshalAs(UnmanagedType.LPStr)] string path);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_stream_memorystream_t sk_memorystream_new();
@@ -1030,7 +1036,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_stream_memorystream_t sk_memorystream_new_with_data(byte[] data, IntPtr length, bool copyData);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_stream_memorystream_t sk_memorystream_new_with_skdata(SKData data);
+		public extern static sk_stream_memorystream_t sk_memorystream_new_with_skdata(IntPtr data);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_memorystream_set_memory(sk_stream_memorystream_t s, IntPtr data, IntPtr length, bool copyData);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1299,6 +1305,9 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_bitmap_extract_alpha(sk_bitmap_t cbitmap, sk_bitmap_t dst, sk_paint_t paint, out SKPointI offset);
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_bitmap_notify_pixels_changed(sk_bitmap_t cbitmap);
 
 		// SKColor
 

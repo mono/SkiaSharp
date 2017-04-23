@@ -28,7 +28,9 @@ namespace SkiaSharpSample.Samples
 			root = local.Path;
 		}
 
-		public override string Title => "Create PDF";
+		public override string Title => "Create PDF Document";
+
+		public override SampleCategories Category => SampleCategories.Documents;
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 		{

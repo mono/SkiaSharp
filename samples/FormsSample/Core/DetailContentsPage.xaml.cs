@@ -115,6 +115,7 @@ namespace SkiaSharpSample.FormsSample
 		{
 			Sample?.DrawSample(e.Surface.Canvas, e.Info.Width, e.Info.Height);
 
+			lastImage?.Dispose();
 			lastImage = e.Surface.Snapshot();
 
 			var view = sender as SKCanvasView;
@@ -125,6 +126,7 @@ namespace SkiaSharpSample.FormsSample
 		{
 			Sample?.DrawSample(e.Surface.Canvas, e.RenderTarget.Width, e.RenderTarget.Height);
 
+			lastImage?.Dispose();
 			lastImage = e.Surface.Snapshot();
 
 			var view = sender as SKGLView;

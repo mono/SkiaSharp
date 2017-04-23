@@ -4,6 +4,7 @@
   <AssemblyInfo>
     <AssemblyName>SkiaSharp</AssemblyName>
     <AssemblyVersion>1.56.0.0</AssemblyVersion>
+    <AssemblyVersion>1.57.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>SkiaSharp.SKObject</BaseTypeName>
@@ -20,6 +21,7 @@
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
       <Docs>
@@ -33,6 +35,7 @@
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
@@ -53,6 +56,7 @@
       <MemberType>Constructor</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
@@ -75,6 +79,7 @@
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKAlphaType</ReturnType>
@@ -91,6 +96,7 @@
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -107,6 +113,7 @@
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKColorTable</ReturnType>
@@ -123,6 +130,7 @@
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKColorType</ReturnType>
@@ -139,6 +147,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -152,12 +161,91 @@
         <remarks>To be added.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="Encode">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKData Encode (SkiaSharp.SKEncodedImageFormat encoder, int quality);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKData Encode(valuetype SkiaSharp.SKEncodedImageFormat encoder, int32 quality) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKData</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="encoder" Type="SkiaSharp.SKEncodedImageFormat" />
+        <Parameter Name="quality" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="encoder">The file format used to encode the pixmap.</param>
+        <param name="quality">The quality level to use for the pixmap.</param>
+        <summary>Encodes the pixmap using the specified format.</summary>
+        <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded pixmap.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Encode">
+      <MemberSignature Language="C#" Value="public bool Encode (SkiaSharp.SKWStream dst, SkiaSharp.SKEncodedImageFormat encoder, int quality);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool Encode(class SkiaSharp.SKWStream dst, valuetype SkiaSharp.SKEncodedImageFormat encoder, int32 quality) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dst" Type="SkiaSharp.SKWStream" />
+        <Parameter Name="encoder" Type="SkiaSharp.SKEncodedImageFormat" />
+        <Parameter Name="quality" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="dst">The stream to write the encoded pixmap to.</param>
+        <param name="encoder">The file format used to encode the pixmap.</param>
+        <param name="quality">The quality level to use for the pixmap.</param>
+        <summary>Encodes the pixmap using the specified format.</summary>
+        <returns>Returns <see langword="true" /> on success, or <see langword="false" /> if there was an error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Encode">
+      <MemberSignature Language="C#" Value="public static bool Encode (SkiaSharp.SKWStream dst, SkiaSharp.SKPixmap src, SkiaSharp.SKEncodedImageFormat encoder, int quality);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig bool Encode(class SkiaSharp.SKWStream dst, class SkiaSharp.SKPixmap src, valuetype SkiaSharp.SKEncodedImageFormat encoder, int32 quality) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dst" Type="SkiaSharp.SKWStream" />
+        <Parameter Name="src" Type="SkiaSharp.SKPixmap" />
+        <Parameter Name="encoder" Type="SkiaSharp.SKEncodedImageFormat" />
+        <Parameter Name="quality" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="dst">The stream to write the encoded pixmap to.</param>
+        <param name="src">The pixmap to encode.</param>
+        <param name="encoder">The file format used to encode the pixmap.</param>
+        <param name="quality">The quality level to use for the pixmap.</param>
+        <summary>Encodes the pixmap using the specified format.</summary>
+        <returns>Returns <see langword="true" /> on success, or <see langword="false" /> if there was an error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
     <Member MemberName="GetPixels">
       <MemberSignature Language="C#" Value="public IntPtr GetPixels ();" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance native int GetPixels() cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.IntPtr</ReturnType>
@@ -175,6 +263,7 @@
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -191,6 +280,7 @@
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKImageInfo</ReturnType>
@@ -207,6 +297,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -223,6 +314,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -248,6 +340,7 @@
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -272,6 +365,7 @@
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -288,6 +382,7 @@
       <MemberType>Property</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>

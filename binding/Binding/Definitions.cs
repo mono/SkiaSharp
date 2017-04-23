@@ -110,7 +110,7 @@ namespace SkiaSharp
 		Expanded         = 7,
 		ExtraExpanded    = 8,
 		UltraExpanded    = 9,
-		[Obsolete("Use UltraExpanded instead.")]
+		[Obsolete("Use UltraExpanded instead.", true)]
 		UltaExpanded     = UltraExpanded
 	};
 
@@ -162,7 +162,7 @@ namespace SkiaSharp
 		RgbaF16
 	}
 
-	[Obsolete ("May be removed in the next version.")]
+	[Obsolete ("May be removed in the next version.", true)]
 	public enum SKColorProfileType {
 		Linear,
 		SRGB
@@ -191,7 +191,7 @@ namespace SkiaSharp
 		All = IgnoreTransform | HighQuality,
 	}
 
-	[Obsolete ("Use SKBlendMode instead. May be removed in the next version.")]
+	[Obsolete ("Use SKBlendMode instead.", true)]
 	public enum SKXferMode {
 		Clear,
 		Src,
@@ -256,7 +256,7 @@ namespace SkiaSharp
 		Luminosity,
 	}
 
-	[Obsolete ("Use SKClipOperation instead.")]
+	[Obsolete ("Use SKClipOperation instead.", true)]
 	public enum SKClipType {
 		Intersect, Difference 
 	}
@@ -314,7 +314,7 @@ namespace SkiaSharp
 
 	public enum SKStrokeJoin {
 		Miter, Round, Bevel,
-		[Obsolete ("Use SKStrokeJoin.Miter instead.")]
+		[Obsolete ("Use SKStrokeJoin.Miter instead.", true)]
 		Mitter = Miter,
 	}
 
@@ -1953,7 +1953,7 @@ namespace SkiaSharp
 		}
 	}
 	
-	[Obsolete ("Use GRContext.Flush() instead.")]
+	[Obsolete ("Use GRContext.Flush() instead.", true)]
 	public enum GRContextFlushBits {
 		None = 0,
 		Discard = 0x2,

@@ -543,6 +543,11 @@ namespace SkiaSharp
 			return SkiaApi.sk_bitmap_install_mask_pixels(Handle, ref mask);
 		}
 
+		public void NotifyPixelsChanged()
+		{
+			SkiaApi.sk_bitmap_notify_pixels_changed(Handle);
+		}
+
 		public SKPixmap PeekPixels ()
 		{
 			SKPixmap pixmap = new SKPixmap ();

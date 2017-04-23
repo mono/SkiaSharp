@@ -18,5 +18,6 @@ namespace SkiaSharpSample
 		ImageFilters = 1 << 9,
 		PathEffects = 1 << 10,
 		SVG = 1 << 11,
+		Documents = 1 << 12,
 	}
 }

@@ -65,7 +65,7 @@ namespace SkiaSharp
 			return SkiaApi.sk_canvas_save_layer (Handle, IntPtr.Zero, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
-		[Obsolete ("Use DrawColor(SKColor, SKBlendMode) instead.")]
+		[Obsolete ("Use DrawColor(SKColor, SKBlendMode) instead.", true)]
 		public void DrawColor (SKColor color, SKXferMode mode)
 		{
 			DrawColor (color, (SKBlendMode)(int)mode);
@@ -174,7 +174,7 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_concat (Handle, ref m);
 		}
 
-		[Obsolete ("Use ClipRect(SKRect, SKClipOperation, bool) instead.")]
+		[Obsolete ("Use ClipRect(SKRect, SKClipOperation, bool) instead.", true)]
 		public void ClipRect (SKRect rect, SKRegionOperation operation, bool antialias = false)
 		{
 			ClipRect (rect, (SKClipOperation)(int)operation, antialias);
@@ -185,7 +185,7 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_clip_rect_with_operation (Handle, ref rect, operation, antialias);
 		}
 
-		[Obsolete ("Use ClipPath(SKPath, SKClipOperation, bool) instead.")]
+		[Obsolete ("Use ClipPath(SKPath, SKClipOperation, bool) instead.", true)]
 		public void ClipPath (SKPath path, SKRegionOperation operation, bool antialias = false)
 		{
 			ClipPath (path, (SKClipOperation)(int)operation, antialias);
@@ -403,7 +403,7 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_text (Handle, text, text.Length, x, y, paint.Handle);
 		}
 
-		[Obsolete ("Use DrawPositionedText instead.")]
+		[Obsolete ("Use DrawPositionedText instead.", true)]
 		public void DrawText (string text, SKPoint [] points, SKPaint paint)
 		{
 			DrawPositionedText (text, points, paint);
@@ -434,7 +434,7 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_pos_text (Handle, text, text.Length, points, paint.Handle);
 		}
 
-		[Obsolete ("Use DrawTextOnPath instead.")]
+		[Obsolete ("Use DrawTextOnPath instead.", true)]
 		public void DrawText (IntPtr buffer, int length, SKPath path, float hOffset, float vOffset, SKPaint paint)
 		{
 			DrawTextOnPath (buffer, length, path, hOffset, vOffset, paint);
@@ -462,7 +462,7 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_text (Handle, buffer, length, x, y, paint.Handle);
 		}
 
-		[Obsolete ("Use DrawPositionedText instead.")]
+		[Obsolete ("Use DrawPositionedText instead.", true)]
 		public void DrawText (IntPtr buffer, int length, SKPoint[] points, SKPaint paint)
 		{
 			DrawPositionedText (buffer, length, points, paint);
@@ -480,7 +480,7 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_pos_text (Handle, buffer, length, points, paint.Handle);
 		}
 
-		[Obsolete ("Use DrawTextOnPath instead.")]
+		[Obsolete ("Use DrawTextOnPath instead.", true)]
 		public void DrawText (string text, SKPath path, float hOffset, float vOffset, SKPaint paint)
 		{
 			DrawTextOnPath (text, path, hOffset, vOffset, paint);
@@ -499,7 +499,7 @@ namespace SkiaSharp
 			DrawTextOnPath (bytes, path, hOffset, vOffset, paint);
 		}
 
-		[Obsolete ("Use DrawTextOnPath instead.")]
+		[Obsolete ("Use DrawTextOnPath instead.", true)]
 		public void DrawText (byte[] text, SKPath path, float hOffset, float vOffset, SKPaint paint)
 		{
 			DrawTextOnPath (text, path, hOffset, vOffset, paint);
