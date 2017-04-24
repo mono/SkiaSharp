@@ -11,6 +11,7 @@ namespace SkiaSharpSample.Samples
 	public class CreateXpsSample : SampleBase
 	{
 		private string root;
+		private bool xpsSupported = true;
 
 		[Preserve]
 		public CreateXpsSample()
@@ -46,7 +47,7 @@ namespace SkiaSharpSample.Samples
 				paint.StrokeWidth = 3;
 				paint.TextAlign = SKTextAlign.Center;
 
-				canvas.DrawText("tap to open XPS", width / 2f, height / 3, paint);
+				canvas.DrawText(xpsSupported ? "tap to open XPS" : "Oops! No XPS support!", width / 2f, height / 3, paint);
 			}
 		}
 
@@ -60,6 +61,13 @@ namespace SkiaSharpSample.Samples
 			using (var document = SKDocument.CreateXps(stream))
 			using (var paint = new SKPaint())
 			{
+				if (document == null)
+				{
+					xpsSupported = false;
+					Refresh();
+					return;
+				}
+
 				paint.TextSize = 64.0f;
 				paint.IsAntialias = true;
 				paint.Color = (SKColor)0xFF9CAFB7;
