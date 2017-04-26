@@ -433,7 +433,7 @@ Task ("update-docs")
 {
     // the reference folders to locate assemblies
     IEnumerable<DirectoryPath> refs = new DirectoryPath [] {
-            // you never know
+            "./output/portable/",
         }
         .Union (GetDirectories ("./source/packages/Xamarin.Forms.*/lib/portable*"))
         .Union (GetDirectories ("./source/packages/OpenTK.*/lib/net40*"));
@@ -451,6 +451,7 @@ Task ("update-docs")
             "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/MonoAndroid/v2.3",
             "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.iOS/v1.0",
             "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.TVOS/v1.0",
+            "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.Mac/v2.0",
             "./externals",
         });
     }
@@ -476,11 +477,11 @@ Task ("update-docs")
         assemblies = assemblies.Union (new FilePath [] {
             "./output/windows/SkiaSharp.Views.Desktop.dll",
             "./output/windows/SkiaSharp.Views.WPF.dll",
-            "./output/uwp/SkiaSharp.Views.UWP.dll",
             "./output/android/SkiaSharp.Views.Android.dll",
             "./output/ios/SkiaSharp.Views.iOS.dll",
             "./output/osx/SkiaSharp.Views.Mac.dll",
             "./output/tvos/SkiaSharp.Views.tvOS.dll",
+            "./output/uwp/SkiaSharp.Views.UWP.dll",
         }).ToArray ();
     }
     // add mac-specific assemblies

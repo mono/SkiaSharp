@@ -557,6 +557,43 @@ using (var tf = SKTypeface.FromStream (stream)) {
         </remarks>
       </Docs>
     </Member>
+    <Member MemberName="OpenStream">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKStreamAsset OpenStream ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKStreamAsset OpenStream() cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKStreamAsset</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Returns a stream for the contents of the font data.</summary>
+        <returns>Returns a stream for the contents of the font data, or <see langword="null" /> on failure.</returns>
+        <remarks>The caller is responsible for deleting the stream.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OpenStream">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKStreamAsset OpenStream (out int ttcIndex);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKStreamAsset OpenStream(int32 ttcIndex) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKStreamAsset</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="ttcIndex" Type="System.Int32&amp;" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="ttcIndex">The TrueTypeCollection index of this typeface within the stream, or 0 if the stream is not a collection.</param>
+        <summary>Returns a stream for the contents of the font data.</summary>
+        <returns>Returns a stream for the contents of the font data, or <see langword="null" /> on failure.</returns>
+        <remarks>The caller is responsible for deleting the stream.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="Style">
       <MemberSignature Language="C#" Value="public SkiaSharp.SKTypefaceStyle Style { get; }" />
       <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKTypefaceStyle Style" />
@@ -605,6 +642,26 @@ using (var tf = SKTypeface.FromStream (stream)) {
         <param name="tableData">The contents of the table data for the specified tag.</param>
         <summary>Returns the contents of the table data for the specified tag.</summary>
         <returns>Returns true if the content exists, otherwise false.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="UnitsPerEm">
+      <MemberSignature Language="C#" Value="public int UnitsPerEm { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance int32 UnitsPerEm" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the units-per-em value for this typeface, or zero if there is an error.</summary>
+        <value>
+          <para></para>
+        </value>
         <remarks>
           <para></para>
         </remarks>
