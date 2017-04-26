@@ -49,17 +49,20 @@ namespace SkiaSharp.Views.iOS
 		// created via designer
 		public override void AwakeFromNib()
 		{
-			designMode = ((IComponent)this).Site?.DesignMode == true;
-
 			Initialize();
 		}
 
 		private void Initialize()
 		{
+			designMode = ((IComponent)this).Site?.DesignMode == true || !Extensions.IsValidEnvironment;
+
+			if (designMode)
+				return;
+
 			drawable = new SKDrawable();
 		}
 
-		public SKSize CanvasSize => drawable.Info.Size;
+		public SKSize CanvasSize => drawable?.Info.Size ?? SKSize.Empty;
 
 		public bool IgnorePixelScaling
 		{
@@ -75,7 +78,7 @@ namespace SkiaSharp.Views.iOS
 		{
 			base.Draw(rect);
 
-			if (designMode)
+			if (designMode || drawable == null)
 				return;
 
 			var ctx = UIGraphics.GetCurrentContext();
@@ -109,7 +112,7 @@ namespace SkiaSharp.Views.iOS
 		{
 			base.Dispose(disposing);
 
-			drawable.Dispose();
+			drawable?.Dispose();
 		}
 	}
 }

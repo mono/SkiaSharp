@@ -13,6 +13,8 @@ namespace SkiaSharp.Views.Android
 		private SKImageInfo info;
 		private bool ignorePixelScaling;
 
+		private bool designMode;
+		
 		public SKCanvasView(Context context)
 			: base(context)
 		{
@@ -39,6 +41,11 @@ namespace SkiaSharp.Views.Android
 
 		private void Initialize()
 		{
+			designMode = !Extensions.IsValidEnvironment;
+
+			if (designMode)
+				return;
+
 			// create the initial info
 			info = new SKImageInfo(0, 0, SKColorType.Rgba8888, SKAlphaType.Premul);
 		}
@@ -59,6 +66,9 @@ namespace SkiaSharp.Views.Android
 		protected override void OnDraw(Canvas canvas)
 		{
 			base.OnDraw(canvas);
+
+			if (designMode)
+				return;
 
 			// create the bitmap data if we need it
 			if (bitmap == null || bitmap.Width != info.Width || bitmap.Height != info.Height)
@@ -94,6 +104,9 @@ namespace SkiaSharp.Views.Android
 
 		private void UpdateCanvasSize(int w, int h)
 		{
+			if (designMode)
+				return;
+
 			if (IgnorePixelScaling)
 			{
 				var scale = Resources.DisplayMetrics.Density;

@@ -50,13 +50,16 @@ namespace SkiaSharp.Views.iOS
 		// created via designer
 		public override void AwakeFromNib()
 		{
-			designMode = ((IComponent)this).Site?.DesignMode == true;
-
 			Initialize();
 		}
 
 		private void Initialize()
 		{
+			designMode = ((IComponent)this).Site?.DesignMode == true || !Extensions.IsValidEnvironment;
+
+			if (designMode)
+				return;
+
 			// create the GL context
 			Context = new EAGLContext(EAGLRenderingAPI.OpenGLES2);
 			DrawableColorFormat = GLKViewDrawableColorFormat.RGBA8888;
