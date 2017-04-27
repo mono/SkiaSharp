@@ -2,6 +2,7 @@
 #addin "Cake.XCode"
 #addin "Cake.FileHelpers"
 #addin "Cake.StrongNameTool"
+#reference "tools/SharpCompress/lib/net45/SharpCompress.dll"
 
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -26,12 +27,19 @@ var SNToolPath = GetSNToolPath (EnvironmentVariable ("SN_EXE"));
 var VERSION_ASSEMBLY = "1.57.0.0";
 var VERSION_FILE = "1.57.1.0";
 var VERSION_SONAME = VERSION_FILE.Substring(VERSION_FILE.IndexOf(".") + 1);
+
+var HARFBUZZ_VERSION_ASSEMBLY = "1.0.0.0";
+var HARFBUZZ_VERSION_FILE = "1.4.5.0";
+
 var VERSION_PACKAGES = new Dictionary<string, string> {
     { "SkiaSharp", "1.57.1" },
     { "SkiaSharp.Views", "1.57.1" },
     { "SkiaSharp.Views.Forms", "1.57.1" },
     { "SkiaSharp.Svg", "1.57.1" },
     { "SkiaSharp.Extended", "1.57.1-beta" },
+    { "SkiaSharp.HarfBuzz", "1.57.1-beta" },
+
+    { "HarfBuzzSharp", "1.4.5" },
 };
 
 var CI_TARGETS = new string[] { "CI", "WINDOWS-CI", "LINUX-CI", "MAC-CI" };
@@ -46,6 +54,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/depot_tools"));
 DirectoryPath SKIA_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia"));
 DirectoryPath ANGLE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/angle"));
+DirectoryPath HARFBUZZ_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/harfbuzz"));
 DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/en"));
 
 #load "cake/UtilsManaged.cake"
@@ -74,18 +83,6 @@ Task ("libs")
     .IsDependentOn ("set-versions")
     .Does (() => 
 {
-    // set the SHA on the assembly info 
-    var sha = EnvironmentVariable ("GIT_COMMIT") ?? string.Empty;
-    if (!string.IsNullOrEmpty (sha) && sha.Length >= 6) {
-        sha = sha.Substring (0, 6);
-        Information ("Setting Git SHA to {0}.", sha);
-        ReplaceTextInFiles ("./binding/Binding/Properties/SkiaSharpAssemblyInfo.cs", "{GIT_SHA}", sha);
-        ReplaceTextInFiles ("./source/SkiaSharp.Views/SkiaSharp.Views.Shared/Properties/SkiaSharpViewsAssemblyInfo.cs", "{GIT_SHA}", sha);
-        ReplaceTextInFiles ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Shared/Properties/SkiaSharpViewsFormsAssemblyInfo.cs", "{GIT_SHA}", sha);
-        ReplaceTextInFiles ("./source/SkiaSharp.Svg/SkiaSharp.Svg.Shared/Properties/SkiaSharpSvgAssemblyInfo.cs", "{GIT_SHA}", sha);
-        ReplaceTextInFiles ("./source/SkiaSharp.Extended/SkiaSharp.Extended.Shared/Properties/SkiaSharpExtendedAssemblyInfo.cs", "{GIT_SHA}", sha);
-    }
-
     // create all the directories
     if (!DirectoryExists ("./output/windows/")) CreateDirectory ("./output/windows/");
     if (!DirectoryExists ("./output/uwp/")) CreateDirectory ("./output/uwp/");
@@ -116,6 +113,20 @@ Task ("libs")
         CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.pdb", "./output/uwp/");
         CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.pri", "./output/uwp/");
 
+        // build libHarfBuzzSharp bindings
+        RunNuGetRestore ("binding/HarfBuzzSharp.Windows.sln");
+        DotNetBuild ("binding/HarfBuzzSharp.Windows.sln", c => { 
+            c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
+        });
+
+        // copy libHarfBuzzSharp build output
+        CopyFileToDirectory ("./binding/HarfBuzzSharp.Portable/bin/Release/HarfBuzzSharp.dll", "./output/portable/");
+        CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/HarfBuzzSharp.dll", "./output/windows/");
+        CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/HarfBuzzSharp.pdb", "./output/windows/");
+        CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/nuget/build/net45/HarfBuzzSharp.dll.config", "./output/windows/");
+        CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/nuget/build/net45/HarfBuzzSharp.Desktop.targets", "./output/windows/");
+
         // build other source
         RunNuGetRestore ("./source/SkiaSharpSource.Windows.sln");
         DotNetBuild ("./source/SkiaSharpSource.Windows.sln", c => { 
@@ -135,6 +146,9 @@ Task ("libs")
 
         // copy Extended
         CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended/bin/Release/SkiaSharp.Extended.dll", "./output/portable/");
+
+        // copy HarfBuzz
+        CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/portable/");
     }
 
     if (IsRunningOnMac ()) {
@@ -155,6 +169,19 @@ Task ("libs")
         CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll", "./output/mac/");
         CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.Desktop.targets", "./output/mac/");
         CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.dll.config", "./output/mac/");
+
+        // build libHarfBuzzSharp bindings
+        RunNuGetRestore ("binding/HarfBuzzSharp.Mac.sln");
+        DotNetBuild ("binding/HarfBuzzSharp.Mac.sln", c => { 
+            c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
+        });
+
+        // copy libHarfBuzzSharp build output
+        CopyFileToDirectory ("./binding/HarfBuzzSharp.Portable/bin/Release/HarfBuzzSharp.dll", "./output/portable/");
+        CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/HarfBuzzSharp.dll", "./output/mac/");
+        CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/nuget/build/net45/HarfBuzzSharp.dll.config", "./output/mac/");
+        CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/nuget/build/net45/HarfBuzzSharp.Desktop.targets", "./output/mac/");
 
         // build other source
         RunNuGetRestore ("./source/SkiaSharpSource.Mac.sln");
@@ -178,6 +205,9 @@ Task ("libs")
 
         // copy Extended
         CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended/bin/Release/SkiaSharp.Extended.dll", "./output/portable/");
+
+        // copy HarfBuzz
+        CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/portable/");
     }
 
     if (IsRunningOnLinux ()) {
@@ -191,6 +221,16 @@ Task ("libs")
         // copy build output
         CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
 
+        // build libHarfBuzzSharp bindings
+        RunNuGetRestore ("binding/HarfBuzzSharp.Linux.sln");
+        DotNetBuild ("binding/HarfBuzzSharp.Linux.sln", c => { 
+            c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
+        });
+
+        // copy libHarfBuzzSharp build output
+        CopyFileToDirectory ("./binding/HarfBuzzSharp.Portable/bin/Release/HarfBuzzSharp.dll", "./output/portable/");
+
         // build other source
         RunNuGetRestore ("./source/SkiaSharpSource.Linux.sln");
         DotNetBuild ("./source/SkiaSharpSource.Linux.sln", c => { 
@@ -203,6 +243,9 @@ Task ("libs")
 
         // copy Extended
         CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended/bin/Release/SkiaSharp.Extended.dll", "./output/portable/");
+
+        // copy HarfBuzz
+        CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/portable/");
     }
 
     // TODO: remove this nonsense !!!
@@ -223,6 +266,15 @@ Task ("libs")
         // copy build output
         CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
     }
+    // build libHarfBuzzSharp
+    RunDotNetCoreRestore ("binding/HarfBuzzSharp.NetStandard.sln");
+    DotNetCoreBuild ("binding/HarfBuzzSharp.NetStandard.sln", new DotNetCoreBuildSettings { 
+        Configuration = "Release",
+    });
+    if (CopyNetStandardOutput) {
+        // copy build output
+        CopyFileToDirectory ("./binding/HarfBuzzSharp.NetStandard/bin/Release/HarfBuzzSharp.dll", "./output/netstandard/");
+    }
     // build other source
     RunDotNetCoreRestore ("source/SkiaSharpSource.NetStandard.sln");
     DotNetCoreBuild ("./source/SkiaSharpSource.NetStandard.sln", new DotNetCoreBuildSettings { 
@@ -233,6 +285,8 @@ Task ("libs")
         CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard/bin/Release/SkiaSharp.Svg.dll", "./output/netstandard/");
         // copy Extended
         CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended.NetStandard/bin/Release/SkiaSharp.Extended.dll", "./output/netstandard/");
+        // copy HarfBuzz
+        CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz.NetStandard/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/netstandard/");
     }
 });
 
@@ -264,14 +318,14 @@ Task ("workbooks")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("tests")
-    .IsDependentOn ("libs")
-    .IsDependentOn ("nuget")
+    // .IsDependentOn ("libs")
+    // .IsDependentOn ("nuget")
     .Does (() => 
 {
     ClearSkiaSharpNuGetCache ();
 
     RunNuGetRestore ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
-    
+
     // Windows (x86 and x64)
     if (IsRunningOnWindows ()) {
         DotNetBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", c => { 
@@ -578,27 +632,33 @@ Task ("nuget")
     // we can only build the combined package on CI
     if (IS_ON_FINAL_CI) {
         PackageNuGet ("./nuget/SkiaSharp.nuspec", "./output/");
+        PackageNuGet ("./nuget/HarfBuzzSharp.nuspec", "./output/");
         PackageNuGet ("./nuget/SkiaSharp.Views.nuspec", "./output/");
         PackageNuGet ("./nuget/SkiaSharp.Views.Forms.nuspec", "./output/");
     } else {
         if (IsRunningOnWindows ()) {
             PackageNuGet ("./nuget/SkiaSharp.Windows.nuspec", "./output/");
+            PackageNuGet ("./nuget/HarfBuzzSharp.Windows.nuspec", "./output/");
             PackageNuGet ("./nuget/SkiaSharp.Views.Windows.nuspec", "./output/");
             PackageNuGet ("./nuget/SkiaSharp.Views.Forms.Windows.nuspec", "./output/");
         }
         if (IsRunningOnMac ()) {
             PackageNuGet ("./nuget/SkiaSharp.Mac.nuspec", "./output/");
+            PackageNuGet ("./nuget/HarfBuzzSharp.Mac.nuspec", "./output/");
             PackageNuGet ("./nuget/SkiaSharp.Views.Mac.nuspec", "./output/");
             PackageNuGet ("./nuget/SkiaSharp.Views.Forms.Mac.nuspec", "./output/");
         }
         if (IsRunningOnLinux ()) {
             PackageNuGet ("./nuget/SkiaSharp.Linux.nuspec", "./output/");
+            PackageNuGet ("./nuget/HarfBuzzSharp.Linux.nuspec", "./output/");
         }
     }
     // SVG is a PCL
     PackageNuGet ("./nuget/SkiaSharp.Svg.nuspec", "./output/");
     // Extended is a PCL
     PackageNuGet ("./nuget/SkiaSharp.Extended.nuspec", "./output/");
+    // HarfBuzz is a PCL
+    PackageNuGet ("./nuget/SkiaSharp.HarfBuzz.nuspec", "./output/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -684,6 +744,13 @@ Task ("set-versions")
     UpdateAssemblyInfo (
         "./source/SkiaSharp.Extended/SkiaSharp.Extended.Shared/Properties/SkiaSharpExtendedAssemblyInfo.cs",
         VERSION_ASSEMBLY, VERSION_FILE, sha);
+    UpdateAssemblyInfo (
+        "./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz.Shared/Properties/SkiaSharpHarfBuzzAssemblyInfo.cs",
+        VERSION_ASSEMBLY, VERSION_FILE, sha);
+
+    UpdateAssemblyInfo (
+        "./binding/HarfBuzzSharp.Shared/Properties/HarfBuzzSharpAssemblyInfo.cs",
+        HARFBUZZ_VERSION_ASSEMBLY, HARFBUZZ_VERSION_FILE, sha);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
