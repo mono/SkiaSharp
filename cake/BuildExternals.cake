@@ -658,6 +658,8 @@ Task ("externals-android")
     .WithCriteria (IsRunningOnMac ())
     .Does (() => 
 {
+    // SkiaSharp
+
     var buildArch = new Action<string, string> ((arch, skiaArch) => {
         // generate native skia build files
         RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn"), new ProcessSettings {
@@ -699,6 +701,22 @@ Task ("externals-android")
             CreateDirectory ("native-builds/lib/android/" + folder);
         }
         CopyFileToDirectory ("native-builds/libSkiaSharp_android/libs/" + folder + "/libSkiaSharp.so", "native-builds/lib/android/" + folder);
+    }
+
+    // HarfBuzzSharp
+
+    // build libHarfBuzzSharp
+    RunProcess (ndkbuild, new ProcessSettings {
+        Arguments = "",
+        WorkingDirectory = ROOT_PATH.Combine ("native-builds/libHarfBuzzSharp_android").FullPath,
+    }); 
+
+    // copy libSkiaSharp to output
+    foreach (var folder in new [] { "x86", "x86_64", "armeabi-v7a", "arm64-v8a" }) {
+        if (!DirectoryExists ("native-builds/lib/android/" + folder)) {
+            CreateDirectory ("native-builds/lib/android/" + folder);
+        }
+        CopyFileToDirectory ("native-builds/libHarfBuzzSharp_android/libs/" + folder + "/libHarfBuzzSharp.so", "native-builds/lib/android/" + folder);
     }
 });
 
