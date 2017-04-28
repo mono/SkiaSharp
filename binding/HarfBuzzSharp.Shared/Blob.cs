@@ -59,7 +59,7 @@ namespace HarfBuzzSharp
 
 		// internal proxy
 #if __IOS__
-		[ObjCRuntime.MonoPInvokeCallback (typeof (hb_destroy_func_tInternal))]
+		[ObjCRuntime.MonoPInvokeCallback (typeof (hb_destroy_func_t))]
 #endif
 		private static void DestroyInternal(IntPtr context)
 		{
