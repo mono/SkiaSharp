@@ -117,7 +117,6 @@ var DecompressArchive = new Action<FilePath, DirectoryPath> ((archive, outputDir
     using (var reader = ReaderFactory.Open (stream)) {
         while (reader.MoveToNextEntry ()) {
             if (!reader.Entry.IsDirectory) {
-                Information ("{0}", reader.Entry.Key);
                 reader.WriteEntryToDirectory (outputDir.FullPath, new ExtractionOptions {
                     ExtractFullPath = true,
                     Overwrite = true
