@@ -318,8 +318,8 @@ Task ("workbooks")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("tests")
-    // .IsDependentOn ("libs")
-    // .IsDependentOn ("nuget")
+    .IsDependentOn ("libs")
+    .IsDependentOn ("nuget")
     .Does (() => 
 {
     ClearSkiaSharpNuGetCache ();
