@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using NUnit.Framework;
 
 using SkiaSharp;
+using SkiaSharp.HarfBuzz;
 
 namespace HarfBuzzSharp.Tests
 {

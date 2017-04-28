@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Linq;
 
-using SkiaSharp;
-using SkiaSharp.HarfBuzz;
+using HarfBuzzSharp;
 
-namespace HarfBuzzSharp
+namespace SkiaSharp.HarfBuzz
 {
 	public class SKShaper : IDisposable
 	{
 		internal const int FONT_SIZE_SCALE = 512;
 
 		private Font font;
-		private Buffer buffer;
+		private HarfBuzzSharp.Buffer buffer;
 
 		public SKShaper(SKTypeface typeface)
 		{
@@ -32,7 +31,7 @@ namespace HarfBuzzSharp
 				font.SetFunctionsOpenType();
 			}
 
-			buffer = new Buffer();
+			buffer = new HarfBuzzSharp.Buffer();
 		}
 
 		public SKTypeface Typeface { get; private set; }

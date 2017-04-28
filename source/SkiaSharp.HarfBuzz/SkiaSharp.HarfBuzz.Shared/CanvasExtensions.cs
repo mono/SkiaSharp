@@ -1,9 +1,9 @@
 ﻿using System;
-
-using SkiaSharp;
 using System.Linq;
 
-namespace HarfBuzzSharp
+using HarfBuzzSharp;
+
+namespace SkiaSharp.HarfBuzz
 {
 	public static class CanvasExtensions
 	{
