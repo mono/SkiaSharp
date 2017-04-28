@@ -171,6 +171,8 @@ Task ("externals-native")
         if (!DirectoryExists ("./output/mac")) CreateDirectory ("./output/mac");
         CopyFileToDirectory ("./native-builds/lib/osx/libSkiaSharp.dylib", "./output/osx/");
         CopyFileToDirectory ("./native-builds/lib/osx/libSkiaSharp.dylib", "./output/mac/");
+        CopyFileToDirectory ("./native-builds/lib/osx/libHarfBuzzSharp.dylib", "./output/osx/");
+        CopyFileToDirectory ("./native-builds/lib/osx/libHarfBuzzSharp.dylib", "./output/mac/");
     }
     if (IsRunningOnLinux ()) {
         if (!DirectoryExists ("./output/linux/x64/")) CreateDirectory ("./output/linux/x64/");
@@ -233,9 +235,6 @@ Task ("externals-windows")
     buildArch ("x64", "x64", "x64");
 
     // libHarfBuzzSharp
-
-    // copy the default config header file
-    CopyFile ("externals/harfbuzz/harfbuzz/win32/config.h.win32", "externals/harfbuzz/harfbuzz/win32/config.h");
 
     var buildHarfBuzzArch = new Action<string, string> ((arch, dir) => {
         // build libHarfBuzzSharp
@@ -305,9 +304,6 @@ Task ("externals-uwp")
 
     // libHarfBuzzSharp
 
-    // copy the default config header file
-    CopyFile ("externals/harfbuzz/harfbuzz/win32/config.h.win32", "externals/harfbuzz/harfbuzz/win32/config.h");
-
     var buildHarfBuzzArch = new Action<string, string> ((arch, dir) => {
         // build libHarfBuzzSharp
         MSBuild ("native-builds/libHarfBuzzSharp_uwp/libHarfBuzzSharp.sln", new MSBuildSettings { 
@@ -333,6 +329,8 @@ Task ("externals-osx")
     .WithCriteria (IsRunningOnMac ())
     .Does (() =>  
 {
+    // SkiaSharp
+
     var buildArch = new Action<string, string> ((arch, skiaArch) => {
         // generate native skia build files
         RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn"), new ProcessSettings {
@@ -384,11 +382,51 @@ Task ("externals-osx")
 
     buildArch ("i386", "x86");
     buildArch ("x86_64", "x64");
-    
+
     // create the fat dylib
     RunLipo ("native-builds/lib/osx/", "libSkiaSharp.dylib", new [] {
         (FilePath) "i386/libSkiaSharp.dylib", 
         (FilePath) "x86_64/libSkiaSharp.dylib"
+    });
+
+    // HarfBuzzSharp
+
+    var buildHarfBuzzArch = new Action<string, string> ((arch, skiaArch) => {
+        // build libHarfBuzzSharp
+        XCodeBuild (new XCodeBuildSettings {
+            Project = "native-builds/libHarfBuzzSharp_osx/libHarfBuzzSharp.xcodeproj",
+            Target = "libHarfBuzzSharp",
+            Sdk = "macosx",
+            Arch = arch,
+            Configuration = "Release",
+        });
+
+        // copy libHarfBuzzSharp to output
+        if (!DirectoryExists ("native-builds/lib/osx/" + arch)) {
+            CreateDirectory ("native-builds/lib/osx/" + arch);
+        }
+        CopyFileToDirectory ("native-builds/libHarfBuzzSharp_osx/build/Release/libHarfBuzzSharp.dylib", "native-builds/lib/osx/" + arch);
+
+        // strip anything we can
+        RunProcess ("strip", new ProcessSettings {
+            Arguments = "-x -S libHarfBuzzSharp.dylib",
+            WorkingDirectory = "native-builds/lib/osx/" + arch,
+        });
+
+        // re-sign with empty
+        RunProcess ("codesign", new ProcessSettings {
+            Arguments = "--force --sign - --timestamp=none libHarfBuzzSharp.dylib",
+            WorkingDirectory = "native-builds/lib/osx/" + arch,
+        });
+    });
+
+    buildHarfBuzzArch ("i386", "x86");
+    buildHarfBuzzArch ("x86_64", "x64");
+
+    // create the fat dylib
+    RunLipo ("native-builds/lib/osx/", "libHarfBuzzSharp.dylib", new [] {
+        (FilePath) "i386/libHarfBuzzSharp.dylib", 
+        (FilePath) "x86_64/libHarfBuzzSharp.dylib"
     });
 });
 
@@ -398,6 +436,8 @@ Task ("externals-ios")
     .WithCriteria (IsRunningOnMac ())
     .Does (() => 
 {
+    // SkiaSharp
+
     var buildArch = new Action<string, string, string> ((sdk, arch, skiaArch) => {
         // generate native skia build files
 
@@ -469,6 +509,44 @@ Task ("externals-ios")
         (FilePath) "armv7/libSkiaSharp.framework/libSkiaSharp", 
         (FilePath) "arm64/libSkiaSharp.framework/libSkiaSharp"
     });
+
+    // HarfBuzzSharp
+
+    var buildHarfBuzzArch = new Action<string, string> ((sdk, arch) => {
+        // build libHarfBuzzSharp
+        XCodeBuild (new XCodeBuildSettings {
+            Project = "native-builds/libHarfBuzzSharp_ios/libHarfBuzzSharp.xcodeproj",
+            Target = "libHarfBuzzSharp",
+            Sdk = sdk,
+            Arch = arch,
+            Configuration = "Release",
+        });
+
+        // copy libHarfBuzzSharp_ios to output
+        if (!DirectoryExists ("native-builds/lib/ios/" + arch)) {
+            CreateDirectory ("native-builds/lib/ios/" + arch);
+        }
+        CopyFileToDirectory ("native-builds/libHarfBuzzSharp_ios/build/Release-" + sdk + "/libHarfBuzzSharp.a", "native-builds/lib/ios/" + arch);
+
+        // strip anything we can
+        RunProcess ("strip", new ProcessSettings {
+            Arguments = "-x -S libHarfBuzzSharp.a",
+            WorkingDirectory = "native-builds/lib/ios/" + arch,
+        });
+    });
+
+    buildHarfBuzzArch ("iphonesimulator", "i386");
+    buildHarfBuzzArch ("iphonesimulator", "x86_64");
+    buildHarfBuzzArch ("iphoneos", "armv7");
+    buildHarfBuzzArch ("iphoneos", "arm64");
+    
+    // create the fat archive
+    RunLipo ("native-builds/lib/ios/", "libHarfBuzzSharp.a", new [] {
+        (FilePath) "i386/libHarfBuzzSharp.a", 
+        (FilePath) "x86_64/libHarfBuzzSharp.a", 
+        (FilePath) "armv7/libHarfBuzzSharp.a", 
+        (FilePath) "arm64/libHarfBuzzSharp.a"
+    });
 });
 
 // this builds the native C and C++ externals for tvOS
@@ -477,6 +555,8 @@ Task ("externals-tvos")
     .WithCriteria (IsRunningOnMac ())
     .Does (() => 
 {
+    // SkiaSharp
+
     var buildArch = new Action<string, string, string> ((sdk, arch, skiaArch) => {
         // generate native skia build files
         RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn"), new ProcessSettings {
@@ -535,6 +615,40 @@ Task ("externals-tvos")
     RunLipo ("native-builds/lib/tvos/", "libSkiaSharp.framework/libSkiaSharp", new [] {
         (FilePath) "x86_64/libSkiaSharp.framework/libSkiaSharp", 
         (FilePath) "arm64/libSkiaSharp.framework/libSkiaSharp"
+    });
+
+    // HarfBuzzSharp
+
+    var buildHarfBuzzArch = new Action<string, string> ((sdk, arch) => {
+        // build libHarfBuzzSharp
+        XCodeBuild (new XCodeBuildSettings {
+            Project = "native-builds/libHarfBuzzSharp_tvos/libHarfBuzzSharp.xcodeproj",
+            Target = "libHarfBuzzSharp",
+            Sdk = sdk,
+            Arch = arch,
+            Configuration = "Release",
+        });
+
+        // copy libHarfBuzzSharp to output
+        if (!DirectoryExists ("native-builds/lib/tvos/" + arch)) {
+            CreateDirectory ("native-builds/lib/tvos/" + arch);
+        }
+        CopyFileToDirectory ("native-builds/libHarfBuzzSharp_tvos/build/Release-" + sdk + "/libHarfBuzzSharp.a", "native-builds/lib/tvos/" + arch);
+
+        // strip anything we can
+        RunProcess ("strip", new ProcessSettings {
+            Arguments = "-x -S libHarfBuzzSharp.a",
+            WorkingDirectory = "native-builds/lib/tvos/" + arch,
+        });
+    });
+
+    buildHarfBuzzArch ("appletvsimulator", "x86_64");
+    buildHarfBuzzArch ("appletvos", "arm64");
+    
+    // create the fat framework
+    RunLipo ("native-builds/lib/tvos/", "libHarfBuzzSharp.a", new [] {
+        (FilePath) "x86_64/libHarfBuzzSharp.a", 
+        (FilePath) "arm64/libHarfBuzzSharp.a"
     });
 });
 
@@ -682,6 +796,16 @@ Task ("externals-harfbuzz")
     DownloadFile (url, archive);
     DecompressArchive (archive, root);
     MoveDirectory (root.Combine ("harfbuzz-" + version), HARFBUZZ_PATH.Combine ("harfbuzz"));
+
+    if (IsRunningOnWindows ()) {
+        // copy the default config header file
+        CopyFile ("externals/harfbuzz/harfbuzz/win32/config.h.win32", "externals/harfbuzz/harfbuzz/win32/config.h");
+    } else {
+        RunProcess ("bash", new ProcessSettings {
+            Arguments = "configure",
+            WorkingDirectory = HARFBUZZ_PATH.Combine ("harfbuzz"),
+        });
+    }
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -705,6 +829,9 @@ Task ("clean-externals")
     // harfbuzz
     CleanDirectories ("externals/harfbuzz");
 
+    // angle
+    CleanDirectories ("externals/angle");
+
     // all
     CleanDirectories ("native-builds/lib");
     // android
@@ -712,10 +839,13 @@ Task ("clean-externals")
     CleanDirectories ("native-builds/libSkiaSharp_android/libs");
     // ios
     CleanDirectories ("native-builds/libSkiaSharp_ios/build");
+    CleanDirectories ("native-builds/libHarfBuzzSharp_ios/build");
     // tvos
     CleanDirectories ("native-builds/libSkiaSharp_tvos/build");
+    CleanDirectories ("native-builds/libHarfBuzzSharp_tvos/build");
     // osx
     CleanDirectories ("native-builds/libSkiaSharp_osx/build");
+    CleanDirectories ("native-builds/libHarfBuzzSharp_osx/build");
     // windows
     CleanDirectories ("native-builds/libSkiaSharp_windows/bin");
     CleanDirectories ("native-builds/libSkiaSharp_windows/obj");
@@ -726,7 +856,6 @@ Task ("clean-externals")
     CleanDirectories ("native-builds/libSkiaSharp_uwp/obj");
     CleanDirectories ("native-builds/libHarfBuzzSharp_uwp/bin");
     CleanDirectories ("native-builds/libHarfBuzzSharp_uwp/obj");
-    CleanDirectories ("externals/angle/uwp");
     // linux
     CleanDirectories ("native-builds/libSkiaSharp_linux/bin");
     CleanDirectories ("native-builds/libSkiaSharp_linux/obj");
