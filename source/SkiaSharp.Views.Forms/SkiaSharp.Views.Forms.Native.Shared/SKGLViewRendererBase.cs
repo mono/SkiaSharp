@@ -39,28 +39,21 @@ namespace SkiaSharp.Views.Forms
 				oldController.GetCanvasSize -= OnGetCanvasSize;
 			}
 
-			if (Control != null)
-			{
-				var control = Control;
-#if __ANDROID__
-				control.SetRenderer(null);
-#else
-				control.PaintSurface -= OnPaintSurface;
-#endif
-			}
-
 			if (e.NewElement != null)
 			{
 				var newController = (ISKGLViewController)e.NewElement;
 
 				// create the native view
-				var view = CreateNativeControl();
+				if (Control == null)
+				{
+					var view = CreateNativeControl();
 #if __ANDROID__
-				view.SetRenderer(new Renderer(newController));
+					view.SetRenderer(new Renderer(newController));
 #else
-				view.PaintSurface += OnPaintSurface;
+					view.PaintSurface += OnPaintSurface;
 #endif
-				SetNativeControl(view);
+					SetNativeControl(view);
+				}
 
 				// subscribe to events from the user
 				newController.SurfaceInvalidated += OnSurfaceInvalidated;
