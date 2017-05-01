@@ -38,21 +38,20 @@ namespace SkiaSharp.Views.Forms
 				oldController.GetCanvasSize -= OnGetCanvasSize;
 			}
 
-			if (Control != null)
-			{
-				var control = Control;
-				control.PaintSurface -= OnPaintSurface;
-			}
-
 			if (e.NewElement != null)
 			{
 				var newController = (ISKCanvasViewController)e.NewElement;
 
 				// create the native view
-				var view = CreateNativeControl();
-				view.IgnorePixelScaling = e.NewElement.IgnorePixelScaling;
-				view.PaintSurface += OnPaintSurface;
-				SetNativeControl(view);
+				if (Control == null)
+				{
+					var view = CreateNativeControl();
+					view.PaintSurface += OnPaintSurface;
+					SetNativeControl(view);
+				}
+
+				// set the initial values
+				Control.IgnorePixelScaling = e.NewElement.IgnorePixelScaling;
 
 				// subscribe to events from the user
 				newController.SurfaceInvalidated += OnSurfaceInvalidated;
