@@ -3,7 +3,7 @@ VERSION ?= 1.0.0.0
 SUPPORT_GPU ?= 1
 CC ?= gcc
 CXX ?= g++
-LDFLAGS ?= -lpthread -ldl -lfontconfig
+LDFLAGS += -lpthread -ldl -lfontconfig
 
 noop = 
 space = ${noop} ${noop}
