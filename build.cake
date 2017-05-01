@@ -533,6 +533,8 @@ Task ("update-docs")
     var assemblies = new FilePath [] {
         "./output/portable/SkiaSharp.dll",
         "./output/portable/SkiaSharp.Views.Forms.dll",
+        "./output/portable/HarfBuzzSharp.dll",
+        "./output/portable/SkiaSharp.HarfBuzz.dll",
     };
     // add windows-specific assemblies
     if (IsRunningOnWindows ()) {
