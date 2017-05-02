@@ -94,6 +94,7 @@ Task ("libs")
     if (!DirectoryExists ("./output/mac/")) CreateDirectory ("./output/mac/");
     if (!DirectoryExists ("./output/netstandard/")) CreateDirectory ("./output/netstandard/");
     if (!DirectoryExists ("./output/linux/")) CreateDirectory ("./output/linux/");
+    if (!DirectoryExists ("./output/interactive/")) CreateDirectory ("./output/interactive/");
 
     if (IsRunningOnWindows ()) {
         // build bindings
@@ -152,6 +153,9 @@ Task ("libs")
 
         // copy HarfBuzz
         CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/portable/");
+
+        // copy Workbooks integration
+        CopyFileToDirectory ("./source/SkiaSharp.Workbooks/bin/Release/SkiaSharp.Workbooks.dll", "./output/interactive/");
     }
 
     if (IsRunningOnMac ()) {
@@ -216,6 +220,9 @@ Task ("libs")
 
         // copy HarfBuzz
         CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/portable/");
+
+        // copy Workbooks integration
+        CopyFileToDirectory ("./source/SkiaSharp.Workbooks/bin/Release/SkiaSharp.Workbooks.dll", "./output/interactive/");
     }
 
     if (IsRunningOnLinux ()) {
@@ -254,6 +261,9 @@ Task ("libs")
 
         // copy HarfBuzz
         CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/portable/");
+
+        // copy Workbooks integration
+        CopyFileToDirectory ("./source/SkiaSharp.Workbooks/bin/Release/SkiaSharp.Workbooks.dll", "./output/interactive/");
     }
 
     // TODO: remove this nonsense !!!
@@ -761,6 +771,9 @@ Task ("set-versions")
     UpdateAssemblyInfo (
         "./binding/HarfBuzzSharp.Shared/Properties/HarfBuzzSharpAssemblyInfo.cs",
         HARFBUZZ_VERSION_ASSEMBLY, HARFBUZZ_VERSION_FILE, sha);
+    UpdateAssemblyInfo (
+        "./source/SkiaSharp.Workbooks/Properties/SkiaSharpWorkbooksAssemblyInfo.cs",
+        VERSION_ASSEMBLY, VERSION_FILE, sha);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
