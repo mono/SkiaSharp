@@ -627,7 +627,8 @@ Task ("nuget")
     // And, we want to make sure all is well on Windows too
     if (IS_ON_FINAL_CI || IsRunningOnWindows ()) {
         var excludedAssemblies = new string[] {
-            "/SkiaSharp.Views.Forms.dll" // Xamarin.Forms is not sigend, so we can't sign
+            "/SkiaSharp.Views.Forms.dll", // Xamarin.Forms is not sigend, so we can't sign
+            "/SkiaSharp.Workbooks.dll" // Workbooks integration library is not signed, so we can't sign
         };
         foreach (var f in GetFiles("./output/*/*.dll")) {
             // skip the excluded assemblies
