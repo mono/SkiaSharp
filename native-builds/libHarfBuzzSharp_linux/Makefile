@@ -10,7 +10,7 @@ space = ${noop} ${noop}
 
 version_parts = $(subst ., ,${VERSION})
 soname_version = $(word 2, ${version_parts})
-file_version = $(subst ${space},.,$(wordlist 2, 4, ${version_parts}))
+file_version = $(subst ${space},.,$(wordlist 1, 3, ${version_parts}))
 
 src_root = ../../externals/harfbuzz/harfbuzz/src
 obj_root = obj

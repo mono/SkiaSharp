@@ -186,7 +186,7 @@ Task ("externals-native")
                 CopyFile (so, "./output/linux/" + arch + "/libSkiaSharp.so");
             }
             // copy libHarfBuzzSharp
-            so = "./native-builds/lib/linux/" + arch + "/libHarfBuzzSharp.so." + VERSION_SONAME;
+            so = "./native-builds/lib/linux/" + arch + "/libHarfBuzzSharp.so." + HARFBUZZ_VERSION_SONAME;
             if (FileExists (so)) {
                 CopyFileToDirectory (so, "./output/linux/" + arch + "/");
                 // the second copy excludes the file version
@@ -783,7 +783,7 @@ Task ("externals-linux")
         //     WorkingDirectory = "native-builds/libHarfBuzzSharp_linux",
         // });
         RunProcess ("make", new ProcessSettings {
-            Arguments = "ARCH=" + arch + " VERSION=" + VERSION_FILE,
+            Arguments = "ARCH=" + arch + " VERSION=" + HARFBUZZ_VERSION_FILE,
             WorkingDirectory = "native-builds/libHarfBuzzSharp_linux",
         });
 
@@ -791,7 +791,7 @@ Task ("externals-linux")
         if (!DirectoryExists ("native-builds/lib/linux/" + arch)) {
             CreateDirectory ("native-builds/lib/linux/" + arch);
         }
-        CopyFileToDirectory ("native-builds/libHarfBuzzSharp_linux/bin/" + arch + "/libHarfBuzzSharp.so." + VERSION_SONAME, "native-builds/lib/linux/" + arch);
+        CopyFileToDirectory ("native-builds/libHarfBuzzSharp_linux/bin/" + arch + "/libHarfBuzzSharp.so." + HARFBUZZ_VERSION_SONAME, "native-builds/lib/linux/" + arch);
     });
 
     foreach (var arch in BUILD_ARCH) {
