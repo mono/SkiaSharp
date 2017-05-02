@@ -15,7 +15,7 @@ namespace HarfBuzzSharp.Tests
 		public void DrawShapedTextExtensionMethodDraws()
 		{
 			using (var surface = SKSurface.Create(new SKImageInfo(512, 512)))
-			using (var tf = SKTypeface.FromFamilyName("Tahoma"))
+			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
 			using (var shaper = new SKShaper(tf))
 			using (var paint = new SKPaint { IsAntialias = true, TextSize = 64, Typeface = tf })
 			{
@@ -38,10 +38,10 @@ namespace HarfBuzzSharp.Tests
 		public void CorrectlyShapesArabicScriptAtAnOffset()
 		{
 			var clusters = new uint[] { 4, 2, 0 };
-			var codepoints = new uint[] { 998, 920, 995 };
-			var points = new SKPoint[] { new SKPoint(100, 200), new SKPoint(148.25f, 200), new SKPoint(170.75f, 200) };
+			var codepoints = new uint[] { 629, 668, 891 };
+			var points = new SKPoint[] { new SKPoint(100, 200), new SKPoint(128.375f, 200), new SKPoint(142.125f, 200) };
 
-			using (var tf = SKTypeface.FromFamilyName("Tahoma"))
+			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
 			using (var shaper = new SKShaper(tf))
 			using (var paint = new SKPaint { IsAntialias = true, TextSize = 64, Typeface = tf })
 			{
@@ -57,10 +57,10 @@ namespace HarfBuzzSharp.Tests
 		public void CorrectlyShapesArabicScript()
 		{
 			var clusters = new uint[] { 4, 2, 0 };
-			var codepoints = new uint[] { 998, 920, 995 };
-			var points = new SKPoint[] { new SKPoint(0, 0), new SKPoint(48.25f, 0), new SKPoint(70.75f, 0) };
+			var codepoints = new uint[] { 629, 668, 891 };
+			var points = new SKPoint[] { new SKPoint(0, 0), new SKPoint(28.375f, 0), new SKPoint(42.125f, 0) };
 
-			using (var tf = SKTypeface.FromFamilyName("Tahoma"))
+			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
 			using (var shaper = new SKShaper(tf))
 			using (var paint = new SKPaint { IsAntialias = true, TextSize = 64, Typeface = tf })
 			{
