@@ -78,11 +78,11 @@ namespace SkiaSharp.HarfBuzz
 
 			var points = new SKPoint[len];
 			var clusters = new uint[len];
-			var codepointsTemp = new byte[len][];
+			var codepoints = new uint[len];
 
 			for (var i = 0; i < len; i++)
 			{
-				codepointsTemp[i] = BitConverter.GetBytes((ushort)info[i].Codepoint);
+				codepoints[i] = info[i].Codepoint;
 
 				clusters[i] = info[i].Cluster;
 
@@ -95,8 +95,6 @@ namespace SkiaSharp.HarfBuzz
 				yOffset += pos[i].YAdvance * textSizeY;
 			}
 
-			var codepoints = codepointsTemp.SelectMany(cp => cp).ToArray();
-
 			return new Result(codepoints, clusters, points);
 		}
 
@@ -104,19 +102,19 @@ namespace SkiaSharp.HarfBuzz
 		{
 			public Result()
 			{
-				Codepoints = new byte[0];
+				Codepoints = new uint[0];
 				Clusters = new uint[0];
 				Points = new SKPoint[0];
 			}
 
-			public Result(byte[] codepoints, uint[] clusters, SKPoint[] points)
+			public Result(uint[] codepoints, uint[] clusters, SKPoint[] points)
 			{
 				Codepoints = codepoints;
 				Clusters = clusters;
 				Points = points;
 			}
 
-			public byte[] Codepoints { get; private set; }
+			public uint[] Codepoints { get; private set; }
 
 			public uint[] Clusters { get; private set; }
 

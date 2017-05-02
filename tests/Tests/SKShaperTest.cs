@@ -38,7 +38,7 @@ namespace HarfBuzzSharp.Tests
 		public void CorrectlyShapesArabicScriptAtAnOffset()
 		{
 			var clusters = new uint[] { 4, 2, 0 };
-			var codepoints = new byte[] { 230, 3, 152, 3, 227, 3 };
+			var codepoints = new uint[] { 998, 920, 995 };
 			var points = new SKPoint[] { new SKPoint(100, 200), new SKPoint(148.25f, 200), new SKPoint(170.75f, 200) };
 
 			using (var tf = SKTypeface.FromFamilyName("Tahoma"))
@@ -57,7 +57,7 @@ namespace HarfBuzzSharp.Tests
 		public void CorrectlyShapesArabicScript()
 		{
 			var clusters = new uint[] { 4, 2, 0 };
-			var codepoints = new byte[] { 230, 3, 152, 3, 227, 3 };
+			var codepoints = new uint[] { 998, 920, 995 };
 			var points = new SKPoint[] { new SKPoint(0, 0), new SKPoint(48.25f, 0), new SKPoint(70.75f, 0) };
 
 			using (var tf = SKTypeface.FromFamilyName("Tahoma"))
