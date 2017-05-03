@@ -3,7 +3,7 @@ VERSION ?= 1.0.0.0
 SUPPORT_GPU ?= 1
 CC ?= gcc
 CXX ?= g++
-LDFLAGS ?= -lpthread -ldl -lfontconfig
+LDFLAGS += -lpthread -ldl -lfontconfig
 
 noop = 
 space = ${noop} ${noop}
@@ -68,15 +68,17 @@ deps = $(objs:.o=.d)
 
 ${objarch_root}/%.o: ${src_root}/%
 # build the local source
-	mkdir -p $(dir $@)
-	$(CXX) -MMD -MF $@.d                                                 \
+	@echo Building $<...
+	@mkdir -p $(dir $@)
+	@$(CXX) -MMD -MF $@.d                                                \
 		${defines} ${includes} ${arch_cflags} ${cflags_c} ${cflags_cc}   \
 		-c $< -o $@
 
 ${target}: ${objs}
 # link with skia
-	mkdir -p $(dir $@)
-	$(CXX) -shared -rdynamic -s -o $@                                             \
+	@echo Linking $@...
+	@mkdir -p $(dir $@)
+	@$(CXX) -shared -rdynamic -s -o $@                                            \
 		${defines} ${includes} ${arch_cflags} ${cflags_c} ${cflags_cc}            \
 		-Wl,--start-group ${objarch_root}/*.o  ${library_paths} -Wl,--end-group   \
 		${ldflags} -Wl,--gc-sections -Wl,--no-undefined                           \

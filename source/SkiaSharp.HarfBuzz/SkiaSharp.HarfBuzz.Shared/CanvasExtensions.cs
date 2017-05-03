@@ -31,7 +31,8 @@ namespace SkiaSharp.HarfBuzz
 				paintClone.TextEncoding = SKTextEncoding.GlyphId;
 				paintClone.Typeface = shaper.Typeface;
 
-				canvas.DrawPositionedText(result.Codepoints, result.Points, paintClone);
+				var bytes = result.Codepoints.Select(cp => BitConverter.GetBytes((ushort)cp)).SelectMany(b => b).ToArray();
+				canvas.DrawPositionedText(bytes, result.Points, paintClone);
 			}
 		}
 	}
