@@ -9,8 +9,8 @@
     <BaseTypeName>System.Enum</BaseTypeName>
   </Base>
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>Various memory modes for  <see cref="T:HarfBuzzSharp.Blob" /></summary>
+    <remarks>In no case shall the HarfBuzz client modify memory that is passed to HarfBuzz in a blob. If there is any such possibility, <see cref="F:HarfBuzzSharp.MemoryMode.Duplicate" /> should be used such that HarfBuzz makes a copy immediately.</remarks>
   </Docs>
   <Members>
     <Member MemberName="Duplicate">
@@ -24,7 +24,7 @@
         <ReturnType>HarfBuzzSharp.MemoryMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>HarfBuzz makes a copy immediately.</summary>
       </Docs>
     </Member>
     <Member MemberName="ReadOnly">
@@ -38,12 +38,12 @@
         <ReturnType>HarfBuzzSharp.MemoryMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Default mode indicating that the memory won’t be changed.</summary>
       </Docs>
     </Member>
-    <Member MemberName="ReadonlyMayMakeWriteable">
-      <MemberSignature Language="C#" Value="ReadonlyMayMakeWriteable" />
-      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype HarfBuzzSharp.MemoryMode ReadonlyMayMakeWriteable = int32(3)" />
+    <Member MemberName="ReadOnlyMayMakeWriteable">
+      <MemberSignature Language="C#" Value="ReadOnlyMayMakeWriteable" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype HarfBuzzSharp.MemoryMode ReadOnlyMayMakeWriteable = int32(3)" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
@@ -52,7 +52,7 @@
         <ReturnType>HarfBuzzSharp.MemoryMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>The font file was mmap()ed, but <see cref="F:HarfBuzzSharp.MemoryMode.ReadOnly" /> should still be used.</summary>
       </Docs>
     </Member>
     <Member MemberName="Writeable">
@@ -66,7 +66,7 @@
         <ReturnType>HarfBuzzSharp.MemoryMode</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Indicates that the data was copied solely for the purpose of passing to HarfBuzz.</summary>
       </Docs>
     </Member>
   </Members>
