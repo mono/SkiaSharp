@@ -97,8 +97,10 @@ var RunMdocAssemble = new Action<DirectoryPath, FilePath> ((docsRoot, output) =>
 var ClearSkiaSharpNuGetCache = new Action (() => {
     // first we need to add our new nuget to the cache so we can restore
     // we first need to delete the old stuff
-    DirectoryPath home = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
-    var installedNuGet = home.Combine (".nuget").Combine ("packages").FullPath + "/*";
+    DirectoryPath packagesDir = 
+        EnvironmentVariable ("NUGET_PACKAGES") ?? 
+        ((DirectoryPath)EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME")).Combine (".nuget").Combine ("packages");
+    var installedNuGet = packagesDir.FullPath + "/*";
     var packages = VERSION_PACKAGES.Keys;
     var dirs = GetDirectories (installedNuGet);
     foreach (var pkg in packages) {
