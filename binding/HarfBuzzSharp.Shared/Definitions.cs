@@ -20,7 +20,7 @@ namespace HarfBuzzSharp
 		Duplicate,
 		ReadOnly,
 		Writeable,
-		ReadonlyMayMakeWriteable
+		ReadOnlyMayMakeWriteable
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
