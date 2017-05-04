@@ -101,9 +101,10 @@ var ClearSkiaSharpNuGetCache = new Action (() => {
     var installedNuGet = home.Combine (".nuget").Combine ("packages").FullPath + "/*";
     var packages = VERSION_PACKAGES.Keys;
     var dirs = GetDirectories (installedNuGet);
-    foreach (var dir in dirs) {
-        var dirName = dir.GetDirectoryName ();
-        foreach (var pkg in packages) {
+    foreach (var pkg in packages) {
+        Information ("Looking for an installed version of {0} in {1}...", pkg, installedNuGet);
+        foreach (var dir in dirs) {
+            var dirName = dir.GetDirectoryName ();
             if (string.Equals (pkg, dirName, StringComparison.OrdinalIgnoreCase)) {
                 Warning ("SkiaSharp nugets were installed at '{0}', removing...", dir);
                 CleanDirectory (dir);
