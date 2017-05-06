@@ -23,6 +23,9 @@ library_dirs = \
 	../../externals/skia/out/linux/${ARCH}
 include_dirs = \
 	../../externals/skia/src/c           \
+	../../externals/skia/src/core        \
+	../../externals/skia/src/xml         \
+	../../externals/skia/include/private \
 	../../externals/skia/include/c       \
 	../../externals/skia/include/core    \
 	../../externals/skia/include/codec   \

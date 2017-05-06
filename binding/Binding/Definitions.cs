@@ -1704,10 +1704,8 @@ namespace SkiaSharp
 		Srgba8888,
 		Sbgra8888,
 		Etc1,
-		Latc,
-		R11Eac,
-		Astc12x12,
 		RgbaFloat,
+		RgFloat,
 		AlphaHalf,
 		RgbaHalf,
 	}

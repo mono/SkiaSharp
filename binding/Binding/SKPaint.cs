@@ -116,24 +116,6 @@ namespace SkiaSharp
 			}
 		}
 
-		public bool UnderlineText {
-			get {
-				return SkiaApi.sk_paint_is_underline_text (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_underline_text (Handle, value);
-			}
-		}
-
-		public bool StrikeThruText {
-			get {
-				return SkiaApi.sk_paint_is_strikethru_text (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_strikethru_text (Handle, value);
-			}
-		}
-
 		public bool FakeBoldText {
 			get {
 				return SkiaApi.sk_paint_is_fake_bold_text (Handle);

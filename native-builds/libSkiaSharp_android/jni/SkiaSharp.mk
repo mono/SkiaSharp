@@ -16,6 +16,9 @@ LOCAL_LDFLAGS          := -s -Wl,--gc-sections
 LOCAL_MODULE           := SkiaSharp
 
 LOCAL_C_INCLUDES       := ../../externals/skia/src/c           \
+                          ../../externals/skia/src/core        \
+                          ../../externals/skia/src/xml         \
+                          ../../externals/skia/include/private \
                           ../../externals/skia/include/c       \
                           ../../externals/skia/include/core    \
                           ../../externals/skia/include/codec   \

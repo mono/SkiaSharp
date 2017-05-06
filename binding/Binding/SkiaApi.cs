@@ -191,8 +191,6 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_point(sk_canvas_t t, float x, float y, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_canvas_draw_point_color(sk_canvas_t t, float x, float y, SKColor color);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_line(sk_canvas_t t, float x0, float y0, float x1, float y1, sk_paint_t paint);
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -238,10 +236,10 @@ namespace SkiaSharp
 		public extern static void sk_canvas_clip_region(sk_canvas_t t, sk_region_t region, SKClipOperation op);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		public extern static bool sk_canvas_get_clip_device_bounds(sk_canvas_t t, ref SKRectI cbounds);
+		public extern static bool sk_canvas_get_device_clip_bounds(sk_canvas_t t, out SKRectI cbounds);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		public extern static bool sk_canvas_get_clip_bounds(sk_canvas_t t, ref SKRect cbounds);
+		public extern static bool sk_canvas_get_local_clip_bounds(sk_canvas_t t, out SKRect cbounds);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_canvas_t sk_canvas_new_from_bitmap(sk_bitmap_t bitmap);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -412,16 +410,6 @@ namespace SkiaSharp
 		public extern static SKPaintHinting sk_paint_get_hinting(sk_paint_t cpaint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_paint_set_hinting(sk_paint_t cpaint, SKPaintHinting hintingLevel);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.I1)]
-		public extern static bool sk_paint_is_underline_text(sk_paint_t cpaint);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_paint_set_underline_text(sk_paint_t cpaint, bool underlineText);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.I1)]
-		public extern static bool sk_paint_is_strikethru_text(sk_paint_t cpaint);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_paint_set_strikethru_text(sk_paint_t cpaint, bool strikeThruText);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_paint_is_fake_bold_text(sk_paint_t cpaint);
@@ -785,13 +773,9 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_colorfilter_t sk_colorfilter_new_compose(sk_colorfilter_t outer, sk_colorfilter_t inner);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_colorfilter_t sk_colorfilter_new_color_cube(sk_data_t cubeData, int cubeDimension);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_colorfilter_t sk_colorfilter_new_color_matrix(float[] array/*[20]*/);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_colorfilter_t sk_colorfilter_new_luma_color();
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_colorfilter_t sk_colorfilter_new_gamma(float gamma);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_colorfilter_t sk_colorfilter_new_table(byte[] table/*[256]*/);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1137,8 +1121,6 @@ namespace SkiaSharp
 		public extern static sk_document_t sk_document_create_pdf_from_filename([MarshalAs(UnmanagedType.LPStr)] string path, float dpi);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_document_t sk_document_create_xps_from_stream(sk_wstream_t stream, float dpi);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_document_t sk_document_create_xps_from_filename([MarshalAs(UnmanagedType.LPStr)] string path, float dpi);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_canvas_t sk_document_begin_page(sk_document_t document, float width, float height, ref SKRect content);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]

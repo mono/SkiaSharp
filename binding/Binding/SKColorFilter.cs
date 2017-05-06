@@ -12,22 +12,7 @@ namespace SkiaSharp
 {
 	public class SKColorFilter : SKObject
 	{
-		[Obsolete("Use MinColorCubeDimension instead.", true)]
-		public const int MinCubeSize = 4;
-		[Obsolete("Use MaxColorCubeDimension instead.", true)]
-		public const int MaxCubeSize = 64;
-
-		public const int MinColorCubeDimension = 4;
-		public const int MaxColorCubeDimension = 64;
 		public const int ColorMatrixSize = 20;
-
-		public static bool IsValid3DColorCube(SKData cubeData, int cubeDimension)
-		{
-			var minMemorySize = 4 * cubeDimension * cubeDimension * cubeDimension;
-			return
-				(cubeDimension >= MinColorCubeDimension) && (cubeDimension <= MaxColorCubeDimension) &&
-				(null != cubeData) && (cubeData.Size >= minMemorySize);
-		}
 
 		[Preserve]
 		internal SKColorFilter(IntPtr handle, bool owns)
@@ -76,22 +61,6 @@ namespace SkiaSharp
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_compose(outer.Handle, inner.Handle));
 		}
 
-		public static SKColorFilter CreateColorCube(byte[] cubeData, int cubeDimension)
-		{
-			if (cubeData == null)
-				throw new ArgumentNullException(nameof(cubeData));
-			return CreateColorCube(SKData.CreateCopy(cubeData), cubeDimension);
-		}
-
-		public static SKColorFilter CreateColorCube(SKData cubeData, int cubeDimension)
-		{
-			if (cubeData == null)
-				throw new ArgumentNullException(nameof(cubeData));
-			if (!IsValid3DColorCube(cubeData, cubeDimension))
-				throw new ArgumentException("Invalid cube data.", nameof(cubeData));
-			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_color_cube(cubeData.Handle, cubeDimension));
-		}
-
 		public static SKColorFilter CreateColorMatrix(float[] matrix)
 		{
 			if (matrix == null)
@@ -104,11 +73,6 @@ namespace SkiaSharp
 		public static SKColorFilter CreateLumaColor()
 		{
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_luma_color());
-		}
-
-		public static SKColorFilter CreateGamma(float gamma)
-		{
-			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_gamma(gamma));
 		}
 
 		public static SKColorFilter CreateTable(byte[] table)

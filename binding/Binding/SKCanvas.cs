@@ -207,36 +207,48 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_clip_region (Handle, region.Handle, operation);
 		}
 
-		public SKRect ClipBounds {
+		[Obsolete ("Use LocalClipBounds instead.")]
+		public SKRect ClipBounds => LocalClipBounds;
+
+		[Obsolete ("Use DeviceClipBounds instead.")]
+		public SKRectI ClipDeviceBounds => DeviceClipBounds;
+
+		public SKRect LocalClipBounds {
 			get {
-				var bounds = SKRect.Empty;
-				if (GetClipBounds (ref bounds)) {
-					return bounds;
-				} else {
-					return SKRect.Empty;
-				}
+				SKRect bounds;
+				GetLocalClipBounds (out bounds);
+				return bounds;
 			}
 		}
 
-		public SKRectI ClipDeviceBounds {
+		public SKRectI DeviceClipBounds {
 			get {
-				var bounds = SKRectI.Empty;
-				if (GetClipDeviceBounds (ref bounds)) {
-					return bounds;
-				} else {
-					return SKRectI.Empty;
-				}
+				SKRectI bounds;
+				GetDeviceClipBounds (out bounds);
+				return bounds;
 			}
 		}
 
+		[Obsolete ("Use GetLocalClipBounds instead.")]
 		public bool GetClipBounds (ref SKRect bounds)
 		{
-			return SkiaApi.sk_canvas_get_clip_bounds(Handle, ref bounds);
+			return GetLocalClipBounds (out bounds);
 		}
 
+		[Obsolete ("Use GetDeviceClipBounds instead.")]
 		public bool GetClipDeviceBounds (ref SKRectI bounds)
 		{
-			return SkiaApi.sk_canvas_get_clip_device_bounds(Handle, ref bounds);
+			return GetDeviceClipBounds (out bounds);
+		}
+
+		public bool GetLocalClipBounds (out SKRect bounds)
+		{
+			return SkiaApi.sk_canvas_get_local_clip_bounds (Handle, out bounds);
+		}
+
+		public bool GetDeviceClipBounds (out SKRectI bounds)
+		{
+			return SkiaApi.sk_canvas_get_device_clip_bounds (Handle, out bounds);
 		}
 
 		public void DrawPaint (SKPaint paint)
@@ -315,7 +327,9 @@ namespace SkiaSharp
 
 		public void DrawPoint (float x, float y, SKColor color)
 		{
-			SkiaApi.sk_canvas_draw_point_color (Handle, x, y, color);
+			using (var paint = new SKPaint { Color = color }) {
+				DrawPoint (x, y, paint);
+			}
 		}
 		
 		public void DrawImage (SKImage image, float x, float y, SKPaint paint = null)

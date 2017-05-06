@@ -56,7 +56,10 @@ namespace SkiaSharp
 
 		public static SKDocument CreateXps (string path, float dpi = DefaultRasterDpi)
 		{
-			return GetObject<SKDocument> (SkiaApi.sk_document_create_xps_from_filename (path, dpi));
+			var stream = new SKFileWStream (path);
+			var doc = CreateXps (stream, dpi);
+			doc.TakeOwnership (stream);
+			return doc;
 		}
 
 		public static SKDocument CreateXps (SKWStream stream, float dpi = DefaultRasterDpi)
