@@ -809,10 +809,9 @@ Task ("externals-angle-uwp")
     .WithCriteria (!FileExists (ANGLE_PATH.CombineWithFilePath ("uwp/ANGLE.WindowsStore.nuspec")))
     .Does (() =>  
 {
-    var angleVersion = "2.1.13";
-    var angleUrl = "https://www.nuget.org/api/v2/package/ANGLE.WindowsStore/" + angleVersion;
+    var angleUrl = "https://www.nuget.org/api/v2/package/ANGLE.WindowsStore/" + ANGLE_VERSION_SOURCE;
     var angleRoot = ANGLE_PATH.Combine ("uwp");
-    var angleNupkg = angleRoot.CombineWithFilePath ("angle_" + angleVersion + ".nupkg");
+    var angleNupkg = angleRoot.CombineWithFilePath ("angle_" + ANGLE_VERSION_SOURCE + ".nupkg");
 
     if (!DirectoryExists (angleRoot)) {
         CreateDirectory (angleRoot);
@@ -824,13 +823,14 @@ Task ("externals-angle-uwp")
 });
 
 Task ("externals-harfbuzz")
-    .WithCriteria (!FileExists (HARFBUZZ_PATH.CombineWithFilePath ("harfbuzz/README")))
+    .WithCriteria (
+        !FileExists (HARFBUZZ_PATH.CombineWithFilePath ("harfbuzz/README")) || 
+        !FileExists (HARFBUZZ_PATH.CombineWithFilePath ("harfbuzz-" + HARFBUZZ_VERSION_SOURCE + ".tar.bz2")))
     .Does (() =>  
 {
-    string version = "1.4.5";
-    string url = "https://github.com/behdad/harfbuzz/releases/download/" + version + "/harfbuzz-" + version + ".tar.bz2";
+    string url = "https://github.com/behdad/harfbuzz/releases/download/" + HARFBUZZ_VERSION_SOURCE + "/harfbuzz-" + HARFBUZZ_VERSION_SOURCE + ".tar.bz2";
     DirectoryPath root = HARFBUZZ_PATH;
-    FilePath archive = root.CombineWithFilePath ("harfbuzz-" + version + ".tar.bz2");
+    FilePath archive = root.CombineWithFilePath ("harfbuzz-" + HARFBUZZ_VERSION_SOURCE + ".tar.bz2");
 
     if (!DirectoryExists (root)) {
         CreateDirectory (root);
@@ -839,7 +839,7 @@ Task ("externals-harfbuzz")
     }
     DownloadFile (url, archive);
     DecompressArchive (archive, root);
-    MoveDirectory (root.Combine ("harfbuzz-" + version), HARFBUZZ_PATH.Combine ("harfbuzz"));
+    MoveDirectory (root.Combine ("harfbuzz-" + HARFBUZZ_VERSION_SOURCE), HARFBUZZ_PATH.Combine ("harfbuzz"));
 
     if (IsRunningOnWindows ()) {
         // copy the default config header file
