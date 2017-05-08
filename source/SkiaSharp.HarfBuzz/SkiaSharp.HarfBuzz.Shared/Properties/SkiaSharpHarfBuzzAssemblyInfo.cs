@@ -10,8 +10,8 @@ using System.Reflection;
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("SkiaSharp.HarfBuzz")]
 [assembly: AssemblyVersion("1.57.0.0")]
-[assembly: AssemblyFileVersion("1.57.1.0")]
-[assembly: AssemblyInformationalVersion("1.57.1.0-{GIT_SHA}")]
+[assembly: AssemblyFileVersion("1.57.2.0")]
+[assembly: AssemblyInformationalVersion("1.57.2.0-{GIT_SHA}")]
 [assembly: AssemblyCopyright("Xamarin Inc.")]
 [assembly: AssemblyTrademark("")]
 
