@@ -24,7 +24,7 @@ var GenApiToolPath = GetToolPath ("Microsoft.DotNet.BuildTools.GenAPI/tools/GenA
 var MDocPath = GetToolPath ("mdoc/mdoc.exe");
 var SNToolPath = GetSNToolPath (EnvironmentVariable ("SN_EXE"));
 
-var VERSION_ASSEMBLY = "1.57.2.0";
+var VERSION_ASSEMBLY = "1.57.0.0";
 var VERSION_FILE = "1.57.2.0";
 var VERSION_SONAME = VERSION_FILE.Substring(VERSION_FILE.IndexOf(".") + 1);
 

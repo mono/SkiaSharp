@@ -9,7 +9,7 @@ using System.Reflection;
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("SkiaSharp")]
-[assembly: AssemblyVersion("1.57.2.0")]
+[assembly: AssemblyVersion("1.57.0.0")]
 [assembly: AssemblyFileVersion("1.57.2.0")]
 [assembly: AssemblyInformationalVersion("1.57.2.0-{GIT_SHA}")]
 [assembly: AssemblyCopyright("Xamarin Inc.")]

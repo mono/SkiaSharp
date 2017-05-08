@@ -13,14 +13,15 @@ namespace SkiaSharp
 {
 	[Obsolete ("Use SKEncodedImageFormat instead.", true)]
 	public enum SKImageEncodeFormat {
-		Bmp = SKEncodedImageFormat.Bmp,
-		Gif = SKEncodedImageFormat.Gif,
-		Ico = SKEncodedImageFormat.Ico,
-		Jpeg = SKEncodedImageFormat.Jpeg,
-		Png = SKEncodedImageFormat.Png,
-		Wbmp = SKEncodedImageFormat.Wbmp,
-		Webp = SKEncodedImageFormat.Webp,
-		Ktx = SKEncodedImageFormat.Ktx,
+		Unknown,
+		Bmp,
+		Gif,
+		Ico,
+		Jpeg,
+		Png,
+		Wbmp,
+		Webp,
+		Ktx,
 	}
 
 	// public delegates
@@ -263,7 +264,38 @@ namespace SkiaSharp
 		[Obsolete ("Use Encode(SKEncodedImageFormat, int) instead.", true)]
 		public SKData Encode (SKImageEncodeFormat format, int quality)
 		{
-			return Encode ((SKEncodedImageFormat)format, quality);
+			SKEncodedImageFormat newFormat;
+			switch (format) {
+				case SKImageEncodeFormat.Bmp:
+					newFormat = SKEncodedImageFormat.Bmp;
+					break;
+				case SKImageEncodeFormat.Gif:
+					newFormat = SKEncodedImageFormat.Gif;
+					break;
+				case SKImageEncodeFormat.Ico:
+					newFormat = SKEncodedImageFormat.Ico;
+					break;
+				case SKImageEncodeFormat.Jpeg:
+					newFormat = SKEncodedImageFormat.Jpeg;
+					break;
+				case SKImageEncodeFormat.Png:
+					newFormat = SKEncodedImageFormat.Png;
+					break;
+				case SKImageEncodeFormat.Wbmp:
+					newFormat = SKEncodedImageFormat.Wbmp;
+					break;
+				case SKImageEncodeFormat.Webp:
+					newFormat = SKEncodedImageFormat.Webp;
+					break;
+				case SKImageEncodeFormat.Ktx:
+					newFormat = SKEncodedImageFormat.Ktx;
+					break;
+				case SKImageEncodeFormat.Unknown:
+				default:
+					newFormat = SKEncodedImageFormat.Png;
+					break;
+			}
+			return Encode (newFormat, quality);
 		}
 
 		public SKData Encode (SKEncodedImageFormat format, int quality)
