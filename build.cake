@@ -24,26 +24,26 @@ var GenApiToolPath = GetToolPath ("Microsoft.DotNet.BuildTools.GenAPI/tools/GenA
 var MDocPath = GetToolPath ("mdoc/mdoc.exe");
 var SNToolPath = GetSNToolPath (EnvironmentVariable ("SN_EXE"));
 
-var VERSION_ASSEMBLY = "1.58.0.0";
-var VERSION_FILE = "1.58.0.0";
+var VERSION_ASSEMBLY = "1.57.2.0";
+var VERSION_FILE = "1.57.2.0";
 var VERSION_SONAME = VERSION_FILE.Substring(VERSION_FILE.IndexOf(".") + 1);
 
 var ANGLE_VERSION_SOURCE = "2.1.13";
 
-var HARFBUZZ_VERSION_SOURCE = "1.4.6";
+var HARFBUZZ_VERSION_SOURCE = "1.4.5";
 var HARFBUZZ_VERSION_ASSEMBLY = "1.0.0.0";
-var HARFBUZZ_VERSION_FILE = "1.4.6.0";
+var HARFBUZZ_VERSION_FILE = "1.4.5.0";
 var HARFBUZZ_VERSION_SONAME = HARFBUZZ_VERSION_FILE.Substring(0, HARFBUZZ_VERSION_FILE.LastIndexOf("."));
 
 var VERSION_PACKAGES = new Dictionary<string, string> {
-    { "SkiaSharp", "1.58.0" },
-    { "SkiaSharp.Views", "1.58.0" },
-    { "SkiaSharp.Views.Forms", "1.58.0" },
-    { "SkiaSharp.Svg", "1.58.0" },
-    { "SkiaSharp.Extended", "1.58.0-beta" },
-    { "SkiaSharp.HarfBuzz", "1.58.0-beta" },
+    { "SkiaSharp", "1.57.2" },
+    { "SkiaSharp.Views", "1.57.2" },
+    { "SkiaSharp.Views.Forms", "1.57.2" },
+    { "SkiaSharp.Svg", "1.57.2" },
+    { "SkiaSharp.Extended", "1.57.2-beta" },
+    { "SkiaSharp.HarfBuzz", "1.57.2-beta" },
 
-    { "HarfBuzzSharp", "1.4.6" },
+    { "HarfBuzzSharp", "1.4.5" },
 };
 
 var CI_TARGETS = new string[] { "CI", "WINDOWS-CI", "LINUX-CI", "MAC-CI" };
