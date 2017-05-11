@@ -7,6 +7,7 @@
 // Copyright 2016 Xamarin Inc
 //
 using System;
+using System.IO;
 
 namespace SkiaSharp
 {
@@ -116,6 +117,21 @@ namespace SkiaSharp
 		public int Length {
 			get {
 				return (int)SkiaApi.sk_stream_get_length (Handle);
+			}
+		}
+
+		internal static SKStream WrapManagedStream (Stream stream)
+		{
+			if (stream == null) {
+				throw new ArgumentNullException (nameof (stream));
+			}
+
+			// we will need a seekable stream, so buffer it if need be
+			if (stream.CanSeek) {
+				return new SKManagedStream (stream, true);
+			} else {
+				var buffered = new SKFrontBufferedStream (stream, SKCodec.MinBufferedBytesNeeded, true);
+				return new SKManagedStream (buffered, true);
 			}
 		}
 	}

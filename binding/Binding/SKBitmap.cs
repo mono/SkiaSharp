@@ -335,7 +335,7 @@ namespace SkiaSharp
 			if (stream == null) {
 				throw new ArgumentNullException (nameof (stream));
 			}
-			return DecodeBounds (WrapManagedStream (stream));
+			return DecodeBounds (SKStream.WrapManagedStream (stream));
 		}
 
 		public static SKImageInfo DecodeBounds (SKStream stream)
@@ -412,7 +412,7 @@ namespace SkiaSharp
 			if (stream == null) {
 				throw new ArgumentNullException (nameof (stream));
 			}
-			return Decode (WrapManagedStream (stream));
+			return Decode (SKStream.WrapManagedStream (stream));
 		}
 
 		public static SKBitmap Decode (Stream stream, SKImageInfo bitmapInfo)
@@ -420,7 +420,7 @@ namespace SkiaSharp
 			if (stream == null) {
 				throw new ArgumentNullException (nameof (stream));
 			}
-			return Decode (WrapManagedStream (stream), bitmapInfo);
+			return Decode (SKStream.WrapManagedStream (stream), bitmapInfo);
 		}
 
 		public static SKBitmap Decode (SKStream stream)
@@ -615,21 +615,6 @@ namespace SkiaSharp
 			using (new SKAutoLockPixels (this))
 			using (var pixmap = new SKPixmap ()) {
 				return PeekPixels (pixmap) && pixmap.Encode (dst, format, quality);
-			}
-		}
-
-		private static SKStream WrapManagedStream (Stream stream)
-		{
-			if (stream == null) {
-				throw new ArgumentNullException (nameof (stream));
-			}
-
-			// we will need a seekable stream, so buffer it if need be
-			if (stream.CanSeek) {
-				return new SKManagedStream (stream, true);
-			} else {
-				var buffered = new SKFrontBufferedStream (stream, SKCodec.MinBufferedBytesNeeded, true);
-				return new SKManagedStream (buffered, true);
 			}
 		}
 

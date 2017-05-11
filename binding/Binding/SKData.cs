@@ -1,4 +1,4 @@
-﻿//
+﻿﻿﻿﻿//
 // Bindings for SKData
 //
 // Author:
@@ -120,6 +120,77 @@ namespace SkiaSharp
 				throw new ArgumentOutOfRangeException (nameof (size), "The size exceeds the size of pointers.");
 				
 			return GetObject<SKData> (SkiaApi.sk_data_new_uninitialized ((IntPtr) size));
+		}
+
+		public static SKData Create (string filename)
+		{
+			if (string.IsNullOrEmpty (filename))
+				throw new ArgumentException ("The filename cannot be empty.", nameof (filename));
+
+			return GetObject<SKData> (SkiaApi.sk_data_new_from_file (filename));
+		}
+
+		public static SKData Create (Stream stream)
+		{
+			if (stream == null)
+				throw new ArgumentNullException (nameof (stream));
+			return Create (stream, stream.Length);
+		}
+
+		public static SKData Create (Stream stream, int length)
+		{
+			if (stream == null)
+				throw new ArgumentNullException (nameof (stream));
+
+			return Create (SKStream.WrapManagedStream (stream), length);
+		}
+
+		public static SKData Create (Stream stream, ulong length)
+		{
+			if (stream == null)
+				throw new ArgumentNullException (nameof (stream));
+
+			return Create (SKStream.WrapManagedStream (stream), length);
+		}
+
+		public static SKData Create (Stream stream, long length)
+		{
+			if (stream == null)
+				throw new ArgumentNullException (nameof (stream));
+
+			return Create (SKStream.WrapManagedStream (stream), length);
+		}
+
+		public static SKData Create (SKStream stream)
+		{
+			if (stream == null)
+				throw new ArgumentNullException (nameof (stream));
+
+			return Create (stream, stream.Length);
+		}
+
+		public static SKData Create (SKStream stream, int length)
+		{
+			if (stream == null)
+				throw new ArgumentNullException (nameof (stream));
+
+			return GetObject<SKData> (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr) length));
+		}
+
+		public static SKData Create (SKStream stream, ulong length)
+		{
+			if (stream == null)
+				throw new ArgumentNullException (nameof (stream));
+
+			return GetObject<SKData> (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr) length));
+		}
+
+		public static SKData Create (SKStream stream, long length)
+		{
+			if (stream == null)
+				throw new ArgumentNullException (nameof (stream));
+
+			return GetObject<SKData> (SkiaApi.sk_data_new_from_stream (stream.Handle, (IntPtr) length));
 		}
 
 		public static SKData Create (IntPtr address, int length)
