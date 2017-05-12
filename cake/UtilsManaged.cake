@@ -43,7 +43,9 @@ var RunMSBuildWithPlatform = new Action<FilePath, string> ((solution, platform) 
         c.Configuration = "Release"; 
         c.Verbosity = VERBOSITY;
         c.Properties ["Platform"] = new [] { platform };
-        c.ToolPath = MSBuildToolPath;
+        if (!string.IsNullOrEmpty (MSBuildToolPath)) {
+            c.ToolPath = MSBuildToolPath;
+        }
     });
 });
 
@@ -53,7 +55,9 @@ var RunMSBuildWithPlatformTarget = new Action<FilePath, string> ((solution, plat
         c.Configuration = "Release"; 
         c.Verbosity = VERBOSITY;
         c.PlatformTarget = (PlatformTarget)Enum.Parse(typeof(PlatformTarget), platformTarget);
-        c.ToolPath = MSBuildToolPath;
+        if (!string.IsNullOrEmpty (MSBuildToolPath)) {
+            c.ToolPath = MSBuildToolPath;
+        }
     });
 });
 

@@ -99,7 +99,7 @@ FilePath GetSNToolPath (string possible)
     return possible;
 }
 
-FilePath GetMSBuildToolPath (string possible)
+string GetMSBuildToolPath (string possible)
 {
     if (string.IsNullOrEmpty (possible)) {
         if (IsRunningOnLinux ()) {
