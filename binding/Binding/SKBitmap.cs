@@ -410,7 +410,11 @@ namespace SkiaSharp
 			if (codec == null) {
 				throw new ArgumentNullException (nameof (codec));
 			}
-			return Decode (codec, codec.Info);
+			var info = codec.Info;
+			if (info.AlphaType == SKAlphaType.Unpremul) {
+				info.AlphaType = SKAlphaType.Premul;
+			}
+			return Decode (codec, info);
 		}
 
 		public static SKBitmap Decode (Stream stream)
