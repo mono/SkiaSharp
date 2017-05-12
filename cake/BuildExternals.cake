@@ -65,11 +65,7 @@ Task ("externals-genapi")
     // SkiaSharp
 
     // build the dummy project
-    DotNetBuild ("binding/SkiaSharp.Generic.sln", c => { 
-        c.Configuration = "Release"; 
-        c.Properties ["Platform"] = new [] { "\"Any CPU\"" };
-        c.Verbosity = VERBOSITY;
-    });
+    RunMSBuild ("binding/SkiaSharp.Generic.sln");
     
     // generate the PCL
     FilePath input = "binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll";
@@ -84,11 +80,7 @@ Task ("externals-genapi")
 
     // HarfBuzz
 
-    DotNetBuild ("binding/HarfBuzzSharp.Generic.sln", c => { 
-        c.Configuration = "Release"; 
-        c.Properties ["Platform"] = new [] { "\"Any CPU\"" };
-        c.Verbosity = VERBOSITY;
-    });
+    RunMSBuild ("binding/HarfBuzzSharp.Generic.sln");
 
     // generate the PCL
     input = "binding/HarfBuzzSharp.Generic/bin/Release/HarfBuzzSharp.dll";
@@ -226,10 +218,7 @@ Task ("externals-windows")
         });
 
         // build libSkiaSharp
-        MSBuild ("native-builds/libSkiaSharp_windows/libSkiaSharp.sln", new MSBuildSettings { 
-            Configuration = "Release",
-            PlatformTarget = (PlatformTarget)Enum.Parse(typeof(PlatformTarget), arch),
-        });
+        RunMSBuildWithPlatformTarget ("native-builds/libSkiaSharp_windows/libSkiaSharp.sln", arch);
 
         // copy libSkiaSharp to output
         if (!DirectoryExists ("native-builds/lib/windows/" + dir)) CreateDirectory ("native-builds/lib/windows/" + dir);
@@ -245,10 +234,7 @@ Task ("externals-windows")
 
     var buildHarfBuzzArch = new Action<string, string> ((arch, dir) => {
         // build libHarfBuzzSharp
-        MSBuild ("native-builds/libHarfBuzzSharp_windows/libHarfBuzzSharp.sln", new MSBuildSettings { 
-            Configuration = "Release",
-            PlatformTarget = (PlatformTarget)Enum.Parse(typeof(PlatformTarget), arch),
-        });
+        RunMSBuildWithPlatformTarget ("native-builds/libHarfBuzzSharp_windows/libHarfBuzzSharp.sln", arch);
 
         // copy libHarfBuzzSharp to output
         if (!DirectoryExists ("native-builds/lib/windows/" + dir)) CreateDirectory ("native-builds/lib/windows/" + dir);
@@ -293,10 +279,7 @@ Task ("externals-uwp")
         });
 
         // build libSkiaSharp
-        MSBuild ("native-builds/libSkiaSharp_uwp/libSkiaSharp.sln", new MSBuildSettings { 
-            Configuration = "Release",
-            PlatformTarget = (PlatformTarget)Enum.Parse(typeof(PlatformTarget), arch),
-        });
+        RunMSBuildWithPlatformTarget ("native-builds/libSkiaSharp_uwp/libSkiaSharp.sln", arch);
 
         // copy libSkiaSharp to output
         if (!DirectoryExists ("native-builds/lib/uwp/" + dir)) CreateDirectory ("native-builds/lib/uwp/" + dir);
@@ -313,10 +296,7 @@ Task ("externals-uwp")
 
     var buildHarfBuzzArch = new Action<string, string> ((arch, dir) => {
         // build libHarfBuzzSharp
-        MSBuild ("native-builds/libHarfBuzzSharp_uwp/libHarfBuzzSharp.sln", new MSBuildSettings { 
-            Configuration = "Release",
-            PlatformTarget = (PlatformTarget)Enum.Parse(typeof(PlatformTarget), arch),
-        });
+        RunMSBuildWithPlatformTarget ("native-builds/libHarfBuzzSharp_uwp/libHarfBuzzSharp.sln", arch);
 
         // copy libHarfBuzzSharp to output
         if (!DirectoryExists ("native-builds/lib/uwp/" + dir)) CreateDirectory ("native-builds/lib/uwp/" + dir);

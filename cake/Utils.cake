@@ -98,3 +98,17 @@ FilePath GetSNToolPath (string possible)
     }
     return possible;
 }
+
+FilePath GetMSBuildToolPath (string possible)
+{
+    if (string.IsNullOrEmpty (possible)) {
+        if (IsRunningOnLinux ()) {
+            possible = "/usr/bin/msbuild";
+        } else if (IsRunningOnMac ()) {
+            possible = "/Library/Frameworks/Mono.framework/Versions/Current/Commands/msbuild";
+        } else if (IsRunningOnWindows ()) {
+            possible = null; // use the default
+        }
+    }
+    return possible;
+}

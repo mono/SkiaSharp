@@ -23,6 +23,7 @@ var NUnitConsoleToolPath = GetToolPath ("NUnit.ConsoleRunner/tools/nunit3-consol
 var GenApiToolPath = GetToolPath ("Microsoft.DotNet.BuildTools.GenAPI/tools/GenAPI.exe");
 var MDocPath = GetToolPath ("mdoc/mdoc.exe");
 var SNToolPath = GetSNToolPath (EnvironmentVariable ("SN_EXE"));
+var MSBuildToolPath = GetMSBuildToolPath (EnvironmentVariable ("MSBUILD_EXE"));
 
 var VERSION_ASSEMBLY = "1.58.0.0";
 var VERSION_FILE = "1.58.0.0";
@@ -103,10 +104,7 @@ Task ("libs")
     if (IsRunningOnWindows ()) {
         // build bindings
         RunNuGetRestore ("binding/SkiaSharp.Windows.sln");
-        DotNetBuild ("binding/SkiaSharp.Windows.sln", c => { 
-            c.Configuration = "Release"; 
-            c.Verbosity = VERBOSITY;
-        });
+        RunMSBuild ("binding/SkiaSharp.Windows.sln");
 
         // copy build output
         CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
@@ -120,10 +118,7 @@ Task ("libs")
 
         // build libHarfBuzzSharp bindings
         RunNuGetRestore ("binding/HarfBuzzSharp.Windows.sln");
-        DotNetBuild ("binding/HarfBuzzSharp.Windows.sln", c => { 
-            c.Configuration = "Release"; 
-            c.Verbosity = VERBOSITY;
-        });
+        RunMSBuild ("binding/HarfBuzzSharp.Windows.sln");
 
         // copy libHarfBuzzSharp build output
         CopyFileToDirectory ("./binding/HarfBuzzSharp.Portable/bin/Release/HarfBuzzSharp.dll", "./output/portable/");
@@ -137,10 +132,7 @@ Task ("libs")
 
         // build other source
         RunNuGetRestore ("./source/SkiaSharpSource.Windows.sln");
-        DotNetBuild ("./source/SkiaSharpSource.Windows.sln", c => { 
-            c.Configuration = "Release"; 
-            c.Verbosity = VERBOSITY;
-        });
+        RunMSBuild ("./source/SkiaSharpSource.Windows.sln");
 
         // copy the managed views
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.UWP/bin/Release/SkiaSharp.Views.UWP.dll", "./output/uwp/");
@@ -165,10 +157,7 @@ Task ("libs")
     if (IsRunningOnMac ()) {
         // build
         RunNuGetRestore ("binding/SkiaSharp.Mac.sln");
-        DotNetBuild ("binding/SkiaSharp.Mac.sln", c => { 
-            c.Configuration = "Release"; 
-            c.Verbosity = VERBOSITY;
-        });
+        RunMSBuild ("binding/SkiaSharp.Mac.sln");
 
         // copy build output
         CopyFileToDirectory ("./binding/SkiaSharp.Android/bin/Release/SkiaSharp.dll", "./output/android/");
@@ -182,10 +171,7 @@ Task ("libs")
 
         // build libHarfBuzzSharp bindings
         RunNuGetRestore ("binding/HarfBuzzSharp.Mac.sln");
-        DotNetBuild ("binding/HarfBuzzSharp.Mac.sln", c => { 
-            c.Configuration = "Release"; 
-            c.Verbosity = VERBOSITY;
-        });
+        RunMSBuild ("binding/HarfBuzzSharp.Mac.sln");
 
         // copy libHarfBuzzSharp build output
         CopyFileToDirectory ("./binding/HarfBuzzSharp.Android/bin/Release/HarfBuzzSharp.dll", "./output/android/");
@@ -199,10 +185,7 @@ Task ("libs")
 
         // build other source
         RunNuGetRestore ("./source/SkiaSharpSource.Mac.sln");
-        DotNetBuild ("./source/SkiaSharpSource.Mac.sln", c => { 
-            c.Configuration = "Release"; 
-            c.Verbosity = VERBOSITY;
-        });
+        RunMSBuild ("./source/SkiaSharpSource.Mac.sln");
 
         // copy other outputs
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Android/bin/Release/SkiaSharp.Views.Android.dll", "./output/android/");
@@ -230,30 +213,21 @@ Task ("libs")
     if (IsRunningOnLinux ()) {
         // build
         RunNuGetRestore ("binding/SkiaSharp.Linux.sln");
-        DotNetBuild ("binding/SkiaSharp.Linux.sln", c => { 
-            c.Configuration = "Release"; 
-            c.Verbosity = VERBOSITY;
-        });
+        RunMSBuild ("binding/SkiaSharp.Linux.sln");
 
         // copy build output
         CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
 
         // build libHarfBuzzSharp bindings
         RunNuGetRestore ("binding/HarfBuzzSharp.Linux.sln");
-        DotNetBuild ("binding/HarfBuzzSharp.Linux.sln", c => { 
-            c.Configuration = "Release"; 
-            c.Verbosity = VERBOSITY;
-        });
+        RunMSBuild ("binding/HarfBuzzSharp.Linux.sln");
 
         // copy libHarfBuzzSharp build output
         CopyFileToDirectory ("./binding/HarfBuzzSharp.Portable/bin/Release/HarfBuzzSharp.dll", "./output/portable/");
 
         // build other source
         RunNuGetRestore ("./source/SkiaSharpSource.Linux.sln");
-        DotNetBuild ("./source/SkiaSharpSource.Linux.sln", c => { 
-            c.Configuration = "Release"; 
-            c.Verbosity = VERBOSITY;
-        });
+        RunMSBuild ("./source/SkiaSharpSource.Linux.sln");
 
         // copy SVG
         CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
@@ -348,25 +322,14 @@ Task ("tests")
 
     // Windows (x86 and x64)
     if (IsRunningOnWindows ()) {
-        DotNetBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", c => { 
-            c.Configuration = "Release"; 
-            c.Properties ["Platform"] = new [] { "x86" };
-            c.Verbosity = VERBOSITY;
-        });
+        RunMSBuildWithPlatform ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", "x86");
         RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/SkiaSharp.Desktop.Tests.dll");
-        DotNetBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", c => { 
-            c.Configuration = "Release"; 
-            c.Properties ["Platform"] = new [] { "x64" };
-            c.Verbosity = VERBOSITY;
-        });
+        RunMSBuildWithPlatform ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", "x64");
         RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Desktop.Tests.dll");
     }
     // Mac OSX (Any CPU)
     if (IsRunningOnMac ()) {
-        DotNetBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", c => { 
-            c.Configuration = "Release"; 
-            c.Verbosity = VERBOSITY;
-        });
+        RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
         RunTests("./tests/SkiaSharp.Desktop.Tests/bin/AnyCPU/Release/SkiaSharp.Desktop.Tests.dll");
     }
     // .NET Core
@@ -401,47 +364,22 @@ Task ("samples")
 
     if (IsRunningOnMac ()) {
         RunNuGetRestore ("./samples/MacSample/MacSample.sln");
-        DotNetBuild ("./samples/MacSample/MacSample.sln", c => { 
-            c.Configuration = "Release"; 
-            c.Verbosity = VERBOSITY;
-        });
+        RunMSBuildWithPlatform ("./samples/MacSample/MacSample.sln", "x86");
         RunNuGetRestore ("./samples/FormsSample/FormsSample.Mac.sln");
-        DotNetBuild ("./samples/FormsSample/FormsSample.Mac.sln", c => { 
-            c.Configuration = "Release"; 
-            c.Properties ["Platform"] = new [] { "iPhone" };
-            c.Verbosity = VERBOSITY;
-        });
+        RunMSBuildWithPlatform ("./samples/FormsSample/FormsSample.Mac.sln", "iPhone");
         RunNuGetRestore ("./samples/TvSample/TvSample.sln");
-        DotNetBuild ("./samples/TvSample/TvSample.sln", c => { 
-            c.Configuration = "Release"; 
-            c.Properties ["Platform"] = new [] { "iPhoneSimulator" };
-            c.Verbosity = VERBOSITY;
-        });
+        RunMSBuildWithPlatform ("./samples/TvSample/TvSample.sln", "iPhoneSimulator");
     }
     
     if (IsRunningOnWindows ()) {
         RunNuGetRestore ("./samples/WPFSample/WPFSample.sln");
-        DotNetBuild ("./samples/WPFSample/WPFSample.sln", c => { 
-            c.Configuration = "Release";
-            c.Properties ["Platform"] = new [] { "x86" };
-            c.Verbosity = VERBOSITY;
-        });
+        RunMSBuild ("./samples/WPFSample/WPFSample.sln");
         RunNuGetRestore ("./samples/UWPSample/UWPSample.sln");
-        DotNetBuild ("./samples/UWPSample/UWPSample.sln", c => { 
-            c.Configuration = "Release"; 
-            c.Verbosity = VERBOSITY;
-        });
+        RunMSBuild ("./samples/UWPSample/UWPSample.sln");
         RunNuGetRestore ("./samples/FormsSample/FormsSample.Windows.sln");
-        DotNetBuild ("./samples/FormsSample/FormsSample.Windows.sln", c => { 
-            c.Configuration = "Release"; 
-            c.Verbosity = VERBOSITY;
-        });
+        RunMSBuild ("./samples/FormsSample/FormsSample.Windows.sln");
         RunNuGetRestore ("./samples/WindowsSample/WindowsSample.sln");
-        DotNetBuild ("./samples/WindowsSample/WindowsSample.sln", c => { 
-            c.Configuration = "Release"; 
-            c.Properties ["Platform"] = new [] { "x86" };
-            c.Verbosity = VERBOSITY;
-        });
+        RunMSBuild ("./samples/WindowsSample/WindowsSample.sln");
     }
 });
 
@@ -513,12 +451,9 @@ Task ("update-docs")
         .Union (GetDirectories ("./source/packages/OpenTK.*/lib/net40*"));
     // add windows-specific references
     if (IsRunningOnWindows ()) {
-        // Windows.Foundation.UniversalApiContract is a winmd, so fake the dll
-        // types aren't needed here
-        DotNetBuild ("./externals/Windows.Foundation.UniversalApiContract/Windows.Foundation.UniversalApiContract.csproj", c => {
-            c.Verbosity = Verbosity.Quiet;
-            c.Verbosity = VERBOSITY;
-        });
+        // // Windows.Foundation.UniversalApiContract is a winmd, so fake the dll
+        // // types aren't needed here
+        // RunMSBuild ("./externals/Windows.Foundation.UniversalApiContract/Windows.Foundation.UniversalApiContract.csproj");
         refs = refs.Union (new DirectoryPath [] {
             "./externals/Windows.Foundation.UniversalApiContract/bin/Release",
             "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/MonoAndroid/v1.0",
@@ -871,6 +806,7 @@ Information ("NuGet.exe ToolPath: {0}", NugetToolPath);
 Information ("Xamarin-Component.exe ToolPath: {0}", XamarinComponentToolPath);
 Information ("genapi.exe ToolPath: {0}", GenApiToolPath);
 Information ("sn.exe ToolPath: {0}", SNToolPath);
+Information ("msbuild.exe ToolPath: {0}", MSBuildToolPath);
 
 if (IS_ON_CI) {
     Information ("Detected that we are building on CI, {0}.", IS_ON_FINAL_CI ? "and on FINAL CI" : "but NOT on final CI");

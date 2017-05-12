@@ -37,6 +37,31 @@ var RunDotNetCoreRestore = new Action<string> ((solution) =>
     });
 });
 
+var RunMSBuildWithPlatform = new Action<FilePath, string> ((solution, platform) =>
+{
+    MSBuild (solution, c => { 
+        c.Configuration = "Release"; 
+        c.Verbosity = VERBOSITY;
+        c.Properties ["Platform"] = new [] { platform };
+        c.ToolPath = MSBuildToolPath;
+    });
+});
+
+var RunMSBuildWithPlatformTarget = new Action<FilePath, string> ((solution, platformTarget) =>
+{
+    MSBuild (solution, c => { 
+        c.Configuration = "Release"; 
+        c.Verbosity = VERBOSITY;
+        c.PlatformTarget = (PlatformTarget)Enum.Parse(typeof(PlatformTarget), platformTarget);
+        c.ToolPath = MSBuildToolPath;
+    });
+});
+
+var RunMSBuild = new Action<FilePath> ((solution) =>
+{
+    RunMSBuildWithPlatform (solution, "\"Any CPU\"");
+});
+
 var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath) =>
 {
     if (!DirectoryExists (outputPath)) {
