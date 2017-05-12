@@ -375,6 +375,13 @@ namespace SkiaSharp
 			return SkiaApi.sk_path_get_bounds (Handle, out rect);
 		}
 
+		public SKRect ComputeTightBounds ()
+		{
+			SKRect rect;
+			SkiaApi.sk_path_compute_tight_bounds (Handle, out rect);
+			return rect;
+		}
+
 		public void Transform (SKMatrix matrix)
 		{
 			SkiaApi.sk_path_transform (Handle, ref matrix);

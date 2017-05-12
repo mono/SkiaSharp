@@ -258,19 +258,24 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		// based on https://groups.google.com/forum/#!topic/skia-discuss/bhQCWsmARzo
-		[Ignore ("Known to fail, see: https://groups.google.com/forum/#!topic/skia-discuss/bhQCWsmARzo")]
 		[Test]
 		public void TightBoundsForEnclosedPathIsNotZero ()
 		{
-			var path = new SKPath();
-			path.MoveTo(10, 20);
-			path.CubicTo(10, 20, 30, 40, 30, 40);
-			path.CubicTo(50, 60, 30, 40, 30, 40);
+			var delta = 0.001f;
 
-			var bounds = path.TightBounds;
+			var rect = SKRect.Create (10, 20, 28.889f, 28.889f);
 
-			Assert.AreEqual(SKRect.Create(10, 20, 20, 20), bounds);
+			var path = new SKPath ();
+			path.MoveTo (10, 20);
+			path.CubicTo (10, 20, 30, 40, 30, 40);
+			path.CubicTo (50, 60, 30, 40, 30, 40);
+
+			var bounds = path.ComputeTightBounds ();
+
+			Assert.AreEqual (rect.Left, bounds.Left, "Left");
+			Assert.AreEqual (rect.Top, bounds.Top, "Top");
+			Assert.AreEqual (rect.Right, bounds.Right, delta, "Right");
+			Assert.AreEqual (rect.Bottom, bounds.Bottom, delta, "Bottom");
 		}
 	}
 }
