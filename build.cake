@@ -51,6 +51,9 @@ var CI_TARGETS = new string[] { "CI", "WINDOWS-CI", "LINUX-CI", "MAC-CI" };
 var IS_ON_CI = CI_TARGETS.Contains (TARGET.ToUpper ());
 var IS_ON_FINAL_CI = TARGET.ToUpper () == "CI";
 
+// temporary flag while we wait for v5.0 to become everywhere
+var USE_MSBUILD = bool.Parse (EnvironmentVariable ("USE_MSBUILD") ?? "False");
+
 string ANDROID_HOME = EnvironmentVariable ("ANDROID_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-sdk-macosx";
 string ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? ANDROID_HOME;
 string ANDROID_NDK_HOME = EnvironmentVariable ("ANDROID_NDK_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-ndk";
