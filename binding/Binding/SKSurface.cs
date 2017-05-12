@@ -26,22 +26,26 @@ namespace SkiaSharp
 		
 		public static SKSurface Create (SKImageInfo info)
 		{
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster (ref info, IntPtr.Zero));
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster (ref cinfo, IntPtr.Zero));
 		}
 
 		public static SKSurface Create (SKImageInfo info, SKSurfaceProps props)
 		{
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster (ref info, ref props));
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster (ref cinfo, ref props));
 		}
 
 		public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes)
 		{
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster_direct (ref info, pixels, (IntPtr)rowBytes, IntPtr.Zero));
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster_direct (ref cinfo, pixels, (IntPtr)rowBytes, IntPtr.Zero));
 		}
 
 		public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes, SKSurfaceProps props)
 		{
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster_direct (ref info, pixels, (IntPtr)rowBytes, ref props));
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster_direct (ref cinfo, pixels, (IntPtr)rowBytes, ref props));
 		}
 		
 		public static SKSurface Create (GRContext context, GRBackendRenderTargetDesc desc, SKSurfaceProps props)
@@ -76,17 +80,20 @@ namespace SkiaSharp
 		
 		public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, int sampleCount, SKSurfaceProps props)
 		{
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, ref info, sampleCount, ref props));
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, ref cinfo, sampleCount, ref props));
 		}
 		
 		public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, int sampleCount)
 		{
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, ref info, sampleCount, IntPtr.Zero));
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, ref cinfo, sampleCount, IntPtr.Zero));
 		}
 		
 		public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info)
 		{
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, ref info, 0, IntPtr.Zero));
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, ref cinfo, 0, IntPtr.Zero));
 		}
 		
 		protected override void Dispose (bool disposing)
@@ -147,7 +154,8 @@ namespace SkiaSharp
 
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)
 		{
-			return SkiaApi.sk_surface_read_pixels (Handle, ref dstInfo, dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
+			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
+			return SkiaApi.sk_surface_read_pixels (Handle, ref cinfo, dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
 		}
 	}
 }

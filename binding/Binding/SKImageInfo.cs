@@ -13,6 +13,48 @@ using System.Runtime.InteropServices;
 namespace SkiaSharp
 {
 	[StructLayout(LayoutKind.Sequential)]
+	internal struct SKImageInfoNative
+	{
+		public IntPtr fColorSpace;
+		public int fWidth;
+		public int fHeight;
+		public SKColorType fColorType;
+		public SKAlphaType fAlphaType;
+
+		public static void UpdateNative (ref SKImageInfo managed, ref SKImageInfoNative native)
+		{
+			native.fColorSpace = managed.ColorSpace == null ? IntPtr.Zero : managed.ColorSpace.Handle;
+			native.fWidth = managed.Width;
+			native.fHeight = managed.Height;
+			native.fColorType = managed.ColorType;
+			native.fAlphaType = managed.AlphaType;
+		}
+
+		public static SKImageInfoNative FromManaged (ref SKImageInfo managed)
+		{
+			return new SKImageInfoNative
+			{
+				fColorSpace = managed.ColorSpace == null ? IntPtr.Zero : managed.ColorSpace.Handle,
+				fWidth = managed.Width,
+				fHeight = managed.Height,
+				fColorType = managed.ColorType,
+				fAlphaType = managed.AlphaType,
+			};
+		}
+
+		public static SKImageInfo ToManaged (ref SKImageInfoNative native)
+		{
+			return new SKImageInfo
+			{
+				ColorSpace = SKObject.GetObject<SKColorSpace> (native.fColorSpace),
+				Width = native.fWidth,
+				Height = native.fHeight,
+				ColorType = native.fColorType,
+				AlphaType = native.fAlphaType,
+			};
+		}
+	}
+
 	public struct SKImageInfo
 	{
 		public static readonly SKImageInfo Empty;
@@ -22,59 +64,56 @@ namespace SkiaSharp
 		public static readonly int PlatformColorGreenShift;
 		public static readonly int PlatformColorBlueShift;
 
-		private int width;
-		private int height;
-		private SKColorType colorType;
-		private SKAlphaType alphaType;
-
 		static SKImageInfo ()
 		{
 			PlatformColorType = SkiaApi.sk_colortype_get_default_8888 ();
 			SkiaApi.sk_color_get_bit_shift (out PlatformColorAlphaShift, out PlatformColorRedShift, out PlatformColorGreenShift, out PlatformColorBlueShift);
 		}
 
-		public int Width {
-			get { return width; }
-			set { width = value; }
-		}
+		public int Width { get; set; }
 
-		public int Height {
-			get { return height; }
-			set { height = value; }
-		}
+		public int Height { get; set; }
 
-		public SKColorType ColorType {
-			get { return colorType; }
-			set { colorType = value; }
-		}
+		public SKColorType ColorType { get; set; }
 
-		public SKAlphaType AlphaType {
-			get { return alphaType; }
-			set { alphaType = value; }
-		}
+		public SKAlphaType AlphaType { get; set; }
+
+		public SKColorSpace ColorSpace { get; set; }
 
 		public SKImageInfo (int width, int height)
 		{
-			this.width = width;
-			this.height = height;
-			this.colorType = PlatformColorType;
-			this.alphaType = SKAlphaType.Premul;
+			Width = width;
+			Height = height;
+			ColorType = PlatformColorType;
+			AlphaType = SKAlphaType.Premul;
+			ColorSpace = null;
 		}
 
 		public SKImageInfo (int width, int height, SKColorType colorType)
 		{
-			this.width = width;
-			this.height = height;
-			this.colorType = colorType;
-			this.alphaType = SKAlphaType.Premul;
+			Width = width;
+			Height = height;
+			ColorType = colorType;
+			AlphaType = SKAlphaType.Premul;
+			ColorSpace = null;
 		}
 
 		public SKImageInfo (int width, int height, SKColorType colorType, SKAlphaType alphaType)
 		{
-			this.width = width;
-			this.height = height;
-			this.colorType = colorType;
-			this.alphaType = alphaType;
+			Width = width;
+			Height = height;
+			ColorType = colorType;
+			AlphaType = alphaType;
+			ColorSpace = null;
+		}
+
+		public SKImageInfo (int width, int height, SKColorType colorType, SKAlphaType alphaType, SKColorSpace colorspace)
+		{
+			Width = width;
+			Height = height;
+			ColorType = colorType;
+			AlphaType = alphaType;
+			ColorSpace = colorspace;
 		}
 
 		public int BytesPerPixel {

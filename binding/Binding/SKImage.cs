@@ -94,7 +94,8 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (pixels));
 
 			var ct = (ctable == null ? IntPtr.Zero : ctable.Handle);
-			var handle = SkiaApi.sk_image_new_raster_copy_with_colortable (ref info, pixels, (IntPtr) rowBytes, ct);
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			var handle = SkiaApi.sk_image_new_raster_copy_with_colortable (ref cinfo, pixels, (IntPtr) rowBytes, ct);
 			return GetObject<SKImage> (handle);
 		}
 
@@ -109,7 +110,8 @@ namespace SkiaSharp
 		{
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
-			return GetObject<SKImage> (SkiaApi.sk_image_new_raster_data (ref info, data.Handle, (IntPtr) rowBytes));	
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return GetObject<SKImage> (SkiaApi.sk_image_new_raster_data (ref cinfo, data.Handle, (IntPtr) rowBytes));	
 		}
 
 		public static SKImage FromPixels (SKImageInfo info, IntPtr pixels)
@@ -307,7 +309,7 @@ namespace SkiaSharp
 		public int Height => SkiaApi.sk_image_get_height (Handle); 
 		public uint UniqueId => SkiaApi.sk_image_get_unique_id (Handle);
 		public SKAlphaType AlphaType => SkiaApi.sk_image_get_alpha_type (Handle);
-		public bool IsAlphaOnly => SkiaApi.sk_image_is_alpha_only (Handle);
+		public bool IsAlphaOnly => SkiaApi.sk_image_is_alpha_only(Handle);
 
 		public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY)
 		{
@@ -345,7 +347,8 @@ namespace SkiaSharp
 
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY, SKImageCachingHint cachingHint)
 		{
-			return SkiaApi.sk_image_read_pixels (Handle, ref dstInfo, dstPixels, (IntPtr)dstRowBytes, srcX, srcY, cachingHint);
+			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
+			return SkiaApi.sk_image_read_pixels (Handle, ref cinfo, dstPixels, (IntPtr)dstRowBytes, srcX, srcY, cachingHint);
 		}
 
 		public bool ReadPixels (SKPixmap pixmap, int srcX, int srcY)

@@ -37,8 +37,10 @@ namespace SkiaSharp
 		}
 
 		public SKPixmap (SKImageInfo info, IntPtr addr, int rowBytes, SKColorTable ctable = null)
-			: this (SkiaApi.sk_pixmap_new_with_params (ref info, addr, (IntPtr)rowBytes, ctable == null ? IntPtr.Zero : ctable.Handle), true)
+			: this (IntPtr.Zero, true)
 		{
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			Handle = SkiaApi.sk_pixmap_new_with_params (ref cinfo, addr, (IntPtr)rowBytes, ctable == null ? IntPtr.Zero : ctable.Handle);
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException (UnableToCreateInstanceMessage);
 			}
@@ -60,14 +62,15 @@ namespace SkiaSharp
 
 		public void Reset (SKImageInfo info, IntPtr addr, int rowBytes, SKColorTable ctable = null)
 		{
-			SkiaApi.sk_pixmap_reset_with_params (Handle, ref info, addr, (IntPtr)rowBytes, ctable == null ? IntPtr.Zero : ctable.Handle);
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			SkiaApi.sk_pixmap_reset_with_params (Handle, ref cinfo, addr, (IntPtr)rowBytes, ctable == null ? IntPtr.Zero : ctable.Handle);
 		}
 
 		public SKImageInfo Info {
 			get {
-				SKImageInfo info;
-				SkiaApi.sk_pixmap_get_info (Handle, out info);
-				return info;
+				SKImageInfoNative cinfo;
+				SkiaApi.sk_pixmap_get_info (Handle, out cinfo);
+				return SKImageInfoNative.ToManaged (ref cinfo);
 			}
 		}
 
@@ -85,6 +88,10 @@ namespace SkiaSharp
 
 		public SKAlphaType AlphaType {
 			get { return Info.AlphaType; }
+		}
+
+		public SKColorSpace ColorSpace {
+			get { return Info.ColorSpace; }
 		}
 
 		public int BytesPerPixel {

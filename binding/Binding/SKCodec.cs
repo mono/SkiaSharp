@@ -35,9 +35,9 @@ namespace SkiaSharp
 
 		public SKImageInfo Info {
 			get {
-				SKImageInfo info;
-				SkiaApi.sk_codec_get_info (Handle, out info);
-				return info;
+				SKImageInfoNative cinfo;
+				SkiaApi.sk_codec_get_info (Handle, out cinfo);
+				return SKImageInfoNative.ToManaged (ref cinfo);
 			}
 		}
 
@@ -141,7 +141,8 @@ namespace SkiaSharp
 				var subset = options.Subset.Value;
 				nativeOptions.fSubset = &subset;
 			}
-			return SkiaApi.sk_codec_get_pixels (Handle, ref info, pixels, (IntPtr)rowBytes, ref nativeOptions, colorTable, ref colorTableCount);
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return SkiaApi.sk_codec_get_pixels (Handle, ref cinfo, pixels, (IntPtr)rowBytes, ref nativeOptions, colorTable, ref colorTableCount);
 		}
 
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options)
@@ -196,7 +197,8 @@ namespace SkiaSharp
 				var subset = options.Subset.Value;
 				nativeOptions.fSubset = &subset;
 			}
-			return SkiaApi.sk_codec_start_incremental_decode (Handle, ref info, pixels, (IntPtr)rowBytes, ref nativeOptions, colorTable, ref colorTableCount);
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return SkiaApi.sk_codec_start_incremental_decode (Handle, ref cinfo, pixels, (IntPtr)rowBytes, ref nativeOptions, colorTable, ref colorTableCount);
 		}
 
 		public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options)
@@ -207,7 +209,8 @@ namespace SkiaSharp
 
 		public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes)
 		{
-			return SkiaApi.sk_codec_start_incremental_decode (Handle, ref info, pixels, (IntPtr)rowBytes, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return SkiaApi.sk_codec_start_incremental_decode (Handle, ref cinfo, pixels, (IntPtr)rowBytes, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
 		}
 
 		public unsafe SKCodecResult StartIncrementalDecode(SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount)
@@ -238,7 +241,8 @@ namespace SkiaSharp
 				var subset = options.Subset.Value;
 				nativeOptions.fSubset = &subset;
 			}
-			return SkiaApi.sk_codec_start_scanline_decode (Handle, ref info, ref nativeOptions, colorTable, ref colorTableCount);
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return SkiaApi.sk_codec_start_scanline_decode (Handle, ref cinfo, ref nativeOptions, colorTable, ref colorTableCount);
 		}
 
 		public SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options)
@@ -249,7 +253,8 @@ namespace SkiaSharp
 
 		public SKCodecResult StartScanlineDecode (SKImageInfo info)
 		{
-			return SkiaApi.sk_codec_start_scanline_decode (Handle, ref info, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return SkiaApi.sk_codec_start_scanline_decode (Handle, ref cinfo, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
 		}
 
 		public SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount)

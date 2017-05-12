@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
 
@@ -95,6 +96,77 @@ namespace SkiaSharp.Tests
 				Assert.AreEqual(SKColors.Black, bitmap.GetPixel(49, 92), "Non-Antialias (1)");
 				Assert.AreEqual(SKColors.White, bitmap.GetPixel(73, 63), "Non-Antialias (2)");
 				Assert.AreEqual(SKColors.Black, bitmap.GetPixel(100, 89), "Non-Antialias (3)");
+			}
+		}
+
+		// Test for issue #282
+		[Ignore("Known to fail, see: https://github.com/mono/SkiaSharp/issues/282")]
+		[Test]
+		public void DrawTransparentImageWithHighFilterQualityWithUnpremul()
+		{
+			var oceanColor = (SKColor)0xFF9EB4D6;
+			var landColor = (SKColor)0xFFACB69B;
+
+			using (var bitmap = new SKBitmap(new SKImageInfo(300, 300)))
+			using (var canvas = new SKCanvas(bitmap))
+			{
+				canvas.Clear(oceanColor);
+
+				// decode the bitmap
+				var path = Path.Combine(PathToImages, "map.png");
+
+				using (var mapBitmap = SKBitmap.Decode(path))
+				using (var mapImage = SKImage.FromBitmap(mapBitmap))
+				{
+					var bounds = SKRect.Create(-259.9664f, -260.4489f, 1221.1876f, 1020.23273f);
+
+					// draw the bitmap
+					using (var paint = new SKPaint { FilterQuality = SKFilterQuality.High })
+					{
+						canvas.DrawImage(mapImage, bounds, paint);
+					}
+				}
+
+				// check values
+				Assert.AreEqual(oceanColor, bitmap.GetPixel(30, 30), "Ocean color");
+				Assert.AreEqual(landColor, bitmap.GetPixel(270, 270), "Land color");
+			}
+		}
+
+		// Test for the "workaround" for issue #282
+		[Test]
+		public void DrawTransparentImageWithHighFilterQualityWithPremul()
+		{
+			var oceanColor = (SKColor)0xFF9EB4D6;
+			var landColor = (SKColor)0xFFACB69B;
+
+			using (var bitmap = new SKBitmap(new SKImageInfo(300, 300)))
+			using (var canvas = new SKCanvas(bitmap))
+			{
+				canvas.Clear(oceanColor);
+
+				// decode the bitmap
+				var path = Path.Combine(PathToImages, "map.png");
+				using (var codec = SKCodec.Create(new SKFileStream(path)))
+				{
+					var info = new SKImageInfo(codec.Info.Width, codec.Info.Height);
+
+					using (var mapBitmap = SKBitmap.Decode(codec, info))
+					using (var mapImage = SKImage.FromBitmap(mapBitmap))
+					{
+						var bounds = SKRect.Create(-259.9664f, -260.4489f, 1221.1876f, 1020.23273f);
+
+						// draw the bitmap
+						using (var paint = new SKPaint { FilterQuality = SKFilterQuality.High })
+						{
+							canvas.DrawImage(mapImage, bounds, paint);
+						}
+					}
+				}
+
+				// check values
+				Assert.AreEqual(oceanColor, bitmap.GetPixel(30, 30), "Ocean color");
+				Assert.AreEqual(landColor, bitmap.GetPixel(270, 270), "Land color");
 			}
 		}
 	}
