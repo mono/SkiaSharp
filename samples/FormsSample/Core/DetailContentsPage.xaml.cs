@@ -9,7 +9,7 @@ namespace SkiaSharpSample.FormsSample
 	public partial class DetailContentsPage : ContentPage
 	{
 		private SampleBase sample;
-		private SKImage lastImage;
+		//private SKImage lastImage;
 
 		public DetailContentsPage(SampleBase showcase)
 		{
@@ -115,8 +115,8 @@ namespace SkiaSharpSample.FormsSample
 		{
 			Sample?.DrawSample(e.Surface.Canvas, e.Info.Width, e.Info.Height);
 
-			lastImage?.Dispose();
-			lastImage = e.Surface.Snapshot();
+			//lastImage?.Dispose();
+			//lastImage = e.Surface.Snapshot();
 
 			var view = sender as SKCanvasView;
 			DrawScaling(view, e.Surface.Canvas, view.CanvasSize);
@@ -126,8 +126,8 @@ namespace SkiaSharpSample.FormsSample
 		{
 			Sample?.DrawSample(e.Surface.Canvas, e.RenderTarget.Width, e.RenderTarget.Height);
 
-			lastImage?.Dispose();
-			lastImage = e.Surface.Snapshot();
+			//lastImage?.Dispose();
+			//lastImage = e.Surface.Snapshot();
 
 			var view = sender as SKGLView;
 			DrawScaling(view, e.Surface.Canvas, view.CanvasSize);
