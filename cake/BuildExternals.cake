@@ -573,7 +573,7 @@ Task ("externals-tvos")
                 "  is_official_build=true skia_enable_tools=false" +
                 "  target_os=\"tvos\" target_cpu=\"" + skiaArch + "\"" +
                 "  skia_use_icu=false skia_use_sfntly=false" +
-                "  extra_cflags=[ \"-DSKIA_C_DLL\", \"-mtvos-version-min=9.0\" ]" +
+                "  extra_cflags=[ \"-DSK_BUILD_FOR_TVOS\", \"-DSKIA_C_DLL\", \"-mtvos-version-min=9.0\" ]" +
                 "  extra_ldflags=[ \"-Wl,tvos_version_min=9.0\" ]" +
                 "'",
             WorkingDirectory = SKIA_PATH.FullPath,

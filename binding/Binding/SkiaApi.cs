@@ -95,15 +95,24 @@ namespace SkiaSharp
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_colorspace_equals(sk_colorspace_t src, sk_colorspace_t dst);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_colorspace_t sk_colorspace_new_named(SKColorSpaceNamed named);
+		public extern static sk_colorspace_t sk_colorspace_new_srgb();
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_colorspace_t sk_colorspace_new_srgb_linear();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_colorspace_t sk_colorspace_new_icc(IntPtr input, IntPtr len);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_colorspace_t sk_colorspace_new_icc(byte[] input, IntPtr len);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_colorspace_t sk_colorspace_new_rgb_with_gamma(SKColorSpaceRenderTargetGamma gamma, sk_matrix44_t toXYZD50);
+		public extern static sk_colorspace_t sk_colorspace_new_rgb_with_gamma(SKColorSpaceRenderTargetGamma gamma, sk_matrix44_t toXYZD50, SKColorSpaceFlags flags);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_colorspace_t sk_colorspace_new_rgb_with_coeffs(ref SKColorSpaceTransferFn coeffs, sk_matrix44_t toXYZD50);
+		public extern static sk_colorspace_t sk_colorspace_new_rgb_with_gamma_and_gamut(SKColorSpaceRenderTargetGamma gamma, SKColorSpaceGamut gamut, SKColorSpaceFlags flags);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_colorspace_t sk_colorspace_new_rgb_with_coeffs(ref SKColorSpaceTransferFn coeffs, sk_matrix44_t toXYZD50, SKColorSpaceFlags flags);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_colorspace_t sk_colorspace_new_rgb_with_coeffs_and_gamut(ref SKColorSpaceTransferFn coeffs, SKColorSpaceGamut gamut, SKColorSpaceFlags flags);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static  bool sk_colorspace_to_xyzd50(sk_colorspace_t cColorSpace, sk_matrix44_t toXYZD50);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static  bool sk_colorspaceprimaries_to_xyzd50(ref SKColorSpacePrimaries primaries, sk_matrix44_t toXYZD50);

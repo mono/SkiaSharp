@@ -2165,10 +2165,15 @@ namespace SkiaSharp
 		Binary,
 	}
 
-	public enum SKColorSpaceNamed {
+	public enum SKColorSpaceGamut {
 		Srgb,
 		AdobeRgb,
-		SrgbLinear,
+		Dcip3D65,
+		Rec2020,
+	}
+
+	public enum SKColorSpaceFlags {
+		NonLinearBlending = 0x1,
 	}
 
 	public enum SKColorSpaceRenderTargetGamma {

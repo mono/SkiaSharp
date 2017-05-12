@@ -10,7 +10,7 @@ namespace SkiaSharp.Tests
 		[Test]
 		public void CanCreateSrgb()
 		{
-			var colorspace = SKColorSpace.CreateNamed(SKColorSpaceNamed.Srgb);
+			var colorspace = SKColorSpace.CreateSrgb();
 
 			Assert.IsNotNull(colorspace);
 			Assert.IsTrue(SKColorSpace.Equal(colorspace, colorspace));
@@ -19,7 +19,7 @@ namespace SkiaSharp.Tests
 		[Test]
 		public void ImageInfoHasColorSpace()
 		{
-			var colorspace = SKColorSpace.CreateNamed(SKColorSpaceNamed.Srgb);
+			var colorspace = SKColorSpace.CreateSrgb();
 
 			var info = new SKImageInfo(100, 100, SKImageInfo.PlatformColorType, SKAlphaType.Premul, colorspace);
 			Assert.AreEqual(colorspace, info.ColorSpace);
@@ -31,7 +31,7 @@ namespace SkiaSharp.Tests
 		[Test]
 		public void SrgbColorSpaceIsCloseToSrgb()
 		{
-			var colorspace = SKColorSpace.CreateNamed(SKColorSpaceNamed.Srgb);
+			var colorspace = SKColorSpace.CreateSrgb();
 
 			Assert.IsTrue(colorspace.GammaIsCloseToSrgb);
 		}
