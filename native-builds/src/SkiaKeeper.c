@@ -13,6 +13,7 @@
 #include "sk_canvas.h"
 #include "sk_codec.h"
 #include "sk_colorfilter.h"
+#include "sk_colorspace.h"
 #include "sk_colortable.h"
 #include "sk_data.h"
 #include "sk_document.h"
@@ -50,6 +51,7 @@ void** KeepSkiaCSymbols ()
         (void*)sk_canvas_destroy,
         (void*)sk_codec_min_buffered_bytes_needed,
         (void*)sk_colorfilter_unref,
+        (void*)sk_colorspace_unref,
         (void*)sk_colortable_unref,
         (void*)sk_data_new_empty,
         (void*)sk_document_unref,

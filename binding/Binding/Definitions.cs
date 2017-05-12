@@ -1830,124 +1830,124 @@ namespace SkiaSharp
 	[StructLayout(LayoutKind.Sequential)]
 	public struct GRContextOptions {
 		[MarshalAs(UnmanagedType.I1)]
-		private bool suppressPrints;
-		private int maxTextureSizeOverride;
-		private int maxTileSizeOverride;
+		private bool fSuppressPrints;
+		private int  fMaxTextureSizeOverride;
+		private int  fMaxTileSizeOverride;
 		[MarshalAs(UnmanagedType.I1)]
-		private bool suppressDualSourceBlending;
-		private int bufferMapThreshold;
+		private bool fSuppressDualSourceBlending;
+		private int  fBufferMapThreshold;
 		[MarshalAs(UnmanagedType.I1)]
-		private bool useDrawInsteadOfPartialRenderTargetWrite;
+		private bool fUseDrawInsteadOfPartialRenderTargetWrite;
 		[MarshalAs(UnmanagedType.I1)]
-		private bool immediateMode;
+		private bool fImmediateMode;
 		[MarshalAs(UnmanagedType.I1)]
-		private bool clipBatchToBounds;
+		private bool fClipDrawOpsToBounds;
+		private int  fMaxOpCombineLookback;
+		private int  fMaxOpCombineLookahead;
 		[MarshalAs(UnmanagedType.I1)]
-		private bool drawBatchBounds;
-		private int maxBatchLookback;
-		private int maxBatchLookahead;
+		private bool fUseShaderSwizzling;
 		[MarshalAs(UnmanagedType.I1)]
-		private bool useShaderSwizzling;
+		private bool fDoManualMipmapping;
 		[MarshalAs(UnmanagedType.I1)]
-		private bool doManualMipmapping;
+		private bool fEnableInstancedRendering;
 		[MarshalAs(UnmanagedType.I1)]
-		private bool enableInstancedRendering;
+		private bool fDisableDistanceFieldPaths;
 		[MarshalAs(UnmanagedType.I1)]
-		private bool disableDistanceFieldPaths;
+		private bool fAllowPathMaskCaching;
 		[MarshalAs(UnmanagedType.I1)]
-		private bool allowPathMaskCaching;
+		private bool fForceSWPathMasks;
 		[MarshalAs(UnmanagedType.I1)]
-		private bool forceSWPathMasks;
+		private bool fRequireDecodeDisableForSRGB;
 
 		public bool SuppressPrints {
-			get { return suppressPrints; }
-			set { suppressPrints = value; }
+			get { return fSuppressPrints; }
+			set { fSuppressPrints = value; }
 		}
 		public int MaxTextureSizeOverride {
-			get { return maxTextureSizeOverride; }
-			set { maxTextureSizeOverride = value; }
+			get { return fMaxTextureSizeOverride; }
+			set { fMaxTextureSizeOverride = value; }
 		}
 		public int MaxTileSizeOverride {
-			get { return maxTileSizeOverride; }
-			set { maxTileSizeOverride = value; }
+			get { return fMaxTileSizeOverride; }
+			set { fMaxTileSizeOverride = value; }
 		}
 		public bool SuppressDualSourceBlending {
-			get { return suppressDualSourceBlending; }
-			set { suppressDualSourceBlending = value; }
+			get { return fSuppressDualSourceBlending; }
+			set { fSuppressDualSourceBlending = value; }
 		}
 		public int BufferMapThreshold {
-			get { return bufferMapThreshold; }
-			set { bufferMapThreshold = value; }
+			get { return fBufferMapThreshold; }
+			set { fBufferMapThreshold = value; }
 		}
 		public bool UseDrawInsteadOfPartialRenderTargetWrite {
-			get { return useDrawInsteadOfPartialRenderTargetWrite; }
-			set { useDrawInsteadOfPartialRenderTargetWrite = value; }
+			get { return fUseDrawInsteadOfPartialRenderTargetWrite; }
+			set { fUseDrawInsteadOfPartialRenderTargetWrite = value; }
 		}
 		public bool ImmediateMode {
-			get { return immediateMode; }
-			set { immediateMode = value; }
+			get { return fImmediateMode; }
+			set { fImmediateMode = value; }
 		}
-		public bool ClipBatchToBounds {
-			get { return clipBatchToBounds; }
-			set { clipBatchToBounds = value; }
+		public bool ClipDrawOpsToBounds {
+			get { return fClipDrawOpsToBounds; }
+			set { fClipDrawOpsToBounds = value; }
 		}
-		public bool DrawBatchBounds {
-			get { return drawBatchBounds; }
-			set { drawBatchBounds = value; }
+		public int MaxOpCombineLookback {
+			get { return fMaxOpCombineLookback; }
+			set { fMaxOpCombineLookback = value; }
 		}
-		public int MaxBatchLookback {
-			get { return maxBatchLookback; }
-			set { maxBatchLookback = value; }
-		}
-		public int MaxBatchLookahead {
-			get { return maxBatchLookahead; }
-			set { maxBatchLookahead = value; }
+		public int MaxOpCombineLookahead {
+			get { return fMaxOpCombineLookahead; }
+			set { fMaxOpCombineLookahead = value; }
 		}
 		public bool UseShaderSwizzling {
-			get { return useShaderSwizzling; }
-			set { useShaderSwizzling = value; }
+			get { return fUseShaderSwizzling; }
+			set { fUseShaderSwizzling = value; }
 		}
 		public bool DoManualMipmapping {
-			get { return doManualMipmapping; }
-			set { doManualMipmapping = value; }
+			get { return fDoManualMipmapping; }
+			set { fDoManualMipmapping = value; }
 		}
 		public bool EnableInstancedRendering {
-			get { return enableInstancedRendering; }
-			set { enableInstancedRendering = value; }
+			get { return fEnableInstancedRendering; }
+			set { fEnableInstancedRendering = value; }
 		}
 		public bool DisableDistanceFieldPaths {
-			get { return disableDistanceFieldPaths; }
-			set { disableDistanceFieldPaths = value; }
+			get { return fDisableDistanceFieldPaths; }
+			set { fDisableDistanceFieldPaths = value; }
 		}
 		public bool AllowPathMaskCaching {
-			get { return allowPathMaskCaching; }
-			set { allowPathMaskCaching = value; }
+			get { return fAllowPathMaskCaching; }
+			set { fAllowPathMaskCaching = value; }
 		}
-		public bool ForceSWPathMasks {
-			get { return forceSWPathMasks; }
-			set { forceSWPathMasks = value; }
+		public bool ForceSoftwarePathMasks {
+			get { return fForceSWPathMasks; }
+			set { fForceSWPathMasks = value; }
+		}
+		public bool RequireDecodeDisableForSrgb {
+			get { return fRequireDecodeDisableForSRGB; }
+			set { fRequireDecodeDisableForSRGB = value; }
 		}
 
 		public static GRContextOptions Default {
 			get {
 				return new GRContextOptions {
-					suppressPrints = false,
-					maxTextureSizeOverride = int.MaxValue,
-					maxTileSizeOverride = 0,
-					suppressDualSourceBlending = false,
-					bufferMapThreshold = -1,
-					useDrawInsteadOfPartialRenderTargetWrite = false,
-					immediateMode = false,
-					clipBatchToBounds = false,
-					drawBatchBounds = false,
-					maxBatchLookback = -1,
-					maxBatchLookahead = -1,
-					useShaderSwizzling = false,
-					doManualMipmapping = false,
-					enableInstancedRendering = false,
-					disableDistanceFieldPaths = false,
-					allowPathMaskCaching = false,
-					forceSWPathMasks = false
+					fSuppressPrints = false,
+					fMaxTextureSizeOverride = 0x7FFFFFFF,
+					fMaxTileSizeOverride = 0,
+					fSuppressDualSourceBlending = false,
+					fBufferMapThreshold = -1,
+					fUseDrawInsteadOfPartialRenderTargetWrite = false,
+					fImmediateMode = false,
+					fClipDrawOpsToBounds = false,
+					fMaxOpCombineLookback = -1,
+					fMaxOpCombineLookahead = -1,
+					fUseShaderSwizzling = false,
+					fDoManualMipmapping = false,
+					fEnableInstancedRendering = false,
+					fDisableDistanceFieldPaths = false,
+					fAllowPathMaskCaching = false,
+					fForceSWPathMasks = false,
+					fRequireDecodeDisableForSRGB = true,
 				};
 			}
 		}
@@ -2165,6 +2165,121 @@ namespace SkiaSharp
 		Opaque,
 		Unpremul,
 		Binary,
+	}
+
+	public enum SKColorSpaceNamed {
+		Srgb,
+		AdobeRgb,
+		SrgbLinear,
+	}
+
+	public enum SKColorSpaceRenderTargetGamma {
+		Linear,
+		Srgb,
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct SKColorSpacePrimaries {
+		private float fRX, fRY;
+		private float fGX, fGY;
+		private float fBX, fBY;
+		private float fWX, fWY;
+
+		public SKColorSpacePrimaries (float rx, float ry, float gx, float gy, float bx, float by, float wx, float wy)
+		{
+			fRX = rx;
+			fRY = ry;
+			fGX = gx;
+			fGY = gy;
+			fBX = bx;
+			fBY = by;
+			fWX = wx;
+			fWY = wy;
+		}
+
+		public float RX { 
+			get { return fRX; }
+			set { fRX = value; }
+		}
+		public float RY { 
+			get { return fRY; }
+			set { fRY = value; }
+		}
+		public float GX { 
+			get { return fGX; }
+			set { fGX = value; }
+		}
+		public float GY { 
+			get { return fGY; }
+			set { fGY = value; }
+		}
+		public float BX { 
+			get { return fBX; }
+			set { fBX = value; }
+		}
+		public float BY { 
+			get { return fBY; }
+			set { fBY = value; }
+		}
+		public float WX { 
+			get { return fWX; }
+			set { fWX = value; }
+		}
+		public float WY { 
+			get { return fWY; }
+			set { fWY = value; }
+		}
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct SKColorSpaceTransferFn {
+		private float fG;
+		private float fA;
+		private float fB;
+		private float fC;
+		private float fD;
+		private float fE;
+		private float fF;
+
+		public SKColorSpaceTransferFn (float g, float a, float b, float c, float d, float e, float f)
+		{
+			fG = g;
+			fA = a;
+			fB = b;
+			fC = c;
+			fD = d;
+			fE = e;
+			fF = f;
+		}
+
+		public float G { 
+			get { return fG; }
+			set { fG = value; }
+		}
+		public float A { 
+			get { return fA; }
+			set { fA = value; }
+		}
+		public float B { 
+			get { return fB; }
+			set { fB = value; }
+		}
+		public float C { 
+			get { return fC; }
+			set { fC = value; }
+		}
+		public float D { 
+			get { return fD; }
+			set { fD = value; }
+		}
+		public float E { 
+			get { return fE; }
+			set { fE = value; }
+		}
+		public float F { 
+			get { return fF; }
+			set { fF = value; }
+		}
 	}
 
 	public enum SKEncodedInfoColor {

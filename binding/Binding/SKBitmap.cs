@@ -67,7 +67,8 @@ namespace SkiaSharp
 		public SKBitmap (SKImageInfo info, int rowBytes)
 			: this ()
 		{
-			if (!SkiaApi.sk_bitmap_try_alloc_pixels (Handle, ref info, (IntPtr)rowBytes)) {
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			if (!SkiaApi.sk_bitmap_try_alloc_pixels (Handle, ref cinfo, (IntPtr)rowBytes)) {
 				throw new Exception (UnableToAllocatePixelsMessage);
 			}
 		}
@@ -75,7 +76,8 @@ namespace SkiaSharp
 		public SKBitmap (SKImageInfo info, SKColorTable ctable)
 			: this ()
 		{
-			if (!SkiaApi.sk_bitmap_try_alloc_pixels_with_color_table (Handle, ref info, IntPtr.Zero, ctable != null ? ctable.Handle : IntPtr.Zero)) {
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			if (!SkiaApi.sk_bitmap_try_alloc_pixels_with_color_table (Handle, ref cinfo, IntPtr.Zero, ctable != null ? ctable.Handle : IntPtr.Zero)) {
 				throw new Exception (UnableToAllocatePixelsMessage);
 			}
 		}
@@ -211,9 +213,9 @@ namespace SkiaSharp
 
 		public SKImageInfo Info {
 			get {
-				SKImageInfo info;
-				SkiaApi.sk_bitmap_get_info (Handle, out info);
-				return info;
+				SKImageInfoNative cinfo;
+				SkiaApi.sk_bitmap_get_info (Handle, out cinfo);
+				return SKImageInfoNative.ToManaged (ref cinfo);
 			}
 		}
 
@@ -231,6 +233,10 @@ namespace SkiaSharp
 
 		public SKAlphaType AlphaType {
 			get { return Info.AlphaType; }
+		}
+
+		public SKColorSpace ColorSpace {
+			get { return Info.ColorSpace; }
 		}
 
 		public int BytesPerPixel {
@@ -524,12 +530,13 @@ namespace SkiaSharp
 
 		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable, SKBitmapReleaseDelegate releaseProc, object context)
 		{
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
 			IntPtr ct = ctable == null ? IntPtr.Zero : ctable.Handle;
 			if (releaseProc == null) {
-				return SkiaApi.sk_bitmap_install_pixels (Handle, ref info, pixels, (IntPtr)rowBytes, ct, IntPtr.Zero, IntPtr.Zero);
+				return SkiaApi.sk_bitmap_install_pixels (Handle, ref cinfo, pixels, (IntPtr)rowBytes, ct, IntPtr.Zero, IntPtr.Zero);
 			} else {
 				var ctx = new NativeDelegateContext (context, releaseProc);
-				return SkiaApi.sk_bitmap_install_pixels (Handle, ref info, pixels, (IntPtr)rowBytes, ct, releaseDelegate, ctx.NativeContext);
+				return SkiaApi.sk_bitmap_install_pixels (Handle, ref cinfo, pixels, (IntPtr)rowBytes, ct, releaseDelegate, ctx.NativeContext);
 			}
 		}
 
