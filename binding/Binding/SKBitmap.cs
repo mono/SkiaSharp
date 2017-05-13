@@ -414,6 +414,8 @@ namespace SkiaSharp
 			if (info.AlphaType == SKAlphaType.Unpremul) {
 				info.AlphaType = SKAlphaType.Premul;
 			}
+			// for backwards compatibility, remove the colorspace
+			info.ColorSpace = null;
 			return Decode (codec, info);
 		}
 

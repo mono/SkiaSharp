@@ -98,6 +98,27 @@ namespace SkiaSharp.Tests
 		}
 
 		[Test]
+		public void TestBitmapDecodeDrawsCorrectly()
+		{
+			var path = Path.Combine(PathToImages, "color-wheel.png");
+
+			using (var bitmap = SKBitmap.Decode(path))
+			using (var surface = SKSurface.Create(new SKImageInfo(200, 200))) {
+				var canvas = surface.Canvas;
+				canvas.Clear(SKColors.White);
+				canvas.DrawBitmap(bitmap, 0, 0);
+
+				using (var img = surface.Snapshot())
+				using (var bmp = SKBitmap.FromImage(img)) {
+					Assert.AreEqual(new SKColor(2, 255, 42), bmp.GetPixel(20, 20));
+					Assert.AreEqual(new SKColor(1, 83, 255), bmp.GetPixel(108, 20));
+					Assert.AreEqual(new SKColor(255, 166, 1), bmp.GetPixel(20, 108));
+					Assert.AreEqual(new SKColor(255, 1, 214), bmp.GetPixel(108, 108));
+				}
+			}
+		}
+
+		[Test]
 		public void BitmapAndPixmapAreValid()
 		{
 			var info = new SKImageInfo(10, 10);
