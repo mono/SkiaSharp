@@ -34,5 +34,23 @@ namespace SkiaSharp.Tests
 				Assert.NotNull(grContext);
 			}
 		}
+
+		[Test]
+		public void GpuSurfaceIsCreated()
+		{
+			using (var ctx = CreateGlContext()) {
+				ctx.MakeCurrent();
+
+				using (var grContext = GRContext.Create(GRBackend.OpenGL))
+				using (var surface = SKSurface.Create(grContext, true, new SKImageInfo(100, 100))) {
+					Assert.NotNull(surface);
+
+					var canvas = surface.Canvas;
+					Assert.NotNull(canvas);
+
+					canvas.Clear(SKColors.Transparent);
+				}
+			}
+		}
 	}
 }
