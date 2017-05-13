@@ -36,10 +36,26 @@ namespace SkiaSharp
 			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster (ref cinfo, ref props));
 		}
 
+		public static SKSurface Create (SKPixmap pixmap)
+		{
+			if (pixmap == null) {
+				throw new ArgumentNullException (nameof (pixmap));
+			}
+			return Create (pixmap.Info, pixmap.GetPixels (), pixmap.RowBytes);
+		}
+
 		public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
 			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster_direct (ref cinfo, pixels, (IntPtr)rowBytes, IntPtr.Zero));
+		}
+
+		public static SKSurface Create (SKPixmap pixmap, SKSurfaceProps props)
+		{
+			if (pixmap == null) {
+				throw new ArgumentNullException (nameof (pixmap));
+			}
+			return Create (pixmap.Info, pixmap.GetPixels (), pixmap.RowBytes, props);
 		}
 
 		public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes, SKSurfaceProps props)
