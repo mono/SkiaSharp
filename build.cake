@@ -325,23 +325,34 @@ Task ("tests")
 
     // Windows (x86 and x64)
     if (IsRunningOnWindows ()) {
+        if (!DirectoryExists ("./output/tests/windows/x86")) CreateDirectory ("./output/tests/windows/x86");
         RunMSBuildWithPlatform ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", "x86");
-        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/SkiaSharp.Desktop.Tests.dll");
+        RunTests ("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/SkiaSharp.Desktop.Tests.dll");
+        CopyFileToDirectory ("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/TestResult.xml", "./output/tests/windows/x86");
+
+        if (!DirectoryExists ("./output/tests/windows/x64")) CreateDirectory ("./output/tests/windows/x64");
         RunMSBuildWithPlatform ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", "x64");
-        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Desktop.Tests.dll");
+        RunTests ("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Desktop.Tests.dll");
+        CopyFileToDirectory ("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/TestResult.xml", "./output/tests/windows/x64");
     }
+
     // Mac OSX (Any CPU)
     if (IsRunningOnMac ()) {
+        if (!DirectoryExists ("./output/tests/mac/AnyCPU")) CreateDirectory ("./output/tests/mac/AnyCPU");
         RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
-        RunTests("./tests/SkiaSharp.Desktop.Tests/bin/AnyCPU/Release/SkiaSharp.Desktop.Tests.dll");
+        RunTests ("./tests/SkiaSharp.Desktop.Tests/bin/AnyCPU/Release/SkiaSharp.Desktop.Tests.dll");
+        CopyFileToDirectory ("./tests/SkiaSharp.Desktop.Tests/bin/AnyCPU/Release/TestResult.xml", "./output/tests/mac/AnyCPU");
     }
+
     // .NET Core
+    if (!DirectoryExists ("./output/tests/netcore")) CreateDirectory ("./output/tests/netcore");
     RunDotNetCoreRestore ("./tests/SkiaSharp.NetCore.Tests.Runner/SkiaSharp.NetCore.Tests.Runner.sln");
     DotNetCorePublish ("./tests/SkiaSharp.NetCore.Tests.Runner", new DotNetCorePublishSettings {
         Configuration = "Release",
         OutputDirectory = "./tests/SkiaSharp.NetCore.Tests.Runner/artifacts/"
     });
-    DotNetCoreExecute ("./tests/SkiaSharp.NetCore.Tests.Runner/artifacts/SkiaSharp.NetCore.Tests.Runner.dll");
+    RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests.Runner/artifacts/SkiaSharp.NetCore.Tests.Runner.dll");
+    CopyFileToDirectory ("./tests/SkiaSharp.NetCore.Tests.Runner/artifacts/TestResult.xml", "./output/tests/netcore");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

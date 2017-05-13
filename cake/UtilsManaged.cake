@@ -104,6 +104,12 @@ var RunTests = new Action<FilePath> ((testAssembly) =>
     });
 });
 
+var RunNetCoreTests = new Action<FilePath> ((testAssembly) =>
+{
+    var dir = testAssembly.GetDirectory ();
+    DotNetCoreExecute (testAssembly, string.Format ("--work=\"{0}\"", dir));
+});
+
 var RunMdocUpdate = new Action<FilePath[], DirectoryPath, DirectoryPath[]> ((assemblies, docsRoot, refs) =>
 {
     var refArgs = string.Empty;
