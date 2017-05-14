@@ -205,8 +205,8 @@ Task ("externals-windows")
                 "  is_official_build=true skia_enable_tools=false" +
                 "  target_os=\\\"win\\\" target_cpu=\\\"" + skiaArch + "\\\"" +
                 "  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true" +
-                "  extra_cflags=[ \\\"-DSKIA_C_DLL\\\", \\\"/MD\\\", \\\"/EHsc\\\" ]" +
-                "  extra_ldflags=[ ]" +
+                "  extra_cflags=[ \\\"-DSKIA_C_DLL\\\", \\\"/MD\\\", \\\"/EHsc\\\", \\\"/Zi\\\" ]" +
+                "  extra_ldflags=[ \\\"/DEBUG\\\" ]" +
                 "\"",
             WorkingDirectory = SKIA_PATH.FullPath,
         });
@@ -265,9 +265,9 @@ Task ("externals-uwp")
                 "  target_os=\\\"winrt\\\" target_cpu=\\\"" + skiaArch + "\\\"" +
                 "  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true" +
                 "  extra_cflags=[ " + 
-                "    \\\"-DSKIA_C_DLL\\\", \\\"/MD\\\", \\\"/EHsc\\\", " + 
+                "    \\\"-DSKIA_C_DLL\\\", \\\"/MD\\\", \\\"/EHsc\\\", \\\"/Zi\\\", " + 
                 "    \\\"-DWINAPI_FAMILY=WINAPI_FAMILY_APP\\\", \\\"-DSK_BUILD_FOR_WINRT\\\", \\\"-DSK_HAS_DWRITE_1_H\\\", \\\"-DSK_HAS_DWRITE_2_H\\\", \\\"-DNO_GETENV\\\" ]" +
-                "  extra_ldflags=[ \\\"/APPCONTAINER\\\" ]" +
+                "  extra_ldflags=[ \\\"/APPCONTAINER\\\", \\\"/DEBUG\\\" ]" +
                 "\"",
             WorkingDirectory = SKIA_PATH.FullPath,
         });
