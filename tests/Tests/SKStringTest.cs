@@ -11,10 +11,7 @@ namespace SkiaSharp.Tests
 		{
 			using (var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "SpiderSymbol.ttf")))
 			{
-				if (IsLinux) // see issue #225
-					Assert.AreEqual("", typeface.FamilyName);
-				else
-					Assert.AreEqual ("SpiderSymbol", typeface.FamilyName);
+				Assert.AreEqual ("SpiderSymbol", typeface.FamilyName);
 			}
 		}
 	}
