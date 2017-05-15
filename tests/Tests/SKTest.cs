@@ -89,15 +89,18 @@ namespace SkiaSharp.Tests
 
 		protected GlContext CreateGlContext()
 		{
-			TestGlVersion();
-
-			if (IsLinux) {
-				return new GlxContext();
-			} else if (IsMac) {
-				return new CglContext();
-			} else if (IsWindows) {
-				return new WglContext();
-			} else {
+			try {
+				if (IsLinux) {
+					return new GlxContext();
+				} else if (IsMac) {
+					return new CglContext();
+				} else if (IsWindows) {
+					return new WglContext();
+				} else {
+					return null;
+				}
+			} catch (Exception ex) {
+				Assert.Ignore("Unable to create GL context: " + ex.Message);
 				return null;
 			}
 		}

@@ -41,7 +41,7 @@ namespace SkiaSharp.Tests
 				(glxMajor < 1) ||
 				(glxMajor == 1 && glxMinor < 3)) {
 				Destroy();
-				throw new Exception("GLX version 1.3 or higher required.");
+				throw new Exception($"GLX version 1.3 or higher required ({glxMajor}.{glxMinor} provided).");
 			}
 
 			var fbc = Glx.ChooseFBConfig(fDisplay, Xlib.XDefaultScreen(fDisplay), visualAttribs);
