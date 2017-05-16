@@ -2327,4 +2327,51 @@ namespace SkiaSharp
 		Allow,
 		Disallow,
 	}
+
+	public enum SKHighContrastConfigInvertStyle {
+		NoInvert,
+		InvertBrightness,
+		InvertLightness,
+	}
+
+	[StructLayout(LayoutKind.Sequential)]
+	public struct SKHighContrastConfig {
+		[MarshalAs (UnmanagedType.I1)]
+		private bool fGrayscale;
+		private SKHighContrastConfigInvertStyle fInvertStyle;
+		private float fContrast;
+		
+		public static readonly SKHighContrastConfig Default;
+
+		static SKHighContrastConfig ()
+		{
+			Default = new SKHighContrastConfig (false, SKHighContrastConfigInvertStyle.NoInvert, 0.0f);
+		}
+
+		public SKHighContrastConfig (bool grayscale, SKHighContrastConfigInvertStyle invertStyle, float contrast)
+		{
+			fGrayscale = grayscale;
+			fInvertStyle = invertStyle;
+			fContrast = contrast;
+		}
+
+		public bool Grayscale { 
+			get { return fGrayscale; }
+			set { fGrayscale = value; }
+		}
+		public SKHighContrastConfigInvertStyle InvertStyle { 
+			get { return fInvertStyle; }
+			set { fInvertStyle = value; }
+		}
+		public float Contrast { 
+			get { return fContrast; }
+			set { fContrast = value; }
+		}
+
+		public bool IsValid =>
+			(int)fInvertStyle >= (int)SKHighContrastConfigInvertStyle.NoInvert &&
+			(int)fInvertStyle <= (int)SKHighContrastConfigInvertStyle.InvertLightness &&
+			fContrast >= -1.0 &&
+			fContrast <= 1.0;
+	}
 }

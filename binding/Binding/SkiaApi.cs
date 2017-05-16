@@ -780,7 +780,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_imagefilter_t sk_imagefilter_new_spot_lit_specular(ref SKPoint3 location, ref SKPoint3 target, float specularExponent, float cutoffAngle, SKColor lightColor, float surfaceScale, float ks, float shininess, sk_imagefilter_t input /*NULL*/, sk_imagefilter_croprect_t cropRect /*NULL*/);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_imagefilter_t sk_imagefilter_new_magnifier(ref SKRect src, float inset, sk_imagefilter_t input /*NULL*/);
+		public extern static sk_imagefilter_t sk_imagefilter_new_magnifier(ref SKRect src, float inset, sk_imagefilter_t input /*NULL*/, sk_imagefilter_croprect_t cropRect /*NULL*/);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_imagefilter_t sk_imagefilter_new_matrix_convolution(ref SKSizeI kernelSize, float[] kernel, float gain, float bias, ref SKPointI kernelOffset, SKMatrixConvolutionTileMode tileMode, bool convolveAlpha, sk_imagefilter_t input /*NULL*/, sk_imagefilter_croprect_t cropRect /*NULL*/);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -803,6 +803,12 @@ namespace SkiaSharp
 		public extern static sk_imagefilter_t sk_imagefilter_new_xfermode(SKBlendMode mode, sk_imagefilter_t background, sk_imagefilter_t foreground /*NULL*/, sk_imagefilter_croprect_t cropRect /*NULL*/);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_imagefilter_t sk_imagefilter_new_arithmetic(float k1, float k2, float k3, float k4, bool enforcePMColor, sk_imagefilter_t background, sk_imagefilter_t foreground /*NULL*/, sk_imagefilter_croprect_t cropRect /*NULL*/);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_imagefilter_t sk_imagefilter_new_image_source(sk_image_t image, ref SKRect srcRect, ref SKRect dstRect, SKFilterQuality filterQuality);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_imagefilter_t sk_imagefilter_new_image_source_default(sk_image_t image);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_imagefilter_t sk_imagefilter_new_paint(sk_paint_t paint, sk_imagefilter_croprect_t cropRect /*NULL*/);
 
 		// SkColorFilter
 
@@ -822,6 +828,8 @@ namespace SkiaSharp
 		public extern static sk_colorfilter_t sk_colorfilter_new_table(byte[] table/*[256]*/);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_colorfilter_t sk_colorfilter_new_table_argb(byte[] tableA/*[256]*/, byte[] tableR/*[256]*/, byte[] tableG/*[256]*/, byte[] tableB/*[256]*/);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_colorfilter_t sk_colorfilter_new_high_contrast(ref SKHighContrastConfig config);
 
 		// SkData
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1532,6 +1540,8 @@ namespace SkiaSharp
 		public extern static sk_path_effect_t sk_path_effect_create_discrete(float segLength, float deviation, UInt32 seedAssist /*0*/);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_path_effect_t sk_path_effect_create_corner(float radius);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_path_effect_t sk_path_effect_create_arc_to(float radius);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_path_effect_t sk_path_effect_create_1d_path(sk_path_t path, float advance, float phase, SKPath1DPathEffectStyle style);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]

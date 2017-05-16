@@ -107,9 +107,9 @@ namespace SkiaSharp
 			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_spot_lit_specular(ref location, ref target, specularExponent, cutoffAngle, lightColor, surfaceScale, ks, shininess, input == null ? IntPtr.Zero : input.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
 		}
 
-		public static SKImageFilter CreateMagnifier(SKRect src, float inset, SKImageFilter input = null)
+		public static SKImageFilter CreateMagnifier(SKRect src, float inset, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null)
 		{
-			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_magnifier(ref src, inset, input == null ? IntPtr.Zero : input.Handle));
+			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_magnifier(ref src, inset, input == null ? IntPtr.Zero : input.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
 		}
 
 		public static SKImageFilter CreateMatrixConvolution(SKSizeI kernelSize, float[] kernel, float gain, float bias, SKPointI kernelOffset, SKMatrixConvolutionTileMode tileMode, bool convolveAlpha, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null)
@@ -195,6 +195,27 @@ namespace SkiaSharp
 			if (background == null)
 				throw new ArgumentNullException(nameof(background));
 			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_arithmetic(k1, k2, k3, k4, enforcePMColor, background.Handle, foreground == null ? IntPtr.Zero : foreground.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
+		}
+
+		public static SKImageFilter CreateImage(SKImage image)
+		{
+			if (image == null)
+				throw new ArgumentNullException(nameof(image));
+			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_image_source_default(image.Handle));
+		}
+
+		public static SKImageFilter CreateImage(SKImage image, SKRect src, SKRect dst, SKFilterQuality filterQuality)
+		{
+			if (image == null)
+				throw new ArgumentNullException(nameof(image));
+			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_image_source(image.Handle, ref src, ref dst, filterQuality));
+		}
+
+		public static SKImageFilter CreatePaint(SKPaint paint, SKImageFilter.CropRect cropRect = null)
+		{
+			if (paint == null)
+				throw new ArgumentNullException(nameof(paint));
+			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_paint(paint.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
 		}
 
 		public class CropRect : SKObject

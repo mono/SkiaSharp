@@ -97,5 +97,15 @@ namespace SkiaSharp
 
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_table_argb(tableA, tableR, tableG, tableB));
 		}
+
+		public static SKColorFilter CreateHighContrast(SKHighContrastConfig config)
+		{
+			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_high_contrast(ref config));
+		}
+
+		public static SKColorFilter CreateHighContrast(bool grayscale, SKHighContrastConfigInvertStyle invertStyle, float contrast)
+		{
+			return CreateHighContrast(new SKHighContrastConfig(grayscale, invertStyle, contrast));
+		}
 	}
 }
