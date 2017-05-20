@@ -21,7 +21,7 @@ var XamarinComponentToolPath = GetToolPath ("xamarin-component.exe");
 var CakeToolPath = GetToolPath ("Cake/Cake.exe");
 var NUnitConsoleToolPath = GetToolPath ("NUnit.ConsoleRunner/tools/nunit3-console.exe");
 var GenApiToolPath = GetToolPath ("Microsoft.DotNet.BuildTools.GenAPI/tools/GenAPI.exe");
-var MDocPath = GetToolPath ("mdoc/mdoc.exe");
+var MDocPath = MakeAbsolute ((FilePath)"externals/api-doc-tools/bin/Release/mdoc.exe");
 var SNToolPath = GetSNToolPath (EnvironmentVariable ("SN_EXE"));
 var MSBuildToolPath = GetMSBuildToolPath (EnvironmentVariable ("MSBUILD_EXE"));
 
@@ -457,6 +457,10 @@ Task ("update-docs")
     .IsDependentOn ("libs")
     .Does (() => 
 {
+    // first build mdoc
+    RunNuGetRestore ("./externals/api-doc-tools/apidoctools.sln");
+    RunMSBuild ("./externals/api-doc-tools/apidoctools.sln");
+
     // the reference folders to locate assemblies
     IEnumerable<DirectoryPath> refs = new DirectoryPath [] {
             "./output/portable/",
@@ -465,9 +469,9 @@ Task ("update-docs")
         .Union (GetDirectories ("./source/packages/OpenTK.*/lib/net40*"));
     // add windows-specific references
     if (IsRunningOnWindows ()) {
-        // // Windows.Foundation.UniversalApiContract is a winmd, so fake the dll
-        // // types aren't needed here
-        // RunMSBuild ("./externals/Windows.Foundation.UniversalApiContract/Windows.Foundation.UniversalApiContract.csproj");
+        // Windows.Foundation.UniversalApiContract is a winmd, so fake the dll
+        // types aren't needed here
+        RunMSBuild ("./externals/Windows.Foundation.UniversalApiContract/Windows.Foundation.UniversalApiContract.csproj");
         refs = refs.Union (new DirectoryPath [] {
             "./externals/Windows.Foundation.UniversalApiContract/bin/Release",
             "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/MonoAndroid/v1.0",
