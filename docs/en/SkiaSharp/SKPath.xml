@@ -726,9 +726,13 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Computes a bounds that is conservatively "snug" around the path.</summary>
+        <returns>Returns the bounds.</returns>
+        <remarks>
+          <para>This assumes that the path will be filled.</para>
+          <para></para>
+          <para>It does not attempt to collapse away contours that are logically empty (e.g. MoveTo(x, y) + LineTo(x, y)) but will include them in the calculation.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="ConicTo">
