@@ -146,6 +146,24 @@
         <remarks>Distance field computation can be expensive and yields no benefit if a path is not rendered multiple times with different transforms. Default is false.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="DisableGpuYuvConversion">
+      <MemberSignature Language="C#" Value="public bool DisableGpuYuvConversion { get; set; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance bool DisableGpuYuvConversion" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets or sets a value indicating whether the GPU will be used to perform YUV -&gt; RGB conversion when generating textures from codec-backed images.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>Default is false.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="DoManualMipmapping">
       <MemberSignature Language="C#" Value="public bool DoManualMipmapping { get; set; }" />
       <MemberSignature Language="ILAsm" Value=".property instance bool DoManualMipmapping" />
@@ -166,7 +184,7 @@
         <value>
           <para></para>
         </value>
-        <remarks>This is used when the driver's implementation (glGenerateMipmap) contains bugs. This requires mipmap level and LOD control (ie desktop or ES3).</remarks>
+        <remarks>This is used when the driver's implementation (glGenerateMipmap) contains bugs. This requires mipmap level and LOD control (ie desktop or ES3). Default is false.</remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawBatchBounds">
@@ -188,7 +206,7 @@
         <value>
           <para></para>
         </value>
-        <remarks>For debugging purposes. The wireframe rect is drawn before the batch in order to visualize batches that draw outside of their dev bounds.</remarks>
+        <remarks>For debugging purposes. The wireframe rect is drawn before the batch in order to visualize batches that draw outside of their dev bounds. Default is false.</remarks>
       </Docs>
     </Member>
     <Member MemberName="EnableInstancedRendering">
@@ -209,7 +227,7 @@
         <value>
           <para></para>
         </value>
-        <remarks>Instanced rendering is still experimental at this point and disabled by default.</remarks>
+        <remarks>Instanced rendering is still experimental at this point and disabled by default. Default is false.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ForceSWPathMasks">
@@ -229,7 +247,25 @@
         <value>
           <para></para>
         </value>
-        <remarks>This assumes the path is not recognized as a simpler shape (e.g. a rrect). This is intended for testing purposes.</remarks>
+        <remarks>This assumes the path is not recognized as a simpler shape (e.g. a rrect). This is intended for testing purposes. Default is false.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GpuPathRenderers">
+      <MemberSignature Language="C#" Value="public SkiaSharp.GRContextOptionsGpuPathRenderers GpuPathRenderers { get; set; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.GRContextOptionsGpuPathRenderers GpuPathRenderers" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.GRContextOptionsGpuPathRenderers</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets or sets the GPU path renderers.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>Default is <see cref="F:SkiaSharp.GRContextOptionsGpuPathRenderers.All" />.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ImmediateMode">
@@ -252,7 +288,7 @@
         <value>
           <para></para>
         </value>
-        <remarks>The context will issue all draws to the backend API immediately. Intended to ease debugging.</remarks>
+        <remarks>The context will issue all draws to the backend API immediately. Intended to ease debugging. Default is false.</remarks>
       </Docs>
     </Member>
     <Member MemberName="MaxBatchLookahead">
@@ -329,8 +365,10 @@
       </ReturnValue>
       <Docs>
         <summary>Gets or sets a value overriding the default maximum look-back window for operation combing.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <value>
+          <para></para>
+        </value>
+        <remarks>For debugging purposes. Default is -1.</remarks>
       </Docs>
     </Member>
     <Member MemberName="MaxTextureSizeOverride">
@@ -353,7 +391,7 @@
         <value>
           <para></para>
         </value>
-        <remarks>An option to override feature detection using backend API queries. The override can only reduce the feature set or limits, never increase them beyond the detected values.</remarks>
+        <remarks>An option to override feature detection using backend API queries. The override can only reduce the feature set or limits, never increase them beyond the detected values. Default is 0x7FFFFFFF.</remarks>
       </Docs>
     </Member>
     <Member MemberName="MaxTileSizeOverride">
@@ -376,7 +414,7 @@
         <value>
           <para></para>
         </value>
-        <remarks>An option to override feature detection using backend API queries. The override can only reduce the feature set or limits, never increase them beyond the detected values.</remarks>
+        <remarks>An option to override feature detection using backend API queries. The override can only reduce the feature set or limits, never increase them beyond the detected values. Default is 0.</remarks>
       </Docs>
     </Member>
     <Member MemberName="RequireDecodeDisableForSrgb">
@@ -391,8 +429,10 @@
       </ReturnValue>
       <Docs>
         <summary>Gets or sets a value indicating whether sRGB support will be disabled if sRGB decoding cannot be enabled.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <value>
+          <para></para>
+        </value>
+        <remarks>Default is true.</remarks>
       </Docs>
     </Member>
     <Member MemberName="SuppressDualSourceBlending">
@@ -415,9 +455,25 @@
         <value>
           <para></para>
         </value>
-        <remarks>
+        <remarks>Default is false.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SuppressPathRendering">
+      <MemberSignature Language="C#" Value="public bool SuppressPathRendering { get; set; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance bool SuppressPathRendering" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets or sets a value indicating whether the caps will never report driver support for path rendering.</summary>
+        <value>
           <para></para>
-        </remarks>
+        </value>
+        <remarks>Default is false.</remarks>
       </Docs>
     </Member>
     <Member MemberName="SuppressPrints">
@@ -440,7 +496,7 @@
         <value>
           <para></para>
         </value>
-        <remarks />
+        <remarks>Default is false.</remarks>
       </Docs>
     </Member>
     <Member MemberName="UseDrawInsteadOfPartialRenderTargetWrite">
@@ -463,7 +519,7 @@
         <value>
           <para></para>
         </value>
-        <remarks>Some GPUs have problems with partial writes of the render target.</remarks>
+        <remarks>Some GPUs have problems with partial writes of the render target. Default is false.</remarks>
       </Docs>
     </Member>
     <Member MemberName="UseShaderSwizzling">
@@ -486,9 +542,7 @@
         <value>
           <para></para>
         </value>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks>Default is false.</remarks>
       </Docs>
     </Member>
   </Members>
