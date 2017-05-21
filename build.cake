@@ -404,6 +404,10 @@ Task ("samples")
 Task ("docs")
     .Does (() => 
 {
+    // first build mdoc
+    RunNuGetRestore ("./externals/api-doc-tools/apidoctools.sln");
+    RunMSBuild ("./externals/api-doc-tools/apidoctools.sln");
+
     // log TODOs
     var docFiles = GetFiles ("./docs/**/*.xml");
     float typeCount = 0;
