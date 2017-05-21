@@ -1825,6 +1825,22 @@ namespace SkiaSharp
 		}
 	}
 
+	public enum GRContextOptionsGpuPathRenderers {
+		None              = 0,
+		DashLine          = 1 << 0,
+		StencilAndCover   = 1 << 1,
+		Msaa              = 1 << 2,
+		AaHairline        = 1 << 3,
+		AaConvex          = 1 << 4,
+		AaLinearizing     = 1 << 5,
+		Pls               = 1 << 6,
+		DistanceField     = 1 << 7,
+		Tessellating      = 1 << 8,
+		Default           = 1 << 9,
+
+		All               = GRContextOptionsGpuPathRenderers.Default | (GRContextOptionsGpuPathRenderers.Default - 1)
+	}
+
 	[StructLayout(LayoutKind.Sequential)]
 	public struct GRContextOptions {
 		[MarshalAs(UnmanagedType.I1)]
@@ -1849,13 +1865,14 @@ namespace SkiaSharp
 		[MarshalAs(UnmanagedType.I1)]
 		private bool fEnableInstancedRendering;
 		[MarshalAs(UnmanagedType.I1)]
-		private bool fDisableDistanceFieldPaths;
-		[MarshalAs(UnmanagedType.I1)]
 		private bool fAllowPathMaskCaching;
 		[MarshalAs(UnmanagedType.I1)]
-		private bool fForceSWPathMasks;
-		[MarshalAs(UnmanagedType.I1)]
 		private bool fRequireDecodeDisableForSRGB;
+		[MarshalAs(UnmanagedType.I1)]
+		private bool fDisableGpuYUVConversion;
+		[MarshalAs(UnmanagedType.I1)]
+		private bool fSuppressPathRendering;
+		private GRContextOptionsGpuPathRenderers fGpuPathRenderers;
 
 		public bool SuppressPrints {
 			get { return fSuppressPrints; }
@@ -1909,21 +1926,25 @@ namespace SkiaSharp
 			get { return fEnableInstancedRendering; }
 			set { fEnableInstancedRendering = value; }
 		}
-		public bool DisableDistanceFieldPaths {
-			get { return fDisableDistanceFieldPaths; }
-			set { fDisableDistanceFieldPaths = value; }
-		}
 		public bool AllowPathMaskCaching {
 			get { return fAllowPathMaskCaching; }
 			set { fAllowPathMaskCaching = value; }
 		}
-		public bool ForceSoftwarePathMasks {
-			get { return fForceSWPathMasks; }
-			set { fForceSWPathMasks = value; }
-		}
 		public bool RequireDecodeDisableForSrgb {
 			get { return fRequireDecodeDisableForSRGB; }
 			set { fRequireDecodeDisableForSRGB = value; }
+		}
+		public bool DisableGpuYuvConversion {
+			get { return fDisableGpuYUVConversion; }
+			set { fDisableGpuYUVConversion = value; }
+		}
+		public bool SuppressPathRendering {
+			get { return fSuppressPathRendering; }
+			set { fSuppressPathRendering = value; }
+		}
+		public GRContextOptionsGpuPathRenderers GpuPathRenderers {
+			get { return fGpuPathRenderers; }
+			set { fGpuPathRenderers = value; }
 		}
 
 		public static GRContextOptions Default {
@@ -1942,10 +1963,11 @@ namespace SkiaSharp
 					fUseShaderSwizzling = false,
 					fDoManualMipmapping = false,
 					fEnableInstancedRendering = false,
-					fDisableDistanceFieldPaths = false,
 					fAllowPathMaskCaching = false,
-					fForceSWPathMasks = false,
 					fRequireDecodeDisableForSRGB = true,
+					fDisableGpuYUVConversion = false,
+					fSuppressPathRendering = false,
+					fGpuPathRenderers = GRContextOptionsGpuPathRenderers.All,
 				};
 			}
 		}
