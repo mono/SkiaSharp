@@ -200,13 +200,14 @@ namespace SkiaSharp
 						var width = ReadNumber(e.Attribute("width"));
 						var height = ReadNumber(e.Attribute("height"));
 						var bytes = ReadBytes(e.Attributes().FirstOrDefault((arg) => arg.Name.LocalName == "href"));
-						var data = SKData.CreateCopy(bytes);
-						SKImage image = SKImage.FromEncodedData(data);
-						var rect = SKRect.Create(x, y, width, height);
-						canvas.DrawImage(image, rect);
 
-						data?.Dispose();
-						image?.Dispose();
+						using (var data = SKData.CreateCopy(bytes))
+						using (var image = SKImage.FromEncodedData(data))
+						{
+							var rect = SKRect.Create(x, y, width, height);
+							canvas.DrawImage(image, rect);
+						}
+
 						break;
 					}
 
