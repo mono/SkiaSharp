@@ -38,24 +38,24 @@ namespace SkiaSharp.Views.Forms
 		{
 			base.MouseDown(mouseEvent);
 
-			FireEvent(SKTouchActionType.Pressed, mouseEvent);
+			FireEvent(SKTouchActionType.Pressed, mouseEvent, true);
 		}
 
 		public override void MouseUp(NSEvent mouseEvent)
 		{
 			base.MouseUp(mouseEvent);
 
-			FireEvent(SKTouchActionType.Released, mouseEvent);
+			FireEvent(SKTouchActionType.Released, mouseEvent, false);
 		}
 
 		public override void MouseDragged(NSEvent mouseEvent)
 		{
 			base.MouseDragged(mouseEvent);
 
-			FireEvent(SKTouchActionType.Moved, mouseEvent);
+			FireEvent(SKTouchActionType.Moved, mouseEvent, true);
 		}
 
-		private bool FireEvent(SKTouchActionType actionType, NSEvent mouseEvent)
+		private bool FireEvent(SKTouchActionType actionType, NSEvent mouseEvent, bool inContact)
 		{
 			if (onTouchAction == null || scalePixels == null)
 				return false;
@@ -68,7 +68,7 @@ namespace SkiaSharp.Views.Forms
 
 			var point = new SKPoint((float)scalePixels(cgPoint.X), (float)scalePixels(cgPoint.Y));
 
-			var args = new SKTouchActionEventArgs(id, actionType, point);
+			var args = new SKTouchActionEventArgs(id, actionType, point, inContact);
 			onTouchAction(args);
 			return args.Handled;
 		}

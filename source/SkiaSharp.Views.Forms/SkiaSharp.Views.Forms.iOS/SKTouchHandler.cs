@@ -40,7 +40,7 @@ namespace SkiaSharp.Views.Forms
 
 			foreach (UITouch touch in touches.Cast<UITouch>())
 			{
-				FireEvent(SKTouchActionType.Pressed, touch);
+				FireEvent(SKTouchActionType.Pressed, touch, true);
 			}
 		}
 
@@ -50,7 +50,7 @@ namespace SkiaSharp.Views.Forms
 
 			foreach (UITouch touch in touches.Cast<UITouch>())
 			{
-				FireEvent(SKTouchActionType.Moved, touch);
+				FireEvent(SKTouchActionType.Moved, touch, true);
 			}
 		}
 
@@ -60,7 +60,7 @@ namespace SkiaSharp.Views.Forms
 
 			foreach (UITouch touch in touches.Cast<UITouch>())
 			{
-				FireEvent(SKTouchActionType.Released, touch);
+				FireEvent(SKTouchActionType.Released, touch, false);
 			}
 		}
 
@@ -70,11 +70,11 @@ namespace SkiaSharp.Views.Forms
 
 			foreach (UITouch touch in touches.Cast<UITouch>())
 			{
-				FireEvent(SKTouchActionType.Cancelled, touch);
+				FireEvent(SKTouchActionType.Cancelled, touch, false);
 			}
 		}
 
-		private bool FireEvent(SKTouchActionType actionType, UITouch touch)
+		private bool FireEvent(SKTouchActionType actionType, UITouch touch, bool inContact)
 		{
 			if (onTouchAction == null || scalePixels == null)
 				return false;
@@ -84,7 +84,7 @@ namespace SkiaSharp.Views.Forms
 			var cgPoint = touch.LocationInView(View);
 			var point = new SKPoint((float)scalePixels(cgPoint.X), (float)scalePixels(cgPoint.Y));
 
-			var args = new SKTouchActionEventArgs(id, actionType, point);
+			var args = new SKTouchActionEventArgs(id, actionType, point, inContact);
 			onTouchAction(args);
 			return args.Handled;
 		}

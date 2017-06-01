@@ -12,6 +12,7 @@ using Xamarin.Forms.Platform.iOS;
 using SKNativeView = SkiaSharp.Views.iOS.SKCanvasView;
 using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.iOS.SKPaintSurfaceEventArgs;
 #elif WINDOWS_UWP
+using Windows.Graphics.Display;
 using Xamarin.Forms.Platform.UWP;
 using SKNativeView = SkiaSharp.Views.UWP.SKXamlCanvas;
 using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.UWP.SKPaintSurfaceEventArgs;
@@ -43,6 +44,10 @@ namespace SkiaSharp.Views.Forms
 			touchHandler = new SKTouchHandler(
 				args => ((ISKCanvasViewController)Element).OnTouchAction(args),
 				coord => Element.IgnorePixelScaling ? coord : coord * Control.Window.BackingScaleFactor);
+#elif WINDOWS_UWP
+			touchHandler = new SKTouchHandler(
+				args => ((ISKCanvasViewController)Element).OnTouchAction(args),
+				coord => Element.IgnorePixelScaling ? coord : (float)(coord * Control.Dpi));
 #endif
 		}
 

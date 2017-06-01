@@ -48,7 +48,7 @@ namespace SkiaSharp.Views.Forms
 				case MotionEventActions.Down:
 				case MotionEventActions.PointerDown:
 					{
-						var args = new SKTouchActionEventArgs(id, SKTouchActionType.Pressed, coords);
+						var args = new SKTouchActionEventArgs(id, SKTouchActionType.Pressed, coords, true);
 						onTouchAction(args);
 						e.Handled = args.Handled;
 						break;
@@ -62,7 +62,7 @@ namespace SkiaSharp.Views.Forms
 							id = evt.GetPointerId(pointer);
 							coords = new SKPoint(scalePixels(evt.GetX(pointer)), scalePixels(evt.GetY(pointer)));
 
-							var args = new SKTouchActionEventArgs(id, SKTouchActionType.Moved, coords);
+							var args = new SKTouchActionEventArgs(id, SKTouchActionType.Moved, coords, true);
 							onTouchAction(args);
 							e.Handled = e.Handled || args.Handled;
 						}
@@ -72,7 +72,7 @@ namespace SkiaSharp.Views.Forms
 				case MotionEventActions.Up:
 				case MotionEventActions.PointerUp:
 					{
-						var args = new SKTouchActionEventArgs(id, SKTouchActionType.Released, coords);
+						var args = new SKTouchActionEventArgs(id, SKTouchActionType.Released, coords, false);
 						onTouchAction(args);
 						e.Handled = args.Handled;
 						break;
@@ -80,7 +80,7 @@ namespace SkiaSharp.Views.Forms
 
 				case MotionEventActions.Cancel:
 					{
-						var args = new SKTouchActionEventArgs(id, SKTouchActionType.Cancelled, coords);
+						var args = new SKTouchActionEventArgs(id, SKTouchActionType.Cancelled, coords, false);
 						onTouchAction(args);
 						e.Handled = args.Handled;
 						break;

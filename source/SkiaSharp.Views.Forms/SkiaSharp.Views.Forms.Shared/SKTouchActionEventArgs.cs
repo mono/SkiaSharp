@@ -5,19 +5,19 @@ namespace SkiaSharp.Views.Forms
 {
 	public class SKTouchActionEventArgs : EventArgs
 	{
-		public SKTouchActionEventArgs(long id, SKTouchActionType type, SKPoint[] locations)
+		public SKTouchActionEventArgs(long id, SKTouchActionType type, SKPoint location, bool inContact)
+			: this(id, type, SKMouseButton.Left, SKTouchDeviceType.Touch, location, inContact)
 		{
-			Id = id;
-			Type = type;
-			Locations = locations ?? new SKPoint[0];
-			Handled = true;
 		}
 
-		public SKTouchActionEventArgs(long id, SKTouchActionType type, SKPoint location)
+		public SKTouchActionEventArgs(long id, SKTouchActionType type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SKPoint location, bool inContact)
 		{
 			Id = id;
-			Type = type;
-			Locations = new[] { location };
+			ActionType = type;
+			DeviceType = deviceType;
+			MouseButton = mouseButton;
+			Location = location;
+			InContact = inContact;
 			Handled = true;
 		}
 
@@ -26,20 +26,45 @@ namespace SkiaSharp.Views.Forms
 
 		public long Id { get; private set; }
 
-		public SKTouchActionType Type { get; private set; }
+		public SKTouchActionType ActionType { get; private set; }
 
-		public SKPoint[] Locations { get; private set; }
+		public SKTouchDeviceType DeviceType { get; private set; }
 
-		public SKPoint Location => Locations.FirstOrDefault();
+		public SKMouseButton MouseButton { get; private set; }
 
-		public bool InContact => Type == SKTouchActionType.Pressed || Type == SKTouchActionType.Moved;
+		public SKPoint Location { get; private set; }
+
+		public bool InContact { get; private set; }
+
+		public override string ToString()
+		{
+			return $"{{ActionType={ActionType}, DeviceType={DeviceType}, Id={Id}, InContact={InContact}, Location={Location}, MouseButton={MouseButton}}}";
+		}
 	}
 
 	public enum SKTouchActionType
 	{
+		Entered,
 		Pressed,
 		Moved,
 		Released,
-		Cancelled
+		Cancelled,
+		Exited,
+	}
+
+	public enum SKTouchDeviceType
+	{
+		Touch,
+		Mouse,
+		Pen
+	}
+
+	public enum SKMouseButton
+	{
+		Unknown,
+
+		Left,
+		Middle,
+		Right
 	}
 }
