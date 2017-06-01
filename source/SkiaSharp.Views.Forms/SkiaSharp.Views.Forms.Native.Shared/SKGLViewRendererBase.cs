@@ -32,9 +32,23 @@ namespace SkiaSharp.Views.Forms
 
 		public SKGLViewRendererBase()
 		{
+#if __ANDROID__
 			touchHandler = new SKTouchHandler(
 				args => ((ISKGLViewController)Element).OnTouchAction(args),
 				coord => coord);
+#elif __IOS__
+			touchHandler = new SKTouchHandler(
+				args => ((ISKGLViewController)Element).OnTouchAction(args),
+				coord => coord * Control.ContentScaleFactor);
+#elif __MACOS__
+			touchHandler = new SKTouchHandler(
+				args => ((ISKGLViewController)Element).OnTouchAction(args),
+				coord => coord * Control.Window.BackingScaleFactor);
+#elif WINDOWS_UWP
+			touchHandler = new SKTouchHandler(
+				args => ((ISKGLViewController)Element).OnTouchAction(args),
+				coord => (float)(coord * Control.ContentsScale));
+#endif
 		}
 
 		protected override void OnElementChanged(ElementChangedEventArgs<TFormsView> e)
