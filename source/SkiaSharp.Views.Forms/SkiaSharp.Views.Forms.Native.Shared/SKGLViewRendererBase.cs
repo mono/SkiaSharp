@@ -28,6 +28,15 @@ namespace SkiaSharp.Views.Forms
 		where TFormsView : SKFormsView
 		where TNativeView : SKNativeView
 	{
+		private readonly SKTouchHandler touchHandler;
+
+		public SKGLViewRendererBase()
+		{
+			touchHandler = new SKTouchHandler(
+				args => ((ISKGLViewController)Element).OnTouchAction(args),
+				coord => coord);
+		}
+
 		protected override void OnElementChanged(ElementChangedEventArgs<TFormsView> e)
 		{
 			if (e.OldElement != null)
@@ -52,6 +61,7 @@ namespace SkiaSharp.Views.Forms
 #else
 					view.PaintSurface += OnPaintSurface;
 #endif
+					touchHandler.Attach(view);
 					SetNativeControl(view);
 				}
 
@@ -107,6 +117,9 @@ namespace SkiaSharp.Views.Forms
 				control.PaintSurface -= OnPaintSurface;
 #endif
 			}
+
+			// detach, regardless of state
+			touchHandler.Detach(control);
 
 			base.Dispose(disposing);
 		}

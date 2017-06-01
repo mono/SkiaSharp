@@ -27,6 +27,25 @@ namespace SkiaSharp.Views.Forms
 		where TFormsView : SKFormsView
 		where TNativeView : SKNativeView
 	{
+		private readonly SKTouchHandler touchHandler;
+
+		public SKCanvasViewRendererBase()
+		{
+#if __ANDROID__
+			touchHandler = new SKTouchHandler(
+				args => ((ISKCanvasViewController)Element).OnTouchAction(args),
+				coord => Element.IgnorePixelScaling ? (float)Context.FromPixels(coord) : coord);
+#elif __IOS__
+			touchHandler = new SKTouchHandler(
+				args => ((ISKCanvasViewController)Element).OnTouchAction(args),
+				coord => Element.IgnorePixelScaling ? coord : coord * Control.ContentScaleFactor);
+#elif __MACOS__
+			touchHandler = new SKTouchHandler(
+				args => ((ISKCanvasViewController)Element).OnTouchAction(args),
+				coord => Element.IgnorePixelScaling ? coord : coord * Control.Window.BackingScaleFactor);
+#endif
+		}
+
 		protected override void OnElementChanged(ElementChangedEventArgs<TFormsView> e)
 		{
 			if (e.OldElement != null)
@@ -47,6 +66,7 @@ namespace SkiaSharp.Views.Forms
 				{
 					var view = CreateNativeControl();
 					view.PaintSurface += OnPaintSurface;
+					touchHandler.Attach(view);
 					SetNativeControl(view);
 				}
 
@@ -101,6 +121,9 @@ namespace SkiaSharp.Views.Forms
 			{
 				control.PaintSurface -= OnPaintSurface;
 			}
+
+			// detach, regardless of state
+			touchHandler.Detach(control);
 
 			base.Dispose(disposing);
 		}

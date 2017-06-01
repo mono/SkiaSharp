@@ -17,7 +17,6 @@ namespace SkiaSharp.Views.Forms
 		{
 			var view = base.CreateNativeControl();
 
-			view.UserInteractionEnabled = false;
 			// Force the opacity to false for consistency with the other platforms
 			view.Opaque = false;
 

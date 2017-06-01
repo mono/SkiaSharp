@@ -12,6 +12,9 @@ namespace SkiaSharp.Views.Forms
 		// the user can subscribe to repaint
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
+		// the user can subscribe to touch events
+		public event EventHandler<SKTouchActionEventArgs> TouchAction;
+
 		// the native listens to this event
 		private event EventHandler SurfaceInvalidated;
 		private event EventHandler<GetCanvasSizeEventArgs> GetCanvasSize;
@@ -47,6 +50,12 @@ namespace SkiaSharp.Views.Forms
 			PaintSurface?.Invoke(this, e);
 		}
 
+		// the native view responds to a touch
+		protected virtual void OnTouchAction(SKTouchActionEventArgs e)
+		{
+			TouchAction?.Invoke(this, e);
+		}
+
 		// ISKViewController implementation
 
 		event EventHandler ISKCanvasViewController.SurfaceInvalidated
@@ -66,6 +75,11 @@ namespace SkiaSharp.Views.Forms
 			OnPaintSurface(e);
 		}
 
+		void ISKCanvasViewController.OnTouchAction(SKTouchActionEventArgs e)
+		{
+			OnTouchAction(e);
+		}
+
 		protected override SizeRequest OnMeasure(double widthConstraint, double heightConstraint)
 		{
 			return new SizeRequest(new Size(40.0, 40.0));
@@ -80,5 +94,8 @@ namespace SkiaSharp.Views.Forms
 
 		// the native view tells the user to repaint
 		void OnPaintSurface(SKPaintSurfaceEventArgs e);
+
+		// the native view responds to a touch
+		void OnTouchAction(SKTouchActionEventArgs e);
 	}
 }
