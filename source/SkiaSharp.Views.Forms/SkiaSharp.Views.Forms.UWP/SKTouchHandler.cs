@@ -17,7 +17,7 @@ namespace SkiaSharp.Views.Forms
 			this.scalePixels = scalePixels;
 		}
 
-		public void SetEnabled(View view, bool enableTouchEvents)
+		public void SetEnabled(FrameworkElement view, bool enableTouchEvents)
 		{
 			if (view != null)
 			{
