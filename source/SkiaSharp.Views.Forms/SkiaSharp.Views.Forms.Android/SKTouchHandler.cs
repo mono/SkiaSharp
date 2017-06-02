@@ -5,10 +5,10 @@ namespace SkiaSharp.Views.Forms
 {
 	internal class SKTouchHandler
 	{
-		private Action<SKTouchActionEventArgs> onTouchAction;
+		private Action<SKTouchEventArgs> onTouchAction;
 		private Func<float, float> scalePixels;
 
-		public SKTouchHandler(Action<SKTouchActionEventArgs> onTouchAction, Func<float, float> scalePixels)
+		public SKTouchHandler(Action<SKTouchEventArgs> onTouchAction, Func<float, float> scalePixels)
 		{
 			this.onTouchAction = onTouchAction;
 			this.scalePixels = scalePixels;
@@ -48,7 +48,7 @@ namespace SkiaSharp.Views.Forms
 				case MotionEventActions.Down:
 				case MotionEventActions.PointerDown:
 					{
-						var args = new SKTouchActionEventArgs(id, SKTouchActionType.Pressed, coords, true);
+						var args = new SKTouchEventArgs(id, SKTouchAction.Pressed, coords, true);
 						onTouchAction(args);
 						e.Handled = args.Handled;
 						break;
@@ -62,7 +62,7 @@ namespace SkiaSharp.Views.Forms
 							id = evt.GetPointerId(pointer);
 							coords = new SKPoint(scalePixels(evt.GetX(pointer)), scalePixels(evt.GetY(pointer)));
 
-							var args = new SKTouchActionEventArgs(id, SKTouchActionType.Moved, coords, true);
+							var args = new SKTouchEventArgs(id, SKTouchAction.Moved, coords, true);
 							onTouchAction(args);
 							e.Handled = e.Handled || args.Handled;
 						}
@@ -72,7 +72,7 @@ namespace SkiaSharp.Views.Forms
 				case MotionEventActions.Up:
 				case MotionEventActions.PointerUp:
 					{
-						var args = new SKTouchActionEventArgs(id, SKTouchActionType.Released, coords, false);
+						var args = new SKTouchEventArgs(id, SKTouchAction.Released, coords, false);
 						onTouchAction(args);
 						e.Handled = args.Handled;
 						break;
@@ -80,7 +80,7 @@ namespace SkiaSharp.Views.Forms
 
 				case MotionEventActions.Cancel:
 					{
-						var args = new SKTouchActionEventArgs(id, SKTouchActionType.Cancelled, coords, false);
+						var args = new SKTouchEventArgs(id, SKTouchAction.Cancelled, coords, false);
 						onTouchAction(args);
 						e.Handled = args.Handled;
 						break;

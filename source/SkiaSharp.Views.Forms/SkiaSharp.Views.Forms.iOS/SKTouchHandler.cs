@@ -7,10 +7,10 @@ namespace SkiaSharp.Views.Forms
 {
 	internal class SKTouchHandler : UIGestureRecognizer
 	{
-		private Action<SKTouchActionEventArgs> onTouchAction;
+		private Action<SKTouchEventArgs> onTouchAction;
 		private Func<nfloat, nfloat> scalePixels;
 
-		public SKTouchHandler(Action<SKTouchActionEventArgs> onTouchAction, Func<nfloat, nfloat> scalePixels)
+		public SKTouchHandler(Action<SKTouchEventArgs> onTouchAction, Func<nfloat, nfloat> scalePixels)
 		{
 			this.onTouchAction = onTouchAction;
 			this.scalePixels = scalePixels;
@@ -40,7 +40,7 @@ namespace SkiaSharp.Views.Forms
 
 			foreach (UITouch touch in touches.Cast<UITouch>())
 			{
-				FireEvent(SKTouchActionType.Pressed, touch, true);
+				FireEvent(SKTouchAction.Pressed, touch, true);
 			}
 		}
 
@@ -50,7 +50,7 @@ namespace SkiaSharp.Views.Forms
 
 			foreach (UITouch touch in touches.Cast<UITouch>())
 			{
-				FireEvent(SKTouchActionType.Moved, touch, true);
+				FireEvent(SKTouchAction.Moved, touch, true);
 			}
 		}
 
@@ -60,7 +60,7 @@ namespace SkiaSharp.Views.Forms
 
 			foreach (UITouch touch in touches.Cast<UITouch>())
 			{
-				FireEvent(SKTouchActionType.Released, touch, false);
+				FireEvent(SKTouchAction.Released, touch, false);
 			}
 		}
 
@@ -70,11 +70,11 @@ namespace SkiaSharp.Views.Forms
 
 			foreach (UITouch touch in touches.Cast<UITouch>())
 			{
-				FireEvent(SKTouchActionType.Cancelled, touch, false);
+				FireEvent(SKTouchAction.Cancelled, touch, false);
 			}
 		}
 
-		private bool FireEvent(SKTouchActionType actionType, UITouch touch, bool inContact)
+		private bool FireEvent(SKTouchAction actionType, UITouch touch, bool inContact)
 		{
 			if (onTouchAction == null || scalePixels == null)
 				return false;
@@ -84,7 +84,7 @@ namespace SkiaSharp.Views.Forms
 			var cgPoint = touch.LocationInView(View);
 			var point = new SKPoint((float)scalePixels(cgPoint.X), (float)scalePixels(cgPoint.Y));
 
-			var args = new SKTouchActionEventArgs(id, actionType, point, inContact);
+			var args = new SKTouchEventArgs(id, actionType, point, inContact);
 			onTouchAction(args);
 			return args.Handled;
 		}

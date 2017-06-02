@@ -19,7 +19,7 @@ namespace SkiaSharp.Views.Forms
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 	
 		// the user can subscribe to touch events
-		public event EventHandler<SKTouchActionEventArgs> TouchAction;
+		public event EventHandler<SKTouchEventArgs> Touch;
 
 		// the native listens to this event
 		private event EventHandler SurfaceInvalidated;
@@ -51,9 +51,9 @@ namespace SkiaSharp.Views.Forms
 		}
 	
 		// the native view responds to a touch
-		protected virtual void OnTouchAction(SKTouchActionEventArgs e)
+		protected virtual void OnTouch(SKTouchEventArgs e)
 		{
-			TouchAction?.Invoke(this, e);
+			Touch?.Invoke(this, e);
 		}
 
 		// ISKViewController implementation
@@ -75,9 +75,9 @@ namespace SkiaSharp.Views.Forms
 			OnPaintSurface(e);
 		}
 
-		void ISKGLViewController.OnTouchAction(SKTouchActionEventArgs e)
+		void ISKGLViewController.OnTouch(SKTouchEventArgs e)
 		{
-			OnTouchAction(e);
+			OnTouch(e);
 		}
 
 		protected override SizeRequest OnMeasure(double widthConstraint, double heightConstraint)
@@ -96,6 +96,6 @@ namespace SkiaSharp.Views.Forms
 		void OnPaintSurface(SKPaintGLSurfaceEventArgs e);
 
 		// the native view responds to a touch
-		void OnTouchAction(SKTouchActionEventArgs e);
+		void OnTouch(SKTouchEventArgs e);
 	}
 }

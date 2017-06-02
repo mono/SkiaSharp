@@ -8,10 +8,10 @@ namespace SkiaSharp.Views.Forms
 {
 	internal class SKTouchHandler
 	{
-		private Action<SKTouchActionEventArgs> onTouchAction;
+		private Action<SKTouchEventArgs> onTouchAction;
 		private Func<float, float> scalePixels;
 
-		public SKTouchHandler(Action<SKTouchActionEventArgs> onTouchAction, Func<float, float> scalePixels)
+		public SKTouchHandler(Action<SKTouchEventArgs> onTouchAction, Func<float, float> scalePixels)
 		{
 			this.onTouchAction = onTouchAction;
 			this.scalePixels = scalePixels;
@@ -47,17 +47,17 @@ namespace SkiaSharp.Views.Forms
 
 		private void OnPointerEntered(object sender, PointerRoutedEventArgs args)
 		{
-			CommonHandler(sender, SKTouchActionType.Entered, args);
+			CommonHandler(sender, SKTouchAction.Entered, args);
 		}
 
 		private void OnPointerExited(object sender, PointerRoutedEventArgs args)
 		{
-			CommonHandler(sender, SKTouchActionType.Exited, args);
+			CommonHandler(sender, SKTouchAction.Exited, args);
 		}
 
 		private void OnPointerPressed(object sender, PointerRoutedEventArgs args)
 		{
-			CommonHandler(sender, SKTouchActionType.Pressed, args);
+			CommonHandler(sender, SKTouchAction.Pressed, args);
 
 			var view = sender as FrameworkElement;
 			view.CapturePointer(args.Pointer);
@@ -65,20 +65,20 @@ namespace SkiaSharp.Views.Forms
 
 		private void OnPointerMoved(object sender, PointerRoutedEventArgs args)
 		{
-			CommonHandler(sender, SKTouchActionType.Moved, args);
+			CommonHandler(sender, SKTouchAction.Moved, args);
 		}
 
 		private void OnPointerReleased(object sender, PointerRoutedEventArgs args)
 		{
-			CommonHandler(sender, SKTouchActionType.Released, args);
+			CommonHandler(sender, SKTouchAction.Released, args);
 		}
 
 		private void OnPointerCancelled(object sender, PointerRoutedEventArgs args)
 		{
-			CommonHandler(sender, SKTouchActionType.Cancelled, args);
+			CommonHandler(sender, SKTouchAction.Cancelled, args);
 		}
 
-		private bool CommonHandler(object sender, SKTouchActionType touchActionType, PointerRoutedEventArgs evt)
+		private bool CommonHandler(object sender, SKTouchAction touchActionType, PointerRoutedEventArgs evt)
 		{
 			if (onTouchAction == null || scalePixels == null)
 				return false;
@@ -94,7 +94,7 @@ namespace SkiaSharp.Views.Forms
 			var mouse = GetMouseButton(pointerPoint);
 			var device = GetTouchDevice(evt);
 
-			var args = new SKTouchActionEventArgs(id, touchActionType, mouse, device, skPoint, evt.Pointer.IsInContact);
+			var args = new SKTouchEventArgs(id, touchActionType, mouse, device, skPoint, evt.Pointer.IsInContact);
 			onTouchAction(args);
 			return args.Handled;
 		}

@@ -3,14 +3,14 @@ using System.Linq;
 
 namespace SkiaSharp.Views.Forms
 {
-	public class SKTouchActionEventArgs : EventArgs
+	public class SKTouchEventArgs : EventArgs
 	{
-		public SKTouchActionEventArgs(long id, SKTouchActionType type, SKPoint location, bool inContact)
+		public SKTouchEventArgs(long id, SKTouchAction type, SKPoint location, bool inContact)
 			: this(id, type, SKMouseButton.Left, SKTouchDeviceType.Touch, location, inContact)
 		{
 		}
 
-		public SKTouchActionEventArgs(long id, SKTouchActionType type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SKPoint location, bool inContact)
+		public SKTouchEventArgs(long id, SKTouchAction type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SKPoint location, bool inContact)
 		{
 			Id = id;
 			ActionType = type;
@@ -26,7 +26,7 @@ namespace SkiaSharp.Views.Forms
 
 		public long Id { get; private set; }
 
-		public SKTouchActionType ActionType { get; private set; }
+		public SKTouchAction ActionType { get; private set; }
 
 		public SKTouchDeviceType DeviceType { get; private set; }
 
@@ -42,7 +42,7 @@ namespace SkiaSharp.Views.Forms
 		}
 	}
 
-	public enum SKTouchActionType
+	public enum SKTouchAction
 	{
 		Entered,
 		Pressed,

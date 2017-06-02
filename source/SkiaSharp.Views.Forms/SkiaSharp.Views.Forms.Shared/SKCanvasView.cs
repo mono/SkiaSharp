@@ -6,14 +6,14 @@ namespace SkiaSharp.Views.Forms
 	[RenderWith(typeof(SKCanvasViewRenderer))]
 	public class SKCanvasView : View, ISKCanvasViewController
 	{
-		public static readonly BindableProperty IgnorePixelScalingProperty = 
+		public static readonly BindableProperty IgnorePixelScalingProperty =
 			BindableProperty.Create(nameof(IgnorePixelScaling), typeof(bool), typeof(SKCanvasView), default(bool));
 
 		// the user can subscribe to repaint
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
 		// the user can subscribe to touch events
-		public event EventHandler<SKTouchActionEventArgs> TouchAction;
+		public event EventHandler<SKTouchEventArgs> Touch;
 
 		// the native listens to this event
 		private event EventHandler SurfaceInvalidated;
@@ -51,9 +51,9 @@ namespace SkiaSharp.Views.Forms
 		}
 
 		// the native view responds to a touch
-		protected virtual void OnTouchAction(SKTouchActionEventArgs e)
+		protected virtual void OnTouch(SKTouchEventArgs e)
 		{
-			TouchAction?.Invoke(this, e);
+			Touch?.Invoke(this, e);
 		}
 
 		// ISKViewController implementation
@@ -75,9 +75,9 @@ namespace SkiaSharp.Views.Forms
 			OnPaintSurface(e);
 		}
 
-		void ISKCanvasViewController.OnTouchAction(SKTouchActionEventArgs e)
+		void ISKCanvasViewController.OnTouch(SKTouchEventArgs e)
 		{
-			OnTouchAction(e);
+			OnTouch(e);
 		}
 
 		protected override SizeRequest OnMeasure(double widthConstraint, double heightConstraint)
@@ -96,6 +96,6 @@ namespace SkiaSharp.Views.Forms
 		void OnPaintSurface(SKPaintSurfaceEventArgs e);
 
 		// the native view responds to a touch
-		void OnTouchAction(SKTouchActionEventArgs e);
+		void OnTouch(SKTouchEventArgs e);
 	}
 }

@@ -34,19 +34,19 @@ namespace SkiaSharp.Views.Forms
 		{
 #if __ANDROID__
 			touchHandler = new SKTouchHandler(
-				args => ((ISKGLViewController)Element).OnTouchAction(args),
+				args => ((ISKGLViewController)Element).OnTouch(args),
 				coord => coord);
 #elif __IOS__
 			touchHandler = new SKTouchHandler(
-				args => ((ISKGLViewController)Element).OnTouchAction(args),
+				args => ((ISKGLViewController)Element).OnTouch(args),
 				coord => coord * Control.ContentScaleFactor);
 #elif __MACOS__
 			touchHandler = new SKTouchHandler(
-				args => ((ISKGLViewController)Element).OnTouchAction(args),
+				args => ((ISKGLViewController)Element).OnTouch(args),
 				coord => coord * Control.Window.BackingScaleFactor);
 #elif WINDOWS_UWP
 			touchHandler = new SKTouchHandler(
-				args => ((ISKGLViewController)Element).OnTouchAction(args),
+				args => ((ISKGLViewController)Element).OnTouch(args),
 				coord => (float)(coord * Control.ContentsScale));
 #endif
 		}
