@@ -9,6 +9,11 @@ namespace SkiaSharp.Views.Forms
 {
 	public class SKCanvasViewRenderer : SKCanvasViewRendererBase<SKFormsView, SKNativeView>
 	{
+		public SKCanvasViewRenderer()
+		{
+			SetDisablesUserInteraction(true);
+		}
+
 		protected override SKNativeView CreateNativeControl()
 		{
 			var view = base.CreateNativeControl();

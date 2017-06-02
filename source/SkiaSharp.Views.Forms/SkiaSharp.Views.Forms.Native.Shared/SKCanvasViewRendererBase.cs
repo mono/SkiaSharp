@@ -51,6 +51,13 @@ namespace SkiaSharp.Views.Forms
 #endif
 		}
 
+#if __IOS__
+		protected void SetDisablesUserInteraction(bool disablesUserInteraction)
+		{
+			touchHandler.DisablesUserInteraction = disablesUserInteraction;
+		}
+#endif
+
 		protected override void OnElementChanged(ElementChangedEventArgs<TFormsView> e)
 		{
 			if (e.OldElement != null)
@@ -71,11 +78,11 @@ namespace SkiaSharp.Views.Forms
 				{
 					var view = CreateNativeControl();
 					view.PaintSurface += OnPaintSurface;
-					touchHandler.Attach(view);
 					SetNativeControl(view);
 				}
 
 				// set the initial values
+				touchHandler.SetEnabled(Control, e.NewElement.EnableTouchEvents);
 				Control.IgnorePixelScaling = e.NewElement.IgnorePixelScaling;
 
 				// subscribe to events from the user
@@ -88,7 +95,7 @@ namespace SkiaSharp.Views.Forms
 
 			base.OnElementChanged(e);
 		}
-		
+
 #if __ANDROID__
 		protected override TNativeView CreateNativeControl()
 		{
@@ -105,9 +112,13 @@ namespace SkiaSharp.Views.Forms
 		{
 			base.OnElementPropertyChanged(sender, e);
 
-			if (e.PropertyName == nameof(SKFormsView.IgnorePixelScaling))
+			if (e.PropertyName == SKFormsView.IgnorePixelScalingProperty.PropertyName)
 			{
 				Control.IgnorePixelScaling = Element.IgnorePixelScaling;
+			}
+			else if (e.PropertyName == SKFormsView.EnableTouchEventsProperty.PropertyName)
+			{
+				touchHandler.SetEnabled(Control, Element.EnableTouchEvents);
 			}
 		}
 

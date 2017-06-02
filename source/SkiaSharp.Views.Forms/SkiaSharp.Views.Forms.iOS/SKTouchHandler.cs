@@ -14,20 +14,35 @@ namespace SkiaSharp.Views.Forms
 		{
 			this.onTouchAction = onTouchAction;
 			this.scalePixels = scalePixels;
+
+			DisablesUserInteraction = false;
 		}
 
-		public void Attach(UIView view)
+		public bool DisablesUserInteraction { get; set; }
+
+		public void SetEnabled(UIView view, bool enableTouchEvents)
 		{
-			view.AddGestureRecognizer(this);
+			if (view != null)
+			{
+				if (!view.UserInteractionEnabled || DisablesUserInteraction)
+				{
+					view.UserInteractionEnabled = enableTouchEvents;
+				}
+				if (enableTouchEvents && view.GestureRecognizers?.Contains(this) != true)
+				{
+					view.AddGestureRecognizer(this);
+				}
+				else if (!enableTouchEvents && view.GestureRecognizers?.Contains(this) == true)
+				{
+					view.RemoveGestureRecognizer(this);
+				}
+			}
 		}
 
 		public void Detach(UIView view)
 		{
 			// clean the view
-			if (view != null)
-			{
-				view.RemoveGestureRecognizer(this);
-			}
+			SetEnabled(view, false);
 
 			// remove references
 			onTouchAction = null;

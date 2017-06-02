@@ -51,6 +51,13 @@ namespace SkiaSharp.Views.Forms
 #endif
 		}
 
+#if __IOS__
+		protected void SetDisablesUserInteraction(bool disablesUserInteraction)
+		{
+			touchHandler.DisablesUserInteraction = disablesUserInteraction;
+		}
+#endif
+
 		protected override void OnElementChanged(ElementChangedEventArgs<TFormsView> e)
 		{
 			if (e.OldElement != null)
@@ -75,9 +82,10 @@ namespace SkiaSharp.Views.Forms
 #else
 					view.PaintSurface += OnPaintSurface;
 #endif
-					touchHandler.Attach(view);
 					SetNativeControl(view);
 				}
+
+				touchHandler.SetEnabled(Control, e.NewElement.EnableTouchEvents);
 
 				// subscribe to events from the user
 				newController.SurfaceInvalidated += OnSurfaceInvalidated;
@@ -110,6 +118,10 @@ namespace SkiaSharp.Views.Forms
 			if (e.PropertyName == SKFormsView.HasRenderLoopProperty.PropertyName)
 			{
 				SetupRenderLoop(false);
+			}
+			else if (e.PropertyName == SKFormsView.EnableTouchEventsProperty.PropertyName)
+			{
+				touchHandler.SetEnabled(Control, Element.EnableTouchEvents);
 			}
 		}
 
@@ -159,7 +171,7 @@ namespace SkiaSharp.Views.Forms
 		private void OnPaintSurface(object sender, SKNativePaintGLSurfaceEventArgs e)
 		{
 			var controller = Element as ISKGLViewController;
-			
+
 			// the control is being repainted, let the user know
 			controller?.OnPaintSurface(new SKPaintGLSurfaceEventArgs(e.Surface, e.RenderTarget));
 		}

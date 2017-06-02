@@ -17,19 +17,8 @@ namespace SkiaSharp.Views.Forms
 			this.scalePixels = scalePixels;
 		}
 
-		public void Attach(FrameworkElement view)
+		public void SetEnabled(View view, bool enableTouchEvents)
 		{
-			view.PointerEntered += OnPointerEntered;
-			view.PointerExited += OnPointerExited;
-			view.PointerPressed += OnPointerPressed;
-			view.PointerMoved += OnPointerMoved;
-			view.PointerReleased += OnPointerReleased;
-			view.PointerCanceled += OnPointerCancelled;
-		}
-
-		public void Detach(FrameworkElement view)
-		{
-			// clean the view
 			if (view != null)
 			{
 				view.PointerEntered -= OnPointerEntered;
@@ -38,7 +27,22 @@ namespace SkiaSharp.Views.Forms
 				view.PointerMoved -= OnPointerMoved;
 				view.PointerReleased -= OnPointerReleased;
 				view.PointerCanceled -= OnPointerCancelled;
+				if (enableTouchEvents)
+				{
+					view.PointerEntered += OnPointerEntered;
+					view.PointerExited += OnPointerExited;
+					view.PointerPressed += OnPointerPressed;
+					view.PointerMoved += OnPointerMoved;
+					view.PointerReleased += OnPointerReleased;
+					view.PointerCanceled += OnPointerCancelled;
+				}
 			}
+		}
+
+		public void Detach(FrameworkElement view)
+		{
+			// clean the view
+			SetEnabled(view, false);
 
 			// remove references
 			onTouchAction = null;

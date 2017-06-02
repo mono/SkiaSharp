@@ -7,7 +7,10 @@ namespace SkiaSharp.Views.Forms
 	public class SKCanvasView : View, ISKCanvasViewController
 	{
 		public static readonly BindableProperty IgnorePixelScalingProperty =
-			BindableProperty.Create(nameof(IgnorePixelScaling), typeof(bool), typeof(SKCanvasView), default(bool));
+			BindableProperty.Create(nameof(IgnorePixelScaling), typeof(bool), typeof(SKCanvasView), false);
+
+		public static readonly BindableProperty EnableTouchEventsProperty =
+			BindableProperty.Create(nameof(EnableTouchEvents), typeof(bool), typeof(SKCanvasView), false);
 
 		// the user can subscribe to repaint
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
@@ -35,6 +38,12 @@ namespace SkiaSharp.Views.Forms
 		{
 			get { return (bool)GetValue(IgnorePixelScalingProperty); }
 			set { SetValue(IgnorePixelScalingProperty, value); }
+		}
+
+		public bool EnableTouchEvents
+		{
+			get { return (bool)GetValue(EnableTouchEventsProperty); }
+			set { SetValue(EnableTouchEventsProperty, value); }
 		}
 
 		// the user asks to repaint

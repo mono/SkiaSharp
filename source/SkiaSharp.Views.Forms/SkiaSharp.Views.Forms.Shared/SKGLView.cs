@@ -7,7 +7,10 @@ namespace SkiaSharp.Views.Forms
 	public class SKGLView : View, ISKGLViewController
 	{
 		public static readonly BindableProperty HasRenderLoopProperty =
-			BindableProperty.Create("HasRenderLoop", typeof(bool), typeof(SKGLView), default(bool));
+			BindableProperty.Create("HasRenderLoop", typeof(bool), typeof(SKGLView), false);
+
+		public static readonly BindableProperty EnableTouchEventsProperty =
+			BindableProperty.Create(nameof(EnableTouchEvents), typeof(bool), typeof(SKCanvasView), false);
 
 		public bool HasRenderLoop
 		{
@@ -15,9 +18,15 @@ namespace SkiaSharp.Views.Forms
 			set { SetValue(HasRenderLoopProperty, value); }
 		}
 
+		public bool EnableTouchEvents
+		{
+			get { return (bool)GetValue(EnableTouchEventsProperty); }
+			set { SetValue(EnableTouchEventsProperty, value); }
+		}
+
 		// the user can subscribe to repaint
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
-	
+
 		// the user can subscribe to touch events
 		public event EventHandler<SKTouchEventArgs> Touch;
 
@@ -49,7 +58,7 @@ namespace SkiaSharp.Views.Forms
 		{
 			PaintSurface?.Invoke(this, e);
 		}
-	
+
 		// the native view responds to a touch
 		protected virtual void OnTouch(SKTouchEventArgs e)
 		{

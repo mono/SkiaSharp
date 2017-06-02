@@ -14,18 +14,22 @@ namespace SkiaSharp.Views.Forms
 			this.scalePixels = scalePixels;
 		}
 
-		public void Attach(View view)
+		public void SetEnabled(View view, bool enableTouchEvents)
 		{
-			view.Touch += OnTouch;
+			if (view != null)
+			{
+				view.Touch -= OnTouch;
+				if (enableTouchEvents)
+				{
+					view.Touch += OnTouch;
+				}
+			}
 		}
 
 		public void Detach(View view)
 		{
 			// clean the view
-			if (view != null)
-			{
-				view.Touch -= OnTouch;
-			}
+			SetEnabled(view, false);
 
 			// remove references
 			onTouchAction = null;

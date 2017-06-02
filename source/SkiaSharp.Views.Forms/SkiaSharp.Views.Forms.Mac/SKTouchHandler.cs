@@ -16,18 +16,25 @@ namespace SkiaSharp.Views.Forms
 			this.scalePixels = scalePixels;
 		}
 
-		public void Attach(NSView view)
+		public void SetEnabled(NSView view, bool enableTouchEvents)
 		{
-			view.AddGestureRecognizer(this);
+			if (view != null)
+			{
+				if (enableTouchEvents && !view.GestureRecognizers.Contains(this))
+				{
+					view.AddGestureRecognizer(this);
+				}
+				else if (!enableTouchEvents && view.GestureRecognizers.Contains(this))
+				{
+					view.RemoveGestureRecognizer(this);
+				}
+			}
 		}
 
 		public void Detach(NSView view)
 		{
 			// clean the view
-			if (view != null)
-			{
-				view.RemoveGestureRecognizer(this);
-			}
+			SetEnabled(view, false);
 
 			// remove references
 			onTouchAction = null;

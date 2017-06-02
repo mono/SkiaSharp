@@ -13,6 +13,11 @@ namespace SkiaSharp.Views.Forms
 	{
 		private CADisplayLink displayLink;
 
+		public SKGLViewRenderer()
+		{
+			SetDisablesUserInteraction(true);
+		}
+
 		protected override SKNativeView CreateNativeControl()
 		{
 			var view = base.CreateNativeControl();
