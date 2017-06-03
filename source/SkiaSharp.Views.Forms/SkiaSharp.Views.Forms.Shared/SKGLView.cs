@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Xamarin.Forms;
 
 namespace SkiaSharp.Views.Forms
@@ -7,7 +7,7 @@ namespace SkiaSharp.Views.Forms
 	public class SKGLView : View, ISKGLViewController
 	{
 		public static readonly BindableProperty HasRenderLoopProperty =
-			BindableProperty.Create("HasRenderLoop", typeof(bool), typeof(SKGLView), false);
+			BindableProperty.Create(nameof(HasRenderLoop), typeof(bool), typeof(SKGLView), false);
 
 		public static readonly BindableProperty EnableTouchEventsProperty =
 			BindableProperty.Create(nameof(EnableTouchEvents), typeof(bool), typeof(SKCanvasView), false);
