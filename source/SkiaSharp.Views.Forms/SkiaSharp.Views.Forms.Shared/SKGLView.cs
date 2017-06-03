@@ -10,7 +10,7 @@ namespace SkiaSharp.Views.Forms
 			BindableProperty.Create(nameof(HasRenderLoop), typeof(bool), typeof(SKGLView), false);
 
 		public static readonly BindableProperty EnableTouchEventsProperty =
-			BindableProperty.Create(nameof(EnableTouchEvents), typeof(bool), typeof(SKCanvasView), false);
+			BindableProperty.Create(nameof(EnableTouchEvents), typeof(bool), typeof(SKGLView), false);
 
 		public bool HasRenderLoop
 		{
