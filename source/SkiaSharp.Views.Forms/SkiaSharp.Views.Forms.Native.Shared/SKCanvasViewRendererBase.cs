@@ -63,7 +63,7 @@ namespace SkiaSharp.Views.Forms
 
 			base.OnElementChanged(e);
 		}
-		
+
 #if __ANDROID__
 		protected override TNativeView CreateNativeControl()
 		{
@@ -80,7 +80,7 @@ namespace SkiaSharp.Views.Forms
 		{
 			base.OnElementPropertyChanged(sender, e);
 
-			if (e.PropertyName == nameof(SKFormsView.IgnorePixelScaling))
+			if (e.PropertyName == SKFormsView.IgnorePixelScalingProperty.PropertyName)
 			{
 				Control.IgnorePixelScaling = Element.IgnorePixelScaling;
 			}

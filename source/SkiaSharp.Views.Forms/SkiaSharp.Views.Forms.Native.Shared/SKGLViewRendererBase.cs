@@ -132,7 +132,7 @@ namespace SkiaSharp.Views.Forms
 		private void OnPaintSurface(object sender, SKNativePaintGLSurfaceEventArgs e)
 		{
 			var controller = Element as ISKGLViewController;
-			
+
 			// the control is being repainted, let the user know
 			controller?.OnPaintSurface(new SKPaintGLSurfaceEventArgs(e.Surface, e.RenderTarget));
 		}

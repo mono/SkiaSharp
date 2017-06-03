@@ -49,6 +49,8 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
+		public double Dpi => dpi;
+
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
 		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)

@@ -7,7 +7,7 @@ namespace SkiaSharp.Views.Forms
 	public class SKGLView : View, ISKGLViewController
 	{
 		public static readonly BindableProperty HasRenderLoopProperty =
-			BindableProperty.Create("HasRenderLoop", typeof(bool), typeof(SKGLView), default(bool));
+			BindableProperty.Create(nameof(HasRenderLoop), typeof(bool), typeof(SKGLView), false);
 
 		public bool HasRenderLoop
 		{

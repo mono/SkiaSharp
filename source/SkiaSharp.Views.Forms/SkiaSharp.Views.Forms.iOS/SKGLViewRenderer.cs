@@ -47,17 +47,25 @@ namespace SkiaSharp.Views.Forms
 			if (!oneShot && !Element.HasRenderLoop)
 				return;
 
+			// if this is a one shot request, don't bother with the display link
+			if (oneShot)
+			{
+				var nativeView = Control;
+				nativeView?.Display();
+				return;
+			}
+
 			// create the loop
 			displayLink = CADisplayLink.Create(() =>
 			{
-				var formsView = Control;
-				var nativeView = Element;
+				var nativeView = Control;
+				var formsView = Element;
 
 				// redraw the view
-				formsView?.Display();
+				nativeView?.Display();
 
 				// stop the render loop if this was a one-shot, or the views are disposed
-				if (formsView == null || nativeView == null || !nativeView.HasRenderLoop)
+				if (nativeView == null || formsView == null || !formsView.HasRenderLoop)
 				{
 					displayLink.Invalidate();
 					displayLink.Dispose();
