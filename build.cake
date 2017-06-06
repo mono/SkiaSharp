@@ -40,8 +40,6 @@ var VERSION_PACKAGES = new Dictionary<string, string> {
     { "SkiaSharp", "1.58.0" },
     { "SkiaSharp.Views", "1.58.0" },
     { "SkiaSharp.Views.Forms", "1.58.0" },
-    { "SkiaSharp.Svg", "1.58.0" },
-    { "SkiaSharp.Extended", "1.58.0-beta" },
     { "SkiaSharp.HarfBuzz", "1.58.0-beta" },
 
     { "HarfBuzzSharp", "1.4.6" },
@@ -144,12 +142,6 @@ Task ("libs")
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms/bin/Release/SkiaSharp.Views.Forms.dll", "./output/portable/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.UWP/bin/Release/SkiaSharp.Views.Forms.dll", "./output/uwp/");
 
-        // copy SVG
-        CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
-
-        // copy Extended
-        CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended/bin/Release/SkiaSharp.Extended.dll", "./output/portable/");
-
         // copy HarfBuzz
         CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/portable/");
 
@@ -200,12 +192,6 @@ Task ("libs")
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.iOS/bin/Release/SkiaSharp.Views.Forms.dll", "./output/ios/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Mac/bin/Release/SkiaSharp.Views.Forms.dll", "./output/osx/");
 
-        // copy SVG
-        CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
-
-        // copy Extended
-        CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended/bin/Release/SkiaSharp.Extended.dll", "./output/portable/");
-
         // copy HarfBuzz
         CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/portable/");
 
@@ -231,12 +217,6 @@ Task ("libs")
         // build other source
         RunNuGetRestore ("./source/SkiaSharpSource.Linux.sln");
         RunMSBuild ("./source/SkiaSharpSource.Linux.sln");
-
-        // copy SVG
-        CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg/bin/Release/SkiaSharp.Svg.dll", "./output/portable/");
-
-        // copy Extended
-        CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended/bin/Release/SkiaSharp.Extended.dll", "./output/portable/");
 
         // copy HarfBuzz
         CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/portable/");
@@ -278,10 +258,6 @@ Task ("libs")
         Configuration = "Release",
     });
     if (CopyNetStandardOutput) {
-        // copy SVG
-        CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard/bin/Release/SkiaSharp.Svg.dll", "./output/netstandard/");
-        // copy Extended
-        CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended.NetStandard/bin/Release/SkiaSharp.Extended.dll", "./output/netstandard/");
         // copy HarfBuzz
         CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz.NetStandard/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/netstandard/");
     }
@@ -298,8 +274,6 @@ Task ("workbooks")
     // the managed bits
     CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.dll.config", "./output/workbooks/");
     CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/workbooks/");
-    CopyFileToDirectory ("./source/SkiaSharp.Svg/SkiaSharp.Svg.NetStandard/bin/Release/SkiaSharp.Svg.dll", "./output/workbooks/");
-    CopyFileToDirectory ("./source/SkiaSharp.Extended/SkiaSharp.Extended.NetStandard/bin/Release/SkiaSharp.Extended.dll", "./output/workbooks/");
 
     // the native bits
     if (IsRunningOnWindows ()) {
@@ -633,10 +607,6 @@ Task ("nuget")
             PackageNuGet ("./nuget/HarfBuzzSharp.Linux.nuspec", "./output/");
         }
     }
-    // SVG is a PCL
-    PackageNuGet ("./nuget/SkiaSharp.Svg.nuspec", "./output/");
-    // Extended is a PCL
-    PackageNuGet ("./nuget/SkiaSharp.Extended.nuspec", "./output/");
     // HarfBuzz is a PCL
     PackageNuGet ("./nuget/SkiaSharp.HarfBuzz.nuspec", "./output/");
 });
@@ -717,12 +687,6 @@ Task ("set-versions")
         VERSION_ASSEMBLY, VERSION_FILE, sha);
     UpdateAssemblyInfo (
         "./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Shared/Properties/SkiaSharpViewsFormsAssemblyInfo.cs",
-        VERSION_ASSEMBLY, VERSION_FILE, sha);
-    UpdateAssemblyInfo (
-        "./source/SkiaSharp.Svg/SkiaSharp.Svg.Shared/Properties/SkiaSharpSvgAssemblyInfo.cs",
-        VERSION_ASSEMBLY, VERSION_FILE, sha);
-    UpdateAssemblyInfo (
-        "./source/SkiaSharp.Extended/SkiaSharp.Extended.Shared/Properties/SkiaSharpExtendedAssemblyInfo.cs",
         VERSION_ASSEMBLY, VERSION_FILE, sha);
     UpdateAssemblyInfo (
         "./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz.Shared/Properties/SkiaSharpHarfBuzzAssemblyInfo.cs",
