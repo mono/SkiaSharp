@@ -17,7 +17,7 @@ var VERBOSITY = (Verbosity) Enum.Parse (typeof(Verbosity), Argument ("v", Argume
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NugetToolPath = GetToolPath ("nuget.exe");
-var XamarinComponentToolPath = GetToolPath ("xamarin-component.exe");
+var XamarinComponentToolPath = GetToolPath ("XamarinComponent/tools/xamarin-component.exe");
 var CakeToolPath = GetToolPath ("Cake/Cake.exe");
 var NUnitConsoleToolPath = GetToolPath ("NUnit.ConsoleRunner/tools/nunit3-console.exe");
 var GenApiToolPath = GetToolPath ("Microsoft.DotNet.BuildTools.GenAPI/tools/GenAPI.exe");
