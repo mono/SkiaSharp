@@ -58,7 +58,7 @@ fi
 
 # Make sure that packages.config exist.
 if [ ! -f "$PACKAGES_CONFIG" ]; then
-    if [ ! -f "$PACKAGES_CONFIG" ]; then
+    if [ ! -f "$CAKE_PACKAGES_CONFIG" ]; then
         echo "Downloading packages.config..."
         curl -Lsfo "$PACKAGES_CONFIG" http://cakebuild.net/download/bootstrapper/packages
         if [ $? -ne 0 ]; then
