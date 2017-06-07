@@ -100,14 +100,14 @@ var RunTests = new Action<FilePath> ((testAssembly) =>
 {
     var dir = testAssembly.GetDirectory ();
     RunProcess (NUnitConsoleToolPath, new ProcessSettings {
-        Arguments = string.Format ("\"{0}\" --work=\"{1}\"", testAssembly, dir),
+        Arguments = string.Format ("\"{0}\" --result=\"TestResult.xml;format=nunit2\" --work=\"{1}\"", testAssembly, dir),
     });
 });
 
 var RunNetCoreTests = new Action<FilePath> ((testAssembly) =>
 {
     var dir = testAssembly.GetDirectory ();
-    DotNetCoreExecute (testAssembly, string.Format ("--work=\"{0}\"", dir));
+    DotNetCoreExecute (testAssembly, string.Format ("--result=\"TestResult.xml;format=nunit2\" --work=\"{0}\"", dir));
 });
 
 var RunMdocUpdate = new Action<FilePath[], DirectoryPath, DirectoryPath[]> ((assemblies, docsRoot, refs) =>
