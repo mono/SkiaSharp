@@ -28,6 +28,36 @@ namespace SkiaSharp.Views.Forms
 		where TFormsView : SKFormsView
 		where TNativeView : SKNativeView
 	{
+		private readonly SKTouchHandler touchHandler;
+
+		public SKGLViewRendererBase()
+		{
+#if __ANDROID__
+			touchHandler = new SKTouchHandler(
+				args => ((ISKGLViewController)Element).OnTouch(args),
+				coord => coord);
+#elif __IOS__
+			touchHandler = new SKTouchHandler(
+				args => ((ISKGLViewController)Element).OnTouch(args),
+				coord => coord * Control.ContentScaleFactor);
+#elif __MACOS__
+			touchHandler = new SKTouchHandler(
+				args => ((ISKGLViewController)Element).OnTouch(args),
+				coord => coord * Control.Window.BackingScaleFactor);
+#elif WINDOWS_UWP
+			touchHandler = new SKTouchHandler(
+				args => ((ISKGLViewController)Element).OnTouch(args),
+				coord => (float)(coord * Control.ContentsScale));
+#endif
+		}
+
+#if __IOS__
+		protected void SetDisablesUserInteraction(bool disablesUserInteraction)
+		{
+			touchHandler.DisablesUserInteraction = disablesUserInteraction;
+		}
+#endif
+
 		protected override void OnElementChanged(ElementChangedEventArgs<TFormsView> e)
 		{
 			if (e.OldElement != null)
@@ -54,6 +84,8 @@ namespace SkiaSharp.Views.Forms
 #endif
 					SetNativeControl(view);
 				}
+
+				touchHandler.SetEnabled(Control, e.NewElement.EnableTouchEvents);
 
 				// subscribe to events from the user
 				newController.SurfaceInvalidated += OnSurfaceInvalidated;
@@ -87,6 +119,10 @@ namespace SkiaSharp.Views.Forms
 			{
 				SetupRenderLoop(false);
 			}
+			else if (e.PropertyName == SKFormsView.EnableTouchEventsProperty.PropertyName)
+			{
+				touchHandler.SetEnabled(Control, Element.EnableTouchEvents);
+			}
 		}
 
 		protected override void Dispose(bool disposing)
@@ -107,6 +143,9 @@ namespace SkiaSharp.Views.Forms
 				control.PaintSurface -= OnPaintSurface;
 #endif
 			}
+
+			// detach, regardless of state
+			touchHandler.Detach(control);
 
 			base.Dispose(disposing);
 		}

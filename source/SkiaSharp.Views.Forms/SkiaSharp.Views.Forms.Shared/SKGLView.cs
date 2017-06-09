@@ -9,14 +9,26 @@ namespace SkiaSharp.Views.Forms
 		public static readonly BindableProperty HasRenderLoopProperty =
 			BindableProperty.Create(nameof(HasRenderLoop), typeof(bool), typeof(SKGLView), false);
 
+		public static readonly BindableProperty EnableTouchEventsProperty =
+			BindableProperty.Create(nameof(EnableTouchEvents), typeof(bool), typeof(SKGLView), false);
+
 		public bool HasRenderLoop
 		{
 			get { return (bool)GetValue(HasRenderLoopProperty); }
 			set { SetValue(HasRenderLoopProperty, value); }
 		}
 
+		public bool EnableTouchEvents
+		{
+			get { return (bool)GetValue(EnableTouchEventsProperty); }
+			set { SetValue(EnableTouchEventsProperty, value); }
+		}
+
 		// the user can subscribe to repaint
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
+
+		// the user can subscribe to touch events
+		public event EventHandler<SKTouchEventArgs> Touch;
 
 		// the native listens to this event
 		private event EventHandler SurfaceInvalidated;
@@ -47,6 +59,12 @@ namespace SkiaSharp.Views.Forms
 			PaintSurface?.Invoke(this, e);
 		}
 
+		// the native view responds to a touch
+		protected virtual void OnTouch(SKTouchEventArgs e)
+		{
+			Touch?.Invoke(this, e);
+		}
+
 		// ISKViewController implementation
 
 		event EventHandler ISKGLViewController.SurfaceInvalidated
@@ -66,6 +84,11 @@ namespace SkiaSharp.Views.Forms
 			OnPaintSurface(e);
 		}
 
+		void ISKGLViewController.OnTouch(SKTouchEventArgs e)
+		{
+			OnTouch(e);
+		}
+
 		protected override SizeRequest OnMeasure(double widthConstraint, double heightConstraint)
 		{
 			return new SizeRequest(new Size(40.0, 40.0));
@@ -80,5 +103,8 @@ namespace SkiaSharp.Views.Forms
 
 		// the native view tells the user to repaint
 		void OnPaintSurface(SKPaintGLSurfaceEventArgs e);
+
+		// the native view responds to a touch
+		void OnTouch(SKTouchEventArgs e);
 	}
 }
