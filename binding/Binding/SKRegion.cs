@@ -95,7 +95,20 @@ namespace SkiaSharp
 		{
 			if (path == null)
 				throw new ArgumentNullException (nameof (path));
-			return SkiaApi.sk_region_set_path(Handle, path.Handle, Handle); 
+
+			using (var clip = new SKRegion()) {
+				SKRect rect;
+				if (path.GetBounds(out rect)) {
+					var recti = new SKRectI(
+						(int)rect.Left,
+						(int)rect.Top,
+						(int)Math.Ceiling(rect.Right),
+						(int)Math.Ceiling(rect.Bottom));
+					clip.SetRect(recti);
+				}
+
+				return SkiaApi.sk_region_set_path(Handle, path.Handle, clip.Handle);
+			}
 		}
 
 		public bool Op(SKRectI rect, SKRegionOperation op)
