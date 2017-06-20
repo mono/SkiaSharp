@@ -18,11 +18,9 @@ namespace SkiaSharp.Views.Forms
 			MouseButton = mouseButton;
 			Location = location;
 			InContact = inContact;
-			Handled = true;
 		}
 
-		// this may be removed, but for now keep it
-		internal bool Handled { get; set; }
+		public bool Handled { get; set; }
 
 		public long Id { get; private set; }
 
@@ -38,7 +36,7 @@ namespace SkiaSharp.Views.Forms
 
 		public override string ToString()
 		{
-			return $"{{ActionType={ActionType}, DeviceType={DeviceType}, Id={Id}, InContact={InContact}, Location={Location}, MouseButton={MouseButton}}}";
+			return $"{{ActionType={ActionType}, DeviceType={DeviceType}, Handled={Handled}, Id={Id}, InContact={InContact}, Location={Location}, MouseButton={MouseButton}}}";
 		}
 	}
 

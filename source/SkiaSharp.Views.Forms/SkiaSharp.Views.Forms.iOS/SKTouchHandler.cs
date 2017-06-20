@@ -55,7 +55,10 @@ namespace SkiaSharp.Views.Forms
 
 			foreach (UITouch touch in touches.Cast<UITouch>())
 			{
-				FireEvent(SKTouchAction.Pressed, touch, true);
+				if (!FireEvent(SKTouchAction.Pressed, touch, true))
+				{
+					IgnoreTouch(touch, evt);
+				}
 			}
 		}
 
