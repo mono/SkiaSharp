@@ -124,5 +124,35 @@ namespace SkiaSharp.Tests
 			Assert.AreEqual(40, fitWide.Width);
 			Assert.AreEqual(20, fitWide.Height);
 		}
+
+		[Test]
+		public void SKRectICeilingWorksAsExpected()
+		{
+			Assert.AreEqual(new SKRectI(6, 6, 21, 21), SKRectI.Ceiling(new SKRect(5.5f, 5.5f, 20.5f, 20.5f)));
+			Assert.AreEqual(new SKRectI(5, 5, 21, 21), SKRectI.Ceiling(new SKRect(5.5f, 5.5f, 20.5f, 20.5f), true));
+			Assert.AreEqual(new SKRectI(6, 6, 21, 21), SKRectI.Ceiling(new SKRect(5.4f, 5.6f, 20.4f, 20.6f)));
+			Assert.AreEqual(new SKRectI(5, 5, 21, 21), SKRectI.Ceiling(new SKRect(5.4f, 5.6f, 20.4f, 20.6f), true));
+			Assert.AreEqual(new SKRectI(21, 21, 6, 6), SKRectI.Ceiling(new SKRect(20.4f, 20.6f, 5.4f, 5.6f)));
+			Assert.AreEqual(new SKRectI(21, 21, 5, 5), SKRectI.Ceiling(new SKRect(20.4f, 20.6f, 5.4f, 5.6f), true));
+		}
+
+		[Test]
+		public void SKRectIFloorWorksAsExpected()
+		{
+			Assert.AreEqual(new SKRectI(5, 5, 20, 20), SKRectI.Floor(new SKRect(5.5f, 5.5f, 20.5f, 20.5f)));
+			Assert.AreEqual(new SKRectI(6, 6, 20, 20), SKRectI.Floor(new SKRect(5.5f, 5.5f, 20.5f, 20.5f), true));
+			Assert.AreEqual(new SKRectI(5, 5, 20, 20), SKRectI.Floor(new SKRect(5.4f, 5.6f, 20.4f, 20.6f)));
+			Assert.AreEqual(new SKRectI(6, 6, 20, 20), SKRectI.Floor(new SKRect(5.4f, 5.6f, 20.4f, 20.6f), true));
+			Assert.AreEqual(new SKRectI(20, 20, 5, 5), SKRectI.Floor(new SKRect(20.4f, 20.6f, 5.4f, 5.6f)));
+			Assert.AreEqual(new SKRectI(20, 20, 6, 6), SKRectI.Floor(new SKRect(20.4f, 20.6f, 5.4f, 5.6f), true));
+		}
+
+		[Test]
+		public void SKRectIRoundWorksAsExpected()
+		{
+			Assert.AreEqual(new SKRectI(6, 6, 21, 21), SKRectI.Round(new SKRect(5.51f, 5.51f, 20.51f, 20.51f)));
+			Assert.AreEqual(new SKRectI(5, 6, 20, 21), SKRectI.Round(new SKRect(5.41f, 5.61f, 20.41f, 20.61f)));
+			Assert.AreEqual(new SKRectI(20, 21, 5, 6), SKRectI.Round(new SKRect(20.41f, 20.61f, 5.41f, 5.61f)));
+		}
 	}
 }
