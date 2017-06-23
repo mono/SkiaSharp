@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -25,7 +25,6 @@
     <EnablePackageSigning>false</EnablePackageSigning>
     <IncludeMonoRuntime>false</IncludeMonoRuntime>
     <LinkMode>None</LinkMode>
-    <XamMacArch></XamMacArch>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
@@ -38,30 +37,14 @@
     <EnablePackageSigning>false</EnablePackageSigning>
     <IncludeMonoRuntime>false</IncludeMonoRuntime>
     <LinkMode>None</LinkMode>
-    <XamMacArch></XamMacArch>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Xamarin.Mac" />
-    <Reference Include="Xamarin.Forms.Core">
-      <HintPath>..\..\packages\Xamarin.Forms.2.3.5.233-pre1\lib\Xamarin.Mac\Xamarin.Forms.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Xamarin.Forms.Platform">
-      <HintPath>..\..\packages\Xamarin.Forms.2.3.5.233-pre1\lib\Xamarin.Mac\Xamarin.Forms.Platform.dll</HintPath>
-    </Reference>
-    <Reference Include="Xamarin.Forms.Platform.macOS">
-      <HintPath>..\..\packages\Xamarin.Forms.2.3.5.233-pre1\lib\Xamarin.Mac\Xamarin.Forms.Platform.macOS.dll</HintPath>
-    </Reference>
-    <Reference Include="Xamarin.Forms.Xaml">
-      <HintPath>..\..\packages\Xamarin.Forms.2.3.5.233-pre1\lib\Xamarin.Mac\Xamarin.Forms.Xaml.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SKCanvasViewRenderer.cs" />
-    <Compile Include="SKGLViewRenderer.cs" />
-    <Compile Include="SKImageSourceHandler.cs" />
-    <Compile Include="SKTouchHandler.cs" />
+    <PackageReference Include="Xamarin.Forms" Version="2.3.4.231" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Mac\SkiaSharp.Views.Mac.csproj">
@@ -74,13 +57,12 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <Compile Include="SKCanvasViewRenderer.cs" />
+    <Compile Include="SKGLViewRenderer.cs" />
+    <Compile Include="SKImageSourceHandler.cs" />
+    <Compile Include="SKTouchHandler.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup>
-  <Import Project="..\SkiaSharp.Views.Forms.Native.Shared\SkiaSharp.Views.Forms.Native.Shared.projitems" Label="Shared" Condition="Exists('..\SkiaSharp.Views.Forms.Native.Shared\SkiaSharp.Views.Forms.Native.Shared.projitems')" />
-  <Import Project="..\SkiaSharp.Views.Forms.Shared\SkiaSharp.Views.Forms.Shared.projitems" Label="Shared" Condition="Exists('..\SkiaSharp.Views.Forms.Shared\SkiaSharp.Views.Forms.Shared.projitems')" />
+  <Import Project="..\SkiaSharp.Views.Forms.Native.Shared\SkiaSharp.Views.Forms.Native.Shared.projitems" Label="Shared" />
+  <Import Project="..\SkiaSharp.Views.Forms.Shared\SkiaSharp.Views.Forms.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
-  <Import Project="..\..\packages\Xamarin.Forms.2.3.5.233-pre1\build\portable-win+net45+wp80+win81+wpa81+MonoAndroid10+Xamarin.iOS10+xamarinmac20\Xamarin.Forms.targets" Condition="Exists('..\..\packages\Xamarin.Forms.2.3.5.233-pre1\build\portable-win+net45+wp80+win81+wpa81+MonoAndroid10+Xamarin.iOS10+xamarinmac20\Xamarin.Forms.targets')" />
 </Project>

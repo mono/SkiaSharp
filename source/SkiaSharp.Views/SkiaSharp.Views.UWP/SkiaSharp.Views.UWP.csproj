@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -39,8 +39,13 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
-    <None Include="project.json" />
+    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="5.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Binding\SkiaSharp.UWP\SkiaSharp.UWP.csproj">
+      <Project>{bab615aa-956e-4079-b260-dd7b1f52ec7d}</Project>
+      <Name>SkiaSharp.UWP</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AngleSwapChainPanel.cs" />
@@ -51,24 +56,13 @@
     <Compile Include="SKSwapChainPanel.cs" />
     <Compile Include="SKXamlCanvas.cs" />
     <Compile Include="UWPExtensions.cs" />
-    <EmbeddedResource Include="Properties\SkiaSharp.Views.UWP.rd.xml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Binding\SkiaSharp.UWP\SkiaSharp.UWP.csproj">
-      <Project>{bab615aa-956e-4079-b260-dd7b1f52ec7d}</Project>
-      <Name>SkiaSharp.UWP</Name>
-    </ProjectReference>
+    <EmbeddedResource Include="Properties\SkiaSharp.Views.UWP.rd.xml" />
   </ItemGroup>
   <Import Project="..\SkiaSharp.Views.Shared\SkiaSharp.Views.Shared.projitems" Label="Shared" />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

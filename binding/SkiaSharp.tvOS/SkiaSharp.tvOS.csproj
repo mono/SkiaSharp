@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -38,9 +38,6 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Resources\" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -54,7 +51,7 @@
       <Kind>Framework</Kind>
     </NativeReference>
   </ItemGroup>
-  <Import Project="..\Binding\Binding.projitems" Label="Shared" Condition="Exists('..\Binding\Binding.projitems')" />
+  <Import Project="..\Binding\Binding.projitems" Label="Shared" />
   <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\TVOS\Xamarin.TVOS.ObjCBinding.CSharp.targets" />
 </Project>

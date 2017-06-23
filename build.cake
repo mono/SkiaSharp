@@ -1,7 +1,6 @@
 #addin "Cake.Xamarin"
 #addin "Cake.XCode"
 #addin "Cake.FileHelpers"
-#addin "Cake.StrongNameTool"
 #reference "tools/SharpCompress/lib/net45/SharpCompress.dll"
 
 using System.Linq;
@@ -48,9 +47,6 @@ var VERSION_PACKAGES = new Dictionary<string, string> {
 var CI_TARGETS = new string[] { "CI", "WINDOWS-CI", "LINUX-CI", "MAC-CI" };
 var IS_ON_CI = CI_TARGETS.Contains (TARGET.ToUpper ());
 var IS_ON_FINAL_CI = TARGET.ToUpper () == "CI";
-
-// temporary flag while we wait for v5.0 to become everywhere
-var USE_MSBUILD = bool.Parse (EnvironmentVariable ("USE_MSBUILD") ?? "False");
 
 string ANDROID_HOME = EnvironmentVariable ("ANDROID_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-sdk-macosx";
 string ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? ANDROID_HOME;
@@ -235,31 +231,26 @@ Task ("libs")
 
     // .NET Standard / .NET Core
     // build
-    RunDotNetCoreRestore ("binding/SkiaSharp.NetStandard.sln");
-    DotNetCoreBuild ("binding/SkiaSharp.NetStandard.sln", new DotNetCoreBuildSettings { 
-        Configuration = "Release",
-    });
+    RunNuGetRestore ("binding/SkiaSharp.NetStandard.sln");
+    RunMSBuild ("binding/SkiaSharp.NetStandard.sln");
     if (CopyNetStandardOutput) {
         // copy build output
         CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
     }
     // build libHarfBuzzSharp
-    RunDotNetCoreRestore ("binding/HarfBuzzSharp.NetStandard.sln");
-    DotNetCoreBuild ("binding/HarfBuzzSharp.NetStandard.sln", new DotNetCoreBuildSettings { 
-        Configuration = "Release",
-    });
+    RunNuGetRestore ("binding/HarfBuzzSharp.NetStandard.sln");
+    RunMSBuild ("binding/HarfBuzzSharp.NetStandard.sln");
     if (CopyNetStandardOutput) {
         // copy build output
         CopyFileToDirectory ("./binding/HarfBuzzSharp.NetStandard/bin/Release/HarfBuzzSharp.dll", "./output/netstandard/");
     }
     // build other source
-    RunDotNetCoreRestore ("source/SkiaSharpSource.NetStandard.sln");
-    DotNetCoreBuild ("./source/SkiaSharpSource.NetStandard.sln", new DotNetCoreBuildSettings { 
-        Configuration = "Release",
-    });
+    RunNuGetRestore ("source/SkiaSharpSource.NetStandard.sln");
+    RunMSBuild ("./source/SkiaSharpSource.NetStandard.sln");
     if (CopyNetStandardOutput) {
-        // copy HarfBuzz
+        // copy build output
         CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz.NetStandard/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/netstandard/");
+        CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.NetStandard/bin/Release/SkiaSharp.Views.Forms.dll", "./output/netstandard/");
     }
 });
 
@@ -575,10 +566,7 @@ Task ("nuget")
             // verify
             if (!excluded) {
                 Information("Making sure that '{0}' is signed.", f);
-                StrongNameVerify(f, new StrongNameToolSettings {
-                    ForceVerification = true,
-                    ToolPath = SNToolPath
-                });
+                RunSNTool(f);
             }
         }
     }
