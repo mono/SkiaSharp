@@ -709,74 +709,27 @@ Task ("externals-android")
 
 // this builds the native C and C++ externals for Linux
 Task ("externals-linux")
-    .IsDependentOn ("externals-init")
     .WithCriteria (IsRunningOnLinux ())
     .Does (() => 
 {
     var arches = EnvironmentVariable ("BUILD_ARCH") ?? (Environment.Is64BitOperatingSystem ? "x64" : "x86");  // x64, x86, ARM
     var BUILD_ARCH = arches.Split (',').Select (a => a.Trim ()).ToArray ();
-    var SUPPORT_GPU = (EnvironmentVariable ("SUPPORT_GPU") ?? "1") == "1"; // 1 == true, 0 == false
-
-    var buildArch = new Action<string> ((arch) => {
-        // generate native skia build files
-        RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn"), new ProcessSettings {
-            Arguments = 
-                "gen out/linux/" + arch + " " + 
-                "--args='" +
-                "  is_official_build=true skia_enable_tools=false" +
-                "  target_os=\"linux\" target_cpu=\"" + arch + "\"" +
-                "  skia_use_icu=false skia_use_sfntly=false skia_use_system_freetype2=false" +
-                "  skia_enable_gpu=" + (SUPPORT_GPU ? "true" : "false") +
-                "  extra_cflags=[ \"-DSKIA_C_DLL\" ]" +
-                "  extra_ldflags=[ ]" +
-                "'",
-            WorkingDirectory = SKIA_PATH.FullPath,
-        });
-
-        // build native skia
-        RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja"), new ProcessSettings {
-            Arguments = "-C out/linux/" + arch,
-            WorkingDirectory = SKIA_PATH.FullPath,
-        });
-
-        // build libSkiaSharp
-        // RunProcess ("make", new ProcessSettings {
-        //     Arguments = "clean",
-        //     WorkingDirectory = "native-builds/libSkiaSharp_linux",
-        // });
-        RunProcess ("make", new ProcessSettings {
-            Arguments = "ARCH=" + arch + " VERSION=" + VERSION_FILE + " SUPPORT_GPU=" + SUPPORT_GPU,
-            WorkingDirectory = "native-builds/libSkiaSharp_linux",
-        });
-
-        // copy libSkiaSharp to output
-        if (!DirectoryExists ("native-builds/lib/linux/" + arch)) {
-            CreateDirectory ("native-builds/lib/linux/" + arch);
-        }
-        CopyFileToDirectory ("native-builds/libSkiaSharp_linux/bin/" + arch + "/libSkiaSharp.so." + VERSION_SONAME, "native-builds/lib/linux/" + arch);
-    });
-
-    var buildHarfBuzzArch = new Action<string> ((arch) => {
-        // build libHarfBuzzSharp
-        // RunProcess ("make", new ProcessSettings {
-        //     Arguments = "clean",
-        //     WorkingDirectory = "native-builds/libHarfBuzzSharp_linux",
-        // });
-        RunProcess ("make", new ProcessSettings {
-            Arguments = "ARCH=" + arch + " VERSION=" + HARFBUZZ_VERSION_FILE,
-            WorkingDirectory = "native-builds/libHarfBuzzSharp_linux",
-        });
-
-        // copy libHarfBuzzSharp to output
-        if (!DirectoryExists ("native-builds/lib/linux/" + arch)) {
-            CreateDirectory ("native-builds/lib/linux/" + arch);
-        }
-        CopyFileToDirectory ("native-builds/libHarfBuzzSharp_linux/bin/" + arch + "/libHarfBuzzSharp.so." + HARFBUZZ_VERSION_SONAME, "native-builds/lib/linux/" + arch);
-    });
+    var SUPPORT_GPU = EnvironmentVariable ("SUPPORT_GPU") ?? "1"; // 1 == true, 0 == false
 
     foreach (var arch in BUILD_ARCH) {
-        buildArch (arch);
-        buildHarfBuzzArch (arch);
+        RunProcess ("make", new ProcessSettings {
+            Arguments = "externals-linux" +
+                " SKIA_PATH=" + SKIA_PATH.FullPath + 
+                " DEPOT_PATH=" + DEPOT_PATH.FullPath + 
+                " HARFBUZZ_PATH=" + HARFBUZZ_PATH.FullPath + 
+                " NATIVEBUILDS_PATH=" + ROOT_PATH.Combine("native-builds").FullPath + 
+                " ARCH=" + arch + 
+                " SKIA_VERSION=" + VERSION_FILE + 
+                " HARFBUZZ_VERSION=" + HARFBUZZ_VERSION_FILE + 
+                " HARFBUZZ_VERSION_SOURCE=" + HARFBUZZ_VERSION_SOURCE + 
+                " SUPPORT_GPU=" + SUPPORT_GPU,
+            WorkingDirectory = ROOT_PATH.FullPath,
+        });
     }
 });
 
