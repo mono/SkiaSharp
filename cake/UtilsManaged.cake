@@ -39,14 +39,22 @@ var RunDotNetCoreRestore = new Action<string> ((solution) =>
 
 var RunMSBuildWithPlatform = new Action<FilePath, string> ((solution, platform) =>
 {
-    MSBuild (solution, c => { 
-        c.Configuration = "Release"; 
-        c.Verbosity = VERBOSITY;
-        c.Properties ["Platform"] = new [] { platform };
-        if (!string.IsNullOrEmpty (MSBuildToolPath)) {
-            c.ToolPath = MSBuildToolPath;
-        }
-    });
+    if (USE_MSBUILD) {
+        MSBuild (solution, c => { 
+            c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
+            c.Properties ["Platform"] = new [] { platform };
+            if (!string.IsNullOrEmpty (MSBuildToolPath)) {
+                c.ToolPath = MSBuildToolPath;
+            }
+        });
+    } else {
+        DotNetBuild (solution, c => { 
+            c.Configuration = "Release"; 
+            c.Verbosity = VERBOSITY;
+            c.Properties ["Platform"] = new [] { platform };
+        });
+    }
 });
 
 var RunMSBuildWithPlatformTarget = new Action<FilePath, string> ((solution, platformTarget) =>
@@ -127,23 +135,6 @@ var RunMdocAssemble = new Action<DirectoryPath, FilePath> ((docsRoot, output) =>
     RunProcess (MDocPath, new ProcessSettings {
         Arguments = string.Format ("assemble --out=\"{0}\" \"{1}\" --debug", output, docsRoot),
     });
-});
-
-var RunSNTool = new Action<FilePath> ((assembly) =>
-{
-    RunProcess (SNToolPath, new ProcessSettings {
-        Arguments = string.Format ("-vf \"{0}\"", assembly),
-    });
-});
-
-var RunGenApi = new Action<FilePath> ((input) =>
-{
-    var output = input.GetFilenameWithoutExtension () + ".cs";
-    RunProcess (GenApiToolPath, new ProcessSettings {
-        Arguments = string.Format ("\"{0}\" -out \"{1}\"", input.GetFilename (), output),
-        WorkingDirectory = input.GetDirectory ().FullPath,
-    });
-    ReplaceTextInFiles (input.GetDirectory ().CombineWithFilePath (output).FullPath, "[System.ComponentModel.EditorBrowsableAttribute(1)]", "[System.ComponentModel.EditorBrowsableAttribute((System.ComponentModel.EditorBrowsableState)1)]");
 });
 
 var ClearSkiaSharpNuGetCache = new Action (() => {
