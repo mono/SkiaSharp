@@ -136,6 +136,16 @@ var RunSNTool = new Action<FilePath> ((assembly) =>
     });
 });
 
+var RunGenApi = new Action<FilePath> ((input) =>
+{
+    var output = input.GetFilenameWithoutExtension () + ".cs";
+    RunProcess (GenApiToolPath, new ProcessSettings {
+        Arguments = string.Format ("\"{0}\" -out \"{1}\"", input.GetFilename (), output),
+        WorkingDirectory = input.GetDirectory ().FullPath,
+    });
+    ReplaceTextInFiles (input.GetDirectory ().CombineWithFilePath (output).FullPath, "[System.ComponentModel.EditorBrowsableAttribute(1)]", "[System.ComponentModel.EditorBrowsableAttribute((System.ComponentModel.EditorBrowsableState)1)]");
+});
+
 var ClearSkiaSharpNuGetCache = new Action (() => {
     // first we need to add our new nuget to the cache so we can restore
     // we first need to delete the old stuff

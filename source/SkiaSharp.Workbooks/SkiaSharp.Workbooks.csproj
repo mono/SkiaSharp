@@ -31,13 +31,18 @@
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Xamarin.Workbooks.Integration" Version="1.0.0-rc2" />
+    <Reference Include="Xamarin.Interactive">
+      <HintPath>..\packages\Xamarin.Workbooks.Integration.1.0.0-rc2\lib\portable-net45+win8+wpa81\Xamarin.Interactive.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Binding\SkiaSharp.Portable\SkiaSharp.Portable.csproj">
+    <ProjectReference Include="/home/matthew/Projects/SkiaSharp/binding/SkiaSharp.Portable/SkiaSharp.Portable.csproj">
       <Project>{7aa90628-2fdd-4585-af2f-cc51cfa8b52a}</Project>
       <Name>SkiaSharp.Portable</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="SkiaWorkbooksIntegration.cs" />

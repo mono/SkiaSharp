@@ -19,6 +19,7 @@ var NugetToolPath = GetToolPath ("nuget.exe");
 var XamarinComponentToolPath = GetToolPath ("XamarinComponent/tools/xamarin-component.exe");
 var CakeToolPath = GetToolPath ("Cake/Cake.exe");
 var NUnitConsoleToolPath = GetToolPath ("NUnit.ConsoleRunner/tools/nunit3-console.exe");
+var GenApiToolPath = GetToolPath ("Microsoft.DotNet.BuildTools.GenAPI/tools/GenAPI.exe");
 var MDocPath = MakeAbsolute ((FilePath)"externals/api-doc-tools/bin/Release/mdoc.exe");
 var SNToolPath = GetSNToolPath (EnvironmentVariable ("SN_EXE"));
 var MSBuildToolPath = GetMSBuildToolPath (EnvironmentVariable ("MSBUILD_EXE"));
@@ -115,6 +116,10 @@ Task ("libs")
         CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz.NetStandard/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/netstandard/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.NetStandard/bin/Release/SkiaSharp.Views.Forms.dll", "./output/netstandard/");
     }
+
+    // Generate the portable code - we can't do it automatically as there are issues on linux
+    RunGenApi ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll");
+    RunGenApi ("./binding/HarfBuzzSharp.NetStandard/bin/Release/HarfBuzzSharp.dll");
 
     // .NET Framework / Xamarin
     if (IsRunningOnWindows ()) {
@@ -685,6 +690,7 @@ Information ("Cake.exe ToolPath: {0}", CakeToolPath);
 Information ("NUnitConsole ToolPath: {0}", NUnitConsoleToolPath);
 Information ("NuGet.exe ToolPath: {0}", NugetToolPath);
 Information ("Xamarin-Component.exe ToolPath: {0}", XamarinComponentToolPath);
+Information ("genapi.exe ToolPath: {0}", GenApiToolPath);
 Information ("sn.exe ToolPath: {0}", SNToolPath);
 Information ("msbuild.exe ToolPath: {0}", MSBuildToolPath);
 
