@@ -1134,14 +1134,16 @@ namespace SkiaSharp
 
 		public SKRectI AspectFill (SKSizeI size) => Truncate (((SKRect)this).AspectFill (size));
 
-		public static SKRectI Ceiling (SKRect value)
+		public static SKRectI Ceiling (SKRect value) => Ceiling (value, false);
+
+		public static SKRectI Ceiling (SKRect value, bool outwards)
 		{
 			int x, y, r, b;
 			checked {
-				x = (int) Math.Ceiling (value.Left);
-				y = (int) Math.Ceiling (value.Top);
-				r = (int) Math.Ceiling (value.Right);
-				b = (int) Math.Ceiling (value.Bottom);
+				x = (int) (outwards && value.Width > 0 ? Math.Floor (value.Left) : Math.Ceiling (value.Left));
+				y = (int) (outwards && value.Height > 0 ? Math.Floor (value.Top) : Math.Ceiling (value.Top));
+				r = (int) (outwards && value.Width < 0 ? Math.Floor (value.Right) : Math.Ceiling (value.Right));
+				b = (int) (outwards && value.Height < 0 ? Math.Floor (value.Bottom) : Math.Ceiling (value.Bottom));
 			}
 
 			return new SKRectI (x, y, r, b);
@@ -1192,6 +1194,21 @@ namespace SkiaSharp
 				y = (int) Math.Round (value.Top);
 				r = (int) Math.Round (value.Right);
 				b = (int) Math.Round (value.Bottom);
+			}
+
+			return new SKRectI (x, y, r, b);
+		}
+
+		public static SKRectI Floor (SKRect value) => Floor (value, false);
+
+		public static SKRectI Floor (SKRect value, bool inwards)
+		{
+			int x, y, r, b;
+			checked {
+				x = (int) (inwards && value.Width > 0 ? Math.Ceiling (value.Left) : Math.Floor (value.Left));
+				y = (int) (inwards && value.Height > 0 ? Math.Ceiling (value.Top) : Math.Floor (value.Top));
+				r = (int) (inwards && value.Width < 0 ? Math.Ceiling (value.Right) : Math.Floor (value.Right));
+				b = (int) (inwards && value.Height < 0 ? Math.Ceiling (value.Bottom) : Math.Floor (value.Bottom));
 			}
 
 			return new SKRectI (x, y, r, b);
