@@ -58,42 +58,6 @@ var InjectCompatibilityExternals = new Action<bool> ((inject) => {
 // EXTERNALS - the native C and C++ libraries
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// this builds the managed PCL external 
-Task ("externals-genapi")
-    .Does (() => 
-{
-    // SkiaSharp
-
-    // build the dummy project
-    RunMSBuild ("binding/SkiaSharp.Generic.sln");
-    
-    // generate the PCL
-    FilePath input = "binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll";
-    var libPath = "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/4.5/,.";
-    RunProcess (GenApiToolPath, new ProcessSettings {
-        Arguments = string.Format("-libPath:{2} -out \"{0}\" \"{1}\"", input.GetFilename () + ".cs", input.GetFilename (), libPath),
-        WorkingDirectory = input.GetDirectory ().FullPath,
-    });
-    // bug in the generator which doesn't use enums in attributes
-    ReplaceTextInFiles ("binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll.cs", "[System.ComponentModel.EditorBrowsableAttribute(1)]", "[System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Never)]");
-    CopyFile ("binding/SkiaSharp.Generic/bin/Release/SkiaSharp.dll.cs", "binding/SkiaSharp.Portable/SkiaPortable.cs");
-
-    // HarfBuzz
-
-    RunMSBuild ("binding/HarfBuzzSharp.Generic.sln");
-
-    // generate the PCL
-    input = "binding/HarfBuzzSharp.Generic/bin/Release/HarfBuzzSharp.dll";
-    libPath = "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/4.5/,.";
-    RunProcess (GenApiToolPath, new ProcessSettings {
-        Arguments = string.Format("-libPath:{2} -out \"{0}\" \"{1}\"", input.GetFilename () + ".cs", input.GetFilename (), libPath),
-        WorkingDirectory = input.GetDirectory ().FullPath,
-    });
-    // bug in the generator which doesn't use enums in attributes
-    ReplaceTextInFiles ("binding/HarfBuzzSharp.Generic/bin/Release/HarfBuzzSharp.dll.cs", "[System.ComponentModel.EditorBrowsableAttribute(1)]", "[System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Never)]");
-    CopyFile ("binding/HarfBuzzSharp.Generic/bin/Release/HarfBuzzSharp.dll.cs", "binding/HarfBuzzSharp.Portable/HarfBuzzPortable.cs");
-});
-
 Task ("externals-init")
     .IsDependentOn ("externals-angle-uwp")
     .IsDependentOn ("externals-harfbuzz")
