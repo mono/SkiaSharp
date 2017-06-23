@@ -110,7 +110,7 @@ Task ("libs")
     // TODO: remove this nonsense !!!
     // Assembly signing is not supported on non-Windows ???, so we MUST NOT use the output
     // See: https://github.com/dotnet/roslyn/issues/8210
-    if (IS_ON_CI && !IsRunningOnWindows ()) {
+    if (!IS_ON_CI || IsRunningOnWindows ()) {
         CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
         CopyFileToDirectory ("./binding/HarfBuzzSharp.NetStandard/bin/Release/HarfBuzzSharp.dll", "./output/netstandard/");
         CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz.NetStandard/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/netstandard/");
