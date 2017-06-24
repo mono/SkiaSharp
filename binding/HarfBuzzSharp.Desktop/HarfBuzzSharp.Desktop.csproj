@@ -15,6 +15,11 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\mono.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+  <PropertyGroup>
+    <IsWindows Condition="'$(OS)' == 'Windows_NT'">true</IsWindows>
+    <IsOSX Condition="'$(OS)' != 'Windows_NT' and '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsOSX>
+    <IsLinux Condition="'$(OS)' != 'Windows_NT' and '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -45,7 +50,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(OS)' != 'Unix' ">
+  <ItemGroup Condition=" '$(IsWindows)' == 'true' ">
     <None Include="..\..\native-builds\lib\windows\x64\libHarfBuzzSharp.dll">
       <Link>nuget\runtimes\win7-x64\native\libHarfBuzzSharp.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -55,7 +60,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <ItemGroup Condition=" '$(OS)' == 'Unix' ">
+  <ItemGroup Condition=" '$(IsOSX)' == 'true' ">
     <None Include="..\..\native-builds\lib\osx\libHarfBuzzSharp.dylib">
       <Link>nuget\runtimes\osx\native\libHarfBuzzSharp.dylib</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
