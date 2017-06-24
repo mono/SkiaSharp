@@ -39,22 +39,14 @@ var RunDotNetCoreRestore = new Action<string> ((solution) =>
 
 var RunMSBuildWithPlatform = new Action<FilePath, string> ((solution, platform) =>
 {
-    if (USE_MSBUILD) {
-        MSBuild (solution, c => { 
-            c.Configuration = "Release"; 
-            c.Verbosity = VERBOSITY;
-            c.Properties ["Platform"] = new [] { platform };
-            if (!string.IsNullOrEmpty (MSBuildToolPath)) {
-                c.ToolPath = MSBuildToolPath;
-            }
-        });
-    } else {
-        DotNetBuild (solution, c => { 
-            c.Configuration = "Release"; 
-            c.Verbosity = VERBOSITY;
-            c.Properties ["Platform"] = new [] { platform };
-        });
-    }
+    MSBuild (solution, c => { 
+        c.Configuration = "Release"; 
+        c.Verbosity = VERBOSITY;
+        c.Properties ["Platform"] = new [] { platform };
+        if (!string.IsNullOrEmpty (MSBuildToolPath)) {
+            c.ToolPath = MSBuildToolPath;
+        }
+    });
 });
 
 var RunMSBuildWithPlatformTarget = new Action<FilePath, string> ((solution, platformTarget) =>
