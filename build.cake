@@ -262,9 +262,9 @@ Task ("samples")
         RunNuGetRestore ("./samples/WPFSample/WPFSample.sln");
         RunMSBuild ("./samples/WPFSample/WPFSample.sln");
         RunNuGetRestore ("./samples/UWPSample/UWPSample.sln");
-        RunMSBuild ("./samples/UWPSample/UWPSample.sln");
+        RunMSBuildWithPlatformTarget ("./samples/UWPSample/UWPSample.sln", "x86");
         RunNuGetRestore ("./samples/FormsSample/FormsSample.Windows.sln");
-        RunMSBuild ("./samples/FormsSample/FormsSample.Windows.sln");
+        RunMSBuildWithPlatformTarget ("./samples/FormsSample/FormsSample.Windows.sln", "x86");
         RunNuGetRestore ("./samples/WindowsSample/WindowsSample.sln");
         RunMSBuild ("./samples/WindowsSample/WindowsSample.sln");
     }
