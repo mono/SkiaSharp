@@ -25,10 +25,10 @@ void ListEnvironmentVariables ()
 
 FilePath GetToolPath (FilePath toolPath)
 {
-    var appRoot = Context.Environment.GetApplicationRoot ();
-     var appRootExe = appRoot.Combine ("..").CombineWithFilePath (toolPath);
-     if (FileExists (appRootExe))
-         return appRootExe;
+    var appRoot = Context.Environment.ApplicationRoot;
+    var appRootExe = appRoot.Combine ("..").CombineWithFilePath (toolPath);
+    if (FileExists (appRootExe))
+        return appRootExe;
     throw new FileNotFoundException ("Unable to find tool: " + appRootExe); 
 }
 

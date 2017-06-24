@@ -137,6 +137,23 @@ var RunMdocAssemble = new Action<DirectoryPath, FilePath> ((docsRoot, output) =>
     });
 });
 
+var RunSNTool = new Action<FilePath> ((assembly) =>
+{
+    RunProcess (SNToolPath, new ProcessSettings {
+        Arguments = string.Format ("-vf \"{0}\"", assembly),
+    });
+});
+
+var RunGenApi = new Action<FilePath, FilePath> ((input, output) =>
+{
+    RunProcess (GenApiToolPath, new ProcessSettings {
+        Arguments = string.Format ("\"{0}\" -out \"{1}\"", input, output),
+    });
+    ReplaceTextInFiles (output.FullPath, 
+        "[System.ComponentModel.EditorBrowsableAttribute(1)]",
+        "[System.ComponentModel.EditorBrowsableAttribute((System.ComponentModel.EditorBrowsableState)1)]");
+});
+
 var ClearSkiaSharpNuGetCache = new Action (() => {
     // first we need to add our new nuget to the cache so we can restore
     // we first need to delete the old stuff

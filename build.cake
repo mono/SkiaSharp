@@ -1,7 +1,6 @@
 #addin "Cake.Xamarin"
 #addin "Cake.XCode"
 #addin "Cake.FileHelpers"
-#addin "Cake.StrongNameTool"
 #reference "tools/SharpCompress/lib/net45/SharpCompress.dll"
 
 using System.Linq;
@@ -74,7 +73,6 @@ DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/en"));
 
 // this builds all the externals
 Task ("externals")
-    .IsDependentOn ("externals-genapi")
     .IsDependentOn ("externals-native")
     .Does (() => 
 {
@@ -102,186 +100,87 @@ Task ("libs")
     if (!DirectoryExists ("./output/linux/")) CreateDirectory ("./output/linux/");
     if (!DirectoryExists ("./output/interactive/")) CreateDirectory ("./output/interactive/");
 
-    if (IsRunningOnWindows ()) {
-        // build bindings
-        RunNuGetRestore ("binding/SkiaSharp.Windows.sln");
-        RunMSBuild ("binding/SkiaSharp.Windows.sln");
+    // .NET Standard / .NET Core
+    RunNuGetRestore ("source/SkiaSharpSource.NetStandard.sln");
+    RunMSBuild ("source/SkiaSharpSource.NetStandard.sln");
+    // TODO: remove this nonsense !!!
+    // Assembly signing is not supported on non-Windows ???, so we MUST NOT use the output
+    // See: https://github.com/dotnet/roslyn/issues/8210
+    if (!IS_ON_CI || IsRunningOnWindows ()) {
+        CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
+        CopyFileToDirectory ("./binding/HarfBuzzSharp.NetStandard/bin/Release/HarfBuzzSharp.dll", "./output/netstandard/");
+        CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz.NetStandard/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/netstandard/");
+        CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.NetStandard/bin/Release/SkiaSharp.Views.Forms.dll", "./output/netstandard/");
+    }
 
-        // copy build output
-        CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
+    // Generate the portable code - we can't do it automatically as there are issues on linux
+    RunGenApi ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "binding/SkiaSharp.Portable/SkiaPortable.cs");
+    RunGenApi ("./binding/HarfBuzzSharp.NetStandard/bin/Release/HarfBuzzSharp.dll", "binding/HarfBuzzSharp.Portable/HarfBuzzPortable.cs");
+
+    // .NET Framework / Xamarin
+    if (IsRunningOnWindows ()) {
+        RunNuGetRestore ("./source/SkiaSharpSource.Windows.sln");
+        RunMSBuild ("./source/SkiaSharpSource.Windows.sln");
+        // SkiaSharp
         CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll", "./output/windows/");
-        CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.pdb", "./output/windows/");
         CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.dll.config", "./output/windows/");
         CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.Desktop.targets", "./output/windows/");
         CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.dll", "./output/uwp/");
-        CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.pdb", "./output/uwp/");
         CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.pri", "./output/uwp/");
-
-        // build libHarfBuzzSharp bindings
-        RunNuGetRestore ("binding/HarfBuzzSharp.Windows.sln");
-        RunMSBuild ("binding/HarfBuzzSharp.Windows.sln");
-
-        // copy libHarfBuzzSharp build output
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.Portable/bin/Release/HarfBuzzSharp.dll", "./output/portable/");
+        // HarfBuzzSharp
         CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/HarfBuzzSharp.dll", "./output/windows/");
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/HarfBuzzSharp.pdb", "./output/windows/");
         CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/nuget/build/net45/HarfBuzzSharp.dll.config", "./output/windows/");
         CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/nuget/build/net45/HarfBuzzSharp.Desktop.targets", "./output/windows/");
         CopyFileToDirectory ("./binding/HarfBuzzSharp.UWP/bin/Release/HarfBuzzSharp.dll", "./output/uwp/");
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.UWP/bin/Release/HarfBuzzSharp.pdb", "./output/uwp/");
         CopyFileToDirectory ("./binding/HarfBuzzSharp.UWP/bin/Release/HarfBuzzSharp.pri", "./output/uwp/");
-
-        // build other source
-        RunNuGetRestore ("./source/SkiaSharpSource.Windows.sln");
-        RunMSBuild ("./source/SkiaSharpSource.Windows.sln");
-
-        // copy the managed views
+        // SkiaSharp.Views
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.UWP/bin/Release/SkiaSharp.Views.UWP.dll", "./output/uwp/");
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Desktop/bin/Release/SkiaSharp.Views.Desktop.dll", "./output/windows/");
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.WPF/bin/Release/SkiaSharp.Views.WPF.dll", "./output/windows/");
+        // SkiaSharp.Views.Forms
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms/bin/Release/SkiaSharp.Views.Forms.dll", "./output/portable/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.UWP/bin/Release/SkiaSharp.Views.Forms.dll", "./output/uwp/");
-
-        // copy HarfBuzz
-        CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/portable/");
-
-        // copy Workbooks integration
-        CopyFileToDirectory ("./source/SkiaSharp.Workbooks/bin/Release/SkiaSharp.Workbooks.dll", "./output/interactive/");
-    }
-
-    if (IsRunningOnMac ()) {
-        // build
-        RunNuGetRestore ("binding/SkiaSharp.Mac.sln");
-        RunMSBuild ("binding/SkiaSharp.Mac.sln");
-
-        // copy build output
+    } else if (IsRunningOnMac ()) {
+        RunNuGetRestore ("source/SkiaSharpSource.Mac.sln");
+        RunMSBuild ("source/SkiaSharpSource.Mac.sln");
+        // SkiaSharp
+        CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll", "./output/mac/");
+        CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.dll.config", "./output/mac/");
+        CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.Desktop.targets", "./output/mac/");
         CopyFileToDirectory ("./binding/SkiaSharp.Android/bin/Release/SkiaSharp.dll", "./output/android/");
         CopyFileToDirectory ("./binding/SkiaSharp.iOS/bin/Release/SkiaSharp.dll", "./output/ios/");
         CopyFileToDirectory ("./binding/SkiaSharp.tvOS/bin/Release/SkiaSharp.dll", "./output/tvos/");
         CopyFileToDirectory ("./binding/SkiaSharp.OSX/bin/Release/SkiaSharp.dll", "./output/osx/");
-        CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
-        CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll", "./output/mac/");
-        CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.Desktop.targets", "./output/mac/");
-        CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.dll.config", "./output/mac/");
-
-        // build libHarfBuzzSharp bindings
-        RunNuGetRestore ("binding/HarfBuzzSharp.Mac.sln");
-        RunMSBuild ("binding/HarfBuzzSharp.Mac.sln");
-
-        // copy libHarfBuzzSharp build output
+        // HarfBuzzSharp
+        CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/HarfBuzzSharp.dll", "./output/mac/");
+        CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/nuget/build/net45/HarfBuzzSharp.dll.config", "./output/mac/");
+        CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/nuget/build/net45/HarfBuzzSharp.Desktop.targets", "./output/mac/");
         CopyFileToDirectory ("./binding/HarfBuzzSharp.Android/bin/Release/HarfBuzzSharp.dll", "./output/android/");
         CopyFileToDirectory ("./binding/HarfBuzzSharp.iOS/bin/Release/HarfBuzzSharp.dll", "./output/ios/");
         CopyFileToDirectory ("./binding/HarfBuzzSharp.tvOS/bin/Release/HarfBuzzSharp.dll", "./output/tvos/");
         CopyFileToDirectory ("./binding/HarfBuzzSharp.OSX/bin/Release/HarfBuzzSharp.dll", "./output/osx/");
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.Portable/bin/Release/HarfBuzzSharp.dll", "./output/portable/");
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/HarfBuzzSharp.dll", "./output/mac/");
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/nuget/build/net45/HarfBuzzSharp.dll.config", "./output/mac/");
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/nuget/build/net45/HarfBuzzSharp.Desktop.targets", "./output/mac/");
-
-        // build other source
-        RunNuGetRestore ("./source/SkiaSharpSource.Mac.sln");
-        RunMSBuild ("./source/SkiaSharpSource.Mac.sln");
-
-        // copy other outputs
+        // SkiaSharp.Views
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Android/bin/Release/SkiaSharp.Views.Android.dll", "./output/android/");
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.iOS/bin/Release/SkiaSharp.Views.iOS.dll", "./output/ios/");
-        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.tvOS/bin/Release/SkiaSharp.Views.tvOS.dll", "./output/tvos/");
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Mac/bin/Release/SkiaSharp.Views.Mac.dll", "./output/osx/");
+        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.tvOS/bin/Release/SkiaSharp.Views.tvOS.dll", "./output/tvos/");
+        // SkiaSharp.Views.Forms
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms/bin/Release/SkiaSharp.Views.Forms.dll", "./output/portable/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Android/bin/Release/SkiaSharp.Views.Forms.dll", "./output/android/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.iOS/bin/Release/SkiaSharp.Views.Forms.dll", "./output/ios/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Mac/bin/Release/SkiaSharp.Views.Forms.dll", "./output/osx/");
-
-        // copy HarfBuzz
-        CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/portable/");
-
-        // copy Workbooks integration
-        CopyFileToDirectory ("./source/SkiaSharp.Workbooks/bin/Release/SkiaSharp.Workbooks.dll", "./output/interactive/");
-    }
-
-    if (IsRunningOnLinux ()) {
-        // build
-        RunNuGetRestore ("binding/SkiaSharp.Linux.sln");
-        RunMSBuild ("binding/SkiaSharp.Linux.sln");
-
-        // copy build output
-        CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
-
-        // build libHarfBuzzSharp bindings
-        RunNuGetRestore ("binding/HarfBuzzSharp.Linux.sln");
-        RunMSBuild ("binding/HarfBuzzSharp.Linux.sln");
-
-        // copy libHarfBuzzSharp build output
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.Portable/bin/Release/HarfBuzzSharp.dll", "./output/portable/");
-
-        // build other source
+    } else if (IsRunningOnLinux ()) {
         RunNuGetRestore ("./source/SkiaSharpSource.Linux.sln");
         RunMSBuild ("./source/SkiaSharpSource.Linux.sln");
-
-        // copy HarfBuzz
-        CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/portable/");
-
-        // copy Workbooks integration
-        CopyFileToDirectory ("./source/SkiaSharp.Workbooks/bin/Release/SkiaSharp.Workbooks.dll", "./output/interactive/");
     }
-
-    // TODO: remove this nonsense !!!
-    // Assembly signing is not supported on non-Windows ???, so we MUST NOT use the output
-    // See: https://github.com/dotnet/roslyn/issues/8210
-    var CopyNetStandardOutput = true;
-    if (IS_ON_CI && !IsRunningOnWindows ()) {
-        CopyNetStandardOutput = false;
-    }
-
-    // .NET Standard / .NET Core
-    // build
-    RunDotNetCoreRestore ("binding/SkiaSharp.NetStandard.sln");
-    DotNetCoreBuild ("binding/SkiaSharp.NetStandard.sln", new DotNetCoreBuildSettings { 
-        Configuration = "Release",
-    });
-    if (CopyNetStandardOutput) {
-        // copy build output
-        CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
-    }
-    // build libHarfBuzzSharp
-    RunDotNetCoreRestore ("binding/HarfBuzzSharp.NetStandard.sln");
-    DotNetCoreBuild ("binding/HarfBuzzSharp.NetStandard.sln", new DotNetCoreBuildSettings { 
-        Configuration = "Release",
-    });
-    if (CopyNetStandardOutput) {
-        // copy build output
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.NetStandard/bin/Release/HarfBuzzSharp.dll", "./output/netstandard/");
-    }
-    // build other source
-    RunDotNetCoreRestore ("source/SkiaSharpSource.NetStandard.sln");
-    DotNetCoreBuild ("./source/SkiaSharpSource.NetStandard.sln", new DotNetCoreBuildSettings { 
-        Configuration = "Release",
-    });
-    if (CopyNetStandardOutput) {
-        // copy HarfBuzz
-        CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz.NetStandard/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/netstandard/");
-    }
-});
-
-Task ("workbooks")
-    .IsDependentOn ("externals")
-    .IsDependentOn ("libs")
-    .Does (() => 
-{
-    // the dir
-    if (!DirectoryExists ("./output/workbooks/")) CreateDirectory ("./output/workbooks/");
-
-    // the managed bits
-    CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.dll.config", "./output/workbooks/");
-    CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/workbooks/");
-
-    // the native bits
-    if (IsRunningOnWindows ()) {
-        CopyFileToDirectory ("./native-builds/lib/windows/x64/libSkiaSharp.dll", "./output/workbooks/");
-    }
-    if (IsRunningOnMac ()) {
-        CopyFileToDirectory ("./native-builds/lib/osx/libSkiaSharp.dylib", "./output/workbooks/");
-    }
+    // SkiaSharp
+    CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
+    // HarfBuzzSharp
+    CopyFileToDirectory ("./binding/HarfBuzzSharp.Portable/bin/Release/HarfBuzzSharp.dll", "./output/portable/");
+    // SkiaSharp.HarfBuzz
+    CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/portable/");
+    // SkiaSharp.Workbooks
+    CopyFileToDirectory ("./source/SkiaSharp.Workbooks/bin/Release/SkiaSharp.Workbooks.dll", "./output/interactive/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -575,10 +474,7 @@ Task ("nuget")
             // verify
             if (!excluded) {
                 Information("Making sure that '{0}' is signed.", f);
-                StrongNameVerify(f, new StrongNameToolSettings {
-                    ForceVerification = true,
-                    ToolPath = SNToolPath
-                });
+                RunSNTool(f);
             }
         }
     }
