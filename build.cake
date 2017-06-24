@@ -96,6 +96,7 @@ Task ("libs")
     if (!DirectoryExists ("./output/netstandard/")) CreateDirectory ("./output/netstandard/");
     if (!DirectoryExists ("./output/linux/")) CreateDirectory ("./output/linux/");
     if (!DirectoryExists ("./output/interactive/")) CreateDirectory ("./output/interactive/");
+    if (!DirectoryExists ("./output/desktop/")) CreateDirectory ("./output/desktop/");
 
     // .NET Standard / .NET Core
     RunNuGetRestore ("source/SkiaSharpSource.NetStandard.sln");
@@ -119,15 +120,9 @@ Task ("libs")
         RunNuGetRestore ("./source/SkiaSharpSource.Windows.sln");
         RunMSBuild ("./source/SkiaSharpSource.Windows.sln");
         // SkiaSharp
-        CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll", "./output/windows/");
-        CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.dll.config", "./output/windows/");
-        CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.Desktop.targets", "./output/windows/");
         CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.dll", "./output/uwp/");
         CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.pri", "./output/uwp/");
         // HarfBuzzSharp
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/HarfBuzzSharp.dll", "./output/windows/");
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/nuget/build/net45/HarfBuzzSharp.dll.config", "./output/windows/");
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/nuget/build/net45/HarfBuzzSharp.Desktop.targets", "./output/windows/");
         CopyFileToDirectory ("./binding/HarfBuzzSharp.UWP/bin/Release/HarfBuzzSharp.dll", "./output/uwp/");
         CopyFileToDirectory ("./binding/HarfBuzzSharp.UWP/bin/Release/HarfBuzzSharp.pri", "./output/uwp/");
         // SkiaSharp.Views
@@ -141,17 +136,11 @@ Task ("libs")
         RunNuGetRestore ("source/SkiaSharpSource.Mac.sln");
         RunMSBuild ("source/SkiaSharpSource.Mac.sln");
         // SkiaSharp
-        CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll", "./output/mac/");
-        CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.dll.config", "./output/mac/");
-        CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.Desktop.targets", "./output/mac/");
         CopyFileToDirectory ("./binding/SkiaSharp.Android/bin/Release/SkiaSharp.dll", "./output/android/");
         CopyFileToDirectory ("./binding/SkiaSharp.iOS/bin/Release/SkiaSharp.dll", "./output/ios/");
         CopyFileToDirectory ("./binding/SkiaSharp.tvOS/bin/Release/SkiaSharp.dll", "./output/tvos/");
         CopyFileToDirectory ("./binding/SkiaSharp.OSX/bin/Release/SkiaSharp.dll", "./output/osx/");
         // HarfBuzzSharp
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/HarfBuzzSharp.dll", "./output/mac/");
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/nuget/build/net45/HarfBuzzSharp.dll.config", "./output/mac/");
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/nuget/build/net45/HarfBuzzSharp.Desktop.targets", "./output/mac/");
         CopyFileToDirectory ("./binding/HarfBuzzSharp.Android/bin/Release/HarfBuzzSharp.dll", "./output/android/");
         CopyFileToDirectory ("./binding/HarfBuzzSharp.iOS/bin/Release/HarfBuzzSharp.dll", "./output/ios/");
         CopyFileToDirectory ("./binding/HarfBuzzSharp.tvOS/bin/Release/HarfBuzzSharp.dll", "./output/tvos/");
@@ -171,8 +160,14 @@ Task ("libs")
         RunMSBuild ("./source/SkiaSharpSource.Linux.sln");
     }
     // SkiaSharp
+    CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll", "./output/desktop/");
+    CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.dll.config", "./output/desktop/");
+    CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.Desktop.targets", "./output/desktop/");
     CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
     // HarfBuzzSharp
+    CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/HarfBuzzSharp.dll", "./output/desktop/");
+    CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/nuget/build/net45/HarfBuzzSharp.dll.config", "./output/desktop/");
+    CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/nuget/build/net45/HarfBuzzSharp.Desktop.targets", "./output/desktop/");
     CopyFileToDirectory ("./binding/HarfBuzzSharp.Portable/bin/Release/HarfBuzzSharp.dll", "./output/portable/");
     // SkiaSharp.HarfBuzz
     CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/portable/");

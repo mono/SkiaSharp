@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+    <PropertyGroup>
+        <OSPlatform Condition=" '$(OSPlatform)' == '' and '$(OS)' == 'Windows_NT'">Windows</OSPlatform>
+        <OSPlatform Condition=" '$(OSPlatform)' == '' and '$(OS)' != 'Windows_NT' and '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">macOS</OSPlatform>
+        <OSPlatform Condition=" '$(OSPlatform)' == '' and '$(OS)' != 'Windows_NT' and '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">Linux</OSPlatform>
+    </PropertyGroup>
+
     <!-- if ShouldIncludeNativeSkiaSharp == False then don't include the native libSkiaSharp -->
     <PropertyGroup>
         <ShouldIncludeNativeSkiaSharp Condition=" '$(ShouldIncludeNativeSkiaSharp)' == '' ">True</ShouldIncludeNativeSkiaSharp>
@@ -16,7 +22,7 @@
     </PropertyGroup>
 
     <!-- add the native x86 Windows library -->
-    <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and '$(PlatformTarget)' == 'x86' and '$(OS)' != 'Unix' ">
+    <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and '$(PlatformTarget)' == 'x86' and '$(OSPlatform)' == 'Windows' ">
         <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win7-x86\native\libSkiaSharp.dll">
             <Link>libSkiaSharp.dll</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -24,7 +30,7 @@
     </ItemGroup>
 
     <!-- add the native x64 Windows library -->
-    <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and '$(PlatformTarget)' == 'x64' and '$(OS)' != 'Unix' ">
+    <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and '$(PlatformTarget)' == 'x64' and '$(OSPlatform)' == 'Windows' ">
         <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win7-x64\native\libSkiaSharp.dll">
             <Link>libSkiaSharp.dll</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -32,7 +38,7 @@
     </ItemGroup>
 
     <!-- copy both native Windows libraries for Any CPU -->
-    <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and '$(PlatformTarget)' != 'x64' and '$(PlatformTarget)' != 'x86' and '$(OS)' != 'Unix' ">
+    <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and '$(PlatformTarget)' != 'x64' and '$(PlatformTarget)' != 'x86' and '$(OSPlatform)' == 'Windows' ">
         <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win7-x86\native\libSkiaSharp.dll">
             <Link>x86\libSkiaSharp.dll</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -48,7 +54,7 @@
     </ItemGroup>
 
     <!-- add the native OSX library -->
-    <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and '$(OS)' == 'Unix' ">
+    <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and '$(OSPlatform)' == 'macOS' ">
         <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\osx\native\libSkiaSharp.dylib">
             <Link>libSkiaSharp.dylib</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
