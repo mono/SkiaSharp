@@ -85,71 +85,13 @@ Task ("externals-native")
 {
     // copy all the native files into the output
     CopyDirectory ("./native-builds/lib/", "./output/native/");
-    
-    // copy the non-embedded native files into the output
-    if (IsRunningOnWindows ()) {
-        if (!DirectoryExists ("./output/windows/x86")) CreateDirectory ("./output/windows/x86");
-        if (!DirectoryExists ("./output/windows/x64")) CreateDirectory ("./output/windows/x64");
-        CopyFileToDirectory ("./native-builds/lib/windows/x86/libSkiaSharp.dll", "./output/windows/x86/");
-        CopyFileToDirectory ("./native-builds/lib/windows/x86/libSkiaSharp.pdb", "./output/windows/x86/");
-        CopyFileToDirectory ("./native-builds/lib/windows/x64/libSkiaSharp.dll", "./output/windows/x64/");
-        CopyFileToDirectory ("./native-builds/lib/windows/x64/libSkiaSharp.pdb", "./output/windows/x64/");
-        if (!DirectoryExists ("./output/uwp/x86")) CreateDirectory ("./output/uwp/x86");
-        if (!DirectoryExists ("./output/uwp/x64")) CreateDirectory ("./output/uwp/x64");
-        if (!DirectoryExists ("./output/uwp/arm")) CreateDirectory ("./output/uwp/arm");
-        CopyFileToDirectory ("./native-builds/lib/uwp/x86/libSkiaSharp.dll", "./output/uwp/x86/");
-        CopyFileToDirectory ("./native-builds/lib/uwp/x86/libSkiaSharp.pdb", "./output/uwp/x86/");
-        CopyFileToDirectory ("./native-builds/lib/uwp/x64/libSkiaSharp.dll", "./output/uwp/x64/");
-        CopyFileToDirectory ("./native-builds/lib/uwp/x64/libSkiaSharp.pdb", "./output/uwp/x64/");
-        CopyFileToDirectory ("./native-builds/lib/uwp/arm/libSkiaSharp.dll", "./output/uwp/arm/");
-        CopyFileToDirectory ("./native-builds/lib/uwp/arm/libSkiaSharp.pdb", "./output/uwp/arm/");
-        // copy ANGLE externals
-        CopyFileToDirectory (ANGLE_PATH.CombineWithFilePath ("uwp/bin/UAP/ARM/libEGL.dll"), "./output/uwp/arm/");
-        CopyFileToDirectory (ANGLE_PATH.CombineWithFilePath ("uwp/bin/UAP/ARM/libGLESv2.dll"), "./output/uwp/arm/");
-        CopyFileToDirectory (ANGLE_PATH.CombineWithFilePath ("uwp/bin/UAP/Win32/libEGL.dll"), "./output/uwp/x86/");
-        CopyFileToDirectory (ANGLE_PATH.CombineWithFilePath ("uwp/bin/UAP/Win32/libGLESv2.dll"), "./output/uwp/x86/");
-        CopyFileToDirectory (ANGLE_PATH.CombineWithFilePath ("uwp/bin/UAP/x64/libEGL.dll"), "./output/uwp/x64/");
-        CopyFileToDirectory (ANGLE_PATH.CombineWithFilePath ("uwp/bin/UAP/x64/libGLESv2.dll"), "./output/uwp/x64/");
-        // copy libHarfBuzzSharp
-        CopyFileToDirectory ("./native-builds/lib/windows/x86/libHarfBuzzSharp.dll", "./output/windows/x86/");
-        CopyFileToDirectory ("./native-builds/lib/windows/x86/libHarfBuzzSharp.pdb", "./output/windows/x86/");
-        CopyFileToDirectory ("./native-builds/lib/windows/x64/libHarfBuzzSharp.dll", "./output/windows/x64/");
-        CopyFileToDirectory ("./native-builds/lib/windows/x64/libHarfBuzzSharp.pdb", "./output/windows/x64/");
-        CopyFileToDirectory ("./native-builds/lib/uwp/x86/libHarfBuzzSharp.dll", "./output/uwp/x86/");
-        CopyFileToDirectory ("./native-builds/lib/uwp/x86/libHarfBuzzSharp.pdb", "./output/uwp/x86/");
-        CopyFileToDirectory ("./native-builds/lib/uwp/x64/libHarfBuzzSharp.dll", "./output/uwp/x64/");
-        CopyFileToDirectory ("./native-builds/lib/uwp/x64/libHarfBuzzSharp.pdb", "./output/uwp/x64/");
-        CopyFileToDirectory ("./native-builds/lib/uwp/ARM/libHarfBuzzSharp.dll", "./output/uwp/arm/");
-        CopyFileToDirectory ("./native-builds/lib/uwp/ARM/libHarfBuzzSharp.pdb", "./output/uwp/arm/");
-    }
-    if (IsRunningOnMac ()) {
-        if (!DirectoryExists ("./output/osx")) CreateDirectory ("./output/osx");
-        if (!DirectoryExists ("./output/mac")) CreateDirectory ("./output/mac");
-        CopyFileToDirectory ("./native-builds/lib/osx/libSkiaSharp.dylib", "./output/osx/");
-        CopyFileToDirectory ("./native-builds/lib/osx/libSkiaSharp.dylib", "./output/mac/");
-        CopyFileToDirectory ("./native-builds/lib/osx/libHarfBuzzSharp.dylib", "./output/osx/");
-        CopyFileToDirectory ("./native-builds/lib/osx/libHarfBuzzSharp.dylib", "./output/mac/");
-    }
-    if (IsRunningOnLinux ()) {
-        if (!DirectoryExists ("./output/linux/x64/")) CreateDirectory ("./output/linux/x64/");
-        if (!DirectoryExists ("./output/linux/x86/")) CreateDirectory ("./output/linux/x86/");
-        if (!DirectoryExists ("./output/linux/arm/")) CreateDirectory ("./output/linux/arm/");
-        foreach (var arch in new [] { "x64", "x86", "arm" }) {
-            var so = "./native-builds/lib/linux/" + arch + "/libSkiaSharp.so." + VERSION_SONAME;
-            if (FileExists (so)) {
-                CopyFileToDirectory (so, "./output/linux/" + arch + "/");
-                // the second copy excludes the file version
-                CopyFile (so, "./output/linux/" + arch + "/libSkiaSharp.so");
-            }
-            // copy libHarfBuzzSharp
-            so = "./native-builds/lib/linux/" + arch + "/libHarfBuzzSharp.so." + HARFBUZZ_VERSION_SONAME;
-            if (FileExists (so)) {
-                CopyFileToDirectory (so, "./output/linux/" + arch + "/");
-                // the second copy excludes the file version
-                CopyFile (so, "./output/linux/" + arch + "/libHarfBuzzSharp.so");
-            }
-        }
-    }
+    // copy ANGLE externals
+    CopyFileToDirectory (ANGLE_PATH.CombineWithFilePath ("uwp/bin/UAP/ARM/libEGL.dll"), "./output/native/uwp/arm/");
+    CopyFileToDirectory (ANGLE_PATH.CombineWithFilePath ("uwp/bin/UAP/ARM/libGLESv2.dll"), "./output/native/uwp/arm/");
+    CopyFileToDirectory (ANGLE_PATH.CombineWithFilePath ("uwp/bin/UAP/Win32/libEGL.dll"), "./output/native/uwp/x86/");
+    CopyFileToDirectory (ANGLE_PATH.CombineWithFilePath ("uwp/bin/UAP/Win32/libGLESv2.dll"), "./output/native/uwp/x86/");
+    CopyFileToDirectory (ANGLE_PATH.CombineWithFilePath ("uwp/bin/UAP/x64/libEGL.dll"), "./output/native/uwp/x64/");
+    CopyFileToDirectory (ANGLE_PATH.CombineWithFilePath ("uwp/bin/UAP/x64/libGLESv2.dll"), "./output/native/uwp/x64/");
 });
 
 // this builds the native C and C++ externals for Windows
@@ -186,7 +128,6 @@ Task ("externals-windows")
 
         // copy libSkiaSharp to output
         if (!DirectoryExists ("native-builds/lib/windows/" + dir)) CreateDirectory ("native-builds/lib/windows/" + dir);
-        CopyFileToDirectory ("native-builds/libSkiaSharp_windows/bin/" + arch + "/Release/libSkiaSharp.lib", "native-builds/lib/windows/" + dir);
         CopyFileToDirectory ("native-builds/libSkiaSharp_windows/bin/" + arch + "/Release/libSkiaSharp.dll", "native-builds/lib/windows/" + dir);
         CopyFileToDirectory ("native-builds/libSkiaSharp_windows/bin/" + arch + "/Release/libSkiaSharp.pdb", "native-builds/lib/windows/" + dir);
     });
@@ -202,7 +143,6 @@ Task ("externals-windows")
 
         // copy libHarfBuzzSharp to output
         if (!DirectoryExists ("native-builds/lib/windows/" + dir)) CreateDirectory ("native-builds/lib/windows/" + dir);
-        CopyFileToDirectory ("native-builds/libHarfBuzzSharp_windows/bin/" + arch + "/Release/libHarfBuzzSharp.lib", "native-builds/lib/windows/" + dir);
         CopyFileToDirectory ("native-builds/libHarfBuzzSharp_windows/bin/" + arch + "/Release/libHarfBuzzSharp.dll", "native-builds/lib/windows/" + dir);
         CopyFileToDirectory ("native-builds/libHarfBuzzSharp_windows/bin/" + arch + "/Release/libHarfBuzzSharp.pdb", "native-builds/lib/windows/" + dir);
     });
@@ -247,7 +187,6 @@ Task ("externals-uwp")
 
         // copy libSkiaSharp to output
         if (!DirectoryExists ("native-builds/lib/uwp/" + dir)) CreateDirectory ("native-builds/lib/uwp/" + dir);
-        CopyFileToDirectory ("native-builds/libSkiaSharp_uwp/bin/" + arch + "/Release/libSkiaSharp.lib", "native-builds/lib/uwp/" + dir);
         CopyFileToDirectory ("native-builds/libSkiaSharp_uwp/bin/" + arch + "/Release/libSkiaSharp.dll", "native-builds/lib/uwp/" + dir);
         CopyFileToDirectory ("native-builds/libSkiaSharp_uwp/bin/" + arch + "/Release/libSkiaSharp.pdb", "native-builds/lib/uwp/" + dir);
     });
@@ -264,7 +203,6 @@ Task ("externals-uwp")
 
         // copy libHarfBuzzSharp to output
         if (!DirectoryExists ("native-builds/lib/uwp/" + dir)) CreateDirectory ("native-builds/lib/uwp/" + dir);
-        CopyFileToDirectory ("native-builds/libHarfBuzzSharp_uwp/bin/" + arch + "/Release/libHarfBuzzSharp.lib", "native-builds/lib/uwp/" + dir);
         CopyFileToDirectory ("native-builds/libHarfBuzzSharp_uwp/bin/" + arch + "/Release/libHarfBuzzSharp.dll", "native-builds/lib/uwp/" + dir);
         CopyFileToDirectory ("native-builds/libHarfBuzzSharp_uwp/bin/" + arch + "/Release/libHarfBuzzSharp.pdb", "native-builds/lib/uwp/" + dir);
     });
@@ -717,7 +655,9 @@ Task ("externals-linux")
         if (!DirectoryExists ("native-builds/lib/linux/" + arch)) {
             CreateDirectory ("native-builds/lib/linux/" + arch);
         }
-        CopyFileToDirectory ("native-builds/libSkiaSharp_linux/bin/" + arch + "/libSkiaSharp.so." + VERSION_SONAME, "native-builds/lib/linux/" + arch);
+        var so = "native-builds/libSkiaSharp_linux/bin/" + arch + "/libSkiaSharp.so." + VERSION_SONAME;
+        CopyFileToDirectory (so, "native-builds/lib/linux/" + arch);
+        CopyFile (so, "native-builds/lib/linux/" + arch + "/libSkiaSharp.so");
     });
 
     var buildHarfBuzzArch = new Action<string> ((arch) => {
@@ -749,7 +689,6 @@ Task ("externals-linux")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("externals-angle-uwp")
-    .WithCriteria (IsRunningOnWindows ())
     .WithCriteria (!FileExists (ANGLE_PATH.CombineWithFilePath ("uwp/ANGLE.WindowsStore.nuspec")))
     .Does (() =>  
 {
