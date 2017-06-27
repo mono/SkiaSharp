@@ -675,7 +675,9 @@ Task ("externals-linux")
         if (!DirectoryExists ("native-builds/lib/linux/" + arch)) {
             CreateDirectory ("native-builds/lib/linux/" + arch);
         }
-        CopyFileToDirectory ("native-builds/libHarfBuzzSharp_linux/bin/" + arch + "/libHarfBuzzSharp.so." + HARFBUZZ_VERSION_SONAME, "native-builds/lib/linux/" + arch);
+        var so = "native-builds/libHarfBuzzSharp_linux/bin/" + arch + "/libHarfBuzzSharp.so." + HARFBUZZ_VERSION_SONAME;
+        CopyFileToDirectory (so, "native-builds/lib/linux/" + arch);
+        CopyFile (so, "native-builds/lib/linux/" + arch + "/libHarfBuzzSharp.so");
     });
 
     foreach (var arch in BUILD_ARCH) {
