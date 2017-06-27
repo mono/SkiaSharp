@@ -68,9 +68,7 @@ var RunMSBuild = new Action<FilePath> ((solution) =>
 
 var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath) =>
 {
-    if (!DirectoryExists (outputPath)) {
-        CreateDirectory (outputPath);
-    }
+    EnsureDirectoryExists (outputPath);
 
     NuGetPack (nuspecPath, new NuGetPackSettings { 
         Verbosity = VERBOSITY_NUGET,

@@ -32,10 +32,7 @@ var RunLipo = new Action<DirectoryPath, FilePath, FilePath[]> ((directory, outpu
         throw new InvalidOperationException ("lipo is only available on Unix.");
     }
     
-    var dir = directory.CombineWithFilePath (output).GetDirectory ();
-    if (!DirectoryExists (dir)) {
-        CreateDirectory (dir);
-    }
+    EnsureDirectoryExists (directory.CombineWithFilePath (output).GetDirectory ());
 
     var inputString = string.Join(" ", inputs.Select (i => string.Format ("\"{0}\"", i)));
     RunProcess ("lipo", new ProcessSettings {

@@ -8,10 +8,13 @@
 
     <!-- get the preferred architecture -->
     <PropertyGroup>
-        <!-- handle x86/x64 -->
+        <!-- handle x86/x64 specifically -->
         <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and ( '$(PlatformTarget)' == 'x64' or '$(PlatformTarget)' == 'x86' ) ">$(PlatformTarget)</PreferredNativeSkiaSharp>
-        <!-- handle Any CPU -->
+        <!-- handle Any CPU, considering Prefer32Bit -->
         <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$(Prefer32Bit)' == 'False' ">x64</PreferredNativeSkiaSharp>
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$(Prefer32Bit)' == 'True' ">x86</PreferredNativeSkiaSharp>
+        <!-- fall back to x64 on 64-bit machines -->
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and $([System.Environment]::Is64BitOperatingSystem) ">x64</PreferredNativeSkiaSharp>
         <!-- fall back to x86 -->
         <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' ">x86</PreferredNativeSkiaSharp>
     </PropertyGroup>
@@ -45,6 +48,7 @@
 
     <!-- a special case for Any CPU -->
     <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and ( '$(PlatformTarget)' != 'x64' and '$(PlatformTarget)' != 'x86' ) ">
+        <!-- Windows -->
         <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win7-x86\native\libSkiaSharp.dll"
               Condition="Exists('$(MSBuildThisFileDirectory)..\..\runtimes\win7-x86\native\libSkiaSharp.dll')">
             <Link>x86\libSkiaSharp.dll</Link>
@@ -53,6 +57,22 @@
         <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win7-x64\native\libSkiaSharp.dll"
               Condition="Exists('$(MSBuildThisFileDirectory)..\..\runtimes\win7-x64\native\libSkiaSharp.dll')">
             <Link>x64\libSkiaSharp.dll</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <!-- Linux -->
+        <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\linux-x86\native\libSkiaSharp.so"
+              Condition="Exists('$(MSBuildThisFileDirectory)..\..\runtimes\linux-x86\native\libSkiaSharp.so')">
+            <Link>x86\libSkiaSharp.so</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\linux-x64\native\libSkiaSharp.so"
+              Condition="Exists('$(MSBuildThisFileDirectory)..\..\runtimes\linux-x64\native\libSkiaSharp.so')">
+            <Link>x64\libSkiaSharp.so</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\linux-arm\native\libSkiaSharp.so"
+              Condition="Exists('$(MSBuildThisFileDirectory)..\..\runtimes\linux-arm\native\libSkiaSharp.so')">
+            <Link>arm\libSkiaSharp.so</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>

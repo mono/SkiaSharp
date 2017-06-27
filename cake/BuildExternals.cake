@@ -86,6 +86,9 @@ Task ("externals-native")
     // copy all the native files into the output
     CopyDirectory ("./native-builds/lib/", "./output/native/");
     // copy ANGLE externals
+    EnsureDirectoryExists ("./output/native/uwp/arm/");
+    EnsureDirectoryExists ("./output/native/uwp/x86/");
+    EnsureDirectoryExists ("./output/native/uwp/x64/");
     CopyFileToDirectory (ANGLE_PATH.CombineWithFilePath ("uwp/bin/UAP/ARM/libEGL.dll"), "./output/native/uwp/arm/");
     CopyFileToDirectory (ANGLE_PATH.CombineWithFilePath ("uwp/bin/UAP/ARM/libGLESv2.dll"), "./output/native/uwp/arm/");
     CopyFileToDirectory (ANGLE_PATH.CombineWithFilePath ("uwp/bin/UAP/Win32/libEGL.dll"), "./output/native/uwp/x86/");
@@ -127,7 +130,7 @@ Task ("externals-windows")
         RunMSBuildWithPlatformTarget ("native-builds/libSkiaSharp_windows/libSkiaSharp.sln", arch);
 
         // copy libSkiaSharp to output
-        if (!DirectoryExists ("native-builds/lib/windows/" + dir)) CreateDirectory ("native-builds/lib/windows/" + dir);
+        EnsureDirectoryExists ("native-builds/lib/windows/" + dir);
         CopyFileToDirectory ("native-builds/libSkiaSharp_windows/bin/" + arch + "/Release/libSkiaSharp.dll", "native-builds/lib/windows/" + dir);
         CopyFileToDirectory ("native-builds/libSkiaSharp_windows/bin/" + arch + "/Release/libSkiaSharp.pdb", "native-builds/lib/windows/" + dir);
     });
@@ -142,7 +145,7 @@ Task ("externals-windows")
         RunMSBuildWithPlatformTarget ("native-builds/libHarfBuzzSharp_windows/libHarfBuzzSharp.sln", arch);
 
         // copy libHarfBuzzSharp to output
-        if (!DirectoryExists ("native-builds/lib/windows/" + dir)) CreateDirectory ("native-builds/lib/windows/" + dir);
+        EnsureDirectoryExists ("native-builds/lib/windows/" + dir);
         CopyFileToDirectory ("native-builds/libHarfBuzzSharp_windows/bin/" + arch + "/Release/libHarfBuzzSharp.dll", "native-builds/lib/windows/" + dir);
         CopyFileToDirectory ("native-builds/libHarfBuzzSharp_windows/bin/" + arch + "/Release/libHarfBuzzSharp.pdb", "native-builds/lib/windows/" + dir);
     });
@@ -186,7 +189,7 @@ Task ("externals-uwp")
         RunMSBuildWithPlatformTarget ("native-builds/libSkiaSharp_uwp/libSkiaSharp.sln", arch);
 
         // copy libSkiaSharp to output
-        if (!DirectoryExists ("native-builds/lib/uwp/" + dir)) CreateDirectory ("native-builds/lib/uwp/" + dir);
+        EnsureDirectoryExists ("native-builds/lib/uwp/" + dir);
         CopyFileToDirectory ("native-builds/libSkiaSharp_uwp/bin/" + arch + "/Release/libSkiaSharp.dll", "native-builds/lib/uwp/" + dir);
         CopyFileToDirectory ("native-builds/libSkiaSharp_uwp/bin/" + arch + "/Release/libSkiaSharp.pdb", "native-builds/lib/uwp/" + dir);
     });
@@ -202,7 +205,7 @@ Task ("externals-uwp")
         RunMSBuildWithPlatformTarget ("native-builds/libHarfBuzzSharp_uwp/libHarfBuzzSharp.sln", arch);
 
         // copy libHarfBuzzSharp to output
-        if (!DirectoryExists ("native-builds/lib/uwp/" + dir)) CreateDirectory ("native-builds/lib/uwp/" + dir);
+        EnsureDirectoryExists ("native-builds/lib/uwp/" + dir);
         CopyFileToDirectory ("native-builds/libHarfBuzzSharp_uwp/bin/" + arch + "/Release/libHarfBuzzSharp.dll", "native-builds/lib/uwp/" + dir);
         CopyFileToDirectory ("native-builds/libHarfBuzzSharp_uwp/bin/" + arch + "/Release/libHarfBuzzSharp.pdb", "native-builds/lib/uwp/" + dir);
     });
@@ -251,9 +254,7 @@ Task ("externals-osx")
         });
 
         // copy libSkiaSharp to output
-        if (!DirectoryExists ("native-builds/lib/osx/" + arch)) {
-            CreateDirectory ("native-builds/lib/osx/" + arch);
-        }
+        EnsureDirectoryExists ("native-builds/lib/osx/" + arch);
         CopyDirectory ("native-builds/libSkiaSharp_osx/build/Release/", "native-builds/lib/osx/" + arch);
 
         // strip anything we can
@@ -291,9 +292,7 @@ Task ("externals-osx")
         });
 
         // copy libHarfBuzzSharp to output
-        if (!DirectoryExists ("native-builds/lib/osx/" + arch)) {
-            CreateDirectory ("native-builds/lib/osx/" + arch);
-        }
+        EnsureDirectoryExists ("native-builds/lib/osx/" + arch);
         CopyFileToDirectory ("native-builds/libHarfBuzzSharp_osx/build/Release/libHarfBuzzSharp.dylib", "native-builds/lib/osx/" + arch);
 
         // strip anything we can
@@ -366,9 +365,7 @@ Task ("externals-ios")
         });
 
         // copy libSkiaSharp to output
-        if (!DirectoryExists ("native-builds/lib/ios/" + arch)) {
-            CreateDirectory ("native-builds/lib/ios/" + arch);
-        }
+        EnsureDirectoryExists ("native-builds/lib/ios/" + arch);
         CopyDirectory ("native-builds/libSkiaSharp_ios/build/Release-" + sdk, "native-builds/lib/ios/" + arch);
 
         // strip anything we can
@@ -412,9 +409,7 @@ Task ("externals-ios")
         });
 
         // copy libHarfBuzzSharp_ios to output
-        if (!DirectoryExists ("native-builds/lib/ios/" + arch)) {
-            CreateDirectory ("native-builds/lib/ios/" + arch);
-        }
+        EnsureDirectoryExists ("native-builds/lib/ios/" + arch);
         CopyFileToDirectory ("native-builds/libHarfBuzzSharp_ios/build/Release-" + sdk + "/libHarfBuzzSharp.a", "native-builds/lib/ios/" + arch);
 
         // strip anything we can
@@ -477,9 +472,7 @@ Task ("externals-tvos")
         });
 
         // copy libSkiaSharp to output
-        if (!DirectoryExists ("native-builds/lib/tvos/" + arch)) {
-            CreateDirectory ("native-builds/lib/tvos/" + arch);
-        }
+        EnsureDirectoryExists ("native-builds/lib/tvos/" + arch);
         CopyDirectory ("native-builds/libSkiaSharp_tvos/build/Release-" + sdk, "native-builds/lib/tvos/" + arch);
 
         // strip anything we can
@@ -519,9 +512,7 @@ Task ("externals-tvos")
         });
 
         // copy libHarfBuzzSharp to output
-        if (!DirectoryExists ("native-builds/lib/tvos/" + arch)) {
-            CreateDirectory ("native-builds/lib/tvos/" + arch);
-        }
+        EnsureDirectoryExists ("native-builds/lib/tvos/" + arch);
         CopyFileToDirectory ("native-builds/libHarfBuzzSharp_tvos/build/Release-" + sdk + "/libHarfBuzzSharp.a", "native-builds/lib/tvos/" + arch);
 
         // strip anything we can
@@ -586,9 +577,7 @@ Task ("externals-android")
 
     // copy libSkiaSharp to output
     foreach (var folder in new [] { "x86", "x86_64", "armeabi-v7a", "arm64-v8a" }) {
-        if (!DirectoryExists ("native-builds/lib/android/" + folder)) {
-            CreateDirectory ("native-builds/lib/android/" + folder);
-        }
+        EnsureDirectoryExists("native-builds/lib/android/" + folder);
         CopyFileToDirectory ("native-builds/libSkiaSharp_android/libs/" + folder + "/libSkiaSharp.so", "native-builds/lib/android/" + folder);
     }
 
@@ -602,9 +591,7 @@ Task ("externals-android")
 
     // copy libSkiaSharp to output
     foreach (var folder in new [] { "x86", "x86_64", "armeabi-v7a", "arm64-v8a" }) {
-        if (!DirectoryExists ("native-builds/lib/android/" + folder)) {
-            CreateDirectory ("native-builds/lib/android/" + folder);
-        }
+        EnsureDirectoryExists ("native-builds/lib/android/" + folder);
         CopyFileToDirectory ("native-builds/libHarfBuzzSharp_android/libs/" + folder + "/libHarfBuzzSharp.so", "native-builds/lib/android/" + folder);
     }
 });
@@ -652,9 +639,7 @@ Task ("externals-linux")
         });
 
         // copy libSkiaSharp to output
-        if (!DirectoryExists ("native-builds/lib/linux/" + arch)) {
-            CreateDirectory ("native-builds/lib/linux/" + arch);
-        }
+        EnsureDirectoryExists ("native-builds/lib/linux/" + arch);
         var so = "native-builds/libSkiaSharp_linux/bin/" + arch + "/libSkiaSharp.so." + VERSION_SONAME;
         CopyFileToDirectory (so, "native-builds/lib/linux/" + arch);
         CopyFile (so, "native-builds/lib/linux/" + arch + "/libSkiaSharp.so");
@@ -672,9 +657,7 @@ Task ("externals-linux")
         });
 
         // copy libHarfBuzzSharp to output
-        if (!DirectoryExists ("native-builds/lib/linux/" + arch)) {
-            CreateDirectory ("native-builds/lib/linux/" + arch);
-        }
+        EnsureDirectoryExists ("native-builds/lib/linux/" + arch);
         var so = "native-builds/libHarfBuzzSharp_linux/bin/" + arch + "/libHarfBuzzSharp.so." + HARFBUZZ_VERSION_SONAME;
         CopyFileToDirectory (so, "native-builds/lib/linux/" + arch);
         CopyFile (so, "native-builds/lib/linux/" + arch + "/libHarfBuzzSharp.so");
@@ -698,11 +681,9 @@ Task ("externals-angle-uwp")
     var angleRoot = ANGLE_PATH.Combine ("uwp");
     var angleNupkg = angleRoot.CombineWithFilePath ("angle_" + ANGLE_VERSION_SOURCE + ".nupkg");
 
-    if (!DirectoryExists (angleRoot)) {
-        CreateDirectory (angleRoot);
-    } else {
-        CleanDirectory (angleRoot);
-    }
+    EnsureDirectoryExists (angleRoot);
+    CleanDirectory (angleRoot);
+
     DownloadFile (angleUrl, angleNupkg);
     Unzip (angleNupkg, angleRoot);
 });
@@ -717,11 +698,9 @@ Task ("externals-harfbuzz")
     DirectoryPath root = HARFBUZZ_PATH;
     FilePath archive = root.CombineWithFilePath ("harfbuzz-" + HARFBUZZ_VERSION_SOURCE + ".tar.bz2");
 
-    if (!DirectoryExists (root)) {
-        CreateDirectory (root);
-    } else {
-        CleanDirectory (root);
-    }
+    EnsureDirectoryExists (root);
+    CleanDirectory (root);
+
     DownloadFile (url, archive);
     DecompressArchive (archive, root);
     MoveDirectory (root.Combine ("harfbuzz-" + HARFBUZZ_VERSION_SOURCE), HARFBUZZ_PATH.Combine ("harfbuzz"));

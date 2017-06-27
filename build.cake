@@ -85,18 +85,18 @@ Task ("libs")
     .Does (() => 
 {
     // create all the directories
-    if (!DirectoryExists ("./output/windows/")) CreateDirectory ("./output/windows/");
-    if (!DirectoryExists ("./output/uwp/")) CreateDirectory ("./output/uwp/");
-    if (!DirectoryExists ("./output/android/")) CreateDirectory ("./output/android/");
-    if (!DirectoryExists ("./output/ios/")) CreateDirectory ("./output/ios/");
-    if (!DirectoryExists ("./output/tvos/")) CreateDirectory ("./output/tvos/");
-    if (!DirectoryExists ("./output/osx/")) CreateDirectory ("./output/osx/");
-    if (!DirectoryExists ("./output/portable/")) CreateDirectory ("./output/portable/");
-    if (!DirectoryExists ("./output/mac/")) CreateDirectory ("./output/mac/");
-    if (!DirectoryExists ("./output/netstandard/")) CreateDirectory ("./output/netstandard/");
-    if (!DirectoryExists ("./output/linux/")) CreateDirectory ("./output/linux/");
-    if (!DirectoryExists ("./output/interactive/")) CreateDirectory ("./output/interactive/");
-    if (!DirectoryExists ("./output/desktop/")) CreateDirectory ("./output/desktop/");
+    EnsureDirectoryExists ("./output/windows/");
+    EnsureDirectoryExists ("./output/uwp/");
+    EnsureDirectoryExists ("./output/android/");
+    EnsureDirectoryExists ("./output/ios/");
+    EnsureDirectoryExists ("./output/tvos/");
+    EnsureDirectoryExists ("./output/osx/");
+    EnsureDirectoryExists ("./output/portable/");
+    EnsureDirectoryExists ("./output/mac/");
+    EnsureDirectoryExists ("./output/netstandard/");
+    EnsureDirectoryExists ("./output/linux/");
+    EnsureDirectoryExists ("./output/interactive/");
+    EnsureDirectoryExists ("./output/desktop/");
 
     // .NET Standard / .NET Core
     RunNuGetRestore ("source/SkiaSharpSource.NetStandard.sln");
@@ -190,12 +190,12 @@ Task ("tests")
 
     // Windows (x86 and x64)
     if (IsRunningOnWindows ()) {
-        if (!DirectoryExists ("./output/tests/windows/x86")) CreateDirectory ("./output/tests/windows/x86");
+        EnsureDirectoryExists ("./output/tests/windows/x86");
         RunMSBuildWithPlatform ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", "x86");
         RunTests ("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/SkiaSharp.Desktop.Tests.dll");
         CopyFileToDirectory ("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/TestResult.xml", "./output/tests/windows/x86");
 
-        if (!DirectoryExists ("./output/tests/windows/x64")) CreateDirectory ("./output/tests/windows/x64");
+        EnsureDirectoryExists ("./output/tests/windows/x64");
         RunMSBuildWithPlatform ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", "x64");
         RunTests ("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Desktop.Tests.dll");
         CopyFileToDirectory ("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/TestResult.xml", "./output/tests/windows/x64");
@@ -203,14 +203,22 @@ Task ("tests")
 
     // Mac OSX (Any CPU)
     if (IsRunningOnMac ()) {
-        if (!DirectoryExists ("./output/tests/mac/AnyCPU")) CreateDirectory ("./output/tests/mac/AnyCPU");
+        EnsureDirectoryExists ("./output/tests/mac/AnyCPU");
         RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
         RunTests ("./tests/SkiaSharp.Desktop.Tests/bin/AnyCPU/Release/SkiaSharp.Desktop.Tests.dll");
         CopyFileToDirectory ("./tests/SkiaSharp.Desktop.Tests/bin/AnyCPU/Release/TestResult.xml", "./output/tests/mac/AnyCPU");
     }
 
+    // Linux (x64)
+    if (IsRunningOnWindows ()) {
+        EnsureDirectoryExists ("./output/tests/linux/x64");
+        RunMSBuildWithPlatform ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", "x64");
+        RunTests ("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Desktop.Tests.dll");
+        CopyFileToDirectory ("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/TestResult.xml", "./output/tests/linux/x64");
+    }
+
     // .NET Core
-    if (!DirectoryExists ("./output/tests/netcore")) CreateDirectory ("./output/tests/netcore");
+    EnsureDirectoryExists ("./output/tests/netcore");
     RunDotNetCoreRestore ("./tests/SkiaSharp.NetCore.Tests.Runner/SkiaSharp.NetCore.Tests.Runner.sln");
     DotNetCorePublish ("./tests/SkiaSharp.NetCore.Tests.Runner", new DotNetCorePublishSettings {
         Configuration = "Release",
@@ -311,10 +319,10 @@ Task ("docs")
         typeCount, totalTypes, typeCount / totalTypes, 
         memberCount, totalMembers, memberCount / totalMembers);
 
-    if (!DirectoryExists ("./output/docs/msxml/")) CreateDirectory ("./output/docs/msxml/");
+    EnsureDirectoryExists ("./output/docs/msxml/");
     RunMdocMSXml (DOCS_PATH, "./output/docs/msxml/");
     
-    if (!DirectoryExists ("./output/docs/mdoc/")) CreateDirectory ("./output/docs/mdoc/");
+    EnsureDirectoryExists ("./output/docs/mdoc/");
     RunMdocAssemble (DOCS_PATH, "./output/docs/mdoc/SkiaSharp");
 
     CopyFileToDirectory ("./docs/SkiaSharp.source", "./output/docs/mdoc/");
@@ -509,9 +517,7 @@ Task ("component")
 {
     // TODO: Not yet ready
     
-    // if (!DirectoryExists ("./output/")) {
-    //     CreateDirectory ("./output/");
-    // }
+    // EnsureDirectoryExists ("./output/");
     
     // FilePath yaml = "./component/component.yaml";
     // var yamlDir = yaml.GetDirectory ();
