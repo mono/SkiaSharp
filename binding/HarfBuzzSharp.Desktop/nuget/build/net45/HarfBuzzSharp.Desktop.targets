@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-    <PropertyGroup>
-        <OSPlatform Condition=" '$(OSPlatform)' == '' and '$(OS)' == 'Windows_NT'">Windows</OSPlatform>
-        <OSPlatform Condition=" '$(OSPlatform)' == '' and '$(OS)' != 'Windows_NT' and '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">macOS</OSPlatform>
-        <OSPlatform Condition=" '$(OSPlatform)' == '' and '$(OS)' != 'Windows_NT' and '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">Linux</OSPlatform>
+    <PropertyGroup Condition=" '$(OSPlatform)' == '' ">
+        <!-- TODO: properly distinguish between OSX and Linux -->
+        <OSPlatform Condition=" '$(OS)' == 'Windows_NT' ">Windows</OSPlatform>
+        <OSPlatform Condition=" '$(OS)' != 'Windows_NT' ">OSX</OSPlatform>
     </PropertyGroup>
 
     <!-- if ShouldIncludeNativeHarfBuzzSharp == False then don't include the native libHarfBuzzSharp -->
@@ -12,55 +12,48 @@
         <ShouldIncludeNativeHarfBuzzSharp Condition=" '$(ShouldIncludeNativeHarfBuzzSharp)' == '' ">True</ShouldIncludeNativeHarfBuzzSharp>
     </PropertyGroup>
 
-    <PropertyGroup Condition=" '$(PlatformTarget)' != 'x64' and '$(PlatformTarget)' != 'x86' ">
+    <!-- get the preferred architecture -->
+    <PropertyGroup>
+        <!-- handle x86/x64 -->
+        <PreferredNativeHarfBuzzSharp Condition=" '$(PreferredNativeHarfBuzzSharp)' == '' and ( '$(PlatformTarget)' == 'x64' or '$(PlatformTarget)' == 'x86' ) ">$(PlatformTarget)</PreferredNativeHarfBuzzSharp>
+        <!-- handle Any CPU -->
         <PreferredNativeHarfBuzzSharp Condition=" '$(PreferredNativeHarfBuzzSharp)' == '' and '$(Prefer32Bit)' == 'False' ">x64</PreferredNativeHarfBuzzSharp>
+        <!-- fall back to x86 -->
         <PreferredNativeHarfBuzzSharp Condition=" '$(PreferredNativeHarfBuzzSharp)' == '' ">x86</PreferredNativeHarfBuzzSharp>
     </PropertyGroup>
 
-    <PropertyGroup Condition=" '$(PlatformTarget)' == 'x64' or '$(PlatformTarget)' == 'x86' ">
-        <PreferredNativeHarfBuzzSharp Condition=" '$(PreferredNativeHarfBuzzSharp)' == '' ">$(PlatformTarget)</PreferredNativeHarfBuzzSharp>
+    <!-- get the preferred paths -->
+    <PropertyGroup>
+        <PreferredWindowsNativeHarfBuzzSharpPath>$(MSBuildThisFileDirectory)..\..\runtimes\win7-$(PreferredNativeHarfBuzzSharp)\native\libHarfBuzzSharp.dll</PreferredWindowsNativeHarfBuzzSharpPath>
+        <PreferredOSXNativeHarfBuzzSharpPath>$(MSBuildThisFileDirectory)..\..\runtimes\osx\native\libHarfBuzzSharp.dylib</PreferredOSXNativeHarfBuzzSharpPath>
+        <PreferredLinuxNativeHarfBuzzSharpPath>$(MSBuildThisFileDirectory)..\..\runtimes\linux-$(PreferredNativeHarfBuzzSharp)\native\libHarfBuzzSharp.so</PreferredLinuxNativeHarfBuzzSharpPath>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(PreferredNativeHarfBuzzSharpPath)' == '' ">
+        <PreferredNativeHarfBuzzSharpPath Condition=" '$(OSPlatform)' == 'Windows' ">$(PreferredWindowsNativeHarfBuzzSharpPath)</PreferredNativeHarfBuzzSharpPath>
+        <PreferredNativeHarfBuzzSharpPath Condition=" '$(OSPlatform)' == 'OSX' ">$(PreferredOSXNativeHarfBuzzSharpPath)</PreferredNativeHarfBuzzSharpPath>
+        <PreferredNativeHarfBuzzSharpPath Condition=" '$(OSPlatform)' == 'Linux' ">$(PreferredLinuxNativeHarfBuzzSharpPath)</PreferredNativeHarfBuzzSharpPath>
     </PropertyGroup>
 
-    <!-- add the native x86 Windows library -->
-    <ItemGroup Condition=" '$(ShouldIncludeNativeHarfBuzzSharp)' != 'False' and '$(PlatformTarget)' == 'x86' and '$(OSPlatform)' == 'Windows' ">
-        <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win7-x86\native\libHarfBuzzSharp.dll">
-            <Link>libHarfBuzzSharp.dll</Link>
+    <!-- add the .dll.config -->
+    <ItemGroup>
+        <None Include="$(MSBuildThisFileDirectory)HarfBuzzSharp.dll.config">
+            <Link>HarfBuzzSharp.dll.config</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Include="$(PreferredNativeHarfBuzzSharpPath)" Condition=" Exists('$(PreferredNativeHarfBuzzSharpPath)') ">
+            <Link>$([System.IO.Path]::GetFilename('$(PreferredNativeHarfBuzzSharpPath)'))</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
-    <!-- add the native x64 Windows library -->
-    <ItemGroup Condition=" '$(ShouldIncludeNativeHarfBuzzSharp)' != 'False' and '$(PlatformTarget)' == 'x64' and '$(OSPlatform)' == 'Windows' ">
-        <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win7-x64\native\libHarfBuzzSharp.dll">
-            <Link>libHarfBuzzSharp.dll</Link>
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-    </ItemGroup>
-
-    <!-- copy both native Windows libraries for Any CPU -->
-    <ItemGroup Condition=" '$(ShouldIncludeNativeHarfBuzzSharp)' != 'False' and '$(PlatformTarget)' != 'x64' and '$(PlatformTarget)' != 'x86' and '$(OS)' != 'Unix' ">
+    <!-- Windows has a special case for Any CPU -->
+    <ItemGroup Condition=" '$(ShouldIncludeNativeHarfBuzzSharp)' != 'False' and '$(OSPlatform)' == 'Windows' and ( '$(PlatformTarget)' != 'x64' and '$(PlatformTarget)' != 'x86' ) ">
         <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win7-x86\native\libHarfBuzzSharp.dll">
             <Link>x86\libHarfBuzzSharp.dll</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win7-x64\native\libHarfBuzzSharp.dll">
             <Link>x64\libHarfBuzzSharp.dll</Link>
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win7-$(PreferredNativeHarfBuzzSharp)\native\libHarfBuzzSharp.dll" Condition=" '$(PreferredNativeHarfBuzzSharp)' == 'x86' or '$(PreferredNativeHarfBuzzSharp)' == 'x64' ">
-            <Link>libHarfBuzzSharp.dll</Link>
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
-    </ItemGroup>
-
-    <!-- add the native OSX library -->
-    <ItemGroup Condition=" '$(ShouldIncludeNativeHarfBuzzSharp)' != 'False' and '$(OSPlatform)' == 'macOS' ">
-        <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\osx\native\libHarfBuzzSharp.dylib">
-            <Link>libHarfBuzzSharp.dylib</Link>
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="$(MSBuildThisFileDirectory)HarfBuzzSharp.dll.config">
-            <Link>HarfBuzzSharp.dll.config</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>

@@ -15,11 +15,6 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\mono.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
-  <PropertyGroup>
-    <OSPlatform Condition="'$(OS)' == 'Windows_NT'">Windows</OSPlatform>
-    <OSPlatform Condition="'$(OS)' != 'Windows_NT' and '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">macOS</OSPlatform>
-    <OSPlatform Condition="'$(OS)' != 'Windows_NT' and '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">Linux</OSPlatform>
-  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -50,18 +45,16 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(OSPlatform)' == 'Windows' ">
-    <None Include="..\..\native-builds\lib\windows\x64\libHarfBuzzSharp.dll">
+  <ItemGroup>
+    <None Include="..\..\native-builds\lib\windows\x64\libHarfBuzzSharp.dll" Condition="Exists('..\..\native-builds\lib\windows\x64\libHarfBuzzSharp.dll')">
       <Link>nuget\runtimes\win7-x64\native\libHarfBuzzSharp.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="..\..\native-builds\lib\windows\x86\libHarfBuzzSharp.dll">
+    <None Include="..\..\native-builds\lib\windows\x86\libHarfBuzzSharp.dll" Condition="Exists('..\..\native-builds\lib\windows\x86\libHarfBuzzSharp.dll')">
       <Link>nuget\runtimes\win7-x86\native\libHarfBuzzSharp.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-  <ItemGroup Condition=" '$(OSPlatform)' == 'macOS' ">
-    <None Include="..\..\native-builds\lib\osx\libHarfBuzzSharp.dylib">
+    <None Include="..\..\native-builds\lib\osx\libHarfBuzzSharp.dylib" Condition="Exists('..\..\native-builds\lib\osx\libHarfBuzzSharp.dylib')">
       <Link>nuget\runtimes\osx\native\libHarfBuzzSharp.dylib</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
