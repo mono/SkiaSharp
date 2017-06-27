@@ -8,13 +8,16 @@
 
     <!-- get the preferred architecture -->
     <PropertyGroup>
+        <!-- handle VS 2017 live unit testing -->
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$(BuildingForLiveUnitTesting)' == 'true' and '$(PlatformTarget)' == '' ">x86</PreferredNativeSkiaSharp>   
+
         <!-- handle x86/x64 specifically -->
-        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and ( '$(PlatformTarget)' == 'x64' or '$(PlatformTarget)' == 'x86' ) ">$(PlatformTarget)</PreferredNativeSkiaSharp>
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and ( '$(PlatformTarget)' == 'x64' or '$(PlatformTarget)' == 'x86' ) ">$(PlatformTarget)</PreferredNativeSkiaSharp> 
         <!-- handle Any CPU, considering Prefer32Bit -->
-        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$(Prefer32Bit)' == 'False' ">x64</PreferredNativeSkiaSharp>
-        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$(Prefer32Bit)' == 'True' ">x86</PreferredNativeSkiaSharp>
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$(Prefer32Bit)' == 'False' ">x64</PreferredNativeSkiaSharp>  
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$(Prefer32Bit)' == 'True' ">x86</PreferredNativeSkiaSharp> 
         <!-- fall back to x64 on 64-bit machines -->
-        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and $([System.Environment]::Is64BitOperatingSystem) ">x64</PreferredNativeSkiaSharp>
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and $([System.Environment]::Is64BitOperatingSystem) ">x64</PreferredNativeSkiaSharp> 
         <!-- fall back to x86 -->
         <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' ">x86</PreferredNativeSkiaSharp>
     </PropertyGroup>
