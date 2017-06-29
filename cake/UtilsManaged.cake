@@ -127,10 +127,17 @@ var RunMdocAssemble = new Action<DirectoryPath, FilePath> ((docsRoot, output) =>
     });
 });
 
-var RunSNTool = new Action<FilePath> ((assembly) =>
+var RunSNVerify = new Action<FilePath> ((assembly) =>
 {
     RunProcess (SNToolPath, new ProcessSettings {
         Arguments = string.Format ("-vf \"{0}\"", assembly),
+    });
+});
+
+var RunSNReSign = new Action<FilePath, FilePath> ((assembly, key) =>
+{
+    RunProcess (SNToolPath, new ProcessSettings {
+        Arguments = string.Format ("-R \"{0}\" \"{1}\"", assembly, key),
     });
 });
 

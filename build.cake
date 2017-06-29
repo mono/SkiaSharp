@@ -101,15 +101,11 @@ Task ("libs")
     // .NET Standard / .NET Core
     RunNuGetRestore ("source/SkiaSharpSource.NetStandard.sln");
     RunMSBuild ("source/SkiaSharpSource.NetStandard.sln");
-    // TODO: remove this nonsense !!!
-    // Assembly signing is not supported on non-Windows ???, so we MUST NOT use the output
-    // See: https://github.com/dotnet/roslyn/issues/8210
-    if (!IS_ON_CI || IsRunningOnWindows ()) {
-        CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.NetStandard/bin/Release/HarfBuzzSharp.dll", "./output/netstandard/");
-        CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz.NetStandard/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/netstandard/");
-        CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.NetStandard/bin/Release/SkiaSharp.Views.Forms.dll", "./output/netstandard/");
-    }
+    // copy to output
+    CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
+    CopyFileToDirectory ("./binding/HarfBuzzSharp.NetStandard/bin/Release/HarfBuzzSharp.dll", "./output/netstandard/");
+    CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz.NetStandard/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/netstandard/");
+    CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.NetStandard/bin/Release/SkiaSharp.Views.Forms.dll", "./output/netstandard/");
 
     // Generate the portable code - we can't do it automatically as there are issues on linux
     RunGenApi ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "binding/SkiaSharp.Portable/SkiaPortable.cs");
@@ -173,6 +169,29 @@ Task ("libs")
     CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/portable/");
     // SkiaSharp.Workbooks
     CopyFileToDirectory ("./source/SkiaSharp.Workbooks/bin/Release/SkiaSharp.Workbooks.dll", "./output/interactive/");
+
+    // make sure everything is signed and strong named
+    // (msbuild on non-Windows can't sign as part of the build process, so use sn)
+    var excludedAssemblies = new string[] {
+        "/SkiaSharp.Views.Forms.dll", // Xamarin.Forms is not sigend, so we can't sign
+        "/SkiaSharp.Workbooks.dll" // Workbooks integration library is not signed, so we can't sign
+    };
+    foreach (var f in GetFiles("./output/*/*.dll")) {
+        // skip the excluded assemblies
+        var excluded = false;
+        foreach (var assembly in excludedAssemblies) {
+            if (f.FullPath.EndsWith (assembly)) {
+                excluded = true;
+                break;
+            }
+        }
+        // sign and verify
+        if (!excluded) {
+            Information("Making sure that '{0}' is signed.", f);
+            RunSNReSign(f, "mono.snk");
+            RunSNVerify(f);
+        }
+    }
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -454,31 +473,6 @@ Task ("nuget")
     .IsDependentOn ("docs")
     .Does (() => 
 {
-    // Because some platforms don't support signing,
-    // we must make sure the final package only contains signed assemblies
-    // And, we want to make sure all is well on Windows too
-    if (IS_ON_FINAL_CI || IsRunningOnWindows ()) {
-        var excludedAssemblies = new string[] {
-            "/SkiaSharp.Views.Forms.dll", // Xamarin.Forms is not sigend, so we can't sign
-            "/SkiaSharp.Workbooks.dll" // Workbooks integration library is not signed, so we can't sign
-        };
-        foreach (var f in GetFiles("./output/*/*.dll")) {
-            // skip the excluded assemblies
-            var excluded = false;
-            foreach (var assembly in excludedAssemblies) {
-                if (f.FullPath.EndsWith (assembly)) {
-                    excluded = true;
-                    break;
-                }
-            }
-            // verify
-            if (!excluded) {
-                Information("Making sure that '{0}' is signed.", f);
-                RunSNTool(f);
-            }
-        }
-    }
-
     // we can only build the combined package on CI
     if (IS_ON_FINAL_CI) {
         PackageNuGet ("./nuget/SkiaSharp.nuspec", "./output/");
