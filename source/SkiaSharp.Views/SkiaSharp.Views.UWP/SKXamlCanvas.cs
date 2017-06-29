@@ -84,7 +84,10 @@ namespace SkiaSharp.Views.UWP
 			if (designMode)
 				return;
 
-			if (ActualWidth == 0 || ActualHeight == 0 || Visibility != Visibility.Visible)
+			if (ActualWidth == 0 || ActualHeight == 0 ||
+				double.IsNaN(ActualWidth) || double.IsNaN(ActualHeight) ||
+				double.IsInfinity(ActualWidth) || double.IsInfinity(ActualHeight) ||
+				Visibility != Visibility.Visible)
 				return;
 
 			int width, height;

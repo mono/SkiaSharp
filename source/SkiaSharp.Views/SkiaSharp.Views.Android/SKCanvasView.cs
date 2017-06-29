@@ -70,6 +70,9 @@ namespace SkiaSharp.Views.Android
 			if (designMode)
 				return;
 
+			if (info.Width == 0 || info.Height == 0 || Visibility != ViewStates.Visible)
+				return;
+
 			// create the bitmap data if we need it
 			if (bitmap == null || bitmap.Width != info.Width || bitmap.Height != info.Height)
 			{

@@ -39,10 +39,16 @@ namespace SkiaSharp.Views.WPF
 
 		protected override void OnRender(DrawingContext drawingContext)
 		{
+			base.OnRender(drawingContext);
+
 			if (designMode)
 				return;
 
-			base.OnRender(drawingContext);
+			if (ActualWidth == 0 || ActualHeight == 0 ||
+				double.IsNaN(ActualWidth) || double.IsNaN(ActualHeight) ||
+				double.IsInfinity(ActualWidth) || double.IsInfinity(ActualHeight) ||
+				Visibility != Visibility.Visible)
+				return;
 
 			int width, height;
 			double dpiX = 1.0;
