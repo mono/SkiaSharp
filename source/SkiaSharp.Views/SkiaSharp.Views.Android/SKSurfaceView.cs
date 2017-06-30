@@ -1,4 +1,5 @@
-﻿using Android.Content;
+﻿using System;
+using Android.Content;
 using Android.Graphics;
 using Android.Runtime;
 using Android.Util;
@@ -77,7 +78,7 @@ namespace SkiaSharp.Views.Android
 		private void CreateBitmap(int width, int height)
 		{
 			// create the bitmap data
-			if (bitmap == null || bitmap.Width != width || bitmap.Height != height)
+			if (bitmap == null || bitmap.Handle == IntPtr.Zero || bitmap.Width != width || bitmap.Height != height)
 			{
 				FreeBitmap();
 				bitmap = Bitmap.CreateBitmap(width, height, Bitmap.Config.Argb8888);
@@ -89,7 +90,10 @@ namespace SkiaSharp.Views.Android
 			if (bitmap != null)
 			{
 				// free and recycle the bitmap data
-				bitmap.Recycle();
+				if (bitmap.Handle != IntPtr.Zero && !bitmap.IsRecycled)
+				{
+					bitmap.Recycle();
+				}
 				bitmap.Dispose();
 				bitmap = null;
 			}

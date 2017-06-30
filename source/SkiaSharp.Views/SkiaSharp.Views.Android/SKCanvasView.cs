@@ -74,7 +74,7 @@ namespace SkiaSharp.Views.Android
 				return;
 
 			// create the bitmap data if we need it
-			if (bitmap == null || bitmap.Width != info.Width || bitmap.Height != info.Height)
+			if (bitmap == null || bitmap.Handle == IntPtr.Zero || bitmap.Width != info.Width || bitmap.Height != info.Height)
 			{
 				FreeBitmap();
 				bitmap = Bitmap.CreateBitmap(info.Width, info.Height, Bitmap.Config.Argb8888);
@@ -141,7 +141,10 @@ namespace SkiaSharp.Views.Android
 			if (bitmap != null)
 			{
 				// free and recycle the bitmap data
-				bitmap.Recycle();
+				if (bitmap.Handle != IntPtr.Zero && !bitmap.IsRecycled)
+				{
+					bitmap.Recycle();
+				}
 				bitmap.Dispose();
 				bitmap = null;
 			}
