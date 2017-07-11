@@ -95,6 +95,9 @@ namespace SkiaSharp
 		public extern static bool sk_colorspace_gamma_is_linear(sk_colorspace_t cColorSpace);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_colorspace_is_srgb(sk_colorspace_t cColorSpace);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_colorspace_equals(sk_colorspace_t src, sk_colorspace_t dst);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_colorspace_t sk_colorspace_new_srgb();
@@ -118,6 +121,8 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static  bool sk_colorspaceprimaries_to_xyzd50(ref SKColorSpacePrimaries primaries, sk_matrix44_t toXYZD50);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_colorspace_transfer_fn_invert(ref SKColorSpaceTransferFn transfer, out SKColorSpaceTransferFn inverted);
 
 		// ColorType
 
