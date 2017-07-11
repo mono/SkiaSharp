@@ -73,13 +73,18 @@ namespace SkiaSharp
 			}
 		}
 
-		public SKBitmap (SKImageInfo info, SKColorTable ctable)
+		public SKBitmap (SKImageInfo info, SKColorTable ctable, SKBitmapAllocFlags flags)
 			: this ()
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			if (!SkiaApi.sk_bitmap_try_alloc_pixels_with_color_table (Handle, ref cinfo, IntPtr.Zero, ctable != null ? ctable.Handle : IntPtr.Zero)) {
+			if (!SkiaApi.sk_bitmap_try_alloc_pixels_with_color_table (Handle, ref cinfo, ctable != null ? ctable.Handle : IntPtr.Zero, flags)) {
 				throw new Exception (UnableToAllocatePixelsMessage);
 			}
+		}
+
+		public SKBitmap (SKImageInfo info, SKColorTable ctable)
+			: this (info, ctable, 0)
+		{
 		}
 
 		protected override void Dispose (bool disposing)
@@ -135,9 +140,21 @@ namespace SkiaSharp
 			SkiaApi.sk_bitmap_set_pixel_color (Handle, x, y, color);
 		}
 
+		[Obsolete ("Use SKPixmap.ReadPixels instead.")]
 		public bool CopyPixelsTo(IntPtr dst, int dstSize, int dstRowBytes = 0, bool preserveDstPad = false)
 		{
-			return SkiaApi.sk_bitmap_copy_pixels_to (Handle, dst, (IntPtr)dstSize, (IntPtr)dstRowBytes, preserveDstPad);
+			if (dst == IntPtr.Zero) {
+				throw new ArgumentException (nameof (dst));
+			}
+
+			using (new SKAutoLockPixels (this))
+			using (var pixmap = PeekPixels ()) {
+				var info = Info;
+				if (dstRowBytes == 0) {
+					dstRowBytes = info.RowBytes;
+				}
+				return pixmap.ReadPixels (info, dst, dstRowBytes);
+			}
 		}
 
 		public bool CanCopyTo (SKColorType colorType)

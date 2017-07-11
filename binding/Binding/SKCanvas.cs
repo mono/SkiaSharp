@@ -703,35 +703,35 @@ namespace SkiaSharp
 
 		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKColor[] colors, SKPaint paint)
 		{
-			DrawVertices (vmode, vertices, null, colors, null, paint);
+			var vert = SKVertices.CreateCopy(vmode, vertices, colors);
+			DrawVertices(vert, SKBlendMode.Modulate, paint);
 		}
 
 		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKPoint[] texs, SKColor[] colors, SKPaint paint)
 		{
-			DrawVertices (vmode, vertices, texs, colors, null, paint);
+			var vert = SKVertices.CreateCopy(vmode, vertices, texs, colors);
+			DrawVertices(vert, SKBlendMode.Modulate, paint);
 		}
 
 		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKPoint[] texs, SKColor[] colors, UInt16[] indices, SKPaint paint)
 		{
-			DrawVertices (vmode, vertices, texs, colors, SKBlendMode.Modulate, indices, paint);
+			var vert = SKVertices.CreateCopy(vmode, vertices, texs, colors, indices);
+			DrawVertices(vert, SKBlendMode.Modulate, paint);
 		}
 
 		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKPoint[] texs, SKColor[] colors, SKBlendMode mode, UInt16[] indices, SKPaint paint)
+		{
+			var vert = SKVertices.CreateCopy (vmode, vertices, texs, colors, indices);
+			DrawVertices (vert, mode, paint);
+		}
+
+		public void DrawVertices (SKVertices vertices, SKBlendMode mode, SKPaint paint)
 		{
 			if (vertices == null)
 				throw new ArgumentNullException (nameof (vertices));
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
-
-			if (texs != null && vertices.Length != texs.Length)
-				throw new ArgumentException ("The number of texture coordinates must match the number of vertices.", nameof (texs));
-			if (colors != null && vertices.Length != colors.Length)
-				throw new ArgumentException ("The number of colors must match the number of vertices.", nameof (colors));
-
-			var vertexCount = vertices.Length;
-			var indexCount = indices?.Length ?? 0;
-
-			SkiaApi.sk_canvas_draw_vertices (Handle, vmode, vertexCount, vertices, texs, colors, mode, indices, indexCount, paint.Handle);
+			SkiaApi.sk_canvas_draw_vertices (Handle, vertices.Handle, mode, paint.Handle);
 		}
 	}
 

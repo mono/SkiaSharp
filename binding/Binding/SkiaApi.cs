@@ -47,7 +47,6 @@ using sk_colorspace_t = System.IntPtr;
 using sk_path_iterator_t = System.IntPtr;
 using sk_path_effect_t = System.IntPtr;
 using sk_pathmeasure_t = System.IntPtr;
-using sk_pixelref_factory_t = System.IntPtr;
 using sk_colortable_t = System.IntPtr;
 using gr_context_t = System.IntPtr;
 using gr_glinterface_t = System.IntPtr;
@@ -60,6 +59,7 @@ using sk_3dview_t = System.IntPtr;
 using sk_matrix44_t = System.IntPtr;
 using sk_color_t = System.UInt32;
 using sk_pmcolor_t = System.UInt32;
+using sk_vertices_t = System.IntPtr;
 
 namespace SkiaSharp
 {
@@ -293,7 +293,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_destroy(sk_canvas_t canvas);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_canvas_draw_vertices(sk_canvas_t canvas, SKVertexMode vmode, int vertexCount, [In] SKPoint[] vertices, [In] SKPoint[] texs, [In] SKColor[] colors, SKBlendMode mode, UInt16[] indices, int indexCount, sk_paint_t paint);
+		public extern static void sk_canvas_draw_vertices(sk_canvas_t canvas, sk_vertices_t vertices, SKBlendMode mode, sk_paint_t paint);
 
 		// Paint
 
@@ -1297,9 +1297,6 @@ namespace SkiaSharp
 		public extern static bool sk_bitmap_ready_to_draw(sk_bitmap_t b);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		public extern static bool sk_bitmap_copy_pixels_to(sk_bitmap_t cbitmap, IntPtr dst, IntPtr dstSize, IntPtr dstRowBytes, bool preserveDstPad);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_bitmap_copy(sk_bitmap_t cbitmap, sk_bitmap_t dst, SKColorType ct);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
@@ -1322,7 +1319,7 @@ namespace SkiaSharp
 		public extern static bool sk_bitmap_try_alloc_pixels(sk_bitmap_t cbitmap, ref SKImageInfoNative requestedInfo, IntPtr rowBytes);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		public extern static bool sk_bitmap_try_alloc_pixels_with_color_table(sk_bitmap_t cbitmap, ref SKImageInfoNative requestedInfo, sk_pixelref_factory_t factory, sk_colortable_t ctable);
+		public extern static bool sk_bitmap_try_alloc_pixels_with_color_table(sk_bitmap_t cbitmap, ref SKImageInfoNative requestedInfo, sk_colortable_t ctable, SKBitmapAllocFlags flags);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_colortable_t sk_bitmap_get_colortable(sk_bitmap_t cbitmap);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1380,6 +1377,9 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_pixmap_encode_image(sk_wstream_t dst, sk_pixmap_t src, SKEncodedImageFormat encoder, int quality);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_pixmap_read_pixels(sk_pixmap_t cpixmap, ref SKImageInfo dstInfo, IntPtr dstPixels, IntPtr dstRowBytes, int srcX, int srcY);
 
 		// Mask
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1658,5 +1658,11 @@ namespace SkiaSharp
 		public extern static bool sk_region_op2(sk_region_t r, sk_region_t src, SKRegionOperation op);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_region_get_bounds(sk_region_t r, out SKRectI rect);
+
+		// Vertices
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_vertices_unref(sk_vertices_t cvertices);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_vertices_t sk_vertices_make_copy(SKVertexMode vmode, int vertexCount, [In] SKPoint[] positions, [In] SKPoint[] texs, [In] SKColor[] colors, int indexCount, [In] UInt16[] indices);
 	}
 }

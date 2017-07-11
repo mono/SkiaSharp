@@ -279,6 +279,7 @@ namespace SkiaSharp
 
 	[Flags]
 	public enum SKSurfacePropsFlags {
+		None = 0,
 		UseDeviceIndependentFonts = 1 << 0,
 	}
 
@@ -337,6 +338,7 @@ namespace SkiaSharp
 	[Flags]
 	public enum SKCropRectFlags
 	{
+		HasNone = 0,
 		HasLeft = 0x01,
 		HasTop = 0x02,
 		HasWidth = 0x04,
@@ -423,6 +425,13 @@ namespace SkiaSharp
 		BottomUp
 	}
 
+
+	public enum SKTransferFunctionBehavior {
+		Respect,
+		Ignore,
+	}
+
+
 	[StructLayout(LayoutKind.Sequential)]
 	internal unsafe struct SKCodecOptionsInternal {
 		public SKZeroInitialized fZeroInitialized;
@@ -430,6 +439,7 @@ namespace SkiaSharp
 		public IntPtr fFrameIndex;
 		[MarshalAs(UnmanagedType.I1)]
 		public bool fHasPriorFrame;
+		public SKTransferFunctionBehavior fPremulBehavior;
 	}
 
 	public struct SKCodecOptions {
@@ -444,30 +454,35 @@ namespace SkiaSharp
 			Subset = null;
 			FrameIndex = 0;
 			HasPriorFrame = false;
+			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (SKZeroInitialized zeroInitialized, SKRectI subset) {
 			ZeroInitialized = zeroInitialized;
 			Subset = subset;
 			FrameIndex = 0;
 			HasPriorFrame = false;
+			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (SKRectI subset) {
 			ZeroInitialized = SKZeroInitialized.No;
 			Subset = subset;
 			FrameIndex = 0;
 			HasPriorFrame = false;
+			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (int frameIndex, bool hasPriorFrame) {
 			ZeroInitialized = SKZeroInitialized.No;
 			Subset = null;
 			FrameIndex = frameIndex;
 			HasPriorFrame = hasPriorFrame;
+			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKZeroInitialized ZeroInitialized { get; set; }
 		public SKRectI? Subset { get; set; }
 		public bool HasSubset => Subset != null;
 		public int FrameIndex { get; set; }
 		public bool HasPriorFrame { get; set; }
+		public SKTransferFunctionBehavior PremulBehavior { get; set; }
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -476,6 +491,7 @@ namespace SkiaSharp
 		private IntPtr duration;
 		[MarshalAs (UnmanagedType.I1)]
 		private bool fullyRecieved;
+		private SKAlphaType alphaType;
 
 		public int RequiredFrame {
 			get { return (int)requiredFrame; }
@@ -490,6 +506,11 @@ namespace SkiaSharp
 		public bool FullyRecieved {
 			get { return fullyRecieved; }
 			set { fullyRecieved = value; }
+		}
+
+		public SKAlphaType AlphaType {
+			get { return alphaType; }
+			set { alphaType = value; }
 		}
 	}
 
@@ -1776,6 +1797,7 @@ namespace SkiaSharp
 
 	[Flags]
 	public enum GRGlBackendState : UInt32 {
+		None             = 0,
 		RenderTarget     = 1 << 0,
 		TextureBinding   = 1 << 1,
 		View             = 1 << 2, // scissor and viewport
@@ -1793,6 +1815,7 @@ namespace SkiaSharp
 
 	[Flags]
 	public enum GRBackendState : UInt32 {
+		None = 0,
 		All = 0xffffffff,
 	}
 
@@ -1871,8 +1894,6 @@ namespace SkiaSharp
 		private bool fUseDrawInsteadOfPartialRenderTargetWrite;
 		[MarshalAs(UnmanagedType.I1)]
 		private bool fImmediateMode;
-		[MarshalAs(UnmanagedType.I1)]
-		private bool fClipDrawOpsToBounds;
 		private int  fMaxOpCombineLookback;
 		private int  fMaxOpCombineLookahead;
 		[MarshalAs(UnmanagedType.I1)]
@@ -1890,6 +1911,8 @@ namespace SkiaSharp
 		[MarshalAs(UnmanagedType.I1)]
 		private bool fSuppressPathRendering;
 		private GRContextOptionsGpuPathRenderers fGpuPathRenderers;
+		[MarshalAs(UnmanagedType.I1)]
+		private bool fAvoidStencilBuffers;
 
 		public bool SuppressPrints {
 			get { return fSuppressPrints; }
@@ -1918,10 +1941,6 @@ namespace SkiaSharp
 		public bool ImmediateMode {
 			get { return fImmediateMode; }
 			set { fImmediateMode = value; }
-		}
-		public bool ClipDrawOpsToBounds {
-			get { return fClipDrawOpsToBounds; }
-			set { fClipDrawOpsToBounds = value; }
 		}
 		public int MaxOpCombineLookback {
 			get { return fMaxOpCombineLookback; }
@@ -1963,6 +1982,10 @@ namespace SkiaSharp
 			get { return fGpuPathRenderers; }
 			set { fGpuPathRenderers = value; }
 		}
+		public bool AvoidStencilBuffers {
+			get { return fAvoidStencilBuffers; }
+			set { fAvoidStencilBuffers = value; }
+		}
 
 		public static GRContextOptions Default {
 			get {
@@ -1974,7 +1997,6 @@ namespace SkiaSharp
 					fBufferMapThreshold = -1,
 					fUseDrawInsteadOfPartialRenderTargetWrite = false,
 					fImmediateMode = false,
-					fClipDrawOpsToBounds = false,
 					fMaxOpCombineLookback = -1,
 					fMaxOpCombineLookahead = -1,
 					fUseShaderSwizzling = false,
@@ -1985,6 +2007,7 @@ namespace SkiaSharp
 					fDisableGpuYUVConversion = false,
 					fSuppressPathRendering = false,
 					fGpuPathRenderers = GRContextOptionsGpuPathRenderers.All,
+					fAvoidStencilBuffers = false,
 				};
 			}
 		}
@@ -2211,7 +2234,9 @@ namespace SkiaSharp
 		Rec2020,
 	}
 
+	[Flags]
 	public enum SKColorSpaceFlags {
+		None = 0,
 		NonLinearBlending = 0x1,
 	}
 
@@ -2412,5 +2437,11 @@ namespace SkiaSharp
 			(int)fInvertStyle <= (int)SKHighContrastConfigInvertStyle.InvertLightness &&
 			fContrast >= -1.0 &&
 			fContrast <= 1.0;
+	}
+
+	[Flags]
+	public enum SKBitmapAllocFlags : uint {
+		None = 0,
+		ZeroPixels = 1 << 0,
 	}
 }

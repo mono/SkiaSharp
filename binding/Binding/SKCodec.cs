@@ -135,7 +135,8 @@ namespace SkiaSharp
 				fZeroInitialized = options.ZeroInitialized,
 				fSubset = null,
 				fFrameIndex = (IntPtr) options.FrameIndex,
-				fHasPriorFrame = options.HasPriorFrame
+				fHasPriorFrame = options.HasPriorFrame,
+				fPremulBehavior = options.PremulBehavior,
 			};
 			if (options.HasSubset) {
 				var subset = options.Subset.Value;
@@ -191,7 +192,8 @@ namespace SkiaSharp
 				fZeroInitialized = options.ZeroInitialized,
 				fSubset = null,
 				fFrameIndex = (IntPtr) options.FrameIndex,
-				fHasPriorFrame = options.HasPriorFrame
+				fHasPriorFrame = options.HasPriorFrame,
+				fPremulBehavior = options.PremulBehavior,
 			};
 			if (options.HasSubset) {
 				var subset = options.Subset.Value;
@@ -235,7 +237,8 @@ namespace SkiaSharp
 				fZeroInitialized = options.ZeroInitialized,
 				fSubset = null,
 				fFrameIndex = (IntPtr) options.FrameIndex,
-				fHasPriorFrame = options.HasPriorFrame
+				fHasPriorFrame = options.HasPriorFrame,
+				fPremulBehavior = options.PremulBehavior,
 			};
 			if (options.HasSubset) {
 				var subset = options.Subset.Value;
