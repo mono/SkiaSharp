@@ -64,56 +64,62 @@ namespace SkiaSharp
 		public static readonly int PlatformColorGreenShift;
 		public static readonly int PlatformColorBlueShift;
 
+		private int width;
+		private int height;
+		private SKColorType colorType;
+		private SKAlphaType alphaType;
+		private SKColorSpace colorSpace;
+
 		static SKImageInfo ()
 		{
 			PlatformColorType = SkiaApi.sk_colortype_get_default_8888 ();
 			SkiaApi.sk_color_get_bit_shift (out PlatformColorAlphaShift, out PlatformColorRedShift, out PlatformColorGreenShift, out PlatformColorBlueShift);
 		}
 
-		public int Width { get; set; }
+		public int Width { get { return width; } set { width = value; } }
 
-		public int Height { get; set; }
+		public int Height { get { return height; } set { height = value; } }
 
-		public SKColorType ColorType { get; set; }
+		public SKColorType ColorType { get { return colorType; } set { colorType = value; } }
 
-		public SKAlphaType AlphaType { get; set; }
+		public SKAlphaType AlphaType { get { return alphaType; } set { alphaType = value; } }
 
-		public SKColorSpace ColorSpace { get; set; }
+		public SKColorSpace ColorSpace { get { return colorSpace; } set { colorSpace = value; } }
 
 		public SKImageInfo (int width, int height)
 		{
-			Width = width;
-			Height = height;
-			ColorType = PlatformColorType;
-			AlphaType = SKAlphaType.Premul;
-			ColorSpace = null;
+			this.width = width;
+			this.height = height;
+			this.colorType = PlatformColorType;
+			this.alphaType = SKAlphaType.Premul;
+			this.colorSpace = null;
 		}
 
 		public SKImageInfo (int width, int height, SKColorType colorType)
 		{
-			Width = width;
-			Height = height;
-			ColorType = colorType;
-			AlphaType = SKAlphaType.Premul;
-			ColorSpace = null;
+			this.width = width;
+			this.height = height;
+			this.colorType = colorType;
+			this.alphaType = SKAlphaType.Premul;
+			this.colorSpace = null;
 		}
 
 		public SKImageInfo (int width, int height, SKColorType colorType, SKAlphaType alphaType)
 		{
-			Width = width;
-			Height = height;
-			ColorType = colorType;
-			AlphaType = alphaType;
-			ColorSpace = null;
+			this.width = width;
+			this.height = height;
+			this.colorType = colorType;
+			this.alphaType = alphaType;
+			this.colorSpace = null;
 		}
 
 		public SKImageInfo (int width, int height, SKColorType colorType, SKAlphaType alphaType, SKColorSpace colorspace)
 		{
-			Width = width;
-			Height = height;
-			ColorType = colorType;
-			AlphaType = alphaType;
-			ColorSpace = colorspace;
+			this.width = width;
+			this.height = height;
+			this.colorType = colorType;
+			this.alphaType = alphaType;
+			this.colorSpace = colorspace;
 		}
 
 		public int BytesPerPixel {
