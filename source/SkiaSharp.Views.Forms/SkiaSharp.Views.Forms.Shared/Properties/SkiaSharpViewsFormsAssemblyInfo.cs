@@ -9,9 +9,9 @@ using System.Reflection;
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("SkiaSharp.Views.Forms")]
-[assembly: AssemblyVersion("1.58.0.0")]
-[assembly: AssemblyFileVersion("1.58.1.0")]
-[assembly: AssemblyInformationalVersion("1.58.1.0-{GIT_SHA}")]
+[assembly: AssemblyVersion("1.59.0.0")]
+[assembly: AssemblyFileVersion("1.59.0.0")]
+[assembly: AssemblyInformationalVersion("1.59.0.0-{GIT_SHA}")]
 [assembly: AssemblyCopyright("Xamarin Inc.")]
 [assembly: AssemblyTrademark("")]
 
