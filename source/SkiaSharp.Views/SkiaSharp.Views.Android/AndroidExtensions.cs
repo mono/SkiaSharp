@@ -165,7 +165,8 @@ namespace SkiaSharp.Views.Android
 			}
 			else
 			{
-				success = skiaBitmap.CopyPixelsTo(ptr, bmp.Width * bmp.RowBytes);
+				// must multiply HEIGHT * rowBytes to get total number of bytes
+				success = skiaBitmap.CopyPixelsTo(ptr, bmp.Height * bmp.RowBytes);
 			}
 
 			bmp.UnlockPixels();
