@@ -1384,7 +1384,7 @@ namespace SkiaSharp
 		public extern static bool sk_pixmap_encode_image(sk_wstream_t dst, sk_pixmap_t src, SKEncodedImageFormat encoder, int quality);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		public extern static bool sk_pixmap_read_pixels(sk_pixmap_t cpixmap, ref SKImageInfo dstInfo, IntPtr dstPixels, IntPtr dstRowBytes, int srcX, int srcY);
+		public extern static bool sk_pixmap_read_pixels(sk_pixmap_t cpixmap, ref SKImageInfoNative dstInfo, IntPtr dstPixels, IntPtr dstRowBytes, int srcX, int srcY);
 
 		// Mask
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]

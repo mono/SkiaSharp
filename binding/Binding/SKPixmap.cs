@@ -118,7 +118,8 @@ namespace SkiaSharp
 
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)
 		{
-			return SkiaApi.sk_pixmap_read_pixels (Handle, ref dstInfo, dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
+			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
+			return SkiaApi.sk_pixmap_read_pixels (Handle, ref cinfo, dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
 		}
 
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes)
