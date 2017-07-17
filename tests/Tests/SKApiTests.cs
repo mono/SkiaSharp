@@ -18,6 +18,48 @@ namespace SkiaSharp.Tests
 		}
 
 		[Test]
+		public void ApiTypesAreNotInvalid()
+		{
+			var ass = typeof(SKImageInfo).GetTypeInfo().Assembly;
+
+			var api = GetApi();
+
+			foreach (var method in api)
+			{
+				foreach (var param in method.GetParameters())
+				{
+					var paramType = param.ParameterType;
+					if (param.ParameterType.IsByRef || param.ParameterType.IsArray)
+					{
+						paramType = param.ParameterType.GetElementType();
+					}
+
+					// check to make sure that the "internal" versions are being used
+					var internalType = ass.GetType(paramType.FullName + "Internal");
+					var nativeType = ass.GetType(paramType.FullName + "Native");
+					if (internalType != null || nativeType != null)
+					{
+						Assert.Fail($"{method.Name}: Using type {paramType.FullName}, but type {(internalType ?? nativeType).FullName} exists.");
+					}
+				}
+			}
+		}
+
+		[Test]
+		public void ApiReturnTypesArePrimitives()
+		{
+			var api = GetApi();
+
+			foreach (var method in api)
+			{
+				var prim = method.ReturnType.GetTypeInfo().IsPrimitive;
+				var enm = method.ReturnType.GetTypeInfo().IsEnum;
+				var voidType = method.ReturnType == typeof(void);
+				Assert.True(prim || enm || voidType, method.Name);
+			}
+		}
+
+		[Test]
 		public void ApiTypesAreMarshalledCorrectly()
 		{
 			var api = GetApi();
