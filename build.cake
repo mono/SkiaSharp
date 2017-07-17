@@ -36,7 +36,7 @@ var HARFBUZZ_VERSION_FILE = "1.4.6.0";
 var HARFBUZZ_VERSION_SONAME = HARFBUZZ_VERSION_FILE.Substring(0, HARFBUZZ_VERSION_FILE.LastIndexOf("."));
 
 var VERSION_PACKAGES = new Dictionary<string, string> {
-    { "SkiaSharp", "1.59.0" },
+    { "SkiaSharp", "1.59.0.1" },
     { "SkiaSharp.Views", "1.59.0" },
     { "SkiaSharp.Views.Forms", "1.59.0" },
     { "SkiaSharp.HarfBuzz", "1.59.0-beta" },
