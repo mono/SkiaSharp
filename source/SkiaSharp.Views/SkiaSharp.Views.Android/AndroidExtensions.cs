@@ -128,81 +128,46 @@ namespace SkiaSharp.Views.Android
 
 		public static Bitmap ToBitmap(this SKBitmap skiaBitmap)
 		{
-			// TODO: replace all this with a SKBitmap.PeekPixels
-			//       and call the overload
-
-			var info = skiaBitmap.Info;
-
-			// try keep the pixel format
-			var config = Bitmap.Config.Argb8888;
-			switch (info.ColorType)
+			using (var pixmap = skiaBitmap.PeekPixels())
 			{
-				case SKColorType.Alpha8:
-					config = Bitmap.Config.Alpha8;
-					break;
-				case SKColorType.Rgb565:
-					config = Bitmap.Config.Rgb565;
-					break;
-				case SKColorType.Argb4444:
-					config = Bitmap.Config.Argb4444;
-					break;
+				return pixmap.ToBitmap();
 			}
-
-			var bmp = Bitmap.CreateBitmap(info.Width, info.Height, config);
-			var ptr = bmp.LockPixels();
-			var success = true;
-
-			if (config == Bitmap.Config.Argb8888 && info.ColorType != SKColorType.Rgba8888)
-			{
-				// wrap the pixels so we can copy in one action
-				var tempInfo = new SKImageInfo(info.Width, info.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
-				// TODO: replace this with a SKPixmap.ReadPixels
-				var tempBmp = new SKBitmap();
-				tempBmp.InstallPixels(tempInfo, ptr);
-				success = skiaBitmap.CopyTo(tempBmp, SKColorType.Rgba8888);
-				tempBmp.Reset();
-				tempBmp.Dispose();
-			}
-			else
-			{
-				// must multiply HEIGHT * rowBytes to get total number of bytes
-				success = skiaBitmap.CopyPixelsTo(ptr, bmp.Height * bmp.RowBytes);
-			}
-
-			bmp.UnlockPixels();
-			if (!success)
-			{
-				bmp.Recycle();
-				bmp.Dispose();
-				bmp = null;
-			}
-
-			return bmp;
 		}
 
 		public static Bitmap ToBitmap(this SKPixmap skiaPixmap)
 		{
-			// TODO: replace (swap) this with SKPixmap.ReadPixels
+			var info = skiaPixmap.Info;
 
-			var bmp = new SKBitmap();
-			bmp.InstallPixels(skiaPixmap);
+			// destination values
+			var config = Bitmap.Config.Argb8888;
+			var dstInfo = new SKImageInfo(info.Width, info.Height);
 
-			var androidBitmap = ToBitmap(bmp);
+			// try keep the pixel format if we can
+			switch (info.ColorType)
+			{
+				case SKColorType.Alpha8:
+					config = Bitmap.Config.Alpha8;
+					dstInfo.ColorType = SKColorType.Alpha8;
+					break;
+				case SKColorType.Rgb565:
+					config = Bitmap.Config.Rgb565;
+					dstInfo.ColorType = SKColorType.Rgb565;
+					dstInfo.AlphaType = SKAlphaType.Opaque;
+					break;
+				case SKColorType.Argb4444:
+					config = Bitmap.Config.Argb4444;
+					dstInfo.ColorType = SKColorType.Argb4444;
+					break;
+			}
 
-			bmp.Reset();
-			bmp.Dispose();
-
-			return androidBitmap;
-		}
-
-		public static Bitmap ToBitmap(this SKImage skiaImage)
-		{
-			var info = new SKImageInfo(skiaImage.Width, skiaImage.Height);
-			var bmp = Bitmap.CreateBitmap(info.Width, info.Height, Bitmap.Config.Argb8888);
+			// destination bitmap
+			var bmp = Bitmap.CreateBitmap(info.Width, info.Height, config);
 			var ptr = bmp.LockPixels();
 
-			var success = skiaImage.ReadPixels(info, ptr, info.RowBytes, 0, 0);
+			// copy
+			var success = skiaPixmap.ReadPixels(dstInfo, ptr, dstInfo.RowBytes);
 
+			// confirm
 			bmp.UnlockPixels();
 			if (!success)
 			{
@@ -214,10 +179,20 @@ namespace SkiaSharp.Views.Android
 			return bmp;
 		}
 
+		public static Bitmap ToBitmap(this SKImage skiaImage)
+		{
+			using (var pixmap = skiaImage.PeekPixels())
+			{
+				return pixmap.ToBitmap();
+			}
+		}
+
 		public static Bitmap ToBitmap(this SKPicture skiaPicture, SKSizeI dimensions)
 		{
-			var img = SKImage.FromPicture(skiaPicture, dimensions);
-			return ToBitmap(img);
+			using (var img = SKImage.FromPicture(skiaPicture, dimensions))
+			{
+				return img.ToBitmap();
+			}
 		}
 	}
 }
