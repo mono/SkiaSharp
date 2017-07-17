@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using NUnit.Framework;
+using System.IO;
 
 namespace SkiaSharp.Tests
 {
@@ -15,6 +16,15 @@ namespace SkiaSharp.Tests
 
 			Assert.AreEqual(OddData.Length, data.Size);
 			Assert.AreEqual(OddData, data.ToArray());
+		}
+
+		[Test]
+		public void DataCanBeCreatedFromFile()
+		{
+			var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
+
+			Assert.NotNull(data);
+			Assert.True(data.Size > 0);
 		}
 
 		[Test]

@@ -437,9 +437,24 @@ namespace SkiaSharp
 		public SKZeroInitialized fZeroInitialized;
 		public SKRectI* fSubset;
 		public IntPtr fFrameIndex;
-		[MarshalAs(UnmanagedType.I1)]
-		public bool fHasPriorFrame;
+		public byte fHasPriorFrame;
 		public SKTransferFunctionBehavior fPremulBehavior;
+
+		public static unsafe SKCodecOptionsInternal FromManaged (ref SKCodecOptions managed)
+		{
+			var nativeOptions = new SKCodecOptionsInternal {
+				fZeroInitialized = managed.ZeroInitialized,
+				fSubset = null,
+				fFrameIndex = (IntPtr) managed.FrameIndex,
+				fHasPriorFrame = managed.HasPriorFrame ? (byte) 1 : (byte) 0,
+				fPremulBehavior = managed.PremulBehavior,
+			};
+			if (managed.HasSubset) {
+				var subset = managed.Subset.Value;
+				nativeOptions.fSubset = &subset;
+			}
+			return nativeOptions;
+		}
 	}
 
 	public struct SKCodecOptions {
@@ -489,8 +504,7 @@ namespace SkiaSharp
 	public struct SKCodecFrameInfo {
 		private IntPtr requiredFrame;
 		private IntPtr duration;
-		[MarshalAs (UnmanagedType.I1)]
-		private bool fullyRecieved;
+		private byte fullyRecieved;
 		private SKAlphaType alphaType;
 
 		public int RequiredFrame {
@@ -504,8 +518,8 @@ namespace SkiaSharp
 		}
 
 		public bool FullyRecieved {
-			get { return fullyRecieved; }
-			set { fullyRecieved = value; }
+			get { return fullyRecieved != 0; }
+			set { fullyRecieved = value ? (byte)1 : (byte)0; }
 		}
 
 		public SKAlphaType AlphaType {
@@ -1883,40 +1897,28 @@ namespace SkiaSharp
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct GRContextOptions {
-		[MarshalAs(UnmanagedType.I1)]
-		private bool fSuppressPrints;
+		private byte fSuppressPrints;
 		private int  fMaxTextureSizeOverride;
 		private int  fMaxTileSizeOverride;
-		[MarshalAs(UnmanagedType.I1)]
-		private bool fSuppressDualSourceBlending;
+		private byte fSuppressDualSourceBlending;
 		private int  fBufferMapThreshold;
-		[MarshalAs(UnmanagedType.I1)]
-		private bool fUseDrawInsteadOfPartialRenderTargetWrite;
-		[MarshalAs(UnmanagedType.I1)]
-		private bool fImmediateMode;
+		private byte fUseDrawInsteadOfPartialRenderTargetWrite;
+		private byte fImmediateMode;
 		private int  fMaxOpCombineLookback;
 		private int  fMaxOpCombineLookahead;
-		[MarshalAs(UnmanagedType.I1)]
-		private bool fUseShaderSwizzling;
-		[MarshalAs(UnmanagedType.I1)]
-		private bool fDoManualMipmapping;
-		[MarshalAs(UnmanagedType.I1)]
-		private bool fEnableInstancedRendering;
-		[MarshalAs(UnmanagedType.I1)]
-		private bool fAllowPathMaskCaching;
-		[MarshalAs(UnmanagedType.I1)]
-		private bool fRequireDecodeDisableForSRGB;
-		[MarshalAs(UnmanagedType.I1)]
-		private bool fDisableGpuYUVConversion;
-		[MarshalAs(UnmanagedType.I1)]
-		private bool fSuppressPathRendering;
+		private byte fUseShaderSwizzling;
+		private byte fDoManualMipmapping;
+		private byte fEnableInstancedRendering;
+		private byte fAllowPathMaskCaching;
+		private byte fRequireDecodeDisableForSRGB;
+		private byte fDisableGpuYUVConversion;
+		private byte fSuppressPathRendering;
 		private GRContextOptionsGpuPathRenderers fGpuPathRenderers;
-		[MarshalAs(UnmanagedType.I1)]
-		private bool fAvoidStencilBuffers;
+		private byte fAvoidStencilBuffers;
 
 		public bool SuppressPrints {
-			get { return fSuppressPrints; }
-			set { fSuppressPrints = value; }
+			get { return fSuppressPrints != 0; }
+			set { fSuppressPrints = value ? (byte)1 : (byte)0; }
 		}
 		public int MaxTextureSizeOverride {
 			get { return fMaxTextureSizeOverride; }
@@ -1927,20 +1929,20 @@ namespace SkiaSharp
 			set { fMaxTileSizeOverride = value; }
 		}
 		public bool SuppressDualSourceBlending {
-			get { return fSuppressDualSourceBlending; }
-			set { fSuppressDualSourceBlending = value; }
+			get { return fSuppressDualSourceBlending != 0; }
+			set { fSuppressDualSourceBlending = value ? (byte)1 : (byte)0; }
 		}
 		public int BufferMapThreshold {
 			get { return fBufferMapThreshold; }
 			set { fBufferMapThreshold = value; }
 		}
 		public bool UseDrawInsteadOfPartialRenderTargetWrite {
-			get { return fUseDrawInsteadOfPartialRenderTargetWrite; }
-			set { fUseDrawInsteadOfPartialRenderTargetWrite = value; }
+			get { return fUseDrawInsteadOfPartialRenderTargetWrite != 0; }
+			set { fUseDrawInsteadOfPartialRenderTargetWrite = value ? (byte)1 : (byte)0; }
 		}
 		public bool ImmediateMode {
-			get { return fImmediateMode; }
-			set { fImmediateMode = value; }
+			get { return fImmediateMode != 0; }
+			set { fImmediateMode = value ? (byte)1 : (byte)0; }
 		}
 		public int MaxOpCombineLookback {
 			get { return fMaxOpCombineLookback; }
@@ -1951,63 +1953,63 @@ namespace SkiaSharp
 			set { fMaxOpCombineLookahead = value; }
 		}
 		public bool UseShaderSwizzling {
-			get { return fUseShaderSwizzling; }
-			set { fUseShaderSwizzling = value; }
+			get { return fUseShaderSwizzling != 0; }
+			set { fUseShaderSwizzling = value ? (byte)1 : (byte)0; }
 		}
 		public bool DoManualMipmapping {
-			get { return fDoManualMipmapping; }
-			set { fDoManualMipmapping = value; }
+			get { return fDoManualMipmapping != 0; }
+			set { fDoManualMipmapping = value ? (byte)1 : (byte)0; }
 		}
 		public bool EnableInstancedRendering {
-			get { return fEnableInstancedRendering; }
-			set { fEnableInstancedRendering = value; }
+			get { return fEnableInstancedRendering != 0; }
+			set { fEnableInstancedRendering = value ? (byte)1 : (byte)0; }
 		}
 		public bool AllowPathMaskCaching {
-			get { return fAllowPathMaskCaching; }
-			set { fAllowPathMaskCaching = value; }
+			get { return fAllowPathMaskCaching != 0; }
+			set { fAllowPathMaskCaching = value ? (byte)1 : (byte)0; }
 		}
 		public bool RequireDecodeDisableForSrgb {
-			get { return fRequireDecodeDisableForSRGB; }
-			set { fRequireDecodeDisableForSRGB = value; }
+			get { return fRequireDecodeDisableForSRGB != 0; }
+			set { fRequireDecodeDisableForSRGB = value ? (byte)1 : (byte)0; }
 		}
 		public bool DisableGpuYuvConversion {
-			get { return fDisableGpuYUVConversion; }
-			set { fDisableGpuYUVConversion = value; }
+			get { return fDisableGpuYUVConversion != 0; }
+			set { fDisableGpuYUVConversion = value ? (byte)1 : (byte)0; }
 		}
 		public bool SuppressPathRendering {
-			get { return fSuppressPathRendering; }
-			set { fSuppressPathRendering = value; }
+			get { return fSuppressPathRendering != 0; }
+			set { fSuppressPathRendering = value ? (byte)1 : (byte)0; }
 		}
 		public GRContextOptionsGpuPathRenderers GpuPathRenderers {
 			get { return fGpuPathRenderers; }
 			set { fGpuPathRenderers = value; }
 		}
 		public bool AvoidStencilBuffers {
-			get { return fAvoidStencilBuffers; }
-			set { fAvoidStencilBuffers = value; }
+			get { return fAvoidStencilBuffers != 0; }
+			set { fAvoidStencilBuffers = value ? (byte)1 : (byte)0; }
 		}
 
 		public static GRContextOptions Default {
 			get {
 				return new GRContextOptions {
-					fSuppressPrints = false,
+					fSuppressPrints = 0,
 					fMaxTextureSizeOverride = 0x7FFFFFFF,
 					fMaxTileSizeOverride = 0,
-					fSuppressDualSourceBlending = false,
+					fSuppressDualSourceBlending = 0,
 					fBufferMapThreshold = -1,
-					fUseDrawInsteadOfPartialRenderTargetWrite = false,
-					fImmediateMode = false,
+					fUseDrawInsteadOfPartialRenderTargetWrite = 0,
+					fImmediateMode = 0,
 					fMaxOpCombineLookback = -1,
 					fMaxOpCombineLookahead = -1,
-					fUseShaderSwizzling = false,
-					fDoManualMipmapping = false,
-					fEnableInstancedRendering = false,
-					fAllowPathMaskCaching = false,
-					fRequireDecodeDisableForSRGB = true,
-					fDisableGpuYUVConversion = false,
-					fSuppressPathRendering = false,
+					fUseShaderSwizzling = 0,
+					fDoManualMipmapping = 0,
+					fEnableInstancedRendering = 0,
+					fAllowPathMaskCaching = 0,
+					fRequireDecodeDisableForSRGB = 1,
+					fDisableGpuYUVConversion = 0,
+					fSuppressPathRendering = 0,
 					fGpuPathRenderers = GRContextOptionsGpuPathRenderers.All,
-					fAvoidStencilBuffers = false,
+					fAvoidStencilBuffers = 0,
 				};
 			}
 		}
@@ -2296,8 +2298,7 @@ namespace SkiaSharp
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKHighContrastConfig {
-		[MarshalAs (UnmanagedType.I1)]
-		private bool fGrayscale;
+		private byte fGrayscale;
 		private SKHighContrastConfigInvertStyle fInvertStyle;
 		private float fContrast;
 		
@@ -2310,14 +2311,14 @@ namespace SkiaSharp
 
 		public SKHighContrastConfig (bool grayscale, SKHighContrastConfigInvertStyle invertStyle, float contrast)
 		{
-			fGrayscale = grayscale;
+			fGrayscale = grayscale ? (byte)1 : (byte)0;
 			fInvertStyle = invertStyle;
 			fContrast = contrast;
 		}
 
 		public bool Grayscale { 
-			get { return fGrayscale; }
-			set { fGrayscale = value; }
+			get { return fGrayscale != 0; }
+			set { fGrayscale = value ? (byte)1 : (byte)0; }
 		}
 		public SKHighContrastConfigInvertStyle InvertStyle { 
 			get { return fInvertStyle; }

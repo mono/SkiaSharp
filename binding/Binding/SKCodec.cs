@@ -131,17 +131,7 @@ namespace SkiaSharp
 			if (pixels == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (pixels));
 
-			var nativeOptions = new SKCodecOptionsInternal {
-				fZeroInitialized = options.ZeroInitialized,
-				fSubset = null,
-				fFrameIndex = (IntPtr) options.FrameIndex,
-				fHasPriorFrame = options.HasPriorFrame,
-				fPremulBehavior = options.PremulBehavior,
-			};
-			if (options.HasSubset) {
-				var subset = options.Subset.Value;
-				nativeOptions.fSubset = &subset;
-			}
+			var nativeOptions = SKCodecOptionsInternal.FromManaged (ref options);
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
 			return SkiaApi.sk_codec_get_pixels (Handle, ref cinfo, pixels, (IntPtr)rowBytes, ref nativeOptions, colorTable, ref colorTableCount);
 		}
@@ -188,17 +178,7 @@ namespace SkiaSharp
 			if (pixels == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (pixels));
 
-			var nativeOptions = new SKCodecOptionsInternal {
-				fZeroInitialized = options.ZeroInitialized,
-				fSubset = null,
-				fFrameIndex = (IntPtr) options.FrameIndex,
-				fHasPriorFrame = options.HasPriorFrame,
-				fPremulBehavior = options.PremulBehavior,
-			};
-			if (options.HasSubset) {
-				var subset = options.Subset.Value;
-				nativeOptions.fSubset = &subset;
-			}
+			var nativeOptions = SKCodecOptionsInternal.FromManaged (ref options);
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
 			return SkiaApi.sk_codec_start_incremental_decode (Handle, ref cinfo, pixels, (IntPtr)rowBytes, ref nativeOptions, colorTable, ref colorTableCount);
 		}
@@ -233,17 +213,7 @@ namespace SkiaSharp
 
 		public unsafe SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
 		{
-			var nativeOptions = new SKCodecOptionsInternal {
-				fZeroInitialized = options.ZeroInitialized,
-				fSubset = null,
-				fFrameIndex = (IntPtr) options.FrameIndex,
-				fHasPriorFrame = options.HasPriorFrame,
-				fPremulBehavior = options.PremulBehavior,
-			};
-			if (options.HasSubset) {
-				var subset = options.Subset.Value;
-				nativeOptions.fSubset = &subset;
-			}
+			var nativeOptions = SKCodecOptionsInternal.FromManaged (ref options);
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
 			return SkiaApi.sk_codec_start_scanline_decode (Handle, ref cinfo, ref nativeOptions, colorTable, ref colorTableCount);
 		}
