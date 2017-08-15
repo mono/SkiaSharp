@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 using NUnit.Framework;
 
 namespace SkiaSharp.Tests
@@ -18,6 +19,23 @@ namespace SkiaSharp.Tests
 			var result = pix1.ReadPixels(info, ptr2, info.RowBytes);
 
 			Assert.True(result);
+		}
+		
+		[Test]
+		public void WithMethodsDoNotModifySource()
+		{
+			var info = new SKImageInfo(100, 30, SKColorType.Rgb565, SKAlphaType.Unpremul);
+			var pixmap = new SKPixmap(info, (IntPtr)123);
+
+			Assert.AreEqual(SKColorType.Rgb565, pixmap.ColorType);
+			Assert.AreEqual((IntPtr)123, pixmap.GetPixels());
+
+			var copy = pixmap.WithColorType(SKColorType.Index8);
+
+			Assert.AreEqual(SKColorType.Rgb565, pixmap.ColorType);
+			Assert.AreEqual((IntPtr)123, pixmap.GetPixels());
+			Assert.AreEqual(SKColorType.Index8, copy.ColorType);
+			Assert.AreEqual((IntPtr)123, copy.GetPixels());
 		}
 
 		[Test]

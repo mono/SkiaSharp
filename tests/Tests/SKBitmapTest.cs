@@ -10,6 +10,166 @@ namespace SkiaSharp.Tests
 	public class SKBitmapTest : SKTest
 	{
 		[Test]
+		public void BitmapCanCopyIsCorrect()
+		{
+			var bmp = CreateTestBitmap();
+
+			Assert.IsTrue(bmp.CanCopyTo(SKColorType.Alpha8));
+			Assert.IsTrue(bmp.CanCopyTo(SKColorType.Rgb565));
+			Assert.IsTrue(bmp.CanCopyTo(SKColorType.Argb4444));
+			Assert.IsTrue(bmp.CanCopyTo(SKColorType.Bgra8888));
+			Assert.IsTrue(bmp.CanCopyTo(SKColorType.Rgba8888));
+			Assert.IsTrue(bmp.CanCopyTo(SKColorType.RgbaF16));
+
+			Assert.IsFalse(bmp.CanCopyTo(SKColorType.Unknown));
+			Assert.IsFalse(bmp.CanCopyTo(SKColorType.Gray8));
+		}
+
+		[Test]
+		public void BitmapCopyToAlpha8PreservesData()
+		{
+			var bmp = CreateTestBitmap();
+
+			var alpha8 = bmp.Copy(SKColorType.Alpha8);
+			Assert.AreEqual(SKColors.Black, alpha8.GetPixel(10, 10));
+			Assert.AreEqual(SKColors.Black, alpha8.GetPixel(30, 10));
+			Assert.AreEqual(SKColors.Black, alpha8.GetPixel(10, 30));
+			Assert.AreEqual(SKColors.Black, alpha8.GetPixel(30, 30));
+			Assert.AreEqual(SKColorType.Alpha8, alpha8.ColorType);
+
+			bmp = CreateTestBitmap(127);
+
+			alpha8 = bmp.Copy(SKColorType.Alpha8);
+			Assert.AreEqual(SKColors.Black.WithAlpha(127), alpha8.GetPixel(10, 10));
+			Assert.AreEqual(SKColors.Black.WithAlpha(127), alpha8.GetPixel(30, 10));
+			Assert.AreEqual(SKColors.Black.WithAlpha(127), alpha8.GetPixel(10, 30));
+			Assert.AreEqual(SKColors.Black.WithAlpha(127), alpha8.GetPixel(30, 30));
+			Assert.AreEqual(SKColorType.Alpha8, alpha8.ColorType);
+		}
+
+		[Test]
+		public void BitmapCopyToArgb4444PreservesData()
+		{
+			var bmp = CreateTestBitmap();
+
+			var argb4444 = bmp.Copy(SKColorType.Argb4444);
+			Assert.AreEqual((SKColor)0xffff0000, argb4444.GetPixel(10, 10));
+			Assert.AreEqual((SKColor)0xff007700, argb4444.GetPixel(30, 10));
+			Assert.AreEqual((SKColor)0xff0000ff, argb4444.GetPixel(10, 30));
+			Assert.AreEqual((SKColor)0xffffff00, argb4444.GetPixel(30, 30));
+			Assert.AreEqual(SKColorType.Argb4444, argb4444.ColorType);
+
+			bmp = CreateTestBitmap(127);
+
+			argb4444 = bmp.Copy(SKColorType.Argb4444);
+			Assert.AreEqual((SKColor)0x77ff0000, argb4444.GetPixel(10, 10));
+			Assert.AreEqual((SKColor)0x77006d00, argb4444.GetPixel(30, 10));
+			Assert.AreEqual((SKColor)0x770000ff, argb4444.GetPixel(10, 30));
+			Assert.AreEqual((SKColor)0x77ffff00, argb4444.GetPixel(30, 30));
+			Assert.AreEqual(SKColorType.Argb4444, argb4444.ColorType);
+		}
+
+		[Test]
+		public void BitmapCopyToRgb565PreservesData()
+		{
+			var bmp = CreateTestBitmap();
+
+			var rgb565 = bmp.Copy(SKColorType.Rgb565);
+			Assert.AreEqual((SKColor)0xffff0000, rgb565.GetPixel(10, 10));
+			Assert.AreEqual((SKColor)0xff008200, rgb565.GetPixel(31, 10));
+			Assert.AreEqual((SKColor)0xff0000ff, rgb565.GetPixel(10, 30));
+			Assert.AreEqual((SKColor)0xffffff00, rgb565.GetPixel(30, 30));
+			Assert.AreEqual(SKColorType.Rgb565, rgb565.ColorType);
+
+			bmp = CreateTestBitmap(127);
+
+			rgb565 = bmp.Copy(SKColorType.Rgb565);
+			Assert.AreEqual((SKColor)0xff7b0000, rgb565.GetPixel(10, 10));
+			Assert.AreEqual((SKColor)0xff004100, rgb565.GetPixel(31, 10));
+			Assert.AreEqual((SKColor)0xff00007b, rgb565.GetPixel(10, 30));
+			Assert.AreEqual((SKColor)0xff7b7d00, rgb565.GetPixel(30, 30));
+			Assert.AreEqual(SKColorType.Rgb565, rgb565.ColorType);
+		}
+
+		[Test]
+		public void BitmapCopyToRgbaF16PreservesData()
+		{
+			var bmp = CreateTestBitmap();
+
+			var rgbaF16 = bmp.Copy(SKColorType.RgbaF16);
+			Assert.AreEqual((SKColor)0xffff0000, rgbaF16.GetPixel(10, 10));
+			Assert.AreEqual((SKColor)0xff003700, rgbaF16.GetPixel(30, 10));
+			Assert.AreEqual((SKColor)0xff0000ff, rgbaF16.GetPixel(10, 30));
+			Assert.AreEqual((SKColor)0xffffff00, rgbaF16.GetPixel(30, 30));
+			Assert.AreEqual(SKColorType.RgbaF16, rgbaF16.ColorType);
+
+			bmp = CreateTestBitmap(127);
+
+			rgbaF16 = bmp.Copy(SKColorType.RgbaF16);
+			Assert.AreEqual((SKColor)0x7f6d0000, rgbaF16.GetPixel(10, 10));
+			Assert.AreEqual((SKColor)0x7f001a00, rgbaF16.GetPixel(30, 10));
+			Assert.AreEqual((SKColor)0x7f00006d, rgbaF16.GetPixel(10, 30));
+			Assert.AreEqual((SKColor)0x7f6d6d00, rgbaF16.GetPixel(30, 30));
+			Assert.AreEqual(SKColorType.RgbaF16, rgbaF16.ColorType);
+		}
+
+		[Test]
+		public void BitmapCopyToInvalidIsNull()
+		{
+			var bmp = CreateTestBitmap();
+
+			ValidateTestBitmap(bmp);
+			ValidateTestBitmap(bmp.Copy(SKImageInfo.PlatformColorType));
+
+			Assert.IsNull(bmp.Copy(SKColorType.Unknown));
+			Assert.IsNull(bmp.Copy(SKColorType.Gray8));
+
+			// alpha to non-alpha is not supported
+			Assert.IsNull(bmp
+				.Copy(SKColorType.Alpha8)
+				.Copy(SKImageInfo.PlatformColorType));
+		}
+
+		private void ValidateTestBitmap(SKBitmap bmp)
+		{
+			Assert.IsNotNull(bmp);
+			Assert.AreEqual(40, bmp.Width);
+			Assert.AreEqual(40, bmp.Height);
+
+			Assert.AreEqual(SKColors.Red, bmp.GetPixel(10, 10));
+			Assert.AreEqual(SKColors.Green, bmp.GetPixel(30, 10));
+			Assert.AreEqual(SKColors.Blue, bmp.GetPixel(10, 30));
+			Assert.AreEqual(SKColors.Yellow, bmp.GetPixel(30, 30));
+		}
+
+		private SKBitmap CreateTestBitmap(byte alpha = 255)
+		{
+			var bmp = new SKBitmap(40, 40);
+			bmp.Erase(SKColors.Transparent);
+
+			using (var canvas = new SKCanvas(bmp))
+			using (var paint = new SKPaint()) {
+
+				var x = bmp.Width / 2;
+				var y = bmp.Height / 2;
+
+				paint.Color = SKColors.Red.WithAlpha(alpha);
+				canvas.DrawRect(SKRect.Create(0, 0, x, y), paint);
+
+				paint.Color = SKColors.Green.WithAlpha(alpha);
+				canvas.DrawRect(SKRect.Create(x, 0, x, y), paint);
+
+				paint.Color = SKColors.Blue.WithAlpha(alpha);
+				canvas.DrawRect(SKRect.Create(0, y, x, y), paint);
+
+				paint.Color = SKColors.Yellow.WithAlpha(alpha);
+				canvas.DrawRect(SKRect.Create(x, y, x, y), paint);
+			}
+
+			return bmp;
+		}
+
+		[Test]
 		public void ReleaseBitmapPixelsWasInvoked()
 		{
 			bool released = false;

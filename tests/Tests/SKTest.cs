@@ -15,6 +15,24 @@ namespace SkiaSharp.Tests
 		protected static readonly string PathToFonts = Path.Combine(PathToAssembly, "fonts");
 		protected static readonly string PathToImages = Path.Combine(PathToAssembly, "images");
 
+		protected static void SaveBitmap(SKBitmap bmp, string filename = "output.png")
+		{
+			using (var bitmap = new SKBitmap(bmp.Width, bmp.Height))
+			using (var canvas = new SKCanvas(bitmap))
+			{
+				canvas.Clear(SKColors.Transparent);
+				canvas.DrawBitmap(bmp, 0, 0);
+				canvas.Flush();
+
+				using (var stream = File.OpenWrite(Path.Combine(PathToImages, filename)))
+				using (var image = SKImage.FromBitmap(bitmap))
+				using (var data = image.Encode())
+				{
+					data.SaveTo(stream);
+				}
+			}
+		}
+
 #if NET_STANDARD
 		protected static bool IsLinux => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 		protected static bool IsMac => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);

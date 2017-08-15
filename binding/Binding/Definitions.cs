@@ -436,7 +436,7 @@ namespace SkiaSharp
 	internal unsafe struct SKCodecOptionsInternal {
 		public SKZeroInitialized fZeroInitialized;
 		public SKRectI* fSubset;
-		public IntPtr fFrameIndex;
+		public int fFrameIndex;
 		public byte fHasPriorFrame;
 		public SKTransferFunctionBehavior fPremulBehavior;
 
@@ -445,7 +445,7 @@ namespace SkiaSharp
 			var nativeOptions = new SKCodecOptionsInternal {
 				fZeroInitialized = managed.ZeroInitialized,
 				fSubset = null,
-				fFrameIndex = (IntPtr) managed.FrameIndex,
+				fFrameIndex = managed.FrameIndex,
 				fHasPriorFrame = managed.HasPriorFrame ? (byte) 1 : (byte) 0,
 				fPremulBehavior = managed.PremulBehavior,
 			};
@@ -502,19 +502,19 @@ namespace SkiaSharp
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKCodecFrameInfo {
-		private IntPtr requiredFrame;
-		private IntPtr duration;
+		private int requiredFrame;
+		private int duration;
 		private byte fullyRecieved;
 		private SKAlphaType alphaType;
 
 		public int RequiredFrame {
-			get { return (int)requiredFrame; }
-			set { requiredFrame = (IntPtr)value; }
+			get { return requiredFrame; }
+			set { requiredFrame = value; }
 		}
 
 		public int Duration {
-			get { return (int)duration; }
-			set { duration = (IntPtr)value; }
+			get { return duration; }
+			set { duration = value; }
 		}
 
 		public bool FullyRecieved {
@@ -1755,7 +1755,6 @@ namespace SkiaSharp
 		Bgra8888,
 		Srgba8888,
 		Sbgra8888,
-		Etc1,
 		RgbaFloat,
 		RgFloat,
 		AlphaHalf,
@@ -1904,8 +1903,6 @@ namespace SkiaSharp
 		private int  fBufferMapThreshold;
 		private byte fUseDrawInsteadOfPartialRenderTargetWrite;
 		private byte fImmediateMode;
-		private int  fMaxOpCombineLookback;
-		private int  fMaxOpCombineLookahead;
 		private byte fUseShaderSwizzling;
 		private byte fDoManualMipmapping;
 		private byte fEnableInstancedRendering;
@@ -1913,7 +1910,9 @@ namespace SkiaSharp
 		private byte fRequireDecodeDisableForSRGB;
 		private byte fDisableGpuYUVConversion;
 		private byte fSuppressPathRendering;
+		private byte fWireframeMode;
 		private GRContextOptionsGpuPathRenderers fGpuPathRenderers;
+		private float fGlyphCacheTextureMaximumBytes;
 		private byte fAvoidStencilBuffers;
 
 		public bool SuppressPrints {
@@ -1944,14 +1943,6 @@ namespace SkiaSharp
 			get { return fImmediateMode != 0; }
 			set { fImmediateMode = value ? (byte)1 : (byte)0; }
 		}
-		public int MaxOpCombineLookback {
-			get { return fMaxOpCombineLookback; }
-			set { fMaxOpCombineLookback = value; }
-		}
-		public int MaxOpCombineLookahead {
-			get { return fMaxOpCombineLookahead; }
-			set { fMaxOpCombineLookahead = value; }
-		}
 		public bool UseShaderSwizzling {
 			get { return fUseShaderSwizzling != 0; }
 			set { fUseShaderSwizzling = value ? (byte)1 : (byte)0; }
@@ -1980,9 +1971,17 @@ namespace SkiaSharp
 			get { return fSuppressPathRendering != 0; }
 			set { fSuppressPathRendering = value ? (byte)1 : (byte)0; }
 		}
+		public bool WireframeMode {
+			get { return fWireframeMode != 0; }
+			set { fWireframeMode = value ? (byte)1 : (byte)0; }
+		}
 		public GRContextOptionsGpuPathRenderers GpuPathRenderers {
 			get { return fGpuPathRenderers; }
 			set { fGpuPathRenderers = value; }
+		}
+		public float GlyphCacheTextureMaximumBytes {
+			get { return fGlyphCacheTextureMaximumBytes; }
+			set { fGlyphCacheTextureMaximumBytes = value; }
 		}
 		public bool AvoidStencilBuffers {
 			get { return fAvoidStencilBuffers != 0; }
@@ -1999,8 +1998,6 @@ namespace SkiaSharp
 					fBufferMapThreshold = -1,
 					fUseDrawInsteadOfPartialRenderTargetWrite = 0,
 					fImmediateMode = 0,
-					fMaxOpCombineLookback = -1,
-					fMaxOpCombineLookahead = -1,
 					fUseShaderSwizzling = 0,
 					fDoManualMipmapping = 0,
 					fEnableInstancedRendering = 0,
@@ -2008,7 +2005,9 @@ namespace SkiaSharp
 					fRequireDecodeDisableForSRGB = 1,
 					fDisableGpuYUVConversion = 0,
 					fSuppressPathRendering = 0,
+					fWireframeMode = 0,
 					fGpuPathRenderers = GRContextOptionsGpuPathRenderers.All,
+					fGlyphCacheTextureMaximumBytes = 2048 * 1024 * 4,
 					fAvoidStencilBuffers = 0,
 				};
 			}
