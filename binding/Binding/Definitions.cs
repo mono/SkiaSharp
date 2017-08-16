@@ -1741,7 +1741,7 @@ namespace SkiaSharp
 	}
 
 	public enum GRSurfaceOrigin {
-		TopLeft,
+		TopLeft = 1,
 		BottomLeft,
 	}
 
@@ -1755,6 +1755,7 @@ namespace SkiaSharp
 		Bgra8888,
 		Srgba8888,
 		Sbgra8888,
+		Rgba8888SInt,
 		RgbaFloat,
 		RgFloat,
 		AlphaHalf,
@@ -1886,10 +1887,9 @@ namespace SkiaSharp
 		AaHairline        = 1 << 3,
 		AaConvex          = 1 << 4,
 		AaLinearizing     = 1 << 5,
-		Pls               = 1 << 6,
-		DistanceField     = 1 << 7,
-		Tessellating      = 1 << 8,
-		Default           = 1 << 9,
+		Small             = 1 << 6,
+		Tessellating      = 1 << 7,
+		Default           = 1 << 8,
 
 		All               = GRContextOptionsGpuPathRenderers.Default | (GRContextOptionsGpuPathRenderers.Default - 1)
 	}
