@@ -142,33 +142,6 @@ namespace SkiaSharp.Tests
 			Assert.AreEqual(SKColors.Yellow, bmp.GetPixel(30, 30));
 		}
 
-		private SKBitmap CreateTestBitmap(byte alpha = 255)
-		{
-			var bmp = new SKBitmap(40, 40);
-			bmp.Erase(SKColors.Transparent);
-
-			using (var canvas = new SKCanvas(bmp))
-			using (var paint = new SKPaint()) {
-
-				var x = bmp.Width / 2;
-				var y = bmp.Height / 2;
-
-				paint.Color = SKColors.Red.WithAlpha(alpha);
-				canvas.DrawRect(SKRect.Create(0, 0, x, y), paint);
-
-				paint.Color = SKColors.Green.WithAlpha(alpha);
-				canvas.DrawRect(SKRect.Create(x, 0, x, y), paint);
-
-				paint.Color = SKColors.Blue.WithAlpha(alpha);
-				canvas.DrawRect(SKRect.Create(0, y, x, y), paint);
-
-				paint.Color = SKColors.Yellow.WithAlpha(alpha);
-				canvas.DrawRect(SKRect.Create(x, y, x, y), paint);
-			}
-
-			return bmp;
-		}
-
 		[Test]
 		public void ReleaseBitmapPixelsWasInvoked()
 		{

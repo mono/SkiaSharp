@@ -38,6 +38,8 @@ using sk_wstream_dynamicmemorystream_t = System.IntPtr;
 using sk_wstream_filestream_t = System.IntPtr;
 using sk_bitmap_t = System.IntPtr;
 using sk_pixmap_t = System.IntPtr;
+using sk_pixelserializer_t = System.IntPtr;
+using sk_managedpixelserializer_t = System.IntPtr;
 using sk_codec_t = System.IntPtr;
 using sk_imagefilter_croprect_t = System.IntPtr;
 using sk_imagefilter_t = System.IntPtr;
@@ -128,6 +130,21 @@ namespace SkiaSharp
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SKColorType sk_colortype_get_default_8888();
+
+		// Pixel Serializer
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_pixelserializer_unref(sk_pixelserializer_t cserializer);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_pixelserializer_use_encoded_data(sk_pixelserializer_t cserializer, IntPtr data, IntPtr len);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_data_t sk_pixelserializer_encode(sk_pixelserializer_t cserializer, sk_pixmap_t cpixmap);
+
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_managedpixelserializer_t sk_managedpixelserializer_new();
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_managedpixelserializer_set_delegates(IntPtr pUse, IntPtr pEncode);
 
 		// Surface
 
@@ -538,6 +555,8 @@ namespace SkiaSharp
 		public extern static bool sk_image_scale_pixels(sk_image_t image, sk_pixmap_t dst, SKFilterQuality quality, SKImageCachingHint cachingHint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_data_t sk_image_encode(sk_image_t image);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_data_t sk_image_encode_with_serializer(sk_image_t image, sk_pixelserializer_t serializer);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_data_t sk_image_encode_specific(sk_image_t image, SKEncodedImageFormat encoder, int quality);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
