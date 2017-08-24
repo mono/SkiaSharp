@@ -21,6 +21,11 @@ namespace SkiaSharp
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal delegate void SKBitmapReleaseDelegateInternal (IntPtr address, IntPtr context);
 
+	// TODO: keep in mind SKBitmap may be going away (according to Google)
+	// TODO: `ComputeIsOpaque` may be useful
+	// TODO: `GenerationID` may be useful
+	// TODO: `GetAddr` and `GetPixel` are confusing
+
 	public class SKBitmap : SKObject
 	{
 		private const string UnsupportedColorTypeMessage = "Setting the ColorTable is only supported for bitmaps with ColorTypes of Index8.";
