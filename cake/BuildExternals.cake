@@ -63,7 +63,7 @@ Task ("externals-init")
     .IsDependentOn ("externals-harfbuzz")
     .Does (() =>  
 {
-    RunProcess ("python", new ProcessSettings {
+    RunProcess (PythonToolPath, new ProcessSettings {
         Arguments = SKIA_PATH.CombineWithFilePath ("tools/git-sync-deps").FullPath,
         WorkingDirectory = SKIA_PATH.FullPath,
     });

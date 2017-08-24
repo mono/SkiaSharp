@@ -23,6 +23,7 @@ var GenApiToolPath = GetToolPath ("Microsoft.DotNet.BuildTools.GenAPI/tools/GenA
 var MDocPath = MakeAbsolute ((FilePath)"externals/api-doc-tools/bin/Release/mdoc.exe");
 var SNToolPath = GetSNToolPath (EnvironmentVariable ("SN_EXE"));
 var MSBuildToolPath = GetMSBuildToolPath (EnvironmentVariable ("MSBUILD_EXE"));
+var PythonToolPath = EnvironmentVariable ("PYTHON_EXE") ?? "python";
 
 var VERSION_ASSEMBLY = "1.59.0.0";
 var VERSION_FILE = "1.59.1.0";
