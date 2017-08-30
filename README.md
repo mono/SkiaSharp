@@ -74,6 +74,6 @@ they have on tap the next 6-12 months. Note it is a living document that changes
 
 Here are some links to show the differences in our code as compared to Google's.
 
-What version are we on? [**m59**](https://github.com/google/skia/tree/chrome/m59)  
-Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/xamarin-mobile-bindings...google:chrome/m59)  
-What have we added? [Compare](https://github.com/google/skia/compare/chrome/m59...mono:xamarin-mobile-bindings)  
+What version are we on? [**m60**](https://github.com/google/skia/tree/chrome/m60)  
+Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/xamarin-mobile-bindings...google:chrome/m60)  
+What have we added? [Compare](https://github.com/google/skia/compare/chrome/m60...mono:xamarin-mobile-bindings)  
