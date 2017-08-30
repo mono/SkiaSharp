@@ -1,12 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard1.3</TargetFramework>
     <RootNamespace>SkiaSharpSample.FormsSample</RootNamespace>
     <PackageTargetFallback>portable-net45+win8+wpa81+wp8</PackageTargetFallback>
     <DebugType>full</DebugType>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="HarfBuzzSharp" Version="1.4.6" />
     <PackageReference Include="SkiaSharp" Version="1.59.1" />
@@ -15,13 +14,10 @@
     <PackageReference Include="SkiaSharp.Views.Forms" Version="1.59.1" />
     <PackageReference Include="Xamarin.Forms" Version="2.4.0.269-pre2" />
   </ItemGroup>
-
   <ItemGroup>
     <None Remove="**\*.xaml" />
     <Compile Update="**\*.xaml.cs" DependentUpon="%(Filename)" />
     <EmbeddedResource Include="**\*.xaml" SubType="Designer" Generator="MSBuild:UpdateDesignTimeXaml" />
   </ItemGroup>
-
   <Import Project="..\..\SkiaSharpSample.Shared\SkiaSharpSample.Shared.projitems" Label="Shared" />
-
 </Project>
