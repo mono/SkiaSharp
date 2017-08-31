@@ -15,6 +15,7 @@ SkiaSharp provides a PCL and platform-specific bindings for:
  - Xamarin.Android
  - Xamarin.iOS
  - Xamarin.tvOS
+ - Xamarin.watchOS
  - Xamarin.Mac
  - Windows Classic Desktop (Windows.Forms / WPF)
  - Windows UWP (Desktop / Mobile / Xbox / HoloLens)

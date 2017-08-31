@@ -2,6 +2,8 @@
 
 #if __TVOS__
 namespace SkiaSharp.Views.tvOS
+#elif __WATCHOS__
+namespace SkiaSharp.Views.watchOS
 #elif __IOS__
 namespace SkiaSharp.Views.iOS
 #endif
@@ -31,11 +33,13 @@ namespace SkiaSharp.Views.iOS
 			{
 				return cgImage.ToSKImage();
 			}
+#if !__WATCHOS__
 			var ciImage = uiImage.CIImage;
 			if (ciImage != null)
 			{
 				return ciImage.ToSKImage();
 			}
+#endif
 			return null;
 		}
 
@@ -46,11 +50,13 @@ namespace SkiaSharp.Views.iOS
 			{
 				return cgImage.ToSKBitmap();
 			}
+#if !__WATCHOS__
 			var ciImage = uiImage.CIImage;
 			if (ciImage != null)
 			{
 				return ciImage.ToSKBitmap();
 			}
+#endif
 			return null;
 		}
 
@@ -62,12 +68,14 @@ namespace SkiaSharp.Views.iOS
 				cgImage.ToSKPixmap(pixmap);
 				return true;
 			}
+#if !__WATCHOS__
 			var ciImage = uiImage.CIImage;
 			if (ciImage != null)
 			{
 				ciImage.ToSKPixmap(pixmap);
 				return true;
 			}
+#endif
 			return false;
 		}
 
