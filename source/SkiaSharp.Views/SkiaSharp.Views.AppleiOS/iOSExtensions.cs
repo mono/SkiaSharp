@@ -1,4 +1,5 @@
-﻿using UIKit;
+﻿using System;
+using UIKit;
 
 #if __TVOS__
 namespace SkiaSharp.Views.tvOS
@@ -79,6 +80,12 @@ namespace SkiaSharp.Views.iOS
 			return false;
 		}
 
+		public static UIImage ToUIImage(this SKPicture skiaPicture, SKSizeI dimensions, nfloat scale, UIImageOrientation orientation)
+		{
+			var cgImage = skiaPicture.ToCGImage(dimensions);
+			return new UIImage(cgImage, scale, orientation);
+		}
+
 		public static UIImage ToUIImage(this SKPicture skiaPicture, SKSizeI dimensions)
 		{
 			var cgImage = skiaPicture.ToCGImage(dimensions);
@@ -91,10 +98,22 @@ namespace SkiaSharp.Views.iOS
 			return new UIImage(cgImage);
 		}
 
+		public static UIImage ToUIImage(this SKPixmap skiaPixmap, nfloat scale, UIImageOrientation orientation)
+		{
+			var cgImage = skiaPixmap.ToCGImage();
+			return new UIImage(cgImage, scale, orientation);
+		}
+
 		public static UIImage ToUIImage(this SKPixmap skiaPixmap)
 		{
 			var cgImage = skiaPixmap.ToCGImage();
 			return new UIImage(cgImage);
+		}
+
+		public static UIImage ToUIImage(this SKBitmap skiaBitmap, nfloat scale, UIImageOrientation orientation)
+		{
+			var cgImage = skiaBitmap.ToCGImage();
+			return new UIImage(cgImage, scale, orientation);
 		}
 
 		public static UIImage ToUIImage(this SKBitmap skiaBitmap)
