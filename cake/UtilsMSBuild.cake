@@ -263,10 +263,7 @@ var UpdateSkiaSharpVersion = new Action<FilePath, Dictionary<string, string>> ((
         }
         var packageReferences = xdoc.Root
             .Elements ("ItemGroup")
-            .Elements ("PackageReference")
-            .Union (xdoc.Root
-                .Elements (MSBuildNS + "ItemGroup")
-                .Elements (MSBuildNS + "PackageReference"));
+            .Elements ("PackageReference");
         foreach (var package in packageReferences) {
             var id = package.Attribute ("Include").Value;
             // check to see what it matches

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using NUnit.Framework;
 
@@ -27,16 +26,6 @@ namespace SkiaSharp.Tests
 			(SKPMColor)SKColors.Green,
 			(SKPMColor)SKColors.Blue
 		};
-
-		[Test]
-		public void CreateIndex8Bitmap()
-		{
-			var info = new SKImageInfo(320, 240, SKColorType.Index8, SKAlphaType.Opaque);
-			var ct = new SKColorTable(Colors);
-			var bitmap = new SKBitmap(info, ct);
-			Assert.IsNotNull(bitmap);
-			Assert.AreEqual(ct, bitmap.ColorTable);
-		}
 
 		[Test]
 		public void MembersRetrieveSingleColorWithAlpha()
@@ -144,31 +133,6 @@ namespace SkiaSharp.Tests
 				Assert.AreEqual((SKPMColor)0x7E1C6251, bitmap.GetIndex8Color(182, 348));
 			}
 			Assert.AreEqual((SKColor)0x7EA4C639, bitmap.GetPixel(182, 348));
-		}
-
-		[Test]
-		public void Index8ImageCanChangeColorTable()
-		{
-			var path = Path.Combine(PathToImages, "index8.png");
-
-			var codec = SKCodec.Create(new SKFileStream(path));
-			var info = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Index8, SKAlphaType.Premul);
-			var bitmap = SKBitmap.Decode(codec, info);
-
-			var colorTable = bitmap.ColorTable;
-			Assert.AreEqual((SKColor)0xFFA4C639, colorTable.GetUnPreMultipliedColor(255));
-
-			var invertedColors = colorTable.Colors.Select(c =>
-			{
-				var c2 = (SKColor)c;
-				var inv = new SKColor((byte)(255 - c2.Red), (byte)(255 - c2.Green), (byte)(255 - c2.Blue), c2.Alpha);
-				return (SKPMColor)inv;
-			}).ToArray();
-
-			colorTable = new SKColorTable(invertedColors);
-			bitmap.SetColorTable(colorTable);
-
-			Assert.AreEqual((SKColor)0xFF5B39C6, colorTable.GetUnPreMultipliedColor(255));
 		}
 	}
 }

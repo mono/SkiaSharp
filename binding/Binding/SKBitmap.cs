@@ -21,11 +21,6 @@ namespace SkiaSharp
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal delegate void SKBitmapReleaseDelegateInternal (IntPtr address, IntPtr context);
 
-	// TODO: keep in mind SKBitmap may be going away (according to Google)
-	// TODO: `ComputeIsOpaque` may be useful
-	// TODO: `GenerationID` may be useful
-	// TODO: `GetAddr` and `GetPixel` are confusing
-
 	public class SKBitmap : SKObject
 	{
 		private const string UnsupportedColorTypeMessage = "Setting the ColorTable is only supported for bitmaps with ColorTypes of Index8.";
@@ -81,20 +76,15 @@ namespace SkiaSharp
 		public SKBitmap (SKImageInfo info, SKColorTable ctable, SKBitmapAllocFlags flags)
 			: this ()
 		{
-			if (!TryAllocPixels (info, ctable, flags)) {
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			if (!SkiaApi.sk_bitmap_try_alloc_pixels_with_color_table (Handle, ref cinfo, ctable != null ? ctable.Handle : IntPtr.Zero, flags)) {
 				throw new Exception (UnableToAllocatePixelsMessage);
 			}
 		}
 
 		public SKBitmap (SKImageInfo info, SKColorTable ctable)
-			: this (info, ctable, SKBitmapAllocFlags.None)
+			: this (info, ctable, 0)
 		{
-		}
-		
-		private bool TryAllocPixels (SKImageInfo info, SKColorTable ctable, SKBitmapAllocFlags flags = SKBitmapAllocFlags.None)
-		{
-			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return SkiaApi.sk_bitmap_try_alloc_pixels_with_color_table (Handle, ref cinfo, ctable != null ? ctable.Handle : IntPtr.Zero, flags);
 		}
 
 		protected override void Dispose (bool disposing)
@@ -157,6 +147,7 @@ namespace SkiaSharp
 				throw new ArgumentException (nameof (dst));
 			}
 
+			using (new SKAutoLockPixels (this))
 			using (var pixmap = PeekPixels ()) {
 				var info = Info;
 				if (dstRowBytes == 0) {
@@ -168,37 +159,7 @@ namespace SkiaSharp
 
 		public bool CanCopyTo (SKColorType colorType)
 		{
-			var srcCT = ColorType;
-
-			if (srcCT == SKColorType.Unknown) {
-				return false;
-			}
-			if (srcCT == SKColorType.Alpha8 && colorType != SKColorType.Alpha8) {
-				return false;   // can't convert from alpha to non-alpha
-			}
-
-			bool sameConfigs = (srcCT == colorType);
-			switch (colorType) {
-				case SKColorType.Alpha8:
-				case SKColorType.Rgb565:
-				case SKColorType.Rgba8888:
-				case SKColorType.Bgra8888:
-				case SKColorType.RgbaF16:
-					break;
-				case SKColorType.Gray8:
-					if (!sameConfigs) {
-						return false;
-					}
-					break;
-				case SKColorType.Argb4444:
-					return
-						sameConfigs || 
-						srcCT == SKImageInfo.PlatformColorType ||
-						srcCT == SKColorType.Index8;
-				default:
-					return false;
-			}
-			return true;
+			return SkiaApi.sk_bitmap_can_copy_to (Handle, colorType);
 		}
 
 		public SKBitmap Copy ()
@@ -209,7 +170,7 @@ namespace SkiaSharp
 		public SKBitmap Copy (SKColorType colorType)
 		{
 			var destination = new SKBitmap ();
-			if (!CopyTo (destination, colorType)) {
+			if (!SkiaApi.sk_bitmap_copy (Handle, destination.Handle, colorType)) {
 				destination.Dispose ();
 				destination = null;
 			}
@@ -221,76 +182,15 @@ namespace SkiaSharp
 			if (destination == null) {
 				throw new ArgumentNullException (nameof (destination));
 			}
-			return CopyTo (destination, ColorType);
+			return SkiaApi.sk_bitmap_copy (Handle, destination.Handle, ColorType);
 		}
 
 		public bool CopyTo (SKBitmap destination, SKColorType colorType)
 		{
-			// TODO: instead of working on `destination` directly, we should
-			//       create a temporary bitmap and then inject the data
-
 			if (destination == null) {
 				throw new ArgumentNullException (nameof (destination));
 			}
-			
-			if (!CanCopyTo (colorType)) {
-				return false;
-			}
-
-			SKPixmap srcPM = PeekPixels ();
-			if (srcPM == null) {
-				return false;
-			}
-
-			SKImageInfo dstInfo = srcPM.Info.WithColorType (colorType);
-			switch (colorType) {
-				case SKColorType.Rgb565:
-					// CopyTo() is not strict on alpha type. Here we set the src to opaque to allow
-					// the call to ReadPixels() to succeed and preserve this lenient behavior.
-					if (srcPM.AlphaType != SKAlphaType.Opaque) {
-						srcPM = srcPM.WithAlphaType (SKAlphaType.Opaque);
-					}
-					dstInfo.AlphaType = SKAlphaType.Opaque;
-					break;
-				case SKColorType.RgbaF16:
-					// The caller does not have an opportunity to pass a dst color space.
-					// Assume that they want linear sRGB.
-					dstInfo.ColorSpace = SKColorSpace.CreateSrgbLinear ();
-					if (srcPM.ColorSpace == null) {
-						// We can't do a sane conversion to F16 without a dst color space.
-						// Guess sRGB in this case.
-						srcPM = srcPM.WithColorSpace (SKColorSpace.CreateSrgb ());
-					}
-					break;
-			}
-
-			destination.Reset (); // TODO: is this needed?
-			if (!destination.TryAllocPixels (dstInfo, colorType == SKColorType.Index8 ? ColorTable : null)) {
-				return false;
-			}
-
-			SKPixmap dstPM = destination.PeekPixels ();
-			if (dstPM == null) {
-				return false;
-			}
-
-			// We can't do a sane conversion from F16 without a src color space. Guess sRGB in this case.
-			if (srcPM.ColorType == SKColorType.RgbaF16 && dstPM.ColorSpace == null) {
-				dstPM = dstPM.WithColorSpace (SKColorSpace.CreateSrgb ());
-			}
-
-			// ReadPixels does not yet support color spaces with parametric transfer functions. This
-			// works around that restriction when the color spaces are equal.
-			if (colorType != SKColorType.RgbaF16 && srcPM.ColorType != SKColorType.RgbaF16 && dstPM.ColorSpace == srcPM.ColorSpace) {
-				dstPM = dstPM.WithColorSpace (null);
-				srcPM = srcPM.WithColorSpace (null);
-			}
-
-			if (!srcPM.ReadPixels (dstPM)) {
-				return false;
-			}
-
-			return true;
+			return SkiaApi.sk_bitmap_copy (Handle, destination.Handle, colorType);
 		}
 
 		public bool ExtractSubset(SKBitmap destination, SKRectI subset)
@@ -368,14 +268,14 @@ namespace SkiaSharp
 			get { return (int)SkiaApi.sk_bitmap_get_byte_count (Handle); }
 		}
 
-		[Obsolete ("This no longer does anything, and should not be used.")]
 		public void LockPixels ()
 		{
+			SkiaApi.sk_bitmap_lock_pixels (Handle);
 		}
 
-		[Obsolete ("This no longer does anything, and should not be used.")]
 		public void UnlockPixels ()
 		{
+			SkiaApi.sk_bitmap_unlock_pixels (Handle);
 		}
 
 		public IntPtr GetPixels ()
@@ -406,11 +306,13 @@ namespace SkiaSharp
 		
 		public byte[] Bytes {
 			get { 
-				IntPtr length;
-				var pixelsPtr = GetPixels (out length);
-				byte [] bytes = new byte [(int)length];
-				Marshal.Copy (pixelsPtr, bytes, 0, (int)length);
-				return bytes; 
+				using (new SKAutoLockPixels (this)) {
+					IntPtr length;
+					var pixelsPtr = GetPixels (out length);
+					byte [] bytes = new byte [(int)length];
+					Marshal.Copy (pixelsPtr, bytes, 0, (int)length);
+					return bytes; 
+				}
 			}
 		}
 
@@ -715,6 +617,7 @@ namespace SkiaSharp
 
 		public static bool Resize (SKBitmap dst, SKBitmap src, SKBitmapResizeMethod method)
 		{
+			using (new SKAutoLockPixels (src))
 			using (var srcPix = src.PeekPixels ())
 			using (var dstPix = dst.PeekPixels ()) {
 				return SKPixmap.Resize (dstPix, srcPix, method);// && dst.InstallPixels (dstPix); 
@@ -739,6 +642,7 @@ namespace SkiaSharp
 
 		public bool Encode (SKWStream dst, SKEncodedImageFormat format, int quality)
 		{
+			using (new SKAutoLockPixels (this))
 			using (var pixmap = new SKPixmap ()) {
 				return PeekPixels (pixmap) && pixmap.Encode (dst, format, quality);
 			}
@@ -757,27 +661,43 @@ namespace SkiaSharp
 		}
 	}
 
-	[Obsolete ("This no longer does anything, and should not be used.")]
 	public class SKAutoLockPixels : IDisposable
 	{
-		[Obsolete ("This no longer does anything, and should not be used.")]
+		private SKBitmap bitmap;
+		private readonly bool doLock;
+
 		public SKAutoLockPixels (SKBitmap bitmap)
+			: this (bitmap, true)
 		{
 		}
 
-		[Obsolete ("This no longer does anything, and should not be used.")]
 		public SKAutoLockPixels (SKBitmap bitmap, bool doLock)
 		{
+			this.bitmap = bitmap;
+			this.doLock = doLock;
+
+			if (bitmap != null && doLock) {
+				bitmap.LockPixels ();
+			}
 		}
 
-		[Obsolete ("This no longer does anything, and should not be used.")]
 		public void Dispose ()
 		{
+			if (bitmap != null && doLock) {
+				bitmap.UnlockPixels ();
+			}
 		}
 
-		[Obsolete ("This no longer does anything, and should not be used.")]
+		/// <summary>
+		/// Perform the unlock now, instead of waiting for the Dispose.
+		/// Will only do this once.
+		/// </summary>
 		public void Unlock ()
 		{
+			if (bitmap != null && doLock) {
+				bitmap.UnlockPixels ();
+				bitmap = null;
+			}
 		}
 	}
 }

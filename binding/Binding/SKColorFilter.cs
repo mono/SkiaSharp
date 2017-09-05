@@ -10,8 +10,6 @@ using System;
 
 namespace SkiaSharp
 {
-	// TODO: `FilterColor` may be useful
-
 	public class SKColorFilter : SKObject
 	{
 		public const int ColorMatrixSize = 20;

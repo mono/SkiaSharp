@@ -436,7 +436,7 @@ namespace SkiaSharp
 	internal unsafe struct SKCodecOptionsInternal {
 		public SKZeroInitialized fZeroInitialized;
 		public SKRectI* fSubset;
-		public int fFrameIndex;
+		public IntPtr fFrameIndex;
 		public byte fHasPriorFrame;
 		public SKTransferFunctionBehavior fPremulBehavior;
 
@@ -445,7 +445,7 @@ namespace SkiaSharp
 			var nativeOptions = new SKCodecOptionsInternal {
 				fZeroInitialized = managed.ZeroInitialized,
 				fSubset = null,
-				fFrameIndex = managed.FrameIndex,
+				fFrameIndex = (IntPtr) managed.FrameIndex,
 				fHasPriorFrame = managed.HasPriorFrame ? (byte) 1 : (byte) 0,
 				fPremulBehavior = managed.PremulBehavior,
 			};
@@ -502,19 +502,19 @@ namespace SkiaSharp
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKCodecFrameInfo {
-		private int requiredFrame;
-		private int duration;
+		private IntPtr requiredFrame;
+		private IntPtr duration;
 		private byte fullyRecieved;
 		private SKAlphaType alphaType;
 
 		public int RequiredFrame {
-			get { return requiredFrame; }
-			set { requiredFrame = value; }
+			get { return (int)requiredFrame; }
+			set { requiredFrame = (IntPtr)value; }
 		}
 
 		public int Duration {
-			get { return duration; }
-			set { duration = value; }
+			get { return (int)duration; }
+			set { duration = (IntPtr)value; }
 		}
 
 		public bool FullyRecieved {
@@ -1741,7 +1741,7 @@ namespace SkiaSharp
 	}
 
 	public enum GRSurfaceOrigin {
-		TopLeft = 1,
+		TopLeft,
 		BottomLeft,
 	}
 
@@ -1755,7 +1755,7 @@ namespace SkiaSharp
 		Bgra8888,
 		Srgba8888,
 		Sbgra8888,
-		Rgba8888SInt,
+		Etc1,
 		RgbaFloat,
 		RgFloat,
 		AlphaHalf,
@@ -1887,9 +1887,10 @@ namespace SkiaSharp
 		AaHairline        = 1 << 3,
 		AaConvex          = 1 << 4,
 		AaLinearizing     = 1 << 5,
-		Small             = 1 << 6,
-		Tessellating      = 1 << 7,
-		Default           = 1 << 8,
+		Pls               = 1 << 6,
+		DistanceField     = 1 << 7,
+		Tessellating      = 1 << 8,
+		Default           = 1 << 9,
 
 		All               = GRContextOptionsGpuPathRenderers.Default | (GRContextOptionsGpuPathRenderers.Default - 1)
 	}
@@ -1903,6 +1904,8 @@ namespace SkiaSharp
 		private int  fBufferMapThreshold;
 		private byte fUseDrawInsteadOfPartialRenderTargetWrite;
 		private byte fImmediateMode;
+		private int  fMaxOpCombineLookback;
+		private int  fMaxOpCombineLookahead;
 		private byte fUseShaderSwizzling;
 		private byte fDoManualMipmapping;
 		private byte fEnableInstancedRendering;
@@ -1910,9 +1913,7 @@ namespace SkiaSharp
 		private byte fRequireDecodeDisableForSRGB;
 		private byte fDisableGpuYUVConversion;
 		private byte fSuppressPathRendering;
-		private byte fWireframeMode;
 		private GRContextOptionsGpuPathRenderers fGpuPathRenderers;
-		private float fGlyphCacheTextureMaximumBytes;
 		private byte fAvoidStencilBuffers;
 
 		public bool SuppressPrints {
@@ -1943,6 +1944,14 @@ namespace SkiaSharp
 			get { return fImmediateMode != 0; }
 			set { fImmediateMode = value ? (byte)1 : (byte)0; }
 		}
+		public int MaxOpCombineLookback {
+			get { return fMaxOpCombineLookback; }
+			set { fMaxOpCombineLookback = value; }
+		}
+		public int MaxOpCombineLookahead {
+			get { return fMaxOpCombineLookahead; }
+			set { fMaxOpCombineLookahead = value; }
+		}
 		public bool UseShaderSwizzling {
 			get { return fUseShaderSwizzling != 0; }
 			set { fUseShaderSwizzling = value ? (byte)1 : (byte)0; }
@@ -1971,17 +1980,9 @@ namespace SkiaSharp
 			get { return fSuppressPathRendering != 0; }
 			set { fSuppressPathRendering = value ? (byte)1 : (byte)0; }
 		}
-		public bool WireframeMode {
-			get { return fWireframeMode != 0; }
-			set { fWireframeMode = value ? (byte)1 : (byte)0; }
-		}
 		public GRContextOptionsGpuPathRenderers GpuPathRenderers {
 			get { return fGpuPathRenderers; }
 			set { fGpuPathRenderers = value; }
-		}
-		public float GlyphCacheTextureMaximumBytes {
-			get { return fGlyphCacheTextureMaximumBytes; }
-			set { fGlyphCacheTextureMaximumBytes = value; }
 		}
 		public bool AvoidStencilBuffers {
 			get { return fAvoidStencilBuffers != 0; }
@@ -1998,6 +1999,8 @@ namespace SkiaSharp
 					fBufferMapThreshold = -1,
 					fUseDrawInsteadOfPartialRenderTargetWrite = 0,
 					fImmediateMode = 0,
+					fMaxOpCombineLookback = -1,
+					fMaxOpCombineLookahead = -1,
 					fUseShaderSwizzling = 0,
 					fDoManualMipmapping = 0,
 					fEnableInstancedRendering = 0,
@@ -2005,9 +2008,7 @@ namespace SkiaSharp
 					fRequireDecodeDisableForSRGB = 1,
 					fDisableGpuYUVConversion = 0,
 					fSuppressPathRendering = 0,
-					fWireframeMode = 0,
 					fGpuPathRenderers = GRContextOptionsGpuPathRenderers.All,
-					fGlyphCacheTextureMaximumBytes = 2048 * 1024 * 4,
 					fAvoidStencilBuffers = 0,
 				};
 			}

@@ -6,7 +6,7 @@ namespace SkiaSharp.Views.GlesInterop
 	{
 #if __MACOS__
 		private const string libGLESv2 = "/System/Library/Frameworks/OpenGL.framework/OpenGL";
-#elif __IOS__ || __TVOS__ || __WATCHOS__
+#elif __IOS__ || __TVOS__
 		private const string libGLESv2 = "/System/Library/Frameworks/OpenGLES.framework/OpenGLES";
 #elif __DESKTOP__ || __WPF__
 		private const string libGLESv2 = "opengl32.dll";

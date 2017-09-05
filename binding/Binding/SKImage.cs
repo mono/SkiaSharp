@@ -34,19 +34,6 @@ namespace SkiaSharp
 	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 	internal delegate void SKImageTextureReleaseDelegateInternal (IntPtr context);
 
-	// TODO: `FromTexture` with color space
-	// TODO: `FromTexture` with `GRBackendTexture` [and color space]
-	// TODO: `MakeCrossContextFromEncoded`
-	// TODO: `FromAdoptedTexture` with color space
-	// TODO: `FromAdoptedTexture` with `GRBackendTexture` [and color space]
-	// TODO: `MakeFromYUVTexturesCopy` and `MakeFromNV12TexturesCopy`
-	// TODO: `FromPicture` with bit depth and color space
-	// TODO: `ColorSpace` property
-	// TODO: `IsValid`
-	// TODO: `GetTextureHandle`
-	// TODO: `ToTextureImage`
-	// TODO: `MakeColorSpace`
-
 	public class SKImage : SKObject
 	{
 		// so the GC doesn't collect the delegate
@@ -274,14 +261,6 @@ namespace SkiaSharp
 		public SKData Encode ()
 		{
 			return GetObject<SKData> (SkiaApi.sk_image_encode (Handle));
-		}
-
-		public SKData Encode (SKPixelSerializer serializer)
-		{
-			if (serializer == null)
-				throw new ArgumentNullException (nameof (serializer));
-
-			return GetObject<SKData> (SkiaApi.sk_image_encode_with_serializer (Handle, serializer.Handle));
 		}
 
 		[Obsolete ("Use Encode(SKEncodedImageFormat, int) instead.", true)]

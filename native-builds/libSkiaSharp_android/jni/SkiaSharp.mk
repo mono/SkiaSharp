@@ -47,12 +47,10 @@ LOCAL_CFLAGS           += -fPIC -g -fno-exceptions -fstrict-aliasing -Wall -Wext
 LOCAL_CPPFLAGS         := -std=c++11 -fno-rtti -fno-threadsafe-statics -Wnon-virtual-dtor        \
                           -Os -ffunction-sections -fdata-sections
 
-LOCAL_SRC_FILES        := ../../src/sk_xamarin.cpp                \
-                          ../../src/SkiaKeeper.c                  \
-                          ../../src/sk_managedstream.cpp          \
-                          ../../src/SkManagedStream.cpp           \
-                          ../../src/sk_managedpixelserializer.cpp \
-                          ../../src/SkManagedPixelSerializer.cpp  
+LOCAL_SRC_FILES        := ../../src/sk_xamarin.cpp               \
+                          ../../src/SkiaKeeper.c                 \
+                          ../../src/sk_managedstream.cpp         \
+                          ../../src/SkManagedStream.cpp
 
 include $(BUILD_SHARED_LIBRARY)
 

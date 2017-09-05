@@ -19,8 +19,6 @@ namespace HarfBuzzSharp
 	{
 #if __TVOS__ && __UNIFIED__
 		private const string HARFBUZZ = "__Internal";
-#elif __WATCHOS__ && __UNIFIED__
-		private const string HARFBUZZ = "__Internal";
 #elif __IOS__ && __UNIFIED__
 		private const string HARFBUZZ = "__Internal";
 #elif __ANDROID__

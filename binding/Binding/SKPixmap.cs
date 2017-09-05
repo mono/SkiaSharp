@@ -159,20 +159,5 @@ namespace SkiaSharp
 
 			return SkiaApi.sk_pixmap_encode_image (dst.Handle, src.Handle, encoder, quality);
 		}
-
-		public SKPixmap WithColorType (SKColorType newColorType)
-		{
-			return new SKPixmap (Info.WithColorType (newColorType), GetPixels (), RowBytes, ColorTable);
-		}
-
-		public SKPixmap WithColorSpace (SKColorSpace newColorSpace)
-		{
-			return new SKPixmap (Info.WithColorSpace (newColorSpace), GetPixels (), RowBytes, ColorTable);
-		}
-
-		public SKPixmap WithAlphaType (SKAlphaType newAlphaType)
-		{
-			return new SKPixmap (Info.WithAlphaType (newAlphaType), GetPixels (), RowBytes, ColorTable);
-		}
 	}
 }

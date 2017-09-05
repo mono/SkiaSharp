@@ -449,11 +449,11 @@ namespace SkiaSharp
 			SkiaApi.sk_dynamicmemorywstream_copy_to (Handle, data);
 		}
 
-		public bool CopyTo (SKWStream dst)
+		public void CopyTo (SKWStream dst)
 		{
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
-			return SkiaApi.sk_dynamicmemorywstream_write_to_stream (Handle, dst.Handle);
+			SkiaApi.sk_dynamicmemorywstream_write_to_stream (Handle, dst.Handle);
 		}
 
 		protected override void Dispose (bool disposing)

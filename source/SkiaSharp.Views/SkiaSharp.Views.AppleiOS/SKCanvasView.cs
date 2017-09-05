@@ -1,6 +1,4 @@
-﻿#if !__WATCHOS__
-
-using System;
+﻿using System;
 using System.ComponentModel;
 using CoreGraphics;
 using Foundation;
@@ -118,5 +116,3 @@ namespace SkiaSharp.Views.iOS
 		}
 	}
 }
-
-#endif

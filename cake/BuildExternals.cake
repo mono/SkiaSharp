@@ -63,7 +63,7 @@ Task ("externals-init")
     .IsDependentOn ("externals-harfbuzz")
     .Does (() =>  
 {
-    RunProcess (PythonToolPath, new ProcessSettings {
+    RunProcess ("python", new ProcessSettings {
         Arguments = SKIA_PATH.CombineWithFilePath ("tools/git-sync-deps").FullPath,
         WorkingDirectory = SKIA_PATH.FullPath,
     });
@@ -79,7 +79,6 @@ Task ("externals-native")
     .IsDependentOn ("externals-osx")
     .IsDependentOn ("externals-ios")
     .IsDependentOn ("externals-tvos")
-    .IsDependentOn ("externals-watchos")
     .IsDependentOn ("externals-android")
     .IsDependentOn ("externals-linux")
     .Does (() => 
@@ -538,113 +537,6 @@ Task ("externals-tvos")
     });
 });
 
-// this builds the native C and C++ externals for watchOS
-Task ("externals-watchos")
-    .IsDependentOn ("externals-init")
-    .WithCriteria (IsRunningOnMac ())
-    .Does (() => 
-{
-    // SkiaSharp
-
-    var buildArch = new Action<string, string, string> ((sdk, arch, skiaArch) => {
-        var specifics = "";
-        // several instances of "error: type 'XXX' requires 8 bytes of alignment and the default allocator only guarantees 4 bytes [-Werror,-Wover-aligned]
-        // https://groups.google.com/forum/#!topic/skia-discuss/hU1IPFwU6bI
-        if (arch == "armv7k") {
-            specifics += ", \"-Wno-over-aligned\"";
-        }
-
-        // generate native skia build files
-        RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn"), new ProcessSettings {
-            Arguments = 
-                "gen out/watchos/" + arch + " " + 
-                "--args='" +
-                "  is_official_build=true skia_enable_tools=false" +
-                "  target_os=\"watchos\" target_cpu=\"" + skiaArch + "\"" +
-                "  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true" +
-                "  skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false" +
-                "  extra_cflags=[ \"-DSK_BUILD_FOR_WATCHOS\", \"-DSKIA_C_DLL\", \"-mwatchos-version-min=2.0\" " + specifics + " ]" +
-                "  extra_ldflags=[ \"-Wl,watchos_version_min=2.0\" ]" +
-                "'",
-            WorkingDirectory = SKIA_PATH.FullPath,
-        });
-
-        // build native skia
-        RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja"), new ProcessSettings {
-            Arguments = "-C out/watchos/" + arch,
-            WorkingDirectory = SKIA_PATH.FullPath,
-        });
-
-        // build libSkiaSharp
-        XCodeBuild (new XCodeBuildSettings {
-            Project = "native-builds/libSkiaSharp_watchos/libSkiaSharp.xcodeproj",
-            Target = "libSkiaSharp",
-            Sdk = sdk,
-            Arch = arch,
-            Configuration = "Release",
-        });
-
-        // copy libSkiaSharp to output
-        EnsureDirectoryExists ("native-builds/lib/watchos/" + arch);
-        CopyDirectory ("native-builds/libSkiaSharp_watchos/build/Release-" + sdk, "native-builds/lib/watchos/" + arch);
-
-        // strip anything we can
-        RunProcess ("strip", new ProcessSettings {
-            Arguments = "-x -S libSkiaSharp",
-            WorkingDirectory = "native-builds/lib/watchos/" + arch + "/libSkiaSharp.framework",
-        });
-
-        // re-sign with empty
-        RunProcess ("codesign", new ProcessSettings {
-            Arguments = "--force --sign - --timestamp=none libSkiaSharp.framework",
-            WorkingDirectory = "native-builds/lib/watchos/" + arch,
-        });
-    });
-
-    buildArch ("watchsimulator", "i386", "x86");
-    buildArch ("watchos", "armv7k", "arm");
-
-    // create the fat framework
-    CopyDirectory ("native-builds/lib/watchos/armv7k/libSkiaSharp.framework/", "native-builds/lib/watchos/libSkiaSharp.framework/");
-    DeleteFile ("native-builds/lib/watchos/libSkiaSharp.framework/libSkiaSharp");
-    RunLipo ("native-builds/lib/watchos/", "libSkiaSharp.framework/libSkiaSharp", new [] {
-        (FilePath) "i386/libSkiaSharp.framework/libSkiaSharp", 
-        (FilePath) "armv7k/libSkiaSharp.framework/libSkiaSharp"
-    });
-
-    // HarfBuzzSharp
-
-    var buildHarfBuzzArch = new Action<string, string> ((sdk, arch) => {
-        // build libHarfBuzzSharp
-        XCodeBuild (new XCodeBuildSettings {
-            Project = "native-builds/libHarfBuzzSharp_watchos/libHarfBuzzSharp.xcodeproj",
-            Target = "libHarfBuzzSharp",
-            Sdk = sdk,
-            Arch = arch,
-            Configuration = "Release",
-        });
-
-        // copy libHarfBuzzSharp to output
-        EnsureDirectoryExists ("native-builds/lib/watchos/" + arch);
-        CopyFileToDirectory ("native-builds/libHarfBuzzSharp_watchos/build/Release-" + sdk + "/libHarfBuzzSharp.a", "native-builds/lib/watchos/" + arch);
-
-        // strip anything we can
-        RunProcess ("strip", new ProcessSettings {
-            Arguments = "-x -S libHarfBuzzSharp.a",
-            WorkingDirectory = "native-builds/lib/watchos/" + arch,
-        });
-    });
-
-    buildHarfBuzzArch ("watchsimulator", "i386");
-    buildHarfBuzzArch ("watchos", "armv7k");
-    
-    // create the fat framework
-    RunLipo ("native-builds/lib/watchos/", "libHarfBuzzSharp.a", new [] {
-        (FilePath) "i386/libHarfBuzzSharp.a", 
-        (FilePath) "armv7k/libHarfBuzzSharp.a"
-    });
-});
-
 // this builds the native C and C++ externals for Android
 Task ("externals-android")
     .IsDependentOn ("externals-init")
@@ -866,9 +758,6 @@ Task ("clean-externals")
     // tvos
     CleanDirectories ("native-builds/libSkiaSharp_tvos/build");
     CleanDirectories ("native-builds/libHarfBuzzSharp_tvos/build");
-    // watchos
-    CleanDirectories ("native-builds/libSkiaSharp_watchos/build");
-    CleanDirectories ("native-builds/libHarfBuzzSharp_watchos/build");
     // osx
     CleanDirectories ("native-builds/libSkiaSharp_osx/build");
     CleanDirectories ("native-builds/libHarfBuzzSharp_osx/build");

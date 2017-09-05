@@ -197,26 +197,5 @@ namespace SkiaSharp
 		public SKRectI Rect {
 			get { return SKRectI.Create (Width, Height); }
 		}
-
-		public SKImageInfo WithColorType (SKColorType newColorType)
-		{
-			var copy = this;
-			copy.colorType = newColorType;
-			return copy;
-		}
-
-		public SKImageInfo WithColorSpace (SKColorSpace newColorSpace)
-		{
-			var copy = this;
-			copy.colorSpace = newColorSpace;
-			return copy;
-		}
-
-		public SKImageInfo WithAlphaType (SKAlphaType newAlphaType)
-		{
-			var copy = this;
-			copy.alphaType = newAlphaType;
-			return copy;
-		}
 	}
 }

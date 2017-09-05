@@ -12,10 +12,6 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	// TODO: `Create(...)` should have overloads that accept a SKPngChunkReader
-	// TODO: missing the `QueryYuv8` and `GetYuv8Planes` members
-	// TODO: might be useful to wrap `GetFrameInfo` (single result)
-
 	public class SKCodec : SKObject
 	{
 		[Preserve]

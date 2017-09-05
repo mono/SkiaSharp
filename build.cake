@@ -23,10 +23,9 @@ var GenApiToolPath = GetToolPath ("Microsoft.DotNet.BuildTools.GenAPI/tools/GenA
 var MDocPath = MakeAbsolute ((FilePath)"externals/api-doc-tools/bin/Release/mdoc.exe");
 var SNToolPath = GetSNToolPath (EnvironmentVariable ("SN_EXE"));
 var MSBuildToolPath = GetMSBuildToolPath (EnvironmentVariable ("MSBUILD_EXE"));
-var PythonToolPath = EnvironmentVariable ("PYTHON_EXE") ?? "python";
 
-var VERSION_ASSEMBLY = "1.60.0.0";
-var VERSION_FILE = "1.60.0.0";
+var VERSION_ASSEMBLY = "1.59.0.0";
+var VERSION_FILE = "1.59.1.0";
 var VERSION_SONAME = VERSION_FILE.Substring(VERSION_FILE.IndexOf(".") + 1);
 
 var ANGLE_VERSION_SOURCE = "2.1.13";
@@ -37,10 +36,10 @@ var HARFBUZZ_VERSION_FILE = "1.4.6.0";
 var HARFBUZZ_VERSION_SONAME = HARFBUZZ_VERSION_FILE.Substring(0, HARFBUZZ_VERSION_FILE.LastIndexOf("."));
 
 var VERSION_PACKAGES = new Dictionary<string, string> {
-    { "SkiaSharp", "1.60.0" },
-    { "SkiaSharp.Views", "1.60.0" },
-    { "SkiaSharp.Views.Forms", "1.60.0" },
-    { "SkiaSharp.HarfBuzz", "1.60.0-beta" },
+    { "SkiaSharp", "1.59.1" },
+    { "SkiaSharp.Views", "1.59.1" },
+    { "SkiaSharp.Views.Forms", "1.59.1" },
+    { "SkiaSharp.HarfBuzz", "1.59.0-beta" },
 
     { "HarfBuzzSharp", "1.4.6" },
 };
@@ -91,7 +90,6 @@ Task ("libs")
     EnsureDirectoryExists ("./output/android/");
     EnsureDirectoryExists ("./output/ios/");
     EnsureDirectoryExists ("./output/tvos/");
-    EnsureDirectoryExists ("./output/watchos/");
     EnsureDirectoryExists ("./output/osx/");
     EnsureDirectoryExists ("./output/portable/");
     EnsureDirectoryExists ("./output/mac/");
@@ -137,20 +135,17 @@ Task ("libs")
         CopyFileToDirectory ("./binding/SkiaSharp.Android/bin/Release/SkiaSharp.dll", "./output/android/");
         CopyFileToDirectory ("./binding/SkiaSharp.iOS/bin/Release/SkiaSharp.dll", "./output/ios/");
         CopyFileToDirectory ("./binding/SkiaSharp.tvOS/bin/Release/SkiaSharp.dll", "./output/tvos/");
-        CopyFileToDirectory ("./binding/SkiaSharp.watchOS/bin/Release/SkiaSharp.dll", "./output/watchos/");
         CopyFileToDirectory ("./binding/SkiaSharp.OSX/bin/Release/SkiaSharp.dll", "./output/osx/");
         // HarfBuzzSharp
         CopyFileToDirectory ("./binding/HarfBuzzSharp.Android/bin/Release/HarfBuzzSharp.dll", "./output/android/");
         CopyFileToDirectory ("./binding/HarfBuzzSharp.iOS/bin/Release/HarfBuzzSharp.dll", "./output/ios/");
         CopyFileToDirectory ("./binding/HarfBuzzSharp.tvOS/bin/Release/HarfBuzzSharp.dll", "./output/tvos/");
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.watchOS/bin/Release/HarfBuzzSharp.dll", "./output/watchos/");
         CopyFileToDirectory ("./binding/HarfBuzzSharp.OSX/bin/Release/HarfBuzzSharp.dll", "./output/osx/");
         // SkiaSharp.Views
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Android/bin/Release/SkiaSharp.Views.Android.dll", "./output/android/");
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.iOS/bin/Release/SkiaSharp.Views.iOS.dll", "./output/ios/");
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Mac/bin/Release/SkiaSharp.Views.Mac.dll", "./output/osx/");
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.tvOS/bin/Release/SkiaSharp.Views.tvOS.dll", "./output/tvos/");
-        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.watchOS/bin/Release/SkiaSharp.Views.watchOS.dll", "./output/watchos/");
         // SkiaSharp.Views.Forms
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms/bin/Release/SkiaSharp.Views.Forms.dll", "./output/portable/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Android/bin/Release/SkiaSharp.Views.Forms.dll", "./output/android/");
@@ -379,7 +374,6 @@ Task ("update-docs")
             "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/MonoAndroid/v2.3",
             "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.iOS/v1.0",
             "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.TVOS/v1.0",
-            "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.WatchOS/v1.0",
             "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.Mac/v2.0",
             "./externals",
         });
@@ -391,7 +385,6 @@ Task ("update-docs")
             "/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xbuild-frameworks/MonoAndroid/v1.0",
             "/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xbuild-frameworks/MonoAndroid/v4.5",
             "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/lib/mono/Xamarin.TVOS",
-            "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/lib/mono/Xamarin.WatchOS",
             "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/lib/mono/Xamarin.iOS",
             "/Library/Frameworks/Xamarin.Mac.framework/Versions/Current/lib/mono/Xamarin.Mac",
         });
@@ -413,7 +406,6 @@ Task ("update-docs")
             "./output/ios/SkiaSharp.Views.iOS.dll",
             "./output/osx/SkiaSharp.Views.Mac.dll",
             "./output/tvos/SkiaSharp.Views.tvOS.dll",
-            "./output/watchos/SkiaSharp.Views.watchOS.dll",
             "./output/uwp/SkiaSharp.Views.UWP.dll",
         }).ToArray ();
     }
@@ -424,7 +416,6 @@ Task ("update-docs")
             "./output/ios/SkiaSharp.Views.iOS.dll",
             "./output/osx/SkiaSharp.Views.Mac.dll",
             "./output/tvos/SkiaSharp.Views.tvOS.dll",
-            "./output/watchos/SkiaSharp.Views.watchOS.dll",
         }).ToArray ();
     }
 

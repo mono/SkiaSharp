@@ -15,52 +15,6 @@ namespace SkiaSharp.Tests
 		protected static readonly string PathToFonts = Path.Combine(PathToAssembly, "fonts");
 		protected static readonly string PathToImages = Path.Combine(PathToAssembly, "images");
 
-		protected static void SaveBitmap(SKBitmap bmp, string filename = "output.png")
-		{
-			using (var bitmap = new SKBitmap(bmp.Width, bmp.Height))
-			using (var canvas = new SKCanvas(bitmap))
-			{
-				canvas.Clear(SKColors.Transparent);
-				canvas.DrawBitmap(bmp, 0, 0);
-				canvas.Flush();
-
-				using (var stream = File.OpenWrite(Path.Combine(PathToImages, filename)))
-				using (var image = SKImage.FromBitmap(bitmap))
-				using (var data = image.Encode())
-				{
-					data.SaveTo(stream);
-				}
-			}
-		}
-
-		protected static SKBitmap CreateTestBitmap(byte alpha = 255)
-		{
-			var bmp = new SKBitmap(40, 40);
-			bmp.Erase(SKColors.Transparent);
-
-			using (var canvas = new SKCanvas(bmp))
-			using (var paint = new SKPaint())
-			{
-
-				var x = bmp.Width / 2;
-				var y = bmp.Height / 2;
-
-				paint.Color = SKColors.Red.WithAlpha(alpha);
-				canvas.DrawRect(SKRect.Create(0, 0, x, y), paint);
-
-				paint.Color = SKColors.Green.WithAlpha(alpha);
-				canvas.DrawRect(SKRect.Create(x, 0, x, y), paint);
-
-				paint.Color = SKColors.Blue.WithAlpha(alpha);
-				canvas.DrawRect(SKRect.Create(0, y, x, y), paint);
-
-				paint.Color = SKColors.Yellow.WithAlpha(alpha);
-				canvas.DrawRect(SKRect.Create(x, y, x, y), paint);
-			}
-
-			return bmp;
-		}
-
 #if NET_STANDARD
 		protected static bool IsLinux => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
 		protected static bool IsMac => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);

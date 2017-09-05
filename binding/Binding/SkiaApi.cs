@@ -38,8 +38,6 @@ using sk_wstream_dynamicmemorystream_t = System.IntPtr;
 using sk_wstream_filestream_t = System.IntPtr;
 using sk_bitmap_t = System.IntPtr;
 using sk_pixmap_t = System.IntPtr;
-using sk_pixelserializer_t = System.IntPtr;
-using sk_managedpixelserializer_t = System.IntPtr;
 using sk_codec_t = System.IntPtr;
 using sk_imagefilter_croprect_t = System.IntPtr;
 using sk_imagefilter_t = System.IntPtr;
@@ -68,8 +66,6 @@ namespace SkiaSharp
 	internal static class SkiaApi
 	{
 #if __TVOS__ && __UNIFIED__
-		private const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
-#elif __WATCHOS__ && __UNIFIED__
 		private const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
 #elif __IOS__ && __UNIFIED__
 		private const string SKIA = "@rpath/libSkiaSharp.framework/libSkiaSharp";
@@ -132,21 +128,6 @@ namespace SkiaSharp
 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SKColorType sk_colortype_get_default_8888();
-
-		// Pixel Serializer
-
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_pixelserializer_unref(sk_pixelserializer_t cserializer);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.I1)]
-		public extern static bool sk_pixelserializer_use_encoded_data(sk_pixelserializer_t cserializer, IntPtr data, IntPtr len);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_data_t sk_pixelserializer_encode(sk_pixelserializer_t cserializer, sk_pixmap_t cpixmap);
-
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_managedpixelserializer_t sk_managedpixelserializer_new();
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_managedpixelserializer_set_delegates(IntPtr pUse, IntPtr pEncode);
 
 		// Surface
 
@@ -557,8 +538,6 @@ namespace SkiaSharp
 		public extern static bool sk_image_scale_pixels(sk_image_t image, sk_pixmap_t dst, SKFilterQuality quality, SKImageCachingHint cachingHint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_data_t sk_image_encode(sk_image_t image);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_data_t sk_image_encode_with_serializer(sk_image_t image, sk_pixelserializer_t serializer);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_data_t sk_image_encode_specific(sk_image_t image, SKEncodedImageFormat encoder, int quality);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1135,8 +1114,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_dynamicmemorywstream_copy_to(sk_wstream_dynamicmemorystream_t cstream, IntPtr data);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs(UnmanagedType.I1)]
-		public extern static bool sk_dynamicmemorywstream_write_to_stream(sk_wstream_dynamicmemorystream_t cstream, sk_wstream_t dst);
+		public extern static void sk_dynamicmemorywstream_write_to_stream(sk_wstream_dynamicmemorystream_t cstream, sk_wstream_t dst);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_wstream_write(sk_wstream_t cstream, IntPtr buffer, IntPtr size);
@@ -1322,6 +1300,16 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_bitmap_ready_to_draw(sk_bitmap_t b);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_bitmap_copy(sk_bitmap_t cbitmap, sk_bitmap_t dst, SKColorType ct);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_bitmap_can_copy_to(sk_bitmap_t cbitmap, SKColorType ct);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_bitmap_lock_pixels(sk_bitmap_t b);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_bitmap_unlock_pixels(sk_bitmap_t b);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_bitmap_install_pixels(sk_bitmap_t cbitmap, ref SKImageInfoNative cinfo, IntPtr pixels, IntPtr rowBytes, sk_colortable_t ctable, IntPtr releaseProc, IntPtr context);

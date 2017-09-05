@@ -1,5 +1,3 @@
-#if !__WATCHOS__
-
 using System;
 using CoreAnimation;
 using CoreGraphics;
@@ -70,5 +68,3 @@ namespace SkiaSharp.Views.Mac
 		}
 	}
 }
-
-#endif

@@ -11,19 +11,6 @@ namespace SkiaSharp.Tests
 		private const int PRECISION = 4;
 
 		[Test]
-		public void ImageInfoMethodsDoNotModifySource()
-		{
-			var info = new SKImageInfo(100, 30, SKColorType.Rgb565, SKAlphaType.Unpremul);
-
-			Assert.AreEqual(SKColorType.Rgb565, info.ColorType);
-
-			var copy = info.WithColorType(SKColorType.Index8);
-
-			Assert.AreEqual(SKColorType.Rgb565, info.ColorType);
-			Assert.AreEqual(SKColorType.Index8, copy.ColorType);
-		}
-
-		[Test]
 		public void RectangleHasCorrectProperties()
 		{
 			var rect = new SKRect(15, 25, 55, 75);

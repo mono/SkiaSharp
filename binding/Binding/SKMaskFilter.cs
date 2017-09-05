@@ -10,9 +10,6 @@ using System;
 
 namespace SkiaSharp
 {
-	// TODO: `getFormat`
-	// TODO: `computeFastBounds`
-
 	public class SKMaskFilter : SKObject
 	{
 		private const float BlurSigmaScale = 0.57735f;
