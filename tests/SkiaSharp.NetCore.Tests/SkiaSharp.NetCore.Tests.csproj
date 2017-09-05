@@ -13,6 +13,11 @@
     <RuntimeFrameworkVersion>1.1.1</RuntimeFrameworkVersion>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="NUnit" Version="3.6.1" />
+    <PackageReference Include="SkiaSharp" Version="1.59.1" />
+    <PackageReference Include="SkiaSharp.HarfBuzz" Version="1.59.0-beta" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="..\Tests\*.cs" Link="%(FileName)%(Extension)" />
     <Compile Include="..\Tests\GlContexts\*.cs" Link="GlContexts\%(FileName)%(Extension)" />
     <Compile Include="..\Tests\GlContexts\Cgl\*.cs" Link="GlContexts\Cgl\%(FileName)%(Extension)" />
@@ -29,10 +34,5 @@
     <None Include="..\Content\fonts\*" Link="fonts/%(FileName)%(Extension)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="NUnit" Version="3.6.1" />
-    <PackageReference Include="SkiaSharp" Version="1.59.1" />
-    <PackageReference Include="SkiaSharp.HarfBuzz" Version="1.59.0-beta" />
   </ItemGroup>
 </Project>

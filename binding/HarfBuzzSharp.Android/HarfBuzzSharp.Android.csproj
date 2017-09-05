@@ -49,9 +49,6 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <Import Project="..\HarfBuzzSharp.Shared\HarfBuzzSharp.Shared.projitems" Label="Shared" Condition="Exists('..\HarfBuzzSharp.Shared\HarfBuzzSharp.Shared.projitems')" />
-  <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" Condition="Exists('..\Binding.Shared\Binding.Shared.projitems')" />
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <ItemGroup>
     <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\arm64-v8a\libHarfBuzzSharp.so">
       <Link>libs\arm64-v8a\libHarfBuzzSharp.so</Link>
@@ -66,4 +63,7 @@
       <Link>libs\x86_64\libHarfBuzzSharp.so</Link>
     </EmbeddedNativeLibrary>
   </ItemGroup>
+  <Import Project="..\HarfBuzzSharp.Shared\HarfBuzzSharp.Shared.projitems" Label="Shared" />
+  <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" />
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>

@@ -16,7 +16,9 @@ namespace SkiaSharp.Views.iOS
 	public class SKGLView : GLKView, IGLKViewDelegate, IComponent
 	{
 		// for IComponent
+#pragma warning disable 67
 		private event EventHandler DisposedInternal;
+#pragma warning restore 67
 		ISite IComponent.Site { get; set; }
 		event EventHandler IComponent.Disposed
 		{
