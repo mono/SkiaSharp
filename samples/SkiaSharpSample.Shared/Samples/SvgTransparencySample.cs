@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using SkiaSharp;
+using SKSvg = SkiaSharp.Extended.Svg.SKSvg;
 
 namespace SkiaSharpSample.Samples
 {

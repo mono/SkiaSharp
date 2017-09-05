@@ -73,10 +73,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="nunit.framework">
-      <HintPath>packages\NUnit.3.6.0\lib\net45\nunit.framework.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -86,6 +82,10 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="NUnit" Version="3.6.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.7.0" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -174,7 +174,6 @@
       <Link>images\map.png</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\binding\HarfBuzzSharp.Desktop\HarfBuzzSharp.Desktop.csproj">
@@ -196,11 +195,4 @@
   <Import Project="..\..\binding\SkiaSharp.Desktop\bin\$(Configuration)\nuget\build\net45\SkiaSharp.Desktop.targets" Condition="Exists('..\..\binding\SkiaSharp.Desktop\bin\$(Configuration)\nuget\build\net45\SkiaSharp.Desktop.targets')" />
   <Import Project="..\..\binding\HarfBuzzSharp.Desktop\bin\$(Configuration)\nuget\build\net45\HarfBuzzSharp.Desktop.targets" Condition="Exists('..\..\binding\HarfBuzzSharp.Desktop\bin\$(Configuration)\nuget\build\net45\HarfBuzzSharp.Desktop.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

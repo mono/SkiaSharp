@@ -8,7 +8,7 @@ var RunGyp = new Action<string, string> ((defines, generators) =>
     Information ("\tGYP_GENERATORS = " + EnvironmentVariable ("GYP_GENERATORS"));
     Information ("\tGYP_DEFINES = " + EnvironmentVariable ("GYP_DEFINES"));
     
-    RunProcess ("python", new ProcessSettings {
+    RunProcess (PythonToolPath, new ProcessSettings {
         Arguments = SKIA_PATH.CombineWithFilePath("bin/sync-and-gyp").FullPath,
         WorkingDirectory = SKIA_PATH.FullPath,
     });

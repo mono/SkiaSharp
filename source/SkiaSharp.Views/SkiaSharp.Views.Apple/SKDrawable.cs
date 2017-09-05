@@ -4,6 +4,8 @@ using CoreGraphics;
 
 #if __TVOS__
 namespace SkiaSharp.Views.tvOS
+#elif __WATCHOS__
+namespace SkiaSharp.Views.watchOS
 #elif __IOS__
 namespace SkiaSharp.Views.iOS
 #elif __MACOS__
@@ -54,7 +56,7 @@ namespace SkiaSharp.Views.Mac
 			using (var colorSpace = CGColorSpace.CreateDeviceRGB())
 			using (var image = new CGImage(info.Width, info.Height, BitsPerByte, info.BytesPerPixel * BitsPerByte, info.RowBytes, colorSpace, BitmapFlags, dataProvider, null, false, CGColorRenderingIntent.Default))
 			{
-#if __IOS__ || __TVOS__
+#if __IOS__ || __TVOS__ || __WATCHOS__
 				// we need to flip the image as we are mixing CoreGraphics and UIKit functions:
 				// https://developer.apple.com/library/ios/documentation/2DDrawing/Conceptual/DrawingPrintingiOS/GraphicsDrawingOverview/GraphicsDrawingOverview.html#//apple_ref/doc/uid/TP40010156-CH14-SW26
 				ctx.SaveState();

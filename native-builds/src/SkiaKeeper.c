@@ -27,6 +27,7 @@
 #include "sk_patheffect.h"
 #include "sk_picture.h"
 #include "sk_pixmap.h"
+#include "sk_pixelserializer.h"
 #include "sk_region.h"
 #include "sk_shader.h"
 #include "sk_stream.h"
@@ -39,6 +40,7 @@
 
 // Xamarin
 #include "sk_managedstream.h"
+#include "sk_managedpixelserializer.h"
 
 SK_X_API void** KeepSkiaCSymbols ();
 
@@ -66,6 +68,7 @@ void** KeepSkiaCSymbols ()
         (void*)sk_path_effect_unref,
         (void*)sk_picture_recorder_new,
         (void*)sk_pixmap_destructor,
+        (void*)sk_pixelserializer_unref,
         (void*)sk_region_new,
         (void*)sk_shader_ref,
         (void*)sk_stream_asset_destroy,
@@ -78,6 +81,7 @@ void** KeepSkiaCSymbols ()
 
         // Xamarin
         (void*)sk_managedstream_new,
+        (void*)sk_managedpixelserializer_new,
     };
     return ret;
 }

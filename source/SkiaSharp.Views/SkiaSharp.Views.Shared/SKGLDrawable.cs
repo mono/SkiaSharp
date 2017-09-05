@@ -5,6 +5,8 @@ using SkiaSharp.Views.GlesInterop;
 namespace SkiaSharp.Views.Android
 #elif __TVOS__
 namespace SkiaSharp.Views.tvOS
+#elif __WATCHOS__
+namespace SkiaSharp.Views.watchOS
 #elif __IOS__
 namespace SkiaSharp.Views.iOS
 #elif __DESKTOP__ || __WPF__
@@ -36,7 +38,7 @@ namespace SkiaSharp.Views.UWP
 				Width = bufferWidth,
 				Height = bufferHeight,
 				Config = GRPixelConfig.Rgba8888,
-				Origin = GRSurfaceOrigin.TopLeft,
+				Origin = GRSurfaceOrigin.BottomLeft,
 				SampleCount = samples,
 				StencilBits = stencil,
 				RenderTargetHandle = (IntPtr)framebuffer,

@@ -1,7 +1,10 @@
 ﻿using System;
 using CoreGraphics;
-using CoreImage;
 using Foundation;
+
+#if !__WATCHOS__
+using CoreImage;
+#endif
 
 #if __MACOS__
 using UIColor = AppKit.NSColor;
@@ -11,6 +14,8 @@ using UIKit;
 
 #if __TVOS__
 namespace SkiaSharp.Views.tvOS
+#elif __WATCHOS__
+namespace SkiaSharp.Views.watchOS
 #elif __IOS__
 namespace SkiaSharp.Views.iOS
 #elif __MACOS__
@@ -64,7 +69,7 @@ namespace SkiaSharp.Views.Mac
 
 		public static CGColor ToCGColor(this SKColor color)
 		{
-#if __TVOS__
+#if __TVOS__ || __WATCHOS__
 			// see https://bugzilla.xamarin.com/show_bug.cgi?id=44507
 			return UIColor.FromRGBA(color.Red, color.Green, color.Blue, color.Alpha).CGColor;
 #else
@@ -73,6 +78,8 @@ namespace SkiaSharp.Views.Mac
 		}
 
 		// CIColor
+
+#if !__WATCHOS__
 
 		public static SKColor ToSKColor(this CIColor color)
 		{
@@ -83,6 +90,8 @@ namespace SkiaSharp.Views.Mac
 		{
 			return new CIColor(color.Red / 255f, color.Green / 255f, color.Blue / 255f, color.Alpha / 255f);
 		}
+
+#endif
 
 		// CGImage
 
@@ -170,6 +179,8 @@ namespace SkiaSharp.Views.Mac
 
 		// CIImage
 
+#if !__WATCHOS__
+
 		public static void ToSKPixmap(this CIImage ciImage, SKPixmap pixmap)
 		{
 			using (var colorSpace = CGColorSpace.CreateDeviceRGB())
@@ -222,6 +233,8 @@ namespace SkiaSharp.Views.Mac
 		{
 			return skiaBitmap.ToCGImage();
 		}
+
+#endif
 
 		// NSData
 
