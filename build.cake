@@ -238,7 +238,7 @@ Task ("tests")
 
     // .NET Core
     EnsureDirectoryExists ("./output/tests/netcore");
-    RunDotNetCoreRestore ("./tests/SkiaSharp.NetCore.Tests.Runner/SkiaSharp.NetCore.Tests.Runner.sln");
+    RunNuGetRestore ("./tests/SkiaSharp.NetCore.Tests.Runner/SkiaSharp.NetCore.Tests.Runner.sln");
     DotNetCorePublish ("./tests/SkiaSharp.NetCore.Tests.Runner", new DotNetCorePublishSettings {
         Configuration = "Release",
         OutputDirectory = "./tests/SkiaSharp.NetCore.Tests.Runner/artifacts/"
