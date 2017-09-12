@@ -56,6 +56,11 @@ namespace SkiaSharp.Views.Forms
 		{
 			touchHandler.DisablesUserInteraction = disablesUserInteraction;
 		}
+#elif __MACOS__
+		protected void HandleScrollWheel(AppKit.NSEvent theEvent)
+		{
+			touchHandler.HandleScrollWheel(theEvent);
+		}
 #endif
 
 		protected override void OnElementChanged(ElementChangedEventArgs<TFormsView> e)

@@ -1,4 +1,6 @@
-﻿using Xamarin.Forms;
+﻿using System;
+using AppKit;
+using Xamarin.Forms;
 
 using SKFormsView = SkiaSharp.Views.Forms.SKCanvasView;
 using SKNativeView = SkiaSharp.Views.Mac.SKCanvasView;
@@ -11,8 +13,25 @@ namespace SkiaSharp.Views.Forms
 	{
 		protected override SKNativeView CreateNativeControl()
 		{
-			var view = base.CreateNativeControl();
+			var view = new Test(HandleScrollWheel);
 			return view;
+		}
+	}
+
+	internal class Test : SKNativeView
+	{
+		private readonly Action<NSEvent> onScrollWheel;
+
+		public Test(Action<NSEvent> onScrollWheel)
+		{
+			this.onScrollWheel = onScrollWheel;
+		}
+
+		public override void ScrollWheel(NSEvent theEvent)
+		{
+			base.ScrollWheel(theEvent);
+
+			onScrollWheel?.Invoke(theEvent);
 		}
 	}
 }

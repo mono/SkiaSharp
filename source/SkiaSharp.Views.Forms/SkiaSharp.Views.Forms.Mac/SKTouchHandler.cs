@@ -104,6 +104,11 @@ namespace SkiaSharp.Views.Forms
 			FireEvent(SKTouchAction.Moved, SKMouseButton.Right, SKTouchDeviceType.Mouse, mouseEvent, true);
 		}
 
+		public void HandleScrollWheel(NSEvent theEvent)
+		{
+			Console.WriteLine($"Precise: {theEvent.ScrollingDeltaX} x {theEvent.ScrollingDeltaY}");
+		}
+
 		private bool FireEvent(SKTouchAction actionType, SKMouseButton mouse, SKTouchDeviceType device, NSEvent mouseEvent, bool inContact)
 		{
 			if (onTouchAction == null || scalePixels == null)
