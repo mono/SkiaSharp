@@ -132,8 +132,11 @@ namespace SkiaSharp.Views.Android
 
 		protected override void Dispose(bool disposing)
 		{
+			if (disposing)
+			{
+				FreeBitmap();
+			}
 			base.Dispose(disposing);
-			FreeBitmap();
 		}
 
 		private void FreeBitmap()

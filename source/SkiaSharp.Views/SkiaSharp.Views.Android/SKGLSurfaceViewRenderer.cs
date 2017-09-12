@@ -79,8 +79,11 @@ namespace SkiaSharp.Views.Android
 
 		protected override void Dispose(bool disposing)
 		{
+			if (disposing)
+			{
+				FreeContext();
+			}
 			base.Dispose(disposing);
-			FreeContext();
 		}
 
 		private void FreeContext()
