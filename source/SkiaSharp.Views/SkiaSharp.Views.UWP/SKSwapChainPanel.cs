@@ -25,6 +25,8 @@ namespace SkiaSharp.Views.UWP
 
 		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
 
+		public GRContext GRContext => context;
+
 		protected override Size ArrangeOverride(Size finalSize)
 		{
 			var arrange = base.ArrangeOverride(finalSize);

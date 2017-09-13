@@ -63,6 +63,8 @@ namespace SkiaSharp.Views.Mac
 
 		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
 
+		public GRContext GRContext => context;
+
 		public override void PrepareOpenGL()
 		{
 			base.PrepareOpenGL();
