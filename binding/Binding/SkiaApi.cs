@@ -74,7 +74,7 @@ namespace SkiaSharp
 #elif __MACOS__
 		private const string SKIA = "libSkiaSharp.dylib";
 #elif DESKTOP
-		private const string SKIA = "libSkiaSharp.dll"; // redirected using .dll.config to 'libSkiaSharp.dylib' on OS X
+		private const string SKIA = "libSkiaSharp";
 #elif WINDOWS_UWP
 		private const string SKIA = "libSkiaSharp.dll";
 #elif NET_STANDARD
