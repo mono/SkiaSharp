@@ -1,6 +1,7 @@
-#addin "Cake.Xamarin"
-#addin "Cake.XCode"
-#addin "Cake.FileHelpers"
+#addin nuget:?package=Cake.Xamarin&version=1.3.0.15 
+#addin nuget:?package=Cake.XCode&version=2.0.13 
+#addin nuget:?package=Cake.FileHelpers&version=1.0.4.16
+
 #reference "tools/SharpCompress/lib/net45/SharpCompress.dll"
 
 using System.Linq;
