@@ -49,6 +49,19 @@ var RunMSBuildWithPlatformTarget = new Action<FilePath, string> ((solution, plat
     });
 });
 
+var RunMSBuildRestore = new Action<FilePath> ((solution) =>
+{
+    MSBuild (solution, c => { 
+        c.Configuration = "Release"; 
+        c.Targets.Clear();
+        c.Targets.Add("Restore");
+        c.Verbosity = VERBOSITY;
+        if (!string.IsNullOrEmpty (MSBuildToolPath)) {
+            c.ToolPath = MSBuildToolPath;
+        }
+    });
+});
+
 var RunMSBuild = new Action<FilePath> ((solution) =>
 {
     RunMSBuildWithPlatform (solution, "\"Any CPU\"");
