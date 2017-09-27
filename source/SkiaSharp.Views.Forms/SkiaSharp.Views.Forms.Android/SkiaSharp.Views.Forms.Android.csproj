@@ -46,12 +46,6 @@
     <PackageReference Include="Xamarin.Forms" Version="2.3.4.231" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SKCanvasViewRenderer.cs" />
-    <Compile Include="SKGLViewRenderer.cs" />
-    <Compile Include="SKImageSourceHandler.cs" />
-    <Compile Include="SKTouchHandler.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\..\Binding\SkiaSharp.Android\SkiaSharp.Android.csproj">
       <Project>{c737dc80-5b71-4b26-a2dc-da30421788b0}</Project>
       <Name>SkiaSharp.Android</Name>
@@ -61,7 +55,13 @@
       <Name>SkiaSharp.Views.Android</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="..\SkiaSharp.Views.Forms.Shared\SkiaSharp.Views.Forms.Shared.projitems" Label="Shared" Condition="Exists('..\SkiaSharp.Views.Forms.Shared\SkiaSharp.Views.Forms.Shared.projitems')" />
+  <ItemGroup>
+    <Compile Include="SKCanvasViewRenderer.cs" />
+    <Compile Include="SKGLViewRenderer.cs" />
+    <Compile Include="SKImageSourceHandler.cs" />
+    <Compile Include="SKTouchHandler.cs" />
+  </ItemGroup>
+  <Import Project="..\SkiaSharp.Views.Forms.Shared\SkiaSharp.Views.Forms.Shared.projitems" Label="Shared" />
   <Import Project="..\SkiaSharp.Views.Forms.Native.Shared\SkiaSharp.Views.Forms.Native.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>

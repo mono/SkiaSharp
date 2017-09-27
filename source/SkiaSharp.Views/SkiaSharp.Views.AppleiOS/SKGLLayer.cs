@@ -30,6 +30,8 @@ namespace SkiaSharp.Views.iOS
 
 		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
 
+		public GRContext GRContext => context;
+
 		public virtual void Render()
 		{
 			if (glContext == null)

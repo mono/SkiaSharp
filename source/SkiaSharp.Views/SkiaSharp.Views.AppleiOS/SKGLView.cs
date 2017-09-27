@@ -18,7 +18,9 @@ namespace SkiaSharp.Views.iOS
 	public class SKGLView : GLKView, IGLKViewDelegate, IComponent
 	{
 		// for IComponent
+#pragma warning disable 67
 		private event EventHandler DisposedInternal;
+#pragma warning restore 67
 		ISite IComponent.Site { get; set; }
 		event EventHandler IComponent.Disposed
 		{
@@ -74,6 +76,8 @@ namespace SkiaSharp.Views.iOS
 		}
 
 		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
+
+		public GRContext GRContext => context;
 
 		public new void DrawInRect(GLKView view, CGRect rect)
 		{

@@ -46,13 +46,7 @@
     <Reference Include="Xamarin.Mac" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Xamarin.Forms" Version="2.3.5.233-pre1" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="SKCanvasViewRenderer.cs" />
-    <Compile Include="SKGLViewRenderer.cs" />
-    <Compile Include="SKImageSourceHandler.cs" />
-    <Compile Include="SKTouchHandler.cs" />
+    <PackageReference Include="Xamarin.Forms" Version="2.3.5.235-pre2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Mac\SkiaSharp.Views.Mac.csproj">
@@ -64,7 +58,13 @@
       <Name>SkiaSharp.OSX</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="..\SkiaSharp.Views.Forms.Native.Shared\SkiaSharp.Views.Forms.Native.Shared.projitems" Label="Shared" Condition="Exists('..\SkiaSharp.Views.Forms.Native.Shared\SkiaSharp.Views.Forms.Native.Shared.projitems')" />
-  <Import Project="..\SkiaSharp.Views.Forms.Shared\SkiaSharp.Views.Forms.Shared.projitems" Label="Shared" Condition="Exists('..\SkiaSharp.Views.Forms.Shared\SkiaSharp.Views.Forms.Shared.projitems')" />
+  <ItemGroup>
+    <Compile Include="SKCanvasViewRenderer.cs" />
+    <Compile Include="SKGLViewRenderer.cs" />
+    <Compile Include="SKImageSourceHandler.cs" />
+    <Compile Include="SKTouchHandler.cs" />
+  </ItemGroup>
+  <Import Project="..\SkiaSharp.Views.Forms.Native.Shared\SkiaSharp.Views.Forms.Native.Shared.projitems" Label="Shared" />
+  <Import Project="..\SkiaSharp.Views.Forms.Shared\SkiaSharp.Views.Forms.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
 </Project>

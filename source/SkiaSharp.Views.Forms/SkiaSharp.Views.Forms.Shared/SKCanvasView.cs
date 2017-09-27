@@ -20,7 +20,7 @@ namespace SkiaSharp.Views.Forms
 
 		// the native listens to this event
 		private event EventHandler SurfaceInvalidated;
-		private event EventHandler<GetCanvasSizeEventArgs> GetCanvasSize;
+		private event EventHandler<GetPropertyValueEventArgs<SKSize>> GetCanvasSize;
 
 		// the user asks the for the size
 		public SKSize CanvasSize
@@ -28,9 +28,9 @@ namespace SkiaSharp.Views.Forms
 			get
 			{
 				// send a mesage to the native view
-				var args = new GetCanvasSizeEventArgs();
+				var args = new GetPropertyValueEventArgs<SKSize>();
 				GetCanvasSize?.Invoke(this, args);
-				return args.CanvasSize;
+				return args.Value;
 			}
 		}
 
@@ -73,7 +73,7 @@ namespace SkiaSharp.Views.Forms
 			remove { SurfaceInvalidated -= value; }
 		}
 
-		event EventHandler<GetCanvasSizeEventArgs> ISKCanvasViewController.GetCanvasSize
+		event EventHandler<GetPropertyValueEventArgs<SKSize>> ISKCanvasViewController.GetCanvasSize
 		{
 			add { GetCanvasSize += value; }
 			remove { GetCanvasSize -= value; }
@@ -99,7 +99,7 @@ namespace SkiaSharp.Views.Forms
 	{
 		// the native listens to this event
 		event EventHandler SurfaceInvalidated;
-		event EventHandler<GetCanvasSizeEventArgs> GetCanvasSize;
+		event EventHandler<GetPropertyValueEventArgs<SKSize>> GetCanvasSize;
 
 		// the native view tells the user to repaint
 		void OnPaintSurface(SKPaintSurfaceEventArgs e);

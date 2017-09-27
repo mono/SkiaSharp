@@ -2,8 +2,8 @@
 
 namespace SkiaSharp.Views.Forms
 {
-	internal class GetCanvasSizeEventArgs : EventArgs
+	internal class GetPropertyValueEventArgs<T> : EventArgs
 	{
-		public SKSize CanvasSize { get; set; }
+		public T Value { get; set; }
 	}
 }

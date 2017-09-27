@@ -11,6 +11,7 @@
     <RootNamespace>SkiaSharpSample.FormsSample.Platform</RootNamespace>
     <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
     <AssemblyName>SkiaSharpSampleFormsSampleiOS</AssemblyName>
+    <NuGetPackageImportStamp></NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|iPhoneSimulator' ">
     <DebugSymbols>true</DebugSymbols>
@@ -113,11 +114,13 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="HarfBuzzSharp" Version="1.4.6" />
-    <PackageReference Include="SkiaSharp" Version="1.60.0" />
-    <PackageReference Include="SkiaSharp.HarfBuzz" Version="1.60.0-beta" />
+    <PackageReference Include="PCLStorage" Version="1.0.2" />
+    <PackageReference Include="SkiaSharp" Version="1.59.1" />
+    <PackageReference Include="SkiaSharp.HarfBuzz" Version="1.59.0-beta" />
     <PackageReference Include="SkiaSharp.Svg" Version="1.59.0" />
-    <PackageReference Include="SkiaSharp.Views.Forms" Version="1.60.0" />
-    <PackageReference Include="Xamarin.Forms" Version="2.4.0.269-pre2" />
+    <PackageReference Include="SkiaSharp.Views" Version="1.59.1" />
+    <PackageReference Include="SkiaSharp.Views.Forms" Version="1.59.1" />
+    <PackageReference Include="Xamarin.Forms" Version="2.3.4.231" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.csproj">
@@ -128,30 +131,11 @@
   <ItemGroup>
     <Compile Include="Main.cs" />
     <Compile Include="AppDelegate.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <BundleResource Include="..\..\SkiaSharpSample.Shared\Media\content-font.ttf">
       <Link>Resources\content-font.ttf</Link>
     </BundleResource>
-  </ItemGroup>
-  <ItemGroup>
-    <ITunesArtwork Include="iTunesArtwork" />
-    <ITunesArtwork Include="iTunesArtwork@2x" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Entitlements.plist" />
-    <None Include="Info.plist" />
-  </ItemGroup>
-  <ItemGroup>
-    <ImageAsset Include="Resources\Media.xcassets\AppIcons.appiconset\Contents.json">
-      <InProject>false</InProject>
-    </ImageAsset>
-  </ItemGroup>
-  <ItemGroup>
-    <InterfaceDefinition Include="Resources\LaunchScreen.storyboard" />
-  </ItemGroup>
-  <ItemGroup>
     <BundleResource Include="Resources\hamburger%402x.png" />
     <BundleResource Include="Resources\hamburger.png" />
     <BundleResource Include="Resources\hamburger%403x.png" />
@@ -162,6 +146,13 @@
     <BundleResource Include="Resources\configure%402x.png" />
     <BundleResource Include="Resources\configure%403x.png" />
     <BundleResource Include="Resources\ic_launcher.png" />
+    <None Include="Entitlements.plist" />
+    <None Include="Info.plist" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <ITunesArtwork Include="iTunesArtwork" />
+    <ITunesArtwork Include="iTunesArtwork@2x" />
+    <ImageAsset Include="Resources\Media.xcassets\AppIcons.appiconset\Contents.json" />
+    <InterfaceDefinition Include="Resources\LaunchScreen.storyboard" />
   </ItemGroup>
   <Import Project="..\..\SkiaSharpSample.Platform.Shared\SkiaSharpSample.Platform.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />

@@ -20,6 +20,12 @@
     <WarningLevel>4</WarningLevel>
     <MtouchUseSGen>true</MtouchUseSGen>
     <MtouchUseRefCounting>true</MtouchUseRefCounting>
+    <MtouchLink>
+    </MtouchLink>
+    <MtouchHttpClientHandler>
+    </MtouchHttpClientHandler>
+    <MtouchTlsProvider>
+    </MtouchTlsProvider>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
@@ -30,6 +36,12 @@
     <WarningLevel>4</WarningLevel>
     <MtouchUseSGen>true</MtouchUseSGen>
     <MtouchUseRefCounting>true</MtouchUseRefCounting>
+    <MtouchLink>
+    </MtouchLink>
+    <MtouchHttpClientHandler>
+    </MtouchHttpClientHandler>
+    <MtouchTlsProvider>
+    </MtouchTlsProvider>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -39,12 +51,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Xamarin.Forms" Version="2.3.4.231" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="SKGLViewRenderer.cs" />
-    <Compile Include="SKCanvasViewRenderer.cs" />
-    <Compile Include="SKImageSourceHandler.cs" />
-    <Compile Include="SKTouchHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Binding\SkiaSharp.iOS\SkiaSharp.iOS.csproj">
@@ -58,7 +64,13 @@
       <IsWatchApp>false</IsWatchApp>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="..\SkiaSharp.Views.Forms.Shared\SkiaSharp.Views.Forms.Shared.projitems" Label="Shared" Condition="Exists('..\SkiaSharp.Views.Forms.Shared\SkiaSharp.Views.Forms.Shared.projitems')" />
+  <ItemGroup>
+    <Compile Include="SKGLViewRenderer.cs" />
+    <Compile Include="SKCanvasViewRenderer.cs" />
+    <Compile Include="SKImageSourceHandler.cs" />
+    <Compile Include="SKTouchHandler.cs" />
+  </ItemGroup>
+  <Import Project="..\SkiaSharp.Views.Forms.Shared\SkiaSharp.Views.Forms.Shared.projitems" Label="Shared" />
   <Import Project="..\SkiaSharp.Views.Forms.Native.Shared\SkiaSharp.Views.Forms.Native.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
 </Project>

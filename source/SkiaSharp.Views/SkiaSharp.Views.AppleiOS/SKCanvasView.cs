@@ -17,7 +17,9 @@ namespace SkiaSharp.Views.iOS
 	public class SKCanvasView : UIView, IComponent
 	{
 		// for IComponent
+#pragma warning disable 67
 		private event EventHandler DisposedInternal;
+#pragma warning restore 67
 		ISite IComponent.Site { get; set; }
 		event EventHandler IComponent.Disposed
 		{

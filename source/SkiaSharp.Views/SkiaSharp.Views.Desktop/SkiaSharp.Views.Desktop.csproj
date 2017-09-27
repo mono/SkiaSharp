@@ -14,8 +14,6 @@
     <TargetFrameworkProfile />
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\mono.snk</AssemblyOriginatorKeyFile>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -46,21 +44,14 @@
     <PackageReference Include="OpenTK.GLControl" Version="1.1.2349.61993" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SKControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="SKGLControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp.Desktop\SkiaSharp.Desktop.csproj">
       <Project>{eb1bbdcc-fb07-40d5-8b9e-0079e2c2f2df}</Project>
       <Name>SkiaSharp.Desktop</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Properties\" />
+    <Compile Include="SKControl.cs" />
+    <Compile Include="SKGLControl.cs" />
   </ItemGroup>
   <Import Project="..\SkiaSharp.Views.Shared\SkiaSharp.Views.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

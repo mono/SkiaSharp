@@ -11,6 +11,7 @@ using System.Runtime.InteropServices;
 using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 
 #if __IOS__
 using ObjCRuntime;
@@ -144,10 +145,13 @@ namespace SkiaSharp
 		{
 			var managedStream = AsManagedStream (managedStreamPtr);
 			var count = (int)size;
-			var managedBuffer = new byte[count];
-			var result = managedStream.stream.Read (managedBuffer, 0, count);
+			byte[] managedBuffer;
+			using (var reader = new BinaryReader (managedStream.stream, Encoding.UTF8, true)) {
+				 managedBuffer = reader.ReadBytes (count);
+			}
+			var result = managedBuffer.Length;
 			if (buffer != IntPtr.Zero) { 
-				Marshal.Copy (managedBuffer, 0, buffer, count);
+				Marshal.Copy (managedBuffer, 0, buffer, result);
 			}
 			return (IntPtr)result;
 		}
@@ -162,10 +166,13 @@ namespace SkiaSharp
 			}
 			var oldPos = managedStream.stream.Position;
 			var count = (int)size;
-			var managedBuffer = new byte[count];
-			var result = managedStream.stream.Read (managedBuffer, 0, count);
+			byte[] managedBuffer;
+			using (var reader = new BinaryReader (managedStream.stream, Encoding.UTF8, true)) {
+				 managedBuffer = reader.ReadBytes (count);
+			}
+			var result = managedBuffer.Length;
 			if (buffer != IntPtr.Zero) { 
-				Marshal.Copy (managedBuffer, 0, buffer, count);
+				Marshal.Copy (managedBuffer, 0, buffer, result);
 			}
 			managedStream.stream.Position = oldPos;
 			return (IntPtr)result;

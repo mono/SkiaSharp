@@ -13,6 +13,7 @@
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\mono.snk</AssemblyOriginatorKeyFile>
+    <MSBuildWarningsAsMessages>MSB9004</MSBuildWarningsAsMessages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -56,7 +57,7 @@
   <ItemGroup>
     <Folder Include="Resources\" />
   </ItemGroup>
-  <Import Project="..\Binding\Binding.projitems" Label="Shared" Condition="Exists('..\Binding\Binding.projitems')" />
+  <Import Project="..\Binding\Binding.projitems" Label="Shared" />
   <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.ObjcBinding.CSharp.targets" />
   <ItemGroup>
