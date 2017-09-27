@@ -13,6 +13,8 @@ namespace SkiaSharp.Views.Android
 
 		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
 
+		public GRContext GRContext => context;
+
 		protected abstract void OnDrawFrame(SKSurface surface, GRBackendRenderTargetDesc renderTarget);
 
 		public void OnDrawFrame(IGL10 gl)

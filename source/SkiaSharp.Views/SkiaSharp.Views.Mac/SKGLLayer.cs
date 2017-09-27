@@ -20,6 +20,8 @@ namespace SkiaSharp.Views.Mac
 
 		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
 
+		public GRContext GRContext => context;
+
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
 		public virtual void DrawInSurface(SKSurface surface, GRBackendRenderTargetDesc renderTarget)

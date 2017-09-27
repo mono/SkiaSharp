@@ -21,6 +21,8 @@ namespace SkiaSharp.Views.Desktop
 
 		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
 
+		public GRContext GRContext => grContext;
+
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 		
 		protected override void OnPaint(PaintEventArgs e)

@@ -32,7 +32,8 @@ namespace SkiaSharp.Views.Forms
 
 		// the native listens to this event
 		private event EventHandler SurfaceInvalidated;
-		private event EventHandler<GetCanvasSizeEventArgs> GetCanvasSize;
+		private event EventHandler<GetPropertyValueEventArgs<SKSize>> GetCanvasSize;
+		private event EventHandler<GetPropertyValueEventArgs<GRContext>> GetGRContext;
 
 		// the user asks the for the size
 		public SKSize CanvasSize
@@ -40,9 +41,21 @@ namespace SkiaSharp.Views.Forms
 			get
 			{
 				// send a mesage to the native view
-				var args = new GetCanvasSizeEventArgs();
+				var args = new GetPropertyValueEventArgs<SKSize>();
 				GetCanvasSize?.Invoke(this, args);
-				return args.CanvasSize;
+				return args.Value;
+			}
+		}
+
+		// the user asks the for the current GRContext
+		public GRContext GRContext
+		{
+			get
+			{
+				// send a mesage to the native view
+				var args = new GetPropertyValueEventArgs<GRContext>();
+				GetGRContext?.Invoke(this, args);
+				return args.Value;
 			}
 		}
 
@@ -73,10 +86,16 @@ namespace SkiaSharp.Views.Forms
 			remove { SurfaceInvalidated -= value; }
 		}
 
-		event EventHandler<GetCanvasSizeEventArgs> ISKGLViewController.GetCanvasSize
+		event EventHandler<GetPropertyValueEventArgs<SKSize>> ISKGLViewController.GetCanvasSize
 		{
 			add { GetCanvasSize += value; }
 			remove { GetCanvasSize -= value; }
+		}
+
+		event EventHandler<GetPropertyValueEventArgs<GRContext>> ISKGLViewController.GetGRContext
+		{
+			add { GetGRContext += value; }
+			remove { GetGRContext -= value; }
 		}
 
 		void ISKGLViewController.OnPaintSurface(SKPaintGLSurfaceEventArgs e)
@@ -99,7 +118,8 @@ namespace SkiaSharp.Views.Forms
 	{
 		// the native listens to this event
 		event EventHandler SurfaceInvalidated;
-		event EventHandler<GetCanvasSizeEventArgs> GetCanvasSize;
+		event EventHandler<GetPropertyValueEventArgs<SKSize>> GetCanvasSize;
+		event EventHandler<GetPropertyValueEventArgs<GRContext>> GetGRContext;
 
 		// the native view tells the user to repaint
 		void OnPaintSurface(SKPaintGLSurfaceEventArgs e);

@@ -75,6 +75,8 @@ namespace SkiaSharp.Views.iOS
 
 		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
 
+		public GRContext GRContext => context;
+
 		public new void DrawInRect(GLKView view, CGRect rect)
 		{
 			if (designMode)

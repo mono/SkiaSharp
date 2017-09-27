@@ -51,6 +51,8 @@ namespace SkiaSharp.Views.Forms
 #endif
 		}
 
+		public GRContext GRContext => Control.GRContext;
+
 #if __IOS__
 		protected void SetDisablesUserInteraction(bool disablesUserInteraction)
 		{
@@ -67,6 +69,7 @@ namespace SkiaSharp.Views.Forms
 				// unsubscribe from events
 				oldController.SurfaceInvalidated -= OnSurfaceInvalidated;
 				oldController.GetCanvasSize -= OnGetCanvasSize;
+				oldController.GetGRContext -= OnGetGRContext;
 			}
 
 			if (e.NewElement != null)
@@ -90,6 +93,7 @@ namespace SkiaSharp.Views.Forms
 				// subscribe to events from the user
 				newController.SurfaceInvalidated += OnSurfaceInvalidated;
 				newController.GetCanvasSize += OnGetCanvasSize;
+				newController.GetGRContext += OnGetGRContext;
 
 				// start the rendering
 				SetupRenderLoop(false);
@@ -163,9 +167,15 @@ namespace SkiaSharp.Views.Forms
 		}
 
 		// the user asked for the size
-		private void OnGetCanvasSize(object sender, GetCanvasSizeEventArgs e)
+		private void OnGetCanvasSize(object sender, GetPropertyValueEventArgs<SKSize> e)
 		{
-			e.CanvasSize = Control?.CanvasSize ?? SKSize.Empty;
+			e.Value = Control?.CanvasSize ?? SKSize.Empty;
+		}
+
+		// the user asked for the current GRContext
+		private void OnGetGRContext(object sender, GetPropertyValueEventArgs<GRContext> e)
+		{
+			e.Value = Control?.GRContext;
 		}
 
 		private void OnPaintSurface(object sender, SKNativePaintGLSurfaceEventArgs e)

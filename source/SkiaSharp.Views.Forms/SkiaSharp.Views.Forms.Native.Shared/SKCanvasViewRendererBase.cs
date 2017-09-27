@@ -165,9 +165,9 @@ namespace SkiaSharp.Views.Forms
 		}
 
 		// the user asked for the size
-		private void OnGetCanvasSize(object sender, GetCanvasSizeEventArgs e)
+		private void OnGetCanvasSize(object sender, GetPropertyValueEventArgs<SKSize> e)
 		{
-			e.CanvasSize = Control?.CanvasSize ?? SKSize.Empty;
+			e.Value = Control?.CanvasSize ?? SKSize.Empty;
 		}
 	}
 }
