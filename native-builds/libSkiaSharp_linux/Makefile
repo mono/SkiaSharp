@@ -81,7 +81,7 @@ ${target}: ${objs}
 # link with skia
 	@echo Linking $@...
 	@mkdir -p $(dir $@)
-	@$(CXX) -shared -rdynamic -s -o $@                                            \
+	@$(CXX) -shared -static-libstdc++ -rdynamic -s -o $@                          \
 		${defines} ${includes} ${arch_cflags} ${cflags_c} ${cflags_cc}            \
 		-Wl,--start-group ${objarch_root}/*.o  ${library_paths} -Wl,--end-group   \
 		${ldflags} -Wl,--gc-sections -Wl,--no-undefined                           \
