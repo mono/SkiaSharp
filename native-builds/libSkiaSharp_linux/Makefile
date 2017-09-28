@@ -51,7 +51,8 @@ cflags = \
 	-msse2 -mfpmath=sse -g -fno-exceptions -fstrict-aliasing -Wall \
 	-Wextra -Winit-self -Wpointer-arith -Wsign-compare -Wvla       \
 	-Wno-unused-parameter -Werror -Os                              \
-	-fPIC -fdata-sections -ffunction-sections
+	-fPIC -fdata-sections -ffunction-sections                      \
+	-fvisibility=hidden -fvisibility-inlines-hidden
 ifeq "${ARCH}" "x86"
   arch_cflags = -m32
 else
