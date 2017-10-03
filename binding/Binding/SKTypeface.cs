@@ -62,6 +62,21 @@ namespace SkiaSharp
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
+
+			if (!stream.CanSeek)
+			{
+				var fontStream = new MemoryStream ();
+				stream.CopyTo (fontStream);
+				fontStream.Flush ();
+				fontStream.Position = 0;
+
+				stream.Dispose ();
+				stream = null;
+
+				stream = fontStream;
+				fontStream = null;
+			}
+
 			return FromStream (new SKManagedStream (stream, true), index);
 		}
 
@@ -72,6 +87,11 @@ namespace SkiaSharp
 			var typeface = GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_stream (stream.Handle, index));
 			stream.RevokeOwnership (typeface);
 			return typeface;
+		}
+
+		public static SKTypeface FromData (SKData data, int index = 0)
+		{
+			return SKTypeface.FromStream (new SKMemoryStream (data), index);
 		}
 
 		public int CountGlyphs (string str)
