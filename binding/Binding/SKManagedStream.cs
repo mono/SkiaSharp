@@ -9,9 +9,10 @@
 using System;
 using System.Runtime.InteropServices;
 using System.IO;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text;
+using System.Threading;
 
 #if __IOS__
 using ObjCRuntime;
@@ -21,7 +22,7 @@ namespace SkiaSharp
 {
 	public class SKManagedStream : SKStreamAsset
 	{
-		private static readonly Dictionary<IntPtr, WeakReference<SKManagedStream>> managedStreams = new Dictionary<IntPtr, WeakReference<SKManagedStream>>();
+		private static readonly ConcurrentDictionary<IntPtr, WeakReference<SKManagedStream>> managedStreams = new ConcurrentDictionary<IntPtr, WeakReference<SKManagedStream>> ();
 
 		// delegate declarations
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -57,9 +58,8 @@ namespace SkiaSharp
 		private static readonly createNew_delegate fCreateNew;
 		private static readonly destroy_delegate fDestroy;
 
-		private readonly Stream stream;
+		private Stream stream;
 		private readonly bool disposeStream;
-		private bool isDisposed;
 
 		static SKManagedStream()
 		{
@@ -87,6 +87,11 @@ namespace SkiaSharp
 				Marshal.GetFunctionPointerForDelegate(fDestroy));
 		}
 
+		~SKManagedStream()
+		{
+			Debug.WriteLine($"~SKManagedStream {Handle}");
+		}
+
 		public SKManagedStream (Stream managedStream)
 			: this (managedStream, false)
 		{
@@ -103,33 +108,56 @@ namespace SkiaSharp
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKManagedStream instance.");
 			}
+			Debug.WriteLine($"ctor {Handle}");
 
-			lock (managedStreams)
-				managedStreams.Add (Handle, new WeakReference<SKManagedStream>(this));
+			managedStreams.TryAdd (Handle, new WeakReference<SKManagedStream> (this));
 
 			stream = managedStream;
 			disposeStream = disposeManagedStream;
 		}
 
-		void DisposeFromNative ()
+		private void DisposeFromNative ()
 		{
-			isDisposed = true;
+			Debug.WriteLine($"DisposeFromNative {Handle}");
+
+			//WeakReference<SKManagedStream> managedStream;
+			//managedStreams.TryRemove (Handle, out managedStream);
+
+			//if (disposeStream && stream != null) {
+			//	stream.Dispose ();
+			//	stream = null;
+			//	Debug.WriteLine($"Disposing managed stream {Handle}");
+			//}
+
+			Interlocked.Exchange(ref fromNative, 1);
 			Dispose ();
 		}
 
+		int fromNative = 0;
+
 		protected override void Dispose (bool disposing)
 		{
-			lock (managedStreams) {
-				if (managedStreams.ContainsKey(Handle)) {
-					managedStreams.Remove (Handle);
+			Debug.WriteLine($"Dispose {disposing} => {Handle}");
+
+			//var st = new StackTrace();
+			//foreach (var t in st.GetFrames())
+			//{
+			//	Debug.WriteLine($"  {t.ToString()}");
+			//}
+			
+			if (disposing) {
+				WeakReference<SKManagedStream> managedStream;
+				managedStreams.TryRemove (Handle, out managedStream);
+
+				if (disposeStream && stream != null) {
+					stream.Dispose ();
+					stream = null;
+					Debug.WriteLine($"Disposing managed stream {Handle}");
 				}
 			}
 
-			if (disposeStream && stream != null) {
-				stream.Dispose ();
-			}
-
-			if (!isDisposed && Handle != IntPtr.Zero && OwnsHandle) {
+			if (Interlocked.CompareExchange(ref fromNative, 0, 0) == 0 && Handle != IntPtr.Zero && OwnsHandle) {
+				Debug.WriteLine($"sk_managedstream_destroy {disposing} => {Handle}");
 				SkiaApi.sk_managedstream_destroy (Handle);
 			}
 
@@ -253,7 +281,8 @@ namespace SkiaSharp
 		{
 			var managedStream = AsManagedStream (managedStreamPtr);
 			var newStream = new SKManagedStream (managedStream.stream, false, false);
-			managedStream.TakeOwnership (newStream);
+			//newStream.RevokeOwnership (managedStream);
+			Debug.WriteLine($"CreateNewInternal {managedStreamPtr} => {newStream.Handle}");
 			return newStream.Handle;
 		}
 		#if __IOS__
@@ -261,6 +290,8 @@ namespace SkiaSharp
 		#endif
 		private static void DestroyInternal (IntPtr managedStreamPtr)
 		{
+			Debug.WriteLine($"DestroyInternal {managedStreamPtr}");
+
 			SKManagedStream managedStream;
 			if (AsManagedStream (managedStreamPtr, out managedStream)) {
 				managedStream.DisposeFromNative ();

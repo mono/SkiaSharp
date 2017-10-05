@@ -7,6 +7,7 @@
 // Copyright 2016 Xamarin Inc
 //
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -23,6 +24,7 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing)
 		{
 			if (Handle != IntPtr.Zero && OwnsHandle) {
+				Debug.WriteLine($"sk_typeface_unref {disposing} => {Handle}");
 				SkiaApi.sk_typeface_unref (Handle);
 			}
 
@@ -85,7 +87,7 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 			var typeface = GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_stream (stream.Handle, index));
-			stream.RevokeOwnership (typeface);
+			stream.RevokeOwnership ();
 			return typeface;
 		}
 

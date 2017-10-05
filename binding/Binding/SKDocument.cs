@@ -58,7 +58,7 @@ namespace SkiaSharp
 		{
 			var stream = new SKFileWStream (path);
 			var doc = CreateXps (stream, dpi);
-			doc.TakeOwnership (stream);
+			stream.RevokeOwnership (doc);
 			return doc;
 		}
 
