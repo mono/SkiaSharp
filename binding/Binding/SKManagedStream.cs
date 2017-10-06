@@ -18,6 +18,9 @@ using System.Threading;
 using ObjCRuntime;
 #endif
 
+//using Logger = System.Console;
+using Logger = System.Diagnostics.Debug;
+
 namespace SkiaSharp
 {
 	public class SKManagedStream : SKStreamAsset
@@ -89,7 +92,7 @@ namespace SkiaSharp
 
 		//~SKManagedStream()
 		//{
-		//	Debug.WriteLine($"~SKManagedStream {Handle}");
+		//	Logger.WriteLine($"~SKManagedStream {Handle}");
 		//}
 
 		public SKManagedStream (Stream managedStream)
@@ -108,7 +111,8 @@ namespace SkiaSharp
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKManagedStream instance.");
 			}
-			Console.WriteLine($"ctor {Handle}");
+			
+			Logger.WriteLine($"ctor {Handle}");
 
 			managedStreams.TryAdd (Handle, this);
 
@@ -118,7 +122,7 @@ namespace SkiaSharp
 
 		private void DisposeFromNative ()
 		{
-			//Debug.WriteLine($"DisposeFromNative {Handle}");
+			//Logger.WriteLine($"DisposeFromNative {Handle}");
 
 			//WeakReference<SKManagedStream> managedStream;
 			//managedStreams.TryRemove (Handle, out managedStream);
@@ -126,7 +130,7 @@ namespace SkiaSharp
 			//if (disposeStream && stream != null) {
 			//	stream.Dispose ();
 			//	stream = null;
-			//	Debug.WriteLine($"Disposing managed stream {Handle}");
+			//	Logger.WriteLine($"Disposing managed stream {Handle}");
 			//}
 
 			Interlocked.Exchange(ref fromNative, 1);
@@ -137,12 +141,12 @@ namespace SkiaSharp
 
 		protected override void Dispose (bool disposing)
 		{
-			//Debug.WriteLine($"Dispose {disposing} => {Handle}");
+			//Logger.WriteLine($"Dispose {disposing} => {Handle}");
 
 			//var st = new StackTrace();
 			//foreach (var t in st.GetFrames())
 			//{
-			//	Debug.WriteLine($"  {t.ToString()}");
+			//	Logger.WriteLine($"  {t.ToString()}");
 			//}
 			
 			if (disposing) {
@@ -152,12 +156,12 @@ namespace SkiaSharp
 				if (disposeStream && stream != null) {
 					stream.Dispose ();
 					stream = null;
-					//Debug.WriteLine($"Disposing managed stream {Handle}");
+					//Logger.WriteLine($"Disposing managed stream {Handle}");
 				}
 			}
 
 			if (Interlocked.CompareExchange(ref fromNative, 0, 0) == 0 && Handle != IntPtr.Zero && OwnsHandle) {
-				//Debug.WriteLine($"sk_managedstream_destroy {disposing} => {Handle}");
+				//Logger.WriteLine($"sk_managedstream_destroy {disposing} => {Handle}");
 				SkiaApi.sk_managedstream_destroy (Handle);
 			}
 
@@ -279,9 +283,11 @@ namespace SkiaSharp
 		#endif
 		private static IntPtr CreateNewInternal (IntPtr managedStreamPtr)
 		{
-			var managedStream = AsManagedStream (managedStreamPtr);
+			var managedStream = AsManagedStream(managedStreamPtr);
 			var newStream = new SKManagedStream (managedStream.stream, false, false);
-			//Debug.WriteLine($"CreateNewInternal {managedStreamPtr} => {newStream.Handle}");
+
+			Logger.WriteLine($"CreateNewInternal {managedStreamPtr} => {newStream.Handle}");
+
 			return newStream.Handle;
 		}
 		#if __IOS__
@@ -289,13 +295,13 @@ namespace SkiaSharp
 		#endif
 		private static void DestroyInternal (IntPtr managedStreamPtr)
 		{
-			Console.WriteLine($"DestroyInternal {managedStreamPtr}");
+			Logger.WriteLine($"DestroyInternal {managedStreamPtr}");
 
 			SKManagedStream managedStream;
 			if (AsManagedStream (managedStreamPtr, out managedStream)) {
 				managedStream.DisposeFromNative ();
 			} else {
-				Debug.WriteLine ("Destroying disposed SKManagedStream: " + managedStreamPtr);
+				Logger.WriteLine ("Destroying disposed SKManagedStream: " + managedStreamPtr);
 			}
 		}
 		private static SKManagedStream AsManagedStream(IntPtr ptr)
