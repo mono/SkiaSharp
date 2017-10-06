@@ -22,7 +22,7 @@ namespace SkiaSharp
 {
 	public class SKManagedStream : SKStreamAsset
 	{
-		public static readonly ConcurrentDictionary<IntPtr, SKManagedStream> managedStreams = new ConcurrentDictionary<IntPtr, SKManagedStream> ();
+		private static readonly ConcurrentDictionary<IntPtr, SKManagedStream> managedStreams = new ConcurrentDictionary<IntPtr, SKManagedStream> ();
 
 		// delegate declarations
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -251,7 +251,7 @@ namespace SkiaSharp
 		#endif
 		private static IntPtr CreateNewInternal (IntPtr managedStreamPtr)
 		{
-			var managedStream = AsManagedStream(managedStreamPtr);
+			var managedStream = AsManagedStream (managedStreamPtr);
 			var newStream = new SKManagedStream (managedStream.stream, false, false);
 			return newStream.Handle;
 		}

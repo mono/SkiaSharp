@@ -19,9 +19,9 @@ namespace SkiaSharp
 {
 	public abstract class SKObject : SKNativeObject
 	{
-		public static readonly Dictionary<IntPtr, WeakReference> instances = new Dictionary<IntPtr, WeakReference>();
+		private static readonly Dictionary<IntPtr, WeakReference> instances = new Dictionary<IntPtr, WeakReference>();
 
-		public readonly List<SKObject> ownedObjects = new List<SKObject>();
+		private readonly List<SKObject> ownedObjects = new List<SKObject>();
 		private int referenceCount = 0;
 		private bool ownsHandle = false;
 
