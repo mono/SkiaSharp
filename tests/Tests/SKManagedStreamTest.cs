@@ -88,7 +88,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Test]
-		public void teast()
+		public void ManagedStreamIsNotCollectedPrematurely()
 		{
 			using (var stream = new SKDynamicMemoryWStream())
 			using (SKDocument document = SKDocument.CreatePdf(stream, new SKDocumentPdfMetadata()))
