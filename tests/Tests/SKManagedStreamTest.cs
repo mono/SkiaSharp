@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
+using System.Collections.Generic;
 
 namespace SkiaSharp.Tests
 {
@@ -84,6 +85,42 @@ namespace SkiaSharp.Tests
 			var resultData = data.Skip(offset).Take(buffer.Length).ToArray();
 			resultData = resultData.Concat(Enumerable.Repeat<byte>(0, offset)).ToArray();
 			Assert.AreEqual(resultData, buffer);
+		}
+
+		[Test]
+		public void teast()
+		{
+			using (var stream = new SKDynamicMemoryWStream())
+			using (SKDocument document = SKDocument.CreatePdf(stream, new SKDocumentPdfMetadata()))
+			{
+				var paintList = new List<SKPaint>();
+
+				for (int index = 0; index < 10; index++)
+				{
+					Stream fontStream = File.OpenRead(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
+					SKTypeface typeface = SKTypeface.FromStream(fontStream);
+
+					SKPaint paint = new SKPaint
+					{
+						Typeface = typeface
+					};
+					paintList.Add(paint);
+				}
+
+				using (SKCanvas pageCanvas = document.BeginPage(792, 842))
+				{
+					foreach (var paint in paintList)
+					{
+						for (int i = 0; i < 100; i++)
+							pageCanvas.DrawText("Text", 0, 5 * i, paint);
+					}
+
+					document.EndPage();
+				}
+
+				GC.Collect();
+				document.Close();
+			}
 		}
 	}
 }
