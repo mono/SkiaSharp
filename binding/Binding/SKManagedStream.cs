@@ -10,7 +10,6 @@ using System;
 using System.Runtime.InteropServices;
 using System.IO;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Text;
 using System.Threading;
 
@@ -113,7 +112,7 @@ namespace SkiaSharp
 
 		private void DisposeFromNative ()
 		{
-			Interlocked.Exchange(ref fromNative, 1);
+			Interlocked.Exchange (ref fromNative, 1);
 			Dispose ();
 		}
 
@@ -129,7 +128,7 @@ namespace SkiaSharp
 				}
 			}
 
-			if (Interlocked.CompareExchange(ref fromNative, 0, 0) == 0 && Handle != IntPtr.Zero && OwnsHandle) {
+			if (Interlocked.CompareExchange (ref fromNative, 0, 0) == 0 && Handle != IntPtr.Zero && OwnsHandle) {
 				SkiaApi.sk_managedstream_destroy (Handle);
 			}
 

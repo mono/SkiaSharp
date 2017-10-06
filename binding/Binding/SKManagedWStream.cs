@@ -9,8 +9,8 @@
 using System;
 using System.Runtime.InteropServices;
 using System.IO;
-using System.Collections.Generic;
-using System.Diagnostics;
+using System.Collections.Concurrent;
+using System.Threading;
 
 #if __IOS__
 using ObjCRuntime;
@@ -20,7 +20,7 @@ namespace SkiaSharp
 {
 	public class SKManagedWStream : SKWStream
 	{
-		private static readonly Dictionary<IntPtr, WeakReference<SKManagedWStream>> managedStreams = new Dictionary<IntPtr, WeakReference<SKManagedWStream>>();
+		private static readonly ConcurrentDictionary<IntPtr, SKManagedWStream> managedStreams = new ConcurrentDictionary<IntPtr, SKManagedWStream> ();
 
 		// delegate declarations
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -38,9 +38,9 @@ namespace SkiaSharp
 		private static readonly bytesWritten_delegate fBytesWritten;
 		private static readonly destroy_delegate fDestroy;
 
-		private readonly Stream stream;
+		private Stream stream;
+		private int fromNative;
 		private readonly bool disposeStream;
-		private bool isDisposed;
 
 		static SKManagedWStream()
 		{
@@ -73,8 +73,7 @@ namespace SkiaSharp
 				throw new InvalidOperationException ("Unable to create a new SKManagedWStream instance.");
 			}
 
-			lock (managedStreams)
-				managedStreams.Add (Handle, new WeakReference<SKManagedWStream>(this));
+			managedStreams.TryAdd (Handle, this);
 
 			stream = managedStream;
 			disposeStream = disposeManagedStream;
@@ -82,23 +81,23 @@ namespace SkiaSharp
 
 		void DisposeFromNative ()
 		{
-			isDisposed = true;
+			Interlocked.Exchange (ref fromNative, 1);
 			Dispose ();
 		}
 
 		protected override void Dispose (bool disposing)
 		{
-			lock (managedStreams) {
-				if (managedStreams.ContainsKey (Handle)) {
-					managedStreams.Remove (Handle);
+			if (disposing) {
+				SKManagedWStream managedStream;
+				managedStreams.TryRemove (Handle, out managedStream);
+
+				if (disposeStream && stream != null) {
+					stream.Dispose ();
+					stream = null;
 				}
 			}
 
-			if (disposeStream && stream != null) {
-				stream.Dispose ();
-			}
-
-			if (!isDisposed && Handle != IntPtr.Zero && OwnsHandle) {
+			if (Interlocked.CompareExchange (ref fromNative, 0, 0) == 0 && Handle != IntPtr.Zero && OwnsHandle) {
 				SkiaApi.sk_managedwstream_destroy (Handle);
 			}
 
@@ -145,8 +144,6 @@ namespace SkiaSharp
 			SKManagedWStream managedStream;
 			if (AsManagedStream (managedStreamPtr, out managedStream)) {
 				managedStream.DisposeFromNative ();
-			} else {
-				Debug.WriteLine ("Destroying disposed SKManagedWStream: " + managedStreamPtr);
 			}
 		}
 		private static SKManagedWStream AsManagedStream (IntPtr ptr)
@@ -159,13 +156,8 @@ namespace SkiaSharp
 		}
 		private static bool AsManagedStream (IntPtr ptr, out SKManagedWStream target)
 		{
-			WeakReference<SKManagedWStream> weak;
-			lock (managedStreams){
-				if (managedStreams.TryGetValue (ptr, out weak)) {
-					if (weak.TryGetTarget(out target)) {
-						return true;
-					}
-				}
+			if (managedStreams.TryGetValue (ptr, out target)) {
+				return true;
 			}
 			target = null;
 			return false;
