@@ -256,7 +256,7 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 			var codec = GetObject<SKCodec> (SkiaApi.sk_codec_new_from_stream (stream.Handle));
-			stream.RevokeOwnership (codec);
+			stream.RevokeOwnership ();
 			return codec;
 		}
 

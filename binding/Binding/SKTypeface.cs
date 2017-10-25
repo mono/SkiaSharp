@@ -85,7 +85,7 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 			var typeface = GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_stream (stream.Handle, index));
-			stream.RevokeOwnership (typeface);
+			stream.RevokeOwnership ();
 			return typeface;
 		}
 

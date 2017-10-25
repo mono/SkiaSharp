@@ -142,7 +142,8 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			return Create (SKStream.WrapManagedStream (stream), length);
+			using (var managed = new SKManagedStream (stream))
+				return Create (managed, length);
 		}
 
 		public static SKData Create (Stream stream, ulong length)
@@ -150,7 +151,8 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			return Create (SKStream.WrapManagedStream (stream), length);
+			using (var managed = new SKManagedStream (stream))
+				return Create (managed, length);
 		}
 
 		public static SKData Create (Stream stream, long length)
@@ -158,7 +160,8 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			return Create (SKStream.WrapManagedStream (stream), length);
+			using (var managed = new SKManagedStream (stream))
+				return Create (managed, length);
 		}
 
 		public static SKData Create (SKStream stream)
