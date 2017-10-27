@@ -132,7 +132,8 @@ Task ("libs")
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms/bin/Release/SkiaSharp.Views.Forms.dll", "./output/portable/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.UWP/bin/Release/SkiaSharp.Views.Forms.dll", "./output/uwp/");
     } else if (IsRunningOnMac ()) {
-        RunNuGetRestore ("source/SkiaSharpSource.Mac.sln");
+        // fix for old MSBuild
+        RunMSBuildRestore ("source/SkiaSharpSource.Mac.sln");
         RunMSBuild ("source/SkiaSharpSource.Mac.sln");
         // SkiaSharp
         CopyFileToDirectory ("./binding/SkiaSharp.Android/bin/Release/SkiaSharp.dll", "./output/android/");

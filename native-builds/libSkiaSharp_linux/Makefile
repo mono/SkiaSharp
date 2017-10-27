@@ -51,7 +51,8 @@ cflags = \
 	-msse2 -mfpmath=sse -g -fno-exceptions -fstrict-aliasing -Wall \
 	-Wextra -Winit-self -Wpointer-arith -Wsign-compare -Wvla       \
 	-Wno-unused-parameter -Werror -Os                              \
-	-fPIC -fdata-sections -ffunction-sections
+	-fPIC -fdata-sections -ffunction-sections                      \
+	-fvisibility=hidden -fvisibility-inlines-hidden
 ifeq "${ARCH}" "x86"
   arch_cflags = -m32
 else
@@ -81,7 +82,7 @@ ${target}: ${objs}
 # link with skia
 	@echo Linking $@...
 	@mkdir -p $(dir $@)
-	@$(CXX) -shared -rdynamic -s -o $@                                            \
+	@$(CXX) -shared -static-libstdc++ -rdynamic -s -o $@                          \
 		${defines} ${includes} ${arch_cflags} ${cflags_c} ${cflags_cc}            \
 		-Wl,--start-group ${objarch_root}/*.o  ${library_paths} -Wl,--end-group   \
 		${ldflags} -Wl,--gc-sections -Wl,--no-undefined                           \

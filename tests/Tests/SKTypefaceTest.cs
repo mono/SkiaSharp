@@ -142,5 +142,26 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Test]
+		public void CanReadData()
+		{
+			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
+			using (var data = SKData.CreateCopy(bytes))
+			using (var typeface = SKTypeface.FromData(data))
+			{
+				Assert.IsNotNull(typeface);
+			}
+		}
+
+		[Test]
+		public void CanReadNonSeekableStream()
+		{
+			using (var stream = File.OpenRead(Path.Combine(PathToFonts, "Distortable.ttf")))
+			using (var nonSeekable = new NonSeekableReadOnlyStream(stream))
+			using (var typeface = SKTypeface.FromStream(nonSeekable))
+			{
+				Assert.IsNotNull(typeface);
+			}
+		}
 	}
 }

@@ -29,7 +29,7 @@
   <Members>
     <Member MemberName="CharsToGlyphs">
       <MemberSignature Language="C#" Value="public int CharsToGlyphs (string chars, out ushort[] glyphs);" />
-      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance int32 CharsToGlyphs(string chars, unsigned int16[] glyphs) cil managed" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance int32 CharsToGlyphs(string chars, [out] unsigned int16[]&amp; glyphs) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
@@ -63,7 +63,7 @@
     </Member>
     <Member MemberName="CharsToGlyphs">
       <MemberSignature Language="C#" Value="public int CharsToGlyphs (IntPtr str, int strlen, SkiaSharp.SKEncoding encoding, out ushort[] glyphs);" />
-      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance int32 CharsToGlyphs(native int str, int32 strlen, valuetype SkiaSharp.SKEncoding encoding, unsigned int16[] glyphs) cil managed" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance int32 CharsToGlyphs(native int str, int32 strlen, valuetype SkiaSharp.SKEncoding encoding, [out] unsigned int16[]&amp; glyphs) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.0.0.0</AssemblyVersion>
@@ -287,6 +287,30 @@
           <para></para>
         </value>
         <remarks>This may be one of the values in <see cref="T:SkiaSharp.SKFontStyleWidth" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromData">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKTypeface FromData (SkiaSharp.SKData data, int index = 0);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKTypeface FromData(class SkiaSharp.SKData data, int32 index) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKTypeface</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="data" Type="SkiaSharp.SKData" />
+        <Parameter Name="index" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="data">The input data.</param>
+        <param name="index">The font face index.</param>
+        <summary>Returns a new typeface given data.</summary>
+        <returns>Returns a new typeface, or <paramref name="null" /> if the file does not exist, or is not a valid font file.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromFamilyName">
@@ -616,7 +640,7 @@ using (var tf = SKTypeface.FromStream (stream)) {
     </Member>
     <Member MemberName="OpenStream">
       <MemberSignature Language="C#" Value="public SkiaSharp.SKStreamAsset OpenStream (out int ttcIndex);" />
-      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKStreamAsset OpenStream(int32 ttcIndex) cil managed" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKStreamAsset OpenStream([out] int32&amp; ttcIndex) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.57.0.0</AssemblyVersion>
@@ -662,7 +686,7 @@ using (var tf = SKTypeface.FromStream (stream)) {
     </Member>
     <Member MemberName="TryGetTableData">
       <MemberSignature Language="C#" Value="public bool TryGetTableData (uint tag, out byte[] tableData);" />
-      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool TryGetTableData(unsigned int32 tag, unsigned int8[] tableData) cil managed" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool TryGetTableData(unsigned int32 tag, [out] unsigned int8[]&amp; tableData) cil managed" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyVersion>1.49.0.0</AssemblyVersion>
