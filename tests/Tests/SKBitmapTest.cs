@@ -389,5 +389,21 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Test]
+		public void SwizzleRedBlueTest()
+		{
+			var info = new SKImageInfo(1, 1);
+
+			using (var bmp = new SKBitmap(info))
+			{
+				bmp.Erase((uint)0xFACEB004);
+
+				Assert.AreEqual((uint)0xFACEB004, (uint)bmp.GetPixel(0, 0));
+
+				SKSwizzle.SwapRedBlue(bmp.GetPixels(), bmp.GetPixels(), 1);
+
+				Assert.AreEqual((uint)0xFA04B0CE, (uint)bmp.GetPixel(0, 0));
+			}
+		}
 	}
 }
