@@ -95,7 +95,7 @@ namespace SkiaSharpSample
 			var controller = UIDocumentInteractionController.FromUrl(resourceToOpen);
 			if (!controller.PresentOpenInMenu(vc.View.Bounds, vc.View, true))
 			{
-				new UIAlertView("SkiaSharp", "Unable to open file.", null, "OK").Show();
+				new UIAlertView("SkiaSharp", "Unable to open file.", (IUIAlertViewDelegate)null, "OK").Show();
 			}
 #elif __ANDROID__
 			// the external / shared location
