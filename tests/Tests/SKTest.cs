@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using NUnit.Framework;
 
-[assembly: Parallelizable(ParallelScope.Fixtures)]
+// [assembly: Parallelizable(ParallelScope.Fixtures)]
 
 namespace SkiaSharp.Tests
 {
