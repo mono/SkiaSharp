@@ -10,8 +10,8 @@ using System.Reflection;
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("SkiaSharp.Views")]
 [assembly: AssemblyVersion("1.59.0.0")]
-[assembly: AssemblyFileVersion("1.59.2.0")]
-[assembly: AssemblyInformationalVersion("1.59.2.0-{GIT_SHA}")]
+[assembly: AssemblyFileVersion("1.59.3.0")]
+[assembly: AssemblyInformationalVersion("1.59.3.0-{GIT_SHA}")]
 [assembly: AssemblyCopyright("Xamarin Inc.")]
 [assembly: AssemblyTrademark("")]
 
