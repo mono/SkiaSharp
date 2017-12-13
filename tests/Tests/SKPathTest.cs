@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using NUnit.Framework;
+using Xunit;
 
 using ParsePathTest = System.Tuple<System.String, SkiaSharp.SKRect>;
 
@@ -34,10 +34,10 @@ namespace SkiaSharp.Tests
 			var str2 = path2.ToSvgPathData ();
 			Assert.NotNull (str2);
 
-			Assert.AreEqual (str, str2);
+			Assert.Equal (str, str2);
 		}
 
-		[Test]
+		[Fact]
 		public void PathPointsAreCorrect()
 		{
 			using (var path = new SKPath ()) {
@@ -58,19 +58,19 @@ namespace SkiaSharp.Tests
 				path.Close ();
 
 				// the right number/count
-				Assert.AreEqual (25, path.PointCount);
-				Assert.AreEqual (25, path.Points.Length);
+				Assert.Equal (25, path.PointCount);
+				Assert.Equal (25, path.Points.Length);
 
 				// the right value
-				Assert.AreEqual (new SKPoint (68.6763107f, 56.0058575f), path.GetPoint (1));
-				Assert.AreEqual (new SKPoint (68.6763107f, 56.0058575f), path.Points [1]);
+				Assert.Equal (new SKPoint (68.6763107f, 56.0058575f), path.GetPoint (1));
+				Assert.Equal (new SKPoint (68.6763107f, 56.0058575f), path.Points [1]);
 
 				// the right segment masks
-				Assert.AreEqual (SKPathSegmentMask.Cubic | SKPathSegmentMask.Line, path.SegmentMasks);
+				Assert.Equal (SKPathSegmentMask.Cubic | SKPathSegmentMask.Line, path.SegmentMasks);
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void PathContainsPoint()
 		{
 			using (var path = new SKPath ()) {
@@ -81,18 +81,18 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void GetLastPoint()
 		{
 			using (var path = new SKPath ()) {
 				path.MoveTo (0, 0);
 				path.LineTo (10, 20);
 
-				Assert.AreEqual (new SKPoint(10, 20), path.LastPoint);
+				Assert.Equal (new SKPoint(10, 20), path.LastPoint);
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void ThumbtackShapeIsConcave ()
 		{
 			// based on test_skbug_3469
@@ -102,11 +102,11 @@ namespace SkiaSharp.Tests
 				path.QuadTo (20, 50, 80, 50);
 				path.QuadTo (20, 50, 20, 80);
 
-				Assert.AreEqual (SKPathConvexity.Concave, path.Convexity);
+				Assert.Equal (SKPathConvexity.Concave, path.Convexity);
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void PathConsistentAfterClose ()
 		{
 			// based on test_path_close_issue1474
@@ -123,8 +123,8 @@ namespace SkiaSharp.Tests
 				path.RLineTo (50, 50);  // This should go to 50,50.
 
 				last = path.LastPoint;
-				Assert.AreEqual (50, last.X);
-				Assert.AreEqual (50, last.Y);
+				Assert.Equal (50, last.X);
+				Assert.Equal (50, last.Y);
 
 				// Test rQuadTo().
 				path.Rewind ();
@@ -134,8 +134,8 @@ namespace SkiaSharp.Tests
 				path.RQuadTo (50, 50, 75, 75);
 
 				last = path.LastPoint;
-				Assert.AreEqual (75, last.X);
-				Assert.AreEqual (75, last.Y);
+				Assert.Equal (75, last.X);
+				Assert.Equal (75, last.Y);
 
 				// Test rConicTo().
 				path.Rewind ();
@@ -145,8 +145,8 @@ namespace SkiaSharp.Tests
 				path.RConicTo (50, 50, 85, 85, 2);
 
 				last = path.LastPoint;
-				Assert.AreEqual (85, last.X);
-				Assert.AreEqual (85, last.Y);
+				Assert.Equal (85, last.X);
+				Assert.Equal (85, last.Y);
 
 				// Test rCubicTo().
 				path.Rewind ();
@@ -156,12 +156,12 @@ namespace SkiaSharp.Tests
 				path.RCubicTo (50, 50, 85, 85, 95, 95);
 
 				last = path.LastPoint;
-				Assert.AreEqual (95, last.X);
-				Assert.AreEqual (95, last.Y);
+				Assert.Equal (95, last.X);
+				Assert.Equal (95, last.Y);
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void ParsePathReturnsValidPath ()
 		{
 			// based on ParsePath
@@ -170,7 +170,7 @@ namespace SkiaSharp.Tests
 				var path = SKPath.ParseSvgPathData (test.Item1);
 
 				Assert.NotNull (path);
-				Assert.AreEqual (test.Item2, path.Bounds);
+				Assert.Equal (test.Item2, path.Bounds);
 
 				TestToFromSvgPath (path);
 			}
@@ -188,7 +188,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void PathBoundsAndRegionBoundsMatch ()
 		{
 			var path = new SKPath ();
@@ -196,22 +196,22 @@ namespace SkiaSharp.Tests
 			path.LineTo (90, 90);
 
 			var bounds = path.Bounds;
-			Assert.AreEqual (10f, bounds.Left);
-			Assert.AreEqual (10f, bounds.Top);
-			Assert.AreEqual (90f, bounds.Right);
-			Assert.AreEqual (90f, bounds.Bottom);
+			Assert.Equal (10f, bounds.Left);
+			Assert.Equal (10f, bounds.Top);
+			Assert.Equal (90f, bounds.Right);
+			Assert.Equal (90f, bounds.Bottom);
 
 			var region = new SKRegion ();
 			region.SetRect (new SKRectI (10, 10, 90, 90));
 
 			var regionBounds = region.Bounds;
-			Assert.AreEqual (10f, regionBounds.Left);
-			Assert.AreEqual (10f, regionBounds.Top);
-			Assert.AreEqual (90f, regionBounds.Right);
-			Assert.AreEqual (90f, regionBounds.Bottom);
+			Assert.Equal (10f, regionBounds.Left);
+			Assert.Equal (10f, regionBounds.Top);
+			Assert.Equal (90f, regionBounds.Right);
+			Assert.Equal (90f, regionBounds.Bottom);
 		}
 
-		[Test]
+		[Fact]
 		public void BoundsAndTightBoundAreCorrect ()
 		{
 			const int Precision = 6;
@@ -222,20 +222,20 @@ namespace SkiaSharp.Tests
 				path.RCubicTo (-34.64102137842175f, 19.9999998f, 0f, 40f, 0f, 40f);
 
 				var bounds = path.Bounds;
-				Assert.AreEqual (-34.641022f, bounds.Left, Precision);
-				Assert.AreEqual (-25.814698f, bounds.Top, Precision);
-				Assert.AreEqual (-6.215782e-07f, bounds.Right, Precision);
-				Assert.AreEqual (14.185303f, bounds.Bottom, Precision);
+				Assert.Equal (-34.641022f, bounds.Left, Precision);
+				Assert.Equal (-25.814698f, bounds.Top, Precision);
+				Assert.Equal (-6.215782e-07f, bounds.Right, Precision);
+				Assert.Equal (14.185303f, bounds.Bottom, Precision);
 
 				var tightBounds = path.TightBounds;
-				Assert.AreEqual (-15.396009f, tightBounds.Left, Precision);
-				Assert.AreEqual (-25.814698f, tightBounds.Top, Precision);
-				Assert.AreEqual (0f, tightBounds.Right, Precision);
-				Assert.AreEqual (14.185303f, tightBounds.Bottom, Precision);
+				Assert.Equal (-15.396009f, tightBounds.Left, Precision);
+				Assert.Equal (-25.814698f, tightBounds.Top, Precision);
+				Assert.Equal (0f, tightBounds.Right, Precision);
+				Assert.Equal (14.185303f, tightBounds.Bottom, Precision);
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void MeasuringSegementsWorks ()
 		{
 			using (SKPath path = new SKPath ())
@@ -243,25 +243,25 @@ namespace SkiaSharp.Tests
 				path.MoveTo (10f, 10f);
 				path.LineTo (110f, 10f);
 
-				Assert.AreEqual (SKPathSegmentMask.Line, path.SegmentMasks);
+				Assert.Equal (SKPathSegmentMask.Line, path.SegmentMasks);
 
 				var measure = new SKPathMeasure (path);
 
-				Assert.AreEqual (100f, measure.Length);
+				Assert.Equal (100f, measure.Length);
 
 				var segment = new SKPath ();
 				var result = measure.GetSegment (20, 50, segment, true);
 				Assert.True (result);
-				Assert.AreEqual (2, segment.PointCount);
-				Assert.AreEqual (new SKPoint (30, 10), segment.Points [0]);
-				Assert.AreEqual (new SKPoint (60, 10), segment.Points [1]);
+				Assert.Equal (2, segment.PointCount);
+				Assert.Equal (new SKPoint (30, 10), segment.Points [0]);
+				Assert.Equal (new SKPoint (60, 10), segment.Points [1]);
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void TightBoundsForEnclosedPathIsNotZero ()
 		{
-			var delta = 0.001f;
+			const int Precision = 3;
 
 			var rect = SKRect.Create (10, 20, 28.889f, 28.889f);
 
@@ -272,10 +272,10 @@ namespace SkiaSharp.Tests
 
 			var bounds = path.ComputeTightBounds ();
 
-			Assert.AreEqual (rect.Left, bounds.Left, "Left");
-			Assert.AreEqual (rect.Top, bounds.Top, "Top");
-			Assert.AreEqual (rect.Right, bounds.Right, delta, "Right");
-			Assert.AreEqual (rect.Bottom, bounds.Bottom, delta, "Bottom");
+			Assert.Equal (rect.Left, bounds.Left);
+			Assert.Equal (rect.Top, bounds.Top);
+			Assert.Equal (rect.Right, bounds.Right, Precision);
+			Assert.Equal (rect.Bottom, bounds.Bottom, Precision);
 		}
 	}
 }

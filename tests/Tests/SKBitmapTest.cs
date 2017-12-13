@@ -3,117 +3,117 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
-using NUnit.Framework;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
 	public class SKBitmapTest : SKTest
 	{
-		[Test]
+		[Fact]
 		public void BitmapCanCopyIsCorrect()
 		{
 			var bmp = CreateTestBitmap();
 
-			Assert.IsTrue(bmp.CanCopyTo(SKColorType.Alpha8));
-			Assert.IsTrue(bmp.CanCopyTo(SKColorType.Rgb565));
-			Assert.IsTrue(bmp.CanCopyTo(SKColorType.Argb4444));
-			Assert.IsTrue(bmp.CanCopyTo(SKColorType.Bgra8888));
-			Assert.IsTrue(bmp.CanCopyTo(SKColorType.Rgba8888));
-			Assert.IsTrue(bmp.CanCopyTo(SKColorType.RgbaF16));
+			Assert.True(bmp.CanCopyTo(SKColorType.Alpha8));
+			Assert.True(bmp.CanCopyTo(SKColorType.Rgb565));
+			Assert.True(bmp.CanCopyTo(SKColorType.Argb4444));
+			Assert.True(bmp.CanCopyTo(SKColorType.Bgra8888));
+			Assert.True(bmp.CanCopyTo(SKColorType.Rgba8888));
+			Assert.True(bmp.CanCopyTo(SKColorType.RgbaF16));
 
-			Assert.IsFalse(bmp.CanCopyTo(SKColorType.Unknown));
-			Assert.IsFalse(bmp.CanCopyTo(SKColorType.Gray8));
+			Assert.False(bmp.CanCopyTo(SKColorType.Unknown));
+			Assert.False(bmp.CanCopyTo(SKColorType.Gray8));
 		}
 
-		[Test]
+		[Fact]
 		public void BitmapCopyToAlpha8PreservesData()
 		{
 			var bmp = CreateTestBitmap();
 
 			var alpha8 = bmp.Copy(SKColorType.Alpha8);
-			Assert.AreEqual(SKColors.Black, alpha8.GetPixel(10, 10));
-			Assert.AreEqual(SKColors.Black, alpha8.GetPixel(30, 10));
-			Assert.AreEqual(SKColors.Black, alpha8.GetPixel(10, 30));
-			Assert.AreEqual(SKColors.Black, alpha8.GetPixel(30, 30));
-			Assert.AreEqual(SKColorType.Alpha8, alpha8.ColorType);
+			Assert.Equal(SKColors.Black, alpha8.GetPixel(10, 10));
+			Assert.Equal(SKColors.Black, alpha8.GetPixel(30, 10));
+			Assert.Equal(SKColors.Black, alpha8.GetPixel(10, 30));
+			Assert.Equal(SKColors.Black, alpha8.GetPixel(30, 30));
+			Assert.Equal(SKColorType.Alpha8, alpha8.ColorType);
 
 			bmp = CreateTestBitmap(127);
 
 			alpha8 = bmp.Copy(SKColorType.Alpha8);
-			Assert.AreEqual(SKColors.Black.WithAlpha(127), alpha8.GetPixel(10, 10));
-			Assert.AreEqual(SKColors.Black.WithAlpha(127), alpha8.GetPixel(30, 10));
-			Assert.AreEqual(SKColors.Black.WithAlpha(127), alpha8.GetPixel(10, 30));
-			Assert.AreEqual(SKColors.Black.WithAlpha(127), alpha8.GetPixel(30, 30));
-			Assert.AreEqual(SKColorType.Alpha8, alpha8.ColorType);
+			Assert.Equal(SKColors.Black.WithAlpha(127), alpha8.GetPixel(10, 10));
+			Assert.Equal(SKColors.Black.WithAlpha(127), alpha8.GetPixel(30, 10));
+			Assert.Equal(SKColors.Black.WithAlpha(127), alpha8.GetPixel(10, 30));
+			Assert.Equal(SKColors.Black.WithAlpha(127), alpha8.GetPixel(30, 30));
+			Assert.Equal(SKColorType.Alpha8, alpha8.ColorType);
 		}
 
-		[Test]
+		[Fact]
 		public void BitmapCopyToArgb4444PreservesData()
 		{
 			var bmp = CreateTestBitmap();
 
 			var argb4444 = bmp.Copy(SKColorType.Argb4444);
-			Assert.AreEqual((SKColor)0xffff0000, argb4444.GetPixel(10, 10));
-			Assert.AreEqual((SKColor)0xff007700, argb4444.GetPixel(30, 10));
-			Assert.AreEqual((SKColor)0xff0000ff, argb4444.GetPixel(10, 30));
-			Assert.AreEqual((SKColor)0xffffff00, argb4444.GetPixel(30, 30));
-			Assert.AreEqual(SKColorType.Argb4444, argb4444.ColorType);
+			Assert.Equal((SKColor)0xffff0000, argb4444.GetPixel(10, 10));
+			Assert.Equal((SKColor)0xff007700, argb4444.GetPixel(30, 10));
+			Assert.Equal((SKColor)0xff0000ff, argb4444.GetPixel(10, 30));
+			Assert.Equal((SKColor)0xffffff00, argb4444.GetPixel(30, 30));
+			Assert.Equal(SKColorType.Argb4444, argb4444.ColorType);
 
 			bmp = CreateTestBitmap(127);
 
 			argb4444 = bmp.Copy(SKColorType.Argb4444);
-			Assert.AreEqual((SKColor)0x77ff0000, argb4444.GetPixel(10, 10));
-			Assert.AreEqual((SKColor)0x77006d00, argb4444.GetPixel(30, 10));
-			Assert.AreEqual((SKColor)0x770000ff, argb4444.GetPixel(10, 30));
-			Assert.AreEqual((SKColor)0x77ffff00, argb4444.GetPixel(30, 30));
-			Assert.AreEqual(SKColorType.Argb4444, argb4444.ColorType);
+			Assert.Equal((SKColor)0x77ff0000, argb4444.GetPixel(10, 10));
+			Assert.Equal((SKColor)0x77006d00, argb4444.GetPixel(30, 10));
+			Assert.Equal((SKColor)0x770000ff, argb4444.GetPixel(10, 30));
+			Assert.Equal((SKColor)0x77ffff00, argb4444.GetPixel(30, 30));
+			Assert.Equal(SKColorType.Argb4444, argb4444.ColorType);
 		}
 
-		[Test]
+		[Fact]
 		public void BitmapCopyToRgb565PreservesData()
 		{
 			var bmp = CreateTestBitmap();
 
 			var rgb565 = bmp.Copy(SKColorType.Rgb565);
-			Assert.AreEqual((SKColor)0xffff0000, rgb565.GetPixel(10, 10));
-			Assert.AreEqual((SKColor)0xff008200, rgb565.GetPixel(31, 10));
-			Assert.AreEqual((SKColor)0xff0000ff, rgb565.GetPixel(10, 30));
-			Assert.AreEqual((SKColor)0xffffff00, rgb565.GetPixel(30, 30));
-			Assert.AreEqual(SKColorType.Rgb565, rgb565.ColorType);
+			Assert.Equal((SKColor)0xffff0000, rgb565.GetPixel(10, 10));
+			Assert.Equal((SKColor)0xff008200, rgb565.GetPixel(31, 10));
+			Assert.Equal((SKColor)0xff0000ff, rgb565.GetPixel(10, 30));
+			Assert.Equal((SKColor)0xffffff00, rgb565.GetPixel(30, 30));
+			Assert.Equal(SKColorType.Rgb565, rgb565.ColorType);
 
 			bmp = CreateTestBitmap(127);
 
 			rgb565 = bmp.Copy(SKColorType.Rgb565);
-			Assert.AreEqual((SKColor)0xff7b0000, rgb565.GetPixel(10, 10));
-			Assert.AreEqual((SKColor)0xff004100, rgb565.GetPixel(31, 10));
-			Assert.AreEqual((SKColor)0xff00007b, rgb565.GetPixel(10, 30));
-			Assert.AreEqual((SKColor)0xff7b7d00, rgb565.GetPixel(30, 30));
-			Assert.AreEqual(SKColorType.Rgb565, rgb565.ColorType);
+			Assert.Equal((SKColor)0xff7b0000, rgb565.GetPixel(10, 10));
+			Assert.Equal((SKColor)0xff004100, rgb565.GetPixel(31, 10));
+			Assert.Equal((SKColor)0xff00007b, rgb565.GetPixel(10, 30));
+			Assert.Equal((SKColor)0xff7b7d00, rgb565.GetPixel(30, 30));
+			Assert.Equal(SKColorType.Rgb565, rgb565.ColorType);
 		}
 
-		[Test]
+		[Fact]
 		public void BitmapCopyToRgbaF16PreservesData()
 		{
 			var bmp = CreateTestBitmap();
 
 			var rgbaF16 = bmp.Copy(SKColorType.RgbaF16);
-			Assert.AreEqual((SKColor)0xffff0000, rgbaF16.GetPixel(10, 10));
-			Assert.AreEqual((SKColor)0xff003700, rgbaF16.GetPixel(30, 10));
-			Assert.AreEqual((SKColor)0xff0000ff, rgbaF16.GetPixel(10, 30));
-			Assert.AreEqual((SKColor)0xffffff00, rgbaF16.GetPixel(30, 30));
-			Assert.AreEqual(SKColorType.RgbaF16, rgbaF16.ColorType);
+			Assert.Equal((SKColor)0xffff0000, rgbaF16.GetPixel(10, 10));
+			Assert.Equal((SKColor)0xff003700, rgbaF16.GetPixel(30, 10));
+			Assert.Equal((SKColor)0xff0000ff, rgbaF16.GetPixel(10, 30));
+			Assert.Equal((SKColor)0xffffff00, rgbaF16.GetPixel(30, 30));
+			Assert.Equal(SKColorType.RgbaF16, rgbaF16.ColorType);
 
 			bmp = CreateTestBitmap(127);
 
 			rgbaF16 = bmp.Copy(SKColorType.RgbaF16);
-			Assert.AreEqual((SKColor)0x7f6d0000, rgbaF16.GetPixel(10, 10));
-			Assert.AreEqual((SKColor)0x7f001a00, rgbaF16.GetPixel(30, 10));
-			Assert.AreEqual((SKColor)0x7f00006d, rgbaF16.GetPixel(10, 30));
-			Assert.AreEqual((SKColor)0x7f6d6d00, rgbaF16.GetPixel(30, 30));
-			Assert.AreEqual(SKColorType.RgbaF16, rgbaF16.ColorType);
+			Assert.Equal((SKColor)0x7f6d0000, rgbaF16.GetPixel(10, 10));
+			Assert.Equal((SKColor)0x7f001a00, rgbaF16.GetPixel(30, 10));
+			Assert.Equal((SKColor)0x7f00006d, rgbaF16.GetPixel(10, 30));
+			Assert.Equal((SKColor)0x7f6d6d00, rgbaF16.GetPixel(30, 30));
+			Assert.Equal(SKColorType.RgbaF16, rgbaF16.ColorType);
 		}
 
-		[Test]
+		[Fact]
 		public void BitmapCopyToInvalidIsNull()
 		{
 			var bmp = CreateTestBitmap();
@@ -121,28 +121,28 @@ namespace SkiaSharp.Tests
 			ValidateTestBitmap(bmp);
 			ValidateTestBitmap(bmp.Copy(SKImageInfo.PlatformColorType));
 
-			Assert.IsNull(bmp.Copy(SKColorType.Unknown));
-			Assert.IsNull(bmp.Copy(SKColorType.Gray8));
+			Assert.Null(bmp.Copy(SKColorType.Unknown));
+			Assert.Null(bmp.Copy(SKColorType.Gray8));
 
 			// alpha to non-alpha is not supported
-			Assert.IsNull(bmp
+			Assert.Null(bmp
 				.Copy(SKColorType.Alpha8)
 				.Copy(SKImageInfo.PlatformColorType));
 		}
 
 		private void ValidateTestBitmap(SKBitmap bmp)
 		{
-			Assert.IsNotNull(bmp);
-			Assert.AreEqual(40, bmp.Width);
-			Assert.AreEqual(40, bmp.Height);
+			Assert.NotNull(bmp);
+			Assert.Equal(40, bmp.Width);
+			Assert.Equal(40, bmp.Height);
 
-			Assert.AreEqual(SKColors.Red, bmp.GetPixel(10, 10));
-			Assert.AreEqual(SKColors.Green, bmp.GetPixel(30, 10));
-			Assert.AreEqual(SKColors.Blue, bmp.GetPixel(10, 30));
-			Assert.AreEqual(SKColors.Yellow, bmp.GetPixel(30, 30));
+			Assert.Equal(SKColors.Red, bmp.GetPixel(10, 10));
+			Assert.Equal(SKColors.Green, bmp.GetPixel(30, 10));
+			Assert.Equal(SKColors.Blue, bmp.GetPixel(10, 30));
+			Assert.Equal(SKColors.Yellow, bmp.GetPixel(30, 30));
 		}
 
-		[Test]
+		[Fact]
 		public void ReleaseBitmapPixelsWasInvoked()
 		{
 			bool released = false;
@@ -150,7 +150,7 @@ namespace SkiaSharp.Tests
 			var onRelease = new SKBitmapReleaseDelegate((addr, ctx) => {
 				Marshal.FreeCoTaskMem(addr);
 				released = true;
-				Assert.AreEqual("RELEASING!", ctx);
+				Assert.Equal("RELEASING!", ctx);
 			});
 
 			using (var bitmap = new SKBitmap()) {
@@ -163,17 +163,17 @@ namespace SkiaSharp.Tests
 			Assert.True(released, "The SKBitmapReleaseDelegate was not called.");
 		}
 
-		[Test]
+		[Fact]
 		public void ImageCreateDoesNotThrow()
 		{
 			var info = new SKImageInfo(1, 1);
 			using (var image = SKImage.Create(info)) {
-				Assert.IsFalse(image.IsTextureBacked);
-				Assert.AreEqual(image, image.ToRasterImage());
+				Assert.False(image.IsTextureBacked);
+				Assert.Equal(image, image.ToRasterImage());
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void ReleaseImagePixelsWasInvoked()
 		{
 			bool released = false;
@@ -181,7 +181,7 @@ namespace SkiaSharp.Tests
 			var onRelease = new SKImageRasterReleaseDelegate((addr, ctx) => {
 				Marshal.FreeCoTaskMem(addr);
 				released = true;
-				Assert.AreEqual("RELEASING!", ctx);
+				Assert.Equal("RELEASING!", ctx);
 			});
 
 			var info = new SKImageInfo(1, 1);
@@ -189,9 +189,9 @@ namespace SkiaSharp.Tests
 
 			using (var pixmap = new SKPixmap(info, pixels))
 			using (var image = SKImage.FromPixels(pixmap, onRelease, "RELEASING!")) {
-				Assert.IsFalse(image.IsTextureBacked);
+				Assert.False(image.IsTextureBacked);
 				using (var raster = image.ToRasterImage()) {
-					Assert.AreEqual(image, raster);
+					Assert.Equal(image, raster);
 				}
 				Assert.False(released, "The SKImageRasterReleaseDelegate was called too soon.");
 			}
@@ -199,7 +199,7 @@ namespace SkiaSharp.Tests
 			Assert.True(released, "The SKImageRasterReleaseDelegate was not called.");
 		}
 
-		[Test]
+		[Fact]
 		public void ReleaseBitmapPixelsWithNullDelegate()
 		{
 			var info = new SKImageInfo(1, 1);
@@ -212,7 +212,7 @@ namespace SkiaSharp.Tests
 			Marshal.FreeCoTaskMem(pixels);
 		}
 
-		[Test]
+		[Fact]
 		public void TestExtractAlpha()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -227,10 +227,10 @@ namespace SkiaSharp.Tests
 
 			Assert.True(bitmap.ExtractAlpha(alpha, paint, out offset));
 
-			Assert.AreEqual(new SKPointI(-7, -7), offset);
+			Assert.Equal(new SKPointI(-7, -7), offset);
 		}
 
-		[Test]
+		[Fact]
 		public void TestBitmapDecodeDrawsCorrectly()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -243,35 +243,35 @@ namespace SkiaSharp.Tests
 
 				using (var img = surface.Snapshot())
 				using (var bmp = SKBitmap.FromImage(img)) {
-					Assert.AreEqual(new SKColor(2, 255, 42), bmp.GetPixel(20, 20));
-					Assert.AreEqual(new SKColor(1, 83, 255), bmp.GetPixel(108, 20));
-					Assert.AreEqual(new SKColor(255, 166, 1), bmp.GetPixel(20, 108));
-					Assert.AreEqual(new SKColor(255, 1, 214), bmp.GetPixel(108, 108));
+					Assert.Equal(new SKColor(2, 255, 42), bmp.GetPixel(20, 20));
+					Assert.Equal(new SKColor(1, 83, 255), bmp.GetPixel(108, 20));
+					Assert.Equal(new SKColor(255, 166, 1), bmp.GetPixel(20, 108));
+					Assert.Equal(new SKColor(255, 1, 214), bmp.GetPixel(108, 108));
 				}
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void BitmapAndPixmapAreValid()
 		{
 			var info = new SKImageInfo(10, 10);
 			using (var bitmap = new SKBitmap(info)) {
-				Assert.AreEqual(10, bitmap.Width);
-				Assert.AreEqual(10, bitmap.Height);
+				Assert.Equal(10, bitmap.Width);
+				Assert.Equal(10, bitmap.Height);
 
 				var pixmap = bitmap.PeekPixels();
 				Assert.NotNull(pixmap);
 
-				Assert.AreEqual(10, pixmap.Width);
-				Assert.AreEqual(10, pixmap.Height);
+				Assert.Equal(10, pixmap.Width);
+				Assert.Equal(10, pixmap.Height);
 
 				Assert.True(bitmap.GetPixels() != IntPtr.Zero);
 				Assert.True(pixmap.GetPixels() != IntPtr.Zero);
-				Assert.AreEqual(bitmap.GetPixels(), pixmap.GetPixels());
+				Assert.Equal(bitmap.GetPixels(), pixmap.GetPixels());
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void BitmapResizes()
 		{
 			var srcInfo = new SKImageInfo(200, 200);
@@ -285,17 +285,17 @@ namespace SkiaSharp.Tests
 				canvas.DrawRect(new SKRect(0, 0, 100, 200), paint);
 			}
 
-			Assert.AreEqual(SKColors.Green, srcBmp.GetPixel(75, 75));
-			Assert.AreEqual(SKColors.Blue, srcBmp.GetPixel(175, 175));
+			Assert.Equal(SKColors.Green, srcBmp.GetPixel(75, 75));
+			Assert.Equal(SKColors.Blue, srcBmp.GetPixel(175, 175));
 
 			var dstBmp = srcBmp.Resize(dstInfo, SKBitmapResizeMethod.Mitchell);
 			Assert.NotNull(dstBmp);
 
-			Assert.AreEqual(SKColors.Green, dstBmp.GetPixel(25, 25));
-			Assert.AreEqual(SKColors.Blue, dstBmp.GetPixel(75, 75));
+			Assert.Equal(SKColors.Green, dstBmp.GetPixel(25, 25));
+			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
 		}
 
-		[Test]
+		[Fact]
 		public void AlphaMaskIsApplied()
 		{
 			var srcInfo = new SKImageInfo(4, 4);
@@ -305,7 +305,7 @@ namespace SkiaSharp.Tests
 
 			foreach (var pixel in pixels)
 			{
-				Assert.AreEqual(255, pixel.Alpha);
+				Assert.Equal(255, pixel.Alpha);
 			}
 			
 			var maskBuffer = new byte[]
@@ -323,28 +323,27 @@ namespace SkiaSharp.Tests
 			srcBmp.InstallMaskPixels(mask);
 
 			pixels = srcBmp.Pixels;
-			Assert.AreEqual(128, pixels[0].Alpha);
-			Assert.AreEqual(127, pixels[1].Alpha);
-			Assert.AreEqual(126, pixels[2].Alpha);
-			Assert.AreEqual(125, pixels[3].Alpha);
-			Assert.AreEqual(101, pixels[4].Alpha);
-			Assert.AreEqual(102, pixels[5].Alpha);
-			Assert.AreEqual(103, pixels[6].Alpha);
-			Assert.AreEqual(104, pixels[7].Alpha);
-			Assert.AreEqual(96, pixels[8].Alpha);
-			Assert.AreEqual(95, pixels[9].Alpha);
-			Assert.AreEqual(94, pixels[10].Alpha);
-			Assert.AreEqual(93, pixels[11].Alpha);
-			Assert.AreEqual(72, pixels[12].Alpha);
-			Assert.AreEqual(73, pixels[13].Alpha);
-			Assert.AreEqual(74, pixels[14].Alpha);
-			Assert.AreEqual(75, pixels[15].Alpha);
+			Assert.Equal(128, pixels[0].Alpha);
+			Assert.Equal(127, pixels[1].Alpha);
+			Assert.Equal(126, pixels[2].Alpha);
+			Assert.Equal(125, pixels[3].Alpha);
+			Assert.Equal(101, pixels[4].Alpha);
+			Assert.Equal(102, pixels[5].Alpha);
+			Assert.Equal(103, pixels[6].Alpha);
+			Assert.Equal(104, pixels[7].Alpha);
+			Assert.Equal(96, pixels[8].Alpha);
+			Assert.Equal(95, pixels[9].Alpha);
+			Assert.Equal(94, pixels[10].Alpha);
+			Assert.Equal(93, pixels[11].Alpha);
+			Assert.Equal(72, pixels[12].Alpha);
+			Assert.Equal(73, pixels[13].Alpha);
+			Assert.Equal(74, pixels[14].Alpha);
+			Assert.Equal(75, pixels[15].Alpha);
 
 			mask.FreeImage();
 		}
 
-		[Test]
-		[Ignore("This test takes a long time (~3mins), so ignore this most of the time.")]
+		[Fact(Skip = "This test takes a long time (~3mins), so ignore this most of the time.")]
 		public static void ImageScalingMultipleThreadsTest()
 		{
 			const int numThreads = 100;
@@ -389,7 +388,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void SwizzleRedBlueTest()
 		{
 			var info = new SKImageInfo(1, 1);
@@ -398,11 +397,11 @@ namespace SkiaSharp.Tests
 			{
 				bmp.Erase((uint)0xFACEB004);
 
-				Assert.AreEqual((uint)0xFACEB004, (uint)bmp.GetPixel(0, 0));
+				Assert.Equal((uint)0xFACEB004, (uint)bmp.GetPixel(0, 0));
 
 				SKSwizzle.SwapRedBlue(bmp.GetPixels(), bmp.GetPixels(), 1);
 
-				Assert.AreEqual((uint)0xFA04B0CE, (uint)bmp.GetPixel(0, 0));
+				Assert.Equal((uint)0xFA04B0CE, (uint)bmp.GetPixel(0, 0));
 			}
 		}
 	}

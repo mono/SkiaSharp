@@ -1,13 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using NUnit.Framework;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
 	public class SKDocumentTest : SKTest
 	{
-		[Test]
+		[Fact]
 		public void CanCreatePdf()
 		{
 			using (var stream = new MemoryStream())
@@ -15,19 +15,19 @@ namespace SkiaSharp.Tests
 			{
 				using (var doc = SKDocument.CreatePdf(managed))
 				{
-					Assert.IsNotNull(doc);
-					Assert.IsNotNull(doc.BeginPage(100, 100));
+					Assert.NotNull(doc);
+					Assert.NotNull(doc.BeginPage(100, 100));
 
 					doc.EndPage();
 					doc.Close();
 				}
 
-				Assert.IsTrue(stream.Length > 0);
-				Assert.IsTrue(stream.Position > 0);
+				Assert.True(stream.Length > 0);
+				Assert.True(stream.Position > 0);
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void CanCreateXps()
 		{
 			// XPS is only supported on Windows
@@ -39,27 +39,27 @@ namespace SkiaSharp.Tests
 				{
 					if (IsWindows)
 					{
-						Assert.IsNotNull(doc);
-						Assert.IsNotNull(doc.BeginPage(100, 100));
+						Assert.NotNull(doc);
+						Assert.NotNull(doc.BeginPage(100, 100));
 
 						doc.EndPage();
 						doc.Close();
 					}
 					else
 					{
-						Assert.IsNull(doc);
+						Assert.Null(doc);
 					}
 				}
 
 				if (IsWindows)
 				{
-					Assert.IsTrue(stream.Length > 0);
-					Assert.IsTrue(stream.Position > 0);
+					Assert.True(stream.Length > 0);
+					Assert.True(stream.Position > 0);
 				}
 				else
 				{
-					Assert.IsTrue(stream.Length == 0);
-					Assert.IsTrue(stream.Position == 0);
+					Assert.True(stream.Length == 0);
+					Assert.True(stream.Position == 0);
 				}
 			}
 		}

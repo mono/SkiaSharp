@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Drawing.Imaging;
-using NUnit.Framework;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
@@ -35,7 +35,7 @@ namespace SkiaSharp.Tests
 			bitmap.UnlockBits(data);
 		}
 
-		[Test]
+		[Fact]
 		public void SurfaceCanvasReturnTheSameInstance()
 		{
 			Draw(surface =>
@@ -46,14 +46,14 @@ namespace SkiaSharp.Tests
 				Assert.NotNull(skcanvas1);
 				Assert.NotNull(skcanvas2);
 
-				Assert.AreEqual(skcanvas1, skcanvas2);
+				Assert.Equal(skcanvas1, skcanvas2);
 				Assert.True(skcanvas1 == skcanvas2);
 
-				Assert.AreSame(skcanvas1, skcanvas2);
+				Assert.Same(skcanvas1, skcanvas2);
 			});
 		}
 
-		[Test]
+		[Fact]
 		public void SecondSurfaceWasCreatedDifferent()
 		{
 			var data = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
@@ -64,8 +64,8 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(surface1);
 			Assert.NotNull(surface2);
 
-			Assert.AreNotEqual(surface1, surface2);
-			Assert.AreNotEqual(surface1.Handle, surface2.Handle);
+			Assert.NotEqual(surface1, surface2);
+			Assert.NotEqual(surface1.Handle, surface2.Handle);
 
 			surface1.Dispose();
 			surface2.Dispose();
@@ -73,7 +73,7 @@ namespace SkiaSharp.Tests
 			bitmap.UnlockBits(data);
 		}
 
-		[Test]
+		[Fact]
 		public void SurfaceWasCreated()
 		{
 			var data = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
@@ -81,11 +81,11 @@ namespace SkiaSharp.Tests
 			var surface = SKSurface.Create(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, data.Scan0, data.Stride);
 
 			Assert.NotNull(surface);
-			Assert.AreNotEqual(IntPtr.Zero, surface.Handle);
+			Assert.NotEqual(IntPtr.Zero, surface.Handle);
 
 			surface.Dispose();
 
-			Assert.AreEqual(IntPtr.Zero, surface.Handle);
+			Assert.Equal(IntPtr.Zero, surface.Handle);
 
 			bitmap.UnlockBits(data);
 		}

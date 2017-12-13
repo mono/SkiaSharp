@@ -87,18 +87,26 @@ var RunProcess = new Action<FilePath, ProcessSettings> ((process, settings) =>
     }
 });
 
-var RunTests = new Action<FilePath> ((testAssembly) =>
+var RunTests = new Action<FilePath, bool> ((testAssembly, is32) =>
 {
     var dir = testAssembly.GetDirectory ();
-    RunProcess (NUnitConsoleToolPath, new ProcessSettings {
-        Arguments = string.Format ("\"{0}\" --result=\"TestResult.xml;format=nunit2\" --work=\"{1}\"", testAssembly, dir),
+    XUnit2 (new [] { testAssembly }, new XUnit2Settings {
+        NUnitReport = true,
+        ReportName = "TestResult",
+        UseX86 = is32,
+        Parallelism = ParallelismOption.Assemblies,
+        OutputDirectory = dir,
+        WorkingDirectory = dir,
+        ArgumentCustomization = args => args.Append ("-verbose"),
     });
 });
 
 var RunNetCoreTests = new Action<FilePath> ((testAssembly) =>
 {
     var dir = testAssembly.GetDirectory ();
-    DotNetCoreExecute (testAssembly, string.Format ("--result=\"TestResult.xml;format=nunit2\" --work=\"{0}\"", dir));
+    DotNetCoreTool(testAssembly, "xunit", "-verbose -parallel none -nunit \"TestResult.xml\"", new DotNetCoreToolSettings {
+        WorkingDirectory = dir,
+    });
 });
 
 var RunMdocUpdate = new Action<FilePath[], DirectoryPath, DirectoryPath[]> ((assemblies, docsRoot, refs) =>

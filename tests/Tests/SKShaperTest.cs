@@ -2,7 +2,7 @@
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using NUnit.Framework;
+using Xunit;
 
 using SkiaSharp;
 using SkiaSharp.HarfBuzz;
@@ -11,7 +11,7 @@ namespace HarfBuzzSharp.Tests
 {
 	public class SKShaperTest : TestBase
 	{
-		[Test]
+		[Fact]
 		public void DrawShapedTextExtensionMethodDraws()
 		{
 			using (var surface = SKSurface.Create(new SKImageInfo(512, 512)))
@@ -34,7 +34,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void CorrectlyShapesArabicScriptAtAnOffset()
 		{
 			var clusters = new uint[] { 4, 2, 0 };
@@ -47,13 +47,13 @@ namespace HarfBuzzSharp.Tests
 			{
 				var result = shaper.Shape("متن", 100, 200, paint);
 
-				CollectionAssert.AreEqual(clusters, result.Clusters);
-				CollectionAssert.AreEqual(codepoints, result.Codepoints);
-				CollectionAssert.AreEqual(points, result.Points);
+				Assert.Equal(clusters, result.Clusters);
+				Assert.Equal(codepoints, result.Codepoints);
+				Assert.Equal(points, result.Points);
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void CorrectlyShapesArabicScript()
 		{
 			var clusters = new uint[] { 4, 2, 0 };
@@ -66,9 +66,9 @@ namespace HarfBuzzSharp.Tests
 			{
 				var result = shaper.Shape("متن", paint);
 
-				CollectionAssert.AreEqual(clusters, result.Clusters);
-				CollectionAssert.AreEqual(codepoints, result.Codepoints);
-				CollectionAssert.AreEqual(points, result.Points);
+				Assert.Equal(clusters, result.Clusters);
+				Assert.Equal(codepoints, result.Codepoints);
+				Assert.Equal(points, result.Points);
 			}
 		}
 	}

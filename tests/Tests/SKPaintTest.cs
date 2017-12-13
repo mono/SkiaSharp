@@ -1,13 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using NUnit.Framework;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
 	public class SKPaintTest : SKTest
 	{
-		[Test]
+		[Fact]
 		public void StrokePropertyValuesAreCorrect()
 		{
 			var paint = new SKPaint();
@@ -19,7 +19,7 @@ namespace SkiaSharp.Tests
 			Assert.False(paint.IsStroke);
 		}
 
-		[Test]
+		[Fact]
 		public void GetFillPathIsWorking()
 		{
 			var paint = new SKPaint();
@@ -33,11 +33,11 @@ namespace SkiaSharp.Tests
 			var isFilled = paint.GetFillPath(path, fillPath);
 
 			Assert.True(isFilled);
-			Assert.AreEqual(rect, fillPath.Bounds);
-			Assert.AreEqual(4, fillPath.PointCount);
+			Assert.Equal(rect, fillPath.Bounds);
+			Assert.Equal(4, fillPath.PointCount);
 		}
 
-		[Test]
+		[Fact]
 		public void GetFillPathIsWorkingWithLine()
 		{
 			var paint = new SKPaint();
@@ -53,21 +53,21 @@ namespace SkiaSharp.Tests
 			var isFilled = paint.GetFillPath(path, fillPath);
 
 			Assert.True(isFilled);
-			Assert.AreEqual(thinRect, fillPath.Bounds);
-			Assert.AreEqual(2, fillPath.PointCount);
+			Assert.Equal(thinRect, fillPath.Bounds);
+			Assert.Equal(2, fillPath.PointCount);
 
 			paint.StrokeWidth = 20;
 			paint.IsStroke = true;
 			isFilled = paint.GetFillPath(path, fillPath);
 
 			Assert.True(isFilled);
-			Assert.AreEqual(rect, fillPath.Bounds);
-			Assert.AreEqual(4 + 1, fillPath.PointCount); // +1 becuase the last point is the same as the first
-			Assert.AreEqual(4, fillPath.Points.Distinct().Count());
+			Assert.Equal(rect, fillPath.Bounds);
+			Assert.Equal(4 + 1, fillPath.PointCount); // +1 becuase the last point is the same as the first
+			Assert.Equal(4, fillPath.Points.Distinct().Count());
 		}
 
 		// Test for issue #276
-		[Test]
+		[Fact]
 		public void NonAntiAliasedTextOnScaledCanvasIsCorrect()
 		{
 			using (var bitmap = new SKBitmap(new SKImageInfo(200, 200)))
@@ -79,9 +79,9 @@ namespace SkiaSharp.Tests
 				canvas.Scale(1, 2);
 				canvas.DrawText("Skia", 10, 60, paint);
 
-				Assert.AreEqual(SKColors.Black, bitmap.GetPixel(49, 92), "Antialias (1)");
-				Assert.AreEqual(SKColors.White, bitmap.GetPixel(73, 63), "Antialias (2)");
-				Assert.AreEqual(SKColors.Black, bitmap.GetPixel(100, 89), "Antialias (3)");
+				Assert.Equal(SKColors.Black, bitmap.GetPixel(49, 92));
+				Assert.Equal(SKColors.White, bitmap.GetPixel(73, 63));
+				Assert.Equal(SKColors.Black, bitmap.GetPixel(100, 89));
 			}
 
 			using (var bitmap = new SKBitmap(new SKImageInfo(200, 200)))
@@ -93,15 +93,14 @@ namespace SkiaSharp.Tests
 				canvas.Scale(1, 2);
 				canvas.DrawText("Skia", 10, 60, paint);
 
-				Assert.AreEqual(SKColors.Black, bitmap.GetPixel(49, 92), "Non-Antialias (1)");
-				Assert.AreEqual(SKColors.White, bitmap.GetPixel(73, 63), "Non-Antialias (2)");
-				Assert.AreEqual(SKColors.Black, bitmap.GetPixel(100, 89), "Non-Antialias (3)");
+				Assert.Equal(SKColors.Black, bitmap.GetPixel(49, 92));
+				Assert.Equal(SKColors.White, bitmap.GetPixel(73, 63));
+				Assert.Equal(SKColors.Black, bitmap.GetPixel(100, 89));
 			}
 		}
 
 		// Test for issue #282
-		[Ignore("Known to fail, see: https://github.com/mono/SkiaSharp/issues/282")]
-		[Test]
+		[Fact(Skip = "Known to fail, see: https://github.com/mono/SkiaSharp/issues/282")]
 		public void DrawTransparentImageWithHighFilterQualityWithUnpremul()
 		{
 			var oceanColor = (SKColor)0xFF9EB4D6;
@@ -128,13 +127,13 @@ namespace SkiaSharp.Tests
 				}
 
 				// check values
-				Assert.AreEqual(oceanColor, bitmap.GetPixel(30, 30), "Ocean color");
-				Assert.AreEqual(landColor, bitmap.GetPixel(270, 270), "Land color");
+				Assert.Equal(oceanColor, bitmap.GetPixel(30, 30));
+				Assert.Equal(landColor, bitmap.GetPixel(270, 270));
 			}
 		}
 
 		// Test for the "workaround" for issue #282
-		[Test]
+		[Fact]
 		public void DrawTransparentImageWithHighFilterQualityWithPremul()
 		{
 			var oceanColor = (SKColor)0xFF9EB4D6;
@@ -165,8 +164,8 @@ namespace SkiaSharp.Tests
 				}
 
 				// check values
-				Assert.AreEqual(oceanColor, bitmap.GetPixel(30, 30), "Ocean color");
-				Assert.AreEqual(landColor, bitmap.GetPixel(270, 270), "Land color");
+				Assert.Equal(oceanColor, bitmap.GetPixel(30, 30));
+				Assert.Equal(landColor, bitmap.GetPixel(270, 270));
 			}
 		}
 	}

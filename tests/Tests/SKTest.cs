@@ -3,9 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using NUnit.Framework;
-
-[assembly: Parallelizable(ParallelScope.Fixtures)]
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
@@ -143,35 +141,34 @@ namespace SkiaSharp.Tests
 				} else if (IsWindows) {
 					return new WglContext();
 				} else {
-					return null;
+					throw new PlatformNotSupportedException();
 				}
 			} catch (Exception ex) {
-				Assert.Ignore("Unable to create GL context: " + ex.Message);
-				return null;
+				throw new Exception("Unable to create GL context: " + ex.Message);
 			}
 		}
 
-		private void TestGlVersion()
-		{
-			var minimumVersion = new Version(1, 5);
-			string versionString = null;
+		//private void TestGlVersion()
+		//{
+		//	var minimumVersion = new Version(1, 5);
+		//	string versionString = null;
 
-			if (IsLinux) {
-			} else if (IsMac) {
-			} else if (IsWindows) {
-				versionString = Wgl.VersionString;
-			} else {
-			}
+		//	if (IsLinux) {
+		//	} else if (IsMac) {
+		//	} else if (IsWindows) {
+		//		versionString = Wgl.VersionString;
+		//	} else {
+		//	}
 
-			// OpenGL version number is 'MAJOR.MINOR***'
-			var versionNumber = versionString?.Trim()?.Split(' ')?.FirstOrDefault();
+		//	// OpenGL version number is 'MAJOR.MINOR***'
+		//	var versionNumber = versionString?.Trim()?.Split(' ')?.FirstOrDefault();
 
-			Version version;
-			if (versionNumber != null && Version.TryParse(versionNumber, out version)) {
-				if (version < minimumVersion) {
-					Assert.Ignore($"Available OpenGL version ({versionString}) is below minimum ({minimumVersion}).");
-				}
-			}
-		}
+		//	Version version;
+		//	if (versionNumber != null && Version.TryParse(versionNumber, out version)) {
+		//		if (version < minimumVersion) {
+		//			Assert.Ignore($"Available OpenGL version ({versionString}) is below minimum ({minimumVersion}).");
+		//		}
+		//	}
+		//}
 	}
 }

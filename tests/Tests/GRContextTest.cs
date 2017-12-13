@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using NUnit.Framework;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	[Parallelizable(ParallelScope.None)]
 	public class GRContextTest : SKTest
 	{
-		[Test]
+		[Fact]
 		public void CreateDefaultContextIsValid()
 		{
 			using (var ctx = CreateGlContext()) {
@@ -19,7 +18,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void CreateSpecificContextIsValid()
 		{
 			using (var ctx = CreateGlContext()) {
@@ -35,7 +34,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void GpuSurfaceIsCreated()
 		{
 			using (var ctx = CreateGlContext()) {

@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using NUnit.Framework;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	[Parallelizable(ParallelScope.None)]
 	public class GRGlInterfaceTest : SKTest
 	{
-		[Test]
+		[Fact]
 		public void CreateDefaultInterfaceIsValid()
 		{
 			using (var ctx = CreateGlContext()) {
@@ -21,7 +20,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void AssembleInterfaceIsValid()
 		{
 			using (var ctx = CreateGlContext()) {

@@ -2,7 +2,8 @@
 using System.IO;
 using System.Reflection;
 using System.Linq;
-using NUnit.Framework;
+using Xunit;
+using Xunit.Sdk;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
 
@@ -17,7 +18,7 @@ namespace SkiaSharp.Tests
 			return api;
 		}
 
-		[Test]
+		[Fact]
 		public void ApiTypesAreNotInvalid()
 		{
 			var ass = typeof(SKImageInfo).GetTypeInfo().Assembly;
@@ -39,13 +40,13 @@ namespace SkiaSharp.Tests
 					var nativeType = ass.GetType(paramType.FullName + "Native");
 					if (internalType != null || nativeType != null)
 					{
-						Assert.Fail($"{method.Name}: Using type {paramType.FullName}, but type {(internalType ?? nativeType).FullName} exists.");
+						throw new XunitException($"{method.Name}: Using type {paramType.FullName}, but type {(internalType ?? nativeType).FullName} exists.");
 					}
 				}
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void ApiReturnTypesArePrimitives()
 		{
 			var api = GetApi();
@@ -59,7 +60,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Test]
+		[Fact]
 		public void ApiTypesAreMarshalledCorrectly()
 		{
 			var api = GetApi();
@@ -74,23 +75,30 @@ namespace SkiaSharp.Tests
 					{
 						//check string
 						var marshal = param.GetCustomAttribute<MarshalAsAttribute>();
-						Assert.NotNull(marshal, $"{method.Name}({paramType})");
-						Assert.AreEqual(UnmanagedType.I1, marshal.Value, $"{method.Name}({paramType})");
+						if (marshal == null)
+							throw new XunitException($"{method.Name}({paramType})");
+						if (marshal.Value != UnmanagedType.I1)
+							throw new XunitException($"{method.Name}({paramType})");
 					}
 					if (paramType == typeof(string))
 					{
 						//check string
 						var marshal = param.GetCustomAttribute<MarshalAsAttribute>();
-						Assert.NotNull(marshal, $"{method.Name}({paramType})");
-						Assert.AreEqual(UnmanagedType.LPStr, marshal.Value, $"{method.Name}({paramType})");
+						if (marshal == null)
+							throw new XunitException($"{method.Name}({paramType})");
+						if (marshal.Value != UnmanagedType.LPStr)
+							throw new XunitException($"{method.Name}({paramType})");
 					}
 					else if (paramType == typeof(string[]))
 					{
 						// check array of strings
 						var marshal = param.GetCustomAttribute<MarshalAsAttribute>();
-						Assert.NotNull(marshal, $"{method.Name}({paramType})");
-						Assert.AreEqual(UnmanagedType.LPArray, marshal.Value, $"{method.Name}({paramType})");
-						Assert.AreEqual(UnmanagedType.LPStr, marshal.ArraySubType, $"{method.Name}({paramType})");
+						if (marshal == null)
+							throw new XunitException($"{method.Name}({paramType})");
+						if (marshal.Value != UnmanagedType.LPArray)
+							throw new XunitException($"{method.Name}({paramType})");
+						if (marshal.ArraySubType != UnmanagedType.LPStr)
+							throw new XunitException($"{method.Name}({paramType})");
 					}
 					else
 					{
@@ -112,7 +120,7 @@ namespace SkiaSharp.Tests
 							}
 							catch
 							{
-								Assert.Fail($"not blittable : {method.Name}({paramType})");
+								throw new XunitException($"not blittable : {method.Name}({paramType})");
 							}
 						}
 					}
@@ -121,8 +129,10 @@ namespace SkiaSharp.Tests
 				if (method.ReturnParameter.ParameterType == typeof(bool))
 				{
 					var marshal = method.ReturnParameter.GetCustomAttribute<MarshalAsAttribute>();
-					Assert.NotNull(marshal, $"{method.Name}(return)");
-					Assert.AreEqual(UnmanagedType.I1, marshal.Value, $"{method.Name}(return)");
+					if (marshal == null)
+						throw new XunitException($"{method.Name}(return)");
+					if (marshal.Value != UnmanagedType.I1)
+						throw new XunitException($"{method.Name}(return)");
 				}
 			}
 		}

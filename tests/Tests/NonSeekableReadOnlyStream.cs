@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using NUnit.Framework;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
@@ -21,7 +21,7 @@ namespace SkiaSharp.Tests
 
 		public override bool CanWrite => false;
 
-		public override long Length => 0;
+		public override long Length => throw new NotSupportedException();
 
 		public override long Position
 		{

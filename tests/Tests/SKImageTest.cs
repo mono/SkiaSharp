@@ -1,11 +1,11 @@
 ﻿using System;
-using NUnit.Framework;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
 	public class SKImageTest : SKTest
 	{
-		[Test]
+		[Fact]
 		public void EncodeWithSimpleSerializer()
 		{
 			var bitmap = CreateTestBitmap();
@@ -22,12 +22,12 @@ namespace SkiaSharp.Tests
 
 			var codec = SKCodec.Create(data);
 
-			Assert.AreEqual(SKEncodedImageFormat.Jpeg, codec.EncodedFormat);
+			Assert.Equal(SKEncodedImageFormat.Jpeg, codec.EncodedFormat);
 
-			Assert.IsTrue(encoded);
+			Assert.True(encoded);
 		}
 
-		[Test]
+		[Fact]
 		public void EncodeWithSerializer()
 		{
 			var bitmap = CreateTestBitmap();
@@ -37,12 +37,12 @@ namespace SkiaSharp.Tests
 			var image = SKImage.FromBitmap(bitmap);
 			var data = image.Encode(serializer);
 
-			Assert.IsNotNull(data);
+			Assert.NotNull(data);
 
-			Assert.AreEqual(1, serializer.DidEncode);
-			Assert.AreEqual(0, serializer.DidUseEncodedData);
+			Assert.Equal(1, serializer.DidEncode);
+			Assert.Equal(0, serializer.DidUseEncodedData);
 
-			CollectionAssert.AreEqual(data.ToArray(), bitmap.Bytes);
+			Assert.Equal(data.ToArray(), bitmap.Bytes);
 		}
 
 		private class TestSerializer : SKManagedPixelSerializer

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using NUnit.Framework;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
 	public class SKPixmapTest : SKTest
 	{
-		[Test]
+		[Fact]
 		public void ReadPixelSucceeds()
 		{
 			var info = new SKImageInfo(10, 10);
@@ -21,24 +21,24 @@ namespace SkiaSharp.Tests
 			Assert.True(result);
 		}
 		
-		[Test]
+		[Fact]
 		public void WithMethodsDoNotModifySource()
 		{
 			var info = new SKImageInfo(100, 30, SKColorType.Rgb565, SKAlphaType.Unpremul);
 			var pixmap = new SKPixmap(info, (IntPtr)123);
 
-			Assert.AreEqual(SKColorType.Rgb565, pixmap.ColorType);
-			Assert.AreEqual((IntPtr)123, pixmap.GetPixels());
+			Assert.Equal(SKColorType.Rgb565, pixmap.ColorType);
+			Assert.Equal((IntPtr)123, pixmap.GetPixels());
 
 			var copy = pixmap.WithColorType(SKColorType.Index8);
 
-			Assert.AreEqual(SKColorType.Rgb565, pixmap.ColorType);
-			Assert.AreEqual((IntPtr)123, pixmap.GetPixels());
-			Assert.AreEqual(SKColorType.Index8, copy.ColorType);
-			Assert.AreEqual((IntPtr)123, copy.GetPixels());
+			Assert.Equal(SKColorType.Rgb565, pixmap.ColorType);
+			Assert.Equal((IntPtr)123, pixmap.GetPixels());
+			Assert.Equal(SKColorType.Index8, copy.ColorType);
+			Assert.Equal((IntPtr)123, copy.GetPixels());
 		}
 
-		[Test]
+		[Fact]
 		public void ReadPixelCopiesData()
 		{
 			var info = new SKImageInfo(10, 10);
@@ -51,13 +51,13 @@ namespace SkiaSharp.Tests
 				bmp1.Erase(SKColors.Blue);
 				bmp1.Erase(SKColors.Green);
 
-				Assert.AreNotEqual(Marshal.ReadInt64(pix1.GetPixels()), Marshal.ReadInt64(pix2.GetPixels()));
+				Assert.NotEqual(Marshal.ReadInt64(pix1.GetPixels()), Marshal.ReadInt64(pix2.GetPixels()));
 
 				var result = pix1.ReadPixels(pix2);
 
 				Assert.True(result);
 
-				Assert.AreEqual(Marshal.ReadInt64(pix1.GetPixels()), Marshal.ReadInt64(pix2.GetPixels()));
+				Assert.Equal(Marshal.ReadInt64(pix1.GetPixels()), Marshal.ReadInt64(pix2.GetPixels()));
 			}
 		}
 	}

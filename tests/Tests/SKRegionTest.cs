@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using NUnit.Framework;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
 	public class SKRegionTest : SKTest
 	{
-		[Test]
+		[Fact]
 		public void SetPathWithoutClipDoesNotCreateEmptyRegion()
 		{
 			var path = new SKPath();
@@ -15,11 +15,11 @@ namespace SkiaSharp.Tests
 			var region = new SKRegion();
 			var isNonEmpty = region.SetPath(path);
 
-			Assert.IsTrue(isNonEmpty);
-			Assert.AreEqual(SKRectI.Truncate(path.Bounds), region.Bounds);
+			Assert.True(isNonEmpty);
+			Assert.Equal(SKRectI.Truncate(path.Bounds), region.Bounds);
 		}
 
-		[Test]
+		[Fact]
 		public void SetPathWithEmptyClipDoesCreatesEmptyRegion()
 		{
 			var path = new SKPath();
@@ -28,11 +28,11 @@ namespace SkiaSharp.Tests
 			var region = new SKRegion();
 			var isNonEmpty = region.SetPath(path, new SKRegion());
 
-			Assert.IsFalse(isNonEmpty);
-			Assert.AreEqual(SKRectI.Empty, region.Bounds);
+			Assert.False(isNonEmpty);
+			Assert.Equal(SKRectI.Empty, region.Bounds);
 		}
 
-		[Test]
+		[Fact]
 		public void SetPathWithClipDoesCreatesCorrectRegion()
 		{
 			var clipRect = new SKRectI(25, 25, 50, 50);
@@ -46,8 +46,8 @@ namespace SkiaSharp.Tests
 			var region = new SKRegion();
 			var isNonEmpty = region.SetPath(path, clip);
 
-			Assert.IsTrue(isNonEmpty);
-			Assert.AreEqual(SKRectI.Intersect(clipRect, rect), region.Bounds);
+			Assert.True(isNonEmpty);
+			Assert.Equal(SKRectI.Intersect(clipRect, rect), region.Bounds);
 		}
 	}
 }
