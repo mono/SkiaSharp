@@ -1051,6 +1051,8 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_stream_read(sk_stream_t stream, IntPtr buffer, IntPtr size);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static IntPtr sk_stream_peek(sk_stream_t stream, IntPtr buffer, IntPtr size);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_stream_skip(sk_stream_t stream, IntPtr size);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]

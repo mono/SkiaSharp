@@ -68,6 +68,11 @@ namespace SkiaSharp
 			return (int)SkiaApi.sk_stream_read (Handle, buffer, (IntPtr)size);
 		}
 
+		public int Peek (IntPtr buffer, int size)
+		{
+			return (int)SkiaApi.sk_stream_peek (Handle, buffer, (IntPtr)size);
+		}
+
 		public int Skip (int size)
 		{
 			return (int)SkiaApi.sk_stream_skip (Handle, (IntPtr)size);
