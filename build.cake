@@ -1,8 +1,6 @@
-#addin nuget:?package=Cake.Xamarin&version=1.3.0.15 
-#addin nuget:?package=Cake.XCode&version=2.0.13 
-#addin nuget:?package=Cake.FileHelpers&version=1.0.4
-
-#tool "nuget:?package=xunit.runner.console"&version=2.3.1
+#addin nuget:?package=Cake.Xamarin&version=2.0.1
+#addin nuget:?package=Cake.XCode&version=3.0.0
+#addin nuget:?package=Cake.FileHelpers&version=2.0.0
 
 #reference "tools/SharpCompress/lib/net45/SharpCompress.dll"
 
@@ -22,7 +20,7 @@ var NugetToolPath = GetToolPath ("nuget.exe");
 var XamarinComponentToolPath = GetToolPath ("XamarinComponent/tools/xamarin-component.exe");
 var CakeToolPath = GetToolPath ("Cake/Cake.exe");
 var GenApiToolPath = GetToolPath ("Microsoft.DotNet.BuildTools.GenAPI/tools/GenAPI.exe");
-var MDocPath = MakeAbsolute ((FilePath)"externals/api-doc-tools/bin/Release/mdoc.exe");
+var MDocPath = GetToolPath ("mdoc/tools/mdoc.exe");
 var SNToolPath = GetSNToolPath (EnvironmentVariable ("SN_EXE"));
 var MSBuildToolPath = GetMSBuildToolPath (EnvironmentVariable ("MSBUILD_EXE"));
 var PythonToolPath = EnvironmentVariable ("PYTHON_EXE") ?? "python";
@@ -300,10 +298,6 @@ Task ("samples")
 Task ("docs")
     .Does (() => 
 {
-    // first build mdoc
-    RunNuGetRestore ("./externals/api-doc-tools/apidoctools.sln");
-    RunMSBuild ("./externals/api-doc-tools/apidoctools.sln");
-
     // log TODOs
     var docFiles = GetFiles ("./docs/**/*.xml");
     float typeCount = 0;
