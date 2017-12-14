@@ -144,7 +144,7 @@ namespace SkiaSharp.Tests
 					throw new PlatformNotSupportedException();
 				}
 			} catch (Exception ex) {
-				throw new Exception("Unable to create GL context: " + ex.Message);
+				throw new SkipException("Unable to create GL context: " + ex.Message);
 			}
 		}
 

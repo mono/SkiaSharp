@@ -6,7 +6,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKStringTest : SKTest
 	{
-		[Fact]
+		[SkippableFact]
 		public void StringIsMarshaledCorrectly ()
 		{
 			using (var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "SpiderSymbol.ttf")))

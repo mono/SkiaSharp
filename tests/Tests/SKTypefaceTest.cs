@@ -22,13 +22,13 @@ namespace SkiaSharp.Tests
 			0x02, 0x00, 0x24, 0x00, 0x44,
 		};
 
-		[Fact]
+		[SkippableFact]
 		public void NullInWrongFileName()
 		{
 			Assert.Null(SKTypeface.FromFile(Path.Combine(PathToFonts, "font that doesn't exist.ttf")));
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestFamilyName()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf")))
@@ -55,7 +55,7 @@ namespace SkiaSharp.Tests
 				(UInt32)(v[3]) << 00;
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestGetTableTags()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "SpiderSymbol.ttf")))
@@ -70,7 +70,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestGetTableData()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "ReallyBigA.ttf")))
@@ -88,7 +88,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestFontManagerMatchCharacter()
 		{
 			var fonts = SKFontManager.Default;
@@ -105,7 +105,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ExceptionInInvalidGetTableData()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Distortable.ttf")))
@@ -114,7 +114,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestTryGetTableData()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "ReallyBigA.ttf")))
@@ -131,7 +131,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void InvalidTryGetTableData()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Distortable.ttf")))
@@ -142,7 +142,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void CanReadData()
 		{
 			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
@@ -153,7 +153,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void CanReadNonSeekableStream()
 		{
 			using (var stream = File.OpenRead(Path.Combine(PathToFonts, "Distortable.ttf")))

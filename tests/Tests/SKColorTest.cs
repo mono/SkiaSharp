@@ -11,7 +11,7 @@ namespace SkiaSharp.Tests
 	{
 		private const int Precision = 2;
 
-		[Fact]
+		[SkippableFact]
 		public void ColorWithComponent()
 		{
 			var color = new SKColor();
@@ -45,7 +45,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(255, alpha.Alpha);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ColorRgbToHsl()
 		{
 			var tuples = new List<ToOtherColor> {
@@ -83,7 +83,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ColorRgbToHsv()
 		{
 			var tuples = new List<ToOtherColor> {
@@ -121,7 +121,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void HexToColor()
 		{
 			var tuples = new List<Tuple<string, SKColor>> {
@@ -155,7 +155,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void InvalidHexToColor()
 		{
 			var tuples = new List<string> {
@@ -177,7 +177,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void PremultipliedColorsHaveCorrectBitShift()
 		{
 			var color = (SKColor)0x12345678;

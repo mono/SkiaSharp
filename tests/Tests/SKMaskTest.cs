@@ -10,7 +10,7 @@ namespace SkiaSharp.Tests
 		private const float EPSILON = 0.0001f;
 		private const int PRECISION = 4;
 
-		[Fact]
+		[SkippableFact]
 		public unsafe void FixedImageMaskIsHandledCorrectly()
 		{
 			byte rawMask = 1 << 7 | 0 << 6 | 0 << 5 | 1 << 4 | 1 << 3 | 0 << 2 | 1 << 1 | 1;
@@ -27,7 +27,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void MonochromeMaskBufferIsCopied()
 		{
 			byte rawMask = 1 << 7 | 0 << 6 | 0 << 5 | 1 << 4 | 1 << 3 | 0 << 2 | 1 << 1 | 1;
@@ -43,7 +43,7 @@ namespace SkiaSharp.Tests
 			mask.FreeImage();
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void Alpha8MaskBufferIsCopied()
 		{
 			var buffer = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
@@ -65,7 +65,7 @@ namespace SkiaSharp.Tests
 			mask.FreeImage();
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ThirtyTwoBitMaskBufferIsCopied()
 		{
 			var buffer = new byte[]

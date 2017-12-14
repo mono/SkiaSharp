@@ -11,7 +11,7 @@ namespace HarfBuzzSharp.Tests
 {
 	public class SKShaperTest : TestBase
 	{
-		[Fact]
+		[SkippableFact]
 		public void DrawShapedTextExtensionMethodDraws()
 		{
 			using (var surface = SKSurface.Create(new SKImageInfo(512, 512)))
@@ -34,7 +34,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void CorrectlyShapesArabicScriptAtAnOffset()
 		{
 			var clusters = new uint[] { 4, 2, 0 };
@@ -53,7 +53,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void CorrectlyShapesArabicScript()
 		{
 			var clusters = new uint[] { 4, 2, 0 };

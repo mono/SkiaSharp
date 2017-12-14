@@ -10,7 +10,7 @@ namespace SkiaSharp.Tests
 		private const float EPSILON = 0.0001f;
 		private const int PRECISION = 4;
 
-		[Fact]
+		[SkippableFact]
 		public void ImageInfoMethodsDoNotModifySource()
 		{
 			var info = new SKImageInfo(100, 30, SKColorType.Rgb565, SKAlphaType.Unpremul);
@@ -23,7 +23,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.Index8, copy.ColorType);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void RectangleHasCorrectProperties()
 		{
 			var rect = new SKRect(15, 25, 55, 75);
@@ -40,7 +40,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(50f, rect.MidY);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void RectangleOffsetsCorrectly()
 		{
 			var expected = new SKRect(25, 30, 65, 80);
@@ -55,7 +55,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expected, rect2);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void RectangleInflatesCorrectly()
 		{
 			var rect = new SKRect(15, 25, 55, 75);
@@ -73,7 +73,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(95f, rect.Bottom);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void RectangleStandardizeCorrectly()
 		{
 			var rect = new SKRect(5, 5, 15, 15);
@@ -98,7 +98,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(rect, negWH.Standardized);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void RectangleAspectFitIsCorrect()
 		{
 			var bigRect = SKRect.Create(5, 5, 20, 20);
@@ -118,7 +118,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(10, fitWide.Height);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void RectangleAspectFillIsCorrect()
 		{
 			var bigRect = SKRect.Create(5, 5, 20, 20);
@@ -138,7 +138,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(20, fitWide.Height);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void SKRectICeilingWorksAsExpected()
 		{
 			Assert.Equal(new SKRectI(6, 6, 21, 21), SKRectI.Ceiling(new SKRect(5.5f, 5.5f, 20.5f, 20.5f)));
@@ -149,7 +149,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKRectI(21, 21, 5, 5), SKRectI.Ceiling(new SKRect(20.4f, 20.6f, 5.4f, 5.6f), true));
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void SKRectIFloorWorksAsExpected()
 		{
 			Assert.Equal(new SKRectI(5, 5, 20, 20), SKRectI.Floor(new SKRect(5.5f, 5.5f, 20.5f, 20.5f)));
@@ -160,7 +160,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKRectI(20, 20, 6, 6), SKRectI.Floor(new SKRect(20.4f, 20.6f, 5.4f, 5.6f), true));
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void SKRectIRoundWorksAsExpected()
 		{
 			Assert.Equal(new SKRectI(6, 6, 21, 21), SKRectI.Round(new SKRect(5.51f, 5.51f, 20.51f, 20.51f)));

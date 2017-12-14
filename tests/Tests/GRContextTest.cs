@@ -6,7 +6,7 @@ namespace SkiaSharp.Tests
 {
 	public class GRContextTest : SKTest
 	{
-		[Fact]
+		[SkippableFact]
 		public void CreateDefaultContextIsValid()
 		{
 			using (var ctx = CreateGlContext()) {
@@ -18,7 +18,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void CreateSpecificContextIsValid()
 		{
 			using (var ctx = CreateGlContext()) {
@@ -34,7 +34,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void GpuSurfaceIsCreated()
 		{
 			using (var ctx = CreateGlContext()) {

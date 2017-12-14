@@ -10,7 +10,7 @@ namespace SkiaSharp.Tests
 		private const float EPSILON = 0.0001f;
 		private const int PRECISION = 4;
 
-		[Fact]
+		[SkippableFact]
 		public void Matrix44CreatesIdentity()
 		{
 			var matrix = SKMatrix44.CreateIdentity();
@@ -26,7 +26,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expectedRowMajor, rowMajor);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void Matrix44Inverts()
 		{
 			var rowMajor = new float[] {
@@ -56,7 +56,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expectedRowMajor, actualRowMajor);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void Matrix44ConvertsToMatrix()
 		{
 			var rowMajor44 = new float[] {
@@ -79,7 +79,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKMatrix.MakeRotationDegrees(45).Values, matrix44.Matrix.Values);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void Matrix44MapsScalars()
 		{
 			// translate
@@ -101,7 +101,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new[] { 0f, 25f, -5f, 1f }, resultRotateValue.Select(v => (int)(v / EPSILON) * EPSILON));
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void Matrix44MapsPoints()
 		{
 			// translate
@@ -124,7 +124,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(25, resultRotateValue.Y, PRECISION);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void Matrix44MapsPointsBulk()
 		{
 			var rnd = new Random();

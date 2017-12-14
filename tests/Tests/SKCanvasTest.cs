@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKCanvasTest : SKTest
 	{
-		[Fact]
+		[SkippableFact]
 		public void CanvasCanRestoreOnGpu()
 		{
 			using (var ctx = CreateGlContext()) {

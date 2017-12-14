@@ -35,7 +35,7 @@ namespace SkiaSharp.Tests
 			bitmap.UnlockBits(data);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void SurfaceCanvasReturnTheSameInstance()
 		{
 			Draw(surface =>
@@ -53,7 +53,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void SecondSurfaceWasCreatedDifferent()
 		{
 			var data = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
@@ -73,7 +73,7 @@ namespace SkiaSharp.Tests
 			bitmap.UnlockBits(data);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void SurfaceWasCreated()
 		{
 			var data = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bitmap.PixelFormat);

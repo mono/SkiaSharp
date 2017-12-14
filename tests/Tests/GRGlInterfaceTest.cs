@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests
 {
 	public class GRGlInterfaceTest : SKTest
 	{
-		[Fact]
+		[SkippableFact]
 		public void CreateDefaultInterfaceIsValid()
 		{
 			using (var ctx = CreateGlContext()) {
@@ -20,7 +20,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void AssembleInterfaceIsValid()
 		{
 			using (var ctx = CreateGlContext()) {

@@ -28,7 +28,7 @@ namespace SkiaSharp.Tests
 			(SKPMColor)SKColors.Blue
 		};
 
-		[Fact]
+		[SkippableFact]
 		public void CreateIndex8Bitmap()
 		{
 			var info = new SKImageInfo(320, 240, SKColorType.Index8, SKAlphaType.Opaque);
@@ -38,7 +38,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(ct, bitmap.ColorTable);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void MembersRetrieveSingleColorWithAlpha()
 		{
 			var c = (SKColor)0x33008200;
@@ -57,7 +57,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKPMColor(0x33001A00), ct[0]);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void MembersRetrieveColors()
 		{
 			var colorTable = new SKColorTable(Colors);
@@ -75,7 +75,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(PMColors[5], colorTable[5]);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void IndexerOutOfRangeBelow()
 		{
 			var colorTable = new SKColorTable(Colors);
@@ -86,7 +86,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void IndexerOutOfRangeAbove()
 		{
 			var colorTable = new SKColorTable(Colors);
@@ -97,7 +97,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void Index8ImageHasColorTable()
 		{
 			var path = Path.Combine(PathToImages, "index8.png");
@@ -139,7 +139,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal((SKColor)0x7EA4C639, bitmap.GetPixel(182, 348));
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void Index8ImageCanChangeColorTable()
 		{
 			var path = Path.Combine(PathToImages, "index8.png");

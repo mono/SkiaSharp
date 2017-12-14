@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKPaintTest : SKTest
 	{
-		[Fact]
+		[SkippableFact]
 		public void StrokePropertyValuesAreCorrect()
 		{
 			var paint = new SKPaint();
@@ -19,7 +19,7 @@ namespace SkiaSharp.Tests
 			Assert.False(paint.IsStroke);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void GetFillPathIsWorking()
 		{
 			var paint = new SKPaint();
@@ -37,7 +37,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(4, fillPath.PointCount);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void GetFillPathIsWorkingWithLine()
 		{
 			var paint = new SKPaint();
@@ -67,7 +67,7 @@ namespace SkiaSharp.Tests
 		}
 
 		// Test for issue #276
-		[Fact]
+		[SkippableFact]
 		public void NonAntiAliasedTextOnScaledCanvasIsCorrect()
 		{
 			using (var bitmap = new SKBitmap(new SKImageInfo(200, 200)))
@@ -133,7 +133,7 @@ namespace SkiaSharp.Tests
 		}
 
 		// Test for the "workaround" for issue #282
-		[Fact]
+		[SkippableFact]
 		public void DrawTransparentImageWithHighFilterQualityWithPremul()
 		{
 			var oceanColor = (SKColor)0xFF9EB4D6;

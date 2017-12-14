@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKColorSpaceTest : SKTest
 	{
-		[Fact]
+		[SkippableFact]
 		public void CanCreateSrgb()
 		{
 			var colorspace = SKColorSpace.CreateSrgb();
@@ -16,7 +16,7 @@ namespace SkiaSharp.Tests
 			Assert.True(SKColorSpace.Equal(colorspace, colorspace));
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ImageInfoHasColorSpace()
 		{
 			var colorspace = SKColorSpace.CreateSrgb();
@@ -28,7 +28,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(colorspace, image.PeekPixels().ColorSpace);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void SrgbColorSpaceIsCloseToSrgb()
 		{
 			var colorspace = SKColorSpace.CreateSrgb();

@@ -7,13 +7,13 @@ namespace SkiaSharp.Tests
 {
 	public class SKCodecTest : SKTest
 	{
-		[Fact]
+		[SkippableFact]
 		public void MinBufferedBytesNeededHasAValue ()
 		{
 			Assert.True (SKCodec.MinBufferedBytesNeeded > 0);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void CanCreateStreamCodec ()
 		{
 			var stream = new SKFileStream (Path.Combine (PathToImages, "color-wheel.png"));
@@ -26,7 +26,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 		
-		[Fact]
+		[SkippableFact]
 		public void GetGifFrames ()
 		{
 			const int FrameCount = 16;
@@ -67,7 +67,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void GetEncodedInfo ()
 		{
 			var stream = new SKFileStream (Path.Combine (PathToImages, "color-wheel.png"));
@@ -78,7 +78,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void CanGetPixels ()
 		{
 			var stream = new SKFileStream (Path.Combine (PathToImages, "baboon.png"));
@@ -88,7 +88,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void DecodeImageScanlines ()
 		{
 			var path = Path.Combine (PathToImages, "CMYK.jpg");
@@ -134,7 +134,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void DecodePartialImage ()
 		{
 			// read the data here, so we can fake a throttle/download
@@ -187,7 +187,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void BitmapDecodesCorrectly ()
 		{
 			byte[] codecPixels;
@@ -204,7 +204,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal (codecPixels, bitmapPixels);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void BitmapDecodesCorrectlyWithManagedStream ()
 		{
 			byte[] codecPixels;

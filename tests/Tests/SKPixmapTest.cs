@@ -6,7 +6,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKPixmapTest : SKTest
 	{
-		[Fact]
+		[SkippableFact]
 		public void ReadPixelSucceeds()
 		{
 			var info = new SKImageInfo(10, 10);
@@ -21,7 +21,7 @@ namespace SkiaSharp.Tests
 			Assert.True(result);
 		}
 		
-		[Fact]
+		[SkippableFact]
 		public void WithMethodsDoNotModifySource()
 		{
 			var info = new SKImageInfo(100, 30, SKColorType.Rgb565, SKAlphaType.Unpremul);
@@ -38,7 +38,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal((IntPtr)123, copy.GetPixels());
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ReadPixelCopiesData()
 		{
 			var info = new SKImageInfo(10, 10);

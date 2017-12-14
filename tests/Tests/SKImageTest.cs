@@ -5,7 +5,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKImageTest : SKTest
 	{
-		[Fact]
+		[SkippableFact]
 		public void EncodeWithSimpleSerializer()
 		{
 			var bitmap = CreateTestBitmap();
@@ -27,7 +27,7 @@ namespace SkiaSharp.Tests
 			Assert.True(encoded);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void EncodeWithSerializer()
 		{
 			var bitmap = CreateTestBitmap();

@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKDocumentTest : SKTest
 	{
-		[Fact]
+		[SkippableFact]
 		public void CanCreatePdf()
 		{
 			using (var stream = new MemoryStream())
@@ -27,7 +27,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void CanCreateXps()
 		{
 			// XPS is only supported on Windows

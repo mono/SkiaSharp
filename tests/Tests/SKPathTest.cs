@@ -37,7 +37,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal (str, str2);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void PathPointsAreCorrect()
 		{
 			using (var path = new SKPath ()) {
@@ -70,7 +70,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void PathContainsPoint()
 		{
 			using (var path = new SKPath ()) {
@@ -81,7 +81,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void GetLastPoint()
 		{
 			using (var path = new SKPath ()) {
@@ -92,7 +92,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ThumbtackShapeIsConcave ()
 		{
 			// based on test_skbug_3469
@@ -106,7 +106,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void PathConsistentAfterClose ()
 		{
 			// based on test_path_close_issue1474
@@ -161,7 +161,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ParsePathReturnsValidPath ()
 		{
 			// based on ParsePath
@@ -188,7 +188,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void PathBoundsAndRegionBoundsMatch ()
 		{
 			var path = new SKPath ();
@@ -211,7 +211,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal (90f, regionBounds.Bottom);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void BoundsAndTightBoundAreCorrect ()
 		{
 			const int Precision = 6;
@@ -235,7 +235,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void MeasuringSegementsWorks ()
 		{
 			using (SKPath path = new SKPath ())
@@ -258,7 +258,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TightBoundsForEnclosedPathIsNotZero ()
 		{
 			const int Precision = 3;

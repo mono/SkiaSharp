@@ -8,7 +8,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKManagedStreamTest : SKTest
 	{
-		[Fact]
+		[SkippableFact]
 		public void ManagedStreamReadsByteCorrectly()
 		{
 			var data = new byte[1024];
@@ -39,7 +39,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ManagedStreamReadsChunkCorrectly()
 		{
 			var data = new byte[1024];
@@ -61,7 +61,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(data.Take(buffer.Length), buffer);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ManagedStreamReadsOffsetChunkCorrectly()
 		{
 			var data = new byte[1024];
@@ -87,7 +87,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(resultData, buffer);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ManagedStreamIsNotCollectedPrematurely()
 		{
 			using (var stream = new SKDynamicMemoryWStream())

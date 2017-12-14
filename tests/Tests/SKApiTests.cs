@@ -18,7 +18,7 @@ namespace SkiaSharp.Tests
 			return api;
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ApiTypesAreNotInvalid()
 		{
 			var ass = typeof(SKImageInfo).GetTypeInfo().Assembly;
@@ -46,7 +46,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ApiReturnTypesArePrimitives()
 		{
 			var api = GetApi();
@@ -60,7 +60,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ApiTypesAreMarshalledCorrectly()
 		{
 			var api = GetApi();

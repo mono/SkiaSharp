@@ -9,7 +9,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKBitmapTest : SKTest
 	{
-		[Fact]
+		[SkippableFact]
 		public void BitmapCanCopyIsCorrect()
 		{
 			var bmp = CreateTestBitmap();
@@ -25,7 +25,7 @@ namespace SkiaSharp.Tests
 			Assert.False(bmp.CanCopyTo(SKColorType.Gray8));
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void BitmapCopyToAlpha8PreservesData()
 		{
 			var bmp = CreateTestBitmap();
@@ -47,7 +47,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.Alpha8, alpha8.ColorType);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void BitmapCopyToArgb4444PreservesData()
 		{
 			var bmp = CreateTestBitmap();
@@ -69,7 +69,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.Argb4444, argb4444.ColorType);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void BitmapCopyToRgb565PreservesData()
 		{
 			var bmp = CreateTestBitmap();
@@ -91,7 +91,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.Rgb565, rgb565.ColorType);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void BitmapCopyToRgbaF16PreservesData()
 		{
 			var bmp = CreateTestBitmap();
@@ -113,7 +113,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.RgbaF16, rgbaF16.ColorType);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void BitmapCopyToInvalidIsNull()
 		{
 			var bmp = CreateTestBitmap();
@@ -142,7 +142,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Yellow, bmp.GetPixel(30, 30));
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ReleaseBitmapPixelsWasInvoked()
 		{
 			bool released = false;
@@ -163,7 +163,7 @@ namespace SkiaSharp.Tests
 			Assert.True(released, "The SKBitmapReleaseDelegate was not called.");
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ImageCreateDoesNotThrow()
 		{
 			var info = new SKImageInfo(1, 1);
@@ -173,7 +173,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ReleaseImagePixelsWasInvoked()
 		{
 			bool released = false;
@@ -199,7 +199,7 @@ namespace SkiaSharp.Tests
 			Assert.True(released, "The SKImageRasterReleaseDelegate was not called.");
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ReleaseBitmapPixelsWithNullDelegate()
 		{
 			var info = new SKImageInfo(1, 1);
@@ -212,7 +212,7 @@ namespace SkiaSharp.Tests
 			Marshal.FreeCoTaskMem(pixels);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestExtractAlpha()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -230,7 +230,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKPointI(-7, -7), offset);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void TestBitmapDecodeDrawsCorrectly()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -251,7 +251,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void BitmapAndPixmapAreValid()
 		{
 			var info = new SKImageInfo(10, 10);
@@ -271,7 +271,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void BitmapResizes()
 		{
 			var srcInfo = new SKImageInfo(200, 200);
@@ -295,7 +295,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void AlphaMaskIsApplied()
 		{
 			var srcInfo = new SKImageInfo(4, 4);
@@ -388,7 +388,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void SwizzleRedBlueTest()
 		{
 			var info = new SKImageInfo(1, 1);

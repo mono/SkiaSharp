@@ -9,7 +9,7 @@ namespace SkiaSharp.Tests
 	{
 		private readonly static byte[] OddData = new byte[] { 1, 3, 5, 7, 9 };
 
-		[Fact]
+		[SkippableFact]
 		public void ValidDataProperties()
 		{
 			var data = SKData.CreateCopy(OddData);
@@ -18,7 +18,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(OddData, data.ToArray());
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void DataCanBeCreatedFromFile()
 		{
 			var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
@@ -27,7 +27,7 @@ namespace SkiaSharp.Tests
 			Assert.True(data.Size > 0);
 		}
 
-		[Fact]
+		[SkippableFact]
 		public void ReleaseDataWasInvoked()
 		{
 			bool released = false;
