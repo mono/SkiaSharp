@@ -48,7 +48,7 @@ namespace SkiaSharp.Tests
 			Assert.True(released, "The SKDataReleaseDelegate was not called.");
 		}
 
-		[Fact(Skip = "Doesn't work as it relies on memory being overwritten by an external process.")]
+		[SkippableFact(Skip = "Doesn't work as it relies on memory being overwritten by an external process.")]
 		public void DataDisposedReturnsInvalidStream()
 		{
 			// create data

@@ -343,7 +343,7 @@ namespace SkiaSharp.Tests
 			mask.FreeImage();
 		}
 
-		[Fact(Skip = "This test takes a long time (~3mins), so ignore this most of the time.")]
+		[SkippableFact(Skip = "This test takes a long time (~3mins), so ignore this most of the time.")]
 		public static void ImageScalingMultipleThreadsTest()
 		{
 			const int numThreads = 100;
