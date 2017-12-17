@@ -754,8 +754,7 @@ namespace SkiaSharp
 			if (stream.CanSeek) {
 				return new SKManagedStream (stream, true);
 			} else {
-				var buffered = new SKFrontBufferedStream (stream, SKCodec.MinBufferedBytesNeeded, true);
-				return new SKManagedStream (buffered, true);
+				return new SKFrontBufferedManagedStream (stream, SKCodec.MinBufferedBytesNeeded, true);
 			}
 		}
 
