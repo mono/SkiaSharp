@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -220,6 +221,25 @@ namespace SkiaSharp.Tests
 			}
 
 			Assert.Equal (codecPixels, bitmapPixels);
+		}
+	
+		[SkippableFact]
+		public void DownloadedStream ()
+		{
+			var httpClient = new HttpClient ();
+			using (var stream = httpClient.GetStreamAsync (new Uri ("http://www.gstatic.com/webp/gallery/2.webp")).Result)
+			using (var nonSeekable = new NonSeekableReadOnlyStream (stream))
+			using (var bitmap = SKBitmap.Decode (nonSeekable))
+				Assert.NotNull (bitmap);
+		}
+	
+		[SkippableFact]
+		public void ReadOnlyStream ()
+		{
+			using (var stream = File.OpenRead (Path.Combine (PathToImages, "baboon.png")))
+			using (var nonSeekable = new NonSeekableReadOnlyStream (stream))
+			using (var bitmap = SKBitmap.Decode (nonSeekable))
+				Assert.NotNull (bitmap);
 		}
 	}
 }

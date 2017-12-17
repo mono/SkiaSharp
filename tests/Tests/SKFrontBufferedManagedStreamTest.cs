@@ -48,17 +48,6 @@ namespace SkiaSharp.Tests
 			Assert.Equal (expectations.Take (bytesRead), storage.Take (bytesRead));
 		}
 
-		////[SkippableFact]
-		////public void DownloadedStream ()
-		////{
-		////	var httpClient = new HttpClient ();
-		////	var stream = httpClient.GetStreamAsync (new Uri ("http://www.gstatic.com/webp/gallery/2.webp")).Result;
-
-		////	var bitmap = SKBitmap.Decode (stream);
-
-		////	Assert.NotNull (bitmap);
-		////}
-
 		[SkippableTheory]
 		[InlineData (6)]
 		[InlineData (15)]
