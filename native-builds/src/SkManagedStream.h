@@ -19,6 +19,8 @@ class SkManagedStream;
 typedef size_t            (*read_delegate)        (SkManagedStream* managedStream, void* buffer, size_t size);
 typedef size_t            (*peek_delegate)        (SkManagedStream* managedStream, void* buffer, size_t size);
 typedef bool              (*isAtEnd_delegate)     (const SkManagedStream* managedStream);
+typedef bool              (*hasPosition_delegate) (const SkManagedStream* managedStream);
+typedef bool              (*hasLength_delegate)   (const SkManagedStream* managedStream);
 typedef bool              (*rewind_delegate)      (SkManagedStream* managedStream);
 typedef size_t            (*getPosition_delegate) (const SkManagedStream* managedStream);
 typedef bool              (*seek_delegate)        (SkManagedStream* managedStream, size_t position);
@@ -44,6 +46,8 @@ public:
     static void setDelegates(const read_delegate pRead,
                              const peek_delegate pPeek,
                              const isAtEnd_delegate pIsAtEnd,
+                             const hasPosition_delegate pHasPosition,
+                             const hasLength_delegate pHasLength,
                              const rewind_delegate pRewind,
                              const getPosition_delegate pGetPosition,
                              const seek_delegate pSeek,
@@ -54,6 +58,8 @@ public:
     
     size_t read(void* buffer, size_t size) override;
     bool isAtEnd() const override;
+    bool hasPosition() const override;
+    bool hasLength() const override;
     
     size_t peek(void* buffer, size_t size) const override;
     

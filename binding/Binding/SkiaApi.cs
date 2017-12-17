@@ -1114,7 +1114,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_stream_managedstream_t sk_managedstream_new();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_managedstream_set_delegates(IntPtr pRead, IntPtr pPeek, IntPtr pIsAtEnd, IntPtr pRewind, IntPtr pGetPosition, IntPtr pSeek, IntPtr pMove, IntPtr pGetLength, IntPtr pCreateNew, IntPtr pDestroy);
+		public extern static void sk_managedstream_set_delegates(IntPtr pRead, IntPtr pPeek, IntPtr pIsAtEnd, IntPtr pHasPosition, IntPtr pHasLength, IntPtr pRewind, IntPtr pGetPosition, IntPtr pSeek, IntPtr pMove, IntPtr pGetLength, IntPtr pCreateNew, IntPtr pDestroy);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_managedstream_destroy(sk_stream_managedstream_t stream);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
