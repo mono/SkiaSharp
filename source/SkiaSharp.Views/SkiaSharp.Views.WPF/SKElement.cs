@@ -11,6 +11,8 @@ using SkiaSharp.Views.Desktop;
 
 namespace SkiaSharp.Views.WPF
 {
+	[DefaultEvent("PaintSurface")]
+	[DefaultProperty("Name")]
 	public class SKElement : FrameworkElement
 	{
 		private readonly bool designMode;
@@ -23,6 +25,10 @@ namespace SkiaSharp.Views.WPF
 			designMode = DesignerProperties.GetIsInDesignMode(this);
 		}
 
+		[Bindable(false)]
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		[EditorBrowsable(EditorBrowsableState.Never)]
 		public SKSize CanvasSize => bitmap == null ? SKSize.Empty : new SKSize(bitmap.PixelWidth, bitmap.PixelHeight);
 
 		public bool IgnorePixelScaling
@@ -35,6 +41,7 @@ namespace SkiaSharp.Views.WPF
 			}
 		}
 
+		[Category("Appearance")]
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
 		protected override void OnRender(DrawingContext drawingContext)
