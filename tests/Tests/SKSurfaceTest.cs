@@ -23,7 +23,7 @@ namespace SkiaSharp.Tests
 			bitmap = null;
 		}
 
-		public void Draw(Action<SKSurface> draw)
+		private void Draw(Action<SKSurface> draw)
 		{
 			var data = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
 

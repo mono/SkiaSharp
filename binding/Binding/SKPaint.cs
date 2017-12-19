@@ -385,10 +385,34 @@ namespace SkiaSharp
 
 		public long BreakText (string text, float maxWidth, out float measuredWidth)
 		{
+			string measuredText;
+			return BreakText (text, maxWidth, out measuredWidth, out measuredText);
+		}
+
+		public long BreakText (string text, float maxWidth, out float measuredWidth, out string measuredText)
+		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
 			var bytes = StringUtilities.GetEncodedText (text, TextEncoding);
-			return (long) SkiaApi.sk_paint_break_text (Handle, bytes, (IntPtr) bytes.Length, maxWidth, out measuredWidth);
+			var byteLength = (int) SkiaApi.sk_paint_break_text (Handle, bytes, (IntPtr) bytes.Length, maxWidth, out measuredWidth);
+			if (byteLength == 0)
+			{
+				measuredText = String.Empty;
+				return 0;
+			}
+			if (byteLength == bytes.Length)
+			{
+				measuredText = text;
+				return text.Length;
+			}
+			measuredText = StringUtilities.GetString (bytes, 0, byteLength, TextEncoding);
+			return measuredText.Length;
+		}
+		
+		public long BreakText (byte[] text, float maxWidth)
+		{
+			float measuredWidth;
+			return BreakText (text, maxWidth, out measuredWidth);
 		}
 
 		public long BreakText (byte[] text, float maxWidth, out float measuredWidth)
@@ -396,6 +420,12 @@ namespace SkiaSharp
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
 			return (long) SkiaApi.sk_paint_break_text (Handle, text, (IntPtr) text.Length, maxWidth, out measuredWidth);
+		}
+		
+		public long BreakText (IntPtr buffer, IntPtr length, float maxWidth)
+		{
+			float measuredWidth;
+			return BreakText (buffer, length, maxWidth, out measuredWidth);
 		}
 
 		public long BreakText (IntPtr buffer, IntPtr length, float maxWidth, out float measuredWidth)

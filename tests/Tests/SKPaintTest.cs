@@ -168,5 +168,43 @@ namespace SkiaSharp.Tests
 				Assert.Equal(landColor, bitmap.GetPixel(270, 270));
 			}
 		}
+
+		[SkippableFact]
+		public void BreakTextReturnsTheCorrectNumberOfBytes()
+		{
+			var paint = new SKPaint();
+
+			paint.TextEncoding = SKTextEncoding.Utf8;
+
+			Assert.Equal(2, paint.BreakText(StringUtilities.GetEncodedText("ä", paint.TextEncoding), 50.0f));
+			Assert.Equal(1, paint.BreakText(StringUtilities.GetEncodedText("a", paint.TextEncoding), 50.0f));
+
+			paint.TextEncoding = SKTextEncoding.Utf16;
+			Assert.Equal(2, paint.BreakText(StringUtilities.GetEncodedText("ä", paint.TextEncoding), 50.0f));
+			Assert.Equal(2, paint.BreakText(StringUtilities.GetEncodedText("a", paint.TextEncoding), 50.0f));
+
+			paint.TextEncoding = SKTextEncoding.Utf32;
+			Assert.Equal(4, paint.BreakText(StringUtilities.GetEncodedText("ä", paint.TextEncoding), 50.0f));
+			Assert.Equal(4, paint.BreakText(StringUtilities.GetEncodedText("a", paint.TextEncoding), 50.0f));
+		}
+
+		[SkippableFact]
+		public void BreakTextReturnsTheCorrectNumberOfCharacters()
+		{
+			var paint = new SKPaint();
+
+			paint.TextEncoding = SKTextEncoding.Utf8;
+
+			Assert.Equal(1, paint.BreakText("ä", 50.0f));
+			Assert.Equal(1, paint.BreakText("a", 50.0f));
+
+			paint.TextEncoding = SKTextEncoding.Utf16;
+			Assert.Equal(1, paint.BreakText("ä", 50.0f));
+			Assert.Equal(1, paint.BreakText("a", 50.0f));
+
+			paint.TextEncoding = SKTextEncoding.Utf32;
+			Assert.Equal(1, paint.BreakText("ä", 50.0f));
+			Assert.Equal(1, paint.BreakText("a", 50.0f));
+		}
 	}
 }
