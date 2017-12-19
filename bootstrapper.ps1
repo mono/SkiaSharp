@@ -125,7 +125,7 @@ if ((Test-Path $PSScriptRoot) -and !(Test-Path $TOOLS_DIR)) {
 }
 
 # Make sure that packages.config exist.
-if (!(Test-Path $PACKAGES_CONFIG)) {
+if ((!(Test-Path $PACKAGES_CONFIG)) -or ((Test-Path $CAKE_PACKAGES_CONFIG) -and ((Get-FileHash $PACKAGES_CONFIG).hash -ne (Get-FileHash $CAKE_PACKAGES_CONFIG).hash))) {
     if (!(Test-Path $CAKE_PACKAGES_CONFIG)) {
         Write-Verbose -Message "Downloading packages.config..."
         try { (New-Object System.Net.WebClient).DownloadFile("http://cakebuild.net/download/bootstrapper/packages", $PACKAGES_CONFIG) } catch {
