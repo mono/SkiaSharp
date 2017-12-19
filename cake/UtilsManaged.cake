@@ -163,10 +163,12 @@ var RunGenApi = new Action<FilePath, FilePath> ((input, output) =>
 var ClearSkiaSharpNuGetCache = new Action (() => {
     // first we need to add our new nuget to the cache so we can restore
     // we first need to delete the old stuff
-    DirectoryPath packagesDir = 
-        EnvironmentVariable ("NUGET_PACKAGES") ?? 
-        ((DirectoryPath)EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME")).Combine (".nuget").Combine ("packages");
-    var installedNuGet = packagesDir.FullPath + "/*";
+    var packagesDir = EnvironmentVariable ("NUGET_PACKAGES");
+    if (string.IsNullOrEmpty (packagesDir)) {
+        var home = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
+        packagesDir = ((DirectoryPath) home).Combine (".nuget").Combine ("packages").ToString();
+    }
+    var installedNuGet = packagesDir + "/*";
     var packages = VERSION_PACKAGES.Keys;
     var dirs = GetDirectories (installedNuGet);
     foreach (var pkg in packages) {
