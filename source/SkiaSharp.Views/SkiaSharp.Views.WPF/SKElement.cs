@@ -51,8 +51,8 @@ namespace SkiaSharp.Views.WPF
 				return;
 
 			int width, height;
-			double dpiX = 1.0;
-			double dpiY = 1.0;
+			double dpiScaleX = 1.0;
+			double dpiScaleY = 1.0;
 			if (IgnorePixelScaling)
 			{
 				width = (int)ActualWidth;
@@ -61,10 +61,10 @@ namespace SkiaSharp.Views.WPF
 			else
 			{
 				var m = PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice;
-				dpiX = m.M11;
-				dpiY = m.M22;
-				width = (int)(ActualWidth * dpiX);
-				height = (int)(ActualHeight * dpiY);
+				dpiScaleX = m.M11;
+				dpiScaleY = m.M22;
+				width = (int)(ActualWidth * dpiScaleX);
+				height = (int)(ActualHeight * dpiScaleY);
 			}
 
 			var info = new SKImageInfo(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
@@ -72,7 +72,7 @@ namespace SkiaSharp.Views.WPF
 			// reset the bitmap if the size has changed
 			if (bitmap == null || info.Width != bitmap.PixelWidth || info.Height != bitmap.PixelHeight)
 			{
-				bitmap = new WriteableBitmap(width, height, dpiX, dpiY, PixelFormats.Pbgra32, null);
+				bitmap = new WriteableBitmap(width, height, 96 * dpiScaleX, 96 * dpiScaleY, PixelFormats.Pbgra32, null);
 			}
 
 			// draw on the bitmap
