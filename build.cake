@@ -26,7 +26,7 @@ var SNToolPath = GetSNToolPath (EnvironmentVariable ("SN_EXE"));
 var MSBuildToolPath = GetMSBuildToolPath (EnvironmentVariable ("MSBUILD_EXE"));
 
 var VERSION_ASSEMBLY = "1.59.0.0";
-var VERSION_FILE = "1.59.3.0";
+var VERSION_FILE = "1.59.4.0";
 var VERSION_SONAME = VERSION_FILE.Substring(VERSION_FILE.IndexOf(".") + 1);
 
 var ANGLE_VERSION_SOURCE = "2.1.13";
@@ -37,9 +37,9 @@ var HARFBUZZ_VERSION_FILE = "1.4.6.0";
 var HARFBUZZ_VERSION_SONAME = HARFBUZZ_VERSION_FILE.Substring(0, HARFBUZZ_VERSION_FILE.LastIndexOf("."));
 
 var VERSION_PACKAGES = new Dictionary<string, string> {
-    { "SkiaSharp", "1.59.3" },
-    { "SkiaSharp.Views", "1.59.3" },
-    { "SkiaSharp.Views.Forms", "1.59.3" },
+    { "SkiaSharp", "1.59.4-beta" },
+    { "SkiaSharp.Views", "1.59.4-beta" },
+    { "SkiaSharp.Views.Forms", "1.59.4-beta" },
     { "SkiaSharp.HarfBuzz", "1.59.0-beta" },
 
     { "HarfBuzzSharp", "1.4.6" },
