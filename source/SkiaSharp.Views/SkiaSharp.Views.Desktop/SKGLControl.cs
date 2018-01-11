@@ -2,17 +2,36 @@
 using System.ComponentModel;
 using System.Windows.Forms;
 using OpenTK;
+using OpenTK.Graphics;
 
 namespace SkiaSharp.Views.Desktop
 {
 	public class SKGLControl : GLControl
 	{
-		private readonly bool designMode;
+		private bool designMode;
 
 		private GRContext grContext;
 		private GRBackendRenderTargetDesc renderTarget;
 
 		public SKGLControl()
+			: base(new GraphicsMode(new ColorFormat(8, 8, 8, 8), 24, 8))
+		{
+			Initialize();
+		}
+
+		public SKGLControl(GraphicsMode mode)
+			: base(mode)
+		{
+			Initialize();
+		}
+
+		public SKGLControl(GraphicsMode mode, int major, int minor, GraphicsContextFlags flags)
+			: base(mode, major, minor, flags)
+		{
+			Initialize();
+		}
+
+		private void Initialize()
 		{
 			designMode = DesignMode || LicenseManager.UsageMode == LicenseUsageMode.Designtime;
 
