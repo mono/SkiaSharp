@@ -51,35 +51,42 @@ namespace SkiaSharp.Views.Forms
 
 		private void OnPointerEntered(object sender, PointerRoutedEventArgs args)
 		{
-			CommonHandler(sender, SKTouchAction.Entered, args);
+			args.Handled = CommonHandler(sender, SKTouchAction.Entered, args);
 		}
 
 		private void OnPointerExited(object sender, PointerRoutedEventArgs args)
 		{
-			CommonHandler(sender, SKTouchAction.Exited, args);
+			args.Handled = CommonHandler(sender, SKTouchAction.Exited, args);
 		}
 
 		private void OnPointerPressed(object sender, PointerRoutedEventArgs args)
 		{
-			CommonHandler(sender, SKTouchAction.Pressed, args);
+			args.Handled = CommonHandler(sender, SKTouchAction.Pressed, args);
 
-			var view = sender as FrameworkElement;
-			view.CapturePointer(args.Pointer);
+			if (args.Handled)
+			{
+				var view = sender as FrameworkElement;
+				view.ManipulationMode = ManipulationModes.All;
+				view.CapturePointer(args.Pointer);
+			}
 		}
 
 		private void OnPointerMoved(object sender, PointerRoutedEventArgs args)
 		{
-			CommonHandler(sender, SKTouchAction.Moved, args);
+			args.Handled = CommonHandler(sender, SKTouchAction.Moved, args);
 		}
 
 		private void OnPointerReleased(object sender, PointerRoutedEventArgs args)
 		{
-			CommonHandler(sender, SKTouchAction.Released, args);
+			args.Handled = CommonHandler(sender, SKTouchAction.Released, args);
+
+			var view = sender as FrameworkElement;
+			view.ManipulationMode = ManipulationModes.System;
 		}
 
 		private void OnPointerCancelled(object sender, PointerRoutedEventArgs args)
 		{
-			CommonHandler(sender, SKTouchAction.Cancelled, args);
+			args.Handled = CommonHandler(sender, SKTouchAction.Cancelled, args);
 		}
 
 		private bool CommonHandler(object sender, SKTouchAction touchActionType, PointerRoutedEventArgs evt)
