@@ -71,7 +71,7 @@ namespace SkiaSharp.Views.Android
 			{
 				Width = 0, // set later
 				Height = 0, // set later
-				Config = GRPixelConfig.Rgba8888,
+				Config = GRPixelConfig.Rgb565,
 				Origin = GRSurfaceOrigin.TopLeft,
 				SampleCount = samples[0],
 				StencilBits = stencilbuffers[0],
