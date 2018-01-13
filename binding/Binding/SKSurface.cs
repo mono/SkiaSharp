@@ -73,7 +73,82 @@ namespace SkiaSharp
 		{
 			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_render_target (context.Handle, ref desc, IntPtr.Zero));
 		}
-		
+
+		public static SKSurface Create (GRContext context, GRGlBackendTextureDesc desc, SKSurfaceProps props)
+		{
+			unsafe {
+				var h = desc.TextureHandle;
+				var hPtr = &h;
+				var d = new GRBackendTextureDesc {
+					Flags = desc.Flags,
+					Origin = desc.Origin,
+					Width = desc.Width,
+					Height = desc.Height,
+					Config = desc.Config,
+					SampleCount = desc.SampleCount,
+					TextureHandle = (IntPtr)hPtr,
+				};
+				return Create (context, d, props);
+			}
+		}
+
+		public static SKSurface Create (GRContext context, GRGlBackendTextureDesc desc)
+		{
+			unsafe {
+				var h = desc.TextureHandle;
+				var hPtr = &h;
+				var d = new GRBackendTextureDesc
+				{
+					Flags = desc.Flags,
+					Origin = desc.Origin,
+					Width = desc.Width,
+					Height = desc.Height,
+					Config = desc.Config,
+					SampleCount = desc.SampleCount,
+					TextureHandle = (IntPtr)hPtr,
+				};
+				return Create (context, d);
+			}
+		}
+
+		public static SKSurface CreateAsRenderTarget (GRContext context, GRGlBackendTextureDesc desc, SKSurfaceProps props)
+		{
+			unsafe {
+				var h = desc.TextureHandle;
+				var hPtr = &h;
+				var d = new GRBackendTextureDesc
+				{
+					Flags = desc.Flags,
+					Origin = desc.Origin,
+					Width = desc.Width,
+					Height = desc.Height,
+					Config = desc.Config,
+					SampleCount = desc.SampleCount,
+					TextureHandle = (IntPtr)hPtr,
+				};
+				return CreateAsRenderTarget (context, d, props);
+			}
+		}
+
+		public static SKSurface CreateAsRenderTarget (GRContext context, GRGlBackendTextureDesc desc)
+		{
+			unsafe {
+				var h = desc.TextureHandle;
+				var hPtr = &h;
+				var d = new GRBackendTextureDesc
+				{
+					Flags = desc.Flags,
+					Origin = desc.Origin,
+					Width = desc.Width,
+					Height = desc.Height,
+					Config = desc.Config,
+					SampleCount = desc.SampleCount,
+					TextureHandle = (IntPtr)hPtr,
+				};
+				return CreateAsRenderTarget (context, d);
+			}
+		}
+
 		public static SKSurface Create (GRContext context, GRBackendTextureDesc desc, SKSurfaceProps props)
 		{
 			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_texture (context.Handle, ref desc, ref props));

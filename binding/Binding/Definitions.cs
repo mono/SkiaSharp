@@ -1840,6 +1840,21 @@ namespace SkiaSharp
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
+	public struct GRGlTextureInfo {
+		private uint fTarget;
+		private uint fID;
+		
+		public uint Target {
+			get { return fTarget; }
+			set { fTarget = value; }
+		}
+		public uint Id {
+			get { return fID; }
+			set { fID = value; }
+		}
+	};
+
+	[StructLayout(LayoutKind.Sequential)]
 	public struct GRBackendTextureDesc {
 		private GRBackendTextureDescFlags flags;
 		private GRSurfaceOrigin origin;
@@ -1877,6 +1892,16 @@ namespace SkiaSharp
 			get { return textureHandle; }
 			set { textureHandle = value; }
 		}
+	}
+
+	public struct GRGlBackendTextureDesc {
+		public GRBackendTextureDescFlags Flags { get; set; }
+		public GRSurfaceOrigin Origin { get; set; }
+		public int Width { get; set; }
+		public int Height { get; set; }
+		public GRPixelConfig Config { get; set; }
+		public int SampleCount { get; set; }
+		public GRGlTextureInfo TextureHandle { get; set; }
 	}
 
 	public enum GRContextOptionsGpuPathRenderers {

@@ -140,5 +140,26 @@ namespace SkiaSharp.Tests
 				fDisplay = IntPtr.Zero;
 			}
 		}
+
+		public override GRGlTextureInfo CreateTexture(SKSizeI textureSize)
+		{
+			var textures = new uint[1];
+			Glx.glGenTextures(textures.Length, textures);
+			var textureId = textures[0];
+
+			Glx.glBindTexture(Glx.GL_TEXTURE_2D, textureId);
+			Glx.glTexImage2D(Glx.GL_TEXTURE_2D, 0, Glx.GL_RGBA, textureSize.Width, textureSize.Height, 0, Glx.GL_RGBA, Glx.GL_UNSIGNED_BYTE, IntPtr.Zero);
+			Glx.glBindTexture(Glx.GL_TEXTURE_2D, 0);
+
+			return new GRGlTextureInfo {
+				Id = textureId,
+				Target = Glx.GL_TEXTURE_2D
+			};
+		}
+
+		public override void DestroyTexture(uint texture)
+		{
+			Glx.glDeleteTextures(1, new[] { texture });
+		}
 	}
 }

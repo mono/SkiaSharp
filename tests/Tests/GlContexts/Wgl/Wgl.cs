@@ -14,6 +14,9 @@ namespace SkiaSharp.Tests
 
 		public const int GL_VERSION = 0x1F02;
 		public const int GL_EXTENSIONS = 0x1F03;
+		public const int GL_TEXTURE_2D = 0x0DE1;
+		public const int GL_UNSIGNED_BYTE = 0x1401;
+		public const int GL_RGBA = 0x1908;
 
 		public const int WGL_NUMBER_PIXEL_FORMATS_ARB = 0x2000;
 		public const int WGL_DRAW_TO_WINDOW_ARB = 0x2001;
@@ -232,6 +235,18 @@ namespace SkiaSharp.Tests
 			var intPtr = glGetString(value);
 			return Marshal.PtrToStringAnsi(intPtr);
 		}
+
+		[DllImport(opengl32, CallingConvention = CallingConvention.Winapi)]
+		public static extern void glGenTextures(int n, uint[] textures);
+
+		[DllImport(opengl32, CallingConvention = CallingConvention.Winapi)]
+		public static extern void glDeleteTextures(int n, uint[] textures);
+
+		[DllImport(opengl32, CallingConvention = CallingConvention.Winapi)]
+		public static extern void glBindTexture(uint target, uint texture);
+
+		[DllImport(opengl32, CallingConvention = CallingConvention.Winapi)]
+		public static extern void glTexImage2D(uint target, int level, int internalformat, int width, int height, int border, uint format, uint type, IntPtr pixels);
 	}
 
 	[UnmanagedFunctionPointer(CallingConvention.Winapi)]

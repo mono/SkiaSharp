@@ -159,5 +159,27 @@ namespace SkiaSharp.Tests
 
 			User32.UnregisterClass("Griffin", Kernel32.CurrentModuleHandle);
 		}
+
+		public override GRGlTextureInfo CreateTexture(SKSizeI textureSize)
+		{
+			var textures = new uint[1];
+			Wgl.glGenTextures(textures.Length, textures);
+			var textureId = textures[0];
+
+			Wgl.glBindTexture(Wgl.GL_TEXTURE_2D, textureId);
+			Wgl.glTexImage2D(Wgl.GL_TEXTURE_2D, 0, Wgl.GL_RGBA, textureSize.Width, textureSize.Height, 0, Wgl.GL_RGBA, Wgl.GL_UNSIGNED_BYTE, IntPtr.Zero);
+			Wgl.glBindTexture(Wgl.GL_TEXTURE_2D, 0);
+
+			return new GRGlTextureInfo
+			{
+				Id = textureId,
+				Target = Wgl.GL_TEXTURE_2D
+			};
+		}
+
+		public override void DestroyTexture(uint texture)
+		{
+			Wgl.glDeleteTextures(1, new[] { texture });
+		}
 	}
 }

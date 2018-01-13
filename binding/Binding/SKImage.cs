@@ -202,6 +202,39 @@ namespace SkiaSharp
 			return GetObject<SKImage> (handle);
 		}
 
+		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc)
+		{
+			return FromTexture (context, desc, SKAlphaType.Premul);
+		}
+
+		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha)
+		{
+			return FromTexture (context, desc, alpha, null);
+		}
+
+		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc)
+		{
+			return FromTexture (context, desc, alpha, releaseProc, null);
+		}
+
+		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc, object releaseContext)
+		{
+			unsafe {
+				var h = desc.TextureHandle;
+				var hPtr = &h;
+				var d = new GRBackendTextureDesc {
+					Flags = desc.Flags,
+					Origin = desc.Origin,
+					Width = desc.Width,
+					Height = desc.Height,
+					Config = desc.Config,
+					SampleCount = desc.SampleCount,
+					TextureHandle = (IntPtr)hPtr,
+				};
+				return FromTexture (context, d, alpha, releaseProc, releaseContext);
+			}
+		}
+
 		public static SKImage FromTexture (GRContext context, GRBackendTextureDesc desc)
 		{
 			return FromTexture (context, desc, SKAlphaType.Premul);
@@ -227,6 +260,29 @@ namespace SkiaSharp
 			} else {
 				var ctx = new NativeDelegateContext (releaseContext, releaseProc);
 				return GetObject<SKImage> (SkiaApi.sk_image_new_from_texture (context.Handle, ref desc, alpha, IntPtr.Zero, textureReleaseDelegate, ctx.NativeContext));
+			}
+		}
+
+		public static SKImage FromAdoptedTexture (GRContext context, GRGlBackendTextureDesc desc)
+		{
+			return FromAdoptedTexture (context, desc, SKAlphaType.Premul);
+		}
+
+		public static SKImage FromAdoptedTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha)
+		{
+			unsafe {
+				var h = desc.TextureHandle;
+				var hPtr = &h;
+				var d = new GRBackendTextureDesc {
+					Flags = desc.Flags,
+					Origin = desc.Origin,
+					Width = desc.Width,
+					Height = desc.Height,
+					Config = desc.Config,
+					SampleCount = desc.SampleCount,
+					TextureHandle = (IntPtr)hPtr,
+				};
+				return FromAdoptedTexture (context, d, alpha);
 			}
 		}
 		

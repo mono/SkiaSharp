@@ -8,6 +8,10 @@ namespace SkiaSharp.Tests
 	{
 		private const string libGL = "libGL";
 
+		public const int GL_TEXTURE_2D = 0x0DE1;
+		public const int GL_UNSIGNED_BYTE = 0x1401;
+		public const int GL_RGBA = 0x1908;
+
 		public const int GLX_USE_GL = 1;
 		public const int GLX_BUFFER_SIZE = 2;
 		public const int GLX_LEVEL = 3;
@@ -122,5 +126,13 @@ namespace SkiaSharp.Tests
 		public extern static IntPtr glXCreateNewContext(IntPtr dpy, IntPtr config, int renderType, IntPtr shareList, int direct);
 		public static readonly glXCreateContextAttribsARBDelegate glXCreateContextAttribsARB;
 		public delegate IntPtr glXCreateContextAttribsARBDelegate(IntPtr dpy, IntPtr config, IntPtr share_context, int direct, int[] attrib_list);
+		[DllImport(libGL)]
+		public static extern void glGenTextures(int n, uint[] textures);
+		[DllImport(libGL)]
+		public static extern void glDeleteTextures(int n, uint[] textures);
+		[DllImport(libGL)]
+		public static extern void glBindTexture(uint target, uint texture);
+		[DllImport(libGL)]
+		public static extern void glTexImage2D(uint target, int level, int internalformat, int width, int height, int border, uint format, uint type, IntPtr pixels);
 	}
 }
