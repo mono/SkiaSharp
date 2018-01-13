@@ -351,10 +351,6 @@ Task ("update-docs")
     .IsDependentOn ("libs")
     .Does (() => 
 {
-    // first build mdoc
-    RunNuGetRestore ("./externals/api-doc-tools/apidoctools.sln");
-    RunMSBuild ("./externals/api-doc-tools/apidoctools.sln");
-
     // the reference folders to locate assemblies
     IEnumerable<DirectoryPath> refs = new DirectoryPath [] {
             "./output/portable/",
