@@ -727,7 +727,7 @@ namespace SkiaSharp
 			DrawImageLattice (image, lattice, dst, paint);
 		}
 		
-		public unsafe void DrawBitmapLattice (SKBitmap bitmap, SKLattice lattice, SKRect dst, SKPaint paint = null)
+		public void DrawBitmapLattice (SKBitmap bitmap, SKLattice lattice, SKRect dst, SKPaint paint = null)
 		{
 			if (bitmap == null)
 				throw new ArgumentNullException (nameof (bitmap));
@@ -736,22 +736,24 @@ namespace SkiaSharp
 			if (lattice.YDivs == null)
 				throw new ArgumentNullException (nameof (lattice.YDivs));
 
-			fixed (int* x = lattice.XDivs)
-			fixed (int* y = lattice.YDivs)
-			fixed (SKLatticeFlags* f = lattice.Flags) {
-				var nativeLattice = new SKLatticeInternal {
-					fBounds = null,
-					fFlags = f,
-					fXCount = lattice.XDivs.Length,
-					fXDivs = x,
-					fYCount = lattice.YDivs.Length,
-					fYDivs = y,
-				};
-				if (lattice.Bounds != null) {
-					var bounds = lattice.Bounds.Value;
-					nativeLattice.fBounds = &bounds;
+			unsafe {
+				fixed (int* x = &lattice.XDivs[0])
+				fixed (int* y = &lattice.YDivs[0])
+				fixed (SKLatticeFlags* f = &lattice.Flags[0]) {
+					var nativeLattice = new SKLatticeInternal {
+						fBounds = null,
+						fFlags = f,
+						fXCount = lattice.XDivs.Length,
+						fXDivs = x,
+						fYCount = lattice.YDivs.Length,
+						fYDivs = y,
+					};
+					if (lattice.Bounds != null) {
+						var bounds = lattice.Bounds.Value;
+						nativeLattice.fBounds = &bounds;
+					}
+					SkiaApi.sk_canvas_draw_bitmap_lattice (Handle, bitmap.Handle, ref nativeLattice, ref dst, paint == null ? IntPtr.Zero : paint.Handle);
 				}
-				SkiaApi.sk_canvas_draw_bitmap_lattice (Handle, bitmap.Handle, ref nativeLattice, ref dst, paint == null ? IntPtr.Zero : paint.Handle);
 			}
 		}
 
@@ -764,22 +766,24 @@ namespace SkiaSharp
 			if (lattice.YDivs == null)
 				throw new ArgumentNullException (nameof (lattice.YDivs));
 			
-			fixed (int* x = lattice.XDivs)
-			fixed (int* y = lattice.YDivs)
-			fixed (SKLatticeFlags* f = lattice.Flags) {
-				var nativeLattice = new SKLatticeInternal {
-					fBounds = null,
-					fFlags = f,
-					fXCount = lattice.XDivs.Length,
-					fXDivs = x,
-					fYCount = lattice.YDivs.Length,
-					fYDivs = y,
-				};
-				if (lattice.Bounds != null) {
-					var bounds = lattice.Bounds.Value;
-					nativeLattice.fBounds = &bounds;
+			unsafe {
+				fixed (int* x = &lattice.XDivs[0])
+				fixed (int* y = &lattice.YDivs[0])
+				fixed (SKLatticeFlags* f = &lattice.Flags[0]) {
+					var nativeLattice = new SKLatticeInternal {
+						fBounds = null,
+						fFlags = f,
+						fXCount = lattice.XDivs.Length,
+						fXDivs = x,
+						fYCount = lattice.YDivs.Length,
+						fYDivs = y,
+					};
+					if (lattice.Bounds != null) {
+						var bounds = lattice.Bounds.Value;
+						nativeLattice.fBounds = &bounds;
+					}
+					SkiaApi.sk_canvas_draw_image_lattice (Handle, image.Handle, ref nativeLattice, ref dst, paint == null ? IntPtr.Zero : paint.Handle);
 				}
-				SkiaApi.sk_canvas_draw_image_lattice (Handle, image.Handle, ref nativeLattice, ref dst, paint == null ? IntPtr.Zero : paint.Handle);
 			}
 		}
 
