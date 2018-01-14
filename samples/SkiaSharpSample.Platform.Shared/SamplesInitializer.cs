@@ -1,26 +1,20 @@
-﻿#if WINDOWS_UWP
-using System;
+﻿using System;
 using System.IO;
+#if WINDOWS_UWP
 using Windows.ApplicationModel;
 using Windows.Storage;
 using Windows.System;
 #elif __MACOS__
-using System.IO;
 using AppKit;
 using Foundation;
 #elif __IOS__ || __TVOS__
-using System.IO;
 using Foundation;
 using UIKit;
 #elif __ANDROID__
-using System.IO;
 using Android.App;
 using Android.Content;
-using Android.Net;
-using Android.OS;
 #elif __DESKTOP__
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
 using System.Windows;
 #endif
@@ -49,8 +43,25 @@ namespace SkiaSharpSample
 			var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 			var path = Path.Combine(root, "Media", fontName);
 #endif
+
+#if WINDOWS_UWP
+			var localStorage = ApplicationData.Current.LocalFolder.Path;
+#elif __IOS__ || __TVOS__
+			var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+			var localStorage = Path.Combine(documents, "..", "Library");
+#elif __MACOS__ || __ANDROID__
+			var localStorage = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
+#elif __DESKTOP__
+			var localStorage = System.Windows.Forms.Application.LocalUserAppDataPath;
+#endif
+
 			SamplesManager.ContentFontPath = path;
 			SamplesManager.OpenFile += OnOpenSampleFile;
+			SamplesManager.TempDataPath = Path.Combine(localStorage, "SkiaSharpSample", "TemporaryData");
+			if (!Directory.Exists(SamplesManager.TempDataPath))
+			{
+				Directory.CreateDirectory(SamplesManager.TempDataPath);
+			}
 		}
 
 		private static async void OnOpenSampleFile(string path)
@@ -84,11 +95,11 @@ namespace SkiaSharpSample
 			var controller = UIDocumentInteractionController.FromUrl(resourceToOpen);
 			if (!controller.PresentOpenInMenu(vc.View.Bounds, vc.View, true))
 			{
-				new UIAlertView("SkiaSharp", "Unable to open file.", null, "OK").Show();
+				new UIAlertView("SkiaSharp", "Unable to open file.", (IUIAlertViewDelegate)null, "OK").Show();
 			}
 #elif __ANDROID__
 			// the external / shared location
-			var external = Path.Combine(Environment.ExternalStorageDirectory.AbsolutePath, "SkiaSharpSample");
+			var external = Path.Combine(Android.OS.Environment.ExternalStorageDirectory.AbsolutePath, "SkiaSharpSample");
 			if (!Directory.Exists(external))
 			{
 				Directory.CreateDirectory(external);
@@ -97,7 +108,7 @@ namespace SkiaSharpSample
 			var newPath = Path.Combine(external, Path.GetFileName(path));
 			File.Copy(path, newPath);
 			// open the file
-			var uri = Uri.FromFile(new Java.IO.File(newPath));
+			var uri = Android.Net.Uri.FromFile(new Java.IO.File(newPath));
 			var intent = new Intent(Intent.ActionView, uri);
 			intent.AddFlags(ActivityFlags.NewTask);
 			Application.Context.StartActivity(intent);

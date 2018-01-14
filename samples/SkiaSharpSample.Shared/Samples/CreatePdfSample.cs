@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using PCLStorage;
 
 using SkiaSharp;
 
@@ -22,10 +21,7 @@ namespace SkiaSharpSample.Samples
 			await base.OnInit();
 
 			// create the folder for this sample
-			var local = FileSystem.Current.LocalStorage;
-			local = await local.CreateFolderAsync("SkiaSharpSample", CreationCollisionOption.OpenIfExists);
-			local = await local.CreateFolderAsync("CreatePdfSample", CreationCollisionOption.OpenIfExists);
-			root = local.Path;
+			root = SamplesManager.EnsureTempDataDirectory("CreatePdfSample");
 		}
 
 		public override string Title => "Create PDF Document";

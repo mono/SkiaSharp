@@ -10,6 +10,11 @@ using System;
 
 namespace SkiaSharp
 {
+	// TODO: `asAColorFilter`
+	// TODO: `countInputs`, `getInput`
+	// TODO: `cropRectIsSet`, `getCropRect`
+	// TODO: `computeFastBounds`, `canComputeFastBounds`
+
 	public class SKImageFilter : SKObject
 	{
 		[Preserve]

@@ -1,14 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using NUnit.Framework;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	// [Parallelizable(ParallelScope.None)]
 	public class SKCanvasTest : SKTest
 	{
-		[Test]
+		[SkippableFact]
 		public void CanvasCanRestoreOnGpu()
 		{
 			using (var ctx = CreateGlContext()) {
@@ -18,14 +17,14 @@ namespace SkiaSharp.Tests
 				using (var surface = SKSurface.Create(grContext, true, new SKImageInfo(100, 100))) {
 					var canvas = surface.Canvas;
 
-					Assert.AreEqual(SKMatrix.MakeIdentity(), canvas.TotalMatrix);
+					Assert.Equal(SKMatrix.MakeIdentity(), canvas.TotalMatrix);
 
 					using (new SKAutoCanvasRestore(canvas)) {
 						canvas.Translate(10, 10);
-						Assert.AreEqual(SKMatrix.MakeTranslation(10, 10), canvas.TotalMatrix);
+						Assert.Equal(SKMatrix.MakeTranslation(10, 10), canvas.TotalMatrix);
 					}
 
-					Assert.AreEqual(SKMatrix.MakeIdentity(), canvas.TotalMatrix);
+					Assert.Equal(SKMatrix.MakeIdentity(), canvas.TotalMatrix);
 				}
 			}
 		}

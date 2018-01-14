@@ -1,91 +1,23 @@
 //
-// Bindings for SKStream
+// Bindings for SKManagedStream
 //
 // Author:
 //   Matthew Leibowitz
 //
-// Copyright 2016 Xamarin Inc
+// Copyright 2017 Xamarin Inc
 //
 using System;
 using System.Runtime.InteropServices;
 using System.IO;
-using System.Collections.Concurrent;
 using System.Text;
-using System.Threading;
-
-#if __IOS__
-using ObjCRuntime;
-#endif
 
 namespace SkiaSharp
 {
-	public class SKManagedStream : SKStreamAsset
+	public class SKManagedStream : SKAbstractManagedStream
 	{
-		private static readonly ConcurrentDictionary<IntPtr, SKManagedStream> managedStreams = new ConcurrentDictionary<IntPtr, SKManagedStream> ();
-
-		// delegate declarations
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		internal delegate IntPtr  read_delegate         (IntPtr managedStreamPtr, IntPtr buffer, IntPtr size);
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		internal delegate IntPtr  peek_delegate         (IntPtr managedStreamPtr, IntPtr buffer, IntPtr size);
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		internal delegate bool    isAtEnd_delegate      (IntPtr managedStreamPtr);
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		internal delegate bool    rewind_delegate       (IntPtr managedStreamPtr);
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		internal delegate IntPtr  getPosition_delegate  (IntPtr managedStreamPtr);
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		internal delegate bool    seek_delegate         (IntPtr managedStreamPtr, IntPtr position);
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		internal delegate bool    move_delegate         (IntPtr managedStreamPtr, int offset);
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		internal delegate IntPtr  getLength_delegate    (IntPtr managedStreamPtr);
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		internal delegate IntPtr  createNew_delegate    (IntPtr managedStreamPtr);
-		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-		internal delegate void    destroy_delegate      (IntPtr managedStreamPtr);
-
-		// delegate fields
-		private static readonly read_delegate fRead;
-		private static readonly peek_delegate fPeek;
-		private static readonly isAtEnd_delegate fIsAtEnd;
-		private static readonly rewind_delegate fRewind;
-		private static readonly getPosition_delegate fGetPosition;
-		private static readonly seek_delegate fSeek;
-		private static readonly move_delegate fMove;
-		private static readonly getLength_delegate fGetLength;
-		private static readonly createNew_delegate fCreateNew;
-		private static readonly destroy_delegate fDestroy;
-
 		private Stream stream;
-		private int fromNative;
+		private bool isAsEnd;
 		private readonly bool disposeStream;
-
-		static SKManagedStream()
-		{
-			fRead = new read_delegate(ReadInternal);
-			fPeek = new peek_delegate(PeekInternal);
-			fIsAtEnd = new isAtEnd_delegate(IsAtEndInternal);
-			fRewind = new rewind_delegate(RewindInternal);
-			fGetPosition = new getPosition_delegate(GetPositionInternal);
-			fSeek = new seek_delegate(SeekInternal);
-			fMove = new move_delegate(MoveInternal);
-			fGetLength = new getLength_delegate(GetLengthInternal);
-			fCreateNew = new createNew_delegate(CreateNewInternal);
-			fDestroy = new destroy_delegate(DestroyInternal);
-
-			SkiaApi.sk_managedstream_set_delegates(
-				Marshal.GetFunctionPointerForDelegate(fRead), 
-				Marshal.GetFunctionPointerForDelegate(fPeek), 
-				Marshal.GetFunctionPointerForDelegate(fIsAtEnd), 
-				Marshal.GetFunctionPointerForDelegate(fRewind),
-				Marshal.GetFunctionPointerForDelegate(fGetPosition),
-				Marshal.GetFunctionPointerForDelegate(fSeek),
-				Marshal.GetFunctionPointerForDelegate(fMove),
-				Marshal.GetFunctionPointerForDelegate(fGetLength),
-				Marshal.GetFunctionPointerForDelegate(fCreateNew),
-				Marshal.GetFunctionPointerForDelegate(fDestroy));
-		}
 
 		public SKManagedStream (Stream managedStream)
 			: this (managedStream, false)
@@ -98,187 +30,133 @@ namespace SkiaSharp
 		}
 
 		private SKManagedStream (Stream managedStream, bool disposeManagedStream, bool owns)
-			: base (SkiaApi.sk_managedstream_new (), owns)
+			: base (owns)
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKManagedStream instance.");
-			}
-			
-			managedStreams.TryAdd (Handle, this);
-
 			stream = managedStream;
 			disposeStream = disposeManagedStream;
 		}
 
-		private void DisposeFromNative ()
-		{
-			Interlocked.Exchange (ref fromNative, 1);
-			Dispose ();
-		}
-
 		protected override void Dispose (bool disposing)
 		{
-			if (disposing) {
-				SKManagedStream managedStream;
-				managedStreams.TryRemove (Handle, out managedStream);
-
-				if (disposeStream && stream != null) {
+			if (disposing)
+			{
+				if (disposeStream && stream != null)
+				{
 					stream.Dispose ();
 					stream = null;
 				}
 			}
 
-			if (Interlocked.CompareExchange (ref fromNative, 0, 0) == 0 && Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_managedstream_destroy (Handle);
-			}
-
 			base.Dispose (disposing);
 		}
 
-		// unmanaged <-> managed methods (static for iOS)
+		private IntPtr OnReadManagedStream (IntPtr buffer, IntPtr size)
+		{
+			byte[] managedBuffer;
+			using (var reader = new BinaryReader (stream, Encoding.UTF8, true))
+			{
+				managedBuffer = reader.ReadBytes ((int)size);
+			}
+			var result = managedBuffer.Length;
+			if (buffer != IntPtr.Zero)
+			{
+				Marshal.Copy (managedBuffer, 0, buffer, result);
+			}
+			if (!stream.CanSeek && (int)size > 0 && result <= (int)size)
+			{
+				isAsEnd = true;
+			}
+			return (IntPtr)result;
+		}
 
-		#if __IOS__
-		[MonoPInvokeCallback(typeof(read_delegate))]
-		#endif
-		private static IntPtr ReadInternal (IntPtr managedStreamPtr, IntPtr buffer, IntPtr size)
+		protected override IntPtr OnRead (IntPtr buffer, IntPtr size)
 		{
-			var managedStream = AsManagedStream (managedStreamPtr);
-			var count = (int)size;
-			byte[] managedBuffer;
-			using (var reader = new BinaryReader (managedStream.stream, Encoding.UTF8, true)) {
-				 managedBuffer = reader.ReadBytes (count);
-			}
-			var result = managedBuffer.Length;
-			if (buffer != IntPtr.Zero) { 
-				Marshal.Copy (managedBuffer, 0, buffer, result);
-			}
-			return (IntPtr)result;
+			return OnReadManagedStream (buffer, size);
 		}
-		#if __IOS__
-		[MonoPInvokeCallback(typeof(peek_delegate))]
-		#endif
-		private static IntPtr PeekInternal (IntPtr managedStreamPtr, IntPtr buffer, IntPtr size)
+
+		protected override IntPtr OnPeek (IntPtr buffer, IntPtr size)
 		{
-			var managedStream = AsManagedStream (managedStreamPtr);
-			if (!managedStream.stream.CanSeek) {
+			if (!stream.CanSeek)
+			{
 				return (IntPtr)0;
 			}
-			var oldPos = managedStream.stream.Position;
-			var count = (int)size;
-			byte[] managedBuffer;
-			using (var reader = new BinaryReader (managedStream.stream, Encoding.UTF8, true)) {
-				 managedBuffer = reader.ReadBytes (count);
-			}
-			var result = managedBuffer.Length;
-			if (buffer != IntPtr.Zero) { 
-				Marshal.Copy (managedBuffer, 0, buffer, result);
-			}
-			managedStream.stream.Position = oldPos;
-			return (IntPtr)result;
+			var oldPos = stream.Position;
+			var result = OnReadManagedStream (buffer, size);
+			stream.Position = oldPos;
+			return result;
 		}
-		#if __IOS__
-		[MonoPInvokeCallback(typeof(isAtEnd_delegate))]
-		#endif
-		private static bool IsAtEndInternal (IntPtr managedStreamPtr)
+
+		protected override bool OnIsAtEnd ()
 		{
-			var managedStream = AsManagedStream (managedStreamPtr);
-			if (!managedStream.stream.CanSeek) {
-				throw new NotSupportedException ("Unable to detect the End Of Stream if the stream is not seekable.");
+			if (!stream.CanSeek)
+			{
+				return isAsEnd;
 			}
-			return managedStream.stream.Position >= managedStream.stream.Length;
+			return stream.Position >= stream.Length;
 		}
-		#if __IOS__
-		[MonoPInvokeCallback(typeof(rewind_delegate))]
-		#endif
-		private static bool RewindInternal (IntPtr managedStreamPtr)
+
+		protected override bool OnHasPosition ()
 		{
-			var managedStream = AsManagedStream (managedStreamPtr);
-			if (!managedStream.stream.CanSeek) {
+			return stream.CanSeek;
+		}
+
+		protected override bool OnHasLength ()
+		{
+			return stream.CanSeek;
+		}
+
+		protected override bool OnRewind ()
+		{
+			if (!stream.CanSeek)
+			{
 				return false;
 			}
-			managedStream.stream.Position = 0;
+			stream.Position = 0;
 			return true;
 		}
-		#if __IOS__
-		[MonoPInvokeCallback(typeof(getPosition_delegate))]
-		#endif
-		private static IntPtr GetPositionInternal (IntPtr managedStreamPtr)
+
+		protected override IntPtr OnGetPosition ()
 		{
-			var managedStream = AsManagedStream (managedStreamPtr);
-			if (!managedStream.stream.CanSeek) {
+			if (!stream.CanSeek)
+			{
 				return (IntPtr)0;
 			}
-			return (IntPtr)managedStream.stream.Position;
+			return (IntPtr)stream.Position;
 		}
-		#if __IOS__
-		[MonoPInvokeCallback(typeof(seek_delegate))]
-		#endif
-		private static bool SeekInternal (IntPtr managedStreamPtr, IntPtr position)
+
+		protected override IntPtr OnGetLength ()
 		{
-			var managedStream = AsManagedStream (managedStreamPtr);
-			if (!managedStream.stream.CanSeek) {
-				return false;
-			}
-			managedStream.stream.Position = (long)position;
-			return true;
-		}
-		#if __IOS__
-		[MonoPInvokeCallback(typeof(move_delegate))]
-		#endif
-		private static bool MoveInternal (IntPtr managedStreamPtr, int offset)
-		{
-			var managedStream = AsManagedStream (managedStreamPtr);
-			if (!managedStream.stream.CanSeek) {
-				return false;
-			}
-			managedStream.stream.Position = managedStream.stream.Position + offset;
-			return true;
-		}
-		#if __IOS__
-		[MonoPInvokeCallback(typeof(getLength_delegate))]
-		#endif
-		private static IntPtr GetLengthInternal (IntPtr managedStreamPtr)
-		{
-			var managedStream = AsManagedStream (managedStreamPtr);
-			if (!managedStream.stream.CanSeek) {
+			if (!stream.CanSeek)
+			{
 				return (IntPtr)0;
 			}
-			return (IntPtr)managedStream.stream.Length;
+			return (IntPtr)stream.Length;
 		}
-		#if __IOS__
-		[MonoPInvokeCallback(typeof(createNew_delegate))]
-		#endif
-		private static IntPtr CreateNewInternal (IntPtr managedStreamPtr)
+
+		protected override bool OnSeek (IntPtr position)
 		{
-			var managedStream = AsManagedStream (managedStreamPtr);
-			var newStream = new SKManagedStream (managedStream.stream, false, false);
+			if (!stream.CanSeek)
+			{
+				return false;
+			}
+			stream.Position = (long)position;
+			return true;
+		}
+
+		protected override bool OnMove (int offset)
+		{
+			if (!stream.CanSeek)
+			{
+				return false;
+			}
+			stream.Position = stream.Position + offset;
+			return true;
+		}
+
+		protected override IntPtr OnCreateNew ()
+		{
+			var newStream = new SKManagedStream (stream, false, false);
 			return newStream.Handle;
-		}
-		#if __IOS__
-		[MonoPInvokeCallback(typeof(destroy_delegate))]
-		#endif
-		private static void DestroyInternal (IntPtr managedStreamPtr)
-		{
-			SKManagedStream managedStream;
-			if (AsManagedStream (managedStreamPtr, out managedStream)) {
-				managedStream.DisposeFromNative ();
-			}
-		}
-		private static SKManagedStream AsManagedStream(IntPtr ptr)
-		{
-			SKManagedStream target;
-			if (AsManagedStream (ptr, out target)) {
-				return target;
-			}
-			throw new ObjectDisposedException ("SKManagedStream: " + ptr);
-		}
-		private static bool AsManagedStream(IntPtr ptr, out SKManagedStream target)
-		{
-			if (managedStreams.TryGetValue (ptr, out target)) {
-				return true;
-			}
-			target = null;
-			return false;
 		}
 	}
 }

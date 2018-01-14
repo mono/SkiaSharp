@@ -1,44 +1,151 @@
-﻿using System;
+﻿#if NET_STANDARD
+#else
+#define SYSTEM_DRAWING
+#endif
+
+using System;
+using Xunit;
+
+#if SYSTEM_DRAWING
 using System.Drawing;
 using System.Drawing.Imaging;
-using NUnit.Framework;
+#endif
 
 namespace SkiaSharp.Tests
 {
-	public class SKSurfaceTest : SKTest, IDisposable
+	public class SKSurfaceTest : SKTest
 	{
-		protected const int width = 100;
-		protected const int height = 100;
+		private const int width = 100;
+		private const int height = 100;
 
-		protected Bitmap bitmap;
-
-		public SKSurfaceTest()
+		private void DrawGpuSurface(Action<SKSurface, SKImageInfo> draw)
 		{
-			bitmap = new Bitmap(width, height, PixelFormat.Format32bppPArgb);
-		}
-
-		public void Dispose()
-		{
-			bitmap.Dispose();
-			bitmap = null;
-		}
-
-		public void Draw(Action<SKSurface> draw)
-		{
-			var data = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
-
-			using (var surface = SKSurface.Create(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, data.Scan0, data.Stride))
+			using (var ctx = CreateGlContext())
 			{
-				draw(surface);
-			}
+				ctx.MakeCurrent();
 
-			bitmap.UnlockBits(data);
+				var info = new SKImageInfo(100, 100);
+
+				using (var grContext = GRContext.Create(GRBackend.OpenGL))
+				using (var surface = SKSurface.Create(grContext, true, info))
+				{
+					Assert.NotNull(surface);
+
+					draw(surface, info);
+				}
+			}
 		}
 
-		[Test]
+		private void DrawGpuTexture(Action<SKSurface, GRGlBackendTextureDesc> draw)
+		{
+			using (var ctx = CreateGlContext())
+			{
+				ctx.MakeCurrent();
+
+				// create the texture
+				var textureInfo = ctx.CreateTexture(new SKSizeI(100, 100));
+				var textureDesc = new GRGlBackendTextureDesc
+				{
+					Width = 100,
+					Height = 100,
+					Config = GRPixelConfig.Rgba8888,
+					Flags = GRBackendTextureDescFlags.RenderTarget,
+					Origin = GRSurfaceOrigin.TopLeft,
+					SampleCount = 0,
+					TextureHandle = textureInfo,
+				};
+
+				// create the surface
+				using (var grContext = GRContext.Create(GRBackend.OpenGL))
+				using (var surface = SKSurface.CreateAsRenderTarget(grContext, textureDesc))
+				{
+					Assert.NotNull(surface);
+
+					draw(surface, textureDesc);
+				}
+
+				// clean up
+				ctx.DestroyTexture(textureInfo.Id);
+			}
+		}
+
+		[SkippableFact]
+		public void GpuBackendSurfaceIsCreated()
+		{
+			DrawGpuSurface((surface, info) =>
+			{
+				Assert.NotNull(surface);
+
+				var canvas = surface.Canvas;
+				Assert.NotNull(canvas);
+
+				canvas.Clear(SKColors.Transparent);
+			});
+		}
+
+		[SkippableFact]
+		public void GpuTextureSurfaceIsCreated()
+		{
+			DrawGpuTexture((surface, desc) =>
+			{
+				Assert.NotNull(surface);
+
+				var canvas = surface.Canvas;
+				Assert.NotNull(canvas);
+
+				canvas.Clear(SKColors.Transparent);
+			});
+		}
+
+		[SkippableFact]
+		public void GpuTextureSurfaceCanBeRead()
+		{
+			DrawGpuTexture((surface, desc) =>
+			{
+				var canvas = surface.Canvas;
+
+				canvas.Clear(SKColors.Red);
+				canvas.Flush();
+
+				using (var image = surface.Snapshot())
+				{
+					Assert.True(image.IsTextureBacked);
+
+					using (var raster = image.ToRasterImage())
+					{
+						Assert.False(raster.IsTextureBacked);
+
+						using (var bmp = SKBitmap.FromImage(raster))
+						{
+							Assert.Equal(SKColors.Red, bmp.GetPixel(0, 0));
+						}
+					}
+				}
+			});
+		}
+
+#if SYSTEM_DRAWING
+		private void DrawBitmap(Action<SKSurface, BitmapData> draw)
+		{
+			using (var bitmap = new Bitmap(width, height, PixelFormat.Format32bppPArgb))
+			{
+				var data = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
+
+				using (var surface = SKSurface.Create(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, data.Scan0, data.Stride))
+				{
+					Assert.NotNull(surface);
+
+					draw(surface, data);
+				}
+
+				bitmap.UnlockBits(data);
+			}
+		}
+
+		[SkippableFact]
 		public void SurfaceCanvasReturnTheSameInstance()
 		{
-			Draw(surface =>
+			DrawBitmap((surface, data) =>
 			{
 				var skcanvas1 = surface.Canvas;
 				var skcanvas2 = surface.Canvas;
@@ -46,48 +153,28 @@ namespace SkiaSharp.Tests
 				Assert.NotNull(skcanvas1);
 				Assert.NotNull(skcanvas2);
 
-				Assert.AreEqual(skcanvas1, skcanvas2);
+				Assert.Equal(skcanvas1, skcanvas2);
 				Assert.True(skcanvas1 == skcanvas2);
 
-				Assert.AreSame(skcanvas1, skcanvas2);
+				Assert.Same(skcanvas1, skcanvas2);
 			});
 		}
 
-		[Test]
+		[SkippableFact]
 		public void SecondSurfaceWasCreatedDifferent()
 		{
-			var data = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
+			DrawBitmap((surface, data) =>
+			{
+				var surface2 = SKSurface.Create(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, data.Scan0, data.Stride);
 
-			var surface1 = SKSurface.Create(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, data.Scan0, data.Stride);
-			var surface2 = SKSurface.Create(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, data.Scan0, data.Stride);
+				Assert.NotNull(surface2);
 
-			Assert.NotNull(surface1);
-			Assert.NotNull(surface2);
+				Assert.NotEqual(surface, surface2);
+				Assert.NotEqual(surface.Handle, surface2.Handle);
 
-			Assert.AreNotEqual(surface1, surface2);
-			Assert.AreNotEqual(surface1.Handle, surface2.Handle);
-
-			surface1.Dispose();
-			surface2.Dispose();
-
-			bitmap.UnlockBits(data);
+				surface2.Dispose();
+			});
 		}
-
-		[Test]
-		public void SurfaceWasCreated()
-		{
-			var data = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
-
-			var surface = SKSurface.Create(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, data.Scan0, data.Stride);
-
-			Assert.NotNull(surface);
-			Assert.AreNotEqual(IntPtr.Zero, surface.Handle);
-
-			surface.Dispose();
-
-			Assert.AreEqual(IntPtr.Zero, surface.Handle);
-
-			bitmap.UnlockBits(data);
-		}
+#endif
 	}
 }

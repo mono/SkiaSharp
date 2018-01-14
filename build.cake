@@ -1,6 +1,6 @@
-#addin nuget:?package=Cake.Xamarin&version=1.3.0.15 
-#addin nuget:?package=Cake.XCode&version=2.0.13 
-#addin nuget:?package=Cake.FileHelpers&version=1.0.4
+#addin nuget:?package=Cake.Xamarin&version=2.0.1
+#addin nuget:?package=Cake.XCode&version=3.0.0
+#addin nuget:?package=Cake.FileHelpers&version=2.0.0
 
 #reference "tools/SharpCompress/lib/net45/SharpCompress.dll"
 
@@ -15,18 +15,18 @@ using System.Xml.Linq;
 var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")));
 var VERBOSITY = (Verbosity) Enum.Parse (typeof(Verbosity), Argument ("v", Argument ("verbosity", Argument ("Verbosity", "Verbose"))), true);
 
-var NuGetSources = new [] { MakeAbsolute (Directory ("./output")).FullPath, "https://api.nuget.org/v3/index.json" };
+var NuGetSources = new [] { MakeAbsolute (Directory ("./output")).FullPath, "https://api.nuget.org/v3/index.json", "https://www.myget.org/F/xunit/api/v3/index.json" };
 var NugetToolPath = GetToolPath ("nuget.exe");
 var XamarinComponentToolPath = GetToolPath ("XamarinComponent/tools/xamarin-component.exe");
 var CakeToolPath = GetToolPath ("Cake/Cake.exe");
-var NUnitConsoleToolPath = GetToolPath ("NUnit.ConsoleRunner/tools/nunit3-console.exe");
 var GenApiToolPath = GetToolPath ("Microsoft.DotNet.BuildTools.GenAPI/tools/GenAPI.exe");
-var MDocPath = MakeAbsolute ((FilePath)"externals/api-doc-tools/bin/Release/mdoc.exe");
+var MDocPath = GetToolPath ("mdoc/tools/mdoc.exe");
 var SNToolPath = GetSNToolPath (EnvironmentVariable ("SN_EXE"));
 var MSBuildToolPath = GetMSBuildToolPath (EnvironmentVariable ("MSBUILD_EXE"));
+var PythonToolPath = EnvironmentVariable ("PYTHON_EXE") ?? "python";
 
-var VERSION_ASSEMBLY = "1.59.0.0";
-var VERSION_FILE = "1.59.4.0";
+var VERSION_ASSEMBLY = "1.60.0.0";
+var VERSION_FILE = "1.60.0.0";
 var VERSION_SONAME = VERSION_FILE.Substring(VERSION_FILE.IndexOf(".") + 1);
 
 var ANGLE_VERSION_SOURCE = "2.1.13";
@@ -37,10 +37,10 @@ var HARFBUZZ_VERSION_FILE = "1.4.6.0";
 var HARFBUZZ_VERSION_SONAME = HARFBUZZ_VERSION_FILE.Substring(0, HARFBUZZ_VERSION_FILE.LastIndexOf("."));
 
 var VERSION_PACKAGES = new Dictionary<string, string> {
-    { "SkiaSharp", "1.59.4-beta" },
-    { "SkiaSharp.Views", "1.59.4-beta" },
-    { "SkiaSharp.Views.Forms", "1.59.4-beta" },
-    { "SkiaSharp.HarfBuzz", "1.59.0-beta" },
+    { "SkiaSharp", "1.60.0" },
+    { "SkiaSharp.Views", "1.60.0" },
+    { "SkiaSharp.Views.Forms", "1.60.0" },
+    { "SkiaSharp.HarfBuzz", "1.60.0-beta" },
 
     { "HarfBuzzSharp", "1.4.6" },
 };
@@ -91,6 +91,7 @@ Task ("libs")
     EnsureDirectoryExists ("./output/android/");
     EnsureDirectoryExists ("./output/ios/");
     EnsureDirectoryExists ("./output/tvos/");
+    EnsureDirectoryExists ("./output/watchos/");
     EnsureDirectoryExists ("./output/osx/");
     EnsureDirectoryExists ("./output/portable/");
     EnsureDirectoryExists ("./output/mac/");
@@ -137,17 +138,20 @@ Task ("libs")
         CopyFileToDirectory ("./binding/SkiaSharp.Android/bin/Release/SkiaSharp.dll", "./output/android/");
         CopyFileToDirectory ("./binding/SkiaSharp.iOS/bin/Release/SkiaSharp.dll", "./output/ios/");
         CopyFileToDirectory ("./binding/SkiaSharp.tvOS/bin/Release/SkiaSharp.dll", "./output/tvos/");
+        CopyFileToDirectory ("./binding/SkiaSharp.watchOS/bin/Release/SkiaSharp.dll", "./output/watchos/");
         CopyFileToDirectory ("./binding/SkiaSharp.OSX/bin/Release/SkiaSharp.dll", "./output/osx/");
         // HarfBuzzSharp
         CopyFileToDirectory ("./binding/HarfBuzzSharp.Android/bin/Release/HarfBuzzSharp.dll", "./output/android/");
         CopyFileToDirectory ("./binding/HarfBuzzSharp.iOS/bin/Release/HarfBuzzSharp.dll", "./output/ios/");
         CopyFileToDirectory ("./binding/HarfBuzzSharp.tvOS/bin/Release/HarfBuzzSharp.dll", "./output/tvos/");
+        CopyFileToDirectory ("./binding/HarfBuzzSharp.watchOS/bin/Release/HarfBuzzSharp.dll", "./output/watchos/");
         CopyFileToDirectory ("./binding/HarfBuzzSharp.OSX/bin/Release/HarfBuzzSharp.dll", "./output/osx/");
         // SkiaSharp.Views
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Android/bin/Release/SkiaSharp.Views.Android.dll", "./output/android/");
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.iOS/bin/Release/SkiaSharp.Views.iOS.dll", "./output/ios/");
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Mac/bin/Release/SkiaSharp.Views.Mac.dll", "./output/osx/");
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.tvOS/bin/Release/SkiaSharp.Views.tvOS.dll", "./output/tvos/");
+        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.watchOS/bin/Release/SkiaSharp.Views.watchOS.dll", "./output/watchos/");
         // SkiaSharp.Views.Forms
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms/bin/Release/SkiaSharp.Views.Forms.dll", "./output/portable/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Android/bin/Release/SkiaSharp.Views.Forms.dll", "./output/android/");
@@ -213,12 +217,12 @@ Task ("tests")
     if (IsRunningOnWindows ()) {
         EnsureDirectoryExists ("./output/tests/windows/x86");
         RunMSBuildWithPlatform ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", "x86");
-        RunTests ("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/SkiaSharp.Desktop.Tests.dll");
+        RunTests ("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/SkiaSharp.Tests.dll", true);
         CopyFileToDirectory ("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/TestResult.xml", "./output/tests/windows/x86");
 
         EnsureDirectoryExists ("./output/tests/windows/x64");
         RunMSBuildWithPlatform ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", "x64");
-        RunTests ("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Desktop.Tests.dll");
+        RunTests ("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Tests.dll", false);
         CopyFileToDirectory ("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/TestResult.xml", "./output/tests/windows/x64");
     }
 
@@ -226,27 +230,23 @@ Task ("tests")
     if (IsRunningOnMac ()) {
         EnsureDirectoryExists ("./output/tests/mac/AnyCPU");
         RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
-        RunTests ("./tests/SkiaSharp.Desktop.Tests/bin/AnyCPU/Release/SkiaSharp.Desktop.Tests.dll");
+        RunTests ("./tests/SkiaSharp.Desktop.Tests/bin/AnyCPU/Release/SkiaSharp.Tests.dll", false);
         CopyFileToDirectory ("./tests/SkiaSharp.Desktop.Tests/bin/AnyCPU/Release/TestResult.xml", "./output/tests/mac/AnyCPU");
     }
 
     // Linux (x64)
-    if (IsRunningOnWindows ()) {
+    if (IsRunningOnLinux ()) {
         EnsureDirectoryExists ("./output/tests/linux/x64");
         RunMSBuildWithPlatform ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", "x64");
-        RunTests ("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Desktop.Tests.dll");
+        RunTests ("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Tests.dll", false);
         CopyFileToDirectory ("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/TestResult.xml", "./output/tests/linux/x64");
     }
 
     // .NET Core
     EnsureDirectoryExists ("./output/tests/netcore");
-    RunNuGetRestore ("./tests/SkiaSharp.NetCore.Tests.Runner/SkiaSharp.NetCore.Tests.Runner.sln");
-    DotNetCorePublish ("./tests/SkiaSharp.NetCore.Tests.Runner", new DotNetCorePublishSettings {
-        Configuration = "Release",
-        OutputDirectory = "./tests/SkiaSharp.NetCore.Tests.Runner/artifacts/"
-    });
-    RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests.Runner/artifacts/SkiaSharp.NetCore.Tests.Runner.dll");
-    CopyFileToDirectory ("./tests/SkiaSharp.NetCore.Tests.Runner/artifacts/TestResult.xml", "./output/tests/netcore");
+    RunNuGetRestore ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.sln");
+    RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
+    CopyFileToDirectory ("./tests/SkiaSharp.NetCore.Tests/TestResult.xml", "./output/tests/netcore");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -298,10 +298,6 @@ Task ("samples")
 Task ("docs")
     .Does (() => 
 {
-    // first build mdoc
-    RunNuGetRestore ("./externals/api-doc-tools/apidoctools.sln");
-    RunMSBuild ("./externals/api-doc-tools/apidoctools.sln");
-
     // log TODOs
     var docFiles = GetFiles ("./docs/**/*.xml");
     float typeCount = 0;
@@ -355,10 +351,6 @@ Task ("update-docs")
     .IsDependentOn ("libs")
     .Does (() => 
 {
-    // first build mdoc
-    RunNuGetRestore ("./externals/api-doc-tools/apidoctools.sln");
-    RunMSBuild ("./externals/api-doc-tools/apidoctools.sln");
-
     // the reference folders to locate assemblies
     IEnumerable<DirectoryPath> refs = new DirectoryPath [] {
             "./output/portable/",
@@ -376,6 +368,7 @@ Task ("update-docs")
             "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/MonoAndroid/v2.3",
             "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.iOS/v1.0",
             "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.TVOS/v1.0",
+            "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.WatchOS/v1.0",
             "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.Mac/v2.0",
             "./externals",
         });
@@ -387,6 +380,7 @@ Task ("update-docs")
             "/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xbuild-frameworks/MonoAndroid/v1.0",
             "/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xbuild-frameworks/MonoAndroid/v4.5",
             "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/lib/mono/Xamarin.TVOS",
+            "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/lib/mono/Xamarin.WatchOS",
             "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/lib/mono/Xamarin.iOS",
             "/Library/Frameworks/Xamarin.Mac.framework/Versions/Current/lib/mono/Xamarin.Mac",
         });
@@ -408,6 +402,7 @@ Task ("update-docs")
             "./output/ios/SkiaSharp.Views.iOS.dll",
             "./output/osx/SkiaSharp.Views.Mac.dll",
             "./output/tvos/SkiaSharp.Views.tvOS.dll",
+            "./output/watchos/SkiaSharp.Views.watchOS.dll",
             "./output/uwp/SkiaSharp.Views.UWP.dll",
         }).ToArray ();
     }
@@ -418,6 +413,7 @@ Task ("update-docs")
             "./output/ios/SkiaSharp.Views.iOS.dll",
             "./output/osx/SkiaSharp.Views.Mac.dll",
             "./output/tvos/SkiaSharp.Views.tvOS.dll",
+            "./output/watchos/SkiaSharp.Views.watchOS.dll",
         }).ToArray ();
     }
 
@@ -677,7 +673,6 @@ Task ("Linux-CI")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Information ("Cake.exe ToolPath: {0}", CakeToolPath);
-Information ("NUnitConsole ToolPath: {0}", NUnitConsoleToolPath);
 Information ("NuGet.exe ToolPath: {0}", NugetToolPath);
 Information ("Xamarin-Component.exe ToolPath: {0}", XamarinComponentToolPath);
 Information ("genapi.exe ToolPath: {0}", GenApiToolPath);

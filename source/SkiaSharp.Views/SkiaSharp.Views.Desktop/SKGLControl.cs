@@ -6,6 +6,8 @@ using OpenTK.Graphics;
 
 namespace SkiaSharp.Views.Desktop
 {
+	[DefaultEvent("PaintSurface")]
+	[DefaultProperty("Name")]
 	public class SKGLControl : GLControl
 	{
 		private bool designMode;
@@ -38,10 +40,19 @@ namespace SkiaSharp.Views.Desktop
 			ResizeRedraw = true;
 		}
 
+		[Bindable(false)]
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		[EditorBrowsable(EditorBrowsableState.Never)]
 		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
 
+		[Bindable(false)]
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		[EditorBrowsable(EditorBrowsableState.Never)]
 		public GRContext GRContext => grContext;
 
+		[Category("Appearance")]
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 		
 		protected override void OnPaint(PaintEventArgs e)

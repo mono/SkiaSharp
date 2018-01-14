@@ -57,14 +57,19 @@ namespace SkiaSharp
 
 		public static string GetString(byte[] data, SKTextEncoding encoding)
 		{
+			return GetString(data, 0, data.Length, encoding);
+		}
+
+		public static string GetString(byte[] data, int index, int count, SKTextEncoding encoding)
+		{
 			switch (encoding)
 			{
 				case SKTextEncoding.Utf8:
-					return Encoding.UTF8.GetString(data);
+					return Encoding.UTF8.GetString(data, index, count);
 				case SKTextEncoding.Utf16:
-					return Encoding.Unicode.GetString(data);
+					return Encoding.Unicode.GetString(data, index, count);
 				case SKTextEncoding.Utf32:
-					return Encoding.UTF32.GetString(data);
+					return Encoding.UTF32.GetString(data, index, count);
 				default:
 					throw new ArgumentOutOfRangeException(nameof(encoding), $"Encoding {encoding} is not supported.");
 			}

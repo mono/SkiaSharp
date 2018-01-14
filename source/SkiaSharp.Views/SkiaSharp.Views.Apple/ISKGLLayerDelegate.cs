@@ -1,5 +1,7 @@
 #if __TVOS__
 namespace SkiaSharp.Views.tvOS
+#elif __WATCHOS__
+namespace SkiaSharp.Views.watchOS
 #elif __IOS__
 namespace SkiaSharp.Views.iOS
 #elif __MACOS__

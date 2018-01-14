@@ -1,5 +1,5 @@
 ﻿using System;
-using NUnit.Framework;
+using Xunit;
 using System.IO;
 
 namespace SkiaSharp.Tests
@@ -22,18 +22,18 @@ namespace SkiaSharp.Tests
 			0x02, 0x00, 0x24, 0x00, 0x44,
 		};
 
-		[Test]
+		[SkippableFact]
 		public void NullInWrongFileName()
 		{
 			Assert.Null(SKTypeface.FromFile(Path.Combine(PathToFonts, "font that doesn't exist.ttf")));
 		}
 
-		[Test]
+		[SkippableFact]
 		public void TestFamilyName()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf")))
 			{
-				Assert.AreEqual("Roboto2", typeface.FamilyName);
+				Assert.Equal("Roboto2", typeface.FamilyName);
 			}
 		}
 
@@ -55,40 +55,40 @@ namespace SkiaSharp.Tests
 				(UInt32)(v[3]) << 00;
 		}
 
-		[Test]
+		[SkippableFact]
 		public void TestGetTableTags()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "SpiderSymbol.ttf")))
 			{
-				Assert.AreEqual("SpiderSymbol", typeface.FamilyName);
+				Assert.Equal("SpiderSymbol", typeface.FamilyName);
 				var tables = typeface.GetTableTags();
-				Assert.AreEqual(ExpectedTablesSpiderFont.Length, tables.Length);
+				Assert.Equal(ExpectedTablesSpiderFont.Length, tables.Length);
 
 				for (int i = 0; i < tables.Length; i++) {
-					Assert.AreEqual(ExpectedTablesSpiderFont[i], GetReadableTag(tables[i]));
+					Assert.Equal(ExpectedTablesSpiderFont[i], GetReadableTag(tables[i]));
 				}
 			}
 		}
 
-		[Test]
+		[SkippableFact]
 		public void TestGetTableData()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "ReallyBigA.ttf")))
 			{
-				Assert.AreEqual("ReallyBigA", typeface.FamilyName);
+				Assert.Equal("ReallyBigA", typeface.FamilyName);
 				var tables = typeface.GetTableTags();
 
 				for (int i = 0; i < tables.Length; i++) {
 					byte[] tableData = typeface.GetTableData(tables[i]);
-					Assert.AreEqual(ExpectedTableLengthsReallyBigAFont[i], tableData.Length);
+					Assert.Equal(ExpectedTableLengthsReallyBigAFont[i], tableData.Length);
 				}
 
-				Assert.AreEqual(ExpectedTableDataPostReallyBigAFont, typeface.GetTableData(GetIntTag("post")));
+				Assert.Equal(ExpectedTableDataPostReallyBigAFont, typeface.GetTableData(GetIntTag("post")));
 
 			}
 		}
 
-		[Test]
+		[SkippableFact]
 		public void TestFontManagerMatchCharacter()
 		{
 			var fonts = SKFontManager.Default;
@@ -97,15 +97,15 @@ namespace SkiaSharp.Tests
 			using (var typeface = fonts.MatchCharacter(emojiChar))
 			{
 				if (IsLinux)
-					Assert.AreEqual("Symbola", typeface.FamilyName);
+					Assert.Equal("Symbola", typeface.FamilyName);
 				else if (IsMac)
-					Assert.AreEqual("Apple Color Emoji", typeface.FamilyName);
+					Assert.Equal("Apple Color Emoji", typeface.FamilyName);
 				else if (IsWindows)
 					Assert.Contains(typeface.FamilyName, new[] { "Segoe UI Emoji", "Segoe UI Symbol" });
 			}
 		}
 
-		[Test]
+		[SkippableFact]
 		public void ExceptionInInvalidGetTableData()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Distortable.ttf")))
@@ -114,7 +114,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Test]
+		[SkippableFact]
 		public void TestTryGetTableData()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "ReallyBigA.ttf")))
@@ -123,15 +123,15 @@ namespace SkiaSharp.Tests
 				for (int i = 0; i < tables.Length; i++) {
 					byte[] tableData;
 					Assert.True(typeface.TryGetTableData(tables[i], out tableData));
-					Assert.AreEqual(ExpectedTableLengthsReallyBigAFont[i], tableData.Length);
+					Assert.Equal(ExpectedTableLengthsReallyBigAFont[i], tableData.Length);
 				}
 
-				Assert.AreEqual(ExpectedTableDataPostReallyBigAFont, typeface.GetTableData(GetIntTag("post")));
+				Assert.Equal(ExpectedTableDataPostReallyBigAFont, typeface.GetTableData(GetIntTag("post")));
 
 			}
 		}
 
-		[Test]
+		[SkippableFact]
 		public void InvalidTryGetTableData()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Distortable.ttf")))
@@ -142,25 +142,25 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Test]
+		[SkippableFact]
 		public void CanReadData()
 		{
 			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
 			using (var data = SKData.CreateCopy(bytes))
 			using (var typeface = SKTypeface.FromData(data))
 			{
-				Assert.IsNotNull(typeface);
+				Assert.NotNull(typeface);
 			}
 		}
 
-		[Test]
+		[SkippableFact]
 		public void CanReadNonSeekableStream()
 		{
 			using (var stream = File.OpenRead(Path.Combine(PathToFonts, "Distortable.ttf")))
 			using (var nonSeekable = new NonSeekableReadOnlyStream(stream))
 			using (var typeface = SKTypeface.FromStream(nonSeekable))
 			{
-				Assert.IsNotNull(typeface);
+				Assert.NotNull(typeface);
 			}
 		}
 	}

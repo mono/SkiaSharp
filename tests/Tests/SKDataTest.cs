@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using NUnit.Framework;
+using Xunit;
 using System.IO;
 
 namespace SkiaSharp.Tests
@@ -9,16 +9,16 @@ namespace SkiaSharp.Tests
 	{
 		private readonly static byte[] OddData = new byte[] { 1, 3, 5, 7, 9 };
 
-		[Test]
+		[SkippableFact]
 		public void ValidDataProperties()
 		{
 			var data = SKData.CreateCopy(OddData);
 
-			Assert.AreEqual(OddData.Length, data.Size);
-			Assert.AreEqual(OddData, data.ToArray());
+			Assert.Equal(OddData.Length, data.Size);
+			Assert.Equal(OddData, data.ToArray());
 		}
 
-		[Test]
+		[SkippableFact]
 		public void DataCanBeCreatedFromFile()
 		{
 			var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
@@ -27,7 +27,7 @@ namespace SkiaSharp.Tests
 			Assert.True(data.Size > 0);
 		}
 
-		[Test]
+		[SkippableFact]
 		public void ReleaseDataWasInvoked()
 		{
 			bool released = false;
@@ -35,21 +35,20 @@ namespace SkiaSharp.Tests
 			var onRelease = new SKDataReleaseDelegate((addr, ctx) => {
 				Marshal.FreeCoTaskMem(addr);
 				released = true;
-				Assert.AreEqual("RELEASING!", ctx);
+				Assert.Equal("RELEASING!", ctx);
 			});
 
 			var memory = Marshal.AllocCoTaskMem(10);
 
 			using (var data = SKData.Create(memory, 10, onRelease, "RELEASING!")) {
-				Assert.AreEqual(memory, data.Data);
-				Assert.AreEqual(10, data.Size);
+				Assert.Equal(memory, data.Data);
+				Assert.Equal(10, data.Size);
 			}
 
 			Assert.True(released, "The SKDataReleaseDelegate was not called.");
 		}
 
-		[Test]
-		[Ignore("Doesn't work as it relies on memory being overwritten by an external process.")]
+		[SkippableFact(Skip = "Doesn't work as it relies on memory being overwritten by an external process.")]
 		public void DataDisposedReturnsInvalidStream()
 		{
 			// create data
@@ -60,14 +59,14 @@ namespace SkiaSharp.Tests
 
 			// nuke the data
 			data.Dispose();
-			Assert.AreEqual(IntPtr.Zero, data.Handle);
+			Assert.Equal(IntPtr.Zero, data.Handle);
 
 			// read the stream
 			var buffer = new byte[OddData.Length];
 			stream.Read(buffer, 0, buffer.Length);
 
 			// since the data was nuked, they will differ
-			Assert.AreNotEqual(OddData, buffer);
+			Assert.NotEqual(OddData, buffer);
 		}
 	}
 }

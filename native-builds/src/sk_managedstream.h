@@ -42,6 +42,8 @@ typedef struct sk_stream_managedstream_t sk_stream_managedstream_t;
 typedef size_t                     (*sk_managedstream_read_delegate)         (sk_stream_managedstream_t* cmanagedStream, void* buffer, size_t size);
 typedef size_t                     (*sk_managedstream_peek_delegate)         (sk_stream_managedstream_t* cmanagedStream, void* buffer, size_t size);
 typedef bool                       (*sk_managedstream_isAtEnd_delegate)      (const sk_stream_managedstream_t* cmanagedStream);
+typedef bool                       (*sk_managedstream_hasPosition_delegate)  (const sk_stream_managedstream_t* cmanagedStream);
+typedef bool                       (*sk_managedstream_hasLength_delegate)    (const sk_stream_managedstream_t* cmanagedStream);
 typedef bool                       (*sk_managedstream_rewind_delegate)       (sk_stream_managedstream_t* cmanagedStream);
 typedef size_t                     (*sk_managedstream_getPosition_delegate)  (const sk_stream_managedstream_t* cmanagedStream);
 typedef bool                       (*sk_managedstream_seek_delegate)         (sk_stream_managedstream_t* cmanagedStream, size_t position);
@@ -58,6 +60,8 @@ SK_X_API void sk_managedstream_destroy (sk_stream_managedstream_t*);
 SK_X_API void sk_managedstream_set_delegates (const sk_managedstream_read_delegate pRead,
                                               const sk_managedstream_peek_delegate pPeek,
                                               const sk_managedstream_isAtEnd_delegate pIsAtEnd,
+                                              const sk_managedstream_hasPosition_delegate pHasPosition,
+                                              const sk_managedstream_hasLength_delegate pHasLength,
                                               const sk_managedstream_rewind_delegate pRewind,
                                               const sk_managedstream_getPosition_delegate pGetPosition,
                                               const sk_managedstream_seek_delegate pSeek,

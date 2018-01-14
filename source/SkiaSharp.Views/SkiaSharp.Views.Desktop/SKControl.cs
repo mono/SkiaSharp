@@ -6,6 +6,8 @@ using System.Windows.Forms;
 
 namespace SkiaSharp.Views.Desktop
 {
+	[DefaultEvent("PaintSurface")]
+	[DefaultProperty("Name")]
 	public class SKControl : Control
 	{
 		private readonly bool designMode;
@@ -20,8 +22,13 @@ namespace SkiaSharp.Views.Desktop
 			designMode = DesignMode || LicenseManager.UsageMode == LicenseUsageMode.Designtime;
 		}
 
+		[Bindable(false)]
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		[EditorBrowsable(EditorBrowsableState.Never)]
 		public SKSize CanvasSize => bitmap == null ? SKSize.Empty : new SKSize(bitmap.Width, bitmap.Height);
 
+		[Category("Appearance")]
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
 		protected override void OnPaint(PaintEventArgs e)

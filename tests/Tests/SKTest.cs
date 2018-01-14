@@ -3,17 +3,61 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using NUnit.Framework;
-
-// [assembly: Parallelizable(ParallelScope.Fixtures)]
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
 	public abstract class SKTest
 	{
-		protected static readonly string PathToAssembly = Path.GetDirectoryName(typeof(SKTest).GetTypeInfo().Assembly.Location);
+		protected static readonly string PathToAssembly = Directory.GetCurrentDirectory();
 		protected static readonly string PathToFonts = Path.Combine(PathToAssembly, "fonts");
 		protected static readonly string PathToImages = Path.Combine(PathToAssembly, "images");
+
+		protected static void SaveBitmap(SKBitmap bmp, string filename = "output.png")
+		{
+			using (var bitmap = new SKBitmap(bmp.Width, bmp.Height))
+			using (var canvas = new SKCanvas(bitmap))
+			{
+				canvas.Clear(SKColors.Transparent);
+				canvas.DrawBitmap(bmp, 0, 0);
+				canvas.Flush();
+
+				using (var stream = File.OpenWrite(Path.Combine(PathToImages, filename)))
+				using (var image = SKImage.FromBitmap(bitmap))
+				using (var data = image.Encode())
+				{
+					data.SaveTo(stream);
+				}
+			}
+		}
+
+		protected static SKBitmap CreateTestBitmap(byte alpha = 255)
+		{
+			var bmp = new SKBitmap(40, 40);
+			bmp.Erase(SKColors.Transparent);
+
+			using (var canvas = new SKCanvas(bmp))
+			using (var paint = new SKPaint())
+			{
+
+				var x = bmp.Width / 2;
+				var y = bmp.Height / 2;
+
+				paint.Color = SKColors.Red.WithAlpha(alpha);
+				canvas.DrawRect(SKRect.Create(0, 0, x, y), paint);
+
+				paint.Color = SKColors.Green.WithAlpha(alpha);
+				canvas.DrawRect(SKRect.Create(x, 0, x, y), paint);
+
+				paint.Color = SKColors.Blue.WithAlpha(alpha);
+				canvas.DrawRect(SKRect.Create(0, y, x, y), paint);
+
+				paint.Color = SKColors.Yellow.WithAlpha(alpha);
+				canvas.DrawRect(SKRect.Create(x, y, x, y), paint);
+			}
+
+			return bmp;
+		}
 
 #if NET_STANDARD
 		protected static bool IsLinux => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
@@ -97,35 +141,34 @@ namespace SkiaSharp.Tests
 				} else if (IsWindows) {
 					return new WglContext();
 				} else {
-					return null;
+					throw new PlatformNotSupportedException();
 				}
 			} catch (Exception ex) {
-				Assert.Ignore("Unable to create GL context: " + ex.Message);
-				return null;
+				throw new SkipException("Unable to create GL context: " + ex.Message);
 			}
 		}
 
-		private void TestGlVersion()
-		{
-			var minimumVersion = new Version(1, 5);
-			string versionString = null;
+		//private void TestGlVersion()
+		//{
+		//	var minimumVersion = new Version(1, 5);
+		//	string versionString = null;
 
-			if (IsLinux) {
-			} else if (IsMac) {
-			} else if (IsWindows) {
-				versionString = Wgl.VersionString;
-			} else {
-			}
+		//	if (IsLinux) {
+		//	} else if (IsMac) {
+		//	} else if (IsWindows) {
+		//		versionString = Wgl.VersionString;
+		//	} else {
+		//	}
 
-			// OpenGL version number is 'MAJOR.MINOR***'
-			var versionNumber = versionString?.Trim()?.Split(' ')?.FirstOrDefault();
+		//	// OpenGL version number is 'MAJOR.MINOR***'
+		//	var versionNumber = versionString?.Trim()?.Split(' ')?.FirstOrDefault();
 
-			Version version;
-			if (versionNumber != null && Version.TryParse(versionNumber, out version)) {
-				if (version < minimumVersion) {
-					Assert.Ignore($"Available OpenGL version ({versionString}) is below minimum ({minimumVersion}).");
-				}
-			}
-		}
+		//	Version version;
+		//	if (versionNumber != null && Version.TryParse(versionNumber, out version)) {
+		//		if (version < minimumVersion) {
+		//			Assert.Ignore($"Available OpenGL version ({versionString}) is below minimum ({minimumVersion}).");
+		//		}
+		//	}
+		//}
 	}
 }

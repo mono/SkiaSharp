@@ -1,16 +1,13 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{F0179CDB-9435-4FB4-8E52-DBF191079491}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SkiaSharp.Tests</RootNamespace>
-    <AssemblyName>SkiaSharp.Desktop.Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <AssemblyName>SkiaSharp.Tests</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <ShouldIncludeNativeSkiaSharp>True</ShouldIncludeNativeSkiaSharp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -74,18 +71,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NUnit" Version="3.8.1" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.8.0" />
+    <PackageReference Include="xunit" Version="2.4.0-beta1-build3891" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0-beta1-build3891" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\binding\HarfBuzzSharp.Desktop\HarfBuzzSharp.Desktop.csproj">
@@ -120,72 +111,12 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\Content\fonts\content-font.ttf">
-      <Link>fonts\content-font.ttf</Link>
+    <Content Include="..\Content\fonts\*">
+      <Link>fonts\%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\Content\fonts\Distortable.ttf">
-      <Link>fonts\Distortable.ttf</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Content\fonts\Em.ttf">
-      <Link>fonts\Em.ttf</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Content\fonts\Funkster.ttf">
-      <Link>fonts\Funkster.ttf</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Content\fonts\HangingS.ttf">
-      <Link>fonts\HangingS.ttf</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Content\fonts\ReallyBigA.ttf">
-      <Link>fonts\ReallyBigA.ttf</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Content\fonts\Roboto2-Regular_NoEmbed.ttf">
-      <Link>fonts\Roboto2-Regular_NoEmbed.ttf</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Content\fonts\SpiderSymbol.ttf">
-      <Link>fonts\SpiderSymbol.ttf</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Content\fonts\test.ttc">
-      <Link>fonts\test.ttc</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Content\images\baboon.jpg">
-      <Link>images\baboon.jpg</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Content\images\baboon.png">
-      <Link>images\baboon.png</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Content\images\color-wheel.png">
-      <Link>images\color-wheel.png</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Content\images\index8.png">
-      <Link>images\index8.png</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Content\images\logos.svg">
-      <Link>images\logos.svg</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Content\images\animated-heart.gif">
-      <Link>images\animated-heart.gif</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Content\images\CMYK.jpg">
-      <Link>images\CMYK.jpg</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Content\images\map.png">
-      <Link>images\map.png</Link>
+    <Content Include="..\Content\images\*">
+      <Link>images\%(FileName)%(Extension)</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

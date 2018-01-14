@@ -31,13 +31,13 @@ namespace SkiaSharpSample.FormsSample
 
 		private static SampleBase[] GetPlatformSamples()
 		{
-			switch (Device.OS)
+			switch (Device.RuntimePlatform)
 			{
-				case TargetPlatform.iOS:
+				case Device.iOS:
 					return SamplesManager.GetSamples(SamplePlatforms.iOS).ToArray();
-				case TargetPlatform.Android:
+				case Device.Android:
 					return SamplesManager.GetSamples(SamplePlatforms.Android).ToArray();
-				case TargetPlatform.Windows:
+				case Device.UWP:
 					return SamplesManager.GetSamples(SamplePlatforms.UWP).ToArray();
 				default:
 					return SamplesManager.GetSamples(SamplePlatforms.All).ToArray();

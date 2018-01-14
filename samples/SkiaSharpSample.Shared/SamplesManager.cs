@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -18,6 +19,16 @@ namespace SkiaSharpSample
 				.Where(t => samplesBase.IsAssignableFrom(t) && !t.IsAbstract)
 				.Select(t => (SampleBase)Activator.CreateInstance(t.AsType()))
 				.ToArray();
+		}
+
+		public static string TempDataPath { get; set; }
+
+		public static string EnsureTempDataDirectory(string name)
+		{
+			var root = Path.Combine(TempDataPath, name);
+			if (!Directory.Exists(root))
+				Directory.CreateDirectory(root);
+			return root;
 		}
 
 		public static string ContentFontPath

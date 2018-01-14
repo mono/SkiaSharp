@@ -68,6 +68,11 @@ namespace SkiaSharp
 			return (int)SkiaApi.sk_stream_read (Handle, buffer, (IntPtr)size);
 		}
 
+		public int Peek (IntPtr buffer, int size)
+		{
+			return (int)SkiaApi.sk_stream_peek (Handle, buffer, (IntPtr)size);
+		}
+
 		public int Skip (int size)
 		{
 			return (int)SkiaApi.sk_stream_skip (Handle, (IntPtr)size);
@@ -434,11 +439,11 @@ namespace SkiaSharp
 			SkiaApi.sk_dynamicmemorywstream_copy_to (Handle, data);
 		}
 
-		public void CopyTo (SKWStream dst)
+		public bool CopyTo (SKWStream dst)
 		{
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
-			SkiaApi.sk_dynamicmemorywstream_write_to_stream (Handle, dst.Handle);
+			return SkiaApi.sk_dynamicmemorywstream_write_to_stream (Handle, dst.Handle);
 		}
 
 		protected override void Dispose (bool disposing)

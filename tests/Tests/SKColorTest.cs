@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using NUnit.Framework;
+using Xunit;
 
 using SKOtherColor = System.Tuple<float, float, float>;
 using ToOtherColor = System.Tuple<SkiaSharp.SKColor, System.Tuple<float, float, float>, string>;
@@ -11,41 +11,41 @@ namespace SkiaSharp.Tests
 	{
 		private const int Precision = 2;
 
-		[Test]
+		[SkippableFact]
 		public void ColorWithComponent()
 		{
 			var color = new SKColor();
-			Assert.AreEqual(0, color.Red);
-			Assert.AreEqual(0, color.Green);
-			Assert.AreEqual(0, color.Blue);
-			Assert.AreEqual(0, color.Alpha);
+			Assert.Equal(0, color.Red);
+			Assert.Equal(0, color.Green);
+			Assert.Equal(0, color.Blue);
+			Assert.Equal(0, color.Alpha);
 
 			var red = color.WithRed(255);
-			Assert.AreEqual(255, red.Red);
-			Assert.AreEqual(0, red.Green);
-			Assert.AreEqual(0, red.Blue);
-			Assert.AreEqual(0, red.Alpha);
+			Assert.Equal(255, red.Red);
+			Assert.Equal(0, red.Green);
+			Assert.Equal(0, red.Blue);
+			Assert.Equal(0, red.Alpha);
 
 			var green = color.WithGreen(255);
-			Assert.AreEqual(0, green.Red);
-			Assert.AreEqual(255, green.Green);
-			Assert.AreEqual(0, green.Blue);
-			Assert.AreEqual(0, green.Alpha);
+			Assert.Equal(0, green.Red);
+			Assert.Equal(255, green.Green);
+			Assert.Equal(0, green.Blue);
+			Assert.Equal(0, green.Alpha);
 
 			var blue = color.WithBlue(255);
-			Assert.AreEqual(0, blue.Red);
-			Assert.AreEqual(0, blue.Green);
-			Assert.AreEqual(255, blue.Blue);
-			Assert.AreEqual(0, blue.Alpha);
+			Assert.Equal(0, blue.Red);
+			Assert.Equal(0, blue.Green);
+			Assert.Equal(255, blue.Blue);
+			Assert.Equal(0, blue.Alpha);
 
 			var alpha = color.WithAlpha(255);
-			Assert.AreEqual(0, alpha.Red);
-			Assert.AreEqual(0, alpha.Green);
-			Assert.AreEqual(0, alpha.Blue);
-			Assert.AreEqual(255, alpha.Alpha);
+			Assert.Equal(0, alpha.Red);
+			Assert.Equal(0, alpha.Green);
+			Assert.Equal(0, alpha.Blue);
+			Assert.Equal(255, alpha.Alpha);
 		}
 
-		[Test]
+		[SkippableFact]
 		public void ColorRgbToHsl()
 		{
 			var tuples = new List<ToOtherColor> {
@@ -69,21 +69,21 @@ namespace SkiaSharp.Tests
 				float h, s, l;
 				rgb.ToHsl(out h, out s, out l);
 
-				Assert.AreEqual(other.Item1, h, Precision);
-				Assert.AreEqual(other.Item2, s, Precision);
-				Assert.AreEqual(other.Item3, l, Precision);
+				Assert.Equal(other.Item1, h, Precision);
+				Assert.Equal(other.Item2, s, Precision);
+				Assert.Equal(other.Item3, l, Precision);
 
 				// to RGB
 				SKColor back = SKColor.FromHsl(other.Item1, other.Item2, other.Item3);
 
-				Assert.AreEqual(rgb.Red, back.Red);
-				Assert.AreEqual(rgb.Green, back.Green);
-				Assert.AreEqual(rgb.Blue, back.Blue);
-				Assert.AreEqual(rgb.Alpha, back.Alpha);
+				Assert.Equal(rgb.Red, back.Red);
+				Assert.Equal(rgb.Green, back.Green);
+				Assert.Equal(rgb.Blue, back.Blue);
+				Assert.Equal(rgb.Alpha, back.Alpha);
 			}
 		}
 
-		[Test]
+		[SkippableFact]
 		public void ColorRgbToHsv()
 		{
 			var tuples = new List<ToOtherColor> {
@@ -107,21 +107,21 @@ namespace SkiaSharp.Tests
 				float h, s, v;
 				rgb.ToHsv(out h, out s, out v);
 
-				Assert.AreEqual(other.Item1, h, Precision);
-				Assert.AreEqual(other.Item2, s, Precision);
-				Assert.AreEqual(other.Item3, v, Precision);
+				Assert.Equal(other.Item1, h, Precision);
+				Assert.Equal(other.Item2, s, Precision);
+				Assert.Equal(other.Item3, v, Precision);
 
 				// to RGB
 				SKColor back = SKColor.FromHsv(other.Item1, other.Item2, other.Item3);
 
-				Assert.AreEqual(rgb.Red, back.Red);
-				Assert.AreEqual(rgb.Green, back.Green);
-				Assert.AreEqual(rgb.Blue, back.Blue);
-				Assert.AreEqual(rgb.Alpha, back.Alpha);
+				Assert.Equal(rgb.Red, back.Red);
+				Assert.Equal(rgb.Green, back.Green);
+				Assert.Equal(rgb.Blue, back.Blue);
+				Assert.Equal(rgb.Alpha, back.Alpha);
 			}
 		}
 
-		[Test]
+		[SkippableFact]
 		public void HexToColor()
 		{
 			var tuples = new List<Tuple<string, SKColor>> {
@@ -151,11 +151,11 @@ namespace SkiaSharp.Tests
 
 				SKColor color = SKColor.Parse(hex);
 
-				Assert.AreEqual(other, color);
+				Assert.Equal(other, color);
 			}
 		}
 
-		[Test]
+		[SkippableFact]
 		public void InvalidHexToColor()
 		{
 			var tuples = new List<string> {
@@ -177,12 +177,12 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Test]
+		[SkippableFact]
 		public void PremultipliedColorsHaveCorrectBitShift()
 		{
 			var color = (SKColor)0x12345678;
 
-			Assert.AreEqual(new SKColor(0x34, 0x56, 0x78, 0x12), color);
+			Assert.Equal(new SKColor(0x34, 0x56, 0x78, 0x12), color);
 
 			SKPMColor pmcolor;
 			if (IsWindows || IsLinux) {
@@ -191,30 +191,30 @@ namespace SkiaSharp.Tests
 				pmcolor = (SKPMColor)0x12785634;
 			}
 
-			Assert.AreEqual(0x12, color.Alpha);
-			Assert.AreEqual(0x12, pmcolor.Alpha);
+			Assert.Equal(0x12, color.Alpha);
+			Assert.Equal(0x12, pmcolor.Alpha);
 
-			Assert.AreEqual(0x34, color.Red);
-			Assert.AreEqual(0x34, pmcolor.Red);
+			Assert.Equal(0x34, color.Red);
+			Assert.Equal(0x34, pmcolor.Red);
 
-			Assert.AreEqual(0x56, color.Green);
-			Assert.AreEqual(0x56, pmcolor.Green);
+			Assert.Equal(0x56, color.Green);
+			Assert.Equal(0x56, pmcolor.Green);
 
-			Assert.AreEqual(0x78, color.Blue);
-			Assert.AreEqual(0x78, pmcolor.Blue);
+			Assert.Equal(0x78, color.Blue);
+			Assert.Equal(0x78, pmcolor.Blue);
 
 			if (IsWindows || IsLinux) {
 				// ARGB
-				Assert.AreEqual(24, SKImageInfo.PlatformColorAlphaShift);
-				Assert.AreEqual(16, SKImageInfo.PlatformColorRedShift);
-				Assert.AreEqual(8, SKImageInfo.PlatformColorGreenShift);
-				Assert.AreEqual(0, SKImageInfo.PlatformColorBlueShift);
+				Assert.Equal(24, SKImageInfo.PlatformColorAlphaShift);
+				Assert.Equal(16, SKImageInfo.PlatformColorRedShift);
+				Assert.Equal(8, SKImageInfo.PlatformColorGreenShift);
+				Assert.Equal(0, SKImageInfo.PlatformColorBlueShift);
 			} else {
 				// ABGR
-				Assert.AreEqual(24, SKImageInfo.PlatformColorAlphaShift);
-				Assert.AreEqual(0, SKImageInfo.PlatformColorRedShift);
-				Assert.AreEqual(8, SKImageInfo.PlatformColorGreenShift);
-				Assert.AreEqual(16, SKImageInfo.PlatformColorBlueShift);
+				Assert.Equal(24, SKImageInfo.PlatformColorAlphaShift);
+				Assert.Equal(0, SKImageInfo.PlatformColorRedShift);
+				Assert.Equal(8, SKImageInfo.PlatformColorGreenShift);
+				Assert.Equal(16, SKImageInfo.PlatformColorBlueShift);
 			}
 		}
 	}

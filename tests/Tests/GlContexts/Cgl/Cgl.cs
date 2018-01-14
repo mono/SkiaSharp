@@ -8,6 +8,10 @@ namespace SkiaSharp.Tests
 	{
 		private const string libGL = "/System/Library/Frameworks/OpenGL.framework/Versions/A/OpenGL";
 
+		public const int GL_TEXTURE_2D = 0x0DE1;
+		public const int GL_UNSIGNED_BYTE = 0x1401;
+		public const int GL_RGBA = 0x1908;
+
 		[DllImport(libGL)]
 		public extern static void CGLGetVersion(out int majorvers, out int minorvers);
 		[DllImport(libGL)]
@@ -22,5 +26,13 @@ namespace SkiaSharp.Tests
 		public extern static void CGLReleaseContext(IntPtr ctx);
 		[DllImport(libGL)]
 		public extern static CGLError CGLFlushDrawable(IntPtr ctx);
+		[DllImport(libGL)]
+		public static extern void glGenTextures(int n, uint[] textures);
+		[DllImport(libGL)]
+		public static extern void glDeleteTextures(int n, uint[] textures);
+		[DllImport(libGL)]
+		public static extern void glBindTexture(uint target, uint texture);
+		[DllImport(libGL)]
+		public static extern void glTexImage2D(uint target, int level, int internalformat, int width, int height, int border, uint format, uint type, IntPtr pixels);
 	}
 }

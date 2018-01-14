@@ -85,7 +85,7 @@ namespace SkiaSharp
 			return GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream (stream.Handle, dpi));
 		}
 
-		public unsafe static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata, float dpi = DefaultRasterDpi)
+		public static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata, float dpi = DefaultRasterDpi)
 		{
 			if (stream == null) {
 				throw new ArgumentNullException (nameof(stream));
@@ -106,16 +106,19 @@ namespace SkiaSharp
 					Creator = creator?.Handle ?? IntPtr.Zero,
 					Producer = producer?.Handle ?? IntPtr.Zero
 				};
-				if (metadata.Creation != null) {
-					var creation = SKTimeDateTimeInternal.Create (metadata.Creation.Value);
-					cmetadata.Creation = &creation;
-				}
-				if (metadata.Modified != null) {
-					var modified = SKTimeDateTimeInternal.Create (metadata.Modified.Value);
-					cmetadata.Modified = &modified;
-				}
 
-				return GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream_with_metadata (stream.Handle, dpi, ref cmetadata));
+				unsafe {
+					if (metadata.Creation != null) {
+						var creation = SKTimeDateTimeInternal.Create (metadata.Creation.Value);
+						cmetadata.Creation = &creation;
+					}
+					if (metadata.Modified != null) {
+						var modified = SKTimeDateTimeInternal.Create (metadata.Modified.Value);
+						cmetadata.Modified = &modified;
+					}
+
+					return GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream_with_metadata (stream.Handle, dpi, ref cmetadata));
+				}
 			}
 		}
 	}
