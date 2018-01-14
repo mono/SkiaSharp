@@ -35,7 +35,7 @@ _Make sure the [Visual C++ Redistributable for Visual Studio 2015](https://www.m
 is installed if this error occurs on Windows:_
  > Unable to load DLL 'libSkiaSharp.dll': The specified module could not be found.
 
-_At this point in time, we do not ship a native Linux binary in the NuGet package, but you can either download our internal Linux [binaries attached to the specific release](https://github.com/mono/SkiaSharp/releases) or you can build your own using the directions below._
+_At this point in time, we do not ship a native Linux binary in the NuGet package, but you can either download our internal [Linux binaries attached to the specific release](https://github.com/mono/SkiaSharp/releases) or you can build your own using the directions below._
 
 ## Building SkiaSharp
 
