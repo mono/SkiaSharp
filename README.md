@@ -35,7 +35,7 @@ _Make sure the [Visual C++ Redistributable for Visual Studio 2015](https://www.m
 is installed if this error occurs on Windows:_
  > Unable to load DLL 'libSkiaSharp.dll': The specified module could not be found.
 
-_At this point in time, we do not ship a native Linux binary, but you can build your own using the directions below._
+_At this point in time, we do not ship a native Linux binary in the NuGet package, but you can either download our internal Linux [binaries attached to the specific release](https://github.com/mono/SkiaSharp/releases) or you can build your own using the directions below._
 
 ## Building SkiaSharp
 
@@ -63,13 +63,6 @@ Mac/Linux:
 Windows:
 
     > .\bootstrapper.ps1 -Target everything
-
-_If you are updating the source using a previous checkout, make sure to run the `clean` target before building._
-
-## New Skia Features Roadmap
-
-Google has created a [nice doc with a collection of high level items](https://docs.google.com/document/d/1C9w8qpPpdgNGThqmgNnTToLZ5UYK4TsUGl5X3B_q6oM/edit)
-they have on tap the next 6-12 months. Note it is a living document that changes based on the requirements of the library's users.
 
 ## Compare Code
 
