@@ -69,6 +69,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Trait(Category, GpuCategory)]
 		[SkippableFact]
 		public void GpuBackendSurfaceIsCreated()
 		{
@@ -83,6 +84,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
+		[Trait(Category, GpuCategory)]
 		[SkippableFact]
 		public void GpuTextureSurfaceIsCreated()
 		{
@@ -97,6 +99,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
+		[Trait(Category, GpuCategory)]
 		[SkippableFact]
 		public void GpuTextureSurfaceCanBeRead()
 		{

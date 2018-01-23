@@ -9,6 +9,9 @@ namespace SkiaSharp.Tests
 {
 	public abstract class SKTest
 	{
+		protected const string Category = nameof(Category);
+		protected const string GpuCategory = "GPU";
+
 		protected static readonly string PathToAssembly = Directory.GetCurrentDirectory();
 		protected static readonly string PathToFonts = Path.Combine(PathToAssembly, "fonts");
 		protected static readonly string PathToImages = Path.Combine(PathToAssembly, "images");
