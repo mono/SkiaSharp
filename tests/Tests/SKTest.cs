@@ -9,6 +9,33 @@ namespace SkiaSharp.Tests
 {
 	public abstract class SKTest
 	{
+#if !NET_STANDARD
+		static SKTest()
+		{
+			// some platforms run the tests from a temporary location
+
+			var skiaRoot = Path.GetDirectoryName(typeof(SkiaSharp.SKImageInfo).Assembly.Location);
+			var harfRoot = Path.GetDirectoryName(typeof(HarfBuzzSharp.Buffer).Assembly.Location);
+
+			foreach (var file in Directory.GetFiles(PathToAssembly))
+			{
+				var fname = Path.GetFileNameWithoutExtension(file);
+
+				var skiaDest = Path.Combine(skiaRoot, Path.GetFileName(file));
+				if (fname == "libSkiaSharp" && !File.Exists(skiaDest))
+				{
+					File.Copy(file, skiaDest, true);
+				}
+
+				var harfDest = Path.Combine(harfRoot, Path.GetFileName(file));
+				if (fname == "libHarfBuzzSharp" && !File.Exists(harfDest))
+				{
+					File.Copy(file, harfDest, true);
+				}
+			}
+		}
+#endif
+
 		protected const string Category = nameof(Category);
 		protected const string GpuCategory = "GPU";
 

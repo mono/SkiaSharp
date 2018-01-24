@@ -58,6 +58,14 @@
       <Link>nuget\runtimes\osx\native\libHarfBuzzSharp.dylib</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\..\native-builds\lib\linux\x64\libHarfBuzzSharp.so" Condition="Exists('..\..\native-builds\lib\linux\x64\libHarfBuzzSharp.so')">
+      <Link>nuget\runtimes\linux-x64\native\libHarfBuzzSharp.so</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\native-builds\lib\linux\x86\libHarfBuzzSharp.so" Condition="Exists('..\..\native-builds\lib\linux\x86\libHarfBuzzSharp.so')">
+      <Link>nuget\runtimes\linux-x86\native\libHarfBuzzSharp.so</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="nuget\build\net45\HarfBuzzSharp.Desktop.targets">
