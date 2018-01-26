@@ -223,7 +223,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal (codecPixels, bitmapPixels);
 		}
 	
-		[SkippableFact(Skip = "Appears to fail on CI...")]
+		[SkippableFact]
 		public void DownloadedStream ()
 		{
 			var httpClient = new HttpClient ();
