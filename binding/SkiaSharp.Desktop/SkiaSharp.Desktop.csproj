@@ -62,6 +62,14 @@
       <Link>nuget\runtimes\osx\native\libSkiaSharp.dylib</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\..\native-builds\lib\linux\x64\libSkiaSharp.so" Condition="Exists('..\..\native-builds\lib\linux\x64\libSkiaSharp.so')">
+      <Link>nuget\runtimes\linux-x64\native\libSkiaSharp.so</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\native-builds\lib\linux\x86\libSkiaSharp.so" Condition="Exists('..\..\native-builds\lib\linux\x86\libSkiaSharp.so')">
+      <Link>nuget\runtimes\linux-x86\native\libSkiaSharp.so</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="nuget\build\net45\SkiaSharp.Desktop.targets">

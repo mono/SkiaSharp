@@ -87,10 +87,10 @@ var RunProcess = new Action<FilePath, ProcessSettings> ((process, settings) =>
     }
 });
 
-var RunTests = new Action<FilePath, bool> ((testAssembly, is32) =>
+var RunTests = new Action<FilePath, string[], bool> ((testAssembly, skip, is32) =>
 {
     var dir = testAssembly.GetDirectory ();
-    XUnit2 (new [] { testAssembly }, new XUnit2Settings {
+    var settings = new XUnit2Settings {
         NUnitReport = true,
         ReportName = "TestResult",
         UseX86 = is32,
@@ -98,13 +98,23 @@ var RunTests = new Action<FilePath, bool> ((testAssembly, is32) =>
         OutputDirectory = dir,
         WorkingDirectory = dir,
         ArgumentCustomization = args => args.Append ("-verbose"),
-    });
+    };
+    if (skip != null) {
+        settings.TraitsToExclude.Add ("Category", skip);
+    }
+    XUnit2 (new [] { testAssembly }, settings);
 });
 
-var RunNetCoreTests = new Action<FilePath> ((testAssembly) =>
+var RunNetCoreTests = new Action<FilePath, string[]> ((testAssembly, skip) =>
 {
     var dir = testAssembly.GetDirectory ();
-    DotNetCoreTool(testAssembly, "xunit", "-verbose -parallel none -nunit \"TestResult.xml\"", new DotNetCoreToolSettings {
+    string skipString = string.Empty;
+    if (skip != null) {
+        foreach (var s in skip) {
+            skipString += " -notrait \"Category=" + skip + "\"";
+        }
+    }
+    DotNetCoreTool(testAssembly, "xunit", "-verbose -parallel none -nunit \"TestResult.xml\"" + skipString, new DotNetCoreToolSettings {
         WorkingDirectory = dir,
     });
 });

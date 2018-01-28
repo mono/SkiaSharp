@@ -6,6 +6,7 @@ namespace SkiaSharp.Tests
 {
 	public class GRContextTest : SKTest
 	{
+		[Trait(Category, GpuCategory)]
 		[SkippableFact]
 		public void CreateDefaultContextIsValid()
 		{
@@ -18,6 +19,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Trait(Category, GpuCategory)]
 		[SkippableFact]
 		public void CreateSpecificContextIsValid()
 		{
@@ -34,6 +36,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Trait(Category, GpuCategory)]
 		[SkippableFact]
 		public void GpuSurfaceIsCreated()
 		{
