@@ -259,7 +259,7 @@ Task ("samples")
     .Does (() => 
 {
     ClearSkiaSharpNuGetCache ();
-    CleanDirectories ("./samples/*/packages/SkiaSharp.*");
+    CleanDirectories ("./samples/*/*/packages/SkiaSharp.*");
 
     // zip the samples for the GitHub release notes
     if (IS_ON_CI) {
@@ -271,23 +271,23 @@ Task ("samples")
     }
 
     if (IsRunningOnMac ()) {
-        RunNuGetRestore ("./samples/MacSample/MacSample.sln");
-        RunMSBuildWithPlatform ("./samples/MacSample/MacSample.sln", "x86");
-        RunNuGetRestore ("./samples/FormsSample/FormsSample.Mac.sln");
-        RunMSBuildWithPlatform ("./samples/FormsSample/FormsSample.Mac.sln", "iPhone");
-        RunNuGetRestore ("./samples/TvSample/TvSample.sln");
-        RunMSBuildWithPlatform ("./samples/TvSample/TvSample.sln", "iPhoneSimulator");
+        RunNuGetRestore ("./samples/Gallery/MacSample/MacSample.sln");
+        RunMSBuildWithPlatform ("./samples/Gallery/MacSample/MacSample.sln", "x86");
+        RunNuGetRestore ("./samples/Gallery/FormsSample/FormsSample.Mac.sln");
+        RunMSBuildWithPlatform ("./samples/Gallery/FormsSample/FormsSample.Mac.sln", "iPhone");
+        RunNuGetRestore ("./samples/Gallery/TvSample/TvSample.sln");
+        RunMSBuildWithPlatform ("./samples/Gallery/TvSample/TvSample.sln", "iPhoneSimulator");
     }
     
     if (IsRunningOnWindows ()) {
-        RunNuGetRestore ("./samples/WPFSample/WPFSample.sln");
-        RunMSBuild ("./samples/WPFSample/WPFSample.sln");
-        RunNuGetRestore ("./samples/UWPSample/UWPSample.sln");
-        RunMSBuildWithPlatformTarget ("./samples/UWPSample/UWPSample.sln", "x86");
-        RunNuGetRestore ("./samples/FormsSample/FormsSample.Windows.sln");
-        RunMSBuildWithPlatformTarget ("./samples/FormsSample/FormsSample.Windows.sln", "x86");
-        RunNuGetRestore ("./samples/WindowsSample/WindowsSample.sln");
-        RunMSBuild ("./samples/WindowsSample/WindowsSample.sln");
+        RunNuGetRestore ("./samples/Gallery/WPFSample/WPFSample.sln");
+        RunMSBuild ("./samples/Gallery/WPFSample/WPFSample.sln");
+        RunNuGetRestore ("./samples/Gallery/UWPSample/UWPSample.sln");
+        RunMSBuildWithPlatformTarget ("./samples/Gallery/UWPSample/UWPSample.sln", "x86");
+        RunNuGetRestore ("./samples/Gallery/FormsSample/FormsSample.Windows.sln");
+        RunMSBuildWithPlatformTarget ("./samples/Gallery/FormsSample/FormsSample.Windows.sln", "x86");
+        RunNuGetRestore ("./samples/Gallery/WindowsSample/WindowsSample.sln");
+        RunMSBuild ("./samples/Gallery/WindowsSample/WindowsSample.sln");
     }
 });
 
@@ -548,11 +548,11 @@ Task ("set-versions")
     add ("./source/*/*/*.nuget.targets");
     add ("./source/*/*/*.csproj");
     // sample packages files
-    add ("./samples/*/*/packages.config");
-    add ("./samples/*/*/project.json");
+    add ("./samples/*/*/*/packages.config");
+    add ("./samples/*/*/*/project.json");
     // sample project files
-    add ("./samples/*/*/*.nuget.targets");
-    add ("./samples/*/*/*.csproj");
+    add ("./samples/*/*/*/*.nuget.targets");
+    add ("./samples/*/*/*/*.csproj");
     // tests packages files
     add ("./tests/*/packages.config");
     add ("./tests/*/project.json");
@@ -602,14 +602,14 @@ Task ("clean-managed").Does (() =>
     CleanDirectories ("./binding/*/obj");
     DeleteFiles ("./binding/*/project.lock.json");
 
-    CleanDirectories ("./samples/*/bin");
-    CleanDirectories ("./samples/*/obj");
-    CleanDirectories ("./samples/*/AppPackages");
     CleanDirectories ("./samples/*/*/bin");
     CleanDirectories ("./samples/*/*/obj");
-    DeleteFiles ("./samples/*/*/project.lock.json");
     CleanDirectories ("./samples/*/*/AppPackages");
-    CleanDirectories ("./samples/*/packages");
+    CleanDirectories ("./samples/*/*/*/bin");
+    CleanDirectories ("./samples/*/*/*/obj");
+    DeleteFiles ("./samples/*/*/*/project.lock.json");
+    CleanDirectories ("./samples/*/*/*/AppPackages");
+    CleanDirectories ("./samples/*/*/packages");
 
     CleanDirectories ("./tests/**/bin");
     CleanDirectories ("./tests/**/obj");
