@@ -86,7 +86,7 @@ Task ("libs")
     .Does (() => 
 {
     // create all the directories
-    EnsureDirectoryExists ("./output/windows/");
+    EnsureDirectoryExists ("./output/wpf/");
     EnsureDirectoryExists ("./output/uwp/");
     EnsureDirectoryExists ("./output/android/");
     EnsureDirectoryExists ("./output/ios/");
@@ -99,6 +99,7 @@ Task ("libs")
     EnsureDirectoryExists ("./output/linux/");
     EnsureDirectoryExists ("./output/interactive/");
     EnsureDirectoryExists ("./output/desktop/");
+    EnsureDirectoryExists ("./output/gtk/");
 
     // .NET Standard / .NET Core
     RunNuGetRestore ("source/SkiaSharpSource.NetStandard.sln");
@@ -125,10 +126,8 @@ Task ("libs")
         CopyFileToDirectory ("./binding/HarfBuzzSharp.UWP/bin/Release/HarfBuzzSharp.pri", "./output/uwp/");
         // SkiaSharp.Views
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.UWP/bin/Release/SkiaSharp.Views.UWP.dll", "./output/uwp/");
-        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Desktop/bin/Release/SkiaSharp.Views.Desktop.dll", "./output/windows/");
-        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.WPF/bin/Release/SkiaSharp.Views.WPF.dll", "./output/windows/");
+        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.WPF/bin/Release/SkiaSharp.Views.WPF.dll", "./output/wpf/");
         // SkiaSharp.Views.Forms
-        CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms/bin/Release/SkiaSharp.Views.Forms.dll", "./output/portable/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.UWP/bin/Release/SkiaSharp.Views.Forms.dll", "./output/uwp/");
     } else if (IsRunningOnMac ()) {
         // fix for old MSBuild
@@ -153,7 +152,6 @@ Task ("libs")
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.tvOS/bin/Release/SkiaSharp.Views.tvOS.dll", "./output/tvos/");
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.watchOS/bin/Release/SkiaSharp.Views.watchOS.dll", "./output/watchos/");
         // SkiaSharp.Views.Forms
-        CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms/bin/Release/SkiaSharp.Views.Forms.dll", "./output/portable/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Android/bin/Release/SkiaSharp.Views.Forms.dll", "./output/android/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.iOS/bin/Release/SkiaSharp.Views.Forms.dll", "./output/ios/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Mac/bin/Release/SkiaSharp.Views.Forms.dll", "./output/osx/");
@@ -166,6 +164,11 @@ Task ("libs")
     CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.dll.config", "./output/desktop/");
     CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.Desktop.targets", "./output/desktop/");
     CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
+    // SkiaSharp.Views
+    CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Desktop/bin/Release/SkiaSharp.Views.Desktop.dll", "./output/desktop/");
+    CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Gtk/bin/Release/SkiaSharp.Views.Gtk.dll", "./output/gtk/");
+    // SkiaSharp.Views.Forms
+    CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms/bin/Release/SkiaSharp.Views.Forms.dll", "./output/portable/");
     // HarfBuzzSharp
     CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/HarfBuzzSharp.dll", "./output/desktop/");
     CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/nuget/build/net45/HarfBuzzSharp.dll.config", "./output/desktop/");
@@ -396,8 +399,9 @@ Task ("update-docs")
     // add windows-specific assemblies
     if (IsRunningOnWindows ()) {
         assemblies = assemblies.Union (new FilePath [] {
-            "./output/windows/SkiaSharp.Views.Desktop.dll",
-            "./output/windows/SkiaSharp.Views.WPF.dll",
+            "./output/desktop/SkiaSharp.Views.Desktop.dll",
+            "./output/gtk/SkiaSharp.Views.Gtk.dll",
+            "./output/wpf/SkiaSharp.Views.WPF.dll",
             "./output/android/SkiaSharp.Views.Android.dll",
             "./output/ios/SkiaSharp.Views.iOS.dll",
             "./output/osx/SkiaSharp.Views.Mac.dll",
@@ -409,11 +413,20 @@ Task ("update-docs")
     // add mac-specific assemblies
     if (IsRunningOnMac ()) {
         assemblies = assemblies.Union (new FilePath [] {
+            "./output/desktop/SkiaSharp.Views.Desktop.dll",
+            "./output/gtk/SkiaSharp.Views.Gtk.dll",
             "./output/android/SkiaSharp.Views.Android.dll",
             "./output/ios/SkiaSharp.Views.iOS.dll",
             "./output/osx/SkiaSharp.Views.Mac.dll",
             "./output/tvos/SkiaSharp.Views.tvOS.dll",
             "./output/watchos/SkiaSharp.Views.watchOS.dll",
+        }).ToArray ();
+    }
+    // add linux-specific assemblies
+    if (IsRunningOnLinux ()) {
+        assemblies = assemblies.Union (new FilePath [] {
+            "./output/desktop/SkiaSharp.Views.Desktop.dll",
+            "./output/gtk/SkiaSharp.Views.Gtk.dll",
         }).ToArray ();
     }
 
@@ -493,6 +506,7 @@ Task ("nuget")
         if (IsRunningOnLinux ()) {
             PackageNuGet ("./nuget/SkiaSharp.Linux.nuspec", "./output/");
             PackageNuGet ("./nuget/HarfBuzzSharp.Linux.nuspec", "./output/");
+            PackageNuGet ("./nuget/SkiaSharp.Views.Linux.nuspec", "./output/");
         }
     }
     // HarfBuzz is a PCL
