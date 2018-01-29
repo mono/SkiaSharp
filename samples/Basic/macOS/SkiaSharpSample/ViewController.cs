@@ -1,14 +1,14 @@
 ﻿using System;
-using UIKit;
+using AppKit;
 
 using SkiaSharp;
-using SkiaSharp.Views.iOS;
+using SkiaSharp.Views.Mac;
 
 namespace SkiaSharpSample
 {
-	public partial class ViewController : UIViewController
+	public partial class ViewController : NSViewController
 	{
-		protected ViewController(IntPtr handle)
+		public ViewController(IntPtr handle)
 			: base(handle)
 		{
 		}
@@ -26,7 +26,7 @@ namespace SkiaSharpSample
 			var canvas = e.Surface.Canvas;
 
 			// get the screen density for scaling
-			var scale = (float)skiaView.ContentScaleFactor;
+			var scale = (float)skiaView.Window.BackingScaleFactor;
 
 			// handle the device screen density
 			canvas.Scale(scale);

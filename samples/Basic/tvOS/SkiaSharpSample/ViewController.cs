@@ -2,13 +2,13 @@
 using UIKit;
 
 using SkiaSharp;
-using SkiaSharp.Views.iOS;
+using SkiaSharp.Views.tvOS;
 
 namespace SkiaSharpSample
 {
 	public partial class ViewController : UIViewController
 	{
-		protected ViewController(IntPtr handle)
+		public ViewController(IntPtr handle)
 			: base(handle)
 		{
 		}
@@ -41,7 +41,7 @@ namespace SkiaSharpSample
 				IsAntialias = true,
 				Style = SKPaintStyle.Fill,
 				TextAlign = SKTextAlign.Center,
-				TextSize = 24
+				TextSize = 48
 			};
 			var coord = new SKPoint((float)skiaView.Bounds.Width / 2, ((float)skiaView.Bounds.Height + paint.TextSize) / 2);
 			canvas.DrawText("SkiaSharp", coord, paint);
