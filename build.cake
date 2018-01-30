@@ -292,7 +292,7 @@ Task ("samples")
         RunNuGetRestore ("./samples/Basic/iOS/SkiaSharpSample.sln");
         RunMSBuildWithPlatform ("./samples/Basic/iOS/SkiaSharpSample.sln", "iPhone");
         RunNuGetRestore ("./samples/Basic/macOS/SkiaSharpSample.sln");
-        RunMSBuildWithPlatform ("./samples/Basic/macOS/SkiaSharpSample.sln", "x86");
+        RunMSBuild ("./samples/Basic/macOS/SkiaSharpSample.sln");
         RunNuGetRestore ("./samples/Basic/tvOS/SkiaSharpSample.sln");
         RunMSBuildWithPlatform ("./samples/Basic/tvOS/SkiaSharpSample.sln", "iPhoneSimulator");
         RunNuGetRestore ("./samples/Basic/Gtk/SkiaSharpSample.sln");
