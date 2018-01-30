@@ -151,6 +151,7 @@ Task ("libs")
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Mac/bin/Release/SkiaSharp.Views.Mac.dll", "./output/osx/");
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.tvOS/bin/Release/SkiaSharp.Views.tvOS.dll", "./output/tvos/");
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.watchOS/bin/Release/SkiaSharp.Views.watchOS.dll", "./output/watchos/");
+        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Gtk/bin/Release/SkiaSharp.Views.Gtk.dll", "./output/gtk/");
         // SkiaSharp.Views.Forms
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Android/bin/Release/SkiaSharp.Views.Forms.dll", "./output/android/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.iOS/bin/Release/SkiaSharp.Views.Forms.dll", "./output/ios/");
@@ -158,6 +159,8 @@ Task ("libs")
     } else if (IsRunningOnLinux ()) {
         RunNuGetRestore ("./source/SkiaSharpSource.Linux.sln");
         RunMSBuild ("./source/SkiaSharpSource.Linux.sln");
+        // SkiaSharp.Views
+        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Gtk/bin/Release/SkiaSharp.Views.Gtk.dll", "./output/gtk/");
     }
     // SkiaSharp
     CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll", "./output/desktop/");
@@ -166,7 +169,6 @@ Task ("libs")
     CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
     // SkiaSharp.Views
     CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Desktop/bin/Release/SkiaSharp.Views.Desktop.dll", "./output/desktop/");
-    CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Gtk/bin/Release/SkiaSharp.Views.Gtk.dll", "./output/gtk/");
     // SkiaSharp.Views.Forms
     CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms/bin/Release/SkiaSharp.Views.Forms.dll", "./output/portable/");
     // HarfBuzzSharp
@@ -400,7 +402,6 @@ Task ("update-docs")
     if (IsRunningOnWindows ()) {
         assemblies = assemblies.Union (new FilePath [] {
             "./output/desktop/SkiaSharp.Views.Desktop.dll",
-            "./output/gtk/SkiaSharp.Views.Gtk.dll",
             "./output/wpf/SkiaSharp.Views.WPF.dll",
             "./output/android/SkiaSharp.Views.Android.dll",
             "./output/ios/SkiaSharp.Views.iOS.dll",
