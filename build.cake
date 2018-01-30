@@ -274,13 +274,13 @@ Task ("samples")
     // BASIC samples
     RunNuGetRestore ("./samples/Basic/NetCore/SkiaSharpSample.sln");
     RunMSBuild ("./samples/Basic/NetCore/SkiaSharpSample.sln");
-    RunNuGetRestore ("./samples/Basic/Gtk/SkiaSharpSample.sln");
-    RunMSBuild ("./samples/Basic/Gtk/SkiaSharpSample.sln");
 
     // GALLERY samples
 
     if (IsRunningOnLinux ()) {
         // BASIC samples
+        RunNuGetRestore ("./samples/Basic/Gtk/SkiaSharpSample.sln");
+        RunMSBuild ("./samples/Basic/Gtk/SkiaSharpSample.sln");
 
         // GALLERY samples
     }
@@ -295,6 +295,8 @@ Task ("samples")
         RunMSBuildWithPlatform ("./samples/Basic/macOS/SkiaSharpSample.sln", "x86");
         RunNuGetRestore ("./samples/Basic/tvOS/SkiaSharpSample.sln");
         RunMSBuildWithPlatform ("./samples/Basic/tvOS/SkiaSharpSample.sln", "iPhoneSimulator");
+        RunNuGetRestore ("./samples/Basic/Gtk/SkiaSharpSample.sln");
+        RunMSBuild ("./samples/Basic/Gtk/SkiaSharpSample.sln");
 
         // GALLERY samples
         RunNuGetRestore ("./samples/Gallery/MacSample/MacSample.sln");
