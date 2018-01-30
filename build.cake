@@ -262,18 +262,39 @@ Task ("samples")
     .Does (() => 
 {
     ClearSkiaSharpNuGetCache ();
-    CleanDirectories ("./samples/*/*/packages/SkiaSharp.*");
+    CleanDirectories ("./samples/*/*/*/packages/SkiaSharp.*");
 
     // zip the samples for the GitHub release notes
     if (IS_ON_CI) {
         Zip ("./samples", "./output/samples.zip");
     }
 
-    if (IsRunningOnLinux ()) {
+    // BASIC samples
+    RunNuGetRestore ("./samples/Basic/NetCore/SkiaSharpSample.sln");
+    RunMSBuild ("./samples/Basic/NetCore/SkiaSharpSample.sln");
+    RunNuGetRestore ("./samples/Basic/Gtk/SkiaSharpSample.sln");
+    RunMSBuild ("./samples/Basic/Gtk/SkiaSharpSample.sln");
 
+    // GALLERY samples
+
+    if (IsRunningOnLinux ()) {
+        // BASIC samples
+
+        // GALLERY samples
     }
 
     if (IsRunningOnMac ()) {
+        // BASIC samples
+        RunNuGetRestore ("./samples/Basic/Android/SkiaSharpSample.sln");
+        RunMSBuild ("./samples/Basic/Android/SkiaSharpSample.sln");
+        RunNuGetRestore ("./samples/Basic/iOS/SkiaSharpSample.sln");
+        RunMSBuildWithPlatform ("./samples/Basic/iOS/SkiaSharpSample.sln", "iPhone");
+        RunNuGetRestore ("./samples/Basic/macOS/SkiaSharpSample.sln");
+        RunMSBuildWithPlatform ("./samples/Basic/macOS/SkiaSharpSample.sln", "x86");
+        RunNuGetRestore ("./samples/Basic/tvOS/SkiaSharpSample.sln");
+        RunMSBuildWithPlatform ("./samples/Basic/tvOS/SkiaSharpSample.sln", "iPhoneSimulator");
+
+        // GALLERY samples
         RunNuGetRestore ("./samples/Gallery/MacSample/MacSample.sln");
         RunMSBuildWithPlatform ("./samples/Gallery/MacSample/MacSample.sln", "x86");
         RunNuGetRestore ("./samples/Gallery/FormsSample/FormsSample.Mac.sln");
@@ -283,6 +304,9 @@ Task ("samples")
     }
     
     if (IsRunningOnWindows ()) {
+        // BASIC samples
+
+        // GALLERY samples
         RunNuGetRestore ("./samples/Gallery/WPFSample/WPFSample.sln");
         RunMSBuild ("./samples/Gallery/WPFSample/WPFSample.sln");
         RunNuGetRestore ("./samples/Gallery/UWPSample/UWPSample.sln");
