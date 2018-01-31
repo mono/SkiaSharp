@@ -100,7 +100,9 @@ namespace SkiaSharp.Views.Mac
 			using (var colorSpace = CGColorSpace.CreateDeviceRGB())
 			using (var context = new CGBitmapContext(pixmap.GetPixels(), pixmap.Width, pixmap.Height, 8, pixmap.RowBytes, colorSpace, CGBitmapFlags.PremultipliedLast | CGBitmapFlags.ByteOrder32Big))
 			{
-				context.DrawImage(new CGRect(0, 0, cgImage.Width, cgImage.Height), cgImage);
+				CGRect rect = new CGRect(0, 0, cgImage.Width, cgImage.Height);
+				context.ClearRect(rect);
+				context.DrawImage(rect, cgImage);
 			}
 		}
 
