@@ -274,6 +274,8 @@ Task ("samples")
     // BASIC samples
     RunNuGetRestore ("./samples/Basic/NetCore/SkiaSharpSample.sln");
     RunMSBuild ("./samples/Basic/NetCore/SkiaSharpSample.sln");
+    RunNuGetRestore ("./samples/Basic/Desktop/SkiaSharpSample.sln");
+    RunMSBuild ("./samples/Basic/Desktop/SkiaSharpSample.sln");
 
     // GALLERY samples
 
@@ -309,6 +311,10 @@ Task ("samples")
     
     if (IsRunningOnWindows ()) {
         // BASIC samples
+        RunNuGetRestore ("./samples/Basic/WPF/SkiaSharpSample.sln");
+        RunMSBuild ("./samples/Basic/WPF/SkiaSharpSample.sln");
+        RunNuGetRestore ("./samples/Basic/UWP/SkiaSharpSample.sln");
+        RunMSBuildWithPlatformTarget ("./samples/Basic/UWP/SkiaSharpSample.sln", "x86");
 
         // GALLERY samples
         RunNuGetRestore ("./samples/Gallery/WPFSample/WPFSample.sln");
