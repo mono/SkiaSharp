@@ -21,6 +21,8 @@ namespace SkiaSharp.Views.Gtk
 
 		protected override bool OnExposeEvent(Gdk.EventExpose evnt)
 		{
+			var result = base.OnExposeEvent(evnt);
+
 			var window = evnt.Window;
 			var area = evnt.Area;
 
@@ -50,7 +52,7 @@ namespace SkiaSharp.Views.Gtk
 			window.Clear();
 			window.DrawPixbuf(null, pix, 0, 0, 0, 0, -1, -1, Gdk.RgbDither.None, 0, 0);
 
-			return true;
+			return result;
 		}
 
 		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)
@@ -59,11 +61,33 @@ namespace SkiaSharp.Views.Gtk
 			PaintSurface?.Invoke(this, e);
 		}
 
+		~SKWidget()
+		{
+			Dispose(false);
+		}
+
+		public override void Destroy()
+		{
+			GC.SuppressFinalize(this);
+			Dispose(true);
+
+			base.Destroy();
+		}
+
 		public override void Dispose()
 		{
-			FreePixbuf();
+			GC.SuppressFinalize(this);
+			Dispose(true);
 
 			base.Dispose();
+		}
+
+		public virtual void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				FreePixbuf();
+			}
 		}
 
 		private void CreatePixbuf()
