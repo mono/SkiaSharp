@@ -5,6 +5,7 @@ using Xamarin.Forms;
 using SKFormsView = SkiaSharp.Views.Forms.SKGLView;
 
 #if __ANDROID__
+using Android.Content;
 using Xamarin.Forms.Platform.Android;
 using SKNativeView = SkiaSharp.Views.Android.SKGLSurfaceView;
 using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.Android.SKPaintGLSurfaceEventArgs;
@@ -28,9 +29,25 @@ namespace SkiaSharp.Views.Forms
 		where TFormsView : SKFormsView
 		where TNativeView : SKNativeView
 	{
-		private readonly SKTouchHandler touchHandler;
+		private SKTouchHandler touchHandler;
 
-		public SKGLViewRendererBase()
+#if __ANDROID__
+		protected SKGLViewRendererBase(Context context)
+			: base(context)
+		{
+			Initialize();
+		}
+#endif
+
+#if __ANDROID__
+		[Obsolete("This constructor is obsolete as of version 2.5. Please use SKGLViewRendererBase(Context) instead.")]
+#endif
+		protected SKGLViewRendererBase()
+		{
+			Initialize();
+		}
+
+		private void Initialize()
 		{
 #if __ANDROID__
 			touchHandler = new SKTouchHandler(
