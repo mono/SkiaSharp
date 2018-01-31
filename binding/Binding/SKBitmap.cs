@@ -150,22 +150,6 @@ namespace SkiaSharp
 			SkiaApi.sk_bitmap_set_pixel_color (Handle, x, y, color);
 		}
 
-		[Obsolete ("Use SKPixmap.ReadPixels instead.")]
-		public bool CopyPixelsTo(IntPtr dst, int dstSize, int dstRowBytes = 0, bool preserveDstPad = false)
-		{
-			if (dst == IntPtr.Zero) {
-				throw new ArgumentException (nameof (dst));
-			}
-
-			using (var pixmap = PeekPixels ()) {
-				var info = Info;
-				if (dstRowBytes == 0) {
-					dstRowBytes = info.RowBytes;
-				}
-				return pixmap.ReadPixels (info, dst, dstRowBytes);
-			}
-		}
-
 		public bool CanCopyTo (SKColorType colorType)
 		{
 			var srcCT = ColorType;
@@ -366,16 +350,6 @@ namespace SkiaSharp
 
 		public int ByteCount {
 			get { return (int)SkiaApi.sk_bitmap_get_byte_count (Handle); }
-		}
-
-		[Obsolete ("This no longer does anything, and should not be used.")]
-		public void LockPixels ()
-		{
-		}
-
-		[Obsolete ("This no longer does anything, and should not be used.")]
-		public void UnlockPixels ()
-		{
 		}
 
 		public IntPtr GetPixels ()
@@ -768,30 +742,6 @@ namespace SkiaSharp
 			using (var ctx = NativeDelegateContext.Unwrap (context)) {
 				ctx.GetDelegate<SKBitmapReleaseDelegate> () (address, ctx.ManagedContext);
 			}
-		}
-	}
-
-	[Obsolete ("This no longer does anything, and should not be used.")]
-	public class SKAutoLockPixels : IDisposable
-	{
-		[Obsolete ("This no longer does anything, and should not be used.")]
-		public SKAutoLockPixels (SKBitmap bitmap)
-		{
-		}
-
-		[Obsolete ("This no longer does anything, and should not be used.")]
-		public SKAutoLockPixels (SKBitmap bitmap, bool doLock)
-		{
-		}
-
-		[Obsolete ("This no longer does anything, and should not be used.")]
-		public void Dispose ()
-		{
-		}
-
-		[Obsolete ("This no longer does anything, and should not be used.")]
-		public void Unlock ()
-		{
 		}
 	}
 }

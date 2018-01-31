@@ -98,12 +98,6 @@ namespace SkiaSharp
 			SkiaApi.gr_context_flush (Handle);
 		}
 
-		[Obsolete ("Use Flush() instead.", true)]
-		public void Flush (GRContextFlushBits flagsBitfield)
-		{
-			Flush ();
-		}
-
 		public int GetRecommendedSampleCount (GRPixelConfig config, float dpi)
 		{
 			return SkiaApi.gr_context_get_recommended_sample_count (Handle, config, dpi);

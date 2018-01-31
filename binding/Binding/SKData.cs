@@ -54,42 +54,6 @@ namespace SkiaSharp
 		{
 		}
 
-		[Obsolete ("Use SKData.Empty instead.", true)]
-		public SKData ()
-			: this (SkiaApi.sk_data_new_empty (), true)
-		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKData instance.");
-			}
-		}
-			
-		[Obsolete ("Use SKData.CreateCopy(IntPtr, ulong) instead.", true)]
-		public SKData (IntPtr bytes, ulong length)
-			: this (IntPtr.Zero, true)
-		{
-			if (SizeOf <IntPtr> () == 4 && length > UInt32.MaxValue)
-				throw new ArgumentOutOfRangeException (nameof (length), "The length exceeds the size of pointers.");
-			Handle = SkiaApi.sk_data_new_with_copy (bytes, (IntPtr) length);
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to copy the SKData instance.");
-			}
-		}
-
-		[Obsolete ("Use SKData.CreateCopy(byte[]) instead.", true)]
-		public SKData (byte[] bytes)
-			: this (bytes, (ulong) bytes.Length)
-		{
-		}
-
-		[Obsolete ("Use SKData.CreateCopy(byte[], ulong) instead.", true)]
-		public SKData (byte[] bytes, ulong length)
-			: this (SkiaApi.sk_data_new_with_copy (bytes, (IntPtr) length), true)
-		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to copy the SKData instance.");
-			}
-		}
-
 		public static SKData Empty => empty.Value;
 
 		public static SKData CreateCopy (IntPtr bytes, ulong length)
@@ -214,15 +178,6 @@ namespace SkiaSharp
 				var ctx = new NativeDelegateContext (context, releaseProc);
 				return GetObject<SKData> (SkiaApi.sk_data_new_with_proc (address, (IntPtr) length, releaseDelegate, ctx.NativeContext));
 			}
-		}
-
-		[Obsolete ("Not supported.", true)]
-		[EditorBrowsable (EditorBrowsableState.Never)]
-		public static SKData FromMallocMemory (IntPtr bytes, ulong length)
-		{
-			if (SizeOf <IntPtr> () == 4 && length > UInt32.MaxValue)
-				throw new ArgumentOutOfRangeException (nameof (length), "The length exceeds the size of pointers.");
-			return GetObject<SKData> (SkiaApi.sk_data_new_from_malloc (bytes, (IntPtr) length));
 		}
 
 		internal static SKData FromCString (string str)

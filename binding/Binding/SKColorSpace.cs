@@ -244,17 +244,5 @@ namespace SkiaSharp
 			}
 			return xyzD50;
 		}
-
-		[Obsolete ("Use SKColorSpacePrimaries.ToXyzD50(SKMatrix44) instead.")]
-		public static bool ConvertPrimariesToXyzD50 (SKColorSpacePrimaries primaries, SKMatrix44 toXyzD50)
-		{
-			return primaries.ToXyzD50(toXyzD50);
-		}
-
-		[Obsolete ("Use SKColorSpacePrimaries.ToXyzD50 instead.")]
-		public static SKMatrix44 ConvertPrimariesToXyzD50 (SKColorSpacePrimaries primaries)
-		{
-			return primaries.ToXyzD50();
-		}
 	}
 }
