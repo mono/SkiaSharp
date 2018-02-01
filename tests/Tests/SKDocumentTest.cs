@@ -8,6 +8,45 @@ namespace SkiaSharp.Tests
 	public class SKDocumentTest : SKTest
 	{
 		[SkippableFact]
+		[Obsolete]
+		public void PdfFileIsClosed()
+		{
+			var path = Path.Combine(PathToImages, Guid.NewGuid().ToString("D") + ".pdf");
+
+			using (var doc = SKDocument.CreatePdf(path))
+			{
+				Assert.NotNull(doc);
+				Assert.NotNull(doc.BeginPage(100, 100));
+
+				doc.EndPage();
+				doc.Close();
+			}
+
+			File.Delete(path);
+		}
+
+		[SkippableFact]
+		[Obsolete]
+		public void XpsFileIsClosed()
+		{
+			var path = Path.Combine(PathToImages, Guid.NewGuid().ToString("D") + ".pdf");
+
+			using (var doc = SKDocument.CreatePdf(path))
+			{
+				if (IsWindows)
+				{
+					Assert.NotNull(doc);
+					Assert.NotNull(doc.BeginPage(100, 100));
+
+					doc.EndPage();
+					doc.Close();
+				}
+			}
+
+			File.Delete(path);
+		}
+
+		[SkippableFact]
 		public void CanCreatePdf()
 		{
 			using (var stream = new MemoryStream())
