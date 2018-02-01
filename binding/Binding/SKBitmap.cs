@@ -458,7 +458,9 @@ namespace SkiaSharp
 			if (filename == null) {
 				throw new ArgumentNullException (nameof (filename));
 			}
-			return DecodeBounds (new SKFileStream (filename));
+			using (var stream = OpenStream (filename)) {
+				return DecodeBounds (stream);
+			}
 		}
 
 		public static SKImageInfo DecodeBounds (byte[] buffer)
@@ -466,7 +468,9 @@ namespace SkiaSharp
 			if (buffer == null) {
 				throw new ArgumentNullException (nameof (buffer));
 			}
-			return DecodeBounds (new SKMemoryStream (buffer));
+			using (var stream = new SKMemoryStream (buffer)) {
+				return DecodeBounds (stream);
+			}
 		}
 
 		public static SKBitmap Decode (SKCodec codec, SKImageInfo bitmapInfo)
@@ -581,7 +585,9 @@ namespace SkiaSharp
 			if (filename == null) {
 				throw new ArgumentNullException (nameof (filename));
 			}
-			return Decode (new SKFileStream (filename));
+			using (var stream = OpenStream (filename)) {
+				return Decode (stream);
+			}
 		}
 
 		public static SKBitmap Decode (string filename, SKImageInfo bitmapInfo)
@@ -589,7 +595,9 @@ namespace SkiaSharp
 			if (filename == null) {
 				throw new ArgumentNullException (nameof (filename));
 			}
-			return Decode (new SKFileStream (filename), bitmapInfo);
+			using (var stream = OpenStream (filename)) {
+				return Decode (stream, bitmapInfo);
+			}
 		}
 
 		public static SKBitmap Decode (byte[] buffer)
@@ -597,7 +605,9 @@ namespace SkiaSharp
 			if (buffer == null) {
 				throw new ArgumentNullException (nameof (buffer));
 			}
-			return Decode (new SKMemoryStream (buffer));
+			using (var stream = new SKMemoryStream (buffer)) {
+				return Decode(stream);
+			}
 		}
 
 		public static SKBitmap Decode (byte[] buffer, SKImageInfo bitmapInfo)
@@ -605,7 +615,9 @@ namespace SkiaSharp
 			if (buffer == null) {
 				throw new ArgumentNullException (nameof (buffer));
 			}
-			return Decode (new SKMemoryStream (buffer), bitmapInfo);
+			using (var stream = new SKMemoryStream (buffer)) {
+				return Decode (stream, bitmapInfo);
+			}
 		}
 
 		public bool InstallPixels (SKImageInfo info, IntPtr pixels)
@@ -732,6 +744,15 @@ namespace SkiaSharp
 			}
 		}
 
+		private static SKStream OpenStream (string path)
+		{
+			if (!SKFileStream.IsPathSupported (path)) {
+				// due to a bug (https://github.com/mono/SkiaSharp/issues/390)
+				return WrapManagedStream (File.OpenRead (path));
+			} else {
+				return new SKFileStream (path);
+			}
+		}
 
 		// internal proxy
 		#if __IOS__
