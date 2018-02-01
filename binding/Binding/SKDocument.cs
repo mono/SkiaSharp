@@ -1,4 +1,4 @@
-﻿//
+//
 // Bindings for SKDocument
 //
 // Author:
@@ -58,7 +58,7 @@ namespace SkiaSharp
 		{
 			var stream = new SKFileWStream (path);
 			var doc = CreateXps (stream, dpi);
-			stream.RevokeOwnership ();
+			stream.RevokeOwnership (doc);
 			return doc;
 		}
 
