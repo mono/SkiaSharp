@@ -167,15 +167,23 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
+		/// This object will dispose the specific child object which disposed.
+		/// </summary>
+		/// <param name="child">The child object to dispose when the parent is disposed.</param>
+		internal void SetDisposeChild (SKObject child)
+		{
+			lock (ownedObjects) {
+				ownedObjects.Add (child);
+			}
+		}
+
+		/// <summary>
 		/// This object will take ownership of the specified object.
 		/// </summary>
 		/// <param name="obj">The object to own.</param>
-		private void TakeOwnership(SKObject obj)
+		private void TakeOwnership (SKObject obj)
 		{
-			lock (ownedObjects)
-			{
-				ownedObjects.Add(obj);
-			}
+			SetDisposeChild (obj);
 			obj.RevokeOwnership ();
 		}
 
@@ -183,7 +191,7 @@ namespace SkiaSharp
 		/// This object will hand ownership over to the specified object.
 		/// </summary>
 		/// <param name="owner">The object to give ownership to.</param>
-		internal void RevokeOwnership(SKObject owner = null)
+		internal void RevokeOwnership (SKObject owner = null)
 		{
 			if (owner != null) {
 				owner.TakeOwnership (this);

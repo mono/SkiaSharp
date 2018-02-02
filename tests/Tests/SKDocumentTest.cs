@@ -27,9 +27,27 @@ namespace SkiaSharp.Tests
 
 		[SkippableFact]
 		[Obsolete]
+		public void PdfFileWithNonASCIIPathIsClosed()
+		{
+			var path = Path.Combine(PathToImages, Guid.NewGuid().ToString("D") + "上田雅美.pdf");
+
+			using (var doc = SKDocument.CreatePdf(path))
+			{
+				Assert.NotNull(doc);
+				Assert.NotNull(doc.BeginPage(100, 100));
+
+				doc.EndPage();
+				doc.Close();
+			}
+
+			File.Delete(path);
+		}
+
+		[SkippableFact]
+		[Obsolete]
 		public void XpsFileIsClosed()
 		{
-			var path = Path.Combine(PathToImages, Guid.NewGuid().ToString("D") + ".pdf");
+			var path = Path.Combine(PathToImages, Guid.NewGuid().ToString("D") + ".xps");
 
 			using (var doc = SKDocument.CreatePdf(path))
 			{
