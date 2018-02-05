@@ -54,21 +54,19 @@ namespace SkiaSharp.Views.Android
 			AddOnLayoutChangeListener(this);
 		}
 
-		//~GLTextureView()
-		//{
-		//	try
-		//	{
-		//		if (mGLThread != null)
-		//		{
-		//			// GLThread may still be running if this view was never attached to a window.
-		//			mGLThread.requestExitAndWait();
-		//		}
-		//	}
-		//	finally
-		//	{
-		//		//base.Finalize();
-		//	}
-		//}
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				if (glThread != null)
+				{
+					// GLThread may still be running if this view was never attached to a window.
+					glThread.RequestExitAndWait();
+				}
+			}
+
+			base.Dispose(disposing);
+		}
 
 		public bool PreserveEGLContextOnPause { get; set; }
 
