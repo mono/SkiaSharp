@@ -7,7 +7,7 @@ using SKFormsView = SkiaSharp.Views.Forms.SKGLView;
 #if __ANDROID__
 using Android.Content;
 using Xamarin.Forms.Platform.Android;
-using SKNativeView = SkiaSharp.Views.Android.SKGLSurfaceView;
+using SKNativeView = SkiaSharp.Views.Android.SKGLTextureView;
 using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.Android.SKPaintGLSurfaceEventArgs;
 #elif __IOS__
 using Xamarin.Forms.Platform.iOS;
