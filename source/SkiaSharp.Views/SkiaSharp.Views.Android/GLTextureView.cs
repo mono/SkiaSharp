@@ -139,6 +139,11 @@ namespace SkiaSharp.Views.Android
 			set { mGLThread.SetRenderMode(value); }
 		}
 
+		public void RequestRender()
+		{
+			mGLThread.RequestRender();
+		}
+
 		public void OnSurfaceTextureUpdated(SurfaceTexture surface)
 		{
 			//mGLThread.RequestRender();
