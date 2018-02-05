@@ -43,12 +43,6 @@ namespace SkiaSharp
 			return CreateNativeAngleInterface () ?? CreateNativeGlInterface ();
 		}
 
-		[Obsolete ("Use CreateNativeGlInterface() or CreateDefaultInterface() instead.", true)]
-		public static GRGlInterface CreateNativeInterface ()
-		{
-			return CreateNativeGlInterface ();
-		}
-
 		public static GRGlInterface CreateNativeGlInterface ()
 		{
 			// the native code will automatically return null on non-OpenGL platforms, such as UWP

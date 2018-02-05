@@ -456,12 +456,6 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			return res;
 		}
 
-		[Obsolete ("Use MapPoint instead.", true)]
-		public SKPoint MapXY (float x, float y)
-		{
-			return MapPoint (x, y);
-		}
-
 		public SKPoint MapPoint (SKPoint point)
 		{
 			return MapPoint (point.X, point.Y);

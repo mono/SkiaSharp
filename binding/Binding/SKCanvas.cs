@@ -75,12 +75,6 @@ namespace SkiaSharp
 			return SkiaApi.sk_canvas_save_layer (Handle, IntPtr.Zero, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
-		[Obsolete ("Use DrawColor(SKColor, SKBlendMode) instead.", true)]
-		public void DrawColor (SKColor color, SKXferMode mode)
-		{
-			DrawColor (color, (SKBlendMode)(int)mode);
-		}
-
 		public void DrawColor (SKColor color, SKBlendMode mode = SKBlendMode.Src)
 		{
 			SkiaApi.sk_canvas_draw_color (Handle, color, mode);
@@ -189,21 +183,9 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_concat (Handle, ref m);
 		}
 
-		[Obsolete ("Use ClipRect(SKRect, SKClipOperation, bool) instead.", true)]
-		public void ClipRect (SKRect rect, SKRegionOperation operation, bool antialias = false)
-		{
-			ClipRect (rect, (SKClipOperation)(int)operation, antialias);
-		}
-
 		public void ClipRect (SKRect rect, SKClipOperation operation = SKClipOperation.Intersect, bool antialias = false)
 		{
 			SkiaApi.sk_canvas_clip_rect_with_operation (Handle, ref rect, operation, antialias);
-		}
-
-		[Obsolete ("Use ClipPath(SKPath, SKClipOperation, bool) instead.", true)]
-		public void ClipPath (SKPath path, SKRegionOperation operation, bool antialias = false)
-		{
-			ClipPath (path, (SKClipOperation)(int)operation, antialias);
 		}
 
 		public void ClipPath (SKPath path, SKClipOperation operation = SKClipOperation.Intersect, bool antialias = false)
@@ -222,12 +204,6 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_clip_region (Handle, region.Handle, operation);
 		}
 
-		[Obsolete ("Use LocalClipBounds instead.")]
-		public SKRect ClipBounds => LocalClipBounds;
-
-		[Obsolete ("Use DeviceClipBounds instead.")]
-		public SKRectI ClipDeviceBounds => DeviceClipBounds;
-
 		public SKRect LocalClipBounds {
 			get {
 				SKRect bounds;
@@ -242,18 +218,6 @@ namespace SkiaSharp
 				GetDeviceClipBounds (out bounds);
 				return bounds;
 			}
-		}
-
-		[Obsolete ("Use GetLocalClipBounds instead.")]
-		public bool GetClipBounds (ref SKRect bounds)
-		{
-			return GetLocalClipBounds (out bounds);
-		}
-
-		[Obsolete ("Use GetDeviceClipBounds instead.")]
-		public bool GetClipDeviceBounds (ref SKRectI bounds)
-		{
-			return GetDeviceClipBounds (out bounds);
 		}
 
 		public bool GetLocalClipBounds (out SKRect bounds)
@@ -503,12 +467,6 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_text (Handle, text, text.Length, x, y, paint.Handle);
 		}
 
-		[Obsolete ("Use DrawPositionedText instead.", true)]
-		public void DrawText (string text, SKPoint [] points, SKPaint paint)
-		{
-			DrawPositionedText (text, points, paint);
-		}
-
 		public void DrawPositionedText (string text, SKPoint [] points, SKPaint paint)
 		{
 			if (text == null)
@@ -532,12 +490,6 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (points));
 
 			SkiaApi.sk_canvas_draw_pos_text (Handle, text, text.Length, points, paint.Handle);
-		}
-
-		[Obsolete ("Use DrawTextOnPath instead.", true)]
-		public void DrawText (IntPtr buffer, int length, SKPath path, float hOffset, float vOffset, SKPaint paint)
-		{
-			DrawTextOnPath (buffer, length, path, hOffset, vOffset, paint);
 		}
 
 		public void DrawTextOnPath (IntPtr buffer, int length, SKPath path, SKPoint offset, SKPaint paint)
@@ -572,12 +524,6 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_text (Handle, buffer, length, x, y, paint.Handle);
 		}
 
-		[Obsolete ("Use DrawPositionedText instead.", true)]
-		public void DrawText (IntPtr buffer, int length, SKPoint[] points, SKPaint paint)
-		{
-			DrawPositionedText (buffer, length, points, paint);
-		}
-
 		public void DrawPositionedText (IntPtr buffer, int length, SKPoint[] points, SKPaint paint)
 		{
 			if (buffer == IntPtr.Zero)
@@ -588,12 +534,6 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (points));
 			
 			SkiaApi.sk_canvas_draw_pos_text (Handle, buffer, length, points, paint.Handle);
-		}
-
-		[Obsolete ("Use DrawTextOnPath instead.", true)]
-		public void DrawText (string text, SKPath path, float hOffset, float vOffset, SKPaint paint)
-		{
-			DrawTextOnPath (text, path, hOffset, vOffset, paint);
 		}
 
 		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKPaint paint)
@@ -612,12 +552,6 @@ namespace SkiaSharp
 
 			var bytes = StringUtilities.GetEncodedText (text, paint.TextEncoding);
 			DrawTextOnPath (bytes, path, hOffset, vOffset, paint);
-		}
-
-		[Obsolete ("Use DrawTextOnPath instead.", true)]
-		public void DrawText (byte[] text, SKPath path, float hOffset, float vOffset, SKPaint paint)
-		{
-			DrawTextOnPath (text, path, hOffset, vOffset, paint);
 		}
 
 		public void DrawTextOnPath (byte[] text, SKPath path, SKPoint offset, SKPaint paint)

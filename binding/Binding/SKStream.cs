@@ -200,6 +200,31 @@ namespace SkiaSharp
 
 			base.Dispose (disposing);
 		}
+
+		public static bool IsPathSupported (string path)
+		{
+			// due to a bug (https://github.com/mono/SkiaSharp/issues/390)
+			if (PlatformConfiguration.IsWindows) {
+				for (int i = 0; i < path.Length; i++) {
+					if (path [i] >= byte.MaxValue)
+						return false;
+				}
+			}
+
+			return true;
+		}
+
+		public static SKStreamAsset OpenStream (string path)
+		{
+			if (!File.Exists (path)) {
+				return null;
+			}
+			if (!IsPathSupported (path)) {
+				return new SKManagedStream (File.OpenRead (path), true);
+			} else {
+				return new SKFileStream (path);
+			}
+		}
 	}
 
 	public class SKMemoryStream : SKStreamMemory
@@ -398,6 +423,17 @@ namespace SkiaSharp
 			}
 
 			base.Dispose (disposing);
+		}
+
+		public static bool IsPathSupported (string path) => SKFileStream.IsPathSupported (path);
+
+		public static SKWStream OpenStream (string path)
+		{
+			if (!IsPathSupported (path)) {
+				return new SKManagedWStream (File.OpenWrite (path), true);
+			} else {
+				return new SKFileWStream (path);
+			}
 		}
 	}
 

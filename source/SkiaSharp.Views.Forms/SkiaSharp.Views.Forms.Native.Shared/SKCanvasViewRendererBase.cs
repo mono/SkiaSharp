@@ -4,6 +4,7 @@ using System.ComponentModel;
 using SKFormsView = SkiaSharp.Views.Forms.SKCanvasView;
 
 #if __ANDROID__
+using Android.Content;
 using Xamarin.Forms.Platform.Android;
 using SKNativeView = SkiaSharp.Views.Android.SKCanvasView;
 using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Android.SKPaintSurfaceEventArgs;
@@ -28,9 +29,25 @@ namespace SkiaSharp.Views.Forms
 		where TFormsView : SKFormsView
 		where TNativeView : SKNativeView
 	{
-		private readonly SKTouchHandler touchHandler;
+		private SKTouchHandler touchHandler;
 
-		public SKCanvasViewRendererBase()
+#if __ANDROID__
+		protected SKCanvasViewRendererBase(Context context)
+			: base(context)
+		{
+			Initialize();
+		}
+#endif
+
+#if __ANDROID__
+		[Obsolete("This constructor is obsolete as of version 2.5. Please use SKCanvasViewRendererBase(Context) instead.")]
+#endif
+		protected SKCanvasViewRendererBase()
+		{
+			Initialize();
+		}
+
+		private void Initialize()
 		{
 #if __ANDROID__
 			touchHandler = new SKTouchHandler(

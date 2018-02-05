@@ -20,15 +20,6 @@ namespace SkiaSharp
 
 	public class SKPathMeasure : SKObject
 	{
-		[Flags]
-		[Obsolete ("Use SKPathMeasureMatrixFlags instead.", true)]
-		public enum MatrixFlags
-		{
-			GetPosition = SKPathMeasureMatrixFlags.GetPosition,
-			GetTangent = SKPathMeasureMatrixFlags.GetTangent,
-			GetPositionAndTangent = SKPathMeasureMatrixFlags.GetPositionAndTangent,
-		}
-
 		[Preserve]
 		internal SKPathMeasure (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -90,12 +81,6 @@ namespace SkiaSharp
 		public bool GetTangent (float distance, out SKPoint tangent)
 		{
 			return SkiaApi.sk_pathmeasure_get_pos_tan (Handle, distance, IntPtr.Zero, out tangent);
-		}
-
-		[Obsolete ("Use GetMatrix(float, out SKMatrix, SKPathMeasureMatrixFlags) instead.", true)]
-		public bool GetMatrix (float distance, out SKMatrix matrix, MatrixFlags flags)
-		{
-			return GetMatrix (distance, out matrix, (SKPathMeasureMatrixFlags)flags);
 		}
 
 		public bool GetMatrix (float distance, out SKMatrix matrix, SKPathMeasureMatrixFlags flags)

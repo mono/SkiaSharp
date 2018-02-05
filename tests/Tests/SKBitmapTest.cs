@@ -404,5 +404,16 @@ namespace SkiaSharp.Tests
 				Assert.Equal((uint)0xFA04B0CE, (uint)bmp.GetPixel(0, 0));
 			}
 		}
+
+		[SkippableFact]
+		public void SupportsNonASCIICharactersInPath()
+		{
+			var fileName = Path.Combine(PathToImages, "上田雅美.jpg");
+
+			using (var bitmap = SKBitmap.Decode(fileName))
+			{
+				Assert.NotNull(bitmap);
+			}
+		}
 	}
 }

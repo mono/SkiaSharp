@@ -32,18 +32,6 @@ namespace SkiaSharp
 			base.Dispose(disposing);
 		}
 
-		[Obsolete("Use CreateBlendMode(SKColor, SKBlendMode) instead.", true)]
-		public static SKColorFilter CreateXferMode(SKColor c, SKXferMode mode)
-		{
-			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_mode(c, (SKBlendMode)mode));
-		}
-
-		[Obsolete("Use CreateBlendMode(SKColor, SKBlendMode) instead.", true)]
-		public static SKColorFilter CreateBlendMode(SKColor c, SKXferMode mode)
-		{
-			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_mode(c, (SKBlendMode)mode));
-		}
-
 		public static SKColorFilter CreateBlendMode(SKColor c, SKBlendMode mode)
 		{
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_mode(c, mode));

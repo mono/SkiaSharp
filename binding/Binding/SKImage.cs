@@ -11,19 +11,6 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	[Obsolete ("Use SKEncodedImageFormat instead.", true)]
-	public enum SKImageEncodeFormat {
-		Unknown,
-		Bmp,
-		Gif,
-		Ico,
-		Jpeg,
-		Png,
-		Wbmp,
-		Webp,
-		Ktx,
-	}
-
 	// public delegates
 	public delegate void SKImageRasterReleaseDelegate (IntPtr pixels, object context);
 	public delegate void SKImageTextureReleaseDelegate (object context);
@@ -182,18 +169,6 @@ namespace SkiaSharp
 			return GetObject<SKImage> (handle);
 		}
 
-		[Obsolete ("Use FromEncodedData instead.", true)]
-		public static SKImage FromData (SKData data, SKRectI subset)
-		{
-			return FromEncodedData (data, subset);
-		}
-
-		[Obsolete ("Use FromEncodedData instead.", true)]
-		public static SKImage FromData (SKData data)
-		{
-			return FromEncodedData (data);
-		}
-
 		public static SKImage FromBitmap (SKBitmap bitmap)
 		{
 			if (bitmap == null)
@@ -338,43 +313,6 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (serializer));
 
 			return GetObject<SKData> (SkiaApi.sk_image_encode_with_serializer (Handle, serializer.Handle));
-		}
-
-		[Obsolete ("Use Encode(SKEncodedImageFormat, int) instead.", true)]
-		public SKData Encode (SKImageEncodeFormat format, int quality)
-		{
-			SKEncodedImageFormat newFormat;
-			switch (format) {
-				case SKImageEncodeFormat.Bmp:
-					newFormat = SKEncodedImageFormat.Bmp;
-					break;
-				case SKImageEncodeFormat.Gif:
-					newFormat = SKEncodedImageFormat.Gif;
-					break;
-				case SKImageEncodeFormat.Ico:
-					newFormat = SKEncodedImageFormat.Ico;
-					break;
-				case SKImageEncodeFormat.Jpeg:
-					newFormat = SKEncodedImageFormat.Jpeg;
-					break;
-				case SKImageEncodeFormat.Png:
-					newFormat = SKEncodedImageFormat.Png;
-					break;
-				case SKImageEncodeFormat.Wbmp:
-					newFormat = SKEncodedImageFormat.Wbmp;
-					break;
-				case SKImageEncodeFormat.Webp:
-					newFormat = SKEncodedImageFormat.Webp;
-					break;
-				case SKImageEncodeFormat.Ktx:
-					newFormat = SKEncodedImageFormat.Ktx;
-					break;
-				case SKImageEncodeFormat.Unknown:
-				default:
-					newFormat = SKEncodedImageFormat.Png;
-					break;
-			}
-			return Encode (newFormat, quality);
 		}
 
 		public SKData Encode (SKEncodedImageFormat format, int quality)

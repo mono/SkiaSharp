@@ -233,16 +233,6 @@ namespace SkiaSharp
 			}
 		}
 
-		[Obsolete ("Use BlendMode instead.", true)]
-		public SKXferMode XferMode {
-			get {
-				return (SKXferMode)BlendMode;
-			}
-			set {
-				BlendMode = (SKBlendMode)value;
-			}
-		}
-
 		public SKBlendMode BlendMode {
 			get {
 				return SkiaApi.sk_paint_get_blendmode(Handle);

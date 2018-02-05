@@ -150,22 +150,6 @@ namespace SkiaSharp
 			SkiaApi.sk_bitmap_set_pixel_color (Handle, x, y, color);
 		}
 
-		[Obsolete ("Use SKPixmap.ReadPixels instead.")]
-		public bool CopyPixelsTo(IntPtr dst, int dstSize, int dstRowBytes = 0, bool preserveDstPad = false)
-		{
-			if (dst == IntPtr.Zero) {
-				throw new ArgumentException (nameof (dst));
-			}
-
-			using (var pixmap = PeekPixels ()) {
-				var info = Info;
-				if (dstRowBytes == 0) {
-					dstRowBytes = info.RowBytes;
-				}
-				return pixmap.ReadPixels (info, dst, dstRowBytes);
-			}
-		}
-
 		public bool CanCopyTo (SKColorType colorType)
 		{
 			var srcCT = ColorType;
@@ -368,16 +352,6 @@ namespace SkiaSharp
 			get { return (int)SkiaApi.sk_bitmap_get_byte_count (Handle); }
 		}
 
-		[Obsolete ("This no longer does anything, and should not be used.")]
-		public void LockPixels ()
-		{
-		}
-
-		[Obsolete ("This no longer does anything, and should not be used.")]
-		public void UnlockPixels ()
-		{
-		}
-
 		public IntPtr GetPixels ()
 		{
 			IntPtr length;
@@ -484,7 +458,9 @@ namespace SkiaSharp
 			if (filename == null) {
 				throw new ArgumentNullException (nameof (filename));
 			}
-			return DecodeBounds (new SKFileStream (filename));
+			using (var stream = OpenStream (filename)) {
+				return DecodeBounds (stream);
+			}
 		}
 
 		public static SKImageInfo DecodeBounds (byte[] buffer)
@@ -492,7 +468,9 @@ namespace SkiaSharp
 			if (buffer == null) {
 				throw new ArgumentNullException (nameof (buffer));
 			}
-			return DecodeBounds (new SKMemoryStream (buffer));
+			using (var stream = new SKMemoryStream (buffer)) {
+				return DecodeBounds (stream);
+			}
 		}
 
 		public static SKBitmap Decode (SKCodec codec, SKImageInfo bitmapInfo)
@@ -607,7 +585,9 @@ namespace SkiaSharp
 			if (filename == null) {
 				throw new ArgumentNullException (nameof (filename));
 			}
-			return Decode (new SKFileStream (filename));
+			using (var stream = OpenStream (filename)) {
+				return Decode (stream);
+			}
 		}
 
 		public static SKBitmap Decode (string filename, SKImageInfo bitmapInfo)
@@ -615,7 +595,9 @@ namespace SkiaSharp
 			if (filename == null) {
 				throw new ArgumentNullException (nameof (filename));
 			}
-			return Decode (new SKFileStream (filename), bitmapInfo);
+			using (var stream = OpenStream (filename)) {
+				return Decode (stream, bitmapInfo);
+			}
 		}
 
 		public static SKBitmap Decode (byte[] buffer)
@@ -623,7 +605,9 @@ namespace SkiaSharp
 			if (buffer == null) {
 				throw new ArgumentNullException (nameof (buffer));
 			}
-			return Decode (new SKMemoryStream (buffer));
+			using (var stream = new SKMemoryStream (buffer)) {
+				return Decode(stream);
+			}
 		}
 
 		public static SKBitmap Decode (byte[] buffer, SKImageInfo bitmapInfo)
@@ -631,7 +615,9 @@ namespace SkiaSharp
 			if (buffer == null) {
 				throw new ArgumentNullException (nameof (buffer));
 			}
-			return Decode (new SKMemoryStream (buffer), bitmapInfo);
+			using (var stream = new SKMemoryStream (buffer)) {
+				return Decode (stream, bitmapInfo);
+			}
 		}
 
 		public bool InstallPixels (SKImageInfo info, IntPtr pixels)
@@ -758,6 +744,15 @@ namespace SkiaSharp
 			}
 		}
 
+		private static SKStream OpenStream (string path)
+		{
+			if (!SKFileStream.IsPathSupported (path)) {
+				// due to a bug (https://github.com/mono/SkiaSharp/issues/390)
+				return WrapManagedStream (File.OpenRead (path));
+			} else {
+				return new SKFileStream (path);
+			}
+		}
 
 		// internal proxy
 		#if __IOS__
@@ -768,30 +763,6 @@ namespace SkiaSharp
 			using (var ctx = NativeDelegateContext.Unwrap (context)) {
 				ctx.GetDelegate<SKBitmapReleaseDelegate> () (address, ctx.ManagedContext);
 			}
-		}
-	}
-
-	[Obsolete ("This no longer does anything, and should not be used.")]
-	public class SKAutoLockPixels : IDisposable
-	{
-		[Obsolete ("This no longer does anything, and should not be used.")]
-		public SKAutoLockPixels (SKBitmap bitmap)
-		{
-		}
-
-		[Obsolete ("This no longer does anything, and should not be used.")]
-		public SKAutoLockPixels (SKBitmap bitmap, bool doLock)
-		{
-		}
-
-		[Obsolete ("This no longer does anything, and should not be used.")]
-		public void Dispose ()
-		{
-		}
-
-		[Obsolete ("This no longer does anything, and should not be used.")]
-		public void Unlock ()
-		{
 		}
 	}
 }

@@ -55,7 +55,13 @@ namespace SkiaSharp
 		{
 			if (path == null)
 				throw new ArgumentNullException (nameof (path));
-			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_file (path, index));
+			using (var stream = SKFileStream.OpenStream (path)) {
+				if (stream == null) {
+					return null;
+				} else {
+					return FromStream (stream, index);
+				}
+			}
 		}
 
 		public static SKTypeface FromStream (Stream stream, int index = 0)

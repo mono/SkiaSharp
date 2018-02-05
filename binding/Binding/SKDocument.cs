@@ -54,11 +54,16 @@ namespace SkiaSharp
 			SkiaApi.sk_document_close (Handle);
 		}
 
+		[Obsolete ("Use CreateXps(SKWStream, float) instead.")]
 		public static SKDocument CreateXps (string path, float dpi = DefaultRasterDpi)
 		{
-			var stream = new SKFileWStream (path);
+			if (path == null) {
+				throw new ArgumentNullException (nameof (path));
+			}
+
+			var stream = SKFileWStream.OpenStream (path);
 			var doc = CreateXps (stream, dpi);
-			stream.RevokeOwnership ();
+			doc.SetDisposeChild (stream);
 			return doc;
 		}
 
@@ -71,9 +76,17 @@ namespace SkiaSharp
 			return GetObject<SKDocument> (SkiaApi.sk_document_create_xps_from_stream (stream.Handle, dpi));
 		}
 
+		[Obsolete ("Use CreatePdf(SKWStream, float) instead.")]
 		public static SKDocument CreatePdf (string path, float dpi = DefaultRasterDpi)
 		{
-			return GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_filename (path, dpi));
+			if (path == null) {
+				throw new ArgumentNullException (nameof (path));
+			}
+
+			var stream = SKFileWStream.OpenStream (path);
+			var doc = CreatePdf (stream, dpi);
+			doc.SetDisposeChild (stream);
+			return doc;
 		}
 
 		public static SKDocument CreatePdf (SKWStream stream, float dpi = DefaultRasterDpi)

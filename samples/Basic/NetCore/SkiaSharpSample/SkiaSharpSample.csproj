@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp.NetStandard\SkiaSharp.NetStandard.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\..\..\native-builds\lib\windows\x64\libSkiaSharp.dll" Condition="Exists('..\..\..\..\native-builds\lib\windows\x64\libSkiaSharp.dll')">
+      <Link>libSkiaSharp.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\..\..\native-builds\lib\osx\libSkiaSharp.dylib" Condition="Exists('..\..\..\..\native-builds\lib\osx\libSkiaSharp.dylib')">
+      <Link>libSkiaSharp.dylib</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\..\..\native-builds\lib\linux\x64\libSkiaSharp.so" Condition="Exists('..\..\..\..\native-builds\lib\linux\x64\libSkiaSharp.so')">
+      <Link>libSkiaSharp.so</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

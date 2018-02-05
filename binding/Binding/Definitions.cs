@@ -110,8 +110,6 @@ namespace SkiaSharp
 		Expanded         = 7,
 		ExtraExpanded    = 8,
 		UltraExpanded    = 9,
-		[Obsolete("Use UltraExpanded instead.", true)]
-		UltaExpanded     = UltraExpanded
 	};
 
 	public enum SKFontStyleSlant {
@@ -162,12 +160,6 @@ namespace SkiaSharp
 		RgbaF16
 	}
 
-	[Obsolete ("May be removed in the next version.", true)]
-	public enum SKColorProfileType {
-		Linear,
-		SRGB
-	}
-
 	public enum SKAlphaType {
 		Unknown,
 		Opaque,
@@ -189,39 +181,6 @@ namespace SkiaSharp
 		IgnoreTransform = 0x01,
 		HighQuality = 0x02,
 		All = IgnoreTransform | HighQuality,
-	}
-
-	[Obsolete ("Use SKBlendMode instead.", true)]
-	public enum SKXferMode {
-		Clear,
-		Src,
-		Dst,
-		SrcOver,
-		DstOver,
-		SrcIn,
-		DstIn,
-		SrcOut,
-		DstOut,
-		SrcATop,
-		DstATop,
-		Xor,
-		Plus,
-		Modulate,
-		Screen,
-		Overlay,
-		Darken,
-		Lighten,
-		ColorDodge,
-		ColorBurn,
-		HardLight,
-		SoftLight,
-		Difference,
-		Exclusion,
-		Multiply,
-		Hue,
-		Saturation,
-		Color,
-		Luminosity,
 	}
 
 	public enum SKBlendMode {
@@ -254,11 +213,6 @@ namespace SkiaSharp
 		Saturation,
 		Color,
 		Luminosity,
-	}
-
-	[Obsolete ("Use SKClipOperation instead.", true)]
-	public enum SKClipType {
-		Intersect, Difference 
 	}
 
 	public enum SKPixelGeometry {
@@ -315,8 +269,6 @@ namespace SkiaSharp
 
 	public enum SKStrokeJoin {
 		Miter, Round, Bevel,
-		[Obsolete ("Use SKStrokeJoin.Miter instead.", true)]
-		Mitter = Miter,
 	}
 
 	public enum SKTextAlign {
@@ -2039,12 +1991,6 @@ namespace SkiaSharp
 		}
 	}
 	
-	[Obsolete ("Use GRContext.Flush() instead.", true)]
-	public enum GRContextFlushBits {
-		None = 0,
-		Discard = 0x2,
-	}
-
 	public enum SKPathOp {
 		Difference,
 		Intersect,
