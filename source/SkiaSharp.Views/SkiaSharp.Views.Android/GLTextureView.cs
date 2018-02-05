@@ -25,14 +25,14 @@ namespace SkiaSharp.Views.Android
 		private const bool EnableLogging = false;
 
 		private WeakReference<GLTextureView> thisWeakRef;
-		private GLThread mGLThread;
-		private IRenderer mRenderer;
-		private bool mDetached;
-		private IEGLConfigChooser mEGLConfigChooser;
-		private IEGLContextFactory mEGLContextFactory;
-		private IEGLWindowSurfaceFactory mEGLWindowSurfaceFactory;
-		private IGLWrapper mGLWrapper;
-		private int mEGLContextClientVersion;
+		private GLThread glThread;
+		private IRenderer renderer;
+		private bool detachedFromWindow;
+		private IEGLConfigChooser eglConfigChooser;
+		private IEGLContextFactory eglContextFactory;
+		private IEGLWindowSurfaceFactory eglWindowSurfaceFactory;
+		private IGLWrapper glWrapper;
+		private int eglContextClientVersion;
 
 		public GLTextureView(Context context)
 			: base(context)
@@ -76,45 +76,45 @@ namespace SkiaSharp.Views.Android
 
 		public void SetGLWrapper(IGLWrapper glWrapper)
 		{
-			mGLWrapper = glWrapper;
+			this.glWrapper = glWrapper;
 		}
 
 		public void SetRenderer(IRenderer renderer)
 		{
 			CheckRenderThreadState();
-			if (mEGLConfigChooser == null)
+			if (eglConfigChooser == null)
 			{
-				mEGLConfigChooser = new SimpleEGLConfigChooser(this, true);
+				eglConfigChooser = new SimpleEGLConfigChooser(this, true);
 			}
-			if (mEGLContextFactory == null)
+			if (eglContextFactory == null)
 			{
-				mEGLContextFactory = new DefaultContextFactory(this);
+				eglContextFactory = new DefaultContextFactory(this);
 			}
-			if (mEGLWindowSurfaceFactory == null)
+			if (eglWindowSurfaceFactory == null)
 			{
-				mEGLWindowSurfaceFactory = new DefaultWindowSurfaceFactory();
+				eglWindowSurfaceFactory = new DefaultWindowSurfaceFactory();
 			}
-			mRenderer = renderer;
-			mGLThread = new GLThread(thisWeakRef);
-			mGLThread.Start();
+			this.renderer = renderer;
+			glThread = new GLThread(thisWeakRef);
+			glThread.Start();
 		}
 
 		public void SetEGLContextFactory(IEGLContextFactory factory)
 		{
 			CheckRenderThreadState();
-			mEGLContextFactory = factory;
+			eglContextFactory = factory;
 		}
 
 		public void SetEGLWindowSurfaceFactory(IEGLWindowSurfaceFactory factory)
 		{
 			CheckRenderThreadState();
-			mEGLWindowSurfaceFactory = factory;
+			eglWindowSurfaceFactory = factory;
 		}
 
 		public void SetEGLConfigChooser(IEGLConfigChooser configChooser)
 		{
 			CheckRenderThreadState();
-			mEGLConfigChooser = configChooser;
+			eglConfigChooser = configChooser;
 		}
 
 		public void SetEGLConfigChooser(bool needDepth)
@@ -130,18 +130,18 @@ namespace SkiaSharp.Views.Android
 		public void SetEGLContextClientVersion(int version)
 		{
 			CheckRenderThreadState();
-			mEGLContextClientVersion = version;
+			eglContextClientVersion = version;
 		}
 
 		public Rendermode RenderMode
 		{
-			get { return mGLThread.GetRenderMode(); }
-			set { mGLThread.SetRenderMode(value); }
+			get { return glThread.GetRenderMode(); }
+			set { glThread.SetRenderMode(value); }
 		}
 
 		public void RequestRender()
 		{
-			mGLThread.RequestRender();
+			glThread.RequestRender();
 		}
 
 		public void OnSurfaceTextureUpdated(SurfaceTexture surface)
@@ -151,29 +151,29 @@ namespace SkiaSharp.Views.Android
 
 		public void OnSurfaceTextureAvailable(SurfaceTexture surface, int width, int height)
 		{
-			mGLThread.OnSurfaceCreated();
+			glThread.OnSurfaceCreated();
 		}
 
 		public bool OnSurfaceTextureDestroyed(SurfaceTexture surface)
 		{
 			// Surface will be destroyed when we return
-			mGLThread.OnSurfaceDestroyed();
+			glThread.OnSurfaceDestroyed();
 			return true;
 		}
 
 		public void OnSurfaceTextureSizeChanged(SurfaceTexture surface, int w, int h)
 		{
-			mGLThread.OnWindowResize(w, h);
+			glThread.OnWindowResize(w, h);
 		}
 
 		public void OnPause()
 		{
-			mGLThread.OnPause();
+			glThread.OnPause();
 		}
 
 		public void OnResume()
 		{
-			mGLThread.OnResume();
+			glThread.OnResume();
 		}
 
 		public void QueueEvent(Action r)
@@ -183,7 +183,7 @@ namespace SkiaSharp.Views.Android
 
 		public void QueueEvent(Java.Lang.IRunnable r)
 		{
-			mGLThread.QueueEvent(r);
+			glThread.QueueEvent(r);
 		}
 
 		protected override void OnAttachedToWindow()
@@ -192,38 +192,38 @@ namespace SkiaSharp.Views.Android
 
 			LogDebug($" OnAttachedToWindow");
 
-			if (mDetached && (mRenderer != null))
+			if (detachedFromWindow && (renderer != null))
 			{
-				Rendermode renderMode = Rendermode.Continuously;
-				if (mGLThread != null)
+				var renderMode = Rendermode.Continuously;
+				if (glThread != null)
 				{
-					renderMode = mGLThread.GetRenderMode();
+					renderMode = glThread.GetRenderMode();
 				}
-				mGLThread = new GLThread(thisWeakRef);
+				glThread = new GLThread(thisWeakRef);
 				if (renderMode != Rendermode.Continuously)
 				{
-					mGLThread.SetRenderMode(renderMode);
+					glThread.SetRenderMode(renderMode);
 				}
-				mGLThread.Start();
+				glThread.Start();
 			}
-			mDetached = false;
+			detachedFromWindow = false;
 		}
 
 		protected override void OnDetachedFromWindow()
 		{
-			LogDebug($" OnDetachedFromWindow reattach={mDetached}");
+			LogDebug($" OnDetachedFromWindow reattach={detachedFromWindow}");
 
-			if (mGLThread != null)
+			if (glThread != null)
 			{
-				mGLThread.RequestExitAndWait();
+				glThread.RequestExitAndWait();
 			}
-			mDetached = true;
+			detachedFromWindow = true;
 			base.OnDetachedFromWindow();
 		}
 
 		private void CheckRenderThreadState()
 		{
-			if (mGLThread != null)
+			if (glThread != null)
 			{
 				throw new Exception("setRenderer has already been called for this instance.");
 			}
@@ -295,12 +295,12 @@ namespace SkiaSharp.Views.Android
 
 			public EGLContext CreateContext(IEGL10 egl, EGLDisplay display, EGLConfig config)
 			{
-				int[] attrib_list = {
-					EglHelper.EGL_CONTEXT_CLIENT_VERSION, textureView.mEGLContextClientVersion,
+				var attribList = new int[] {
+					EglHelper.EGL_CONTEXT_CLIENT_VERSION, textureView.eglContextClientVersion,
 					EGL10.EglNone
 				};
 
-				return egl.EglCreateContext(display, config, EGL10.EglNoContext, textureView.mEGLContextClientVersion != 0 ? attrib_list : null);
+				return egl.EglCreateContext(display, config, EGL10.EglNoContext, textureView.eglContextClientVersion != 0 ? attribList : null);
 			}
 
 			public void DestroyContext(IEGL10 egl, EGLDisplay display, EGLContext context)
@@ -309,7 +309,7 @@ namespace SkiaSharp.Views.Android
 
 				if (!egl.EglDestroyContext(display, context))
 				{
-					int error = egl.EglGetError();
+					var error = egl.EglGetError();
 					LogError($"[DefaultContextFactory] eglDestroyContext failed: {error}");
 					throw new Exception($"eglDestroyContext failed: {error}");
 				}
@@ -357,25 +357,24 @@ namespace SkiaSharp.Views.Android
 
 			public EGLConfig ChooseConfig(IEGL10 egl, EGLDisplay display)
 			{
-				int[] num_config = new int[1];
-				if (!egl.EglChooseConfig(display, configSpec, null, 0, num_config))
+				var numConfig = new int[1];
+				if (!egl.EglChooseConfig(display, configSpec, null, 0, numConfig))
 				{
 					throw new Exception("eglChooseConfig failed");
 				}
 
-				int numConfigs = num_config[0];
-
+				var numConfigs = numConfig[0];
 				if (numConfigs <= 0)
 				{
 					throw new Exception("No configs match configSpec");
 				}
 
-				EGLConfig[] configs = new EGLConfig[numConfigs];
-				if (!egl.EglChooseConfig(display, configSpec, configs, numConfigs, num_config))
+				var configs = new EGLConfig[numConfigs];
+				if (!egl.EglChooseConfig(display, configSpec, configs, numConfigs, numConfig))
 				{
 					throw new Exception("eglChooseConfig#2 failed");
 				}
-				EGLConfig config = ChooseConfig(egl, display, configs);
+				var config = ChooseConfig(egl, display, configs);
 				if (config == null)
 				{
 					throw new Exception("No config chosen");
@@ -387,16 +386,16 @@ namespace SkiaSharp.Views.Android
 
 			private int[] FilterConfigSpec(int[] spec)
 			{
-				if (textureView.mEGLContextClientVersion != 2)
+				if (textureView.eglContextClientVersion != 2)
 				{
 					return spec;
 				}
 
 				// We know none of the subclasses define EGL_RENDERABLE_TYPE.
 				// And we know the configSpec is well formed.
-				int len = spec.Length;
-				int[] newConfigSpec = new int[len + 2];
-				System.Array.Copy(spec, 0, newConfigSpec, 0, len - 1);
+				var len = spec.Length;
+				var newConfigSpec = new int[len + 2];
+				Array.Copy(spec, 0, newConfigSpec, 0, len - 1);
 				newConfigSpec[len - 1] = EGL10.EglRenderableType;
 				newConfigSpec[len] = EglHelper.EGL_OPENGL_ES2_BIT;
 				newConfigSpec[len + 1] = EGL10.EglNone;
@@ -406,13 +405,13 @@ namespace SkiaSharp.Views.Android
 
 		private class ComponentSizeChooser : BaseConfigChooser
 		{
-			private int[] mValue;
-			private int mRedSize;
-			private int mGreenSize;
-			private int mBlueSize;
-			private int mAlphaSize;
-			private int mDepthSize;
-			private int mStencilSize;
+			private int[] value;
+			private int redSize;
+			private int greenSize;
+			private int blueSize;
+			private int alphaSize;
+			private int depthSize;
+			private int stencilSize;
 
 			public ComponentSizeChooser(GLTextureView textureView, int redSize, int greenSize, int blueSize, int alphaSize, int depthSize, int stencilSize)
 				: base(textureView, new int[] {
@@ -425,28 +424,28 @@ namespace SkiaSharp.Views.Android
 					EGL10.EglNone
 				})
 			{
-				mValue = new int[1];
-				mRedSize = redSize;
-				mGreenSize = greenSize;
-				mBlueSize = blueSize;
-				mAlphaSize = alphaSize;
-				mDepthSize = depthSize;
-				mStencilSize = stencilSize;
+				value = new int[1];
+				this.redSize = redSize;
+				this.greenSize = greenSize;
+				this.blueSize = blueSize;
+				this.alphaSize = alphaSize;
+				this.depthSize = depthSize;
+				this.stencilSize = stencilSize;
 			}
 
 			public override EGLConfig ChooseConfig(IEGL10 egl, EGLDisplay display, EGLConfig[] configs)
 			{
-				foreach (EGLConfig config in configs)
+				foreach (var config in configs)
 				{
-					int d = FindConfigAttrib(egl, display, config, EGL10.EglDepthSize, 0);
-					int s = FindConfigAttrib(egl, display, config, EGL10.EglStencilSize, 0);
-					if ((d >= mDepthSize) && (s >= mStencilSize))
+					var d = FindConfigAttrib(egl, display, config, EGL10.EglDepthSize, 0);
+					var s = FindConfigAttrib(egl, display, config, EGL10.EglStencilSize, 0);
+					if ((d >= depthSize) && (s >= stencilSize))
 					{
-						int r = FindConfigAttrib(egl, display, config, EGL10.EglRedSize, 0);
-						int g = FindConfigAttrib(egl, display, config, EGL10.EglGreenSize, 0);
-						int b = FindConfigAttrib(egl, display, config, EGL10.EglBlueSize, 0);
-						int a = FindConfigAttrib(egl, display, config, EGL10.EglAlphaSize, 0);
-						if ((r == mRedSize) && (g == mGreenSize) && (b == mBlueSize) && (a == mAlphaSize))
+						var r = FindConfigAttrib(egl, display, config, EGL10.EglRedSize, 0);
+						var g = FindConfigAttrib(egl, display, config, EGL10.EglGreenSize, 0);
+						var b = FindConfigAttrib(egl, display, config, EGL10.EglBlueSize, 0);
+						var a = FindConfigAttrib(egl, display, config, EGL10.EglAlphaSize, 0);
+						if ((r == redSize) && (g == greenSize) && (b == blueSize) && (a == alphaSize))
 						{
 							return config;
 						}
@@ -457,9 +456,9 @@ namespace SkiaSharp.Views.Android
 
 			private int FindConfigAttrib(IEGL10 egl, EGLDisplay display, EGLConfig config, int attribute, int defaultValue)
 			{
-				if (egl.EglGetConfigAttrib(display, config, attribute, mValue))
+				if (egl.EglGetConfigAttrib(display, config, attribute, value))
 				{
-					return mValue[0];
+					return value[0];
 				}
 				return defaultValue;
 			}
@@ -477,22 +476,22 @@ namespace SkiaSharp.Views.Android
 		{
 			public const int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
 			public const int EGL_OPENGL_ES2_BIT = 4;
-			public const string kMSM7K_RENDERER_PREFIX = "Q3Dimension MSM7500 ";
-			public const int kGLES_20 = 0x20000;
+			public const string MSM7K_RENDERER_PREFIX = "Q3Dimension MSM7500 ";
+			public const int GLES_20 = 0x20000;
 
-			private WeakReference<GLTextureView> mGLTextureViewWeakRef;
-			private IEGL10 mEgl;
-			private EGLDisplay mEglDisplay;
-			private EGLSurface mEglSurface;
-			private EGLContext mEglContext;
-			private EGLConfig mEglConfig;
+			private WeakReference<GLTextureView> textureViewWeakRef;
+			private IEGL10 egl;
+			private EGLDisplay eglDisplay;
+			private EGLSurface eglSurface;
+			private EGLContext eglContext;
+			private EGLConfig eglConfig;
 
 			public EglHelper(WeakReference<GLTextureView> glTextureViewWeakRef)
 			{
-				mGLTextureViewWeakRef = glTextureViewWeakRef;
+				textureViewWeakRef = glTextureViewWeakRef;
 			}
 
-			public EGLConfig EglConfig => mEglConfig;
+			public EGLConfig EglConfig => eglConfig;
 
 			private int CurrentThreadId => Thread.CurrentThread.ManagedThreadId;
 
@@ -501,79 +500,79 @@ namespace SkiaSharp.Views.Android
 				LogDebug($"[GLThread {CurrentThreadId}][EglHelper] Start");
 
 				// Get an EGL instance
-				mEgl = EGLContext.EGL.JavaCast<IEGL10>();
+				egl = EGLContext.EGL.JavaCast<IEGL10>();
 
 				// Get to the default display.
-				mEglDisplay = mEgl.EglGetDisplay(EGL10.EglDefaultDisplay);
+				eglDisplay = egl.EglGetDisplay(EGL10.EglDefaultDisplay);
 
-				if (mEglDisplay == EGL10.EglNoDisplay)
+				if (eglDisplay == EGL10.EglNoDisplay)
 				{
 					throw new Exception("eglGetDisplay failed");
 				}
 
 				// We can now initialize EGL for that display
-				int[] version = new int[2];
-				if (!mEgl.EglInitialize(mEglDisplay, version))
+				var version = new int[2];
+				if (!egl.EglInitialize(eglDisplay, version))
 				{
 					throw new Exception("eglInitialize failed");
 				}
-				if (!mGLTextureViewWeakRef.TryGetTarget(out GLTextureView view))
+				if (!textureViewWeakRef.TryGetTarget(out GLTextureView view))
 				{
-					mEglConfig = null;
-					mEglContext = null;
+					eglConfig = null;
+					eglContext = null;
 				}
 				else
 				{
-					mEglConfig = view.mEGLConfigChooser.ChooseConfig(mEgl, mEglDisplay);
+					eglConfig = view.eglConfigChooser.ChooseConfig(egl, eglDisplay);
 					// Create an EGL context. We want to do this as rarely as we can, because an
 					// EGL context is a somewhat heavy object.
-					mEglContext = view.mEGLContextFactory.CreateContext(mEgl, mEglDisplay, mEglConfig);
+					eglContext = view.eglContextFactory.CreateContext(egl, eglDisplay, eglConfig);
 				}
-				if (mEglContext == null || mEglContext == EGL10.EglNoContext)
+				if (eglContext == null || eglContext == EGL10.EglNoContext)
 				{
-					mEglContext = null;
+					eglContext = null;
 
-					int error = mEgl.EglGetError();
+					var error = egl.EglGetError();
 					LogError($"[GLThread {CurrentThreadId}][EglHelper] createContext failed: {error}");
 					throw new Exception($"createContext failed: {error}");
 				}
 
-				LogDebug($"[GLThread {CurrentThreadId}][EglHelper] createContext {mEglContext}");
+				LogDebug($"[GLThread {CurrentThreadId}][EglHelper] createContext {eglContext}");
 
-				mEglSurface = null;
+				eglSurface = null;
 			}
 
 			public bool CreateSurface()
 			{
 				LogDebug($"[GLThread {CurrentThreadId}][EglHelper] CreateSurface");
 
-				if (mEgl == null)
+				if (egl == null)
 				{
 					throw new Exception("egl not initialized");
 				}
-				if (mEglDisplay == null)
+				if (eglDisplay == null)
 				{
 					throw new Exception("eglDisplay not initialized");
 				}
-				if (mEglConfig == null)
+				if (eglConfig == null)
 				{
 					throw new Exception("mEglConfig not initialized");
 				}
 				// The window size has changed, so we need to create a new surface.
-				DestroySurfaceImp();
+				DestroySurfaceImpl();
 
 				// Create an EGL surface we can render into.
-				if (mGLTextureViewWeakRef.TryGetTarget(out GLTextureView view))
+				if (textureViewWeakRef.TryGetTarget(out GLTextureView view))
 				{
-					mEglSurface = view.mEGLWindowSurfaceFactory.CreateWindowSurface(mEgl, mEglDisplay, mEglConfig, view.SurfaceTexture);
+					eglSurface = view.eglWindowSurfaceFactory.CreateWindowSurface(egl, eglDisplay, eglConfig, view.SurfaceTexture);
 				}
 				else
 				{
-					mEglSurface = null;
+					eglSurface = null;
 				}
-				if (mEglSurface == null || mEglSurface == EGL10.EglNoSurface)
+				if (eglSurface == null || eglSurface == EGL10.EglNoSurface)
 				{
-					int error = mEgl.EglGetError();
+					var error = egl.EglGetError();
 					if (error == EGL10.EglBadNativeWindow)
 					{
 						LogError($"[GLThread {CurrentThreadId}][EglHelper] createWindowSurface returned EGL_BAD_NATIVE_WINDOW");
@@ -582,11 +581,11 @@ namespace SkiaSharp.Views.Android
 				}
 				// Before we can issue IGL commands, we need to make sure the context is 
 				// current and bound to a surface.
-				if (!mEgl.EglMakeCurrent(mEglDisplay, mEglSurface, mEglSurface, mEglContext))
+				if (!egl.EglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext))
 				{
 					// Could not make the context current, probably because the underlying
 					// TextureView surface has been destroyed.
-					LogError($"[GLThread {CurrentThreadId}][EglHelper] eglMakeCurrent failed: {mEgl.EglGetError()}");
+					LogError($"[GLThread {CurrentThreadId}][EglHelper] eglMakeCurrent failed: {egl.EglGetError()}");
 					return false;
 				}
 				return true;
@@ -594,17 +593,17 @@ namespace SkiaSharp.Views.Android
 
 			public IGL CreateGL()
 			{
-				IGL gl = mEglContext.GL;
-				if (mGLTextureViewWeakRef.TryGetTarget(out GLTextureView view))
+				var gl = eglContext.GL;
+				if (textureViewWeakRef.TryGetTarget(out GLTextureView view))
 				{
-					if (view.mGLWrapper != null)
+					if (view.glWrapper != null)
 					{
-						gl = view.mGLWrapper.Wrap(gl);
+						gl = view.glWrapper.Wrap(gl);
 					}
 
 					if (view.DebugFlags.HasFlag(DebugFlags.CheckGlError | DebugFlags.LogGlCalls))
 					{
-						int configFlags = 0;
+						var configFlags = 0;
 						Java.IO.Writer log = null;
 						if (view.DebugFlags.HasFlag(DebugFlags.CheckGlError))
 						{
@@ -622,9 +621,9 @@ namespace SkiaSharp.Views.Android
 
 			public int Swap()
 			{
-				if (!mEgl.EglSwapBuffers(mEglDisplay, mEglSurface))
+				if (!egl.EglSwapBuffers(eglDisplay, eglSurface))
 				{
-					return mEgl.EglGetError();
+					return egl.EglGetError();
 				}
 				return EGL10.EglSuccess;
 			}
@@ -633,23 +632,23 @@ namespace SkiaSharp.Views.Android
 			{
 				LogDebug($"[GLThread {CurrentThreadId}][EglHelper] DestroySurface");
 
-				if (mGLTextureViewWeakRef.TryGetTarget(out GLTextureView view))
+				if (textureViewWeakRef.TryGetTarget(out GLTextureView view))
 				{
-					view.mRenderer.OnSurfaceDestroyed();
+					view.renderer.OnSurfaceDestroyed();
 				}
-				DestroySurfaceImp();
+				DestroySurfaceImpl();
 			}
 
-			private void DestroySurfaceImp()
+			private void DestroySurfaceImpl()
 			{
-				if (mEglSurface != null && mEglSurface != EGL10.EglNoSurface)
+				if (eglSurface != null && eglSurface != EGL10.EglNoSurface)
 				{
-					mEgl.EglMakeCurrent(mEglDisplay, EGL10.EglNoSurface, EGL10.EglNoSurface, EGL10.EglNoContext);
-					if (mGLTextureViewWeakRef.TryGetTarget(out GLTextureView view))
+					egl.EglMakeCurrent(eglDisplay, EGL10.EglNoSurface, EGL10.EglNoSurface, EGL10.EglNoContext);
+					if (textureViewWeakRef.TryGetTarget(out GLTextureView view))
 					{
-						view.mEGLWindowSurfaceFactory.DestroySurface(mEgl, mEglDisplay, mEglSurface);
+						view.eglWindowSurfaceFactory.DestroySurface(egl, eglDisplay, eglSurface);
 					}
-					mEglSurface = null;
+					eglSurface = null;
 				}
 			}
 
@@ -657,18 +656,18 @@ namespace SkiaSharp.Views.Android
 			{
 				LogDebug($"[GLThread {CurrentThreadId}][EglHelper] Finish");
 
-				if (mEglContext != null)
+				if (eglContext != null)
 				{
-					if (mGLTextureViewWeakRef.TryGetTarget(out GLTextureView view))
+					if (textureViewWeakRef.TryGetTarget(out GLTextureView view))
 					{
-						view.mEGLContextFactory.DestroyContext(mEgl, mEglDisplay, mEglContext);
+						view.eglContextFactory.DestroyContext(egl, eglDisplay, eglContext);
 					}
-					mEglContext = null;
+					eglContext = null;
 				}
-				if (mEglDisplay != null)
+				if (eglDisplay != null)
 				{
-					mEgl.EglTerminate(mEglDisplay);
-					mEglDisplay = null;
+					egl.EglTerminate(eglDisplay);
+					eglDisplay = null;
 				}
 			}
 		}
@@ -688,28 +687,28 @@ namespace SkiaSharp.Views.Android
 			private bool paused;
 			private bool hasSurface;
 			private bool surfaceIsBad;
-			private bool mWaitingForSurface;
-			private bool mHaveEglContext;
-			private bool mHaveEglSurface;
-			private bool mFinishedCreatingEglSurface;
-			private bool mShouldReleaseEglContext;
-			private int mWidth;
-			private int mHeight;
-			private Rendermode mRenderMode;
-			private bool mRequestRender;
-			private bool mRenderComplete;
-			private Queue<Java.Lang.IRunnable> mEventQueue = new Queue<Java.Lang.IRunnable>();
-			private bool mSizeChanged = true;
+			private bool waitingForSurface;
+			private bool haveEglContext;
+			private bool haveEglSurface;
+			private bool finishedCreatingEglSurface;
+			private bool shouldReleaseEglContext;
+			private int width;
+			private int height;
+			private Rendermode renderMode;
+			private bool requestRender;
+			private bool renderComplete;
+			private Queue<Java.Lang.IRunnable> eventQueue = new Queue<Java.Lang.IRunnable>();
+			private bool surfaceSizeChanged = true;
 			// End of member variables protected by the sGLThreadManager monitor.
 
 			public GLThread(WeakReference<GLTextureView> glTextureViewWeakRef)
 			{
 				threadManager = new GLThreadManager();
 
-				mWidth = 0;
-				mHeight = 0;
-				mRequestRender = true;
-				mRenderMode = Rendermode.Continuously;
+				width = 0;
+				height = 0;
+				requestRender = true;
+				renderMode = Rendermode.Continuously;
 				textureViewWeakRef = glTextureViewWeakRef;
 				thread = new Thread(new ThreadStart(Run));
 			}
@@ -744,19 +743,19 @@ namespace SkiaSharp.Views.Android
 
 			private void StopEglSurfaceLocked()
 			{
-				if (mHaveEglSurface)
+				if (haveEglSurface)
 				{
-					mHaveEglSurface = false;
+					haveEglSurface = false;
 					eglHelper.DestroySurface();
 				}
 			}
 
 			private void StopEglContextLocked()
 			{
-				if (mHaveEglContext)
+				if (haveEglContext)
 				{
 					eglHelper.Finish();
-					mHaveEglContext = false;
+					haveEglContext = false;
 					threadManager.ReleaseEglContextLocked(this);
 				}
 			}
@@ -764,21 +763,21 @@ namespace SkiaSharp.Views.Android
 			private void GuardedRun()
 			{
 				eglHelper = new EglHelper(textureViewWeakRef);
-				mHaveEglContext = false;
-				mHaveEglSurface = false;
+				haveEglContext = false;
+				haveEglSurface = false;
 				try
 				{
 					IGL10 gl = null;
-					bool createEglContext = false;
-					bool createEglSurface = false;
-					bool createGlInterface = false;
-					bool lostEglContext = false;
-					bool sizeChanged = false;
-					bool wantRenderNotification = false;
-					bool doRenderNotification = false;
-					bool askedToReleaseEglContext = false;
-					int w = 0;
-					int h = 0;
+					var createEglContext = false;
+					var createEglSurface = false;
+					var createGlInterface = false;
+					var lostEglContext = false;
+					var sizeChanged = false;
+					var wantRenderNotification = false;
+					var doRenderNotification = false;
+					var askedToReleaseEglContext = false;
+					var w = 0;
+					var h = 0;
 					Java.Lang.IRunnable ev = null;
 
 					while (true)
@@ -792,14 +791,14 @@ namespace SkiaSharp.Views.Android
 									return;
 								}
 
-								if (mEventQueue.Count > 0)
+								if (eventQueue.Count > 0)
 								{
-									ev = mEventQueue.Dequeue();
+									ev = eventQueue.Dequeue();
 									break;
 								}
 
 								// Update the pause state.
-								bool pausing = false;
+								var pausing = false;
 								if (paused != requestPaused)
 								{
 									pausing = requestPaused;
@@ -810,13 +809,13 @@ namespace SkiaSharp.Views.Android
 								}
 
 								// Do we need to give up the EGL context?
-								if (mShouldReleaseEglContext)
+								if (shouldReleaseEglContext)
 								{
 									LogDebug($"[GLThread {Id}] Releasing EGL context because asked to");
 
 									StopEglSurfaceLocked();
 									StopEglContextLocked();
-									mShouldReleaseEglContext = false;
+									shouldReleaseEglContext = false;
 									askedToReleaseEglContext = true;
 								}
 
@@ -829,7 +828,7 @@ namespace SkiaSharp.Views.Android
 								}
 
 								// When pausing, release the EGL surface:
-								if (pausing && mHaveEglSurface)
+								if (pausing && haveEglSurface)
 								{
 									LogDebug($"[GLThread {Id}] Releasing EGL surface because paused");
 
@@ -837,10 +836,10 @@ namespace SkiaSharp.Views.Android
 								}
 
 								// When pausing, optionally release the EGL Context:
-								if (pausing && mHaveEglContext)
+								if (pausing && haveEglContext)
 								{
 									textureViewWeakRef.TryGetTarget(out GLTextureView view);
-									bool preserveEglContextOnPause = view == null ? false : view.PreserveEGLContextOnPause;
+									var preserveEglContextOnPause = view == null ? false : view.PreserveEGLContextOnPause;
 									if (!preserveEglContextOnPause || threadManager.ShouldReleaseEGLContextWhenPausing())
 									{
 										StopEglContextLocked();
@@ -861,25 +860,25 @@ namespace SkiaSharp.Views.Android
 								}
 
 								// Have we lost the TextureView surface?
-								if ((!hasSurface) && (!mWaitingForSurface))
+								if ((!hasSurface) && (!waitingForSurface))
 								{
 									LogDebug($"[GLThread {Id}] Noticed TextureView surface lost");
 
-									if (mHaveEglSurface)
+									if (haveEglSurface)
 									{
 										StopEglSurfaceLocked();
 									}
-									mWaitingForSurface = true;
+									waitingForSurface = true;
 									surfaceIsBad = false;
 									Monitor.PulseAll(threadManager);
 								}
 
 								// Have we acquired the surface view surface?
-								if (hasSurface && mWaitingForSurface)
+								if (hasSurface && waitingForSurface)
 								{
 									LogDebug($"[GLThread {Id}] Noticed TextureView surface acquired");
 
-									mWaitingForSurface = false;
+									waitingForSurface = false;
 									Monitor.PulseAll(threadManager);
 								}
 
@@ -889,7 +888,7 @@ namespace SkiaSharp.Views.Android
 
 									wantRenderNotification = false;
 									doRenderNotification = false;
-									mRenderComplete = true;
+									renderComplete = true;
 									Monitor.PulseAll(threadManager);
 								}
 
@@ -897,7 +896,7 @@ namespace SkiaSharp.Views.Android
 								if (IsReadyToDraw())
 								{
 									// If we don't have an EGL context, try to acquire one.
-									if (!mHaveEglContext)
+									if (!haveEglContext)
 									{
 										if (askedToReleaseEglContext)
 										{
@@ -914,43 +913,43 @@ namespace SkiaSharp.Views.Android
 												threadManager.ReleaseEglContextLocked(this);
 												throw t;
 											}
-											mHaveEglContext = true;
+											haveEglContext = true;
 											createEglContext = true;
 
 											Monitor.PulseAll(threadManager);
 										}
 									}
 
-									if (mHaveEglContext && !mHaveEglSurface)
+									if (haveEglContext && !haveEglSurface)
 									{
-										mHaveEglSurface = true;
+										haveEglSurface = true;
 										createEglSurface = true;
 										createGlInterface = true;
 										sizeChanged = true;
 									}
 
-									if (mHaveEglSurface)
+									if (haveEglSurface)
 									{
-										if (mSizeChanged)
+										if (surfaceSizeChanged)
 										{
 											sizeChanged = true;
-											w = mWidth;
-											h = mHeight;
+											w = width;
+											h = height;
 											wantRenderNotification = true;
 
 											LogDebug($"[GLThread {Id}] Noticing that we want render notification");
 
 											// Destroy and recreate the EGL surface.
 											createEglSurface = true;
-											mSizeChanged = false;
+											surfaceSizeChanged = false;
 										}
-										mRequestRender = false;
+										requestRender = false;
 										Monitor.PulseAll(threadManager);
 										break;
 									}
 								}
 
-								LogDebug($"[GLThread {Id}] Waiting mHaveEglContext={mHaveEglContext} mHaveEglSurface={mHaveEglSurface} mFinishedCreatingEglSurface={mFinishedCreatingEglSurface} paused={paused} hasSurface={hasSurface} surfaceIsBad={surfaceIsBad} mWaitingForSurface={mWaitingForSurface} mWidth={mWidth} mHeight={mHeight} mRequestRender={mRequestRender} mRenderMode={mRenderMode}");
+								LogDebug($"[GLThread {Id}] Waiting mHaveEglContext={haveEglContext} mHaveEglSurface={haveEglSurface} mFinishedCreatingEglSurface={finishedCreatingEglSurface} paused={paused} hasSurface={hasSurface} surfaceIsBad={surfaceIsBad} mWaitingForSurface={waitingForSurface} mWidth={width} mHeight={height} mRequestRender={requestRender} mRenderMode={renderMode}");
 
 								// By design, this is the only place in a GLThread thread where we Wait().
 								Monitor.Wait(threadManager);
@@ -972,7 +971,7 @@ namespace SkiaSharp.Views.Android
 							{
 								lock (threadManager)
 								{
-									mFinishedCreatingEglSurface = true;
+									finishedCreatingEglSurface = true;
 									Monitor.PulseAll(threadManager);
 								}
 							}
@@ -980,7 +979,7 @@ namespace SkiaSharp.Views.Android
 							{
 								lock (threadManager)
 								{
-									mFinishedCreatingEglSurface = true;
+									finishedCreatingEglSurface = true;
 									surfaceIsBad = true;
 									Monitor.PulseAll(threadManager);
 								}
@@ -1003,7 +1002,7 @@ namespace SkiaSharp.Views.Android
 
 							if (textureViewWeakRef.TryGetTarget(out GLTextureView view))
 							{
-								view.mRenderer.OnSurfaceCreated(gl, eglHelper.EglConfig);
+								view.renderer.OnSurfaceCreated(gl, eglHelper.EglConfig);
 							}
 							createEglContext = false;
 						}
@@ -1014,7 +1013,7 @@ namespace SkiaSharp.Views.Android
 
 							if (textureViewWeakRef.TryGetTarget(out GLTextureView view))
 							{
-								view.mRenderer.OnSurfaceChanged(gl, w, h);
+								view.renderer.OnSurfaceChanged(gl, w, h);
 							}
 							sizeChanged = false;
 						}
@@ -1024,11 +1023,11 @@ namespace SkiaSharp.Views.Android
 
 							if (textureViewWeakRef.TryGetTarget(out GLTextureView view))
 							{
-								view.mRenderer.OnDrawFrame(gl);
+								view.renderer.OnDrawFrame(gl);
 							}
 						}
 
-						int swapError = eglHelper.Swap();
+						var swapError = eglHelper.Swap();
 						switch (swapError)
 						{
 							case EGL10.EglSuccess:
@@ -1069,19 +1068,19 @@ namespace SkiaSharp.Views.Android
 
 			public bool IsAbleToDraw()
 			{
-				return mHaveEglContext && mHaveEglSurface && IsReadyToDraw();
+				return haveEglContext && haveEglSurface && IsReadyToDraw();
 			}
 
 			private bool IsReadyToDraw()
 			{
-				return (!paused) && hasSurface && (!surfaceIsBad) && (mWidth > 0) && (mHeight > 0) && (mRequestRender || (mRenderMode == Rendermode.Continuously));
+				return (!paused) && hasSurface && (!surfaceIsBad) && (width > 0) && (height > 0) && (requestRender || (renderMode == Rendermode.Continuously));
 			}
 
-			public void SetRenderMode(Rendermode renderMode)
+			public void SetRenderMode(Rendermode mode)
 			{
 				lock (threadManager)
 				{
-					mRenderMode = renderMode;
+					renderMode = mode;
 					Monitor.PulseAll(threadManager);
 				}
 			}
@@ -1090,7 +1089,7 @@ namespace SkiaSharp.Views.Android
 			{
 				lock (threadManager)
 				{
-					return mRenderMode;
+					return renderMode;
 				}
 			}
 
@@ -1098,7 +1097,7 @@ namespace SkiaSharp.Views.Android
 			{
 				lock (threadManager)
 				{
-					mRequestRender = true;
+					requestRender = true;
 					Monitor.PulseAll(threadManager);
 				}
 			}
@@ -1110,9 +1109,9 @@ namespace SkiaSharp.Views.Android
 					LogDebug($"[GLThread {Id}] OnSurfaceCreated");
 
 					hasSurface = true;
-					mFinishedCreatingEglSurface = false;
+					finishedCreatingEglSurface = false;
 					Monitor.PulseAll(threadManager);
-					while (mWaitingForSurface && !mFinishedCreatingEglSurface && !exited)
+					while (waitingForSurface && !finishedCreatingEglSurface && !exited)
 					{
 						try
 						{
@@ -1134,7 +1133,7 @@ namespace SkiaSharp.Views.Android
 
 					hasSurface = false;
 					Monitor.PulseAll(threadManager);
-					while ((!mWaitingForSurface) && (!exited))
+					while ((!waitingForSurface) && (!exited))
 					{
 						try
 						{
@@ -1180,10 +1179,10 @@ namespace SkiaSharp.Views.Android
 					LogDebug($"[GLThread {Id}] OnResume");
 
 					requestPaused = false;
-					mRequestRender = true;
-					mRenderComplete = false;
+					requestRender = true;
+					renderComplete = false;
 					Monitor.PulseAll(threadManager);
-					while ((!exited) && paused && (!mRenderComplete))
+					while ((!exited) && paused && (!renderComplete))
 					{
 						LogDebug($"[GLThread {Id}] OnResume: Waiting for paused==False");
 
@@ -1203,15 +1202,15 @@ namespace SkiaSharp.Views.Android
 			{
 				lock (threadManager)
 				{
-					mWidth = w;
-					mHeight = h;
-					mSizeChanged = true;
-					mRequestRender = true;
-					mRenderComplete = false;
+					width = w;
+					height = h;
+					surfaceSizeChanged = true;
+					requestRender = true;
+					renderComplete = false;
 					Monitor.PulseAll(threadManager);
 
 					// Wait for thread to react to resize and render a frame
-					while (!exited && !paused && !mRenderComplete && IsAbleToDraw())
+					while (!exited && !paused && !renderComplete && IsAbleToDraw())
 					{
 						LogDebug($"[GLThread {Id}] OnWindowResize: Waiting for render complete");
 
@@ -1250,7 +1249,7 @@ namespace SkiaSharp.Views.Android
 
 			public void RequestReleaseEglContextLocked()
 			{
-				mShouldReleaseEglContext = true;
+				shouldReleaseEglContext = true;
 				Monitor.PulseAll(threadManager);
 			}
 
@@ -1263,7 +1262,7 @@ namespace SkiaSharp.Views.Android
 
 				lock (threadManager)
 				{
-					mEventQueue.Enqueue(r);
+					eventQueue.Enqueue(r);
 					Monitor.PulseAll(threadManager);
 				}
 			}
@@ -1285,9 +1284,9 @@ namespace SkiaSharp.Views.Android
 
 			public override void Write(char[] buf, int offset, int count)
 			{
-				for (int i = 0; i < count; i++)
+				for (var i = 0; i < count; i++)
 				{
-					char c = buf[offset + i];
+					var c = buf[offset + i];
 					if (c == '\n')
 					{
 						FlushBuilder();
@@ -1390,10 +1389,10 @@ namespace SkiaSharp.Views.Android
 					if (!glesDriverCheckComplete)
 					{
 						CheckGLESVersion();
-						string renderer = gl.GlGetString(GL10.GlRenderer);
-						if (glesVersion < EglHelper.kGLES_20)
+						var renderer = gl.GlGetString(GL10.GlRenderer);
+						if (glesVersion < EglHelper.GLES_20)
 						{
-							multipleGLESContextsAllowed = !renderer.StartsWith(EglHelper.kMSM7K_RENDERER_PREFIX);
+							multipleGLESContextsAllowed = !renderer.StartsWith(EglHelper.MSM7K_RENDERER_PREFIX);
 							Monitor.PulseAll(this);
 						}
 						limitedGLESContexts = !multipleGLESContextsAllowed;
@@ -1413,8 +1412,8 @@ namespace SkiaSharp.Views.Android
 				if (!glesVersionCheckComplete)
 				{
 					// SystemProperties.getInt("ro.opengles.version", ConfigurationInfo.GL_ES_VERSION_UNDEFINED)
-					ActivityManager activityManager = ActivityManager.FromContext(Application.Context);
-					ConfigurationInfo configInfo = activityManager.DeviceConfigurationInfo;
+					var activityManager = ActivityManager.FromContext(Application.Context);
+					var configInfo = activityManager.DeviceConfigurationInfo;
 					if (configInfo.ReqGlEsVersion != ConfigurationInfo.GlEsVersionUndefined)
 					{
 						glesVersion = configInfo.ReqGlEsVersion;
@@ -1423,7 +1422,7 @@ namespace SkiaSharp.Views.Android
 					{
 						glesVersion = 1 << 16; // Lack of property means OpenGL ES version 1
 					}
-					if (glesVersion >= EglHelper.kGLES_20)
+					if (glesVersion >= EglHelper.GLES_20)
 					{
 						multipleGLESContextsAllowed = true;
 					}
