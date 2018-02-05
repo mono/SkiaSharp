@@ -92,7 +92,11 @@ namespace SkiaSharp
 				throw new ArgumentException ("The filename cannot be empty.", nameof (filename));
 
 			using (var stream = SKFileStream.OpenStream (filename)) {
-				return Create (stream);
+				if (stream == null) {
+					return null;
+				} else {
+					return Create (stream);
+				}
 			}
 		}
 

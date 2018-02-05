@@ -56,7 +56,11 @@ namespace SkiaSharp
 			if (path == null)
 				throw new ArgumentNullException (nameof (path));
 			using (var stream = SKFileStream.OpenStream (path)) {
-				return FromStream (stream, index);
+				if (stream == null) {
+					return null;
+				} else {
+					return FromStream (stream, index);
+				}
 			}
 		}
 

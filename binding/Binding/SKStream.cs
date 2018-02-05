@@ -216,6 +216,9 @@ namespace SkiaSharp
 
 		public static SKStreamAsset OpenStream (string path)
 		{
+			if (!File.Exists (path)) {
+				return null;
+			}
 			if (!IsPathSupported (path)) {
 				return new SKManagedStream (File.OpenRead (path), true);
 			} else {

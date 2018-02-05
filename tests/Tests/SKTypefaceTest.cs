@@ -23,7 +23,7 @@ namespace SkiaSharp.Tests
 		};
 
 		[SkippableFact]
-		public void NullInWrongFileName()
+		public void NullWithMissingFile()
 		{
 			Assert.Null(SKTypeface.FromFile(Path.Combine(PathToFonts, "font that doesn't exist.ttf")));
 		}
