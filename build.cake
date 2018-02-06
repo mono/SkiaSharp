@@ -437,6 +437,16 @@ Task ("update-docs")
 
         var xdoc = XDocument.Load (file.ToString ());
 
+        // if (xdoc.Root.Elements ("AssemblyInfo").Elements ("AssemblyVersion").All ( v => v.Value != VERSION_ASSEMBLY )) {
+        //     DeleteFile(file);
+        //     continue;
+        // }
+        // xdoc.Root
+        //     .Elements ("Members")
+        //     .Elements ("Member")
+        //     .Where (e => e.Elements ("AssemblyInfo").Elements ("AssemblyVersion").All ( v => v.Value != VERSION_ASSEMBLY ))
+        //     .Remove ();
+
         // remove IComponent docs as this is just designer
         xdoc.Root
             .Elements ("Members")
