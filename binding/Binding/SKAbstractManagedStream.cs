@@ -102,8 +102,7 @@ namespace SkiaSharp
 		protected SKAbstractManagedStream (bool owns)
 			: base (SkiaApi.sk_managedstream_new (), owns)
 		{
-			if (Handle == IntPtr.Zero)
-			{
+			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKAbstractManagedStream instance.");
 			}
 
@@ -118,14 +117,12 @@ namespace SkiaSharp
 
 		protected override void Dispose (bool disposing)
 		{
-			if (disposing)
-			{
+			if (disposing) {
 				SKAbstractManagedStream managedStream;
 				managedStreams.TryRemove (Handle, out managedStream);
 			}
 
-			if (Interlocked.CompareExchange (ref fromNative, 0, 0) == 0 && Handle != IntPtr.Zero && OwnsHandle)
-			{
+			if (Interlocked.CompareExchange (ref fromNative, 0, 0) == 0 && Handle != IntPtr.Zero && OwnsHandle) {
 				SkiaApi.sk_managedstream_destroy (Handle);
 			}
 
@@ -157,7 +154,7 @@ namespace SkiaSharp
 		// unmanaged <-> managed methods (static for iOS)
 
 #if __IOS__
-		[MonoPInvokeCallback(typeof(read_delegate))]
+		[MonoPInvokeCallback (typeof (read_delegate))]
 #endif
 		private static IntPtr ReadInternal (IntPtr managedStreamPtr, IntPtr buffer, IntPtr size)
 		{
@@ -239,24 +236,21 @@ namespace SkiaSharp
 		private static void DestroyInternal (IntPtr managedStreamPtr)
 		{
 			SKAbstractManagedStream managedStream;
-			if (AsManagedStream (managedStreamPtr, out managedStream))
-			{
+			if (AsManagedStream (managedStreamPtr, out managedStream)) {
 				managedStream.DisposeFromNative ();
 			}
 		}
 		private static SKAbstractManagedStream AsManagedStream (IntPtr ptr)
 		{
 			SKAbstractManagedStream target;
-			if (AsManagedStream (ptr, out target))
-			{
+			if (AsManagedStream (ptr, out target)) {
 				return target;
 			}
 			throw new ObjectDisposedException ("SKAbstractManagedStream: " + ptr);
 		}
 		private static bool AsManagedStream (IntPtr ptr, out SKAbstractManagedStream target)
 		{
-			if (managedStreams.TryGetValue (ptr, out target))
-			{
+			if (managedStreams.TryGetValue (ptr, out target)) {
 				return true;
 			}
 			target = null;

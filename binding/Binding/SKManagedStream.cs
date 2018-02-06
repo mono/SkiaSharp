@@ -38,10 +38,8 @@ namespace SkiaSharp
 
 		protected override void Dispose (bool disposing)
 		{
-			if (disposing)
-			{
-				if (disposeStream && stream != null)
-				{
+			if (disposing) {
+				if (disposeStream && stream != null) {
 					stream.Dispose ();
 					stream = null;
 				}
@@ -53,17 +51,14 @@ namespace SkiaSharp
 		private IntPtr OnReadManagedStream (IntPtr buffer, IntPtr size)
 		{
 			byte[] managedBuffer;
-			using (var reader = new BinaryReader (stream, Encoding.UTF8, true))
-			{
+			using (var reader = new BinaryReader (stream, Encoding.UTF8, true)) {
 				managedBuffer = reader.ReadBytes ((int)size);
 			}
 			var result = managedBuffer.Length;
-			if (buffer != IntPtr.Zero)
-			{
+			if (buffer != IntPtr.Zero) {
 				Marshal.Copy (managedBuffer, 0, buffer, result);
 			}
-			if (!stream.CanSeek && (int)size > 0 && result <= (int)size)
-			{
+			if (!stream.CanSeek && (int)size > 0 && result <= (int)size) {
 				isAsEnd = true;
 			}
 			return (IntPtr)result;
@@ -76,8 +71,7 @@ namespace SkiaSharp
 
 		protected override IntPtr OnPeek (IntPtr buffer, IntPtr size)
 		{
-			if (!stream.CanSeek)
-			{
+			if (!stream.CanSeek) {
 				return (IntPtr)0;
 			}
 			var oldPos = stream.Position;
@@ -88,8 +82,7 @@ namespace SkiaSharp
 
 		protected override bool OnIsAtEnd ()
 		{
-			if (!stream.CanSeek)
-			{
+			if (!stream.CanSeek) {
 				return isAsEnd;
 			}
 			return stream.Position >= stream.Length;
@@ -107,8 +100,7 @@ namespace SkiaSharp
 
 		protected override bool OnRewind ()
 		{
-			if (!stream.CanSeek)
-			{
+			if (!stream.CanSeek) {
 				return false;
 			}
 			stream.Position = 0;
@@ -117,8 +109,7 @@ namespace SkiaSharp
 
 		protected override IntPtr OnGetPosition ()
 		{
-			if (!stream.CanSeek)
-			{
+			if (!stream.CanSeek) {
 				return (IntPtr)0;
 			}
 			return (IntPtr)stream.Position;
@@ -126,8 +117,7 @@ namespace SkiaSharp
 
 		protected override IntPtr OnGetLength ()
 		{
-			if (!stream.CanSeek)
-			{
+			if (!stream.CanSeek) {
 				return (IntPtr)0;
 			}
 			return (IntPtr)stream.Length;
@@ -135,8 +125,7 @@ namespace SkiaSharp
 
 		protected override bool OnSeek (IntPtr position)
 		{
-			if (!stream.CanSeek)
-			{
+			if (!stream.CanSeek) {
 				return false;
 			}
 			stream.Position = (long)position;
@@ -145,8 +134,7 @@ namespace SkiaSharp
 
 		protected override bool OnMove (int offset)
 		{
-			if (!stream.CanSeek)
-			{
+			if (!stream.CanSeek) {
 				return false;
 			}
 			stream.Position = stream.Position + offset;
