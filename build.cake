@@ -382,86 +382,43 @@ Task ("docs")
     CopyFileToDirectory ("./docs/SkiaSharp.source", "./output/docs/mdoc/");
 });
 
-// we can only update the docs on the platform machines
-// becuase each requires platform features for the views 
 Task ("update-docs")
     .IsDependentOn ("libs")
     .Does (() => 
 {
     // the reference folders to locate assemblies
-    IEnumerable<DirectoryPath> refs = new DirectoryPath [] {
-            "./output/portable/",
-        }
-        .Union (GetDirectories ("./source/packages/Xamarin.Forms.*/lib/portable*"))
-        .Union (GetDirectories ("./source/packages/OpenTK.*/lib/net40*"));
-    // add windows-specific references
-    if (IsRunningOnWindows ()) {
-        // Windows.Foundation.UniversalApiContract is a winmd, so fake the dll
-        // types aren't needed here
-        RunMSBuild ("./externals/Windows.Foundation.UniversalApiContract/Windows.Foundation.UniversalApiContract.csproj");
-        refs = refs.Union (new DirectoryPath [] {
-            "./externals/Windows.Foundation.UniversalApiContract/bin/Release",
-            "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/MonoAndroid/v1.0",
-            "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/MonoAndroid/v2.3",
-            "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.iOS/v1.0",
-            "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.TVOS/v1.0",
-            "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.WatchOS/v1.0",
-            "C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework/Xamarin.Mac/v2.0",
-            "./externals",
-        });
-    }
-    // add mac-specific references
-    if (IsRunningOnMac ()) {
-        refs = refs.Union (new DirectoryPath [] {
-            "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/xbuild-frameworks/.NETPortable/v4.5",
-            "/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xbuild-frameworks/MonoAndroid/v1.0",
-            "/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xbuild-frameworks/MonoAndroid/v4.5",
-            "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/lib/mono/Xamarin.TVOS",
-            "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/lib/mono/Xamarin.WatchOS",
-            "/Library/Frameworks/Xamarin.iOS.framework/Versions/Current/lib/mono/Xamarin.iOS",
-            "/Library/Frameworks/Xamarin.Mac.framework/Versions/Current/lib/mono/Xamarin.Mac",
-        });
-    }
+    var refAssemblies = "C:/Program Files (x86)/Microsoft Visual Studio/*/*/Common7/IDE/ReferenceAssemblies/Microsoft/Framework/";
+    var refNetNative = "C:/Program Files (x86)/MSBuild/15.0/.Net/.NetNative/*/x86/ilc/lib/Private";
+    var refs = new List<DirectoryPath> ();
+    refs.AddRange (GetDirectories (refNetNative));
+    refs.AddRange (GetDirectories (refAssemblies + "MonoAndroid/v1.0"));
+    refs.AddRange (GetDirectories (refAssemblies + "MonoAndroid/v4.0.3"));
+    refs.AddRange (GetDirectories (refAssemblies + "Xamarin.iOS/v1.0"));
+    refs.AddRange (GetDirectories (refAssemblies + "Xamarin.TVOS/v1.0"));
+    refs.AddRange (GetDirectories (refAssemblies + "Xamarin.WatchOS/v1.0"));
+    refs.AddRange (GetDirectories (refAssemblies + "Xamarin.Mac/v2.0"));
 
     // the assemblies to generate docs for
     var assemblies = new FilePath [] {
-        "./output/portable/SkiaSharp.dll",
-        "./output/portable/SkiaSharp.Views.Forms.dll",
-        "./output/portable/HarfBuzzSharp.dll",
-        "./output/portable/SkiaSharp.HarfBuzz.dll",
+        // SkiaSharp
+        "./output/netstandard/SkiaSharp.dll",
+        // SkiaSharp.Views
+        "./output/android/SkiaSharp.Views.Android.dll",
+        "./output/desktop/SkiaSharp.Views.Desktop.dll",
+        "./output/gtk/SkiaSharp.Views.Gtk.dll",
+        "./output/ios/SkiaSharp.Views.iOS.dll",
+        "./output/osx/SkiaSharp.Views.Mac.dll",
+        "./output/tvos/SkiaSharp.Views.tvOS.dll",
+        "./output/uwp/SkiaSharp.Views.UWP.dll",
+        "./output/watchos/SkiaSharp.Views.watchOS.dll",
+        "./output/wpf/SkiaSharp.Views.WPF.dll",
+        // SkiaSharp.Views.Forms
+        "./output/netstandard/SkiaSharp.Views.Forms.dll",
+        // HarfBuzzSharp
+        "./output/netstandard/HarfBuzzSharp.dll",
+        // SkiaSharp.HarfBuzz
+        "./output/netstandard/SkiaSharp.HarfBuzz.dll",
     };
-    // add windows-specific assemblies
-    if (IsRunningOnWindows ()) {
-        assemblies = assemblies.Union (new FilePath [] {
-            "./output/desktop/SkiaSharp.Views.Desktop.dll",
-            "./output/wpf/SkiaSharp.Views.WPF.dll",
-            "./output/android/SkiaSharp.Views.Android.dll",
-            "./output/ios/SkiaSharp.Views.iOS.dll",
-            "./output/osx/SkiaSharp.Views.Mac.dll",
-            "./output/tvos/SkiaSharp.Views.tvOS.dll",
-            "./output/watchos/SkiaSharp.Views.watchOS.dll",
-            "./output/uwp/SkiaSharp.Views.UWP.dll",
-        }).ToArray ();
-    }
-    // add mac-specific assemblies
-    if (IsRunningOnMac ()) {
-        assemblies = assemblies.Union (new FilePath [] {
-            "./output/desktop/SkiaSharp.Views.Desktop.dll",
-            "./output/gtk/SkiaSharp.Views.Gtk.dll",
-            "./output/android/SkiaSharp.Views.Android.dll",
-            "./output/ios/SkiaSharp.Views.iOS.dll",
-            "./output/osx/SkiaSharp.Views.Mac.dll",
-            "./output/tvos/SkiaSharp.Views.tvOS.dll",
-            "./output/watchos/SkiaSharp.Views.watchOS.dll",
-        }).ToArray ();
-    }
-    // add linux-specific assemblies
-    if (IsRunningOnLinux ()) {
-        assemblies = assemblies.Union (new FilePath [] {
-            "./output/desktop/SkiaSharp.Views.Desktop.dll",
-            "./output/gtk/SkiaSharp.Views.Gtk.dll",
-        }).ToArray ();
-    }
 
     // print out the assemblies
     foreach (var r in refs) {
@@ -481,15 +438,11 @@ Task ("update-docs")
         var xdoc = XDocument.Load (file.ToString ());
 
         // remove IComponent docs as this is just designer
-        var icomponents = xdoc.Root
+        xdoc.Root
             .Elements ("Members")
             .Elements ("Member")
             .Where (e => e.Attribute ("MemberName") != null && e.Attribute ("MemberName").Value.StartsWith ("System.ComponentModel.IComponent."))
-            .ToArray ();
-        foreach (var ic in icomponents) {
-            Information ("Removing IComponent member '{0}' from '{1}'...", ic.Attribute ("MemberName").Value, file);
-            icomponents.Remove ();
-        }
+            .Remove ();
 
         // get the whitespaces right
         var settings = new XmlWriterSettings {
