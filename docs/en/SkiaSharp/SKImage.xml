@@ -187,10 +187,12 @@
         <Parameter Name="serializer" Type="SkiaSharp.SKPixelSerializer" />
       </Parameters>
       <Docs>
-        <param name="serializer">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="serializer">The serializer to use to encode the image.</param>
+        <summary>Encodes the image using the specified serializer.</summary>
+        <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded image.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Encode">
@@ -259,11 +261,11 @@
         <Parameter Name="desc" Type="SkiaSharp.GRGlBackendTextureDesc" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="desc">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing OpenGL texture.</param>
+        <summary>Creates a new image from the specified OpenGL texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>SkiaSharp will delete or recycle the OpenGL texture when the image is released.</remarks>
       </Docs>
     </Member>
     <Member MemberName="FromAdoptedTexture">
@@ -310,12 +312,12 @@
         <Parameter Name="alpha" Type="SkiaSharp.SKAlphaType" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="desc">To be added.</param>
-        <param name="alpha">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing OpenGL texture.</param>
+        <param name="alpha">The alpha type of the texture.</param>
+        <summary>Creates a new image from the specified OpenGL texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>SkiaSharp will delete or recycle the texture when the image is released.</remarks>
       </Docs>
     </Member>
     <Member MemberName="FromBitmap">
@@ -859,11 +861,13 @@
         <Parameter Name="desc" Type="SkiaSharp.GRGlBackendTextureDesc" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="desc">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing texture.</param>
+        <summary>Creates a new image from the specified OpenGL texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTexture">
@@ -912,12 +916,14 @@
         <Parameter Name="alpha" Type="SkiaSharp.SKAlphaType" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="desc">To be added.</param>
-        <param name="alpha">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing OpenGL texture.</param>
+        <param name="alpha">The alpha type of the texture.</param>
+        <summary>Creates a new image from the specified OpenGL texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTexture">
@@ -969,13 +975,15 @@
         <Parameter Name="releaseProc" Type="SkiaSharp.SKImageTextureReleaseDelegate" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="desc">To be added.</param>
-        <param name="alpha">To be added.</param>
-        <param name="releaseProc">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing OpenGL texture.</param>
+        <param name="alpha">The alpha type of the texture.</param>
+        <param name="releaseProc">The delegate to invoke when the image is about to be destroyed.</param>
+        <summary>Creates a new image from the specified OpenGL texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTexture">
@@ -1030,14 +1038,16 @@
         <Parameter Name="releaseContext" Type="System.Object" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="desc">To be added.</param>
-        <param name="alpha">To be added.</param>
-        <param name="releaseProc">To be added.</param>
-        <param name="releaseContext">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing OpenGL texture.</param>
+        <param name="alpha">The alpha type of the texture.</param>
+        <param name="releaseProc">The delegate to invoke when the image is about to be destroyed.</param>
+        <param name="releaseContext">The user data to use when invoking the delegate.</param>
+        <summary>Creates a new image from the specified OpenGL texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported</returns>
+        <remarks>
+          <para />
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Height">

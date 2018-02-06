@@ -130,11 +130,13 @@
         <Parameter Name="maxWidth" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="maxWidth">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text to be measured.</param>
+        <param name="maxWidth">The maximum width. Only the subset of text whose accumulated widths are &lt;= maxWidth are measured.</param>
+        <summary>Measure the text, stopping early if the measured width exceeds <paramref name="maxWidth" />.</summary>
+        <returns>Returns the number of bytes of text that were measured. </returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="BreakText">
@@ -166,7 +168,7 @@
         <param name="text">The text to be measured.</param>
         <param name="maxWidth">The maximum width. Only the subset of text whose accumulated widths are &lt;= maxWidth are measured.</param>
         <summary>Measure the text, stopping early if the measured width exceeds <paramref name="maxWidth" />.</summary>
-        <returns>Return the number of characters of text that were measured. </returns>
+        <returns>Returns the number of characters of text that were measured. </returns>
         <remarks>
           <para></para>
         </remarks>
@@ -196,7 +198,7 @@
         <param name="maxWidth">The maximum width. Only the subset of text whose accumulated widths are &lt;= <paramref name="maxWidth" /> are measured.</param>
         <param name="measuredWidth">The actual width of the measured text.</param>
         <summary>Measure the text, stopping early if the measured width exceeds <paramref name="maxWidth" />.</summary>
-        <returns>Return the number of characters of text that were measured. </returns>
+        <returns>Returns the number of bytes of text that were measured. </returns>
         <remarks>
           <para></para>
         </remarks>
@@ -218,12 +220,12 @@
         <Parameter Name="maxWidth" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="buffer">To be added.</param>
-        <param name="length">To be added.</param>
-        <param name="maxWidth">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="buffer">The pointer to a region holding text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
+        <param name="maxWidth">The maximum width. Only the subset of text whose accumulated widths are &lt;= <paramref name="maxWidth" /> are measured.</param>
+        <summary>Measure the text buffer, stopping early if the measured width exceeds <paramref name="maxWidth" />.</summary>
+        <returns>Returns the number of bytes of text that were measured. </returns>
+        <remarks>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format. This only consumes up to <paramref name="length" /> bytes from the buffer.</remarks>
       </Docs>
     </Member>
     <Member MemberName="BreakText">
@@ -257,7 +259,7 @@
         <param name="maxWidth">The maximum width. Only the subset of text whose accumulated widths are &lt;= <paramref name="maxWidth" /> are measured.</param>
         <param name="measuredWidth">The actual width of the measured text.</param>
         <summary>Measure the text, stopping early if the measured width exceeds <paramref name="maxWidth" />.</summary>
-        <returns>Return the number of characters of text that were measured. </returns>
+        <returns>Returns the number of characters of text that were measured. </returns>
         <remarks>
           <para></para>
         </remarks>
@@ -295,9 +297,9 @@
         <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
         <param name="maxWidth">The maximum width. Only the subset of text whose accumulated widths are &lt;= <paramref name="maxWidth" /> are measured.</param>
         <param name="measuredWidth">The actual width of the measured text.</param>
-        <summary>Measure the text encoded as a UTF-8 buffer, stopping early if the measured width exceeds <paramref name="maxWidth" />.</summary>
-        <returns>Return the number of characters of text that were measured. </returns>
-        <remarks>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.   This only consumes up to <paramref name="length" /> bytes from the buffer.</remarks>
+        <summary>Measure the text buffer, stopping early if the measured width exceeds <paramref name="maxWidth" />.</summary>
+        <returns>Returns the number of bytes of text that were measured. </returns>
+        <remarks>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format. This only consumes up to <paramref name="length" /> bytes from the buffer.</remarks>
       </Docs>
     </Member>
     <Member MemberName="BreakText">
@@ -317,13 +319,15 @@
         <Parameter Name="measuredText" Type="System.String&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="maxWidth">To be added.</param>
-        <param name="measuredWidth">To be added.</param>
-        <param name="measuredText">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text to be measured.</param>
+        <param name="maxWidth">The maximum width. Only the subset of text whose accumulated widths are &lt;= <paramref name="maxWidth" /> are measured.</param>
+        <param name="measuredWidth">The actual width of the measured text.</param>
+        <param name="measuredText">The text that was measured.</param>
+        <summary>Measure the text, stopping early if the measured width exceeds <paramref name="maxWidth" />.</summary>
+        <returns>Returns the number of characters of text that were measured. </returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Clone">
