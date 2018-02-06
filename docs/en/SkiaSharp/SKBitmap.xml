@@ -508,41 +508,6 @@
         </remarks>
       </Docs>
     </Member>
-    <Member MemberName="CopyPixelsTo">
-      <MemberSignature Language="C#" Value="public bool CopyPixelsTo (IntPtr dst, int dstSize, int dstRowBytes = 0, bool preserveDstPad = false);" />
-      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool CopyPixelsTo(native int dst, int32 dstSize, int32 dstRowBytes, bool preserveDstPad) cil managed" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.55.0.0</AssemblyVersion>
-        <AssemblyVersion>1.56.0.0</AssemblyVersion>
-        <AssemblyVersion>1.57.0.0</AssemblyVersion>
-        <AssemblyVersion>1.58.0.0</AssemblyVersion>
-        <AssemblyVersion>1.59.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <Attributes>
-        <Attribute>
-          <AttributeName>System.Obsolete("Use SKPixmap.ReadPixels instead.")</AttributeName>
-        </Attribute>
-      </Attributes>
-      <ReturnValue>
-        <ReturnType>System.Boolean</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="dst" Type="System.IntPtr" />
-        <Parameter Name="dstSize" Type="System.Int32" />
-        <Parameter Name="dstRowBytes" Type="System.Int32" />
-        <Parameter Name="preserveDstPad" Type="System.Boolean" />
-      </Parameters>
-      <Docs>
-        <param name="dst">The location of destination buffer.</param>
-        <param name="dstSize">The size of destination buffer. Must be large enough to hold pixels using indicated stride.</param>
-        <param name="dstRowBytes">The width of each line in the buffer. If 0, uses bitmap's internal stride.</param>
-        <param name="preserveDstPad">Whether or not to preserve padding in the destination.</param>
-        <summary>Copies the pixels of the bitmap to the specified memory location.</summary>
-        <returns>Returns true if possible, returns false otherwise.</returns>
-        <remarks>In the case when the <paramref name="dstRowBytes" /> matches the bitmap's <paramref name="rowBytes" />, the copy may be made faster by copying over the <paramref name="dst" />'s per-row padding (for all rows but the last). By setting <paramref name="preserveDstPad" /> to true the caller can disable this optimization and ensure that pixels in the padding are not overwritten.</remarks>
-      </Docs>
-    </Member>
     <Member MemberName="CopyTo">
       <MemberSignature Language="C#" Value="public bool CopyTo (SkiaSharp.SKBitmap destination);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool CopyTo(class SkiaSharp.SKBitmap destination) cil managed" />
@@ -2020,35 +1985,6 @@
         </remarks>
       </Docs>
     </Member>
-    <Member MemberName="LockPixels">
-      <MemberSignature Language="C#" Value="public void LockPixels ();" />
-      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void LockPixels() cil managed" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <AssemblyVersion>1.49.0.0</AssemblyVersion>
-        <AssemblyVersion>1.52.0.0</AssemblyVersion>
-        <AssemblyVersion>1.53.0.0</AssemblyVersion>
-        <AssemblyVersion>1.54.0.0</AssemblyVersion>
-        <AssemblyVersion>1.54.0.0</AssemblyVersion>
-        <AssemblyVersion>1.55.0.0</AssemblyVersion>
-        <AssemblyVersion>1.56.0.0</AssemblyVersion>
-        <AssemblyVersion>1.57.0.0</AssemblyVersion>
-        <AssemblyVersion>1.58.0.0</AssemblyVersion>
-        <AssemblyVersion>1.59.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>Call this to ensure that the bitmap points to the current pixel address in the pixelref.</summary>
-        <remarks>
-          <para>This allows pixelrefs that implement cached/deferred image decoding to know when there are active clients of a given image.</para>
-          <para>Balance it with a call to <see cref="M:SkiaSharp.SKBitmap.UnlockPixels" />. These calls are harmless if there is no pixelref.</para>
-        </remarks>
-      </Docs>
-    </Member>
     <Member MemberName="NotifyPixelsChanged">
       <MemberSignature Language="C#" Value="public void NotifyPixelsChanged ();" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void NotifyPixelsChanged() cil managed" />
@@ -2447,32 +2383,6 @@
         <remarks>
           <para></para>
         </remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="UnlockPixels">
-      <MemberSignature Language="C#" Value="public void UnlockPixels ();" />
-      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void UnlockPixels() cil managed" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <AssemblyVersion>1.49.0.0</AssemblyVersion>
-        <AssemblyVersion>1.52.0.0</AssemblyVersion>
-        <AssemblyVersion>1.53.0.0</AssemblyVersion>
-        <AssemblyVersion>1.54.0.0</AssemblyVersion>
-        <AssemblyVersion>1.54.0.0</AssemblyVersion>
-        <AssemblyVersion>1.55.0.0</AssemblyVersion>
-        <AssemblyVersion>1.56.0.0</AssemblyVersion>
-        <AssemblyVersion>1.57.0.0</AssemblyVersion>
-        <AssemblyVersion>1.58.0.0</AssemblyVersion>
-        <AssemblyVersion>1.59.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
-      </ReturnValue>
-      <Parameters />
-      <Docs>
-        <summary>Call this to balance a previous call to <see cref="M:SkiaSharp.SKBitmap.LockPixels" />.</summary>
-        <remarks>When you are finished access the pixel memory, call this to balance a previous call to <see cref="M:SkiaSharp.SKBitmap.LockPixels" />. This allows pixelrefs that implement cached/deferred image decoding to know when there are active clients of a given image.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Width">
