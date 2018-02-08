@@ -51,10 +51,10 @@ namespace SkiaSharpSample
 			canvas.DrawText("SkiaSharp", coord, paint);
 		}
 
-        protected override void OnDestroy()
-        {
-            skiaView.PaintSurface -= OnPaintSurface;
-            base.OnDestroy();
-        }
+		protected override void OnDestroy()
+		{
+			skiaView.PaintSurface -= OnPaintSurface;
+			base.OnDestroy();
+		}
 	}
 }
