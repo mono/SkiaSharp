@@ -206,3 +206,7 @@ var DecompressArchive = new Action<FilePath, DirectoryPath> ((archive, outputDir
         }
     }
 });
+
+var CreateSamplesZip = new Action<DirectoryPath> ((samplesDir) => {
+
+});

@@ -263,13 +263,11 @@ Task ("samples")
     .IsDependentOn ("nuget")
     .Does (() => 
 {
+    // clear the NuGets so we can use the build output
     ClearSkiaSharpNuGetCache ();
-    CleanDirectories ("./samples/*/*/*/packages/SkiaSharp.*");
 
-    // zip the samples for the GitHub release notes
-    if (IS_ON_CI) {
-        Zip ("./samples", "./output/samples.zip");
-    }
+    // create the samples archive
+    CreateSamplesZip ("./samples/");
 
     // BASIC samples
     RunNuGetRestore ("./samples/Basic/NetCore/SkiaSharpSample.sln");
@@ -549,26 +547,9 @@ Task ("set-versions")
     var add = new Action<string> (glob => {
         files.AddRange (GetFiles (glob).Select (p => MakeAbsolute (p).ToString ()));
     });
-    // nuspecs
     add ("./nuget/*.nuspec");
-    // packages files
-    add ("./source/*/*/packages.config");
-    add ("./source/*/*/project.json");
-    // project files
-    add ("./source/*/*/*.nuget.targets");
-    add ("./source/*/*/*.csproj");
-    // sample packages files
-    add ("./samples/*/*/*/packages.config");
-    add ("./samples/*/*/*/project.json");
-    // sample project files
-    add ("./samples/*/*/*/*.nuget.targets");
-    add ("./samples/*/*/*/*.csproj");
-    // tests packages files
-    add ("./tests/*/packages.config");
-    add ("./tests/*/project.json");
-    // tests project files
-    add ("./tests/*/*.nuget.targets");
-    add ("./tests/*/*.csproj");
+    add ("./source/**/*.csproj");
+    add ("./tests/**/*.csproj");
     // update
     foreach (var file in files) {
         UpdateSkiaSharpVersion (file, VERSION_PACKAGES);
@@ -587,13 +568,12 @@ Task ("set-versions")
     UpdateAssemblyInfo (
         "./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz.Shared/Properties/SkiaSharpHarfBuzzAssemblyInfo.cs",
         VERSION_ASSEMBLY, VERSION_FILE, sha);
-
-    UpdateAssemblyInfo (
-        "./binding/HarfBuzzSharp.Shared/Properties/HarfBuzzSharpAssemblyInfo.cs",
-        HARFBUZZ_VERSION_ASSEMBLY, HARFBUZZ_VERSION_FILE, sha);
     UpdateAssemblyInfo (
         "./source/SkiaSharp.Workbooks/Properties/SkiaSharpWorkbooksAssemblyInfo.cs",
         VERSION_ASSEMBLY, VERSION_FILE, sha);
+    UpdateAssemblyInfo (
+        "./binding/HarfBuzzSharp.Shared/Properties/HarfBuzzSharpAssemblyInfo.cs",
+        HARFBUZZ_VERSION_ASSEMBLY, HARFBUZZ_VERSION_FILE, sha);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
