@@ -10,8 +10,8 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>A read-only stream that buffers the specified first chunk of bytes.</summary>
+    <remarks>This is useful for decoding images using streams that are not seekable, since <see cref="T:SkiaSharp.SKCodec" /> needs to read the first few bytes to determine the codec to use.</remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -26,10 +26,12 @@
         <Parameter Name="bufferSize" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="nativeStream">To be added.</param>
-        <param name="bufferSize">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="nativeStream">The stream to buffer.</param>
+        <param name="bufferSize">The number of bytes to buffer.</param>
+        <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -44,10 +46,12 @@
         <Parameter Name="bufferSize" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="managedStream">To be added.</param>
-        <param name="bufferSize">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="managedStream">The stream to buffer.</param>
+        <param name="bufferSize">The number of bytes to buffer.</param>
+        <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -63,11 +67,13 @@
         <Parameter Name="disposeUnderlyingStream" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="nativeStream">To be added.</param>
-        <param name="bufferSize">To be added.</param>
-        <param name="disposeUnderlyingStream">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="nativeStream">The stream to buffer.</param>
+        <param name="bufferSize">The number of bytes to buffer.</param>
+        <param name="disposeUnderlyingStream">Whether or not to dispose the underlying stream when this stream is disposed.</param>
+        <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -83,11 +89,13 @@
         <Parameter Name="disposeUnderlyingStream" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="managedStream">To be added.</param>
-        <param name="bufferSize">To be added.</param>
-        <param name="disposeUnderlyingStream">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="managedStream">The stream to buffer.</param>
+        <param name="bufferSize">The number of bytes to buffer.</param>
+        <param name="disposeUnderlyingStream">Whether or not to dispose the underlying stream when this stream is disposed.</param>
+        <summary>Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -121,9 +129,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to copy the current stream.</summary>
+        <returns>Returns a pointer to the new <see cref="T:SkiaSharp.SKStreamAsset" /> instance.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="OnGetLength">
@@ -138,9 +148,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to return the total length of the stream.</summary>
+        <returns>Returns the total length of the stream.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="OnGetPosition">
@@ -155,9 +167,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to get the current position in the stream</summary>
+        <returns>Returns the current position in the stream.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="OnHasLength">
@@ -172,9 +186,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to indicate whether this stream can report it's total length.</summary>
+        <returns>Returns a value indicating whether this stream can report it's total length.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="OnHasPosition">
@@ -189,9 +205,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to indicate whether this stream can report it's current position.</summary>
+        <returns>Returns a value indicating whether this stream can report it's current position.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="OnIsAtEnd">
@@ -206,9 +224,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to indicate whether all the bytes in the stream have been read.</summary>
+        <returns>Returns a value indicating whether all the bytes in the stream have been read.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="OnMove">
@@ -225,10 +245,10 @@
         <Parameter Name="offset" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="offset">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="offset">The relative offset.</param>
+        <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to seek to a relative offset.</summary>
+        <returns>Returns <see langword="true" /> if seeking is supported and the seek was successful, otherwise <see langword="false" />.</returns>
+        <remarks>If an attempt is made to move to a position outside the stream, the position must be set to the closest point within the stream (beginning or end).</remarks>
       </Docs>
     </Member>
     <Member MemberName="OnPeek">
@@ -246,11 +266,11 @@
         <Parameter Name="size" Type="System.IntPtr" />
       </Parameters>
       <Docs>
-        <param name="buffer">To be added.</param>
-        <param name="size">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="buffer">The buffer to read into.</param>
+        <param name="size">The number of bytes to read.</param>
+        <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to copy the specified number of bytes into the specified buffer.</summary>
+        <returns>Returns the number of bytes actually peeked/copied.</returns>
+        <remarks>The stream’s cursor must be returned to the position before this method was called.</remarks>
       </Docs>
     </Member>
     <Member MemberName="OnRead">
@@ -268,11 +288,13 @@
         <Parameter Name="size" Type="System.IntPtr" />
       </Parameters>
       <Docs>
-        <param name="buffer">To be added.</param>
-        <param name="size">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="buffer">The buffer to read into.</param>
+        <param name="size">The number of bytes to read.</param>
+        <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to copy the specified number of bytes into the specified buffer.</summary>
+        <returns>Returns the number of bytes actually read.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="OnRewind">
@@ -287,9 +309,11 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to rewind the current stream.</summary>
+        <returns>Returns <see langword="true" /> if the stream is known to be at the beginning after this call returns.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="OnSeek">
@@ -306,10 +330,10 @@
         <Parameter Name="position" Type="System.IntPtr" />
       </Parameters>
       <Docs>
-        <param name="position">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="position">The absolute position.</param>
+        <summary>Implemented by derived <see cref="T:SkiaSharp.SKAbstractManagedStream" /> types to seek to an absolute position.</summary>
+        <returns>Returns <see langword="true" /> if seeking is supported and the seek was successful, otherwise <see langword="false" />.</returns>
+        <remarks>If an attempt is made to move to a position outside the stream, the position must be set to the closest point within the stream (beginning or end).</remarks>
       </Docs>
     </Member>
   </Members>

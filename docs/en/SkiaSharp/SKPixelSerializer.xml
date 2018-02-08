@@ -10,8 +10,8 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>Represents a mechanism for serializing pixels.</summary>
+    <remarks />
   </Docs>
   <Members>
     <Member MemberName="Create">
@@ -28,10 +28,12 @@
         <Parameter Name="onEncode" Type="System.Func&lt;SkiaSharp.SKPixmap,SkiaSharp.SKData&gt;" />
       </Parameters>
       <Docs>
-        <param name="onEncode">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="onEncode">The delegate to use to serialize the pixel data.</param>
+        <summary>Create a new pixel serializer using the specified delegate to encode the pixel data.</summary>
+        <returns>Returns an instance of the <see cref="T:SkiaSharp.SKPixelSerializer" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -49,11 +51,13 @@
         <Parameter Name="onEncode" Type="System.Func&lt;SkiaSharp.SKPixmap,SkiaSharp.SKData&gt;" />
       </Parameters>
       <Docs>
-        <param name="onUseEncodedData">To be added.</param>
-        <param name="onEncode">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="onUseEncodedData">The delegate to use to determine whether to use the previous encoded data, or to encode another version.</param>
+        <param name="onEncode">The delegate to use to serialize the pixel data.</param>
+        <summary>Create a new pixel serializer using the specified delegate to encode the pixel data.</summary>
+        <returns>Returns an instance of the <see cref="T:SkiaSharp.SKPixelSerializer" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -89,10 +93,12 @@
         <Parameter Name="pixmap" Type="SkiaSharp.SKPixmap" />
       </Parameters>
       <Docs>
-        <param name="pixmap">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="pixmap">The pixel data to encode.</param>
+        <summary>Encode the specified pixel data.</summary>
+        <returns>Returns the encoded pixel data, or <see langword="null" /> if the raw pixels should be used.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="UseEncodedData">
@@ -110,11 +116,11 @@
         <Parameter Name="length" Type="System.UInt64" />
       </Parameters>
       <Docs>
-        <param name="data">To be added.</param>
-        <param name="length">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="data">The encoded data buffer.</param>
+        <param name="length">The length of the encoded data buffer.</param>
+        <summary>Determines whether the serializer wants to use the specified encoded data instead of encoding a new version.</summary>
+        <returns>Returns <see langword="true" /> if the specified encoded data should be used, otherwise <see langword="false" /> to serialize another version.</returns>
+        <remarks>If this method returns <see langword="true" />, then <see cref="M:SkiaSharp.SKPixelSerializer.Encode" /> may not be called to encode the source data.</remarks>
       </Docs>
     </Member>
   </Members>
