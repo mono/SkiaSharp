@@ -1,10 +1,35 @@
 ﻿using System;
+using System.IO;
 using Xunit;
 
 namespace SkiaSharp.Tests
 {
 	public class SKImageTest : SKTest
 	{
+		[SkippableFact]
+		public void TestLazyImage()
+		{
+			var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
+			Assert.NotNull(data);
+
+			var image = SKImage.FromEncodedData(data);
+			Assert.NotNull(image);
+
+			Assert.True(image.IsLazyGenerated);
+		}
+
+		[SkippableFact]
+		public void TestNotLazyImage()
+		{
+			var bitmap = CreateTestBitmap();
+			Assert.NotNull(bitmap);
+
+			var image = SKImage.FromBitmap(bitmap);
+			Assert.NotNull(image);
+
+			Assert.False(image.IsLazyGenerated);
+		}
+
 		[SkippableFact]
 		public void EncodeWithSimpleSerializer()
 		{

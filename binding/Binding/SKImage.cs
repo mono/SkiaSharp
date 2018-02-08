@@ -355,6 +355,8 @@ namespace SkiaSharp
 
 		public bool IsTextureBacked => SkiaApi.sk_image_is_texture_backed (Handle);
 
+		public bool IsLazyGenerated => SkiaApi.sk_image_is_lazy_generated (Handle);
+
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)
 		{
 			return ReadPixels (dstInfo, dstPixels, dstRowBytes, srcX, srcY, SKImageCachingHint.Allow);

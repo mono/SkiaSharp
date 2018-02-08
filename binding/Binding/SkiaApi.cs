@@ -552,6 +552,9 @@ namespace SkiaSharp
 		public extern static bool sk_image_is_texture_backed(sk_image_t image);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_image_is_lazy_generated(sk_image_t image);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_image_read_pixels(sk_image_t image, ref SKImageInfoNative dstInfo, IntPtr dstPixels, IntPtr dstRowBytes, int srcX, int srcY, SKImageCachingHint cachingHint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
