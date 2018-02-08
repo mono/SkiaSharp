@@ -50,5 +50,11 @@ namespace SkiaSharpSample
 			var coord = new SKPoint(scaledSize.Width / 2, (scaledSize.Height + paint.TextSize) / 2);
 			canvas.DrawText("SkiaSharp", coord, paint);
 		}
+
+		protected override void OnDestroy()
+		{
+			skiaView.PaintSurface -= OnPaintSurface;
+			base.OnDestroy();
+		}
 	}
 }
