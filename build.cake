@@ -267,7 +267,9 @@ Task ("samples")
     ClearSkiaSharpNuGetCache ();
 
     // create the samples archive
-    CreateSamplesZip ("./samples/");
+    CreateSamplesZip ("./samples/", "./binding/", "./source/", "./output/samples.zip");
+
+return;
 
     // BASIC samples
     RunNuGetRestore ("./samples/Basic/NetCore/SkiaSharpSample.sln");

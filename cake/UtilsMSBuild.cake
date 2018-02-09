@@ -3,8 +3,8 @@ var MSBuildNS = (XNamespace) "http://schemas.microsoft.com/developer/msbuild/200
 
 var UpdateSkiaSharpVersion = new Action<FilePath, Dictionary<string, string>> ((path, versions) => {
     path = MakeAbsolute (path);
-    var fn = System.IO.Path.GetFileName (path.ToString ());
-    var ext = System.IO.Path.GetExtension (path.ToString ());
+    var fn = path.GetFilename ().ToString ();
+    var ext = path.GetExtension ();
 
     if (ext == ".nuspec") {
         // NuGet

@@ -1,5 +1,8 @@
 using System.Runtime.InteropServices;
 using SharpCompress.Readers;
+using SharpCompress.Common;
+using SharpCompress.Writers;
+using SharpCompress.Writers.Zip;
 
 var VERBOSITY_NUGET = NuGetVerbosity.Detailed;
 switch (VERBOSITY) {
@@ -15,6 +18,8 @@ switch (VERBOSITY) {
         VERBOSITY_NUGET = NuGetVerbosity.Detailed;
         break;
 };
+
+var SolutionProjectRegex = new Regex(@",\s*""(.*?\.\w{2}proj)""");
 
 var RunNuGetRestore = new Action<FilePath> ((solution) =>
 {
@@ -207,6 +212,124 @@ var DecompressArchive = new Action<FilePath, DirectoryPath> ((archive, outputDir
     }
 });
 
-var CreateSamplesZip = new Action<DirectoryPath> ((samplesDir) => {
+var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath, DirectoryPath, DirectoryPath> ((samplesDirPath, bindingDirPath, sourceDirPath, outputFilePath) => {
+    var dpc = System.IO.Path.DirectorySeparatorChar;
+    var toZipPath = new Func<string, string> (inPath => inPath.Replace ('\\', '/'));
+    var toMSBuildPath = new Func<string, string> (inPath => inPath.Replace ('/', '\\'));
+    var toNativePath = new Func<string, string> (inPath => inPath.Replace ('\\', dpc).Replace ('/', dpc));
 
+    var samplesDir = System.IO.Path.GetFullPath (toNativePath (MakeAbsolute (samplesDirPath).FullPath));
+    var bindingDir = System.IO.Path.GetFullPath (toNativePath (MakeAbsolute (bindingDirPath).FullPath));
+    var sourceDir = System.IO.Path.GetFullPath (toNativePath (MakeAbsolute (sourceDirPath).FullPath));
+    var samplesUri = new Uri (samplesDir);
+
+    using (var zip = System.IO.File.OpenWrite (toNativePath (MakeAbsolute (outputFilePath).FullPath)))
+    using (var zipWriter = new ZipWriter (zip, new ZipWriterOptions (CompressionType.Deflate))) {
+        foreach (var file in GetFiles (samplesDir + "/**/*")) {
+            var abs = System.IO.Path.GetFullPath (toNativePath (file.FullPath));
+            var absDir = System.IO.Path.GetDirectoryName (abs);
+            var ext = System.IO.Path.GetExtension (abs).ToLowerInvariant ();
+            var rel = samplesUri.MakeRelativeUri (new Uri (abs)).ToString ();
+
+            if (ext == ".sln") {
+                using (var ms = new MemoryStream ())
+                using (var writer = new StreamWriter (ms)) {
+                    using (var reader = new StreamReader (abs)) {
+                        var skippingProject = false;
+                        for (var line = reader.ReadLine (); line != null; line = reader.ReadLine ()) {
+                            if (skippingProject) {
+                                if (line.Trim ().Equals ("EndProject", StringComparison.OrdinalIgnoreCase)) {
+                                    skippingProject = false;
+                                }
+                            } else {
+                                var m = SolutionProjectRegex.Match (line);
+                                if (m.Success) {
+                                    var relProjectPath = toNativePath (m.Groups[1].Value);
+                                    var projectPath = System.IO.Path.GetFullPath (System.IO.Path.Combine (absDir, relProjectPath));
+                                    if (!projectPath.StartsWith (samplesDir, StringComparison.OrdinalIgnoreCase)) {
+                                        skippingProject = true;
+                                    } else {
+                                        writer.WriteLine (line);
+                                    }
+                                } else {
+                                    writer.WriteLine (line);
+                                }
+                            }
+                        }
+                    }
+
+                    writer.Flush ();
+                    ms.Position = 0;
+                    zipWriter.Write (rel, ms);
+                }
+            } else if (ext == ".csproj") {
+                var xdoc = XDocument.Load (abs);
+
+                // get all <ProjectReference> elements
+                var projRefs1 = xdoc
+                    .Root
+                    .Elements (MSBuildNS + "ItemGroup")
+                    .Elements (MSBuildNS + "ProjectReference");
+                var projRefs2 = xdoc
+                    .Root
+                    .Elements ("ItemGroup")
+                    .Elements ("ProjectReference");
+                var projRefs = projRefs1.Union (projRefs2).ToArray ();
+                // swap out the project references for package references
+                foreach (var projRef in projRefs) {
+                    var include = projRef.Attribute ("Include")?.Value;
+                    if (!string.IsNullOrWhiteSpace (include)) {
+                        var absInclude = System.IO.Path.GetFullPath (System.IO.Path.Combine (absDir, toNativePath (include)));
+                        if (!absInclude.StartsWith (samplesDir, StringComparison.OrdinalIgnoreCase)) {
+                            // not inside the samples directory, so needs to be removed
+
+                            string binding = null;
+                            if (absInclude.StartsWith (bindingDir, StringComparison.OrdinalIgnoreCase)) {
+                                binding = System.IO.Path.GetFileName (absInclude).Split ('.').FirstOrDefault ();
+                            } else if (absInclude.StartsWith (sourceDir, StringComparison.OrdinalIgnoreCase)) {
+                                binding = System.IO.Path.GetFileName (System.IO.Path.GetDirectoryName (System.IO.Path.GetDirectoryName (absInclude)));
+                            }
+
+                            binding = VERSION_PACKAGES.Keys.FirstOrDefault (p => p.Equals (binding, StringComparison.OrdinalIgnoreCase));
+                            if (!string.IsNullOrWhiteSpace (binding)) {
+                                var name = projRef.Name.Namespace + "PackageReference";
+                                projRef.AddAfterSelf (new XElement (name, new object[] {
+                                        new XAttribute("Include", binding),
+                                        new XAttribute("Version", VERSION_PACKAGES[binding]),
+                                    }));
+                                projRef.Remove ();
+                            }
+                        }
+                    }
+                }
+
+                // get all the <Import> elements
+                var imports1 = xdoc.Root.Elements (MSBuildNS + "Import");
+                var imports2 = xdoc.Root.Elements ("Import");
+                var imports = imports1.Union (imports2).ToArray ();
+                // remove them
+                foreach (var import in imports) {
+                    var project = import.Attribute ("Project")?.Value;
+                    if (!string.IsNullOrWhiteSpace (project)) {
+                        var absProject = System.IO.Path.GetFullPath (System.IO.Path.Combine (absDir, toNativePath (project)));
+                        if (!absProject.StartsWith (samplesDir, StringComparison.OrdinalIgnoreCase)) {
+                            // not inside the samples directory, so needs to be removed
+
+                            import.Remove ();
+                        }
+                    }
+                }
+
+                // save the modified document to the zip file
+                using (var ms = new MemoryStream ()) {
+                    xdoc.Save (ms);
+                    ms.Flush ();
+                    ms.Position = 0;
+                    zipWriter.Write (rel, ms);
+                }
+            } else {
+                zipWriter.Write (rel, abs);
+            }
+        }
+    }
 });
