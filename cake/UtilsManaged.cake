@@ -36,6 +36,7 @@ var RunMSBuildWithPlatform = new Action<FilePath, string> ((solution, platform) 
         c.Configuration = "Release"; 
         c.Verbosity = VERBOSITY;
         c.Properties ["Platform"] = new [] { platform };
+        c.MSBuildPlatform = MSBuildPlatform.x86;
         if (!string.IsNullOrEmpty (MSBuildToolPath)) {
             c.ToolPath = MSBuildToolPath;
         }
@@ -61,6 +62,8 @@ var RunMSBuildRestore = new Action<FilePath> ((solution) =>
         c.Targets.Clear();
         c.Targets.Add("Restore");
         c.Verbosity = VERBOSITY;
+        c.PlatformTarget = PlatformTarget.MSIL;
+        c.MSBuildPlatform = MSBuildPlatform.x86;
         if (!string.IsNullOrEmpty (MSBuildToolPath)) {
             c.ToolPath = MSBuildToolPath;
         }
