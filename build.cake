@@ -269,8 +269,6 @@ Task ("samples")
     // create the samples archive
     CreateSamplesZip ("./samples/", "./binding/", "./source/", "./output/samples.zip");
 
-return;
-
     // BASIC samples
     RunNuGetRestore ("./samples/Basic/NetCore/SkiaSharpSample.sln");
     RunMSBuild ("./samples/Basic/NetCore/SkiaSharpSample.sln");
