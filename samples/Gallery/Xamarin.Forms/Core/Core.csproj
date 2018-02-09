@@ -1,33 +1,21 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <TargetFramework>netstandard1.3</TargetFramework>
-    <OutputTypeEx>library</OutputTypeEx>
-    <RootNamespace>SkiaSharpSample</RootNamespace>
-    <AssemblyName>SkiaSharpSample</AssemblyName>
-    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <DefineConstants>$(DefineConstants);NET_STANDARD</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DefineConstants>TRACE;DEBUG;NET_STANDARD</DefineConstants>
-    <OutputPath>bin\Debug\</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DefineConstants>TRACE;NET_STANDARD</DefineConstants>
-    <OutputPath>bin\Release\</OutputPath>
-  </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="Xamarin.Forms" Version="2.5.0.122203" />
+    <PackageReference Include="Xamarin.Forms" Version="2.5.0.77107" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp.NetStandard\HarfBuzzSharp.NetStandard.csproj" />
     <ProjectReference Include="..\..\..\..\binding\SkiaSharp.NetStandard\SkiaSharp.NetStandard.csproj" />
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.NetStandard\SkiaSharp.HarfBuzz.NetStandard.csproj" />
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.NetStandard\SkiaSharp.Views.Forms.NetStandard.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <None Remove="**\*.xaml" />
-    <Compile Update="**\*.xaml.cs" DependentUpon="%(Filename)" />
-    <EmbeddedResource Include="**\*.xaml" SubType="Designer" Generator="MSBuild:UpdateDesignTimeXaml" />
-  </ItemGroup>
+
   <Import Project="..\..\Shared\Shared.projitems" Label="Shared" />
+
 </Project>

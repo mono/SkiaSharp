@@ -9,9 +9,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SkiaSharpSample</RootNamespace>
     <AssemblyName>SkiaSharpSample</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -86,6 +87,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="OpenTK" Version="1.1.2349.61993" />
+    <PackageReference Include="OpenTK.GLControl" Version="1.1.2349.61993" />
     <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp.Desktop\HarfBuzzSharp.Desktop.csproj">
       <Project>{2ae5d8c5-eac6-4515-89f2-a4994b41c925}</Project>
       <Name>HarfBuzzSharp.Desktop</Name>
@@ -123,6 +126,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <Content Include="..\..\Shared\Media\content-font.ttf">
       <Link>Media\content-font.ttf</Link>
@@ -142,8 +146,12 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Media\" />
+  </ItemGroup>
   <Import Project="..\..\PlatformShared\PlatformShared.projitems" Label="Shared" />
   <Import Project="..\..\Shared\Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\..\..\binding\SkiaSharp.Desktop\bin\$(Configuration)\nuget\build\net45\SkiaSharp.Desktop.targets" Condition="Exists('..\..\..\..\binding\SkiaSharp.Desktop\bin\$(Configuration)\nuget\build\net45\SkiaSharp.Desktop.targets')" />
+  <Import Project="..\..\..\..\binding\HarfBuzzSharp.Desktop\bin\$(Configuration)\nuget\build\net45\HarfBuzzSharp.Desktop.targets" Condition="Exists('..\..\..\..\binding\HarfBuzzSharp.Desktop\bin\$(Configuration)\nuget\build\net45\HarfBuzzSharp.Desktop.targets')" />
 </Project>
