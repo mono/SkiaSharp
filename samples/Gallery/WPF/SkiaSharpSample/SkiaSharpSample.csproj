@@ -94,12 +94,26 @@
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="OpenTK" Version="1.1.2349.61993" />
-    <PackageReference Include="OpenTK.GLControl" Version="1.1.2349.61993" />
-    <PackageReference Include="HarfBuzzSharp" Version="1.4.6" />
-    <PackageReference Include="SkiaSharp" Version="1.60.0-beta" />
-    <PackageReference Include="SkiaSharp.HarfBuzz" Version="1.60.0-beta" />
-    <PackageReference Include="SkiaSharp.Views" Version="1.60.0-beta" />
+    <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp.Desktop\HarfBuzzSharp.Desktop.csproj">
+      <Project>{2ae5d8c5-eac6-4515-89f2-a4994b41c925}</Project>
+      <Name>HarfBuzzSharp.Desktop</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp.Desktop\SkiaSharp.Desktop.csproj">
+      <Project>{eb1bbdcc-fb07-40d5-8b9e-0079e2c2f2df}</Project>
+      <Name>SkiaSharp.Desktop</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.NetStandard\SkiaSharp.HarfBuzz.NetStandard.csproj">
+      <Project>{156fadfb-602e-4658-a235-d4d24cd46f09}</Project>
+      <Name>SkiaSharp.HarfBuzz.NetStandard</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.Desktop\SkiaSharp.Views.Desktop.csproj">
+      <Project>{e5a90865-c185-45ad-88d1-6da7d6004b03}</Project>
+      <Name>SkiaSharp.Views.Desktop</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.WPF\SkiaSharp.Views.WPF.csproj">
+      <Project>{743cf830-d458-41a9-865a-f85126562015}</Project>
+      <Name>SkiaSharp.Views.WPF</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -147,8 +161,8 @@
     </None>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="..\..\PlatformShared\PlatformShared.projitems" Label="Shared" />
   <Import Project="..\..\Shared\Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="..\..\..\..\binding\SkiaSharp.Desktop\bin\$(Configuration)\nuget\build\net45\SkiaSharp.Desktop.targets" Condition="Exists('..\..\..\..\binding\SkiaSharp.Desktop\bin\$(Configuration)\nuget\build\net45\SkiaSharp.Desktop.targets')" />
 </Project>

@@ -95,18 +95,38 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.0.2" />
-    <PackageReference Include="HarfBuzzSharp" Version="1.4.6" />
-    <PackageReference Include="SkiaSharp" Version="1.60.0-beta" />
-    <PackageReference Include="SkiaSharp.HarfBuzz" Version="1.60.0-beta" />
-    <PackageReference Include="SkiaSharp.Views.Forms" Version="1.60.0-beta" />
-    <PackageReference Include="SkiaSharp.Views" Version="1.60.0-beta" />
     <PackageReference Include="Xamarin.Forms" Version="2.5.0.122203" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp.UWP\HarfBuzzSharp.UWP.csproj">
+      <Project>{6d1e1f39-ef70-4211-a518-bbbaf02d6fff}</Project>
+      <Name>HarfBuzzSharp.UWP</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp.UWP\SkiaSharp.UWP.csproj">
+      <Project>{bab615aa-956e-4079-b260-dd7b1f52ec7d}</Project>
+      <Name>SkiaSharp.UWP</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.NetStandard\SkiaSharp.HarfBuzz.NetStandard.csproj">
+      <Project>{233220cc-f0f3-4c44-9736-ed2cfc363fd3}</Project>
+      <Name>SkiaSharp.HarfBuzz.NetStandard</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.UWP\SkiaSharp.Views.Forms.UWP.csproj">
+      <Project>{3a1277b5-cfae-48cc-b64b-4dae1222a3eb}</Project>
+      <Name>SkiaSharp.Views.Forms.UWP</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.UWP\SkiaSharp.Views.UWP.csproj">
+      <Project>{8bb20362-91a2-4206-944d-634070eac6f3}</Project>
+      <Name>SkiaSharp.Views.UWP</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Core\Core.csproj">
       <Project>{e3d24d5e-80b0-45e1-ad55-d69d00bfa5f8}</Project>
       <Name>Core</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\..\..\output\native\uwp\$(Platform)\libSkiaSharp.dll" Condition="Exists('..\..\..\..\output\native\uwp\$(Platform)\libSkiaSharp.dll')" />
+    <Content Include="..\..\..\..\output\native\uwp\$(Platform)\libEGL.dll" Condition="Exists('..\..\..\..\output\native\uwp\$(Platform)\libEGL.dll')" />
+    <Content Include="..\..\..\..\output\native\uwp\$(Platform)\libGLESv2.dll" Condition="Exists('..\..\..\..\output\native\uwp\$(Platform)\libGLESv2.dll')" />
   </ItemGroup>
   <ItemGroup>
     <SDKReference Include="WindowsMobile, Version=10.0.10240.0">
