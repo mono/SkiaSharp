@@ -85,8 +85,19 @@
     <Reference Include="Xamarin.WatchOS" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="SkiaSharp" Version="1.60.0-beta" />
-    <PackageReference Include="SkiaSharp.Views" Version="1.60.0-beta" />
+    <ProjectReference Include="..\SkiaSharpSample.OnWatchExtension\SkiaSharpSample.OnWatchExtension.csproj">
+      <IsAppExtension>true</IsAppExtension>
+      <Project>{9B82BB1F-18DD-47A6-B4DD-10310A27FE00}</Project>
+      <Name>SkiaSharpSample.OnWatchExtension</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\binding\SkiaSharp.watchOS\SkiaSharp.watchOS.csproj">
+      <Project>{099A4BAD-6CF7-4898-9D16-266BDD844F95}</Project>
+      <Name>SkiaSharp.watchOS</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.watchOS\SkiaSharp.Views.watchOS.csproj">
+      <Project>{9E850CCA-54CC-4CEB-B2C2-E32EF4A17D61}</Project>
+      <Name>SkiaSharp.Views.watchOS</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <ImageAsset Include="Assets.xcassets\AppIcon.appiconset\Contents.json" />
@@ -101,13 +112,6 @@
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="Interface.storyboard" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\SkiaSharpSample.OnWatchExtension\SkiaSharpSample.OnWatchExtension.csproj">
-      <IsAppExtension>true</IsAppExtension>
-      <Project>{9B82BB1F-18DD-47A6-B4DD-10310A27FE00}</Project>
-      <Name>SkiaSharpSample.OnWatchExtension</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\WatchOS\Xamarin.WatchOS.App.CSharp.targets" />
 </Project>
