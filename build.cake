@@ -263,68 +263,91 @@ Task ("samples")
     .IsDependentOn ("nuget")
     .Does (() => 
 {
+    // clear the NuGets so we can use the build output
     ClearSkiaSharpNuGetCache ();
-    CleanDirectories ("./samples/*/*/*/packages/SkiaSharp.*");
 
-    // zip the samples for the GitHub release notes
-    if (IS_ON_CI) {
-        Zip ("./samples", "./output/samples.zip");
-    }
+    // create the samples archive
+    CreateSamplesZip ("./samples/", "./binding/", "./source/", "./output/samples.zip");
 
-    // BASIC samples
-    RunNuGetRestore ("./samples/Basic/NetCore/SkiaSharpSample.sln");
-    RunMSBuild ("./samples/Basic/NetCore/SkiaSharpSample.sln");
-    RunNuGetRestore ("./samples/Basic/Desktop/SkiaSharpSample.sln");
-    RunMSBuild ("./samples/Basic/Desktop/SkiaSharpSample.sln");
+    var isLinux = IsRunningOnLinux ();
+    var isMac = IsRunningOnMac ();
+    var isWin = IsRunningOnWindows ();
 
-    // GALLERY samples
+    var buildMatrix = new Dictionary<string, bool> {
+        { "android", isMac },
+        { "gtk", isLinux || isMac },
+        { "ios", isMac },
+        { "macos", isMac },
+        { "tvos", isMac },
+        { "uwp", isWin },
+        { "watchos", isMac },
+        { "wpf", isWin },
+    };
 
-    if (IsRunningOnLinux ()) {
-        // BASIC samples
-        RunNuGetRestore ("./samples/Basic/Gtk/SkiaSharpSample.sln");
-        RunMSBuild ("./samples/Basic/Gtk/SkiaSharpSample.sln");
+    var platformMatrix = new Dictionary<string, string> {
+        { "ios", "iPhone" },
+        { "tvos", "iPhoneSimulator" },
+        { "uwp", "x86" },
+        { "watchos", "iPhoneSimulator" },
+        { "xamarin.forms.mac", "iPhone" },
+        { "xamarin.forms.windows", "x86" },
+    };
 
-        // GALLERY samples
-    }
+    var buildSample = new Action<FilePath> (sln => {
+        var platform = sln.GetDirectory ().GetDirectoryName ().ToLower ();
+        var name = sln.GetFilenameWithoutExtension ();
+        var slnPlatform = name.GetExtension ();
+        if (!string.IsNullOrEmpty (slnPlatform)) {
+            slnPlatform = slnPlatform.ToLower ();
+        }
 
-    if (IsRunningOnMac ()) {
-        // BASIC samples
-        RunNuGetRestore ("./samples/Basic/Android/SkiaSharpSample.sln");
-        RunMSBuild ("./samples/Basic/Android/SkiaSharpSample.sln");
-        RunNuGetRestore ("./samples/Basic/iOS/SkiaSharpSample.sln");
-        RunMSBuildWithPlatform ("./samples/Basic/iOS/SkiaSharpSample.sln", "iPhone");
-        RunNuGetRestore ("./samples/Basic/macOS/SkiaSharpSample.sln");
-        RunMSBuild ("./samples/Basic/macOS/SkiaSharpSample.sln");
-        RunNuGetRestore ("./samples/Basic/tvOS/SkiaSharpSample.sln");
-        RunMSBuildWithPlatform ("./samples/Basic/tvOS/SkiaSharpSample.sln", "iPhoneSimulator");
-        RunNuGetRestore ("./samples/Basic/Gtk/SkiaSharpSample.sln");
-        RunMSBuild ("./samples/Basic/Gtk/SkiaSharpSample.sln");
+        if (!buildMatrix.ContainsKey (platform) || buildMatrix [platform]) {
+            string buildPlatform = null;
+            if (!string.IsNullOrEmpty (slnPlatform)) {
+                if (platformMatrix.ContainsKey (platform + slnPlatform)) {
+                    buildPlatform = platformMatrix [platform + slnPlatform];
+                }
+            }
+            if (string.IsNullOrEmpty (buildPlatform) && platformMatrix.ContainsKey (platform)) {
+                buildPlatform = platformMatrix [platform];
+            }
 
-        // GALLERY samples
-        RunNuGetRestore ("./samples/Gallery/MacSample/MacSample.sln");
-        RunMSBuildWithPlatform ("./samples/Gallery/MacSample/MacSample.sln", "x86");
-        RunNuGetRestore ("./samples/Gallery/FormsSample/FormsSample.Mac.sln");
-        RunMSBuildWithPlatform ("./samples/Gallery/FormsSample/FormsSample.Mac.sln", "iPhone");
-        RunNuGetRestore ("./samples/Gallery/TvSample/TvSample.sln");
-        RunMSBuildWithPlatform ("./samples/Gallery/TvSample/TvSample.sln", "iPhoneSimulator");
-    }
-    
-    if (IsRunningOnWindows ()) {
-        // BASIC samples
-        RunNuGetRestore ("./samples/Basic/WPF/SkiaSharpSample.sln");
-        RunMSBuild ("./samples/Basic/WPF/SkiaSharpSample.sln");
-        RunNuGetRestore ("./samples/Basic/UWP/SkiaSharpSample.sln");
-        RunMSBuildWithPlatformTarget ("./samples/Basic/UWP/SkiaSharpSample.sln", "x86");
+            RunNuGetRestore (sln);
+            if (string.IsNullOrEmpty (buildPlatform)) {
+                RunMSBuild (sln);
+            } else {
+                RunMSBuildWithPlatform (sln, buildPlatform);
+            }
+        }
+    });
 
-        // GALLERY samples
-        RunNuGetRestore ("./samples/Gallery/WPFSample/WPFSample.sln");
-        RunMSBuild ("./samples/Gallery/WPFSample/WPFSample.sln");
-        RunNuGetRestore ("./samples/Gallery/UWPSample/UWPSample.sln");
-        RunMSBuildWithPlatformTarget ("./samples/Gallery/UWPSample/UWPSample.sln", "x86");
-        RunNuGetRestore ("./samples/Gallery/FormsSample/FormsSample.Windows.sln");
-        RunMSBuildWithPlatformTarget ("./samples/Gallery/FormsSample/FormsSample.Windows.sln", "x86");
-        RunNuGetRestore ("./samples/Gallery/WindowsSample/WindowsSample.sln");
-        RunMSBuild ("./samples/Gallery/WindowsSample/WindowsSample.sln");
+    var solutions = GetFiles ("./samples/**/*.sln");
+    foreach (var sln in solutions) {
+        var name = sln.GetFilenameWithoutExtension ();
+        var slnPlatform = name.GetExtension ();
+
+        if (string.IsNullOrEmpty (slnPlatform)) {
+            // this is the main solution
+            var variants = GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.sln");
+            if (!variants.Any ()) {
+                // there is no platform variant
+                buildSample (sln);
+            } else {
+                // skip as there is a platform variant
+            }
+        } else {
+            // this is a platform variant
+            slnPlatform = slnPlatform.ToLower ();
+            var shouldBuild = 
+                (isLinux && slnPlatform == ".linux") ||
+                (isMac && slnPlatform == ".mac") ||
+                (isWin && slnPlatform == ".windows");
+            if (shouldBuild) {
+                buildSample (sln);
+            } else {
+                // skip this as this is not the correct platform
+            }
+        }
     }
 });
 
@@ -549,26 +572,9 @@ Task ("set-versions")
     var add = new Action<string> (glob => {
         files.AddRange (GetFiles (glob).Select (p => MakeAbsolute (p).ToString ()));
     });
-    // nuspecs
     add ("./nuget/*.nuspec");
-    // packages files
-    add ("./source/*/*/packages.config");
-    add ("./source/*/*/project.json");
-    // project files
-    add ("./source/*/*/*.nuget.targets");
-    add ("./source/*/*/*.csproj");
-    // sample packages files
-    add ("./samples/*/*/*/packages.config");
-    add ("./samples/*/*/*/project.json");
-    // sample project files
-    add ("./samples/*/*/*/*.nuget.targets");
-    add ("./samples/*/*/*/*.csproj");
-    // tests packages files
-    add ("./tests/*/packages.config");
-    add ("./tests/*/project.json");
-    // tests project files
-    add ("./tests/*/*.nuget.targets");
-    add ("./tests/*/*.csproj");
+    add ("./source/**/*.csproj");
+    add ("./tests/**/*.csproj");
     // update
     foreach (var file in files) {
         UpdateSkiaSharpVersion (file, VERSION_PACKAGES);
@@ -587,13 +593,12 @@ Task ("set-versions")
     UpdateAssemblyInfo (
         "./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz.Shared/Properties/SkiaSharpHarfBuzzAssemblyInfo.cs",
         VERSION_ASSEMBLY, VERSION_FILE, sha);
-
-    UpdateAssemblyInfo (
-        "./binding/HarfBuzzSharp.Shared/Properties/HarfBuzzSharpAssemblyInfo.cs",
-        HARFBUZZ_VERSION_ASSEMBLY, HARFBUZZ_VERSION_FILE, sha);
     UpdateAssemblyInfo (
         "./source/SkiaSharp.Workbooks/Properties/SkiaSharpWorkbooksAssemblyInfo.cs",
         VERSION_ASSEMBLY, VERSION_FILE, sha);
+    UpdateAssemblyInfo (
+        "./binding/HarfBuzzSharp.Shared/Properties/HarfBuzzSharpAssemblyInfo.cs",
+        HARFBUZZ_VERSION_ASSEMBLY, HARFBUZZ_VERSION_FILE, sha);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

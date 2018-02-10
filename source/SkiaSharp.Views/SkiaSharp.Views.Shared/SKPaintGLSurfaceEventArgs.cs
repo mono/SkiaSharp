@@ -1,11 +1,10 @@
+#if !__WATCHOS__
 using System;
 
 #if __ANDROID__
 namespace SkiaSharp.Views.Android
 #elif __TVOS__
 namespace SkiaSharp.Views.tvOS
-#elif __WATCHOS__
-namespace SkiaSharp.Views.watchOS
 #elif __IOS__
 namespace SkiaSharp.Views.iOS
 #elif __DESKTOP__ || __WPF__ || __GTK__
@@ -29,3 +28,4 @@ namespace SkiaSharp.Views.Mac
 		public GRBackendRenderTargetDesc RenderTarget { get; private set; }
 	}
 }
+#endif

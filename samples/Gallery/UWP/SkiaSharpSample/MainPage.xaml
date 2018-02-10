@@ -1,0 +1,98 @@
+﻿<Page xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:views="using:SkiaSharp.Views.UWP"
+      xmlns:sample="using:SkiaSharpSample"
+      xmlns:local="using:SkiaSharpSample"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      x:Class="SkiaSharpSample.MainPage"
+      mc:Ignorable="d">
+    <Page.Resources>
+        <CollectionViewSource x:Name="samplesViewSource" IsSourceGrouped="True" />
+        
+        <Style x:Key="ShellButton" TargetType="ButtonBase">
+            <Setter Property="Background" Value="Transparent" />
+            <!--<Setter Property="BorderBrush" Value="{x:Null}" />-->
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Width" Value="{ThemeResource SplitViewCompactPaneThemeLength}" />
+            <Setter Property="Height" Value="{ThemeResource SplitViewCompactPaneThemeLength}" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
+        <SolidColorBrush x:Key="XamarinLightBlue" Color="#3498DB" />
+    </Page.Resources>
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="{ThemeResource SplitViewCompactPaneThemeLength}" />
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <SplitView Name="splitView" DisplayMode="Overlay" OpenPaneLength="320" Grid.Row="1">
+                <SplitView.Pane>
+                    <!-- the samples menu -->
+                    <ListView ItemsSource="{x:Bind samplesViewSource.View}" SelectionChanged="OnSampleSelected">
+                        <ListView.GroupStyle>
+                            <GroupStyle>
+                                <GroupStyle.HeaderTemplate>
+                                    <DataTemplate x:DataType="local:GroupedSamples">
+                                        <TextBlock Text="{x:Bind Name}" />
+                                    </DataTemplate>
+                                </GroupStyle.HeaderTemplate>
+                            </GroupStyle>
+                        </ListView.GroupStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="sample:SampleBase">
+                                <TextBlock Text="{x:Bind Title}" />
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </SplitView.Pane>
+
+                <SplitView.Content>
+                    <!-- the samples canvas -->
+                    <Grid Tapped="OnSampleTapped">
+                        <views:SKXamlCanvas x:Name="canvas" Grid.Row="1" PaintSurface="OnPaintCanvas" />
+                        <views:SKSwapChainPanel x:Name="glview" Grid.Row="1" PaintSurface="OnPaintGL" DrawInBackground="True" Visibility="Collapsed" />
+                    </Grid>
+                </SplitView.Content>
+            </SplitView>
+        </Grid>
+
+        <CommandBar x:Name="commandBar" Background="{StaticResource XamarinLightBlue}" Foreground="White">
+            <!-- the toolbar items -->
+            <AppBarButton Icon="Repair" Label="Configure Backend" IsCompact="True" Foreground="White">
+                <Button.Flyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem Text="Memory" Tag="Memory" Click="OnBackendSelected" />
+                        <MenuFlyoutItem Text="OpenGL" Tag="OpenGL" Click="OnBackendSelected" />
+                        <MenuFlyoutItem Text="Vulkan" Tag="Vulkan" Click="OnBackendSelected" />
+                    </MenuFlyout>
+                </Button.Flyout>
+            </AppBarButton>
+            <AppBarButton Icon="Pictures" Label="Toggle Sample Slideshow" IsCompact="True" Foreground="White" 
+                          Click="OnToggleSlideshow" />
+
+            <CommandBar.Content>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- the hamburger menu -->
+                    <ToggleButton IsChecked="{Binding IsPaneOpen, ElementName=splitView, Mode=TwoWay}" IsTabStop="False"
+                                  IsThreeState="False" ClickMode="Press" Style="{StaticResource ShellButton}" Foreground="White">
+                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE700;" />
+                    </ToggleButton>
+
+                    <!-- the title bar -->
+                    <TextBlock x:Name="titleBar" Text="SkiaSharp for Windows" Grid.Column="1" Margin="12,0,0,0"
+                               VerticalAlignment="Center" HorizontalAlignment="Left" />
+                </Grid>
+            </CommandBar.Content>
+        </CommandBar>
+
+    </Grid>
+</Page>

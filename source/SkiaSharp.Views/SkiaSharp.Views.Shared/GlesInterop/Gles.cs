@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿#if !__WATCHOS__
+using System.Runtime.InteropServices;
 
 namespace SkiaSharp.Views.GlesInterop
 {
@@ -6,7 +7,7 @@ namespace SkiaSharp.Views.GlesInterop
 	{
 #if __MACOS__
 		private const string libGLESv2 = "/System/Library/Frameworks/OpenGL.framework/OpenGL";
-#elif __IOS__ || __TVOS__ || __WATCHOS__
+#elif __IOS__ || __TVOS__
 		private const string libGLESv2 = "/System/Library/Frameworks/OpenGLES.framework/OpenGLES";
 #elif __DESKTOP__ || __WPF__ || __GTK__
 		private const string libGLESv2 = "opengl32.dll";
@@ -109,3 +110,4 @@ namespace SkiaSharp.Views.GlesInterop
 		public static extern System.IntPtr glGetString(uint value);
 	}
 }
+#endif
