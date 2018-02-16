@@ -58,9 +58,8 @@ namespace HarfBuzzSharp
 		}
 
 		// internal proxy
-#if __IOS__
-		[ObjCRuntime.MonoPInvokeCallback (typeof (hb_destroy_func_t))]
-#endif
+
+		[MonoPInvokeCallback (typeof (hb_destroy_func_t))]
 		private static void DestroyInternal(IntPtr context)
 		{
 			using (var ctx = NativeDelegateContext.Unwrap(context))

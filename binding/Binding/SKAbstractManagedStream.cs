@@ -10,10 +10,6 @@ using System;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-#if __IOS__
-using ObjCRuntime;
-#endif
-
 using NativePointerDictionary = System.Collections.Concurrent.ConcurrentDictionary<System.IntPtr, SkiaSharp.SKAbstractManagedStream>;
 
 namespace SkiaSharp
@@ -153,86 +149,73 @@ namespace SkiaSharp
 
 		// unmanaged <-> managed methods (static for iOS)
 
-#if __IOS__
 		[MonoPInvokeCallback (typeof (read_delegate))]
-#endif
 		private static IntPtr ReadInternal (IntPtr managedStreamPtr, IntPtr buffer, IntPtr size)
 		{
 			return AsManagedStream (managedStreamPtr).OnRead (buffer, size);
 		}
-#if __IOS__
+
 		[MonoPInvokeCallback(typeof(peek_delegate))]
-#endif
 		private static IntPtr PeekInternal (IntPtr managedStreamPtr, IntPtr buffer, IntPtr size)
 		{
 			return AsManagedStream (managedStreamPtr).OnPeek (buffer, size);
 		}
-#if __IOS__
+
 		[MonoPInvokeCallback(typeof(isAtEnd_delegate))]
-#endif
 		private static bool IsAtEndInternal (IntPtr managedStreamPtr)
 		{
 			return AsManagedStream (managedStreamPtr).OnIsAtEnd ();
 		}
-#if __IOS__
+
 		[MonoPInvokeCallback(typeof(hasPosition_delegate))]
-#endif
 		private static bool HasPositionInternal (IntPtr managedStreamPtr)
 		{
 			return AsManagedStream (managedStreamPtr).OnHasPosition ();
 		}
-#if __IOS__
+
 		[MonoPInvokeCallback(typeof(hasLength_delegate))]
-#endif
 		private static bool HasLengthInternal (IntPtr managedStreamPtr)
 		{
 			return AsManagedStream (managedStreamPtr).OnHasLength ();
 		}
-#if __IOS__
+
 		[MonoPInvokeCallback(typeof(rewind_delegate))]
-#endif
 		private static bool RewindInternal (IntPtr managedStreamPtr)
 		{
 			return AsManagedStream (managedStreamPtr).OnRewind ();
 		}
-#if __IOS__
+
 		[MonoPInvokeCallback(typeof(getPosition_delegate))]
-#endif
 		private static IntPtr GetPositionInternal (IntPtr managedStreamPtr)
 		{
 			return AsManagedStream (managedStreamPtr).OnGetPosition ();
 		}
-#if __IOS__
+
 		[MonoPInvokeCallback(typeof(seek_delegate))]
-#endif
 		private static bool SeekInternal (IntPtr managedStreamPtr, IntPtr position)
 		{
 			return AsManagedStream (managedStreamPtr).OnSeek (position);
 		}
-#if __IOS__
+
 		[MonoPInvokeCallback(typeof(move_delegate))]
-#endif
 		private static bool MoveInternal (IntPtr managedStreamPtr, int offset)
 		{
 			return AsManagedStream (managedStreamPtr).OnMove (offset);
 		}
-#if __IOS__
+
 		[MonoPInvokeCallback(typeof(getLength_delegate))]
-#endif
 		private static IntPtr GetLengthInternal (IntPtr managedStreamPtr)
 		{
 			return AsManagedStream (managedStreamPtr).OnGetLength ();
 		}
-#if __IOS__
+
 		[MonoPInvokeCallback(typeof(createNew_delegate))]
-#endif
 		private static IntPtr CreateNewInternal (IntPtr managedStreamPtr)
 		{
 			return AsManagedStream (managedStreamPtr).OnCreateNew ();
 		}
-#if __IOS__
+
 		[MonoPInvokeCallback(typeof(destroy_delegate))]
-#endif
 		private static void DestroyInternal (IntPtr managedStreamPtr)
 		{
 			SKAbstractManagedStream managedStream;
@@ -240,6 +223,7 @@ namespace SkiaSharp
 				managedStream.DisposeFromNative ();
 			}
 		}
+
 		private static SKAbstractManagedStream AsManagedStream (IntPtr ptr)
 		{
 			SKAbstractManagedStream target;
@@ -248,6 +232,7 @@ namespace SkiaSharp
 			}
 			throw new ObjectDisposedException ("SKAbstractManagedStream: " + ptr);
 		}
+
 		private static bool AsManagedStream (IntPtr ptr, out SKAbstractManagedStream target)
 		{
 			if (managedStreams.TryGetValue (ptr, out target)) {

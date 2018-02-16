@@ -755,9 +755,8 @@ namespace SkiaSharp
 		}
 
 		// internal proxy
-		#if __IOS__
-		[ObjCRuntime.MonoPInvokeCallback (typeof (SKBitmapReleaseDelegateInternal))]
-		#endif
+
+		[MonoPInvokeCallback (typeof (SKBitmapReleaseDelegateInternal))]
 		private static void SKBitmapReleaseInternal (IntPtr address, IntPtr context)
 		{
 			using (var ctx = NativeDelegateContext.Unwrap (context)) {

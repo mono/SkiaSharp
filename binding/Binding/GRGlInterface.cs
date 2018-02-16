@@ -140,9 +140,8 @@ namespace SkiaSharp
 		}
 
 		// internal proxy
-		#if __IOS__
-		[ObjCRuntime.MonoPInvokeCallback (typeof (GRGlGetProcDelegateInternal))]
-		#endif
+
+		[MonoPInvokeCallback (typeof (GRGlGetProcDelegateInternal))]
 		private static IntPtr GrGLGetProcInternal (IntPtr context, string name)
 		{
 			var ctx = NativeDelegateContext.Unwrap (context);

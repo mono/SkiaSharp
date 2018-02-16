@@ -10,10 +10,6 @@ using System;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-#if __IOS__
-using ObjCRuntime;
-#endif
-
 using NativePointerDictionary = System.Collections.Concurrent.ConcurrentDictionary<System.IntPtr, SkiaSharp.SKAbstractManagedWStream>;
 
 namespace SkiaSharp
@@ -97,30 +93,25 @@ namespace SkiaSharp
 
 		// unmanaged <-> managed methods (static for iOS)
 
-#if __IOS__
 		[MonoPInvokeCallback (typeof (write_delegate))]
-#endif
 		private static bool WriteInternal (IntPtr managedStreamPtr, IntPtr buffer, IntPtr size)
 		{
 			return AsManagedStream (managedStreamPtr).OnWrite (buffer, size);
 		}
-#if __IOS__
+
 		[MonoPInvokeCallback (typeof (flush_delegate))]
-#endif
 		private static void FlushInternal (IntPtr managedStreamPtr)
 		{
 			AsManagedStream (managedStreamPtr).OnFlush ();
 		}
-#if __IOS__
+
 		[MonoPInvokeCallback (typeof (bytesWritten_delegate))]
-#endif
 		private static IntPtr BytesWrittenInternal (IntPtr managedStreamPtr)
 		{
 			return AsManagedStream (managedStreamPtr).OnBytesWritten ();
 		}
-#if __IOS__
+
 		[MonoPInvokeCallback (typeof (destroy_delegate))]
-#endif
 		private static void DestroyInternal (IntPtr managedStreamPtr)
 		{
 			SKAbstractManagedWStream managedStream;
@@ -128,6 +119,7 @@ namespace SkiaSharp
 				managedStream.DisposeFromNative ();
 			}
 		}
+
 		private static SKAbstractManagedWStream AsManagedStream (IntPtr ptr)
 		{
 			SKAbstractManagedWStream target;
@@ -136,6 +128,7 @@ namespace SkiaSharp
 			}
 			throw new ObjectDisposedException ("SKAbstractManagedWStream: " + ptr);
 		}
+
 		private static bool AsManagedStream (IntPtr ptr, out SKAbstractManagedWStream target)
 		{
 			if (managedStreams.TryGetValue (ptr, out target)) {

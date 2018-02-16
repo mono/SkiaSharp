@@ -10,10 +10,6 @@
 using System;
 using System.Runtime.InteropServices;
 
-#if __IOS__
-using ObjCRuntime;
-#endif
-
 namespace SkiaSharp
 {
 	public abstract class SKManagedPixelSerializer : SKPixelSerializer
@@ -56,18 +52,15 @@ namespace SkiaSharp
 
 
 		// internal proxy
-		#if __IOS__
-		[ObjCRuntime.MonoPInvokeCallback (typeof (use_delegate))]
-		#endif
+
+		[MonoPInvokeCallback (typeof (use_delegate))]
 		private static bool UseInternal (IntPtr cserializer, IntPtr buffer, IntPtr size)
 		{
 			var serializer = GetObject<SKManagedPixelSerializer> (cserializer, false);
 			return serializer.OnUseEncodedData (buffer, size);
 		}
 
-		#if __IOS__
-		[ObjCRuntime.MonoPInvokeCallback (typeof (SKBitmapReleaseDelegateInternal))]
-		#endif
+		[MonoPInvokeCallback (typeof (SKBitmapReleaseDelegateInternal))]
 		private static IntPtr EncodeInternal (IntPtr cserializer, IntPtr pixmap)
 		{
 			var serializer = GetObject<SKManagedPixelSerializer> (cserializer, false);

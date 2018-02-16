@@ -250,9 +250,8 @@ namespace SkiaSharp
 		}
 
 		// internal proxy
-		#if __IOS__
-		[ObjCRuntime.MonoPInvokeCallback (typeof (SKDataReleaseDelegateInternal))]
-		#endif
+
+		[MonoPInvokeCallback (typeof (SKDataReleaseDelegateInternal))]
 		private static void ReleaseInternal (IntPtr address, IntPtr context)
 		{
 			using (var ctx = NativeDelegateContext.Unwrap (context)) {

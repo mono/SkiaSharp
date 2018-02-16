@@ -412,9 +412,7 @@ namespace SkiaSharp
 
 		// internal proxies
 
-		#if __IOS__
-		[ObjCRuntime.MonoPInvokeCallback (typeof (SKImageRasterReleaseDelegateInternal))]
-		#endif
+		[MonoPInvokeCallback (typeof (SKImageRasterReleaseDelegateInternal))]
 		private static void RasterReleaseInternal (IntPtr pixels, IntPtr context)
 		{
 			using (var ctx = NativeDelegateContext.Unwrap (context)) {
@@ -422,17 +420,13 @@ namespace SkiaSharp
 			}
 		}
 
-		#if __IOS__
-		[ObjCRuntime.MonoPInvokeCallback (typeof (SKImageRasterReleaseDelegateInternal))]
-		#endif
+		[MonoPInvokeCallback (typeof (SKImageRasterReleaseDelegateInternal))]
 		private static void CoTaskMemReleaseInternal (IntPtr pixels, IntPtr context)
 		{
 			Marshal.FreeCoTaskMem (pixels);
 		}
 
-		#if __IOS__
-		[ObjCRuntime.MonoPInvokeCallback (typeof (SKImageTextureReleaseDelegateInternal))]
-		#endif
+		[MonoPInvokeCallback (typeof (SKImageTextureReleaseDelegateInternal))]
 		private static void TextureReleaseInternal (IntPtr context)
 		{
 			using (var ctx = NativeDelegateContext.Unwrap (context)) {
