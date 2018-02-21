@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
+using SharpCompress.Readers;
 
 #load "cake/Utils.cake"
 
@@ -17,7 +18,6 @@ var VERBOSITY = (Verbosity) Enum.Parse (typeof(Verbosity), Argument ("v", Argume
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NugetToolPath = GetToolPath ("nuget.exe");
-var XamarinComponentToolPath = GetToolPath ("XamarinComponent/tools/xamarin-component.exe");
 var CakeToolPath = GetToolPath ("Cake/Cake.exe");
 var GenApiToolPath = GetToolPath ("Microsoft.DotNet.BuildTools.GenAPI/tools/GenAPI.exe");
 var MDocPath = GetToolPath ("mdoc/tools/mdoc.exe");
@@ -267,7 +267,7 @@ Task ("samples")
     ClearSkiaSharpNuGetCache ();
 
     // create the samples archive
-    CreateSamplesZip ("./samples/", "./binding/", "./source/", "./output/samples.zip");
+    CreateSamplesZip ("./samples/", "./output/");
 
     var isLinux = IsRunningOnLinux ();
     var isMac = IsRunningOnMac ();
@@ -533,27 +533,6 @@ Task ("nuget")
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// COMPONENT - building the package for components.xamarin.com
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-Task ("component")
-    .IsDependentOn ("nuget")
-    .Does (() => 
-{
-    // TODO: Not yet ready
-    
-    // EnsureDirectoryExists ("./output/");
-    
-    // FilePath yaml = "./component/component.yaml";
-    // var yamlDir = yaml.GetDirectory ();
-    // PackageComponent (yamlDir, new XamarinComponentSettings { 
-    //     ToolPath = XamarinComponentToolPath
-    // });
-
-    // MoveFiles (yamlDir.FullPath.TrimEnd ('/') + "/*.xam", "./output/");
-});
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
 // VERSIONS - update all packages and references to the new version
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -657,7 +636,6 @@ Task ("Everything")
     .IsDependentOn ("libs")
     .IsDependentOn ("docs")
     .IsDependentOn ("nuget")
-    .IsDependentOn ("component")
     .IsDependentOn ("tests")
     .IsDependentOn ("samples");
 
@@ -670,7 +648,6 @@ Task ("CI")
     .IsDependentOn ("libs")
     .IsDependentOn ("docs")
     .IsDependentOn ("nuget")
-    .IsDependentOn ("component")
     .IsDependentOn ("tests")
     .IsDependentOn ("samples");
 
@@ -689,7 +666,6 @@ Task ("Linux-CI")
 
 Information ("Cake.exe ToolPath: {0}", CakeToolPath);
 Information ("NuGet.exe ToolPath: {0}", NugetToolPath);
-Information ("Xamarin-Component.exe ToolPath: {0}", XamarinComponentToolPath);
 Information ("genapi.exe ToolPath: {0}", GenApiToolPath);
 Information ("sn.exe ToolPath: {0}", SNToolPath);
 Information ("msbuild.exe ToolPath: {0}", MSBuildToolPath);

@@ -1,8 +1,3 @@
-using System.Runtime.InteropServices;
-using SharpCompress.Readers;
-using SharpCompress.Common;
-using SharpCompress.Writers;
-using SharpCompress.Writers.Zip;
 
 var VERBOSITY_NUGET = NuGetVerbosity.Detailed;
 switch (VERBOSITY) {
@@ -18,8 +13,6 @@ switch (VERBOSITY) {
         VERBOSITY_NUGET = NuGetVerbosity.Detailed;
         break;
 };
-
-var SolutionProjectRegex = new Regex(@",\s*""(.*?\.\w{2}proj)""");
 
 var RunNuGetRestore = new Action<FilePath> ((solution) =>
 {
@@ -215,124 +208,145 @@ var DecompressArchive = new Action<FilePath, DirectoryPath> ((archive, outputDir
     }
 });
 
-var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath, DirectoryPath, DirectoryPath> ((samplesDirPath, bindingDirPath, sourceDirPath, outputFilePath) => {
-    var dpc = System.IO.Path.DirectorySeparatorChar;
-    var toZipPath = new Func<string, string> (inPath => inPath.Replace ('\\', '/'));
-    var toMSBuildPath = new Func<string, string> (inPath => inPath.Replace ('/', '\\'));
-    var toNativePath = new Func<string, string> (inPath => inPath.Replace ('\\', dpc).Replace ('/', dpc));
+var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath> ((samplesDirPath, outputDirPath) => {
+    var workingDir = outputDirPath.Combine ("samples");
 
-    var samplesDir = System.IO.Path.GetFullPath (toNativePath (MakeAbsolute (samplesDirPath).FullPath));
-    var bindingDir = System.IO.Path.GetFullPath (toNativePath (MakeAbsolute (bindingDirPath).FullPath));
-    var sourceDir = System.IO.Path.GetFullPath (toNativePath (MakeAbsolute (sourceDirPath).FullPath));
+    // copy the current samples directory
+    EnsureDirectoryExists (workingDir);
+    CleanDirectory (workingDir);
+    CopyDirectory (samplesDirPath, workingDir);
+
+    // remove any binaries from the samples directory
+    var settings = new DeleteDirectorySettings {
+        Force = true,
+        Recursive = true
+    };
+    DeleteDirectories (GetDirectories (workingDir.FullPath + "/**/bin"), settings);
+    DeleteDirectories (GetDirectories (workingDir.FullPath + "/**/obj"), settings);
+
+    // make sure the paths are in the correct format for comparison
+    var dpc = System.IO.Path.DirectorySeparatorChar;
+    var toNativePath = new Func<string, string> (inPath => inPath.Replace ('\\', dpc).Replace ('/', dpc));
+    var samplesDir = System.IO.Path.GetFullPath (toNativePath (MakeAbsolute (workingDir).FullPath));
     var samplesUri = new Uri (samplesDir);
 
-    using (var zip = System.IO.File.OpenWrite (toNativePath (MakeAbsolute (outputFilePath).FullPath)))
-    using (var zipWriter = new ZipWriter (zip, new ZipWriterOptions (CompressionType.Deflate))) {
-        foreach (var file in GetFiles (samplesDir + "/**/*")) {
-            var abs = System.IO.Path.GetFullPath (toNativePath (file.FullPath));
-            var absDir = System.IO.Path.GetDirectoryName (abs);
-            var ext = System.IO.Path.GetExtension (abs).ToLowerInvariant ();
-            var rel = samplesUri.MakeRelativeUri (new Uri (abs)).ToString ();
+    // the regex to math the project entris in the solution
+    var solutionProjectRegex = new Regex(@",\s*""(.*?\.\w{2}proj)"", ""(\{.*?\})""");
 
-            if (ext == ".sln") {
-                using (var ms = new MemoryStream ())
-                using (var writer = new StreamWriter (ms)) {
-                    using (var reader = new StreamReader (abs)) {
-                        var skippingProject = false;
-                        for (var line = reader.ReadLine (); line != null; line = reader.ReadLine ()) {
-                            if (skippingProject) {
-                                if (line.Trim ().Equals ("EndProject", StringComparison.OrdinalIgnoreCase)) {
-                                    skippingProject = false;
-                                }
-                            } else {
-                                var m = SolutionProjectRegex.Match (line);
-                                if (m.Success) {
-                                    var relProjectPath = toNativePath (m.Groups[1].Value);
-                                    var projectPath = System.IO.Path.GetFullPath (System.IO.Path.Combine (absDir, relProjectPath));
-                                    if (!projectPath.StartsWith (samplesDir, StringComparison.OrdinalIgnoreCase)) {
-                                        skippingProject = true;
-                                    } else {
-                                        writer.WriteLine (line);
-                                    }
-                                } else {
-                                    writer.WriteLine (line);
-                                }
-                            }
+    foreach (var file in GetFiles (workingDir + "/**/*")) {
+        var abs = System.IO.Path.GetFullPath (toNativePath (file.FullPath));
+        var absDir = System.IO.Path.GetDirectoryName (abs);
+        var ext = System.IO.Path.GetExtension (abs).ToLowerInvariant ();
+        var rel = samplesUri.MakeRelativeUri (new Uri (abs)).ToString ();
+
+        if (ext == ".sln") {
+            var modified = false;
+            var lines = FileReadLines (abs).ToList ();
+            var guids = new List<string> ();
+
+            // remove projects that aren't samples
+            for (var i = 0; i < lines.Count; i++) {
+                var line = lines [i];
+                var m = solutionProjectRegex.Match (line);
+                if (m.Success) {
+                    var relProjectPath = toNativePath (m.Groups[1].Value);
+                    var projectPath = System.IO.Path.GetFullPath (System.IO.Path.Combine (absDir, relProjectPath));
+                    if (!projectPath.StartsWith (samplesDir, StringComparison.OrdinalIgnoreCase)) {
+                        // skip the next line as it is the "EndProject" line
+                        guids.Add (m.Groups[2].Value. ToLowerInvariant ());
+                        lines.RemoveAt (i);
+                        i--;
+                        lines.RemoveAt (i);
+                        i--;
+                        modified = true;
+                    }
+                }
+            }
+
+            // remove all the other references
+            if (guids.Count > 0) {
+                for (var i = 0; i < lines.Count; i++) {
+                    var line = lines [i];
+                    foreach (var guid in guids) {
+                        if (line.ToLowerInvariant ().Contains (guid)) {
+                            lines.RemoveAt (i);
+                            i--;
                         }
                     }
-
-                    writer.Flush ();
-                    ms.Position = 0;
-                    zipWriter.Write (rel, ms);
                 }
-            } else if (ext == ".csproj") {
-                var xdoc = XDocument.Load (abs);
+            }
 
-                // get all <ProjectReference> elements
-                var projRefs1 = xdoc
-                    .Root
-                    .Elements (MSBuildNS + "ItemGroup")
-                    .Elements (MSBuildNS + "ProjectReference");
-                var projRefs2 = xdoc
-                    .Root
-                    .Elements ("ItemGroup")
-                    .Elements ("ProjectReference");
-                var projRefs = projRefs1.Union (projRefs2).ToArray ();
-                // swap out the project references for package references
-                foreach (var projRef in projRefs) {
-                    var include = projRef.Attribute ("Include")?.Value;
-                    if (!string.IsNullOrWhiteSpace (include)) {
-                        var absInclude = System.IO.Path.GetFullPath (System.IO.Path.Combine (absDir, toNativePath (include)));
-                        if (!absInclude.StartsWith (samplesDir, StringComparison.OrdinalIgnoreCase)) {
-                            // not inside the samples directory, so needs to be removed
+            // save the modified solution
+            if (modified) {
+                FileWriteLines (abs, lines.ToArray ());
+            }
+        } else if (ext == ".csproj") {
+            var modified = false;
+            var xdoc = XDocument.Load (abs);
 
-                            string binding = null;
-                            if (absInclude.StartsWith (bindingDir, StringComparison.OrdinalIgnoreCase)) {
-                                binding = System.IO.Path.GetFileName (absInclude).Split ('.').FirstOrDefault ();
-                            } else if (absInclude.StartsWith (sourceDir, StringComparison.OrdinalIgnoreCase)) {
-                                binding = System.IO.Path.GetFileName (System.IO.Path.GetDirectoryName (System.IO.Path.GetDirectoryName (absInclude)));
-                            }
-
+            // get all <ProjectReference> elements
+            var projItems1 = xdoc
+                .Root
+                .Elements (MSBuildNS + "ItemGroup")
+                .Elements ();
+            var projItems2 = xdoc
+                .Root
+                .Elements ("ItemGroup")
+                .Elements ();
+            var projItems = projItems1.Union (projItems2).ToArray ();
+            // swap out the project references for package references
+            foreach (var projItem in projItems) {
+                var include = projItem.Attribute ("Include")?.Value;
+                if (!string.IsNullOrWhiteSpace (include)) {
+                    var absInclude = System.IO.Path.GetFullPath (System.IO.Path.Combine (absDir, toNativePath (include)));
+                    if (!absInclude.StartsWith (samplesDir, StringComparison.OrdinalIgnoreCase)) {
+                        // not inside the samples directory, so needs to be removed
+                        if (projItem.Name.LocalName == "ProjectReference") {
+                            // get the desired package ID for this project reference
+                            // we assume "Desired.Package.Id.<platform>.csproj"
+                            var binding = System.IO.Path.GetFileNameWithoutExtension (System.IO.Path.GetFileNameWithoutExtension (absInclude));
+                            // check to see if we have a specific version
                             binding = VERSION_PACKAGES.Keys.FirstOrDefault (p => p.Equals (binding, StringComparison.OrdinalIgnoreCase));
                             if (!string.IsNullOrWhiteSpace (binding)) {
-                                var name = projRef.Name.Namespace + "PackageReference";
-                                projRef.AddAfterSelf (new XElement (name, new object[] {
+                                // add a <PackageReference>
+                                var name = projItem.Name.Namespace + "PackageReference";
+                                projItem.AddAfterSelf (new XElement (name, new object[] {
                                         new XAttribute("Include", binding),
                                         new XAttribute("Version", VERSION_PACKAGES[binding]),
                                     }));
-                                projRef.Remove ();
                             }
                         }
+                        // remove the element
+                        projItem.Remove ();
+                        modified = true;
                     }
                 }
+            }
 
-                // get all the <Import> elements
-                var imports1 = xdoc.Root.Elements (MSBuildNS + "Import");
-                var imports2 = xdoc.Root.Elements ("Import");
-                var imports = imports1.Union (imports2).ToArray ();
-                // remove them
-                foreach (var import in imports) {
-                    var project = import.Attribute ("Project")?.Value;
-                    if (!string.IsNullOrWhiteSpace (project)) {
-                        var absProject = System.IO.Path.GetFullPath (System.IO.Path.Combine (absDir, toNativePath (project)));
-                        if (!absProject.StartsWith (samplesDir, StringComparison.OrdinalIgnoreCase)) {
-                            // not inside the samples directory, so needs to be removed
-
-                            import.Remove ();
-                        }
+            // get all the <Import> elements
+            var imports1 = xdoc.Root.Elements (MSBuildNS + "Import");
+            var imports2 = xdoc.Root.Elements ("Import");
+            var imports = imports1.Union (imports2).ToArray ();
+            // remove them
+            foreach (var import in imports) {
+                var project = import.Attribute ("Project")?.Value;
+                if (!string.IsNullOrWhiteSpace (project)) {
+                    var absProject = System.IO.Path.GetFullPath (System.IO.Path.Combine (absDir, toNativePath (project)));
+                    if (!absProject.StartsWith (samplesDir, StringComparison.OrdinalIgnoreCase)) {
+                        // not inside the samples directory, so needs to be removed
+                        import.Remove ();
+                        modified = true;
                     }
                 }
+            }
 
-                // save the modified document to the zip file
-                using (var ms = new MemoryStream ()) {
-                    xdoc.Save (ms);
-                    ms.Flush ();
-                    ms.Position = 0;
-                    zipWriter.Write (rel, ms);
-                }
-            } else {
-                zipWriter.Write (rel, abs);
+            // save the modified project
+            if (modified) {
+                xdoc.Save (abs);
             }
         }
     }
+
+    // finally create the zip
+    Zip (workingDir, outputDirPath.CombineWithFilePath ("samples.zip"));
 });
