@@ -7,16 +7,16 @@ namespace SkiaSharp.Tests
 {
 	internal class WglContext : GlContext
 	{
-		private ushort gWC;
+		private static ushort gWC;
 
-		private IntPtr fWindow;
-		private IntPtr fDeviceContext;
+		private static IntPtr fWindow;
+		private static IntPtr fDeviceContext;
 
 		private IntPtr fPbuffer;
 		private IntPtr fPbufferDC;
 		private IntPtr fPbufferGlContext;
 
-		public WglContext()
+		static WglContext()
 		{
 			var wc = new WNDCLASS
 			{
@@ -53,17 +53,20 @@ namespace SkiaSharp.Tests
 			fDeviceContext = User32.GetDC(fWindow);
 			if (fDeviceContext == IntPtr.Zero)
 			{
-				Destroy();
+				DestroyWindow();
 				throw new Exception("Could not get device context.");
 			}
 
 			if (!Wgl.HasExtension(fDeviceContext, "WGL_ARB_pixel_format") ||
 				!Wgl.HasExtension(fDeviceContext, "WGL_ARB_pbuffer"))
 			{
-				Destroy();
+				DestroyWindow();
 				throw new Exception("DC does not have extensions.");
 			}
+		}
 
+		public WglContext()
+		{
 			var iAttrs = new int[]
 			{
 				Wgl.WGL_ACCELERATION_ARB, Wgl.WGL_FULL_ACCELERATION_ARB,
@@ -144,7 +147,10 @@ namespace SkiaSharp.Tests
 			Wgl.wglReleasePbufferDCARB?.Invoke(fPbuffer, fPbufferDC);
 
 			Wgl.wglDestroyPbufferARB?.Invoke(fPbuffer);
+		}
 
+		private static void DestroyWindow()
+		{
 			if (fWindow != IntPtr.Zero)
 			{
 				if (fDeviceContext != IntPtr.Zero)
