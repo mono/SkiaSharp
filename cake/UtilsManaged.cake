@@ -171,7 +171,7 @@ var RunGenApi = new Action<FilePath, FilePath> ((input, output) =>
         "[System.ComponentModel.EditorBrowsableAttribute((System.ComponentModel.EditorBrowsableState)1)]");
 });
 
-var ClearSkiaSharpNuGetCache = new Action (() => {
+var ClearSkiaSharpNuGetCache = new Action<string[]> ((packages) => {
     // first we need to add our new nuget to the cache so we can restore
     // we first need to delete the old stuff
     var packagesDir = EnvironmentVariable ("NUGET_PACKAGES");
@@ -180,7 +180,6 @@ var ClearSkiaSharpNuGetCache = new Action (() => {
         packagesDir = ((DirectoryPath) home).Combine (".nuget").Combine ("packages").ToString();
     }
     var installedNuGet = packagesDir + "/*";
-    var packages = VERSION_PACKAGES.Keys;
     var dirs = GetDirectories (installedNuGet);
     foreach (var pkg in packages) {
         Information ("Looking for an installed version of {0} in {1}...", pkg, installedNuGet);
@@ -208,7 +207,7 @@ var DecompressArchive = new Action<FilePath, DirectoryPath> ((archive, outputDir
     }
 });
 
-var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath> ((samplesDirPath, outputDirPath) => {
+var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath, Dictionary<string, string>> ((samplesDirPath, outputDirPath, packageVersions) => {
     var workingDir = outputDirPath.Combine ("samples");
 
     // copy the current samples directory
@@ -306,13 +305,13 @@ var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath> ((samplesDirPath
                             // we assume "Desired.Package.Id.<platform>.csproj"
                             var binding = System.IO.Path.GetFileNameWithoutExtension (System.IO.Path.GetFileNameWithoutExtension (absInclude));
                             // check to see if we have a specific version
-                            binding = VERSION_PACKAGES.Keys.FirstOrDefault (p => p.Equals (binding, StringComparison.OrdinalIgnoreCase));
+                            binding = packageVersions.Keys.FirstOrDefault (p => p.Equals (binding, StringComparison.OrdinalIgnoreCase));
                             if (!string.IsNullOrWhiteSpace (binding)) {
                                 // add a <PackageReference>
                                 var name = projItem.Name.Namespace + "PackageReference";
                                 projItem.AddAfterSelf (new XElement (name, new object[] {
                                         new XAttribute("Include", binding),
-                                        new XAttribute("Version", VERSION_PACKAGES[binding]),
+                                        new XAttribute("Version", packageVersions[binding]),
                                     }));
                             }
                         }

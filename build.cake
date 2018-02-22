@@ -214,7 +214,7 @@ Task ("tests")
     .IsDependentOn ("nuget")
     .Does (() => 
 {
-    ClearSkiaSharpNuGetCache ();
+    ClearSkiaSharpNuGetCache (VERSION_PACKAGES.Keys.ToArray ());
 
     RunNuGetRestore ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
 
@@ -264,10 +264,10 @@ Task ("samples")
     .Does (() => 
 {
     // clear the NuGets so we can use the build output
-    ClearSkiaSharpNuGetCache ();
+    ClearSkiaSharpNuGetCache (VERSION_PACKAGES.Keys.ToArray ());
 
     // create the samples archive
-    CreateSamplesZip ("./samples/", "./output/");
+    CreateSamplesZip ("./samples/", "./output/", VERSION_PACKAGES);
 
     var isLinux = IsRunningOnLinux ();
     var isMac = IsRunningOnMac ();
@@ -499,37 +499,37 @@ Task ("update-docs")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("nuget")
+    .IsDependentOn ("set-versions")
     .IsDependentOn ("libs")
     .IsDependentOn ("docs")
     .Does (() => 
 {
-    // we can only build the combined package on CI
+    var windows = GetFiles ("./nuget/*.Windows.*nuspec").Select (f => f.FullPath);
+    var mac = GetFiles ("./nuget/*.Mac.*nuspec").Select (f => f.FullPath);
+    var linux = GetFiles ("./nuget/*.Linux.*nuspec").Select (f => f.FullPath);
+    var all = GetFiles ("./nuget/*.All.*nuspec").Select (f => f.FullPath);
+    var finals = GetFiles ("./nuget/*.nuspec").Select (f => f.FullPath);
+    finals = finals.Except (windows).Except (mac).Except (linux).Except (all);
+
+    var toPack = all;
     if (IS_ON_FINAL_CI) {
-        PackageNuGet ("./nuget/SkiaSharp.nuspec", "./output/");
-        PackageNuGet ("./nuget/HarfBuzzSharp.nuspec", "./output/");
-        PackageNuGet ("./nuget/SkiaSharp.Views.nuspec", "./output/");
-        PackageNuGet ("./nuget/SkiaSharp.Views.Forms.nuspec", "./output/");
+        // we can only build the combined package on CI
+        toPack = toPack.Union (finals);
     } else {
         if (IsRunningOnWindows ()) {
-            PackageNuGet ("./nuget/SkiaSharp.Windows.nuspec", "./output/");
-            PackageNuGet ("./nuget/HarfBuzzSharp.Windows.nuspec", "./output/");
-            PackageNuGet ("./nuget/SkiaSharp.Views.Windows.nuspec", "./output/");
-            PackageNuGet ("./nuget/SkiaSharp.Views.Forms.Windows.nuspec", "./output/");
+            toPack = toPack.Union (windows);
         }
         if (IsRunningOnMac ()) {
-            PackageNuGet ("./nuget/SkiaSharp.Mac.nuspec", "./output/");
-            PackageNuGet ("./nuget/HarfBuzzSharp.Mac.nuspec", "./output/");
-            PackageNuGet ("./nuget/SkiaSharp.Views.Mac.nuspec", "./output/");
-            PackageNuGet ("./nuget/SkiaSharp.Views.Forms.Mac.nuspec", "./output/");
+            toPack = toPack.Union (mac);
         }
         if (IsRunningOnLinux ()) {
-            PackageNuGet ("./nuget/SkiaSharp.Linux.nuspec", "./output/");
-            PackageNuGet ("./nuget/HarfBuzzSharp.Linux.nuspec", "./output/");
-            PackageNuGet ("./nuget/SkiaSharp.Views.Linux.nuspec", "./output/");
+            toPack = toPack.Union (linux);
         }
     }
-    // HarfBuzz is a PCL
-    PackageNuGet ("./nuget/SkiaSharp.HarfBuzz.nuspec", "./output/");
+
+    foreach (var nuspec in toPack) {
+        PackageNuGet (nuspec, "./output/");
+    }
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -547,6 +547,19 @@ Task ("set-versions")
         sha = "{GIT_SHA}";
     }
 
+    // set the build number for the preview nugets 
+    var buildNumber = EnvironmentVariable ("BUILD_NUMBER") ?? string.Empty;
+    if (string.IsNullOrEmpty (buildNumber)) {
+        buildNumber = "0";
+    }
+
+    // make a copy of the nuspecs to have a preview release
+    DeleteFiles ("./nuget/*.prerelease.nuspec");
+    foreach (var file in GetFiles ("./nuget/*.nuspec")) {
+        var newFile = file.GetDirectory ().CombineWithFilePath (file.GetFilenameWithoutExtension () + ".prerelease.nuspec");
+        CopyFile (file, newFile);
+    }
+
     var files = new List<string> ();
     var add = new Action<string> (glob => {
         files.AddRange (GetFiles (glob).Select (p => MakeAbsolute (p).ToString ()));
@@ -556,7 +569,7 @@ Task ("set-versions")
     add ("./tests/**/*.csproj");
     // update
     foreach (var file in files) {
-        UpdateSkiaSharpVersion (file, VERSION_PACKAGES);
+        UpdateSkiaSharpVersion (file, VERSION_PACKAGES, "-build-" + buildNumber);
     }
 
     // assembly infos
@@ -618,6 +631,8 @@ Task ("clean-managed").Does (() =>
 
     CleanDirectories ("./externals/Windows.Foundation.UniversalApiContract/bin");
     CleanDirectories ("./externals/Windows.Foundation.UniversalApiContract/obj");
+
+    DeleteFiles ("./nuget/*.prerelease.nuspec");
 
     if (DirectoryExists ("./output"))
         DeleteDirectory ("./output", true);

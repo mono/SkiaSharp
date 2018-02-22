@@ -1,13 +1,14 @@
 
 var MSBuildNS = (XNamespace) "http://schemas.microsoft.com/developer/msbuild/2003";
 
-var UpdateSkiaSharpVersion = new Action<FilePath, Dictionary<string, string>> ((path, versions) => {
+var UpdateSkiaSharpVersion = new Action<FilePath, Dictionary<string, string>, string> ((path, versions, previewSuffix) => {
     path = MakeAbsolute (path);
     var fn = path.GetFilename ().ToString ();
     var ext = path.GetExtension ();
 
     if (ext == ".nuspec") {
         // NuGet
+        var suffix = fn.EndsWith (".prerelease.nuspec") ? previewSuffix : "";
         var modified = false;
         var xdoc = XDocument.Load (path.ToString ());
         // <dependency>
@@ -24,10 +25,12 @@ var UpdateSkiaSharpVersion = new Action<FilePath, Dictionary<string, string>> ((
             var oldVersion = package.Attribute ("version");
             if (id != null && oldVersion != null) {
                 string version;
-                if (versions.TryGetValue (id.Value, out version) && 
-                    version != oldVersion.Value) {
-                    oldVersion.Value = version;
-                    modified = true;
+                if (versions.TryGetValue (id.Value, out version)) {
+                    version += suffix;
+                    if (version != oldVersion.Value) {
+                        oldVersion.Value = version;
+                        modified = true;
+                    }
                 }
             }
         }
@@ -36,10 +39,12 @@ var UpdateSkiaSharpVersion = new Action<FilePath, Dictionary<string, string>> ((
         var xVersion = metadata.Elements ("version").FirstOrDefault ();
         if (xId != null && xVersion != null) {
             string version;
-            if (versions.TryGetValue (xId.Value, out version) && 
-                version != xVersion.Value) {
-                xVersion.Value = version;
-                modified = true;
+            if (versions.TryGetValue (xId.Value, out version)) {
+                version += suffix;
+                if (version != xVersion.Value) {
+                    xVersion.Value = version;
+                    modified = true;
+                }
             }
         }
         if (modified) {
