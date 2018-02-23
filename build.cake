@@ -281,7 +281,7 @@ Task ("samples")
     CreateSamplesZip ("./samples/", "./output/", VERSION_PACKAGES);
 
     // create the workbooks archive
-    Zip ("./workbooks", "./coutput/workbooks.zip");
+    Zip ("./workbooks", "./output/workbooks.zip");
 
     var isLinux = IsRunningOnLinux ();
     var isMac = IsRunningOnMac ();
