@@ -1,4 +1,6 @@
 
+var MSBuildNS = (XNamespace) "http://schemas.microsoft.com/developer/msbuild/2003";
+
 var VERBOSITY_NUGET = NuGetVerbosity.Detailed;
 switch (VERBOSITY) {
     case Verbosity.Quiet:
@@ -348,4 +350,20 @@ var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath, Dictionary<strin
 
     // finally create the zip
     Zip (workingDir, outputDirPath.CombineWithFilePath ("samples.zip"));
+});
+
+var UpdateAssemblyInfo = new Action<FilePath, string, string, string> ((path, assembly, version, sha) => {
+    var info = ParseAssemblyInfo (path);
+    var settings = new AssemblyInfoSettings {
+        Version = assembly,
+        FileVersion = version,
+        InformationalVersion = version + "-" + sha,
+        Company = info.Company,
+        Copyright = info.Copyright,
+        Description = info.Description,
+        Product = info.Product,
+        Title = info.Title,
+        Trademark = info.Trademark,
+    };
+    CreateAssemblyInfo (path, settings);
 });

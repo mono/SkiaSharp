@@ -60,8 +60,19 @@ DirectoryPath ANGLE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/angle"));
 DirectoryPath HARFBUZZ_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/harfbuzz"));
 DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/en"));
 
+var GIT_SHA = EnvironmentVariable ("GIT_COMMIT") ?? string.Empty;
+if (!string.IsNullOrEmpty (GIT_SHA) && GIT_SHA.Length >= 6) {
+    GIT_SHA = GIT_SHA.Substring (0, 6);
+} else {
+    GIT_SHA = "{GIT_SHA}";
+}
+
+var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? string.Empty;
+if (string.IsNullOrEmpty (BUILD_NUMBER)) {
+    BUILD_NUMBER = "0";
+}
+
 #load "cake/UtilsManaged.cake"
-#load "cake/UtilsMSBuild.cake"
 #load "cake/UtilsNative.cake"
 #load "cake/BuildExternals.cake"
 
@@ -499,35 +510,95 @@ Task ("update-docs")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("nuget")
-    .IsDependentOn ("set-versions")
     .IsDependentOn ("libs")
     .IsDependentOn ("docs")
     .Does (() => 
 {
-    var windows = GetFiles ("./nuget/*.Windows.*nuspec").Select (f => f.FullPath);
-    var mac = GetFiles ("./nuget/*.Mac.*nuspec").Select (f => f.FullPath);
-    var linux = GetFiles ("./nuget/*.Linux.*nuspec").Select (f => f.FullPath);
-    var all = GetFiles ("./nuget/*.All.*nuspec").Select (f => f.FullPath);
-    var finals = GetFiles ("./nuget/*.nuspec").Select (f => f.FullPath);
-    finals = finals.Except (windows).Except (mac).Except (linux).Except (all);
+    EnsureDirectoryExists ("./output/nuspec/");
+    CleanDirectories ("./output/nuspec/");
 
-    var toPack = all;
-    if (IS_ON_FINAL_CI) {
-        // we can only build the combined package on CI
-        toPack = toPack.Union (finals);
-    } else {
+    var platform = "";
+    if (!IS_ON_FINAL_CI) {
         if (IsRunningOnWindows ()) {
-            toPack = toPack.Union (windows);
-        }
-        if (IsRunningOnMac ()) {
-            toPack = toPack.Union (mac);
-        }
-        if (IsRunningOnLinux ()) {
-            toPack = toPack.Union (linux);
+            platform = "windows";
+        } else if (IsRunningOnMac ()) {
+            platform = "macos";
+        } else if (IsRunningOnLinux ()) {
+            platform = "linux";
         }
     }
 
-    foreach (var nuspec in toPack) {
+    var removePlatforms = new Action<XDocument> ((xdoc) => {
+        var files = xdoc.Root
+            .Elements ("files")
+            .Elements ("file");
+        foreach (var file in files.ToArray ()) {
+            var nuspecPlatform = file.Attribute ("platform");
+            if (nuspecPlatform != null) {
+                if (!string.IsNullOrEmpty (platform)) {
+                    // handle the platform builds
+                    if (!string.IsNullOrEmpty (nuspecPlatform.Value)) {
+                        if (!nuspecPlatform.Value.Split (',').Contains (platform)) {
+                            file.Remove ();
+                        }
+                    }
+                } else {
+                    // special case as we don't add linux-only files on CI
+                    if (nuspecPlatform.Value == "linux") {
+                        file.Remove ();
+                    }
+                }
+                nuspecPlatform.Remove ();
+            }
+        }
+    });
+
+    var setVersion = new Action<XDocument, string> ((xdoc, suffix) => {
+        var metadata = xdoc.Root.Element ("metadata");
+        var id = metadata.Element ("id");
+        var version = metadata.Element ("version");
+
+        // <version>
+        if (id != null && version != null) {
+            if (VERSION_PACKAGES.TryGetValue (id.Value, out string v)) {
+                version.Value = v + suffix;
+            }
+        }
+
+        // <dependency>
+        var dependencies = metadata
+            .Elements ("dependencies")
+            .Elements ("dependency");
+        var groupDependencies = metadata
+            .Elements ("dependencies")
+            .Elements ("group")
+            .Elements ("dependency");
+        foreach (var package in dependencies.Union (groupDependencies)) {
+            var depId = package.Attribute ("id");
+            var depVersion = package.Attribute ("version");
+            if (depId != null && depVersion != null) {
+                if (VERSION_PACKAGES.TryGetValue (depId.Value, out string v)) {
+                    depVersion.Value = v + suffix;
+                }
+            }
+        }
+    });
+
+    foreach (var nuspec in GetFiles ("./nuget/*.nuspec")) {
+        var xdoc = XDocument.Load (nuspec.FullPath);
+        var metadata = xdoc.Root.Element ("metadata");
+        var id = metadata.Element ("id");
+
+        removePlatforms (xdoc);
+
+        setVersion (xdoc, "");
+        xdoc.Save ($"./output/nuspec/{id.Value}.nuspec");
+
+        setVersion (xdoc, $"-build-{BUILD_NUMBER}");
+        xdoc.Save ($"./output/nuspec/{id.Value}.prerelease.nuspec");
+    }
+
+    foreach (var nuspec in GetFiles ("./output/nuspec/*.nuspec")) {
         PackageNuGet (nuspec, "./output/");
     }
 });
@@ -539,58 +610,54 @@ Task ("nuget")
 Task ("set-versions")
     .Does (() => 
 {
-    // set the SHA on the assembly info 
-    var sha = EnvironmentVariable ("GIT_COMMIT") ?? string.Empty;
-    if (!string.IsNullOrEmpty (sha) && sha.Length >= 6) {
-        sha = sha.Substring (0, 6);
-    } else {
-        sha = "{GIT_SHA}";
-    }
+    var files = new List<FilePath> ();
+    files.AddRange (GetFiles ("./source/**/*.csproj"));
+    files.AddRange (GetFiles ("./tests/**/*.csproj"));
 
-    // set the build number for the preview nugets 
-    var buildNumber = EnvironmentVariable ("BUILD_NUMBER") ?? string.Empty;
-    if (string.IsNullOrEmpty (buildNumber)) {
-        buildNumber = "0";
-    }
-
-    // make a copy of the nuspecs to have a preview release
-    DeleteFiles ("./nuget/*.prerelease.nuspec");
-    foreach (var file in GetFiles ("./nuget/*.nuspec")) {
-        var newFile = file.GetDirectory ().CombineWithFilePath (file.GetFilenameWithoutExtension () + ".prerelease.nuspec");
-        CopyFile (file, newFile);
-    }
-
-    var files = new List<string> ();
-    var add = new Action<string> (glob => {
-        files.AddRange (GetFiles (glob).Select (p => MakeAbsolute (p).ToString ()));
-    });
-    add ("./nuget/*.nuspec");
-    add ("./source/**/*.csproj");
-    add ("./tests/**/*.csproj");
-    // update
     foreach (var file in files) {
-        UpdateSkiaSharpVersion (file, VERSION_PACKAGES, "-build-" + buildNumber);
+        var modified = false;
+        var xdoc = XDocument.Load (file.FullPath);
+
+        var refs1 = xdoc.Root
+            .Elements (MSBuildNS + "ItemGroup")
+            .Elements (MSBuildNS + "PackageReference");
+        var refs2 = xdoc.Root
+            .Elements ("ItemGroup")
+            .Elements ("PackageReference");
+
+        foreach (var package in refs1.Union (refs2)) {
+            var id = package.Attribute ("Include").Value;
+            var oldVersion = package.Attribute ("Version").Value;
+            if (VERSION_PACKAGES.TryGetValue (id, out string version) && version != oldVersion) {
+                package.Attribute ("Version").Value = version;
+                modified = true;
+            }
+        }
+
+        if (modified) {
+            xdoc.Save (file.FullPath);
+        }
     }
 
     // assembly infos
     UpdateAssemblyInfo (
         "./binding/Binding/Properties/SkiaSharpAssemblyInfo.cs",
-        VERSION_ASSEMBLY, VERSION_FILE, sha);
+        VERSION_ASSEMBLY, VERSION_FILE, GIT_SHA);
     UpdateAssemblyInfo (
         "./source/SkiaSharp.Views/SkiaSharp.Views.Shared/Properties/SkiaSharpViewsAssemblyInfo.cs",
-        VERSION_ASSEMBLY, VERSION_FILE, sha);
+        VERSION_ASSEMBLY, VERSION_FILE, GIT_SHA);
     UpdateAssemblyInfo (
         "./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Shared/Properties/SkiaSharpViewsFormsAssemblyInfo.cs",
-        VERSION_ASSEMBLY, VERSION_FILE, sha);
+        VERSION_ASSEMBLY, VERSION_FILE, GIT_SHA);
     UpdateAssemblyInfo (
         "./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz.Shared/Properties/SkiaSharpHarfBuzzAssemblyInfo.cs",
-        VERSION_ASSEMBLY, VERSION_FILE, sha);
+        VERSION_ASSEMBLY, VERSION_FILE, GIT_SHA);
     UpdateAssemblyInfo (
         "./source/SkiaSharp.Workbooks/Properties/SkiaSharpWorkbooksAssemblyInfo.cs",
-        VERSION_ASSEMBLY, VERSION_FILE, sha);
+        VERSION_ASSEMBLY, VERSION_FILE, GIT_SHA);
     UpdateAssemblyInfo (
         "./binding/HarfBuzzSharp.Shared/Properties/HarfBuzzSharpAssemblyInfo.cs",
-        HARFBUZZ_VERSION_ASSEMBLY, HARFBUZZ_VERSION_FILE, sha);
+        HARFBUZZ_VERSION_ASSEMBLY, HARFBUZZ_VERSION_FILE, GIT_SHA);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
