@@ -1,0 +1,98 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- for all/any platform -->
+  <PropertyGroup>
+    <TargetFrameworks>net45;uap10.0.10240;MonoAndroid4.0.3;Xamarin.iOS10;Xamarin.TVOS10;Xamarin.WatchOS10;Xamarin.Mac20</TargetFrameworks>
+    <DefineConstants>$(DefineConstants);</DefineConstants>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <!-- TODO: remove this when CoreCLR supports signing on non-Windows -->
+    <!--<SignAssembly Condition=" '$(OS)' == 'Windows_NT' ">true</SignAssembly>-->
+    <SignAssembly>true</SignAssembly>
+    <PublicSign Condition="'$(OS)' != 'Windows_NT'">true</PublicSign>
+    <AssemblyOriginatorKeyFile>..\..\mono.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.2.0" PrivateAssets="All" />
+    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <Compile Include="SkiaSharp.Views.Shared\**\*.cs" />
+  </ItemGroup>
+
+  <!-- for uwp -->
+  <PropertyGroup Condition=" $(TargetFramework.StartsWith('uap10')) ">
+    <AssemblyName>SkiaSharp.Views.UWP</AssemblyName>
+    <RootNamespace>SkiaSharp.Views.UWP</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('uap10')) ">
+    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.0.6" />
+    <Compile Include="SkiaSharp.Views.UWP\**\*.cs" />
+  </ItemGroup>
+
+  <!-- for android -->
+  <PropertyGroup Condition=" $(TargetFramework.StartsWith('MonoAndroid')) ">
+    <AssemblyName>SkiaSharp.Views.Android</AssemblyName>
+    <RootNamespace>SkiaSharp.Views.Android</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('MonoAndroid')) ">
+    <Compile Include="SkiaSharp.Views.Android\**\*.cs" />
+  </ItemGroup>
+
+  <!-- for ios -->
+  <PropertyGroup Condition=" $(TargetFramework.StartsWith('Xamarin.iOS')) ">
+    <AssemblyName>SkiaSharp.Views.iOS</AssemblyName>
+    <RootNamespace>SkiaSharp.Views.iOS</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.iOS')) ">
+    <Compile Include="SkiaSharp.Views.Apple\**\*.cs" />
+    <Compile Include="SkiaSharp.Views.AppleiOS\**\*.cs" />
+    <Compile Include="SkiaSharp.Views.iOS\**\*.cs" />
+  </ItemGroup>
+
+  <!-- for tvos -->
+  <PropertyGroup Condition=" $(TargetFramework.StartsWith('Xamarin.TVOS')) ">
+    <AssemblyName>SkiaSharp.Views.tvOS</AssemblyName>
+    <RootNamespace>SkiaSharp.Views.tvOS</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.TVOS')) ">
+    <Compile Include="SkiaSharp.Views.Apple\**\*.cs" />
+    <Compile Include="SkiaSharp.Views.AppleiOS\**\*.cs" />
+    <Compile Include="SkiaSharp.Views.iOS\**\*.cs" />
+  </ItemGroup>
+
+  <!-- for watchos -->
+  <PropertyGroup Condition=" $(TargetFramework.StartsWith('Xamarin.WatchOS')) ">
+    <AssemblyName>SkiaSharp.Views.watchOS</AssemblyName>
+    <RootNamespace>SkiaSharp.Views.watchOS</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.WatchOS')) ">
+    <Compile Include="SkiaSharp.Views.Apple\**\*.cs" />
+    <Compile Include="SkiaSharp.Views.AppleiOS\**\*.cs" />
+    <Compile Include="SkiaSharp.Views.iOS\**\*.cs" />
+  </ItemGroup>
+
+  <!-- for macos -->
+  <PropertyGroup Condition=" $(TargetFramework.StartsWith('Xamarin.Mac')) ">
+    <AssemblyName>SkiaSharp.Views.Mac</AssemblyName>
+    <RootNamespace>SkiaSharp.Views.Mac</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.Mac')) ">
+    <Compile Include="SkiaSharp.Views.Apple\**\*.cs" />
+    <Compile Include="SkiaSharp.Views.Mac\**\*.cs" />
+  </ItemGroup>
+
+  <!-- for .net -->
+  <PropertyGroup Condition=" $(TargetFramework.StartsWith('net4')) ">
+    <DefineConstants>$(DefineConstants);__DESKTOP__</DefineConstants>
+    <AssemblyName>SkiaSharp.Views.Desktop</AssemblyName>
+    <RootNamespace>SkiaSharp.Views.Desktop</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('net4')) ">
+    <Reference Include="System.Windows.Forms" />
+    <PackageReference Include="OpenTK" Version="1.1.2349.61993" />
+    <PackageReference Include="OpenTK.GLControl" Version="1.1.2349.61993" />
+    <Compile Include="SkiaSharp.Views.Desktop\**\*.cs" />
+  </ItemGroup>
+
+  <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
+
+</Project>

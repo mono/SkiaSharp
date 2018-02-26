@@ -1,0 +1,153 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- for all/any platform -->
+  <PropertyGroup>
+    <TargetFrameworks>netstandard1.3;netstandard2.0;net45;uap10.0.10240;MonoAndroid2.3;Xamarin.iOS10;Xamarin.TVOS10;Xamarin.WatchOS10;Xamarin.Mac20</TargetFrameworks>
+    <AssemblyName>SkiaSharp</AssemblyName>
+    <RootNamespace>SkiaSharp</RootNamespace>
+    <DefineConstants>$(DefineConstants);</DefineConstants>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <!-- TODO: remove this when CoreCLR supports signing on non-Windows -->
+    <!--<SignAssembly Condition=" '$(OS)' == 'Windows_NT' ">true</SignAssembly>-->
+    <SignAssembly>true</SignAssembly>
+    <PublicSign Condition="'$(OS)' != 'Windows_NT'">true</PublicSign>
+    <AssemblyOriginatorKeyFile>..\..\mono.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.2.0" PrivateAssets="All" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Binding.Shared\**\*.cs" />
+    <Compile Include="..\Binding\**\*.cs" />
+  </ItemGroup>
+
+  <!-- for .net standard -->
+  <PropertyGroup Condition=" $(TargetFramework.StartsWith('netstandard')) ">
+    <DefineConstants>$(DefineConstants);NET_STANDARD</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('netstandard')) ">
+    <PackageReference Include="System.IO.UnmanagedMemoryStream" Version="4.3.0" />
+  </ItemGroup>
+
+  <!-- for uwp -->
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('uap10')) ">
+    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.0.6" />
+    <None Include="..\..\native-builds\lib\uwp\x64\libSkiaSharp.dll"
+          Link="nuget\runtimes\win10-x64\nativeassets\uap10.0\libSkiaSharp.dll"
+          Condition=" Exists('..\..\native-builds\lib\uwp\x64\libSkiaSharp.dll') "
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\native-builds\lib\uwp\x86\libSkiaSharp.dll"
+          Link="nuget\runtimes\win10-x86\nativeassets\uap10.0\libSkiaSharp.dll"
+          Condition=" Exists('..\..\native-builds\lib\uwp\x86\libSkiaSharp.dll') "
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\native-builds\lib\uwp\ARM\libSkiaSharp.dll"
+          Link="nuget\runtimes\win10-arm\nativeassets\uap10.0\libSkiaSharp.dll"
+          Condition=" Exists('..\..\native-builds\lib\uwp\ARM\libSkiaSharp.dll') "
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- for android -->
+  <PropertyGroup Condition=" $(TargetFramework.StartsWith('MonoAndroid')) ">
+    <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v2.3</TargetFrameworkVersion>
+  </PropertyGroup>
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('MonoAndroid')) ">
+    <None Include="nuget\build\MonoAndroid\SkiaSharp.targets"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\native-builds\lib\android\armeabi-v7a\libSkiaSharp.so"
+          Link="nuget\runtimes\android-arm\native\libSkiaSharp.so"
+          Condition=" Exists('..\..\native-builds\lib\android\armeabi-v7a\libSkiaSharp.so') "
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\native-builds\lib\android\arm64-v8a\libSkiaSharp.so"
+          Link="nuget\runtimes\android-arm64\native\libSkiaSharp.so"
+          Condition=" Exists('..\..\native-builds\lib\android\arm64-v8a\libSkiaSharp.so') "
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\native-builds\lib\android\x86\libSkiaSharp.so"
+          Link="nuget\runtimes\android-x86\native\libSkiaSharp.so"
+          Condition=" Exists('..\..\native-builds\lib\android\x86\libSkiaSharp.so') "
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\native-builds\lib\android\x86_64\libSkiaSharp.so"
+          Link="nuget\runtimes\android-x64\native\libSkiaSharp.so"
+          Condition=" Exists('..\..\native-builds\lib\android\x86_64\libSkiaSharp.so') "
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- for ios -->
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.iOS')) ">
+    <None Include="nuget\build\Xamarin.iOS\SkiaSharp.targets"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\native-builds\lib\ios\libSkiaSharp.framework\**\*"
+          Link="nuget\runtimes\ios\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- for tvos -->
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.TVOS')) ">
+    <None Include="nuget\build\Xamarin.TVOS\SkiaSharp.targets"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\native-builds\lib\tvos\libSkiaSharp.framework\**\*"
+          Link="nuget\runtimes\tvos\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- for watchos -->
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.WatchOS')) ">
+    <None Include="nuget\build\Xamarin.WatchOS\SkiaSharp.targets"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\native-builds\lib\watchos\libSkiaSharp.framework\**\*"
+          Link="nuget\runtimes\watchos\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- for macos -->
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.Mac')) ">
+    <!-- <MSBuildWarningsAsMessages>MSB9004</MSBuildWarningsAsMessages> -->
+    <None Include="nuget\build\Xamarin.Mac\SkiaSharp.targets"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\native-builds\lib\osx\libSkiaSharp.dylib"
+          Link="nuget\runtimes\osx\native\libSkiaSharp.dylib"
+          Condition=" Exists('..\..\native-builds\lib\osx\libSkiaSharp.dylib') "
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- for .net full -->
+  <PropertyGroup Condition=" $(TargetFramework.StartsWith('net4')) ">
+    <DefineConstants>$(DefineConstants);DESKTOP</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('net4')) ">
+    <None Include="nuget\build\net45\SkiaSharp.targets"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\native-builds\lib\windows\x64\libSkiaSharp.dll"
+          Link="nuget\runtimes\win7-x64\native\libSkiaSharp.dll"
+          Condition=" Exists('..\..\native-builds\lib\windows\x64\libSkiaSharp.dll') "
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\native-builds\lib\windows\x86\libSkiaSharp.dll"
+          Link="nuget\runtimes\win7-x86\native\libSkiaSharp.dll"
+          Condition=" Exists('..\..\native-builds\lib\windows\x86\libSkiaSharp.dll') "
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\native-builds\lib\osx\libSkiaSharp.dylib"
+          Link="nuget\runtimes\osx\native\libSkiaSharp.dylib"
+          Condition=" Exists('..\..\native-builds\lib\osx\libSkiaSharp.dylib') "
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\native-builds\lib\linux\x64\libSkiaSharp.so"
+          Link="nuget\runtimes\linux-x64\native\libSkiaSharp.so"
+          Condition=" Exists('..\..\native-builds\lib\linux\x64\libSkiaSharp.so') "
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\native-builds\lib\linux\x86\libSkiaSharp.so"
+          Link="nuget\runtimes\linux-x86\native\libSkiaSharp.so"
+          Condition=" Exists('..\..\native-builds\lib\linux\x86\libSkiaSharp.so') "
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\native-builds\lib\linux\arm\libSkiaSharp.so"
+          Link="nuget\runtimes\linux-arm\native\libSkiaSharp.so"
+          Condition=" Exists('..\..\native-builds\lib\linux\arm\libSkiaSharp.so') "
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\native-builds\lib\linux\arm64\libSkiaSharp.so"
+          Link="nuget\runtimes\linux-arm64\native\libSkiaSharp.so"
+          Condition=" Exists('..\..\native-builds\lib\linux\arm64\libSkiaSharp.so') "
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
+
+</Project>

@@ -1,0 +1,58 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- for all/any platform -->
+  <PropertyGroup>
+    <TargetFrameworks>netstandard1.3;netstandard2.0;uap10.0.10240;MonoAndroid8.0;Xamarin.iOS10;Xamarin.Mac20</TargetFrameworks>
+    <AssemblyName>SkiaSharp.Views.Forms</AssemblyName>
+    <RootNamespace>SkiaSharp.Views.Forms</RootNamespace>
+    <DefineConstants>$(DefineConstants);</DefineConstants>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.2.0" PrivateAssets="All" />
+    <PackageReference Include="Xamarin.Forms" Version="2.5.0.77107" />
+    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <Compile Include="SkiaSharp.Views.Forms.Shared\**\*.cs" />
+  </ItemGroup>
+
+  <!-- for .net standard -->
+  <PropertyGroup Condition=" $(TargetFramework.StartsWith('netstandard')) ">
+    <DefineConstants>$(DefineConstants);NET_STANDARD</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('netstandard')) ">
+    <Compile Include="SkiaSharp.Views.Forms.NetStandard\**\*.cs" />
+  </ItemGroup>
+
+  <!-- for uwp -->
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('uap10')) ">
+    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.0.6" />
+    <ProjectReference Include="..\SkiaSharp.Views\SkiaSharp.Views.csproj" />
+    <Compile Include="SkiaSharp.Views.Forms.Native.Shared\**\*.cs" />
+    <Compile Include="SkiaSharp.Views.Forms.UWP\**\*.cs" />
+  </ItemGroup>
+
+  <!-- for android -->
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('MonoAndroid')) ">
+    <ProjectReference Include="..\SkiaSharp.Views\SkiaSharp.Views.csproj" />
+    <Compile Include="SkiaSharp.Views.Forms.Native.Shared\**\*.cs" />
+    <Compile Include="SkiaSharp.Views.Forms.Android\**\*.cs" />
+  </ItemGroup>
+
+  <!-- for ios -->
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.iOS')) ">
+    <ProjectReference Include="..\SkiaSharp.Views\SkiaSharp.Views.csproj" />
+    <Compile Include="SkiaSharp.Views.Forms.Native.Shared\**\*.cs" />
+    <Compile Include="SkiaSharp.Views.Forms.iOS\**\*.cs" />
+  </ItemGroup>
+
+  <!-- for macos -->
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.Mac')) ">
+    <ProjectReference Include="..\SkiaSharp.Views\SkiaSharp.Views.csproj" />
+    <Compile Include="SkiaSharp.Views.Forms.Native.Shared\**\*.cs" />
+    <Compile Include="SkiaSharp.Views.Forms.Mac\**\*.cs" />
+  </ItemGroup>
+
+  <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
+
+</Project>
