@@ -11,11 +11,11 @@
     <!-- TODO: remove this when CoreCLR supports signing on non-Windows -->
     <!--<SignAssembly Condition=" '$(OS)' == 'Windows_NT' ">true</SignAssembly>-->
     <SignAssembly>true</SignAssembly>
-    <PublicSign Condition="'$(OS)' != 'Windows_NT'">true</PublicSign>
+    <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
     <AssemblyOriginatorKeyFile>..\..\mono.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.2.0" PrivateAssets="All" />
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.2.1" PrivateAssets="All" />
     <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
     <Compile Include="SkiaSharp.Views.Forms.Shared\**\*.cs" />

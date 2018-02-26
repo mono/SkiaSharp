@@ -2,7 +2,8 @@
 
   <!-- for all/any platform -->
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.3;netstandard2.0;net45;uap10.0.10240;MonoAndroid2.3;Xamarin.iOS10;Xamarin.TVOS10;Xamarin.WatchOS10;Xamarin.Mac20</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">netstandard1.3;netstandard2.0;net45;uap10.0.10240;MonoAndroid2.3;Xamarin.iOS10;Xamarin.TVOS10;Xamarin.WatchOS10;Xamarin.Mac20</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">netstandard1.3;netstandard2.0;net45;MonoAndroid2.3;Xamarin.iOS10;Xamarin.TVOS10;Xamarin.WatchOS10;Xamarin.Mac20</TargetFrameworks>
     <AssemblyName>HarfBuzzSharp</AssemblyName>
     <RootNamespace>HarfBuzzSharp</RootNamespace>
     <DefineConstants>$(DefineConstants);HARFBUZZ</DefineConstants>
@@ -12,11 +13,11 @@
     <!-- TODO: remove this when CoreCLR supports signing on non-Windows -->
     <!--<SignAssembly Condition=" '$(OS)' == 'Windows_NT' ">true</SignAssembly>-->
     <SignAssembly>true</SignAssembly>
-    <PublicSign Condition="'$(OS)' != 'Windows_NT'">true</PublicSign>
+    <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
     <AssemblyOriginatorKeyFile>..\..\mono.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.2.0" PrivateAssets="All" />
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.2.1" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" />
@@ -152,5 +153,10 @@
   </ItemGroup>
 
   <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
+
+  <!-- REMOVE: the changes below override the default settings to fix the build on mac -->
+  <PropertyGroup Condition=" $(TargetFramework.StartsWith('net4')) and '$(OS)' != 'Windows_NT' ">
+    <LanguageTargets>$(MSBuildToolsPath)\Microsoft.CSharp.targets</LanguageTargets>
+  </PropertyGroup>
 
 </Project>

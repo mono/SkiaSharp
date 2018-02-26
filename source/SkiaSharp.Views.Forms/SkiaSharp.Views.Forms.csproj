@@ -2,7 +2,8 @@
 
   <!-- for all/any platform -->
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.3;netstandard2.0;uap10.0.10240;MonoAndroid8.0;Xamarin.iOS10;Xamarin.Mac20</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">netstandard1.3;netstandard2.0;uap10.0.10240;MonoAndroid8.0;Xamarin.iOS10;Xamarin.Mac20</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">netstandard1.3;netstandard2.0;MonoAndroid8.0;Xamarin.iOS10;Xamarin.Mac20</TargetFrameworks>
     <AssemblyName>SkiaSharp.Views.Forms</AssemblyName>
     <RootNamespace>SkiaSharp.Views.Forms</RootNamespace>
     <DefineConstants>$(DefineConstants);</DefineConstants>
@@ -10,7 +11,7 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.2.0" PrivateAssets="All" />
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.2.1" PrivateAssets="All" />
     <PackageReference Include="Xamarin.Forms" Version="2.5.0.77107" />
     <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <Compile Include="SkiaSharp.Views.Forms.Shared\**\*.cs" />

@@ -2,18 +2,19 @@
 
   <!-- for all/any platform -->
   <PropertyGroup>
-    <TargetFrameworks>net45;uap10.0.10240;MonoAndroid4.0.3;Xamarin.iOS10;Xamarin.TVOS10;Xamarin.WatchOS10;Xamarin.Mac20</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">net45;uap10.0.10240;MonoAndroid4.0.3;Xamarin.iOS10;Xamarin.TVOS10;Xamarin.WatchOS10;Xamarin.Mac20</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">net45;MonoAndroid4.0.3;Xamarin.iOS10;Xamarin.TVOS10;Xamarin.WatchOS10;Xamarin.Mac20</TargetFrameworks>
     <DefineConstants>$(DefineConstants);</DefineConstants>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <!-- TODO: remove this when CoreCLR supports signing on non-Windows -->
     <!--<SignAssembly Condition=" '$(OS)' == 'Windows_NT' ">true</SignAssembly>-->
     <SignAssembly>true</SignAssembly>
-    <PublicSign Condition="'$(OS)' != 'Windows_NT'">true</PublicSign>
+    <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
     <AssemblyOriginatorKeyFile>..\..\mono.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.2.0" PrivateAssets="All" />
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.2.1" PrivateAssets="All" />
     <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <Compile Include="SkiaSharp.Views.Shared\**\*.cs" />
   </ItemGroup>
@@ -94,5 +95,10 @@
   </ItemGroup>
 
   <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
+
+  <!-- REMOVE: the changes below override the default settings to fix the build on mac -->
+  <PropertyGroup Condition=" $(TargetFramework.StartsWith('net4')) and '$(OS)' != 'Windows_NT' ">
+    <LanguageTargets>$(MSBuildToolsPath)\Microsoft.CSharp.targets</LanguageTargets>
+  </PropertyGroup>
 
 </Project>
