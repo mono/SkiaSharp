@@ -48,8 +48,10 @@
         canvas.DrawRect (new SKRect (i, i, 256-i, 256-i), (i % 16 == 0) ? redBrush : blueBrush);
 
     // Save the artwork
-    var pngEncodedFile = surface.Snapshot().Encode();
-    File.WriteAllBytes ("demo.png", pngEncodedFile);
+    using (var output = File.OpenWrite ("demo.png"))
+    {
+        surface.Snapshot().Encode().SaveTo(output);
+    }
 }
 ]]></code>
       </example>
