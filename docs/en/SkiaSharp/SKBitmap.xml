@@ -25,6 +25,7 @@
     <remarks>
       <para>A bitmap has an integer width and height, and a format (colortype), and a pointer to the actual pixels. Bitmaps can be drawn into a <see cref="T:SkiaSharp.SKCanvas" />, but they are also used to specify the target of a <see cref="T:SkiaSharp.SKCanvas" />' drawing operations.</para>
       <para>A <see cref="T:SkiaSharp.SKBitmap" /> exposes <see cref="M:SkiaSharp.SKBitmap.GetPixels" />, which lets a caller write its pixels. To retrieve a pointer to the raw image data of the bitmap, call the <see cref="M:SkiaSharp.SKBitmap.LockPixels" /> method, and then call the <see cref="M:SkiaSharp.SKBitmap.GetPixels" /> method to get a pointer to the image data.  Once you no longer need to use the raw data pointer, call the <see cref="M:SkiaSharp.SKBitmap.UnlockPixels" /> method. The raw data is laid out in the format configured at the time that the bitmap was created.</para>
+      <para>(Note: As of SkiaSharp 1.60.0, calls to <see cref="M:SkiaSharp.SKBitmap.LockPixels" /> and <see cref="M:SkiaSharp.SKBitmap.UnlockPixels" /> are no longer required, and they no longer exist as part of the API.)</para>
     </remarks>
   </Docs>
   <Members>
