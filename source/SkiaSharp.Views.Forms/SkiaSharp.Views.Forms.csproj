@@ -2,16 +2,19 @@
 
   <!-- for all/any platform -->
   <PropertyGroup>
+    <TargetFrameworks></TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">netstandard1.3;netstandard2.0;uap10.0.10240;MonoAndroid8.0;Xamarin.iOS10;Xamarin.Mac20</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">netstandard1.3;netstandard2.0;MonoAndroid8.0;Xamarin.iOS10;Xamarin.Mac20</TargetFrameworks>
     <AssemblyName>SkiaSharp.Views.Forms</AssemblyName>
     <RootNamespace>SkiaSharp.Views.Forms</RootNamespace>
     <DefineConstants>$(DefineConstants);</DefineConstants>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <SignAssembly>false</SignAssembly>
+    <PackageId>SkiaSharp.Views.Forms</PackageId>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.2.1" PrivateAssets="All" />
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.2.2" PrivateAssets="All" />
     <PackageReference Include="Xamarin.Forms" Version="2.5.0.77107" />
     <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <Compile Include="SkiaSharp.Views.Forms.Shared\**\*.cs" />
@@ -27,7 +30,7 @@
 
   <!-- for uwp -->
   <ItemGroup Condition=" $(TargetFramework.StartsWith('uap10')) ">
-    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.0.6" />
+    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.0.7" />
     <ProjectReference Include="..\SkiaSharp.Views\SkiaSharp.Views.csproj" />
     <Compile Include="SkiaSharp.Views.Forms.Native.Shared\**\*.cs" />
     <Compile Include="SkiaSharp.Views.Forms.UWP\**\*.cs" />
@@ -55,5 +58,6 @@
   </ItemGroup>
 
   <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
+  <Import Project="$(MSBuildThisFileDirectory)..\SkiaSharp.Build.targets" />
 
 </Project>

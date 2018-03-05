@@ -2,21 +2,20 @@
 
   <!-- for all/any platform -->
   <PropertyGroup>
+    <TargetFrameworks></TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">net45;uap10.0.10240;MonoAndroid4.0.3;Xamarin.iOS10;Xamarin.TVOS10;Xamarin.WatchOS10;Xamarin.Mac20</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">net45;MonoAndroid4.0.3;Xamarin.iOS10;Xamarin.TVOS10;Xamarin.WatchOS10;Xamarin.Mac20</TargetFrameworks>
     <DefineConstants>$(DefineConstants);</DefineConstants>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    <!-- TODO: remove this when CoreCLR supports signing on non-Windows -->
-    <!--<SignAssembly Condition=" '$(OS)' == 'Windows_NT' ">true</SignAssembly>-->
-    <SignAssembly>true</SignAssembly>
-    <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
-    <AssemblyOriginatorKeyFile>..\..\mono.snk</AssemblyOriginatorKeyFile>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <PackageId>SkiaSharp.Views</PackageId>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.2.1" PrivateAssets="All" />
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.2.2" PrivateAssets="All" />
     <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <Compile Include="SkiaSharp.Views.Shared\**\*.cs" />
+    <Compile Remove="SkiaSharp.Views.Gtk\**\*" />
+    <Compile Remove="SkiaSharp.Views.WPF\**\*" />
   </ItemGroup>
 
   <!-- for uwp -->
@@ -25,7 +24,7 @@
     <RootNamespace>SkiaSharp.Views.UWP</RootNamespace>
   </PropertyGroup>
   <ItemGroup Condition=" $(TargetFramework.StartsWith('uap10')) ">
-    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.0.6" />
+    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.0.7" />
     <Compile Include="SkiaSharp.Views.UWP\**\*.cs" />
   </ItemGroup>
 
@@ -95,10 +94,6 @@
   </ItemGroup>
 
   <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
-
-  <!-- REMOVE: the changes below override the default settings to fix the build on mac -->
-  <PropertyGroup Condition=" $(TargetFramework.StartsWith('net4')) and '$(OS)' != 'Windows_NT' ">
-    <LanguageTargets>$(MSBuildToolsPath)\Microsoft.CSharp.targets</LanguageTargets>
-  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)..\SkiaSharp.Build.targets" />
 
 </Project>

@@ -7,15 +7,11 @@
     <RootNamespace>SkiaSharp.HarfBuzz</RootNamespace>
     <DefineConstants>$(DefineConstants);</DefineConstants>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    <!-- TODO: remove this when CoreCLR supports signing on non-Windows -->
-    <!--<SignAssembly Condition=" '$(OS)' == 'Windows_NT' ">true</SignAssembly>-->
-    <SignAssembly>true</SignAssembly>
-    <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
-    <AssemblyOriginatorKeyFile>..\..\mono.snk</AssemblyOriginatorKeyFile>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <PackageId>SkiaSharp.HarfBuzz</PackageId>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.2.1" PrivateAssets="All" />
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.2.2" PrivateAssets="All" />
     <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
     <Compile Include="SkiaSharp.Views.Forms.Shared\**\*.cs" />
@@ -30,5 +26,6 @@
   </ItemGroup>
 
   <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
+  <Import Project="$(MSBuildThisFileDirectory)..\SkiaSharp.Build.targets" />
 
 </Project>

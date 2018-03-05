@@ -1,58 +1,38 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{67A502A4-E8B2-419A-811E-5A634B29C8D7}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <RootNamespace>SkiaSharp.Views.Gtk</RootNamespace>
+    <TargetFrameworks>net45</TargetFrameworks>
     <AssemblyName>SkiaSharp.Views.Gtk</AssemblyName>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\..\mono.snk</AssemblyOriginatorKeyFile>
+    <RootNamespace>SkiaSharp.Views.Gtk</RootNamespace>
+    <DefineConstants>$(DefineConstants);__DESKTOP__;__GTK__;</DefineConstants>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <OutputDirectoryName>gtk</OutputDirectoryName>
+    <!-- Add the GAC to the search list as GTK# is installed to the GAC -->
+    <AssemblySearchPaths>$(AssemblySearchPaths);{GAC}</AssemblySearchPaths>
+    <PackageId>SkiaSharp.Views</PackageId>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;__DESKTOP__;__GTK__</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;__DESKTOP__;__GTK__</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="Mono.Posix" />
-    <Reference Include="gtk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
-    <Reference Include="gdk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
-    <Reference Include="glib-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
-    <Reference Include="glade-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
-    <Reference Include="pango-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
-    <Reference Include="atk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
+    <Reference Include="Mono.Posix" SpecificVersion="false" />
+    <Reference Include="gtk-sharp" SpecificVersion="false" />
+    <Reference Include="gdk-sharp" SpecificVersion="false" />
+    <Reference Include="glib-sharp" SpecificVersion="false" />
+    <Reference Include="glade-sharp" SpecificVersion="false" />
+    <Reference Include="pango-sharp" SpecificVersion="false" />
+    <Reference Include="atk-sharp" SpecificVersion="false" />
   </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj">
-      <Project>{187629ac-563e-4b4e-a2ed-0ea52dd098ad}</Project>
-      <Name>SkiaSharp</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SkiaSharp.Views.csproj">
-      <Project>{5b7ea90a-fb36-483d-9af3-1cd958d3b331}</Project>
-      <Name>SkiaSharp.Views</Name>
-    </ProjectReference>
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.2.2" PrivateAssets="All" />
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\SkiaSharp.Views.csproj" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="..\SkiaSharp.Views.Shared\Properties\SkiaSharpViewsAssemblyInfo.cs">
-      <Link>Properties\SkiaSharpViewsAssemblyInfo.cs</Link>
-    </Compile>
-    <Compile Include="SKWidget.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\SkiaSharp.Views.Shared\Properties\SkiaSharpViewsAssemblyInfo.cs" />
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+
+  <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
+  <Import Project="$(MSBuildThisFileDirectory)..\..\SkiaSharp.Build.targets" />
+
 </Project>

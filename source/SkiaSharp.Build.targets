@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <SignAssembly Condition=" 'SignAssembly' == '' ">true</SignAssembly>
+    <KeyFileName Condition=" '$(KeyFileName)' == '' ">mono.snk</KeyFileName>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\$(KeyFileName)</AssemblyOriginatorKeyFile>
+
+    <!--
+      Ignore this message:
+        Warning VSX1000
+        No Address and User has been specified in order to establish a connection to a Mac Server, so only the main
+        assembly was compiled for project '<project name>'. Connect to a Mac Server and try again to build the full
+        application.
+    -->
+    <MSBuildWarningsAsMessages>VSX1000</MSBuildWarningsAsMessages>
+  </PropertyGroup>
+
+  <!--
+    ===================================================================================================================
+    _SignAssembly
+
+    Sign the assembly using sn.
+    ===================================================================================================================
+  -->
+  <Target Name="_SignAssembly" AfterTargets="CoreCompile" Condition=" '$(OS)' != 'Windows_NT' ">
+    <Exec Command="sn -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
+  </Target>
+
+  <!--
+    ===================================================================================================================
+    _CopyToOutputDirectory
+
+    Copy the project output into the root output folder.
+    ===================================================================================================================
+  -->
+  <Target Name="_CopyToOutputDirectory" AfterTargets="Build">
+    <PropertyGroup>
+      <_TargetPlatform Condition=" $(TargetFramework.StartsWith('MonoAndroid')) ">android</_TargetPlatform>
+      <_TargetPlatform Condition=" $(TargetFramework.StartsWith('net4')) ">desktop</_TargetPlatform>
+      <_TargetPlatform Condition=" $(TargetFramework.StartsWith('netstandard1')) ">netstandard</_TargetPlatform>
+      <_TargetPlatform Condition=" $(TargetFramework.StartsWith('netstandard2')) ">netstandard2</_TargetPlatform>
+      <_TargetPlatform Condition=" $(TargetFramework.StartsWith('uap10')) ">uwp</_TargetPlatform>
+      <_TargetPlatform Condition=" $(TargetFramework.StartsWith('Xamarin.iOS')) ">ios</_TargetPlatform>
+      <_TargetPlatform Condition=" $(TargetFramework.StartsWith('Xamarin.Mac')) ">mac</_TargetPlatform>
+      <_TargetPlatform Condition=" $(TargetFramework.StartsWith('Xamarin.TVOS')) ">tvos</_TargetPlatform>
+      <_TargetPlatform Condition=" $(TargetFramework.StartsWith('Xamarin.WatchOS')) ">watchos</_TargetPlatform>
+      <_TargetPlatform Condition=" '$(OutputDirectoryName)' != '' ">$(OutputDirectoryName)</_TargetPlatform>
+    </PropertyGroup>
+    <ItemGroup Condition=" '$(_TargetPlatform)' != '' ">
+      <_CopyItems Include="$(TargetPath)" Dest="nuget\lib\$(TargetFramework)\$(TargetFileName)" />
+      <!-- <_CopyItems Include="@(_SourceItemsToCopyToOutputDirectory)" Dest="%(_SourceItemsToCopyToOutputDirectory.TargetPath)" /> -->
+      <_CopyItems Include="@(_NoneWithTargetPath)" Dest="%(_NoneWithTargetPath.TargetPath)" />
+    </ItemGroup>
+    <Copy Condition=" '@(_CopyItems)' != '' "
+          SourceFiles="@(_CopyItems)"
+          DestinationFiles="@(_CopyItems -> '$(MSBuildThisFileDirectory)..\output\$(PackageId)\%(Dest)')"
+          ContinueOnError="false"
+          Retries="0" />
+  </Target>
+
+</Project>
