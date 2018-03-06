@@ -5,8 +5,9 @@
   <!-- for all/any platform -->
   <PropertyGroup>
     <TargetFrameworks></TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">net45;uap10.0.10240;MonoAndroid4.0.3;Xamarin.iOS10;Xamarin.TVOS10;Xamarin.WatchOS10;Xamarin.Mac20</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">net45;MonoAndroid4.0.3;Xamarin.iOS10;Xamarin.TVOS10;Xamarin.WatchOS10;Xamarin.Mac20</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(IsLinux)' == 'true' ">net45</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(IsWindows)' == 'true' ">net45;uap10.0.10240</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(IsMacOS)' == 'true' ">net45;MonoAndroid4.0.3;Xamarin.iOS10;Xamarin.TVOS10;Xamarin.WatchOS10;Xamarin.Mac20</TargetFrameworks>
     <DefineConstants>$(DefineConstants);</DefineConstants>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <EnableDefaultItems>false</EnableDefaultItems>

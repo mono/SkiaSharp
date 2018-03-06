@@ -5,8 +5,9 @@
   <!-- for all/any platform -->
   <PropertyGroup>
     <TargetFrameworks></TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">netstandard1.3;netstandard2.0;uap10.0.10240;MonoAndroid8.0;Xamarin.iOS10;Xamarin.Mac20</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">netstandard1.3;netstandard2.0;MonoAndroid8.0;Xamarin.iOS10;Xamarin.Mac20</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(IsLinux)' == 'true' ">netstandard1.3;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(IsWindows)' == 'true' ">netstandard1.3;netstandard2.0;uap10.0.10240</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(IsMacOS)' == 'true' ">netstandard1.3;netstandard2.0;MonoAndroid8.0;Xamarin.iOS10;Xamarin.Mac20</TargetFrameworks>
     <AssemblyName>SkiaSharp.Views.Forms</AssemblyName>
     <RootNamespace>SkiaSharp.Views.Forms</RootNamespace>
     <DefineConstants>$(DefineConstants);</DefineConstants>
