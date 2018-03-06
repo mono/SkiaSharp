@@ -30,11 +30,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <!-- add the .dll.config -->
-        <None Include="$(MSBuildThisFileDirectory)HarfBuzzSharp.dll.config">
-            <Link>HarfBuzzSharp.dll.config</Link>
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
         <None Include="$(PreferredWindowsNativeHarfBuzzSharpPath)" Condition=" Exists('$(PreferredWindowsNativeHarfBuzzSharpPath)') ">
             <Link>$([System.IO.Path]::GetFilename('$(PreferredWindowsNativeHarfBuzzSharpPath)'))</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -16,7 +16,6 @@
     <PackageReference Include="MSBuild.Sdk.Extras" Version="1.2.2" PrivateAssets="All" />
     <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
-    <Compile Include="SkiaSharp.Views.Forms.Shared\**\*.cs" />
   </ItemGroup>
 
   <!-- for .net standard -->
@@ -24,7 +23,7 @@
     <DefineConstants>$(DefineConstants);NET_STANDARD</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition=" $(TargetFramework.StartsWith('netstandard')) ">
-    <Compile Include="SkiaSharp.HarfBuzz.Shared\**\*.cs" />
+    <Compile Include="SkiaSharp.HarfBuzz.Shared\**\*.cs" Link="%(Filename)%(Extension)" />
   </ItemGroup>
 
   <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />

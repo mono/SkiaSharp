@@ -79,13 +79,13 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0-beta.1.build3958" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\binding\HarfBuzzSharp.Desktop\HarfBuzzSharp.Desktop.csproj">
+    <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj">
       <Project>{2ae5d8c5-eac6-4515-89f2-a4994b41c925}</Project>
-      <Name>HarfBuzzSharp.Desktop</Name>
+      <Name>HarfBuzzSharp</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\binding\SkiaSharp.Desktop\SkiaSharp.Desktop.csproj">
+    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj">
       <Project>{eb1bbdcc-fb07-40d5-8b9e-0079e2c2f2df}</Project>
-      <Name>SkiaSharp.Desktop</Name>
+      <Name>SkiaSharp</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj">
       <Project>{7cad1912-05a5-42e5-b7ba-81bb051f0566}</Project>
@@ -120,7 +120,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <Import Project="..\..\binding\SkiaSharp.Desktop\bin\$(Configuration)\nuget\build\net45\SkiaSharp.Desktop.targets" Condition="Exists('..\..\binding\SkiaSharp.Desktop\bin\$(Configuration)\nuget\build\net45\SkiaSharp.Desktop.targets')" />
-  <Import Project="..\..\binding\HarfBuzzSharp.Desktop\bin\$(Configuration)\nuget\build\net45\HarfBuzzSharp.Desktop.targets" Condition="Exists('..\..\binding\HarfBuzzSharp.Desktop\bin\$(Configuration)\nuget\build\net45\HarfBuzzSharp.Desktop.targets')" />
+  <Import Project="..\..\binding\SkiaSharp\bin\$(Configuration)\net45\nuget\build\net45\SkiaSharp.targets" Condition="Exists('..\..\binding\SkiaSharp\bin\$(Configuration)\net45\nuget\build\net45\SkiaSharp.targets')" />
+  <Import Project="..\..\binding\HarfBuzzSharp\bin\$(Configuration)\net45\nuget\build\net45\HarfBuzzSharp.targets" Condition="Exists('..\..\binding\HarfBuzzSharp\bin\$(Configuration)\net45\nuget\build\net45\HarfBuzzSharp.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
