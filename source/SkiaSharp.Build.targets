@@ -54,7 +54,7 @@
     </ItemGroup>
     <Copy Condition=" '@(_CopyItems)' != '' "
           SourceFiles="@(_CopyItems)"
-          DestinationFiles="@(_CopyItems -> '$(MSBuildThisFileDirectory)..\output\$(PackageId)\%(Dest)')"
+          DestinationFiles="@(_CopyItems -> '$(MSBuildThisFileDirectory)..\output\$(OutputGroup)\%(Dest)')"
           ContinueOnError="false"
           Retries="0" />
   </Target>
