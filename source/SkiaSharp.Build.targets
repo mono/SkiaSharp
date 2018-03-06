@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <SignAssembly Condition=" 'SignAssembly' == '' ">true</SignAssembly>
+    <PublicSign Condition=" '$(PublicSign)' == '' and '$(SignAssembly)' == 'true' and '$(OS)' != 'Windows_NT' ">true</PublicSign>
     <KeyFileName Condition=" '$(KeyFileName)' == '' ">mono.snk</KeyFileName>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\$(KeyFileName)</AssemblyOriginatorKeyFile>
 
@@ -14,6 +14,13 @@
         application.
     -->
     <MSBuildWarningsAsMessages>VSX1000</MSBuildWarningsAsMessages>
+    <!--
+      Ignore this message:
+        Warning MSB9004
+        ManifestResourceWithNoCulture item type is deprecated. Emit EmbeddedResource items instead, with metadata
+        WithCulture='false', Type='Resx', and optional LogicalName.
+    -->
+    <MSBuildWarningsAsMessages>MSB9004</MSBuildWarningsAsMessages>
   </PropertyGroup>
 
   <!--
@@ -23,8 +30,8 @@
     Sign the assembly using sn.
     ===================================================================================================================
   -->
-  <Target Name="_SignAssembly" AfterTargets="CoreCompile" Condition=" '$(IsWindows)' != 'true' ">
-    <Exec Command="sn -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
+  <Target Name="_SignAssembly" AfterTargets="CoreCompile" Condition=" '$(IsWindows)' != 'true' and '$(SignAssembly)' == 'true' ">
+    <Exec Command="sn -q -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
   </Target>
 
   <!--
