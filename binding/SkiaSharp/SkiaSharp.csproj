@@ -1,10 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="$(MSBuildThisFileDirectory)..\..\source\SkiaSharp.Build.props" />
+
   <!-- for all/any platform -->
   <PropertyGroup>
     <TargetFrameworks></TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">netstandard1.3;netstandard2.0;net45;uap10.0.10240;MonoAndroid2.3;Xamarin.iOS10;Xamarin.TVOS10;Xamarin.WatchOS10;Xamarin.Mac20</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">netstandard1.3;netstandard2.0;net45;MonoAndroid2.3;Xamarin.iOS10;Xamarin.TVOS10;Xamarin.WatchOS10;Xamarin.Mac20</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(IsLinux)' == 'true' ">netstandard1.3;netstandard2.0;net45</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(IsWindows)' == 'true' ">netstandard1.3;netstandard2.0;net45;uap10.0.10240</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(IsMacOS)' == 'true' ">netstandard1.3;netstandard2.0;net45;MonoAndroid2.3;Xamarin.iOS10;Xamarin.TVOS10;Xamarin.WatchOS10;Xamarin.Mac20</TargetFrameworks>
     <AssemblyName>SkiaSharp</AssemblyName>
     <RootNamespace>SkiaSharp</RootNamespace>
     <DefineConstants>$(DefineConstants);</DefineConstants>
@@ -12,13 +15,14 @@
     <EnableDefaultItems>false</EnableDefaultItems>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <PackageId>SkiaSharp</PackageId>
+    <IsBindingProject>true</IsBindingProject>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.2.2" PrivateAssets="All" />
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.3.0-build.10.g401ca5a83c" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)..\Binding.Shared\**\*.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)..\Binding\**\*.cs" />
+    <Compile Include="..\Binding.Shared\**\*.cs" />
+    <Compile Include="..\Binding\**\*.cs" />
   </ItemGroup>
 
   <!-- for .net standard -->
@@ -32,17 +36,14 @@
   <!-- for uwp -->
   <ItemGroup Condition=" $(TargetFramework.StartsWith('uap10')) ">
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.0.7" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\uwp\x64\libSkiaSharp.dll"
+    <None Include="..\..\native-builds\lib\uwp\x64\libSkiaSharp.dll"
           Link="nuget\runtimes\win10-x64\nativeassets\uap10.0\libSkiaSharp.dll"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\uwp\x64\libSkiaSharp.dll') "
           CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\uwp\x86\libSkiaSharp.dll"
+    <None Include="..\..\native-builds\lib\uwp\x86\libSkiaSharp.dll"
           Link="nuget\runtimes\win10-x86\nativeassets\uap10.0\libSkiaSharp.dll"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\uwp\x86\libSkiaSharp.dll') "
           CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\uwp\ARM\libSkiaSharp.dll"
+    <None Include="..\..\native-builds\lib\uwp\ARM\libSkiaSharp.dll"
           Link="nuget\runtimes\win10-arm\nativeassets\uap10.0\libSkiaSharp.dll"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\uwp\ARM\libSkiaSharp.dll') "
           CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
@@ -51,61 +52,46 @@
     <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v2.3</TargetFrameworkVersion>
   </PropertyGroup>
   <ItemGroup Condition=" $(TargetFramework.StartsWith('MonoAndroid')) ">
-    <None Include="nuget\build\MonoAndroid\SkiaSharp.targets"
-          CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\android\armeabi-v7a\libSkiaSharp.so"
-          Link="nuget\runtimes\android-arm\native\libSkiaSharp.so"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\android\armeabi-v7a\libSkiaSharp.so') "
-          CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\android\arm64-v8a\libSkiaSharp.so"
-          Link="nuget\runtimes\android-arm64\native\libSkiaSharp.so"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\android\arm64-v8a\libSkiaSharp.so') "
-          CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\android\x86\libSkiaSharp.so"
-          Link="nuget\runtimes\android-x86\native\libSkiaSharp.so"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\android\x86\libSkiaSharp.so') "
-          CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\android\x86_64\libSkiaSharp.so"
-          Link="nuget\runtimes\android-x64\native\libSkiaSharp.so"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\android\x86_64\libSkiaSharp.so') "
-          CopyToOutputDirectory="PreserveNewest" />
+    <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\arm64-v8a\libSkiaSharp.so"
+                           Link="libs\arm64-v8a\libSkiaSharp.so" />
+    <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\armeabi-v7a\libSkiaSharp.so"
+                           Link="libs\armeabi-v7a\libSkiaSharp.so" />
+    <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\x86\libSkiaSharp.so"
+                           Link="libs\x86\libSkiaSharp.so" />
+    <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\x86_64\libSkiaSharp.so"
+                           Link="libs\x86_64\libSkiaSharp.so" />
   </ItemGroup>
 
   <!-- for ios -->
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.iOS')) ">
-    <None Include="nuget\build\Xamarin.iOS\SkiaSharp.targets"
-          CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\ios\libSkiaSharp.framework\**\*"
-          Link="nuget\runtimes\ios\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)"
-          CopyToOutputDirectory="PreserveNewest" />
+    <NativeReference Include="..\..\native-builds\lib\ios\libSkiaSharp.framework"
+                     Kind="Framework" />
+    <ObjcBindingApiDefinition Include="Dummy.cs" />
+    <ObjcBindingCoreSource Include="Dummy.cs" />
   </ItemGroup>
 
   <!-- for tvos -->
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.TVOS')) ">
-    <None Include="nuget\build\Xamarin.TVOS\SkiaSharp.targets"
-          CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\tvos\libSkiaSharp.framework\**\*"
-          Link="nuget\runtimes\tvos\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)"
-          CopyToOutputDirectory="PreserveNewest" />
+    <NativeReference Include="..\..\native-builds\lib\tos\libSkiaSharp.framework"
+                     Kind="Framework" />
+    <ObjcBindingApiDefinition Include="Dummy.cs" />
+    <ObjcBindingCoreSource Include="Dummy.cs" />
   </ItemGroup>
 
   <!-- for watchos -->
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.WatchOS')) ">
-    <None Include="nuget\build\Xamarin.WatchOS\SkiaSharp.targets"
-          CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\watchos\libSkiaSharp.framework\**\*"
-          Link="nuget\runtimes\watchos\native\libSkiaSharp.framework\%(RecursiveDir)%(Filename)%(Extension)"
-          CopyToOutputDirectory="PreserveNewest" />
+    <NativeReference Include="..\..\native-builds\lib\watchos\libSkiaSharp.framework"
+                     Kind="Framework" />
+    <ObjcBindingApiDefinition Include="Dummy.cs" />
+    <ObjcBindingCoreSource Include="Dummy.cs" />
   </ItemGroup>
 
   <!-- for macos -->
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.Mac')) ">
-    <None Include="nuget\build\Xamarin.Mac\SkiaSharp.targets"
-          CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\osx\libSkiaSharp.dylib"
-          Link="nuget\runtimes\osx\native\libSkiaSharp.dylib"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\osx\libSkiaSharp.dylib') "
-          CopyToOutputDirectory="PreserveNewest" />
+    <ObjcBindingNativeLibrary Include="..\..\native-builds\lib\osx\libSkiaSharp.dylib"
+                              Link="libSkiaSharp.dylib" />
+    <ObjcBindingApiDefinition Include="Dummy.cs" />
+    <ObjcBindingCoreSource Include="Dummy.cs" />
   </ItemGroup>
 
   <!-- for .net full -->
@@ -115,33 +101,40 @@
   <ItemGroup Condition=" $(TargetFramework.StartsWith('net4')) ">
     <None Include="nuget\build\net45\SkiaSharp.targets"
           CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\windows\x64\libSkiaSharp.dll"
+  </ItemGroup>
+
+  <!-- the desktop native files -->
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('net4')) or $(TargetFramework.StartsWith('netstandard')) ">
+    <!-- windows -->
+    <None Include="..\..\native-builds\lib\windows\x64\libSkiaSharp.dll"
           Link="nuget\runtimes\win7-x64\native\libSkiaSharp.dll"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\windows\x64\libSkiaSharp.dll') "
+          Condition=" '$(IsWindows)' == 'true' "
           CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\windows\x86\libSkiaSharp.dll"
+    <None Include="..\..\native-builds\lib\windows\x86\libSkiaSharp.dll"
           Link="nuget\runtimes\win7-x86\native\libSkiaSharp.dll"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\windows\x86\libSkiaSharp.dll') "
+          Condition=" '$(IsWindows)' == 'true' "
           CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\osx\libSkiaSharp.dylib"
+    <!-- macos -->
+    <None Include="..\..\native-builds\lib\osx\libSkiaSharp.dylib"
           Link="nuget\runtimes\osx\native\libSkiaSharp.dylib"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\osx\libSkiaSharp.dylib') "
+          Condition=" '$(IsMacOS)' == 'true' "
           CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\linux\x64\libSkiaSharp.so"
+    <!-- linux -->
+    <None Include="..\..\native-builds\lib\linux\x64\libSkiaSharp.so"
           Link="nuget\runtimes\linux-x64\native\libSkiaSharp.so"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\linux\x64\libSkiaSharp.so') "
+          Condition=" '$(IsLinux)' == 'true' "
           CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\linux\x86\libSkiaSharp.so"
+    <None Include="..\..\native-builds\lib\linux\x86\libSkiaSharp.so"
           Link="nuget\runtimes\linux-x86\native\libSkiaSharp.so"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\linux\x86\libSkiaSharp.so') "
+          Condition=" '$(IsLinux)' == 'true' "
           CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\linux\arm\libSkiaSharp.so"
+    <None Include="..\..\native-builds\lib\linux\arm\libSkiaSharp.so"
           Link="nuget\runtimes\linux-arm\native\libSkiaSharp.so"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\linux\arm\libSkiaSharp.so') "
+          Condition=" '$(IsLinux)' == 'true' "
           CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\linux\arm64\libSkiaSharp.so"
+    <None Include="..\..\native-builds\lib\linux\arm64\libSkiaSharp.so"
           Link="nuget\runtimes\linux-arm64\native\libSkiaSharp.so"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\linux\arm64\libSkiaSharp.so') "
+          Condition=" '$(IsLinux)' == 'true' "
           CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

@@ -1,5 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="$(MSBuildThisFileDirectory)..\..\SkiaSharp.Build.props" />
+
   <PropertyGroup>
     <TargetFrameworks>net45</TargetFrameworks>
     <AssemblyName>SkiaSharp.Views.Gtk</AssemblyName>
@@ -29,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)..\SkiaSharp.Views.Shared\Properties\SkiaSharpViewsAssemblyInfo.cs" />
+    <Compile Include="..\SkiaSharp.Views.Shared\Properties\SkiaSharpViewsAssemblyInfo.cs" />
   </ItemGroup>
 
   <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />

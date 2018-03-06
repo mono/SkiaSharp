@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>
+    <IsMacOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsMacOS>
+    <IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
+  </PropertyGroup>
+
+  <Target Name="PrintRID"
+          BeforeTargets="BeforeBuild">
+    <Message Text="Operating System: Windows"
+             Condition=" '$(IsWindows)' == 'true' " />
+    <Message Text="Operating System: macOS"
+             Condition=" '$(IsMacOS)' == 'true' " />
+    <Message Text="Operating System: Linux"
+             Condition=" '$(IsLinux)' == 'true' " />
+
+    <Error Text="There appears to be a problem selecting the operating system. IsWindows='$(IsWindows)',  IsMacOS='$(IsMacOS)',  IsLinux='$(IsLinux)'"
+           Condition=" '$(IsWindows)$(IsMacOS)$(IsLinux)' != 'true' " />
+  </Target>
+
+</Project>

@@ -1,10 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="$(MSBuildThisFileDirectory)..\..\source\SkiaSharp.Build.props" />
+
   <!-- for all/any platform -->
   <PropertyGroup>
     <TargetFrameworks></TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">netstandard1.3;netstandard2.0;net45;uap10.0.10240;MonoAndroid2.3;Xamarin.iOS10;Xamarin.TVOS10;Xamarin.WatchOS10;Xamarin.Mac20</TargetFrameworks>
-    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">netstandard1.3;netstandard2.0;net45;MonoAndroid2.3;Xamarin.iOS10;Xamarin.TVOS10;Xamarin.WatchOS10;Xamarin.Mac20</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(IsLinux)' == 'true' ">netstandard1.3;netstandard2.0;net45</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(IsWindows)' == 'true' ">netstandard1.3;netstandard2.0;net45;uap10.0.10240</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(IsMacOS)' == 'true' ">netstandard1.3;netstandard2.0;net45;MonoAndroid2.3;Xamarin.iOS10;Xamarin.TVOS10;Xamarin.WatchOS10;Xamarin.Mac20</TargetFrameworks>
     <AssemblyName>HarfBuzzSharp</AssemblyName>
     <RootNamespace>HarfBuzzSharp</RootNamespace>
     <DefineConstants>$(DefineConstants);HARFBUZZ</DefineConstants>
@@ -12,13 +15,14 @@
     <EnableDefaultItems>false</EnableDefaultItems>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <PackageId>HarfBuzzSharp</PackageId>
+    <IsBindingProject>true</IsBindingProject>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.2.2" PrivateAssets="All" />
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.3.0-build.10.g401ca5a83c" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)..\Binding.Shared\**\*.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)..\HarfBuzzSharp.Shared\**\*.cs" />
+    <Compile Include="..\Binding.Shared\**\*.cs" />
+    <Compile Include="..\HarfBuzzSharp.Shared\**\*.cs" />
   </ItemGroup>
 
   <!-- for .net standard -->
@@ -26,22 +30,20 @@
     <DefineConstants>$(DefineConstants);NET_STANDARD</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition=" $(TargetFramework.StartsWith('netstandard')) ">
+    <PackageReference Include="System.IO.UnmanagedMemoryStream" Version="4.3.0" />
   </ItemGroup>
 
   <!-- for uwp -->
   <ItemGroup Condition=" $(TargetFramework.StartsWith('uap10')) ">
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.0.7" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\uwp\x64\libHarfBuzzSharp.dll"
+    <None Include="..\..\native-builds\lib\uwp\x64\libHarfBuzzSharp.dll"
           Link="nuget\runtimes\win10-x64\nativeassets\uap10.0\libHarfBuzzSharp.dll"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\uwp\x64\libHarfBuzzSharp.dll') "
           CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\uwp\x86\libHarfBuzzSharp.dll"
+    <None Include="..\..\native-builds\lib\uwp\x86\libHarfBuzzSharp.dll"
           Link="nuget\runtimes\win10-x86\nativeassets\uap10.0\libHarfBuzzSharp.dll"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\uwp\x86\libHarfBuzzSharp.dll') "
           CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\uwp\ARM\libHarfBuzzSharp.dll"
+    <None Include="..\..\native-builds\lib\uwp\ARM\libHarfBuzzSharp.dll"
           Link="nuget\runtimes\win10-arm\nativeassets\uap10.0\libHarfBuzzSharp.dll"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\uwp\ARM\libHarfBuzzSharp.dll') "
           CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
@@ -50,64 +52,46 @@
     <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v2.3</TargetFrameworkVersion>
   </PropertyGroup>
   <ItemGroup Condition=" $(TargetFramework.StartsWith('MonoAndroid')) ">
-    <None Include="nuget\build\MonoAndroid\HarfBuzzSharp.targets"
-          CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\android\armeabi-v7a\libHarfBuzzSharp.so"
-          Link="nuget\runtimes\android-arm\native\libHarfBuzzSharp.so"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\android\armeabi-v7a\libHarfBuzzSharp.so') "
-          CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\android\arm64-v8a\libHarfBuzzSharp.so"
-          Link="nuget\runtimes\android-arm64\native\libHarfBuzzSharp.so"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\android\arm64-v8a\libHarfBuzzSharp.so') "
-          CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\android\x86\libHarfBuzzSharp.so"
-          Link="nuget\runtimes\android-x86\native\libHarfBuzzSharp.so"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\android\x86\libHarfBuzzSharp.so') "
-          CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\android\x86_64\libHarfBuzzSharp.so"
-          Link="nuget\runtimes\android-x64\native\libHarfBuzzSharp.so"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\android\x86_64\libHarfBuzzSharp.so') "
-          CopyToOutputDirectory="PreserveNewest" />
+    <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\arm64-v8a\libHarfBuzzSharp.so"
+                           Link="libs\arm64-v8a\libHarfBuzzSharp.so" />
+    <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\armeabi-v7a\libHarfBuzzSharp.so"
+                           Link="libs\armeabi-v7a\libHarfBuzzSharp.so" />
+    <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\x86\libHarfBuzzSharp.so"
+                           Link="libs\x86\libHarfBuzzSharp.so" />
+    <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\x86_64\libHarfBuzzSharp.so"
+                           Link="libs\x86_64\libHarfBuzzSharp.so" />
   </ItemGroup>
 
   <!-- for ios -->
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.iOS')) ">
-    <None Include="nuget\build\Xamarin.iOS\HarfBuzzSharp.targets"
-          CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\ios\libHarfBuzzSharp.so"
-          Link="nuget\runtimes\ios\native\libHarfBuzzSharp.so"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\ios\libHarfBuzzSharp.so') "
-          CopyToOutputDirectory="PreserveNewest" />
+    <NativeReference Include="..\..\native-builds\lib\ios\libHarfBuzzSharp.framework"
+                     Kind="Framework" />
+    <ObjcBindingApiDefinition Include="Dummy.cs" />
+    <ObjcBindingCoreSource Include="Dummy.cs" />
   </ItemGroup>
 
   <!-- for tvos -->
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.TVOS')) ">
-    <None Include="nuget\build\Xamarin.TVOS\HarfBuzzSharp.targets"
-          CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\tvos\libHarfBuzzSharp.so"
-          Link="nuget\runtimes\tvos\native\libHarfBuzzSharp.so"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\tvos\libHarfBuzzSharp.so') "
-          CopyToOutputDirectory="PreserveNewest" />
+    <NativeReference Include="..\..\native-builds\lib\tos\libHarfBuzzSharp.framework"
+                     Kind="Framework" />
+    <ObjcBindingApiDefinition Include="Dummy.cs" />
+    <ObjcBindingCoreSource Include="Dummy.cs" />
   </ItemGroup>
 
   <!-- for watchos -->
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.WatchOS')) ">
-    <None Include="nuget\build\Xamarin.WatchOS\HarfBuzzSharp.targets"
-          CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\watchos\libHarfBuzzSharp.so"
-          Link="nuget\runtimes\watchos\native\libHarfBuzzSharp.so"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\watchos\libHarfBuzzSharp.so') "
-          CopyToOutputDirectory="PreserveNewest" />
+    <NativeReference Include="..\..\native-builds\lib\watchos\libHarfBuzzSharp.framework"
+                     Kind="Framework" />
+    <ObjcBindingApiDefinition Include="Dummy.cs" />
+    <ObjcBindingCoreSource Include="Dummy.cs" />
   </ItemGroup>
 
   <!-- for macos -->
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.Mac')) ">
-    <None Include="nuget\build\Xamarin.Mac\HarfBuzzSharp.targets"
-          CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\osx\libHarfBuzzSharp.dylib"
-          Link="nuget\runtimes\osx\native\libHarfBuzzSharp.dylib"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\osx\libHarfBuzzSharp.dylib') "
-          CopyToOutputDirectory="PreserveNewest" />
+    <ObjcBindingNativeLibrary Include="..\..\native-builds\lib\osx\libHarfBuzzSharp.dylib"
+                              Link="libHarfBuzzSharp.dylib" />
+    <ObjcBindingApiDefinition Include="Dummy.cs" />
+    <ObjcBindingCoreSource Include="Dummy.cs" />
   </ItemGroup>
 
   <!-- for .net full -->
@@ -117,33 +101,40 @@
   <ItemGroup Condition=" $(TargetFramework.StartsWith('net4')) ">
     <None Include="nuget\build\net45\HarfBuzzSharp.targets"
           CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\windows\x64\libHarfBuzzSharp.dll"
+  </ItemGroup>
+
+  <!-- the desktop native files -->
+  <ItemGroup Condition=" $(TargetFramework.StartsWith('net4')) or $(TargetFramework.StartsWith('netstandard')) ">
+    <!-- windows -->
+    <None Include="..\..\native-builds\lib\windows\x64\libHarfBuzzSharp.dll"
           Link="nuget\runtimes\win7-x64\native\libHarfBuzzSharp.dll"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\windows\x64\libHarfBuzzSharp.dll') "
+          Condition=" '$(IsWindows)' == 'true' "
           CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\windows\x86\libHarfBuzzSharp.dll"
+    <None Include="..\..\native-builds\lib\windows\x86\libHarfBuzzSharp.dll"
           Link="nuget\runtimes\win7-x86\native\libHarfBuzzSharp.dll"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\windows\x86\libHarfBuzzSharp.dll') "
+          Condition=" '$(IsWindows)' == 'true' "
           CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\osx\libHarfBuzzSharp.dylib"
+    <!-- macos -->
+    <None Include="..\..\native-builds\lib\osx\libHarfBuzzSharp.dylib"
           Link="nuget\runtimes\osx\native\libHarfBuzzSharp.dylib"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\osx\libHarfBuzzSharp.dylib') "
+          Condition=" '$(IsMacOS)' == 'true' "
           CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\linux\x64\libHarfBuzzSharp.so"
+    <!-- linux -->
+    <None Include="..\..\native-builds\lib\linux\x64\libHarfBuzzSharp.so"
           Link="nuget\runtimes\linux-x64\native\libHarfBuzzSharp.so"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\linux\x64\libHarfBuzzSharp.so') "
+          Condition=" '$(IsLinux)' == 'true' "
           CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\linux\x86\libHarfBuzzSharp.so"
+    <None Include="..\..\native-builds\lib\linux\x86\libHarfBuzzSharp.so"
           Link="nuget\runtimes\linux-x86\native\libHarfBuzzSharp.so"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\linux\x86\libHarfBuzzSharp.so') "
+          Condition=" '$(IsLinux)' == 'true' "
           CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\linux\arm\libHarfBuzzSharp.so"
+    <None Include="..\..\native-builds\lib\linux\arm\libHarfBuzzSharp.so"
           Link="nuget\runtimes\linux-arm\native\libHarfBuzzSharp.so"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\linux\arm\libHarfBuzzSharp.so') "
+          Condition=" '$(IsLinux)' == 'true' "
           CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(MSBuildThisFileDirectory)..\..\native-builds\lib\linux\arm64\libHarfBuzzSharp.so"
+    <None Include="..\..\native-builds\lib\linux\arm64\libHarfBuzzSharp.so"
           Link="nuget\runtimes\linux-arm64\native\libHarfBuzzSharp.so"
-          Condition=" Exists('$(MSBuildThisFileDirectory)..\..\native-builds\lib\linux\arm64\libHarfBuzzSharp.so') "
+          Condition=" '$(IsLinux)' == 'true' "
           CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

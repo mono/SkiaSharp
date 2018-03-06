@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
     <SignAssembly Condition=" 'SignAssembly' == '' ">true</SignAssembly>
@@ -23,7 +23,7 @@
     Sign the assembly using sn.
     ===================================================================================================================
   -->
-  <Target Name="_SignAssembly" AfterTargets="CoreCompile" Condition=" '$(OS)' != 'Windows_NT' ">
+  <Target Name="_SignAssembly" AfterTargets="CoreCompile" Condition=" '$(IsWindows)' != 'true' ">
     <Exec Command="sn -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
   </Target>
 
