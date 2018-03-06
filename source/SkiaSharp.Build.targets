@@ -48,13 +48,14 @@
       <_TargetPlatform Condition=" '$(OutputDirectoryName)' != '' ">$(OutputDirectoryName)</_TargetPlatform>
     </PropertyGroup>
     <ItemGroup Condition=" '$(_TargetPlatform)' != '' ">
-      <_CopyItems Include="$(TargetPath)" Dest="nuget\lib\$(TargetFramework)\$(TargetFileName)" />
+      <_CopyItems Include="$(TargetPath)" Dest="nuget\$(PackagingLocation)\$(TargetFileName)" Condition=" '$(PackagingLocation)' != '' " />
+      <_CopyItems Include="$(TargetPath)" Dest="nuget\lib\$(TargetFramework)\$(TargetFileName)" Condition=" '$(PackagingLocation)' == '' " />
       <!-- <_CopyItems Include="@(_SourceItemsToCopyToOutputDirectory)" Dest="%(_SourceItemsToCopyToOutputDirectory.TargetPath)" /> -->
       <_CopyItems Include="@(_NoneWithTargetPath)" Dest="%(_NoneWithTargetPath.TargetPath)" />
     </ItemGroup>
     <Copy Condition=" '@(_CopyItems)' != '' "
           SourceFiles="@(_CopyItems)"
-          DestinationFiles="@(_CopyItems -> '$(MSBuildThisFileDirectory)..\output\$(OutputGroup)\%(Dest)')"
+          DestinationFiles="@(_CopyItems -> '$(MSBuildThisFileDirectory)..\output\$(PackagingGroup)\%(Dest)')"
           ContinueOnError="false"
           Retries="0" />
   </Target>
