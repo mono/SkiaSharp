@@ -66,10 +66,13 @@
     <IsBindingProject>true</IsBindingProject>
   </PropertyGroup>
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.iOS')) ">
-    <NativeReference Include="..\..\native-builds\lib\ios\libHarfBuzzSharp.framework"
-                     Kind="Framework" />
-    <ObjcBindingApiDefinition Include="Dummy.cs" />
-    <ObjcBindingCoreSource Include="Dummy.cs" />
+    <NativeReference Include="..\..\native-builds\lib\ios\libHarfBuzzSharp.a"
+                     Kind="Static"
+                     IsCxx="true"
+                     ForceLoad="true"
+                     SmartLink="true" />
+    <ObjcBindingApiDefinition Include="HarfBuzzSharp.cs" />
+    <ObjcBindingCoreSource Include="HarfBuzzSharp.cs" />
   </ItemGroup>
 
   <!-- for tvos -->
@@ -77,10 +80,13 @@
     <IsBindingProject>true</IsBindingProject>
   </PropertyGroup>
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.TVOS')) ">
-    <NativeReference Include="..\..\native-builds\lib\tos\libHarfBuzzSharp.framework"
-                     Kind="Framework" />
-    <ObjcBindingApiDefinition Include="Dummy.cs" />
-    <ObjcBindingCoreSource Include="Dummy.cs" />
+    <NativeReference Include="..\..\native-builds\lib\tvos\libHarfBuzzSharp.a"
+                     Kind="Static"
+                     IsCxx="true"
+                     ForceLoad="true"
+                     SmartLink="true" />
+    <ObjcBindingApiDefinition Include="HarfBuzzSharp.cs" />
+    <ObjcBindingCoreSource Include="HarfBuzzSharp.cs" />
   </ItemGroup>
 
   <!-- for watchos -->
@@ -88,10 +94,13 @@
     <IsBindingProject>true</IsBindingProject>
   </PropertyGroup>
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.WatchOS')) ">
-    <NativeReference Include="..\..\native-builds\lib\watchos\libHarfBuzzSharp.framework"
-                     Kind="Framework" />
-    <ObjcBindingApiDefinition Include="Dummy.cs" />
-    <ObjcBindingCoreSource Include="Dummy.cs" />
+    <NativeReference Include="..\..\native-builds\lib\watchos\libHarfBuzzSharp.a"
+                     Kind="Static"
+                     IsCxx="true"
+                     ForceLoad="true"
+                     SmartLink="true" />
+    <ObjcBindingApiDefinition Include="HarfBuzzSharp.cs" />
+    <ObjcBindingCoreSource Include="HarfBuzzSharp.cs" />
   </ItemGroup>
 
   <!-- for macos -->
@@ -99,10 +108,13 @@
     <IsBindingProject>true</IsBindingProject>
   </PropertyGroup>
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.Mac')) ">
-    <ObjcBindingNativeLibrary Include="..\..\native-builds\lib\osx\libHarfBuzzSharp.dylib"
-                              Link="libHarfBuzzSharp.dylib" />
-    <ObjcBindingApiDefinition Include="Dummy.cs" />
-    <ObjcBindingCoreSource Include="Dummy.cs" />
+    <NativeReference Include="..\..\native-builds\lib\osx\libHarfBuzzSharp.dylib"
+                     Kind="Dynamic"
+                     IsCxx="true"
+                     ForceLoad="true"
+                     SmartLink="true" />
+    <ObjcBindingApiDefinition Include="HarfBuzzSharp.cs" />
+    <ObjcBindingCoreSource Include="HarfBuzzSharp.cs" />
   </ItemGroup>
 
   <!-- for .net full -->

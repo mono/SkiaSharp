@@ -68,8 +68,8 @@
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.iOS')) ">
     <NativeReference Include="..\..\native-builds\lib\ios\libSkiaSharp.framework"
                      Kind="Framework" />
-    <ObjcBindingApiDefinition Include="Dummy.cs" />
-    <ObjcBindingCoreSource Include="Dummy.cs" />
+    <ObjcBindingApiDefinition Include="SkiaSharp.cs" />
+    <ObjcBindingCoreSource Include="SkiaSharp.cs" />
   </ItemGroup>
 
   <!-- for tvos -->
@@ -77,10 +77,10 @@
     <IsBindingProject>true</IsBindingProject>
   </PropertyGroup>
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.TVOS')) ">
-    <NativeReference Include="..\..\native-builds\lib\tos\libSkiaSharp.framework"
+    <NativeReference Include="..\..\native-builds\lib\tvos\libSkiaSharp.framework"
                      Kind="Framework" />
-    <ObjcBindingApiDefinition Include="Dummy.cs" />
-    <ObjcBindingCoreSource Include="Dummy.cs" />
+    <ObjcBindingApiDefinition Include="SkiaSharp.cs" />
+    <ObjcBindingCoreSource Include="SkiaSharp.cs" />
   </ItemGroup>
 
   <!-- for watchos -->
@@ -90,8 +90,8 @@
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.WatchOS')) ">
     <NativeReference Include="..\..\native-builds\lib\watchos\libSkiaSharp.framework"
                      Kind="Framework" />
-    <ObjcBindingApiDefinition Include="Dummy.cs" />
-    <ObjcBindingCoreSource Include="Dummy.cs" />
+    <ObjcBindingApiDefinition Include="SkiaSharp.cs" />
+    <ObjcBindingCoreSource Include="SkiaSharp.cs" />
   </ItemGroup>
 
   <!-- for macos -->
@@ -99,10 +99,13 @@
     <IsBindingProject>true</IsBindingProject>
   </PropertyGroup>
   <ItemGroup Condition=" $(TargetFramework.StartsWith('Xamarin.Mac')) ">
-    <ObjcBindingNativeLibrary Include="..\..\native-builds\lib\osx\libSkiaSharp.dylib"
-                              Link="libSkiaSharp.dylib" />
-    <ObjcBindingApiDefinition Include="Dummy.cs" />
-    <ObjcBindingCoreSource Include="Dummy.cs" />
+    <NativeReference Include="..\..\native-builds\lib\osx\libSkiaSharp.dylib"
+                     Kind="Dynamic"
+                     IsCxx="true"
+                     ForceLoad="true"
+                     SmartLink="true" />
+    <ObjcBindingApiDefinition Include="SkiaSharp.cs" />
+    <ObjcBindingCoreSource Include="SkiaSharp.cs" />
   </ItemGroup>
 
   <!-- for .net full -->
