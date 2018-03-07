@@ -68,7 +68,7 @@ FilePath GetSNToolPath (string possible)
             var dirPath = progFiles.Combine ("Microsoft SDKs/Windows").FullPath + "/v*A";
             var dirs = GetDirectories (dirPath).OrderBy (d => {
                 var version = d.GetDirectoryName ();
-                return double.Parse (version.Substring (1, version.Length - 2));
+                return double.Parse (version.Substring (1, version.Length - 2), System.Globalization.CultureInfo.InvariantCulture);
             });
             foreach (var dir in dirs) {
                 var path = dir.FullPath + "/bin/*/" + arch + "/sn.exe";
