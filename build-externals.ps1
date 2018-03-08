@@ -8,7 +8,7 @@ Param (
 $ErrorActionPreference = 'Stop'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-function Which ([string] $tool) {
+function FindTool ([string] $tool) {
     if ($IsMacOS -or $IsLinux) {
         return & 'which' $tool
     } else {
@@ -29,36 +29,29 @@ $ANGLE_PATH = Join-Path $PSScriptRoot 'externals/angle'
 $7ZIP4PWSH_PATH = Join-Path $PSScriptRoot 'externals/7zip4pwsh'
 $HOME_PATH = $(if ($IsMacOS -or $IsLinux) { $env:HOME } else { $env:USERPROFILE })
 $ANDROID_NDK_HOME = $env:ANDROID_NDK_HOME
-if (!$ANDROID_NDK_HOME -or $(Test-Path $ANDROID_NDK_HOME)) {
-    $ANDROID_NDK_HOME = Join-Path $HOME_PATH 'Library/Developer/Xamarin/android-ndk'
-}
 
 # Tools
-$python = Which 'python'
+$python = FindTool 'python'
 $git_sync_deps = Join-Path $SKIA_PATH 'tools/git-sync-deps'
 $gn = Join-Path $SKIA_PATH $(if ($IsMacOS -or $IsLinux) { 'bin/gn' } else { 'bin/gn.exe' })
 $ninja = Join-Path $DEPOT_PATH $(if ($IsMacOS -or $IsLinux) { 'ninja' } else { 'ninja.exe' })
-$xcodebuild = Which 'xcodebuild'
-$msbuild = Which 'msbuild'
-if (!$IsMacOS -and !$isLinux) {
-    $vsWhich = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-    $msbuild = & $vsWhich -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
-    $msbuild = Join-Path $msbuild 'MSBuild\15.0\Bin\MSBuild.exe'
-}
-$strip = Which 'strip'
-$codesign = Which 'codesign'
-$lipo = Which 'lipo'
-$tar = Which 'tar'
-$bash = Which 'bash'
-$git = Which 'git'
-$ndkbuild = Join-Path $ANDROID_NDK_HOME 'ndk-build'
+$xcodebuild = FindTool 'xcodebuild'
+$msbuild = FindTool 'msbuild'
+$strip = FindTool 'strip'
+$codesign = FindTool 'codesign'
+$lipo = FindTool 'lipo'
+$tar = FindTool 'tar'
+$bash = FindTool 'bash'
+$git = FindTool 'git'
+$ndkbuild = ''
 
 # Get tool versions
 $powershellVersion = "$($PSVersionTable.PSVersion.ToString()) ($($PSVersionTable.PSEdition.ToString()))"
-$msbuildVersion = if ($msbuild) { & $msbuild -version -nologo }
 $operatingSystem = if ($IsMacOS) { 'macOS' } elseif ($IsLinux) { 'Linux' } else { 'Windows' }
-$xcodebuildVersion = if ($IsMacOS) { & $xcodebuild -version } else { 'not supported' }
 $7zip4pwshVersion = "1.8.0"
+$msbuildVersion = ''
+$xcodebuildVersion = ''
+$pythonVersion = ''
 
 # Utility functions
 
@@ -130,6 +123,71 @@ function MSBuild ([string] $project, [string] $arch) {
 
 # The main script
 
+function InitializeTools () {
+    Write-Output "Initializing tools..."
+    Initialize7zip
+
+    # make sure the home directory exists
+    if (!(Test-Path $HOME_PATH)) {
+        throw 'For some reason, this user doesn''t have a home directory'
+    }
+
+    # try and find the tools
+    if ($IsMacOS) {
+        # find the Android NDK root
+        if (!$ANDROID_NDK_HOME -or $(Test-Path $ANDROID_NDK_HOME)) {
+            $script:ANDROID_NDK_HOME = Join-Path $HOME_PATH 'Library/Developer/Xamarin/android-ndk'
+        }
+        if (!(Test-Path $ANDROID_NDK_HOME)) {
+            throw 'Unable to locate the "Android NDK home". Use the "ANDROID_NDK_HOME" environment variable.'
+        }
+
+        # find ndk-build
+        $script:ndkbuild = Join-Path $ANDROID_NDK_HOME 'ndk-build'
+        if (!(Test-Path $ndkbuild)) {
+            throw 'Unable to locate "ndk-build". Use the "ANDROID_NDK_HOME" environment variable.'
+        }
+
+        # find xcodebuild
+        if (!(Test-Path $xcodebuild)) {
+            throw 'Unable to locate "xcodebuild". Make sure XCode and the command line tools are installed.'
+        }
+    } elseif ($IsLinux) {
+    } else {
+        # find MSBuild
+        if (!$msbuild) {
+            # find vswhere
+            $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+            if (!(Test-Path $vswhere)) {
+                throw 'Unable to locate "vswhere.exe". Make sure Visual Studio 2017 is installed.'
+            }
+
+            # find MSBuild
+            $msbuildRoot = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
+            if (!(Test-Path $msbuildRoot)) {
+                throw 'Unable to locate the "MSBuild install". Make sure Visual Studio 2017 is installed.'
+            }
+            $script:msbuild = Join-Path $msbuildRoot 'MSBuild\15.0\Bin\MSBuild.exe'
+            if (!(Test-Path $msbuild)) {
+                throw 'Unable to locate "MSBuild.exe". Make sure Visual Studio 2017 is installed.'
+            }
+        }
+    }
+
+    # verify that all the common tools exist
+    if (!(Test-Path $python)) {
+        throw 'Unable to locate "Python". Make sure it exists in the "PATH" environment variable.'
+    }
+
+    # get the versions
+    $script:pythonVersion = if ($python) { & $python --version }
+    $script:msbuildVersion = if ($msbuild) { & $msbuild -version -nologo }
+    $script:xcodebuildVersion = if ($IsMacOS) { & $xcodebuild -version }
+
+    Write-Output "Tool initialization complete."
+    Write-Output ""
+}
+
 function WriteSystemInfo () {
     $fc = $host.UI.RawUI.ForegroundColor
     $host.UI.RawUI.ForegroundColor = "Cyan"
@@ -140,9 +198,10 @@ function WriteSystemInfo () {
     Write-Output "  PowerShell version:  '$powershellVersion'"
     Write-Output ""
     Write-Output "Tool Versions:"
-    Write-Output "  MSBuild version:  '$msbuildVersion'"
-    Write-Output "  XCode version:    '$xcodebuildVersion'"
     Write-Output "  7Zip4Powershell:  '$7zip4pwshVersion'"
+    Write-Output "  MSBuild version:  '$msbuildVersion'"
+    Write-Output "  Python version:   '$pythonVersion'"
+    Write-Output "  XCode version:    '$xcodebuildVersion'"
     Write-Output ""
     Write-Output "Other Versions:"
     Write-Output "  ANGLE version:     '$ANGLEVersion'"
@@ -173,13 +232,6 @@ function WriteSystemInfo () {
     Write-Output ""
 
     $host.UI.RawUI.ForegroundColor = $fc
-}
-
-function InitializeTools () {
-    Write-Output "Initializing tools..."
-    Initialize7zip
-    Write-Output "Tool initialization complete."
-    Write-Output ""
 }
 
 # Initialize the repository
@@ -510,6 +562,24 @@ Function Build-Android-Arch ([string] $arch, [string] $skiaArch, [string] $dir) 
 "@
 }
 
+Function Build-Linux-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
+    Write-Output "Building the Linux library for '$dir'..."
+
+#     $ndk_api = $(if ($skiaArch.EndsWith("64")) { "21" } else { "9" } )
+
+#     # Build skia.a
+#     GnNinja -out "android/$arch" -skiaArgs @"
+#         is_official_build=true skia_enable_tools=false
+#         target_os=\""android\"" target_cpu=\""$skiaArch\""
+#         skia_use_system_freetype2=false
+#         skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true
+#         skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false
+#         extra_cflags=[ \""-DSKIA_C_DLL\"" ]
+#         extra_ldflags=[ \""-Wl,watchos_version_min=2.0\"" ]
+#         ndk=\""$ANDROID_NDK_HOME\"" ndk_api=$ndk_api
+# "@
+}
+
 # Initialize the tooling
 InitializeTools
 
@@ -590,6 +660,7 @@ if ($IsMacOS) {
     }
 } elseif ($IsLinux) {
     # Build for Linux
+    Build-Linux-Arch  -arch "x64" -skiaArch "x64" -dir "x64"
 } else {
     # Build for Windows (Win32)
     if ($Platforms.Contains("windows") -or $Platforms.Contains("win")) {
