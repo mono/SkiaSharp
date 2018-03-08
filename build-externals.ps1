@@ -8,6 +8,19 @@ Param (
 $ErrorActionPreference = 'Stop'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
+function Which ([string] $tool) {
+    if ($IsMacOS -or $IsLinux) {
+        return & 'which' $tool
+    } else {
+        $where = "$env:SystemRoot\system32\where.exe"
+        & $where /Q $tool
+        if ($?) {
+            return & $where $tool
+        }
+    }
+    return $null
+}
+
 # Paths
 $SKIA_PATH = Join-Path $PSScriptRoot 'externals/skia'
 $DEPOT_PATH = Join-Path $PSScriptRoot 'externals/depot_tools'
@@ -21,29 +34,28 @@ if (!$ANDROID_NDK_HOME -or $(Test-Path $ANDROID_NDK_HOME)) {
 }
 
 # Tools
-$where = $(if ($IsMacOS -or $IsLinux) { 'which' } else { "$env:SystemRoot\system32\where.exe" })
-$python = & $where 'python'
+$python = Which 'python'
 $git_sync_deps = Join-Path $SKIA_PATH 'tools/git-sync-deps'
 $gn = Join-Path $SKIA_PATH $(if ($IsMacOS -or $IsLinux) { 'bin/gn' } else { 'bin/gn.exe' })
 $ninja = Join-Path $DEPOT_PATH $(if ($IsMacOS -or $IsLinux) { 'ninja' } else { 'ninja.exe' })
-$xcodebuild = & $where 'xcodebuild'
-$msbuild = & $where 'msbuild'
-if (!$IsMacOS) {
-    $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-    $msbuild = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
+$xcodebuild = Which 'xcodebuild'
+$msbuild = Which 'msbuild'
+if (!$IsMacOS -and !$isLinux) {
+    $vsWhich = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+    $msbuild = & $vsWhich -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
     $msbuild = Join-Path $msbuild 'MSBuild\15.0\Bin\MSBuild.exe'
 }
-$strip = & $where 'strip'
-$codesign = & $where 'codesign'
-$lipo = & $where 'lipo'
-$tar = & $where 'tar'
-$bash = & $where 'bash'
-$git = & $where 'git'
+$strip = Which 'strip'
+$codesign = Which 'codesign'
+$lipo = Which 'lipo'
+$tar = Which 'tar'
+$bash = Which 'bash'
+$git = Which 'git'
 $ndkbuild = Join-Path $ANDROID_NDK_HOME 'ndk-build'
 
 # Get tool versions
 $powershellVersion = "$($PSVersionTable.PSVersion.ToString()) ($($PSVersionTable.PSEdition.ToString()))"
-$msbuildVersion = & $msbuild -version -nologo
+$msbuildVersion = if ($msbuild) { & $msbuild -version -nologo }
 $operatingSystem = if ($IsMacOS) { 'macOS' } elseif ($IsLinux) { 'Linux' } else { 'Windows' }
 $xcodebuildVersion = if ($IsMacOS) { & $xcodebuild -version } else { 'not supported' }
 $7zip4pwshVersion = "1.8.0"
@@ -113,7 +125,7 @@ function StripSign ([string] $target) {
 }
 
 function MSBuild ([string] $project, [string] $arch) {
-    Exec $msbuild -a "$project /p:Configuration=Release /p:Platform=$arch /v:minimal"
+    Exec $msbuild -a "$project /p:Configuration=Release /p:Platform=$arch /v:quiet"
 }
 
 # The main script
@@ -149,7 +161,6 @@ function WriteSystemInfo () {
     Write-Output "  Python:         '$python'"
     Write-Output "  strip:          '$strip'"
     Write-Output "  tar:            '$tar'"
-    Write-Output "  where/which:    '$where'"
     Write-Output "  XCodeBuild:     '$xcodebuild'"
     Write-Output ""
     Write-Output "Other Paths:"
@@ -278,6 +289,8 @@ function InitializeHarfBuzz () {
 }
 
 function InjectCompatibilityExternals ([bool] $inject = $true) {
+    Write-Output "Injecting compatibility headers into external sources..."
+
     # Some methods don't yet on UWP, so we must add the compat layer to them.
     # We need this in this manner as we can't modify the third party files.
     # All we do is insert our header before all the others.
@@ -522,6 +535,7 @@ if (!$Platforms) {
 }
 
 # Build the libraries
+Write-Output "Building the native libraries..."
 if ($IsMacOS) {
     # Build for macOS
     if ($Platforms.Contains("macos") -or $Platforms.Contains("osx") -or $Platforms.Contains("mac")) {
@@ -595,3 +609,4 @@ if ($IsMacOS) {
         Copy-Item "$ANGLE_PATH/uwp/bin/UAP/x64/*.dll" "output/native/uwp/x64"
     }
 }
+Write-Output "Build complete."
