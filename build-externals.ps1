@@ -1,5 +1,7 @@
 Param (
-    [string[]] $Platforms = $Null
+    [string[]] $Platforms = $Null,
+    [string] $HarfBuzzVersion = "1.4.6",
+    [string] $ANGLEVersion = "2.1.13"
 )
 
 $ErrorActionPreference = 'Stop'
@@ -41,11 +43,6 @@ $powershellVersion = "$($PSVersionTable.PSVersion.ToString()) ($($PSVersionTable
 $msbuildVersion = & $msbuild -version -nologo
 $operatingSystem = if ($IsMacOS) { 'macOS' } elseif ($IsLinux) { 'Linux' } else { 'Windows' }
 $xcodebuildVersion = if ($IsMacOS) { & $xcodebuild -version } else { 'not supported' }
-
-# Get source version
-$harfbuzzVersion = "1.4.6"
-$skiaVersion = "m60"
-$angleVersion = "2.1.13"
 
 # Utility functions
 
@@ -127,9 +124,8 @@ function WriteSystemInfo () {
     Write-Output "  XCode version:    '$xcodebuildVersion'"
     Write-Output ""
     Write-Output "Other Versions:"
-    Write-Output "  ANGLE version:     '$angleVersion'"
-    Write-Output "  HarfBuzz version:  '$harfbuzzVersion'"
-    Write-Output "  skia version:      '$skiaVersion'"
+    Write-Output "  ANGLE version:     '$ANGLEVersion'"
+    Write-Output "  HarfBuzz version:  '$HarfBuzzVersion'"
     Write-Output ""
     Write-Output "Tool Paths:"
     Write-Output "  bash:           '$bash'"
@@ -178,11 +174,11 @@ function InitializeANGLE () {
 
     # download ANGLE
     $angleRoot = Join-Path $ANGLE_PATH "uwp"
-    $angleZip = Join-Path $angleRoot "ANGLE.WindowsStore.$angleVersion.nupkg"
+    $angleZip = Join-Path $angleRoot "ANGLE.WindowsStore.$ANGLEVersion.nupkg"
     if (!(Test-Path $angleZip)) {
         Write-Output "Downloading ANGLE..."
         New-Item $angleRoot -itemtype "Directory" -force | Out-Null
-        Invoke-WebRequest -Uri "https://www.nuget.org/api/v2/package/ANGLE.WindowsStore/$angleVersion" -OutFile $angleZip
+        Invoke-WebRequest -Uri "https://www.nuget.org/api/v2/package/ANGLE.WindowsStore/$ANGLEVersion" -OutFile $angleZip
     }
     
     # extract ANGLE
@@ -196,11 +192,11 @@ function InitializeHarfBuzz () {
     Write-Output "Initializing HarfBuzz..."
 
     # download harfbuzz
-    $harfbuzzZip = Join-Path $HARFBUZZ_PATH "harfbuzz-$harfbuzzVersion.tar.bz2"
+    $harfbuzzZip = Join-Path $HARFBUZZ_PATH "harfbuzz-$HarfBuzzVersion.tar.bz2"
     if (!(Test-Path $harfbuzzZip)) {
         Write-Output "Downloading HarfBuzz..."
         New-Item $HARFBUZZ_PATH -itemtype "Directory" -force | Out-Null
-        Invoke-WebRequest -Uri "https://github.com/behdad/harfbuzz/releases/download/$harfbuzzVersion/harfbuzz-$harfbuzzVersion.tar.bz2" -OutFile $harfbuzzZip
+        Invoke-WebRequest -Uri "https://github.com/behdad/harfbuzz/releases/download/$HarfBuzzVersion/harfbuzz-$HarfBuzzVersion.tar.bz2" -OutFile $harfbuzzZip
     }
     
     # extract harfbuzz
@@ -212,7 +208,7 @@ function InitializeHarfBuzz () {
         } else {
             throw 'TODO: Unzipping .tar.bz2 needs to be implemented.'
         }
-        Move-Item "$HARFBUZZ_PATH/harfbuzz-$harfbuzzVersion" "$harfbuzzSource"
+        Move-Item "$HARFBUZZ_PATH/harfbuzz-$HarfBuzzVersion" "$harfbuzzSource"
     }
 
     # configure harfbuzz
