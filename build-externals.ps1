@@ -1,10 +1,20 @@
+Param (
+    [string[]] $Platforms = $Null
+)
+
 $ErrorActionPreference = 'Stop'
+
+Add-Type -assembly "System.IO.Compression.FileSystem"
 
 # Paths
 $SKIA_PATH = Join-Path $PSScriptRoot 'externals/skia'
 $DEPOT_PATH = Join-Path $PSScriptRoot 'externals/depot_tools'
 $HARFBUZZ_PATH = Join-Path $PSScriptRoot 'externals/harfbuzz'
 $ANGLE_PATH = Join-Path $PSScriptRoot 'externals/angle'
+$ANDROID_NDK_HOME = $env:ANDROID_NDK_HOME
+if (!$ANDROID_NDK_HOME -or $(Test-Path $ANDROID_NDK_HOME)) {
+    $ANDROID_NDK_HOME = Join-Path $env:HOME '/Library/Developer/Xamarin/android-ndk'
+}
 
 # Tools
 $where = $(if ($IsMacOS -or $IsLinux) { 'which' } else { 'where' })
@@ -24,6 +34,7 @@ $codesign = & $where 'codesign'
 $lipo = & $where 'lipo'
 $tar = & $where 'tar'
 $bash = & $where 'bash'
+$ndkbuild = Join-Path $ANDROID_NDK_HOME 'ndk-build'
 
 # Get tool versions
 $powershellVersion = "$($PSVersionTable.PSVersion.ToString()) ($($PSVersionTable.PSEdition.ToString()))"
@@ -36,6 +47,15 @@ $harfbuzzVersion = "1.4.6"
 $skiaVersion = "m60"
 $angleVersion = "2.1.13"
 
+# Utility functions
+
+function Copy-Dir ([string] $src, [string] $dest) {
+    New-Item $dest -itemtype "Directory" -force | Out-Null
+    Get-ChildItem $src -Directory | ForEach-Object {
+        Copy-Item -literalpath "$src/$_" $dest -force -recurse | Out-Null
+    }
+}
+
 function Exec ([string] $file, [string[]] $a, [string] $wo) {
     if (!$wo) {
         $wo = "."
@@ -46,46 +66,7 @@ function Exec ([string] $file, [string[]] $a, [string] $wo) {
     }
 }
 
-function WriteSystemInfo () {
-    $fc = $host.UI.RawUI.ForegroundColor
-    $host.UI.RawUI.ForegroundColor = "Cyan"
-
-    Write-Output ""
-    Write-Output "Current System:"
-    Write-Output "  Operating system:    '$operatingSystem'"
-    Write-Output "  PowerShell version:  '$powershellVersion'"
-    Write-Output ""
-    Write-Output "Tool Versions:"
-    Write-Output "  MSBuild version:  '$msbuildVersion'"
-    Write-Output "  XCode version:    '$xcodebuildVersion'"
-    Write-Output ""
-    Write-Output "Other Versions:"
-    Write-Output "  ANGLE version:     '$angleVersion'"
-    Write-Output "  HarfBuzz version:  '$harfbuzzVersion'"
-    Write-Output "  skia version:      '$skiaVersion'"
-    Write-Output ""
-    Write-Output "Tool Paths:"
-    Write-Output "  bash:           '$bash'"
-    Write-Output "  codesign:       '$codesign'"
-    Write-Output "  git-sync-deps:  '$git_sync_deps'"
-    Write-Output "  gn:             '$gn'"
-    Write-Output "  lipo:           '$lipo'"
-    Write-Output "  MSBuild:        '$msbuild'"
-    Write-Output "  ninja:          '$ninja'"
-    Write-Output "  Python:         '$python'"
-    Write-Output "  strip:          '$strip'"
-    Write-Output "  tar:            '$tar'"
-    Write-Output "  XCodeBuild:     '$xcodebuild'"
-    Write-Output ""
-    Write-Output "Other Paths:"
-    Write-Output "  ANGLE_PATH:     '$ANGLE_PATH'"
-    Write-Output "  DEPOT_PATH:     '$DEPOT_PATH'"
-    Write-Output "  HARFBUZZ_PATH:  '$HARFBUZZ_PATH'"
-    Write-Output "  SKIA_PATH:      '$SKIA_PATH'"
-    Write-Output ""
-
-    $host.UI.RawUI.ForegroundColor = $fc
-}
+# Tool helpers
 
 function Lipo ([string] $dest, [string[]] $libs) {
     Write-Output "Creating fat file '$dest'..."
@@ -130,18 +111,95 @@ function StripSign ([string] $target) {
     Exec $codesign -a "--force --sign - --timestamp=none $target"
 }
 
+# The main script
+
+function WriteSystemInfo () {
+    $fc = $host.UI.RawUI.ForegroundColor
+    $host.UI.RawUI.ForegroundColor = "Cyan"
+
+    Write-Output ""
+    Write-Output "Current System:"
+    Write-Output "  Operating system:    '$operatingSystem'"
+    Write-Output "  PowerShell version:  '$powershellVersion'"
+    Write-Output ""
+    Write-Output "Tool Versions:"
+    Write-Output "  MSBuild version:  '$msbuildVersion'"
+    Write-Output "  XCode version:    '$xcodebuildVersion'"
+    Write-Output ""
+    Write-Output "Other Versions:"
+    Write-Output "  ANGLE version:     '$angleVersion'"
+    Write-Output "  HarfBuzz version:  '$harfbuzzVersion'"
+    Write-Output "  skia version:      '$skiaVersion'"
+    Write-Output ""
+    Write-Output "Tool Paths:"
+    Write-Output "  bash:           '$bash'"
+    Write-Output "  codesign:       '$codesign'"
+    Write-Output "  git-sync-deps:  '$git_sync_deps'"
+    Write-Output "  gn:             '$gn'"
+    Write-Output "  lipo:           '$lipo'"
+    Write-Output "  MSBuild:        '$msbuild'"
+    Write-Output "  ndk-build:      '$ndkbuild'"
+    Write-Output "  ninja:          '$ninja'"
+    Write-Output "  Python:         '$python'"
+    Write-Output "  strip:          '$strip'"
+    Write-Output "  tar:            '$tar'"
+    Write-Output "  XCodeBuild:     '$xcodebuild'"
+    Write-Output ""
+    Write-Output "Other Paths:"
+    Write-Output "  ANGLE_PATH:       '$ANGLE_PATH'"
+    Write-Output "  DEPOT_PATH:       '$DEPOT_PATH'"
+    Write-Output "  HARFBUZZ_PATH:    '$HARFBUZZ_PATH'"
+    Write-Output "  SKIA_PATH:        '$SKIA_PATH'"
+    Write-Output "  ANDROID_NDK_HOME: '$ANDROID_NDK_HOME'"
+    Write-Output ""
+
+    $host.UI.RawUI.ForegroundColor = $fc
+}
+
 # Initialize the repository
 function Initialize () {
     Write-Output "Initializing repository..."
+    InitializeSkia
+    InitializeHarfBuzz
+    InitializeANGLE
+    Write-Output "Repository initialization complete."
+    Write-Output ""
+}
+
+function InitializeSkia () {
+    Write-Output "Initializing skia..."
 
     # sync skia dependencies
     Exec $python -a $git_sync_deps -wo $SKIA_PATH
+}
+
+function InitializeANGLE () {
+    Write-Output "Initializing ANGLE..."
+
+    # download ANGLE
+    $angleRoot = Join-Path $ANGLE_PATH "uwp"
+    $angleZip = Join-Path $angleRoot "ANGLE.WindowsStore.$angleVersion.nupkg"
+    if (!(Test-Path $angleZip)) {
+        Write-Output "Downloading ANGLE..."
+        New-Item $angleRoot -itemtype "Directory" -force | Out-Null
+        Invoke-WebRequest -Uri "https://www.nuget.org/api/v2/package/ANGLE.WindowsStore/$angleVersion" -OutFile $angleZip
+    }
+    
+    # extract ANGLE
+    if (!(Test-Path "$angleRoot/ANGLE.WindowsStore.nuspec")) {
+        Write-Output "Extracting ANGLE..."
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($angleZip, $angleRoot)
+    }
+}
+
+function InitializeHarfBuzz () {
+    Write-Output "Initializing HarfBuzz..."
 
     # download harfbuzz
     $harfbuzzZip = Join-Path $HARFBUZZ_PATH "harfbuzz-$harfbuzzVersion.tar.bz2"
     if (!(Test-Path $harfbuzzZip)) {
         Write-Output "Downloading HarfBuzz..."
-        New-Item $HARFBUZZ_PATH -ItemType "Directory" -force | Out-Null
+        New-Item $HARFBUZZ_PATH -itemtype "Directory" -force | Out-Null
         Invoke-WebRequest -Uri "https://github.com/behdad/harfbuzz/releases/download/$harfbuzzVersion/harfbuzz-$harfbuzzVersion.tar.bz2" -OutFile $harfbuzzZip
     }
     
@@ -154,7 +212,7 @@ function Initialize () {
         } else {
             throw 'TODO: Unzipping .tar.bz2 needs to be implemented.'
         }
-        Rename-Item "$HARFBUZZ_PATH/harfbuzz-$harfbuzzVersion" "$harfbuzzSource"
+        Move-Item "$HARFBUZZ_PATH/harfbuzz-$harfbuzzVersion" "$harfbuzzSource"
     }
 
     # configure harfbuzz
@@ -171,33 +229,9 @@ function Initialize () {
             Copy-Item "$harfbuzzSource/win32/config.h.win32" "$harfbuzzSource/win32/config.h"
         }
     }
-
-    # TODO: ANGLE
-    # # download ANGLE
-    # $harfbuzzZip = Join-Path $HARFBUZZ_PATH "harfbuzz-$harfbuzzVersion.tar.bz2"
-    # if (!(Test-Path $harfbuzzZip)) {
-    #     Write-Output "Downloading HarfBuzz..."
-    #     New-Item $HARFBUZZ_PATH -ItemType "Directory" -force | Out-Null
-    #     Invoke-WebRequest -Uri "https://github.com/behdad/harfbuzz/releases/download/$harfbuzzVersion/harfbuzz-$harfbuzzVersion.tar.bz2" -OutFile $harfbuzzZip
-    # }
-    
-    # # extract ANGLE
-    # $harfbuzzSource = Join-Path $HARFBUZZ_PATH "harfbuzz"
-    # if (!(Test-Path "$harfbuzzSource/README")) {
-    #     Write-Output "Extracting HarfBuzz..."
-    #     if ($IsMacOS -or $IsLinux) {
-    #         Exec $tar -a "-xjf $harfbuzzZip -C $HARFBUZZ_PATH"
-    #     } else {
-    #         throw 'TODO: Unzipping .tar.bz2 needs to be implemented.'
-    #     }
-    #     Rename-Item "$HARFBUZZ_PATH/harfbuzz-$harfbuzzVersion" "$harfbuzzSource"
-    # }
-
-    Write-Output "Repository initialization complete."
-    Write-Output ""
 }
 
-Function Build-Windows ([string] $arch, [string] $skiaArch, [string] $dir) {
+Function Build-Windows-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
     Write-Output "Building the Windows library for '$dir'..."
 
     # Build skia.lib
@@ -224,12 +258,12 @@ Function Build-Windows ([string] $arch, [string] $skiaArch, [string] $dir) {
 
     # Copy the output to the output folder
     $out = "output/native/windows/$dir"
-    New-Item $out -ItemType "Directory" -force | Out-Null
+    New-Item $out -itemtype "Directory" -force | Out-Null
     Copy-Item "native-builds/libSkiaSharp_windows/bin/$arch/Release/*" $out -force
     Copy-Item "native-builds/libHarfBuzzSharp_windows/bin/$arch/Release/*" $out -force
 }
 
-Function Build-UWP ([string] $arch, [string] $skiaArch, [string] $dir) {
+Function Build-UWP-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
     Write-Output "Building the UWP library for '$dir'..."
 
     # Build skia.lib
@@ -259,12 +293,12 @@ Function Build-UWP ([string] $arch, [string] $skiaArch, [string] $dir) {
 
     # Copy the output to the output folder
     $out = "output/native/uwp/$dir"
-    New-Item $out -ItemType "Directory" -force | Out-Null
+    New-Item $out -itemtype "Directory" -force | Out-Null
     Copy-Item "native-builds/libSkiaSharp_uwp/bin/$arch/Release/*" $out -force
     Copy-Item "native-builds/libHarfBuzzSharp_uwp/bin/$arch/Release/*" $out -force
 }
 
-Function Build-MacOS ([string] $arch, [string] $skiaArch, [string] $dir) {
+Function Build-MacOS-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
     Write-Output "Building the macOS library for '$dir'..."
 
     # Build skia.a
@@ -283,7 +317,7 @@ Function Build-MacOS ([string] $arch, [string] $skiaArch, [string] $dir) {
 
     # Copy the output to the output folder
     $out = "output/native/osx/$dir"
-    New-Item $out -ItemType "Directory" -force | Out-Null
+    New-Item $out -itemtype "Directory" -force | Out-Null
     Copy-Item "native-builds/libSkiaSharp_osx/build/Release/*" $out -force
     Copy-Item "native-builds/libHarfBuzzSharp_osx/build/Release/*" $out -force
 
@@ -292,7 +326,7 @@ Function Build-MacOS ([string] $arch, [string] $skiaArch, [string] $dir) {
     StripSign -target "$out/libHarfBuzzSharp.dylib"
 }
 
-Function Build-iOS ([string] $arch, [string] $skiaArch, [string] $dir) {
+Function Build-iOS-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
     Write-Output "Building the iOS library for '$dir'..."
 
     $sdk = $(if ($arch.Contains("arm")) { "iphoneos" } else { "iphonesimulator" })
@@ -314,7 +348,7 @@ Function Build-iOS ([string] $arch, [string] $skiaArch, [string] $dir) {
 
     # Copy the output to the output folder
     $out = "output/native/ios/$dir"
-    New-Item $out -ItemType "Directory" -force | Out-Null
+    New-Item $out -itemtype "Directory" -force | Out-Null
     Copy-Item "native-builds/libSkiaSharp_ios/build/Release-$sdk/libSkiaSharp.framework" $out -force -recurse
     Copy-Item "native-builds/libHarfBuzzSharp_ios/build/Release-$sdk/*" $out -force
 
@@ -323,7 +357,7 @@ Function Build-iOS ([string] $arch, [string] $skiaArch, [string] $dir) {
     StripSign -target "$out/libHarfBuzzSharp.a"
 }
 
-Function Build-TVOS ([string] $arch, [string] $skiaArch, [string] $dir) {
+Function Build-TVOS-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
     Write-Output "Building the tvOS library for '$dir'..."
 
     $sdk = $(if ($arch.Contains("arm")) { "appletvos" } else { "appletvsimulator" })
@@ -344,7 +378,7 @@ Function Build-TVOS ([string] $arch, [string] $skiaArch, [string] $dir) {
 
     # Copy the output to the output folder
     $out = "output/native/tvos/$dir"
-    New-Item $out -ItemType "Directory" -force | Out-Null
+    New-Item $out -itemtype "Directory" -force | Out-Null
     Copy-Item "native-builds/libSkiaSharp_tvos/build/Release-$sdk/libSkiaSharp.framework" $out -force -recurse
     Copy-Item "native-builds/libHarfBuzzSharp_tvos/build/Release-$sdk/*" $out -force
 
@@ -353,7 +387,7 @@ Function Build-TVOS ([string] $arch, [string] $skiaArch, [string] $dir) {
     StripSign -target "$out/libHarfBuzzSharp.a"
 }
 
-Function Build-WatchOS ([string] $arch, [string] $skiaArch, [string] $dir) {
+Function Build-WatchOS-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
     Write-Output "Building the watchOS library for '$dir'..."
 
     $sdk = $(if ($arch.Contains("arm")) { "watchos" } else { "watchsimulator" })
@@ -376,7 +410,7 @@ Function Build-WatchOS ([string] $arch, [string] $skiaArch, [string] $dir) {
 
     # Copy the output to the output folder
     $out = "output/native/watchos/$dir"
-    New-Item $out -ItemType "Directory" -force | Out-Null
+    New-Item $out -itemtype "Directory" -force | Out-Null
     Copy-Item "native-builds/libSkiaSharp_watchos/build/Release-$sdk/libSkiaSharp.framework" $out -force -recurse
     Copy-Item "native-builds/libHarfBuzzSharp_watchos/build/Release-$sdk/*" $out -force
 
@@ -385,54 +419,111 @@ Function Build-WatchOS ([string] $arch, [string] $skiaArch, [string] $dir) {
     StripSign -target "$out/libHarfBuzzSharp.a"
 }
 
+Function Build-Android-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
+    Write-Output "Building the Android library for '$dir'..."
+
+    $ndk_api = $(if ($skiaArch.EndsWith("64")) { "21" } else { "9" } )
+
+    # Build skia.a
+    GnNinja -out "android/$arch" -skiaArgs @"
+        is_official_build=true skia_enable_tools=false
+        target_os=\""android\"" target_cpu=\""$skiaArch\""
+        skia_use_system_freetype2=false
+        skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true
+        skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false
+        extra_cflags=[ \""-DSKIA_C_DLL\"" ]
+        extra_ldflags=[ \""-Wl,watchos_version_min=2.0\"" ]
+        ndk=\""$ANDROID_NDK_HOME\"" ndk_api=$ndk_api
+"@
+}
+
 # Output some useful information to the screen
 WriteSystemInfo
 
 # Initialize the repositories
 Initialize
 
+if (!$Platforms) {
+    $Platforms = @(
+        "android",
+        "ios",
+        "linux"
+        "macos",
+        "tvos",
+        "uwp",
+        "watchos",
+        "windows"
+    )
+} else {
+    $Platforms = $Platforms | ForEach-Object { $_.ToLowerInvariant() }
+}
+
 # Build the libraries
 if ($IsMacOS) {
     # Build for macOS
-    Build-MacOS -arch "i386" -skiaArch "x86" -dir "x86"
-    Build-MacOS -arch "x86_64" -skiaArch "x64" -dir "x64"
-    # Create the fat files
-    Lipo -dest "output/native/osx/libSkiaSharp.dylib" -libs @("x86", "x64")
-    Lipo -dest "output/native/osx/libHarfBuzzSharp.dylib" -libs @("x86", "x64")
+    if ($Platforms.Contains("macos") -or $Platforms.Contains("osx") -or $Platforms.Contains("mac")) {
+        Build-MacOS-Arch -arch "i386" -skiaArch "x86" -dir "x86"
+        Build-MacOS-Arch -arch "x86_64" -skiaArch "x64" -dir "x64"
+        # Create the fat files
+        Lipo -dest "output/native/osx/libSkiaSharp.dylib" -libs @("x86", "x64")
+        Lipo -dest "output/native/osx/libHarfBuzzSharp.dylib" -libs @("x86", "x64")
+    }
 
     # Build for iOS
-    Build-iOS -arch "x86_64" -skiaArch "x64" -dir "x64"
-    Build-iOS -arch "i386" -skiaArch "x86" -dir "x86"
-    Build-iOS -arch "armv7" -skiaArch "arm" -dir "arm"
-    Build-iOS -arch "arm64" -skiaArch "arm64" -dir "arm64"
-    # Create the fat files
-    Lipo -dest "output/native/ios/libSkiaSharp.framework" -libs @("arm", "arm64", "x86", "x64")
-    Lipo -dest "output/native/ios/libHarfBuzzSharp.a" -libs @("arm", "arm64", "x86", "x64")
+    if ($Platforms.Contains("ios")) {
+        Build-iOS-Arch -arch "x86_64" -skiaArch "x64" -dir "x64"
+        Build-iOS-Arch -arch "i386" -skiaArch "x86" -dir "x86"
+        Build-iOS-Arch -arch "armv7" -skiaArch "arm" -dir "arm"
+        Build-iOS-Arch -arch "arm64" -skiaArch "arm64" -dir "arm64"
+        # Create the fat files
+        Lipo -dest "output/native/ios/libSkiaSharp.framework" -libs @("arm", "arm64", "x86", "x64")
+        Lipo -dest "output/native/ios/libHarfBuzzSharp.a" -libs @("arm", "arm64", "x86", "x64")
+    }
 
     # Build for tvOS
-    Build-TVOS -arch "x86_64" -skiaArch "x64" -dir "x64"
-    Build-TVOS -arch "arm64" -skiaArch "arm64" -dir "arm64"
-    # Create the fat files
-    Lipo -dest "output/native/tvos/libSkiaSharp.framework" -libs @("arm64", "x64")
-    Lipo -dest "output/native/tvos/libHarfBuzzSharp.a" -libs @("arm64", "x64")
+    if ($Platforms.Contains("tvos")) {
+        Build-TVOS-Arch -arch "x86_64" -skiaArch "x64" -dir "x64"
+        Build-TVOS-Arch -arch "arm64" -skiaArch "arm64" -dir "arm64"
+        # Create the fat files
+        Lipo -dest "output/native/tvos/libSkiaSharp.framework" -libs @("arm64", "x64")
+        Lipo -dest "output/native/tvos/libHarfBuzzSharp.a" -libs @("arm64", "x64")
+    }
 
     # Build for watchOS
-    Build-WatchOS -arch "i386" -skiaArch "x86" -dir "x86"
-    Build-WatchOS -arch "armv7k" -skiaArch "arm" -dir "arm"
-    # Create the fat files
-    Lipo -dest "output/native/watchvos/libSkiaSharp.framework" -libs @("arm", "x86")
-    Lipo -dest "output/native/watchvos/libHarfBuzzSharp.a" -libs @("arm", "x86")
+    if ($Platforms.Contains("watchos")) {
+        Build-WatchOS-Arch -arch "i386" -skiaArch "x86" -dir "x86"
+        Build-WatchOS-Arch -arch "armv7k" -skiaArch "arm" -dir "arm"
+        # Create the fat files
+        Lipo -dest "output/native/watchos/libSkiaSharp.framework" -libs @("arm", "x86")
+        Lipo -dest "output/native/watchos/libHarfBuzzSharp.a" -libs @("arm", "x86")
+    }
 
-    # # Build for Android
+    # Build for Android
+    if ($Platforms.Contains("android")) {
+        Build-Android-Arch -arch "x86" -skiaArch "x86" -dir "x86"
+        Build-Android-Arch -arch "x86_64" -skiaArch "x64" -dir "x86_64"
+        Build-Android-Arch -arch "armeabi-v7a" -skiaArch "arm" -dir "armeabi-v7a"
+        Build-Android-Arch -arch "arm64-v8a" -skiaArch "arm64" -dir "arm64-v8a"
+        # build and copy libSkiaSharp
+        Exec $ndkbuild -a "-C native-builds/libSkiaSharp_android"
+        Copy-Dir "native-builds/libSkiaSharp_android/libs" "output/native/android"
+        # build and copy libHarfBuzzSharp
+        Exec $ndkbuild -a "-C native-builds/libHarfBuzzSharp_android"
+        Copy-Dir "native-builds/libHarfBuzzSharp_android/libs" "output/native/android"
+    }
 } elseif ($IsLinux) {
     # Build for Linux
 } else {
     # Build for Windows (Win32)
-    Build-Windows -arch "Win32" -skiaArch "x86" -dir "x86"
-    Build-Windows -arch "x64" -skiaArch "x64" -dir "x64"
+    if ($Platforms.Contains("windows") -or $Platforms.Contains("win")) {
+        Build-Windows-Arch -arch "Win32" -skiaArch "x86" -dir "x86"
+        Build-Windows-Arch -arch "x64" -skiaArch "x64" -dir "x64"
+    }
 
     # Build for UWP
-    Build-UWP -arch "Win32" -skiaArch "x86" -dir "x86"
-    Build-UWP -arch "x64" -skiaArch "x64" -dir "x64"
-    Build-UWP -arch "ARM" -skiaArch "arm" -dir "ARM"
+    if ($Platforms.Contains("uwp")) {
+        Build-UWP-Arch -arch "Win32" -skiaArch "x86" -dir "x86"
+        Build-UWP-Arch -arch "x64" -skiaArch "x64" -dir "x64"
+        Build-UWP-Arch -arch "ARM" -skiaArch "arm" -dir "ARM"
+    }
 }
