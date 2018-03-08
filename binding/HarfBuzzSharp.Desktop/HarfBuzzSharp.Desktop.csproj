@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Import Project="..\..\source\SkiaSharp.Build.props" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -12,8 +13,8 @@
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\mono.snk</AssemblyOriginatorKeyFile>
+    <PackagingGroup>HarfBuzzSharp</PackagingGroup>
+    <PackagingPlatform>net45</PackagingPlatform>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -43,41 +44,37 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="mdoc" Version="5.5.0" PrivateAssets="All" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\native-builds\lib\windows\x64\libHarfBuzzSharp.dll" Condition="Exists('..\..\native-builds\lib\windows\x64\libHarfBuzzSharp.dll')">
+    <None Include="..\..\output\native\windows\x64\libHarfBuzzSharp.dll" Condition="Exists('..\..\output\native\windows\x64\libHarfBuzzSharp.dll')">
       <Link>nuget\runtimes\win7-x64\native\libHarfBuzzSharp.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="..\..\native-builds\lib\windows\x86\libHarfBuzzSharp.dll" Condition="Exists('..\..\native-builds\lib\windows\x86\libHarfBuzzSharp.dll')">
+    <None Include="..\..\output\native\windows\x86\libHarfBuzzSharp.dll" Condition="Exists('..\..\output\native\windows\x86\libHarfBuzzSharp.dll')">
       <Link>nuget\runtimes\win7-x86\native\libHarfBuzzSharp.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="..\..\native-builds\lib\osx\libHarfBuzzSharp.dylib" Condition="Exists('..\..\native-builds\lib\osx\libHarfBuzzSharp.dylib')">
+    <None Include="..\..\output\native\osx\libHarfBuzzSharp.dylib" Condition="Exists('..\..\output\native\osx\libHarfBuzzSharp.dylib')">
       <Link>nuget\runtimes\osx\native\libHarfBuzzSharp.dylib</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="..\..\native-builds\lib\linux\x64\libHarfBuzzSharp.so" Condition="Exists('..\..\native-builds\lib\linux\x64\libHarfBuzzSharp.so')">
+    <None Include="..\..\output\native\linux\x64\libHarfBuzzSharp.so" Condition="Exists('..\..\output\native\linux\x64\libHarfBuzzSharp.so')">
       <Link>nuget\runtimes\linux-x64\native\libHarfBuzzSharp.so</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="..\..\native-builds\lib\linux\x86\libHarfBuzzSharp.so" Condition="Exists('..\..\native-builds\lib\linux\x86\libHarfBuzzSharp.so')">
+    <None Include="..\..\output\native\linux\x86\libHarfBuzzSharp.so" Condition="Exists('..\..\output\native\linux\x86\libHarfBuzzSharp.so')">
       <Link>nuget\runtimes\linux-x86\native\libHarfBuzzSharp.so</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\output\native\linux\arm\libHarfBuzzSharp.so" Condition="Exists('..\..\output\native\linux\arm\libHarfBuzzSharp.so')">
+      <Link>nuget\runtimes\linux-arm\native\libHarfBuzzSharp.so</Link>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="nuget\build\net45\HarfBuzzSharp.Desktop.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="nuget\build\net45\HarfBuzzSharp.dll.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <SubType>Designer</SubType>
-    </None>
+    <None Include="nuget\build\net45\HarfBuzzSharp.Desktop.targets" />
+    <None Include="nuget\build\net45\HarfBuzzSharp.dll.config" />
   </ItemGroup>
   <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" />
   <Import Project="..\HarfBuzzSharp.Shared\HarfBuzzSharp.Shared.projitems" Label="Shared" />
+  <Import Project="..\..\source\SkiaSharp.Build.targets" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

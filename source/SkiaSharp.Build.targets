@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' And Exists ('/Library/Frameworks/Mono.framework/Versions/Current/bin/mono') ">/Library/Frameworks/Mono.framework/Versions/Current/bin/mono</_ManagedExeLauncher>
+    <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' And Exists ('/usr/local/bin/mono') ">/usr/local/bin/mono</_ManagedExeLauncher>
+    <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' And Exists ('/usr/bin/mono') ">/usr/bin/mono</_ManagedExeLauncher>
+    <_ManagedExeLauncher Condition=" '$(OS)' != 'Windows_NT' And '$(_ManagedExeLauncher)' == '' ">mono</_ManagedExeLauncher>
+
+    <PublicSign Condition=" '$(PublicSign)' == '' and '$(SignAssembly)' == 'true' and '$(OS)' != 'Windows_NT' ">true</PublicSign>
+    <KeyFileName Condition=" '$(KeyFileName)' == '' ">mono.snk</KeyFileName>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\$(KeyFileName)</AssemblyOriginatorKeyFile>
+
+    <!--
+      Ignore this message:
+        Warning VSX1000
+        No Address and User has been specified in order to establish a connection to a Mac Server, so only the main
+        assembly was compiled for project '<project name>'. Connect to a Mac Server and try again to build the full
+        application.
+    -->
+    <MSBuildWarningsAsMessages>VSX1000</MSBuildWarningsAsMessages>
+    <!--
+      Ignore this message:
+        Warning MSB9004
+        ManifestResourceWithNoCulture item type is deprecated. Emit EmbeddedResource items instead, with metadata
+        WithCulture='false', Type='Resx', and optional LogicalName.
+    -->
+    <MSBuildWarningsAsMessages>MSB9004</MSBuildWarningsAsMessages>
+  </PropertyGroup>
+
+  <!--
+    ===================================================================================================================
+    _SignAssembly
+
+    Sign the assembly using sn.
+    ===================================================================================================================
+  -->
+  <Target Name="_SignAssembly" AfterTargets="CoreCompile" Condition=" '$(IsWindows)' != 'true' and '$(SignAssembly)' == 'true' ">
+    <Exec Command="sn -q -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
+  </Target>
+
+  <!--
+    ===================================================================================================================
+    _CheckSkiaSharpBuildPropsImported
+
+    Make sure that SkiaSharp.Build.props was added.
+    ===================================================================================================================
+  -->
+  <Target Name="_CheckSkiaSharpBuildPropsImported" BeforeTargets="BeforeBuild">
+    <Error Text="SkiaSharp.Build.props was not imported." Condition=" '$(SkiaSharpBuildPropsImported)' != 'true' " />
+  </Target>
+
+  <!--
+    ===================================================================================================================
+    _CopyToOutputDirectory
+
+    Copy the project output into the root output folder.
+    ===================================================================================================================
+  -->
+  <Target Name="_CopyToOutputDirectory" AfterTargets="Build">
+    <ItemGroup Condition=" '$(PackagingLocation)' == '' ">
+      <_CopyItems Include="$(TargetPath)" Dest="nuget\lib\$(PackagingPlatform)\$(TargetFileName)" />
+      <_CopyItems Include="$(TargetDir)$(TargetName).xml" Dest="nuget\lib\$(PackagingPlatform)\$(TargetName).xml" Condition=" Exists('$(TargetDir)$(TargetName).xml') " />
+      <_CopyItems Include="$(TargetDir)$(TargetName).pdb" Dest="nuget\lib\$(PackagingPlatform)\$(TargetName).pdb" />
+    </ItemGroup>
+    <ItemGroup Condition=" '$(PackagingLocation)' != '' ">
+      <_CopyItems Include="$(TargetPath)" Dest="nuget\$(PackagingLocation)\$(TargetFileName)" />
+      <_CopyItems Include="$(TargetDir)$(TargetName).xml" Dest="nuget\$(PackagingLocation)\$(TargetName).xml" Condition=" Exists('$(TargetDir)$(TargetName).xml') " />
+      <_CopyItems Include="$(TargetDir)$(TargetName).pdb" Dest="nuget\$(PackagingLocation)\$(TargetName).pdb" />
+    </ItemGroup>
+    <ItemGroup>
+      <_CopyItems Include="@(_NoneWithTargetPath)" Dest="%(_NoneWithTargetPath.TargetPath)" />
+    </ItemGroup>
+    <Copy Condition=" '@(_CopyItems)' != '' "
+          SourceFiles="@(_CopyItems)"
+          DestinationFiles="@(_CopyItems -> '$(MSBuildThisFileDirectory)..\output\$(PackagingGroup)\%(Dest)')"
+          ContinueOnError="false"
+          Retries="0" />
+  </Target>
+
+  <!--
+    ===================================================================================================================
+    MDocGenerateDocs
+
+    Generated the XML documentation file using mdoc.
+    This runs during the build phase.
+    ===================================================================================================================
+  -->
+  <Target Name="MDocGenerateDocs" AfterTargets="CoreCompile">
+    <PropertyGroup>
+      <MDocVersion Condition=" '%(Identity)' == 'mdoc' ">@(PackageReference -> '%(Version)')</MDocVersion>
+      <MDocPackagePath Condition=" '%(Name)' == 'mdoc' ">@(PackageDefinitions -> '%(ResolvedPath)')</MDocPackagePath>
+      <MDocPackagePath Condition=" '$(MDocPackagePath)' == '' ">$(NuGetPackageRoot)\mdoc\$(MDocVersion)</MDocPackagePath>
+      <MDocToolPath>$(MDocPackagePath)\tools\mdoc.exe</MDocToolPath>
+      <MDocOutputName>$(TargetName).xml</MDocOutputName>
+      <MDocOutputPath>$(TargetDir)$(MDocOutputName)</MDocOutputPath>
+      <_ShouldGenerateDocs Condition=" '$(MDocDocumentationDirectory)' != '' and Exists('$(MDocDocumentationDirectory)\index.xml') ">true</_ShouldGenerateDocs>
+    </PropertyGroup>
+    <ItemGroup Condition=" '$(_ShouldGenerateDocs)' == 'true' ">
+      <FileWrites Include="$(MDocOutputPath)" />
+    </ItemGroup>
+    <Exec Condition=" '$(_ShouldGenerateDocs)' == 'true' "
+          Command="$(_ManagedExeLauncher) &quot;$(MDocToolPath)&quot; export-msxdoc --out=&quot;$(MDocOutputPath)&quot; &quot;$(MDocDocumentationDirectory)&quot;" />
+  </Target>
+
+</Project>
