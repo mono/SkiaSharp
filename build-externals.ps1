@@ -356,7 +356,7 @@ Function Build-TVOS ([string] $arch, [string] $skiaArch, [string] $dir) {
 Function Build-WatchOS ([string] $arch, [string] $skiaArch, [string] $dir) {
     Write-Output "Building the watchOS library for '$dir'..."
 
-    $sdk = $(if ($arch.Contains("arm")) { "iphoneos" } else { "iphonesimulator" })
+    $sdk = $(if ($arch.Contains("arm")) { "watchos" } else { "watchsimulator" })
     $extrasFlags = $(if ($arch.StartsWith("armv7")) { ", \""-Wno-over-aligned\""" } else { "" } )
 
     # Build skia.a
