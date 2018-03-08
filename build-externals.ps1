@@ -13,13 +13,14 @@ $SKIA_PATH = Join-Path $PSScriptRoot 'externals/skia'
 $DEPOT_PATH = Join-Path $PSScriptRoot 'externals/depot_tools'
 $HARFBUZZ_PATH = Join-Path $PSScriptRoot 'externals/harfbuzz'
 $ANGLE_PATH = Join-Path $PSScriptRoot 'externals/angle'
+$HOME_PATH = $(if ($IsMacOS -or $IsLinux) { $env:HOME } else { $env:USERPROFILE })
 $ANDROID_NDK_HOME = $env:ANDROID_NDK_HOME
 if (!$ANDROID_NDK_HOME -or $(Test-Path $ANDROID_NDK_HOME)) {
-    $ANDROID_NDK_HOME = Join-Path $env:HOME '/Library/Developer/Xamarin/android-ndk'
+    $ANDROID_NDK_HOME = Join-Path $HOME_PATH 'Library/Developer/Xamarin/android-ndk'
 }
 
 # Tools
-$where = $(if ($IsMacOS -or $IsLinux) { 'which' } else { 'where' })
+$where = $(if ($IsMacOS -or $IsLinux) { 'which' } else { "$env:SystemRoot\system32\where.exe" })
 $python = & $where 'python'
 $git_sync_deps = Join-Path $SKIA_PATH 'tools/git-sync-deps'
 $gn = Join-Path $SKIA_PATH $(if ($IsMacOS -or $IsLinux) { 'bin/gn' } else { 'bin/gn.exe' })
@@ -27,7 +28,7 @@ $ninja = Join-Path $DEPOT_PATH $(if ($IsMacOS -or $IsLinux) { 'ninja' } else { '
 $xcodebuild = & $where 'xcodebuild'
 $msbuild = & $where 'msbuild'
 if (!$IsMacOS) {
-    $vswhere = 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe'
+    $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
     $msbuild = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
     $msbuild = Join-Path $msbuild 'MSBuild\15.0\Bin\MSBuild.exe'
 }
@@ -139,6 +140,7 @@ function WriteSystemInfo () {
     Write-Output "  Python:         '$python'"
     Write-Output "  strip:          '$strip'"
     Write-Output "  tar:            '$tar'"
+    Write-Output "  where/which:    '$where'"
     Write-Output "  XCodeBuild:     '$xcodebuild'"
     Write-Output ""
     Write-Output "Other Paths:"
