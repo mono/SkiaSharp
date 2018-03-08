@@ -1,18 +1,19 @@
 Param (
-    [string[]] $Platforms = $Null,
+    [string[]] $Platforms = $null,
     [string] $HarfBuzzVersion = "1.4.6",
     [string] $ANGLEVersion = "2.1.13"
 )
 
+# Prepare the script itself
 $ErrorActionPreference = 'Stop'
-
-Add-Type -assembly "System.IO.Compression.FileSystem"
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 # Paths
 $SKIA_PATH = Join-Path $PSScriptRoot 'externals/skia'
 $DEPOT_PATH = Join-Path $PSScriptRoot 'externals/depot_tools'
 $HARFBUZZ_PATH = Join-Path $PSScriptRoot 'externals/harfbuzz'
 $ANGLE_PATH = Join-Path $PSScriptRoot 'externals/angle'
+$7ZIP4PWSH_PATH = Join-Path $PSScriptRoot 'externals/7zip4pwsh'
 $HOME_PATH = $(if ($IsMacOS -or $IsLinux) { $env:HOME } else { $env:USERPROFILE })
 $ANDROID_NDK_HOME = $env:ANDROID_NDK_HOME
 if (!$ANDROID_NDK_HOME -or $(Test-Path $ANDROID_NDK_HOME)) {
@@ -37,6 +38,7 @@ $codesign = & $where 'codesign'
 $lipo = & $where 'lipo'
 $tar = & $where 'tar'
 $bash = & $where 'bash'
+$git = & $where 'git'
 $ndkbuild = Join-Path $ANDROID_NDK_HOME 'ndk-build'
 
 # Get tool versions
@@ -44,6 +46,7 @@ $powershellVersion = "$($PSVersionTable.PSVersion.ToString()) ($($PSVersionTable
 $msbuildVersion = & $msbuild -version -nologo
 $operatingSystem = if ($IsMacOS) { 'macOS' } elseif ($IsLinux) { 'Linux' } else { 'Windows' }
 $xcodebuildVersion = if ($IsMacOS) { & $xcodebuild -version } else { 'not supported' }
+$7zip4pwshVersion = "1.8.0"
 
 # Utility functions
 
@@ -109,6 +112,10 @@ function StripSign ([string] $target) {
     Exec $codesign -a "--force --sign - --timestamp=none $target"
 }
 
+function MSBuild ([string] $project, [string] $arch) {
+    Exec $msbuild -a "$project /p:Configuration=Release /p:Platform=$arch /v:minimal"
+}
+
 # The main script
 
 function WriteSystemInfo () {
@@ -123,6 +130,7 @@ function WriteSystemInfo () {
     Write-Output "Tool Versions:"
     Write-Output "  MSBuild version:  '$msbuildVersion'"
     Write-Output "  XCode version:    '$xcodebuildVersion'"
+    Write-Output "  7Zip4Powershell:  '$7zip4pwshVersion'"
     Write-Output ""
     Write-Output "Other Versions:"
     Write-Output "  ANGLE version:     '$ANGLEVersion'"
@@ -131,6 +139,7 @@ function WriteSystemInfo () {
     Write-Output "Tool Paths:"
     Write-Output "  bash:           '$bash'"
     Write-Output "  codesign:       '$codesign'"
+    Write-Output "  git:            '$git'"
     Write-Output "  git-sync-deps:  '$git_sync_deps'"
     Write-Output "  gn:             '$gn'"
     Write-Output "  lipo:           '$lipo'"
@@ -144,6 +153,7 @@ function WriteSystemInfo () {
     Write-Output "  XCodeBuild:     '$xcodebuild'"
     Write-Output ""
     Write-Output "Other Paths:"
+    Write-Output "  7ZIP4PWSH_PATH:   '$7ZIP4PWSH_PATH'"
     Write-Output "  ANGLE_PATH:       '$ANGLE_PATH'"
     Write-Output "  DEPOT_PATH:       '$DEPOT_PATH'"
     Write-Output "  HARFBUZZ_PATH:    '$HARFBUZZ_PATH'"
@@ -152,6 +162,13 @@ function WriteSystemInfo () {
     Write-Output ""
 
     $host.UI.RawUI.ForegroundColor = $fc
+}
+
+function InitializeTools () {
+    Write-Output "Initializing tools..."
+    Initialize7zip
+    Write-Output "Tool initialization complete."
+    Write-Output ""
 }
 
 # Initialize the repository
@@ -164,11 +181,40 @@ function Initialize () {
     Write-Output ""
 }
 
+function Initialize7zip () {
+    # 7zip is only supported on Windows
+    if ($IsMacOS -or $IsLinux) {
+        return;
+    }
+
+    Write-Output "Initializing 7zip..."
+
+    # download 7zip
+    $7zipZip = Join-Path $7ZIP4PWSH_PATH "7Zip4Powershell.$7zip4pwshVersion.zip"
+    if (!(Test-Path $7zipZip)) {
+        Write-Output "Downloading 7zip..."
+        New-Item $7ZIP4PWSH_PATH -itemtype "Directory" -force | Out-Null
+        Invoke-WebRequest -Uri "https://www.nuget.org/api/v2/package/7Zip4Powershell/$7zip4pwshVersion" -OutFile $7zipZip
+    }
+    
+    # extract 7zip
+    if (!(Test-Path "$7ZIP4PWSH_PATH/7Zip4Powershell.nuspec")) {
+        Write-Output "Extracting 7zip..."
+        Expand-Archive $7zipZip $7ZIP4PWSH_PATH
+    }
+
+    Import-Module "$7ZIP4PWSH_PATH/tools/7Zip4PowerShell.psd1"
+}
+
 function InitializeSkia () {
     Write-Output "Initializing skia..."
 
     # sync skia dependencies
+    Exec $git -a "submodule update --init --recursive"
     Exec $python -a $git_sync_deps -wo $SKIA_PATH
+
+    # inject compatibility headers into third party libraries
+    InjectCompatibilityExternals
 }
 
 function InitializeANGLE () {
@@ -176,7 +222,7 @@ function InitializeANGLE () {
 
     # download ANGLE
     $angleRoot = Join-Path $ANGLE_PATH "uwp"
-    $angleZip = Join-Path $angleRoot "ANGLE.WindowsStore.$ANGLEVersion.nupkg"
+    $angleZip = Join-Path $angleRoot "ANGLE.WindowsStore.$ANGLEVersion.zip"
     if (!(Test-Path $angleZip)) {
         Write-Output "Downloading ANGLE..."
         New-Item $angleRoot -itemtype "Directory" -force | Out-Null
@@ -186,7 +232,7 @@ function InitializeANGLE () {
     # extract ANGLE
     if (!(Test-Path "$angleRoot/ANGLE.WindowsStore.nuspec")) {
         Write-Output "Extracting ANGLE..."
-        [System.IO.Compression.ZipFile]::ExtractToDirectory($angleZip, $angleRoot)
+        Expand-Archive $angleZip $angleRoot
     }
 }
 
@@ -194,21 +240,23 @@ function InitializeHarfBuzz () {
     Write-Output "Initializing HarfBuzz..."
 
     # download harfbuzz
-    $harfbuzzZip = Join-Path $HARFBUZZ_PATH "harfbuzz-$HarfBuzzVersion.tar.bz2"
-    if (!(Test-Path $harfbuzzZip)) {
+    $harfbuzzBzip = Join-Path $HARFBUZZ_PATH "harfbuzz-$HarfBuzzVersion.tar.bz2"
+    $harfbuzzTar = Join-Path $HARFBUZZ_PATH "harfbuzz-$HarfBuzzVersion.tar"
+    if (!(Test-Path $harfbuzzBzip)) {
         Write-Output "Downloading HarfBuzz..."
         New-Item $HARFBUZZ_PATH -itemtype "Directory" -force | Out-Null
-        Invoke-WebRequest -Uri "https://github.com/behdad/harfbuzz/releases/download/$HarfBuzzVersion/harfbuzz-$HarfBuzzVersion.tar.bz2" -OutFile $harfbuzzZip
+        Invoke-WebRequest -Uri "https://github.com/behdad/harfbuzz/releases/download/$HarfBuzzVersion/harfbuzz-$HarfBuzzVersion.tar.bz2" -OutFile $harfbuzzBzip
     }
-    
+
     # extract harfbuzz
     $harfbuzzSource = Join-Path $HARFBUZZ_PATH "harfbuzz"
     if (!(Test-Path "$harfbuzzSource/README")) {
         Write-Output "Extracting HarfBuzz..."
         if ($IsMacOS -or $IsLinux) {
-            Exec $tar -a "-xjf $harfbuzzZip -C $HARFBUZZ_PATH"
+            Exec $tar -a "-xjf $harfbuzzBzip -C $HARFBUZZ_PATH"
         } else {
-            throw 'TODO: Unzipping .tar.bz2 needs to be implemented.'
+            Expand-7Zip $harfbuzzBzip $HARFBUZZ_PATH
+            Expand-7Zip $harfbuzzTar $HARFBUZZ_PATH
         }
         Move-Item "$HARFBUZZ_PATH/harfbuzz-$HarfBuzzVersion" "$harfbuzzSource"
     }
@@ -229,6 +277,36 @@ function InitializeHarfBuzz () {
     }
 }
 
+function InjectCompatibilityExternals ([bool] $inject = $true) {
+    # Some methods don't yet on UWP, so we must add the compat layer to them.
+    # We need this in this manner as we can't modify the third party files.
+    # All we do is insert our header before all the others.
+    $compatHeader = "native-builds/src/WinRTCompat.h"
+    $compatSource = "native-builds/src/WinRTCompat.c"
+    $files = @{
+        "externals/skia/third_party/externals/dng_sdk/source/dng_string.cpp"      = "#if qWinOS"
+        "externals/skia/third_party/externals/dng_sdk/source/dng_utils.cpp"       = "#if qWinOS"
+        "externals/skia/third_party/externals/dng_sdk/source/dng_pthread.cpp"     = "#if qWinOS"
+        "externals/skia/third_party/externals/zlib/deflate.c"                     = "#include <assert.h>"
+        "externals/skia/third_party/externals/libjpeg-turbo/simd/jsimd_x86_64.c"  = "#define JPEG_INTERNALS"
+        "externals/skia/third_party/externals/libjpeg-turbo/simd/jsimd_i386.c"    = "#define JPEG_INTERNALS"
+        "externals/skia/third_party/externals/libjpeg-turbo/simd/jsimd_arm.c"     = "#define JPEG_INTERNALS"
+        "externals/skia/third_party/externals/libjpeg-turbo/simd/jsimd_arm64.c"   = "#define JPEG_INTERNALS"
+    }
+    $files.GetEnumerator() | ForEach-Object {
+        $file = $_.Key
+        $segments = "../" * ($file.Length - $file.Replace("/", "").Length)
+        $relativeInclude = "#include ""$segments$compatHeader"""
+
+        $firstLine = Get-Content $file -first 1
+        if ($inject -and ($firstLine -ne $relativeInclude)) {
+            "$relativeInclude`n" + (Get-Content $file | Out-String) | Set-Content $file
+        } elseif (!$inject -and ($firstLine -eq $relativeInclude)) {
+            (Get-Content $file) | Select-Object -Skip 1 | Set-Content $file
+        }
+    }
+}
+
 Function Build-Windows-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
     Write-Output "Building the Windows library for '$dir'..."
 
@@ -242,17 +320,9 @@ Function Build-Windows-Arch ([string] $arch, [string] $skiaArch, [string] $dir) 
         extra_ldflags=[ \""/DEBUG\"" ]
 "@
 
-    # Build libSkiaSharp.dll
-    Exec $msbuild -a @"
-        native-builds/libSkiaSharp_windows/libSkiaSharp.sln
-        /p:Configuration=Release /p:Platform=$arch /v:minimal
-"@
-
-    # Build libHarfBuzzSharp.dll
-    Exec $msbuild -a @"
-        native-builds/libHarfBuzzSharp_windows/libHarfBuzzSharp.sln
-        /p:Configuration=Release /p:Platform=$arch /v:minimal
-"@
+    # Build libSkiaSharp.dll and libHarfBuzzSharp.dll
+    MSBuild -project "native-builds/libSkiaSharp_windows/libSkiaSharp.sln" -arch $arch
+    MSBuild -project "native-builds/libHarfBuzzSharp_windows/libHarfBuzzSharp.sln" -arch $arch
 
     # Copy the output to the output folder
     $out = "output/native/windows/$dir"
@@ -277,17 +347,9 @@ Function Build-UWP-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
         extra_ldflags=[ \""/APPCONTAINER\"",  \""/DEBUG\"" ]
 "@
 
-    # Build libSkiaSharp.dll
-    Exec $msbuild -a @"
-        native-builds/libSkiaSharp_uwp/libSkiaSharp.sln
-        /p:Configuration=Release /p:Platform=$arch /v:minimal
-"@
-
-    # Build libHarfBuzzSharp.dll
-    Exec $msbuild -a @"
-        native-builds/libHarfBuzzSharp_uwp/libHarfBuzzSharp.sln
-        /p:Configuration=Release /p:Platform=$arch /v:minimal
-"@
+    # Build libSkiaSharp.dll and libHarfBuzzSharp.dll
+    MSBuild -project "native-builds/libSkiaSharp_uwp/libSkiaSharp.sln" -arch $arch
+    MSBuild -project "native-builds/libHarfBuzzSharp_uwp/libHarfBuzzSharp.sln" -arch $arch
 
     # Copy the output to the output folder
     $out = "output/native/uwp/$dir"
@@ -435,6 +497,9 @@ Function Build-Android-Arch ([string] $arch, [string] $skiaArch, [string] $dir) 
 "@
 }
 
+# Initialize the tooling
+InitializeTools
+
 # Output some useful information to the screen
 WriteSystemInfo
 
@@ -522,6 +587,11 @@ if ($IsMacOS) {
     if ($Platforms.Contains("uwp")) {
         Build-UWP-Arch -arch "Win32" -skiaArch "x86" -dir "x86"
         Build-UWP-Arch -arch "x64" -skiaArch "x64" -dir "x64"
-        Build-UWP-Arch -arch "ARM" -skiaArch "arm" -dir "ARM"
+        Build-UWP-Arch -arch "ARM" -skiaArch "arm" -dir "arm"
+
+        # copy ANGLE to output folder
+        Copy-Item "$ANGLE_PATH/uwp/bin/UAP/ARM/*.dll" "output/native/uwp/arm"
+        Copy-Item "$ANGLE_PATH/uwp/bin/UAP/Win32/*.dll" "output/native/uwp/x86"
+        Copy-Item "$ANGLE_PATH/uwp/bin/UAP/x64/*.dll" "output/native/uwp/x64"
     }
 }
