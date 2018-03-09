@@ -76,7 +76,7 @@ Function MSBuild ([string] $project, [string] $arch = "Any CPU", [string] $confi
 }
 
 Function GetVersion ([string]$lib, [string]$type = "nuget") {
-    $matches = (Get-Content "versions.txt" | Select-String -pattern "^$lib\s*$type\s*([\.\d]*)$")
+    $matches = (Get-Content "versions.txt" | Select-String -pattern "^$lib\s*$type\s*(.*)$")
     return $matches.Matches[0].Groups[1].Value
 }
 

@@ -196,9 +196,6 @@ Function InitializeSkia () {
     # sync skia dependencies
     Exec $git -a "submodule update --init --recursive"
     Exec $python -a $git_sync_deps -wo $SKIA_PATH
-
-    # inject compatibility headers into third party libraries
-    InjectCompatibilityExternals
 }
 
 Function InitializeANGLE () {
@@ -263,38 +260,6 @@ Function InitializeHarfBuzz () {
     }
 }
 
-Function InjectCompatibilityExternals ([bool] $inject = $true) {
-    WriteLine "Injecting compatibility headers into external sources..."
-
-    # Some methods don't yet on UWP, so we must add the compat layer to them.
-    # We need this in this manner as we can't modify the third party files.
-    # All we do is insert our header before all the others.
-    $compatHeader = "native-builds/src/WinRTCompat.h"
-    $compatSource = "native-builds/src/WinRTCompat.c"
-    $files = @{
-        "externals/skia/third_party/externals/dng_sdk/source/dng_string.cpp"      = "#if qWinOS"
-        "externals/skia/third_party/externals/dng_sdk/source/dng_utils.cpp"       = "#if qWinOS"
-        "externals/skia/third_party/externals/dng_sdk/source/dng_pthread.cpp"     = "#if qWinOS"
-        "externals/skia/third_party/externals/zlib/deflate.c"                     = "#include <assert.h>"
-        "externals/skia/third_party/externals/libjpeg-turbo/simd/jsimd_x86_64.c"  = "#define JPEG_INTERNALS"
-        "externals/skia/third_party/externals/libjpeg-turbo/simd/jsimd_i386.c"    = "#define JPEG_INTERNALS"
-        "externals/skia/third_party/externals/libjpeg-turbo/simd/jsimd_arm.c"     = "#define JPEG_INTERNALS"
-        "externals/skia/third_party/externals/libjpeg-turbo/simd/jsimd_arm64.c"   = "#define JPEG_INTERNALS"
-    }
-    $files.GetEnumerator() | ForEach-Object {
-        $file = $_.Key
-        $segments = "../" * ($file.Length - $file.Replace("/", "").Length)
-        $relativeInclude = "#include ""$segments$compatHeader"""
-
-        $firstLine = Get-Content $file -first 1
-        if ($inject -and ($firstLine -ne $relativeInclude)) {
-            "$relativeInclude`n" + (Get-Content $file | Out-String) | Set-Content $file
-        } elseif (!$inject -and ($firstLine -eq $relativeInclude)) {
-            (Get-Content $file) | Select-Object -Skip 1 | Set-Content $file
-        }
-    }
-}
-
 Function Build-Windows-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
     WriteLine "Building the Windows library for '$dir'..."
 
@@ -309,7 +274,6 @@ Function Build-Windows-Arch ([string] $arch, [string] $skiaArch, [string] $dir) 
 "@
 
     # Build libSkiaSharp.dll and libHarfBuzzSharp.dll
-    MSBuild -project "native-builds/libSkiaSharp_windows/libSkiaSharp.sln" -arch $arch
     MSBuild -project "native-builds/libHarfBuzzSharp_windows/libHarfBuzzSharp.sln" -arch $arch
 
     # Copy the output to the output folder
@@ -336,7 +300,6 @@ Function Build-UWP-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
 "@
 
     # Build libSkiaSharp.dll and libHarfBuzzSharp.dll
-    MSBuild -project "native-builds/libSkiaSharp_uwp/libSkiaSharp.sln" -arch $arch
     MSBuild -project "native-builds/libHarfBuzzSharp_uwp/libHarfBuzzSharp.sln" -arch $arch
 
     # Copy the output to the output folder
