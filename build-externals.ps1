@@ -4,30 +4,16 @@ Param (
     [string] $ANGLEVersion = "2.1.13"
 )
 
-# Prepare the script itself
 $ErrorActionPreference = 'Stop'
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-function FindTool ([string] $tool) {
-    if ($IsMacOS -or $IsLinux) {
-        return & 'which' $tool
-    } else {
-        $where = "$env:SystemRoot\system32\where.exe"
-        & $where /Q $tool
-        if ($?) {
-            return & $where $tool
-        }
-    }
-    return $null
-}
+# Prepare the script itself
+. "./build-common.ps1"
 
 # Paths
 $SKIA_PATH = Join-Path $PSScriptRoot 'externals/skia'
 $DEPOT_PATH = Join-Path $PSScriptRoot 'externals/depot_tools'
 $HARFBUZZ_PATH = Join-Path $PSScriptRoot 'externals/harfbuzz'
 $ANGLE_PATH = Join-Path $PSScriptRoot 'externals/angle'
-$7ZIP4PWSH_PATH = Join-Path $PSScriptRoot 'externals/7zip4pwsh'
-$HOME_PATH = $(if ($IsMacOS -or $IsLinux) { $env:HOME } else { $env:USERPROFILE })
 $ANDROID_NDK_HOME = $env:ANDROID_NDK_HOME
 
 # Tools
@@ -36,7 +22,6 @@ $git_sync_deps = Join-Path $SKIA_PATH 'tools/git-sync-deps'
 $gn = Join-Path $SKIA_PATH $(if ($IsMacOS -or $IsLinux) { 'bin/gn' } else { 'bin/gn.exe' })
 $ninja = Join-Path $DEPOT_PATH $(if ($IsMacOS -or $IsLinux) { 'ninja' } else { 'ninja.exe' })
 $xcodebuild = FindTool 'xcodebuild'
-$msbuild = FindTool 'msbuild'
 $strip = FindTool 'strip'
 $codesign = FindTool 'codesign'
 $lipo = FindTool 'lipo'
@@ -46,36 +31,13 @@ $git = FindTool 'git'
 $ndkbuild = ''
 
 # Get tool versions
-$powershellVersion = "$($PSVersionTable.PSVersion.ToString()) ($($PSVersionTable.PSEdition.ToString()))"
-$operatingSystem = if ($IsMacOS) { 'macOS' } elseif ($IsLinux) { 'Linux' } else { 'Windows' }
-$7zip4pwshVersion = "1.8.0"
-$msbuildVersion = ''
 $xcodebuildVersion = ''
 $pythonVersion = ''
-
-# Utility functions
-
-function Copy-Dir ([string] $src, [string] $dest) {
-    New-Item $dest -itemtype "Directory" -force | Out-Null
-    Get-ChildItem $src -Directory | ForEach-Object {
-        Copy-Item -literalpath "$src/$_" $dest -force -recurse | Out-Null
-    }
-}
-
-function Exec ([string] $file, [string[]] $a, [string] $wo) {
-    if (!$wo) {
-        $wo = "."
-    }
-    $process = Start-Process $file -args $a -wo $wo -nnw -wait -passthru
-    if ($process.ExitCode -ne 0) {
-        throw "Process '$file' exited with error code '$($process.ExitCode.ToString())'." 
-    }
-}
 
 # Tool helpers
 
 function Lipo ([string] $dest, [string[]] $libs) {
-    Write-Output "Creating fat file '$dest'..."
+    WriteLine "Creating fat file '$dest'..."
 
     $dir = Split-Path -path $dest
     $name = Split-Path -path $dest -leaf
@@ -94,13 +56,12 @@ function Lipo ([string] $dest, [string[]] $libs) {
 }
 
 function GnNinja ([string] $out, [string] $skiaArgs) {
-    Write-Output "Building the native library to '$out'..."
     Exec $gn -a " gen out/$out -q --args=""$skiaArgs"" " -wo $SKIA_PATH
     Exec $ninja -a " -C out/$out " -wo $SKIA_PATH
 }
 
 function XCodeBuild ([string] $project, [string] $sdk, [string] $arch) {
-    Write-Output "Building '$project' as $sdk|$arch..."
+    WriteLine "Building '$project' as $sdk|$arch..."
     $target = [System.IO.Path]::GetFileNameWithoutExtension($project)
     $xcodebuildArgs = "-project $project -target $target -sdk $sdk -arch $arch -configuration Release -quiet"
     Exec $xcodebuild -a $xcodebuildArgs
@@ -112,25 +73,21 @@ function StripSign ([string] $target) {
     } else {
         $archive = $target
     }
-    Write-Output "Stripping and signing '$target'..."
+    WriteLine "Stripping and signing '$target'..."
     Exec $strip -a "-x -S $archive"
     Exec $codesign -a "--force --sign - --timestamp=none $target"
-}
-
-function MSBuild ([string] $project, [string] $arch) {
-    Exec $msbuild -a "$project /p:Configuration=Release /p:Platform=$arch /v:quiet"
 }
 
 # The main script
 
 function InitializeTools () {
-    Write-Output "Initializing tools..."
-    Initialize7zip
+    WriteLine "$hr"
+    WriteLine "Initializing tools..."
+    WriteLine ""
 
-    # make sure the home directory exists
-    if (!(Test-Path $HOME_PATH)) {
-        throw 'For some reason, this user doesn''t have a home directory'
-    }
+    # 7zip
+    DownloadNuGet "7Zip4Powershell" "1.8.0"
+    Import-Module "./externals/7Zip4PowerShell/tools/7Zip4PowerShell.psd1"
 
     # try and find the tools
     if ($IsMacOS) {
@@ -149,128 +106,90 @@ function InitializeTools () {
         }
 
         # find xcodebuild
-        if (!(Test-Path $xcodebuild)) {
+        if (!$xcodebuild -or !(Test-Path $xcodebuild)) {
             throw 'Unable to locate "xcodebuild". Make sure XCode and the command line tools are installed.'
         }
     } elseif ($IsLinux) {
     } else {
-        # find MSBuild
-        if (!$msbuild) {
-            # find vswhere
-            $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-            if (!(Test-Path $vswhere)) {
-                throw 'Unable to locate "vswhere.exe". Make sure Visual Studio 2017 is installed.'
-            }
-
-            # find MSBuild
-            $msbuildRoot = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
-            if (!(Test-Path $msbuildRoot)) {
-                throw 'Unable to locate the "MSBuild install". Make sure Visual Studio 2017 is installed.'
-            }
-            $script:msbuild = Join-Path $msbuildRoot 'MSBuild\15.0\Bin\MSBuild.exe'
-            if (!(Test-Path $msbuild)) {
-                throw 'Unable to locate "MSBuild.exe". Make sure Visual Studio 2017 is installed.'
-            }
+        if (!$script:msbuild -or !(Test-Path $script:msbuild)) {
+            throw 'Unable to locate "MSBuild.exe". Make sure Visual Studio 2017 is installed.'
         }
     }
 
     # verify that all the common tools exist
-    if (!(Test-Path $python)) {
+    if (!$python -or !(Test-Path $python)) {
         throw 'Unable to locate "Python". Make sure it exists in the "PATH" environment variable.'
     }
 
     # get the versions
     $script:pythonVersion = if ($python) { & $python --version }
-    $script:msbuildVersion = if ($msbuild) { & $msbuild -version -nologo }
     $script:xcodebuildVersion = if ($IsMacOS) { & $xcodebuild -version }
 
-    Write-Output "Tool initialization complete."
-    Write-Output ""
+    WriteLine "Tool initialization complete."
+    WriteLine "$hr"
+    WriteLine ""
 }
 
 function WriteSystemInfo () {
     $fc = $host.UI.RawUI.ForegroundColor
     $host.UI.RawUI.ForegroundColor = "Cyan"
 
-    Write-Output ""
-    Write-Output "Current System:"
-    Write-Output "  Operating system:    '$operatingSystem'"
-    Write-Output "  PowerShell version:  '$powershellVersion'"
-    Write-Output ""
-    Write-Output "Tool Versions:"
-    Write-Output "  7Zip4Powershell:  '$7zip4pwshVersion'"
-    Write-Output "  MSBuild version:  '$msbuildVersion'"
-    Write-Output "  Python version:   '$pythonVersion'"
-    Write-Output "  XCode version:    '$xcodebuildVersion'"
-    Write-Output ""
-    Write-Output "Other Versions:"
-    Write-Output "  ANGLE version:     '$ANGLEVersion'"
-    Write-Output "  HarfBuzz version:  '$HarfBuzzVersion'"
-    Write-Output ""
-    Write-Output "Tool Paths:"
-    Write-Output "  bash:           '$bash'"
-    Write-Output "  codesign:       '$codesign'"
-    Write-Output "  git:            '$git'"
-    Write-Output "  git-sync-deps:  '$git_sync_deps'"
-    Write-Output "  gn:             '$gn'"
-    Write-Output "  lipo:           '$lipo'"
-    Write-Output "  MSBuild:        '$msbuild'"
-    Write-Output "  ndk-build:      '$ndkbuild'"
-    Write-Output "  ninja:          '$ninja'"
-    Write-Output "  Python:         '$python'"
-    Write-Output "  strip:          '$strip'"
-    Write-Output "  tar:            '$tar'"
-    Write-Output "  XCodeBuild:     '$xcodebuild'"
-    Write-Output ""
-    Write-Output "Other Paths:"
-    Write-Output "  7ZIP4PWSH_PATH:   '$7ZIP4PWSH_PATH'"
-    Write-Output "  ANGLE_PATH:       '$ANGLE_PATH'"
-    Write-Output "  DEPOT_PATH:       '$DEPOT_PATH'"
-    Write-Output "  HARFBUZZ_PATH:    '$HARFBUZZ_PATH'"
-    Write-Output "  SKIA_PATH:        '$SKIA_PATH'"
-    Write-Output "  ANDROID_NDK_HOME: '$ANDROID_NDK_HOME'"
-    Write-Output ""
+    WriteLine "$hr"
+    WriteLine "Current System:"
+    WriteLine "  Operating system:    '$operatingSystem'"
+    WriteLine "  PowerShell version:  '$powershellVersion'"
+    WriteLine ""
+    WriteLine "Tool Versions:"
+    WriteLine "  MSBuild version:  '$msbuildVersion'"
+    WriteLine "  Python version:   '$pythonVersion'"
+    WriteLine "  XCode version:    '$xcodebuildVersion'"
+    WriteLine ""
+    WriteLine "Other Versions:"
+    WriteLine "  ANGLE version:     '$ANGLEVersion'"
+    WriteLine "  HarfBuzz version:  '$HarfBuzzVersion'"
+    WriteLine ""
+    WriteLine "Tool Paths:"
+    WriteLine "  bash:           '$bash'"
+    WriteLine "  codesign:       '$codesign'"
+    WriteLine "  git:            '$git'"
+    WriteLine "  git-sync-deps:  '$git_sync_deps'"
+    WriteLine "  gn:             '$gn'"
+    WriteLine "  lipo:           '$lipo'"
+    WriteLine "  MSBuild:        '$msbuild'"
+    WriteLine "  ndk-build:      '$ndkbuild'"
+    WriteLine "  ninja:          '$ninja'"
+    WriteLine "  Python:         '$python'"
+    WriteLine "  strip:          '$strip'"
+    WriteLine "  tar:            '$tar'"
+    WriteLine "  XCodeBuild:     '$xcodebuild'"
+    WriteLine ""
+    WriteLine "Other Paths:"
+    WriteLine "  ANGLE_PATH:       '$ANGLE_PATH'"
+    WriteLine "  DEPOT_PATH:       '$DEPOT_PATH'"
+    WriteLine "  HARFBUZZ_PATH:    '$HARFBUZZ_PATH'"
+    WriteLine "  SKIA_PATH:        '$SKIA_PATH'"
+    WriteLine "  ANDROID_NDK_HOME: '$ANDROID_NDK_HOME'"
+    WriteLine "$hr"
+    WriteLine ""
 
     $host.UI.RawUI.ForegroundColor = $fc
 }
 
 # Initialize the repository
 function Initialize () {
-    Write-Output "Initializing repository..."
+    WriteLine "$hr"
+    WriteLine "Initializing repository..."
+    WriteLine ""
     InitializeSkia
     InitializeHarfBuzz
     InitializeANGLE
-    Write-Output "Repository initialization complete."
-    Write-Output ""
-}
-
-function Initialize7zip () {
-    # 7zip is only supported on Windows
-    if ($IsMacOS -or $IsLinux) {
-        return;
-    }
-
-    Write-Output "Initializing 7zip..."
-
-    # download 7zip
-    $7zipZip = Join-Path $7ZIP4PWSH_PATH "7Zip4Powershell.$7zip4pwshVersion.zip"
-    if (!(Test-Path $7zipZip)) {
-        Write-Output "Downloading 7zip..."
-        New-Item $7ZIP4PWSH_PATH -itemtype "Directory" -force | Out-Null
-        Invoke-WebRequest -Uri "https://www.nuget.org/api/v2/package/7Zip4Powershell/$7zip4pwshVersion" -OutFile $7zipZip
-    }
-    
-    # extract 7zip
-    if (!(Test-Path "$7ZIP4PWSH_PATH/7Zip4Powershell.nuspec")) {
-        Write-Output "Extracting 7zip..."
-        Expand-Archive $7zipZip $7ZIP4PWSH_PATH
-    }
-
-    Import-Module "$7ZIP4PWSH_PATH/tools/7Zip4PowerShell.psd1"
+    WriteLine "Repository initialization complete."
+    WriteLine "$hr"
+    WriteLine ""
 }
 
 function InitializeSkia () {
-    Write-Output "Initializing skia..."
+    WriteLine "Initializing skia..."
 
     # sync skia dependencies
     Exec $git -a "submodule update --init --recursive"
@@ -281,32 +200,32 @@ function InitializeSkia () {
 }
 
 function InitializeANGLE () {
-    Write-Output "Initializing ANGLE..."
+    WriteLine "Initializing ANGLE..."
 
     # download ANGLE
     $angleRoot = Join-Path $ANGLE_PATH "uwp"
     $angleZip = Join-Path $angleRoot "ANGLE.WindowsStore.$ANGLEVersion.zip"
     if (!(Test-Path $angleZip)) {
-        Write-Output "Downloading ANGLE..."
+        WriteLine "Downloading ANGLE..."
         New-Item $angleRoot -itemtype "Directory" -force | Out-Null
         Invoke-WebRequest -Uri "https://www.nuget.org/api/v2/package/ANGLE.WindowsStore/$ANGLEVersion" -OutFile $angleZip
     }
     
     # extract ANGLE
     if (!(Test-Path "$angleRoot/ANGLE.WindowsStore.nuspec")) {
-        Write-Output "Extracting ANGLE..."
+        WriteLine "Extracting ANGLE..."
         Expand-Archive $angleZip $angleRoot
     }
 }
 
 function InitializeHarfBuzz () {
-    Write-Output "Initializing HarfBuzz..."
+    WriteLine "Initializing HarfBuzz..."
 
     # download harfbuzz
     $harfbuzzBzip = Join-Path $HARFBUZZ_PATH "harfbuzz-$HarfBuzzVersion.tar.bz2"
     $harfbuzzTar = Join-Path $HARFBUZZ_PATH "harfbuzz-$HarfBuzzVersion.tar"
     if (!(Test-Path $harfbuzzBzip)) {
-        Write-Output "Downloading HarfBuzz..."
+        WriteLine "Downloading HarfBuzz..."
         New-Item $HARFBUZZ_PATH -itemtype "Directory" -force | Out-Null
         Invoke-WebRequest -Uri "https://github.com/behdad/harfbuzz/releases/download/$HarfBuzzVersion/harfbuzz-$HarfBuzzVersion.tar.bz2" -OutFile $harfbuzzBzip
     }
@@ -314,7 +233,7 @@ function InitializeHarfBuzz () {
     # extract harfbuzz
     $harfbuzzSource = Join-Path $HARFBUZZ_PATH "harfbuzz"
     if (!(Test-Path "$harfbuzzSource/README")) {
-        Write-Output "Extracting HarfBuzz..."
+        WriteLine "Extracting HarfBuzz..."
         if ($IsMacOS -or $IsLinux) {
             Exec $tar -a "-xjf $harfbuzzBzip -C $HARFBUZZ_PATH"
         } else {
@@ -328,20 +247,20 @@ function InitializeHarfBuzz () {
     if ($IsMacOS -or $IsLinux) {
         if (!(Test-Path "$harfbuzzSource/config.h")) {
             # run ./configure
-            Write-Output "Configuring HarfBuzz..."
+            WriteLine "Configuring HarfBuzz..."
             Exec $bash -a "configure -q" -wo $harfbuzzSource
         }
     } else {
         if (!(Test-Path "$harfbuzzSource/win32/config.h")) {
             # copy the default config header file
-            Write-Output "Configuring HarfBuzz..."
+            WriteLine "Configuring HarfBuzz..."
             Copy-Item "$harfbuzzSource/win32/config.h.win32" "$harfbuzzSource/win32/config.h"
         }
     }
 }
 
 function InjectCompatibilityExternals ([bool] $inject = $true) {
-    Write-Output "Injecting compatibility headers into external sources..."
+    WriteLine "Injecting compatibility headers into external sources..."
 
     # Some methods don't yet on UWP, so we must add the compat layer to them.
     # We need this in this manner as we can't modify the third party files.
@@ -373,7 +292,7 @@ function InjectCompatibilityExternals ([bool] $inject = $true) {
 }
 
 Function Build-Windows-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
-    Write-Output "Building the Windows library for '$dir'..."
+    WriteLine "Building the Windows library for '$dir'..."
 
     # Build skia.lib
     GnNinja -out "win/$arch" -skiaArgs @"
@@ -397,7 +316,7 @@ Function Build-Windows-Arch ([string] $arch, [string] $skiaArch, [string] $dir) 
 }
 
 Function Build-UWP-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
-    Write-Output "Building the UWP library for '$dir'..."
+    WriteLine "Building the UWP library for '$dir'..."
 
     # Build skia.lib
     GnNinja -out "winrt/$arch" -skiaArgs @"
@@ -424,7 +343,7 @@ Function Build-UWP-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
 }
 
 Function Build-MacOS-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
-    Write-Output "Building the macOS library for '$dir'..."
+    WriteLine "Building the macOS library for '$dir'..."
 
     # Build skia.a
     GnNinja -out "mac/$arch" -skiaArgs @"
@@ -452,7 +371,7 @@ Function Build-MacOS-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
 }
 
 Function Build-iOS-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
-    Write-Output "Building the iOS library for '$dir'..."
+    WriteLine "Building the iOS library for '$dir'..."
 
     $sdk = $(if ($arch.Contains("arm")) { "iphoneos" } else { "iphonesimulator" })
     $extrasFlags = $(if ($arch.StartsWith("armv7")) { ", \""-Wno-over-aligned\""" } else { "" } )
@@ -483,7 +402,7 @@ Function Build-iOS-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
 }
 
 Function Build-TVOS-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
-    Write-Output "Building the tvOS library for '$dir'..."
+    WriteLine "Building the tvOS library for '$dir'..."
 
     $sdk = $(if ($arch.Contains("arm")) { "appletvos" } else { "appletvsimulator" })
 
@@ -513,7 +432,7 @@ Function Build-TVOS-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
 }
 
 Function Build-WatchOS-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
-    Write-Output "Building the watchOS library for '$dir'..."
+    WriteLine "Building the watchOS library for '$dir'..."
 
     $sdk = $(if ($arch.Contains("arm")) { "watchos" } else { "watchsimulator" })
     $extrasFlags = $(if ($arch.StartsWith("armv7")) { ", \""-Wno-over-aligned\""" } else { "" } )
@@ -545,7 +464,7 @@ Function Build-WatchOS-Arch ([string] $arch, [string] $skiaArch, [string] $dir) 
 }
 
 Function Build-Android-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
-    Write-Output "Building the Android library for '$dir'..."
+    WriteLine "Building the Android library for '$dir'..."
 
     $ndk_api = $(if ($skiaArch.EndsWith("64")) { "21" } else { "9" } )
 
@@ -563,21 +482,7 @@ Function Build-Android-Arch ([string] $arch, [string] $skiaArch, [string] $dir) 
 }
 
 Function Build-Linux-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
-    Write-Output "Building the Linux library for '$dir'..."
-
-#     $ndk_api = $(if ($skiaArch.EndsWith("64")) { "21" } else { "9" } )
-
-#     # Build skia.a
-#     GnNinja -out "android/$arch" -skiaArgs @"
-#         is_official_build=true skia_enable_tools=false
-#         target_os=\""android\"" target_cpu=\""$skiaArch\""
-#         skia_use_system_freetype2=false
-#         skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true
-#         skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false
-#         extra_cflags=[ \""-DSKIA_C_DLL\"" ]
-#         extra_ldflags=[ \""-Wl,watchos_version_min=2.0\"" ]
-#         ndk=\""$ANDROID_NDK_HOME\"" ndk_api=$ndk_api
-# "@
+    WriteLine "Building the Linux library for '$dir'..."
 }
 
 # Initialize the tooling
@@ -600,15 +505,26 @@ if (!$Platforms) {
         "watchos",
         "windows"
     )
-} else {
-    $Platforms = $Platforms | ForEach-Object { $_.ToLowerInvariant() }
 }
+$Platforms = $Platforms | ForEach-Object {
+    $plat = $_.ToLowerInvariant()
+    if (($plat -eq "osx") -or ($plat -eq "mac")) {
+        $plat = "macos"
+    } elseif (($plat -eq "win") -or ($plat -eq "win32")) {
+        $plat = "windows"
+    }
+    return $plat
+} | Select -uniq
 
 # Build the libraries
-Write-Output "Building the native libraries..."
+WriteLine "$hr"
+WriteLine "Building the native libraries for:"
+$Platforms | ForEach-Object { WriteLine " - $_" }
+WriteLine ""
+
 if ($IsMacOS) {
     # Build for macOS
-    if ($Platforms.Contains("macos") -or $Platforms.Contains("osx") -or $Platforms.Contains("mac")) {
+    if ($Platforms.Contains("macos")) {
         Build-MacOS-Arch -arch "i386" -skiaArch "x86" -dir "x86"
         Build-MacOS-Arch -arch "x86_64" -skiaArch "x64" -dir "x64"
         # Create the fat files
@@ -653,17 +569,17 @@ if ($IsMacOS) {
         Build-Android-Arch -arch "arm64-v8a" -skiaArch "arm64" -dir "arm64-v8a"
         # build and copy libSkiaSharp
         Exec $ndkbuild -a "-C native-builds/libSkiaSharp_android"
-        Copy-Dir "native-builds/libSkiaSharp_android/libs" "output/native/android"
+        CopyDirectoryContents "native-builds/libSkiaSharp_android/libs" "output/native/android"
         # build and copy libHarfBuzzSharp
         Exec $ndkbuild -a "-C native-builds/libHarfBuzzSharp_android"
-        Copy-Dir "native-builds/libHarfBuzzSharp_android/libs" "output/native/android"
+        CopyDirectoryContents "native-builds/libHarfBuzzSharp_android/libs" "output/native/android"
     }
 } elseif ($IsLinux) {
     # Build for Linux
     Build-Linux-Arch  -arch "x64" -skiaArch "x64" -dir "x64"
 } else {
     # Build for Windows (Win32)
-    if ($Platforms.Contains("windows") -or $Platforms.Contains("win")) {
+    if ($Platforms.Contains("windows")) {
         Build-Windows-Arch -arch "Win32" -skiaArch "x86" -dir "x86"
         Build-Windows-Arch -arch "x64" -skiaArch "x64" -dir "x64"
     }
@@ -680,4 +596,6 @@ if ($IsMacOS) {
         Copy-Item "$ANGLE_PATH/uwp/bin/UAP/x64/*.dll" "output/native/uwp/x64"
     }
 }
-Write-Output "Build complete."
+WriteLine "Build complete for the native libraries."
+WriteLine "$hr"
+WriteLine ""
