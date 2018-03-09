@@ -1,7 +1,5 @@
 Param (
-    [string[]] $Platforms = $null,
-    [string] $HarfBuzzVersion = "1.4.6",
-    [string] $ANGLEVersion = "2.1.13"
+    [string[]] $Platforms = $null
 )
 
 $ErrorActionPreference = 'Stop'
@@ -29,14 +27,16 @@ $tar = FindTool 'tar'
 $bash = FindTool 'bash'
 $git = FindTool 'git'
 $ndkbuild = ''
+$make = FindTool 'make'
 
 # Get tool versions
 $xcodebuildVersion = ''
 $pythonVersion = ''
+$makeVersion = ''
 
 # Tool helpers
 
-function Lipo ([string] $dest, [string[]] $libs) {
+Function Lipo ([string] $dest, [string[]] $libs) {
     WriteLine "Creating fat file '$dest'..."
 
     $dir = Split-Path -path $dest
@@ -55,19 +55,19 @@ function Lipo ([string] $dest, [string[]] $libs) {
     Exec $lipo -a "-create -output $name $libs" -wo $dir
 }
 
-function GnNinja ([string] $out, [string] $skiaArgs) {
+Function GnNinja ([string] $out, [string] $skiaArgs) {
     Exec $gn -a " gen out/$out -q --args=""$skiaArgs"" " -wo $SKIA_PATH
     Exec $ninja -a " -C out/$out " -wo $SKIA_PATH
 }
 
-function XCodeBuild ([string] $project, [string] $sdk, [string] $arch) {
+Function XCodeBuild ([string] $project, [string] $sdk, [string] $arch) {
     WriteLine "Building '$project' as $sdk|$arch..."
     $target = [System.IO.Path]::GetFileNameWithoutExtension($project)
     $xcodebuildArgs = "-project $project -target $target -sdk $sdk -arch $arch -configuration Release -quiet"
     Exec $xcodebuild -a $xcodebuildArgs
 }
 
-function StripSign ([string] $target) {
+Function StripSign ([string] $target) {
     if ($target.EndsWith(".framework")) {
         $archive = "$target/$([System.IO.Path]::GetFileNameWithoutExtension($target))"
     } else {
@@ -80,13 +80,13 @@ function StripSign ([string] $target) {
 
 # The main script
 
-function InitializeTools () {
+Function InitializeTools () {
     WriteLine "$hr"
     WriteLine "Initializing tools..."
     WriteLine ""
 
     # 7zip
-    DownloadNuGet "7Zip4Powershell" "1.8.0"
+    DownloadNuGet "7Zip4Powershell" (GetVersion "7Zip4Powershell" "release")
     Import-Module "./externals/7Zip4PowerShell/tools/7Zip4PowerShell.psd1"
 
     # try and find the tools
@@ -110,6 +110,9 @@ function InitializeTools () {
             throw 'Unable to locate "xcodebuild". Make sure XCode and the command line tools are installed.'
         }
     } elseif ($IsLinux) {
+        if (!$script:make -or !(Test-Path $script:make)) {
+            throw 'Unable to locate "make". Make sure it exists in the "PATH" environment variable.'
+        }
     } else {
         if (!$script:msbuild -or !(Test-Path $script:msbuild)) {
             throw 'Unable to locate "MSBuild.exe". Make sure Visual Studio 2017 is installed.'
@@ -123,30 +126,30 @@ function InitializeTools () {
 
     # get the versions
     $script:pythonVersion = if ($python) { & $python --version }
-    $script:xcodebuildVersion = if ($IsMacOS) { & $xcodebuild -version }
+    $script:xcodebuildVersion = if ($xcodebuild) { & $xcodebuild -version }
+    $script:makeVersion = if ($make) { & $make -version }
 
     WriteLine "Tool initialization complete."
     WriteLine "$hr"
     WriteLine ""
 }
 
-function WriteSystemInfo () {
-    $fc = $host.UI.RawUI.ForegroundColor
-    $host.UI.RawUI.ForegroundColor = "Cyan"
-
+Function WriteSystemInfo () {
     WriteLine "$hr"
     WriteLine "Current System:"
     WriteLine "  Operating system:    '$operatingSystem'"
     WriteLine "  PowerShell version:  '$powershellVersion'"
     WriteLine ""
     WriteLine "Tool Versions:"
+    WriteLine "  make version:     '$makeVersion'"
     WriteLine "  MSBuild version:  '$msbuildVersion'"
     WriteLine "  Python version:   '$pythonVersion'"
     WriteLine "  XCode version:    '$xcodebuildVersion'"
     WriteLine ""
     WriteLine "Other Versions:"
-    WriteLine "  ANGLE version:     '$ANGLEVersion'"
-    WriteLine "  HarfBuzz version:  '$HarfBuzzVersion'"
+    WriteLine "  skia version:      '$(GetVersion "skia" "release")'"
+    WriteLine "  ANGLE version:     '$(GetVersion "ANGLE" "release")'"
+    WriteLine "  HarfBuzz version:  '$(GetVersion "harfbuzz" "release")'"
     WriteLine ""
     WriteLine "Tool Paths:"
     WriteLine "  bash:           '$bash'"
@@ -155,6 +158,7 @@ function WriteSystemInfo () {
     WriteLine "  git-sync-deps:  '$git_sync_deps'"
     WriteLine "  gn:             '$gn'"
     WriteLine "  lipo:           '$lipo'"
+    WriteLine "  make:           '$make'"
     WriteLine "  MSBuild:        '$msbuild'"
     WriteLine "  ndk-build:      '$ndkbuild'"
     WriteLine "  ninja:          '$ninja'"
@@ -171,12 +175,10 @@ function WriteSystemInfo () {
     WriteLine "  ANDROID_NDK_HOME: '$ANDROID_NDK_HOME'"
     WriteLine "$hr"
     WriteLine ""
-
-    $host.UI.RawUI.ForegroundColor = $fc
 }
 
 # Initialize the repository
-function Initialize () {
+Function Initialize () {
     WriteLine "$hr"
     WriteLine "Initializing repository..."
     WriteLine ""
@@ -188,7 +190,7 @@ function Initialize () {
     WriteLine ""
 }
 
-function InitializeSkia () {
+Function InitializeSkia () {
     WriteLine "Initializing skia..."
 
     # sync skia dependencies
@@ -199,16 +201,17 @@ function InitializeSkia () {
     InjectCompatibilityExternals
 }
 
-function InitializeANGLE () {
+Function InitializeANGLE () {
     WriteLine "Initializing ANGLE..."
 
     # download ANGLE
+    $version = GetVersion "ANGLE" "release"
     $angleRoot = Join-Path $ANGLE_PATH "uwp"
-    $angleZip = Join-Path $angleRoot "ANGLE.WindowsStore.$ANGLEVersion.zip"
+    $angleZip = Join-Path $angleRoot "ANGLE.WindowsStore.$version.zip"
     if (!(Test-Path $angleZip)) {
         WriteLine "Downloading ANGLE..."
         New-Item $angleRoot -itemtype "Directory" -force | Out-Null
-        Invoke-WebRequest -Uri "https://www.nuget.org/api/v2/package/ANGLE.WindowsStore/$ANGLEVersion" -OutFile $angleZip
+        Invoke-WebRequest -Uri "https://www.nuget.org/api/v2/package/ANGLE.WindowsStore/$version" -OutFile $angleZip
     }
     
     # extract ANGLE
@@ -218,16 +221,17 @@ function InitializeANGLE () {
     }
 }
 
-function InitializeHarfBuzz () {
+Function InitializeHarfBuzz () {
     WriteLine "Initializing HarfBuzz..."
 
     # download harfbuzz
-    $harfbuzzBzip = Join-Path $HARFBUZZ_PATH "harfbuzz-$HarfBuzzVersion.tar.bz2"
-    $harfbuzzTar = Join-Path $HARFBUZZ_PATH "harfbuzz-$HarfBuzzVersion.tar"
+    $version = GetVersion "harfbuzz" "release"
+    $harfbuzzBzip = Join-Path $HARFBUZZ_PATH "harfbuzz-$version.tar.bz2"
+    $harfbuzzTar = Join-Path $HARFBUZZ_PATH "harfbuzz-$version.tar"
     if (!(Test-Path $harfbuzzBzip)) {
         WriteLine "Downloading HarfBuzz..."
         New-Item $HARFBUZZ_PATH -itemtype "Directory" -force | Out-Null
-        Invoke-WebRequest -Uri "https://github.com/behdad/harfbuzz/releases/download/$HarfBuzzVersion/harfbuzz-$HarfBuzzVersion.tar.bz2" -OutFile $harfbuzzBzip
+        Invoke-WebRequest -Uri "https://github.com/behdad/harfbuzz/releases/download/$version/harfbuzz-$version.tar.bz2" -OutFile $harfbuzzBzip
     }
 
     # extract harfbuzz
@@ -240,7 +244,7 @@ function InitializeHarfBuzz () {
             Expand-7Zip $harfbuzzBzip $HARFBUZZ_PATH
             Expand-7Zip $harfbuzzTar $HARFBUZZ_PATH
         }
-        Move-Item "$HARFBUZZ_PATH/harfbuzz-$HarfBuzzVersion" "$harfbuzzSource"
+        Move-Item "$HARFBUZZ_PATH/harfbuzz-$version" "$harfbuzzSource"
     }
 
     # configure harfbuzz
@@ -259,7 +263,7 @@ function InitializeHarfBuzz () {
     }
 }
 
-function InjectCompatibilityExternals ([bool] $inject = $true) {
+Function InjectCompatibilityExternals ([bool] $inject = $true) {
     WriteLine "Injecting compatibility headers into external sources..."
 
     # Some methods don't yet on UWP, so we must add the compat layer to them.
@@ -483,7 +487,70 @@ Function Build-Android-Arch ([string] $arch, [string] $skiaArch, [string] $dir) 
 
 Function Build-Linux-Arch ([string] $arch, [string] $skiaArch, [string] $dir) {
     WriteLine "Building the Linux library for '$dir'..."
+
+    $enable_gpu = if ($gpu) { "true" } else { "false" }
+    $support_gpu = if ($gpu) { "1" } else { "0" }
+
+    # path to fontconfig
+
+    # Build skia.a
+    GnNinja -out "linux/$arch" -skiaArgs @"
+        is_official_build=true skia_enable_tools=false
+        target_os=\""linux\"" target_cpu=\""$skiaArch\""
+        skia_enable_gpu=$enable_gpu
+        skia_use_system_freetype2=false
+        skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true
+        skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false
+        extra_cflags=[ \""-DSKIA_C_DLL\"" ]
+        extra_ldflags=[  ]
+"@
+
+    # Build libSkiaSharp.so
+    Exec $make -a "ARCH=$arch SUPPORT_GPU=$support_gpu" -wo "native-builds/libSkiaSharp_linux"
+
+    $out = "output/native/linux/$dir"
+    $so = "native-builds/libSkiaSharp_linux/bin/$arch/libSkiaSharp.so.$(GetVersion "SkiaSharp" "soname")"
+    New-Item $out -itemtype "Directory" -force | Out-Null
+    Copy-Item $so $out -force
+    Copy-Item $so "$out/libSkiaSharp.so" -force
 }
+
+
+# var arches = EnvironmentVariable ("BUILD_ARCH") ?? (Environment.Is64BitOperatingSystem ? "x64" : "x86");  // x64, x86, ARM
+# var BUILD_ARCH = arches.Split (',').Select (a => a.Trim ()).ToArray ();
+# var SUPPORT_GPU = (EnvironmentVariable ("SUPPORT_GPU") ?? "1") == "1"; // 1 == true, 0 == false
+
+# var buildArch = new Action<string> ((arch) => {
+
+#     // copy libSkiaSharp to output
+#     EnsureDirectoryExists ("native-builds/lib/linux/" + arch);
+#     var so = "native-builds/libSkiaSharp_linux/bin/" + arch + "/libSkiaSharp.so." + VERSION_SONAME;
+#     CopyFileToDirectory (so, "native-builds/lib/linux/" + arch);
+#     CopyFile (so, "native-builds/lib/linux/" + arch + "/libSkiaSharp.so");
+# });
+
+# var buildHarfBuzzArch = new Action<string> ((arch) => {
+#     // build libHarfBuzzSharp
+#     // RunProcess ("make", new ProcessSettings {
+#     //     Arguments = "clean",
+#     //     WorkingDirectory = "native-builds/libHarfBuzzSharp_linux",
+#     // });
+#     RunProcess ("make", new ProcessSettings {
+#         Arguments = "ARCH=" + arch + " VERSION=" + HARFBUZZ_VERSION_FILE,
+#         WorkingDirectory = "native-builds/libHarfBuzzSharp_linux",
+#     });
+
+#     // copy libHarfBuzzSharp to output
+#     EnsureDirectoryExists ("native-builds/lib/linux/" + arch);
+#     var so = "native-builds/libHarfBuzzSharp_linux/bin/" + arch + "/libHarfBuzzSharp.so." + HARFBUZZ_VERSION_SONAME;
+#     CopyFileToDirectory (so, "native-builds/lib/linux/" + arch);
+#     CopyFile (so, "native-builds/lib/linux/" + arch + "/libHarfBuzzSharp.so");
+# });
+
+# foreach (var arch in BUILD_ARCH) {
+#     buildArch (arch);
+#     buildHarfBuzzArch (arch);
+# }
 
 # Initialize the tooling
 InitializeTools
@@ -576,6 +643,7 @@ if ($IsMacOS) {
     }
 } elseif ($IsLinux) {
     # Build for Linux
+    # TODO: BUILD_ARCH | SUPPORT_GPU
     Build-Linux-Arch  -arch "x64" -skiaArch "x64" -dir "x64"
 } else {
     # Build for Windows (Win32)

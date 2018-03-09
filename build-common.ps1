@@ -12,7 +12,7 @@ $msbuildVersion = ''
 
 $hr = "=" * 80
 
-function WriteLine ([string] $message, [string] $color = "Cyan") {
+Function WriteLine ([string] $message, [string] $color = "Cyan") {
     if ($host.UI.RawUI.ForegroundColor -eq $color) {
         Write-Output $message
     } else {
@@ -23,14 +23,14 @@ function WriteLine ([string] $message, [string] $color = "Cyan") {
     }
 }
 
-function CopyDirectoryContents ([string] $src, [string] $dest) {
+Function CopyDirectoryContents ([string] $src, [string] $dest) {
     New-Item $dest -itemtype "Directory" -force | Out-Null
     Get-ChildItem $src -Directory | ForEach-Object {
         Copy-Item -literalpath "$src/$_" $dest -force -recurse | Out-Null
     }
 }
 
-function Exec ([string] $file, [string[]] $a, [string] $wo) {
+Function Exec ([string] $file, [string[]] $a, [string] $wo) {
     if (!$wo) {
         $wo = "."
     }
@@ -40,7 +40,7 @@ function Exec ([string] $file, [string[]] $a, [string] $wo) {
     }
 }
 
-function FindTool ([string] $tool) {
+Function FindTool ([string] $tool) {
     if ($IsMacOS -or $IsLinux) {
         return & 'which' $tool
     } else {
@@ -53,7 +53,7 @@ function FindTool ([string] $tool) {
     return $null
 }
 
-function DownloadNuGet ([string] $id, [string] $version) {
+Function DownloadNuGet ([string] $id, [string] $version) {
     # download nuget.exe
     if (!(Test-Path $script:nuget)) {
         WriteLine "Downloading nuget.exe..."
@@ -69,10 +69,15 @@ function DownloadNuGet ([string] $id, [string] $version) {
     }
 }
 
-function MSBuild ([string] $project, [string] $arch = "Any CPU", [string] $config = "Release", [string] $target = "Build") {
+Function MSBuild ([string] $project, [string] $arch = "Any CPU", [string] $config = "Release", [string] $target = "Build") {
     # run MSBuild
     $v = if ($target -eq "Build") { "minimal" } else { "quiet" }
     Exec $script:msbuild -a """$project"" /p:Configuration=""$config"" /p:Platform=""$arch"" /t:""$target"" /v:$v /m /nologo"
+}
+
+Function GetVersion ([string]$lib, [string]$type = "nuget") {
+    $matches = (Get-Content "versions.txt" | Select-String -pattern "^$lib\s*$type\s*([\.\d]*)$")
+    return $matches.Matches[0].Groups[1].Value
 }
 
 # find MSBuild

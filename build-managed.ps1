@@ -45,7 +45,7 @@ if ($BuildManaged) {
 
 if ($AssembleDocs) {
     $mdoc = "externals/mdoc/tools/mdoc.exe"
-    DownloadNuGet "mdoc" "5.5.0"
+    DownloadNuGet "mdoc" (GetVersion "mdoc" "release")
     
     # assemble the docs
     WriteLine "Assembling the docs..."
