@@ -320,7 +320,7 @@ Function Build-Windows-Arch ([string] $arch)
         extra_ldflags=[ \""/DEBUG\"" ]
 "@
 
-    # Build libHarfBuzzSharp.dll
+    # Build harfbuzz.dll
     $harfbuzzOut = Join-Path $HARFBUZZ_PATH "out/win/$arch"
     New-Item $harfbuzzOut -itemtype "Directory" -force | Out-Null
     $config = " -T v140 -D""CMAKE_SYSTEM_VERSION=8.1"" -D""BUILD_SHARED_LIBS=1"" "
@@ -361,7 +361,7 @@ Function Build-UWP-Arch ([string] $arch)
         extra_ldflags=[ \""/DEBUG\"",  \""/APPCONTAINER\"",  \""WindowsApp.lib\"" ]
 "@
 
-    # Build libHarfBuzzSharp.dll
+    # Build harfbuzz.dll
     $harfbuzzOut = Join-Path $HARFBUZZ_PATH "out/uwp/$arch"
     New-Item $harfbuzzOut -itemtype "Directory" -force | Out-Null
     $config = " -T v141 -D""CMAKE_SYSTEM_VERSION=10.0.10240.0"" -D""CMAKE_SYSTEM_NAME=WindowsStore"" -D""BUILD_SHARED_LIBS=1"" "
