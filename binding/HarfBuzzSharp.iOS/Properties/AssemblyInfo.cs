@@ -2,4 +2,4 @@
 using ObjCRuntime;
 
 [assembly: LinkerSafe]
-[assembly: LinkWith("libHarfBuzzSharp.a", IsCxx = true, ForceLoad = true, SmartLink = true)]
+[assembly: LinkWith("libharfbuzz.a", IsCxx = true, ForceLoad = true, SmartLink = true)]
