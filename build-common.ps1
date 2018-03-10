@@ -55,24 +55,24 @@ Function FindTool ([string] $tool) {
 
 Function DownloadNuGet ([string] $id, [string] $version) {
     # download nuget.exe
-    if (!(Test-Path $script:nuget)) {
+    if (!(Test-Path $nuget)) {
         WriteLine "Downloading nuget.exe..."
-        $dir = Split-Path $script:nuget
+        $dir = Split-Path $nuget
         New-Item $dir -itemtype "Directory" -force | Out-Null
-        Invoke-WebRequest "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -out $script:nuget
+        Invoke-WebRequest "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe" -out $nuget
     }
 
     # download the specific nuget
     if (!(Test-Path "externals/$id/$id.nupkg")) {
         WriteLine "Downloading $id..."
-        Exec $script:nuget -a "install $id -Version ""$version"" -ExcludeVersion -OutputDirectory ""externals"" -Verbosity quiet"
+        Exec $nuget -a "install $id -Version ""$version"" -ExcludeVersion -OutputDirectory ""externals"" -Verbosity quiet"
     }
 }
 
 Function MSBuild ([string] $project, [string] $arch = "Any CPU", [string] $config = "Release", [string] $target = "Build") {
     # run MSBuild
     $v = if ($target -eq "Build") { "minimal" } else { "quiet" }
-    Exec $script:msbuild -a """$project"" /p:Configuration=""$config"" /p:Platform=""$arch"" /t:""$target"" /v:$v /m /nologo"
+    Exec $msbuild -a """$project"" /p:Configuration=""$config"" /p:Platform=""$arch"" /t:""$target"" /v:$v /m /nologo"
 }
 
 Function GetVersion ([string]$lib, [string]$type = "nuget") {
@@ -80,21 +80,29 @@ Function GetVersion ([string]$lib, [string]$type = "nuget") {
     return $matches.Matches[0].Groups[1].Value
 }
 
+
+# find vswhere
+if (!$IsMacOS -and !$IsLinux) {
+    $vswhereTemp = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+    if ($vswhereTemp -and (Test-Path $vswhereTemp)) {
+        $vswhere = $vswhereTemp
+    }
+}
+
 # find MSBuild
-$script:msbuild = FindTool 'msbuild'
-if ($IsMacOS -or $IsLinux) {
-} else {
-    if (!$script:msbuild) {
-        # find vswhere
-        $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-        if ($vswhere -and (Test-Path $vswhere)) {
+$msbuild = FindTool 'msbuild'
+if (!$msbuild) {
+    if ($IsMacOS -or $IsLinux) {
+        # TODO: try find msbuild
+    } else {
+        if ($vswhere) {
             $msbuildRoot = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
             if ($msbuildRoot -and (Test-Path $msbuildRoot)) {
-                $script:msbuild = Join-Path $msbuildRoot 'MSBuild\15.0\Bin\MSBuild.exe'
+                $msbuild = Join-Path $msbuildRoot 'MSBuild\15.0\Bin\MSBuild.exe'
             }
         }
     }
 }
 
 # get the MSBuild version
-$script:msbuildVersion = if ($script:msbuild) { & $script:msbuild -version -nologo }
+$msbuildVersion = if ($msbuild) { & $msbuild -version -nologo }
