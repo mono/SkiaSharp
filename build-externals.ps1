@@ -747,9 +747,7 @@ if ($SkipBuild) {
 
     # Build for Linux
     if ("linux" -in $Platforms) {
-        # TODO: BUILD_ARCH | SUPPORT_GPU
         Build-Linux-Arch -arch "x64"
-        Build-Linux-Arch -arch "x86"
     }
 
     # Build for Windows (Win32)
