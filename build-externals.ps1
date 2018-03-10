@@ -1,5 +1,7 @@
 Param (
-    [string[]] $Platforms = $null
+    [string[]] $Platforms = $null,
+    [bool] $SkipInit = $false,
+    [bool] $SkipBuild = $false
 )
 
 $ErrorActionPreference = 'Stop'
@@ -41,7 +43,8 @@ $cmakeVersion = ''
 ################################################################################
 # Tools
 
-Function Lipo ([string] $dest, [string[]] $libs) {
+Function Lipo ([string] $dest, [string[]] $libs)
+{
     WriteLine "Creating fat file '$dest'..."
 
     $dir = Split-Path -path $dest
@@ -51,7 +54,7 @@ Function Lipo ([string] $dest, [string[]] $libs) {
         Remove-Item $dest -force -recurse
     }
 
-    if ($name.EndsWith(".framework")) {
+    if ($name -like "*.framework") {
         Copy-Item -literalpath "$dir/$($libs[0])/$name" -destination "$dest" -force -recurse
         $name = "$name/$([System.IO.Path]::GetFileNameWithoutExtension($name))"
     }
@@ -60,20 +63,23 @@ Function Lipo ([string] $dest, [string[]] $libs) {
     Exec $lipo -a "-create -output $name $libs" -wo $dir
 }
 
-Function GnNinja ([string] $out, [string] $skiaArgs) {
-    Exec $gn -a " gen out/$out -q --args=""$skiaArgs"" " -wo $SKIA_PATH
+Function GnNinja ([string] $out, [string] $skiaArgs)
+{
+    Exec $gn -a " gen out/$out --args=""$skiaArgs"" " -wo $SKIA_PATH
     Exec $ninja -a " SkiaSharp -C out/$out " -wo $SKIA_PATH
 }
 
-Function XCodeBuild ([string] $project, [string] $sdk, [string] $arch) {
+Function XCodeBuild ([string] $project, [string] $sdk, [string] $arch)
+{
     WriteLine "Building '$project' as $sdk|$arch..."
     $target = [System.IO.Path]::GetFileNameWithoutExtension($project)
     $xcodebuildArgs = "-project $project -target $target -sdk $sdk -arch $arch -configuration Release -quiet"
     Exec $xcodebuild -a $xcodebuildArgs
 }
 
-Function StripSign ([string] $target) {
-    if ($target.EndsWith(".framework")) {
+Function StripSign ([string] $target)
+{
+    if ($target -like ".framework") {
         $archive = "$target/$([System.IO.Path]::GetFileNameWithoutExtension($target))"
     } else {
         $archive = $target
@@ -85,7 +91,8 @@ Function StripSign ([string] $target) {
 
 ################################################################################
 
-Function InitializeTools () {
+Function InitializeTools ()
+{
     WriteLine "$hr"
     WriteLine "Initializing tools..."
     WriteLine ""
@@ -97,6 +104,12 @@ Function InitializeTools () {
         if (!$make -or !(Test-Path $make)) {
             throw 'Unable to locate "make". Make sure it exists in the "PATH" environment variable.'
         }
+
+        # find bash
+        $script:bash = FindTool 'bash'
+        if (!$bash -or !(Test-Path $bash)) {
+            throw 'Unable to locate "bash" on Unix...'
+        }
     }
 
     if ($IsMacOS) {
@@ -104,7 +117,6 @@ Function InitializeTools () {
         $script:codesign = FindTool 'codesign'
         $script:lipo = FindTool 'lipo'
         $script:tar = FindTool 'tar'
-        $script:bash = FindTool 'bash'
 
         # find the Android NDK root
         if (!$ANDROID_NDK_HOME -or $(Test-Path $ANDROID_NDK_HOME)) {
@@ -157,10 +169,10 @@ Function InitializeTools () {
 
     # verify that all the common tools exist
     if (!$python -or !(Test-Path $python)) {
-        throw 'Unable to locate "Python". Make sure it exists in the "PATH" environment variable.'
+        throw 'Unable to locate "python". Make sure it exists in the "PATH" environment variable.'
     }
     if (!$cmake -or !(Test-Path $cmake)) {
-        throw 'Unable to locate "cmake.exe". Make sure it exists in the "PATH" environment variable or Visual Studio 2017 is installed.'
+        throw 'Unable to locate "cmake". Make sure it exists in the "PATH" environment variable or Visual Studio 2017 is installed.'
     }
 
     # get the versions
@@ -175,7 +187,8 @@ Function InitializeTools () {
 
 ################################################################################
 
-Function WriteSystemInfo () {
+Function WriteSystemInfo ()
+{
     WriteLine "$hr"
     WriteLine "Current System:"
     WriteLine "  Operating system:    '$operatingSystem'"
@@ -222,19 +235,25 @@ Function WriteSystemInfo () {
 
 ################################################################################
 # Initialize the repository
-Function Initialize () {
+Function Initialize ()
+{
     WriteLine "$hr"
     WriteLine "Initializing repository..."
     WriteLine ""
-    InitializeSkia
-    InitializeHarfBuzz
-    InitializeANGLE
-    WriteLine "Repository initialization complete."
+    if ($SkipInit) {
+        WriteLine "Skipping initialization as requested."
+    } else {
+        InitializeSkia
+        InitializeHarfBuzz
+        InitializeANGLE
+        WriteLine "Repository initialization complete."
+    }
     WriteLine "$hr"
     WriteLine ""
 }
 
-Function InitializeSkia () {
+Function InitializeSkia ()
+{
     WriteLine "Initializing skia..."
 
     # sync skia dependencies
@@ -242,7 +261,8 @@ Function InitializeSkia () {
     Exec $python -a $git_sync_deps -wo $SKIA_PATH
 }
 
-Function InitializeANGLE () {
+Function InitializeANGLE ()
+{
     WriteLine "Initializing ANGLE..."
 
     # download ANGLE
@@ -262,24 +282,26 @@ Function InitializeANGLE () {
     }
 }
 
-Function InitializeHarfBuzz () {
+Function InitializeHarfBuzz ()
+{
     WriteLine "Initializing HarfBuzz..."
 
     # sync harfbuzz dependencies
     Exec $git -a "submodule update --init --recursive"
     if ($IsMacOS -or $IsLinux) {
         Exec $bash -a "autogen.sh" -wo $HARFBUZZ_PATH
-        Exec $bash -a "configure" -wo $HARFBUZZ_PATH
+        # ./configure is called automatically by ./autogen.sh
+        # Exec $bash -a "configure" -wo $HARFBUZZ_PATH
     }
 }
 
 ################################################################################
 # Build-*-Arch
 
-Function Build-Windows-Arch ([string] $arch) {
+Function Build-Windows-Arch ([string] $arch)
+{
     WriteLine "Building the Windows library for '$arch'..."
 
-    $skiaArch = $arch
     if ($arch -eq "x86") {
         $cmakeArch = ""
     } elseif ($arch -eq "x64") {
@@ -291,7 +313,7 @@ Function Build-Windows-Arch ([string] $arch) {
     # Build libSkiaSharp.dll
     GnNinja -out "win/$arch" -skiaArgs @"
         is_official_build=true skia_enable_tools=false
-        target_os=\""win\"" target_cpu=\""$skiaArch\""
+        target_os=\""win\"" target_cpu=\""$arch\""
         skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true
         skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false
         extra_cflags=[ \""-DSKIA_C_DLL\"", \""/MD\"", \""/EHsc\"" ]
@@ -312,10 +334,10 @@ Function Build-Windows-Arch ([string] $arch) {
     Copy-Item "externals/harfbuzz/out/win/$arch/Release/harfbuzz.dll" $out -force
 }
 
-Function Build-UWP-Arch ([string] $arch) {
+Function Build-UWP-Arch ([string] $arch)
+{
     WriteLine "Building the UWP library for '$arch'..."
 
-    $skiaArch = $arch
     if ($arch -eq "x86") {
         $cmakeArch = ""
     } elseif ($arch -eq "x64") {
@@ -329,7 +351,7 @@ Function Build-UWP-Arch ([string] $arch) {
     # Build libSkiaSharp.dll
     GnNinja -out "uwp/$arch" -skiaArgs @"
         is_official_build=true skia_enable_tools=false
-        target_os=\""winrt\"" target_cpu=\""$skiaArch\""
+        target_os=\""winrt\"" target_cpu=\""$arch\""
         skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true
         skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false
         extra_cflags=[
@@ -353,10 +375,10 @@ Function Build-UWP-Arch ([string] $arch) {
     Copy-Item "externals/harfbuzz/out/uwp/$arch/Release/harfbuzz.dll" $out -force
 }
 
-Function Build-MacOS-Arch ([string] $arch) {
+Function Build-MacOS-Arch ([string] $arch)
+{
     WriteLine "Building the macOS library for '$arch'..."
 
-    $skiaArch = $arch
     if ($arch -eq "x86") {
         $xcodeArch = "i386"
     } elseif ($arch -eq "x64") {
@@ -368,7 +390,7 @@ Function Build-MacOS-Arch ([string] $arch) {
     # Build skia.a
     GnNinja -out "mac/$xcodeArch" -skiaArgs @"
         is_official_build=true skia_enable_tools=false
-        target_os=\""mac\"" target_cpu=\""$skiaArch\""
+        target_os=\""mac\"" target_cpu=\""$arch\""
         skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true
         skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false
         extra_cflags=[ \""-DSKIA_C_DLL\"", \""-mmacosx-version-min=10.9\"" ]
@@ -390,10 +412,10 @@ Function Build-MacOS-Arch ([string] $arch) {
     StripSign -target "$out/libHarfBuzzSharp.dylib"
 }
 
-Function Build-iOS-Arch ([string] $arch) {
+Function Build-iOS-Arch ([string] $arch)
+{
     WriteLine "Building the iOS library for '$arch'..."
 
-    $skiaArch = $arch
     if ($arch -eq "x86") {
         $xcodeArch = "i386"
     } elseif ($arch -eq "x64") {
@@ -406,13 +428,13 @@ Function Build-iOS-Arch ([string] $arch) {
         throw "Unknown iOS architecture: $arch"
     }
 
-    $sdk = $(if ($arch.Contains("arm")) { "iphoneos" } else { "iphonesimulator" })
+    $sdk = $(if ($arch -like "arm*") { "iphoneos" } else { "iphonesimulator" })
     $extrasFlags = $(if ($arch -eq "arm") { ", \""-Wno-over-aligned\""" } else { "" } )
 
     # Build skia.a
     GnNinja -out "ios/$xcodeArch" -skiaArgs @"
         is_official_build=true skia_enable_tools=false
-        target_os=\""ios\"" target_cpu=\""$skiaArch\""
+        target_os=\""ios\"" target_cpu=\""$arch\""
         skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true
         skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false
         extra_cflags=[ \""-DSKIA_C_DLL\"", \""-mios-version-min=8.0\"" $extrasFlags ]
@@ -434,10 +456,10 @@ Function Build-iOS-Arch ([string] $arch) {
     StripSign -target "$out/libHarfBuzzSharp.a"
 }
 
-Function Build-TVOS-Arch ([string] $arch) {
+Function Build-TVOS-Arch ([string] $arch)
+{
     WriteLine "Building the tvOS library for '$arch'..."
 
-    $skiaArch = $arch
     if ($arch -eq "x64") {
         $xcodeArch = "x86_64"
     } elseif ($arch -eq "arm64") {
@@ -446,12 +468,12 @@ Function Build-TVOS-Arch ([string] $arch) {
         throw "Unknown tvOS architecture: $arch"
     }
 
-    $sdk = $(if ($arch.Contains("arm")) { "appletvos" } else { "appletvsimulator" })
+    $sdk = $(if ($arch -like "arm*") { "appletvos" } else { "appletvsimulator" })
 
     # Build skia.a
     GnNinja -out "tvos/$xcodeArch" -skiaArgs @"
         is_official_build=true skia_enable_tools=false
-        target_os=\""tvos\"" target_cpu=\""$skiaArch\""
+        target_os=\""tvos\"" target_cpu=\""$arch\""
         skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true
         skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false
         extra_cflags=[ \""-DSKIA_C_DLL\"", \""-DSK_BUILD_FOR_TVOS\"", \""-mtvos-version-min=9.0\"" ]
@@ -473,10 +495,10 @@ Function Build-TVOS-Arch ([string] $arch) {
     StripSign -target "$out/libHarfBuzzSharp.a"
 }
 
-Function Build-WatchOS-Arch ([string] $arch) {
+Function Build-WatchOS-Arch ([string] $arch)
+{
     WriteLine "Building the watchOS library for '$arch'..."
 
-    $skiaArch = $arch
     if ($arch -eq "x86") {
         $xcodeArch = "i386"
     } elseif ($arch -eq "arm") {
@@ -485,13 +507,13 @@ Function Build-WatchOS-Arch ([string] $arch) {
         throw "Unknown watchOS architecture: $arch"
     }
 
-    $sdk = $(if ($arch.Contains("arm")) { "watchos" } else { "watchsimulator" })
+    $sdk = $(if ($arch -like "arm*") { "watchos" } else { "watchsimulator" })
     $extrasFlags = $(if ($arch -eq "arm") { ", \""-Wno-over-aligned\""" } else { "" } )
 
     # Build skia.a
     GnNinja -out "watchos/$xcodeArch" -skiaArgs @"
         is_official_build=true skia_enable_tools=false
-        target_os=\""watchos\"" target_cpu=\""$skiaArch\""
+        target_os=\""watchos\"" target_cpu=\""$arch\""
         skia_enable_gpu=false
         skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true
         skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false
@@ -514,10 +536,10 @@ Function Build-WatchOS-Arch ([string] $arch) {
     StripSign -target "$out/libHarfBuzzSharp.a"
 }
 
-Function Build-Android-Arch ([string] $arch) {
+Function Build-Android-Arch ([string] $arch)
+{
     WriteLine "Building the Android library for '$arch'..."
 
-    $skiaArch = $arch
     if ($arch -eq "x86") {
         $androidArch = "x86"
     } elseif ($arch -eq "x64") {
@@ -530,12 +552,12 @@ Function Build-Android-Arch ([string] $arch) {
         throw "Unknown Android architecture: $arch"
     }
 
-    $ndk_api = $(if ($skiaArch.EndsWith("64")) { "21" } else { "9" } )
+    $ndk_api = $(if ($arch -like "*64") { "21" } else { "9" } )
 
     # Build skia.a
     GnNinja -out "android/$androidArch" -skiaArgs @"
         is_official_build=true skia_enable_tools=false
-        target_os=\""android\"" target_cpu=\""$skiaArch\""
+        target_os=\""android\"" target_cpu=\""$arch\""
         skia_use_system_freetype2=false
         skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true
         skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false
@@ -545,24 +567,73 @@ Function Build-Android-Arch ([string] $arch) {
 "@
 }
 
-Function Build-Linux-Arch ([string] $arch) {
-    WriteLine "Building the Linux library for '$dir'..."
-
+Function Build-Linux-Arch-SkiaSharp (
+    [string] $arch,
+    [string] $name = "linux",
+    [bool] $gpu = $true, 
+    [string] $cc = $null,
+    [string] $cxx = $null,
+    [string] $ar = $null,
+    [string[]] $flags_asm = $null,
+    [string[]] $flags_cc = $null,
+    [string[]] $flags_cxx = $null,
+    [string[]] $flags_ld = $null)
+{
+    # support for custom flags
+    # include GPU support (the API still exists, but everything returns null)
     $enable_gpu = if ($gpu) { "true" } else { "false" }
+    # we need the SKIA_C_DLL flag in order to keep our C API public
+    $flags_c = @("-DSKIA_C_DLL")
+    $flags_cc += $flags_c
+    $flags_cxx += $flags_c
+    # we like this option, but others might not...
+    if ($flags_ld -eq $null) { $flags_ld = @("-static-libstdc++") }
+    # we always want this when linking
+    $flags_ld += @("-Wl,--no-undefined")
+    
+    # format the flags for gn/ninja
+    # custom tooling
+    if ($cc) { $cc = "cc=\""$cc\""" }
+    if ($cxx) { $cxx = "cxx=\""$cxx\""" }
+    if ($ar) { $ar = "ar=\""$ar\""" }
+    # custom flags
+    $flags_asm = ($flags_asm | ForEach-Object { " \""$_\"" " }) -join ', '
+    $flags_cc = ($flags_cc | ForEach-Object { " \""$_\"" " }) -join ', '
+    $flags_cxx = ($flags_cxx | ForEach-Object { " \""$_\"" " }) -join ', '
+    $flags_ld = ($flags_ld | ForEach-Object { " \""$_\"" " }) -join ', '
 
     # Build libSkiaSharp.so
-    GnNinja -out "linux/$arch" -skiaArgs @"
+    GnNinja -out "$name/$arch" -skiaArgs @"
+        $ar $cc $cxx
         is_official_build=true skia_enable_tools=false
-        target_os=\""linux\"" target_cpu=\""$skiaArch\""
+        target_os=\""linux\"" target_cpu=\""$arch\""
+        linux_soname_version=\""$(GetVersion "libSkiaSharp" "soname")\""
         skia_enable_gpu=$enable_gpu
         skia_use_system_freetype2=false
         skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true
         skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false
-        extra_cflags=[ \""-DSKIA_C_DLL\"" ]
-        extra_ldflags=[ \""-Wl,--no-undefined\"", \""-static-libstdc++\"" ]
+        extra_asmflags=[ $flags_asm ]
+        extra_cflags=[ ]
+        extra_cflags_c=[ $flags_cc ]
+        extra_cflags_cc=[ $flags_cxx ]
+        extra_ldflags=[ $flags_ld ]
 "@
 
-    # Build libHarfBuzzSharp.dll
+    # Copy the output to the output folder
+    $out = "output/native/$name/$arch"
+    New-Item $out -itemtype "Directory" -force | Out-Null
+    Copy-Item "externals/skia/out/$name/$arch/libSkiaSharp.so.$(GetVersion "libSkiaSharp" "soname")" $out -force
+    Copy-Item "externals/skia/out/$name/$arch/libSkiaSharp.so.$(GetVersion "libSkiaSharp" "soname")" "$out/libSkiaSharp.so" -force
+}
+
+Function Build-Linux-Arch ([string] $arch)
+{
+    WriteLine "Building the Linux library for '$arch'..."
+
+    # Build libSkiaSharp.so
+    Build-Linux-Arch-SkiaSharp -arch $arch
+
+    # Build libharfbuzz.so
     $harfbuzzOut = Join-Path $HARFBUZZ_PATH "out/linux/$arch"
     New-Item $harfbuzzOut -itemtype "Directory" -force | Out-Null
     $config = " -D""BUILD_SHARED_LIBS=1"" "
@@ -572,45 +643,8 @@ Function Build-Linux-Arch ([string] $arch) {
     # Copy the output to the output folder
     $out = "output/native/linux/$arch"
     New-Item $out -itemtype "Directory" -force | Out-Null
-    Copy-Item "externals/skia/out/linux/$arch/libSkiaSharp.so" $out -force
-    Copy-Item "externals/harfbuzz/out/linux/$arch/Release/harfbuzz.so" $out -force
+    Copy-Item "externals/harfbuzz/out/linux/$arch/libharfbuzz.so" $out -force
 }
-
-# var arches = EnvironmentVariable ("BUILD_ARCH") ?? (Environment.Is64BitOperatingSystem ? "x64" : "x86");  // x64, x86, ARM
-# var BUILD_ARCH = arches.Split (',').Select (a => a.Trim ()).ToArray ();
-# var SUPPORT_GPU = (EnvironmentVariable ("SUPPORT_GPU") ?? "1") == "1"; // 1 == true, 0 == false
-
-# var buildArch = new Action<string> ((arch) => {
-
-#     // copy libSkiaSharp to output
-#     EnsureDirectoryExists ("native-builds/lib/linux/" + arch);
-#     var so = "native-builds/libSkiaSharp_linux/bin/" + arch + "/libSkiaSharp.so." + VERSION_SONAME;
-#     CopyFileToDirectory (so, "native-builds/lib/linux/" + arch);
-#     CopyFile (so, "native-builds/lib/linux/" + arch + "/libSkiaSharp.so");
-# });
-
-# var buildHarfBuzzArch = new Action<string> ((arch) => {
-#     // build libHarfBuzzSharp
-#     // RunProcess ("make", new ProcessSettings {
-#     //     Arguments = "clean",
-#     //     WorkingDirectory = "native-builds/libHarfBuzzSharp_linux",
-#     // });
-#     RunProcess ("make", new ProcessSettings {
-#         Arguments = "ARCH=" + arch + " VERSION=" + HARFBUZZ_VERSION_FILE,
-#         WorkingDirectory = "native-builds/libHarfBuzzSharp_linux",
-#     });
-
-#     // copy libHarfBuzzSharp to output
-#     EnsureDirectoryExists ("native-builds/lib/linux/" + arch);
-#     var so = "native-builds/libHarfBuzzSharp_linux/bin/" + arch + "/libHarfBuzzSharp.so." + HARFBUZZ_VERSION_SONAME;
-#     CopyFileToDirectory (so, "native-builds/lib/linux/" + arch);
-#     CopyFile (so, "native-builds/lib/linux/" + arch + "/libHarfBuzzSharp.so");
-# });
-
-# foreach (var arch in BUILD_ARCH) {
-#     buildArch (arch);
-#     buildHarfBuzzArch (arch);
-# }
 
 ################################################################################
 # Script starts here...
@@ -618,33 +652,37 @@ Function Build-Linux-Arch ([string] $arch) {
 # Initialize the tooling
 InitializeTools
 
-# # Output some useful information to the screen
-# WriteSystemInfo
+# Output some useful information to the screen
+WriteSystemInfo
 
-# # Initialize the repositories
-# Initialize
+# Initialize the repositories
+Initialize
 
-if (!$Platforms) {
-    $Platforms = @(
-        "android",
-        "ios",
-        "linux"
-        "macos",
-        "tvos",
-        "uwp",
-        "watchos",
-        "windows"
-    )
+# these are all the platforms supported
+$AllPlatforms = @("android", "ios", "linux", "macos", "tvos", "uwp", "watchos", "windows")
+if ($IsMacOS) {
+    $SupportedPlatforms = @("android", "ios", "macos", "tvos", "watchos")
+} elseif ($IsLinux) {
+    $SupportedPlatforms = @("linux")
+} else {
+    $SupportedPlatforms = @("uwp", "windows")
 }
-$Platforms = $Platforms | ForEach-Object {
-    $plat = $_.ToLowerInvariant()
-    if (($plat -eq "osx") -or ($plat -eq "mac")) {
-        $plat = "macos"
-    } elseif (($plat -eq "win") -or ($plat -eq "win32")) {
-        $plat = "windows"
-    }
-    return $plat
-} | Select -uniq
+
+# filter and clean
+
+$Platforms = 
+    $(if ($Platforms) { $Platforms } else { $AllPlatforms }) | 
+    ForEach-Object {
+        $plat = $_.ToLowerInvariant()
+        if (($plat -eq "osx") -or ($plat -eq "mac")) {
+            $plat = "macos"
+        } elseif (($plat -eq "win") -or ($plat -eq "win32")) {
+            $plat = "windows"
+        }
+        return $plat
+    } | 
+    Select-Object -uniq  | 
+    ForEach-Object { if ($_ -in $SupportedPlatforms) { $_ } }
 
 # Build the libraries
 WriteLine "$hr"
@@ -652,9 +690,11 @@ WriteLine "Building the native libraries for:"
 $Platforms | ForEach-Object { WriteLine " - $_" }
 WriteLine ""
 
-if ($IsMacOS) {
+if ($SkipBuild) {
+    WriteLine "Skipping the native build as requested."
+} else {
     # Build for macOS
-    if ($Platforms.Contains("macos")) {
+    if ("macos" -in $Platforms) {
         Build-MacOS-Arch -arch "x86"
         Build-MacOS-Arch -arch "x64"
         # Create the fat files
@@ -663,7 +703,7 @@ if ($IsMacOS) {
     }
 
     # Build for iOS
-    if ($Platforms.Contains("ios")) {
+    if ("ios" -in $Platforms) {
         Build-iOS-Arch -arch "x64"
         Build-iOS-Arch -arch "x86"
         Build-iOS-Arch -arch "arm"
@@ -674,7 +714,7 @@ if ($IsMacOS) {
     }
 
     # Build for tvOS
-    if ($Platforms.Contains("tvos")) {
+    if ("tvos" -in $Platforms) {
         Build-TVOS-Arch -arch "x64"
         Build-TVOS-Arch -arch "arm64"
         # Create the fat files
@@ -683,7 +723,7 @@ if ($IsMacOS) {
     }
 
     # Build for watchOS
-    if ($Platforms.Contains("watchos")) {
+    if ("watchos" -in $Platforms) {
         Build-WatchOS-Arch -arch "x86"
         Build-WatchOS-Arch -arch "arm"
         # Create the fat files
@@ -692,7 +732,7 @@ if ($IsMacOS) {
     }
 
     # Build for Android
-    if ($Platforms.Contains("android")) {
+    if ("android" -in $Platforms) {
         Build-Android-Arch -arch "x86"
         Build-Android-Arch -arch "x64"
         Build-Android-Arch -arch "arm"
@@ -704,19 +744,22 @@ if ($IsMacOS) {
         Exec $ndkbuild -a "-C native-builds/libHarfBuzzSharp_android"
         CopyDirectoryContents "native-builds/libHarfBuzzSharp_android/libs" "output/native/android"
     }
-} elseif ($IsLinux) {
+
     # Build for Linux
-    # TODO: BUILD_ARCH | SUPPORT_GPU
-    Build-Linux-Arch -arch "x64"
-} else {
+    if ("linux" -in $Platforms) {
+        # TODO: BUILD_ARCH | SUPPORT_GPU
+        Build-Linux-Arch -arch "x64"
+        Build-Linux-Arch -arch "x86"
+    }
+
     # Build for Windows (Win32)
-    if ($Platforms.Contains("windows")) {
+    if ("windows" -in $Platforms) {
         Build-Windows-Arch -arch "x86"
         Build-Windows-Arch -arch "x64"
     }
 
     # Build for UWP
-    if ($Platforms.Contains("uwp")) {
+    if ("uwp" -in $Platforms) {
         Build-UWP-Arch -arch "x86"
         Build-UWP-Arch -arch "x64"
         Build-UWP-Arch -arch "arm"
@@ -726,7 +769,8 @@ if ($IsMacOS) {
         Copy-Item "$ANGLE_PATH/uwp/bin/UAP/Win32/*.dll" "output/native/uwp/x86"
         Copy-Item "$ANGLE_PATH/uwp/bin/UAP/x64/*.dll" "output/native/uwp/x64"
     }
+    WriteLine "Build complete for the native libraries."
 }
-WriteLine "Build complete for the native libraries."
+
 WriteLine "$hr"
 WriteLine ""
