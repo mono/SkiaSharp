@@ -19,6 +19,7 @@ if ($BuildExternals) {
     WriteLine ""
 }
 
+# jump out
 if (!$BuildManaged -and !$AssembleDocs) {
     WriteLine "$hr"
     WriteLine "Skipping the managed libraries and packaging."
@@ -30,6 +31,11 @@ if (!$BuildManaged -and !$AssembleDocs) {
     }
 
     return
+}
+
+# we need MSBuild for this part
+if (!$msbuild -or !(Test-Path $msbuild)) {
+    throw 'Unable to locate "MSBuild.exe". Make sure Visual Studio 2017 is installed.'
 }
 
 WriteLine "$hr"

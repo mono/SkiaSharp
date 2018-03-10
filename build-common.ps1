@@ -70,15 +70,15 @@ Function DownloadNuGet ([string] $id, [string] $version)
     # download the specific nuget
     if (!(Test-Path "externals/$id/$id.nupkg")) {
         WriteLine "Downloading $id..."
-        Exec $nuget -a "install $id -Version ""$version"" -ExcludeVersion -OutputDirectory ""externals"" -Verbosity quiet"
+        Exec $nuget -a "install $id -Version ""$version"" -ExcludeVersion -OutputDirectory ""externals"" -Verbosity normal"
     }
 }
 
 Function MSBuild ([string] $project, [string] $arch = "Any CPU", [string] $config = "Release", [string] $target = "Build")
 {
     # run MSBuild
-    $v = if ($target -eq "Build") { "minimal" } else { "quiet" }
-    Exec $msbuild -a """$project"" /p:Configuration=""$config"" /p:Platform=""$arch"" /t:""$target"" /v:$v /m /nologo"
+    # $v = if ($target -eq "Build") { "minimal" } else { "quiet" }
+    Exec $msbuild -a """$project"" /p:Configuration=""$config"" /p:Platform=""$arch"" /t:""$target"" /v:minimal /m /nologo"
 }
 
 Function GetVersion ([string]$lib, [string]$type = "nuget")
