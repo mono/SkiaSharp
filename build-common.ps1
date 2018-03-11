@@ -2,15 +2,30 @@
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 $powershellVersion = "$($PSVersionTable.PSVersion.ToString()) ($($PSVersionTable.PSEdition.ToString()))"
-$operatingSystem = if ($IsMacOS) { 'Mac' } elseif ($IsLinux) { 'Linux' } else { 'Windows' }
+$operatingSystem = if ($IsMacOS) { 'macOS' } elseif ($IsLinux) { 'Linux' } else { 'Windows' }
 
 $HOME_PATH = $(if ($IsMacOS -or $IsLinux) { $env:HOME } else { $env:USERPROFILE })
+$ROOT_PATH = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path $MyInvocation.MyCommand.Path -Parent }
+$OUTPUT_PATH = Join-Path $ROOT_PATH 'output'
+$EXTERNALS_PATH = Join-Path $ROOT_PATH 'externals'
 
-$nuget = "externals/nuget/nuget.exe"
+$nuget = Join-Path $EXTERNALS_PATH "nuget/nuget.exe"
 $msbuild = ''
 $msbuildVersion = ''
 
 $hr = "=" * 80
+
+$GIT_SHA = $env:GIT_SHA
+if ($GIT_SHA -and ($GIT_SHA.Length -gt 7)) {
+    $GIT_SHA = $GIT_SHA.Substring(0, 6)
+} else {
+    $GIT_SHA = ''
+}
+
+$BUILD_NUMBER = $env:BUILD_NUMBER
+if (!$BUILD_NUMBER) {
+    $BUILD_NUMBER = '0'
+}
 
 Function WriteLine ([string] $message, [string] $color = "Cyan")
 {
@@ -68,9 +83,9 @@ Function DownloadNuGet ([string] $id, [string] $version)
     }
 
     # download the specific nuget
-    if (!(Test-Path "externals/$id/$id.nupkg")) {
+    if (!(Test-Path "$EXTERNALS_PATH/$id/$id.nupkg")) {
         WriteLine "Downloading $id..."
-        Exec $nuget -a "install $id -Version ""$version"" -ExcludeVersion -OutputDirectory ""externals"" -Verbosity normal"
+        Exec $nuget -a "install $id -Version ""$version"" -ExcludeVersion -OutputDirectory ""$EXTERNALS_PATH"" -Verbosity normal"
     }
 }
 
@@ -83,8 +98,12 @@ Function MSBuild ([string] $project, [string] $arch = "Any CPU", [string] $confi
 
 Function GetVersion ([string]$lib, [string]$type = "nuget")
 {
-    $matches = (Get-Content "versions.txt" | Select-String -pattern "^$lib\s*$type\s*(.*)$")
-    return $matches.Matches[0].Groups[1].Value
+    try {
+        $matches = (Get-Content "versions.txt" | Select-String -pattern "^$lib\s*$type\s*(.*)$")
+        return $matches.Matches[0].Groups[1].Value
+    } catch {
+        return ''
+    }
 }
 
 

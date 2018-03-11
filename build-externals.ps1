@@ -10,10 +10,10 @@ $ErrorActionPreference = 'Stop'
 . "./build-common.ps1"
 
 # Paths
-$SKIA_PATH = Join-Path $PSScriptRoot 'externals/skia'
-$DEPOT_PATH = Join-Path $PSScriptRoot 'externals/depot_tools'
-$HARFBUZZ_PATH = Join-Path $PSScriptRoot 'externals/harfbuzz'
-$ANGLE_PATH = Join-Path $PSScriptRoot 'externals/angle'
+$SKIA_PATH = Join-Path $EXTERNALS_PATH 'skia'
+$DEPOT_PATH = Join-Path $EXTERNALS_PATH 'depot_tools'
+$HARFBUZZ_PATH = Join-Path $EXTERNALS_PATH 'harfbuzz'
+$ANGLE_PATH = Join-Path $EXTERNALS_PATH 'angle'
 $ANDROID_NDK_HOME = $env:ANDROID_NDK_HOME
 
 # skia Tools
@@ -328,10 +328,10 @@ Function Build-Windows-Arch ([string] $arch)
     MSBuild -project "$harfbuzzOut/harfbuzz.vcxproj" -arch $arch
 
     # Copy the output to the output folder
-    $out = "output/native/windows/$arch"
+    $out = "$OUTPUT_PATH/native/windows/$arch"
     New-Item $out -itemtype "Directory" -force | Out-Null
-    Copy-Item "externals/skia/out/win/$arch/libSkiaSharp.dll" $out -force
-    Copy-Item "externals/harfbuzz/out/win/$arch/Release/harfbuzz.dll" $out -force
+    Copy-Item "$SKIA_PATH/out/win/$arch/libSkiaSharp.dll" $out -force
+    Copy-Item "$HARFBUZZ_PATH/out/win/$arch/Release/harfbuzz.dll" $out -force
 }
 
 Function Build-UWP-Arch ([string] $arch)
@@ -369,10 +369,10 @@ Function Build-UWP-Arch ([string] $arch)
     MSBuild -project "$harfbuzzOut/harfbuzz.vcxproj" -arch $arch
 
     # Copy the output to the output folder
-    $out = "output/native/uwp/$arch"
+    $out = "$OUTPUT_PATH/native/uwp/$arch"
     New-Item $out -itemtype "Directory" -force | Out-Null
-    Copy-Item "externals/skia/out/uwp/$arch/libSkiaSharp.dll" $out -force
-    Copy-Item "externals/harfbuzz/out/uwp/$arch/Release/harfbuzz.dll" $out -force
+    Copy-Item "$SKIA_PATH/out/uwp/$arch/libSkiaSharp.dll" $out -force
+    Copy-Item "$HARFBUZZ_PATH/out/uwp/$arch/Release/harfbuzz.dll" $out -force
 }
 
 Function Build-MacOS-Arch ([string] $arch)
@@ -402,7 +402,7 @@ Function Build-MacOS-Arch ([string] $arch)
     XCodeBuild -project "native-builds/libHarfBuzzSharp_osx/libHarfBuzzSharp.xcodeproj" -sdk "macosx" -arch $xcodeArch
 
     # Copy the output to the output folder
-    $out = "output/native/osx/$arch"
+    $out = "$OUTPUT_PATH/native/osx/$arch"
     New-Item $out -itemtype "Directory" -force | Out-Null
     Copy-Item "native-builds/libSkiaSharp_osx/build/Release/*" $out -force
     Copy-Item "native-builds/libHarfBuzzSharp_osx/build/Release/*" $out -force
@@ -446,7 +446,7 @@ Function Build-iOS-Arch ([string] $arch)
     XCodeBuild -project "native-builds/libHarfBuzzSharp_ios/libHarfBuzzSharp.xcodeproj" -sdk $sdk -arch $xcodeArch
 
     # Copy the output to the output folder
-    $out = "output/native/ios/$arch"
+    $out = "$OUTPUT_PATH/native/ios/$arch"
     New-Item $out -itemtype "Directory" -force | Out-Null
     Copy-Item "native-builds/libSkiaSharp_ios/build/Release-$sdk/libSkiaSharp.framework" $out -force -recurse
     Copy-Item "native-builds/libHarfBuzzSharp_ios/build/Release-$sdk/*" $out -force
@@ -485,7 +485,7 @@ Function Build-TVOS-Arch ([string] $arch)
     XCodeBuild -project "native-builds/libHarfBuzzSharp_tvos/libHarfBuzzSharp.xcodeproj" -sdk $sdk -arch $xcodeArch
 
     # Copy the output to the output folder
-    $out = "output/native/tvos/$arch"
+    $out = "$OUTPUT_PATH/native/tvos/$arch"
     New-Item $out -itemtype "Directory" -force | Out-Null
     Copy-Item "native-builds/libSkiaSharp_tvos/build/Release-$sdk/libSkiaSharp.framework" $out -force -recurse
     Copy-Item "native-builds/libHarfBuzzSharp_tvos/build/Release-$sdk/*" $out -force
@@ -526,7 +526,7 @@ Function Build-WatchOS-Arch ([string] $arch)
     XCodeBuild -project "native-builds/libHarfBuzzSharp_watchos/libHarfBuzzSharp.xcodeproj" -sdk $sdk -arch $xcodeArch
 
     # Copy the output to the output folder
-    $out = "output/native/watchos/$arch"
+    $out = "$OUTPUT_PATH/native/watchos/$arch"
     New-Item $out -itemtype "Directory" -force | Out-Null
     Copy-Item "native-builds/libSkiaSharp_watchos/build/Release-$sdk/libSkiaSharp.framework" $out -force -recurse
     Copy-Item "native-builds/libHarfBuzzSharp_watchos/build/Release-$sdk/*" $out -force
@@ -620,10 +620,10 @@ Function Build-Linux-Arch-SkiaSharp (
 "@
 
     # Copy the output to the output folder
-    $out = "output/native/$name/$arch"
+    $out = "$OUTPUT_PATH/native/$name/$arch"
     New-Item $out -itemtype "Directory" -force | Out-Null
-    Copy-Item "externals/skia/out/$name/$arch/libSkiaSharp.so.$(GetVersion "libSkiaSharp" "soname")" $out -force
-    Copy-Item "externals/skia/out/$name/$arch/libSkiaSharp.so.$(GetVersion "libSkiaSharp" "soname")" "$out/libSkiaSharp.so" -force
+    Copy-Item "$SKIA_PATH/out/$name/$arch/libSkiaSharp.so.$(GetVersion "libSkiaSharp" "soname")" $out -force
+    Copy-Item "$SKIA_PATH/out/$name/$arch/libSkiaSharp.so.$(GetVersion "libSkiaSharp" "soname")" "$out/libSkiaSharp.so" -force
 }
 
 Function Build-Linux-Arch ([string] $arch)
@@ -641,9 +641,9 @@ Function Build-Linux-Arch ([string] $arch)
     Exec $make -a "harfbuzz" -wo $harfbuzzOut
 
     # Copy the output to the output folder
-    $out = "output/native/linux/$arch"
+    $out = "$OUTPUT_PATH/native/linux/$arch"
     New-Item $out -itemtype "Directory" -force | Out-Null
-    Copy-Item "externals/harfbuzz/out/linux/$arch/libharfbuzz.so" $out -force
+    Copy-Item "$HARFBUZZ_PATH/out/linux/$arch/libharfbuzz.so" $out -force
 }
 
 ################################################################################
@@ -673,7 +673,7 @@ if ($IsMacOS) {
 $Platforms = 
     $(if ($Platforms) { $Platforms } else { $AllPlatforms }) | 
     ForEach-Object {
-        $plat = $_.ToLowerInvariant()
+        $plat = $_.ToLower()
         if (($plat -eq "osx") -or ($plat -eq "mac")) {
             $plat = "macos"
         } elseif (($plat -eq "win") -or ($plat -eq "win32")) {
@@ -698,8 +698,8 @@ if ($SkipBuild) {
         Build-MacOS-Arch -arch "x86"
         Build-MacOS-Arch -arch "x64"
         # Create the fat files
-        Lipo -dest "output/native/osx/libSkiaSharp.dylib" -libs @("x86", "x64")
-        Lipo -dest "output/native/osx/libHarfBuzzSharp.dylib" -libs @("x86", "x64")
+        Lipo -dest "$OUTPUT_PATH/native/osx/libSkiaSharp.dylib" -libs @("x86", "x64")
+        Lipo -dest "$OUTPUT_PATH/native/osx/libHarfBuzzSharp.dylib" -libs @("x86", "x64")
     }
 
     # Build for iOS
@@ -709,8 +709,8 @@ if ($SkipBuild) {
         Build-iOS-Arch -arch "arm"
         Build-iOS-Arch -arch "arm64"
         # Create the fat files
-        Lipo -dest "output/native/ios/libSkiaSharp.framework" -libs @("arm", "arm64", "x86", "x64")
-        Lipo -dest "output/native/ios/libHarfBuzzSharp.a" -libs @("arm", "arm64", "x86", "x64")
+        Lipo -dest "$OUTPUT_PATH/native/ios/libSkiaSharp.framework" -libs @("arm", "arm64", "x86", "x64")
+        Lipo -dest "$OUTPUT_PATH/native/ios/libHarfBuzzSharp.a" -libs @("arm", "arm64", "x86", "x64")
     }
 
     # Build for tvOS
@@ -718,8 +718,8 @@ if ($SkipBuild) {
         Build-TVOS-Arch -arch "x64"
         Build-TVOS-Arch -arch "arm64"
         # Create the fat files
-        Lipo -dest "output/native/tvos/libSkiaSharp.framework" -libs @("arm64", "x64")
-        Lipo -dest "output/native/tvos/libHarfBuzzSharp.a" -libs @("arm64", "x64")
+        Lipo -dest "$OUTPUT_PATH/native/tvos/libSkiaSharp.framework" -libs @("arm64", "x64")
+        Lipo -dest "$OUTPUT_PATH/native/tvos/libHarfBuzzSharp.a" -libs @("arm64", "x64")
     }
 
     # Build for watchOS
@@ -727,8 +727,8 @@ if ($SkipBuild) {
         Build-WatchOS-Arch -arch "x86"
         Build-WatchOS-Arch -arch "arm"
         # Create the fat files
-        Lipo -dest "output/native/watchos/libSkiaSharp.framework" -libs @("arm", "x86")
-        Lipo -dest "output/native/watchos/libHarfBuzzSharp.a" -libs @("arm", "x86")
+        Lipo -dest "$OUTPUT_PATH/native/watchos/libSkiaSharp.framework" -libs @("arm", "x86")
+        Lipo -dest "$OUTPUT_PATH/native/watchos/libHarfBuzzSharp.a" -libs @("arm", "x86")
     }
 
     # Build for Android
@@ -739,10 +739,10 @@ if ($SkipBuild) {
         Build-Android-Arch -arch "arm64"
         # build and copy libSkiaSharp
         Exec $ndkbuild -a "-C native-builds/libSkiaSharp_android"
-        CopyDirectoryContents "native-builds/libSkiaSharp_android/libs" "output/native/android"
+        CopyDirectoryContents "native-builds/libSkiaSharp_android/libs" "$OUTPUT_PATH/native/android"
         # build and copy libHarfBuzzSharp
         Exec $ndkbuild -a "-C native-builds/libHarfBuzzSharp_android"
-        CopyDirectoryContents "native-builds/libHarfBuzzSharp_android/libs" "output/native/android"
+        CopyDirectoryContents "native-builds/libHarfBuzzSharp_android/libs" "$OUTPUT_PATH/native/android"
     }
 
     # Build for Linux
@@ -763,9 +763,9 @@ if ($SkipBuild) {
         Build-UWP-Arch -arch "arm"
 
         # copy ANGLE to output folder
-        Copy-Item "$ANGLE_PATH/uwp/bin/UAP/ARM/*.dll" "output/native/uwp/arm"
-        Copy-Item "$ANGLE_PATH/uwp/bin/UAP/Win32/*.dll" "output/native/uwp/x86"
-        Copy-Item "$ANGLE_PATH/uwp/bin/UAP/x64/*.dll" "output/native/uwp/x64"
+        Copy-Item "$ANGLE_PATH/uwp/bin/UAP/ARM/*.dll" "$OUTPUT_PATH/native/uwp/arm"
+        Copy-Item "$ANGLE_PATH/uwp/bin/UAP/Win32/*.dll" "$OUTPUT_PATH/native/uwp/x86"
+        Copy-Item "$ANGLE_PATH/uwp/bin/UAP/x64/*.dll" "$OUTPUT_PATH/native/uwp/x64"
     }
     WriteLine "Build complete for the native libraries."
 }
