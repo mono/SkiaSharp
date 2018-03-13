@@ -27,10 +27,8 @@ $xcodebuild = ''
 $strip = ''
 $codesign = ''
 $lipo = ''
-$tar = ''
 $bash = ''
 $git = ''
-$ndkbuild = ''
 $make = ''
 $cmake = ''
 
@@ -63,10 +61,10 @@ Function Lipo ([string] $dest, [string[]] $libs)
     Exec $lipo -a "-create -output $name $libs" -wo $dir
 }
 
-Function GnNinja ([string] $out, [string] $skiaArgs)
+Function GnNinja ([string] $out, [string] $target = "SkiaSharp", [string] $skiaArgs)
 {
     Exec $gn -a " gen out/$out --args=""$skiaArgs"" " -wo $SKIA_PATH
-    Exec $ninja -a " SkiaSharp -C out/$out " -wo $SKIA_PATH
+    Exec $ninja -a " $target -C out/$out " -wo $SKIA_PATH
 }
 
 Function XCodeBuild ([string] $project, [string] $sdk, [string] $arch)
@@ -79,7 +77,7 @@ Function XCodeBuild ([string] $project, [string] $sdk, [string] $arch)
 
 Function StripSign ([string] $target)
 {
-    if ($target -like ".framework") {
+    if ($target -like "*.framework") {
         $archive = "$target/$([System.IO.Path]::GetFileNameWithoutExtension($target))"
     } else {
         $archive = $target
@@ -124,12 +122,6 @@ Function InitializeTools ()
         }
         if (!(Test-Path $ANDROID_NDK_HOME)) {
             throw 'Unable to locate the "Android NDK home". Use the "ANDROID_NDK_HOME" environment variable.'
-        }
-
-        # find ndk-build
-        $script:ndkbuild = Join-Path $ANDROID_NDK_HOME 'ndk-build'
-        if (!(Test-Path $ndkbuild)) {
-            throw 'Unable to locate "ndk-build". Use the "ANDROID_NDK_HOME" environment variable.'
         }
 
         # find xcodebuild
@@ -216,11 +208,9 @@ Function WriteSystemInfo ()
     WriteLine "  lipo:           '$lipo'"
     WriteLine "  make:           '$make'"
     WriteLine "  MSBuild:        '$msbuild'"
-    WriteLine "  ndk-build:      '$ndkbuild'"
     WriteLine "  ninja:          '$ninja'"
     WriteLine "  Python:         '$python'"
     WriteLine "  strip:          '$strip'"
-    WriteLine "  tar:            '$tar'"
     WriteLine "  XCodeBuild:     '$xcodebuild'"
     WriteLine ""
     WriteLine "Other Paths:"
@@ -388,7 +378,7 @@ Function Build-MacOS-Arch ([string] $arch)
     }
 
     # Build skia.a
-    GnNinja -out "mac/$xcodeArch" -skiaArgs @"
+    GnNinja -out "mac/$xcodeArch" -target "skia" -skiaArgs @"
         is_official_build=true skia_enable_tools=false
         target_os=\""mac\"" target_cpu=\""$arch\""
         skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true
@@ -397,19 +387,25 @@ Function Build-MacOS-Arch ([string] $arch)
         extra_ldflags=[ \""-Wl,macosx_version_min=10.9\"" ]
 "@
 
-    # Build libSkiaSharp.dylib and libHarfBuzzSharp.dylib
+    # Build libSkiaSharp.dylib
     XCodeBuild -project "native-builds/libSkiaSharp_osx/libSkiaSharp.xcodeproj" -sdk "macosx" -arch $xcodeArch
-    XCodeBuild -project "native-builds/libHarfBuzzSharp_osx/libHarfBuzzSharp.xcodeproj" -sdk "macosx" -arch $xcodeArch
+
+    # Build libharfbuzz.dylib
+    $harfbuzzOut = Join-Path $HARFBUZZ_PATH "out/mac/$arch"
+    New-Item $harfbuzzOut -itemtype "Directory" -force | Out-Null
+    $config = " -D""BUILD_SHARED_LIBS=1"" -D""CMAKE_OSX_ARCHITECTURES=$xcodeArch"" -D""CMAKE_OSX_DEPLOYMENT_TARGET=10.7"" "
+    Exec $cmake -a "-G ""Unix Makefiles"" $config ../../../" -wo $harfbuzzOut
+    Exec $make -a "harfbuzz" -wo $harfbuzzOut
 
     # Copy the output to the output folder
     $out = "$OUTPUT_PATH/native/osx/$arch"
     New-Item $out -itemtype "Directory" -force | Out-Null
     Copy-Item "native-builds/libSkiaSharp_osx/build/Release/*" $out -force
-    Copy-Item "native-builds/libHarfBuzzSharp_osx/build/Release/*" $out -force
+    Copy-Item "$HARFBUZZ_PATH/out/mac/$arch/libharfbuzz.dylib" $out -force
 
     # Strip anything we can and resign with an empty key
     StripSign -target "$out/libSkiaSharp.dylib"
-    StripSign -target "$out/libHarfBuzzSharp.dylib"
+    StripSign -target "$out/libharfbuzz.dylib"
 }
 
 Function Build-iOS-Arch ([string] $arch)
@@ -432,7 +428,7 @@ Function Build-iOS-Arch ([string] $arch)
     $extrasFlags = $(if ($arch -eq "arm") { ", \""-Wno-over-aligned\""" } else { "" } )
 
     # Build skia.a
-    GnNinja -out "ios/$xcodeArch" -skiaArgs @"
+    GnNinja -out "ios/$xcodeArch" -target "skia" -skiaArgs @"
         is_official_build=true skia_enable_tools=false
         target_os=\""ios\"" target_cpu=\""$arch\""
         skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true
@@ -441,19 +437,25 @@ Function Build-iOS-Arch ([string] $arch)
         extra_ldflags=[ \""-Wl,ios_version_min=8.0\"" ]
 "@
 
-    # Build libSkiaSharp.framework and libHarfBuzzSharp.a
+    # Build libSkiaSharp.framework
     XCodeBuild -project "native-builds/libSkiaSharp_ios/libSkiaSharp.xcodeproj" -sdk $sdk -arch $xcodeArch
-    XCodeBuild -project "native-builds/libHarfBuzzSharp_ios/libHarfBuzzSharp.xcodeproj" -sdk $sdk -arch $xcodeArch
+
+    # Build libharfbuzz.a
+    $harfbuzzOut = Join-Path $HARFBUZZ_PATH "out/ios/$arch"
+    New-Item $harfbuzzOut -itemtype "Directory" -force | Out-Null
+    $config = " -D""CMAKE_OSX_ARCHITECTURES=$xcodeArch"" -D""CMAKE_OSX_SYSROOT=$sdk"" -D""CMAKE_C_FLAGS=-mios-version-min=8.0"" -D""CMAKE_CXX_FLAGS=-mios-version-min=8.0"" "
+    Exec $cmake -a "-G ""Unix Makefiles"" $config ../../../" -wo $harfbuzzOut
+    Exec $make -a "harfbuzz" -wo $harfbuzzOut
 
     # Copy the output to the output folder
     $out = "$OUTPUT_PATH/native/ios/$arch"
     New-Item $out -itemtype "Directory" -force | Out-Null
     Copy-Item "native-builds/libSkiaSharp_ios/build/Release-$sdk/libSkiaSharp.framework" $out -force -recurse
-    Copy-Item "native-builds/libHarfBuzzSharp_ios/build/Release-$sdk/*" $out -force
+    Copy-Item "$HARFBUZZ_PATH/out/ios/$arch/libharfbuzz.a" $out -force
 
     # Strip anything we can and resign with an empty key
     StripSign -target "$out/libSkiaSharp.framework"
-    StripSign -target "$out/libHarfBuzzSharp.a"
+    StripSign -target "$out/libharfbuzz.a"
 }
 
 Function Build-TVOS-Arch ([string] $arch)
@@ -471,7 +473,7 @@ Function Build-TVOS-Arch ([string] $arch)
     $sdk = $(if ($arch -like "arm*") { "appletvos" } else { "appletvsimulator" })
 
     # Build skia.a
-    GnNinja -out "tvos/$xcodeArch" -skiaArgs @"
+    GnNinja -out "tvos/$xcodeArch" -target "skia" -skiaArgs @"
         is_official_build=true skia_enable_tools=false
         target_os=\""tvos\"" target_cpu=\""$arch\""
         skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true
@@ -480,19 +482,25 @@ Function Build-TVOS-Arch ([string] $arch)
         extra_ldflags=[ \""-Wl,tvos_version_min=9.0\"" ]
 "@
 
-    # Build libSkiaSharp.framework and libHarfBuzzSharp.a
+    # Build libSkiaSharp.framework
     XCodeBuild -project "native-builds/libSkiaSharp_tvos/libSkiaSharp.xcodeproj" -sdk $sdk -arch $xcodeArch
-    XCodeBuild -project "native-builds/libHarfBuzzSharp_tvos/libHarfBuzzSharp.xcodeproj" -sdk $sdk -arch $xcodeArch
+
+    # Build libharfbuzz.a
+    $harfbuzzOut = Join-Path $HARFBUZZ_PATH "out/tvos/$arch"
+    New-Item $harfbuzzOut -itemtype "Directory" -force | Out-Null
+    $config = " -D""CMAKE_OSX_ARCHITECTURES=$xcodeArch"" -D""CMAKE_OSX_SYSROOT=$sdk"" -D""CMAKE_C_FLAGS=-mtvos-version-min=9.0"" -D""CMAKE_CXX_FLAGS=-mtvos-version-min=9.0"" "
+    Exec $cmake -a "-G ""Unix Makefiles"" $config ../../../" -wo $harfbuzzOut
+    Exec $make -a "harfbuzz" -wo $harfbuzzOut
 
     # Copy the output to the output folder
     $out = "$OUTPUT_PATH/native/tvos/$arch"
     New-Item $out -itemtype "Directory" -force | Out-Null
     Copy-Item "native-builds/libSkiaSharp_tvos/build/Release-$sdk/libSkiaSharp.framework" $out -force -recurse
-    Copy-Item "native-builds/libHarfBuzzSharp_tvos/build/Release-$sdk/*" $out -force
+    Copy-Item "$HARFBUZZ_PATH/out/tvos/$arch/libharfbuzz.a" $out -force
 
     # Strip anything we can and resign with an empty key
     StripSign -target "$out/libSkiaSharp.framework"
-    StripSign -target "$out/libHarfBuzzSharp.a"
+    StripSign -target "$out/libharfbuzz.a"
 }
 
 Function Build-WatchOS-Arch ([string] $arch)
@@ -511,7 +519,7 @@ Function Build-WatchOS-Arch ([string] $arch)
     $extrasFlags = $(if ($arch -eq "arm") { ", \""-Wno-over-aligned\""" } else { "" } )
 
     # Build skia.a
-    GnNinja -out "watchos/$xcodeArch" -skiaArgs @"
+    GnNinja -out "watchos/$xcodeArch" -target "skia" -skiaArgs @"
         is_official_build=true skia_enable_tools=false
         target_os=\""watchos\"" target_cpu=\""$arch\""
         skia_enable_gpu=false
@@ -521,19 +529,25 @@ Function Build-WatchOS-Arch ([string] $arch)
         extra_ldflags=[ \""-Wl,watchos_version_min=2.0\"" ]
 "@
 
-    # Build libSkiaSharp.framework and libHarfBuzzSharp.a
+    # Build libSkiaSharp.framework
     XCodeBuild -project "native-builds/libSkiaSharp_watchos/libSkiaSharp.xcodeproj" -sdk $sdk -arch $xcodeArch
-    XCodeBuild -project "native-builds/libHarfBuzzSharp_watchos/libHarfBuzzSharp.xcodeproj" -sdk $sdk -arch $xcodeArch
+
+    # Build libharfbuzz.a
+    $harfbuzzOut = Join-Path $HARFBUZZ_PATH "out/watchos/$arch"
+    New-Item $harfbuzzOut -itemtype "Directory" -force | Out-Null
+    $config = " -D""CMAKE_OSX_ARCHITECTURES=$xcodeArch"" -D""CMAKE_OSX_SYSROOT=$sdk"" -D""CMAKE_C_FLAGS=-mwatchos-version-min=2.0"" -D""CMAKE_CXX_FLAGS=-mwatchos-version-min=2.0"" "
+    Exec $cmake -a "-G ""Unix Makefiles"" $config ../../../" -wo $harfbuzzOut
+    Exec $make -a "harfbuzz" -wo $harfbuzzOut
 
     # Copy the output to the output folder
     $out = "$OUTPUT_PATH/native/watchos/$arch"
     New-Item $out -itemtype "Directory" -force | Out-Null
     Copy-Item "native-builds/libSkiaSharp_watchos/build/Release-$sdk/libSkiaSharp.framework" $out -force -recurse
-    Copy-Item "native-builds/libHarfBuzzSharp_watchos/build/Release-$sdk/*" $out -force
+    Copy-Item "$HARFBUZZ_PATH/out/watchos/$arch/libharfbuzz.a" $out -force
 
     # Strip anything we can and resign with an empty key
     StripSign -target "$out/libSkiaSharp.framework"
-    StripSign -target "$out/libHarfBuzzSharp.a"
+    StripSign -target "$out/libharfbuzz.a"
 }
 
 Function Build-Android-Arch ([string] $arch)
@@ -555,16 +569,30 @@ Function Build-Android-Arch ([string] $arch)
     $ndk_api = $(if ($arch -like "*64") { "21" } else { "9" } )
 
     # Build skia.a
-    GnNinja -out "android/$androidArch" -skiaArgs @"
+    GnNinja -out "android/$arch" -skiaArgs @"
         is_official_build=true skia_enable_tools=false
         target_os=\""android\"" target_cpu=\""$arch\""
         skia_use_system_freetype2=false
         skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true
         skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false
         extra_cflags=[ \""-DSKIA_C_DLL\"" ]
-        extra_ldflags=[ \""-Wl,watchos_version_min=2.0\"" ]
-        ndk=\""$ANDROID_NDK_HOME\"" ndk_api=$ndk_api
+        ndk=\""$ANDROID_NDK_HOME\""
+        ndk_api=$ndk_api
 "@
+
+    # Build libharfbuzz.so
+    $harfbuzzOut = Join-Path $HARFBUZZ_PATH "out/android/$arch"
+    New-Item $harfbuzzOut -itemtype "Directory" -force | Out-Null
+    $config = " -D""CMAKE_SYSTEM_VERSION=$ndk_api"" -D""CMAKE_ANDROID_NDK=$ANDROID_NDK_HOME"" -D""CMAKE_ANDROID_ARCH_ABI=$androidArch"" -D""CMAKE_ANDROID_STL_TYPE=gnustl_static"" "
+    $config = " -D""BUILD_SHARED_LIBS=1"" -D""CMAKE_SYSTEM_NAME=Android"" $config "
+    Exec $cmake -a "-G ""Unix Makefiles"" $config ../../../" -wo $harfbuzzOut
+    Exec $make -a "harfbuzz" -wo $harfbuzzOut
+
+    # Copy the output to the output folder
+    $out = "$OUTPUT_PATH/native/android/$arch"
+    New-Item $out -itemtype "Directory" -force | Out-Null
+    Copy-Item "$SKIA_PATH/out/android/$arch/libSkiaSharp.so" $out -force
+    Copy-Item "$HARFBUZZ_PATH/out/android/$arch/libharfbuzz.so" $out -force
 }
 
 Function Build-Linux-Arch-SkiaSharp (
@@ -699,7 +727,7 @@ if ($SkipBuild) {
         Build-MacOS-Arch -arch "x64"
         # Create the fat files
         Lipo -dest "$OUTPUT_PATH/native/osx/libSkiaSharp.dylib" -libs @("x86", "x64")
-        Lipo -dest "$OUTPUT_PATH/native/osx/libHarfBuzzSharp.dylib" -libs @("x86", "x64")
+        Lipo -dest "$OUTPUT_PATH/native/osx/libharfbuzz.dylib" -libs @("x86", "x64")
     }
 
     # Build for iOS
@@ -710,7 +738,7 @@ if ($SkipBuild) {
         Build-iOS-Arch -arch "arm64"
         # Create the fat files
         Lipo -dest "$OUTPUT_PATH/native/ios/libSkiaSharp.framework" -libs @("arm", "arm64", "x86", "x64")
-        Lipo -dest "$OUTPUT_PATH/native/ios/libHarfBuzzSharp.a" -libs @("arm", "arm64", "x86", "x64")
+        Lipo -dest "$OUTPUT_PATH/native/ios/libharfbuzz.a" -libs @("arm", "arm64", "x86", "x64")
     }
 
     # Build for tvOS
@@ -719,7 +747,7 @@ if ($SkipBuild) {
         Build-TVOS-Arch -arch "arm64"
         # Create the fat files
         Lipo -dest "$OUTPUT_PATH/native/tvos/libSkiaSharp.framework" -libs @("arm64", "x64")
-        Lipo -dest "$OUTPUT_PATH/native/tvos/libHarfBuzzSharp.a" -libs @("arm64", "x64")
+        Lipo -dest "$OUTPUT_PATH/native/tvos/libharfbuzz.a" -libs @("arm64", "x64")
     }
 
     # Build for watchOS
@@ -728,7 +756,7 @@ if ($SkipBuild) {
         Build-WatchOS-Arch -arch "arm"
         # Create the fat files
         Lipo -dest "$OUTPUT_PATH/native/watchos/libSkiaSharp.framework" -libs @("arm", "x86")
-        Lipo -dest "$OUTPUT_PATH/native/watchos/libHarfBuzzSharp.a" -libs @("arm", "x86")
+        Lipo -dest "$OUTPUT_PATH/native/watchos/libharfbuzz.a" -libs @("arm", "x86")
     }
 
     # Build for Android
@@ -737,12 +765,6 @@ if ($SkipBuild) {
         Build-Android-Arch -arch "x64"
         Build-Android-Arch -arch "arm"
         Build-Android-Arch -arch "arm64"
-        # build and copy libSkiaSharp
-        Exec $ndkbuild -a "-C native-builds/libSkiaSharp_android"
-        CopyDirectoryContents "native-builds/libSkiaSharp_android/libs" "$OUTPUT_PATH/native/android"
-        # build and copy libHarfBuzzSharp
-        Exec $ndkbuild -a "-C native-builds/libHarfBuzzSharp_android"
-        CopyDirectoryContents "native-builds/libHarfBuzzSharp_android/libs" "$OUTPUT_PATH/native/android"
     }
 
     # Build for Linux
