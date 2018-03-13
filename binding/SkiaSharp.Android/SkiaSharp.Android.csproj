@@ -31,7 +31,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>
@@ -57,16 +58,16 @@
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <ItemGroup />
   <ItemGroup>
-    <EmbeddedNativeLibrary Include="..\..\output\native\android\arm64-v8a\libSkiaSharp.so">
+    <EmbeddedNativeLibrary Include="..\..\output\native\android\arm64\libSkiaSharp.so">
       <Link>libs\arm64-v8a\libSkiaSharp.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="..\..\output\native\android\armeabi-v7a\libSkiaSharp.so">
+    <EmbeddedNativeLibrary Include="..\..\output\native\android\arm\libSkiaSharp.so">
       <Link>libs\armeabi-v7a\libSkiaSharp.so</Link>
     </EmbeddedNativeLibrary>
     <EmbeddedNativeLibrary Include="..\..\output\native\android\x86\libSkiaSharp.so">
       <Link>libs\x86\libSkiaSharp.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="..\..\output\native\android\x86_64\libSkiaSharp.so">
+    <EmbeddedNativeLibrary Include="..\..\output\native\android\x64\libSkiaSharp.so">
       <Link>libs\x86_64\libSkiaSharp.so</Link>
     </EmbeddedNativeLibrary>
   </ItemGroup>

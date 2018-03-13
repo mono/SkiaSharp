@@ -39,11 +39,17 @@ WriteLine "$hr"
 WriteLine "Building the managed libraries and packaging..."
 WriteLine ""
 
-if ($BuildManaged) {
-    # we need MSBuild for this part
-    if (!$msbuild -or !(Test-Path $msbuild)) {
-        throw 'Unable to locate "MSBuild.exe". Make sure Visual Studio 2017 is installed.'
+# we need mono and MSBuild
+if ($IsMacOS -or $IsLinux) {
+    if (!$mono -or !(Test-Path $mono)) {
+        throw 'Unable to locate "mono". Make sure mono is installed.'
     }
+}
+if (!$msbuild -or !(Test-Path $msbuild)) {
+    throw 'Unable to locate "MSBuild.exe". Make sure Visual Studio 2017 is installed.'
+}
+
+if ($BuildManaged) {
 
     # build the solution
     WriteLine "Building SkiaSharp and HarfBuzzSharp (and others too)..."

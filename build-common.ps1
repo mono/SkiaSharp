@@ -12,6 +12,8 @@ $EXTERNALS_PATH = Join-Path $ROOT_PATH 'externals'
 $nuget = Join-Path $EXTERNALS_PATH "nuget/nuget.exe"
 $msbuild = ''
 $msbuildVersion = ''
+$mono = ''
+$monoVersion = ''
 
 $hr = "=" * 80
 
@@ -51,6 +53,10 @@ Function Exec ([string] $file, [string[]] $a, [string] $wo)
 {
     if (!$wo) {
         $wo = "."
+    }
+    if (($IsMacOS -or $IsLinux) -and ($file -like "*.exe")) {
+        $a = """$file"" $a"
+        $file = $mono
     }
     $process = Start-Process $file -args $a -wo $wo -nnw -wait -passthru
     if ($process.ExitCode -ne 0) {
@@ -132,3 +138,9 @@ if (!$msbuild) {
 
 # get the MSBuild version
 $msbuildVersion = if ($msbuild) { & $msbuild -version -nologo }
+
+# find mono
+$mono = FindTool 'mono'
+
+# get the mono version
+$monoVersion = if ($mono) { & $mono --version }

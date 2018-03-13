@@ -31,7 +31,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release</OutputPath>
     <DefineConstants>HARFBUZZ</DefineConstants>
@@ -54,16 +55,16 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedNativeLibrary Include="..\..\output\native\android\arm64-v8a\libharfbuzz.so">
+    <EmbeddedNativeLibrary Include="..\..\output\native\android\arm64\libharfbuzz.so">
       <Link>libs\arm64-v8a\libharfbuzz.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="..\..\output\native\android\armeabi-v7a\libharfbuzz.so">
+    <EmbeddedNativeLibrary Include="..\..\output\native\android\arm\libharfbuzz.so">
       <Link>libs\armeabi-v7a\libharfbuzz.so</Link>
     </EmbeddedNativeLibrary>
     <EmbeddedNativeLibrary Include="..\..\output\native\android\x86\libharfbuzz.so">
       <Link>libs\x86\libharfbuzz.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="..\..\output\native\android\x86_64\libharfbuzz.so">
+    <EmbeddedNativeLibrary Include="..\..\output\native\android\x64\libharfbuzz.so">
       <Link>libs\x86_64\libharfbuzz.so</Link>
     </EmbeddedNativeLibrary>
   </ItemGroup>

@@ -11,6 +11,17 @@
     <KeyFileName Condition=" '$(KeyFileName)' == '' ">mono.snk</KeyFileName>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)..\$(KeyFileName)</AssemblyOriginatorKeyFile>
 
+    <GenerateAssemblyVersionInfo Condition=" '$(GenerateAssemblyVersionInfo)' == '' ">true</GenerateAssemblyVersionInfo>
+    <AssemblyVersionGitSha Condition=" '$(AssemblyVersionGitSha)' == '' ">$(GIT_SHA)</AssemblyVersionGitSha>
+
+    <!--
+      Suppress version attribute generation in Microsoft.NET.Sdk projects to avoid build failures
+      when two sets of attributes are emitted.
+    -->
+    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
+    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+
     <!--
       Ignore this message:
         Warning VSX1000
@@ -27,6 +38,28 @@
     -->
     <MSBuildWarningsAsMessages>MSB9004</MSBuildWarningsAsMessages>
   </PropertyGroup>
+
+  <!--
+    ===================================================================================================================
+    _GenerateAssemblyVersionInfo
+
+    Generate the assembly versioning attributes.
+    ===================================================================================================================
+  -->
+  <Target Name="_GenerateAssemblyVersionInfo" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <_VersionSourceFile>$(IntermediateOutputPath)\$(AssemblyName).Version.cs</_VersionSourceFile>
+      <_VersionTxtFile>$(MSBuildThisFileDirectory)..\VERSIONS.txt</_VersionTxtFile>
+    </PropertyGroup>
+    <_GenerateVersionFiles VersionsFile="$(_VersionTxtFile)"
+                           OutFile="$(_VersionSourceFile)"
+                           PackagingGroup="$(PackagingGroup)"
+                           GitSha="$(AssemblyVersionGitSha)" />
+    <ItemGroup>
+      <FileWrites Include="$(_VersionSourceFile)" />
+      <Compile Include="$(_VersionSourceFile)" />
+    </ItemGroup>
+  </Target>
 
   <!--
     ===================================================================================================================
@@ -102,5 +135,47 @@
     <Exec Condition=" '$(_ShouldGenerateDocs)' == 'true' "
           Command="$(_ManagedExeLauncher) &quot;$(MDocToolPath)&quot; export-msxdoc --out=&quot;$(MDocOutputPath)&quot; &quot;$(MDocDocumentationDirectory)&quot;" />
   </Target>
+
+  <!--
+    ===================================================================================================================
+    _GenerateVersionFiles
+
+    Generates the assembly versioning files.
+    ===================================================================================================================
+  -->
+  <UsingTask TaskName="_GenerateVersionFiles" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll" >  
+    <ParameterGroup>
+      <VersionsFile ParameterType="System.String" />
+      <OutFile ParameterType="System.String" />
+      <PackagingGroup ParameterType="System.String" />
+      <GitSha ParameterType="System.String" />
+    </ParameterGroup>
+    <Task>
+      <!-- <Reference Include="" /> -->
+      <Using Namespace="System.Text.RegularExpressions" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        var versions = File.ReadAllText(VersionsFile);
+
+        var group = PackagingGroup;
+        if (PackagingGroup.Contains('.')) {
+          group = PackagingGroup.Split('.')[0];
+        }
+
+        if (!string.IsNullOrEmpty(GitSha)) {
+          GitSha = "-" + GitSha;
+        }
+
+        var assemblyMatch = Regex.Match(versions, $@"^{group}\s*assembly\s*(.*)$", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        var fileMatch = Regex.Match(versions, $@"^{group}\s*file\s*(.*)$", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+
+        var contents = "using System.Reflection;\n\n";
+        contents += $"[assembly: AssemblyVersion(\"{assemblyMatch.Groups[1]}\")]\n";
+        contents += $"[assembly: AssemblyFileVersion(\"{fileMatch.Groups[1]}\")]\n";
+        contents += $"[assembly: AssemblyInformationalVersion(\"{fileMatch.Groups[1]}{GitSha}\")]\n";
+
+        File.WriteAllText(OutFile, contents);
+      ]]></Code>
+    </Task>
+  </UsingTask>
 
 </Project>
