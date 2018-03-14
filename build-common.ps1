@@ -14,6 +14,8 @@ $msbuild = ''
 $msbuildVersion = ''
 $mono = ''
 $monoVersion = ''
+$dotnet = ''
+$dotnetVersion = ''
 
 $hr = "=" * 80
 
@@ -144,3 +146,9 @@ $mono = FindTool 'mono'
 
 # get the mono version
 $monoVersion = if ($mono) { & $mono --version }
+
+# find dotnet
+$dotnet = FindTool 'dotnet'
+
+# get the dotnet version
+$dotnetVersion = if ($dotnet) { & $dotnet --version }
