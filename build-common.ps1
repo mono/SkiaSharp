@@ -56,6 +56,7 @@ Function Exec ([string] $file, [string[]] $a, [string] $wo)
     if (!$wo) {
         $wo = "."
     }
+    WriteLine "Running '$file' with args '$a' in '$wo'..."
     if (($IsMacOS -or $IsLinux) -and ($file -like "*.exe")) {
         $a = """$file"" $a"
         $file = $mono

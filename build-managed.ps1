@@ -29,7 +29,7 @@ Function Test ([string] $sln, [string] $dll, [string] $arch)
 Function TestNetCore ([string] $csproj)
 {
     $root = Split-Path $csproj
-    Exec $msbuild -a "/t:Restore /p:RestorePackagesPath=packages /p:RestoreNoCache=true /p:RestoreSources=""$OUTPUT_PATH;https://api.nuget.org/v3/index.json""" -wo $root
+    Exec $msbuild -a "/t:Restore /p:RestorePackagesPath=packages /p:RestoreNoCache=true /p:RestoreSources=""$OUTPUT_PATH%3Bhttps://api.nuget.org/v3/index.json""" -wo $root
     Exec $dotnet -a "build" -wo $root
 
     $nunit = "$OUTPUT_PATH/tests/$operatingSystem/netcore/TestResult.xml"
