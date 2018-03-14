@@ -69,16 +69,20 @@ Function Exec ([string] $file, [string[]] $a, [string] $wo)
 
 Function FindTool ([string] $tool)
 {
+    $toolPath = ''
     if ($IsMacOS -or $IsLinux) {
-        return & 'which' $tool
+        $toolPath = (& 'which' $tool)
     } else {
         $where = "$env:SystemRoot\system32\where.exe"
         & $where /Q $tool
         if ($?) {
-            return & $where $tool
+            $toolPath = (& $where $tool)
         }
     }
-    return $null
+    if ($toolPath) {
+        $toolPath = $toolPath.Split([Environment]::NewLine)[0].Trim()
+    }
+    return $toolPath
 }
 
 Function DownloadNuGet ([string] $id, [string] $version)
