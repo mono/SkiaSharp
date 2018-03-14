@@ -24,17 +24,17 @@ namespace HarfBuzzSharp
 #elif __IOS__ && __UNIFIED__
 		private const string HARFBUZZ = "__Internal";
 #elif __ANDROID__
-		private const string HARFBUZZ = "libHarfBuzzSharp.so";
+		private const string HARFBUZZ = "libharfbuzz.so";
 #elif __MACOS__
-		private const string HARFBUZZ = "libHarfBuzzSharp.dylib";
+		private const string HARFBUZZ = "libharfbuzz.dylib";
 #elif DESKTOP
-		private const string HARFBUZZ = "libHarfBuzzSharp";
+		private const string HARFBUZZ = "harfbuzz";
 #elif WINDOWS_UWP
-		private const string HARFBUZZ = "libHarfBuzzSharp.dll";
+		private const string HARFBUZZ = "harfbuzz.dll";
 #elif NET_STANDARD
-		private const string HARFBUZZ = "libHarfBuzzSharp";
+		private const string HARFBUZZ = "harfbuzz";
 #else
-		private const string HARFBUZZ = "libHarfBuzzSharp";
+		private const string HARFBUZZ = "harfbuzz";
 #endif
 
 		// hb_blob_t

@@ -5,7 +5,7 @@
     <!-- package -->
     <id>HarfBuzzSharp</id>
     <title>HarfBuzzSharp</title>
-    <version>1.4.6</version>
+    <version>1.0.0</version>
     <description>
       HarfBuzzSharp is a cross-platform OpenType text shaping engine for .NET platforms.
     </description>
@@ -30,42 +30,38 @@
   <files>
 
     <!-- HarfBuzzSharp.dll -->
-    <file src="output/desktop/HarfBuzzSharp.dll" target="lib/net45" />
-    <file src="output/desktop/HarfBuzzSharp.dll.config" target="lib/net45" />
-    <file src="output/docs/msxml/HarfBuzzSharp.xml" target="lib/net45" />
-    <file src="output/netstandard/HarfBuzzSharp.dll" target="lib/netstandard1.3" />
-    <file src="output/docs/msxml/HarfBuzzSharp.xml" target="lib/netstandard1.3" />
-    <file src="output/portable/HarfBuzzSharp.dll" target="lib/portable-net45+win8+wpa81+wp8" />
-    <file src="output/docs/msxml/HarfBuzzSharp.xml" target="lib/portable-net45+win8+wpa81+wp8" />
-    <file platform="macos" src="output/android/HarfBuzzSharp.dll" target="lib/MonoAndroid" />
-    <file platform="macos" src="output/docs/msxml/HarfBuzzSharp.xml" target="lib/MonoAndroid" />
-    <file platform="macos" src="output/ios/HarfBuzzSharp.dll" target="lib/XamariniOS" />
-    <file platform="macos" src="output/docs/msxml/HarfBuzzSharp.xml" target="lib/XamariniOS" />
-    <file platform="macos" src="output/tvos/HarfBuzzSharp.dll" target="lib/XamarintvOS" />
-    <file platform="macos" src="output/docs/msxml/HarfBuzzSharp.xml" target="lib/XamarintvOS" />
-    <file platform="macos" src="output/watchos/HarfBuzzSharp.dll" target="lib/XamarinwatchOS" />
-    <file platform="macos" src="output/docs/msxml/HarfBuzzSharp.xml" target="lib/XamarinwatchOS" />
-    <file platform="macos" src="output/osx/HarfBuzzSharp.dll" target="lib/XamarinMac" />
-    <file platform="macos" src="output/docs/msxml/HarfBuzzSharp.xml" target="lib/XamarinMac" />
-    <file platform="windows" src="output/uwp/HarfBuzzSharp.dll" target="lib/uap10.0" />
-    <file platform="windows" src="output/docs/msxml/HarfBuzzSharp.xml" target="lib/uap10.0" />
+    <file src="lib/net45/HarfBuzzSharp.dll" />
+    <file src="lib/net45/HarfBuzzSharp.xml" />
+    <file src="lib/netstandard1.3/HarfBuzzSharp.dll" />
+    <file src="lib/netstandard1.3/HarfBuzzSharp.xml" />
+    <file platform="macos" src="lib/MonoAndroid/HarfBuzzSharp.dll" />
+    <file platform="macos" src="lib/MonoAndroid/HarfBuzzSharp.xml" />
+    <file platform="macos" src="lib/Xamarin.iOS/HarfBuzzSharp.dll" />
+    <file platform="macos" src="lib/Xamarin.iOS/HarfBuzzSharp.xml" />
+    <file platform="macos" src="lib/Xamarin.TVOS/HarfBuzzSharp.dll" />
+    <file platform="macos" src="lib/Xamarin.TVOS/HarfBuzzSharp.xml" />
+    <file platform="macos" src="lib/Xamarin.WatchOS/HarfBuzzSharp.dll" />
+    <file platform="macos" src="lib/Xamarin.WatchOS/HarfBuzzSharp.xml" />
+    <file platform="macos" src="lib/Xamarin.Mac20/HarfBuzzSharp.dll" />
+    <file platform="macos" src="lib/Xamarin.Mac20/HarfBuzzSharp.xml" />
+    <file platform="windows" src="lib/uap10.0/HarfBuzzSharp.dll" />
+    <file platform="windows" src="lib/uap10.0/HarfBuzzSharp.xml" />
 
     <!-- the build bits -->
-    <file src="output/desktop/HarfBuzzSharp.Desktop.targets" target="build/net45/HarfBuzzSharp.targets" />
-    <file src="output/desktop/HarfBuzzSharp.dll.config" target="build/net45/HarfBuzzSharp.dll.config" />
+    <file src="build/net45/HarfBuzzSharp.targets" />
 
-    <!-- libHarfBuzzSharp.dll and other native files -->
-    <file platform="windows" src="output/native/windows/x64/libHarfBuzzSharp.dll" target="runtimes/win7-x64/native/libHarfBuzzSharp.dll" />
-    <file platform="windows" src="output/native/windows/x86/libHarfBuzzSharp.dll" target="runtimes/win7-x86/native/libHarfBuzzSharp.dll" />
-    <file platform="macos" src="output/native/osx/libHarfBuzzSharp.dylib" target="runtimes/osx/native/libHarfBuzzSharp.dylib" />
-    <file platform="windows" src="output/native/uwp/x64/libHarfBuzzSharp.dll" target="runtimes/win10-x64/nativeassets/uap10.0/libHarfBuzzSharp.dll" />
-    <file platform="windows" src="output/native/uwp/x86/libHarfBuzzSharp.dll" target="runtimes/win10-x86/nativeassets/uap10.0/libHarfBuzzSharp.dll" />
-    <file platform="windows" src="output/native/uwp/arm/libHarfBuzzSharp.dll" target="runtimes/win10-arm/nativeassets/uap10.0/libHarfBuzzSharp.dll" />
-    <file platform="linux" src="output/native/linux/x64/libHarfBuzzSharp.so" target="runtimes/linux-x64/native/libHarfBuzzSharp.so" />
+    <!-- harfbuzz.dll and other native files -->
+    <file platform="windows" src="runtimes/win7-x64/native/harfbuzz.dll" />
+    <file platform="windows" src="runtimes/win7-x86/native/harfbuzz.dll" />
+    <file platform="macos" src="runtimes/osx/native/libharfbuzz.dylib" />
+    <file platform="windows" src="runtimes/win10-x64/nativeassets/uap10.0/harfbuzz.dll" />
+    <file platform="windows" src="runtimes/win10-x86/nativeassets/uap10.0/harfbuzz.dll" />
+    <file platform="windows" src="runtimes/win10-arm/nativeassets/uap10.0/harfbuzz.dll" />
+    <file platform="linux" src="runtimes/linux-x64/native/libharfbuzz.so" />
 
     <!-- legal -->
-    <file src="LICENSE.md" target="LICENSE.md" />
-    <file src="External-Dependency-Info.txt" target="THIRD-PARTY-NOTICES.txt" /> 
+    <file src="LICENSE.txt" />
+    <file src="THIRD-PARTY-NOTICES.txt" />
 
   </files>
 </package>
