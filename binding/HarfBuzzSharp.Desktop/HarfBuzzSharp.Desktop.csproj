@@ -51,28 +51,21 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\output\native\windows\x64\harfbuzz.dll" Condition="Exists('..\..\output\native\windows\x64\harfbuzz.dll')">
+    <None Include="..\..\output\native\windows\x64\harfbuzz.dll" Condition=" '$(IsWindows)' == 'true' ">
       <Link>nuget\runtimes\win7-x64\native\harfbuzz.dll</Link>
     </None>
-    <None Include="..\..\output\native\windows\x86\harfbuzz.dll" Condition="Exists('..\..\output\native\windows\x86\harfbuzz.dll')">
+    <None Include="..\..\output\native\windows\x86\harfbuzz.dll" Condition=" '$(IsWindows)' == 'true' ">
       <Link>nuget\runtimes\win7-x86\native\harfbuzz.dll</Link>
     </None>
-    <None Include="..\..\output\native\osx\harfbuzz.dylib" Condition="Exists('..\..\output\native\osx\harfbuzz.dylib')">
-      <Link>nuget\runtimes\osx\native\harfbuzz.dylib</Link>
+    <None Include="..\..\output\native\osx\libharfbuzz.dylib" Condition=" '$(IsMacOS)' == 'true' ">
+      <Link>nuget\runtimes\osx\native\libharfbuzz.dylib</Link>
     </None>
-    <None Include="..\..\output\native\linux\x64\harfbuzz.so" Condition="Exists('..\..\output\native\linux\x64\harfbuzz.so')">
-      <Link>nuget\runtimes\linux-x64\native\harfbuzz.so</Link>
-    </None>
-    <None Include="..\..\output\native\linux\x86\harfbuzz.so" Condition="Exists('..\..\output\native\linux\x86\harfbuzz.so')">
-      <Link>nuget\runtimes\linux-x86\native\harfbuzz.so</Link>
-    </None>
-    <None Include="..\..\output\native\linux\arm\harfbuzz.so" Condition="Exists('..\..\output\native\linux\arm\harfbuzz.so')">
-      <Link>nuget\runtimes\linux-arm\native\harfbuzz.so</Link>
+    <None Include="..\..\output\native\linux\x64\libharfbuzz.so" Condition=" '$(IsLinux)' == 'true' ">
+      <Link>nuget\runtimes\linux-x64\native\libharfbuzz.so</Link>
     </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="nuget\build\net45\HarfBuzzSharp.targets" />
-    <None Include="nuget\lib\net45\HarfBuzzSharp.dll.config" />
   </ItemGroup>
   <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" />
   <Import Project="..\HarfBuzzSharp.Shared\HarfBuzzSharp.Shared.projitems" Label="Shared" />

@@ -24,9 +24,9 @@ namespace HarfBuzzSharp
 #elif __IOS__ && __UNIFIED__
 		private const string HARFBUZZ = "__Internal";
 #elif __ANDROID__
-		private const string HARFBUZZ = "harfbuzz.so";
+		private const string HARFBUZZ = "libharfbuzz.so";
 #elif __MACOS__
-		private const string HARFBUZZ = "harfbuzz.dylib";
+		private const string HARFBUZZ = "libharfbuzz.dylib";
 #elif DESKTOP
 		private const string HARFBUZZ = "harfbuzz";
 #elif WINDOWS_UWP

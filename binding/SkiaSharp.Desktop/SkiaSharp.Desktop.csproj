@@ -55,28 +55,21 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\output\native\windows\x64\libSkiaSharp.dll" Condition="Exists('..\..\output\native\windows\x64\libSkiaSharp.dll')">
+    <None Include="..\..\output\native\windows\x64\libSkiaSharp.dll" Condition=" '$(IsWindows)' == 'true' ">
       <Link>nuget\runtimes\win7-x64\native\libSkiaSharp.dll</Link>
     </None>
-    <None Include="..\..\output\native\windows\x86\libSkiaSharp.dll" Condition="Exists('..\..\output\native\windows\x86\libSkiaSharp.dll')">
+    <None Include="..\..\output\native\windows\x86\libSkiaSharp.dll" Condition=" '$(IsWindows)' == 'true' ">
       <Link>nuget\runtimes\win7-x86\native\libSkiaSharp.dll</Link>
     </None>
-    <None Include="..\..\output\native\osx\libSkiaSharp.dylib" Condition="Exists('..\..\output\native\osx\libSkiaSharp.dylib')">
+    <None Include="..\..\output\native\osx\libSkiaSharp.dylib" Condition=" '$(IsMacOS)' == 'true' ">
       <Link>nuget\runtimes\osx\native\libSkiaSharp.dylib</Link>
     </None>
-    <None Include="..\..\output\native\linux\x64\libSkiaSharp.so" Condition="Exists('..\..\output\native\linux\x64\libSkiaSharp.so')">
+    <None Include="..\..\output\native\linux\x64\libSkiaSharp.so" Condition=" '$(IsLinux)' == 'true' ">
       <Link>nuget\runtimes\linux-x64\native\libSkiaSharp.so</Link>
-    </None>
-    <None Include="..\..\output\native\linux\x86\libSkiaSharp.so" Condition="Exists('..\..\output\native\linux\x86\libSkiaSharp.so')">
-      <Link>nuget\runtimes\linux-x86\native\libSkiaSharp.so</Link>
-    </None>
-    <None Include="..\..\output\native\linux\arm\libSkiaSharp.so" Condition="Exists('..\..\output\native\linux\arm\libSkiaSharp.so')">
-      <Link>nuget\runtimes\linux-arm\native\libSkiaSharp.so</Link>
     </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="nuget\build\net45\SkiaSharp.targets" />
-    <None Include="nuget\lib\net45\SkiaSharp.dll.config" />
   </ItemGroup>
   <Import Project="..\Binding\Binding.projitems" Label="Shared" />
   <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" />

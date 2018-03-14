@@ -165,13 +165,13 @@
           GitSha = "-" + GitSha;
         }
 
-        var assemblyMatch = Regex.Match(versions, $@"^{group}\s*assembly\s*(.*)$", RegexOptions.IgnoreCase | RegexOptions.Multiline);
-        var fileMatch = Regex.Match(versions, $@"^{group}\s*file\s*(.*)$", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        var assemblyMatch = Regex.Match(versions, @"^" + group + @"\s*assembly\s*(.*)$", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+        var fileMatch = Regex.Match(versions, @"^" + group + @"\s*file\s*(.*)$", RegexOptions.IgnoreCase | RegexOptions.Multiline);
 
         var contents = "using System.Reflection;\n\n";
-        contents += $"[assembly: AssemblyVersion(\"{assemblyMatch.Groups[1]}\")]\n";
-        contents += $"[assembly: AssemblyFileVersion(\"{fileMatch.Groups[1]}\")]\n";
-        contents += $"[assembly: AssemblyInformationalVersion(\"{fileMatch.Groups[1]}{GitSha}\")]\n";
+        contents += "[assembly: AssemblyVersion(\"" + assemblyMatch.Groups[1].Value.Trim() + "\")]\n";
+        contents += "[assembly: AssemblyFileVersion(\"" + fileMatch.Groups[1].Value.Trim() + "\")]\n";
+        contents += "[assembly: AssemblyInformationalVersion(\"" + fileMatch.Groups[1].Value.Trim() + GitSha + "\")]\n";
 
         File.WriteAllText(OutFile, contents);
       ]]></Code>
