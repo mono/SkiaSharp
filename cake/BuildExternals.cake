@@ -106,7 +106,7 @@ Task ("externals-uwp")
                 "  extra_cflags=[ " + 
                 "    \\\"-DSKIA_C_DLL\\\", \\\"/MD\\\", \\\"/EHsc\\\", \\\"/Zi\\\", " + 
                 "    \\\"-DWINAPI_FAMILY=WINAPI_FAMILY_APP\\\", \\\"-DSK_BUILD_FOR_WINRT\\\", \\\"-DSK_HAS_DWRITE_1_H\\\", \\\"-DSK_HAS_DWRITE_2_H\\\", \\\"-DNO_GETENV\\\" ]" +
-                "  extra_ldflags=[ \\\"/APPCONTAINER\\\", \\\"/DEBUG\\\" ]" +
+                "  extra_ldflags=[ \\\"/APPCONTAINER\\\", \\\"/DEBUG\\\", \\\"WindowsApp.lib\\\" ]" +
                 "\"",
             WorkingDirectory = SKIA_PATH.FullPath,
         });
