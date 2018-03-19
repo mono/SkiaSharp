@@ -61,8 +61,8 @@ Task ("externals-windows")
         // copy libSkiaSharp to output
         var outDir = "output/native/windows/" + dir;
         EnsureDirectoryExists (outDir);
-        CopyFileToDirectory (SKIA_PATH.Combine ("out/win/" + arch + "/libSkiaSharp.dll"), outDir);
-        CopyFileToDirectory (SKIA_PATH.Combine ("out/win/" + arch + "/libSkiaSharp.pdb"), outDir);
+        CopyFileToDirectory (SKIA_PATH.CombineWithFilePath ("out/win/" + arch + "/libSkiaSharp.dll"), outDir);
+        CopyFileToDirectory (SKIA_PATH.CombineWithFilePath ("out/win/" + arch + "/libSkiaSharp.pdb"), outDir);
     });
 
     buildArch ("Win32", "x86", "x86");
@@ -120,8 +120,8 @@ Task ("externals-uwp")
         // copy libSkiaSharp to output
         var outDir = "output/native/uwp/" + dir;
         EnsureDirectoryExists (outDir);
-        CopyFileToDirectory (SKIA_PATH.Combine ("out/winrt/" + arch + "/libSkiaSharp.dll"), outDir);
-        CopyFileToDirectory (SKIA_PATH.Combine ("out/winrt/" + arch + "/libSkiaSharp.pdb"), outDir);
+        CopyFileToDirectory (SKIA_PATH.CombineWithFilePath ("out/winrt/" + arch + "/libSkiaSharp.dll"), outDir);
+        CopyFileToDirectory (SKIA_PATH.CombineWithFilePath ("out/winrt/" + arch + "/libSkiaSharp.pdb"), outDir);
     });
 
     buildArch ("x64", "x64", "x64");
@@ -591,6 +591,8 @@ Task ("externals-android")
     .WithCriteria (IsRunningOnMac ())
     .Does (() => 
 {
+    var ndkbuild = MakeAbsolute (Directory (ANDROID_NDK_HOME)).CombineWithFilePath ("ndk-build").FullPath;
+
     // SkiaSharp
 
     var buildArch = new Action<string, string> ((arch, skiaArch) => {
@@ -618,7 +620,7 @@ Task ("externals-android")
 
         var outDir = "output/native/android/" + arch;
         EnsureDirectoryExists (outDir);
-        CopyFileToDirectory (SKIA_PATH.Combine ("out/android/" + arch + "/libSkiaSharp.so"), outDir);
+        CopyFileToDirectory (SKIA_PATH.CombineWithFilePath ("out/android/" + arch + "/libSkiaSharp.so"), outDir);
     });
 
     buildArch ("x86", "x86");
@@ -664,7 +666,7 @@ Task ("externals-linux")
                 "  skia_enable_gpu=" + (SUPPORT_GPU ? "true" : "false") +
                 "  extra_cflags=[ \"-DSKIA_C_DLL\" ]" +
                 "  extra_ldflags=[ ]" +
-                "  linux_soname_version=\"" + VERSION_SONAME "\"" +
+                "  linux_soname_version=\"" + VERSION_SONAME + "\"" +
                 "'",
             WorkingDirectory = SKIA_PATH.FullPath,
         });
@@ -678,8 +680,8 @@ Task ("externals-linux")
         // copy libSkiaSharp to output
         var outDir = "output/native/linux/" + arch;
         EnsureDirectoryExists (outDir);
-        CopyFileToDirectory (SKIA_PATH.Combine ("out/linux/" + arch + "/libSkiaSharp.so." + VERSION_SONAME), outDir);
-        CopyFile (SKIA_PATH.Combine ("out/linux/" + arch + "/libSkiaSharp.so." + VERSION_SONAME), outDir + "/libSkiaSharp.so");
+        CopyFileToDirectory (SKIA_PATH.CombineWithFilePath ("out/linux/" + arch + "/libSkiaSharp.so." + VERSION_SONAME), outDir);
+        CopyFile (SKIA_PATH.CombineWithFilePath ("out/linux/" + arch + "/libSkiaSharp.so." + VERSION_SONAME), outDir + "/libSkiaSharp.so");
     });
 
     var buildHarfBuzzArch = new Action<string> ((arch) => {
@@ -759,8 +761,6 @@ Task ("externals-harfbuzz")
 
 Task ("externals-deinit").Does (() =>
 {
-    // remove compatibility
-    InjectCompatibilityExternals (false);
 });
 
 Task ("clean-externals")
