@@ -699,9 +699,6 @@ Task ("clean-managed").Does (() =>
     CleanDirectories ("./source/*/*/Generated Files");
     CleanDirectories ("./source/packages");
 
-    CleanDirectories ("./externals/Windows.Foundation.UniversalApiContract/bin");
-    CleanDirectories ("./externals/Windows.Foundation.UniversalApiContract/obj");
-
     DeleteFiles ("./nuget/*.prerelease.nuspec");
 
     if (DirectoryExists ("./output"))
