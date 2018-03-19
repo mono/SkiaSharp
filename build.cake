@@ -73,7 +73,6 @@ if (string.IsNullOrEmpty (BUILD_NUMBER)) {
 }
 
 #load "cake/UtilsManaged.cake"
-#load "cake/UtilsNative.cake"
 #load "cake/BuildExternals.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -113,7 +112,7 @@ Task ("libs")
     EnsureDirectoryExists ("./output/gtk/");
 
     // .NET Standard / .NET Core
-    RunNuGetRestore ("source/SkiaSharpSource.NetStandard.sln");
+    RunMSBuildRestore ("source/SkiaSharpSource.NetStandard.sln");
     RunMSBuild ("source/SkiaSharpSource.NetStandard.sln");
     // copy to output
     CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
@@ -127,7 +126,7 @@ Task ("libs")
 
     // .NET Framework / Xamarin
     if (IsRunningOnWindows ()) {
-        RunNuGetRestore ("./source/SkiaSharpSource.Windows.sln");
+        RunMSBuildRestore ("./source/SkiaSharpSource.Windows.sln");
         RunMSBuild ("./source/SkiaSharpSource.Windows.sln");
         // SkiaSharp
         CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.dll", "./output/uwp/");
@@ -168,7 +167,7 @@ Task ("libs")
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.iOS/bin/Release/SkiaSharp.Views.Forms.dll", "./output/ios/");
         CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Mac/bin/Release/SkiaSharp.Views.Forms.dll", "./output/osx/");
     } else if (IsRunningOnLinux ()) {
-        RunNuGetRestore ("./source/SkiaSharpSource.Linux.sln");
+        RunMSBuildRestore ("./source/SkiaSharpSource.Linux.sln");
         RunMSBuild ("./source/SkiaSharpSource.Linux.sln");
         // SkiaSharp.Views
         CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Gtk/bin/Release/SkiaSharp.Views.Gtk.dll", "./output/gtk/");
@@ -227,7 +226,7 @@ Task ("tests")
 {
     ClearSkiaSharpNuGetCache (VERSION_PACKAGES.Keys.ToArray ());
 
-    RunNuGetRestore ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
+    RunMSBuildRestore ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
 
     // Windows (x86 and x64)
     if (IsRunningOnWindows ()) {
@@ -260,7 +259,7 @@ Task ("tests")
 
     // .NET Core
     EnsureDirectoryExists ("./output/tests/netcore");
-    RunNuGetRestore ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.sln");
+    RunMSBuildRestore ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.sln");
     RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj", null);
     CopyFileToDirectory ("./tests/SkiaSharp.NetCore.Tests/TestResult.xml", "./output/tests/netcore");
 });
@@ -326,7 +325,7 @@ Task ("samples")
                 buildPlatform = platformMatrix [platform];
             }
 
-            RunNuGetRestore (sln);
+            RunMSBuildRestore (sln);
             if (string.IsNullOrEmpty (buildPlatform)) {
                 RunMSBuild (sln);
             } else {

@@ -1,30 +1,6 @@
 
 var MSBuildNS = (XNamespace) "http://schemas.microsoft.com/developer/msbuild/2003";
 
-var VERBOSITY_NUGET = NuGetVerbosity.Detailed;
-switch (VERBOSITY) {
-    case Verbosity.Quiet:
-    case Verbosity.Minimal:
-        VERBOSITY_NUGET = NuGetVerbosity.Quiet;
-        break;
-    case Verbosity.Normal:
-        VERBOSITY_NUGET = NuGetVerbosity.Normal;
-        break;
-    case Verbosity.Verbose:
-    case Verbosity.Diagnostic:
-        VERBOSITY_NUGET = NuGetVerbosity.Detailed;
-        break;
-};
-
-var RunNuGetRestore = new Action<FilePath> ((solution) =>
-{
-    NuGetRestore (solution, new NuGetRestoreSettings { 
-        ToolPath = NugetToolPath,
-        Source = NuGetSources,
-        Verbosity = VERBOSITY_NUGET
-    });
-});
-
 var RunMSBuildWithPlatform = new Action<FilePath, string> ((solution, platform) =>
 {
     MSBuild (solution, c => { 
@@ -75,7 +51,6 @@ var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath)
     EnsureDirectoryExists (outputPath);
 
     NuGetPack (nuspecPath, new NuGetPackSettings { 
-        Verbosity = VERBOSITY_NUGET,
         OutputDirectory = outputPath,        
         BasePath = "./",
         ToolPath = NugetToolPath
