@@ -183,7 +183,7 @@ Task ("externals-osx")
 
         // build native skia
         RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja"), new ProcessSettings {
-            Arguments = "-C out/mac/" + arch,
+            Arguments = "skia -C out/mac/" + arch,
             WorkingDirectory = SKIA_PATH.FullPath,
         });
 
@@ -295,7 +295,7 @@ Task ("externals-ios")
 
         // build native skia
         RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja"), new ProcessSettings {
-            Arguments = "-C out/ios/" + arch,
+            Arguments = "skia -C out/ios/" + arch,
             WorkingDirectory = SKIA_PATH.FullPath,
         });
 
@@ -403,7 +403,7 @@ Task ("externals-tvos")
 
         // build native skia
         RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja"), new ProcessSettings {
-            Arguments = "-C out/tvos/" + arch,
+            Arguments = "skia -C out/tvos/" + arch,
             WorkingDirectory = SKIA_PATH.FullPath,
         });
 
@@ -511,7 +511,7 @@ Task ("externals-watchos")
 
         // build native skia
         RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja"), new ProcessSettings {
-            Arguments = "-C out/watchos/" + arch,
+            Arguments = "skia -C out/watchos/" + arch,
             WorkingDirectory = SKIA_PATH.FullPath,
         });
 
