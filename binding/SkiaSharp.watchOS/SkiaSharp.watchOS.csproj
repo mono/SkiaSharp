@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\source\SkiaSharp.Build.props" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -9,8 +10,8 @@
     <RootNamespace>SkiaSharp</RootNamespace>
     <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
     <AssemblyName>SkiaSharp</AssemblyName>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\mono.snk</AssemblyOriginatorKeyFile>
+    <PackagingGroup>SkiaSharp</PackagingGroup>
+    <PackagingPlatform>Xamarin.WatchOS</PackagingPlatform>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -24,6 +25,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>
@@ -36,6 +39,9 @@
     <Reference Include="System" />
     <Reference Include="Xamarin.WatchOS" />
     <Reference Include="System.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="mdoc" Version="5.5.0" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Resources\" />
@@ -56,5 +62,6 @@
   </ItemGroup>
   <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" Condition="Exists('..\Binding.Shared\Binding.Shared.projitems')" />
   <Import Project="..\Binding\Binding.projitems" Label="Shared" Condition="Exists('..\Binding\Binding.projitems')" />
+  <Import Project="..\..\source\SkiaSharp.Build.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\WatchOS\Xamarin.WatchOS.ObjCBinding.CSharp.targets" />
 </Project> 

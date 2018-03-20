@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\source\SkiaSharp.Build.props" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -9,9 +10,8 @@
     <RootNamespace>HarfBuzzSharp</RootNamespace>
     <AssemblyName>HarfBuzzSharp</AssemblyName>
     <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\mono.snk</AssemblyOriginatorKeyFile>
-    <MSBuildWarningsAsMessages>MSB9004</MSBuildWarningsAsMessages>
+    <PackagingGroup>HarfBuzzSharp</PackagingGroup>
+    <PackagingPlatform>Xamarin.TVOS</PackagingPlatform>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -24,6 +24,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release</OutputPath>
     <DefineConstants>MONOTOUCH;HARFBUZZ</DefineConstants>
@@ -34,6 +36,9 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Xamarin.TVOS" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="mdoc" Version="5.5.0" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -51,5 +56,6 @@
   </ItemGroup>
   <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" />
   <Import Project="..\HarfBuzzSharp.Shared\HarfBuzzSharp.Shared.projitems" Label="Shared" />
+  <Import Project="..\..\source\SkiaSharp.Build.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\TVOS\Xamarin.TVOS.ObjCBinding.CSharp.targets" />
 </Project>

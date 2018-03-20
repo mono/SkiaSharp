@@ -50,18 +50,18 @@ var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath)
 {
     EnsureDirectoryExists (outputPath);
 
-    NuGetPack (nuspecPath, new NuGetPackSettings { 
-        OutputDirectory = outputPath,        
-        BasePath = "./",
+    NuGetPack (nuspecPath, new NuGetPackSettings {
+        OutputDirectory = outputPath,
+        BasePath = nuspecPath.GetDirectory (),
         ToolPath = NugetToolPath
-    });                
+    });
 });
 
 var RunProcess = new Action<FilePath, ProcessSettings> ((process, settings) =>
 {
     var result = StartProcess (process, settings);
     if (result != 0) {
-        throw new Exception ("Process '" + process + "' failed with error: " + result);
+        throw new Exception ($"Process '{process}' failed with error: {result}");
     }
 });
 
@@ -89,10 +89,10 @@ var RunNetCoreTests = new Action<FilePath, string[]> ((testAssembly, skip) =>
     string skipString = string.Empty;
     if (skip != null) {
         foreach (var s in skip) {
-            skipString += " -notrait \"Category=" + skip + "\"";
+            skipString += $" -notrait \"Category={skip}\"";
         }
     }
-    DotNetCoreTool(testAssembly, "xunit", "-verbose -parallel none -nunit \"TestResult.xml\"" + skipString, new DotNetCoreToolSettings {
+    DotNetCoreTool(testAssembly, "xunit", $"-verbose -parallel none -nunit \"TestResult.xml\" {skipString}", new DotNetCoreToolSettings {
         WorkingDirectory = dir,
     });
 });
@@ -101,18 +101,18 @@ var RunMdocUpdate = new Action<FilePath[], DirectoryPath, DirectoryPath[]> ((ass
 {
     var refArgs = string.Empty;
     if (refs != null) {
-        refArgs = string.Join (" ", refs.Select (r => string.Format ("--lib=\"{0}\"", r)));
+        refArgs = string.Join (" ", refs.Select (r => $"--lib=\"{r}\""));
     }
-    var assemblyArgs = string.Join (" ", assemblies.Select (a => string.Format ("\"{0}\"", a)));
+    var assemblyArgs = string.Join (" ", assemblies.Select (a => $"\"{a}\""));
     RunProcess (MDocPath, new ProcessSettings {
-        Arguments = string.Format ("update --preserve --out=\"{0}\" {1} {2}", docsRoot, refArgs, assemblyArgs),
+        Arguments = $"update --preserve --out=\"{docsRoot}\" {refArgs} {assemblyArgs}",
     });
 });
 
 var RunMdocMSXml = new Action<DirectoryPath, DirectoryPath> ((docsRoot, outputDir) =>
 {
     RunProcess (MDocPath, new ProcessSettings {
-        Arguments = string.Format ("export-msxdoc \"{0}\" --debug", MakeAbsolute (docsRoot)),
+        Arguments = $"export-msxdoc \"{MakeAbsolute (docsRoot)}\" --debug",
         WorkingDirectory = MakeAbsolute (outputDir).ToString ()
     });
 });
@@ -120,32 +120,8 @@ var RunMdocMSXml = new Action<DirectoryPath, DirectoryPath> ((docsRoot, outputDi
 var RunMdocAssemble = new Action<DirectoryPath, FilePath> ((docsRoot, output) =>
 {
     RunProcess (MDocPath, new ProcessSettings {
-        Arguments = string.Format ("assemble --out=\"{0}\" \"{1}\" --debug", output, docsRoot),
+        Arguments = $"assemble --out=\"{output}\" \"{docsRoot}\" --debug",
     });
-});
-
-var RunSNVerify = new Action<FilePath> ((assembly) =>
-{
-    RunProcess (SNToolPath, new ProcessSettings {
-        Arguments = string.Format ("-vf \"{0}\"", assembly),
-    });
-});
-
-var RunSNReSign = new Action<FilePath, FilePath> ((assembly, key) =>
-{
-    RunProcess (SNToolPath, new ProcessSettings {
-        Arguments = string.Format ("-R \"{0}\" \"{1}\"", assembly, key),
-    });
-});
-
-var RunGenApi = new Action<FilePath, FilePath> ((input, output) =>
-{
-    RunProcess (GenApiToolPath, new ProcessSettings {
-        Arguments = string.Format ("\"{0}\" -out \"{1}\"", input, output),
-    });
-    ReplaceTextInFiles (output.FullPath, 
-        "[System.ComponentModel.EditorBrowsableAttribute(1)]",
-        "[System.ComponentModel.EditorBrowsableAttribute((System.ComponentModel.EditorBrowsableState)1)]");
 });
 
 var ClearSkiaSharpNuGetCache = new Action<string[]> ((packages) => {
@@ -156,14 +132,14 @@ var ClearSkiaSharpNuGetCache = new Action<string[]> ((packages) => {
         var home = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
         packagesDir = ((DirectoryPath) home).Combine (".nuget").Combine ("packages").ToString();
     }
-    var installedNuGet = packagesDir + "/*";
+    var installedNuGet = $"{packagesDir}/*";
     var dirs = GetDirectories (installedNuGet);
     foreach (var pkg in packages) {
-        Information ("Looking for an installed version of {0} in {1}...", pkg, installedNuGet);
+        Information ($"Looking for an installed version of {pkg} in {installedNuGet}...");
         foreach (var dir in dirs) {
             var dirName = dir.GetDirectoryName ();
             if (string.Equals (pkg, dirName, StringComparison.OrdinalIgnoreCase)) {
-                Warning ("SkiaSharp nugets were installed at '{0}', removing...", dir);
+                Warning ($"SkiaSharp nugets were installed at '{dir}', removing...");
                 CleanDirectory (dir);
             }
         }
@@ -184,7 +160,7 @@ var DecompressArchive = new Action<FilePath, DirectoryPath> ((archive, outputDir
     }
 });
 
-var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath, Dictionary<string, string>> ((samplesDirPath, outputDirPath, packageVersions) => {
+var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath> ((samplesDirPath, outputDirPath) => {
     var workingDir = outputDirPath.Combine ("samples");
 
     // copy the current samples directory
@@ -197,8 +173,8 @@ var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath, Dictionary<strin
         Force = true,
         Recursive = true
     };
-    DeleteDirectories (GetDirectories (workingDir.FullPath + "/**/bin"), settings);
-    DeleteDirectories (GetDirectories (workingDir.FullPath + "/**/obj"), settings);
+    DeleteDirectories (GetDirectories ($"{workingDir}/**/bin"), settings);
+    DeleteDirectories (GetDirectories ($"{workingDir}/**/obj"), settings);
 
     // make sure the paths are in the correct format for comparison
     var dpc = System.IO.Path.DirectorySeparatorChar;
@@ -209,7 +185,7 @@ var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath, Dictionary<strin
     // the regex to math the project entris in the solution
     var solutionProjectRegex = new Regex(@",\s*""(.*?\.\w{2}proj)"", ""(\{.*?\})""");
 
-    foreach (var file in GetFiles (workingDir + "/**/*")) {
+    foreach (var file in GetFiles ($"{workingDir}/**/*")) {
         var abs = System.IO.Path.GetFullPath (toNativePath (file.FullPath));
         var absDir = System.IO.Path.GetDirectoryName (abs);
         var ext = System.IO.Path.GetExtension (abs).ToLowerInvariant ();
@@ -282,13 +258,13 @@ var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath, Dictionary<strin
                             // we assume "Desired.Package.Id.<platform>.csproj"
                             var binding = System.IO.Path.GetFileNameWithoutExtension (System.IO.Path.GetFileNameWithoutExtension (absInclude));
                             // check to see if we have a specific version
-                            binding = packageVersions.Keys.FirstOrDefault (p => p.Equals (binding, StringComparison.OrdinalIgnoreCase));
-                            if (!string.IsNullOrWhiteSpace (binding)) {
+                            var bindingVersion = GetVersion (binding);
+                            if (!string.IsNullOrWhiteSpace (bindingVersion)) {
                                 // add a <PackageReference>
                                 var name = projItem.Name.Namespace + "PackageReference";
                                 projItem.AddAfterSelf (new XElement (name, new object[] {
                                         new XAttribute("Include", binding),
-                                        new XAttribute("Version", packageVersions[binding]),
+                                        new XAttribute("Version", bindingVersion),
                                     }));
                             }
                         }
@@ -325,20 +301,4 @@ var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath, Dictionary<strin
 
     // finally create the zip
     Zip (workingDir, outputDirPath.CombineWithFilePath ("samples.zip"));
-});
-
-var UpdateAssemblyInfo = new Action<FilePath, string, string, string> ((path, assembly, version, sha) => {
-    var info = ParseAssemblyInfo (path);
-    var settings = new AssemblyInfoSettings {
-        Version = assembly,
-        FileVersion = version,
-        InformationalVersion = version + "-" + sha,
-        Company = info.Company,
-        Copyright = info.Copyright,
-        Description = info.Description,
-        Product = info.Product,
-        Title = info.Title,
-        Trademark = info.Trademark,
-    };
-    CreateAssemblyInfo (path, settings);
 });

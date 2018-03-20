@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Import Project="..\..\source\SkiaSharp.Build.props" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -16,8 +17,8 @@
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\mono.snk</AssemblyOriginatorKeyFile>
+    <PackagingGroup>SkiaSharp</PackagingGroup>
+    <PackagingPlatform>uap10.0</PackagingPlatform>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -32,6 +33,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -41,16 +43,47 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="mdoc" Version="5.5.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.0.6" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\SkiaSharp.UWP.rd.xml" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\output\native\uwp\x64\libSkiaSharp.dll">
+      <Link>nuget\runtimes\win10-x64\nativeassets\uap10.0\libSkiaSharp.dll</Link>
+    </None>
+    <None Include="..\..\output\native\uwp\x86\libSkiaSharp.dll">
+      <Link>nuget\runtimes\win10-x86\nativeassets\uap10.0\libSkiaSharp.dll</Link>
+    </None>
+    <None Include="..\..\output\native\uwp\arm\libSkiaSharp.dll">
+      <Link>nuget\runtimes\win10-arm\nativeassets\uap10.0\libSkiaSharp.dll</Link>
+    </None>
+    <None Include="..\..\output\native\uwp\x64\libGLESv2.dll">
+      <Link>nuget\runtimes\win10-x64\nativeassets\uap10.0\libGLESv2.dll</Link>
+    </None>
+    <None Include="..\..\output\native\uwp\x86\libGLESv2.dll">
+      <Link>nuget\runtimes\win10-x86\nativeassets\uap10.0\libGLESv2.dll</Link>
+    </None>
+    <None Include="..\..\output\native\uwp\arm\libGLESv2.dll">
+      <Link>nuget\runtimes\win10-arm\nativeassets\uap10.0\libGLESv2.dll</Link>
+    </None>
+    <None Include="..\..\output\native\uwp\x64\libEGL.dll">
+      <Link>nuget\runtimes\win10-x64\nativeassets\uap10.0\libEGL.dll</Link>
+    </None>
+    <None Include="..\..\output\native\uwp\x86\libEGL.dll">
+      <Link>nuget\runtimes\win10-x86\nativeassets\uap10.0\libEGL.dll</Link>
+    </None>
+    <None Include="..\..\output\native\uwp\arm\libEGL.dll">
+      <Link>nuget\runtimes\win10-arm\nativeassets\uap10.0\libEGL.dll</Link>
+    </None>
+  </ItemGroup>
   <Import Project="..\Binding\Binding.projitems" Label="Shared" />
   <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
+  <Import Project="..\..\source\SkiaSharp.Build.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
 </Project>

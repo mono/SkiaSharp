@@ -19,31 +19,9 @@ var VERBOSITY = (Verbosity) Enum.Parse (typeof(Verbosity), Argument ("v", Argume
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NugetToolPath = GetToolPath ("nuget.exe");
 var CakeToolPath = GetToolPath ("Cake/Cake.exe");
-var GenApiToolPath = GetToolPath ("Microsoft.DotNet.BuildTools.GenAPI/tools/GenAPI.exe");
 var MDocPath = GetToolPath ("mdoc/tools/mdoc.exe");
-var SNToolPath = GetSNToolPath (EnvironmentVariable ("SN_EXE"));
 var MSBuildToolPath = GetMSBuildToolPath (EnvironmentVariable ("MSBUILD_EXE"));
 var PythonToolPath = EnvironmentVariable ("PYTHON_EXE") ?? "python";
-
-var VERSION_ASSEMBLY = "1.60.0.0";
-var VERSION_FILE = "1.60.0.0";
-var VERSION_SONAME = VERSION_FILE.Substring(VERSION_FILE.IndexOf(".") + 1);
-
-var ANGLE_VERSION_SOURCE = "2.1.13";
-
-var HARFBUZZ_VERSION_SOURCE = "1.4.6";
-var HARFBUZZ_VERSION_ASSEMBLY = "1.0.0.0";
-var HARFBUZZ_VERSION_FILE = "1.4.6.0";
-var HARFBUZZ_VERSION_SONAME = HARFBUZZ_VERSION_FILE.Substring(0, HARFBUZZ_VERSION_FILE.LastIndexOf("."));
-
-var VERSION_PACKAGES = new Dictionary<string, string> {
-    { "SkiaSharp", "1.60.0" },
-    { "SkiaSharp.Views", "1.60.0" },
-    { "SkiaSharp.Views.Forms", "1.60.0" },
-    { "SkiaSharp.HarfBuzz", "1.60.0" },
-
-    { "HarfBuzzSharp", "1.4.6" },
-};
 
 var CI_TARGETS = new string[] { "CI", "WINDOWS-CI", "LINUX-CI", "MAC-CI" };
 var IS_ON_CI = CI_TARGETS.Contains (TARGET.ToUpper ());
@@ -92,127 +70,24 @@ Task ("externals")
 
 Task ("libs")
     .IsDependentOn ("externals")
-    .IsDependentOn ("set-versions")
     .Does (() => 
 {
-    // create all the directories
-    EnsureDirectoryExists ("./output/wpf/");
-    EnsureDirectoryExists ("./output/uwp/");
-    EnsureDirectoryExists ("./output/android/");
-    EnsureDirectoryExists ("./output/ios/");
-    EnsureDirectoryExists ("./output/tvos/");
-    EnsureDirectoryExists ("./output/watchos/");
-    EnsureDirectoryExists ("./output/osx/");
-    EnsureDirectoryExists ("./output/portable/");
-    EnsureDirectoryExists ("./output/mac/");
-    EnsureDirectoryExists ("./output/netstandard/");
-    EnsureDirectoryExists ("./output/linux/");
-    EnsureDirectoryExists ("./output/interactive/");
-    EnsureDirectoryExists ("./output/desktop/");
-    EnsureDirectoryExists ("./output/gtk/");
-
-    // .NET Standard / .NET Core
-    RunMSBuildRestore ("source/SkiaSharpSource.NetStandard.sln");
-    RunMSBuild ("source/SkiaSharpSource.NetStandard.sln");
-    // copy to output
-    CopyFileToDirectory ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "./output/netstandard/");
-    CopyFileToDirectory ("./binding/HarfBuzzSharp.NetStandard/bin/Release/HarfBuzzSharp.dll", "./output/netstandard/");
-    CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz.NetStandard/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/netstandard/");
-    CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.NetStandard/bin/Release/SkiaSharp.Views.Forms.dll", "./output/netstandard/");
-
-    // Generate the portable code - we can't do it automatically as there are issues on linux
-    RunGenApi ("./binding/SkiaSharp.NetStandard/bin/Release/SkiaSharp.dll", "binding/SkiaSharp.Portable/SkiaPortable.cs");
-    RunGenApi ("./binding/HarfBuzzSharp.NetStandard/bin/Release/HarfBuzzSharp.dll", "binding/HarfBuzzSharp.Portable/HarfBuzzPortable.cs");
-
-    // .NET Framework / Xamarin
+    // build the managed libraries
+    var platform = "";
     if (IsRunningOnWindows ()) {
-        RunMSBuildRestore ("./source/SkiaSharpSource.Windows.sln");
-        RunMSBuild ("./source/SkiaSharpSource.Windows.sln");
-        // SkiaSharp
-        CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.dll", "./output/uwp/");
-        CopyFileToDirectory ("./binding/SkiaSharp.UWP/bin/Release/SkiaSharp.pri", "./output/uwp/");
-        // HarfBuzzSharp
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.UWP/bin/Release/HarfBuzzSharp.dll", "./output/uwp/");
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.UWP/bin/Release/HarfBuzzSharp.pri", "./output/uwp/");
-        // SkiaSharp.Views
-        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.UWP/bin/Release/SkiaSharp.Views.UWP.dll", "./output/uwp/");
-        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.WPF/bin/Release/SkiaSharp.Views.WPF.dll", "./output/wpf/");
-        // SkiaSharp.Views.Forms
-        CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.UWP/bin/Release/SkiaSharp.Views.Forms.dll", "./output/uwp/");
+        platform = ".Windows";
     } else if (IsRunningOnMac ()) {
-        // fix for old MSBuild
-        RunMSBuildRestore ("source/SkiaSharpSource.Mac.sln");
-        RunMSBuild ("source/SkiaSharpSource.Mac.sln");
-        // SkiaSharp
-        CopyFileToDirectory ("./binding/SkiaSharp.Android/bin/Release/SkiaSharp.dll", "./output/android/");
-        CopyFileToDirectory ("./binding/SkiaSharp.iOS/bin/Release/SkiaSharp.dll", "./output/ios/");
-        CopyFileToDirectory ("./binding/SkiaSharp.tvOS/bin/Release/SkiaSharp.dll", "./output/tvos/");
-        CopyFileToDirectory ("./binding/SkiaSharp.watchOS/bin/Release/SkiaSharp.dll", "./output/watchos/");
-        CopyFileToDirectory ("./binding/SkiaSharp.OSX/bin/Release/SkiaSharp.dll", "./output/osx/");
-        // HarfBuzzSharp
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.Android/bin/Release/HarfBuzzSharp.dll", "./output/android/");
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.iOS/bin/Release/HarfBuzzSharp.dll", "./output/ios/");
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.tvOS/bin/Release/HarfBuzzSharp.dll", "./output/tvos/");
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.watchOS/bin/Release/HarfBuzzSharp.dll", "./output/watchos/");
-        CopyFileToDirectory ("./binding/HarfBuzzSharp.OSX/bin/Release/HarfBuzzSharp.dll", "./output/osx/");
-        // SkiaSharp.Views
-        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Android/bin/Release/SkiaSharp.Views.Android.dll", "./output/android/");
-        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.iOS/bin/Release/SkiaSharp.Views.iOS.dll", "./output/ios/");
-        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Mac/bin/Release/SkiaSharp.Views.Mac.dll", "./output/osx/");
-        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.tvOS/bin/Release/SkiaSharp.Views.tvOS.dll", "./output/tvos/");
-        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.watchOS/bin/Release/SkiaSharp.Views.watchOS.dll", "./output/watchos/");
-        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Gtk/bin/Release/SkiaSharp.Views.Gtk.dll", "./output/gtk/");
-        // SkiaSharp.Views.Forms
-        CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Android/bin/Release/SkiaSharp.Views.Forms.dll", "./output/android/");
-        CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.iOS/bin/Release/SkiaSharp.Views.Forms.dll", "./output/ios/");
-        CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Mac/bin/Release/SkiaSharp.Views.Forms.dll", "./output/osx/");
+        platform = ".Mac";
     } else if (IsRunningOnLinux ()) {
-        RunMSBuildRestore ("./source/SkiaSharpSource.Linux.sln");
-        RunMSBuild ("./source/SkiaSharpSource.Linux.sln");
-        // SkiaSharp.Views
-        CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Gtk/bin/Release/SkiaSharp.Views.Gtk.dll", "./output/gtk/");
+        platform = ".Linux";
     }
-    // SkiaSharp
-    CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/SkiaSharp.dll", "./output/desktop/");
-    CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.dll.config", "./output/desktop/");
-    CopyFileToDirectory ("./binding/SkiaSharp.Desktop/bin/Release/nuget/build/net45/SkiaSharp.Desktop.targets", "./output/desktop/");
-    CopyFileToDirectory ("./binding/SkiaSharp.Portable/bin/Release/SkiaSharp.dll", "./output/portable/");
-    // SkiaSharp.Views
-    CopyFileToDirectory ("./source/SkiaSharp.Views/SkiaSharp.Views.Desktop/bin/Release/SkiaSharp.Views.Desktop.dll", "./output/desktop/");
-    // SkiaSharp.Views.Forms
-    CopyFileToDirectory ("./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms/bin/Release/SkiaSharp.Views.Forms.dll", "./output/portable/");
-    // HarfBuzzSharp
-    CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/HarfBuzzSharp.dll", "./output/desktop/");
-    CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/nuget/build/net45/HarfBuzzSharp.dll.config", "./output/desktop/");
-    CopyFileToDirectory ("./binding/HarfBuzzSharp.Desktop/bin/Release/nuget/build/net45/HarfBuzzSharp.Desktop.targets", "./output/desktop/");
-    CopyFileToDirectory ("./binding/HarfBuzzSharp.Portable/bin/Release/HarfBuzzSharp.dll", "./output/portable/");
-    // SkiaSharp.HarfBuzz
-    CopyFileToDirectory ("./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/bin/Release/SkiaSharp.HarfBuzz.dll", "./output/portable/");
-    // SkiaSharp.Workbooks
-    CopyFileToDirectory ("./source/SkiaSharp.Workbooks/bin/Release/SkiaSharp.Workbooks.dll", "./output/interactive/");
+    RunMSBuildRestore ($"./source/SkiaSharpSource{platform}.sln");
+    RunMSBuild ($"./source/SkiaSharpSource{platform}.sln");
 
-    // make sure everything is signed and strong named
-    // (msbuild on non-Windows can't sign as part of the build process, so use sn)
-    var excludedAssemblies = new string[] {
-        "/SkiaSharp.Views.Forms.dll", // Xamarin.Forms is not sigend, so we can't sign
-        "/SkiaSharp.Workbooks.dll" // Workbooks integration library is not signed, so we can't sign
-    };
-    foreach (var f in GetFiles("./output/*/*.dll")) {
-        // skip the excluded assemblies
-        var excluded = false;
-        foreach (var assembly in excludedAssemblies) {
-            if (f.FullPath.EndsWith (assembly)) {
-                excluded = true;
-                break;
-            }
-        }
-        // sign and verify
-        if (!excluded) {
-            Information("Making sure that '{0}' is signed.", f);
-            RunSNReSign(f, "mono.snk");
-            RunSNVerify(f);
-        }
-    }
+    // assemble the mdoc docs
+    EnsureDirectoryExists ("./output/docs/mdoc/");
+    RunMdocAssemble (DOCS_PATH, "./output/docs/mdoc/SkiaSharp");
+    CopyFileToDirectory ("./docs/SkiaSharp.source", "./output/docs/mdoc/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -224,8 +99,6 @@ Task ("tests")
     .IsDependentOn ("nuget")
     .Does (() => 
 {
-    ClearSkiaSharpNuGetCache (VERSION_PACKAGES.Keys.ToArray ());
-
     RunMSBuildRestore ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
 
     // Windows (x86 and x64)
@@ -273,11 +146,8 @@ Task ("samples")
     .IsDependentOn ("nuget")
     .Does (() => 
 {
-    // clear the NuGets so we can use the build output
-    ClearSkiaSharpNuGetCache (VERSION_PACKAGES.Keys.ToArray ());
-
     // create the samples archive
-    CreateSamplesZip ("./samples/", "./output/", VERSION_PACKAGES);
+    CreateSamplesZip ("./samples/", "./output/");
 
     // create the workbooks archive
     Zip ("./workbooks", "./output/workbooks.zip");
@@ -368,93 +238,23 @@ Task ("samples")
 // DOCS - building the API documentation
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Task ("docs")
-    .Does (() => 
-{
-    // log TODOs
-    var docFiles = GetFiles ("./docs/**/*.xml");
-    float typeCount = 0;
-    float memberCount = 0;
-    float totalTypes = 0;
-    float totalMembers = 0;
-    foreach (var file in docFiles) {
-        var xdoc = XDocument.Load (file.ToString ());
-
-        var typesWithDocs = xdoc.Root
-            .Elements ("Docs");
-
-        totalTypes += typesWithDocs.Count ();
-        var currentTypeCount = typesWithDocs.Where (m => m.Value != null && m.Value.IndexOf ("To be added.") >= 0).Count (); 
-        typeCount += currentTypeCount;
-
-        var membersWithDocs = xdoc.Root
-            .Elements ("Members")
-            .Elements ("Member")
-            .Where (m => m.Attribute ("MemberName") != null && m.Attribute ("MemberName").Value != "Dispose"  && m.Attribute ("MemberName").Value != "Finalize")
-            .Elements ("Docs");
-
-        totalMembers += membersWithDocs.Count ();
-        var currentMemberCount = membersWithDocs.Where (m => m.Value != null && m.Value.IndexOf ("To be added.") >= 0).Count ();
-        memberCount += currentMemberCount;
-
-        currentMemberCount += currentTypeCount;
-        if (currentMemberCount > 0) {
-            var fullName = xdoc.Root.Attribute ("FullName");
-            if (fullName != null)
-                Information ("Docs missing on {0} = {1}", fullName.Value, currentMemberCount);
-        }
-    }
-    Information (
-        "Documentation missing in {0}/{1} ({2:0.0%}) types and {3}/{4} ({5:0.0%}) members.", 
-        typeCount, totalTypes, typeCount / totalTypes, 
-        memberCount, totalMembers, memberCount / totalMembers);
-
-    EnsureDirectoryExists ("./output/docs/msxml/");
-    RunMdocMSXml (DOCS_PATH, "./output/docs/msxml/");
-    
-    EnsureDirectoryExists ("./output/docs/mdoc/");
-    RunMdocAssemble (DOCS_PATH, "./output/docs/mdoc/SkiaSharp");
-
-    CopyFileToDirectory ("./docs/SkiaSharp.source", "./output/docs/mdoc/");
-});
-
 Task ("update-docs")
-    .IsDependentOn ("libs")
     .Does (() => 
 {
     // the reference folders to locate assemblies
-    var refAssemblies = "C:/Program Files (x86)/Microsoft Visual Studio/*/*/Common7/IDE/ReferenceAssemblies/Microsoft/Framework/";
-    var refNetNative = "C:/Program Files (x86)/MSBuild/15.0/.Net/.NetNative/*/x86/ilc/lib/Private";
     var refs = new List<DirectoryPath> ();
-    refs.AddRange (GetDirectories (refNetNative));
-    refs.AddRange (GetDirectories (refAssemblies + "MonoAndroid/v1.0"));
-    refs.AddRange (GetDirectories (refAssemblies + "MonoAndroid/v4.0.3"));
-    refs.AddRange (GetDirectories (refAssemblies + "Xamarin.iOS/v1.0"));
-    refs.AddRange (GetDirectories (refAssemblies + "Xamarin.TVOS/v1.0"));
-    refs.AddRange (GetDirectories (refAssemblies + "Xamarin.WatchOS/v1.0"));
-    refs.AddRange (GetDirectories (refAssemblies + "Xamarin.Mac/v2.0"));
+    if (IsRunningOnWindows ()) {
+        var refAssemblies = "C:/Program Files (x86)/Microsoft Visual Studio/*/*/Common7/IDE/ReferenceAssemblies/Microsoft/Framework/";
+        refs.AddRange (GetDirectories (refAssemblies + "MonoAndroid/v1.0"));
+        refs.AddRange (GetDirectories (refAssemblies + "MonoAndroid/v4.0.3"));
+        refs.AddRange (GetDirectories (refAssemblies + "Xamarin.iOS/v1.0"));
+        refs.AddRange (GetDirectories (refAssemblies + "Xamarin.TVOS/v1.0"));
+        refs.AddRange (GetDirectories (refAssemblies + "Xamarin.WatchOS/v1.0"));
+        refs.AddRange (GetDirectories (refAssemblies + "Xamarin.Mac/v2.0"));
+    }
 
     // the assemblies to generate docs for
-    var assemblies = new FilePath [] {
-        // SkiaSharp
-        "./output/netstandard/SkiaSharp.dll",
-        // SkiaSharp.Views
-        "./output/android/SkiaSharp.Views.Android.dll",
-        "./output/desktop/SkiaSharp.Views.Desktop.dll",
-        "./output/gtk/SkiaSharp.Views.Gtk.dll",
-        "./output/ios/SkiaSharp.Views.iOS.dll",
-        "./output/osx/SkiaSharp.Views.Mac.dll",
-        "./output/tvos/SkiaSharp.Views.tvOS.dll",
-        "./output/uwp/SkiaSharp.Views.UWP.dll",
-        "./output/watchos/SkiaSharp.Views.watchOS.dll",
-        "./output/wpf/SkiaSharp.Views.WPF.dll",
-        // SkiaSharp.Views.Forms
-        "./output/netstandard/SkiaSharp.Views.Forms.dll",
-        // HarfBuzzSharp
-        "./output/netstandard/HarfBuzzSharp.dll",
-        // SkiaSharp.HarfBuzz
-        "./output/netstandard/SkiaSharp.HarfBuzz.dll",
-    };
+    var assemblies = GetFiles ("./output/*/nuget/lib/*/*.dll").ToArray ();
 
     // print out the assemblies
     foreach (var r in refs) {
@@ -469,6 +269,10 @@ Task ("update-docs")
 
     // apply some formatting
     var docFiles = GetFiles ("./docs/**/*.xml");
+    float typeCount = 0;
+    float memberCount = 0;
+    float totalTypes = 0;
+    float totalMembers = 0;
     foreach (var file in docFiles) {
 
         var xdoc = XDocument.Load (file.ToString ());
@@ -487,8 +291,33 @@ Task ("update-docs")
         xdoc.Root
             .Elements ("Members")
             .Elements ("Member")
-            .Where (e => e.Attribute ("MemberName") != null && e.Attribute ("MemberName").Value.StartsWith ("System.ComponentModel.IComponent."))
+            .Where (e => e.Attribute ("MemberName")?.Value?.StartsWith ("System.ComponentModel.IComponent.") == true)
             .Remove ();
+
+        // count the types without docs
+        var typesWithDocs = xdoc.Root
+            .Elements ("Docs");
+        totalTypes += typesWithDocs.Count ();
+        var currentTypeCount = typesWithDocs.Count (m => m.Value?.IndexOf ("To be added.") >= 0);
+        typeCount += currentTypeCount;
+
+        // count the members without docs
+        var membersWithDocs = xdoc.Root
+            .Elements ("Members")
+            .Elements ("Member")
+            .Where (m => m.Attribute ("MemberName")?.Value != "Dispose" && m.Attribute ("MemberName")?.Value != "Finalize")
+            .Elements ("Docs");
+        totalMembers += membersWithDocs.Count ();
+        var currentMemberCount = membersWithDocs.Count (m => m.Value?.IndexOf ("To be added.") >= 0);
+        memberCount += currentMemberCount;
+
+        // log if either type or member has missing docs
+        currentMemberCount += currentTypeCount;
+        if (currentMemberCount > 0) {
+            var fullName = xdoc.Root.Attribute ("FullName");
+            if (fullName != null)
+                Information ("Docs missing on {0} = {1}", fullName.Value, currentMemberCount);
+        }
 
         // get the whitespaces right
         var settings = new XmlWriterSettings {
@@ -505,6 +334,12 @@ Task ("update-docs")
         // empty line at the end
         System.IO.File.AppendAllText (file.ToString (), "\n");
     }
+
+    // log summary
+    Information (
+        "Documentation missing in {0}/{1} ({2:0.0%}) types and {3}/{4} ({5:0.0%}) members.", 
+        typeCount, totalTypes, typeCount / totalTypes, 
+        memberCount, totalMembers, memberCount / totalMembers);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -513,7 +348,6 @@ Task ("update-docs")
 
 Task ("nuget")
     .IsDependentOn ("libs")
-    .IsDependentOn ("docs")
     .Does (() => 
 {
     EnsureDirectoryExists ("./output/nuspec/");
@@ -562,7 +396,8 @@ Task ("nuget")
 
         // <version>
         if (id != null && version != null) {
-            if (VERSION_PACKAGES.TryGetValue (id.Value, out string v)) {
+            var v = GetVersion (id.Value);
+            if (!string.IsNullOrEmpty (v)) {
                 version.Value = v + suffix;
             }
         }
@@ -579,7 +414,8 @@ Task ("nuget")
             var depId = package.Attribute ("id");
             var depVersion = package.Attribute ("version");
             if (depId != null && depVersion != null) {
-                if (VERSION_PACKAGES.TryGetValue (depId.Value, out string v)) {
+                var v = GetVersion (id.Value);
+                if (!string.IsNullOrEmpty (v)) {
                     depVersion.Value = v + suffix;
                 }
             }
@@ -603,63 +439,6 @@ Task ("nuget")
     foreach (var nuspec in GetFiles ("./output/nuspec/*.nuspec")) {
         PackageNuGet (nuspec, "./output/");
     }
-});
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// VERSIONS - update all packages and references to the new version
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-Task ("set-versions")
-    .Does (() => 
-{
-    var files = new List<FilePath> ();
-    files.AddRange (GetFiles ("./source/**/*.csproj"));
-    files.AddRange (GetFiles ("./tests/**/*.csproj"));
-
-    foreach (var file in files) {
-        var modified = false;
-        var xdoc = XDocument.Load (file.FullPath);
-
-        var refs1 = xdoc.Root
-            .Elements (MSBuildNS + "ItemGroup")
-            .Elements (MSBuildNS + "PackageReference");
-        var refs2 = xdoc.Root
-            .Elements ("ItemGroup")
-            .Elements ("PackageReference");
-
-        foreach (var package in refs1.Union (refs2)) {
-            var id = package.Attribute ("Include").Value;
-            var oldVersion = package.Attribute ("Version").Value;
-            if (VERSION_PACKAGES.TryGetValue (id, out string version) && version != oldVersion) {
-                package.Attribute ("Version").Value = version;
-                modified = true;
-            }
-        }
-
-        if (modified) {
-            xdoc.Save (file.FullPath);
-        }
-    }
-
-    // assembly infos
-    UpdateAssemblyInfo (
-        "./binding/Binding/Properties/SkiaSharpAssemblyInfo.cs",
-        VERSION_ASSEMBLY, VERSION_FILE, GIT_SHA);
-    UpdateAssemblyInfo (
-        "./source/SkiaSharp.Views/SkiaSharp.Views.Shared/Properties/SkiaSharpViewsAssemblyInfo.cs",
-        VERSION_ASSEMBLY, VERSION_FILE, GIT_SHA);
-    UpdateAssemblyInfo (
-        "./source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Shared/Properties/SkiaSharpViewsFormsAssemblyInfo.cs",
-        VERSION_ASSEMBLY, VERSION_FILE, GIT_SHA);
-    UpdateAssemblyInfo (
-        "./source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz.Shared/Properties/SkiaSharpHarfBuzzAssemblyInfo.cs",
-        VERSION_ASSEMBLY, VERSION_FILE, GIT_SHA);
-    UpdateAssemblyInfo (
-        "./source/SkiaSharp.Workbooks/Properties/SkiaSharpWorkbooksAssemblyInfo.cs",
-        VERSION_ASSEMBLY, VERSION_FILE, GIT_SHA);
-    UpdateAssemblyInfo (
-        "./binding/HarfBuzzSharp.Shared/Properties/HarfBuzzSharpAssemblyInfo.cs",
-        HARFBUZZ_VERSION_ASSEMBLY, HARFBUZZ_VERSION_FILE, GIT_SHA);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -715,7 +494,6 @@ Task ("Default")
 Task ("Everything")
     .IsDependentOn ("externals")
     .IsDependentOn ("libs")
-    .IsDependentOn ("docs")
     .IsDependentOn ("nuget")
     .IsDependentOn ("tests")
     .IsDependentOn ("samples");
@@ -727,7 +505,6 @@ Task ("Everything")
 Task ("CI")
     .IsDependentOn ("externals")
     .IsDependentOn ("libs")
-    .IsDependentOn ("docs")
     .IsDependentOn ("nuget")
     .IsDependentOn ("tests")
     .IsDependentOn ("samples");
@@ -747,8 +524,6 @@ Task ("Linux-CI")
 
 Information ("Cake.exe ToolPath: {0}", CakeToolPath);
 Information ("NuGet.exe ToolPath: {0}", NugetToolPath);
-Information ("genapi.exe ToolPath: {0}", GenApiToolPath);
-Information ("sn.exe ToolPath: {0}", SNToolPath);
 Information ("msbuild.exe ToolPath: {0}", MSBuildToolPath);
 
 if (IS_ON_CI) {
