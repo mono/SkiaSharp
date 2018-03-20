@@ -75,6 +75,96 @@
         <remarks>If the <paramref name="mode" /> is <see cref="F:SkiaSharp.SKBlendMode.Dst" />, this function will return <see langword="null" /> (since that mode will have no effect on the result).</remarks>
       </Docs>
     </Member>
+    <Member MemberName="CreateBlendMode">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKColorFilter CreateBlendMode (SkiaSharp.SKColor c, SkiaSharp.SKXferMode mode);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKColorFilter CreateBlendMode(valuetype SkiaSharp.SKColor c, valuetype SkiaSharp.SKXferMode mode) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Obsolete("Use CreateBlendMode(SKColor, SKBlendMode) instead.", true)</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKColorFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="c" Type="SkiaSharp.SKColor" />
+        <Parameter Name="mode" Type="SkiaSharp.SKXferMode" />
+      </Parameters>
+      <Docs>
+        <param name="c">The source color used with the specified mode.</param>
+        <param name="mode">The blend mode mode that is applied to each color.</param>
+        <summary>Creates a new color filter that uses the specified color and mode.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />, or <see langword="null" /> if the mode will have no effect.</returns>
+        <remarks>If the <paramref name="mode" /> is <see cref="F:SkiaSharp.SkiaSharp.SKXferMode.Dst" />, this function will return <see langword="null" /> (since that mode will have no effect on the result).</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateColorCube">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKColorFilter CreateColorCube (SkiaSharp.SKData cubeData, int cubeDimension);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKColorFilter CreateColorCube(class SkiaSharp.SKData cubeData, int32 cubeDimension) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+        <AssemblyVersion>1.52.0.0</AssemblyVersion>
+        <AssemblyVersion>1.53.0.0</AssemblyVersion>
+        <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKColorFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="cubeData" Type="SkiaSharp.SKData" />
+        <Parameter Name="cubeDimension" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="cubeData">The cube data in the form of a 3D cube.</param>
+        <param name="cubeDimension">The cube's dimension, between <see cref="F:SkiaSharp.SKColorFilter.MinCubeSize" /> and <see cref="F:SkiaSharp.SKColorFilter.MaxCubeSize" /> inclusive.</param>
+        <summary>Creates a new color cube look-up table color filter, where (x, y, z) maps to the (R, G, B).</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+        <remarks>The alpha components of the colors must be 255, or opaque.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateColorCube">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKColorFilter CreateColorCube (byte[] cubeData, int cubeDimension);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKColorFilter CreateColorCube(unsigned int8[] cubeData, int32 cubeDimension) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+        <AssemblyVersion>1.52.0.0</AssemblyVersion>
+        <AssemblyVersion>1.53.0.0</AssemblyVersion>
+        <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKColorFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="cubeData" Type="System.Byte[]" />
+        <Parameter Name="cubeDimension" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="cubeData">The cube data in the form of a 3D cube.</param>
+        <param name="cubeDimension">The cube's dimension, between <see cref="F:SkiaSharp.SKColorFilter.MinCubeSize" /> and <see cref="F:SkiaSharp.SKColorFilter.MaxCubeSize" /> inclusive.</param>
+        <summary>Creates a new color cube look-up table color filter, where (x, y, z) maps to the (R, G, B).</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+        <remarks>The alpha components of the colors must be 255, or opaque.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="CreateColorMatrix">
       <MemberSignature Language="C#" Value="public static SkiaSharp.SKColorFilter CreateColorMatrix (float[] matrix);" />
       <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKColorFilter CreateColorMatrix(float32[] matrix) cil managed" />
@@ -139,6 +229,30 @@
         <remarks>
           <para></para>
         </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateGamma">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKColorFilter CreateGamma (float gamma);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKColorFilter CreateGamma(float32 gamma) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKColorFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="gamma" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="gamma">The gamma to use.</param>
+        <summary>Creates a new gamma color filter which can be used to perform pixel-by-pixel conversion between linear and power-law color spaces.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+        <remarks>A gamma of 2.2 is interpreted to mean convert from sRGB to linear while a gamma of 1/2.2 is interpreted to mean convert from linear to sRGB. Any other values are just directly applied (i.e., out = in ^ gamma).</remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateHighContrast">
@@ -326,6 +440,45 @@
         </remarks>
       </Docs>
     </Member>
+    <Member MemberName="CreateXferMode">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKColorFilter CreateXferMode (SkiaSharp.SKColor c, SkiaSharp.SKXferMode mode);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKColorFilter CreateXferMode(valuetype SkiaSharp.SKColor c, valuetype SkiaSharp.SKXferMode mode) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+        <AssemblyVersion>1.52.0.0</AssemblyVersion>
+        <AssemblyVersion>1.53.0.0</AssemblyVersion>
+        <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Obsolete("Use CreateBlendMode(SKColor, SKBlendMode) instead.", true)</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKColorFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="c" Type="SkiaSharp.SKColor" />
+        <Parameter Name="mode" Type="SkiaSharp.SKXferMode" />
+      </Parameters>
+      <Docs>
+        <param name="c">The source color.</param>
+        <param name="mode">The transfer/blend mode to apply to each color.</param>
+        <summary>Creates a new transfer mode color filter that uses the specified color and transfer/blend mode.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
     <Member MemberName="Dispose">
       <MemberSignature Language="C#" Value="protected override void Dispose (bool disposing);" />
       <MemberSignature Language="ILAsm" Value=".method familyhidebysig virtual instance void Dispose(bool disposing) cil managed" />
@@ -354,6 +507,140 @@
         <param name="disposing">To be added.</param>
         <summary>To be added.</summary>
         <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="IsValid3DColorCube">
+      <MemberSignature Language="C#" Value="public static bool IsValid3DColorCube (SkiaSharp.SKData cubeData, int cubeDimension);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig bool IsValid3DColorCube(class SkiaSharp.SKData cubeData, int32 cubeDimension) cil managed" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+        <AssemblyVersion>1.52.0.0</AssemblyVersion>
+        <AssemblyVersion>1.53.0.0</AssemblyVersion>
+        <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="cubeData" Type="SkiaSharp.SKData" />
+        <Parameter Name="cubeDimension" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="cubeData">must containt a 3D data in the form of cube of the size: cubeDimension * cubeDimension * cubeDimension * sizeof(SkColor).</param>
+        <param name="cubeDimension">Cube dimensions.</param>
+        <summary>Determines if the provided cube data and dimensions represent a valid color cube.</summary>
+        <returns>Returns true if the cube data and dimensions represent a valid color cube, otherwise false.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MaxColorCubeDimension">
+      <MemberSignature Language="C#" Value="public const int MaxColorCubeDimension = 64;" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal int32 MaxColorCubeDimension = (64)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+        <AssemblyVersion>1.52.0.0</AssemblyVersion>
+        <AssemblyVersion>1.53.0.0</AssemblyVersion>
+        <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <MemberValue>64</MemberValue>
+      <Docs>
+        <summary>The maximum dimension for the color cube.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MaxCubeSize">
+      <MemberSignature Language="C#" Value="public const int MaxCubeSize = 64;" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal int32 MaxCubeSize = (64)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Obsolete("Use MaxColorCubeDimension instead.", true)</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <MemberValue>64</MemberValue>
+      <Docs>
+        <summary>The maximum dimension for the color cube.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MinColorCubeDimension">
+      <MemberSignature Language="C#" Value="public const int MinColorCubeDimension = 4;" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal int32 MinColorCubeDimension = (4)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <AssemblyVersion>1.49.0.0</AssemblyVersion>
+        <AssemblyVersion>1.52.0.0</AssemblyVersion>
+        <AssemblyVersion>1.53.0.0</AssemblyVersion>
+        <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.54.0.0</AssemblyVersion>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <MemberValue>4</MemberValue>
+      <Docs>
+        <summary>The minimum dimension for the color cube.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="MinCubeSize">
+      <MemberSignature Language="C#" Value="public const int MinCubeSize = 4;" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal int32 MinCubeSize = (4)" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyVersion>1.55.0.0</AssemblyVersion>
+        <AssemblyVersion>1.56.0.0</AssemblyVersion>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Obsolete("Use MinColorCubeDimension instead.", true)</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <MemberValue>4</MemberValue>
+      <Docs>
+        <summary>The minimum dimension for the color cube.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
   </Members>
