@@ -109,41 +109,11 @@ var RunMdocUpdate = new Action<FilePath[], DirectoryPath, DirectoryPath[]> ((ass
     });
 });
 
-var RunMdocMSXml = new Action<DirectoryPath, DirectoryPath> ((docsRoot, outputDir) =>
-{
-    RunProcess (MDocPath, new ProcessSettings {
-        Arguments = $"export-msxdoc \"{MakeAbsolute (docsRoot)}\" --debug",
-        WorkingDirectory = MakeAbsolute (outputDir).ToString ()
-    });
-});
-
 var RunMdocAssemble = new Action<DirectoryPath, FilePath> ((docsRoot, output) =>
 {
     RunProcess (MDocPath, new ProcessSettings {
         Arguments = $"assemble --out=\"{output}\" \"{docsRoot}\" --debug",
     });
-});
-
-var ClearSkiaSharpNuGetCache = new Action<string[]> ((packages) => {
-    // first we need to add our new nuget to the cache so we can restore
-    // we first need to delete the old stuff
-    var packagesDir = EnvironmentVariable ("NUGET_PACKAGES");
-    if (string.IsNullOrEmpty (packagesDir)) {
-        var home = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
-        packagesDir = ((DirectoryPath) home).Combine (".nuget").Combine ("packages").ToString();
-    }
-    var installedNuGet = $"{packagesDir}/*";
-    var dirs = GetDirectories (installedNuGet);
-    foreach (var pkg in packages) {
-        Information ($"Looking for an installed version of {pkg} in {installedNuGet}...");
-        foreach (var dir in dirs) {
-            var dirName = dir.GetDirectoryName ();
-            if (string.Equals (pkg, dirName, StringComparison.OrdinalIgnoreCase)) {
-                Warning ($"SkiaSharp nugets were installed at '{dir}', removing...");
-                CleanDirectory (dir);
-            }
-        }
-    }
 });
 
 var DecompressArchive = new Action<FilePath, DirectoryPath> ((archive, outputDir) => {

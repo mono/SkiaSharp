@@ -38,6 +38,9 @@ DirectoryPath ANGLE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/angle"));
 DirectoryPath HARFBUZZ_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/harfbuzz"));
 DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/en"));
 
+DirectoryPath PROFILE_PATH = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
+DirectoryPath NUGET_PACKAGES = EnvironmentVariable ("NUGET_PACKAGES") ?? PROFILE_PATH.Combine (".nuget/packages");
+
 var GIT_SHA = EnvironmentVariable ("GIT_COMMIT") ?? string.Empty;
 if (!string.IsNullOrEmpty (GIT_SHA) && GIT_SHA.Length >= 6) {
     GIT_SHA = GIT_SHA.Substring (0, 6);
@@ -244,48 +247,59 @@ Task ("update-docs")
     // the reference folders to locate assemblies
     var refs = new List<DirectoryPath> ();
     if (IsRunningOnWindows ()) {
-        var refAssemblies = "C:/Program Files (x86)/Microsoft Visual Studio/*/*/Common7/IDE/ReferenceAssemblies/Microsoft/Framework/";
-        refs.AddRange (GetDirectories (refAssemblies + "MonoAndroid/v1.0"));
-        refs.AddRange (GetDirectories (refAssemblies + "MonoAndroid/v4.0.3"));
-        refs.AddRange (GetDirectories (refAssemblies + "Xamarin.iOS/v1.0"));
-        refs.AddRange (GetDirectories (refAssemblies + "Xamarin.TVOS/v1.0"));
-        refs.AddRange (GetDirectories (refAssemblies + "Xamarin.WatchOS/v1.0"));
-        refs.AddRange (GetDirectories (refAssemblies + "Xamarin.Mac/v2.0"));
+        var refAssemblies = "C:/Program Files (x86)/Microsoft Visual Studio/*/*/Common7/IDE/ReferenceAssemblies/Microsoft/Framework";
+        refs.AddRange (GetDirectories ($"{refAssemblies}/MonoAndroid/v1.0"));
+        refs.AddRange (GetDirectories ($"{refAssemblies}/MonoAndroid/v4.0.3"));
+        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.iOS/v1.0"));
+        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.TVOS/v1.0"));
+        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.WatchOS/v1.0"));
+        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.Mac/v2.0"));
+        refs.AddRange (GetDirectories ("C:/Program Files (x86)/Windows Kits/10/References/Windows.Foundation.UniversalApiContract/1.0.0.0"));
+        refs.AddRange (GetDirectories ($"{NUGET_PACKAGES}/xamarin.forms/{GetVersion ("Xamarin.Forms", "release")}/lib/*"));
     }
 
     // the assemblies to generate docs for
-    var assemblies = GetFiles ("./output/*/nuget/lib/*/*.dll").ToArray ();
+    var assemblies = new FilePath [] {
+        // SkiaSharp
+        "./output/SkiaSharp/nuget/lib/netstandard1.3/SkiaSharp.dll",
+        // SkiaSharp.Views
+        "./output/SkiaSharp.Views/nuget/lib/MonoAndroid/SkiaSharp.Views.Android.dll",
+        "./output/SkiaSharp.Views/nuget/lib/net45/SkiaSharp.Views.Desktop.dll",
+        "./output/SkiaSharp.Views/nuget/lib/net45/SkiaSharp.Views.Gtk.dll",
+        "./output/SkiaSharp.Views/nuget/lib/net45/SkiaSharp.Views.WPF.dll",
+        "./output/SkiaSharp.Views/nuget/lib/Xamarin.iOS/SkiaSharp.Views.iOS.dll",
+        "./output/SkiaSharp.Views/nuget/lib/Xamarin.Mac20/SkiaSharp.Views.Mac.dll",
+        "./output/SkiaSharp.Views/nuget/lib/Xamarin.TVOS/SkiaSharp.Views.tvOS.dll",
+        "./output/SkiaSharp.Views/nuget/lib/uap10.0/SkiaSharp.Views.UWP.dll",
+        "./output/SkiaSharp.Views/nuget/lib/Xamarin.WatchOS/SkiaSharp.Views.watchOS.dll",
+        // SkiaSharp.Views.Forms
+        "./output/SkiaSharp.Views.Forms/nuget/lib/netstandard1.3/SkiaSharp.Views.Forms.dll",
+        // HarfBuzzSharp
+        "./output/HarfBuzzSharp/nuget/lib/netstandard1.3/HarfBuzzSharp.dll",
+        // SkiaSharp.HarfBuzz
+        "./output/SkiaSharp.HarfBuzz/nuget/lib/netstandard1.3/SkiaSharp.HarfBuzz.dll",
+    };
+
 
     // print out the assemblies
     foreach (var r in refs) {
         Information ("Reference Directory: {0}", r);
     }
     foreach (var a in assemblies) {
-        Information ("Processing {0}...", a);
+        Information ("Assemblies {0}...", a);
     }
 
     // generate doc files
     RunMdocUpdate (assemblies, DOCS_PATH, refs.ToArray ());
 
-    // apply some formatting
+    // process the generated docs
     var docFiles = GetFiles ("./docs/**/*.xml");
     float typeCount = 0;
     float memberCount = 0;
     float totalTypes = 0;
     float totalMembers = 0;
     foreach (var file in docFiles) {
-
         var xdoc = XDocument.Load (file.ToString ());
-
-        // if (xdoc.Root.Elements ("AssemblyInfo").Elements ("AssemblyVersion").All ( v => v.Value != VERSION_ASSEMBLY )) {
-        //     DeleteFile(file);
-        //     continue;
-        // }
-        // xdoc.Root
-        //     .Elements ("Members")
-        //     .Elements ("Member")
-        //     .Where (e => e.Elements ("AssemblyInfo").Elements ("AssemblyVersion").All ( v => v.Value != VERSION_ASSEMBLY ))
-        //     .Remove ();
 
         // remove IComponent docs as this is just designer
         xdoc.Root
