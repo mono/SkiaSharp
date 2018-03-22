@@ -57,7 +57,7 @@ var RunMSBuildRestoreLocal = new Action<FilePath> ((solution) =>
             c.ToolPath = MSBuildToolPath;
         }
         // c.Properties ["RestoreSources"] = NuGetSources;
-        c.ArgumentCustomization = args => args.Append ($"/p:RestoreSources=\"{string.Join (";", NuGetSources)}\"");
+        c.ArgumentCustomization = args => args.Append ($"/p:RestoreSources=\"{string.Join (IsRunningOnWindows () ? ";" : "%3B", NuGetSources)}\"");
     });
 });
 
