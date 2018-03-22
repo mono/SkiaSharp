@@ -62,7 +62,7 @@ string GetMSBuildToolPath (string possible)
 string GetVersion (string lib, string type = "nuget")
 {
     try {
-        var contents = FileReadText ("./versions.txt");
+        var contents = FileReadText ("./VERSIONS.txt");
         var match = Regex.Match(contents, $@"^{lib}\s*{type}\s*(.*)$", RegexOptions.IgnoreCase | RegexOptions.Multiline);
         return match.Groups[1].Value.Trim();
     } catch {

@@ -608,7 +608,7 @@ Task ("externals-linux")
         //     WorkingDirectory = "native-builds/libHarfBuzzSharp_linux",
         // });
         RunProcess ("make", new ProcessSettings {
-            Arguments = $"ARCH={arch} VERSION={GetVersion ("HarfBuzz", "file")}",
+            Arguments = $"ARCH={arch} SONAME_VERSION={GetVersion ("HarfBuzz", "soname")}",
             WorkingDirectory = "native-builds/libHarfBuzzSharp_linux",
         });
 
