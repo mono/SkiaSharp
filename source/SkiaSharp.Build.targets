@@ -127,13 +127,22 @@
       <MDocToolPath>$(MDocPackagePath)\tools\mdoc.exe</MDocToolPath>
       <MDocOutputName>$(TargetName).xml</MDocOutputName>
       <MDocOutputPath>$(TargetDir)$(MDocOutputName)</MDocOutputPath>
+      <MDocIntermediateOutputPath>$(IntermediateOutputPath)mdoc\</MDocIntermediateOutputPath>
       <_ShouldGenerateDocs Condition=" '$(MDocDocumentationDirectory)' != '' and Exists('$(MDocDocumentationDirectory)\index.xml') ">true</_ShouldGenerateDocs>
     </PropertyGroup>
+    <MakeDir Directories="$(MDocIntermediateOutputPath)" />
+    <Exec Condition=" '$(_ShouldGenerateDocs)' == 'true' "
+          WorkingDirectory="$(MDocIntermediateOutputPath)"
+          Command="$(_ManagedExeLauncher) &quot;$(MDocToolPath)&quot; export-msxdoc &quot;$(MDocDocumentationDirectory)&quot;" />
+    <Copy Condition=" Exists('$(MDocIntermediateOutputPath)$(MDocOutputName)') "
+          SourceFiles="$(MDocIntermediateOutputPath)$(MDocOutputName)"
+          DestinationFiles="$(MDocOutputPath)"
+          ContinueOnError="false"
+          Retries="0" />
     <ItemGroup Condition=" '$(_ShouldGenerateDocs)' == 'true' ">
       <FileWrites Include="$(MDocOutputPath)" />
+      <FileWrites Include="$(MDocIntermediateOutputPath)\*" />
     </ItemGroup>
-    <Exec Condition=" '$(_ShouldGenerateDocs)' == 'true' "
-          Command="$(_ManagedExeLauncher) &quot;$(MDocToolPath)&quot; export-msxdoc --out=&quot;$(MDocOutputPath)&quot; &quot;$(MDocDocumentationDirectory)&quot;" />
   </Target>
 
   <!--
