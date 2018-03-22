@@ -1,4 +1,53 @@
 
+void GnNinja (DirectoryPath outDir, string target, string skiaArgs)
+{
+    // generate native skia build files
+    RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn.exe"), new ProcessSettings {
+        Arguments = $"gen out/{outDir} --args={skiaArgs}",
+        WorkingDirectory = SKIA_PATH.FullPath,
+    });
+
+    // build native skia
+    RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja.exe"), new ProcessSettings {
+        Arguments = $"{target} -C out/{outDir}",
+        WorkingDirectory = SKIA_PATH.FullPath,
+    });
+}
+
+void StripSign (FilePath target)
+{
+    target = MakeAbsolute (target);
+    var archive = target;
+    if (target.FullPath.EndsWith (".framework")) {
+        archive = $"{target}/{target.GetFilenameWithoutExtension()}";
+    }
+
+    // strip anything we can
+    RunProcess ("strip", new ProcessSettings {
+        Arguments = $"-x -S {archive}",
+    });
+
+    // re-sign with empty
+    RunProcess ("codesign", new ProcessSettings {
+        Arguments = $"--force --sign - --timestamp=none {target}",
+    });
+}
+
+void RunLipo (DirectoryPath directory, FilePath output, FilePath[] inputs)
+{
+    if (!IsRunningOnMac ()) {
+        throw new InvalidOperationException ("lipo is only available on Unix.");
+    }
+    
+    EnsureDirectoryExists (directory.CombineWithFilePath (output).GetDirectory ());
+
+    var inputString = string.Join(" ", inputs.Select (i => string.Format ("\"{0}\"", i)));
+    RunProcess ("lipo", new ProcessSettings {
+        Arguments = string.Format("-create -output \"{0}\" {1}", output, inputString),
+        WorkingDirectory = directory,
+    });
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXTERNALS - the native C and C++ libraries
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -38,25 +87,15 @@ Task ("externals-windows")
 
     var buildArch = new Action<string, string, string> ((arch, skiaArch, dir) => {
         // generate native skia build files
-        RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn.exe"), new ProcessSettings {
-            Arguments = 
-                $"gen out/win/{arch} " +
-                $"--args=\"" +
-                $"  is_official_build=true skia_enable_tools=false" +
-                $"  target_os=\\\"win\\\" target_cpu=\\\"{skiaArch}\\\"" +
-                $"  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true" +
-                $"  skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false" +
-                $"  extra_cflags=[ \\\"-DSKIA_C_DLL\\\", \\\"/MD\\\", \\\"/EHsc\\\", \\\"/Zi\\\" ]" +
-                $"  extra_ldflags=[ \\\"/DEBUG\\\" ]" +
-                $"\"",
-            WorkingDirectory = SKIA_PATH.FullPath,
-        });
-
-        // build native skia
-        RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja.exe"), new ProcessSettings {
-            Arguments = $"SkiaSharp -C out/win/{arch}",
-            WorkingDirectory = SKIA_PATH.FullPath,
-        });
+        GnNinja ($"win/{arch}", "SkiaSharp",
+            $"\"" +
+            $"  is_official_build=true skia_enable_tools=false" +
+            $"  target_os=\\\"win\\\" target_cpu=\\\"{skiaArch}\\\"" +
+            $"  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true" +
+            $"  skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false" +
+            $"  extra_cflags=[ \\\"-DSKIA_C_DLL\\\", \\\"/MD\\\", \\\"/EHsc\\\", \\\"/Zi\\\" ]" +
+            $"  extra_ldflags=[ \\\"/DEBUG\\\" ]" +
+            $"\"");
 
         // copy libSkiaSharp to output
         var outDir = $"output/native/windows/{dir}";
@@ -95,27 +134,17 @@ Task ("externals-uwp")
 
     var buildArch = new Action<string, string, string> ((arch, skiaArch, dir) => {
         // generate native skia build files
-        RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn.exe"), new ProcessSettings {
-            Arguments = 
-                $"gen out/winrt/{arch} " +
-                $"--args=\"" +
-                $"  is_official_build=true skia_enable_tools=false" +
-                $"  target_os=\\\"winrt\\\" target_cpu=\\\"{skiaArch}\\\"" +
-                $"  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true" +
-                $"  skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false" +
-                $"  extra_cflags=[ " +
-                $"    \\\"-DSKIA_C_DLL\\\", \\\"/MD\\\", \\\"/EHsc\\\", \\\"/Zi\\\", " +
-                $"    \\\"-DWINAPI_FAMILY=WINAPI_FAMILY_APP\\\", \\\"-DSK_BUILD_FOR_WINRT\\\", \\\"-DSK_HAS_DWRITE_1_H\\\", \\\"-DSK_HAS_DWRITE_2_H\\\", \\\"-DNO_GETENV\\\" ]" +
-                $"  extra_ldflags=[ \\\"/APPCONTAINER\\\", \\\"/DEBUG\\\", \\\"WindowsApp.lib\\\" ]" +
-                $"\"",
-            WorkingDirectory = SKIA_PATH.FullPath,
-        });
-
-        // build native skia
-        RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja.exe"), new ProcessSettings {
-            Arguments = $"SkiaSharp -C out/winrt/{arch}",
-            WorkingDirectory = SKIA_PATH.FullPath,
-        });
+        GnNinja ($"winrt/{arch}", "SkiaSharp",
+            $"\"" +
+            $"  is_official_build=true skia_enable_tools=false" +
+            $"  target_os=\\\"winrt\\\" target_cpu=\\\"{skiaArch}\\\"" +
+            $"  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true" +
+            $"  skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false" +
+            $"  extra_cflags=[ " +
+            $"    \\\"-DSKIA_C_DLL\\\", \\\"/MD\\\", \\\"/EHsc\\\", \\\"/Zi\\\", " +
+            $"    \\\"-DWINAPI_FAMILY=WINAPI_FAMILY_APP\\\", \\\"-DSK_BUILD_FOR_WINRT\\\", \\\"-DSK_HAS_DWRITE_1_H\\\", \\\"-DSK_HAS_DWRITE_2_H\\\", \\\"-DNO_GETENV\\\" ]" +
+            $"  extra_ldflags=[ \\\"/APPCONTAINER\\\", \\\"/DEBUG\\\", \\\"WindowsApp.lib\\\" ]" +
+            $"\"");
 
         // copy libSkiaSharp to output
         var outDir = $"output/native/uwp/{dir}";
@@ -167,25 +196,15 @@ Task ("externals-osx")
 
     var buildArch = new Action<string, string> ((arch, skiaArch) => {
         // generate native skia build files
-        RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn"), new ProcessSettings {
-            Arguments = 
-                $"gen out/mac/{arch} " +
-                $"--args='" +
-                $"  is_official_build=true skia_enable_tools=false" +
-                $"  target_os=\"mac\" target_cpu=\"{skiaArch}\"" +
-                $"  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true" +
-                $"  skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false" +
-                $"  extra_cflags=[ \"-DSKIA_C_DLL\", \"-mmacosx-version-min=10.9\" ]" +
-                $"  extra_ldflags=[ \"-Wl,macosx_version_min=10.9\" ]" +
-                $"'",
-            WorkingDirectory = SKIA_PATH.FullPath,
-        });
-
-        // build native skia
-        RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja"), new ProcessSettings {
-            Arguments = $"skia -C out/mac/{arch}",
-            WorkingDirectory = SKIA_PATH.FullPath,
-        });
+        GnNinja ($"mac/{arch}", "skia",
+            $"'" +
+            $"  is_official_build=true skia_enable_tools=false" +
+            $"  target_os=\"mac\" target_cpu=\"{skiaArch}\"" +
+            $"  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true" +
+            $"  skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false" +
+            $"  extra_cflags=[ \"-DSKIA_C_DLL\", \"-mmacosx-version-min=10.9\" ]" +
+            $"  extra_ldflags=[ \"-Wl,macosx_version_min=10.9\" ]" +
+            $"'");
 
         // build libSkiaSharp
         XCodeBuild (new XCodeBuildSettings {
@@ -200,17 +219,7 @@ Task ("externals-osx")
         EnsureDirectoryExists ($"output/native/osx/{arch}");
         CopyDirectory ("native-builds/libSkiaSharp_osx/build/Release/", $"output/native/osx/{arch}");
 
-        // strip anything we can
-        RunProcess ("strip", new ProcessSettings {
-            Arguments = "-x -S libSkiaSharp.dylib",
-            WorkingDirectory = $"output/native/osx/{arch}",
-        });
-
-        // re-sign with empty
-        RunProcess ("codesign", new ProcessSettings {
-            Arguments = "--force --sign - --timestamp=none libSkiaSharp.dylib",
-            WorkingDirectory = $"output/native/osx/{arch}",
-        });
+        StripSign ($"output/native/osx/{arch}/libSkiaSharp.dylib");
     });
 
     buildArch ("i386", "x86");
@@ -238,17 +247,7 @@ Task ("externals-osx")
         EnsureDirectoryExists ($"output/native/osx/{arch}");
         CopyFileToDirectory ("native-builds/libHarfBuzzSharp_osx/build/Release/libHarfBuzzSharp.dylib", $"output/native/osx/{arch}");
 
-        // strip anything we can
-        RunProcess ("strip", new ProcessSettings {
-            Arguments = "-x -S libHarfBuzzSharp.dylib",
-            WorkingDirectory = $"output/native/osx/{arch}",
-        });
-
-        // re-sign with empty
-        RunProcess ("codesign", new ProcessSettings {
-            Arguments = "--force --sign - --timestamp=none libHarfBuzzSharp.dylib",
-            WorkingDirectory = $"output/native/osx/{arch}",
-        });
+        StripSign ($"output/native/osx/{arch}/libHarfBuzzSharp.dylib");
     });
 
     buildHarfBuzzArch ("i386", "x86");
@@ -279,19 +278,15 @@ Task ("externals-ios")
             specifics += ", \"-Wno-over-aligned\"";
         }
 
-        RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn"), new ProcessSettings {
-            Arguments = 
-                $"gen out/ios/{arch} " +
-                $"--args='" +
-                $"  is_official_build=true skia_enable_tools=false" +
-                $"  target_os=\"ios\" target_cpu=\"{skiaArch}\"" +
-                $"  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true" +
-                $"  skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false" +
-                $"  extra_cflags=[ \"-DSKIA_C_DLL\", \"-mios-version-min=8.0\" {specifics} ]" +
-                $"  extra_ldflags=[ \"-Wl,ios_version_min=8.0\" ]" +
-                $"'",
-            WorkingDirectory = SKIA_PATH.FullPath,
-        });
+        GnNinja ($"ios/{arch}", "skia",
+            $"'" +
+            $"  is_official_build=true skia_enable_tools=false" +
+            $"  target_os=\"ios\" target_cpu=\"{skiaArch}\"" +
+            $"  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true" +
+            $"  skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false" +
+            $"  extra_cflags=[ \"-DSKIA_C_DLL\", \"-mios-version-min=8.0\" {specifics} ]" +
+            $"  extra_ldflags=[ \"-Wl,ios_version_min=8.0\" ]" +
+            $"'");
 
         // build native skia
         RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja"), new ProcessSettings {
@@ -312,17 +307,7 @@ Task ("externals-ios")
         EnsureDirectoryExists ($"output/native/ios/{arch}");
         CopyDirectory ($"native-builds/libSkiaSharp_ios/build/Release-{sdk}", $"output/native/ios/{arch}");
 
-        // strip anything we can
-        RunProcess ("strip", new ProcessSettings {
-            Arguments = "-x -S libSkiaSharp",
-            WorkingDirectory = $"output/native/ios/{arch}/libSkiaSharp.framework",
-        });
-
-        // re-sign with empty
-        RunProcess ("codesign", new ProcessSettings {
-            Arguments = "--force --sign - --timestamp=none libSkiaSharp.framework",
-            WorkingDirectory = $"output/native/ios/{arch}",
-        });
+        StripSign ($"output/native/ios/{arch}/libSkiaSharp.framework");
     });
 
     buildArch ("iphonesimulator", "i386", "x86");
@@ -356,11 +341,7 @@ Task ("externals-ios")
         EnsureDirectoryExists ($"output/native/ios/{arch}");
         CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_ios/build/Release-{sdk}/libHarfBuzzSharp.a", $"output/native/ios/{arch}");
 
-        // strip anything we can
-        RunProcess ("strip", new ProcessSettings {
-            Arguments = "-x -S libHarfBuzzSharp.a",
-            WorkingDirectory = $"output/native/ios/{arch}",
-        });
+        StripSign ($"output/native/ios/{arch}/libHarfBuzzSharp.a");
     });
 
     buildHarfBuzzArch ("iphonesimulator", "i386");
@@ -387,25 +368,15 @@ Task ("externals-tvos")
 
     var buildArch = new Action<string, string, string> ((sdk, arch, skiaArch) => {
         // generate native skia build files
-        RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn"), new ProcessSettings {
-            Arguments = 
-                $"gen out/tvos/{arch} " +
-                $"--args='" +
-                $"  is_official_build=true skia_enable_tools=false" +
-                $"  target_os=\"tvos\" target_cpu=\"{skiaArch}\"" +
-                $"  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true" +
-                $"  skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false" +
-                $"  extra_cflags=[ \"-DSK_BUILD_FOR_TVOS\", \"-DSKIA_C_DLL\", \"-mtvos-version-min=9.0\" ]" +
-                $"  extra_ldflags=[ \"-Wl,tvos_version_min=9.0\" ]" +
-                $"'",
-            WorkingDirectory = SKIA_PATH.FullPath,
-        });
-
-        // build native skia
-        RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja"), new ProcessSettings {
-            Arguments = $"skia -C out/tvos/{arch}",
-            WorkingDirectory = SKIA_PATH.FullPath,
-        });
+        GnNinja ($"tvos/{arch}", "skia",
+            $"'" +
+            $"  is_official_build=true skia_enable_tools=false" +
+            $"  target_os=\"tvos\" target_cpu=\"{skiaArch}\"" +
+            $"  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true" +
+            $"  skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false" +
+            $"  extra_cflags=[ \"-DSK_BUILD_FOR_TVOS\", \"-DSKIA_C_DLL\", \"-mtvos-version-min=9.0\" ]" +
+            $"  extra_ldflags=[ \"-Wl,tvos_version_min=9.0\" ]" +
+            $"'");
 
         // build libSkiaSharp
         XCodeBuild (new XCodeBuildSettings {
@@ -420,17 +391,7 @@ Task ("externals-tvos")
         EnsureDirectoryExists ($"output/native/tvos/{arch}");
         CopyDirectory ($"native-builds/libSkiaSharp_tvos/build/Release-{sdk}", $"output/native/tvos/{arch}");
 
-        // strip anything we can
-        RunProcess ("strip", new ProcessSettings {
-            Arguments = "-x -S libSkiaSharp",
-            WorkingDirectory = $"output/native/tvos/{arch}/libSkiaSharp.framework",
-        });
-
-        // re-sign with empty
-        RunProcess ("codesign", new ProcessSettings {
-            Arguments = "--force --sign - --timestamp=none libSkiaSharp.framework",
-            WorkingDirectory = $"output/native/tvos/{arch}",
-        });
+        StripSign ($"output/native/tvos/{arch}/libSkiaSharp.framework");
     });
 
     buildArch ("appletvsimulator", "x86_64", "x64");
@@ -460,11 +421,7 @@ Task ("externals-tvos")
         EnsureDirectoryExists ($"output/native/tvos/{arch}");
         CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_tvos/build/Release-{sdk}/libHarfBuzzSharp.a", $"output/native/tvos/{arch}");
 
-        // strip anything we can
-        RunProcess ("strip", new ProcessSettings {
-            Arguments = "-x -S libHarfBuzzSharp.a",
-            WorkingDirectory = $"output/native/tvos/{arch}",
-        });
+        StripSign ($"output/native/tvos/{arch}/libHarfBuzzSharp.a");
     });
 
     buildHarfBuzzArch ("appletvsimulator", "x86_64");
@@ -494,26 +451,16 @@ Task ("externals-watchos")
         }
 
         // generate native skia build files
-        RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn"), new ProcessSettings {
-            Arguments = 
-                $"gen out/watchos/{arch} " +
-                $"--args='" +
-                $"  is_official_build=true skia_enable_tools=false" +
-                $"  target_os=\"watchos\" target_cpu=\"{skiaArch}\"" +
-                $"  skia_enable_gpu=false" +
-                $"  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true" +
-                $"  skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false" +
-                $"  extra_cflags=[ \"-DSK_BUILD_FOR_WATCHOS\", \"-DSKIA_C_DLL\", \"-mwatchos-version-min=2.0\" {specifics} ]" +
-                $"  extra_ldflags=[ \"-Wl,watchos_version_min=2.0\" ]" +
-                $"'",
-            WorkingDirectory = SKIA_PATH.FullPath,
-        });
-
-        // build native skia
-        RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja"), new ProcessSettings {
-            Arguments = $"skia -C out/watchos/{arch}",
-            WorkingDirectory = SKIA_PATH.FullPath,
-        });
+        GnNinja ($"watchos/{arch}", "skia",
+            $"'" +
+            $"  is_official_build=true skia_enable_tools=false" +
+            $"  target_os=\"watchos\" target_cpu=\"{skiaArch}\"" +
+            $"  skia_enable_gpu=false" +
+            $"  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true" +
+            $"  skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false" +
+            $"  extra_cflags=[ \"-DSK_BUILD_FOR_WATCHOS\", \"-DSKIA_C_DLL\", \"-mwatchos-version-min=2.0\" {specifics} ]" +
+            $"  extra_ldflags=[ \"-Wl,watchos_version_min=2.0\" ]" +
+            $"'");
 
         // build libSkiaSharp
         XCodeBuild (new XCodeBuildSettings {
@@ -528,17 +475,7 @@ Task ("externals-watchos")
         EnsureDirectoryExists ($"output/native/watchos/{arch}");
         CopyDirectory ($"native-builds/libSkiaSharp_watchos/build/Release-{sdk}", $"output/native/watchos/{arch}");
 
-        // strip anything we can
-        RunProcess ("strip", new ProcessSettings {
-            Arguments = "-x -S libSkiaSharp",
-            WorkingDirectory = $"output/native/watchos/{arch}/libSkiaSharp.framework",
-        });
-
-        // re-sign with empty
-        RunProcess ("codesign", new ProcessSettings {
-            Arguments = "--force --sign - --timestamp=none libSkiaSharp.framework",
-            WorkingDirectory = $"output/native/watchos/{arch}",
-        });
+        StripSign ($"output/native/watchos/{arch}/libSkiaSharp.framework");
     });
 
     buildArch ("watchsimulator", "i386", "x86");
@@ -568,11 +505,7 @@ Task ("externals-watchos")
         EnsureDirectoryExists ($"output/native/watchos/{arch}");
         CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_watchos/build/Release-{sdk}/libHarfBuzzSharp.a", $"output/native/watchos/{arch}");
 
-        // strip anything we can
-        RunProcess ("strip", new ProcessSettings {
-            Arguments = "-x -S libHarfBuzzSharp.a",
-            WorkingDirectory = $"output/native/watchos/{arch}",
-        });
+        StripSign ($"output/native/watchos/{arch}/libHarfBuzzSharp.a");
     });
 
     buildHarfBuzzArch ("watchsimulator", "i386");
@@ -597,26 +530,16 @@ Task ("externals-android")
 
     var buildArch = new Action<string, string> ((arch, skiaArch) => {
         // generate native skia build files
-        RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn"), new ProcessSettings {
-            Arguments = 
-                $"gen out/android/{arch} " +
-                $"--args='" +
-                $"  is_official_build=true skia_enable_tools=false" +
-                $"  target_os=\"android\" target_cpu=\"{skiaArch}\"" +
-                $"  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true" +
-                $"  skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false" +
-                $"  extra_cflags=[ \"-DSKIA_C_DLL\" ]" +
-                $"  ndk=\"{ANDROID_NDK_HOME}\"" +
-                $"  ndk_api={(skiaArch == "x64" || skiaArch == "arm64" ? 21 : 9)}" +
-                $"'",
-            WorkingDirectory = SKIA_PATH.FullPath,
-        });
-
-        // build native skia
-        RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja"), new ProcessSettings {
-            Arguments = $"SkiaSharp -C out/android/{arch}",
-            WorkingDirectory = SKIA_PATH.FullPath,
-        });
+        GnNinja ($"android/{arch}", "SkiaSharp",
+            $"'" +
+            $"  is_official_build=true skia_enable_tools=false" +
+            $"  target_os=\"android\" target_cpu=\"{skiaArch}\"" +
+            $"  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true" +
+            $"  skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false" +
+            $"  extra_cflags=[ \"-DSKIA_C_DLL\" ]" +
+            $"  ndk=\"{ANDROID_NDK_HOME}\"" +
+            $"  ndk_api={(skiaArch == "x64" || skiaArch == "arm64" ? 21 : 9)}" +
+            $"'");
 
         var outDir = $"output/native/android/{arch}";
         EnsureDirectoryExists (outDir);
@@ -657,27 +580,17 @@ Task ("externals-linux")
         var soname = GetVersion ("libSkiaSharp", "soname");
 
         // generate native skia build files
-        RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn"), new ProcessSettings {
-            Arguments = 
-                $"gen out/linux/{arch} " +
-                $"--args='" +
-                $"  is_official_build=true skia_enable_tools=false" +
-                $"  target_os=\"linux\" target_cpu=\"{arch}\"" +
-                $"  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true" +
-                $"  skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false" +
-                $"  skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")}" +
-                $"  extra_cflags=[ \"-DSKIA_C_DLL\" ]" +
-                $"  extra_ldflags=[ ]" +
-                $"  linux_soname_version=\"{soname}\"" +
-                $"'",
-            WorkingDirectory = SKIA_PATH.FullPath,
-        });
-
-        // build native skia
-        RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja"), new ProcessSettings {
-            Arguments = $"SkiaSharp -C out/linux/{arch}",
-            WorkingDirectory = SKIA_PATH.FullPath,
-        });
+        GnNinja ($"linux/{arch}", "SkiaSharp",
+            $"'" +
+            $"  is_official_build=true skia_enable_tools=false" +
+            $"  target_os=\"linux\" target_cpu=\"{arch}\"" +
+            $"  skia_use_icu=false skia_use_sfntly=false skia_use_piex=true" +
+            $"  skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false" +
+            $"  skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")}" +
+            $"  extra_cflags=[ \"-DSKIA_C_DLL\" ]" +
+            $"  extra_ldflags=[ ]" +
+            $"  linux_soname_version=\"{soname}\"" +
+            $"'");
 
         // copy libSkiaSharp to output
         var outDir = $"output/native/linux/{arch}";

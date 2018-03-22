@@ -89,7 +89,9 @@ Task ("libs")
 
     // assemble the mdoc docs
     EnsureDirectoryExists ("./output/docs/mdoc/");
-    RunMdocAssemble (DOCS_PATH, "./output/docs/mdoc/SkiaSharp");
+    RunProcess (MDocPath, new ProcessSettings {
+        Arguments = $"assemble --out=\"./output/docs/mdoc/SkiaSharp\" \"{DOCS_PATH}\" --debug",
+    });
     CopyFileToDirectory ("./docs/SkiaSharp.source", "./output/docs/mdoc/");
 });
 
@@ -134,9 +136,30 @@ Task ("tests")
     }
 
     // .NET Core
+    var netCoreTestProj = "./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj";
+    var xdoc = XDocument.Load (netCoreTestProj);
+    var refs = xdoc.Root.Elements ("ItemGroup").Elements ("PackageReference");
+    bool changed = false;
+    foreach (var packageRef in refs) {
+        var include = packageRef.Attribute ("Include").Value;
+        var oldVersion = packageRef.Attribute ("Version").Value;
+        var version = GetVersion (include);
+        if (!string.IsNullOrEmpty (version)) {
+            version += $"-build-{BUILD_NUMBER}";
+            if (version != oldVersion) {
+                packageRef.Attribute ("Version").Value = version;
+                changed = true;
+            }
+        }
+    }
+    if (changed) {
+        xdoc.Save (netCoreTestProj);
+    }
+    CleanDirectories ("./externals/packages/skiasharp*");
+    CleanDirectories ("./externals/packages/harfbuzzsharp*");
     EnsureDirectoryExists ("./output/tests/netcore");
-    RunMSBuildRestore ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.sln");
-    RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj", null);
+    RunMSBuildRestoreLocal (netCoreTestProj);
+    RunNetCoreTests (netCoreTestProj, null);
     CopyFileToDirectory ("./tests/SkiaSharp.NetCore.Tests/TestResult.xml", "./output/tests/netcore");
 });
 
@@ -145,8 +168,6 @@ Task ("tests")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("samples")
-    .IsDependentOn ("libs")
-    .IsDependentOn ("nuget")
     .Does (() => 
 {
     // create the samples archive
@@ -290,7 +311,11 @@ Task ("update-docs")
     }
 
     // generate doc files
-    RunMdocUpdate (assemblies, DOCS_PATH, refs.ToArray ());
+    var refArgs = string.Join (" ", refs.Select (r => $"--lib=\"{r}\""));
+    var assemblyArgs = string.Join (" ", assemblies.Select (a => $"\"{a}\""));
+    RunProcess (MDocPath, new ProcessSettings {
+        Arguments = $"update --preserve --out=\"{DOCS_PATH}\" {refArgs} {assemblyArgs}",
+    });
 
     // process the generated docs
     var docFiles = GetFiles ("./docs/**/*.xml");
@@ -364,9 +389,6 @@ Task ("nuget")
     .IsDependentOn ("libs")
     .Does (() => 
 {
-    EnsureDirectoryExists ("./output/nuspec/");
-    CleanDirectories ("./output/nuspec/");
-
     var platform = "";
     if (!IS_ON_FINAL_CI) {
         if (IsRunningOnWindows ()) {
@@ -383,6 +405,7 @@ Task ("nuget")
             .Elements ("files")
             .Elements ("file");
         foreach (var file in files.ToArray ()) {
+            // remove the files that aren't available
             var nuspecPlatform = file.Attribute ("platform");
             if (nuspecPlatform != null) {
                 if (!string.IsNullOrEmpty (platform)) {
@@ -400,6 +423,8 @@ Task ("nuget")
                 }
                 nuspecPlatform.Remove ();
             }
+            // copy the src arrtibute and set it for the target
+            file.Add (new XAttribute ("target", file.Attribute ("src").Value));
         }
     });
 
@@ -428,7 +453,7 @@ Task ("nuget")
             var depId = package.Attribute ("id");
             var depVersion = package.Attribute ("version");
             if (depId != null && depVersion != null) {
-                var v = GetVersion (id.Value);
+                var v = GetVersion (depId.Value);
                 if (!string.IsNullOrEmpty (v)) {
                     depVersion.Value = v + suffix;
                 }
@@ -443,14 +468,21 @@ Task ("nuget")
 
         removePlatforms (xdoc);
 
+        var outDir = $"./output/{id.Value}/nuget";
+        DeleteFiles ($"{outDir}/*.nuspec");
+
         setVersion (xdoc, "");
-        xdoc.Save ($"./output/nuspec/{id.Value}.nuspec");
+        xdoc.Save ($"{outDir}/{id.Value}.nuspec");
 
         setVersion (xdoc, $"-build-{BUILD_NUMBER}");
-        xdoc.Save ($"./output/nuspec/{id.Value}.prerelease.nuspec");
+        xdoc.Save ($"{outDir}/{id.Value}.prerelease.nuspec");
+
+        // the legal
+        CopyFile ("./LICENSE.txt", $"{outDir}/LICENSE.txt");
+        CopyFile ("./External-Dependency-Info.txt", $"{outDir}/THIRD-PARTY-NOTICES.txt");
     }
 
-    foreach (var nuspec in GetFiles ("./output/nuspec/*.nuspec")) {
+    foreach (var nuspec in GetFiles ("./output/*/nuget/*.nuspec")) {
         PackageNuGet (nuspec, "./output/");
     }
 });
@@ -546,6 +578,9 @@ if (IS_ON_CI) {
     Information ("Detected that we are {0} on CI.", "NOT");
 }
 
-ListEnvironmentVariables ();
+Information ("Environment Variables:");
+foreach (var envVar in EnvironmentVariables ()) {
+    Information ("\tKey: {0}\tValue: \"{1}\"", envVar.Key, envVar.Value);
+}
 
 RunTarget (TARGET);

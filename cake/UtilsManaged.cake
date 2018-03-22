@@ -41,6 +41,26 @@ var RunMSBuildRestore = new Action<FilePath> ((solution) =>
     });
 });
 
+var RunMSBuildRestoreLocal = new Action<FilePath> ((solution) =>
+{
+    var dir = solution.GetDirectory ();
+    MSBuild (solution, c => { 
+        c.Configuration = "Release"; 
+        c.Targets.Clear();
+        c.Targets.Add("Restore");
+        c.Verbosity = VERBOSITY;
+        c.Properties ["RestoreNoCache"] = new [] { "true" };
+        c.Properties ["RestorePackagesPath"] = new [] { "./externals/packages" };
+        c.PlatformTarget = PlatformTarget.MSIL;
+        c.MSBuildPlatform = MSBuildPlatform.x86;
+        if (!string.IsNullOrEmpty (MSBuildToolPath)) {
+            c.ToolPath = MSBuildToolPath;
+        }
+        // c.Properties ["RestoreSources"] = NuGetSources;
+        c.ArgumentCustomization = args => args.Append ($"/p:RestoreSources=\"{string.Join (";", NuGetSources)}\"");
+    });
+});
+
 var RunMSBuild = new Action<FilePath> ((solution) =>
 {
     RunMSBuildWithPlatform (solution, "\"Any CPU\"");
@@ -94,25 +114,6 @@ var RunNetCoreTests = new Action<FilePath, string[]> ((testAssembly, skip) =>
     }
     DotNetCoreTool(testAssembly, "xunit", $"-verbose -parallel none -nunit \"TestResult.xml\" {skipString}", new DotNetCoreToolSettings {
         WorkingDirectory = dir,
-    });
-});
-
-var RunMdocUpdate = new Action<FilePath[], DirectoryPath, DirectoryPath[]> ((assemblies, docsRoot, refs) =>
-{
-    var refArgs = string.Empty;
-    if (refs != null) {
-        refArgs = string.Join (" ", refs.Select (r => $"--lib=\"{r}\""));
-    }
-    var assemblyArgs = string.Join (" ", assemblies.Select (a => $"\"{a}\""));
-    RunProcess (MDocPath, new ProcessSettings {
-        Arguments = $"update --preserve --out=\"{docsRoot}\" {refArgs} {assemblyArgs}",
-    });
-});
-
-var RunMdocAssemble = new Action<DirectoryPath, FilePath> ((docsRoot, output) =>
-{
-    RunProcess (MDocPath, new ProcessSettings {
-        Arguments = $"assemble --out=\"{output}\" \"{docsRoot}\" --debug",
     });
 });
 
