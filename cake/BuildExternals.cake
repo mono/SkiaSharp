@@ -1,14 +1,15 @@
 
 void GnNinja (DirectoryPath outDir, string target, string skiaArgs)
 {
+    var exe = IsRunningOnWindows () ? ".exe" : "";
     // generate native skia build files
-    RunProcess (SKIA_PATH.CombineWithFilePath("bin/gn.exe"), new ProcessSettings {
+    RunProcess (SKIA_PATH.CombineWithFilePath($"bin/gn{exe}"), new ProcessSettings {
         Arguments = $"gen out/{outDir} --args={skiaArgs}",
         WorkingDirectory = SKIA_PATH.FullPath,
     });
 
     // build native skia
-    RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja.exe"), new ProcessSettings {
+    RunProcess (DEPOT_PATH.CombineWithFilePath ($"ninja{exe}"), new ProcessSettings {
         Arguments = $"{target} -C out/{outDir}",
         WorkingDirectory = SKIA_PATH.FullPath,
     });
