@@ -16,7 +16,7 @@ using SharpCompress.Readers;
 var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")));
 var VERBOSITY = (Verbosity) Enum.Parse (typeof(Verbosity), Argument ("v", Argument ("verbosity", Argument ("Verbosity", "Verbose"))), true);
 
-var NuGetSources = new [] { MakeAbsolute (Directory ("./output")).FullPath, "https://api.nuget.org/v3/index.json" };
+var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NugetToolPath = GetToolPath ("nuget.exe");
 var CakeToolPath = GetToolPath ("Cake/Cake.exe");
 var MDocPath = GetToolPath ("mdoc/tools/mdoc.exe");
@@ -481,9 +481,9 @@ Task ("nuget")
         CopyFile ("./External-Dependency-Info.txt", $"{outDir}/THIRD-PARTY-NOTICES.txt");
     }
 
-    DeleteFiles ("output/*.nupkg");
+    DeleteFiles ("output/nugets/*.nupkg");
     foreach (var nuspec in GetFiles ("./output/*/nuget/*.nuspec")) {
-        PackageNuGet (nuspec, "./output/");
+        PackageNuGet (nuspec, "./output/nugets/");
     }
 });
 
