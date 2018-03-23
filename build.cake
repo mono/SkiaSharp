@@ -301,7 +301,6 @@ Task ("update-docs")
         "./output/SkiaSharp.HarfBuzz/nuget/lib/netstandard1.3/SkiaSharp.HarfBuzz.dll",
     };
 
-
     // print out the assemblies
     foreach (var r in refs) {
         Information ("Reference Directory: {0}", r);
@@ -482,6 +481,7 @@ Task ("nuget")
         CopyFile ("./External-Dependency-Info.txt", $"{outDir}/THIRD-PARTY-NOTICES.txt");
     }
 
+    DeleteFiles ("output/*.nupkg");
     foreach (var nuspec in GetFiles ("./output/*/nuget/*.nuspec")) {
         PackageNuGet (nuspec, "./output/");
     }

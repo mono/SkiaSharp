@@ -146,6 +146,7 @@ var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath> ((samplesDirPath
     };
     DeleteDirectories (GetDirectories ($"{workingDir}/**/bin"), settings);
     DeleteDirectories (GetDirectories ($"{workingDir}/**/obj"), settings);
+    DeleteDirectories (GetDirectories ($"{workingDir}/**/AppPackages"), settings);
 
     // make sure the paths are in the correct format for comparison
     var dpc = System.IO.Path.DirectorySeparatorChar;
@@ -272,4 +273,5 @@ var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath> ((samplesDirPath
 
     // finally create the zip
     Zip (workingDir, outputDirPath.CombineWithFilePath ("samples.zip"));
+    CleanDirectory (workingDir);
 });
