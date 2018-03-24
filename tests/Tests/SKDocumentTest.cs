@@ -49,7 +49,8 @@ namespace SkiaSharp.Tests
 		{
 			var path = Path.Combine(PathToImages, Guid.NewGuid().ToString("D") + ".xps");
 
-			using (var doc = SKDocument.CreatePdf(path))
+			using (new SKAutoCoInitialize())
+			using (var doc = SKDocument.CreateXps(path))
 			{
 				if (IsWindows)
 				{
@@ -92,6 +93,7 @@ namespace SkiaSharp.Tests
 			using (var stream = new MemoryStream())
 			using (var managed = new SKManagedWStream(stream, false))
 			{
+				using (new SKAutoCoInitialize())
 				using (var doc = SKDocument.CreateXps(managed))
 				{
 					if (IsWindows)
