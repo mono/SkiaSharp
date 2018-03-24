@@ -60,5 +60,22 @@ namespace SkiaSharp.Tests
 				Assert.Equal(Marshal.ReadInt64(pix1.GetPixels()), Marshal.ReadInt64(pix2.GetPixels()));
 			}
 		}
+
+		[SkippableFact]
+		public void SwizzleSwapsRedAndBlue()
+		{
+			var info = new SKImageInfo(10, 10);
+
+			using (var bmp = new SKBitmap(info))
+			{
+				bmp.Erase(SKColors.Red);
+
+				Assert.Equal(SKColors.Red, bmp.Pixels[0]);
+
+				SKSwizzle.SwapRedBlue(bmp.GetPixels(out var length), info.Width * info.Height);
+
+				Assert.Equal(SKColors.Blue, bmp.Pixels[0]);
+			}
+		}
 	}
 }
