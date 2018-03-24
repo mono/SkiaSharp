@@ -63,7 +63,10 @@ namespace SkiaSharp
 
 			var stream = SKFileWStream.OpenStream (path);
 			var doc = CreateXps (stream, dpi);
-			doc.SetDisposeChild (stream);
+			if (doc != null)
+				doc.SetDisposeChild (stream);
+			else
+				stream.Dispose();
 			return doc;
 		}
 
@@ -85,7 +88,10 @@ namespace SkiaSharp
 
 			var stream = SKFileWStream.OpenStream (path);
 			var doc = CreatePdf (stream, dpi);
-			doc.SetDisposeChild (stream);
+			if (doc != null)
+				doc.SetDisposeChild (stream);
+			else
+				stream.Dispose();
 			return doc;
 		}
 
