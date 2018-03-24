@@ -72,7 +72,7 @@ namespace SkiaSharp.Tests
 
 				Assert.Equal(SKColors.Red, bmp.Pixels[0]);
 
-				SKSwizzle.SwapRedBlue(bmp.GetPixels(out var length), (int)length);
+				SKSwizzle.SwapRedBlue(bmp.GetPixels(out var length), info.Width * info.Height);
 
 				Assert.Equal(SKColors.Blue, bmp.Pixels[0]);
 			}
