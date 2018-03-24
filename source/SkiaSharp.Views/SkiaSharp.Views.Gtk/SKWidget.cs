@@ -43,7 +43,7 @@ namespace SkiaSharp.Views.Gtk
 				{
 					using (var pixmap = surface.PeekPixels())
 					{
-						SKSwizzle.SwapRedBlue(pixmap.GetPixels(), pixmap.GetPixels(), info.BytesSize);
+						SKSwizzle.SwapRedBlue(pixmap.GetPixels(), info.Width * info.Height);
 					}
 				}
 			}
