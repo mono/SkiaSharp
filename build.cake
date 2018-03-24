@@ -145,7 +145,6 @@ Task ("tests")
         var oldVersion = packageRef.Attribute ("Version").Value;
         var version = GetVersion (include);
         if (!string.IsNullOrEmpty (version)) {
-            version += $"-build-{BUILD_NUMBER}";
             if (version != oldVersion) {
                 packageRef.Attribute ("Version").Value = version;
                 changed = true;
