@@ -1,6 +1,5 @@
 ARCH ?= x64
-VERSION ?= 1.0.0.0
-SUPPORT_GPU ?= 1
+SONAME_VERSION ?= 0.0.0
 CC ?= gcc
 CXX ?= g++
 LDFLAGS += 
@@ -8,16 +7,12 @@ LDFLAGS +=
 noop = 
 space = ${noop} ${noop}
 
-version_parts = $(subst ., ,${VERSION})
-soname_version = $(word 2, ${version_parts})
-file_version = $(subst ${space},.,$(wordlist 1, 3, ${version_parts}))
-
 src_root = ../../externals/harfbuzz/harfbuzz/src
 obj_root = obj
 bin_root = bin
 objarch_root = ${obj_root}/${ARCH}
 target_name = libHarfBuzzSharp.so
-target = ${bin_root}/${ARCH}/${target_name}.${file_version}
+target = ${bin_root}/${ARCH}/${target_name}.${SONAME_VERSION}
 
 library_dirs = 
 include_dirs = \
@@ -105,7 +100,7 @@ ${target}: ${objs}
 		${defines} ${includes} ${arch_cflags} ${cflags_c} ${cflags_cc}               \
 		-Wl,--start-group ${objarch_root}/*.o ${objarch_root}/**/*.o  ${library_paths} -Wl,--end-group   \
 		${ldflags} -Wl,--gc-sections -Wl,--no-undefined                              \
-		-Wl,-soname,libHarfBuzzSharp.so.${soname_version}
+		-Wl,-soname,libHarfBuzzSharp.so.${SONAME_VERSION}
 
 all: ${target}
 

@@ -5,7 +5,7 @@
     <!-- package -->
     <id>SkiaSharp</id>
     <title>SkiaSharp</title>
-    <version>1.60.0</version>
+    <version>1.0.0</version>
     <description>
 SkiaSharp is a cross-platform 2D graphics API for .NET platforms based on Google's Skia Graphics Library.
 It provides a comprehensive 2D API that can be used across mobile, server and desktop models to render images.
@@ -31,51 +31,47 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
   <files>
 
     <!-- SkiaSharp.dll -->
-    <file src="output/desktop/SkiaSharp.dll" target="lib/net45" />
-    <file src="output/desktop/SkiaSharp.dll.config" target="lib/net45" />
-    <file src="output/docs/msxml/SkiaSharp.xml" target="lib/net45" />
-    <file src="output/netstandard/SkiaSharp.dll" target="lib/netstandard1.3" />
-    <file src="output/docs/msxml/SkiaSharp.xml" target="lib/netstandard1.3" />
-    <file src="output/portable/SkiaSharp.dll" target="lib/portable-net45+win8+wpa81+wp8" />
-    <file src="output/docs/msxml/SkiaSharp.xml" target="lib/portable-net45+win8+wpa81+wp8" />
-    <file platform="macos" src="output/android/SkiaSharp.dll" target="lib/MonoAndroid" />
-    <file platform="macos" src="output/docs/msxml/SkiaSharp.xml" target="lib/MonoAndroid" />
-    <file platform="macos" src="output/ios/SkiaSharp.dll" target="lib/XamariniOS" />
-    <file platform="macos" src="output/docs/msxml/SkiaSharp.xml" target="lib/XamariniOS" />
-    <file platform="macos" src="output/tvos/SkiaSharp.dll" target="lib/XamarintvOS" />
-    <file platform="macos" src="output/docs/msxml/SkiaSharp.xml" target="lib/XamarintvOS" />
-    <file platform="macos" src="output/watchos/SkiaSharp.dll" target="lib/XamarinwatchOS" />
-    <file platform="macos" src="output/docs/msxml/SkiaSharp.xml" target="lib/XamarinwatchOS" />
-    <file platform="macos" src="output/osx/SkiaSharp.dll" target="lib/XamarinMac" />
-    <file platform="macos" src="output/docs/msxml/SkiaSharp.xml" target="lib/XamarinMac" />
-    <file platform="windows" src="output/uwp/SkiaSharp.dll" target="lib/uap10.0" />
-    <file platform="windows" src="output/docs/msxml/SkiaSharp.xml" target="lib/uap10.0" />
+    <file src="lib/net45/SkiaSharp.dll" />
+    <file src="lib/net45/SkiaSharp.xml" />
+    <file src="lib/netstandard1.3/SkiaSharp.dll" />
+    <file src="lib/netstandard1.3/SkiaSharp.xml" />
+    <file platform="macos" src="lib/MonoAndroid/SkiaSharp.dll" />
+    <file platform="macos" src="lib/MonoAndroid/SkiaSharp.xml" />
+    <file platform="macos" src="lib/Xamarin.iOS/SkiaSharp.dll" />
+    <file platform="macos" src="lib/Xamarin.iOS/SkiaSharp.xml" />
+    <file platform="macos" src="lib/Xamarin.TVOS/SkiaSharp.dll" />
+    <file platform="macos" src="lib/Xamarin.TVOS/SkiaSharp.xml" />
+    <file platform="macos" src="lib/Xamarin.WatchOS/SkiaSharp.dll" />
+    <file platform="macos" src="lib/Xamarin.WatchOS/SkiaSharp.xml" />
+    <file platform="macos" src="lib/Xamarin.Mac20/SkiaSharp.dll" />
+    <file platform="macos" src="lib/Xamarin.Mac20/SkiaSharp.xml" />
+    <file platform="windows" src="lib/uap10.0/SkiaSharp.dll" />
+    <file platform="windows" src="lib/uap10.0/SkiaSharp.xml" />
 
     <!-- the build bits -->
-    <file src="output/desktop/SkiaSharp.Desktop.targets" target="build/net45/SkiaSharp.targets" />
-    <file src="output/desktop/SkiaSharp.dll.config" target="build/net45/SkiaSharp.dll.config" />
+    <file src="build/net45/SkiaSharp.targets" />
 
     <!-- libSkiaSharp.dll and other native files -->
-    <file platform="windows" src="output/native/windows/x64/libSkiaSharp.dll" target="runtimes/win7-x64/native/libSkiaSharp.dll" />
-    <file platform="windows" src="output/native/windows/x86/libSkiaSharp.dll" target="runtimes/win7-x86/native/libSkiaSharp.dll" />
-    <file platform="macos" src="output/native/osx/libSkiaSharp.dylib" target="runtimes/osx/native/libSkiaSharp.dylib" />
-    <file platform="windows" src="output/native/uwp/x64/libSkiaSharp.dll" target="runtimes/win10-x64/nativeassets/uap10.0/libSkiaSharp.dll" />
-    <file platform="windows" src="output/native/uwp/x86/libSkiaSharp.dll" target="runtimes/win10-x86/nativeassets/uap10.0/libSkiaSharp.dll" />
-    <file platform="windows" src="output/native/uwp/arm/libSkiaSharp.dll" target="runtimes/win10-arm/nativeassets/uap10.0/libSkiaSharp.dll" />
-    <file platform="windows" src="output/native/uwp/x64/libGLESv2.dll" target="runtimes/win10-x64/nativeassets/uap10.0/libGLESv2.dll" />
-    <file platform="windows" src="output/native/uwp/x86/libGLESv2.dll" target="runtimes/win10-x86/nativeassets/uap10.0/libGLESv2.dll" />
-    <file platform="windows" src="output/native/uwp/arm/libGLESv2.dll" target="runtimes/win10-arm/nativeassets/uap10.0/libGLESv2.dll" />
-    <file platform="windows" src="output/native/uwp/x64/libEGL.dll" target="runtimes/win10-x64/nativeassets/uap10.0/libEGL.dll" />
-    <file platform="windows" src="output/native/uwp/x86/libEGL.dll" target="runtimes/win10-x86/nativeassets/uap10.0/libEGL.dll" />
-    <file platform="windows" src="output/native/uwp/arm/libEGL.dll" target="runtimes/win10-arm/nativeassets/uap10.0/libEGL.dll" />
-    <file platform="linux" src="output/native/linux/x64/libSkiaSharp.so" target="runtimes/linux-x64/native/libSkiaSharp.so" />
+    <file platform="windows" src="runtimes/win7-x64/native/libSkiaSharp.dll" />
+    <file platform="windows" src="runtimes/win7-x86/native/libSkiaSharp.dll" />
+    <file platform="macos" src="runtimes/osx/native/libSkiaSharp.dylib" />
+    <file platform="windows" src="runtimes/win10-x64/nativeassets/uap10.0/libSkiaSharp.dll" />
+    <file platform="windows" src="runtimes/win10-x86/nativeassets/uap10.0/libSkiaSharp.dll" />
+    <file platform="windows" src="runtimes/win10-arm/nativeassets/uap10.0/libSkiaSharp.dll" />
+    <file platform="windows" src="runtimes/win10-x64/nativeassets/uap10.0/libGLESv2.dll" />
+    <file platform="windows" src="runtimes/win10-x86/nativeassets/uap10.0/libGLESv2.dll" />
+    <file platform="windows" src="runtimes/win10-arm/nativeassets/uap10.0/libGLESv2.dll" />
+    <file platform="windows" src="runtimes/win10-x64/nativeassets/uap10.0/libEGL.dll" />
+    <file platform="windows" src="runtimes/win10-x86/nativeassets/uap10.0/libEGL.dll" />
+    <file platform="windows" src="runtimes/win10-arm/nativeassets/uap10.0/libEGL.dll" />
+    <file platform="linux" src="runtimes/linux-x64/native/libSkiaSharp.so" />
 
     <!-- Workbooks integration -->
-    <file src="output/interactive/SkiaSharp.Workbooks.dll" target="xamarin.interactive/SkiaSharp.Workbooks.dll" />
+    <file src="xamarin.interactive/SkiaSharp.Workbooks.dll" />
 
     <!-- legal -->
-    <file src="LICENSE.md" target="LICENSE.md" />
-    <file src="External-Dependency-Info.txt" target="THIRD-PARTY-NOTICES.txt" /> 
+    <file src="LICENSE.txt" />
+    <file src="THIRD-PARTY-NOTICES.txt" /> 
 
   </files>
 </package>

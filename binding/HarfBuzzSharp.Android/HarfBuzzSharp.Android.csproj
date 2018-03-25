@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\source\SkiaSharp.Build.props" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -14,8 +15,8 @@
     <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
     <AndroidUseLatestPlatformSdk>False</AndroidUseLatestPlatformSdk>
     <TargetFrameworkVersion>v2.3</TargetFrameworkVersion>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\mono.snk</AssemblyOriginatorKeyFile>
+    <PackagingGroup>HarfBuzzSharp</PackagingGroup>
+    <PackagingPlatform>MonoAndroid</PackagingPlatform>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -30,7 +31,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release</OutputPath>
     <DefineConstants>HARFBUZZ</DefineConstants>
@@ -47,23 +49,27 @@
     <Reference Include="Mono.Android" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="mdoc" Version="5.6.0" PrivateAssets="All" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\arm64-v8a\libHarfBuzzSharp.so">
+    <EmbeddedNativeLibrary Include="..\..\output\native\android\arm64-v8a\libHarfBuzzSharp.so">
       <Link>libs\arm64-v8a\libHarfBuzzSharp.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\armeabi-v7a\libHarfBuzzSharp.so">
+    <EmbeddedNativeLibrary Include="..\..\output\native\android\armeabi-v7a\libHarfBuzzSharp.so">
       <Link>libs\armeabi-v7a\libHarfBuzzSharp.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\x86\libHarfBuzzSharp.so">
+    <EmbeddedNativeLibrary Include="..\..\output\native\android\x86\libHarfBuzzSharp.so">
       <Link>libs\x86\libHarfBuzzSharp.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\x86_64\libHarfBuzzSharp.so">
+    <EmbeddedNativeLibrary Include="..\..\output\native\android\x86_64\libHarfBuzzSharp.so">
       <Link>libs\x86_64\libHarfBuzzSharp.so</Link>
     </EmbeddedNativeLibrary>
   </ItemGroup>
   <Import Project="..\HarfBuzzSharp.Shared\HarfBuzzSharp.Shared.projitems" Label="Shared" />
   <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" />
+  <Import Project="..\..\source\SkiaSharp.Build.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
 </Project>

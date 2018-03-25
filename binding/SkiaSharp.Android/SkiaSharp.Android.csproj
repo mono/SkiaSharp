@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\source\SkiaSharp.Build.props" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -14,8 +15,8 @@
     <AndroidUseLatestPlatformSdk>False</AndroidUseLatestPlatformSdk>
     <TargetFrameworkVersion>v2.3</TargetFrameworkVersion>
     <AssemblyName>SkiaSharp</AssemblyName>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\mono.snk</AssemblyOriginatorKeyFile>
+    <PackagingGroup>SkiaSharp</PackagingGroup>
+    <PackagingPlatform>MonoAndroid</PackagingPlatform>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -30,7 +31,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>
@@ -46,6 +48,9 @@
     <Reference Include="Mono.Android" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="mdoc" Version="5.6.0" PrivateAssets="All" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="..\Binding\Binding.projitems" Label="Shared" />
@@ -53,17 +58,18 @@
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <ItemGroup />
   <ItemGroup>
-    <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\arm64-v8a\libSkiaSharp.so">
+    <EmbeddedNativeLibrary Include="..\..\output\native\android\arm64-v8a\libSkiaSharp.so">
       <Link>libs\arm64-v8a\libSkiaSharp.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\armeabi-v7a\libSkiaSharp.so">
+    <EmbeddedNativeLibrary Include="..\..\output\native\android\armeabi-v7a\libSkiaSharp.so">
       <Link>libs\armeabi-v7a\libSkiaSharp.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\x86\libSkiaSharp.so">
+    <EmbeddedNativeLibrary Include="..\..\output\native\android\x86\libSkiaSharp.so">
       <Link>libs\x86\libSkiaSharp.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="..\..\native-builds\lib\android\x86_64\libSkiaSharp.so">
+    <EmbeddedNativeLibrary Include="..\..\output\native\android\x86_64\libSkiaSharp.so">
       <Link>libs\x86_64\libSkiaSharp.so</Link>
     </EmbeddedNativeLibrary>
   </ItemGroup>
+  <Import Project="..\..\source\SkiaSharp.Build.targets" />
 </Project>
