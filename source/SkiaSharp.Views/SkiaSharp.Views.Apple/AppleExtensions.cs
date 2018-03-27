@@ -69,11 +69,11 @@ namespace SkiaSharp.Views.Mac
 
 		public static CGColor ToCGColor(this SKColor color)
 		{
-#if __TVOS__ || __WATCHOS__
+#if __TVOS__ || __WATCHOS__ || __IOS__
 			// see https://bugzilla.xamarin.com/show_bug.cgi?id=44507
 			return UIColor.FromRGBA(color.Red, color.Green, color.Blue, color.Alpha).CGColor;
 #else
-			return new CGColor(color.Red / 255f, color.Green / 255f, color.Blue / 255f, color.Alpha / 255f);
+			return UIColor.FromRgba(color.Red, color.Green, color.Blue, color.Alpha).CGColor;
 #endif
 		}
 
