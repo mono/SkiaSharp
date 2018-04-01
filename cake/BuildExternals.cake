@@ -49,6 +49,30 @@ void RunLipo (DirectoryPath directory, FilePath output, FilePath[] inputs)
     });
 }
 
+var BuildingForTizen = DirectoryExists (TIZEN_STUDIO_HOME) && IsRunningOnLinux ();
+
+var ReplaceConfigH = new Action<FilePath> ((newConfigH) => {
+    var oldConfigH = HARFBUZZ_PATH.CombineWithFilePath ("harfbuzz/config.h");
+
+    if (FileExists (oldConfigH)) {
+        MoveFile (oldConfigH, oldConfigH + ".bak");
+    }
+
+    CopyFile (newConfigH, oldConfigH);
+});
+
+var RestoreConfigH = new Action (() => {
+    var configH = HARFBUZZ_PATH.CombineWithFilePath ("harfbuzz/config.h");
+    var backupConfigH = configH + ".bak";
+
+    if (FileExists (configH)) {
+        DeleteFile (configH);
+    }
+
+    if (FileExists (backupConfigH)) {
+        MoveFile (backupConfigH, configH);
+    }
+});
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXTERNALS - the native C and C++ libraries
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,6 +98,7 @@ Task ("externals-native")
     .IsDependentOn ("externals-watchos")
     .IsDependentOn ("externals-android")
     .IsDependentOn ("externals-linux")
+    .IsDependentOn ("externals-tizen")
     .Does (() => 
 {
 });
@@ -625,6 +650,70 @@ Task ("externals-linux")
     }
 });
 
+Task ("externals-tizen")
+    .IsDependentOn ("externals-init")
+    .WithCriteria (BuildingForTizen)
+    .Does (() =>
+{
+	var tizen = MakeAbsolute (Directory (TIZEN_STUDIO_HOME)).CombineWithFilePath ("tools/ide/bin/tizen").FullPath;
+
+	var buildArch = new Action<string, string> ((arch, skiaArch) => {
+
+        // generate native skia build files
+        GnNinja ($"tizen/{arch}", "skia",
+            $"'" +
+            $"  is_official_build=true  skia_enable_tools=false" +
+            $"  target_os=\"linux\" target_cpu=\"{skiaArch}\"" +
+            $"  building_for_tizen=true" +
+            $"  skia_enable_gpu=true" +
+            $"  skia_use_icu=false" +
+            $"  skia_use_sfntly=false" +
+            $"  skia_use_piex=true" +
+            $"  skia_use_system_expat=false" +
+            $"  skia_use_system_freetype2=true" +
+            $"  skia_use_system_libjpeg_turbo=false" +
+            $"  skia_use_system_libpng=false" +
+            $"  skia_use_system_libwebp=false" +
+            $"  skia_use_system_zlib=true" +
+            $"  extra_cflags=[ \"-DSKIA_C_DLL\",  \"-DOS_TIZEN\" ]" +
+            $"  ncli=\"{TIZEN_STUDIO_HOME}\"" +
+            $"  ncli_version=\"4.0\"" +
+            $"'");
+
+        // build libSkiaSharp
+        RunProcess (tizen, new ProcessSettings {
+            Arguments = "build-native -a " + skiaArch + " -c llvm -C Release" ,
+            WorkingDirectory = ROOT_PATH.Combine ("native-builds/libSkiaSharp_tizen").FullPath,
+        });
+
+        // copy libSkiaSharp to output
+        var outDir = $"output/native/tizen/{arch}";
+        CopyFile("native-builds/libSkiaSharp_tizen/Release/libskiasharp.so", "native-builds/libSkiaSharp_tizen/Release/libSkiaSharp.so");
+        var libSkiaSharp = "native-builds/libSkiaSharp_tizen/Release/libSkiaSharp.so";
+        EnsureDirectoryExists (outDir);
+        CopyFile (libSkiaSharp, $"{outDir}/libSkiaSharp.so");
+    });
+
+    var buildHarfBuzzArch = new Action<string, string> ((arch, skiaArch) => {
+	var build_path = ROOT_PATH.Combine ("native-builds/libHarfBuzzSharp_tizen").FullPath;
+        // build libHarfBuzzSharp
+        RunProcess(tizen, new ProcessSettings {
+            Arguments = "build-native -a " + skiaArch + " -c llvm -C Release",
+            WorkingDirectory = build_path,
+        });
+
+        // copy libHarfBuzzSharp to output
+        EnsureDirectoryExists ($"output/native/tizen/{arch}");
+        var so = "native-builds/libHarfBuzzSharp_tizen/Release/libharfbuzzsharp.so";
+        CopyFileToDirectory(so, $"output/native/tizen/{arch}");
+        CopyFile  (so, $"output/native/tizen/{arch}/libHarfBuzzSharp.so");
+    });
+
+    buildArch ("armel", "arm");
+    buildArch ("i386", "x86");
+    buildHarfBuzzArch ("armel", "arm");
+    buildHarfBuzzArch ("i386", "x86");
+});
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXTERNALS DOWNLOAD - download any externals that are needed
 ////////////////////////////////////////////////////////////////////////////////////////////////////

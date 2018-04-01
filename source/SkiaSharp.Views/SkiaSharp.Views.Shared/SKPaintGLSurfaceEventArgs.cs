@@ -13,6 +13,8 @@ namespace SkiaSharp.Views.Desktop
 namespace SkiaSharp.Views.UWP
 #elif __MACOS__
 namespace SkiaSharp.Views.Mac
+#elif TIZEN4_0
+namespace SkiaSharp.Views.Tizen
 #endif
 {
     public class SKPaintGLSurfaceEventArgs : EventArgs

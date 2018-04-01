@@ -14,6 +14,8 @@ namespace SkiaSharp.Views.Desktop
 namespace SkiaSharp.Views.Mac
 #elif WINDOWS_UWP
 namespace SkiaSharp.Views.UWP
+#elif TIZEN4_0
+namespace SkiaSharp.Views.Tizen
 #endif
 {
 	internal static class SKGLDrawable

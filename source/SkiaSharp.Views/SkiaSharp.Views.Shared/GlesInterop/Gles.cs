@@ -15,6 +15,8 @@ namespace SkiaSharp.Views.GlesInterop
 		private const string libGLESv2 = "libGLESv2.so";
 #elif WINDOWS_UWP
 		private const string libGLESv2 = "libGLESv2.dll";
+#elif TIZEN4_0
+		private const string libGLESv2 = "libGLESv2.so";
 #endif
 
 		public const int GL_FRAMEBUFFER_BINDING = 0x8CA6;

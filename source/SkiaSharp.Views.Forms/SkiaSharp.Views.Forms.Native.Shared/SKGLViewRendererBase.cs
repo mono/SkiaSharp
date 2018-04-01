@@ -21,6 +21,11 @@ using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.UWP.SKPaintGLSurfaceEven
 using Xamarin.Forms.Platform.MacOS;
 using SKNativeView = SkiaSharp.Views.Mac.SKGLView;
 using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.Mac.SKPaintGLSurfaceEventArgs;
+#elif TIZEN4_0
+using Xamarin.Forms.Platform.Tizen;
+using SKNativeView = SkiaSharp.Views.Tizen.SKGLSurfaceView;
+using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.Tizen.SKPaintGLSurfaceEventArgs;
+using TForms = Xamarin.Forms.Platform.Tizen.Forms;
 #endif
 
 namespace SkiaSharp.Views.Forms
@@ -65,6 +70,10 @@ namespace SkiaSharp.Views.Forms
 			touchHandler = new SKTouchHandler(
 				args => ((ISKGLViewController)Element).OnTouch(args),
 				coord => (float)(coord * Control.ContentsScale));
+#elif TIZEN4_0
+			touchHandler = new SKTouchHandler(
+				args => ((ISKGLViewController)Element).OnTouch(args),
+				coord => coord);
 #endif
 		}
 
@@ -123,6 +132,12 @@ namespace SkiaSharp.Views.Forms
 		protected override TNativeView CreateNativeControl()
 		{
 			return (TNativeView)Activator.CreateInstance(typeof(TNativeView), new[] { Context });
+		}
+#elif TIZEN4_0
+		protected virtual TNativeView CreateNativeControl()
+		{
+			TNativeView ret = (TNativeView)Activator.CreateInstance(typeof(TNativeView), new[] { TForms.Context.MainWindow });
+			return ret;
 		}
 #else
 		protected virtual TNativeView CreateNativeControl()

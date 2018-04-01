@@ -31,6 +31,8 @@ string ANDROID_HOME = EnvironmentVariable ("ANDROID_HOME") ?? EnvironmentVariabl
 string ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? ANDROID_HOME;
 string ANDROID_NDK_HOME = EnvironmentVariable ("ANDROID_NDK_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-ndk";
 
+string TIZEN_STUDIO_HOME = EnvironmentVariable ("TIZEN_STUDIO_HOME") ?? EnvironmentVariable ("HOME") + "/tizen-studio";
+
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/depot_tools"));
 DirectoryPath SKIA_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia"));
@@ -188,6 +190,7 @@ Task ("samples")
         { "uwp", isWin },
         { "watchos", isMac },
         { "wpf", isWin },
+        { "tizen", isLinux }
     };
 
     var platformMatrix = new Dictionary<string, string> {
@@ -197,6 +200,7 @@ Task ("samples")
         { "watchos", "iPhoneSimulator" },
         { "xamarin.forms.mac", "iPhone" },
         { "xamarin.forms.windows", "x86" },
+        { "xamarin.forms.tizen",  "x86" }
     };
 
     var buildSample = new Action<FilePath> (sln => {
@@ -247,7 +251,8 @@ Task ("samples")
             var shouldBuild = 
                 (isLinux && slnPlatform == ".linux") ||
                 (isMac && slnPlatform == ".mac") ||
-                (isWin && slnPlatform == ".windows");
+                (isWin && slnPlatform == ".windows") ||
+                (isLinux && slnPlatform == ".tizen");
             if (shouldBuild) {
                 buildSample (sln);
             } else {
