@@ -640,8 +640,7 @@ Task ("externals-tizen")
         GnNinja ($"tizen/{arch}", "skia",
             $"'" +
             $"  is_official_build=true  skia_enable_tools=false" +
-            $"  target_os=\"linux\" target_cpu=\"{skiaArch}\"" +
-            $"  building_for_tizen=true" +
+            $"  target_os=\"tizen\" target_cpu=\"{skiaArch}\"" +
             $"  skia_enable_gpu=true" +
             $"  skia_use_icu=false" +
             $"  skia_use_sfntly=false" +
