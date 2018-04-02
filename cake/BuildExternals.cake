@@ -51,28 +51,6 @@ void RunLipo (DirectoryPath directory, FilePath output, FilePath[] inputs)
 
 var BuildingForTizen = DirectoryExists (TIZEN_STUDIO_HOME) && IsRunningOnLinux ();
 
-var ReplaceConfigH = new Action<FilePath> ((newConfigH) => {
-    var oldConfigH = HARFBUZZ_PATH.CombineWithFilePath ("harfbuzz/config.h");
-
-    if (FileExists (oldConfigH)) {
-        MoveFile (oldConfigH, oldConfigH + ".bak");
-    }
-
-    CopyFile (newConfigH, oldConfigH);
-});
-
-var RestoreConfigH = new Action (() => {
-    var configH = HARFBUZZ_PATH.CombineWithFilePath ("harfbuzz/config.h");
-    var backupConfigH = configH + ".bak";
-
-    if (FileExists (configH)) {
-        DeleteFile (configH);
-    }
-
-    if (FileExists (backupConfigH)) {
-        MoveFile (backupConfigH, configH);
-    }
-});
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXTERNALS - the native C and C++ libraries
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -655,10 +633,9 @@ Task ("externals-tizen")
     .WithCriteria (BuildingForTizen)
     .Does (() =>
 {
-	var tizen = MakeAbsolute (Directory (TIZEN_STUDIO_HOME)).CombineWithFilePath ("tools/ide/bin/tizen").FullPath;
+    var tizen = MakeAbsolute (Directory (TIZEN_STUDIO_HOME)).CombineWithFilePath ("tools/ide/bin/tizen").FullPath;
 
-	var buildArch = new Action<string, string> ((arch, skiaArch) => {
-
+    var buildArch = new Action<string, string> ((arch, skiaArch) => {
         // generate native skia build files
         GnNinja ($"tizen/{arch}", "skia",
             $"'" +
@@ -695,11 +672,10 @@ Task ("externals-tizen")
     });
 
     var buildHarfBuzzArch = new Action<string, string> ((arch, skiaArch) => {
-	var build_path = ROOT_PATH.Combine ("native-builds/libHarfBuzzSharp_tizen").FullPath;
         // build libHarfBuzzSharp
         RunProcess(tizen, new ProcessSettings {
             Arguments = "build-native -a " + skiaArch + " -c llvm -C Release",
-            WorkingDirectory = build_path,
+            WorkingDirectory = ROOT_PATH.Combine ("native-builds/libHarfBuzzSharp_tizen").FullPath
         });
 
         // copy libHarfBuzzSharp to output
