@@ -9,10 +9,5 @@ namespace SkiaSharp.Views.Forms
 {
 	public class SKCanvasViewRenderer : SKCanvasViewRendererBase<SKFormsView, SKNativeView>, IRegisterable
 	{
-		public int ABC
-		{
-			get;
-			set;
-		}
 	}
 }

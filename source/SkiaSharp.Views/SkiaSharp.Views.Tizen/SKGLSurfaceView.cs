@@ -40,7 +40,7 @@ namespace SkiaSharp.Views.Tizen
 		private GRBackendRenderTargetDesc renderTarget = new GRBackendRenderTargetDesc
 		{
 			Config = GRPixelConfig.Unknown,
-			Origin = GRSurfaceOrigin.TopLeft,
+			Origin = GRSurfaceOrigin.BottomLeft,
 		};
 
 		/// <summary>
