@@ -1,4 +1,4 @@
-﻿using ElmSharp;
+using ElmSharp;
 using System;
 
 using TSystemInfo = Tizen.System.SystemInfo;
@@ -17,7 +17,6 @@ namespace SkiaSharp.Views.Tizen
 		/// </summary>
 		private static Lazy<int> s_dpi = new Lazy<int>(() =>
 		{
-			Console.WriteLine("SEC--ScalingInfo  Profile : " + Profile);
 			if (Profile == "tv")
 			{
 				// TV has fixed DPI value (72)
@@ -26,7 +25,6 @@ namespace SkiaSharp.Views.Tizen
 
 			int dpi = 0;
 			TSystemInfo.TryGetValue("http://tizen.org/feature/screen.dpi", out dpi);
-			Console.WriteLine("SEC--ScalingInfo  DPI : " + dpi);
 			return dpi;
 		});
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using Xamarin.Forms;
 
@@ -136,7 +136,7 @@ namespace SkiaSharp.Views.Forms
 #elif TIZEN4_0
 		protected virtual TNativeView CreateNativeControl()
 		{
-			TNativeView ret = (TNativeView)Activator.CreateInstance(typeof(TNativeView), new[] { TForms.Context.MainWindow });
+			TNativeView ret = (TNativeView)Activator.CreateInstance(typeof(TNativeView), new[] { TForms.NativeParent });
 			return ret;
 		}
 #else

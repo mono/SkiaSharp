@@ -170,7 +170,6 @@ namespace SkiaSharp.Views.Tizen
 		/// <returns>Pointer to the newly created control.</returns>
 		protected sealed override IntPtr CreateHandle(EvasObject parent)
 		{
-			Console.WriteLine("SEC-CustomRenderingView.CreateHandle   parent:" + parent);
 			IntPtr handle = Interop.Elementary.elm_layout_add(parent);
 			Interop.Elementary.elm_layout_theme_set(handle, "layout", "background", "default");
 
@@ -182,7 +181,6 @@ namespace SkiaSharp.Views.Tizen
 			Interop.Elementary.elm_object_part_content_set(handle, "elm.swallow.content", EvasImage);
 
 			CreateNativeResources(parent);
-			Console.WriteLine("SEC-CustomRenderingView.CreateHandle   handle:" + handle);
 			return handle;
 		}
 
