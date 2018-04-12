@@ -46,7 +46,7 @@
     Generate the assembly versioning attributes.
     ===================================================================================================================
   -->
-  <Target Name="_GenerateAssemblyVersionInfo" BeforeTargets="CoreCompile">
+  <Target Name="_GenerateAssemblyVersionInfo" BeforeTargets="CoreCompile" Condition=" '$(SkipGenerateAssemblyVersionInfo)' != 'true' ">
     <PropertyGroup>
       <_VersionSourceFile>$(IntermediateOutputPath)\$(AssemblyName).Version.cs</_VersionSourceFile>
       <_VersionTxtFile>$(MSBuildThisFileDirectory)..\VERSIONS.txt</_VersionTxtFile>
@@ -90,7 +90,7 @@
     Copy the project output into the root output folder.
     ===================================================================================================================
   -->
-  <Target Name="_CopyToOutputDirectory" AfterTargets="Build">
+  <Target Name="_CopyToOutputDirectory" AfterTargets="Build" Condition=" '$(SkipCopyToOutputDirectory)' != 'true' ">
     <ItemGroup Condition=" '$(PackagingLocation)' == '' ">
       <_CopyItems Include="$(TargetPath)" Dest="nuget\lib\$(PackagingPlatform)\$(TargetFileName)" />
       <_CopyItems Include="$(TargetDir)$(TargetName).xml" Dest="nuget\lib\$(PackagingPlatform)\$(TargetName).xml" Condition=" Exists('$(TargetDir)$(TargetName).xml') " />
@@ -119,7 +119,7 @@
     This runs during the build phase.
     ===================================================================================================================
   -->
-  <Target Name="MDocGenerateDocs" AfterTargets="CoreCompile">
+  <Target Name="MDocGenerateDocs" AfterTargets="CoreCompile" Condition=" '$(SkipMDocGenerateDocs)' != 'true' ">
     <PropertyGroup>
       <MDocVersion Condition=" '%(Identity)' == 'mdoc' ">@(PackageReference -> '%(Version)')</MDocVersion>
       <MDocPackagePath Condition=" '%(Name)' == 'mdoc' ">@(PackageDefinitions -> '%(ResolvedPath)')</MDocPackagePath>

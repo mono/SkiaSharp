@@ -136,5 +136,45 @@ namespace SkiaSharp.Tests
 				}
 			}
 		}
+
+		[SkippableFact]
+		public void ExceptionsThrownInTheConstructorFailGracefully()
+		{
+			BrokenObject broken = null;
+			try
+			{
+				broken = new BrokenObject();
+			}
+			catch (Exception)
+			{
+			}
+			finally
+			{
+				broken?.Dispose();
+				broken = null;
+			}
+
+			// try and trigger the finalizer
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
+		}
+
+		private class BrokenObject : SKObject
+		{
+			public BrokenObject()
+				: base(broken_native_method(), true)
+			{
+			}
+
+			private static IntPtr broken_native_method()
+			{
+				throw new Exception("BREAK!");
+			}
+
+			protected override void Dispose(bool disposing)
+			{
+				base.Dispose(disposing);
+			}
+		}
 	}
 }

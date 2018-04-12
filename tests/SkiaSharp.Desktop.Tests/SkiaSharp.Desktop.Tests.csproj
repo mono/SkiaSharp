@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\source\SkiaSharp.Build.props" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -8,7 +9,10 @@
     <RootNamespace>SkiaSharp.Tests</RootNamespace>
     <AssemblyName>SkiaSharp.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <ShouldIncludeNativeSkiaSharp>True</ShouldIncludeNativeSkiaSharp>
+    <ShouldIncludeNativeSkiaSharp>true</ShouldIncludeNativeSkiaSharp>
+    <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+    <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
+    <SkipCopyToOutputDirectory>true</SkipCopyToOutputDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -121,7 +125,11 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
+  </ItemGroup>
   <Import Project="..\..\output\SkiaSharp\nuget\build\net45\SkiaSharp.targets" Condition="Exists('..\..\output\SkiaSharp\nuget\build\net45\SkiaSharp.targets')" />
   <Import Project="..\..\output\HarfBuzzSharp\nuget\build\net45\HarfBuzzSharp.targets" Condition="Exists('..\..\output\HarfBuzzSharp\nuget\build\net45\HarfBuzzSharp.targets')" />
+  <Import Project="..\..\source\SkiaSharp.Build.targets" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
