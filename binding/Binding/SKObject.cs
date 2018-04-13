@@ -61,13 +61,16 @@ namespace SkiaSharp
 
 		protected override void Dispose(bool disposing)
 		{
-			lock (ownedObjects)
+			if (ownedObjects != null)
 			{
-				foreach (var child in ownedObjects)
+				lock (ownedObjects)
 				{
-					child.Dispose();
+					foreach (var child in ownedObjects)
+					{
+						child.Dispose();
+					}
+					ownedObjects.Clear();
 				}
-				ownedObjects.Clear();
 			}
 
 			var zero = DeregisterHandle(Handle, this);
