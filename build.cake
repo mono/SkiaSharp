@@ -106,35 +106,39 @@ Task ("tests")
     .IsDependentOn ("nuget")
     .Does (() => 
 {
-    RunMSBuildRestore ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
+    var RunDestopTest = new Action<string> (arch => {
+        var platform = "";
+        if (IsRunningOnWindows ()) {
+            platform = "windows";
+        } else if (IsRunningOnMac ()) {
+            platform = "mac";
+        } else if (IsRunningOnLinux ()) {
+            platform = "linux";
+        }
 
-    // Windows (x86 and x64)
+        EnsureDirectoryExists ($"./output/tests/{platform}/{arch}");
+        RunMSBuildRestore ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
+        if (arch == "AnyCPU") {
+            RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
+        } else {
+            RunMSBuildWithPlatform ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", arch);
+        }
+        RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/Release/SkiaSharp.Tests.dll", null, arch == "x86");
+        CopyFileToDirectory ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/Release/TestResult.xml", $"./output/tests/{platform}/{arch}");
+    });
+
+    // Full .NET Framework
     if (IsRunningOnWindows ()) {
-        EnsureDirectoryExists ("./output/tests/windows/x86");
-        RunMSBuildWithPlatform ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", "x86");
-        RunTests ("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/SkiaSharp.Tests.dll", null, true);
-        CopyFileToDirectory ("./tests/SkiaSharp.Desktop.Tests/bin/x86/Release/TestResult.xml", "./output/tests/windows/x86");
+        RunDestopTest ("x86");
+        RunDestopTest ("x64");
+    } else if (IsRunningOnMac ()) {
+        RunDestopTest ("AnyCPU");
+    } else if (IsRunningOnLinux ()) {
+        // TODO: Disable x64 for the time being due to a bug in mono sn:
+        //       https://github.com/mono/mono/issues/8218
 
-        EnsureDirectoryExists ("./output/tests/windows/x64");
-        RunMSBuildWithPlatform ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", "x64");
-        RunTests ("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Tests.dll", null, false);
-        CopyFileToDirectory ("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/TestResult.xml", "./output/tests/windows/x64");
-    }
-
-    // Mac OSX (Any CPU)
-    if (IsRunningOnMac ()) {
-        EnsureDirectoryExists ("./output/tests/mac/AnyCPU");
-        RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
-        RunTests ("./tests/SkiaSharp.Desktop.Tests/bin/AnyCPU/Release/SkiaSharp.Tests.dll", null, false);
-        CopyFileToDirectory ("./tests/SkiaSharp.Desktop.Tests/bin/AnyCPU/Release/TestResult.xml", "./output/tests/mac/AnyCPU");
-    }
-
-    // Linux (x64)
-    if (IsRunningOnLinux ()) {
-        EnsureDirectoryExists ("./output/tests/linux/x64");
-        RunMSBuildWithPlatform ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", "x64");
-        RunTests ("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/SkiaSharp.Tests.dll", null, false);
-        CopyFileToDirectory ("./tests/SkiaSharp.Desktop.Tests/bin/x64/Release/TestResult.xml", "./output/tests/linux/x64");
+        RunDestopTest ("AnyCPU");
+        // RunDestopTest ("x64");
     }
 
     // .NET Core
