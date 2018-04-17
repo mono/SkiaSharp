@@ -1,9 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Property Group for Tizen40 Project -->
   <PropertyGroup>
     <TargetFramework>tizen40</TargetFramework>
     <OutputType>Exe</OutputType>
+    <RootNamespace>SkiaSharpSample.Platform</RootNamespace>
+    <AssemblyName>SkiaSharpGallery.Tizen</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -16,34 +17,31 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="res\" />
+    <PackageReference Include="Tizen.NET" Version="4.0.0" ExcludeAssets="Runtime" />
+    <PackageReference Include="Tizen.NET.Sdk" Version="1.0.1" />
+    <PackageReference Include="Xamarin.Forms.Platform.Tizen" Version="2.5.0.280555" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.csproj" />
-    <ProjectReference Include="..\..\..\..\binding\SkiaSharp.NetStandard\SkiaSharp.NetStandard.csproj" /> 
     <ProjectReference Include="..\..\..\..\binding\SkiaSharp.Tizen\SkiaSharp.Tizen.csproj" />
-    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.Tizen\SkiaSharp.Views.csproj" />
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.Tizen\SkiaSharp.Views.Tizen.csproj" />
-    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Tizen\SkiaSharp.Views.Forms.Tizen.csproj"/>
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.Tizen\SkiaSharp.Views.Forms.Tizen.csproj" />
     <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp.Tizen\HarfBuzzSharp.Tizen.csproj" />
-    <ProjectReference Include="..\..\..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.NetStandard\SkiaSharp.HarfBuzz.NetStandard.csproj" />
-
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
   </ItemGroup>
 
-  <!-- Include Nuget Package for Tizen Project building -->
   <ItemGroup>
     <None Include="..\..\..\..\output\native\tizen\i386\libSkiaSharp.so" Condition="Exists('..\..\..\..\output\native\tizen\i386\libSkiaSharp.so')">
-      <Link>tpkroot\bin\runtimes\linux-x86\native\libSkiaSharp.so</Link>
+      <Link>tpkroot\bin\runtimes\tizen-x86\native\libSkiaSharp.so</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="..\..\..\..\output\native\tizen\armel\libSkiaSharp.so" Condition="Exists('..\..\..\..\output\native\tizen\armel\libSkiaSharp.so')">
       <Link>tpkroot\bin\runtimes\tizen-armel\native\libSkiaSharp.so</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-
     <None Include="..\..\..\..\output\native\tizen\i386\libHarfBuzzSharp.so" Condition="Exists('..\..\..\..\output\native\tizen\i386\libHarfBuzzSharp.so')">
-      <Link>tpkroot\bin\runtimes\linux-x86\native\libHarfBuzzSharp.so</Link>
+      <Link>tpkroot\bin\runtimes\tizen-x86\native\libHarfBuzzSharp.so</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="..\..\..\..\output\native\tizen\armel\libHarfBuzzSharp.so" Condition="Exists('..\..\..\..\output\native\tizen\armel\libHarfBuzzSharp.so')">
@@ -52,11 +50,4 @@
     </None>
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Tizen.NET" Version="4.0.0">
-      <ExcludeAssets>Runtime</ExcludeAssets>
-    </PackageReference>
-    <PackageReference Include="Tizen.NET.Sdk" Version="1.0.1" />
-    <PackageReference Include="Xamarin.Forms.Platform.Tizen" Version="2.5.0.280555" />
-  </ItemGroup>
 </Project>

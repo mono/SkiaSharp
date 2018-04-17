@@ -8,6 +8,8 @@
     <AssemblyName>SkiaSharp.Views.Forms</AssemblyName>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
+    <TizenCreateTpkOnBuild>false</TizenCreateTpkOnBuild>
+    <SignAssembly>false</SignAssembly>
     <PackagingGroup>SkiaSharp.Views.Forms</PackagingGroup>
     <PackagingPlatform>tizen40</PackagingPlatform>
   </PropertyGroup>
@@ -21,11 +23,12 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Xamarin.Forms.Platform.Tizen" Version="2.5.0.280555" />
-    <PackageReference Include="Tizen.NET" Version="4.0.0" />
+    <PackageReference Include="Tizen.NET" Version="4.0.0" ExcludeAssets="Runtime" />
+    <PackageReference Include="Tizen.NET.Sdk" Version="1.0.1" />
     <PackageReference Include="mdoc" Version="5.6.0" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\binding\SkiaSharp.NetStandard\SkiaSharp.NetStandard.csproj" />
+    <ProjectReference Include="..\..\..\binding\SkiaSharp.Tizen\SkiaSharp.Tizen.csproj" />
     <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Tizen\SkiaSharp.Views.Tizen.csproj" />
   </ItemGroup>
   <Import Project="..\SkiaSharp.Views.Forms.Shared\SkiaSharp.Views.Forms.Shared.projitems" Label="Shared" />

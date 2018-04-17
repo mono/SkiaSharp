@@ -8,9 +8,7 @@
     <AssemblyName>SkiaSharp.Views.Tizen</AssemblyName>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
-    <SignAssembly>true</SignAssembly>
-    <PublicSign Condition="'$(OS)' != 'Windows_NT'">true</PublicSign>
-    <AssemblyOriginatorKeyFile>..\..\..\mono.snk</AssemblyOriginatorKeyFile>
+    <TizenCreateTpkOnBuild>false</TizenCreateTpkOnBuild>
     <PackagingGroup>SkiaSharp.Views</PackagingGroup>
     <PackagingPlatform>tizen40</PackagingPlatform>
   </PropertyGroup>
@@ -24,11 +22,11 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
-    <PackageReference Include="Tizen.NET" Version="4.0.0" />
+    <PackageReference Include="Tizen.NET" Version="4.0.0" ExcludeAssets="Runtime" />
+    <PackageReference Include="Tizen.NET.Sdk" Version="1.0.1" />
     <PackageReference Include="mdoc" Version="5.6.0" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\binding\SkiaSharp.NetStandard\SkiaSharp.NetStandard.csproj" />
     <ProjectReference Include="..\..\..\binding\SkiaSharp.Tizen\SkiaSharp.Tizen.csproj" />
   </ItemGroup>
   <Import Project="..\..\SkiaSharp.Build.targets" />

@@ -251,8 +251,7 @@ Task ("samples")
             var shouldBuild = 
                 (isLinux && slnPlatform == ".linux") ||
                 (isMac && slnPlatform == ".mac") ||
-                (isWin && slnPlatform == ".windows") ||
-                (isLinux && slnPlatform == ".tizen");
+                (isWin && slnPlatform == ".windows");
             if (shouldBuild) {
                 buildSample (sln);
             } else {

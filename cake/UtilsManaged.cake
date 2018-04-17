@@ -137,17 +137,6 @@ var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath> ((samplesDirPath
     // copy the current samples directory
     EnsureDirectoryExists (workingDir);
     CleanDirectory (workingDir);
-
-    var tizenBasicPath = samplesDirPath.Combine("Basic/Xamarin.Forms/SkiaSharpSample.Tizen/bin");
-    if (DirectoryExists(tizenBasicPath))
-    {
-        CleanDirectory(tizenBasicPath);
-    }
-    var tizenGalleryPath = samplesDirPath.Combine("Gallery/Xamarin.Forms/Tizen/bin");
-    if (DirectoryExists(tizenGalleryPath))
-    {
-        CleanDirectory(tizenGalleryPath);
-    }
     CopyDirectory (samplesDirPath, workingDir);
 
     // remove any binaries from the samples directory
