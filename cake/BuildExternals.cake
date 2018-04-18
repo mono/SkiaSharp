@@ -647,7 +647,7 @@ Task ("externals-tizen")
 
         // copy libSkiaSharp to output
         var outDir = $"output/native/tizen/{arch}";
-        var libSkiaSharp = "native-builds/libSkiaSharp_tizen/Release/libSkiaSharp.so";
+        var libSkiaSharp = "native-builds/libSkiaSharp_tizen/Release/libskiasharp.so";
         EnsureDirectoryExists (outDir);
         CopyFile (libSkiaSharp, $"{outDir}/libSkiaSharp.so");
     });
