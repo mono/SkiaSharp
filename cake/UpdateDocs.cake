@@ -9,8 +9,8 @@ void CreateFrameworks (Version minVersion, DirectoryPath docsTempPath) {
         "skiasharp",
         "skiasharp.views",
         "skiasharp.views.forms",
-        // "harfbuzzsharp",
-        // "skiasharp.harfbuzz",
+        "harfbuzzsharp",
+        "skiasharp.harfbuzz",
     };
     var xplat = new [] {
         "netstandard1.3",
@@ -137,7 +137,7 @@ Task ("update-docs")
     // generate doc files
     var refArgs = string.Join (" ", refs.Select (r => $"--lib=\"{r}\""));
     var fw = MakeAbsolute (docsTempPath.CombineWithFilePath ("frameworks.xml"));
-    RunProcess (@"C:\Projects\api-doc-tools\bin\Debug\mdoc.exe", new ProcessSettings {
+    RunProcess (MDocPath, new ProcessSettings {
         Arguments = $"update --preserve --out=\"{DOCS_PATH}\" -lang=DocId --frameworks={fw} {refArgs}",
         WorkingDirectory = docsTempPath
     });
