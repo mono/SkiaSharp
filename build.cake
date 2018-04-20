@@ -3,13 +3,17 @@
 #addin nuget:?package=Cake.FileHelpers&version=2.0.0
 
 #reference "tools/SharpCompress/lib/net45/SharpCompress.dll"
+#reference "tools/Newtonsoft.Json/lib/net45/SharpCompress.dll"
 
 using System.Linq;
+using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using SharpCompress.Readers;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 #load "cake/Utils.cake"
 
@@ -57,6 +61,7 @@ if (string.IsNullOrEmpty (BUILD_NUMBER)) {
 
 #load "cake/UtilsManaged.cake"
 #load "cake/BuildExternals.cake"
+#load "cake/UpdateDocs.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXTERNALS - the native C and C++ libraries
@@ -263,128 +268,6 @@ Task ("samples")
             }
         }
     }
-});
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// DOCS - building the API documentation
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-Task ("update-docs")
-    .Does (() => 
-{
-    // the reference folders to locate assemblies
-    var refs = new List<DirectoryPath> ();
-    if (IsRunningOnWindows ()) {
-        var refAssemblies = "C:/Program Files (x86)/Microsoft Visual Studio/*/*/Common7/IDE/ReferenceAssemblies/Microsoft/Framework";
-        refs.AddRange (GetDirectories ($"{refAssemblies}/MonoAndroid/v1.0"));
-        refs.AddRange (GetDirectories ($"{refAssemblies}/MonoAndroid/v4.0.3"));
-        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.iOS/v1.0"));
-        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.TVOS/v1.0"));
-        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.WatchOS/v1.0"));
-        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.Mac/v2.0"));
-        refs.AddRange (GetDirectories ("C:/Program Files (x86)/Windows Kits/10/References/Windows.Foundation.UniversalApiContract/1.0.0.0"));
-        refs.AddRange (GetDirectories ($"{NUGET_PACKAGES}/xamarin.forms/{GetVersion ("Xamarin.Forms", "release")}/lib/*"));
-    }
-
-    // the assemblies to generate docs for
-    var assemblies = new FilePath [] {
-        // SkiaSharp
-        "./output/SkiaSharp/nuget/lib/netstandard1.3/SkiaSharp.dll",
-        // SkiaSharp.Views
-        "./output/SkiaSharp.Views/nuget/lib/MonoAndroid/SkiaSharp.Views.Android.dll",
-        "./output/SkiaSharp.Views/nuget/lib/net45/SkiaSharp.Views.Desktop.dll",
-        "./output/SkiaSharp.Views/nuget/lib/net45/SkiaSharp.Views.Gtk.dll",
-        "./output/SkiaSharp.Views/nuget/lib/net45/SkiaSharp.Views.WPF.dll",
-        "./output/SkiaSharp.Views/nuget/lib/Xamarin.iOS/SkiaSharp.Views.iOS.dll",
-        "./output/SkiaSharp.Views/nuget/lib/Xamarin.Mac20/SkiaSharp.Views.Mac.dll",
-        "./output/SkiaSharp.Views/nuget/lib/Xamarin.TVOS/SkiaSharp.Views.tvOS.dll",
-        "./output/SkiaSharp.Views/nuget/lib/uap10.0/SkiaSharp.Views.UWP.dll",
-        "./output/SkiaSharp.Views/nuget/lib/Xamarin.WatchOS/SkiaSharp.Views.watchOS.dll",
-        // SkiaSharp.Views.Forms
-        "./output/SkiaSharp.Views.Forms/nuget/lib/netstandard1.3/SkiaSharp.Views.Forms.dll",
-        // HarfBuzzSharp
-        "./output/HarfBuzzSharp/nuget/lib/netstandard1.3/HarfBuzzSharp.dll",
-        // SkiaSharp.HarfBuzz
-        "./output/SkiaSharp.HarfBuzz/nuget/lib/netstandard1.3/SkiaSharp.HarfBuzz.dll",
-    };
-
-    // print out the assemblies
-    foreach (var r in refs) {
-        Information ("Reference Directory: {0}", r);
-    }
-    foreach (var a in assemblies) {
-        Information ("Assemblies {0}...", a);
-    }
-
-    // generate doc files
-    var refArgs = string.Join (" ", refs.Select (r => $"--lib=\"{r}\""));
-    var assemblyArgs = string.Join (" ", assemblies.Select (a => $"\"{a}\""));
-    RunProcess (MDocPath, new ProcessSettings {
-        Arguments = $"update --preserve --out=\"{DOCS_PATH}\" {refArgs} {assemblyArgs}",
-    });
-
-    // process the generated docs
-    var docFiles = GetFiles ("./docs/**/*.xml");
-    float typeCount = 0;
-    float memberCount = 0;
-    float totalTypes = 0;
-    float totalMembers = 0;
-    foreach (var file in docFiles) {
-        var xdoc = XDocument.Load (file.ToString ());
-
-        // remove IComponent docs as this is just designer
-        xdoc.Root
-            .Elements ("Members")
-            .Elements ("Member")
-            .Where (e => e.Attribute ("MemberName")?.Value?.StartsWith ("System.ComponentModel.IComponent.") == true)
-            .Remove ();
-
-        // count the types without docs
-        var typesWithDocs = xdoc.Root
-            .Elements ("Docs");
-        totalTypes += typesWithDocs.Count ();
-        var currentTypeCount = typesWithDocs.Count (m => m.Value?.IndexOf ("To be added.") >= 0);
-        typeCount += currentTypeCount;
-
-        // count the members without docs
-        var membersWithDocs = xdoc.Root
-            .Elements ("Members")
-            .Elements ("Member")
-            .Where (m => m.Attribute ("MemberName")?.Value != "Dispose" && m.Attribute ("MemberName")?.Value != "Finalize")
-            .Elements ("Docs");
-        totalMembers += membersWithDocs.Count ();
-        var currentMemberCount = membersWithDocs.Count (m => m.Value?.IndexOf ("To be added.") >= 0);
-        memberCount += currentMemberCount;
-
-        // log if either type or member has missing docs
-        currentMemberCount += currentTypeCount;
-        if (currentMemberCount > 0) {
-            var fullName = xdoc.Root.Attribute ("FullName");
-            if (fullName != null)
-                Information ("Docs missing on {0} = {1}", fullName.Value, currentMemberCount);
-        }
-
-        // get the whitespaces right
-        var settings = new XmlWriterSettings {
-            Encoding = new UTF8Encoding (),
-            Indent = true,
-            NewLineChars = "\n",
-            OmitXmlDeclaration = true,
-        };
-        using (var writer = XmlWriter.Create (file.ToString (), settings)) {
-            xdoc.Save (writer);
-            writer.Flush ();
-        }
-
-        // empty line at the end
-        System.IO.File.AppendAllText (file.ToString (), "\n");
-    }
-
-    // log summary
-    Information (
-        "Documentation missing in {0}/{1} ({2:0.0%}) types and {3}/{4} ({5:0.0%}) members.", 
-        typeCount, totalTypes, typeCount / totalTypes, 
-        memberCount, totalMembers, memberCount / totalMembers);
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
