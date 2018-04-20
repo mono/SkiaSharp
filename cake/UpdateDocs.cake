@@ -1,8 +1,4 @@
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// DOCS - building the API documentation
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 void CreateFrameworks (Version minVersion, DirectoryPath docsTempPath) {
     // download all the versions from nuget so we can generate the docs
     var ids = new [] {
@@ -110,41 +106,8 @@ void CreateFrameworks (Version minVersion, DirectoryPath docsTempPath) {
     xFrameworksDoc.Save ($"{docsTempPath}/frameworks.xml");
 }
 
-Task ("update-docs")
-    .Does (() => 
+void FormatDocs ()
 {
-    var docsTempPath = MakeAbsolute (ROOT_PATH.Combine ("output/docs/temp"));
-
-    // create the frameworks folder from the released NuGets
-    CreateFrameworks (new Version (1, 0, 0), docsTempPath);
-
-    // the reference folders to locate assemblies
-    var refs = new List<DirectoryPath> ();
-    if (IsRunningOnWindows ()) {
-        var refAssemblies = "C:/Program Files (x86)/Microsoft Visual Studio/*/*/Common7/IDE/ReferenceAssemblies/Microsoft/Framework";
-        refs.AddRange (GetDirectories ($"{refAssemblies}/MonoAndroid/v1.0"));
-        refs.AddRange (GetDirectories ($"{refAssemblies}/MonoAndroid/v4.0.3"));
-        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.iOS/v1.0"));
-        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.TVOS/v1.0"));
-        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.WatchOS/v1.0"));
-        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.Mac/v2.0"));
-        refs.AddRange (GetDirectories ("C:/Program Files (x86)/Windows Kits/10/References/Windows.Foundation.UniversalApiContract/1.0.0.0"));
-        refs.AddRange (GetDirectories ($"{NUGET_PACKAGES}/xamarin.forms/{GetVersion ("Xamarin.Forms", "release")}/lib/*"));
-        refs.AddRange (GetDirectories ($"{NUGET_PACKAGES}/tizen.net/{GetVersion ("Tizen.NET", "release")}/lib/*"));
-        refs.AddRange (GetDirectories ($"{NUGET_PACKAGES}/opentk.glcontrol/{GetVersion ("OpenTK.GLControl", "release")}/lib/*"));
-    }
-
-    // generate doc files
-    var refArgs = string.Join (" ", refs.Select (r => $"--lib=\"{r}\""));
-    var fw = MakeAbsolute (docsTempPath.CombineWithFilePath ("frameworks.xml"));
-    RunProcess (MDocPath, new ProcessSettings {
-        Arguments = $"update --preserve --out=\"{DOCS_PATH}\" -lang=DocId --frameworks={fw} {refArgs}",
-        WorkingDirectory = docsTempPath
-    });
-
-    // clean up after working
-    CleanDirectories (docsTempPath.FullPath);
-
     // process the generated docs
     var docFiles = GetFiles ("./docs/**/*.xml");
     float typeCount = 0;
@@ -207,4 +170,48 @@ Task ("update-docs")
         "Documentation missing in {0}/{1} ({2:0.0%}) types and {3}/{4} ({5:0.0%}) members.", 
         typeCount, totalTypes, typeCount / totalTypes, 
         memberCount, totalMembers, memberCount / totalMembers);
+}
+
+Task ("format-docs")
+    .Does (() => 
+{
+    FormatDocs ();
+});
+
+Task ("update-docs")
+    .Does (() => 
+{
+    var docsTempPath = MakeAbsolute (ROOT_PATH.Combine ("output/docs/temp"));
+
+    // create the frameworks folder from the released NuGets
+    CreateFrameworks (new Version (1, 0, 0), docsTempPath);
+
+    // the reference folders to locate assemblies
+    var refs = new List<DirectoryPath> ();
+    if (IsRunningOnWindows ()) {
+        var refAssemblies = "C:/Program Files (x86)/Microsoft Visual Studio/*/*/Common7/IDE/ReferenceAssemblies/Microsoft/Framework";
+        refs.AddRange (GetDirectories ($"{refAssemblies}/MonoAndroid/v1.0"));
+        refs.AddRange (GetDirectories ($"{refAssemblies}/MonoAndroid/v4.0.3"));
+        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.iOS/v1.0"));
+        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.TVOS/v1.0"));
+        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.WatchOS/v1.0"));
+        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.Mac/v2.0"));
+        refs.AddRange (GetDirectories ("C:/Program Files (x86)/Windows Kits/10/References/Windows.Foundation.UniversalApiContract/1.0.0.0"));
+        refs.AddRange (GetDirectories ($"{NUGET_PACKAGES}/xamarin.forms/{GetVersion ("Xamarin.Forms", "release")}/lib/*"));
+        refs.AddRange (GetDirectories ($"{NUGET_PACKAGES}/tizen.net/{GetVersion ("Tizen.NET", "release")}/lib/*"));
+        refs.AddRange (GetDirectories ($"{NUGET_PACKAGES}/opentk.glcontrol/{GetVersion ("OpenTK.GLControl", "release")}/lib/*"));
+    }
+
+    // generate doc files
+    var refArgs = string.Join (" ", refs.Select (r => $"--lib=\"{r}\""));
+    var fw = MakeAbsolute (docsTempPath.CombineWithFilePath ("frameworks.xml"));
+    RunProcess (MDocPath, new ProcessSettings {
+        Arguments = $"update --preserve --out=\"{DOCS_PATH}\" -lang=DocId --frameworks={fw} {refArgs}",
+        WorkingDirectory = docsTempPath
+    });
+
+    // clean up after working
+    CleanDirectories (docsTempPath.FullPath);
+
+    FormatDocs ();
 });
