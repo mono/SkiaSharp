@@ -609,7 +609,6 @@
       <Type Name="SKDocumentPdfMetadata" Kind="Structure" />
       <Type Name="SKDropShadowImageFilterShadowMode" Kind="Enumeration" />
       <Type Name="SKDynamicMemoryWStream" Kind="Class" />
-      <Type Name="SKEncodedFormat" Kind="Enumeration" />
       <Type Name="SKEncodedImageFormat" Kind="Enumeration" />
       <Type Name="SKEncodedInfo" Kind="Structure" />
       <Type Name="SKEncodedInfoAlpha" Kind="Enumeration" />
@@ -630,10 +629,6 @@
       <Type Name="SkiaExtensions" Kind="Class" />
       <Type Name="SKImage" Kind="Class" />
       <Type Name="SKImageCachingHint" Kind="Enumeration" />
-      <Type Name="SKImageDecoder" Kind="Class" />
-      <Type Name="SKImageDecoderFormat" Kind="Enumeration" />
-      <Type Name="SKImageDecoderMode" Kind="Enumeration" />
-      <Type Name="SKImageDecoderResult" Kind="Enumeration" />
       <Type Name="SKImageEncodeFormat" Kind="Enumeration" />
       <Type Name="SKImageFilter" Kind="Class" />
       <Type Name="SKImageFilter+CropRect" Kind="Class" />
@@ -694,7 +689,6 @@
       <Type Name="SKRegionOperation" Kind="Enumeration" />
       <Type Name="SKShader" Kind="Class" />
       <Type Name="SKShaderTileMode" Kind="Enumeration" />
-      <Type Name="SKShadowMaskFilterShadowFlags" Kind="Enumeration" />
       <Type Name="SKSize" Kind="Structure" />
       <Type Name="SKSizeI" Kind="Structure" />
       <Type Name="SKStream" Kind="Class" />
@@ -3052,28 +3046,6 @@
     </ExtensionMethod>
     <ExtensionMethod>
       <Targets>
-        <Target Type="T:SkiaSharp.SKColor" />
-      </Targets>
-      <Member MemberName="ToDrawingColor">
-        <MemberSignature Language="C#" Value="public static System.Drawing.Color ToDrawingColor (this SkiaSharp.SKColor color);" />
-        <MemberSignature Language="ILAsm" Value=".method public static hidebysig valuetype System.Drawing.Color ToDrawingColor(valuetype SkiaSharp.SKColor color) cil managed" />
-        <MemberSignature Language="DocId" Value="M:SkiaSharp.Views.iOS.Extensions.ToDrawingColor(SkiaSharp.SKColor)" />
-        <MemberType>ExtensionMethod</MemberType>
-        <ReturnValue>
-          <ReturnType>System.Drawing.Color</ReturnType>
-        </ReturnValue>
-        <Parameters>
-          <Parameter Name="color" Type="SkiaSharp.SKColor" RefType="this" />
-        </Parameters>
-        <Docs>
-          <param name="color">The SkiaSharp color.</param>
-          <summary>Converts a SkiaSharp color into a System.Drawing color.</summary>
-        </Docs>
-        <Link Type="SkiaSharp.Views.iOS.Extensions" Member="M:SkiaSharp.Views.iOS.Extensions.ToDrawingColor(SkiaSharp.SKColor)" />
-      </Member>
-    </ExtensionMethod>
-    <ExtensionMethod>
-      <Targets>
         <Target Type="T:SkiaSharp.SKPoint" />
       </Targets>
       <Member MemberName="ToDrawingPoint">
@@ -3202,28 +3174,6 @@
           <summary>Converts a SkiaSharp size into a System.Drawing size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.iOS.Extensions" Member="M:SkiaSharp.Views.iOS.Extensions.ToDrawingSize(SkiaSharp.SKSizeI)" />
-      </Member>
-    </ExtensionMethod>
-    <ExtensionMethod>
-      <Targets>
-        <Target Type="System.Drawing.Color" />
-      </Targets>
-      <Member MemberName="ToSKColor">
-        <MemberSignature Language="C#" Value="public static SkiaSharp.SKColor ToSKColor (this System.Drawing.Color color);" />
-        <MemberSignature Language="ILAsm" Value=".method public static hidebysig valuetype SkiaSharp.SKColor ToSKColor(valuetype System.Drawing.Color color) cil managed" />
-        <MemberSignature Language="DocId" Value="M:SkiaSharp.Views.iOS.Extensions.ToSKColor(System.Drawing.Color)" />
-        <MemberType>ExtensionMethod</MemberType>
-        <ReturnValue>
-          <ReturnType>SkiaSharp.SKColor</ReturnType>
-        </ReturnValue>
-        <Parameters>
-          <Parameter Name="color" Type="System.Drawing.Color" RefType="this" />
-        </Parameters>
-        <Docs>
-          <param name="color">The System.Drawing color.</param>
-          <summary>Converts a System.Drawing color into a SkiaSharp color.</summary>
-        </Docs>
-        <Link Type="SkiaSharp.Views.iOS.Extensions" Member="M:SkiaSharp.Views.iOS.Extensions.ToSKColor(System.Drawing.Color)" />
       </Member>
     </ExtensionMethod>
     <ExtensionMethod>
@@ -4222,28 +4172,6 @@
     </ExtensionMethod>
     <ExtensionMethod>
       <Targets>
-        <Target Type="T:SkiaSharp.SKColor" />
-      </Targets>
-      <Member MemberName="ToDrawingColor">
-        <MemberSignature Language="C#" Value="public static System.Drawing.Color ToDrawingColor (this SkiaSharp.SKColor color);" />
-        <MemberSignature Language="ILAsm" Value=".method public static hidebysig valuetype System.Drawing.Color ToDrawingColor(valuetype SkiaSharp.SKColor color) cil managed" />
-        <MemberSignature Language="DocId" Value="M:SkiaSharp.Views.Mac.Extensions.ToDrawingColor(SkiaSharp.SKColor)" />
-        <MemberType>ExtensionMethod</MemberType>
-        <ReturnValue>
-          <ReturnType>System.Drawing.Color</ReturnType>
-        </ReturnValue>
-        <Parameters>
-          <Parameter Name="color" Type="SkiaSharp.SKColor" RefType="this" />
-        </Parameters>
-        <Docs>
-          <param name="color">The SkiaSharp color.</param>
-          <summary>Converts a SkiaSharp color into a System.Drawing color.</summary>
-        </Docs>
-        <Link Type="SkiaSharp.Views.Mac.Extensions" Member="M:SkiaSharp.Views.Mac.Extensions.ToDrawingColor(SkiaSharp.SKColor)" />
-      </Member>
-    </ExtensionMethod>
-    <ExtensionMethod>
-      <Targets>
         <Target Type="T:SkiaSharp.SKPoint" />
       </Targets>
       <Member MemberName="ToDrawingPoint">
@@ -4372,28 +4300,6 @@
           <summary>Converts a SkiaSharp size into a System.Drawing size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.Mac.Extensions" Member="M:SkiaSharp.Views.Mac.Extensions.ToDrawingSize(SkiaSharp.SKSizeI)" />
-      </Member>
-    </ExtensionMethod>
-    <ExtensionMethod>
-      <Targets>
-        <Target Type="System.Drawing.Color" />
-      </Targets>
-      <Member MemberName="ToSKColor">
-        <MemberSignature Language="C#" Value="public static SkiaSharp.SKColor ToSKColor (this System.Drawing.Color color);" />
-        <MemberSignature Language="ILAsm" Value=".method public static hidebysig valuetype SkiaSharp.SKColor ToSKColor(valuetype System.Drawing.Color color) cil managed" />
-        <MemberSignature Language="DocId" Value="M:SkiaSharp.Views.Mac.Extensions.ToSKColor(System.Drawing.Color)" />
-        <MemberType>ExtensionMethod</MemberType>
-        <ReturnValue>
-          <ReturnType>SkiaSharp.SKColor</ReturnType>
-        </ReturnValue>
-        <Parameters>
-          <Parameter Name="color" Type="System.Drawing.Color" RefType="this" />
-        </Parameters>
-        <Docs>
-          <param name="color">The System.Drawing color.</param>
-          <summary>Converts a System.Drawing color into a SkiaSharp color.</summary>
-        </Docs>
-        <Link Type="SkiaSharp.Views.Mac.Extensions" Member="M:SkiaSharp.Views.Mac.Extensions.ToSKColor(System.Drawing.Color)" />
       </Member>
     </ExtensionMethod>
     <ExtensionMethod>
@@ -5312,28 +5218,6 @@
     </ExtensionMethod>
     <ExtensionMethod>
       <Targets>
-        <Target Type="T:SkiaSharp.SKColor" />
-      </Targets>
-      <Member MemberName="ToDrawingColor">
-        <MemberSignature Language="C#" Value="public static System.Drawing.Color ToDrawingColor (this SkiaSharp.SKColor color);" />
-        <MemberSignature Language="ILAsm" Value=".method public static hidebysig valuetype System.Drawing.Color ToDrawingColor(valuetype SkiaSharp.SKColor color) cil managed" />
-        <MemberSignature Language="DocId" Value="M:SkiaSharp.Views.tvOS.Extensions.ToDrawingColor(SkiaSharp.SKColor)" />
-        <MemberType>ExtensionMethod</MemberType>
-        <ReturnValue>
-          <ReturnType>System.Drawing.Color</ReturnType>
-        </ReturnValue>
-        <Parameters>
-          <Parameter Name="color" Type="SkiaSharp.SKColor" RefType="this" />
-        </Parameters>
-        <Docs>
-          <param name="color">The SkiaSharp color.</param>
-          <summary>Converts a SkiaSharp color into a System.Drawing color.</summary>
-        </Docs>
-        <Link Type="SkiaSharp.Views.tvOS.Extensions" Member="M:SkiaSharp.Views.tvOS.Extensions.ToDrawingColor(SkiaSharp.SKColor)" />
-      </Member>
-    </ExtensionMethod>
-    <ExtensionMethod>
-      <Targets>
         <Target Type="T:SkiaSharp.SKPoint" />
       </Targets>
       <Member MemberName="ToDrawingPoint">
@@ -5462,28 +5346,6 @@
           <summary>Converts a SkiaSharp size into a System.Drawing size.</summary>
         </Docs>
         <Link Type="SkiaSharp.Views.tvOS.Extensions" Member="M:SkiaSharp.Views.tvOS.Extensions.ToDrawingSize(SkiaSharp.SKSizeI)" />
-      </Member>
-    </ExtensionMethod>
-    <ExtensionMethod>
-      <Targets>
-        <Target Type="System.Drawing.Color" />
-      </Targets>
-      <Member MemberName="ToSKColor">
-        <MemberSignature Language="C#" Value="public static SkiaSharp.SKColor ToSKColor (this System.Drawing.Color color);" />
-        <MemberSignature Language="ILAsm" Value=".method public static hidebysig valuetype SkiaSharp.SKColor ToSKColor(valuetype System.Drawing.Color color) cil managed" />
-        <MemberSignature Language="DocId" Value="M:SkiaSharp.Views.tvOS.Extensions.ToSKColor(System.Drawing.Color)" />
-        <MemberType>ExtensionMethod</MemberType>
-        <ReturnValue>
-          <ReturnType>SkiaSharp.SKColor</ReturnType>
-        </ReturnValue>
-        <Parameters>
-          <Parameter Name="color" Type="System.Drawing.Color" RefType="this" />
-        </Parameters>
-        <Docs>
-          <param name="color">The System.Drawing color.</param>
-          <summary>Converts a System.Drawing color into a SkiaSharp color.</summary>
-        </Docs>
-        <Link Type="SkiaSharp.Views.tvOS.Extensions" Member="M:SkiaSharp.Views.tvOS.Extensions.ToSKColor(System.Drawing.Color)" />
       </Member>
     </ExtensionMethod>
     <ExtensionMethod>
