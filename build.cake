@@ -3,7 +3,7 @@
 #addin nuget:?package=Cake.FileHelpers&version=2.0.0
 
 #reference "tools/SharpCompress/lib/net45/SharpCompress.dll"
-#reference "tools/Newtonsoft.Json/lib/net45/SharpCompress.dll"
+#reference "tools/Newtonsoft.Json/lib/net45/Newtonsoft.Json.dll"
 
 using System.Linq;
 using System.Net.Http;
