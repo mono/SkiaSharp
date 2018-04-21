@@ -1,12 +1,12 @@
 
-void CreateFrameworks (Version minVersion, DirectoryPath docsTempPath) {
+void CreateFrameworks (DirectoryPath docsTempPath) {
     // download all the versions from nuget so we can generate the docs
-    var ids = new [] {
-        "skiasharp",
-        "skiasharp.views",
-        "skiasharp.views.forms",
-        "harfbuzzsharp",
-        "skiasharp.harfbuzz",
+    var ids = new Dictionary<string, Version> {
+        { "skiasharp",              new Version (1, 57, 0) },
+        { "skiasharp.views",        new Version (1, 57, 0) },
+        { "skiasharp.views.forms",  new Version (1, 57, 0) },
+        { "harfbuzzsharp",          new Version (1, 0, 0) },
+        { "skiasharp.harfbuzz",     new Version (1, 57, 0) },
     };
     var xplat = new [] {
         "netstandard1.3",
@@ -25,7 +25,7 @@ void CreateFrameworks (Version minVersion, DirectoryPath docsTempPath) {
     var xFrameworks = new XElement ("Frameworks");
     var xFrameworksDoc = new XDocument (xFrameworks);
 
-    foreach (var id in ids) {
+    foreach (var id in ids.Keys) {
         // get the versions for each nuget
         Information ($"Downloading information for ID: {id}...");
         var md = string.Format (metadata, id);
@@ -35,7 +35,7 @@ void CreateFrameworks (Version minVersion, DirectoryPath docsTempPath) {
         foreach (var package in page ["items"]) {
             var version = (string) package ["catalogEntry"] ["version"];
             // skip pre-release versions
-            if (version.Contains("-") || Version.Parse (version) < minVersion)
+            if (version.Contains("-") || Version.Parse (version) < ids [id])
                 continue;
 
             // download the assemblies
@@ -184,7 +184,7 @@ Task ("update-docs")
     var docsTempPath = MakeAbsolute (ROOT_PATH.Combine ("output/docs/temp"));
 
     // create the frameworks folder from the released NuGets
-    CreateFrameworks (new Version (1, 0, 0), docsTempPath);
+    CreateFrameworks (docsTempPath);
 
     // the reference folders to locate assemblies
     var refs = new List<DirectoryPath> ();
