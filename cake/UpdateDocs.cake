@@ -155,20 +155,35 @@ Task ("docs-format-docs")
         var xdoc = XDocument.Load (file.FullPath);
 
         // remove IComponent docs as this is just designer
-        xdoc.Root
-            .Elements ("Members")
-            .Elements ("Member")
-            .Where (e => e.Attribute ("MemberName")?.Value?.StartsWith ("System.ComponentModel.IComponent.") == true)
-            .Remove ();
+        if (xdoc.Root.Name == "Type") {
+            xdoc.Root
+                .Elements ("Members")
+                .Elements ("Member")
+                .Where (e => e.Attribute ("MemberName")?.Value?.StartsWith ("System.ComponentModel.IComponent.") == true)
+                .Remove ();
+        }
 
         // remove any duplicate public keys
-        var multiKey = xdoc.Root
-            .Elements ("Assemblies")
-            .Elements ("Assembly")
-            .Where (e => e.Elements ("AssemblyPublicKey").Count () > 1);
-        foreach (var mass in multiKey) {
-            mass.Elements ("AssemblyPublicKey")
-                .Skip (1)
+        if (xdoc.Root.Name == "Overview") {
+            var multiKey = xdoc.Root
+                .Elements ("Assemblies")
+                .Elements ("Assembly")
+                .Where (e => e.Elements ("AssemblyPublicKey").Count () > 1);
+            foreach (var mass in multiKey) {
+                mass.Elements ("AssemblyPublicKey")
+                    .Skip (1)
+                    .Remove ();
+            }
+        }
+
+        // Fix the type rename from SkPath1DPathEffectStyle to SKPath1DPathEffectStyle
+        // this breaks linux as it is just a case change and that OS is case sensitive
+        if (xdoc.Root.Name == "Overview") {
+            xdoc.Root
+                .Elements ("Types")
+                .Elements ("Namespace")
+                .Elements ("Type")
+                .Where (e => e.Attribute ("Name")?.Value == "SkPath1DPathEffectStyle")
                 .Remove ();
         }
 
