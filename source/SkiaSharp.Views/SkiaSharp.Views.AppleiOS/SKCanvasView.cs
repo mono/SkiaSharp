@@ -85,17 +85,20 @@ namespace SkiaSharp.Views.iOS
 			if (designMode || drawable == null)
 				return;
 
-			var ctx = UIGraphics.GetCurrentContext();
+			using (var ctx = UIGraphics.GetCurrentContext())
+			{
+				// create the skia context
+				SKImageInfo info;
+				using (var surface = drawable.CreateSurface(Bounds, IgnorePixelScaling ? 1 : ContentScaleFactor, out info))
+				{
 
-			// create the skia context
-			SKImageInfo info;
-			var surface = drawable.CreateSurface(Bounds, IgnorePixelScaling ? 1 : ContentScaleFactor, out info);
+					// draw on the image using SKiaSharp
+					DrawInSurface(surface, info);
 
-			// draw on the image using SKiaSharp
-			DrawInSurface(surface, info);
-
-			// draw the surface to the context
-			drawable.DrawSurface(ctx, Bounds, info, surface);
+					// draw the surface to the context
+					drawable.DrawSurface(ctx, Bounds, info, surface);
+				}
+			}
 		}
 
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
