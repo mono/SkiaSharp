@@ -1,12 +1,12 @@
 
-void CreateFrameworks (Version minVersion, DirectoryPath docsTempPath) {
+void CreateFrameworks (DirectoryPath docsTempPath) {
     // download all the versions from nuget so we can generate the docs
-    var ids = new [] {
-        "skiasharp",
-        "skiasharp.views",
-        "skiasharp.views.forms",
-        "harfbuzzsharp",
-        "skiasharp.harfbuzz",
+    var ids = new Dictionary<string, Version> {
+        { "skiasharp",              new Version (1, 57, 0) },
+        { "skiasharp.views",        new Version (1, 57, 0) },
+        { "skiasharp.views.forms",  new Version (1, 57, 0) },
+        { "harfbuzzsharp",          new Version (1, 0, 0) },
+        { "skiasharp.harfbuzz",     new Version (1, 57, 0) },
     };
     var xplat = new [] {
         "netstandard1.3",
@@ -25,7 +25,7 @@ void CreateFrameworks (Version minVersion, DirectoryPath docsTempPath) {
     var xFrameworks = new XElement ("Frameworks");
     var xFrameworksDoc = new XDocument (xFrameworks);
 
-    foreach (var id in ids) {
+    foreach (var id in ids.Keys) {
         // get the versions for each nuget
         Information ($"Downloading information for ID: {id}...");
         var md = string.Format (metadata, id);
@@ -35,7 +35,7 @@ void CreateFrameworks (Version minVersion, DirectoryPath docsTempPath) {
         foreach (var package in page ["items"]) {
             var version = (string) package ["catalogEntry"] ["version"];
             // skip pre-release versions
-            if (version.Contains("-") || Version.Parse (version) < minVersion)
+            if (version.Contains("-") || Version.Parse (version) < ids [id])
                 continue;
 
             // download the assemblies
@@ -106,7 +106,44 @@ void CreateFrameworks (Version minVersion, DirectoryPath docsTempPath) {
     xFrameworksDoc.Save ($"{docsTempPath}/frameworks.xml");
 }
 
-void FormatDocs ()
+Task ("docs-update-frameworks")
+    .Does (() => 
+{
+    var docsTempPath = MakeAbsolute (ROOT_PATH.Combine ("output/docs/temp"));
+
+    // create the frameworks folder from the released NuGets
+    CreateFrameworks (docsTempPath);
+
+    // the reference folders to locate assemblies
+    var refs = new List<DirectoryPath> ();
+    if (IsRunningOnWindows ()) {
+        var refAssemblies = "C:/Program Files (x86)/Microsoft Visual Studio/*/*/Common7/IDE/ReferenceAssemblies/Microsoft/Framework";
+        refs.AddRange (GetDirectories ($"{refAssemblies}/MonoAndroid/v1.0"));
+        refs.AddRange (GetDirectories ($"{refAssemblies}/MonoAndroid/v4.0.3"));
+        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.iOS/v1.0"));
+        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.TVOS/v1.0"));
+        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.WatchOS/v1.0"));
+        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.Mac/v2.0"));
+        refs.AddRange (GetDirectories ("C:/Program Files (x86)/Windows Kits/10/References/Windows.Foundation.UniversalApiContract/1.0.0.0"));
+        refs.AddRange (GetDirectories ($"{NUGET_PACKAGES}/xamarin.forms/{GetVersion ("Xamarin.Forms", "release")}/lib/*"));
+        refs.AddRange (GetDirectories ($"{NUGET_PACKAGES}/tizen.net/{GetVersion ("Tizen.NET", "release")}/lib/*"));
+        refs.AddRange (GetDirectories ($"{NUGET_PACKAGES}/opentk.glcontrol/{GetVersion ("OpenTK.GLControl", "release")}/lib/*"));
+    }
+
+    // generate doc files
+    var refArgs = string.Join (" ", refs.Select (r => $"--lib=\"{r}\""));
+    var fw = MakeAbsolute (docsTempPath.CombineWithFilePath ("frameworks.xml"));
+    RunProcess (MDocPath, new ProcessSettings {
+        Arguments = $"update --delete --out=\"{DOCS_PATH}\" -lang=DocId --frameworks={fw} {refArgs}",
+        WorkingDirectory = docsTempPath
+    });
+
+    // clean up after working
+    CleanDirectories (docsTempPath.FullPath);
+});
+
+Task ("docs-format-docs")
+    .Does (() => 
 {
     // process the generated docs
     var docFiles = GetFiles ("./docs/**/*.xml");
@@ -115,14 +152,40 @@ void FormatDocs ()
     float totalTypes = 0;
     float totalMembers = 0;
     foreach (var file in docFiles) {
-        var xdoc = XDocument.Load (file.ToString ());
+        var xdoc = XDocument.Load (file.FullPath);
 
         // remove IComponent docs as this is just designer
-        xdoc.Root
-            .Elements ("Members")
-            .Elements ("Member")
-            .Where (e => e.Attribute ("MemberName")?.Value?.StartsWith ("System.ComponentModel.IComponent.") == true)
-            .Remove ();
+        if (xdoc.Root.Name == "Type") {
+            xdoc.Root
+                .Elements ("Members")
+                .Elements ("Member")
+                .Where (e => e.Attribute ("MemberName")?.Value?.StartsWith ("System.ComponentModel.IComponent.") == true)
+                .Remove ();
+        }
+
+        // remove any duplicate public keys
+        if (xdoc.Root.Name == "Overview") {
+            var multiKey = xdoc.Root
+                .Elements ("Assemblies")
+                .Elements ("Assembly")
+                .Where (e => e.Elements ("AssemblyPublicKey").Count () > 1);
+            foreach (var mass in multiKey) {
+                mass.Elements ("AssemblyPublicKey")
+                    .Skip (1)
+                    .Remove ();
+            }
+        }
+
+        // Fix the type rename from SkPath1DPathEffectStyle to SKPath1DPathEffectStyle
+        // this breaks linux as it is just a case change and that OS is case sensitive
+        if (xdoc.Root.Name == "Overview") {
+            xdoc.Root
+                .Elements ("Types")
+                .Elements ("Namespace")
+                .Elements ("Type")
+                .Where (e => e.Attribute ("Name")?.Value == "SkPath1DPathEffectStyle")
+                .Remove ();
+        }
 
         // count the types without docs
         var typesWithDocs = xdoc.Root
@@ -170,48 +233,11 @@ void FormatDocs ()
         "Documentation missing in {0}/{1} ({2:0.0%}) types and {3}/{4} ({5:0.0%}) members.", 
         typeCount, totalTypes, typeCount / totalTypes, 
         memberCount, totalMembers, memberCount / totalMembers);
-}
-
-Task ("format-docs")
-    .Does (() => 
-{
-    FormatDocs ();
 });
 
 Task ("update-docs")
+    .IsDependentOn ("docs-update-frameworks")
+    .IsDependentOn ("docs-format-docs")
     .Does (() => 
 {
-    var docsTempPath = MakeAbsolute (ROOT_PATH.Combine ("output/docs/temp"));
-
-    // create the frameworks folder from the released NuGets
-    CreateFrameworks (new Version (1, 0, 0), docsTempPath);
-
-    // the reference folders to locate assemblies
-    var refs = new List<DirectoryPath> ();
-    if (IsRunningOnWindows ()) {
-        var refAssemblies = "C:/Program Files (x86)/Microsoft Visual Studio/*/*/Common7/IDE/ReferenceAssemblies/Microsoft/Framework";
-        refs.AddRange (GetDirectories ($"{refAssemblies}/MonoAndroid/v1.0"));
-        refs.AddRange (GetDirectories ($"{refAssemblies}/MonoAndroid/v4.0.3"));
-        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.iOS/v1.0"));
-        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.TVOS/v1.0"));
-        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.WatchOS/v1.0"));
-        refs.AddRange (GetDirectories ($"{refAssemblies}/Xamarin.Mac/v2.0"));
-        refs.AddRange (GetDirectories ("C:/Program Files (x86)/Windows Kits/10/References/Windows.Foundation.UniversalApiContract/1.0.0.0"));
-        refs.AddRange (GetDirectories ($"{NUGET_PACKAGES}/xamarin.forms/{GetVersion ("Xamarin.Forms", "release")}/lib/*"));
-        refs.AddRange (GetDirectories ($"{NUGET_PACKAGES}/tizen.net/{GetVersion ("Tizen.NET", "release")}/lib/*"));
-        refs.AddRange (GetDirectories ($"{NUGET_PACKAGES}/opentk.glcontrol/{GetVersion ("OpenTK.GLControl", "release")}/lib/*"));
-    }
-
-    // generate doc files
-    var refArgs = string.Join (" ", refs.Select (r => $"--lib=\"{r}\""));
-    var fw = MakeAbsolute (docsTempPath.CombineWithFilePath ("frameworks.xml"));
-    RunProcess (MDocPath, new ProcessSettings {
-        Arguments = $"update --preserve --out=\"{DOCS_PATH}\" -lang=DocId --frameworks={fw} {refArgs}",
-        WorkingDirectory = docsTempPath
-    });
-
-    // clean up after working
-    CleanDirectories (docsTempPath.FullPath);
-
-    FormatDocs ();
 });
