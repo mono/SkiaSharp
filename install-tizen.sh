@@ -3,7 +3,10 @@
 mkdir ~/tizen-temp
 cd ~/tizen-temp
 
-curl -L -o "tizen-install.bin" http://download.tizen.org/sdk/Installer/tizen-studio_2.3/web-cli_Tizen_Studio_2.3_macos-64.bin
+# mac:   http://download.tizen.org/sdk/Installer/tizen-studio_2.3/web-cli_Tizen_Studio_2.3_macos-64.bin
+# linux: http://download.tizen.org/sdk/Installer/tizen-studio_2.3/web-cli_Tizen_Studio_2.3_ubuntu-64.bin
+
+curl -L -o "tizen-install.bin" http://download.tizen.org/sdk/Installer/tizen-studio_2.3/web-cli_Tizen_Studio_2.3_ubuntu-64.bin
 chmod +x tizen-install.bin
 ./tizen-install.bin --accept-license ~/tizen-studio
 
