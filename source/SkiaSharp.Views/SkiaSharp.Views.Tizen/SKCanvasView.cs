@@ -1,60 +1,36 @@
-﻿using ElmSharp;
-using System;
+﻿using System;
+using ElmSharp;
+using SkiaSharp.Views.Tizen.Interop;
 
 namespace SkiaSharp.Views.Tizen
 {
-	/// <summary>
-	/// Software rendering for Skia.
-	/// </summary>
 	public class SKCanvasView : CustomRenderingView
 	{
-		/// <summary>
-		/// Backing field for IgnorePixelScaling.
-		/// </summary>
 		private bool ignorePixelScaling;
+		private SKImageInfo info;
 
-		/// <summary>
-		/// Information about the surface.
-		/// </summary>
-		private SKImageInfo info = new SKImageInfo(0, 0, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
-
-		/// <summary>
-		/// Creates new instance with the given object as its parent.
-		/// </summary>
-		/// <param name="parent">The parent object.</param>
-		public SKCanvasView(EvasObject parent) : base(parent)
+		public SKCanvasView(EvasObject parent)
+			: base(parent)
 		{
+			info = new SKImageInfo(0, 0, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
 		}
 
-		/// <summary>
-		/// If set to true, the surface is resized to device independent pixels, and then stretched to fill the view.
-		/// If set to false, the surface is resized to 1 canvas pixel per display pixel.
-		/// </summary>
-		/// <remarks>
-		/// Default value is false.
-		/// </remarks>
 		public bool IgnorePixelScaling
 		{
-			get
-			{
-				return ignorePixelScaling;
-			}
-
+			get { return ignorePixelScaling; }
 			set
 			{
 				if (ignorePixelScaling != value)
 				{
 					ignorePixelScaling = value;
-					OnSurfaceSizeChanged();
+					OnResized();
 				}
 			}
 		}
 
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
-		protected sealed override int SurfaceWidth => info.Width;
-
-		protected sealed override int SurfaceHeight => info.Height;
+		protected override SKSizeI GetSurfaceSize() => info.Size;
 
 		protected virtual void OnDrawFrame(SKSurface surface, SKImageInfo info)
 		{
@@ -64,7 +40,7 @@ namespace SkiaSharp.Views.Tizen
 		protected sealed override void OnDrawFrame()
 		{
 			// draw directly into the EFL image data
-			using (var surface = SKSurface.Create(info, Interop.Evas.Image.evas_object_image_data_get(EvasImage, true), info.RowBytes))
+			using (var surface = SKSurface.Create(info, Evas.evas_object_image_data_get(evasImage, true), info.RowBytes))
 			{
 				// draw using SkiaSharp
 				OnDrawFrame(surface, info);

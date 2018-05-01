@@ -1,6 +1,7 @@
-﻿internal static partial class Interop
+﻿
+namespace SkiaSharp.Views.Tizen.Interop
 {
-	private static class Libraries
+	internal static class Libraries
 	{
 		internal const string Libc = "libc.so.6";
 		internal const string Evas = "libevas.so.1";

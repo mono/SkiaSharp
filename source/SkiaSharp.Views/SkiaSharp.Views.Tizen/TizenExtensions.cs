@@ -1,12 +1,11 @@
 ﻿using ElmSharp;
-using System;
-using System.IO;
 
 namespace SkiaSharp.Views.Tizen
 {
 	public static class TizenExtensions
 	{
-		// Point*
+		// Point
+
 		public static SKPoint ToSKPoint(this Point point)
 		{
 			return new SKPoint(point.X, point.Y);
@@ -19,15 +18,16 @@ namespace SkiaSharp.Views.Tizen
 
 		public static Point ToPoint(this SKPoint point)
 		{
-			return new Point() { X = (int)point.X, Y = (int)point.Y };
+			return new Point { X = (int)point.X, Y = (int)point.Y };
 		}
 
 		public static Point ToPoint(this SKPointI point)
 		{
-			return new Point() { X = point.X, Y = point.Y };
+			return new Point { X = point.X, Y = point.Y };
 		}
 
-		// Rectangle*
+		// Rectangle
+
 		public static SKRect ToSKRect(this Rect rect)
 		{
 			return new SKRect(rect.Left, rect.Top, rect.Right, rect.Bottom);
@@ -49,6 +49,7 @@ namespace SkiaSharp.Views.Tizen
 		}
 
 		// Color
+
 		public static SKColor ToSKColor(this Color color)
 		{
 			return new SKColor((byte)color.R, (byte)color.G, (byte)color.B, (byte)color.A);
@@ -57,27 +58,6 @@ namespace SkiaSharp.Views.Tizen
 		public static Color ToColor(this SKColor color)
 		{
 			return Color.FromRgba(color.Red, color.Green, color.Blue, color.Alpha);
-		}
-
-		// Matrix
-		public static Stream ToStream(this SKBitmap skiaBitmap)
-		{
-			return ToStream(SKImage.FromBitmap(skiaBitmap));
-		}
-
-		public static Stream ToStream(this SKPixmap skiaPixmap)
-		{
-			return ToStream(SKImage.FromPixels(skiaPixmap));
-		}
-
-		public static Stream ToStream(this SKImage skiaImage)
-		{
-			return skiaImage.Encode().AsStream();
-		}
-
-		public static Stream ToStream(this SKPicture skiaPicture, SKSizeI dimensions)
-		{
-			return ToStream(SKImage.FromPicture(skiaPicture, dimensions));
 		}
 	}
 }

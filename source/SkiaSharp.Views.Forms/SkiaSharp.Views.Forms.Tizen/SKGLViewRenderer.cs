@@ -5,6 +5,7 @@ using SKFormsView = SkiaSharp.Views.Forms.SKGLView;
 using SKNativeView = SkiaSharp.Views.Tizen.SKGLSurfaceView;
 
 [assembly: ExportRenderer(typeof(SKFormsView), typeof(SkiaSharp.Views.Forms.SKGLViewRenderer))]
+
 namespace SkiaSharp.Views.Forms
 {
 	public class SKGLViewRenderer : SKGLViewRendererBase<SKFormsView, SKNativeView>

@@ -6,11 +6,8 @@ namespace SkiaSharp.Views.Forms
 	internal class SKTouchHandler
 	{
 		private readonly MomentumHandler momentumHandler;
-
 		private Action<SKTouchEventArgs> onTouchAction;
-
 		private Func<float, float> scalePixels;
-
 		private GestureLayer gestureLayer;
 
 		public SKTouchHandler(Action<SKTouchEventArgs> onTouchAction, Func<float, float> scalePixels)
@@ -26,13 +23,9 @@ namespace SkiaSharp.Views.Forms
 			if (view != null)
 			{
 				if (enableTouchEvents)
-				{
 					CreateGestureLayer(view);
-				}
 				else
-				{
 					DestroyGestureLayer();
-				}
 			}
 		}
 
@@ -84,7 +77,6 @@ namespace SkiaSharp.Views.Forms
 		private class MomentumHandler
 		{
 			private readonly SKTouchHandler handler;
-
 			private int currentId = 0;
 
 			public MomentumHandler(SKTouchHandler h)
@@ -116,9 +108,7 @@ namespace SkiaSharp.Views.Forms
 			private void PostEvent(SKTouchAction action)
 			{
 				if (handler.onTouchAction == null || handler.scalePixels == null)
-				{
 					return;
-				}
 
 				var p = handler.gestureLayer.EvasCanvas.Pointer;
 				var coords = new SKPoint(handler.scalePixels(p.X), handler.scalePixels(p.Y));

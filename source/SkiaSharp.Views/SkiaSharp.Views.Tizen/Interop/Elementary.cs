@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-internal static partial class Interop
+namespace SkiaSharp.Views.Tizen.Interop
 {
-	internal static partial class Elementary
+	internal static class Elementary
 	{
 		[DllImport(Libraries.Elementary)]
 		internal static extern IntPtr elm_layout_add(IntPtr obj);
@@ -16,5 +16,8 @@ internal static partial class Interop
 
 		[DllImport(Libraries.Elementary)]
 		internal static extern void elm_object_part_content_set(IntPtr obj, string part, IntPtr content);
+
+		[DllImport(Libraries.Elementary)]
+		internal static extern IntPtr elm_image_object_get(IntPtr obj);
 	}
 }

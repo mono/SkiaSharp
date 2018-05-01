@@ -1,52 +1,34 @@
-using ElmSharp;
 using System;
-
-using TSystemInfo = Tizen.System.SystemInfo;
+using ElmSharp;
+using Tizen.System;
 
 namespace SkiaSharp.Views.Tizen
 {
-    public static class ScalingInfo
-    {
-		private static Lazy<string> s_profile = new Lazy<string>(() =>
-		{
-			return Elementary.GetProfile();
-		});
+	public static class ScalingInfo
+	{
+		private static readonly Lazy<string> profile = new Lazy<string>(() => Elementary.GetProfile());
 
-		/// <summary>
-		/// DPI of the screen.
-		/// </summary>
-		private static Lazy<int> s_dpi = new Lazy<int>(() =>
+		private static readonly Lazy<int> dpi = new Lazy<int>(() =>
 		{
+			// TV has fixed DPI value (72)
 			if (Profile == "tv")
-			{
-				// TV has fixed DPI value (72)
 				return 72;
-			}
 
-			int dpi = 0;
-			TSystemInfo.TryGetValue("http://tizen.org/feature/screen.dpi", out dpi);
+			SystemInfo.TryGetValue("http://tizen.org/feature/screen.dpi", out int dpi);
 			return dpi;
 		});
 
-		/// <summary>
-		/// Scaling factor, allows to convert pixels to Android-style device-independent pixels.
-		/// </summary>
-		private static Lazy<float> s_scalingFactor = new Lazy<float>(() => s_dpi.Value / 160.0f);
+		// allows to convert pixels to Android-style device-independent pixels
+		private static readonly Lazy<float> scalingFactor = new Lazy<float>(() => dpi.Value / 160.0f);
 
-		public static string Profile => s_profile.Value;
+		public static string Profile => profile.Value;
 
-		public static int DPI => s_dpi.Value;
+		public static int Dpi => dpi.Value;
 
-		public static float ScalingFactor => s_scalingFactor.Value;
+		public static float ScalingFactor => scalingFactor.Value;
 
-		public static float FromPixel(float v)
-		{
-			return v / ScalingFactor;
-		}
+		public static float FromPixel(float v) => v / ScalingFactor;
 
-		public static float ToPixel(float v)
-		{
-			return v * ScalingFactor;
-		}
+		public static float ToPixel(float v) => v * ScalingFactor;
 	}
 }

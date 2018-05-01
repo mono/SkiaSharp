@@ -1,14 +1,15 @@
-﻿using SkiaSharp.Views.Tizen;
-using System.IO;
+﻿using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Xamarin.Forms;
 using Xamarin.Forms.Platform.Tizen;
 
-[assembly: ExportImageSourceHandler(typeof(SkiaSharp.Views.Forms.SKImageImageSource), typeof(SkiaSharp.Views.Forms.SKImageImageSourceHandler))]
-[assembly: ExportImageSourceHandler(typeof(SkiaSharp.Views.Forms.SKBitmapImageSource), typeof(SkiaSharp.Views.Forms.SKBitmapImageSourceeHandler))]
-[assembly: ExportImageSourceHandler(typeof(SkiaSharp.Views.Forms.SKPixmapImageSource), typeof(SkiaSharp.Views.Forms.SKPixmapImageSourceHandler))]
-[assembly: ExportImageSourceHandler(typeof(SkiaSharp.Views.Forms.SKPictureImageSource), typeof(SkiaSharp.Views.Forms.SKPictureImageSourceHandler))]
+using NativeImage = Xamarin.Forms.Platform.Tizen.Native.Image;
+
+[assembly: ExportImageSourceHandler(typeof(SkiaSharp.Views.Forms.SKImageImageSource), typeof(SkiaSharp.Views.Forms.SKImageSourceHandler))]
+[assembly: ExportImageSourceHandler(typeof(SkiaSharp.Views.Forms.SKBitmapImageSource), typeof(SkiaSharp.Views.Forms.SKImageSourceHandler))]
+[assembly: ExportImageSourceHandler(typeof(SkiaSharp.Views.Forms.SKPixmapImageSource), typeof(SkiaSharp.Views.Forms.SKImageSourceHandler))]
+[assembly: ExportImageSourceHandler(typeof(SkiaSharp.Views.Forms.SKPictureImageSource), typeof(SkiaSharp.Views.Forms.SKImageSourceHandler))]
 
 namespace SkiaSharp.Views.Forms
 {
@@ -16,52 +17,32 @@ namespace SkiaSharp.Views.Forms
 	{
 		private StreamImageSourceHandler handler = new StreamImageSourceHandler();
 
-		public Task<bool> LoadImageAsync(Xamarin.Forms.Platform.Tizen.Native.Image image, ImageSource imageSource, CancellationToken cancelationToken = default(CancellationToken))
+		public Task<bool> LoadImageAsync(NativeImage image, ImageSource imageSource, CancellationToken cancelationToken = default(CancellationToken))
 		{
-			return handler.LoadImageAsync(image, ImageSource.FromStream(() => ToStream(imageSource)), cancelationToken);
-		}
+			ImageSource newSource = null;
 
-		protected abstract Stream ToStream(ImageSource imageSource);
-	}
-
-	public sealed class SKImageImageSourceHandler : SKImageSourceHandler
-	{
-		protected override Stream ToStream(ImageSource imageSource)
-		{
-			return (imageSource as SKImageImageSource)?.Image?.ToStream();
-		}
-	}
-
-	public sealed class SKBitmapImageSourceeHandler : SKImageSourceHandler
-	{
-		protected override Stream ToStream(ImageSource imageSource)
-		{
-			return (imageSource as SKBitmapImageSource)?.Bitmap?.ToStream();
-		}
-	}
-
-	public sealed class SKPixmapImageSourceHandler : SKImageSourceHandler
-	{
-		protected override Stream ToStream(ImageSource imageSource)
-		{
-			return (imageSource as SKPixmapImageSource)?.Pixmap?.ToStream();
-		}
-	}
-
-	public sealed class SKPictureImageSourceHandler : SKImageSourceHandler
-	{
-		protected override Stream ToStream(ImageSource imageSource)
-		{
-			var pictureImageSource = imageSource as SKPictureImageSource;
-
-			if (pictureImageSource != null)
+			switch (imageSource)
 			{
-				return pictureImageSource.Picture?.ToStream(pictureImageSource.Dimensions);
+				case SKImageImageSource imageImageSource:
+					newSource = ImageSource.FromStream(() => ToStream(imageImageSource.Image));
+					break;
+				case SKBitmapImageSource bitmapImageSource:
+					newSource = ImageSource.FromStream(() => ToStream(SKImage.FromBitmap(bitmapImageSource.Bitmap)));
+					break;
+				case SKPixmapImageSource pixmapImageSource:
+					newSource = ImageSource.FromStream(() => ToStream(SKImage.FromPixels(pixmapImageSource.Pixmap)));
+					break;
+				case SKPictureImageSource pictureImageSource:
+					newSource = ImageSource.FromStream(() => ToStream(SKImage.FromPicture(pictureImageSource.Picture, pictureImageSource.Dimensions)));
+					break;
 			}
-			else
-			{
-				return null;
-			}
+
+			return handler.LoadImageAsync(image, newSource, cancelationToken);
+		}
+
+		private static Stream ToStream(SKImage skiaImage)
+		{
+			return skiaImage.Encode().AsStream();
 		}
 	}
 }
