@@ -1,6 +1,7 @@
-﻿using ElmSharp;
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
+using ElmSharp;
+using SkiaSharp.Views.GlesInterop;
 
 namespace SkiaSharp.Views.Tizen
 {
@@ -27,9 +28,6 @@ namespace SkiaSharp.Views.Tizen
 
 		// drawing context
 		private IntPtr glContext;
-
-		// access to OpenGL API
-		private Interop.Evas.GL.ApiWrapper glApi;
 
 		// EFL wrapper for a OpenGL surface
 		private IntPtr glSurface;
@@ -83,7 +81,7 @@ namespace SkiaSharp.Views.Tizen
 		{
 			if (glSurface != IntPtr.Zero)
 			{
-				glApi.GlClear(GlesInterop.Gles.GL_STENCIL_BUFFER_BIT);
+				Gles.glClear(Gles.GL_STENCIL_BUFFER_BIT);
 
 				// create the surface
 				using (var surface = SKSurface.Create(context, renderTarget))
@@ -138,9 +136,6 @@ namespace SkiaSharp.Views.Tizen
 
 				// initialize the context
 				glContext = Interop.Evas.GL.evas_gl_context_create(glEvas, IntPtr.Zero);
-
-				// obtain the OpenGL function pointers
-				glApi = new Interop.Evas.GL.ApiWrapper(glEvas);
 			}
 		}
 
@@ -148,9 +143,6 @@ namespace SkiaSharp.Views.Tizen
 		{
 			if (glEvas != IntPtr.Zero)
 			{
-				// zero the instance
-				glApi = null;
-
 				// destroy the context
 				Interop.Evas.GL.evas_gl_context_destroy(glEvas, glContext);
 				glContext = IntPtr.Zero;
@@ -181,7 +173,7 @@ namespace SkiaSharp.Views.Tizen
 				Interop.Evas.GL.evas_gl_make_current(glEvas, glSurface, glContext);
 
 				// resize the viewport
-				glApi.GlViewport(0, 0, renderTarget.Width, renderTarget.Height);
+				Gles.glViewport(0, 0, renderTarget.Width, renderTarget.Height);
 
 				// initialize the Skia's context
 				CreateContext();
@@ -208,7 +200,7 @@ namespace SkiaSharp.Views.Tizen
 		private void CreateContext()
 		{
 			// create the interface using the function pointers provided by the EFL
-			var glInterface = GRGlInterface.AssembleInterface((c, n) => glApi.GetFunctionPointer(n));
+			var glInterface = GRGlInterface.CreateNativeEvasInterface(glEvas);
 			context = GRContext.Create(GRBackend.OpenGL, glInterface);
 		}
 
