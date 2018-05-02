@@ -23,3 +23,4 @@ chmod +x tizen-install.bin
 # install packages
 cd ~/tizen-studio
 ./package-manager/package-manager-cli.bin install --no-java-check --accept-license MOBILE-4.0
+./package-manager/package-manager-cli.bin install --no-java-check --accept-license MOBILE-4.0
