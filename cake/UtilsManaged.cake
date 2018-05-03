@@ -132,6 +132,22 @@ var DecompressArchive = new Action<FilePath, DirectoryPath> ((archive, outputDir
 });
 
 var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath> ((samplesDirPath, outputDirPath) => {
+    var platformExtensions = new [] {
+        ".android",
+        ".desktop",
+        ".gtk",
+        ".ios",
+        ".mac",
+        ".netstandard",
+        ".osx",
+        ".portable",
+        ".shared",
+        ".tizen",
+        ".tvos",
+        ".uwp",
+        ".watchos",
+        ".wpf",
+    };
     var workingDir = outputDirPath.Combine ("samples");
 
     // copy the current samples directory
@@ -154,7 +170,7 @@ var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath> ((samplesDirPath
     var samplesDir = System.IO.Path.GetFullPath (toNativePath (MakeAbsolute (workingDir).FullPath));
     var samplesUri = new Uri (samplesDir);
 
-    // the regex to math the project entris in the solution
+    // the regex to math the project entries in the solution
     var solutionProjectRegex = new Regex(@",\s*""(.*?\.\w{2}proj)"", ""(\{.*?\})""");
 
     foreach (var file in GetFiles ($"{workingDir}/**/*")) {
@@ -227,8 +243,10 @@ var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath> ((samplesDirPath
                         // not inside the samples directory, so needs to be removed
                         if (projItem.Name.LocalName == "ProjectReference") {
                             // get the desired package ID for this project reference
-                            // we assume "Desired.Package.Id.<platform>.csproj"
-                            var binding = System.IO.Path.GetFileNameWithoutExtension (System.IO.Path.GetFileNameWithoutExtension (absInclude));
+                            // we assume "Desired.Package.Id.<platform>.csproj" or we assume "Desired.Package.Id.csproj"
+                            var binding = System.IO.Path.GetFileNameWithoutExtension (absInclude);
+                            if (platformExtensions.Contains (System.IO.Path.GetExtension (binding).ToLower ()))
+                                binding = System.IO.Path.GetFileNameWithoutExtension (binding);
                             // check to see if we have a specific version
                             var bindingVersion = GetVersion (binding);
                             if (!string.IsNullOrWhiteSpace (bindingVersion)) {

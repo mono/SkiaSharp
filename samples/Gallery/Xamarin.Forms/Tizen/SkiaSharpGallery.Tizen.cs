@@ -8,6 +8,8 @@ namespace SkiaSharpSample.Platform
 		{
 			base.OnCreate();
 
+			SamplesInitializer.Init();
+
 			LoadApplication(new App());
 		}
 
