@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\source\SkiaSharp.Build.props" />
+  <PropertyGroup>
+    <TargetFramework>tizen40</TargetFramework>
+    <OutputTypeEx>library</OutputTypeEx>
+    <RootNamespace>SkiaSharp</RootNamespace>
+    <AssemblyName>SkiaSharp</AssemblyName>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
+    <TizenCreateTpkOnBuild>false</TizenCreateTpkOnBuild>
+    <PackagingGroup>SkiaSharp</PackagingGroup>
+    <PackagingPlatform>tizen40</PackagingPlatform>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <OutputPath>bin\Debug\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DefineConstants>TRACE</DefineConstants>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <OutputPath>bin\Release\</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Tizen.NET" Version="4.0.0" ExcludeAssets="Runtime" />
+    <PackageReference Include="Tizen.NET.Sdk" Version="1.0.1" />
+    <PackageReference Include="mdoc" Version="5.6.4" PrivateAssets="All" />
+    <PackageReference Include="System.IO.UnmanagedMemoryStream" Version="4.3.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\output\native\tizen\armel\libSkiaSharp.so">
+      <Link>nuget\runtimes\tizen-armel\native\libSkiaSharp.so</Link>
+    </None>
+    <None Include="..\..\output\native\tizen\i386\libSkiaSharp.so">
+      <Link>nuget\runtimes\tizen-x86\native\libSkiaSharp.so</Link>
+    </None>
+  </ItemGroup>
+  <Import Project="..\Binding\Binding.projitems" Label="Shared" />
+  <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" />
+  <Import Project="..\..\source\SkiaSharp.Build.targets" />
+</Project>

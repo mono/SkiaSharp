@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\SkiaSharp.Build.props" />
+  <PropertyGroup>
+    <TargetFramework>tizen40</TargetFramework>
+    <OutputTypeEx>library</OutputTypeEx>
+    <RootNamespace>SkiaSharp.Views.Tizen</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.Tizen</AssemblyName>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
+    <TizenCreateTpkOnBuild>false</TizenCreateTpkOnBuild>
+    <PackagingGroup>SkiaSharp.Views</PackagingGroup>
+    <PackagingPlatform>tizen40</PackagingPlatform>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <OutputPath>bin\Debug\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DefineConstants>TRACE</DefineConstants>
+    <OutputPath>bin\Release\</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
+    <PackageReference Include="Tizen.NET" Version="4.0.0" ExcludeAssets="Runtime" />
+    <PackageReference Include="Tizen.NET.Sdk" Version="1.0.1" />
+    <PackageReference Include="mdoc" Version="5.6.4" PrivateAssets="All" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp.Tizen\SkiaSharp.Tizen.csproj" />
+  </ItemGroup>
+  <Import Project="..\..\SkiaSharp.Build.targets" />
+  <Import Project="..\SkiaSharp.Views.Shared\SkiaSharp.Views.Shared.projitems" Label="Shared" />
+</Project>
