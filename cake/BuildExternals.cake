@@ -514,7 +514,7 @@ Task ("externals-watchos")
 // this builds the native C and C++ externals for Android
 Task ("externals-android")
     .IsDependentOn ("externals-init")
-    .WithCriteria (IsRunningOnMac ())
+    .WithCriteria (IsRunningOnMac () || IsRunningOnWindows ())
     .Does (() => 
 {
     var ndkbuild = MakeAbsolute (Directory (ANDROID_NDK_HOME)).CombineWithFilePath ("ndk-build").FullPath;
