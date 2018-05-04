@@ -517,7 +517,8 @@ Task ("externals-android")
     .WithCriteria (IsRunningOnMac () || IsRunningOnWindows ())
     .Does (() => 
 {
-    var ndkbuild = MakeAbsolute (Directory (ANDROID_NDK_HOME)).CombineWithFilePath ("ndk-build").FullPath;
+    var cmd = IsRunningOnWindows () ? ".cmd" : "";
+    var ndkbuild = ANDROID_NDK_HOME.CombineWithFilePath ($"ndk-build{cmd}").FullPath;
 
     // SkiaSharp
 
@@ -618,7 +619,7 @@ Task ("externals-tizen")
     .Does (() =>
 {
     var bat = IsRunningOnWindows () ? ".bat" : "";
-    var tizen = MakeAbsolute (Directory (TIZEN_STUDIO_HOME)).CombineWithFilePath ($"tools/ide/bin/tizen{bat}").FullPath;
+    var tizen = TIZEN_STUDIO_HOME.CombineWithFilePath ($"tools/ide/bin/tizen{bat}").FullPath;
 
     var buildArch = new Action<string, string> ((arch, skiaArch) => {
         // generate native skia build files
