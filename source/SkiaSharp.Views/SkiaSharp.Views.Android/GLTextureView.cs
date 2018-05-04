@@ -728,11 +728,6 @@ namespace SkiaSharp.Views.Android
 				{
 					GuardedRun();
 				}
-				catch (Exception e)
-				{
-					// fall thru and exit normally
-					throw e;
-				}
 				finally
 				{
 					threadManager.ThreadExiting(this);
