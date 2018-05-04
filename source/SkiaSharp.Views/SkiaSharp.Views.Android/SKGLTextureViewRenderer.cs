@@ -40,6 +40,8 @@ namespace SkiaSharp.Views.Android
 
 			renderTarget.Width = width;
 			renderTarget.Height = height;
+
+			CreateContext();
 		}
 
 		public void OnSurfaceCreated(IGL10 gl, EGLConfig config)
@@ -62,10 +64,6 @@ namespace SkiaSharp.Views.Android
 			int[] framebuffers = new int[1];
 			gl.GlGetIntegerv(GLES20.GlFramebufferBinding, framebuffers, 0);
 
-			// create the SkiaSharp context
-			var glInterface = GRGlInterface.CreateNativeGlInterface();
-			context = GRContext.Create(GRBackend.OpenGL, glInterface);
-
 			// create the render target
 			renderTarget = new GRBackendRenderTargetDesc
 			{
@@ -77,6 +75,8 @@ namespace SkiaSharp.Views.Android
 				StencilBits = stencilbuffers[0],
 				RenderTargetHandle = (IntPtr)framebuffers[0],
 			};
+
+			CreateContext();
 		}
 
 		public void OnSurfaceDestroyed()
@@ -99,6 +99,15 @@ namespace SkiaSharp.Views.Android
 			{
 				context.Dispose();
 				context = null;
+			}
+		}
+
+		private void CreateContext()
+		{
+			if (context == null)
+			{
+				var glInterface = GRGlInterface.CreateNativeGlInterface();
+				context = GRContext.Create(GRBackend.OpenGL, glInterface);
 			}
 		}
 	}
