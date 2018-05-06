@@ -210,9 +210,6 @@ namespace SkiaSharp
 
 		public bool CopyTo (SKBitmap destination, SKColorType colorType)
 		{
-			// TODO: instead of working on `destination` directly, we should
-			//       create a temporary bitmap and then inject the data
-
 			if (destination == null) {
 				throw new ArgumentNullException (nameof (destination));
 			}
@@ -248,8 +245,10 @@ namespace SkiaSharp
 					break;
 			}
 
-			destination.Reset (); // TODO: is this needed?
-			if (!destination.TryAllocPixels (dstInfo, colorType == SKColorType.Index8 ? ColorTable : null)) {
+			// TODO: handle copying two Index8 images - copy/reference the color tables
+
+			var tmpDst = new SKBitmap ();
+			if (!tmpDst.TryAllocPixels (dstInfo, colorType == SKColorType.Index8 ? ColorTable : null)) {
 				return false;
 			}
 
@@ -273,6 +272,8 @@ namespace SkiaSharp
 			if (!srcPM.ReadPixels (dstPM)) {
 				return false;
 			}
+
+			destination.Swap (tmpDst);
 
 			return true;
 		}
@@ -728,6 +729,11 @@ namespace SkiaSharp
 			using (var pixmap = new SKPixmap ()) {
 				return PeekPixels (pixmap) && pixmap.Encode (dst, format, quality);
 			}
+		}
+		
+		private void Swap (SKBitmap other)
+		{
+			SkiaApi.sk_bitmap_swap (Handle, other.Handle);
 		}
 
 		private static SKStream WrapManagedStream (Stream stream)
