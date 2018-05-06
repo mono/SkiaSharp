@@ -218,12 +218,12 @@ namespace SkiaSharp
 				return false;
 			}
 
-			SKPixmap srcPM = PeekPixels ();
+			var srcPM = PeekPixels ();
 			if (srcPM == null) {
 				return false;
 			}
 
-			SKImageInfo dstInfo = srcPM.Info.WithColorType (colorType);
+			var dstInfo = srcPM.Info.WithColorType (colorType);
 			switch (colorType) {
 				case SKColorType.Rgb565:
 					// CopyTo() is not strict on alpha type. Here we set the src to opaque to allow
@@ -245,14 +245,12 @@ namespace SkiaSharp
 					break;
 			}
 
-			// TODO: handle copying two Index8 images - copy/reference the color tables
-
 			var tmpDst = new SKBitmap ();
 			if (!tmpDst.TryAllocPixels (dstInfo, colorType == SKColorType.Index8 ? ColorTable : null)) {
 				return false;
 			}
 
-			SKPixmap dstPM = destination.PeekPixels ();
+			var dstPM = tmpDst.PeekPixels ();
 			if (dstPM == null) {
 				return false;
 			}
