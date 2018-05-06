@@ -210,9 +210,6 @@ namespace SkiaSharp
 
 		public bool CopyTo (SKBitmap destination, SKColorType colorType)
 		{
-			// TODO: instead of working on `destination` directly, we should
-			//       create a temporary bitmap and then inject the data
-
 			if (destination == null) {
 				throw new ArgumentNullException (nameof (destination));
 			}
@@ -221,12 +218,12 @@ namespace SkiaSharp
 				return false;
 			}
 
-			SKPixmap srcPM = PeekPixels ();
+			var srcPM = PeekPixels ();
 			if (srcPM == null) {
 				return false;
 			}
 
-			SKImageInfo dstInfo = srcPM.Info.WithColorType (colorType);
+			var dstInfo = srcPM.Info.WithColorType (colorType);
 			switch (colorType) {
 				case SKColorType.Rgb565:
 					// CopyTo() is not strict on alpha type. Here we set the src to opaque to allow
@@ -248,12 +245,12 @@ namespace SkiaSharp
 					break;
 			}
 
-			destination.Reset (); // TODO: is this needed?
-			if (!destination.TryAllocPixels (dstInfo, colorType == SKColorType.Index8 ? ColorTable : null)) {
+			var tmpDst = new SKBitmap ();
+			if (!tmpDst.TryAllocPixels (dstInfo, colorType == SKColorType.Index8 ? ColorTable : null)) {
 				return false;
 			}
 
-			SKPixmap dstPM = destination.PeekPixels ();
+			var dstPM = tmpDst.PeekPixels ();
 			if (dstPM == null) {
 				return false;
 			}
@@ -273,6 +270,8 @@ namespace SkiaSharp
 			if (!srcPM.ReadPixels (dstPM)) {
 				return false;
 			}
+
+			destination.Swap (tmpDst);
 
 			return true;
 		}
@@ -728,6 +727,11 @@ namespace SkiaSharp
 			using (var pixmap = new SKPixmap ()) {
 				return PeekPixels (pixmap) && pixmap.Encode (dst, format, quality);
 			}
+		}
+		
+		private void Swap (SKBitmap other)
+		{
+			SkiaApi.sk_bitmap_swap (Handle, other.Handle);
 		}
 
 		private static SKStream WrapManagedStream (Stream stream)
