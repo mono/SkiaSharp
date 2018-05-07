@@ -50,7 +50,7 @@ void CreateFrameworks (DirectoryPath docsTempPath)
 
         // process the generated nugets as well
         var genVersion = GetVersion (id);
-        var genDest = ROOT_PATH.Combine ("output").Combine (id);
+        var genDest = ROOT_PATH.Combine ("output").Combine (id).Combine ("nuget");
         ProcessNuGet (docsTempPath, id, genVersion, genDest, xFrameworks);
     }
 
