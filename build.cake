@@ -199,7 +199,6 @@ Task ("samples")
         { "uwp", isWin },
         { "watchos", isMac },
         { "wpf", isWin },
-        { "tizen", isLinux }
     };
 
     var platformMatrix = new Dictionary<string, string> {
@@ -209,7 +208,6 @@ Task ("samples")
         { "watchos", "iPhoneSimulator" },
         { "xamarin.forms.mac", "iPhone" },
         { "xamarin.forms.windows", "x86" },
-        { "xamarin.forms.tizen",  "x86" }
     };
 
     var buildSample = new Action<FilePath> (sln => {
