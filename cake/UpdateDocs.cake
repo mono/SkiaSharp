@@ -84,6 +84,8 @@ void ProcessNuGet(DirectoryPath docsTempPath, string id, string version, Directo
                 platform = "tvos";
             } else if (d.StartsWith ("xamarinwatchos")) {
                 platform = "watchos";
+            } else if (d.StartsWith ("tizen")) {
+                platform = "tizen";
             } else {
                 throw new Exception ($"Unknown platform: {d}");
             }
