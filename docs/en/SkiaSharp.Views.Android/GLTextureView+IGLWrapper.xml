@@ -8,8 +8,8 @@
   </AssemblyInfo>
   <Interfaces />
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>An interface used to wrap a GL interface.</summary>
+    <remarks>Typically used for implementing debugging and tracing on top of the default GL interface. You would typically use this by creating your own class that implemented all the GL methods by delegating to another GL instance. Then you could add your own behavior before or after calling the delegate. All the wrapper would do was instantiate and return the wrapped GL instance.</remarks>
   </Docs>
   <Members>
     <Member MemberName="Wrap">
@@ -28,10 +28,12 @@
         <Parameter Name="gl" Type="Javax.Microedition.Khronos.Opengles.IGL" />
       </Parameters>
       <Docs>
-        <param name="gl">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="gl">The GL interface that is to be wrapped.</param>
+        <summary>Wraps a GL interface in another GL interface.</summary>
+        <returns>Returns the wrapped GL interface.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
       </Docs>
     </Member>
   </Members>

@@ -32,9 +32,9 @@ namespace SkiaSharp.Views.Tizen
 
 		protected override SKSizeI GetSurfaceSize() => info.Size;
 
-		protected virtual void OnDrawFrame(SKSurface surface, SKImageInfo info)
+		protected virtual void OnDrawFrame(SKPaintSurfaceEventArgs e)
 		{
-			PaintSurface?.Invoke(this, new SKPaintSurfaceEventArgs(surface, info));
+			PaintSurface?.Invoke(this, e);
 		}
 
 		protected sealed override void OnDrawFrame()
@@ -43,7 +43,7 @@ namespace SkiaSharp.Views.Tizen
 			using (var surface = SKSurface.Create(info, Evas.evas_object_image_data_get(evasImage, true), info.RowBytes))
 			{
 				// draw using SkiaSharp
-				OnDrawFrame(surface, info);
+				OnDrawFrame(new SKPaintSurfaceEventArgs(surface, info));
 				surface.Canvas.Flush();
 			}
 		}

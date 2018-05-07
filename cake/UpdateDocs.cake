@@ -50,7 +50,7 @@ void CreateFrameworks (DirectoryPath docsTempPath)
 
         // process the generated nugets as well
         var genVersion = GetVersion (id);
-        var genDest = ROOT_PATH.Combine ("output").Combine (id);
+        var genDest = ROOT_PATH.Combine ("output").Combine (id).Combine ("nuget");
         ProcessNuGet (docsTempPath, id, genVersion, genDest, xFrameworks);
     }
 
@@ -76,14 +76,16 @@ void ProcessNuGet(DirectoryPath docsTempPath, string id, string version, Directo
                 platform = "net";
             } else if (d.StartsWith ("uap")) {
                 platform = "uwp";
-            } else if (d.StartsWith ("xamarinios")) {
+            } else if (d.StartsWith ("xamarinios") || d.StartsWith ("xamarin.ios")) {
                 platform = "ios";
-            } else if (d.StartsWith ("xamarinmac")) {
+            } else if (d.StartsWith ("xamarinmac") || d.StartsWith ("xamarin.mac")) {
                 platform = "macos";
-            } else if (d.StartsWith ("xamarintvos")) {
+            } else if (d.StartsWith ("xamarintvos") || d.StartsWith ("xamarin.tvos")) {
                 platform = "tvos";
-            } else if (d.StartsWith ("xamarinwatchos")) {
+            } else if (d.StartsWith ("xamarinwatchos") || d.StartsWith ("xamarin.watchos")) {
                 platform = "watchos";
+            } else if (d.StartsWith ("tizen")) {
+                platform = "tizen";
             } else {
                 throw new Exception ($"Unknown platform: {d}");
             }
