@@ -160,9 +160,10 @@ var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath> ((samplesDirPath
         Force = true,
         Recursive = true
     };
-    DeleteDirectories (GetDirectories ($"{workingDir}/**/bin"), settings);
-    DeleteDirectories (GetDirectories ($"{workingDir}/**/obj"), settings);
-    DeleteDirectories (GetDirectories ($"{workingDir}/**/AppPackages"), settings);
+    DeleteDirectories (GetDirectories ($"{workingDir}/*/*/*/bin"), settings);
+    DeleteDirectories (GetDirectories ($"{workingDir}/*/*/*/obj"), settings);
+    DeleteDirectories (GetDirectories ($"{workingDir}/*/*/*/AppPackages"), settings);
+    DeleteDirectories (GetDirectories ($"{workingDir}/*/*/.vs"), settings);
 
     // make sure the paths are in the correct format for comparison
     var dpc = System.IO.Path.DirectorySeparatorChar;
