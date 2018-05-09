@@ -45,7 +45,7 @@ namespace SkiaSharp.Views.Forms
 			var pointer = evt.ActionIndex;
 
 			var id = evt.GetPointerId(pointer);
-			var coords = new SKPoint(scalePixels(evt.GetX(pointer)), scalePixels(evt.GetY(pointer)));
+			var coords = scalePixels(evt.GetX(pointer), evt.GetY(pointer));
 
 			switch (evt.ActionMasked)
 			{
