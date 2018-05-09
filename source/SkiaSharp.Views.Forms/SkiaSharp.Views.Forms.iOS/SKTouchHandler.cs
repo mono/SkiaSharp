@@ -8,9 +8,9 @@ namespace SkiaSharp.Views.Forms
 	internal class SKTouchHandler : UIGestureRecognizer
 	{
 		private Action<SKTouchEventArgs> onTouchAction;
-		private Func<nfloat, nfloat> scalePixels;
+		private Func<double, double, SKPoint> scalePixels;
 
-		public SKTouchHandler(Action<SKTouchEventArgs> onTouchAction, Func<nfloat, nfloat> scalePixels)
+		public SKTouchHandler(Action<SKTouchEventArgs> onTouchAction, Func<double, double, SKPoint> scalePixels)
 		{
 			this.onTouchAction = onTouchAction;
 			this.scalePixels = scalePixels;
@@ -100,7 +100,7 @@ namespace SkiaSharp.Views.Forms
 			var id = touch.Handle.ToInt64();
 
 			var cgPoint = touch.LocationInView(View);
-			var point = new SKPoint((float)scalePixels(cgPoint.X), (float)scalePixels(cgPoint.Y));
+			var point = scalePixels(cgPoint.X, cgPoint.Y);
 
 			var args = new SKTouchEventArgs(id, actionType, point, inContact);
 			onTouchAction(args);
