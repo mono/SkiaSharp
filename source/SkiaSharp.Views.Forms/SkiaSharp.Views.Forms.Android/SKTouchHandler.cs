@@ -6,9 +6,9 @@ namespace SkiaSharp.Views.Forms
 	internal class SKTouchHandler
 	{
 		private Action<SKTouchEventArgs> onTouchAction;
-		private Func<float, float> scalePixels;
+		private Func<double, double, SKPoint> scalePixels;
 
-		public SKTouchHandler(Action<SKTouchEventArgs> onTouchAction, Func<float, float> scalePixels)
+		public SKTouchHandler(Action<SKTouchEventArgs> onTouchAction, Func<double, double, SKPoint> scalePixels)
 		{
 			this.onTouchAction = onTouchAction;
 			this.scalePixels = scalePixels;
@@ -45,7 +45,7 @@ namespace SkiaSharp.Views.Forms
 			var pointer = evt.ActionIndex;
 
 			var id = evt.GetPointerId(pointer);
-			var coords = new SKPoint(scalePixels(evt.GetX(pointer)), scalePixels(evt.GetY(pointer)));
+			var coords = scalePixels(evt.GetX(pointer), evt.GetY(pointer));
 
 			switch (evt.ActionMasked)
 			{
@@ -64,7 +64,7 @@ namespace SkiaSharp.Views.Forms
 						for (pointer = 0; pointer < count; pointer++)
 						{
 							id = evt.GetPointerId(pointer);
-							coords = new SKPoint(scalePixels(evt.GetX(pointer)), scalePixels(evt.GetY(pointer)));
+							coords = scalePixels(evt.GetX(pointer), evt.GetY(pointer));
 
 							var args = new SKTouchEventArgs(id, SKTouchAction.Moved, coords, true);
 							onTouchAction(args);

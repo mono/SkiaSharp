@@ -8,9 +8,9 @@ namespace SkiaSharp.Views.Forms
 	internal class SKTouchHandler : NSGestureRecognizer
 	{
 		private Action<SKTouchEventArgs> onTouchAction;
-		private Func<nfloat, nfloat> scalePixels;
+		private Func<double, double, SKPoint> scalePixels;
 
-		public SKTouchHandler(Action<SKTouchEventArgs> onTouchAction, Func<nfloat, nfloat> scalePixels)
+		public SKTouchHandler(Action<SKTouchEventArgs> onTouchAction, Func<double, double, SKPoint> scalePixels)
 		{
 			this.onTouchAction = onTouchAction;
 			this.scalePixels = scalePixels;
@@ -115,7 +115,7 @@ namespace SkiaSharp.Views.Forms
 			// flip the Y coordinate for macOS
 			cgPoint.Y = View.Bounds.Height - cgPoint.Y;
 
-			var point = new SKPoint((float)scalePixels(cgPoint.X), (float)scalePixels(cgPoint.Y));
+			var point = scalePixels(cgPoint.X, cgPoint.Y);
 
 			var args = new SKTouchEventArgs(id, actionType, mouse, device, point, inContact);
 			onTouchAction(args);

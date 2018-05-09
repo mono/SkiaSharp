@@ -9,9 +9,9 @@ namespace SkiaSharp.Views.Forms
 	internal class SKTouchHandler
 	{
 		private Action<SKTouchEventArgs> onTouchAction;
-		private Func<float, float> scalePixels;
+		private Func<double, double, SKPoint> scalePixels;
 
-		public SKTouchHandler(Action<SKTouchEventArgs> onTouchAction, Func<float, float> scalePixels)
+		public SKTouchHandler(Action<SKTouchEventArgs> onTouchAction, Func<double, double, SKPoint> scalePixels)
 		{
 			this.onTouchAction = onTouchAction;
 			this.scalePixels = scalePixels;
@@ -100,7 +100,7 @@ namespace SkiaSharp.Views.Forms
 
 			var pointerPoint = evt.GetCurrentPoint(view);
 			var windowsPoint = pointerPoint.Position;
-			var skPoint = new SKPoint(scalePixels((float)windowsPoint.X), scalePixels((float)windowsPoint.Y));
+			var skPoint = scalePixels(windowsPoint.X, windowsPoint.Y);
 
 			var mouse = GetMouseButton(pointerPoint);
 			var device = GetTouchDevice(evt);

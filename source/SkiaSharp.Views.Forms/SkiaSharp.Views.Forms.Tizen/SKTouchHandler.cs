@@ -7,10 +7,10 @@ namespace SkiaSharp.Views.Forms
 	{
 		private readonly MomentumHandler momentumHandler;
 		private Action<SKTouchEventArgs> onTouchAction;
-		private Func<float, float> scalePixels;
+		private Func<double, double, SKPoint> scalePixels;
 		private GestureLayer gestureLayer;
 
-		public SKTouchHandler(Action<SKTouchEventArgs> onTouchAction, Func<float, float> scalePixels)
+		public SKTouchHandler(Action<SKTouchEventArgs> onTouchAction, Func<double, double, SKPoint> scalePixels)
 		{
 			this.onTouchAction = onTouchAction;
 			this.scalePixels = scalePixels;
@@ -111,7 +111,7 @@ namespace SkiaSharp.Views.Forms
 					return;
 
 				var p = handler.gestureLayer.EvasCanvas.Pointer;
-				var coords = new SKPoint(handler.scalePixels(p.X), handler.scalePixels(p.Y));
+				var coords = handler.scalePixels(p.X, p.Y);
 				var inContact = (action == SKTouchAction.Pressed || action == SKTouchAction.Moved) ? true : false;
 
 				handler.onTouchAction(new SKTouchEventArgs(currentId, action, coords, inContact));
