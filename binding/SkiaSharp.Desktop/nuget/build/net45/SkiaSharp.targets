@@ -29,7 +29,7 @@
         <PreferredLinuxNativeSkiaSharpPath>$(MSBuildThisFileDirectory)..\..\runtimes\linux-$(PreferredNativeSkiaSharp)\native\libSkiaSharp.so</PreferredLinuxNativeSkiaSharpPath>
     </PropertyGroup>
 
-    <ItemGroup>
+    <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' ">
         <None Include="$(PreferredWindowsNativeSkiaSharpPath)" Condition=" Exists('$(PreferredWindowsNativeSkiaSharpPath)') ">
             <Link>$([System.IO.Path]::GetFilename('$(PreferredWindowsNativeSkiaSharpPath)'))</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
