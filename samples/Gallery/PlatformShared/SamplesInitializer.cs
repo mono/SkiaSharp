@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 #if WINDOWS_UWP
 using Windows.ApplicationModel;
 using Windows.Storage;
@@ -17,6 +18,9 @@ using Android.Content;
 using System.Diagnostics;
 using System.Reflection;
 using System.Windows;
+#elif TIZEN4_0
+using Tizen.Applications;
+using Xamarin.Forms.Platform.Tizen;
 #endif
 
 namespace SkiaSharpSample
@@ -42,6 +46,8 @@ namespace SkiaSharpSample
 #elif __DESKTOP__
 			var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 			var path = Path.Combine(root, "Media", fontName);
+#elif TIZEN4_0
+			var path = ResourcePath.GetPath(fontName);
 #endif
 
 #if WINDOWS_UWP
@@ -53,6 +59,8 @@ namespace SkiaSharpSample
 			var localStorage = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
 #elif __DESKTOP__
 			var localStorage = System.Windows.Forms.Application.LocalUserAppDataPath;
+#elif TIZEN4_0
+			var localStorage = Application.Current.DirectoryInfo.Data;
 #endif
 
 			SamplesManager.ContentFontPath = path;
@@ -114,6 +122,17 @@ namespace SkiaSharpSample
 			Application.Context.StartActivity(intent);
 #elif __DESKTOP__
 			Process.Start(path);
+#elif TIZEN4_0
+			var appControl = new AppControl
+			{
+				Operation = AppControlOperations.View,
+				Uri = "file://" + path
+			};
+			var matchedApplications = AppControl.GetMatchedApplicationIds(appControl);
+			if (matchedApplications.Any())
+			{
+				AppControl.SendLaunchRequest(appControl);
+			}
 #endif
 		}
 	}

@@ -12,6 +12,17 @@ namespace SkiaSharpSample
 			: base(root)
 		{
 			InitializeComponent();
+
+			if (Device.RuntimePlatform == "Tizen")
+			{
+				ToolbarItems.Clear();
+				var item = new ToolbarItem
+				{
+					Icon = "more.png"
+				};
+				item.Clicked += OnMore;
+				ToolbarItems.Add(item);
+			}
 		}
 
 		public SampleBase Sample
@@ -28,10 +39,24 @@ namespace SkiaSharpSample
 
 		public event EventHandler PlaySamples;
 
+		private async void OnMore(object sender, EventArgs e)
+		{
+			var result = await DisplayActionSheet("More", "Close", null, "Configure Backend", "Toggle Slideshow");
+			switch (result)
+			{
+				case "Toggle Slideshow":
+					OnPlaySamples(sender, e);
+					break;
+				case "Configure Backend":
+					OnConfigureBackend(sender, e);
+					break;
+			}
+		}
+
 		private async void OnConfigureBackend(object sender, EventArgs e)
 		{
 			var items = Enum.GetNames(typeof(SampleBackends)).Except(new[] { nameof(SampleBackends.All) });
-			var backendString = await DisplayActionSheet("Select Backend:", "Cancel", null, items.ToArray());
+			var backendString = await DisplayActionSheet("Select Backend:", "Close", null, items.ToArray());
 
 			SampleBackends backend;
 			if (Enum.TryParse(backendString, out backend))

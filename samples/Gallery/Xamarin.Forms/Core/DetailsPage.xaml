@@ -6,12 +6,18 @@
   <NavigationPage.ToolbarItems>
     <ToolbarItem Name="Configure Backend" Clicked="OnConfigureBackend">
       <ToolbarItem.Icon>
-        <OnPlatform x:TypeArguments="FileImageSource" WinPhone="Assets/configure.png" iOS="configure.png" Android="configure.png" />
+        <OnPlatform x:TypeArguments="FileImageSource">
+          <On Platform="UWP" Value="Assets/configure.png" />
+          <On Platform="iOS,Android,Tizen" Value="configure.png" />
+        </OnPlatform>
       </ToolbarItem.Icon>
     </ToolbarItem>
     <ToolbarItem Name="Toggle Sample Slideshow" Clicked="OnPlaySamples">
       <ToolbarItem.Icon>
-        <OnPlatform x:TypeArguments="FileImageSource" WinPhone="Assets/slideshow.png" iOS="slideshow.png" Android="slideshow.png" />
+        <OnPlatform x:TypeArguments="FileImageSource">
+          <On Platform="UWP" Value="Assets/slideshow.png" />
+          <On Platform="iOS,Android,Tizen" Value="slideshow.png" />
+        </OnPlatform>
       </ToolbarItem.Icon>
     </ToolbarItem>
   </NavigationPage.ToolbarItems>
