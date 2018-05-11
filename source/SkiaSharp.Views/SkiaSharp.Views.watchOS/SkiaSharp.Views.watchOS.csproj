@@ -1,64 +1,25 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\SkiaSharp.Build.props" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{9E850CCA-54CC-4CEB-B2C2-E32EF4A17D61}</ProjectGuid>
-    <ProjectTypeGuids>{FC940695-DFE0-4552-9F25-99AF4A5619A1};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <OutputType>Library</OutputType>
+    <TargetFramework>xamarinwatchos1.0</TargetFramework>
+    <OutputTypeEx>library</OutputTypeEx>
     <RootNamespace>SkiaSharp.Views.watchOS</RootNamespace>
     <AssemblyName>SkiaSharp.Views.watchOS</AssemblyName>
-    <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
     <PackagingGroup>SkiaSharp.Views</PackagingGroup>
     <PackagingPlatform>Xamarin.WatchOS</PackagingPlatform>
+    <DefineConstants>$(DefineConstants);</DefineConstants>
+    <!-- __WATCHOS__ -->
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>__WATCHOS__;DEBUG;</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <MtouchLink>SdkOnly</MtouchLink>
-    <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
-    <MtouchTlsProvider>Default</MtouchTlsProvider>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
-    <DefineConstants>__WATCHOS__;</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <MtouchLink>SdkOnly</MtouchLink>
-    <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
-    <MtouchTlsProvider>Default</MtouchTlsProvider>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Core" />
-    <Reference Include="Xamarin.WatchOS" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="mdoc" Version="5.6.4" PrivateAssets="All" />
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.4.0" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Properties\" />
-    <Folder Include="Resources\" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\binding\SkiaSharp.watchOS\SkiaSharp.watchOS.csproj">
-      <Project>{099A4BAD-6CF7-4898-9D16-266BDD844F95}</Project>
-      <Name>SkiaSharp.watchOS</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp.watchOS\SkiaSharp.watchOS.csproj" />
   </ItemGroup>
   <Import Project="..\SkiaSharp.Views.AppleiOS\SkiaSharp.Views.AppleiOS.projitems" Label="Shared" />
   <Import Project="..\SkiaSharp.Views.Apple\SkiaSharp.Views.Apple.projitems" Label="Shared" />
   <Import Project="..\SkiaSharp.Views.Shared\SkiaSharp.Views.Shared.projitems" Label="Shared" />
   <Import Project="..\..\SkiaSharp.Build.targets" />
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\WatchOS\Xamarin.WatchOS.CSharp.targets" />
+  <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 </Project>

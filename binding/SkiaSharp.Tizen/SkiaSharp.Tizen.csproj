@@ -5,7 +5,6 @@
     <OutputTypeEx>library</OutputTypeEx>
     <RootNamespace>SkiaSharp</RootNamespace>
     <AssemblyName>SkiaSharp</AssemblyName>
-    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
     <TizenCreateTpkOnBuild>false</TizenCreateTpkOnBuild>
     <PackagingGroup>SkiaSharp</PackagingGroup>
@@ -14,6 +13,7 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.4.0" PrivateAssets="All" />
     <PackageReference Include="Tizen.NET" Version="4.0.0" ExcludeAssets="Runtime" />
     <PackageReference Include="Tizen.NET.Sdk" Version="1.0.1" />
     <PackageReference Include="mdoc" Version="5.6.4" PrivateAssets="All" />
@@ -26,4 +26,5 @@
   <Import Project="..\Binding\Binding.projitems" Label="Shared" />
   <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" />
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
+  <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 </Project>
