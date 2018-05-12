@@ -17,7 +17,7 @@ namespace SkiaSharpSample.Platform
 		{
 			var app = new Program();
 
-			Forms.Init(app);
+			Forms.Init(app, true);
 
 			app.Run(args);
 		}
