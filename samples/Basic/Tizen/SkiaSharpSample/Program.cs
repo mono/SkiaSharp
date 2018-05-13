@@ -1,4 +1,4 @@
-using Xamarin.Forms.Platform.Tizen;
+﻿using Xamarin.Forms.Platform.Tizen;
 
 namespace SkiaSharpSample
 {
@@ -7,7 +7,7 @@ namespace SkiaSharpSample
 		public static void Main(string[] args)
 		{
 			var app = new Program();
-			Forms.Init(app);
+			Forms.Init(app, true);
 			app.Run(args);
 		}
 
