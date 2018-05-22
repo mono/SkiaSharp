@@ -20,8 +20,10 @@
     <EmbeddedNativeLibrary Include="..\..\output\native\android\x86\libSkiaSharp.so" Link="libs\x86\libSkiaSharp.so" />
     <EmbeddedNativeLibrary Include="..\..\output\native\android\x86_64\libSkiaSharp.so" Link="libs\x86_64\libSkiaSharp.so" />
   </ItemGroup>
-  <Import Project="..\Binding\Binding.projitems" Label="Shared" />
-  <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" />
+  <ItemGroup>
+    <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)\%(Filename).shared%(Extension)" />
+    <Compile Include="..\Binding\**\*.cs" Link="%(RecursiveDir)\%(Filename)%(Extension)" />
+  </ItemGroup>
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
   <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 </Project>

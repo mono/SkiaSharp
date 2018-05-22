@@ -26,8 +26,10 @@
     <None Include="..\..\output\native\uwp\x86\libEGL.dll" Link="nuget\runtimes\win10-x86\nativeassets\uap10.0\libEGL.dll" />
     <None Include="..\..\output\native\uwp\arm\libEGL.dll" Link="nuget\runtimes\win10-arm\nativeassets\uap10.0\libEGL.dll" />
   </ItemGroup>
-  <Import Project="..\Binding\Binding.projitems" Label="Shared" />
-  <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" />
+  <ItemGroup>
+    <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)\%(Filename).shared%(Extension)" />
+    <Compile Include="..\Binding\**\*.cs" Link="%(RecursiveDir)\%(Filename)%(Extension)" />
+  </ItemGroup>
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
   <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 </Project>
