@@ -23,8 +23,10 @@
     <None Include="..\..\output\native\tizen\armel\libSkiaSharp.so" Link="nuget\runtimes\tizen-armel\native\libSkiaSharp.so" />
     <None Include="..\..\output\native\tizen\i386\libSkiaSharp.so" Link="nuget\runtimes\tizen-x86\native\libSkiaSharp.so" />
   </ItemGroup>
-  <Import Project="..\Binding\Binding.projitems" Label="Shared" />
-  <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" />
+  <ItemGroup>
+    <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)\%(Filename).shared%(Extension)" />
+    <Compile Include="..\Binding\**\*.cs" Link="%(RecursiveDir)\%(Filename)%(Extension)" />
+  </ItemGroup>
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
   <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 </Project>

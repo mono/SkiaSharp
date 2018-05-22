@@ -21,8 +21,10 @@
     <None Include="..\..\output\native\tizen\armel\libHarfBuzzSharp.so" Link="nuget\runtimes\tizen-armel\native\libHarfBuzzSharp.so" />
     <None Include="..\..\output\native\tizen\i386\libHarfBuzzSharp.so" Link="nuget\runtimes\tizen-x86\native\libHarfBuzzSharp.so" />
   </ItemGroup>
-  <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" />
-  <Import Project="..\HarfBuzzSharp.Shared\HarfBuzzSharp.Shared.projitems" Label="Shared" />
+  <ItemGroup>
+    <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)\%(Filename).shared%(Extension)" />
+    <Compile Include="..\HarfBuzzSharp.Shared\**\*.cs" Link="%(RecursiveDir)\%(Filename)%(Extension)" />
+  </ItemGroup>
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
   <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 </Project>

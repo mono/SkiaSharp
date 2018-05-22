@@ -19,8 +19,10 @@
     <ProjectReference Include="..\..\..\binding\SkiaSharp.Android\SkiaSharp.Android.csproj" />
     <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Android\SkiaSharp.Views.Android.csproj" />
   </ItemGroup>
-  <Import Project="..\SkiaSharp.Views.Forms.Shared\SkiaSharp.Views.Forms.Shared.projitems" Label="Shared" />
-  <Import Project="..\SkiaSharp.Views.Forms.Native.Shared\SkiaSharp.Views.Forms.Native.Shared.projitems" Label="Shared" />
+  <ItemGroup>
+    <Compile Include="..\SkiaSharp.Views.Forms.Shared\**\*.cs" Link="%(RecursiveDir)\%(Filename)%(Extension)" />
+    <Compile Include="..\SkiaSharp.Views.Forms.Native.Shared\**\*.cs" Link="%(RecursiveDir)\%(Filename)%(Extension)" />
+  </ItemGroup>
   <Import Project="..\..\SkiaSharp.Build.targets" />
   <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 </Project>
