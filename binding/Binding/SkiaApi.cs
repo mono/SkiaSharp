@@ -77,7 +77,7 @@ namespace SkiaSharp
 		private const string SKIA = "libSkiaSharp.so";
 #elif __MACOS__
 		private const string SKIA = "libSkiaSharp.dylib";
-#elif DESKTOP
+#elif __DESKTOP__
 		private const string SKIA = "libSkiaSharp";
 #elif WINDOWS_UWP
 		private const string SKIA = "libSkiaSharp.dll";

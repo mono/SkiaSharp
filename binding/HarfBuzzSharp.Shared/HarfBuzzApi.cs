@@ -27,7 +27,7 @@ namespace HarfBuzzSharp
 		private const string HARFBUZZ = "libHarfBuzzSharp.so";
 #elif __MACOS__
 		private const string HARFBUZZ = "libHarfBuzzSharp.dylib";
-#elif DESKTOP
+#elif __DESKTOP__
 		private const string HARFBUZZ = "libHarfBuzzSharp";
 #elif WINDOWS_UWP
 		private const string HARFBUZZ = "libHarfBuzzSharp.dll";

@@ -3,24 +3,19 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.3</TargetFramework>
     <OutputTypeEx>library</OutputTypeEx>
-    <AssemblyName>HarfBuzzSharp</AssemblyName>
     <RootNamespace>HarfBuzzSharp</RootNamespace>
-    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <AssemblyName>HarfBuzzSharp</AssemblyName>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
     <PackagingPlatform>netstandard1.3</PackagingPlatform>
+    <DefineConstants>$(DefineConstants);HARFBUZZ;NET_STANDARD</DefineConstants>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="mdoc" Version="5.6.4" PrivateAssets="All" />
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.4.0" PrivateAssets="All" />
   </ItemGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>TRACE;DEBUG;HARFBUZZ;NET_STANDARD</DefineConstants>
-    <OutputPath>bin\Debug\</OutputPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>TRACE;RELEASE;HARFBUZZ;NET_STANDARD</DefineConstants>
-    <OutputPath>bin\Release\</OutputPath>
-  </PropertyGroup>
   <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" />
   <Import Project="..\HarfBuzzSharp.Shared\HarfBuzzSharp.Shared.projitems" Label="Shared" />
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
+  <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 </Project>
