@@ -9,7 +9,8 @@ cmd-strip = $(PRIVATE_STRIP) --strip-all $(call host-path,$1)
 
 LOCAL_MODULE           := HarfBuzzSharp
 
-LOCAL_C_INCLUDES       := ../../externals/harfbuzz/harfbuzz/src/hb-ucdn \
+LOCAL_C_INCLUDES       := .                                             \
+                          ../../externals/harfbuzz/harfbuzz/src/hb-ucdn \
                           ../../externals/harfbuzz/harfbuzz/src         \
                           ../../externals/harfbuzz/harfbuzz
 
