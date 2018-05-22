@@ -1,6 +1,6 @@
 <Type Name="SKCanvasView" FullName="SkiaSharp.Views.Forms.SKCanvasView">
-  <TypeSignature Language="C#" Value="public class SKCanvasView : Xamarin.Forms.View" />
-  <TypeSignature Language="ILAsm" Value=".class public auto ansi beforefieldinit SKCanvasView extends Xamarin.Forms.View implements class Xamarin.Forms.IElementController, class Xamarin.Forms.IViewController, class Xamarin.Forms.IVisualElementController" />
+  <TypeSignature Language="C#" Value="public class SKCanvasView : Xamarin.Forms.View, SkiaSharp.Views.Forms.ISKCanvasViewController" />
+  <TypeSignature Language="ILAsm" Value=".class public auto ansi beforefieldinit SKCanvasView extends Xamarin.Forms.View implements class SkiaSharp.Views.Forms.ISKCanvasViewController, class Xamarin.Forms.IElementController, class Xamarin.Forms.IViewController, class Xamarin.Forms.IVisualElementController" />
   <TypeSignature Language="DocId" Value="T:SkiaSharp.Views.Forms.SKCanvasView" />
   <AssemblyInfo>
     <AssemblyName>SkiaSharp.Views.Forms</AssemblyName>
@@ -12,7 +12,11 @@
   <Base>
     <BaseTypeName>Xamarin.Forms.View</BaseTypeName>
   </Base>
-  <Interfaces />
+  <Interfaces>
+    <Interface>
+      <InterfaceName>SkiaSharp.Views.Forms.ISKCanvasViewController</InterfaceName>
+    </Interface>
+  </Interfaces>
   <Attributes>
     <Attribute>
       <AttributeName>Xamarin.Forms.RenderWith(typeof(SkiaSharp.Views.Forms.SKCanvasViewRenderer))</AttributeName>
@@ -316,6 +320,94 @@ myView.PaintSurface += (sender, e) => {
           </example>
           <para></para>
         </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SkiaSharp.Views.Forms.ISKCanvasViewController.GetCanvasSize">
+      <MemberSignature Language="C#" Value="event EventHandler&lt;SkiaSharp.Views.Forms.GetPropertyValueEventArgs&lt;SkiaSharp.SKSize&gt;&gt; SkiaSharp.Views.Forms.ISKCanvasViewController.GetCanvasSize;" />
+      <MemberSignature Language="ILAsm" Value=".event class System.EventHandler`1&lt;class SkiaSharp.Views.Forms.GetPropertyValueEventArgs`1&lt;valuetype SkiaSharp.SKSize&gt;&gt; SkiaSharp.Views.Forms.ISKCanvasViewController.GetCanvasSize" />
+      <MemberSignature Language="DocId" Value="E:SkiaSharp.Views.Forms.SKCanvasView.SkiaSharp#Views#Forms#ISKCanvasViewController#GetCanvasSize" />
+      <MemberType>Event</MemberType>
+      <Implements>
+        <InterfaceMember>E:SkiaSharp.Views.Forms.ISKCanvasViewController.GetCanvasSize</InterfaceMember>
+      </Implements>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp.Views.Forms</AssemblyName>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.EventHandler&lt;SkiaSharp.Views.Forms.GetPropertyValueEventArgs&lt;SkiaSharp.SKSize&gt;&gt;</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>The event that is raised when the Xamarin.Forms view requests the size of the current SkiaSharp surface.</summary>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SkiaSharp.Views.Forms.ISKCanvasViewController.OnPaintSurface">
+      <MemberSignature Language="C#" Value="void ISKCanvasViewController.OnPaintSurface (SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs e);" />
+      <MemberSignature Language="ILAsm" Value=".method hidebysig newslot virtual instance void SkiaSharp.Views.Forms.ISKCanvasViewController.OnPaintSurface(class SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs e) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.Views.Forms.SKCanvasView.SkiaSharp#Views#Forms#ISKCanvasViewController#OnPaintSurface(SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs)" />
+      <MemberType>Method</MemberType>
+      <Implements>
+        <InterfaceMember>M:SkiaSharp.Views.Forms.ISKCanvasViewController.OnPaintSurface(SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs)</InterfaceMember>
+      </Implements>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp.Views.Forms</AssemblyName>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="e" Type="SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs" />
+      </Parameters>
+      <Docs>
+        <param name="e">The event arguments that contain the drawing surface and information.</param>
+        <summary>The method that is invoked when the native SkiaSharp surface is being repainted.</summary>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SkiaSharp.Views.Forms.ISKCanvasViewController.OnTouch">
+      <MemberSignature Language="C#" Value="void ISKCanvasViewController.OnTouch (SkiaSharp.Views.Forms.SKTouchEventArgs e);" />
+      <MemberSignature Language="ILAsm" Value=".method hidebysig newslot virtual instance void SkiaSharp.Views.Forms.ISKCanvasViewController.OnTouch(class SkiaSharp.Views.Forms.SKTouchEventArgs e) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.Views.Forms.SKCanvasView.SkiaSharp#Views#Forms#ISKCanvasViewController#OnTouch(SkiaSharp.Views.Forms.SKTouchEventArgs)" />
+      <MemberType>Method</MemberType>
+      <Implements>
+        <InterfaceMember>M:SkiaSharp.Views.Forms.ISKCanvasViewController.OnTouch(SkiaSharp.Views.Forms.SKTouchEventArgs)</InterfaceMember>
+      </Implements>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp.Views.Forms</AssemblyName>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="e" Type="SkiaSharp.Views.Forms.SKTouchEventArgs" />
+      </Parameters>
+      <Docs>
+        <param name="e">The event arguments that contain the touch information.</param>
+        <summary>The method that is invoked when there is a touch event on the native view.</summary>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="SkiaSharp.Views.Forms.ISKCanvasViewController.SurfaceInvalidated">
+      <MemberSignature Language="C#" Value="event EventHandler SkiaSharp.Views.Forms.ISKCanvasViewController.SurfaceInvalidated;" />
+      <MemberSignature Language="ILAsm" Value=".event class System.EventHandler SkiaSharp.Views.Forms.ISKCanvasViewController.SurfaceInvalidated" />
+      <MemberSignature Language="DocId" Value="E:SkiaSharp.Views.Forms.SKCanvasView.SkiaSharp#Views#Forms#ISKCanvasViewController#SurfaceInvalidated" />
+      <MemberType>Event</MemberType>
+      <Implements>
+        <InterfaceMember>E:SkiaSharp.Views.Forms.ISKCanvasViewController.SurfaceInvalidated</InterfaceMember>
+      </Implements>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp.Views.Forms</AssemblyName>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.EventHandler</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>The event that is raised when the Xamarin.Forms view requests the native view be repainted.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Touch">

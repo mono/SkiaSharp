@@ -25,6 +25,17 @@ namespace SkiaSharpSample
 			};
 			detailsPage.PlaySamples += delegate { masterPage.CycleSamples(); };
 
+			if (Device.RuntimePlatform == "Tizen")
+			{
+				var hamburger = new ToolbarItem
+				{
+					Icon = "hamburger.png",
+					Order = ToolbarItemOrder.Secondary
+				};
+				hamburger.Clicked += delegate { IsPresented = !IsPresented; };
+				detailsPage.ToolbarItems.Add(hamburger);
+			}
+
 			Master = masterPage;
 			Detail = detailsPage;
 		}

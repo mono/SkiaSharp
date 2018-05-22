@@ -27,7 +27,7 @@ namespace SkiaSharpSample
 
 		private void Initialize()
 		{
-			var window = new Window("ElmSharpApp");
+			var window = new Window("SkiaSharp");
 			window.BackButtonPressed += OnBackButtonPressed;
 			window.AvailableRotations = DisplayRotation.Degree_0 | DisplayRotation.Degree_180 | DisplayRotation.Degree_270 | DisplayRotation.Degree_90;
 			window.Show();
@@ -44,13 +44,13 @@ namespace SkiaSharpSample
 		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
 		{
 			var skiaView = sender as SKCanvasView;
-			var geo = skiaView.Geometry.ToSKRect();
 
 			// the the canvas and properties
 			var canvas = e.Surface.Canvas;
 
 			// get the screen density for scaling
-			var scale = e.Info.Width / geo.Width;
+			var scale = (float)ScalingInfo.ScalingFactor;
+			var scaledSize = new SKSize(e.Info.Width / scale, e.Info.Height / scale);
 
 			// handle the device screen density
 			canvas.Scale(scale);
@@ -67,7 +67,7 @@ namespace SkiaSharpSample
 				TextAlign = SKTextAlign.Center,
 				TextSize = 24
 			};
-			var coord = new SKPoint(geo.Width / 2f, (geo.Height + paint.TextSize) / 2f);
+			var coord = new SKPoint(scaledSize.Width / 2, (scaledSize.Height + paint.TextSize) / 2);
 			canvas.DrawText("SkiaSharp", coord, paint);
 		}
 

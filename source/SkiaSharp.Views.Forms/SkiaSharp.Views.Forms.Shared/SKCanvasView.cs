@@ -95,7 +95,7 @@ namespace SkiaSharp.Views.Forms
 		}
 	}
 
-	internal interface ISKCanvasViewController : IViewController
+	public interface ISKCanvasViewController : IViewController
 	{
 		// the native listens to this event
 		event EventHandler SurfaceInvalidated;

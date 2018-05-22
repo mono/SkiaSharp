@@ -15,13 +15,13 @@ using Windows.UI.Xaml.Navigation;
 
 namespace SkiaSharpSample.UWP
 {
-    public sealed partial class MainPage
-    {
-        public MainPage()
-        {
-            this.InitializeComponent();
+	public sealed partial class MainPage
+	{
+		public MainPage()
+		{
+			this.InitializeComponent();
 
-            LoadApplication(new SkiaSharpSample.App());
-        }
-    }
+			LoadApplication(new SkiaSharpSample.App());
+		}
+	}
 }
