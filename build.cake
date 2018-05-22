@@ -189,7 +189,7 @@ Task ("samples")
     var isWin = IsRunningOnWindows ();
 
     var buildMatrix = new Dictionary<string, bool> {
-        { "android", isMac },
+        { "android", isMac || isWin },
         { "gtk", isLinux || isMac },
         { "ios", isMac },
         { "macos", isMac },
