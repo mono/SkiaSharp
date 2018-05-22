@@ -1,61 +1,29 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\source\SkiaSharp.Build.props" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{0C940695-4868-4CF7-7D16-266BDD88A812}</ProjectGuid>
-    <ProjectTypeGuids>{FC940695-DFE0-4552-9F25-99AF4A5619A1};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <OutputType>Library</OutputType>
+    <TargetFramework>xamarinwatchos1.0</TargetFramework>
+    <OutputTypeEx>library</OutputTypeEx>
     <RootNamespace>HarfBuzzSharp</RootNamespace>
     <AssemblyName>HarfBuzzSharp</AssemblyName>
-    <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
     <PackagingPlatform>Xamarin.WatchOS</PackagingPlatform>
+    <DefineConstants>$(DefineConstants);HARFBUZZ</DefineConstants>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <IsBindingProject>true</IsBindingProject>
+    <EnableDefaultItems>false</EnableDefaultItems>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;MONOTOUCH;HARFBUZZ</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
-    <DefineConstants>MONOTOUCH;HARFBUZZ</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="Xamarin.WatchOS" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="mdoc" Version="5.6.4" PrivateAssets="All" />
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.4.0" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <ObjcBindingApiDefinition Include="ApiDefinition.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <ObjcBindingCoreSource Include="Structs.cs" />
+    <ObjcBindingNativeLibrary Include="..\..\output\native\watchos\libHarfBuzzSharp.a" Link="libHarfBuzzSharp.a" />
   </ItemGroup>
-  <ItemGroup>
-    <ObjcBindingNativeLibrary Include="..\..\output\native\watchos\libHarfBuzzSharp.a">
-      <Link>libHarfBuzzSharp.a</Link>
-    </ObjcBindingNativeLibrary>
-  </ItemGroup>
-  <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" Condition="Exists('..\Binding.Shared\Binding.Shared.projitems')" />
-  <Import Project="..\HarfBuzzSharp.Shared\HarfBuzzSharp.Shared.projitems" Label="Shared" Condition="Exists('..\HarfBuzzSharp.Shared\HarfBuzzSharp.Shared.projitems')" />
+  <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" />
+  <Import Project="..\HarfBuzzSharp.Shared\HarfBuzzSharp.Shared.projitems" Label="Shared" />
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\WatchOS\Xamarin.WatchOS.ObjCBinding.CSharp.targets" />
+  <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 </Project>

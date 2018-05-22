@@ -1,73 +1,22 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\SkiaSharp.Build.props" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{926C8D29-E047-4F4E-8B35-852E47BFA9F5}</ProjectGuid>
-    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <OutputType>Library</OutputType>
+    <TargetFramework>monoandroid4.0.3</TargetFramework>
+    <OutputTypeEx>library</OutputTypeEx>
     <RootNamespace>SkiaSharp.Views.Android</RootNamespace>
     <AssemblyName>SkiaSharp.Views.Android</AssemblyName>
-    <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
-    <AndroidResgenClass>Resource</AndroidResgenClass>
-    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
-    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
-    <AndroidUseLatestPlatformSdk>false</AndroidUseLatestPlatformSdk>
-    <TargetFrameworkVersion>v4.0.3</TargetFrameworkVersion>
     <PackagingGroup>SkiaSharp.Views</PackagingGroup>
     <PackagingPlatform>MonoAndroid</PackagingPlatform>
+    <DefineConstants>$(DefineConstants);</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AndroidLinkMode>None</AndroidLinkMode>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AndroidManagedSymbols>true</AndroidManagedSymbols>
-    <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Core" />
-    <Reference Include="Mono.Android" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="mdoc" Version="5.6.4" PrivateAssets="All" />
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.4.0" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AndroidExtensions.cs" />
-    <Compile Include="SKCanvasView.cs" />
-    <Compile Include="SKGLSurfaceViewRenderer.cs" />
-    <Compile Include="SKGLSurfaceView.cs" />
-    <Compile Include="SKSurfaceView.cs" />
-    <Compile Include="SKLockedSurface.cs" />
-    <Compile Include="GLTextureView.cs" />
-    <Compile Include="SKGLTextureView.cs" />
-    <Compile Include="SKGLTextureViewRenderer.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\binding\SkiaSharp.Android\SkiaSharp.Android.csproj">
-      <Project>{c737dc80-5b71-4b26-a2dc-da30421788b0}</Project>
-      <Name>SkiaSharp.Android</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Properties\" />
+    <ProjectReference Include="..\..\..\binding\SkiaSharp.Android\SkiaSharp.Android.csproj" />
   </ItemGroup>
   <Import Project="..\SkiaSharp.Views.Shared\SkiaSharp.Views.Shared.projitems" Label="Shared" />
   <Import Project="..\..\SkiaSharp.Build.targets" />
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
+  <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 </Project>

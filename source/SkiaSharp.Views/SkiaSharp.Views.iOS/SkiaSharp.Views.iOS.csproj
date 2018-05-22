@@ -1,65 +1,24 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\SkiaSharp.Build.props" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{74C78108-9199-4A7A-928C-FC4DC57D0AE4}</ProjectGuid>
-    <ProjectTypeGuids>{FEACFBD2-3405-455C-9665-78FE426C6842};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <OutputType>Library</OutputType>
+    <TargetFramework>xamarinios1.0</TargetFramework>
+    <OutputTypeEx>library</OutputTypeEx>
     <RootNamespace>SkiaSharp.Views.iOS</RootNamespace>
     <AssemblyName>SkiaSharp.Views.iOS</AssemblyName>
-    <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
     <PackagingGroup>SkiaSharp.Views</PackagingGroup>
     <PackagingPlatform>Xamarin.iOS</PackagingPlatform>
+    <DefineConstants>$(DefineConstants);</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <MtouchLink>SdkOnly</MtouchLink>
-    <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
-    <MtouchTlsProvider>Default</MtouchTlsProvider>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
-    <DefineConstants>
-    </DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <MtouchLink>SdkOnly</MtouchLink>
-    <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
-    <MtouchTlsProvider>Default</MtouchTlsProvider>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Core" />
-    <Reference Include="Xamarin.iOS" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="mdoc" Version="5.6.4" PrivateAssets="All" />
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.4.0" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Properties\" />
-    <Folder Include="Resources\" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\binding\SkiaSharp.iOS\SkiaSharp.iOS.csproj">
-      <Project>{6a678cfb-21a7-4e81-8909-fd72abbfd408}</Project>
-      <Name>SkiaSharp.iOS</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp.iOS\SkiaSharp.iOS.csproj" />
   </ItemGroup>
   <Import Project="..\SkiaSharp.Views.AppleiOS\SkiaSharp.Views.AppleiOS.projitems" Label="Shared" />
   <Import Project="..\SkiaSharp.Views.Apple\SkiaSharp.Views.Apple.projitems" Label="Shared" />
   <Import Project="..\SkiaSharp.Views.Shared\SkiaSharp.Views.Shared.projitems" Label="Shared" />
   <Import Project="..\..\SkiaSharp.Build.targets" />
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
+  <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 </Project>

@@ -1,74 +1,28 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\source\SkiaSharp.Build.props" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{2AE5D8C5-EAC6-4515-89F2-A4994B41C925}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <TargetFramework>net45</TargetFramework>
+    <OutputTypeEx>library</OutputTypeEx>
     <RootNamespace>HarfBuzzSharp</RootNamespace>
     <AssemblyName>HarfBuzzSharp</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
     <PackagingPlatform>net45</PackagingPlatform>
+    <DefineConstants>$(DefineConstants);__DESKTOP__;HARFBUZZ</DefineConstants>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;HARFBUZZ;DESKTOP</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;HARFBUZZ;DESKTOP</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="mdoc" Version="5.6.4" PrivateAssets="All" />
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.4.0" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\output\native\windows\x64\libHarfBuzzSharp.dll" Condition=" '$(IsWindows)' == 'true' ">
-      <Link>nuget\runtimes\win7-x64\native\libHarfBuzzSharp.dll</Link>
-    </None>
-    <None Include="..\..\output\native\windows\x86\libHarfBuzzSharp.dll" Condition=" '$(IsWindows)' == 'true' ">
-      <Link>nuget\runtimes\win7-x86\native\libHarfBuzzSharp.dll</Link>
-    </None>
-    <None Include="..\..\output\native\osx\libHarfBuzzSharp.dylib" Condition=" '$(IsMacOS)' == 'true' ">
-      <Link>nuget\runtimes\osx\native\libHarfBuzzSharp.dylib</Link>
-    </None>
-    <None Include="..\..\output\native\linux\x64\libHarfBuzzSharp.so" Condition=" '$(IsLinux)' == 'true' ">
-      <Link>nuget\runtimes\linux-x64\native\libHarfBuzzSharp.so</Link>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
+    <None Include="..\..\output\native\windows\x64\libHarfBuzzSharp.dll" Link="nuget\runtimes\win7-x64\native\libHarfBuzzSharp.dll" Condition=" '$(IsWindows)' == 'true' " />
+    <None Include="..\..\output\native\windows\x86\libHarfBuzzSharp.dll" Link="nuget\runtimes\win7-x86\native\libHarfBuzzSharp.dll" Condition=" '$(IsWindows)' == 'true' " />
+    <None Include="..\..\output\native\osx\libHarfBuzzSharp.dylib" Link="nuget\runtimes\osx\native\libHarfBuzzSharp.dylib" Condition=" '$(IsMacOS)' == 'true' " />
+    <None Include="..\..\output\native\linux\x64\libHarfBuzzSharp.so" Link="nuget\runtimes\linux-x64\native\libHarfBuzzSharp.so" Condition=" '$(IsLinux)' == 'true' " />
     <None Include="nuget\build\net45\HarfBuzzSharp.targets" />
   </ItemGroup>
   <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" />
   <Import Project="..\HarfBuzzSharp.Shared\HarfBuzzSharp.Shared.projitems" Label="Shared" />
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 </Project>
