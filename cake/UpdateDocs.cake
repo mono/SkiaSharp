@@ -1,5 +1,6 @@
 
-void CreateFrameworks (DirectoryPath docsTempPath) {
+void CreateFrameworks (DirectoryPath docsTempPath)
+{
     // download all the versions from nuget so we can generate the docs
     var ids = new Dictionary<string, Version> {
         { "skiasharp",              new Version (1, 57, 0) },
@@ -8,15 +9,10 @@ void CreateFrameworks (DirectoryPath docsTempPath) {
         { "harfbuzzsharp",          new Version (1, 0, 0) },
         { "skiasharp.harfbuzz",     new Version (1, 57, 0) },
     };
-    var xplat = new [] {
-        "netstandard1.3",
-        "portable-net45%2Bwin8%2Bwpa81%2Bwp8",
-        "portable-net45%2Bxamarinmac%2Bxamarinios%2Bmonotouch%2Bmonoandroid%2Bwin8%2Bwpa81%2Bwp8%2Bxamarin.watchos%2Bxamarin.tvos",
-    };
     var metadata = "https://api.nuget.org/v3/registration3/{0}/index.json";
     var download = "https://api.nuget.org/v3-flatcontainer/{0}/{1}/{0}.{1}.nupkg";
 
-    var packagesPath = MakeAbsolute (ROOT_PATH.Combine ("externals/docs_packages"));
+    var packagesPath = ROOT_PATH.Combine ("externals/docs_packages");
 
     // prepare the temp folder
     EnsureDirectoryExists (docsTempPath);
@@ -49,61 +45,79 @@ void CreateFrameworks (DirectoryPath docsTempPath) {
             }
 
             // copy the assemblies into the temp folder
-            if (id == "skiasharp.views") {
-                // copy platform-specific
-                foreach (var dir in GetDirectories ($"{dest}/lib/*")) {
-                    var d = dir.GetDirectoryName ().ToLower ();
-                    var platform = "";
-                    if (d.StartsWith ("monoandroid")) {
-                        platform = "android";
-                    } else if (d.StartsWith ("net4")) {
-                        platform = "net";
-                    } else if (d.StartsWith ("uap")) {
-                        platform = "uwp";
-                    } else if (d.StartsWith ("xamarinios")) {
-                        platform = "ios";
-                    } else if (d.StartsWith ("xamarinmac")) {
-                        platform = "macos";
-                    } else if (d.StartsWith ("xamarintvos")) {
-                        platform = "tvos";
-                    } else if (d.StartsWith ("xamarinwatchos")) {
-                        platform = "watchos";
-                    } else {
-                        throw new Exception ($"Unknown platform: {d}");
-                    }
-                    var moniker = $"{id.Replace (".", "-")}-{platform}-{version}";
-                    var o = docsTempPath.Combine (moniker);
-                    EnsureDirectoryExists (o);
-                    foreach (var f in GetFiles ($"{dir}/*.dll")) {
-                        CopyFileToDirectory (f, o);
-                    }
-                    xFrameworks.Add (
-                        new XElement ("Framework",
-                            new XAttribute ("Name", o.GetDirectoryName ()),
-                            new XAttribute ("Source", o.GetDirectoryName ())));
-                }
-            } else {
-                // copy netstandard/portable
-                var moniker = $"{id.Replace (".", "-")}-{version}";
-                var o = docsTempPath.Combine (moniker);
-                EnsureDirectoryExists (o);
-                foreach (var x in xplat) {
-                    if (DirectoryExists ($"{dest}/lib/{x}")) {
-                        foreach (var f in GetFiles ($"{dest}/lib/{x}/*.dll")) {
-                            CopyFileToDirectory (f, o);
-                        }
-                        break;
-                    }
-                }
-                xFrameworks.Add (
-                    new XElement ("Framework",
-                        new XAttribute ("Name", o.GetDirectoryName ()),
-                        new XAttribute ("Source", o.GetDirectoryName ())));
-            }
+            ProcessNuGet (docsTempPath, id, version, dest, xFrameworks);
         }
+
+        // process the generated nugets as well
+        var genVersion = GetVersion (id);
+        var genDest = ROOT_PATH.Combine ("output").Combine (id).Combine ("nuget");
+        ProcessNuGet (docsTempPath, id, genVersion, genDest, xFrameworks);
     }
 
     xFrameworksDoc.Save ($"{docsTempPath}/frameworks.xml");
+}
+
+void ProcessNuGet(DirectoryPath docsTempPath, string id, string version, DirectoryPath dest, XElement xFrameworks)
+{
+    var xplat = new [] {
+        "netstandard1.3",
+        "portable-net45%2Bwin8%2Bwpa81%2Bwp8",
+        "portable-net45%2Bxamarinmac%2Bxamarinios%2Bmonotouch%2Bmonoandroid%2Bwin8%2Bwpa81%2Bwp8%2Bxamarin.watchos%2Bxamarin.tvos",
+    };
+
+    if (id == "skiasharp.views") {
+        // copy platform-specific
+        foreach (var dir in GetDirectories ($"{dest}/lib/*")) {
+            var d = dir.GetDirectoryName ().ToLower ();
+            var platform = "";
+            if (d.StartsWith ("monoandroid")) {
+                platform = "android";
+            } else if (d.StartsWith ("net4")) {
+                platform = "net";
+            } else if (d.StartsWith ("uap")) {
+                platform = "uwp";
+            } else if (d.StartsWith ("xamarinios") || d.StartsWith ("xamarin.ios")) {
+                platform = "ios";
+            } else if (d.StartsWith ("xamarinmac") || d.StartsWith ("xamarin.mac")) {
+                platform = "macos";
+            } else if (d.StartsWith ("xamarintvos") || d.StartsWith ("xamarin.tvos")) {
+                platform = "tvos";
+            } else if (d.StartsWith ("xamarinwatchos") || d.StartsWith ("xamarin.watchos")) {
+                platform = "watchos";
+            } else if (d.StartsWith ("tizen")) {
+                platform = "tizen";
+            } else {
+                throw new Exception ($"Unknown platform: {d}");
+            }
+            var moniker = $"{id.Replace (".", "-")}-{platform}-{version}";
+            var o = docsTempPath.Combine (moniker);
+            EnsureDirectoryExists (o);
+            foreach (var f in GetFiles ($"{dir}/*.dll")) {
+                CopyFileToDirectory (f, o);
+            }
+            xFrameworks.Add (
+                new XElement ("Framework",
+                    new XAttribute ("Name", o.GetDirectoryName ()),
+                    new XAttribute ("Source", o.GetDirectoryName ())));
+        }
+    } else {
+        // copy netstandard/portable
+        var moniker = $"{id.Replace (".", "-")}-{version}";
+        var o = docsTempPath.Combine (moniker);
+        EnsureDirectoryExists (o);
+        foreach (var x in xplat) {
+            if (DirectoryExists ($"{dest}/lib/{x}")) {
+                foreach (var f in GetFiles ($"{dest}/lib/{x}/*.dll")) {
+                    CopyFileToDirectory (f, o);
+                }
+                break;
+            }
+        }
+        xFrameworks.Add (
+            new XElement ("Framework",
+                new XAttribute ("Name", o.GetDirectoryName ()),
+                new XAttribute ("Source", o.GetDirectoryName ())));
+    }
 }
 
 Task ("docs-update-frameworks")

@@ -44,9 +44,9 @@ namespace SkiaSharp.Views.Tizen
 
 		protected override SKSizeI GetSurfaceSize() => renderTarget.Size;
 
-		protected virtual void OnDrawFrame(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
+		protected virtual void OnDrawFrame(SKPaintGLSurfaceEventArgs e)
 		{
-			PaintSurface?.Invoke(this, new SKPaintGLSurfaceEventArgs(surface, renderTarget));
+			PaintSurface?.Invoke(this, e);
 		}
 
 		protected sealed override void CreateNativeResources(EvasObject parent)
@@ -69,7 +69,7 @@ namespace SkiaSharp.Views.Tizen
 				using (var surface = SKSurface.Create(context, renderTarget))
 				{
 					// draw using SkiaSharp
-					OnDrawFrame(surface, renderTarget);
+					OnDrawFrame(new SKPaintGLSurfaceEventArgs(surface, renderTarget));
 
 					surface.Canvas.Flush();
 				}

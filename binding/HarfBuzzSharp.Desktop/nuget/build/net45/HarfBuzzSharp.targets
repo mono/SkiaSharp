@@ -29,7 +29,7 @@
         <PreferredLinuxNativeHarfBuzzSharpPath>$(MSBuildThisFileDirectory)..\..\runtimes\linux-$(PreferredNativeHarfBuzzSharp)\native\libHarfBuzzSharp.so</PreferredLinuxNativeHarfBuzzSharpPath>
     </PropertyGroup>
 
-    <ItemGroup>
+    <ItemGroup Condition=" '$(ShouldIncludeNativeHarfBuzzSharp)' != 'False' ">
         <None Include="$(PreferredWindowsNativeHarfBuzzSharpPath)" Condition=" Exists('$(PreferredWindowsNativeHarfBuzzSharpPath)') ">
             <Link>$([System.IO.Path]::GetFilename('$(PreferredWindowsNativeHarfBuzzSharpPath)'))</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -19,16 +19,16 @@ namespace SkiaSharp.Views.Tizen
 		});
 
 		// allows to convert pixels to Android-style device-independent pixels
-		private static readonly Lazy<float> scalingFactor = new Lazy<float>(() => dpi.Value / 160.0f);
+		private static readonly Lazy<double> scalingFactor = new Lazy<double>(() => dpi.Value / 160.0);
 
 		public static string Profile => profile.Value;
 
 		public static int Dpi => dpi.Value;
 
-		public static float ScalingFactor => scalingFactor.Value;
+		public static double ScalingFactor => scalingFactor.Value;
 
-		public static float FromPixel(float v) => v / ScalingFactor;
+		public static double FromPixel(double v) => v / ScalingFactor;
 
-		public static float ToPixel(float v) => v * ScalingFactor;
+		public static double ToPixel(double v) => v * ScalingFactor;
 	}
 }

@@ -26,6 +26,30 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void CopyIndex8ToPlatformPreservesData()
+		{
+			var path = Path.Combine(PathToImages, "index8.png");
+			var bmp = SKBitmap.Decode(path);
+
+			var platform = bmp.Copy(SKImageInfo.PlatformColorType);
+
+			Assert.Equal((SKColor)0x7EA4C639, platform.GetPixel(182, 348));
+			Assert.Equal(SKImageInfo.PlatformColorType, platform.ColorType);
+		}
+
+		[SkippableFact]
+		public void OverwriteIndex8ToPlatformPreservesData()
+		{
+			var path = Path.Combine(PathToImages, "index8.png");
+			var bmp = SKBitmap.Decode(path);
+
+			bmp.CopyTo(bmp, SKImageInfo.PlatformColorType);
+
+			Assert.Equal((SKColor)0x7EA4C639, bmp.GetPixel(182, 348));
+			Assert.Equal(SKImageInfo.PlatformColorType, bmp.ColorType);
+		}
+
+		[SkippableFact]
 		public void BitmapCopyToAlpha8PreservesData()
 		{
 			var bmp = CreateTestBitmap();
