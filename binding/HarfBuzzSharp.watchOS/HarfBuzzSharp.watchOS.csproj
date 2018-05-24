@@ -22,8 +22,10 @@
     <ObjcBindingCoreSource Include="Structs.cs" />
     <ObjcBindingNativeLibrary Include="..\..\output\native\watchos\libHarfBuzzSharp.a" Link="libHarfBuzzSharp.a" />
   </ItemGroup>
-  <Import Project="..\Binding.Shared\Binding.Shared.projitems" Label="Shared" />
-  <Import Project="..\HarfBuzzSharp.Shared\HarfBuzzSharp.Shared.projitems" Label="Shared" />
+  <ItemGroup>
+    <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)\%(Filename)%(Extension)" />
+    <Compile Include="..\HarfBuzzSharp.Shared\**\*.cs" Link="%(RecursiveDir)\%(Filename)%(Extension)" />
+  </ItemGroup>
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
   <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 </Project>
