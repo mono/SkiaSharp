@@ -722,13 +722,12 @@ namespace SkiaSharp
 			return bmp;
 		}
 
+		[Obsolete ("Use SKPixmap.Encode instead.")]
 		public bool Encode (SKWStream dst, SKEncodedImageFormat format, int quality)
 		{
-			using (var pixmap = new SKPixmap ()) {
-				return PeekPixels (pixmap) && pixmap.Encode (dst, format, quality);
-			}
+			return SKPixmap.Encode (dst, this, format, quality);
 		}
-		
+
 		private void Swap (SKBitmap other)
 		{
 			SkiaApi.sk_bitmap_swap (Handle, other.Handle);
