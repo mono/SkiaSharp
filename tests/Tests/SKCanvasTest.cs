@@ -29,5 +29,43 @@ namespace SkiaSharp.Tests
 				}
 			}
 		}
+
+		[SkippableFact]
+		public void NWayCanvasCanBeConstructed()
+		{
+			using (var canvas = new SKNWayCanvas(100, 100))
+			{
+				Assert.NotNull(canvas);
+			}
+		}
+
+		[SkippableFact]
+		public void NWayCanvasDrawsToMultipleCanvases()
+		{
+			using (var firstBitmap = new SKBitmap(new SKImageInfo(100, 100)))
+			using (var first = new SKCanvas(firstBitmap))
+			using (var secondBitmap = new SKBitmap(new SKImageInfo(100, 100)))
+			using (var second = new SKCanvas(secondBitmap))
+			{
+				first.Clear(SKColors.Red);
+				second.Clear(SKColors.Green);
+
+				using (var canvas = new SKNWayCanvas(100, 100))
+				{
+					canvas.AddCanvas(first);
+					canvas.AddCanvas(second);
+
+					canvas.Clear(SKColors.Blue);
+
+					Assert.Equal(SKColors.Blue, firstBitmap.GetPixel(0, 0));
+					Assert.Equal(SKColors.Blue, secondBitmap.GetPixel(0, 0));
+
+					canvas.Clear(SKColors.Orange);
+				}
+
+				Assert.Equal(SKColors.Orange, firstBitmap.GetPixel(0, 0));
+				Assert.Equal(SKColors.Orange, secondBitmap.GetPixel(0, 0));
+			}
+		}
 	}
 }
