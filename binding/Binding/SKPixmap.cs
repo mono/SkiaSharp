@@ -150,6 +150,18 @@ namespace SkiaSharp
 			return Encode (dst, this, encoder, quality);
 		}
 
+		public static bool Encode (SKWStream dst, SKBitmap src, SKEncodedImageFormat format, int quality)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
+
+			using (var pixmap = new SKPixmap ()) {
+				return src.PeekPixels (pixmap) && Encode (dst, pixmap, format, quality);
+			}
+		}
+
 		public static bool Encode (SKWStream dst, SKPixmap src, SKEncodedImageFormat encoder, int quality)
 		{
 			if (dst == null)
@@ -158,6 +170,75 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (src));
 
 			return SkiaApi.sk_pixmap_encode_image (dst.Handle, src.Handle, encoder, quality);
+		}
+
+		public SKData Encode (SKWebpEncoderOptions options)
+		{
+			using (var stream = new SKDynamicMemoryWStream ()) {
+				var result = Encode (stream, this, options);
+				return result ? stream.DetachAsData () : null;
+			}
+		}
+
+		public bool Encode (SKWStream dst, SKWebpEncoderOptions options)
+		{
+			return Encode (dst, this, options);
+		}
+
+		public static bool Encode (SKWStream dst, SKPixmap src, SKWebpEncoderOptions options)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
+
+			return SkiaApi.sk_webpencoder_encode (dst.Handle, src.Handle, options);
+		}
+
+		public SKData Encode (SKJpegEncoderOptions options)
+		{
+			using (var stream = new SKDynamicMemoryWStream ()) {
+				var result = Encode (stream, this, options);
+				return result ? stream.DetachAsData () : null;
+			}
+		}
+
+		public bool Encode (SKWStream dst, SKJpegEncoderOptions options)
+		{
+			return Encode (dst, this, options);
+		}
+
+		public static bool Encode (SKWStream dst, SKPixmap src, SKJpegEncoderOptions options)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
+
+			return SkiaApi.sk_jpegencoder_encode (dst.Handle, src.Handle, options);
+		}
+
+		public SKData Encode (SKPngEncoderOptions options)
+		{
+			using (var stream = new SKDynamicMemoryWStream ()) {
+				var result = Encode (stream, this, options);
+				return result ? stream.DetachAsData () : null;
+			}
+		}
+
+		public bool Encode (SKWStream dst, SKPngEncoderOptions options)
+		{
+			return Encode (dst, this, options);
+		}
+
+		public static bool Encode (SKWStream dst, SKPixmap src, SKPngEncoderOptions options)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
+
+			return SkiaApi.sk_pngencoder_encode (dst.Handle, src.Handle, options);
 		}
 
 		public SKPixmap WithColorType (SKColorType newColorType)
