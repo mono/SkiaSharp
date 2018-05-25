@@ -77,5 +77,50 @@ namespace SkiaSharp.Tests
 				Assert.Equal(SKColors.Blue, bmp.Pixels[0]);
 			}
 		}
+
+		[SkippableFact]
+		public void EncodeWithPngEncoder()
+		{
+			var bitmap = CreateTestBitmap();
+			var pixmap = bitmap.PeekPixels();
+
+			var data = pixmap.Encode(SKPngEncoderOptions.Default);
+
+			Assert.NotNull(data);
+
+			var codec = SKCodec.Create(data);
+
+			Assert.Equal(SKEncodedImageFormat.Png, codec.EncodedFormat);
+		}
+
+		[SkippableFact]
+		public void EncodeWithJpegEncoder()
+		{
+			var bitmap = CreateTestBitmap();
+			var pixmap = bitmap.PeekPixels();
+
+			var data = pixmap.Encode(SKJpegEncoderOptions.Default);
+
+			Assert.NotNull(data);
+
+			var codec = SKCodec.Create(data);
+
+			Assert.Equal(SKEncodedImageFormat.Jpeg, codec.EncodedFormat);
+		}
+
+		[SkippableFact]
+		public void EncodeWithWebpEncoder()
+		{
+			var bitmap = CreateTestBitmap();
+			var pixmap = bitmap.PeekPixels();
+
+			var data = pixmap.Encode(SKWebpEncoderOptions.Default);
+
+			Assert.NotNull(data);
+
+			var codec = SKCodec.Create(data);
+
+			Assert.Equal(SKEncodedImageFormat.Webp, codec.EncodedFormat);
+		}
 	}
 }
