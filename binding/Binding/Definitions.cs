@@ -2336,6 +2336,13 @@ namespace SkiaSharp
 			Default = new SKPngEncoderOptions (SKPngEncoderFilterFlags.All, 6, SKTransferFunctionBehavior.Respect);
 		}
 
+		public SKPngEncoderOptions (SKPngEncoderFilterFlags filterFlags, int zLibLevel)
+		{
+			fFilterFlags = filterFlags;
+			fZLibLevel = zLibLevel;
+			fUnpremulBehavior = SKTransferFunctionBehavior.Respect;
+		}
+
 		public SKPngEncoderOptions (SKPngEncoderFilterFlags filterFlags, int zLibLevel, SKTransferFunctionBehavior unpremulBehavior)
 		{
 			fFilterFlags = filterFlags;
@@ -2382,6 +2389,14 @@ namespace SkiaSharp
 			Default = new SKJpegEncoderOptions (100, SKJpegEncoderDownsample.Downsample420, SKJpegEncoderAlphaOption.Ignore, SKTransferFunctionBehavior.Respect);
 		}
 
+		public SKJpegEncoderOptions (int quality, SKJpegEncoderDownsample downsample, SKJpegEncoderAlphaOption alphaOption)
+		{
+			fQuality = quality;
+			fDownsample = downsample;
+			fAlphaOption = alphaOption;
+			fBlendBehavior = SKTransferFunctionBehavior.Respect;
+		}
+
 		public SKJpegEncoderOptions (int quality, SKJpegEncoderDownsample downsample, SKJpegEncoderAlphaOption alphaOption, SKTransferFunctionBehavior blendBehavior)
 		{
 			fQuality = quality;
@@ -2424,6 +2439,13 @@ namespace SkiaSharp
 		static SKWebpEncoderOptions ()
 		{
 			Default = new SKWebpEncoderOptions (SKWebpEncoderCompression.Lossy, 100, SKTransferFunctionBehavior.Respect);
+		}
+
+		public SKWebpEncoderOptions (SKWebpEncoderCompression compression, float quality)
+		{
+			fCompression = compression;
+			fQuality = quality;
+			fUnpremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 
 		public SKWebpEncoderOptions (SKWebpEncoderCompression compression, float quality, SKTransferFunctionBehavior unpremulBehavior)
