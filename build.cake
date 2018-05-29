@@ -19,7 +19,7 @@ using Newtonsoft.Json.Linq;
 
 var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")));
 var VERBOSITY = (Verbosity) Enum.Parse (typeof(Verbosity), Argument ("v", Argument ("verbosity", Argument ("Verbosity", "Verbose"))), true);
-var SKIP_EXTERNALS = bool.Parse (Argument ("skipexternals", Argument ("SkipExternals", "false")));
+var SKIP_EXTERNALS = Argument ("skipexternals", Argument ("SkipExternals", "")).ToLower ().Split (',');
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NugetToolPath = GetToolPath ("nuget.exe");
@@ -67,13 +67,11 @@ if (string.IsNullOrEmpty (BUILD_NUMBER)) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // this builds all the externals
-var externalsTask = Task ("externals")
+Task ("externals")
+    .IsDependentOn ("externals-native")
     .Does (() => 
 {
 });
-if (!SKIP_EXTERNALS) {
-    externalsTask.IsDependentOn ("externals-native");
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // LIBS - the managed C# libraries
