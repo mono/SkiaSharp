@@ -188,6 +188,14 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_clip_rect_with_operation (Handle, ref rect, operation, antialias);
 		}
 
+		public void ClipRoundRect (SKRoundRect rect, SKClipOperation operation = SKClipOperation.Intersect, bool antialias = false)
+		{
+			if (rect == null)
+				throw new ArgumentNullException (nameof (rect));
+
+			SkiaApi.sk_canvas_clip_rrect_with_operation (Handle, rect.Handle, operation, antialias);
+		}
+
 		public void ClipPath (SKPath path, SKClipOperation operation = SKClipOperation.Intersect, bool antialias = false)
 		{
 			if (path == null)
@@ -256,6 +264,15 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_rect (Handle, ref rect, paint.Handle);
+		}
+
+		public void DrawRoundRect (SKRoundRect rect, SKPaint paint)
+		{
+			if (rect == null)
+				throw new ArgumentNullException (nameof (rect));
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
+			SkiaApi.sk_canvas_draw_rrect (Handle, rect.Handle, paint.Handle);
 		}
 
 		public void DrawRoundRect (float x, float y, float w, float h, float rx, float ry, SKPaint paint)

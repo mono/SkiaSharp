@@ -5,6 +5,11 @@ using System.Text;
 
 namespace SkiaSharp
 {
+	public static class Utils
+	{
+		internal const float NearlyZero = (1.0f / (1 << 12));
+	}
+
 	public static class StringUtilities
 	{
 		private static int GetUnicodeStringLength(SKTextEncoding encoding)

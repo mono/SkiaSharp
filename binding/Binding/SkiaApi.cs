@@ -64,6 +64,7 @@ using sk_matrix44_t = System.IntPtr;
 using sk_color_t = System.UInt32;
 using sk_pmcolor_t = System.UInt32;
 using sk_vertices_t = System.IntPtr;
+using sk_rrect_t = System.IntPtr;
 
 namespace SkiaSharp
 {
@@ -235,6 +236,8 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_rect(sk_canvas_t t, ref SKRect rect, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_canvas_draw_rrect(sk_canvas_t t, sk_rrect_t rect, sk_paint_t paint);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_round_rect (sk_canvas_t t, ref SKRect rect, float rx, float ry, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_oval(sk_canvas_t t, ref SKRect rect, sk_paint_t paint);
@@ -295,7 +298,8 @@ namespace SkiaSharp
 		public extern static void sk_canvas_draw_named_destination_annotation(sk_canvas_t t, ref SKPoint point, sk_data_t value);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_link_destination_annotation(sk_canvas_t t, ref SKRect rect, sk_data_t value);
-
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_canvas_clip_rrect_with_operation(sk_canvas_t t, sk_rrect_t crect, SKClipOperation op, [MarshalAs(UnmanagedType.I1)] bool doAA);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_clip_rect_with_operation(sk_canvas_t t, ref SKRect crect, SKClipOperation op, [MarshalAs(UnmanagedType.I1)] bool doAA);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -635,6 +639,10 @@ namespace SkiaSharp
 		public extern static void sk_path_add_rect(sk_path_t t, ref SKRect rect, SKPathDirection direction);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_add_rect_start(sk_path_t t, ref SKRect rect, SKPathDirection direction, uint startIndex);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_add_rrect(sk_path_t t, sk_rrect_t rect, SKPathDirection direction);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_path_add_rrect_start(sk_path_t t, sk_rrect_t rect, SKPathDirection direction, uint startIndex);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_add_oval(sk_path_t t, ref SKRect rect, SKPathDirection direction);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1724,5 +1732,53 @@ namespace SkiaSharp
 		public extern static void sk_vertices_unref(sk_vertices_t cvertices);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_vertices_t sk_vertices_make_copy(SKVertexMode vmode, int vertexCount, [In] SKPoint[] positions, [In] SKPoint[] texs, [In] SKColor[] colors, int indexCount, [In] UInt16[] indices);
+
+		// RRect
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_rrect_t sk_rrect_new ();
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_rrect_t sk_rrect_new_copy (sk_rrect_t rrect);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_rrect_delete (sk_rrect_t rrect);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKRoundRectType sk_rrect_get_type (sk_rrect_t rrect);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_rrect_get_rect (sk_rrect_t rrect, out SKRect rect);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_rrect_get_radii (sk_rrect_t rrect, SKRoundRectCorner corner, [Out] out SKPoint radii);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		public extern static bool sk_rrect_all_corners_circular (sk_rrect_t rrect, float tolerance);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static float sk_rrect_get_width (sk_rrect_t rrect);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static float sk_rrect_get_height (sk_rrect_t rrect);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_rrect_set_empty (sk_rrect_t rrect);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_rrect_set_rect (sk_rrect_t rrect, [In] ref SKRect rect);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_rrect_set_oval (sk_rrect_t rrect, [In] ref SKRect rect);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_rrect_set_rect_xy (sk_rrect_t rrect, [In] ref SKRect rect, float xRad, float yRad);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_rrect_set_nine_patch (sk_rrect_t rrect, [In] ref SKRect rect, float leftRad, float topRad, float rightRad, float bottomRad);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_rrect_set_rect_radii (sk_rrect_t rrect, [In] ref SKRect rect, [In] SKPoint[] radii);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_rrect_inset (sk_rrect_t rrect, float dx, float dy);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_rrect_outset (sk_rrect_t rrect, float dx, float dy);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_rrect_offset (sk_rrect_t rrect, float dx, float dy);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		public extern static bool sk_rrect_contains (sk_rrect_t rrect, [In] ref SKRect rect);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		public extern static bool sk_rrect_is_valid (sk_rrect_t rrect);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		public extern static bool sk_rrect_transform (sk_rrect_t rrect, [In] ref SKMatrix matrix, sk_rrect_t dest);
 	}
 }
