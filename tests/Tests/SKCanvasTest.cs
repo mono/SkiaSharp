@@ -31,6 +31,25 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void CanvasCanClipRoundRect()
+		{
+			using (var canvas = new SKNWayCanvas(100, 100))
+			{
+				canvas.ClipRoundRect(new SKRoundRect(new SKRect(10, 10, 50, 50), 5, 5));
+			}
+		}
+
+		[SkippableFact]
+		public void CanvasCanDrawRoundRect()
+		{
+			using (var canvas = new SKNWayCanvas(100, 100))
+			using (var paint = new SKPaint())
+			{
+				canvas.DrawRoundRect(new SKRoundRect(new SKRect(10, 10, 50, 50), 5, 5), paint);
+			}
+		}
+
+		[SkippableFact]
 		public void NWayCanvasCanBeConstructed()
 		{
 			using (var canvas = new SKNWayCanvas(100, 100))

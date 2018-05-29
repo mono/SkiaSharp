@@ -2468,4 +2468,20 @@ namespace SkiaSharp
 			set { fUnpremulBehavior = value; }
 		}
 	}
+
+	public enum SKRoundRectType {
+		Empty,
+		Rect,
+		Oval,
+		Simple,
+		NinePatch,
+		Complex,
+	}
+
+	public enum SKRoundRectCorner {
+		UpperLeft,
+		UpperRight,
+		LowerRight,
+		LowerLeft,
+	}
 }

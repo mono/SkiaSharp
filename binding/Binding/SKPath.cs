@@ -341,6 +341,20 @@ namespace SkiaSharp
 			SkiaApi.sk_path_add_rect_start (Handle, ref rect, direction, startIndex);
 		}
 
+		public void AddRoundRect (SKRoundRect rect, SKPathDirection direction = SKPathDirection.Clockwise)
+		{
+			if (rect == null)
+				throw new ArgumentNullException (nameof (rect));
+			SkiaApi.sk_path_add_rrect (Handle, rect.Handle, direction);
+		}
+
+		public void AddRoundRect (SKRoundRect rect, SKPathDirection direction, uint startIndex)
+		{
+			if (rect == null)
+				throw new ArgumentNullException (nameof (rect));
+			SkiaApi.sk_path_add_rrect_start (Handle, rect.Handle, direction, startIndex);
+		}
+
 		public void AddOval (SKRect rect, SKPathDirection direction = SKPathDirection.Clockwise)
 		{
 			SkiaApi.sk_path_add_oval (Handle, ref rect, direction);
@@ -400,9 +414,15 @@ namespace SkiaSharp
 			SkiaApi.sk_path_add_path_reverse (Handle, other.Handle);
 		}
 
-		public void AddRoundedRect (SKRect rect, float rx, float ry, SKPathDirection dir = SKPathDirection.Clockwise)
+		public void AddRoundRect (SKRect rect, float rx, float ry, SKPathDirection dir = SKPathDirection.Clockwise)
 		{
 			SkiaApi.sk_path_add_rounded_rect (Handle, ref rect, rx, ry, dir);
+		}
+
+		[Obsolete ("Use AddRoundRect instead.")]
+		public void AddRoundedRect (SKRect rect, float rx, float ry, SKPathDirection dir = SKPathDirection.Clockwise)
+		{
+			AddRoundRect (rect, rx, ry, dir);
 		}
 
 		public void AddCircle (float x, float y, float radius, SKPathDirection dir = SKPathDirection.Clockwise)
