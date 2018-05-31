@@ -11,8 +11,8 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>Represents a rounded rectangle with a potentially different radii for each corner.</summary>
+    <remarks>If either of a corner's radii are 0 the corner will be square and negative radii are not allowed (they are clamped to zero).</remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -26,8 +26,8 @@
       </AssemblyInfo>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Creates a new instance of <see cref="T:SkiaSharp.SKRoundRect" /> with all values initialized to 0.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -43,9 +43,9 @@
         <Parameter Name="rect" Type="SkiaSharp.SKRect" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rect">The bounds of the new rectangle.</param>
+        <summary>Creates a new instance of <see cref="T:SkiaSharp.SKRoundRect" /> with all radii set to 0.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -61,9 +61,9 @@
         <Parameter Name="rrect" Type="SkiaSharp.SKRoundRect" />
       </Parameters>
       <Docs>
-        <param name="rrect">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rrect">The rounded rectangle to copy.</param>
+        <summary>Creates a copy of a <see cref="T:SkiaSharp.SKRoundRect" />.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -81,11 +81,11 @@
         <Parameter Name="yRadius" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <param name="xRadius">To be added.</param>
-        <param name="yRadius">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rect">The bounds of the new rectangle.</param>
+        <param name="xRadius">The radii of the corners along the x-axis.</param>
+        <param name="yRadius">The radii of the corners along the y-axis.</param>
+        <summary>Creates a new instance of <see cref="T:SkiaSharp.SKRoundRect" /> with the same radii for all four corners.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="AllCornersCircular">
@@ -101,9 +101,9 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a value indicating whether all four corners are circular (with the x- and y-axis equal).</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CheckAllCornersCircular">
@@ -122,10 +122,10 @@
         <Parameter Name="tolerance" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="tolerance">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="tolerance">The difference in the axis allowed before the corners are no longer circular.</param>
+        <summary>Check to see whether all four corners are circular (with the x- and y-axis equal).</summary>
+        <returns></returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Contains">
@@ -144,10 +144,10 @@
         <Parameter Name="rect" Type="SkiaSharp.SKRect" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="rect">The rectangle.</param>
+        <summary>Determines whether the specified rectangle is wholly contained within the rounded rectangle.</summary>
+        <returns>Returns <see langword="true" /> if the specified rectangle is inside the rounded rectangle, otherwise <see langword="false" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Deflate">
@@ -166,9 +166,9 @@
         <Parameter Name="size" Type="SkiaSharp.SKSize" />
       </Parameters>
       <Docs>
-        <param name="size">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="size">The amount to deflate the rectangle by.</param>
+        <summary>Deflate the rectangle by the specified amount.</summary>
+        <remarks>The corner radii are adjusted by the amount of the deflation if they are round.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Deflate">
@@ -188,10 +188,10 @@
         <Parameter Name="dy" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="dx">To be added.</param>
-        <param name="dy">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="dx">The amount to deflate the rectangle by along the x-axis.</param>
+        <param name="dy">The amount to deflate the rectangle by along the y-axis.</param>
+        <summary>Deflate the rectangle by the specified amount.</summary>
+        <remarks>The corner radii are adjusted by the amount of the deflation if they are round.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -231,10 +231,10 @@
         <Parameter Name="corner" Type="SkiaSharp.SKRoundRectCorner" />
       </Parameters>
       <Docs>
-        <param name="corner">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="corner">The corner to retrieve.</param>
+        <summary>Retrieves the radii of the specified corner.</summary>
+        <returns>Returns the radii of the specified corner.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Height">
@@ -250,9 +250,9 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the height of the rectangle.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Inflate">
@@ -271,9 +271,9 @@
         <Parameter Name="size" Type="SkiaSharp.SKSize" />
       </Parameters>
       <Docs>
-        <param name="size">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="size">The amount to inflate the rectangle by.</param>
+        <summary>Inflate the rectangle by the specified amount.</summary>
+        <remarks>The corner radii are adjusted by the amount of the inflation if they are round.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Inflate">
@@ -293,10 +293,10 @@
         <Parameter Name="dy" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="dx">To be added.</param>
-        <param name="dy">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="dx">The amount to inflate the rectangle by along the x-axis.</param>
+        <param name="dy">The amount to inflate the rectangle by along the y-axis.</param>
+        <summary>Inflate the rectangle by the specified amount.</summary>
+        <remarks>The corner radii are adjusted by the amount of the inflation if they are round.</remarks>
       </Docs>
     </Member>
     <Member MemberName="IsValid">
@@ -312,9 +312,9 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a value indicating whether the rectangle has a valid bounds, readii and type.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Offset">
@@ -333,9 +333,9 @@
         <Parameter Name="pos" Type="SkiaSharp.SKPoint" />
       </Parameters>
       <Docs>
-        <param name="pos">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="pos">The amount to translate the rectangle by.</param>
+        <summary>Translate the rectangle by the specified amount.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Offset">
@@ -355,10 +355,10 @@
         <Parameter Name="dy" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="dx">To be added.</param>
-        <param name="dy">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="dx">The amount to translate the rectangle by along the x-axis.</param>
+        <param name="dy">The amount to translate the rectangle by along the y-axis.</param>
+        <summary>Translate the rectangle by the specified amount.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Rect">
@@ -374,9 +374,9 @@
         <ReturnType>SkiaSharp.SKRect</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the rectangle bounds of the rounded rectangle.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="SetEmpty">
@@ -393,8 +393,8 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Set this rounded rectangle to an empty rectangle (with all values 0).</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="SetNinePatch">
@@ -417,13 +417,13 @@
         <Parameter Name="bottomRadius" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <param name="leftRadius">To be added.</param>
-        <param name="topRadius">To be added.</param>
-        <param name="rightRadius">To be added.</param>
-        <param name="bottomRadius">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rect">The interior rectangle.</param>
+        <param name="leftRadius">The radii along the x-axis on the left side of the rectangle.</param>
+        <param name="topRadius">The radii along the y-axis on the top of the rectangle.</param>
+        <param name="rightRadius">The radii along the x-axis on the right side of the rectangle.</param>
+        <param name="bottomRadius">The radii along the y-axis on the bottom of the rectangle.</param>
+        <summary>Set this rounded rectangle to a nine-patch rectangle.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="SetOval">
@@ -442,9 +442,9 @@
         <Parameter Name="rect" Type="SkiaSharp.SKRect" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rect">The outer bounds of the oval.</param>
+        <summary>Set this rectangle to be an oval.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="SetRect">
@@ -463,9 +463,9 @@
         <Parameter Name="rect" Type="SkiaSharp.SKRect" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rect">The simple rectangle.</param>
+        <summary>Set this rectangle to be a simple rectangle.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="SetRect">
@@ -486,11 +486,11 @@
         <Parameter Name="yRadius" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <param name="xRadius">To be added.</param>
-        <param name="yRadius">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rect">The simple rectangle.</param>
+        <param name="xRadius">The radii of the corners along the x-axis.</param>
+        <param name="yRadius">The radii of the corners along the y-axis.</param>
+        <summary>Set this rectangle to be a simple rounded rectangle.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="SetRectRadii">
@@ -510,10 +510,10 @@
         <Parameter Name="radii" Type="SkiaSharp.SKPoint[]" />
       </Parameters>
       <Docs>
-        <param name="rect">To be added.</param>
-        <param name="radii">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rect">The rectangle.</param>
+        <param name="radii">The corner radii.</param>
+        <summary>Set this rectangle to be a rounded rectangle.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Transform">
@@ -532,10 +532,10 @@
         <Parameter Name="matrix" Type="SkiaSharp.SKMatrix" />
       </Parameters>
       <Docs>
-        <param name="matrix">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="matrix">The transformation matrix.</param>
+        <summary>Create a new rounded rectangle that is transformed by the specified matrix.</summary>
+        <returns>Returns a new, transformed rectangle if the matrix was valid, otherwise null.</returns>
+        <remarks>The transformation matrix must be a scale and/or translation matrix.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Type">
@@ -551,9 +551,9 @@
         <ReturnType>SkiaSharp.SKRoundRectType</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a value indicating what sub-type of rounded rectangle this instance is.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Width">
@@ -569,9 +569,9 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the width of the rectangle.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
   </Members>

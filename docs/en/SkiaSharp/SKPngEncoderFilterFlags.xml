@@ -15,14 +15,14 @@
     </Attribute>
   </Attributes>
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>Various row filters to use when encoding a PNG.</summary>
+    <remarks></remarks>
   </Docs>
   <Members>
-    <Member MemberName="All">
-      <MemberSignature Language="C#" Value="All" />
-      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype SkiaSharp.SKPngEncoderFilterFlags All = int32(248)" />
-      <MemberSignature Language="DocId" Value="F:SkiaSharp.SKPngEncoderFilterFlags.All" />
+    <Member MemberName="AllFilters">
+      <MemberSignature Language="C#" Value="AllFilters" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype SkiaSharp.SKPngEncoderFilterFlags AllFilters = int32(248)" />
+      <MemberSignature Language="DocId" Value="F:SkiaSharp.SKPngEncoderFilterFlags.AllFilters" />
       <MemberType>Field</MemberType>
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
@@ -33,7 +33,7 @@
       </ReturnValue>
       <MemberValue>248</MemberValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Try all the filters.</summary>
       </Docs>
     </Member>
     <Member MemberName="Avg">
@@ -50,7 +50,24 @@
       </ReturnValue>
       <MemberValue>64</MemberValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Use the average of the two neighboring pixels (left and above) to predict the value of a pixel. [Average(x) = Raw(x) - floor((Raw(x-bpp)+Prior(x))/2)]</summary>
+      </Docs>
+    </Member>
+    <Member MemberName="NoFilters">
+      <MemberSignature Language="C#" Value="NoFilters" />
+      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype SkiaSharp.SKPngEncoderFilterFlags NoFilters = int32(0)" />
+      <MemberSignature Language="DocId" Value="F:SkiaSharp.SKPngEncoderFilterFlags.NoFilters" />
+      <MemberType>Field</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPngEncoderFilterFlags</ReturnType>
+      </ReturnValue>
+      <MemberValue>0</MemberValue>
+      <Docs>
+        <summary>Do not use any filters.</summary>
       </Docs>
     </Member>
     <Member MemberName="None">
@@ -67,7 +84,7 @@
       </ReturnValue>
       <MemberValue>8</MemberValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Transmit unmodified.</summary>
       </Docs>
     </Member>
     <Member MemberName="Paeth">
@@ -84,7 +101,7 @@
       </ReturnValue>
       <MemberValue>128</MemberValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Compute a simple linear function of the three neighboring pixels (left, above, upper left), then chooses as predictor the neighboring pixel closest to the computed value. [Paeth(x) = Raw(x) - PaethPredictor(Raw(x-bpp), Prior(x), Prior(x-bpp))]</summary>
       </Docs>
     </Member>
     <Member MemberName="Sub">
@@ -101,7 +118,7 @@
       </ReturnValue>
       <MemberValue>16</MemberValue>
       <Docs>
-        <summary>To be added.</summary>
+        <summary>Transmit the difference between each byte and the value of the corresponding byte of the prior pixel. [Sub(x) = Raw(x) - Raw(x-bpp)]</summary>
       </Docs>
     </Member>
     <Member MemberName="Up">
@@ -118,24 +135,7 @@
       </ReturnValue>
       <MemberValue>32</MemberValue>
       <Docs>
-        <summary>To be added.</summary>
-      </Docs>
-    </Member>
-    <Member MemberName="Zero">
-      <MemberSignature Language="C#" Value="Zero" />
-      <MemberSignature Language="ILAsm" Value=".field public static literal valuetype SkiaSharp.SKPngEncoderFilterFlags Zero = int32(0)" />
-      <MemberSignature Language="DocId" Value="F:SkiaSharp.SKPngEncoderFilterFlags.Zero" />
-      <MemberType>Field</MemberType>
-      <AssemblyInfo>
-        <AssemblyName>SkiaSharp</AssemblyName>
-        <AssemblyVersion>1.60.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>SkiaSharp.SKPngEncoderFilterFlags</ReturnType>
-      </ReturnValue>
-      <MemberValue>0</MemberValue>
-      <Docs>
-        <summary>To be added.</summary>
+        <summary>Transmit the difference between each byte and the value of the corresponding byte of the pixel above. [Up(x) = Raw(x) - Prior(x)]</summary>
       </Docs>
     </Member>
   </Members>

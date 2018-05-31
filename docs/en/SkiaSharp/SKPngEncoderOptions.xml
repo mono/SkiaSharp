@@ -11,8 +11,8 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>To be added.</summary>
-    <remarks>To be added.</remarks>
+    <summary>Options to control the PNG encoding.</summary>
+    <remarks></remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -29,10 +29,10 @@
         <Parameter Name="zLibLevel" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="filterFlags">To be added.</param>
-        <param name="zLibLevel">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="filterFlags">The filtering flags.</param>
+        <param name="zLibLevel">The compression level in the range 0..9.</param>
+        <summary>Creates a new instance of <see cref="T:SkiaSharp.SKPngEncoderOptions" />.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -50,11 +50,11 @@
         <Parameter Name="unpremulBehavior" Type="SkiaSharp.SKTransferFunctionBehavior" />
       </Parameters>
       <Docs>
-        <param name="filterFlags">To be added.</param>
-        <param name="zLibLevel">To be added.</param>
-        <param name="unpremulBehavior">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="filterFlags">The filtering flags.</param>
+        <param name="zLibLevel">The compression level in the range 0..9.</param>
+        <param name="unpremulBehavior">The unpremultiplication behavior.</param>
+        <summary>Creates a new instance of <see cref="T:SkiaSharp.SKPngEncoderOptions" />.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Default">
@@ -70,8 +70,8 @@
         <ReturnType>SkiaSharp.SKPngEncoderOptions</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Gets a new instance of <see cref="T:SkiaSharp.SKPngEncoderOptions" /> with the values set to the defaults.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FilterFlags">
@@ -87,9 +87,13 @@
         <ReturnType>SkiaSharp.SKPngEncoderFilterFlags</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the filtering flags.</summary>
+        <value></value>
+        <remarks>
+          <para>If a single filter is chosen, then that filter will be used for every row.</para>
+          <para>If multiple filters are chosen, then a heuristic will be used to guess which filter will encode smallest, then apply that filter. This happens on a per row basis, different rows can use different filters.</para>
+          <para>Using a single filter (or less filters) is typically faster. Trying all of the filters may help minimize the output file size.</para>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="UnpremulBehavior">
@@ -105,9 +109,9 @@
         <ReturnType>SkiaSharp.SKTransferFunctionBehavior</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the unpremultiplication behavior if the input is premultiplied.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="ZLibLevel">
@@ -123,9 +127,9 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the compression level in the range 0..9.</summary>
+        <value></value>
+        <remarks>A value of 0 is a special case to skip compression entirely, creating dramatically larger PNGs.</remarks>
       </Docs>
     </Member>
   </Members>
