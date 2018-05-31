@@ -30,11 +30,7 @@ namespace SkiaSharp.Views.UWP
 
 			SizeChanged += OnSizeChanged;
 			Unloaded += OnUnloaded;
-
-			// get the scale from the current display
-			var display = DisplayInformation.GetForCurrentView();
-			OnDpiChanged(display);
-			display.DpiChanged += OnDpiChanged;
+			Loaded += OnLoaded;
 		}
 
 		public SKSize CanvasSize => bitmap == null ? SKSize.Empty : new SKSize(bitmap.PixelWidth, bitmap.PixelHeight);
@@ -69,8 +65,19 @@ namespace SkiaSharp.Views.UWP
 			Invalidate();
 		}
 
+		private void OnLoaded(object sender, RoutedEventArgs e)
+		{
+			var display = DisplayInformation.GetForCurrentView();
+			display.DpiChanged += OnDpiChanged;
+
+			OnDpiChanged(display);
+		}
+
 		private void OnUnloaded(object sender, RoutedEventArgs e)
 		{
+			var display = DisplayInformation.GetForCurrentView();
+			display.DpiChanged -= OnDpiChanged;
+
 			FreeBitmap();
 		}
 
