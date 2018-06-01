@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SkiaSharp
 {
-	public static class Utils
+	internal static class Utils
 	{
 		internal const float NearlyZero = (1.0f / (1 << 12));
 	}

@@ -2314,13 +2314,13 @@ namespace SkiaSharp
 
 	[Flags]
 	public enum SKPngEncoderFilterFlags {
-		Zero  = 0x00,
-		None  = 0x08,
-		Sub   = 0x10,
-		Up    = 0x20,
-		Avg   = 0x40,
-		Paeth = 0x80,
-		All   = None | Sub | Up | Avg | Paeth,
+		NoFilters  = 0x00,
+		None       = 0x08,
+		Sub        = 0x10,
+		Up         = 0x20,
+		Avg        = 0x40,
+		Paeth      = 0x80,
+		AllFilters = None | Sub | Up | Avg | Paeth,
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -2333,7 +2333,7 @@ namespace SkiaSharp
 
 		static SKPngEncoderOptions ()
 		{
-			Default = new SKPngEncoderOptions (SKPngEncoderFilterFlags.All, 6, SKTransferFunctionBehavior.Respect);
+			Default = new SKPngEncoderOptions (SKPngEncoderFilterFlags.AllFilters, 6, SKTransferFunctionBehavior.Respect);
 		}
 
 		public SKPngEncoderOptions (SKPngEncoderFilterFlags filterFlags, int zLibLevel)
