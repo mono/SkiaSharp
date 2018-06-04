@@ -1056,6 +1056,14 @@ namespace SkiaSharp
 			this.bottom = bottom;
 		}
 
+		public SKRectI (SKPointI location, SKSizeI sizeI)
+		{
+		    this.left = location.X;
+		    this.top = location.Y;
+		    this.right = location.X + sizeI.Width;
+		    this.bottom = location.Y + sizeI.Height;
+		}
+
 		public int Left {
 			get { return left; }
 			set { left = value; }
@@ -1347,6 +1355,15 @@ namespace SkiaSharp
 			this.top = top;
 			this.bottom = bottom;
 		}
+
+		public SKRect (SKPoint location, SKSize sizeI)
+		{
+			this.left = location.X;
+			this.top = location.Y;
+			this.right = location.X + sizeI.Width;
+			this.bottom = location.Y + sizeI.Height;
+		}
+
 
 		public float Left {
 			get { return left; }
