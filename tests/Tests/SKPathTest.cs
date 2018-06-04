@@ -82,6 +82,18 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void PathContainsPointInRoundRect()
+		{
+			using (var path = new SKPath ()) {
+				var rrect = new SKRoundRect(SKRect.Create(10, 10, 100, 100), 5, 5);
+				path.AddRoundRect (rrect);
+
+				Assert.True (path.Contains (30, 30));
+				Assert.False (path.Contains (5, 30));
+			}
+		}
+
+		[SkippableFact]
 		public void GetLastPoint()
 		{
 			using (var path = new SKPath ()) {
@@ -183,7 +195,7 @@ namespace SkiaSharp.Tests
 				p.AddOval (r);
 				TestToFromSvgPath (p);
 				
-				p.AddRoundedRect (r, 4, 4.5f);
+				p.AddRoundRect (r, 4, 4.5f);
 				TestToFromSvgPath (p);
 			}
 		}

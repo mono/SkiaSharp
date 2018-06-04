@@ -361,6 +361,33 @@
         </remarks>
       </Docs>
     </Member>
+    <Member MemberName="ClipRoundRect">
+      <MemberSignature Language="C#" Value="public void ClipRoundRect (SkiaSharp.SKRoundRect rect, SkiaSharp.SKClipOperation operation = SkiaSharp.SKClipOperation.Intersect, bool antialias = false);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void ClipRoundRect(class SkiaSharp.SKRoundRect rect, valuetype SkiaSharp.SKClipOperation operation, bool antialias) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKCanvas.ClipRoundRect(SkiaSharp.SKRoundRect,SkiaSharp.SKClipOperation,System.Boolean)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="rect" Type="SkiaSharp.SKRoundRect" />
+        <Parameter Name="operation" Type="SkiaSharp.SKClipOperation" />
+        <Parameter Name="antialias" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="rect">The round rectangle to combine with the current clip.</param>
+        <param name="operation">The clip operator to apply to the current clip</param>
+        <param name="antialias">Whether or not the clip should be antialiased.</param>
+        <summary>Modify the current clip with the specified round rectangle.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
     <Member MemberName="Concat">
       <MemberSignature Language="C#" Value="public void Concat (ref SkiaSharp.SKMatrix m);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Concat(valuetype SkiaSharp.SKMatrix&amp; m) cil managed" />
@@ -1715,7 +1742,7 @@
       </Parameters>
       <Docs>
         <param name="rect">The rectangle to draw.</param>
-        <param name="paint">The paint to use when drawing the rectagle.</param>
+        <param name="paint">The paint to use when drawing the rectangle.</param>
         <summary>Draws a rectangle in the canvas.</summary>
         <remarks>
           <para></para>
@@ -1746,7 +1773,7 @@
         <param name="y">The y-coordinate.</param>
         <param name="w">The rectangle width.</param>
         <param name="h">The rectangle height.</param>
-        <param name="paint">The paint to use when drawing the rectagle.</param>
+        <param name="paint">The paint to use when drawing the rectangle.</param>
         <summary>Draws a rectangle in the canvas.</summary>
         <remarks>
           <para></para>
@@ -1782,6 +1809,29 @@
       </Docs>
     </Member>
     <Member MemberName="DrawRoundRect">
+      <MemberSignature Language="C#" Value="public void DrawRoundRect (SkiaSharp.SKRoundRect rect, SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawRoundRect(class SkiaSharp.SKRoundRect rect, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKCanvas.DrawRoundRect(SkiaSharp.SKRoundRect,SkiaSharp.SKPaint)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="rect" Type="SkiaSharp.SKRoundRect" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="rect">The round rectangle to draw.</param>
+        <param name="paint">The paint to use when drawing the rectangle.</param>
+        <summary>Draws a rounded rectangle in the canvas.</summary>
+        <remarks>The paint to use when drawing the round rectangle.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="DrawRoundRect">
       <MemberSignature Language="C#" Value="public void DrawRoundRect (SkiaSharp.SKRect rect, SkiaSharp.SKSize r, SkiaSharp.SKPaint paint);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawRoundRect(valuetype SkiaSharp.SKRect rect, valuetype SkiaSharp.SKSize r, class SkiaSharp.SKPaint paint) cil managed" />
       <MemberSignature Language="DocId" Value="M:SkiaSharp.SKCanvas.DrawRoundRect(SkiaSharp.SKRect,SkiaSharp.SKSize,SkiaSharp.SKPaint)" />
@@ -1801,9 +1851,9 @@
       <Docs>
         <param name="rect">The rectangle to draw.</param>
         <param name="r">The radius of the oval used to round the corners.</param>
-        <param name="paint">The paint to use when drawing the rectagle.</param>
+        <param name="paint">The paint to use when drawing the rectangle.</param>
         <summary>Draws a rounded rectangle in the canvas.</summary>
-        <remarks>The paint to use when drawing the rectagle.</remarks>
+        <remarks>The paint to use when drawing the rectangle.</remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawRoundRect">
@@ -1831,7 +1881,7 @@
         <param name="rect">The rectangle to draw.</param>
         <param name="rx">The x-radius of the oval used to round the corners.</param>
         <param name="ry">The y-radius of the oval used to round the corners.</param>
-        <param name="paint">The paint to use when drawing the rectagle.</param>
+        <param name="paint">The paint to use when drawing the rectangle.</param>
         <summary>Draws a rounded rectangle in the canvas.</summary>
         <remarks>
           <para></para>
@@ -1866,7 +1916,7 @@
         <param name="h">The rectangle height.</param>
         <param name="rx">The x-radius of the oval used to round the corners.</param>
         <param name="ry">The y-radius of the oval used to round the corners.</param>
-        <param name="paint">The paint to use when drawing the rectagle.</param>
+        <param name="paint">The paint to use when drawing the rectangle.</param>
         <summary>Draws a rounded rectangle in the canvas.</summary>
         <remarks>
           <para></para>

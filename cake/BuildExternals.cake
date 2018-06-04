@@ -85,6 +85,7 @@ Task ("externals-native")
 // this builds the native C and C++ externals for Windows
 Task ("externals-windows")
     .IsDependentOn ("externals-init")
+    .WithCriteria (!SKIP_EXTERNALS.Contains ("windows"))
     .WithCriteria (IsRunningOnWindows ())
     .Does (() =>  
 {
@@ -130,6 +131,7 @@ Task ("externals-windows")
 // this builds the native C and C++ externals for Windows UWP
 Task ("externals-uwp")
     .IsDependentOn ("externals-init")
+    .WithCriteria (!SKIP_EXTERNALS.Contains ("uwp"))
     .WithCriteria (IsRunningOnWindows ())
     .Does (() =>  
 {
@@ -190,6 +192,7 @@ Task ("externals-uwp")
 // this builds the native C and C++ externals for Mac OS X
 Task ("externals-osx")
     .IsDependentOn ("externals-init")
+    .WithCriteria (!SKIP_EXTERNALS.Contains ("osx"))
     .WithCriteria (IsRunningOnMac ())
     .Does (() =>  
 {
@@ -262,6 +265,7 @@ Task ("externals-osx")
 // this builds the native C and C++ externals for iOS
 Task ("externals-ios")
     .IsDependentOn ("externals-init")
+    .WithCriteria (!SKIP_EXTERNALS.Contains ("ios"))
     .WithCriteria (IsRunningOnMac ())
     .Does (() => 
 {
@@ -358,6 +362,7 @@ Task ("externals-ios")
 // this builds the native C and C++ externals for tvOS
 Task ("externals-tvos")
     .IsDependentOn ("externals-init")
+    .WithCriteria (!SKIP_EXTERNALS.Contains ("tvos"))
     .WithCriteria (IsRunningOnMac ())
     .Does (() => 
 {
@@ -432,6 +437,7 @@ Task ("externals-tvos")
 // this builds the native C and C++ externals for watchOS
 Task ("externals-watchos")
     .IsDependentOn ("externals-init")
+    .WithCriteria (!SKIP_EXTERNALS.Contains ("watchos"))
     .WithCriteria (IsRunningOnMac ())
     .Does (() => 
 {
@@ -514,6 +520,7 @@ Task ("externals-watchos")
 // this builds the native C and C++ externals for Android
 Task ("externals-android")
     .IsDependentOn ("externals-init")
+    .WithCriteria (!SKIP_EXTERNALS.Contains ("android"))
     .WithCriteria (IsRunningOnMac () || IsRunningOnWindows ())
     .Does (() => 
 {
@@ -561,6 +568,7 @@ Task ("externals-android")
 // this builds the native C and C++ externals for Linux
 Task ("externals-linux")
     .IsDependentOn ("externals-init")
+    .WithCriteria (!SKIP_EXTERNALS.Contains ("linux"))
     .WithCriteria (IsRunningOnLinux ())
     .Does (() => 
 {
@@ -616,6 +624,7 @@ Task ("externals-linux")
 
 Task ("externals-tizen")
     .IsDependentOn ("externals-init")
+    .WithCriteria (!SKIP_EXTERNALS.Contains ("tizen"))
     .Does (() =>
 {
     var bat = IsRunningOnWindows () ? ".bat" : "";
