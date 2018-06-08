@@ -60,7 +60,7 @@ namespace SkiaSharp
 			return serializer.OnUseEncodedData (buffer, size);
 		}
 
-		[MonoPInvokeCallback (typeof (SKBitmapReleaseDelegateInternal))]
+		[MonoPInvokeCallback (typeof (encode_delegate))]
 		private static IntPtr EncodeInternal (IntPtr cserializer, IntPtr pixmap)
 		{
 			var serializer = GetObject<SKManagedPixelSerializer> (cserializer, false);
