@@ -8,10 +8,11 @@ namespace SkiaSharp.Views.Gtk
 	public class SKWidget : global::Gtk.DrawingArea
 	{
 		private Gdk.Pixbuf pix;
+		private SKImageInfo imgInfo;
+		private SKSurface surface;
 
 		public SKWidget()
 		{
-			DoubleBuffered = false;
 		}
 
 		public SKSize CanvasSize => pix == null ? SKSize.Empty : new SKSize(pix.Width, pix.Height);
@@ -21,30 +22,23 @@ namespace SkiaSharp.Views.Gtk
 
 		protected override bool OnExposeEvent(Gdk.EventExpose evnt)
 		{
-			var result = base.OnExposeEvent(evnt);
-
 			var window = evnt.Window;
 			var area = evnt.Area;
 
 			// get the pixbuf
-			CreatePixbuf();
-			var info = new SKImageInfo(pix.Width, pix.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
+			CreateDrawingObjects();
 
-			// create the surface
-			using (var surface = SKSurface.Create(info, pix.Pixels, info.RowBytes))
-			{
 				// start drawing
-				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
+			OnPaintSurface(new SKPaintSurfaceEventArgs(surface, imgInfo));
 
-				surface.Canvas.Flush();
+			surface.Canvas.Flush();
 
-				// swap R and B
-				if (info.ColorType == SKColorType.Bgra8888)
+			// swap R and B
+			if (imgInfo.ColorType == SKColorType.Bgra8888)
+			{
+				using (var pixmap = surface.PeekPixels())
 				{
-					using (var pixmap = surface.PeekPixels())
-					{
-						SKSwizzle.SwapRedBlue(pixmap.GetPixels(), info.Width * info.Height);
-					}
+					SKSwizzle.SwapRedBlue(pixmap.GetPixels(), imgInfo.Width * imgInfo.Height);
 				}
 			}
 
@@ -52,7 +46,7 @@ namespace SkiaSharp.Views.Gtk
 			window.Clear();
 			window.DrawPixbuf(null, pix, 0, 0, 0, 0, -1, -1, Gdk.RgbDither.None, 0, 0);
 
-			return result;
+			return true;
 		}
 
 		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)
@@ -86,29 +80,37 @@ namespace SkiaSharp.Views.Gtk
 		{
 			if (disposing)
 			{
-				FreePixbuf();
+				FreeDrawingObjects();
 			}
 		}
 
-		private void CreatePixbuf()
+		private void CreateDrawingObjects()
 		{
 			var alloc = Allocation;
 			var w = alloc.Width;
 			var h = alloc.Height;
 			if (pix == null || pix.Width != w || pix.Height != h)
 			{
-				FreePixbuf();
+				FreeDrawingObjects();
 
 				pix = new Gdk.Pixbuf(Gdk.Colorspace.Rgb, true, 8, w, h);
+
+				// (Re)create the Skia Drawing objects
+				imgInfo = new SKImageInfo(pix.Width, pix.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
+				surface = SKSurface.Create(imgInfo, pix.Pixels, imgInfo.RowBytes);
 			}
 		}
 
-		private void FreePixbuf()
+		private void FreeDrawingObjects()
 		{
 			if (pix != null)
 			{
 				pix.Dispose();
 				pix = null;
+
+				// Skia objects should only exist if the Pixbuf is set as well
+				surface?.Dispose();
+				surface = null;
 			}
 		}
 	}
