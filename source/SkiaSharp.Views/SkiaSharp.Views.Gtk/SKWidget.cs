@@ -11,7 +11,6 @@ namespace SkiaSharp.Views.Gtk
 
 		public SKWidget()
 		{
-			DoubleBuffered = false;
 		}
 
 		public SKSize CanvasSize => pix == null ? SKSize.Empty : new SKSize(pix.Width, pix.Height);
@@ -21,8 +20,6 @@ namespace SkiaSharp.Views.Gtk
 
 		protected override bool OnExposeEvent(Gdk.EventExpose evnt)
 		{
-			var result = base.OnExposeEvent(evnt);
-
 			var window = evnt.Window;
 			var area = evnt.Area;
 
@@ -52,7 +49,7 @@ namespace SkiaSharp.Views.Gtk
 			window.Clear();
 			window.DrawPixbuf(null, pix, 0, 0, 0, 0, -1, -1, Gdk.RgbDither.None, 0, 0);
 
-			return result;
+			return true;
 		}
 
 		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)
