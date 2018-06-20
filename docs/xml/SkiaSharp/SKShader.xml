@@ -244,6 +244,45 @@ canvas.DrawPaint (paint);]]></code>
         </remarks>
       </Docs>
     </Member>
+    <MemberGroup MemberName="CreateCompose">
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Docs>
+        <remarks>
+          <format type="text/markdown"><![CDATA[  
+## Example  
+
+```csharp
+// create the first shader
+var colors = new SKColor [] {
+    new SKColor (0, 255, 255),
+    new SKColor (255, 0, 255),
+    new SKColor (255, 255, 0),
+    new SKColor (0, 255, 255)
+};
+var sweep = SKShader.CreateSweepGradient (new SKPoint (128, 128), colors, null);
+
+// create the second shader
+var turbulence = SKShader.CreatePerlinNoiseTurbulence (0.05f, 0.05f, 4, 0);
+
+// create the compose shader
+var shader = SKShader.CreateCompose (sweep, turbulence);
+
+// use the compose shader
+var paint = new SKPaint {
+    Shader = shader
+};
+canvas.DrawPaint (paint);
+```
+]]></format>
+        </remarks>
+      </Docs>
+    </MemberGroup>
     <Member MemberName="CreateCompose">
       <MemberSignature Language="C#" Value="public static SkiaSharp.SKShader CreateCompose (SkiaSharp.SKShader shaderA, SkiaSharp.SKShader shaderB);" />
       <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKShader CreateCompose(class SkiaSharp.SKShader shaderA, class SkiaSharp.SKShader shaderB) cil managed" />
@@ -266,21 +305,10 @@ canvas.DrawPaint (paint);]]></code>
       <Docs>
         <param name="shaderA">The colors from this shader are seen as the destination by the blend mode.</param>
         <param name="shaderB">The colors from this shader are seen as the source by the blend mode.</param>
-        <summary>Create a new compose shader, which combines two shaders by the <see cref="F:SkiaSharp.SKXferMode.SrcOver" /> blend mode.</summary>
+        <summary>Create a new compose shader, which combines two shaders by the <see cref="F:SkiaSharp.SKBlendMode.SrcOver" /> blend mode.</summary>
         <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
         <remarks>
-          <example>
-            <code lang="c#"><![CDATA[
-var colors = new SKColor [] { new SKColor (0, 255, 255), new SKColor (255, 0, 255), new SKColor (255, 255, 0), new SKColor (0, 255, 255)};
-var sweep = SKShader.CreateSweepGradient (new SKPoint (128, 128), colors, null);
-var turbulence = SKShader.CreatePerlinNoiseTurbulence (0.05f, 0.05f, 4, 0);
-var shader = SKShader.CreateCompose (sweep, turbulence);
-var paint = new SKPaint () { Shader = shader };
-canvas.DrawPaint (paint);]]></code>
-          </example>
-          <para>
-            <img href="xamarin-media/SkiaSharp/compose.png" />
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -367,13 +395,52 @@ canvas.DrawPaint (paint);]]></code>
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Creates a new "empty” shader that will not draw anything.</summary>
+        <summary>Creates a new "empty" shader that will not draw anything.</summary>
         <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
         <remarks>
           <para></para>
         </remarks>
       </Docs>
     </Member>
+    <MemberGroup MemberName="CreateLinearGradient">
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Docs>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Creates a shader that generates a linear gradient between the two specified points.
+
+![Linear Gradient](xamarin-media/SkiaSharp/linear.png "Linear Gradient")  
+
+## Example  
+
+```csharp
+// create the shader
+var colors = new SKColor [] {
+    new SKColor (0, 255, 255),
+    new SKColor (255, 0, 255),
+    new SKColor (255, 255, 0),
+    new SKColor (0, 255, 255)
+};
+var shader = SKShader.CreateLinearGradient (new SKPoint (0, 0), new SKPoint (255, 255), colors, null, SKShaderTileMode.Clamp);
+
+// use the shader
+var paint = new SKPaint {
+    Shader = shader
+};
+canvas.DrawPaint (paint);
+```
+]]></format>
+        </remarks>
+      </Docs>
+    </MemberGroup>
     <Member MemberName="CreateLinearGradient">
       <MemberSignature Language="C#" Value="public static SkiaSharp.SKShader CreateLinearGradient (SkiaSharp.SKPoint start, SkiaSharp.SKPoint end, SkiaSharp.SKColor[] colors, float[] colorPos, SkiaSharp.SKShaderTileMode mode);" />
       <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKShader CreateLinearGradient(valuetype SkiaSharp.SKPoint start, valuetype SkiaSharp.SKPoint end, valuetype SkiaSharp.SKColor[] colors, float32[] colorPos, valuetype SkiaSharp.SKShaderTileMode mode) cil managed" />
@@ -405,17 +472,7 @@ canvas.DrawPaint (paint);]]></code>
         <summary>Creates a shader that generates a linear gradient between the two specified points.</summary>
         <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
         <remarks>
-          <example>
-            <code lang="c#"><![CDATA[
-var colors = new SKColor [] { new SKColor (0, 255, 255), new SKColor (255, 0, 255), new SKColor (255, 255, 0), new SKColor (0, 255, 255)};
-var shader = SKShader.CreateLinearGradient (new SKPoint (0, 0), new SKPoint (255, 255), colors, null, SKShaderTileMode.Clamp);
-var paint = new SKPaint () { Shader = shader };
-canvas.DrawPaint (paint);
-]]></code>
-          </example>
-          <para>
-            <img href="xamarin-media/SkiaSharp/linear.png" />
-          </para>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
