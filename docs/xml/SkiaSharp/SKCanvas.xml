@@ -1147,7 +1147,7 @@ using (var surface = SKSurface.Create (info)) {
       <Docs>
         <param name="rect">The bounds of the annotation.</param>
         <param name="value">The data that specifies the name of the link’s destination.</param>
-        <summary>Annotates the canvas by making the specified rectangle link to a named destination (see <see cref="M:SkiaSharp.SKCanvas.DrawNamedDestinationAnnotation" />).</summary>
+        <summary>Annotates the canvas by making the specified rectangle link to a named destination (see <see cref="M:SkiaSharp.SKCanvas.DrawNamedDestinationAnnotation(SkiaSharp.SKPoint,SkiaSharp.SKData)" />).</summary>
         <remarks>
           <para>The caller is responsible for managing its ownership of the data.</para>
           <para>If the backend of this canvas does not support annotations, this call is safely ignored.</para>
@@ -1176,7 +1176,7 @@ using (var surface = SKSurface.Create (info)) {
       <Docs>
         <param name="rect">The bounds of the annotation.</param>
         <param name="value">The name of the link’s destination.</param>
-        <summary>Annotates the canvas by making the specified rectangle link to a named destination (see <see cref="M:SkiaSharp.SKCanvas.DrawNamedDestinationAnnotation" />).</summary>
+        <summary>Annotates the canvas by making the specified rectangle link to a named destination (see <see cref="M:SkiaSharp.SKCanvas.DrawNamedDestinationAnnotation(SkiaSharp.SKPoint,System.String)" />).</summary>
         <returns>Returns the actual data object that was attached to the canvas.</returns>
         <remarks>If the backend of this canvas does not support annotations, this call is safely ignored.</remarks>
       </Docs>
@@ -1203,7 +1203,7 @@ using (var surface = SKSurface.Create (info)) {
       <Docs>
         <param name="point">The location of the destination.</param>
         <param name="value">The data that specifies the name of the destination.</param>
-        <summary>Annotates the canvas by associating a name with the specified point (see <see cref="M:SkiaSharp.SKCanvas.DrawLinkDestinationAnnotation" />).</summary>
+        <summary>Annotates the canvas by associating a name with the specified point (see <see cref="M:SkiaSharp.SKCanvas.DrawLinkDestinationAnnotation(SkiaSharp.SKRect,SkiaSharp.SKData)" />).</summary>
         <remarks>
           <para>The caller is responsible for managing its ownership of the data.</para>
           <para>If the backend of this canvas does not support annotations, this call is safely ignored.</para>
@@ -1232,7 +1232,7 @@ using (var surface = SKSurface.Create (info)) {
       <Docs>
         <param name="point">The location of the destination.</param>
         <param name="value">The name of the destination.</param>
-        <summary>Annotates the canvas by associating a name with the specified point (see <see cref="M:SkiaSharp.SKCanvas.DrawLinkDestinationAnnotation" />).</summary>
+        <summary>Annotates the canvas by associating a name with the specified point (see <see cref="M:SkiaSharp.SKCanvas.DrawLinkDestinationAnnotation(SkiaSharp.SKRect,System.String)" />).</summary>
         <returns>Returns the actual data object that was attached to the canvas.</returns>
         <remarks>If the backend of this canvas does not support annotations, this call is safely ignored.</remarks>
       </Docs>
@@ -3209,7 +3209,7 @@ using (var surface = SKSurface.Create (info)) {
       <Parameters />
       <Docs>
         <summary>Saves the canvas state.</summary>
-        <returns>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> to balance this save.</returns>
+        <returns>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount(System.Int32)" /> to balance this save.</returns>
         <remarks>This call saves the current matrix, clip, and draw filter, and pushes a copy onto a private stack. Subsequent calls to translate, scale, rotate, skew, concat or clipping path or drawing filter all operate on this copy. When the balancing call to <see cref="M:SkiaSharp.SKCanvas.Restore" /> is made, the previous matrix, clipping, and drawing filters are restored.</remarks>
       </Docs>
     </Member>
@@ -3257,7 +3257,7 @@ using (var surface = SKSurface.Create (info)) {
       <Docs>
         <param name="paint">This is copied, and is applied to the offscreen when <see cref="M:SkiaSharp.SKCanvas.Restore" /> is called.</param>
         <summary>Saves the canvas state and allocates an offscreen bitmap.</summary>
-        <returns>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> to balance this save.</returns>
+        <returns>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount(System.Int32)" /> to balance this save.</returns>
         <remarks>This behaves the same as <see cref="M:SkiaSharp.SKCanvas.Save" /> but in addition it allocates an offscreen bitmap. All drawing calls are directed there, and only when the balancing call to <see cref="M:SkiaSharp.SKCanvas.Restore" /> is made is that offscreen transfered to the canvas (or the previous layer).</remarks>
       </Docs>
     </Member>
@@ -3284,10 +3284,10 @@ using (var surface = SKSurface.Create (info)) {
         <param name="limit">This clipping rectangle hint to limit the size of the offscreen bitmap.</param>
         <param name="paint">This is copied, and is applied to the offscreen when <see cref="M:SkiaSharp.SKCanvas.Restore" /> is called.</param>
         <summary>Saves the canvas state and allocates an offscreen bitmap.</summary>
-        <returns>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> to balance this save.</returns>
+        <returns>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount(System.Int32)" /> to balance this save.</returns>
         <remarks>
           <para>This behaves the same as <see cref="M:SkiaSharp.SKCanvas.Save" /> but in addition it allocates an offscreen bitmap. All drawing calls are directed there, and only when the balancing call to <see cref="M:SkiaSharp.SKCanvas.Restore" /> is made is that offscreen transfered to the canvas (or the previous layer).</para>
-          <para>The limit rectangle, is used as a hint to limit the size of the offscreen bitmap, and thus drawing may be clipped to it, though that clipping is not guaranteed to happen. If exact clipping is desired, use <see cref="M:SkiaSharp.SKCanvas.ClipRect" />.</para>
+          <para>The limit rectangle, is used as a hint to limit the size of the offscreen bitmap, and thus drawing may be clipped to it, though that clipping is not guaranteed to happen. If exact clipping is desired, use <see cref="M:SkiaSharp.SKCanvas.ClipRect(SkiaSharp.SKRect,SkiaSharp.SKClipOperation,System.Boolean)" />.</para>
         </remarks>
       </Docs>
     </Member>
