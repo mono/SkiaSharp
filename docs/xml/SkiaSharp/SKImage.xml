@@ -1,0 +1,1655 @@
+<Type Name="SKImage" FullName="SkiaSharp.SKImage">
+  <TypeSignature Language="C#" Value="public class SKImage : SkiaSharp.SKObject" />
+  <TypeSignature Language="ILAsm" Value=".class public auto ansi SKImage extends SkiaSharp.SKObject" />
+  <TypeSignature Language="DocId" Value="T:SkiaSharp.SKImage" />
+  <AssemblyInfo>
+    <AssemblyName>SkiaSharp</AssemblyName>
+    <AssemblyVersion>1.57.0.0</AssemblyVersion>
+    <AssemblyVersion>1.58.0.0</AssemblyVersion>
+    <AssemblyVersion>1.59.0.0</AssemblyVersion>
+    <AssemblyVersion>1.60.0.0</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>SkiaSharp.SKObject</BaseTypeName>
+  </Base>
+  <Interfaces />
+  <Docs>
+    <summary>An abstraction for drawing a rectangle of pixels.</summary>
+    <remarks>
+      <para>An image is an abstraction of pixels, though the particular type of image could be actually storing its data on the GPU, or as drawing commands (picture or PDF or otherwise), ready to be played back into another canvas.</para>
+      <para></para>
+      <para>The content of an image is always immutable, though the actual storage may change, if for example that image can be re-created via encoded data or other means.</para>
+      <para></para>
+      <para>An image always has a non-zero dimensions. If there is a request to create a new image, either directly or via a surface, and either of the requested dimensions are zero, then <see langword="null" /> will be returned.</para>
+    </remarks>
+  </Docs>
+  <Members>
+    <Member MemberName="AlphaType">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKAlphaType AlphaType { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKAlphaType AlphaType" />
+      <MemberSignature Language="DocId" Value="P:SkiaSharp.SKImage.AlphaType" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKAlphaType</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the configured <see cref="T:SkiaSharp.SKAlphaType" /> for the bitmap.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ApplyImageFilter">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKImage ApplyImageFilter (SkiaSharp.SKImageFilter filter, SkiaSharp.SKRectI subset, SkiaSharp.SKRectI clipBounds, out SkiaSharp.SKRectI outSubset, out SkiaSharp.SKPoint outOffset);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKImage ApplyImageFilter(class SkiaSharp.SKImageFilter filter, valuetype SkiaSharp.SKRectI subset, valuetype SkiaSharp.SKRectI clipBounds, [out] valuetype SkiaSharp.SKRectI&amp; outSubset, [out] valuetype SkiaSharp.SKPoint&amp; outOffset) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.ApplyImageFilter(SkiaSharp.SKImageFilter,SkiaSharp.SKRectI,SkiaSharp.SKRectI,SkiaSharp.SKRectI@,SkiaSharp.SKPoint@)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="filter" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="subset" Type="SkiaSharp.SKRectI" />
+        <Parameter Name="clipBounds" Type="SkiaSharp.SKRectI" />
+        <Parameter Name="outSubset" Type="SkiaSharp.SKRectI&amp;" RefType="out" />
+        <Parameter Name="outOffset" Type="SkiaSharp.SKPoint&amp;" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="filter">The filter to apply to the current image.</param>
+        <param name="subset">The active portion of this image.</param>
+        <param name="clipBounds">Constrains the device-space extent of the image to the given rectangle.</param>
+        <param name="outSubset">The active portion of the resulting image</param>
+        <param name="outOffset">The amount to translate the resulting image relative to the source when it is drawn.</param>
+        <summary>Applies a given image filter to this image, and return the filtered result.</summary>
+        <returns>Returns the resulting image after the filter is applied, or <see langword="null" /> if the image could not be created or would be transparent black (#00000000).</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Create">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage Create (SkiaSharp.SKImageInfo info);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage Create(valuetype SkiaSharp.SKImageInfo info) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.Create(SkiaSharp.SKImageInfo)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+      </Parameters>
+      <Docs>
+        <param name="info">The image information to use.</param>
+        <summary>Creates a new raster-based <see cref="T:SkiaSharp.SKImage" /> using the specified information.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImage" /> instance.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Dispose">
+      <MemberSignature Language="C#" Value="protected override void Dispose (bool disposing);" />
+      <MemberSignature Language="ILAsm" Value=".method familyhidebysig virtual instance void Dispose(bool disposing) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.Dispose(System.Boolean)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="disposing" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="disposing">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Encode">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKData Encode ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKData Encode() cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.Encode" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKData</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Encodes the image using the <see cref="F:SkiaSharp.SKImageEncodeFormat.Png" /> format.</summary>
+        <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded image.</returns>
+        <remarks>Use the overload that takes a <see cref="T:SkiaSharp.SKImageEncodeFormat" /> if you want to encode in a different format.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Encode">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKData Encode (SkiaSharp.SKPixelSerializer serializer);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKData Encode(class SkiaSharp.SKPixelSerializer serializer) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.Encode(SkiaSharp.SKPixelSerializer)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKData</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="serializer" Type="SkiaSharp.SKPixelSerializer" />
+      </Parameters>
+      <Docs>
+        <param name="serializer">The serializer to use to encode the image.</param>
+        <summary>Encodes the image using the specified serializer.</summary>
+        <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded image.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Encode">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKData Encode (SkiaSharp.SKEncodedImageFormat format, int quality);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKData Encode(valuetype SkiaSharp.SKEncodedImageFormat format, int32 quality) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.Encode(SkiaSharp.SKEncodedImageFormat,System.Int32)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKData</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="format" Type="SkiaSharp.SKEncodedImageFormat" />
+        <Parameter Name="quality" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="format">The file format used to encode the image.</param>
+        <param name="quality">The quality level to use for the image. This is in the range from 0-100.</param>
+        <summary>Encodes the image using the specified format.</summary>
+        <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded image.</returns>
+        <remarks>The quality is a suggestion, and not all formats (eg: png) respect or support it.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Encode">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKData Encode (SkiaSharp.SKImageEncodeFormat format, int quality);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKData Encode(valuetype SkiaSharp.SKImageEncodeFormat format, int32 quality) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.Encode(SkiaSharp.SKImageEncodeFormat,System.Int32)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Obsolete("Use Encode(SKEncodedImageFormat, int) instead.", true)</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKData</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="format" Type="SkiaSharp.SKImageEncodeFormat" />
+        <Parameter Name="quality" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="format">The file format used to encode the image.</param>
+        <param name="quality">The quality level to use for the image.</param>
+        <summary>Encodes the image using the specified format.</summary>
+        <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded image.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromAdoptedTexture">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromAdoptedTexture (SkiaSharp.GRContext context, SkiaSharp.GRBackendTextureDesc desc);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromAdoptedTexture(class SkiaSharp.GRContext context, valuetype SkiaSharp.GRBackendTextureDesc desc) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromAdoptedTexture(SkiaSharp.GRContext,SkiaSharp.GRBackendTextureDesc)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="context" Type="SkiaSharp.GRContext" />
+        <Parameter Name="desc" Type="SkiaSharp.GRBackendTextureDesc" />
+      </Parameters>
+      <Docs>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing texture.</param>
+        <summary>Creates a new image from the specified texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>SkiaSharp will delete or recycle the texture when the image is released.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromAdoptedTexture">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromAdoptedTexture (SkiaSharp.GRContext context, SkiaSharp.GRGlBackendTextureDesc desc);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromAdoptedTexture(class SkiaSharp.GRContext context, valuetype SkiaSharp.GRGlBackendTextureDesc desc) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromAdoptedTexture(SkiaSharp.GRContext,SkiaSharp.GRGlBackendTextureDesc)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="context" Type="SkiaSharp.GRContext" />
+        <Parameter Name="desc" Type="SkiaSharp.GRGlBackendTextureDesc" />
+      </Parameters>
+      <Docs>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing OpenGL texture.</param>
+        <summary>Creates a new image from the specified OpenGL texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>SkiaSharp will delete or recycle the OpenGL texture when the image is released.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromAdoptedTexture">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromAdoptedTexture (SkiaSharp.GRContext context, SkiaSharp.GRBackendTextureDesc desc, SkiaSharp.SKAlphaType alpha);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromAdoptedTexture(class SkiaSharp.GRContext context, valuetype SkiaSharp.GRBackendTextureDesc desc, valuetype SkiaSharp.SKAlphaType alpha) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromAdoptedTexture(SkiaSharp.GRContext,SkiaSharp.GRBackendTextureDesc,SkiaSharp.SKAlphaType)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="context" Type="SkiaSharp.GRContext" />
+        <Parameter Name="desc" Type="SkiaSharp.GRBackendTextureDesc" />
+        <Parameter Name="alpha" Type="SkiaSharp.SKAlphaType" />
+      </Parameters>
+      <Docs>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing texture.</param>
+        <param name="alpha">The alpha type of the texture.</param>
+        <summary>Creates a new image from the specified texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>SkiaSharp will delete or recycle the texture when the image is released.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromAdoptedTexture">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromAdoptedTexture (SkiaSharp.GRContext context, SkiaSharp.GRGlBackendTextureDesc desc, SkiaSharp.SKAlphaType alpha);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromAdoptedTexture(class SkiaSharp.GRContext context, valuetype SkiaSharp.GRGlBackendTextureDesc desc, valuetype SkiaSharp.SKAlphaType alpha) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromAdoptedTexture(SkiaSharp.GRContext,SkiaSharp.GRGlBackendTextureDesc,SkiaSharp.SKAlphaType)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="context" Type="SkiaSharp.GRContext" />
+        <Parameter Name="desc" Type="SkiaSharp.GRGlBackendTextureDesc" />
+        <Parameter Name="alpha" Type="SkiaSharp.SKAlphaType" />
+      </Parameters>
+      <Docs>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing OpenGL texture.</param>
+        <param name="alpha">The alpha type of the texture.</param>
+        <summary>Creates a new image from the specified OpenGL texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>SkiaSharp will delete or recycle the texture when the image is released.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromBitmap">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromBitmap (SkiaSharp.SKBitmap bitmap);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromBitmap(class SkiaSharp.SKBitmap bitmap) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromBitmap(SkiaSharp.SKBitmap)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="bitmap" Type="SkiaSharp.SKBitmap" />
+      </Parameters>
+      <Docs>
+        <param name="bitmap">The bitmap that will be used as the source for the image.</param>
+        <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKBitmap" />.</summary>
+        <returns>An image whose contents are the contents of the specified bitmap.</returns>
+        <remarks>If the bitmap is marked immutable, and its pixel memory is shareable, it may be shared instead of copied.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromData">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromData (SkiaSharp.SKData data);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromData(class SkiaSharp.SKData data) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromData(SkiaSharp.SKData)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Obsolete("Use FromEncodedData instead.", true)</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="data" Type="SkiaSharp.SKData" />
+      </Parameters>
+      <Docs>
+        <param name="data">The data holding the encoded image.</param>
+        <summary>Creates a new image from an encoded image wrapped by the data.</summary>
+        <returns>The decoded image, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromData">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromData (SkiaSharp.SKData data, SkiaSharp.SKRectI subset);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromData(class SkiaSharp.SKData data, valuetype SkiaSharp.SKRectI subset) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromData(SkiaSharp.SKData,SkiaSharp.SKRectI)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Obsolete("Use FromEncodedData instead.", true)</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="data" Type="SkiaSharp.SKData" />
+        <Parameter Name="subset" Type="SkiaSharp.SKRectI" />
+      </Parameters>
+      <Docs>
+        <param name="data">The data holding the encoded image.</param>
+        <param name="subset">The bounds for a subset of the image.</param>
+        <summary>Creates a new image from an encoded image wrapped by the data.</summary>
+        <returns>The decoded image, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromEncodedData">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromEncodedData (SkiaSharp.SKData data);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromEncodedData(class SkiaSharp.SKData data) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromEncodedData(SkiaSharp.SKData)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="data" Type="SkiaSharp.SKData" />
+      </Parameters>
+      <Docs>
+        <param name="data">The data holding the encoded image.</param>
+        <summary>Creates a new image from an encoded image wrapped by the data.</summary>
+        <returns>The decoded image, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromEncodedData">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromEncodedData (SkiaSharp.SKData data, SkiaSharp.SKRectI subset);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromEncodedData(class SkiaSharp.SKData data, valuetype SkiaSharp.SKRectI subset) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromEncodedData(SkiaSharp.SKData,SkiaSharp.SKRectI)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="data" Type="SkiaSharp.SKData" />
+        <Parameter Name="subset" Type="SkiaSharp.SKRectI" />
+      </Parameters>
+      <Docs>
+        <param name="data">The data holding the encoded image.</param>
+        <param name="subset">The bounds for a subset of the image.</param>
+        <summary>Creates a new image from an encoded image wrapped by the data.</summary>
+        <returns>The decoded image, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromPicture">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromPicture (SkiaSharp.SKPicture picture, SkiaSharp.SKSizeI dimensions);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromPicture(class SkiaSharp.SKPicture picture, valuetype SkiaSharp.SKSizeI dimensions) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromPicture(SkiaSharp.SKPicture,SkiaSharp.SKSizeI)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="picture" Type="SkiaSharp.SKPicture" />
+        <Parameter Name="dimensions" Type="SkiaSharp.SKSizeI" />
+      </Parameters>
+      <Docs>
+        <param name="picture">The picture.</param>
+        <param name="dimensions">The size of the raster surface.</param>
+        <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.</summary>
+        <returns>An image whose contents is the picture.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromPicture">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromPicture (SkiaSharp.SKPicture picture, SkiaSharp.SKSizeI dimensions, SkiaSharp.SKMatrix matrix);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromPicture(class SkiaSharp.SKPicture picture, valuetype SkiaSharp.SKSizeI dimensions, valuetype SkiaSharp.SKMatrix matrix) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromPicture(SkiaSharp.SKPicture,SkiaSharp.SKSizeI,SkiaSharp.SKMatrix)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="picture" Type="SkiaSharp.SKPicture" />
+        <Parameter Name="dimensions" Type="SkiaSharp.SKSizeI" />
+        <Parameter Name="matrix" Type="SkiaSharp.SKMatrix" />
+      </Parameters>
+      <Docs>
+        <param name="picture">The picture.</param>
+        <param name="dimensions">The size of the raster surface.</param>
+        <param name="matrix">The matrix to use when reading the image.</param>
+        <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.</summary>
+        <returns>An image whose contents is the picture.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromPicture">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromPicture (SkiaSharp.SKPicture picture, SkiaSharp.SKSizeI dimensions, SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromPicture(class SkiaSharp.SKPicture picture, valuetype SkiaSharp.SKSizeI dimensions, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromPicture(SkiaSharp.SKPicture,SkiaSharp.SKSizeI,SkiaSharp.SKPaint)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="picture" Type="SkiaSharp.SKPicture" />
+        <Parameter Name="dimensions" Type="SkiaSharp.SKSizeI" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="picture">The picture.</param>
+        <param name="dimensions">The size of the raster surface.</param>
+        <param name="paint">The paint to use when reading the image.</param>
+        <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.</summary>
+        <returns>An image whose contents is the picture.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromPicture">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromPicture (SkiaSharp.SKPicture picture, SkiaSharp.SKSizeI dimensions, SkiaSharp.SKMatrix matrix, SkiaSharp.SKPaint paint);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromPicture(class SkiaSharp.SKPicture picture, valuetype SkiaSharp.SKSizeI dimensions, valuetype SkiaSharp.SKMatrix matrix, class SkiaSharp.SKPaint paint) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromPicture(SkiaSharp.SKPicture,SkiaSharp.SKSizeI,SkiaSharp.SKMatrix,SkiaSharp.SKPaint)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="picture" Type="SkiaSharp.SKPicture" />
+        <Parameter Name="dimensions" Type="SkiaSharp.SKSizeI" />
+        <Parameter Name="matrix" Type="SkiaSharp.SKMatrix" />
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+      </Parameters>
+      <Docs>
+        <param name="picture">The picture.</param>
+        <param name="dimensions">The size of the raster surface.</param>
+        <param name="matrix">The matrix to use when reading the image.</param>
+        <param name="paint">The paint to use when reading the image.</param>
+        <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.</summary>
+        <returns>An image whose contents is the picture.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromPixelCopy">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromPixelCopy (SkiaSharp.SKPixmap pixmap);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromPixelCopy(class SkiaSharp.SKPixmap pixmap) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromPixelCopy(SkiaSharp.SKPixmap)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pixmap" Type="SkiaSharp.SKPixmap" />
+      </Parameters>
+      <Docs>
+        <param name="pixmap">The pixmap that contains the image information and buffer location.</param>
+        <summary>Creates a new image from a copy of an in-memory buffer.</summary>
+        <returns>A new image with a copy of the contents of the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromPixelCopy">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromPixelCopy (SkiaSharp.SKImageInfo info, IntPtr pixels);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromPixelCopy(valuetype SkiaSharp.SKImageInfo info, native int pixels) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromPixelCopy(SkiaSharp.SKImageInfo,System.IntPtr)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="pixels" Type="System.IntPtr" />
+      </Parameters>
+      <Docs>
+        <param name="info">The image information describing the encoding of the image in memory.</param>
+        <param name="pixels">The pointer to the image in memory.</param>
+        <summary>Creates a new image from a copy of an in-memory buffer.</summary>
+        <returns>A new image with a copy of the contents of the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromPixelCopy">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromPixelCopy (SkiaSharp.SKImageInfo info, IntPtr pixels, int rowBytes);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromPixelCopy(valuetype SkiaSharp.SKImageInfo info, native int pixels, int32 rowBytes) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromPixelCopy(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="pixels" Type="System.IntPtr" />
+        <Parameter Name="rowBytes" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="info">The image information describing the encoding of the image in memory.</param>
+        <param name="pixels">The pointer to the image in memory.</param>
+        <param name="rowBytes">The specified the number of bytes used per row in the image.</param>
+        <summary>Creates a new image from a copy of an in-memory buffer.</summary>
+        <returns>A new image with a copy of the contents of the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromPixelCopy">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromPixelCopy (SkiaSharp.SKImageInfo info, IntPtr pixels, int rowBytes, SkiaSharp.SKColorTable ctable);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromPixelCopy(valuetype SkiaSharp.SKImageInfo info, native int pixels, int32 rowBytes, class SkiaSharp.SKColorTable ctable) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromPixelCopy(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32,SkiaSharp.SKColorTable)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="pixels" Type="System.IntPtr" />
+        <Parameter Name="rowBytes" Type="System.Int32" />
+        <Parameter Name="ctable" Type="SkiaSharp.SKColorTable" />
+      </Parameters>
+      <Docs>
+        <param name="info">The image information describing the encoding of the image in memory.</param>
+        <param name="pixels">The pointer to the image in memory.</param>
+        <param name="rowBytes">The specified the number of bytes used per row in the image.</param>
+        <param name="ctable">The color table to use with the image data.</param>
+        <summary>Creates a new image from a copy of an in-memory buffer.</summary>
+        <returns>A new image with a copy of the contents of the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromPixelData">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromPixelData (SkiaSharp.SKImageInfo info, SkiaSharp.SKData data, int rowBytes);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromPixelData(valuetype SkiaSharp.SKImageInfo info, class SkiaSharp.SKData data, int32 rowBytes) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromPixelData(SkiaSharp.SKImageInfo,SkiaSharp.SKData,System.Int32)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="data" Type="SkiaSharp.SKData" />
+        <Parameter Name="rowBytes" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="info">The image information describing the encoding of the image in memory.</param>
+        <param name="data">The data object that contains the pixel data.</param>
+        <param name="rowBytes">The specified the number of bytes used per row in the image.</param>
+        <summary>Creates a new image from an in-memory buffer.</summary>
+        <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromPixels">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromPixels (SkiaSharp.SKPixmap pixmap);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromPixels(class SkiaSharp.SKPixmap pixmap) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromPixels(SkiaSharp.SKPixmap)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pixmap" Type="SkiaSharp.SKPixmap" />
+      </Parameters>
+      <Docs>
+        <param name="pixmap">The pixmap that contains the image information and buffer location.</param>
+        <summary>Creates a new image from an in-memory buffer.</summary>
+        <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromPixels">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromPixels (SkiaSharp.SKImageInfo info, IntPtr pixels);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromPixels(valuetype SkiaSharp.SKImageInfo info, native int pixels) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromPixels(SkiaSharp.SKImageInfo,System.IntPtr)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="pixels" Type="System.IntPtr" />
+      </Parameters>
+      <Docs>
+        <param name="info">The image information describing the encoding of the image in memory.</param>
+        <param name="pixels">The pointer to the image in memory.</param>
+        <summary>Creates a new image from an in-memory buffer.</summary>
+        <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromPixels">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromPixels (SkiaSharp.SKPixmap pixmap, SkiaSharp.SKImageRasterReleaseDelegate releaseProc);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromPixels(class SkiaSharp.SKPixmap pixmap, class SkiaSharp.SKImageRasterReleaseDelegate releaseProc) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromPixels(SkiaSharp.SKPixmap,SkiaSharp.SKImageRasterReleaseDelegate)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pixmap" Type="SkiaSharp.SKPixmap" />
+        <Parameter Name="releaseProc" Type="SkiaSharp.SKImageRasterReleaseDelegate" />
+      </Parameters>
+      <Docs>
+        <param name="pixmap">The pixmap that contains the image information and buffer location.</param>
+        <param name="releaseProc">The delegate to invoke when the image is about to be destroyed.</param>
+        <summary>Creates a new image from an in-memory buffer.</summary>
+        <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromPixels">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromPixels (SkiaSharp.SKImageInfo info, IntPtr pixels, int rowBytes);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromPixels(valuetype SkiaSharp.SKImageInfo info, native int pixels, int32 rowBytes) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromPixels(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="pixels" Type="System.IntPtr" />
+        <Parameter Name="rowBytes" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="info">The image information describing the encoding of the image in memory.</param>
+        <param name="pixels">The pointer to the image in memory.</param>
+        <param name="rowBytes">The specified the number of bytes used per row in the image.</param>
+        <summary>Creates a new image from an in-memory buffer.</summary>
+        <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromPixels">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromPixels (SkiaSharp.SKPixmap pixmap, SkiaSharp.SKImageRasterReleaseDelegate releaseProc, object releaseContext);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromPixels(class SkiaSharp.SKPixmap pixmap, class SkiaSharp.SKImageRasterReleaseDelegate releaseProc, object releaseContext) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromPixels(SkiaSharp.SKPixmap,SkiaSharp.SKImageRasterReleaseDelegate,System.Object)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pixmap" Type="SkiaSharp.SKPixmap" />
+        <Parameter Name="releaseProc" Type="SkiaSharp.SKImageRasterReleaseDelegate" />
+        <Parameter Name="releaseContext" Type="System.Object" />
+      </Parameters>
+      <Docs>
+        <param name="pixmap">The pixmap that contains the image information and buffer location.</param>
+        <param name="releaseProc">The delegate to invoke when the image is about to be destroyed.</param>
+        <param name="releaseContext">The user data to use when invoking the delegate.</param>
+        <summary>Creates a new image from an in-memory buffer.</summary>
+        <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromTexture">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromTexture (SkiaSharp.GRContext context, SkiaSharp.GRBackendTextureDesc desc);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromTexture(class SkiaSharp.GRContext context, valuetype SkiaSharp.GRBackendTextureDesc desc) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromTexture(SkiaSharp.GRContext,SkiaSharp.GRBackendTextureDesc)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="context" Type="SkiaSharp.GRContext" />
+        <Parameter Name="desc" Type="SkiaSharp.GRBackendTextureDesc" />
+      </Parameters>
+      <Docs>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing texture.</param>
+        <summary>Creates a new image from the specified texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromTexture">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromTexture (SkiaSharp.GRContext context, SkiaSharp.GRGlBackendTextureDesc desc);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromTexture(class SkiaSharp.GRContext context, valuetype SkiaSharp.GRGlBackendTextureDesc desc) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromTexture(SkiaSharp.GRContext,SkiaSharp.GRGlBackendTextureDesc)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="context" Type="SkiaSharp.GRContext" />
+        <Parameter Name="desc" Type="SkiaSharp.GRGlBackendTextureDesc" />
+      </Parameters>
+      <Docs>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing texture.</param>
+        <summary>Creates a new image from the specified OpenGL texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromTexture">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromTexture (SkiaSharp.GRContext context, SkiaSharp.GRBackendTextureDesc desc, SkiaSharp.SKAlphaType alpha);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromTexture(class SkiaSharp.GRContext context, valuetype SkiaSharp.GRBackendTextureDesc desc, valuetype SkiaSharp.SKAlphaType alpha) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromTexture(SkiaSharp.GRContext,SkiaSharp.GRBackendTextureDesc,SkiaSharp.SKAlphaType)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="context" Type="SkiaSharp.GRContext" />
+        <Parameter Name="desc" Type="SkiaSharp.GRBackendTextureDesc" />
+        <Parameter Name="alpha" Type="SkiaSharp.SKAlphaType" />
+      </Parameters>
+      <Docs>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing texture.</param>
+        <param name="alpha">The alpha type of the texture.</param>
+        <summary>Creates a new image from the specified texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromTexture">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromTexture (SkiaSharp.GRContext context, SkiaSharp.GRGlBackendTextureDesc desc, SkiaSharp.SKAlphaType alpha);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromTexture(class SkiaSharp.GRContext context, valuetype SkiaSharp.GRGlBackendTextureDesc desc, valuetype SkiaSharp.SKAlphaType alpha) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromTexture(SkiaSharp.GRContext,SkiaSharp.GRGlBackendTextureDesc,SkiaSharp.SKAlphaType)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="context" Type="SkiaSharp.GRContext" />
+        <Parameter Name="desc" Type="SkiaSharp.GRGlBackendTextureDesc" />
+        <Parameter Name="alpha" Type="SkiaSharp.SKAlphaType" />
+      </Parameters>
+      <Docs>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing OpenGL texture.</param>
+        <param name="alpha">The alpha type of the texture.</param>
+        <summary>Creates a new image from the specified OpenGL texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromTexture">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromTexture (SkiaSharp.GRContext context, SkiaSharp.GRBackendTextureDesc desc, SkiaSharp.SKAlphaType alpha, SkiaSharp.SKImageTextureReleaseDelegate releaseProc);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromTexture(class SkiaSharp.GRContext context, valuetype SkiaSharp.GRBackendTextureDesc desc, valuetype SkiaSharp.SKAlphaType alpha, class SkiaSharp.SKImageTextureReleaseDelegate releaseProc) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromTexture(SkiaSharp.GRContext,SkiaSharp.GRBackendTextureDesc,SkiaSharp.SKAlphaType,SkiaSharp.SKImageTextureReleaseDelegate)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="context" Type="SkiaSharp.GRContext" />
+        <Parameter Name="desc" Type="SkiaSharp.GRBackendTextureDesc" />
+        <Parameter Name="alpha" Type="SkiaSharp.SKAlphaType" />
+        <Parameter Name="releaseProc" Type="SkiaSharp.SKImageTextureReleaseDelegate" />
+      </Parameters>
+      <Docs>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing texture.</param>
+        <param name="alpha">The alpha type of the texture.</param>
+        <param name="releaseProc">The delegate to invoke when the image is about to be destroyed.</param>
+        <summary>Creates a new image from the specified texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromTexture">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromTexture (SkiaSharp.GRContext context, SkiaSharp.GRGlBackendTextureDesc desc, SkiaSharp.SKAlphaType alpha, SkiaSharp.SKImageTextureReleaseDelegate releaseProc);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromTexture(class SkiaSharp.GRContext context, valuetype SkiaSharp.GRGlBackendTextureDesc desc, valuetype SkiaSharp.SKAlphaType alpha, class SkiaSharp.SKImageTextureReleaseDelegate releaseProc) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromTexture(SkiaSharp.GRContext,SkiaSharp.GRGlBackendTextureDesc,SkiaSharp.SKAlphaType,SkiaSharp.SKImageTextureReleaseDelegate)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="context" Type="SkiaSharp.GRContext" />
+        <Parameter Name="desc" Type="SkiaSharp.GRGlBackendTextureDesc" />
+        <Parameter Name="alpha" Type="SkiaSharp.SKAlphaType" />
+        <Parameter Name="releaseProc" Type="SkiaSharp.SKImageTextureReleaseDelegate" />
+      </Parameters>
+      <Docs>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing OpenGL texture.</param>
+        <param name="alpha">The alpha type of the texture.</param>
+        <param name="releaseProc">The delegate to invoke when the image is about to be destroyed.</param>
+        <summary>Creates a new image from the specified OpenGL texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromTexture">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromTexture (SkiaSharp.GRContext context, SkiaSharp.GRBackendTextureDesc desc, SkiaSharp.SKAlphaType alpha, SkiaSharp.SKImageTextureReleaseDelegate releaseProc, object releaseContext);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromTexture(class SkiaSharp.GRContext context, valuetype SkiaSharp.GRBackendTextureDesc desc, valuetype SkiaSharp.SKAlphaType alpha, class SkiaSharp.SKImageTextureReleaseDelegate releaseProc, object releaseContext) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromTexture(SkiaSharp.GRContext,SkiaSharp.GRBackendTextureDesc,SkiaSharp.SKAlphaType,SkiaSharp.SKImageTextureReleaseDelegate,System.Object)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="context" Type="SkiaSharp.GRContext" />
+        <Parameter Name="desc" Type="SkiaSharp.GRBackendTextureDesc" />
+        <Parameter Name="alpha" Type="SkiaSharp.SKAlphaType" />
+        <Parameter Name="releaseProc" Type="SkiaSharp.SKImageTextureReleaseDelegate" />
+        <Parameter Name="releaseContext" Type="System.Object" />
+      </Parameters>
+      <Docs>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing texture.</param>
+        <param name="alpha">The alpha type of the texture.</param>
+        <param name="releaseProc">The delegate to invoke when the image is about to be destroyed.</param>
+        <param name="releaseContext">The user data to use when invoking the delegate.</param>
+        <summary>Creates a new image from the specified texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="FromTexture">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImage FromTexture (SkiaSharp.GRContext context, SkiaSharp.GRGlBackendTextureDesc desc, SkiaSharp.SKAlphaType alpha, SkiaSharp.SKImageTextureReleaseDelegate releaseProc, object releaseContext);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImage FromTexture(class SkiaSharp.GRContext context, valuetype SkiaSharp.GRGlBackendTextureDesc desc, valuetype SkiaSharp.SKAlphaType alpha, class SkiaSharp.SKImageTextureReleaseDelegate releaseProc, object releaseContext) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.FromTexture(SkiaSharp.GRContext,SkiaSharp.GRGlBackendTextureDesc,SkiaSharp.SKAlphaType,SkiaSharp.SKImageTextureReleaseDelegate,System.Object)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="context" Type="SkiaSharp.GRContext" />
+        <Parameter Name="desc" Type="SkiaSharp.GRGlBackendTextureDesc" />
+        <Parameter Name="alpha" Type="SkiaSharp.SKAlphaType" />
+        <Parameter Name="releaseProc" Type="SkiaSharp.SKImageTextureReleaseDelegate" />
+        <Parameter Name="releaseContext" Type="System.Object" />
+      </Parameters>
+      <Docs>
+        <param name="context">The graphics context.</param>
+        <param name="desc">The description of the existing OpenGL texture.</param>
+        <param name="alpha">The alpha type of the texture.</param>
+        <param name="releaseProc">The delegate to invoke when the image is about to be destroyed.</param>
+        <param name="releaseContext">The user data to use when invoking the delegate.</param>
+        <summary>Creates a new image from the specified OpenGL texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported</returns>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Height">
+      <MemberSignature Language="C#" Value="public int Height { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance int32 Height" />
+      <MemberSignature Language="DocId" Value="P:SkiaSharp.SKImage.Height" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the image height.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="IsAlphaOnly">
+      <MemberSignature Language="C#" Value="public bool IsAlphaOnly { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance bool IsAlphaOnly" />
+      <MemberSignature Language="DocId" Value="P:SkiaSharp.SKImage.IsAlphaOnly" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets a value indicating whether the image will be drawn as a mask, with no intrinsic color of its own</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="IsLazyGenerated">
+      <MemberSignature Language="C#" Value="public bool IsLazyGenerated { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance bool IsLazyGenerated" />
+      <MemberSignature Language="DocId" Value="P:SkiaSharp.SKImage.IsLazyGenerated" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets a value indicating whether the image is backed by an image-generator or other source that creates (and caches) its pixels / texture on-demand.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>If this method returns <see langword="false" />, then <see cref="M:SkiaSharp.SKImage.PeekPixels" /> will return <see langword="null" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="IsTextureBacked">
+      <MemberSignature Language="C#" Value="public bool IsTextureBacked { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance bool IsTextureBacked" />
+      <MemberSignature Language="DocId" Value="P:SkiaSharp.SKImage.IsTextureBacked" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets a value indicating whether the image is texture backed.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="PeekPixels">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPixmap PeekPixels ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKPixmap PeekPixels() cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.PeekPixels" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPixmap</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Returns the pixmap if the image is raster-based.</summary>
+        <returns>Returns the pixmap, or <see langword="null" /> if the image does not have access to pixel data.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="PeekPixels">
+      <MemberSignature Language="C#" Value="public bool PeekPixels (SkiaSharp.SKPixmap pixmap);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool PeekPixels(class SkiaSharp.SKPixmap pixmap) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.PeekPixels(SkiaSharp.SKPixmap)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pixmap" Type="SkiaSharp.SKPixmap" />
+      </Parameters>
+      <Docs>
+        <param name="pixmap">The pixmap to receive the pixel information.</param>
+        <summary>Returns the pixmap if the image is raster-based.</summary>
+        <returns>Returns <see langword="true" /> on success, or <see langword="false" /> if the image does not have access to pixel data.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ReadPixels">
+      <MemberSignature Language="C#" Value="public bool ReadPixels (SkiaSharp.SKPixmap pixmap, int srcX, int srcY);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool ReadPixels(class SkiaSharp.SKPixmap pixmap, int32 srcX, int32 srcY) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.ReadPixels(SkiaSharp.SKPixmap,System.Int32,System.Int32)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pixmap" Type="SkiaSharp.SKPixmap" />
+        <Parameter Name="srcX" Type="System.Int32" />
+        <Parameter Name="srcY" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="pixmap">The pixmap to read the pixel data into.</param>
+        <param name="srcX">The source x-coordinate to start reading from.</param>
+        <param name="srcY">The source y-coordinate to start reading from.</param>
+        <summary>Copies the pixels from the image into the specified buffer.</summary>
+        <returns>Returns <see langword="true" /> if the pexels were read, or <see langword="false" /> if there was an error.</returns>
+        <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dst.Info.Width, dst.Info.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ReadPixels">
+      <MemberSignature Language="C#" Value="public bool ReadPixels (SkiaSharp.SKPixmap pixmap, int srcX, int srcY, SkiaSharp.SKImageCachingHint cachingHint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool ReadPixels(class SkiaSharp.SKPixmap pixmap, int32 srcX, int32 srcY, valuetype SkiaSharp.SKImageCachingHint cachingHint) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.ReadPixels(SkiaSharp.SKPixmap,System.Int32,System.Int32,SkiaSharp.SKImageCachingHint)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pixmap" Type="SkiaSharp.SKPixmap" />
+        <Parameter Name="srcX" Type="System.Int32" />
+        <Parameter Name="srcY" Type="System.Int32" />
+        <Parameter Name="cachingHint" Type="SkiaSharp.SKImageCachingHint" />
+      </Parameters>
+      <Docs>
+        <param name="pixmap">The pixmap to read the pixel data into.</param>
+        <param name="srcX">The source x-coordinate to start reading from.</param>
+        <param name="srcY">The source y-coordinate to start reading from.</param>
+        <param name="cachingHint">Whether or not to cache intermediate results.</param>
+        <summary>Copies the pixels from the image into the specified buffer.</summary>
+        <returns>Returns <see langword="true" /> if the pexels were read, or <see langword="false" /> if there was an error.</returns>
+        <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dst.Info.Width, dst.Info.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ReadPixels">
+      <MemberSignature Language="C#" Value="public bool ReadPixels (SkiaSharp.SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool ReadPixels(valuetype SkiaSharp.SKImageInfo dstInfo, native int dstPixels, int32 dstRowBytes, int32 srcX, int32 srcY) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.ReadPixels(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32,System.Int32,System.Int32)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dstInfo" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="dstPixels" Type="System.IntPtr" />
+        <Parameter Name="dstRowBytes" Type="System.Int32" />
+        <Parameter Name="srcX" Type="System.Int32" />
+        <Parameter Name="srcY" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="dstInfo">The image information describing the destination pixel buffer.</param>
+        <param name="dstPixels">The pixel buffer to read the pixel data into.</param>
+        <param name="dstRowBytes">The number of bytes in each row of in the destination buffer.</param>
+        <param name="srcX">The source x-coordinate to start reading from.</param>
+        <param name="srcY">The source y-coordinate to start reading from.</param>
+        <summary>Copies the pixels from the image into the specified buffer.</summary>
+        <returns>Returns <see langword="true" /> if the pixels were read, or <see langword="false" /> if there was an error.</returns>
+        <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dstInfo.Width, dstInfo.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ReadPixels">
+      <MemberSignature Language="C#" Value="public bool ReadPixels (SkiaSharp.SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY, SkiaSharp.SKImageCachingHint cachingHint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool ReadPixels(valuetype SkiaSharp.SKImageInfo dstInfo, native int dstPixels, int32 dstRowBytes, int32 srcX, int32 srcY, valuetype SkiaSharp.SKImageCachingHint cachingHint) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.ReadPixels(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32,System.Int32,System.Int32,SkiaSharp.SKImageCachingHint)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dstInfo" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="dstPixels" Type="System.IntPtr" />
+        <Parameter Name="dstRowBytes" Type="System.Int32" />
+        <Parameter Name="srcX" Type="System.Int32" />
+        <Parameter Name="srcY" Type="System.Int32" />
+        <Parameter Name="cachingHint" Type="SkiaSharp.SKImageCachingHint" />
+      </Parameters>
+      <Docs>
+        <param name="dstInfo">The image information describing the destination pixel buffer.</param>
+        <param name="dstPixels">The pixel buffer to read the pixel data into.</param>
+        <param name="dstRowBytes">The number of bytes in each row of in the destination buffer.</param>
+        <param name="srcX">The source x-coordinate to start reading from.</param>
+        <param name="srcY">The source y-coordinate to start reading from.</param>
+        <param name="cachingHint">Whether or not to cache intermediate results.</param>
+        <summary>Copies the pixels from the image into the specified buffer.</summary>
+        <returns>Returns <see langword="true" /> if the pexels were read, or <see langword="false" /> if there was an error.</returns>
+        <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dstInfo.Width, dstInfo.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ScalePixels">
+      <MemberSignature Language="C#" Value="public bool ScalePixels (SkiaSharp.SKPixmap dst, SkiaSharp.SKFilterQuality quality);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool ScalePixels(class SkiaSharp.SKPixmap dst, valuetype SkiaSharp.SKFilterQuality quality) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.ScalePixels(SkiaSharp.SKPixmap,SkiaSharp.SKFilterQuality)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dst" Type="SkiaSharp.SKPixmap" />
+        <Parameter Name="quality" Type="SkiaSharp.SKFilterQuality" />
+      </Parameters>
+      <Docs>
+        <param name="dst">The pixmap describing the destination pixel buffer.</param>
+        <param name="quality">The quality of scaling to use.</param>
+        <summary>Copies the pixels from this image into the destination pixmap, scaling the image if the dimensions differ.</summary>
+        <returns>Rreturns <see langword="true" /> on success, or <see langword="false" /> if the color type/alpha type could not be converted to the destination types.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ScalePixels">
+      <MemberSignature Language="C#" Value="public bool ScalePixels (SkiaSharp.SKPixmap dst, SkiaSharp.SKFilterQuality quality, SkiaSharp.SKImageCachingHint cachingHint);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool ScalePixels(class SkiaSharp.SKPixmap dst, valuetype SkiaSharp.SKFilterQuality quality, valuetype SkiaSharp.SKImageCachingHint cachingHint) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.ScalePixels(SkiaSharp.SKPixmap,SkiaSharp.SKFilterQuality,SkiaSharp.SKImageCachingHint)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dst" Type="SkiaSharp.SKPixmap" />
+        <Parameter Name="quality" Type="SkiaSharp.SKFilterQuality" />
+        <Parameter Name="cachingHint" Type="SkiaSharp.SKImageCachingHint" />
+      </Parameters>
+      <Docs>
+        <param name="dst">The pixmap describing the destination pixel buffer.</param>
+        <param name="quality">The quality of scaling to use.</param>
+        <param name="cachingHint">Whether or not to cache intermediate results.</param>
+        <summary>Copies the pixels from this image into the destination pixmap, scaling the image if the dimensions differ.</summary>
+        <returns>Rreturns <see langword="true" /> on success, or <see langword="false" /> if the color type/alpha type could not be converted to the destination types.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Subset">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKImage Subset (SkiaSharp.SKRectI subset);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKImage Subset(valuetype SkiaSharp.SKRectI subset) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.Subset(SkiaSharp.SKRectI)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="subset" Type="SkiaSharp.SKRectI" />
+      </Parameters>
+      <Docs>
+        <param name="subset">The rectangle indicating the subset to obtain.</param>
+        <summary>Returns a new image that is a subset of this image.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if there was an error or the rectangle does not intersct the image.</returns>
+        <remarks>The underlying implementation may share the pixels, or it may make a copy.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ToRasterImage">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKImage ToRasterImage ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKImage ToRasterImage() cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.ToRasterImage" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImage</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Returns a raster-based image of the current image.</summary>
+        <returns>Returns a raster-based copy of a texture image, or the same image if it already raster-based.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ToShader">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKShader ToShader (SkiaSharp.SKShaderTileMode tileX, SkiaSharp.SKShaderTileMode tileY);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKShader ToShader(valuetype SkiaSharp.SKShaderTileMode tileX, valuetype SkiaSharp.SKShaderTileMode tileY) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.ToShader(SkiaSharp.SKShaderTileMode,SkiaSharp.SKShaderTileMode)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKShader</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="tileX" Type="SkiaSharp.SKShaderTileMode" />
+        <Parameter Name="tileY" Type="SkiaSharp.SKShaderTileMode" />
+      </Parameters>
+      <Docs>
+        <param name="tileX">The method in which to tile along the x-axis.</param>
+        <param name="tileY">The method in which to tile along the y-axis.</param>
+        <summary>Creates a new bitmap shader from the current image.</summary>
+        <returns>Returns a new bitmap shader that will draw the current image.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ToShader">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKShader ToShader (SkiaSharp.SKShaderTileMode tileX, SkiaSharp.SKShaderTileMode tileY, SkiaSharp.SKMatrix localMatrix);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKShader ToShader(valuetype SkiaSharp.SKShaderTileMode tileX, valuetype SkiaSharp.SKShaderTileMode tileY, valuetype SkiaSharp.SKMatrix localMatrix) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImage.ToShader(SkiaSharp.SKShaderTileMode,SkiaSharp.SKShaderTileMode,SkiaSharp.SKMatrix)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKShader</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="tileX" Type="SkiaSharp.SKShaderTileMode" />
+        <Parameter Name="tileY" Type="SkiaSharp.SKShaderTileMode" />
+        <Parameter Name="localMatrix" Type="SkiaSharp.SKMatrix" />
+      </Parameters>
+      <Docs>
+        <param name="tileX">The method in which to tile along the x-axis.</param>
+        <param name="tileY">The method in which to tile along the y-axis.</param>
+        <param name="localMatrix">The local matrix to use with the shader.</param>
+        <summary>Creates a new bitmap shader from the current image.</summary>
+        <returns>Returns a new bitmap shader that will draw the current image.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="UniqueId">
+      <MemberSignature Language="C#" Value="public uint UniqueId { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance unsigned int32 UniqueId" />
+      <MemberSignature Language="DocId" Value="P:SkiaSharp.SKImage.UniqueId" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.UInt32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the unique ID associated with the image.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Width">
+      <MemberSignature Language="C#" Value="public int Width { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance int32 Width" />
+      <MemberSignature Language="DocId" Value="P:SkiaSharp.SKImage.Width" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the image width.</summary>
+        <value>
+          <para></para>
+        </value>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+  </Members>
+</Type>

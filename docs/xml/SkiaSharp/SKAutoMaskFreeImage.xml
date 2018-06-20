@@ -1,0 +1,90 @@
+<Type Name="SKAutoMaskFreeImage" FullName="SkiaSharp.SKAutoMaskFreeImage">
+  <TypeSignature Language="C#" Value="public class SKAutoMaskFreeImage : IDisposable" />
+  <TypeSignature Language="ILAsm" Value=".class public auto ansi beforefieldinit SKAutoMaskFreeImage extends System.Object implements class System.IDisposable" />
+  <TypeSignature Language="DocId" Value="T:SkiaSharp.SKAutoMaskFreeImage" />
+  <AssemblyInfo>
+    <AssemblyName>SkiaSharp</AssemblyName>
+    <AssemblyVersion>1.57.0.0</AssemblyVersion>
+    <AssemblyVersion>1.58.0.0</AssemblyVersion>
+    <AssemblyVersion>1.59.0.0</AssemblyVersion>
+    <AssemblyVersion>1.60.0.0</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>System.Object</BaseTypeName>
+  </Base>
+  <Interfaces>
+    <Interface>
+      <InterfaceName>System.IDisposable</InterfaceName>
+    </Interface>
+  </Interfaces>
+  <Docs>
+    <summary>Convenience class used to automatically free the image data for a mask in a using statement.</summary>
+    <remarks>
+      <para>This class can be used in a using statement to automatically free the image data of a mask by virtue of having the <see cref="M:SkiaSharp.SKAutoMaskFreeImage.Dispose" /> method.</para>
+      <para></para>
+      <example>
+        <code lang="C#"><![CDATA[// some buffer
+byte[] buffer = ...;
+
+// create the mask, allocating the image
+var mask = SKMask.Create(buffer, bounds, rowBytes, format);
+using (new SKAutoMaskFreeImage(mask.Image)) {
+    // use the mask
+
+    // automatically release the image data
+}]]></code>
+      </example>
+    </remarks>
+  </Docs>
+  <Members>
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public SKAutoMaskFreeImage (IntPtr maskImage);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig specialname rtspecialname instance void .ctor(native int maskImage) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKAutoMaskFreeImage.#ctor(System.IntPtr)" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters>
+        <Parameter Name="maskImage" Type="System.IntPtr" />
+      </Parameters>
+      <Docs>
+        <param name="maskImage">The image to free.</param>
+        <summary>Create a new instance of <see cref="T:SkiaSharp.SKAutoMaskFreeImage" /> with the specified image to free.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Dispose">
+      <MemberSignature Language="C#" Value="public void Dispose ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig newslot virtual instance void Dispose() cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKAutoMaskFreeImage.Dispose" />
+      <MemberType>Method</MemberType>
+      <Implements>
+        <InterfaceMember>M:System.IDisposable.Dispose</InterfaceMember>
+      </Implements>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Disposes the object, releasing the image data.</summary>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+  </Members>
+</Type>
