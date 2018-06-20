@@ -254,7 +254,11 @@ canvas.DrawPaint (paint);]]></code>
       </AssemblyInfo>
       <Docs>
         <remarks>
-          <format type="text/markdown"><![CDATA[  
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Create a new compose shader, which combines two shaders by a blend mode.
+
 ## Example  
 
 ```csharp
@@ -271,7 +275,7 @@ var sweep = SKShader.CreateSweepGradient (new SKPoint (128, 128), colors, null);
 var turbulence = SKShader.CreatePerlinNoiseTurbulence (0.05f, 0.05f, 4, 0);
 
 // create the compose shader
-var shader = SKShader.CreateCompose (sweep, turbulence);
+var shader = SKShader.CreateCompose (sweep, turbulence, SKBlendMode.SrcOver);
 
 // use the compose shader
 var paint = new SKPaint {
