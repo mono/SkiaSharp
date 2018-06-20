@@ -1,0 +1,307 @@
+<Type Name="SKMaskFilter" FullName="SkiaSharp.SKMaskFilter">
+  <TypeSignature Language="C#" Value="public class SKMaskFilter : SkiaSharp.SKObject" />
+  <TypeSignature Language="ILAsm" Value=".class public auto ansi beforefieldinit SKMaskFilter extends SkiaSharp.SKObject" />
+  <TypeSignature Language="DocId" Value="T:SkiaSharp.SKMaskFilter" />
+  <AssemblyInfo>
+    <AssemblyName>SkiaSharp</AssemblyName>
+    <AssemblyVersion>1.57.0.0</AssemblyVersion>
+    <AssemblyVersion>1.58.0.0</AssemblyVersion>
+    <AssemblyVersion>1.59.0.0</AssemblyVersion>
+    <AssemblyVersion>1.60.0.0</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>SkiaSharp.SKObject</BaseTypeName>
+  </Base>
+  <Interfaces />
+  <Docs>
+    <summary>Mask filters perform transformations on an alpha-channel mask before drawing. A mask filter is set using the <see cref="P:SkiaSharp.SKPaint.MaskFilter" /> property on <see cref="T:SkiaSharp.SKPaint." /></summary>
+    <remarks />
+  </Docs>
+  <Members>
+    <Member MemberName="ConvertRadiusToSigma">
+      <MemberSignature Language="C#" Value="public static float ConvertRadiusToSigma (float radius);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig float32 ConvertRadiusToSigma(float32 radius) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKMaskFilter.ConvertRadiusToSigma(System.Single)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Single</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="radius" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="radius">The radius.</param>
+        <summary>Converts from the (legacy) idea of specifying the blur "radius" to the standard notion of specifying its sigma.</summary>
+        <returns>The sigma.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ConvertSigmaToRadius">
+      <MemberSignature Language="C#" Value="public static float ConvertSigmaToRadius (float sigma);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig float32 ConvertSigmaToRadius(float32 sigma) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKMaskFilter.ConvertSigmaToRadius(System.Single)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Single</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="sigma" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="sigma">The sigma.</param>
+        <summary>Converts from the standard notion of specifying the blur sigma to the (legacy) idea of specifying its “radius”.</summary>
+        <returns>The radius.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateBlur">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKMaskFilter CreateBlur (SkiaSharp.SKBlurStyle blurStyle, float sigma);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKMaskFilter CreateBlur(valuetype SkiaSharp.SKBlurStyle blurStyle, float32 sigma) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKMaskFilter.CreateBlur(SkiaSharp.SKBlurStyle,System.Single)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKMaskFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="blurStyle" Type="SkiaSharp.SKBlurStyle" />
+        <Parameter Name="sigma" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="blurStyle">The style of blurring.</param>
+        <param name="sigma">The standard deviation (greater than 0) of the Gaussian blur to apply.</param>
+        <summary>Creates a mask filter that applies a blur.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKMaskFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateBlur">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKMaskFilter CreateBlur (SkiaSharp.SKBlurStyle blurStyle, float sigma, SkiaSharp.SKBlurMaskFilterFlags flags);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKMaskFilter CreateBlur(valuetype SkiaSharp.SKBlurStyle blurStyle, float32 sigma, valuetype SkiaSharp.SKBlurMaskFilterFlags flags) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKMaskFilter.CreateBlur(SkiaSharp.SKBlurStyle,System.Single,SkiaSharp.SKBlurMaskFilterFlags)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKMaskFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="blurStyle" Type="SkiaSharp.SKBlurStyle" />
+        <Parameter Name="sigma" Type="System.Single" />
+        <Parameter Name="flags" Type="SkiaSharp.SKBlurMaskFilterFlags" />
+      </Parameters>
+      <Docs>
+        <param name="blurStyle">The style of blurring.</param>
+        <param name="sigma">The standard deviation (greater than 0) of the Gaussian blur to apply.</param>
+        <param name="flags">The flags to apply when blurring.</param>
+        <summary>Creates a mask filter that applies a blur.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKMaskFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateBlur">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKMaskFilter CreateBlur (SkiaSharp.SKBlurStyle blurStyle, float sigma, SkiaSharp.SKRect occluder);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKMaskFilter CreateBlur(valuetype SkiaSharp.SKBlurStyle blurStyle, float32 sigma, valuetype SkiaSharp.SKRect occluder) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKMaskFilter.CreateBlur(SkiaSharp.SKBlurStyle,System.Single,SkiaSharp.SKRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKMaskFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="blurStyle" Type="SkiaSharp.SKBlurStyle" />
+        <Parameter Name="sigma" Type="System.Single" />
+        <Parameter Name="occluder" Type="SkiaSharp.SKRect" />
+      </Parameters>
+      <Docs>
+        <param name="blurStyle">The style of blurring.</param>
+        <param name="sigma">The standard deviation (greater than 0) of the Gaussian blur to apply.</param>
+        <param name="occluder">The rect for which no pixels need be drawn (because it will be overdrawn with some opaque object).</param>
+        <summary>Creates a mask filter that applies a blur.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKMaskFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateBlur">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKMaskFilter CreateBlur (SkiaSharp.SKBlurStyle blurStyle, float sigma, SkiaSharp.SKRect occluder, SkiaSharp.SKBlurMaskFilterFlags flags);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKMaskFilter CreateBlur(valuetype SkiaSharp.SKBlurStyle blurStyle, float32 sigma, valuetype SkiaSharp.SKRect occluder, valuetype SkiaSharp.SKBlurMaskFilterFlags flags) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKMaskFilter.CreateBlur(SkiaSharp.SKBlurStyle,System.Single,SkiaSharp.SKRect,SkiaSharp.SKBlurMaskFilterFlags)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKMaskFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="blurStyle" Type="SkiaSharp.SKBlurStyle" />
+        <Parameter Name="sigma" Type="System.Single" />
+        <Parameter Name="occluder" Type="SkiaSharp.SKRect" />
+        <Parameter Name="flags" Type="SkiaSharp.SKBlurMaskFilterFlags" />
+      </Parameters>
+      <Docs>
+        <param name="blurStyle">The style of blurring.</param>
+        <param name="sigma">The standard deviation (greater than 0) of the Gaussian blur to apply.</param>
+        <param name="occluder">The rect for which no pixels need be drawn (because it will be overdrawn with some opaque object).</param>
+        <param name="flags">The flags to apply when blurring.</param>
+        <summary>Creates a mask filter that applies a blur.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKMaskFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateClip">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKMaskFilter CreateClip (byte min, byte max);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKMaskFilter CreateClip(unsigned int8 min, unsigned int8 max) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKMaskFilter.CreateClip(System.Byte,System.Byte)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKMaskFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="min" Type="System.Byte" />
+        <Parameter Name="max" Type="System.Byte" />
+      </Parameters>
+      <Docs>
+        <param name="min">The minimum alpha value.</param>
+        <param name="max">The maximum alpha value.</param>
+        <summary>Creates a mask filter that clips the alpha channel to the specified minimum and maximum alpha values.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKMaskFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateGamma">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKMaskFilter CreateGamma (float gamma);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKMaskFilter CreateGamma(float32 gamma) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKMaskFilter.CreateGamma(System.Single)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKMaskFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="gamma" Type="System.Single" />
+      </Parameters>
+      <Docs>
+        <param name="gamma">The gamma.</param>
+        <summary>Creates a mask filter that applies gamma.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKMaskFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateTable">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKMaskFilter CreateTable (byte[] table);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKMaskFilter CreateTable(unsigned int8[] table) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKMaskFilter.CreateTable(System.Byte[])" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKMaskFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="table" Type="System.Byte[]" />
+      </Parameters>
+      <Docs>
+        <param name="table">The lookup table with exactly 256 elements.</param>
+        <summary>Creates a mask filter that applies a table lookup on each of the alpha values in the mask.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKMaskFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Dispose">
+      <MemberSignature Language="C#" Value="protected override void Dispose (bool disposing);" />
+      <MemberSignature Language="ILAsm" Value=".method familyhidebysig virtual instance void Dispose(bool disposing) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKMaskFilter.Dispose(System.Boolean)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="disposing" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="disposing">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+  </Members>
+</Type>

@@ -1,0 +1,1118 @@
+<Type Name="SKImageFilter" FullName="SkiaSharp.SKImageFilter">
+  <TypeSignature Language="C#" Value="public class SKImageFilter : SkiaSharp.SKObject" />
+  <TypeSignature Language="ILAsm" Value=".class public auto ansi beforefieldinit SKImageFilter extends SkiaSharp.SKObject" />
+  <TypeSignature Language="DocId" Value="T:SkiaSharp.SKImageFilter" />
+  <AssemblyInfo>
+    <AssemblyName>SkiaSharp</AssemblyName>
+    <AssemblyVersion>1.57.0.0</AssemblyVersion>
+    <AssemblyVersion>1.58.0.0</AssemblyVersion>
+    <AssemblyVersion>1.59.0.0</AssemblyVersion>
+    <AssemblyVersion>1.60.0.0</AssemblyVersion>
+  </AssemblyInfo>
+  <Base>
+    <BaseTypeName>SkiaSharp.SKObject</BaseTypeName>
+  </Base>
+  <Interfaces />
+  <Docs>
+    <summary>Image filters for use with the <see cref="P:SkiaSharp.SKPaint.ImageFilter" /> property of a <see cref="T:SkiaSharp.SKPaint" />.</summary>
+    <remarks />
+  </Docs>
+  <Members>
+    <Member MemberName="CreateAlphaThreshold">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateAlphaThreshold (SkiaSharp.SKRectI region, float innerThreshold, float outerThreshold, SkiaSharp.SKImageFilter input = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateAlphaThreshold(valuetype SkiaSharp.SKRectI region, float32 innerThreshold, float32 outerThreshold, class SkiaSharp.SKImageFilter input) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateAlphaThreshold(SkiaSharp.SKRectI,System.Single,System.Single,SkiaSharp.SKImageFilter)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="region" Type="SkiaSharp.SKRectI" />
+        <Parameter Name="innerThreshold" Type="System.Single" />
+        <Parameter Name="outerThreshold" Type="System.Single" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+      </Parameters>
+      <Docs>
+        <param name="region">The region to sample.</param>
+        <param name="innerThreshold">The minimum alpha for pixels within the region.</param>
+        <param name="outerThreshold">The maximum alpha for pixels outside the region.</param>
+        <param name="input">The input filter to use.</param>
+        <summary>Creates an image filter that samples a region.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>If the sample is inside the region the alpha of the image is boosted up to a threshold value. If it is outside the region then the alpha is decreased to the threshold value. The (0, 0) point of the region corresponds to the upper left corner of the source image.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateArithmetic">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateArithmetic (float k1, float k2, float k3, float k4, bool enforcePMColor, SkiaSharp.SKImageFilter background, SkiaSharp.SKImageFilter foreground = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateArithmetic(float32 k1, float32 k2, float32 k3, float32 k4, bool enforcePMColor, class SkiaSharp.SKImageFilter background, class SkiaSharp.SKImageFilter foreground, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateArithmetic(System.Single,System.Single,System.Single,System.Single,System.Boolean,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter.CropRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="k1" Type="System.Single" />
+        <Parameter Name="k2" Type="System.Single" />
+        <Parameter Name="k3" Type="System.Single" />
+        <Parameter Name="k4" Type="System.Single" />
+        <Parameter Name="enforcePMColor" Type="System.Boolean" />
+        <Parameter Name="background" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="foreground" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="k1">The k1 constant value.</param>
+        <param name="k2">The k2 constant value.</param>
+        <param name="k3">The k3 constant value.</param>
+        <param name="k4">The k4 constant value.</param>
+        <param name="enforcePMColor">Whether or not premultiplied colors are enforced.</param>
+        <param name="background">The background image filter to use. If this is null, then the source bitmap is used.</param>
+        <param name="foreground">The foreground image filter to use. If this is null, then the source bitmap is used.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies the specified arithmetic blend.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateBlendMode">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateBlendMode (SkiaSharp.SKBlendMode mode, SkiaSharp.SKImageFilter background, SkiaSharp.SKImageFilter foreground = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateBlendMode(valuetype SkiaSharp.SKBlendMode mode, class SkiaSharp.SKImageFilter background, class SkiaSharp.SKImageFilter foreground, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateBlendMode(SkiaSharp.SKBlendMode,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter.CropRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="mode" Type="SkiaSharp.SKBlendMode" />
+        <Parameter Name="background" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="foreground" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="mode">The blend mode.</param>
+        <param name="background">The background filter.</param>
+        <param name="foreground">The forground filter.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a blend mode.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateBlur">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateBlur (float sigmaX, float sigmaY, SkiaSharp.SKImageFilter input = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateBlur(float32 sigmaX, float32 sigmaY, class SkiaSharp.SKImageFilter input, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateBlur(System.Single,System.Single,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter.CropRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="sigmaX" Type="System.Single" />
+        <Parameter Name="sigmaY" Type="System.Single" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="sigmaX">The standard deviation of the Gaussian blur to apply (greater than 0) in the horizontal direction.</param>
+        <param name="sigmaY">The standard deviation of the Gaussian blur to apply (greater than 0) in the vertical direction.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a blur.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateColorFilter">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateColorFilter (SkiaSharp.SKColorFilter cf, SkiaSharp.SKImageFilter input = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateColorFilter(class SkiaSharp.SKColorFilter cf, class SkiaSharp.SKImageFilter input, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateColorFilter(SkiaSharp.SKColorFilter,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter.CropRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="cf" Type="SkiaSharp.SKColorFilter" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="cf">The color filter to use.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a color filter.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateCompose">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateCompose (SkiaSharp.SKImageFilter outer, SkiaSharp.SKImageFilter inner);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateCompose(class SkiaSharp.SKImageFilter outer, class SkiaSharp.SKImageFilter inner) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateCompose(SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="outer" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="inner" Type="SkiaSharp.SKImageFilter" />
+      </Parameters>
+      <Docs>
+        <param name="outer">The outer (second) filter to apply.</param>
+        <param name="inner">The inner (first) filter to apply.</param>
+        <summary>Creates an image filter, whose effect is to first apply the inner filter and then apply the outer filter to the result of the inner's.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateCompose">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateCompose (SkiaSharp.SKDisplacementMapEffectChannelSelectorType xChannelSelector, SkiaSharp.SKDisplacementMapEffectChannelSelectorType yChannelSelector, float scale, SkiaSharp.SKImageFilter displacement, SkiaSharp.SKImageFilter input = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateCompose(valuetype SkiaSharp.SKDisplacementMapEffectChannelSelectorType xChannelSelector, valuetype SkiaSharp.SKDisplacementMapEffectChannelSelectorType yChannelSelector, float32 scale, class SkiaSharp.SKImageFilter displacement, class SkiaSharp.SKImageFilter input, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateCompose(SkiaSharp.SKDisplacementMapEffectChannelSelectorType,SkiaSharp.SKDisplacementMapEffectChannelSelectorType,System.Single,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter.CropRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Attributes>
+        <Attribute>
+          <AttributeName>System.Obsolete("Use CreateDisplacementMapEffect instead.", true)</AttributeName>
+        </Attribute>
+      </Attributes>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="xChannelSelector" Type="SkiaSharp.SKDisplacementMapEffectChannelSelectorType" />
+        <Parameter Name="yChannelSelector" Type="SkiaSharp.SKDisplacementMapEffectChannelSelectorType" />
+        <Parameter Name="scale" Type="System.Single" />
+        <Parameter Name="displacement" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="xChannelSelector">
+          <para></para>
+        </param>
+        <param name="yChannelSelector">
+          <para></para>
+        </param>
+        <param name="scale">
+          <para></para>
+        </param>
+        <param name="displacement">
+          <para></para>
+        </param>
+        <param name="input">
+          <para></para>
+        </param>
+        <param name="cropRect">
+          <para></para>
+        </param>
+        <summary>
+          <para></para>
+        </summary>
+        <returns>
+          <para></para>
+        </returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateDilate">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateDilate (int radiusX, int radiusY, SkiaSharp.SKImageFilter input = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateDilate(int32 radiusX, int32 radiusY, class SkiaSharp.SKImageFilter input, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateDilate(System.Int32,System.Int32,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter.CropRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="radiusX" Type="System.Int32" />
+        <Parameter Name="radiusY" Type="System.Int32" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="radiusX">The amount of dilation in the x-direction.</param>
+        <param name="radiusY">The amount of dilation in the y-direction.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a dilation to pixels of a bitmap.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateDisplacementMapEffect">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateDisplacementMapEffect (SkiaSharp.SKDisplacementMapEffectChannelSelectorType xChannelSelector, SkiaSharp.SKDisplacementMapEffectChannelSelectorType yChannelSelector, float scale, SkiaSharp.SKImageFilter displacement, SkiaSharp.SKImageFilter input = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateDisplacementMapEffect(valuetype SkiaSharp.SKDisplacementMapEffectChannelSelectorType xChannelSelector, valuetype SkiaSharp.SKDisplacementMapEffectChannelSelectorType yChannelSelector, float32 scale, class SkiaSharp.SKImageFilter displacement, class SkiaSharp.SKImageFilter input, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateDisplacementMapEffect(SkiaSharp.SKDisplacementMapEffectChannelSelectorType,SkiaSharp.SKDisplacementMapEffectChannelSelectorType,System.Single,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter.CropRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="xChannelSelector" Type="SkiaSharp.SKDisplacementMapEffectChannelSelectorType" />
+        <Parameter Name="yChannelSelector" Type="SkiaSharp.SKDisplacementMapEffectChannelSelectorType" />
+        <Parameter Name="scale" Type="System.Single" />
+        <Parameter Name="displacement" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="xChannelSelector">The channel in the x-direction to select for displacement.</param>
+        <param name="yChannelSelector">The channel in the y-direction to select for displacement.</param>
+        <param name="scale">The amount to displace by.</param>
+        <param name="displacement">The image filter to apply the displacement to.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a displacement map.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateDistantLitDiffuse">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateDistantLitDiffuse (SkiaSharp.SKPoint3 direction, SkiaSharp.SKColor lightColor, float surfaceScale, float kd, SkiaSharp.SKImageFilter input = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateDistantLitDiffuse(valuetype SkiaSharp.SKPoint3 direction, valuetype SkiaSharp.SKColor lightColor, float32 surfaceScale, float32 kd, class SkiaSharp.SKImageFilter input, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateDistantLitDiffuse(SkiaSharp.SKPoint3,SkiaSharp.SKColor,System.Single,System.Single,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter.CropRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="direction" Type="SkiaSharp.SKPoint3" />
+        <Parameter Name="lightColor" Type="SkiaSharp.SKColor" />
+        <Parameter Name="surfaceScale" Type="System.Single" />
+        <Parameter Name="kd" Type="System.Single" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="direction">The direction of the light.</param>
+        <param name="lightColor">The color of the light.</param>
+        <param name="surfaceScale">The surface height to use.</param>
+        <param name="kd">The diffuse lighting constant.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a distant diffuse lighting.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateDistantLitSpecular">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateDistantLitSpecular (SkiaSharp.SKPoint3 direction, SkiaSharp.SKColor lightColor, float surfaceScale, float ks, float shininess, SkiaSharp.SKImageFilter input = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateDistantLitSpecular(valuetype SkiaSharp.SKPoint3 direction, valuetype SkiaSharp.SKColor lightColor, float32 surfaceScale, float32 ks, float32 shininess, class SkiaSharp.SKImageFilter input, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateDistantLitSpecular(SkiaSharp.SKPoint3,SkiaSharp.SKColor,System.Single,System.Single,System.Single,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter.CropRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="direction" Type="SkiaSharp.SKPoint3" />
+        <Parameter Name="lightColor" Type="SkiaSharp.SKColor" />
+        <Parameter Name="surfaceScale" Type="System.Single" />
+        <Parameter Name="ks" Type="System.Single" />
+        <Parameter Name="shininess" Type="System.Single" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="direction">The direction of the light.</param>
+        <param name="lightColor">The color of the light.</param>
+        <param name="surfaceScale">The surface height to use.</param>
+        <param name="ks">The specular lighting constant.</param>
+        <param name="shininess">The shininess or specular exponent.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a distant specular lighting.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateDropShadow">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateDropShadow (float dx, float dy, float sigmaX, float sigmaY, SkiaSharp.SKColor color, SkiaSharp.SKDropShadowImageFilterShadowMode shadowMode, SkiaSharp.SKImageFilter input = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateDropShadow(float32 dx, float32 dy, float32 sigmaX, float32 sigmaY, valuetype SkiaSharp.SKColor color, valuetype SkiaSharp.SKDropShadowImageFilterShadowMode shadowMode, class SkiaSharp.SKImageFilter input, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateDropShadow(System.Single,System.Single,System.Single,System.Single,SkiaSharp.SKColor,SkiaSharp.SKDropShadowImageFilterShadowMode,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter.CropRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dx" Type="System.Single" />
+        <Parameter Name="dy" Type="System.Single" />
+        <Parameter Name="sigmaX" Type="System.Single" />
+        <Parameter Name="sigmaY" Type="System.Single" />
+        <Parameter Name="color" Type="SkiaSharp.SKColor" />
+        <Parameter Name="shadowMode" Type="SkiaSharp.SKDropShadowImageFilterShadowMode" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="dx">The shadow offset in the x-direction.</param>
+        <param name="dy">The shadow offset in the y-direction.</param>
+        <param name="sigmaX">The amount to blur in the x-direction.</param>
+        <param name="sigmaY">The amount to blur in the y-direction.</param>
+        <param name="color">The shadow color.</param>
+        <param name="shadowMode">The shadow mode.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a drop shadow.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateErode">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateErode (int radiusX, int radiusY, SkiaSharp.SKImageFilter input = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateErode(int32 radiusX, int32 radiusY, class SkiaSharp.SKImageFilter input, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateErode(System.Int32,System.Int32,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter.CropRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="radiusX" Type="System.Int32" />
+        <Parameter Name="radiusY" Type="System.Int32" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="radiusX">The amount to erode in the x-direction.</param>
+        <param name="radiusY">The amount to erode in the y-direction.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that erodes the pixels of a bitmap.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>To be added</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateImage">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateImage (SkiaSharp.SKImage image);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateImage(class SkiaSharp.SKImage image) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateImage(SkiaSharp.SKImage)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="image" Type="SkiaSharp.SKImage" />
+      </Parameters>
+      <Docs>
+        <param name="image">The image to draw.</param>
+        <summary>Creates an image filter that draws an image.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateImage">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateImage (SkiaSharp.SKImage image, SkiaSharp.SKRect src, SkiaSharp.SKRect dst, SkiaSharp.SKFilterQuality filterQuality);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateImage(class SkiaSharp.SKImage image, valuetype SkiaSharp.SKRect src, valuetype SkiaSharp.SKRect dst, valuetype SkiaSharp.SKFilterQuality filterQuality) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateImage(SkiaSharp.SKImage,SkiaSharp.SKRect,SkiaSharp.SKRect,SkiaSharp.SKFilterQuality)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="image" Type="SkiaSharp.SKImage" />
+        <Parameter Name="src" Type="SkiaSharp.SKRect" />
+        <Parameter Name="dst" Type="SkiaSharp.SKRect" />
+        <Parameter Name="filterQuality" Type="SkiaSharp.SKFilterQuality" />
+      </Parameters>
+      <Docs>
+        <param name="image">The image to draw.</param>
+        <param name="src">The rectangle of the source image to draw.</param>
+        <param name="dst">The rectangle of the destination area.</param>
+        <param name="filterQuality">The filter quality.</param>
+        <summary>Creates an image filter that draws an image.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateMagnifier">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateMagnifier (SkiaSharp.SKRect src, float inset, SkiaSharp.SKImageFilter input = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateMagnifier(valuetype SkiaSharp.SKRect src, float32 inset, class SkiaSharp.SKImageFilter input) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateMagnifier(SkiaSharp.SKRect,System.Single,SkiaSharp.SKImageFilter)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="src" Type="SkiaSharp.SKRect" />
+        <Parameter Name="inset" Type="System.Single" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+      </Parameters>
+      <Docs>
+        <param name="src">The rectangle area to magnify.</param>
+        <param name="inset">The amount of magnification to apply.</param>
+        <param name="input">The input filter to use.</param>
+        <summary>Creates an image filter that magnifies an area of a bitmap.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateMagnifier">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateMagnifier (SkiaSharp.SKRect src, float inset, SkiaSharp.SKImageFilter input = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateMagnifier(valuetype SkiaSharp.SKRect src, float32 inset, class SkiaSharp.SKImageFilter input, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateMagnifier(SkiaSharp.SKRect,System.Single,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter.CropRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="src" Type="SkiaSharp.SKRect" />
+        <Parameter Name="inset" Type="System.Single" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="src">The rectangle area to magnify.</param>
+        <param name="inset">The amount of magnification to apply.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that magnifies an area of a bitmap.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateMatrix">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateMatrix (SkiaSharp.SKMatrix matrix, SkiaSharp.SKFilterQuality quality, SkiaSharp.SKImageFilter input = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateMatrix(valuetype SkiaSharp.SKMatrix matrix, valuetype SkiaSharp.SKFilterQuality quality, class SkiaSharp.SKImageFilter input) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateMatrix(SkiaSharp.SKMatrix,SkiaSharp.SKFilterQuality,SkiaSharp.SKImageFilter)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="matrix" Type="SkiaSharp.SKMatrix" />
+        <Parameter Name="quality" Type="SkiaSharp.SKFilterQuality" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+      </Parameters>
+      <Docs>
+        <param name="matrix">The transformation matrix.</param>
+        <param name="quality">The quality.</param>
+        <param name="input">The input filter to use.</param>
+        <summary>Creates an image filter that applies a transformation matrix.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateMatrixConvolution">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateMatrixConvolution (SkiaSharp.SKSizeI kernelSize, float[] kernel, float gain, float bias, SkiaSharp.SKPointI kernelOffset, SkiaSharp.SKMatrixConvolutionTileMode tileMode, bool convolveAlpha, SkiaSharp.SKImageFilter input = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateMatrixConvolution(valuetype SkiaSharp.SKSizeI kernelSize, float32[] kernel, float32 gain, float32 bias, valuetype SkiaSharp.SKPointI kernelOffset, valuetype SkiaSharp.SKMatrixConvolutionTileMode tileMode, bool convolveAlpha, class SkiaSharp.SKImageFilter input, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateMatrixConvolution(SkiaSharp.SKSizeI,System.Single[],System.Single,System.Single,SkiaSharp.SKPointI,SkiaSharp.SKMatrixConvolutionTileMode,System.Boolean,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter.CropRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="kernelSize" Type="SkiaSharp.SKSizeI" />
+        <Parameter Name="kernel" Type="System.Single[]" />
+        <Parameter Name="gain" Type="System.Single" />
+        <Parameter Name="bias" Type="System.Single" />
+        <Parameter Name="kernelOffset" Type="SkiaSharp.SKPointI" />
+        <Parameter Name="tileMode" Type="SkiaSharp.SKMatrixConvolutionTileMode" />
+        <Parameter Name="convolveAlpha" Type="System.Boolean" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="kernelSize">The kernel size in pixels, in each dimension (N by M).</param>
+        <param name="kernel">The image processing kernel, with N * M elements in row order.</param>
+        <param name="gain">A scale factor applied to each pixel after convolution.</param>
+        <param name="bias">A bias factor added to each pixel after convolution.</param>
+        <param name="kernelOffset">An offset applied to each pixel coordinate before convolution.</param>
+        <param name="tileMode">How accesses outside the image are treated.</param>
+        <param name="convolveAlpha">Whether or not all channels are convolved, or just the RGB channels.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image that filter applies an NxM image processing kernel.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateMerge">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateMerge (SkiaSharp.SKImageFilter[] filters, SkiaSharp.SKBlendMode[] modes = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateMerge(class SkiaSharp.SKImageFilter[] filters, valuetype SkiaSharp.SKBlendMode[] modes, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateMerge(SkiaSharp.SKImageFilter[],SkiaSharp.SKBlendMode[],SkiaSharp.SKImageFilter.CropRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="filters" Type="SkiaSharp.SKImageFilter[]" />
+        <Parameter Name="modes" Type="SkiaSharp.SKBlendMode[]" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="filters">The image filters to merge.</param>
+        <param name="modes">The blend modes to merge the filters with.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that merges a set of image filters using blend modes.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateMerge">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateMerge (SkiaSharp.SKImageFilter first, SkiaSharp.SKImageFilter second, SkiaSharp.SKBlendMode mode, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateMerge(class SkiaSharp.SKImageFilter first, class SkiaSharp.SKImageFilter second, valuetype SkiaSharp.SKBlendMode mode, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateMerge(SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter,SkiaSharp.SKBlendMode,SkiaSharp.SKImageFilter.CropRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="first" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="second" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="mode" Type="SkiaSharp.SKBlendMode" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="first">The first image filter to merge.</param>
+        <param name="second">The second image filter to merge.</param>
+        <param name="mode">The blend mode to merge the filters with.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that merges two image filters using a blend mode.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateOffset">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateOffset (float dx, float dy, SkiaSharp.SKImageFilter input = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateOffset(float32 dx, float32 dy, class SkiaSharp.SKImageFilter input, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateOffset(System.Single,System.Single,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter.CropRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dx" Type="System.Single" />
+        <Parameter Name="dy" Type="System.Single" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="dx">The amount to offset in the x-direction.</param>
+        <param name="dy">The amount to offset in the y-direction.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that translates the bitmap that is drawn.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreatePaint">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreatePaint (SkiaSharp.SKPaint paint, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreatePaint(class SkiaSharp.SKPaint paint, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreatePaint(SkiaSharp.SKPaint,SkiaSharp.SKImageFilter.CropRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="paint" Type="SkiaSharp.SKPaint" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="paint">The paint to draw.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that draws a paint.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para />
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreatePicture">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreatePicture (SkiaSharp.SKPicture picture);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreatePicture(class SkiaSharp.SKPicture picture) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreatePicture(SkiaSharp.SKPicture)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="picture" Type="SkiaSharp.SKPicture" />
+      </Parameters>
+      <Docs>
+        <param name="picture">The picture to draw.</param>
+        <summary>Creates an image filter that draws a picture.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreatePicture">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreatePicture (SkiaSharp.SKPicture picture, SkiaSharp.SKRect cropRect);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreatePicture(class SkiaSharp.SKPicture picture, valuetype SkiaSharp.SKRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreatePicture(SkiaSharp.SKPicture,SkiaSharp.SKRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="picture" Type="SkiaSharp.SKPicture" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKRect" />
+      </Parameters>
+      <Docs>
+        <param name="picture">The picture to draw.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that draws a picture.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreatePictureForLocalspace">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreatePictureForLocalspace (SkiaSharp.SKPicture picture, SkiaSharp.SKRect cropRect, SkiaSharp.SKFilterQuality filterQuality);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreatePictureForLocalspace(class SkiaSharp.SKPicture picture, valuetype SkiaSharp.SKRect cropRect, valuetype SkiaSharp.SKFilterQuality filterQuality) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreatePictureForLocalspace(SkiaSharp.SKPicture,SkiaSharp.SKRect,SkiaSharp.SKFilterQuality)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="picture" Type="SkiaSharp.SKPicture" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKRect" />
+        <Parameter Name="filterQuality" Type="SkiaSharp.SKFilterQuality" />
+      </Parameters>
+      <Docs>
+        <param name="picture">The picture to draw.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <param name="filterQuality">The quality.</param>
+        <summary>Creates an image filter that draws a picture at a resolution that matches the local coordinate space.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreatePointLitDiffuse">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreatePointLitDiffuse (SkiaSharp.SKPoint3 location, SkiaSharp.SKColor lightColor, float surfaceScale, float kd, SkiaSharp.SKImageFilter input = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreatePointLitDiffuse(valuetype SkiaSharp.SKPoint3 location, valuetype SkiaSharp.SKColor lightColor, float32 surfaceScale, float32 kd, class SkiaSharp.SKImageFilter input, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreatePointLitDiffuse(SkiaSharp.SKPoint3,SkiaSharp.SKColor,System.Single,System.Single,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter.CropRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="location" Type="SkiaSharp.SKPoint3" />
+        <Parameter Name="lightColor" Type="SkiaSharp.SKColor" />
+        <Parameter Name="surfaceScale" Type="System.Single" />
+        <Parameter Name="kd" Type="System.Single" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="location">The location of the light.</param>
+        <param name="lightColor">The color of the light.</param>
+        <param name="surfaceScale">The surface height to use.</param>
+        <param name="kd">The diffuse lighting constant.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a point diffuse lighting.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreatePointLitSpecular">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreatePointLitSpecular (SkiaSharp.SKPoint3 location, SkiaSharp.SKColor lightColor, float surfaceScale, float ks, float shininess, SkiaSharp.SKImageFilter input = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreatePointLitSpecular(valuetype SkiaSharp.SKPoint3 location, valuetype SkiaSharp.SKColor lightColor, float32 surfaceScale, float32 ks, float32 shininess, class SkiaSharp.SKImageFilter input, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreatePointLitSpecular(SkiaSharp.SKPoint3,SkiaSharp.SKColor,System.Single,System.Single,System.Single,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter.CropRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="location" Type="SkiaSharp.SKPoint3" />
+        <Parameter Name="lightColor" Type="SkiaSharp.SKColor" />
+        <Parameter Name="surfaceScale" Type="System.Single" />
+        <Parameter Name="ks" Type="System.Single" />
+        <Parameter Name="shininess" Type="System.Single" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="location">The location of the light.</param>
+        <param name="lightColor">The color of the light.</param>
+        <param name="surfaceScale">The surface height to use.</param>
+        <param name="ks">The specular lighting constant.</param>
+        <param name="shininess">The shininess or specular exponent.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a point specular lighting.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateSpotLitDiffuse">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateSpotLitDiffuse (SkiaSharp.SKPoint3 location, SkiaSharp.SKPoint3 target, float specularExponent, float cutoffAngle, SkiaSharp.SKColor lightColor, float surfaceScale, float kd, SkiaSharp.SKImageFilter input = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateSpotLitDiffuse(valuetype SkiaSharp.SKPoint3 location, valuetype SkiaSharp.SKPoint3 target, float32 specularExponent, float32 cutoffAngle, valuetype SkiaSharp.SKColor lightColor, float32 surfaceScale, float32 kd, class SkiaSharp.SKImageFilter input, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateSpotLitDiffuse(SkiaSharp.SKPoint3,SkiaSharp.SKPoint3,System.Single,System.Single,SkiaSharp.SKColor,System.Single,System.Single,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter.CropRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="location" Type="SkiaSharp.SKPoint3" />
+        <Parameter Name="target" Type="SkiaSharp.SKPoint3" />
+        <Parameter Name="specularExponent" Type="System.Single" />
+        <Parameter Name="cutoffAngle" Type="System.Single" />
+        <Parameter Name="lightColor" Type="SkiaSharp.SKColor" />
+        <Parameter Name="surfaceScale" Type="System.Single" />
+        <Parameter Name="kd" Type="System.Single" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="location">The location of the light.</param>
+        <param name="target">The target location of the light.</param>
+        <param name="specularExponent">The specular exponent.</param>
+        <param name="cutoffAngle">The cutoff angle of the spotlight.</param>
+        <param name="lightColor">The color of the light.</param>
+        <param name="surfaceScale">The surface height to use.</param>
+        <param name="kd">The diffuse lighting constant.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a spot diffuse lighting.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateSpotLitSpecular">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateSpotLitSpecular (SkiaSharp.SKPoint3 location, SkiaSharp.SKPoint3 target, float specularExponent, float cutoffAngle, SkiaSharp.SKColor lightColor, float surfaceScale, float ks, float shininess, SkiaSharp.SKImageFilter input = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateSpotLitSpecular(valuetype SkiaSharp.SKPoint3 location, valuetype SkiaSharp.SKPoint3 target, float32 specularExponent, float32 cutoffAngle, valuetype SkiaSharp.SKColor lightColor, float32 surfaceScale, float32 ks, float32 shininess, class SkiaSharp.SKImageFilter input, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateSpotLitSpecular(SkiaSharp.SKPoint3,SkiaSharp.SKPoint3,System.Single,System.Single,SkiaSharp.SKColor,System.Single,System.Single,System.Single,SkiaSharp.SKImageFilter,SkiaSharp.SKImageFilter.CropRect)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="location" Type="SkiaSharp.SKPoint3" />
+        <Parameter Name="target" Type="SkiaSharp.SKPoint3" />
+        <Parameter Name="specularExponent" Type="System.Single" />
+        <Parameter Name="cutoffAngle" Type="System.Single" />
+        <Parameter Name="lightColor" Type="SkiaSharp.SKColor" />
+        <Parameter Name="surfaceScale" Type="System.Single" />
+        <Parameter Name="ks" Type="System.Single" />
+        <Parameter Name="shininess" Type="System.Single" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+        <Parameter Name="cropRect" Type="SkiaSharp.SKImageFilter+CropRect" />
+      </Parameters>
+      <Docs>
+        <param name="location">The location of the light.</param>
+        <param name="target">The target location of the light.</param>
+        <param name="specularExponent">The specular exponent.</param>
+        <param name="cutoffAngle">The cutoff angle of the spotlight.</param>
+        <param name="lightColor">The color of the light.</param>
+        <param name="surfaceScale">The surface height to use.</param>
+        <param name="ks">The specular lighting constant.</param>
+        <param name="shininess">The shininess or specular exponent.</param>
+        <param name="input">The input filter to use.</param>
+        <param name="cropRect">The rectangle to which the output processing will be limited.</param>
+        <summary>Creates an image filter that applies a spot specular lighting.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateTile">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateTile (SkiaSharp.SKRect src, SkiaSharp.SKRect dst, SkiaSharp.SKImageFilter input);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateTile(valuetype SkiaSharp.SKRect src, valuetype SkiaSharp.SKRect dst, class SkiaSharp.SKImageFilter input) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateTile(SkiaSharp.SKRect,SkiaSharp.SKRect,SkiaSharp.SKImageFilter)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="src" Type="SkiaSharp.SKRect" />
+        <Parameter Name="dst" Type="SkiaSharp.SKRect" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+      </Parameters>
+      <Docs>
+        <param name="src">The pixels to tile.</param>
+        <param name="dst">The pixels where the tiles are drawn</param>
+        <param name="input">The input filter to use.</param>
+        <summary>Creates an image filter that tiles the image being drawn.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>
+          <para></para>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Dispose">
+      <MemberSignature Language="C#" Value="protected override void Dispose (bool disposing);" />
+      <MemberSignature Language="ILAsm" Value=".method familyhidebysig virtual instance void Dispose(bool disposing) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.Dispose(System.Boolean)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="disposing" Type="System.Boolean" />
+      </Parameters>
+      <Docs>
+        <param name="disposing">To be added.</param>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+  </Members>
+</Type>
