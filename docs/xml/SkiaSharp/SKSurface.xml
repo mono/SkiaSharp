@@ -16,14 +16,20 @@
   <Docs>
     <summary>Represents the backend/results of drawing to a canvas.</summary>
     <remarks>
-      <para>The surface represents the backend/results of drawing to a canvas. For raster drawing, the surface will be pixels, but (for example) when drawing into a PDF or <see cref="T:SkiaSharp.SKPicture" /> canvas, the surface stores the recorded commands.</para>
-      <para></para>
-      <para>The surface always has non-zero dimensions. If there is a request for a new surface, and either of the requested dimensions are zero, then <see langword="null" /> will be returned.</para>
-      <para></para>
-      <para>Once you create a surface with one of its <see cref="M:SkiaSharp.SKSurface.Create" /> methods, you can draw into the canvas returned by the <see cref="M:SkiaSharp.SKSurface.Canvas" /> property. Once the drawing is complete, you can retrieve an <see cref="T:SkiaSharp.SKImage" /> by calling the <see cref="M:SkiaSharp.SKSurface.Snapshot" /> method.</para>
-      <para></para>
-      <example>
-        <code lang="C#"><![CDATA[using (var surface = SKSurface.Create (width: 640, height: 480, SKImageInfo.PlatformColorType, SKAlphaType.Premul)) {
+      <format type="text/markdown"><![CDATA[
+## Remarks  
+
+The surface represents the backend/results of drawing to a canvas. For raster drawing, the surface will be pixels, but (for example) when drawing into a PDF or <xref:SkiaSharp.SKPicture> canvas, the surface stores the recorded commands.
+
+The surface always has non-zero dimensions. If there is a request for a new surface, and either of the requested dimensions are zero, then `null` will be returned.
+
+Once you create a surface with one of its <xref:SkiaSharp.SKSurface.Create%2A> methods, you can draw into the canvas returned by the <xref:SkiaSharp.SKSurface.Canvas> property. Once the drawing is complete, you can retrieve an <xref:SkiaSharp.SKImage> by calling the <xref:SkiaSharp.SKSurface.Snapshot%2A> method.
+
+## Examples  
+
+```csharp
+var info = new SKImageInfo (640, 480);
+using (var surface = SKSurface.Create (info)) {
     // fetch the canvas where we draw into
     SKCanvas myCanvas = surface.Canvas;
 
@@ -47,9 +53,10 @@
         data.SaveTo(output);
     }
 }
-]]></code>
-      </example>
-      <para></para>
+```
+
+]]></format>
+    </remarks>
     </remarks>
   </Docs>
   <Members>
