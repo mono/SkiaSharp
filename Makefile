@@ -5,4 +5,4 @@ update-docs:
 	echo Not supported anymore, just "make assemble-docs"
 
 assemble-docs:
-	mdoc assemble --out=docs/SkiaSharp docs/en
+	mdoc assemble --out=docs/SkiaSharp docs/xml
