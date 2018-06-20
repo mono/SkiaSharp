@@ -16,31 +16,43 @@
   <Docs>
     <summary>Encapsulates all of the state about drawing into a device (bitmap).</summary>
     <remarks>
-      <para>Encapsulates all of the state about drawing into a device (bitmap).</para>
-      <para></para>
-      <para>This includes a reference to the device itself, and a stack of matrix/clip values. For any given draw call (e.g. drawRect), the geometry of the object being drawn is transformed by the concatenation of all the matrices in the stack. The transformed geometry is clipped by the intersection of all of the clips in the stack.</para>
-      <para></para>
-      <para>While the canvas holds the state of the drawing device, the state (style) of the object being drawn is held by the Paint, which is provided as a parameter to each of the draw() methods. The Paint holds attributes such as color, typeface, the text size, the stroke width, the shader (for example, gradients, patterns), etc.</para>
-      <para></para>
-      <para>The SKCanvas is returned when accessing the <see cref="P:SkiaSharp.SKSurface.Canvas" /> property of a surface.</para>
-      <para>Transformations</para>
-      <para>The <see cref="T:SkiaSharp.SKCanvas" /> supports a number of 2D transformations.   Unlike other 2D graphic systems like CoreGraphics or Cairo, SKCanvas extends the transformations to include perspectives.   </para>
-      <para>You can use the <see cref="M:SkiaSharp.SKCanvas.Scale" />, <see cref="M:SkiaSharp.SKCanvas.Skew" />, <see cref="M:SkiaSharp.SKCanvas.Translate" />, <see cref="M:SkiaSharp.SKCanvas.RotateDegrees" />, <see cref="M:SkiaSharp.SKCanvas.RotateRadians" /> to perform some of the most common 2D transformations.   </para>
-      <para>For more control you can use the <see cref="M:SkiaSharp.SKCanvas.SetMatrix" /> to set an arbitrary transformation using the <see cref="T:SkiaSharp.SKMatrix" /> and the <see cref="M:SkiaSharp.SKCanvas.Concat" /> to concatenate an <see cref="T:SkiaSharp.SKMatrix" /> transformation to the current matrix in use.</para>
-      <para>The <see cref="M:SkiaSharp.SKCanvas.ResetMatrix" /> can be used to reset the state of the matrix</para>
-      <para></para>
-      <para>Drawing</para>
-      <para>The drawing operations can take a <see cref="T:SkiaSharp.SKPaint" /> parameter to affect their drawing.  You use <see cref="T:SkiaSharp.SKPaint" /> objects to cache the style and color information to draw geometries, texts and bitmaps.</para>
-      <para>Clipping Path</para>
-      <para>State</para>
-      <para>It is possible to save the current transformations by calling the <see cref="M:SkiaSharp.SKCanvas.Save" /> method which preserves the current transformation matrix, you can then alter the matrix and restore the previous state by using the <see cref="M:SkiaSharp.SKCanvas.Restore" /> or <see cref="M:SkiaSharp.SKCanvas.RestoreToCount" /> methods.   </para>
-      <para>Additionally, it is possible to push a new state with <see cref="M:SkiaSharp.SKCanvas.SaveLayer" /> which will make an offscreen copy of a region, and once the drawing is completed, calling the <see cref="M:SkiaSharp.SKCanvas.Restore" /> method which copies the offscreen bitmap into this canvas.</para>
-      <para>The example below shows a typical use:</para>
-      <para></para>
-      <para></para>
-      <para></para>
-      <example>
-        <code lang="C#"><![CDATA[using (var surface = SKSurface.Create (width: 640, height: 480, SKImageInfo.PlatformColorType, SKAlphaType.Premul)) {
+      <format type="text/markdown"><![CDATA[  
+## Remarks  
+
+A canvas encapsulates all of the state about drawing into a device (bitmap or surface).
+
+This includes a reference to the device itself, and a stack of matrix/clip values. For any given draw call (e.g. DrawRect), the geometry of the object being drawn is transformed by the concatenation of all the matrices in the stack. The transformed geometry is clipped by the intersection of all of the clips in the stack.
+
+While the canvas holds the state of the drawing device, the state (style) of the object being drawn is held by the Paint, which is provided as a parameter to each of the draw() methods. The Paint holds attributes such as color, typeface, the text size, the stroke width, the shader (for example, gradients, patterns), etc.
+
+The canvas is returned when accessing the <xref:SkiaSharp.SKSurface.Canvas> property of a surface.
+
+### Transformations
+
+The <xref:SkiaSharp.SKCanvas> supports a number of 2D transformations. Unlike other 2D graphic systems like CoreGraphics or Cairo, SKCanvas extends the transformations to include perspectives.
+
+You can use the <xref:SkiaSharp.SKCanvas.Scale%2A>, <xref:SkiaSharp.SKCanvas.Skew%2A>, <xref:SkiaSharp.SKCanvas.Translate%2A>, <xref:SkiaSharp.SKCanvas.RotateDegrees%2A>, <xref:SkiaSharp.SKCanvas.RotateRadians%2A> to perform some of the most common 2D transformations.
+
+For more control you can use the <xref:SkiaSharp.SKCanvas.SetMatrix> to set an arbitrary transformation using the <xref:SkiaSharp.SKMatrix> and the <xref:SkiaSharp.SKCanvas.Concat%2A> to concatenate an <xref:SkiaSharp.SKMatrix> transformation to the current matrix in use.
+
+The <xref:SkiaSharp.SKCanvas.ResetMatrix> can be used to reset the state of the matrix.
+
+### Drawing
+
+The drawing operations can take a <xref:SkiaSharp.SKPaint> parameter to affect their drawing. You use <see cref="T:SkiaSharp.SKPaint"> objects to cache the style and color information to draw geometries, texts and bitmaps.
+
+### Clipping and State
+
+It is possible to save the current transformations by calling the <xref:SkiaSharp.SKCanvas.Save> method which preserves the current transformation matrix, you can then alter the matrix and restore the previous state by using the <xref:SkiaSharp.SKCanvas.Restore> or <xref:SkiaSharp.SKCanvas.RestoreToCount> methods. 
+
+Additionally, it is possible to push a new state with <xref:SkiaSharp.SKCanvas.SaveLayer> which will make an off-screen copy of a region, and once the drawing is completed, calling the <xref:SkiaSharp.SKCanvas.Restore> method which copies the off-screen bitmap into this canvas.
+
+## Examples
+
+```csharp
+var info = new SKImageInfo (640, 480);
+
+using (var surface = SKSurface.Create (info)) {
     SKCanvas canvas = surface.Canvas;
 
     canvas.Clear (SKColors.White);
@@ -72,8 +84,10 @@
             canvas.DrawPath (path, paint);
         }
     }
-}]]></code>
-      </example>
+}
+```
+
+]]></format>
     </remarks>
   </Docs>
   <Members>
