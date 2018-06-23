@@ -34,7 +34,7 @@ to each of the draw() methods. The Paint holds attributes such as color,
 typeface, the text size, the stroke width, the shader (for example, gradients,
 patterns), etc.
 
-The canvas is returned when accessing the <xref:SkiaSharp.SKSurface.Canvas>
+The canvas is returned when accessing the <xref:SkiaSharp.SKSurface.SKCanvas>
 property of a surface.
 
 ### Transformations
@@ -1386,10 +1386,11 @@ This is equivalent to calling <xref:SkiaSharp.SKCanvas.Save>, followed by
 <xref:SkiaSharp.SKCanvas.Concat(SkiaSharp.SKMatrix@)> with the specified `matrix`,
 <xref:SkiaSharp.SKCanvas.DrawPicture(SkiaSharp.SKPicture,SkiaSharp.SKPaint)>
 and then <xref:SkiaSharp.SKCanvas.Restore>.
+
+If paint is non-null, the picture is drawn into a temporary buffer, and then
+the paint's alpha, color filter, image filter, blend mode are applied to that
+buffer as it is drawn to the canvas.
 ]]></format>
-          <para></para>
-          <para></para>
-          <para>If paint is non-null, the picture is drawn into a temporary buffer, and then the paint's alpha, color filter, image filter, blend mode are applied to that buffer as it is drawn to the canvas.</para>
         </remarks>
       </Docs>
     </Member>
