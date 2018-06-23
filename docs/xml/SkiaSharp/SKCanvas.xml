@@ -16,8 +16,8 @@
   <Docs>
     <summary>Encapsulates all of the state about drawing into a device (bitmap or surface).</summary>
     <remarks>
-      <format type="text/markdown"><![CDATA[  
-## Remarks  
+      <format type="text/markdown"><![CDATA[
+## Remarks
 
 A canvas encapsulates all of the state about drawing into a device (bitmap or surface).
 
@@ -43,7 +43,7 @@ The drawing operations can take a <xref:SkiaSharp.SKPaint> parameter to affect t
 
 ### Clipping and State
 
-It is possible to save the current transformations by calling the <xref:SkiaSharp.SKCanvas.Save%2A> method which preserves the current transformation matrix, you can then alter the matrix and restore the previous state by using the <xref:SkiaSharp.SKCanvas.Restore%2A> or <xref:SkiaSharp.SKCanvas.RestoreToCount%2A> methods. 
+It is possible to save the current transformations by calling the <xref:SkiaSharp.SKCanvas.Save%2A> method which preserves the current transformation matrix, you can then alter the matrix and restore the previous state by using the <xref:SkiaSharp.SKCanvas.Restore%2A> or <xref:SkiaSharp.SKCanvas.RestoreToCount%2A> methods.
 
 Additionally, it is possible to push a new state with <xref:SkiaSharp.SKCanvas.SaveLayer%2A> which will make an off-screen copy of a region, and once the drawing is completed, calling the <xref:SkiaSharp.SKCanvas.Restore> method which copies the off-screen bitmap into this canvas.
 
@@ -56,13 +56,13 @@ using (var surface = SKSurface.Create (info)) {
     SKCanvas canvas = surface.Canvas;
 
     canvas.Clear (SKColors.White);
-    
+
     // set up drawing tools
     using (var paint = new SKPaint ()) {
         paint.IsAntialias = true;
         paint.Color = new SKColor (0x2c, 0x3e, 0x50);
         paint.StrokeCap = SKStrokeCap.Round;
-        
+
         // create the Xamagon path
         using (var path = new SKPath ()) {
             path.MoveTo (71.4311121f, 56f);
@@ -79,7 +79,7 @@ using (var surface = SKSurface.Create (info)) {
             path.CubicTo (120.020241f, 57.5737917f, 117.323748f, 56.0054182f, 114.568946f, 56f);
             path.LineTo (71.4311121f, 56f);
             path.Close ();
-          
+
             // draw the Xamagon path
             canvas.DrawPath (path, paint);
         }
@@ -2206,8 +2206,8 @@ using (var surface = SKSurface.Create (info)) {
         <param name="paint">The paint to use when drawing the text.</param>
         <summary>Draws text on the canvas at the specified coordinates.</summary>
         <remarks>
-          <format type="text/markdown"><![CDATA[  
-## Examples  
+          <format type="text/markdown"><![CDATA[
+## Examples
 
 ```csharp
 public static void TextSample (SKCanvas canvas, int width, int height)

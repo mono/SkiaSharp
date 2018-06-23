@@ -27,7 +27,7 @@
 
     // load the image from the embedded resource stream
     using (var resource = assembly.GetManifestResourceStream ("embedded.png"))
-    using (var stream = new SKManagedStream(resource)) 
+    using (var stream = new SKManagedStream(resource))
     using (var source = SKBitmap.Decode (stream)) {
         var matrix = SKMatrix.MakeRotation (30.0f);
         using (var shader = SKShader.CreateBitmap (source, SKShaderTileMode.Repeat, SKShaderTileMode.Repeat, matrix))
