@@ -19,7 +19,7 @@
       <para>Not only is the data immutable, but the actual pointer that is returned by the <see cref="P:SkiaSharp.SKData.Data" /> property is guaranteed to always be the same for the life of this instance.</para>
       <para>The <see cref="M:SkiaSharp.SKData.AsStream" /> method can be used to return a <see cref="T:System.IO.Stream" /> that wraps this <see cref="T:SkiaSharp.SKData" /> and allows for .NET APIs to scan the contents of the <see cref="T:SkiaSharp.SKData" /> as a stream.</para>
       <para></para>
-      <para>You can use the constructors for this object to make copies of the data, or you can use the <see cref="M:SkiaSharp.SKData.FromMallocMemory" /> to wrap a block of memory that has been allocated with the platform “malloc" function.</para>
+      <para>You can use the constructors for this object to make copies of the data, or you can use the <see cref="M:SkiaSharp.SKData.FromMallocMemory" /> to wrap a block of memory that has been allocated with the platform "malloc" function.</para>
     </remarks>
   </Docs>
   <Members>
@@ -700,7 +700,7 @@
       </Parameters>
       <Docs>
         <param name="disposing">Specify true to release both managed and unmanaged resources, false to release only unmanaged resources.</param>
-        <summary>Releases the resources associated with the data. If this <see cref="T:SkiaSharp.SKData" /> was created with one of the <see cref="M:SkiaSharp.SKData.FromMallocMemory" /> methods, then the operating system’s “free” method will be called on the data.</summary>
+        <summary>Releases the resources associated with the data. If this <see cref="T:SkiaSharp.SKData" /> was created with one of the <see cref="M:SkiaSharp.SKData.FromMallocMemory" /> methods, then the operating system's "free"� method will be called on the data.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -758,9 +758,9 @@
         <Parameter Name="length" Type="System.UInt64" />
       </Parameters>
       <Docs>
-        <param name="bytes">Pointer to memory that has been allocated with the operating system’s “malloc" or <see cref="M:System.Runtime.InteropServices.Marshal.AllocHGlobal" /> method.</param>
+        <param name="bytes">Pointer to memory that has been allocated with the operating system's "malloc" or <see cref="M:System.Runtime.InteropServices.Marshal.AllocHGlobal" /> method.</param>
         <param name="length">The size of the buffer allocated.</param>
-        <summary>Creates an <see cref="T:SkiaSharp.SKData" /> from a buffer that was previously allocated with the operating system “malloc" (or <see cref="M:System.Runtime.InteropServices.Marshal.AllocHGlobal" /> method.</summary>
+        <summary>Creates an <see cref="T:SkiaSharp.SKData" /> from a buffer that was previously allocated with the operating system "malloc" (or <see cref="M:System.Runtime.InteropServices.Marshal.AllocHGlobal" /> method.</summary>
         <returns>An <see cref="T:SkiaSharp.SKData" /> instance that wraps a memory block.</returns>
         <remarks>When this <see cref="T:SkiaSharp.SKData" /> instance is cleared, the free method will be called on the provided buffer.</remarks>
       </Docs>

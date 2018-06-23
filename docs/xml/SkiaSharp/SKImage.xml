@@ -18,7 +18,7 @@
     <remarks>
       <para>An image is an abstraction of pixels, though the particular type of image could be actually storing its data on the GPU, or as drawing commands (picture or PDF or otherwise), ready to be played back into another canvas.</para>
       <para></para>
-      <para>The content of an image is always immutable, though the actual storage may change, if for example that image can be re-created via encoded data or other means.</para>
+      <para>The content of an image is always immutable, though the actual storage may change, if for example that image can be recreated via encoded data or other means.</para>
       <para></para>
       <para>An image always has a non-zero dimensions. If there is a request to create a new image, either directly or via a surface, and either of the requested dimensions are zero, then <see langword="null" /> will be returned.</para>
     </remarks>
@@ -205,7 +205,7 @@
         <param name="quality">The quality level to use for the image. This is in the range from 0-100.</param>
         <summary>Encodes the image using the specified format.</summary>
         <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded image.</returns>
-        <remarks>The quality is a suggestion, and not all formats (eg: png) respect or support it.</remarks>
+        <remarks>The quality is a suggestion, and not all formats (for example, PNG) respect or support it.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Encode">
@@ -1329,7 +1329,7 @@
         <param name="srcX">The source x-coordinate to start reading from.</param>
         <param name="srcY">The source y-coordinate to start reading from.</param>
         <summary>Copies the pixels from the image into the specified buffer.</summary>
-        <returns>Returns <see langword="true" /> if the pexels were read, or <see langword="false" /> if there was an error.</returns>
+        <returns>Returns <see langword="true" /> if the pixels were read, or <see langword="false" /> if there was an error.</returns>
         <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dst.Info.Width, dst.Info.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
       </Docs>
     </Member>
@@ -1360,7 +1360,7 @@
         <param name="srcY">The source y-coordinate to start reading from.</param>
         <param name="cachingHint">Whether or not to cache intermediate results.</param>
         <summary>Copies the pixels from the image into the specified buffer.</summary>
-        <returns>Returns <see langword="true" /> if the pexels were read, or <see langword="false" /> if there was an error.</returns>
+        <returns>Returns <see langword="true" /> if the pixels were read, or <see langword="false" /> if there was an error.</returns>
         <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dst.Info.Width, dst.Info.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
       </Docs>
     </Member>
@@ -1428,7 +1428,7 @@
         <param name="srcY">The source y-coordinate to start reading from.</param>
         <param name="cachingHint">Whether or not to cache intermediate results.</param>
         <summary>Copies the pixels from the image into the specified buffer.</summary>
-        <returns>Returns <see langword="true" /> if the pexels were read, or <see langword="false" /> if there was an error.</returns>
+        <returns>Returns <see langword="true" /> if the pixels were read, or <see langword="false" /> if there was an error.</returns>
         <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dstInfo.Width, dstInfo.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
       </Docs>
     </Member>
@@ -1455,7 +1455,7 @@
         <param name="dst">The pixmap describing the destination pixel buffer.</param>
         <param name="quality">The quality of scaling to use.</param>
         <summary>Copies the pixels from this image into the destination pixmap, scaling the image if the dimensions differ.</summary>
-        <returns>Rreturns <see langword="true" /> on success, or <see langword="false" /> if the color type/alpha type could not be converted to the destination types.</returns>
+        <returns>Returns <see langword="true" /> on success, or <see langword="false" /> if the color type/alpha type could not be converted to the destination types.</returns>
         <remarks>
           <para></para>
         </remarks>
@@ -1486,7 +1486,7 @@
         <param name="quality">The quality of scaling to use.</param>
         <param name="cachingHint">Whether or not to cache intermediate results.</param>
         <summary>Copies the pixels from this image into the destination pixmap, scaling the image if the dimensions differ.</summary>
-        <returns>Rreturns <see langword="true" /> on success, or <see langword="false" /> if the color type/alpha type could not be converted to the destination types.</returns>
+        <returns>Returns <see langword="true" /> on success, or <see langword="false" /> if the color type/alpha type could not be converted to the destination types.</returns>
         <remarks>
           <para></para>
         </remarks>
@@ -1513,7 +1513,7 @@
       <Docs>
         <param name="subset">The rectangle indicating the subset to obtain.</param>
         <summary>Returns a new image that is a subset of this image.</summary>
-        <returns>Returns the new image, or <see langword="null" /> if there was an error or the rectangle does not intersct the image.</returns>
+        <returns>Returns the new image, or <see langword="null" /> if there was an error or the rectangle does not intersect the image.</returns>
         <remarks>The underlying implementation may share the pixels, or it may make a copy.</remarks>
       </Docs>
     </Member>

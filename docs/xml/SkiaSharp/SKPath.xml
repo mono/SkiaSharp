@@ -616,7 +616,7 @@
         <param name="sweepAngle">The sweep angle (in degrees) measured clockwise.</param>
         <param name="forceMoveTo">Whether to always begin a new contour with the arc.</param>
         <summary>Appends the specified arc to the path.</summary>
-        <remarks>If the start of the arc is different from the path’s current last point, then an automatic <see cref="M:SkiaSharp.SKPath.LineTo" /> is added to connect the current contour to the start of the arc. However, if the path is empty, then we call <see cref="M:SkiaSharp.SKPath.MoveTo" /> with the first point of the arc.</remarks>
+        <remarks>If the start of the arc is different from the path's current last point, then an automatic <see cref="M:SkiaSharp.SKPath.LineTo" /> is added to connect the current contour to the start of the arc. However, if the path is empty, then we call <see cref="M:SkiaSharp.SKPath.MoveTo" /> with the first point of the arc.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ArcTo">
@@ -741,7 +741,7 @@
       <Docs>
         <summary>Gets the bounds of the path's points. If the path contains zero points/verbs, this will return the empty rectangle.</summary>
         <value>Gets the bounds of the path's points.</value>
-        <remarks>This bounds may be larger than the actual shape, since curves do not extend as far as their control points. Additionally this bound encompases all points, even isolated MoveTo either preceeding or following the last non-degenerate contour.</remarks>
+        <remarks>This bounds may be larger than the actual shape, since curves do not extend as far as their control points. Additionally this bound encompasses all points, even isolated MoveTo either preceding or following the last non-degenerate contour.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Close">
@@ -909,7 +909,7 @@
         <param name="pow2">The tolerance to use (1 &lt;&lt; pow2).</param>
         <summary>Chop a conic into a number of quads.</summary>
         <returns>Returns the collection of points that make up the conic curve.</returns>
-        <remarks>The amount of storage needed for pts is: 1 + 2 * (1 &lt;&lt; pow2)</remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="ConvertConicToQuads">
@@ -1033,7 +1033,9 @@
           <format type="text/markdown"><![CDATA[
 ## Remarks
 
-This iterator is able to clean up the path as the values are returned. If you do not desire to get verbs that have been cleaned up, use the <xref:SkiaSharp.SKPath.CreateRawIterator%2A> method instead.
+This iterator is able to clean up the path as the values are returned. If you 
+do not desire to get verbs that have been cleaned up, use the 
+<xref:SkiaSharp.SKPath.CreateRawIterator%2A> method instead.
 ]]></format>
         </remarks>
       </Docs>
@@ -1061,7 +1063,9 @@ This iterator is able to clean up the path as the values are returned. If you do
           <format type="text/markdown"><![CDATA[
 ## Remarks
 
-Unlike the <xref:SkiaSharp.SKPath.CreateIterator%2A> method, this iterator does not clean up or normalize the values in the path. It returns the raw elements contained in the path.
+Unlike the <xref:SkiaSharp.SKPath.CreateIterator%2A> method, this iterator 
+does not clean up or normalize the values in the path. It returns the raw 
+elements contained in the path.
 ]]></format>
         </remarks>
       </Docs>
@@ -1197,7 +1201,7 @@ Unlike the <xref:SkiaSharp.SKPath.CreateIterator%2A> method, this iterator does 
         <param name="rect">The bounds, if the path contains any points.</param>
         <summary>Returns the bounds of the path's points.</summary>
         <returns>Returns true if the path is not empty, otherwise false.</returns>
-        <remarks>This bounds may be larger than the actual shape, since curves do not extend as far as their control points. Additionally this bound encompases all points, even isolated MoveTo either preceeding or following the last non-degenerate contour.</remarks>
+        <remarks>This bounds may be larger than the actual shape, since curves do not extend as far as their control points. Additionally this bound encompasses all points, even isolated MoveTo either preceding or following the last non-degenerate contour.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPoint">
@@ -1299,7 +1303,7 @@ Unlike the <xref:SkiaSharp.SKPath.CreateIterator%2A> method, this iterator does 
       </Parameters>
       <Docs>
         <param name="result">The tight bounds of the path.</param>
-        <summary>Gets the “tight” bounds of the path. Unlike <see cref="M:SkiaSharp.SKPath.GetBounds" />, the control points of curves are excluded.</summary>
+        <summary>Gets the "tight" bounds of the path. Unlike <see cref="M:SkiaSharp.SKPath.GetBounds" />, the control points of curves are excluded.</summary>
         <returns>Returns true if the bounds could be computed, otherwise false.</returns>
         <remarks>
           <para></para>
@@ -1577,7 +1581,7 @@ Unlike the <xref:SkiaSharp.SKPath.CreateIterator%2A> method, this iterator does 
       <Docs>
         <param name="dx">The amount in the x-direction to offset the entire path.</param>
         <param name="dy">The amount in the y-direction to offset the entire path.</param>
-        <summary>Offset the path by the specifid distance.</summary>
+        <summary>Offset the path by the specified distance.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -2256,7 +2260,7 @@ Unlike the <xref:SkiaSharp.SKPath.CreateIterator%2A> method, this iterator does 
         <ReturnType>SkiaSharp.SKRect</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Gets the “tight” bounds of the path. Unlike <see cref="P:SkiaSharp.SKPath.Bounds" />, the control points of curves are excluded.</summary>
+        <summary>Gets the "tight" bounds of the path. Unlike <see cref="P:SkiaSharp.SKPath.Bounds" />, the control points of curves are excluded.</summary>
         <value>The tight bounds of the path.</value>
         <remarks>
           <para></para>

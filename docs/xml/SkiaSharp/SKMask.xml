@@ -93,7 +93,7 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Allocates a memory block for the mask’s image.</summary>
+        <summary>Allocates a memory block for the mask's image.</summary>
         <returns>Returns the total size of the allocated memory.</returns>
         <remarks>
           <para></para>
@@ -120,7 +120,7 @@
       </Parameters>
       <Docs>
         <param name="size">The amount of memory to allocate.</param>
-        <summary>Allocates a memory block for a mask’s image.</summary>
+        <summary>Allocates a memory block for a mask's image.</summary>
         <returns>Returns a pointer to the allocated memory.</returns>
         <remarks>
           <para></para>
@@ -175,7 +175,8 @@
           <format type="text/markdown"><![CDATA[
 ## Remarks
 
-Does not account for <xref:SkiaSharp.SKMaskFormat.ThreeD>. For that, use <xref:SkiaSharp.SKMask.ComputeTotalImageSize>.
+Does not account for <xref:SkiaSharp.SKMaskFormat.ThreeD>. For that, use 
+<xref:SkiaSharp.SKMask.ComputeTotalImageSize>.
 
 If there is an overflow of 32bits, then returns 0.
 ]]></format>
@@ -279,7 +280,7 @@ If there is an overflow of 32bits, then returns 0.
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>De-allocate the mask’s image data.</summary>
+        <summary>De-allocate the mask's image data.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -304,7 +305,7 @@ If there is an overflow of 32bits, then returns 0.
         <Parameter Name="image" Type="System.IntPtr" />
       </Parameters>
       <Docs>
-        <param name="image">The pointer to a mask’s image data.</param>
+        <param name="image">The pointer to a mask's image data.</param>
         <summary>De-allocate the specified mask image data.</summary>
         <remarks>
           <para></para>
@@ -331,17 +332,20 @@ If there is an overflow of 32bits, then returns 0.
         <Parameter Name="y" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="x">The x-cordinate, which must be contained by the mask's bounds.</param>
-        <param name="y">The y-cordinate, which must be contained by the mask's bounds.</param>
+        <param name="x">The x-coordinate, which must be contained by the mask's bounds.</param>
+        <param name="y">The y-coordinate, which must be contained by the mask's bounds.</param>
         <summary>Returns the address of the specified pixel, computing the pixel-size at runtime based on the mask format.</summary>
         <returns>Returns the address of the specified pixel.</returns>
         <remarks>
           <format type="text/markdown"><![CDATA[
 ## Remarks
 
-This will be slightly slower than using one of the routines where the format is implied by the name (e.g. <xref:SkiaSharp.SKMask.GetAddr8%2A> or <xref:SkiaSharp.SKMask.GetAddr32%2A>).
+This will be slightly slower than using one of the routines where the format 
+is implied by the name (e.g. <xref:SkiaSharp.SKMask.GetAddr8%2A> or 
+<xref:SkiaSharp.SKMask.GetAddr32%2A>).
 
-This should not be called with <xref:SkiaSharp.SKMaskFormat.BW>, as it will give unspecified results.
+This should not be called with <xref:SkiaSharp.SKMaskFormat.BW>, as it will 
+give unspecified results.
 ]]></format>
         </remarks>
       </Docs>
@@ -366,8 +370,8 @@ This should not be called with <xref:SkiaSharp.SKMaskFormat.BW>, as it will give
         <Parameter Name="y" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="x">The x-cordinate, which must be contained by the mask's bounds.</param>
-        <param name="y">The y-cordinate, which must be contained by the mask's bounds.</param>
+        <param name="x">The x-coordinate, which must be contained by the mask's bounds.</param>
+        <param name="y">The y-coordinate, which must be contained by the mask's bounds.</param>
         <summary>Returns the bit value of the specified specified pixel.</summary>
         <returns>Returns the bit value of the specified specified pixel.</returns>
         <remarks>
@@ -395,8 +399,8 @@ This should not be called with <xref:SkiaSharp.SKMaskFormat.BW>, as it will give
         <Parameter Name="y" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="x">The x-cordinate, which must be contained by the mask's bounds.</param>
-        <param name="y">The y-cordinate, which must be contained by the mask's bounds.</param>
+        <param name="x">The x-coordinate, which must be contained by the mask's bounds.</param>
+        <param name="y">The y-coordinate, which must be contained by the mask's bounds.</param>
         <summary>Returns the 16-bit value of the specified specified pixel.</summary>
         <returns>Returns the 16-bit value of the specified specified pixel.</returns>
         <remarks>
@@ -424,8 +428,8 @@ This should not be called with <xref:SkiaSharp.SKMaskFormat.BW>, as it will give
         <Parameter Name="y" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="x">The x-cordinate, which must be contained by the mask's bounds.</param>
-        <param name="y">The y-cordinate, which must be contained by the mask's bounds.</param>
+        <param name="x">The x-coordinate, which must be contained by the mask's bounds.</param>
+        <param name="y">The y-coordinate, which must be contained by the mask's bounds.</param>
         <summary>Returns the 32-bit value of the specified specified pixel.</summary>
         <returns>Returns the 32-bit value of the specified specified pixel.</returns>
         <remarks>
@@ -453,8 +457,8 @@ This should not be called with <xref:SkiaSharp.SKMaskFormat.BW>, as it will give
         <Parameter Name="y" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="x">The x-cordinate, which must be contained by the mask's bounds.</param>
-        <param name="y">The y-cordinate, which must be contained by the mask's bounds.</param>
+        <param name="x">The x-coordinate, which must be contained by the mask's bounds.</param>
+        <param name="y">The y-coordinate, which must be contained by the mask's bounds.</param>
         <summary>Returns the 8-bit value of the specified specified pixel.</summary>
         <returns>Returns the 8-bit value of the specified specified pixel.</returns>
         <remarks>
@@ -478,7 +482,7 @@ This should not be called with <xref:SkiaSharp.SKMaskFormat.BW>, as it will give
         <ReturnType>System.IntPtr</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Get the pointer to the mask’s image data location.</summary>
+        <summary>Get the pointer to the mask's image data location.</summary>
         <value>
           <para></para>
         </value>
@@ -503,7 +507,7 @@ This should not be called with <xref:SkiaSharp.SKMaskFormat.BW>, as it will give
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Gets a value indicating whether the mask’s bounds are empty.</summary>
+        <summary>Gets a value indicating whether the mask's bounds are empty.</summary>
         <value>
           <para></para>
         </value>

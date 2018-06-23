@@ -19,7 +19,7 @@
       <para>Shaders specify the source colors for what is being drawn. If a paint has no shader, then the paint's color is used. If the paint has a shader, then the shader's colors are used instead, but they are modulated by the paint's alpha. </para>
       <para></para>
       <para>This makes it easy to create a shader once (e.g. bitmap tiling or gradient) and then change its transparency without having to modify the original shader, only the paint's alpha needs to be modified.</para>
-      <para>Shaders are created by calling one of the static “Create” methods in the SKShader method that create a shader of the appropriate type.</para>
+      <para>Shaders are created by calling one of the static "Create" methods in the SKShader method that create a shader of the appropriate type.</para>
       <format type="text/html">
         <h2>Linear Gradient Shader</h2>
       </format>
@@ -152,7 +152,7 @@ canvas.DrawPaint (paint);]]></code>
         <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
         <remarks>
           <para>If the bitmap cannot be used (has no pixels, or its dimensions exceed implementation limits) then an empty shader may be returned. </para>
-          <para>If the source bitmap’s color type is <see cref="F:SkiaSharp.SKColorType.Alpha8" /> then that mask will be colorized using the color on the paint.</para>
+          <para>If the source bitmap's color type is <see cref="F:SkiaSharp.SKColorType.Alpha8" /> then that mask will be colorized using the color on the paint.</para>
         </remarks>
       </Docs>
     </Member>
@@ -186,7 +186,7 @@ canvas.DrawPaint (paint);]]></code>
         <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
         <remarks>
           <para>If the bitmap cannot be used (has no pixels, or its dimensions exceed implementation limits) then an empty shader may be returned. </para>
-          <para>If the source bitmap’s color type is <see cref="F:SkiaSharp.SKColorType.Alpha8" /> then that mask will be colorized using the color on the paint.</para>
+          <para>If the source bitmap's color type is <see cref="F:SkiaSharp.SKColorType.Alpha8" /> then that mask will be colorized using the color on the paint.</para>
         </remarks>
       </Docs>
     </Member>
@@ -262,27 +262,39 @@ Create a new compose shader, which combines two shaders by a blend mode.
 ## Example
 
 ```csharp
-// create the first shader
-var colors = new SKColor [] {
-    new SKColor (0, 255, 255),
-    new SKColor (255, 0, 255),
-    new SKColor (255, 255, 0),
-    new SKColor (0, 255, 255)
-};
-var sweep = SKShader.CreateSweepGradient (new SKPoint (128, 128), colors, null);
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
 
-// create the second shader
-var turbulence = SKShader.CreatePerlinNoiseTurbulence (0.05f, 0.05f, 4, 0);
+    canvas.Clear(SKColors.White);
 
-// create the compose shader
-var shader = SKShader.CreateCompose (sweep, turbulence, SKBlendMode.SrcOver);
+    // create the first shader
+    var colors = new SKColor[] {
+        new SKColor(0, 255, 255),
+        new SKColor(255, 0, 255),
+        new SKColor(255, 255, 0),
+        new SKColor(0, 255, 255)
+    };
+    var sweep = SKShader.CreateSweepGradient(new SKPoint(128, 128), colors, null);
 
-// use the compose shader
-var paint = new SKPaint {
-    Shader = shader
-};
-canvas.DrawPaint (paint);
+    // create the second shader
+    var turbulence = SKShader.CreatePerlinNoiseTurbulence(0.05f, 0.05f, 4, 0);
+
+    // create the compose shader
+    var shader = SKShader.CreateCompose(sweep, turbulence, SKBlendMode.SrcOver);
+
+    // use the compose shader
+    var paint = new SKPaint
+    {
+        Shader = shader
+    };
+    canvas.DrawPaint(paint);
+}
 ```
+
+The example above produces the following:
+
+![Compose Shader](xamarin-media/SkiaSharp/compose.png "Compose Shader")
 ]]></format>
         </remarks>
       </Docs>
@@ -419,27 +431,40 @@ canvas.DrawPaint (paint);
           <format type="text/markdown"><![CDATA[
 ## Remarks
 
-Creates a shader that generates a linear gradient between the two specified points.
+Creates a shader that generates a linear gradient between the two specified
+points.
 
 ![Linear Gradient](xamarin-media/SkiaSharp/linear.png "Linear Gradient")
 
 ## Example
 
 ```csharp
-// create the shader
-var colors = new SKColor [] {
-    new SKColor (0, 255, 255),
-    new SKColor (255, 0, 255),
-    new SKColor (255, 255, 0),
-    new SKColor (0, 255, 255)
-};
-var shader = SKShader.CreateLinearGradient (new SKPoint (0, 0), new SKPoint (255, 255), colors, null, SKShaderTileMode.Clamp);
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
 
-// use the shader
-var paint = new SKPaint {
-    Shader = shader
-};
-canvas.DrawPaint (paint);
+    canvas.Clear(SKColors.White);
+
+    // create the shader
+    var colors = new SKColor[] {
+        new SKColor(0, 255, 255),
+        new SKColor(255, 0, 255),
+        new SKColor(255, 255, 0),
+        new SKColor(0, 255, 255)
+    };
+    var shader = SKShader.CreateLinearGradient(
+        new SKPoint(0, 0),
+        new SKPoint(255, 255),
+        colors,
+        null,
+        SKShaderTileMode.Clamp);
+
+    // use the shader
+    var paint = new SKPaint {
+        Shader = shader
+    };
+    canvas.DrawPaint(paint);
+}
 ```
 ]]></format>
         </remarks>

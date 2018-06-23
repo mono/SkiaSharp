@@ -19,41 +19,50 @@
       <format type="text/markdown"><![CDATA[
 ## Remarks
 
-The surface represents the backend/results of drawing to a canvas. For raster drawing, the surface will be pixels, but (for example) when drawing into a PDF or <xref:SkiaSharp.SKPicture> canvas, the surface stores the recorded commands.
+The surface represents the backend/results of drawing to a canvas. For raster 
+drawing, the surface will be pixels, but (for example) when drawing into a 
+PDF or <xref:SkiaSharp.SKPicture> canvas, the surface stores the recorded 
+commands.
 
-The surface always has non-zero dimensions. If there is a request for a new surface, and either of the requested dimensions are zero, then `null` will be returned.
+The surface always has non-zero dimensions. If there is a request for a new 
+surface, and either of the requested dimensions are zero, then `null` will 
+be returned.
 
-Once you create a surface with one of its <xref:SkiaSharp.SKSurface.Create%2A> methods, you can draw into the canvas returned by the <xref:SkiaSharp.SKSurface.Canvas> property. Once the drawing is complete, you can retrieve an <xref:SkiaSharp.SKImage> by calling the <xref:SkiaSharp.SKSurface.Snapshot%2A> method.
+Once you create a surface with one of its <xref:SkiaSharp.SKSurface.Create%2A> 
+methods, you can draw into the canvas returned by the 
+<xref:SkiaSharp.SKSurface.Canvas> property. Once the drawing is complete, you 
+can retrieve an <xref:SkiaSharp.SKImage> by calling the 
+<xref:SkiaSharp.SKSurface.Snapshot%2A> method.
 
 ## Examples
 
 ```csharp
-var info = new SKImageInfo (640, 480);
-using (var surface = SKSurface.Create (info)) {
-    // fetch the canvas where we draw into
-    SKCanvas myCanvas = surface.Canvas;
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
 
-    // Configure our brush
-    var redBrush = new SKPaint () {
-        Color = new SKColor (0xff, 0, 0),
+    canvas.Clear(SKColors.White);
+
+    // configure our brush
+    var redBrush = new SKPaint {
+        Color = new SKColor(0xff, 0, 0),
         IsStroke = true
     };
-    var blueBrush = new SKPaint () {
-        Color = new SKColor (0, 0, 0xff),
+    var blueBrush = new SKPaint {
+        Color = new SKColor(0, 0, 0xff),
         IsStroke = true
     };
 
-    for (int i = 0; i < 64; i += 8)
-        canvas.DrawRect (new SKRect (i, i, 256-i, 256-i), (i % 16 == 0) ? redBrush : blueBrush);
-
-    // Save the artwork
-    using (var image = surface.Snapshot ())
-    using (var data = image.Encode ())
-    using (var output = File.OpenWrite ("demo.png")) {
-        data.SaveTo(output);
+    for (int i = 0; i < 64; i += 8) {
+        var rect = new SKRect(i, i, 256 - i - 1, 256 - i - 1);
+        canvas.DrawRect(rect, (i % 16 == 0) ? redBrush : blueBrush);
     }
 }
 ```
+
+The example above produces the following:
+
+![SKSurface](xamarin-media/SkiaSharp/surface-rects.png "SKSurface")
 ]]></format>
     </remarks>
   </Docs>
@@ -156,7 +165,7 @@ using (var surface = SKSurface.Create (info)) {
       <Docs>
         <param name="context">The graphics context.</param>
         <param name="desc">The description of the existing render target.</param>
-        <summary>Wraps a pre-existing 3D API rendering target as a surface.</summary>
+        <summary>Wraps a preexisting 3D API rendering target as a surface.</summary>
         <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
         <remarks>
           <para></para>
@@ -185,7 +194,7 @@ using (var surface = SKSurface.Create (info)) {
       <Docs>
         <param name="context">The graphics context.</param>
         <param name="desc">The description of the existing texture.</param>
-        <summary>Wraps a pre-existing 3D API texture as a surface.</summary>
+        <summary>Wraps a preexisting 3D API texture as a surface.</summary>
         <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
         <remarks>
           <para></para>
@@ -211,7 +220,7 @@ using (var surface = SKSurface.Create (info)) {
       <Docs>
         <param name="context">The graphics context.</param>
         <param name="desc">The description of the existing OpenGL texture.</param>
-        <summary>Wraps a pre-existing OpenGL texture as a surface.</summary>
+        <summary>Wraps a preexisting OpenGL texture as a surface.</summary>
         <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
         <remarks>
           <para />
@@ -297,7 +306,7 @@ using (var surface = SKSurface.Create (info)) {
         <param name="context">The graphics context.</param>
         <param name="desc">The description of the existing render target.</param>
         <param name="props">The surface property configuration.</param>
-        <summary>Wraps a pre-existing 3D API rendering target as a surface.</summary>
+        <summary>Wraps a preexisting 3D API rendering target as a surface.</summary>
         <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
         <remarks>
           <para></para>
@@ -328,7 +337,7 @@ using (var surface = SKSurface.Create (info)) {
         <param name="context">The graphics context.</param>
         <param name="desc">The description of the existing texture.</param>
         <param name="props">The surface property configuration.</param>
-        <summary>Wraps a pre-existing 3D API texture as a surface.</summary>
+        <summary>Wraps a preexisting 3D API texture as a surface.</summary>
         <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
         <remarks>
           <para></para>
@@ -356,7 +365,7 @@ using (var surface = SKSurface.Create (info)) {
         <param name="context">The graphics context.</param>
         <param name="desc">The description of the existing OpenGL texture.</param>
         <param name="props">The surface property configuration.</param>
-        <summary>Wraps a pre-existing OpenGL texture as a surface.</summary>
+        <summary>Wraps a preexisting OpenGL texture as a surface.</summary>
         <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
         <remarks>
           <para></para>
@@ -510,7 +519,7 @@ using (var surface = SKSurface.Create (info)) {
       </Parameters>
       <Docs>
         <param name="width">The desired width for the surface.</param>
-        <param name="height">The desired heigh for the surface.</param>
+        <param name="height">The desired height for the surface.</param>
         <param name="colorType">The color type to use for the surface.</param>
         <param name="alphaType">The transparency mode to use for the surface.</param>
         <summary>Creates a new surface with the specified image parameters.</summary>
@@ -686,7 +695,7 @@ using (var surface = SKSurface.Create (info)) {
       <Docs>
         <param name="context">The graphics context.</param>
         <param name="desc">The description of the existing texture.</param>
-        <summary>Wraps a pre-existing backend 3D API texture as a surface.</summary>
+        <summary>Wraps a preexisting backend 3D API texture as a surface.</summary>
         <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
         <remarks>The <see cref="F:SkiaSharp.GRBackendTextureDescFlags.RenderTarget" /> flag must be set on <see cref="T:SkiaSharp.GRBackendTextureDesc" /> for this to succeed. The texture must remain valid for the lifetime of the surface.  </remarks>
       </Docs>
@@ -710,7 +719,7 @@ using (var surface = SKSurface.Create (info)) {
       <Docs>
         <param name="context">The graphics context.</param>
         <param name="desc">The description of the existing OpenGL texture.</param>
-        <summary>Wraps a pre-existing backend OpenGL texture as a surface.</summary>
+        <summary>Wraps a preexisting backend OpenGL texture as a surface.</summary>
         <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
         <remarks>The <see cref="F:SkiaSharp.GRBackendTextureDescFlags.RenderTarget" /> flag must be set on <see cref="T:SkiaSharp.GRGlBackendTextureDesc" /> for this to succeed. The texture must remain valid for the lifetime of the surface.  </remarks>
       </Docs>
@@ -739,7 +748,7 @@ using (var surface = SKSurface.Create (info)) {
         <param name="context">The graphics context.</param>
         <param name="desc">The description of the existing texture.</param>
         <param name="props">The surface property configuration.</param>
-        <summary>Wraps a pre-existing backend 3D API texture as a surface.</summary>
+        <summary>Wraps a preexisting backend 3D API texture as a surface.</summary>
         <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
         <remarks>The <see cref="F:SkiaSharp.GRBackendTextureDescFlags.RenderTarget" /> flag must be set on <see cref="T:SkiaSharp.GRBackendTextureDesc" /> for this to succeed. The texture must remain valid for the lifetime of the surface.  </remarks>
       </Docs>
@@ -765,7 +774,7 @@ using (var surface = SKSurface.Create (info)) {
         <param name="context">The graphics context.</param>
         <param name="desc">The description of the existing OpenGL texture.</param>
         <param name="props">The surface property configuration.</param>
-        <summary>Wraps a pre-existing backend OpenGL texture as a surface.</summary>
+        <summary>Wraps a preexisting backend OpenGL texture as a surface.</summary>
         <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
         <remarks>The <see cref="F:SkiaSharp.GRBackendTextureDescFlags.RenderTarget" /> flag must be set on <see cref="T:SkiaSharp.GRGlBackendTextureDesc" /> for this to succeed. The texture must remain valid for the lifetime of the surface.  </remarks>
       </Docs>

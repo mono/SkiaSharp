@@ -16,7 +16,7 @@
   <Docs>
     <summary>The <see cref="T:SkiaSharp.SKBitmap" /> specifies a raster bitmap.</summary>
     <remarks>
-      <para>A bitmap has an integer width and height, and a format (colortype), and a pointer to the actual pixels. Bitmaps can be drawn into a <see cref="T:SkiaSharp.SKCanvas" />, but they are also used to specify the target of a <see cref="T:SkiaSharp.SKCanvas" />' drawing operations.</para>
+      <para>A bitmap has an integer width and height, and a format (color type), and a pointer to the actual pixels. Bitmaps can be drawn into a <see cref="T:SkiaSharp.SKCanvas" />, but they are also used to specify the target of a <see cref="T:SkiaSharp.SKCanvas" />' drawing operations.</para>
       <para>A <see cref="T:SkiaSharp.SKBitmap" /> exposes <see cref="M:SkiaSharp.SKBitmap.GetPixels" />, which lets a caller write its pixels. To retrieve a pointer to the raw image data of the bitmap, call the <see cref="M:SkiaSharp.SKBitmap.LockPixels" /> method, and then call the <see cref="M:SkiaSharp.SKBitmap.GetPixels" /> method to get a pointer to the image data.  Once you no longer need to use the raw data pointer, call the <see cref="M:SkiaSharp.SKBitmap.UnlockPixels" /> method. The raw data is laid out in the format configured at the time that the bitmap was created.</para>
       <para>(Note: As of SkiaSharp 1.60.0, calls to <see cref="M:SkiaSharp.SKBitmap.LockPixels" /> and <see cref="M:SkiaSharp.SKBitmap.UnlockPixels" /> are no longer required, and they no longer exist as part of the API.)</para>
     </remarks>
@@ -36,7 +36,7 @@
       </AssemblyInfo>
       <Parameters />
       <Docs>
-        <summary>Default constructor that creates a bitmap with zero width and height, and no pixels. Its colortype is set to <see cref="F:SkiaSharp.SKColorType.Unknown." /></summary>
+        <summary>Default constructor that creates a bitmap with zero width and height, and no pixels. Its color type is set to <see cref="F:SkiaSharp.SKColorType.Unknown." /></summary>
         <remarks>This constructor does not allocate a backing store for the bitmap.</remarks>
       </Docs>
     </Member>
@@ -476,7 +476,7 @@
         <Parameter Name="destination" Type="SkiaSharp.SKBitmap" />
       </Parameters>
       <Docs>
-        <param name="destination">The bitmap to recieved the copied contents.</param>
+        <param name="destination">The bitmap to received the copied contents.</param>
         <summary>Copies the contents of the bitmap into the specified bitmap.</summary>
         <returns>Returns true if the copy was made.</returns>
         <remarks>
@@ -504,7 +504,7 @@
         <Parameter Name="colorType" Type="SkiaSharp.SKColorType" />
       </Parameters>
       <Docs>
-        <param name="destination">The bitmap to recieved the copied contents.</param>
+        <param name="destination">The bitmap to received the copied contents.</param>
         <param name="colorType">The color type to use for the copy of the bitmap.</param>
         <summary>Copies the contents of the bitmap into the specified bitmap.</summary>
         <returns>Returns true if the copy was made.</returns>
@@ -1090,7 +1090,7 @@
       <Docs>
         <param name="color">The color to fill.</param>
         <summary>Fill the entire bitmap with the specified color.</summary>
-        <remarks>If the bitmap's colortype does not support alpha (e.g. 565) then the alpha of the color is ignored (treated as opaque). If the colortype only supports alpha (e.g. A1 or A8) then the color's R, G, B components are ignored.</remarks>
+        <remarks>If the bitmap's color type does not support alpha (e.g. 565) then the alpha of the color is ignored (treated as opaque). If the color type only supports alpha (e.g. A1 or A8) then the color's R, G, B components are ignored.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Erase">
@@ -1116,7 +1116,7 @@
         <param name="color">The color to fill.</param>
         <param name="rect">The area to fill.</param>
         <summary>Fill the specified area of this bitmap with the specified color.</summary>
-        <remarks>If the bitmap's colortype does not support alpha (e.g. 565) then the alpha of the color is ignored (treated as opaque). If the colortype only supports alpha (e.g. A1 or A8) then the color's R, G, B components are ignored.</remarks>
+        <remarks>If the bitmap's color type does not support alpha (e.g. 565) then the alpha of the color is ignored (treated as opaque). If the color type only supports alpha (e.g. A1 or A8) then the color's R, G, B components are ignored.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ExtractAlpha">
@@ -1458,7 +1458,7 @@
         <param name="y">The y-cordinate.</param>
         <summary>Returns the color for the pixel at the specified location.</summary>
         <returns>Alpha only color types return black with the appropriate alpha set. The value is undefined for <see cref="F:SkiaSharp.SKColorType.Unknown" />, if the coordinates are out of bounds, if the bitmap does not have any pixels, or has not be locked with <see cref="M:SkiaSharp.SKBitmap.LockPixels" />.</returns>
-        <remarks>In most cases this will require un-premultiplying the color.</remarks>
+        <remarks>In most cases this will require unpremultiplying the color.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPixels">
@@ -1582,7 +1582,7 @@
       </Parameters>
       <Docs>
         <param name="mask">The mask to install.</param>
-        <summary>Installs the specified mask’s pixels into the bitmap.</summary>
+        <summary>Installs the specified mask's pixels into the bitmap.</summary>
         <returns>Returns true on success, or false on failure. If there was an error, the bitmap will be set to empty.</returns>
         <remarks>The caller must ensure that the specified mask pixels are valid for the lifetime of the created bitmap.</remarks>
       </Docs>
@@ -1854,7 +1854,7 @@
       <Docs>
         <summary>Call this to ensure that the bitmap points to the current pixel address in the pixelref.</summary>
         <remarks>
-          <para>This allows pixelrefs that implement cached/deferred image decoding to know when there are active clients of a given image.</para>
+          <para>This allows pixel references that implement cached/deferred image decoding to know when there are active clients of a given image.</para>
           <para>Balance it with a call to <see cref="M:SkiaSharp.SKBitmap.UnlockPixels" />. These calls are harmless if there is no pixelref.</para>
         </remarks>
       </Docs>
@@ -1999,7 +1999,7 @@
       <Parameters />
       <Docs>
         <summary>Reset the bitmap to its initial state.</summary>
-        <remarks>The result is a bitmap with zero width and height, and no pixels. Its colortype is set to <see cref="F:SkiaSharp.SKColorType.Unknown." /> If we are a (shared) owner of the pixels, that ownership is decremented.</remarks>
+        <remarks>The result is a bitmap with zero width and height, and no pixels. Its color type is set to <see cref="F:SkiaSharp.SKColorType.Unknown." /> If we are a (shared) owner of the pixels, that ownership is decremented.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Resize">
@@ -2254,7 +2254,7 @@
       <Parameters />
       <Docs>
         <summary>Call this to balance a previous call to <see cref="M:SkiaSharp.SKBitmap.LockPixels" />.</summary>
-        <remarks>When you are finished access the pixel memory, call this to balance a previous call to <see cref="M:SkiaSharp.SKBitmap.LockPixels" />. This allows pixelrefs that implement cached/deferred image decoding to know when there are active clients of a given image.</remarks>
+        <remarks>When you are finished access the pixel memory, call this to balance a previous call to <see cref="M:SkiaSharp.SKBitmap.LockPixels" />. This allows pixel references that implement cached/deferred image decoding to know when there are active clients of a given image.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Width">

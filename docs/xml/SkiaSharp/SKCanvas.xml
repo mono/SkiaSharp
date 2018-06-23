@@ -19,71 +19,99 @@
       <format type="text/markdown"><![CDATA[
 ## Remarks
 
-A canvas encapsulates all of the state about drawing into a device (bitmap or surface).
+A canvas encapsulates all of the state about drawing into a device (bitmap or 
+surface).
 
-This includes a reference to the device itself, and a stack of matrix/clip values. For any given draw call (e.g. DrawRect), the geometry of the object being drawn is transformed by the concatenation of all the matrices in the stack. The transformed geometry is clipped by the intersection of all of the clips in the stack.
+This includes a reference to the device itself, and a stack of matrix/clip 
+values. For any given draw call (e.g. DrawRect), the geometry of the object 
+being drawn is transformed by the concatenation of all the matrices in the 
+stack. The transformed geometry is clipped by the intersection of all of the 
+clips in the stack.
 
-While the canvas holds the state of the drawing device, the state (style) of the object being drawn is held by the Paint, which is provided as a parameter to each of the draw() methods. The Paint holds attributes such as color, typeface, the text size, the stroke width, the shader (for example, gradients, patterns), etc.
+While the canvas holds the state of the drawing device, the state (style) of 
+the object being drawn is held by the Paint, which is provided as a parameter 
+to each of the draw() methods. The Paint holds attributes such as color, 
+typeface, the text size, the stroke width, the shader (for example, gradients, 
+patterns), etc.
 
-The canvas is returned when accessing the <xref:SkiaSharp.SKSurface.Canvas> property of a surface.
+The canvas is returned when accessing the <xref:SkiaSharp.SKSurface.Canvas> 
+property of a surface.
 
 ### Transformations
 
-The canvas supports a number of 2D transformations. Unlike other 2D graphic systems like CoreGraphics or Cairo, SKCanvas extends the transformations to include perspectives.
+The canvas supports a number of 2D transformations. Unlike other 2D graphic 
+systems like CoreGraphics or Cairo, SKCanvas extends the transformations to 
+include perspectives.
 
-You can use the <xref:SkiaSharp.SKCanvas.Scale%2A>, <xref:SkiaSharp.SKCanvas.Skew%2A>, <xref:SkiaSharp.SKCanvas.Translate%2A>, <xref:SkiaSharp.SKCanvas.RotateDegrees%2A>, <xref:SkiaSharp.SKCanvas.RotateRadians%2A> to perform some of the most common 2D transformations.
+You can use the <xref:SkiaSharp.SKCanvas.Scale%2A>, 
+<xref:SkiaSharp.SKCanvas.Skew%2A>, <xref:SkiaSharp.SKCanvas.Translate%2A>, 
+<xref:SkiaSharp.SKCanvas.RotateDegrees%2A>, 
+<xref:SkiaSharp.SKCanvas.RotateRadians%2A> to perform some of the most common 
+2D transformations.
 
-For more control you can use the <xref:SkiaSharp.SKCanvas.SetMatrix%2A> to set an arbitrary transformation using the <xref:SkiaSharp.SKMatrix> and the <xref:SkiaSharp.SKCanvas.Concat%2A> to concatenate an <xref:SkiaSharp.SKMatrix> transformation to the current matrix in use.
+For more control you can use the <xref:SkiaSharp.SKCanvas.SetMatrix%2A> to set 
+an arbitrary transformation using the <xref:SkiaSharp.SKMatrix> and the 
+<xref:SkiaSharp.SKCanvas.Concat%2A> to concatenate an <xref:SkiaSharp.SKMatrix>
+transformation to the current matrix in use.
 
-The <xref:SkiaSharp.SKCanvas.ResetMatrix%2A> can be used to reset the state of the matrix.
+The <xref:SkiaSharp.SKCanvas.ResetMatrix%2A> can be used to reset the state of 
+the matrix.
 
 ### Drawing
 
-The drawing operations can take a <xref:SkiaSharp.SKPaint> parameter to affect their drawing. You use <xref:SkiaSharp.SKPaint> objects to cache the style and color information to draw geometries, texts and bitmaps.
+The drawing operations can take a <xref:SkiaSharp.SKPaint> parameter to affect 
+their drawing. You use <xref:SkiaSharp.SKPaint> objects to cache the style and 
+color information to draw geometries, texts and bitmaps.
 
 ### Clipping and State
 
-It is possible to save the current transformations by calling the <xref:SkiaSharp.SKCanvas.Save%2A> method which preserves the current transformation matrix, you can then alter the matrix and restore the previous state by using the <xref:SkiaSharp.SKCanvas.Restore%2A> or <xref:SkiaSharp.SKCanvas.RestoreToCount%2A> methods.
+It is possible to save the current transformations by calling the 
+<xref:SkiaSharp.SKCanvas.Save%2A> method which preserves the current 
+transformation matrix, you can then alter the matrix and restore the previous 
+state by using the <xref:SkiaSharp.SKCanvas.Restore%2A> or 
+<xref:SkiaSharp.SKCanvas.RestoreToCount%2A> methods.
 
-Additionally, it is possible to push a new state with <xref:SkiaSharp.SKCanvas.SaveLayer%2A> which will make an off-screen copy of a region, and once the drawing is completed, calling the <xref:SkiaSharp.SKCanvas.Restore> method which copies the off-screen bitmap into this canvas.
+Additionally, it is possible to push a new state with 
+<xref:SkiaSharp.SKCanvas.SaveLayer%2A> which will make an offscreen copy of a 
+region, and once the drawing is completed, calling the 
+<xref:SkiaSharp.SKCanvas.Restore> method which copies the offscreen bitmap 
+into this canvas.
 
 ## Examples
 
 ```csharp
-var info = new SKImageInfo (640, 480);
-
-using (var surface = SKSurface.Create (info)) {
+var info = new SKImageInfo(640, 480);
+using (var surface = SKSurface.Create(info)) {
     SKCanvas canvas = surface.Canvas;
 
-    canvas.Clear (SKColors.White);
+    canvas.Clear(SKColors.White);
 
     // set up drawing tools
-    using (var paint = new SKPaint ()) {
-        paint.IsAntialias = true;
-        paint.Color = new SKColor (0x2c, 0x3e, 0x50);
-        paint.StrokeCap = SKStrokeCap.Round;
+    var paint = new SKPaint {
+        IsAntialias = true,
+        Color = new SKColor(0x2c, 0x3e, 0x50),
+        StrokeCap = SKStrokeCap.Round
+    };
 
-        // create the Xamagon path
-        using (var path = new SKPath ()) {
-            path.MoveTo (71.4311121f, 56f);
-            path.CubicTo (68.6763107f, 56.0058575f, 65.9796704f, 57.5737917f, 64.5928855f, 59.965729f);
-            path.LineTo (43.0238921f, 97.5342563f);
-            path.CubicTo (41.6587026f, 99.9325978f, 41.6587026f, 103.067402f, 43.0238921f, 105.465744f);
-            path.LineTo (64.5928855f, 143.034271f);
-            path.CubicTo (65.9798162f, 145.426228f, 68.6763107f, 146.994582f, 71.4311121f, 147f);
-            path.LineTo (114.568946f, 147f);
-            path.CubicTo (117.323748f, 146.994143f, 120.020241f, 145.426228f, 121.407172f, 143.034271f);
-            path.LineTo (142.976161f, 105.465744f);
-            path.CubicTo (144.34135f, 103.067402f, 144.341209f, 99.9325978f, 142.976161f, 97.5342563f);
-            path.LineTo (121.407172f, 59.965729f);
-            path.CubicTo (120.020241f, 57.5737917f, 117.323748f, 56.0054182f, 114.568946f, 56f);
-            path.LineTo (71.4311121f, 56f);
-            path.Close ();
+    // create the Xamagon path
+    var path = new SKPath();
+    path.MoveTo(71.4311121f, 56f);
+    path.CubicTo(68.6763107f, 56.0058575f, 65.9796704f, 57.5737917f, 64.5928855f, 59.965729f);
+    path.LineTo(43.0238921f, 97.5342563f);
+    path.CubicTo(41.6587026f, 99.9325978f, 41.6587026f, 103.067402f, 43.0238921f, 105.465744f);
+    path.LineTo(64.5928855f, 143.034271f);
+    path.CubicTo(65.9798162f, 145.426228f, 68.6763107f, 146.994582f, 71.4311121f, 147f);
+    path.LineTo(114.568946f, 147f);
+    path.CubicTo(117.323748f, 146.994143f, 120.020241f, 145.426228f, 121.407172f, 143.034271f);
+    path.LineTo(142.976161f, 105.465744f);
+    path.CubicTo(144.34135f, 103.067402f, 144.341209f, 99.9325978f, 142.976161f, 97.5342563f);
+    path.LineTo(121.407172f, 59.965729f);
+    path.CubicTo(120.020241f, 57.5737917f, 117.323748f, 56.0054182f, 114.568946f, 56f);
+    path.LineTo(71.4311121f, 56f);
+    path.Close();
 
-            // draw the Xamagon path
-            canvas.DrawPath (path, paint);
-        }
-    }
+    // draw the Xamagon path
+    canvas.DrawPath(path, paint);
 }
 ```
 ]]></format>
@@ -128,7 +156,7 @@ using (var surface = SKSurface.Create (info)) {
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Replaces all the pixels in the canvas’ current clip with the <see cref="P:SkiaSharp.SKColors.Empty" /> color.</summary>
+        <summary>Replaces all the pixels in the canvas' current clip with the <see cref="P:SkiaSharp.SKColors.Empty" /> color.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -154,7 +182,7 @@ using (var surface = SKSurface.Create (info)) {
       </Parameters>
       <Docs>
         <param name="color">The color to use to replace the pixels in the current clipping region.</param>
-        <summary>Replaces all the pixels in the canvas’ current clip with the specified color.</summary>
+        <summary>Replaces all the pixels in the canvas' current clip with the specified color.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -1145,7 +1173,7 @@ using (var surface = SKSurface.Create (info)) {
       </Parameters>
       <Docs>
         <param name="rect">The bounds of the annotation.</param>
-        <param name="value">The data that specifies the name of the link’s destination.</param>
+        <param name="value">The data that specifies the name of the link's destination.</param>
         <summary>Annotates the canvas by making the specified rectangle link to a named destination (see <see cref="M:SkiaSharp.SKCanvas.DrawNamedDestinationAnnotation(SkiaSharp.SKPoint,SkiaSharp.SKData)" />).</summary>
         <remarks>
           <para>The caller is responsible for managing its ownership of the data.</para>
@@ -1174,7 +1202,7 @@ using (var surface = SKSurface.Create (info)) {
       </Parameters>
       <Docs>
         <param name="rect">The bounds of the annotation.</param>
-        <param name="value">The name of the link’s destination.</param>
+        <param name="value">The name of the link's destination.</param>
         <summary>Annotates the canvas by making the specified rectangle link to a named destination (see <see cref="M:SkiaSharp.SKCanvas.DrawNamedDestinationAnnotation(SkiaSharp.SKPoint,System.String)" />).</summary>
         <returns>Returns the actual data object that was attached to the canvas.</returns>
         <remarks>If the backend of this canvas does not support annotations, this call is safely ignored.</remarks>
@@ -1995,6 +2023,69 @@ using (var surface = SKSurface.Create (info)) {
         </remarks>
       </Docs>
     </Member>
+    <MemberGroup MemberName="DrawText">
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Docs>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Examples
+
+```csharp
+var info = new SKImageInfo(512, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear(SKColors.White);
+
+    // draw left-aligned text, solid
+    using (var paint = new SKPaint()) {
+        paint.TextSize = 64.0f;
+        paint.IsAntialias = true;
+        paint.Color = new SKColor(0x42, 0x81, 0xA4);
+        paint.IsStroke = false;
+
+        canvas.DrawText("Skia", info.Width / 2f, 64.0f, paint);
+    }
+
+    // draw centered text, stroked
+    using (var paint = new SKPaint()) {
+        paint.TextSize = 64.0f;
+        paint.IsAntialias = true;
+        paint.Color = new SKColor(0x9C, 0xAF, 0xB7);
+        paint.IsStroke = true;
+        paint.StrokeWidth = 3;
+        paint.TextAlign = SKTextAlign.Center;
+
+        canvas.DrawText("Skia", info.Width / 2f, 144.0f, paint);
+    }
+
+    // draw right-aligned text, scaled
+    using (var paint = new SKPaint()) {
+        paint.TextSize = 64.0f;
+        paint.IsAntialias = true;
+        paint.Color = new SKColor(0xE6, 0xB8, 0x9C);
+        paint.TextScaleX = 1.5f;
+        paint.TextAlign = SKTextAlign.Right;
+
+        canvas.DrawText("Skia", info.Width / 2f, 224.0f, paint);
+    }
+}
+```
+
+The example above produces the following:
+
+![SKCanvas, SKPaint and DrawText](xamarin-media/SkiaSharp/SKCanvasDrawText.png "SKCanvas, SKPaint and DrawText")
+
+]]></format>
+        </remarks>
+      </Docs>
+    </MemberGroup>
     <Member MemberName="DrawText">
       <MemberSignature Language="C#" Value="public void DrawText (byte[] text, SkiaSharp.SKPoint p, SkiaSharp.SKPaint paint);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void DrawText(unsigned int8[] text, valuetype SkiaSharp.SKPoint p, class SkiaSharp.SKPaint paint) cil managed" />
@@ -2206,46 +2297,7 @@ using (var surface = SKSurface.Create (info)) {
         <param name="paint">The paint to use when drawing the text.</param>
         <summary>Draws text on the canvas at the specified coordinates.</summary>
         <remarks>
-          <format type="text/markdown"><![CDATA[
-## Examples
-
-```csharp
-public static void TextSample (SKCanvas canvas, int width, int height)
-{
-    canvas.DrawColor (SKColors.White);
-
-    using (var paint = new SKPaint ()) {
-        paint.TextSize = 64.0f;
-        paint.IsAntialias = true;
-        paint.Color = new SKColor (0x42, 0x81, 0xA4);
-        paint.IsStroke = false;
-
-        canvas.DrawText ("Skia", width / 2f, 64.0f, paint);
-    }
-
-    using (var paint = new SKPaint ()) {
-        paint.TextSize = 64.0f;
-        paint.IsAntialias = true;
-        paint.Color = new SKColor (0x9C, 0xAF, 0xB7);
-        paint.IsStroke = true;
-        paint.StrokeWidth = 3;
-        paint.TextAlign = SKTextAlign.Center;
-
-        canvas.DrawText ("Skia", width / 2f, 144.0f, paint);
-    }
-
-    using (var paint = new SKPaint ()) {
-        paint.TextSize = 64.0f;
-        paint.IsAntialias = true;
-        paint.Color = new SKColor (0xE6, 0xB8, 0x9C);
-        paint.TextScaleX = 1.5f;
-        paint.TextAlign = SKTextAlign.Right;
-
-        canvas.DrawText ("Skia", width / 2f, 224.0f, paint);
-    }
-}
-```
-]]></format>
+          <para></para>
         </remarks>
       </Docs>
     </Member>
@@ -2278,7 +2330,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
       <Docs>
         <param name="text">The text to draw.</param>
         <param name="path">The path the text should follow for its baseline.</param>
-        <param name="hOffset">The distance along the path to add to the text’s starting position.</param>
+        <param name="hOffset">The distance along the path to add to the text's starting position.</param>
         <param name="vOffset">The distance above (-) or below (+) the path to position the text.</param>
         <param name="paint">The paint to use when drawing the text.</param>
         <summary>Draws text on the canvas following a path.</summary>
@@ -2350,7 +2402,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
       <Docs>
         <param name="text">The text to draw.</param>
         <param name="path">The path the text should follow for its baseline.</param>
-        <param name="hOffset">The distance along the path to add to the text’s starting position.</param>
+        <param name="hOffset">The distance along the path to add to the text's starting position.</param>
         <param name="vOffset">The distance above (-) or below (+) the path to position the text.</param>
         <param name="paint">The paint to use when drawing the text.</param>
         <summary>Draws text on the canvas following a path.</summary>
@@ -2390,7 +2442,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
         <param name="buffer">The pointer to a region holding UTF-8 encoded text to draw.</param>
         <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
         <param name="path">The path the text should follow for its baseline.</param>
-        <param name="hOffset">The distance along the path to add to the text’s starting position.</param>
+        <param name="hOffset">The distance along the path to add to the text's starting position.</param>
         <param name="vOffset">The distance above (-) or below (+) the path to position the text.</param>
         <param name="paint">The paint to use when drawing the text.</param>
         <summary>Draws text encoded in a UTF-8 buffer on the canvas following a path.</summary>
@@ -2420,7 +2472,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
       <Docs>
         <param name="text">The text to draw.</param>
         <param name="path">The path the text should follow for its baseline.</param>
-        <param name="offset">The offset to the path to add to the text’s starting position.</param>
+        <param name="offset">The offset to the path to add to the text's starting position.</param>
         <param name="paint">The paint to use when drawing the text.</param>
         <summary>Draws text on the canvas following a path.</summary>
         <remarks>
@@ -2449,7 +2501,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
       <Docs>
         <param name="text">The text to draw.</param>
         <param name="path">The path the text should follow for its baseline.</param>
-        <param name="offset">The offset to the path to add to the text’s starting position.</param>
+        <param name="offset">The offset to the path to add to the text's starting position.</param>
         <param name="paint">The paint to use when drawing the text.</param>
         <summary>Draws text on the canvas following a path.</summary>
         <remarks>
@@ -2482,7 +2534,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
       <Docs>
         <param name="text">The text to draw.</param>
         <param name="path">The path the text should follow for its baseline.</param>
-        <param name="hOffset">The distance along the path to add to the text’s starting position.</param>
+        <param name="hOffset">The distance along the path to add to the text's starting position.</param>
         <param name="vOffset">The distance above (-) or below (+) the path to position the text.</param>
         <param name="paint">The paint to use when drawing the text.</param>
         <summary>Draws text on the canvas following a path.</summary>
@@ -2514,7 +2566,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
         <param name="buffer">The pointer to a region holding UTF-8 encoded text to draw.</param>
         <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
         <param name="path">The path the text should follow for its baseline.</param>
-        <param name="offset">The offset to the path to add to the text’s starting position.</param>
+        <param name="offset">The offset to the path to add to the text's starting position.</param>
         <param name="paint">The paint to use when drawing the text.</param>
         <summary>Draws text on the canvas following a path.</summary>
         <remarks>
@@ -2547,7 +2599,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
       <Docs>
         <param name="text">The text to draw.</param>
         <param name="path">The path the text should follow for its baseline.</param>
-        <param name="hOffset">The distance along the path to add to the text’s starting position.</param>
+        <param name="hOffset">The distance along the path to add to the text's starting position.</param>
         <param name="vOffset">The distance above (-) or below (+) the path to position the text.</param>
         <param name="paint">The paint to use when drawing the text.</param>
         <summary>Draws text on the canvas following a path.</summary>
@@ -2583,7 +2635,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
         <param name="buffer">The pointer to a region holding UTF-8 encoded text to draw.</param>
         <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
         <param name="path">The path the text should follow for its baseline.</param>
-        <param name="hOffset">The distance along the path to add to the text’s starting position.</param>
+        <param name="hOffset">The distance along the path to add to the text's starting position.</param>
         <param name="vOffset">The distance above (-) or below (+) the path to position the text.</param>
         <param name="paint">The paint to use when drawing the text.</param>
         <summary>Draws text encoded in a UTF-8 buffer on the canvas following a path.</summary>
@@ -2731,7 +2783,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
       <Docs>
         <param name="vmode">How to interpret the array of vertices.</param>
         <param name="vertices">The array of vertices for the mesh.</param>
-        <param name="texs">The coordinates in texture space (not uv space) for each vertex. May be <see langword="null" />.</param>
+        <param name="texs">The coordinates in texture space (not UV space) for each vertex. May be <see langword="null" />.</param>
         <param name="colors">The color for each vertex, to be interpolated across the triangle. May be <see langword="null" />.</param>
         <param name="paint">The shader/texture.</param>
         <summary>Draws an array of vertices, interpreted as triangles (based on mode).</summary>
@@ -2764,7 +2816,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
       <Docs>
         <param name="vmode">How to interpret the array of vertices.</param>
         <param name="vertices">The array of vertices for the mesh.</param>
-        <param name="texs">The coordinates in texture space (not uv space) for each vertex. May be <see langword="null" />.</param>
+        <param name="texs">The coordinates in texture space (not UV space) for each vertex. May be <see langword="null" />.</param>
         <param name="colors">The color for each vertex, to be interpolated across the triangle. May be <see langword="null" />.</param>
         <param name="indices">The array of indices to reference into the vertex (texture coordinates, colors) array.</param>
         <param name="paint">The shader/texture.</param>
@@ -2799,7 +2851,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
       <Docs>
         <param name="vmode">How to interpret the array of vertices.</param>
         <param name="vertices">The array of vertices for the mesh.</param>
-        <param name="texs">The coordinates in texture space (not uv space) for each vertex. May be <see langword="null" />.</param>
+        <param name="texs">The coordinates in texture space (not UV space) for each vertex. May be <see langword="null" />.</param>
         <param name="colors">The color for each vertex, to be interpolated across the triangle. May be <see langword="null" />.</param>
         <param name="mode">The blend mode to use to combine the colors with the texture, before being drawn using the paint. Used if both texture coordinates and colors are present.</param>
         <param name="indices">The array of indices to reference into the vertex (texture coordinates, colors) array.</param>
@@ -2984,7 +3036,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
       <Docs>
         <param name="path">The path to compare with the current clip.</param>
         <summary>Checks to see if the specified path, after being transformed by the current matrix, would lie completely outside of the current clip.</summary>
-        <returns>Returns true if the path (transformed by the canvas' matrix) does not intersect with the canvas’ clip.</returns>
+        <returns>Returns true if the path (transformed by the canvas' matrix) does not intersect with the canvas' clip.</returns>
         <remarks>Call this to check if an area you intend to draw into is clipped out (and therefore you can skip making the draw calls).</remarks>
       </Docs>
     </Member>
@@ -3009,7 +3061,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
       <Docs>
         <param name="rect">The rectangle to compare with the current clip.</param>
         <summary>Checks to see if the specified rectangle, after being transformed by the current matrix, would lie completely outside of the current clip.</summary>
-        <returns>Returns true if the rectangle (transformed by the canvas' matrix) does not intersect with the canvas’ clip.</returns>
+        <returns>Returns true if the rectangle (transformed by the canvas' matrix) does not intersect with the canvas' clip.</returns>
         <remarks>Call this to check if an area you intend to draw into is clipped out (and therefore you can skip making the draw calls).</remarks>
       </Docs>
     </Member>
@@ -3101,7 +3153,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
       </Parameters>
       <Docs>
         <param name="degrees">The number of degrees to rotate.</param>
-        <summary>Pre-concats the current matrix with the specified rotation.</summary>
+        <summary>Pre-concatenates the current matrix with the specified rotation.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -3131,7 +3183,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
         <param name="degrees">The number of degrees to rotate.</param>
         <param name="px">The x-coordinate of the point to rotate about.</param>
         <param name="py">The y-coordinate of the point to rotate about.</param>
-        <summary>Pre-concats the current matrix with the specified rotation, around the specified point.</summary>
+        <summary>Pre-concatenates the current matrix with the specified rotation, around the specified point.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -3157,7 +3209,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
       </Parameters>
       <Docs>
         <param name="radians">The number of radians to rotate.</param>
-        <summary>Pre-concats the current matrix with the specified rotation.</summary>
+        <summary>Pre-concatenates the current matrix with the specified rotation.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -3187,7 +3239,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
         <param name="radians">The number of radians to rotate.</param>
         <param name="px">The x-coordinate of the point to rotate about.</param>
         <param name="py">The y-coordinate of the point to rotate about.</param>
-        <summary>Pre-concats the current matrix with the specified rotation, around the specified point.</summary>
+        <summary>Pre-concatenates the current matrix with the specified rotation, around the specified point.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -3212,7 +3264,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
       <Docs>
         <summary>Saves the canvas state.</summary>
         <returns>The value to pass to <see cref="M:SkiaSharp.SKCanvas.RestoreToCount(System.Int32)" /> to balance this save.</returns>
-        <remarks>This call saves the current matrix, clip, and draw filter, and pushes a copy onto a private stack. Subsequent calls to translate, scale, rotate, skew, concat or clipping path or drawing filter all operate on this copy. When the balancing call to <see cref="M:SkiaSharp.SKCanvas.Restore" /> is made, the previous matrix, clipping, and drawing filters are restored.</remarks>
+        <remarks>This call saves the current matrix, clip, and draw filter, and pushes a copy onto a private stack. Subsequent calls to translate, scale, rotate, skew, concatenate or clipping path or drawing filter all operate on this copy. When the balancing call to <see cref="M:SkiaSharp.SKCanvas.Restore" /> is made, the previous matrix, clipping, and drawing filters are restored.</remarks>
       </Docs>
     </Member>
     <Member MemberName="SaveCount">
@@ -3313,7 +3365,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
       </Parameters>
       <Docs>
         <param name="size">The amount to scale.</param>
-        <summary>Pre-concats the current matrix with the specified scale.</summary>
+        <summary>Pre-concatenates the current matrix with the specified scale.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -3339,7 +3391,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
       </Parameters>
       <Docs>
         <param name="s">The amount to scale.</param>
-        <summary>Pre-concats the current matrix with the specified scale.</summary>
+        <summary>Pre-concatenates the current matrix with the specified scale.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -3367,7 +3419,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
       <Docs>
         <param name="sx">The amount to scale in the x-direction.</param>
         <param name="sy">The amount to scale in the y-direction.</param>
-        <summary>Pre-concats the current matrix with the specified scale.</summary>
+        <summary>Pre-concatenates the current matrix with the specified scale.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -3399,7 +3451,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
         <param name="sy">The amount to scale in the y-direction.</param>
         <param name="px">The x-coordinate for the scaling center.</param>
         <param name="py">The y-coordinate for the scaling center.</param>
-        <summary>Pre-concats the current matrix with the specified scale, at the specific offset.</summary>
+        <summary>Pre-concatenates the current matrix with the specified scale, at the specific offset.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -3451,7 +3503,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
       </Parameters>
       <Docs>
         <param name="skew">The amount to skew.</param>
-        <summary>Pre-concats the current matrix with the specified skew.</summary>
+        <summary>Pre-concatenates the current matrix with the specified skew.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -3479,7 +3531,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
       <Docs>
         <param name="sx">The amount to skew in the x-direction.</param>
         <param name="sy">The amount to skew in the y-direction.</param>
-        <summary>Pre-concats the current matrix with the specified skew.</summary>
+        <summary>Pre-concatenates the current matrix with the specified skew.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -3528,7 +3580,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
       </Parameters>
       <Docs>
         <param name="point">The distance to translate.</param>
-        <summary>Pre-concats the current matrix with the specified translation.</summary>
+        <summary>Pre-concatenates the current matrix with the specified translation.</summary>
         <remarks>
           <para></para>
         </remarks>
@@ -3556,7 +3608,7 @@ public static void TextSample (SKCanvas canvas, int width, int height)
       <Docs>
         <param name="dx">The distance to translate in the x-direction</param>
         <param name="dy">The distance to translate in the y-direction.</param>
-        <summary>Pre-concats the current matrix with the specified translation.</summary>
+        <summary>Pre-concatenates the current matrix with the specified translation.</summary>
         <remarks>
           <para></para>
         </remarks>
