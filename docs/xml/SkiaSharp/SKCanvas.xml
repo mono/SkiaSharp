@@ -19,62 +19,62 @@
       <format type="text/markdown"><![CDATA[
 ## Remarks
 
-A canvas encapsulates all of the state about drawing into a device (bitmap or 
+A canvas encapsulates all of the state about drawing into a device (bitmap or
 surface).
 
-This includes a reference to the device itself, and a stack of matrix/clip 
-values. For any given draw call (e.g. DrawRect), the geometry of the object 
-being drawn is transformed by the concatenation of all the matrices in the 
-stack. The transformed geometry is clipped by the intersection of all of the 
+This includes a reference to the device itself, and a stack of matrix/clip
+values. For any given draw call (e.g. DrawRect), the geometry of the object
+being drawn is transformed by the concatenation of all the matrices in the
+stack. The transformed geometry is clipped by the intersection of all of the
 clips in the stack.
 
-While the canvas holds the state of the drawing device, the state (style) of 
-the object being drawn is held by the Paint, which is provided as a parameter 
-to each of the draw() methods. The Paint holds attributes such as color, 
-typeface, the text size, the stroke width, the shader (for example, gradients, 
+While the canvas holds the state of the drawing device, the state (style) of
+the object being drawn is held by the Paint, which is provided as a parameter
+to each of the draw() methods. The Paint holds attributes such as color,
+typeface, the text size, the stroke width, the shader (for example, gradients,
 patterns), etc.
 
-The canvas is returned when accessing the <xref:SkiaSharp.SKSurface.Canvas> 
+The canvas is returned when accessing the <xref:SkiaSharp.SKSurface.Canvas>
 property of a surface.
 
 ### Transformations
 
-The canvas supports a number of 2D transformations. Unlike other 2D graphic 
-systems like CoreGraphics or Cairo, SKCanvas extends the transformations to 
+The canvas supports a number of 2D transformations. Unlike other 2D graphic
+systems like CoreGraphics or Cairo, SKCanvas extends the transformations to
 include perspectives.
 
-You can use the <xref:SkiaSharp.SKCanvas.Scale%2A>, 
-<xref:SkiaSharp.SKCanvas.Skew%2A>, <xref:SkiaSharp.SKCanvas.Translate%2A>, 
-<xref:SkiaSharp.SKCanvas.RotateDegrees%2A>, 
-<xref:SkiaSharp.SKCanvas.RotateRadians%2A> to perform some of the most common 
+You can use the <xref:SkiaSharp.SKCanvas.Scale%2A>,
+<xref:SkiaSharp.SKCanvas.Skew%2A>, <xref:SkiaSharp.SKCanvas.Translate%2A>,
+<xref:SkiaSharp.SKCanvas.RotateDegrees%2A>,
+<xref:SkiaSharp.SKCanvas.RotateRadians%2A> to perform some of the most common
 2D transformations.
 
-For more control you can use the <xref:SkiaSharp.SKCanvas.SetMatrix%2A> to set 
-an arbitrary transformation using the <xref:SkiaSharp.SKMatrix> and the 
+For more control you can use the <xref:SkiaSharp.SKCanvas.SetMatrix%2A> to set
+an arbitrary transformation using the <xref:SkiaSharp.SKMatrix> and the
 <xref:SkiaSharp.SKCanvas.Concat%2A> to concatenate an <xref:SkiaSharp.SKMatrix>
 transformation to the current matrix in use.
 
-The <xref:SkiaSharp.SKCanvas.ResetMatrix%2A> can be used to reset the state of 
+The <xref:SkiaSharp.SKCanvas.ResetMatrix%2A> can be used to reset the state of
 the matrix.
 
 ### Drawing
 
-The drawing operations can take a <xref:SkiaSharp.SKPaint> parameter to affect 
-their drawing. You use <xref:SkiaSharp.SKPaint> objects to cache the style and 
+The drawing operations can take a <xref:SkiaSharp.SKPaint> parameter to affect
+their drawing. You use <xref:SkiaSharp.SKPaint> objects to cache the style and
 color information to draw geometries, texts and bitmaps.
 
 ### Clipping and State
 
-It is possible to save the current transformations by calling the 
-<xref:SkiaSharp.SKCanvas.Save%2A> method which preserves the current 
-transformation matrix, you can then alter the matrix and restore the previous 
-state by using the <xref:SkiaSharp.SKCanvas.Restore%2A> or 
+It is possible to save the current transformations by calling the
+<xref:SkiaSharp.SKCanvas.Save%2A> method which preserves the current
+transformation matrix, you can then alter the matrix and restore the previous
+state by using the <xref:SkiaSharp.SKCanvas.Restore%2A> or
 <xref:SkiaSharp.SKCanvas.RestoreToCount%2A> methods.
 
-Additionally, it is possible to push a new state with 
-<xref:SkiaSharp.SKCanvas.SaveLayer%2A> which will make an offscreen copy of a 
-region, and once the drawing is completed, calling the 
-<xref:SkiaSharp.SKCanvas.Restore> method which copies the offscreen bitmap 
+Additionally, it is possible to push a new state with
+<xref:SkiaSharp.SKCanvas.SaveLayer%2A> which will make an offscreen copy of a
+region, and once the drawing is completed, calling the
+<xref:SkiaSharp.SKCanvas.Restore> method which copies the offscreen bitmap
 into this canvas.
 
 ## Examples
