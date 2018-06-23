@@ -224,22 +224,31 @@
         <param name="info">The information about the surface.</param>
         <summary>Implement this to draw on the canvas.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Android.SKCanvasView.OnDraw(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Android.SKCanvasView.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
-          <para></para>
-          <example>
-            <code lang="C#"><![CDATA[protected override void OnDraw (SKSurface surface, SKImageInfo info)
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+There are two ways to draw on this surface: by overriding the
+<xref:SkiaSharp.Views.Android.SKCanvasView.OnDraw%2A> method, or by attaching a
+handler to the <xref:SkiaSharp.Views.Android.SKCanvasView.PaintSurface> event.
+If the method is overridden, then the base must be called.
+
+## Examples
+
+```csharp
+protected override void OnDraw(SKSurface surface, SKImageInfo info)
 {
     // call the base method
-    base.OnDraw (surface, info);
+    base.OnDraw(surface, info);
 
     var surfaceWidth = info.Width;
     var surfaceHeight = info.Height;
 
     var canvas = surface.Canvas;
     // draw on the canvas
-    canvas.Flush ();
-}]]></code>
-          </example>
+    canvas.Flush();
+}
+```
+]]></format>
         </remarks>
       </Docs>
     </Member>

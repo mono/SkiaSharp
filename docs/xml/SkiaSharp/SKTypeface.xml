@@ -16,8 +16,16 @@
   <Docs>
     <summary>Represents a specific typeface and intrinsic style of a font.</summary>
     <remarks>
-      <para>This is used in the paint, along with optionally algorithmic settings like <see cref="P:SkiaSharp.SKPaint.TextSize" />, <see cref="P:SkiaSharp.SKPaint.TextSkewX" /><see cref="P:SkiaSharp.SKPaint.TextScaleX" /><see cref="P:SkiaSharp.SKPaint.FakeBoldText" />, to specify how text appears when drawn (and measured). </para>
-      <para>Typeface objects are immutable, and so they can be shared between threads.</para>
+      <format type="text/markdown"><![CDATA[
+## Remarks
+
+This is used in the paint, along with optionally algorithmic settings like
+<xref:SkiaSharp.SKPaint.TextSize>, <xref:SkiaSharp.SKPaint.TextSkewX>,
+<xref:SkiaSharp.SKPaint.TextScaleX>, and <xref:SkiaSharp.SKPaint.FakeBoldText>
+to specify how text appears when drawn (and measured).
+
+Typeface objects are immutable, and so they can be shared between threads.
+]]></format>
     </remarks>
   </Docs>
   <Members>
@@ -355,6 +363,43 @@
         <remarks></remarks>
       </Docs>
     </Member>
+    <MemberGroup MemberName="FromFile">
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.57.0.0</AssemblyVersion>
+        <AssemblyVersion>1.58.0.0</AssemblyVersion>
+        <AssemblyVersion>1.59.0.0</AssemblyVersion>
+        <AssemblyVersion>1.60.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Docs>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Examples
+
+```csharp
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear(SKColors.White);
+
+    // load the typeface
+    var tf = SKTypeface.FromFile("myfont.ttf");
+
+    // set the paint's typeface
+    var paint = new SKPaint {
+        TextSize = 50,
+        Typeface = tf
+    };
+
+    // draw text using the typeface
+    canvas.DrawText("SkiaSharp", 50, 100, paint);
+}
+```
+]]></format>
+        </remarks>
+      </Docs>
+    </MemberGroup>
     <Member MemberName="FromFile">
       <MemberSignature Language="C#" Value="public static SkiaSharp.SKTypeface FromFile (string path, int index = 0);" />
       <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKTypeface FromFile(string path, int32 index) cil managed" />
@@ -406,20 +451,7 @@
         <param name="index">The font face index.</param>
         <summary>Returns a new typeface given a stream. Ownership of the stream is transferred, so the caller must not reference it again.</summary>
         <returns>Returns a new typeface, or <paramref name="null" /> if the file does not exist, or is not a valid font file.</returns>
-        <remarks>
-          <para></para>
-          <example>
-            <code lang="C#"><![CDATA[var stream = new SKFileStream ("myfont.ttf");
-using (var tf = SKTypeface.FromStream (stream)) {
-    paint.Color = XamDkBlue;
-    paint.TextSize = 60;
-    paint.Typeface = tf;
-
-    canvas.DrawText (text, 50, 100, paint);
-}
-]]></code>
-          </example>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromStream">

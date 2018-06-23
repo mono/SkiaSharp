@@ -16,111 +16,241 @@
   <Docs>
     <summary>Shaders specify the source color(s) for what is being drawn in the <see cref="T:SkiaSharp.SKPaint" />.</summary>
     <remarks>
-      <para>Shaders specify the source colors for what is being drawn. If a paint has no shader, then the paint's color is used. If the paint has a shader, then the shader's colors are used instead, but they are modulated by the paint's alpha. </para>
-      <para></para>
-      <para>This makes it easy to create a shader once (e.g. bitmap tiling or gradient) and then change its transparency without having to modify the original shader, only the paint's alpha needs to be modified.</para>
-      <para>Shaders are created by calling one of the static "Create" methods in the SKShader method that create a shader of the appropriate type.</para>
-      <format type="text/html">
-        <h2>Linear Gradient Shader</h2>
-      </format>
-      <example>
-        <code lang="c#"><![CDATA[
-var colors = new SKColor [] { new SKColor (0, 255, 255), new SKColor (255, 0, 255), new SKColor (255, 255, 0), new SKColor (0, 255, 255)};
-var shader = SKShader.CreateLinearGradient (new SKPoint (0, 0), new SKPoint (255, 255), colors, null, SKShaderTileMode.Clamp);
-var paint = new SKPaint () { Shader = shader };
-canvas.DrawPaint (paint);
-]]></code>
-      </example>
-      <para>
-        <img href="xamarin-media/SkiaSharp/linear.png" />
-      </para>
-      <format type="text/html">
-        <h2>Radial Gradient Shader</h2>
-      </format>
-      <example>
-        <code lang="c#"><![CDATA[var colors = new SKColor [] {
-    new SKColor (0, 0, 255),
-    new SKColor (0, 255, 0)
-};
-var shader = SKShader.CreateRadialGradient (new SKPoint (128, 128), 180, colors, null, SKShaderTileMode.Clamp);
-var paint = new SKPaint () {
-    Shader = shader,
-};
-canvas.DrawPaint (paint);]]></code>
-      </example>
-      <para>
-        <img href="xamarin-media/SkiaSharp/radial.png" />
-      </para>
-      <format type="text/html">
-        <h2>Two-point Conical Gradient Shader</h2>
-      </format>
-      <example>
-        <code lang="c#"><![CDATA[var colors = new SKColor [] {
-    new SKColor (0, 0, 255),
-    new SKColor (0, 255, 0)
-};
-var shader = SKShader.CreateTwoPointConicalGradient (new SKPoint (128, 128), 128, new SKPoint (128, 16), 16, colors, null, SKShaderTileMode.Clamp);
-var paint = new SKPaint () {
-    Shader = shader,
-};
-canvas.DrawPaint (paint);]]></code>
-      </example>
-      <para>
-        <img href="xamarin-media/SkiaSharp/twopoint.png" />
-      </para>
-      <format type="text/html">
-        <h2>Sweep Gradient Shader</h2>
-      </format>
-      <example>
-        <code lang="c#"><![CDATA[var colors = new SKColor [] {
-    new SKColor (0, 255, 255),
-    new SKColor (255, 0, 255),
-    new SKColor (255, 255, 0),
-    new SKColor (0, 255, 255)
-};
-var shader = SKShader.CreateSweepGradient (new SKPoint (128, 128), colors, null);
-var paint = new SKPaint () {
-    Shader = shader
-};
-canvas.DrawPaint (paint);]]></code>
-      </example>
-      <format type="text/html">
-        <h2>Fractal Perlin Noise</h2>
-      </format>
-      <example>
-        <code lang="c#"><![CDATA[var shader = SKShader.CreatePerlinNoiseFractalNoise (0.5f, 0.5f, 4, 0);
-var paint = new SKPaint () { Shader = shader };
-canvas.DrawPaint (paint);]]></code>
-      </example>
-      <para>
-        <img href="xamarin-media/SkiaSharp/fractalnoise.png" />
-      </para>
-      <format type="text/html">
-        <h2>Turbulence Perlin Noise</h2>
-      </format>
-      <example>
-        <code lang="c#"><![CDATA[var turbulence = SKShader.CreatePerlinNoiseTurbulence (0.05f, 0.05f, 4, 0);
-var paint = new SKPaint () { Shader = turbulence };
-canvas.DrawPaint (paint);]]></code>
-      </example>
-      <para>
-        <img href="xamarin-media/SkiaSharp/turbulence.png" />
-      </para>
-      <format type="text/html">
-        <h2>Compose Shader</h2>
-      </format>
-      <example>
-        <code lang="c#"><![CDATA[
-var colors = new SKColor [] { new SKColor (0, 255, 255), new SKColor (255, 0, 255), new SKColor (255, 255, 0), new SKColor (0, 255, 255)};
-var sweep = SKShader.CreateSweepGradient (new SKPoint (128, 128), colors, null);
-var turbulence = SKShader.CreatePerlinNoiseTurbulence (0.05f, 0.05f, 4, 0);
-var shader = SKShader.CreateCompose (sweep, turbulence);
-var paint = new SKPaint () { Shader = shader };
-canvas.DrawPaint (paint);]]></code>
-      </example>
-      <para>
-        <img href="xamarin-media/SkiaSharp/compose.png" />
-      </para>
+      <format type="text/markdown"><![CDATA[
+## Remarks
+
+Shaders specify the source colors for what is being drawn. If a paint has no
+shader, then the paint's color is used. If the paint has a shader, then the
+shader's colors are used instead, but they are modulated by the paint's alpha.
+
+This makes it easy to create a shader once (for example, bitmap tiling or
+gradient) and then change its transparency without having to modify the
+original shader, only the paint's alpha needs to be modified.
+
+Shaders are created by calling one of the static "Create" methods.
+
+## Examples
+
+### Linear Gradient Shader Example
+
+```csharp
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear(SKColors.White);
+
+    // create the shader
+    var colors = new SKColor[] {
+        new SKColor(0, 255, 255),
+        new SKColor(255, 0, 255),
+        new SKColor(255, 255, 0),
+        new SKColor(0, 255, 255)
+    };
+    var shader = SKShader.CreateLinearGradient(
+        new SKPoint(0, 0),
+        new SKPoint(255, 255),
+        colors,
+        null,
+        SKShaderTileMode.Clamp);
+
+    // use the shader
+    var paint = new SKPaint {
+        Shader = shader
+    };
+    canvas.DrawPaint(paint);
+}
+```
+
+The example above produces the following:
+
+![Linear Gradient](xamarin-media/SkiaSharp/linear.png "Linear Gradient")
+
+### Radial Gradient Shader Example
+
+```csharp
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear(SKColors.White);
+
+    // create the shader
+    var colors = new SKColor[] {
+        new SKColor(0, 0, 255),
+        new SKColor(0, 255, 0)
+    };
+    var shader = SKShader.CreateRadialGradient(
+        new SKPoint(128, 128),
+        180,
+        colors,
+        null,
+        SKShaderTileMode.Clamp);
+
+    // use the shader
+    var paint = new SKPaint {
+        Shader = shader
+    };
+    canvas.DrawPaint(paint);
+}
+```
+
+The example above produces the following:
+
+![Radial Gradient](xamarin-media/SkiaSharp/radial.png "Radial Gradient")
+
+### Two-point Conical Gradient Shader Example
+
+```csharp
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear(SKColors.White);
+
+    // create the shader
+    var colors = new SKColor[] {
+        new SKColor(0, 0, 255),
+        new SKColor(0, 255, 0)
+    };
+    var shader = SKShader.CreateTwoPointConicalGradient(
+        new SKPoint(128, 128),
+        128,
+        new SKPoint(128, 16),
+        16,
+        colors,
+        null,
+        SKShaderTileMode.Clamp);
+
+    // use the shader
+    var paint = new SKPaint {
+        Shader = shader
+    };
+    canvas.DrawPaint(paint);
+}
+```
+
+The example above produces the following:
+
+![Two-point Conical Gradient](xamarin-media/SkiaSharp/twopoint.png "Two-point Conical Gradient")
+
+### Sweep Gradient Shader Example
+
+```csharp
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear(SKColors.White);
+
+    // create the shader
+    var colors = new SKColor[] {
+        new SKColor(0, 255, 255),
+        new SKColor(255, 0, 255),
+        new SKColor(255, 255, 0),
+        new SKColor(0, 255, 255)
+    };
+    var shader = SKShader.CreateSweepGradient(
+        new SKPoint(128, 128),
+        colors,
+        null);
+
+    // use the shader
+    var paint = new SKPaint {
+        Shader = shader
+    };
+    canvas.DrawPaint(paint);
+}
+```
+
+The example above produces the following:
+
+![Sweep Gradient](xamarin-media/SkiaSharp/sweep.png "Sweep Gradient")
+
+### Fractal Perlin Noise Shader Example
+
+```csharp
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear(SKColors.White);
+
+    // create the shader
+    var shader = SKShader.CreatePerlinNoiseFractalNoise(0.5f, 0.5f, 4, 0);
+
+    // use the shader
+    var paint = new SKPaint {
+        Shader = shader
+    };
+    canvas.DrawPaint(paint);
+}
+```
+
+The example above produces the following:
+
+![Fractal Perlin Noise](xamarin-media/SkiaSharp/fractal-perlin-noise.png "Fractal Perlin Noise")
+
+### Perlin Noise Turbulence Shader Example
+
+```csharp
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear(SKColors.White);
+
+    // create the shader
+    var shader = SKShader.CreatePerlinNoiseTurbulence(0.05f, 0.05f, 4, 0);
+
+    // use the shader
+    var paint = new SKPaint {
+        Shader = shader
+    };
+    canvas.DrawPaint(paint);
+}
+```
+
+The example above produces the following:
+
+![Fractal Perlin Noise](xamarin-media/SkiaSharp/turbulence-perlin-noise.png "Fractal Perlin Noise")
+
+### Compose Shader Example
+
+```csharp
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear(SKColors.White);
+
+    // create the first shader
+    var colors = new SKColor[] {
+        new SKColor(0, 255, 255),
+        new SKColor(255, 0, 255),
+        new SKColor(255, 255, 0),
+        new SKColor(0, 255, 255)
+    };
+    var sweep = SKShader.CreateSweepGradient(new SKPoint(128, 128), colors, null);
+
+    // create the second shader
+    var turbulence = SKShader.CreatePerlinNoiseTurbulence(0.05f, 0.05f, 4, 0);
+
+    // create the compose shader
+    var shader = SKShader.CreateCompose(sweep, turbulence, SKBlendMode.SrcOver);
+
+    // use the compose shader
+    var paint = new SKPaint {
+        Shader = shader
+    };
+    canvas.DrawPaint(paint);
+}
+```
+
+The example above produces the following:
+
+![Compose Shader](xamarin-media/SkiaSharp/compose.png "Compose Shader")
+]]></format>
     </remarks>
   </Docs>
   <Members>
@@ -282,8 +412,7 @@ using (var surface = SKSurface.Create(info)) {
     var shader = SKShader.CreateCompose(sweep, turbulence, SKBlendMode.SrcOver);
 
     // use the compose shader
-    var paint = new SKPaint
-    {
+    var paint = new SKPaint {
         Shader = shader
     };
     canvas.DrawPaint(paint);
