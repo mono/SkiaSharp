@@ -15,7 +15,92 @@
   <Interfaces />
   <Docs>
     <summary>A utility class that can be used to create 3D transformations.</summary>
-    <remarks></remarks>
+    <remarks>
+      <format type="text/markdown"><![CDATA[
+## Remarks
+
+A utility class that can be used to create 3D transformations.
+
+## Examples
+
+```csharp
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear(SKColors.White);
+
+    // center the entire drawing
+    canvas.Translate(128, 128);
+
+    // the "3D camera"
+    var view = new SK3dView();
+
+    // rotate to a nice 3D view
+    view.RotateXDegrees(-25);
+    view.RotateYDegrees(45);
+
+    // move the origin of the 3D view
+    view.Translate(-50, 50, 50);
+
+    // define the cube face
+    var face = SKRect.Create(0, 0, 100, 100);
+
+    // draw the left face
+    using (new SKAutoCanvasRestore(canvas, true)) {
+        // get the face in the correct location
+        view.Save();
+        view.RotateYDegrees(-90);
+        view.ApplyToCanvas(canvas);
+        view.Restore();
+
+        // draw the face
+        var leftFace = new SKPaint {
+            Color = SKColors.LightGray,
+            IsAntialias = true
+        };
+        canvas.DrawRect(face, leftFace);
+    }
+
+    // draw the right face
+    using (new SKAutoCanvasRestore(canvas, true)) {
+        // get the face in the correct location
+        view.Save();
+        view.TranslateZ(-100);
+        view.ApplyToCanvas(canvas);
+        view.Restore();
+
+        // draw the face
+        var rightFace = new SKPaint {
+            Color = SKColors.Gray,
+            IsAntialias = true
+        };
+        canvas.DrawRect(face, rightFace);
+    }
+
+    // draw the top face
+    using (new SKAutoCanvasRestore(canvas, true)) {
+        // get the face in the correct location
+        view.Save();
+        view.RotateXDegrees(90);
+        view.ApplyToCanvas(canvas);
+        view.Restore();
+
+        // draw the face
+        var topFace = new SKPaint {
+            Color = SKColors.DarkGray,
+            IsAntialias = true
+        };
+        canvas.DrawRect(face, topFace);
+    }
+}
+```
+
+The example above produces the following:
+
+![3D View](xamarin-media/SkiaSharp/sk3dview.png "3D View")
+]]></format>
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
