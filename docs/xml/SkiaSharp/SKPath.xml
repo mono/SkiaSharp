@@ -166,7 +166,7 @@
       </Parameters>
       <Docs>
         <param name="other">The path containing the elements to be added to the current path.</param>
-        <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path. On <see cref="F:SkiaSharp.SKPath+AddMode.Append" /> mode, contours are added as new contours. On <see cref="F:SkiaSharp.SKPath+AddMode.Extend" /> mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
+        <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path. On <see cref="F:SkiaSharp.SKPath.AddMode.Append" /> mode, contours are added as new contours. On <see cref="F:SkiaSharp.SKPath.AddMode.Extend" /> mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
         <summary>Extends the current path with the path elements from another path, using the specified extension mode.</summary>
         <remarks></remarks>
       </Docs>
@@ -224,7 +224,7 @@
       <Docs>
         <param name="other">The path containing the elements to be added to the current path.</param>
         <param name="matrix">Transformation matrix applied to the <paramref name="other" /> path.</param>
-        <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path. On <see cref="F:SkiaSharp.SKPath+AddMode.Append" /> mode, contours are added as new contours. On <see cref="F:SkiaSharp.SKPath+AddMode.Extend" /> mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
+        <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path. On <see cref="F:SkiaSharp.SKPath.AddMode.Append" /> mode, contours are added as new contours. On <see cref="F:SkiaSharp.SKPath.AddMode.Extend" /> mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
         <summary>Extends the current path with the path elements from another path, by applying the specified transformation matrix, using the specified extension mode.</summary>
         <remarks></remarks>
       </Docs>
@@ -286,7 +286,7 @@
         <param name="other">The path containing the elements to be added to the current path.</param>
         <param name="dx">The amount to translate the path in X as it is added.</param>
         <param name="dy">The amount to translate the path in Y as it is added.</param>
-        <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path. On <see cref="F:SkiaSharp.SKPath+AddMode.Append" /> mode, contours are added as new contours. On <see cref="F:SkiaSharp.SKPath+AddMode.Extend" /> mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
+        <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path. On <see cref="F:SkiaSharp.SKPath.AddMode.Append" /> mode, contours are added as new contours. On <see cref="F:SkiaSharp.SKPath.AddMode.Extend" /> mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
         <summary>Extends the current path with the path elements from another path offset by (<paramref name="dx" />, <paramref name="dy" />), using the specified extension mode.</summary>
         <remarks></remarks>
       </Docs>
@@ -420,7 +420,7 @@
       <Docs>
         <param name="rect">The rectangle to add as a closed contour to the path</param>
         <param name="direction">The direction to wind the rectangle's contour.</param>
-        <param name="startIndex">Initial point of the contour (initial <see cref="M:SkiaSharp.SKPath.MoveTo" />), expressed as a corner index, starting in the upper-left position, clock-wise. Must be in the range of 0..3.</param>
+        <param name="startIndex">Initial point of the contour (initial <see cref="M:SkiaSharp.SKPath.MoveTo(SkiaSharp.SKPoint)" />), expressed as a corner index, starting in the upper-left position, clock-wise. Must be in the range of 0..3.</param>
         <summary>Adds a closed rectangle contour to the path.</summary>
         <remarks>Add a closed rectangle contour to the path with an initial point of the contour (startIndex) expressed as a corner index.</remarks>
       </Docs>
@@ -503,7 +503,7 @@
       <Docs>
         <param name="rect">The rounded rectangle.</param>
         <param name="direction">The direction to wind the rectangle's contour.</param>
-        <param name="startIndex">Initial point of the contour (initial <see cref="M:SkiaSharp.SKPath.MoveTo" />), expressed as an index of the radii minor/major points, ordered clock-wise. Must be in the range of 0..7.</param>
+        <param name="startIndex">Initial point of the contour (initial <see cref="M:SkiaSharp.SKPath.MoveTo(SkiaSharp.SKPoint)" />), expressed as an index of the radii minor/major points, ordered clock-wise. Must be in the range of 0..7.</param>
         <summary>Adds a closed rectangle with rounded corners to the current path.</summary>
         <remarks></remarks>
       </Docs>
@@ -1698,7 +1698,15 @@ the first point is automatically set to (0, 0).
       <Docs>
         <summary>Gets all the points in the path.</summary>
         <value></value>
-        <remarks>The number of points will be <see cref="P:SkiaSharp.SKPath.PointCount" />, To only return a subset of the points in the path, use <see cref="M:SkiaSharp.SKPath.GetPoints" />.</remarks>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+The number of points will be <xref:SkiaSharp.SKPath.PointCount>, To only
+return a subset of the points in the path, use
+<xref:SkiaSharp.SKPath.GetPoints%2A>.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="QuadTo">
@@ -2173,7 +2181,7 @@ the first point is automatically set to (0, 0).
       <Docs>
         <param name="point0">The amount to add to the coordinates of the last point on this contour, to specify the control point on a quadratic curve.</param>
         <param name="point1">The amount to add to the coordinates of the last point on this contour, to specify end point on a quadratic curve.</param>
-        <summary>Same as <see cref="M:SkiaSharp.SKPath.QuadTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
+        <summary>Same as <see cref="M:SkiaSharp.SKPath.QuadTo(SkiaSharp.SKPoint,SkiaSharp.SKPoint)" /> but the coordinates are considered relative to the last point on this contour.</summary>
         <remarks>
           <format type="text/markdown"><![CDATA[
 ## Remarks
@@ -2210,7 +2218,7 @@ the first point is automatically set to (0, 0).
         <param name="dy0">The amount to add to the y-coordinate of the last point on this contour, to specify the control point on a quadratic curve.</param>
         <param name="dx1">The amount to add to the x-coordinate of the last point on this contour, to specify end point on a quadratic curve.</param>
         <param name="dy1">The amount to add to the y-coordinate of the last point on this contour, to specify end point on a quadratic curve.</param>
-        <summary>Same as <see cref="M:SkiaSharp.SKPath.QuadTo" /> but the coordinates are considered relative to the last point on this contour.</summary>
+        <summary>Same as <see cref="M:SkiaSharp.SKPath.QuadTo(System.Single,System.Single,System.Single,System.Single)" /> but the coordinates are considered relative to the last point on this contour.</summary>
         <remarks>
           <format type="text/markdown"><![CDATA[
 ## Remarks
