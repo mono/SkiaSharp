@@ -29,13 +29,180 @@ stack. The transformed geometry is clipped by the intersection of all of the
 clips in the stack.
 
 While the canvas holds the state of the drawing device, the state (style) of
-the object being drawn is held by the Paint, which is provided as a parameter
-to each of the draw() methods. The Paint holds attributes such as color,
+the object being drawn is held by the paint, which is provided as a parameter
+to each of the "Draw" methods. The paint holds attributes such as color,
 typeface, the text size, the stroke width, the shader (for example, gradients,
 patterns), etc.
 
 The canvas is returned when accessing the <xref:SkiaSharp.SKSurface.Canvas>
 property of a surface.
+
+### Construction
+
+SkiaSharp has multiple backends which receive <xref:SkiaSharp.SKCanvas>
+drawing commands, including:
+
+ * Raster Surface
+ * GPU Surface
+ * PDF Document
+ * XPS Document _(experimental)_
+ * SVG Canvas _(experimental)_
+ * Picture
+ * Null Canvas _(for testing)_
+
+#### Constructing a Raster Surface
+
+The raster backend draws to a block of memory. This memory can be managed by
+SkiaSharp or by the client.
+
+The recommended way of creating a canvas for the Raster and Ganesh backends is
+to use a <xref:SkiaSharp.SKSurface>, which is an object that manages the
+memory into which the canvas commands are drawn.
+
+```csharp
+// define the surface properties
+var info = new SKImageInfo(256, 256);
+
+// construct a new surface
+var surface = SKSurface.Create(info);
+
+// get the canvas from the surface
+var canvas = surface.Canvas;
+
+// draw on the canvas ...
+```
+
+Alternatively, we could have specified the memory for the surface explicitly,
+instead of asking SkiaSharp to manage it.
+
+```csharp
+// define the surface properties
+var info = new SKImageInfo(256, 256);
+
+// allocate memory
+var memory = Marshal.AllocCoTaskMem(info.BytesSize);
+
+// construct a surface around the existing memory
+var surface = SKSurface.Create(info, memory, info.RowBytes);
+
+// get the canvas from the surface
+var canvas = surface.Canvas;
+
+// draw on the canvas ...
+```
+
+#### Constructing a GPU Surface
+
+GPU surfaces must have a <xref:SkiaSharp.GRContext> object which manages the
+GPU context, and related caches for textures and fonts.
+
+<xref:SkiaSharp.GRContext> objects are matched one to one with OpenGL contexts
+or Vulkan devices. That is, all <xref:SkiaSharp.SKSurface> instances that will
+be rendered to using the same OpenGL context or Vulkan device should share a
+<xref:SkiaSharp.GRContext>.
+
+SkiaSharp does not create an OpenGL context or a Vulkan device for you. In
+OpenGL mode it also assumes that the correct OpenGL context has been made
+current to the current thread when SkiaSharp calls are made.
+
+```csharp
+// an OpenGL context must be created and set as current
+
+// define the surface properties
+var info = new SKImageInfo(256, 256);
+
+// create the surface
+var context = GRContext.Create(GRBackend.OpenGL);
+var surface = SKSurface.Create(context, false, info);
+
+// get the canvas from the surface
+var canvas = surface.Canvas;
+
+// draw on the canvas ...
+```
+
+#### Constructing a PDF Document
+
+The PDF backend uses <xref:SkiaSharp.SKDocument> instead of
+<xref:SkiaSharp.SKSurface>, since a document must include multiple pages.
+
+```csharp
+// create the document
+var stream = SKFileWStream.OpenStream("document.pdf");
+var document = SKDocument.CreatePdf(stream);
+
+// get the canvas from the page
+var canvas = document.BeginPage(256, 256);
+
+// draw on the canvas ...
+
+// end the page and document
+document.EndPage();
+document.Close();
+```
+
+#### Constructing a XPS Document _(experimental)_
+
+The XPS backend uses <xref:SkiaSharp.SKDocument> instead of
+<xref:SkiaSharp.SKSurface>, since a document must include multiple pages.
+
+```csharp
+// create the document
+var stream = SKFileWStream.OpenStream("document.xps");
+var document = SKDocument.CreateXps(stream);
+
+// get the canvas from the page
+var canvas = document.BeginPage(256, 256);
+
+// draw on the canvas ...
+
+// end the page and document
+document.EndPage();
+document.Close();
+```
+
+#### Constructing a SVG Canvas _(experimental)_
+
+The SVG backend uses <xref:SkiaSharp.SKSvgCanvas>.
+
+```csharp
+// create the canvas
+var stream = SKFileWStream.OpenStream("image.svg");
+var writer = new SKXmlStreamWriter(stream);
+var canvas = SKSvgCanvas.Create(SKRect.Create(256, 256), writer);
+
+// draw on the canvas ...
+```
+
+#### Constructing a Picture
+
+The XPS backend uses <xref:SkiaSharp.SKPictureRecorder> instead of
+<xref:SkiaSharp.SKSurface>.
+
+```csharp
+// create the picture recorder
+var recorder = new SKPictureRecorder();
+
+// get the canvas from the page
+var canvas = recorder.BeginRecording(SKRect.Create(256, 256));
+
+// draw on the canvas ...
+
+// finish recording
+var picture = recorder.EndRecording();
+```
+
+#### Constructing a Null Canvas _(for testing)_
+
+The null canvas is a canvas that ignores all drawing commands and does
+nothing.
+
+```csharp
+// create the dummy canvas
+var canvas = new SKNoDrawCanvas(256, 256);
+
+// draw on the canvas ...
+```
 
 ### Transformations
 
