@@ -228,9 +228,10 @@
 ## Remarks
 
 There are two ways to draw on this surface: by overriding the
-<xref:SkiaSharp.Views.Android.SKCanvasView.OnDraw%2A> method, or by attaching a
-handler to the <xref:SkiaSharp.Views.Android.SKCanvasView.PaintSurface> event.
-If the method is overridden, then the base must be called.
+<xref:SkiaSharp.Views.Android.SKCanvasView.OnDraw(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)>
+method, or by attaching a handler to the
+<xref:SkiaSharp.Views.Android.SKCanvasView.PaintSurface>
+event. If the method is overridden, then the base must be called.
 
 ## Examples
 
@@ -300,10 +301,19 @@ protected override void OnDraw(SKSurface surface, SKImageInfo info)
       <Docs>
         <summary>Occurs when the the canvas needs to be redrawn.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Android.SKCanvasView.OnDraw(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Android.SKCanvasView.PaintSurface" /> event.</para>
-          <para></para>
-          <example>
-            <code lang="C#"><![CDATA[SKCanvasView myView = ...;
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+There are two ways to draw on this surface: by overriding the
+<xref:SkiaSharp.Views.Android.SKCanvasView.OnDraw(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)>
+method, or by attaching a handler to the
+<xref:SkiaSharp.Views.Android.SKCanvasView.PaintSurface>
+event.
+
+## Examples
+
+```csharp
+SKCanvasView myView = ...;
 
 myView.PaintSurface += (sender, e) => {
     var surface = e.Surface;
@@ -311,10 +321,12 @@ myView.PaintSurface += (sender, e) => {
     var surfaceHeight = e.Info.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
-    canvas.Flush ();
-};]]></code>
-          </example>
+    canvas.Flush();
+};
+```
+]]></format>
         </remarks>
       </Docs>
     </Member>

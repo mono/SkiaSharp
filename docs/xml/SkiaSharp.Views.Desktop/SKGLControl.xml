@@ -224,7 +224,7 @@
         <param name="e">The event arguments that contain the drawing surface and information.</param>
         <summary>Implement this to draw on the canvas.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Desktop.SKGLControl.OnPaintSurface" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Desktop.SKGLControl.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Desktop.SKGLControl.OnPaintSurface(SkiaSharp.Views.Desktop.SKPaintGLSurfaceEventArgs)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Desktop.SKGLControl.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
           <para></para>
           <example>
             <code lang="C#"><![CDATA[protected override void OnPaintSurface (SKPaintGLSurfaceEventArgs e)
@@ -237,6 +237,7 @@
     var surfaceHeight = e.RenderTarget.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
     canvas.Flush ();
 }]]></code>
@@ -267,7 +268,7 @@
       <Docs>
         <summary>Occurs when the surface needs to be redrawn.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Desktop.SKGLControl.OnPaintSurface" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Desktop.SKGLControl.PaintSurface" /> event.</para>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Desktop.SKGLControl.OnPaintSurface(SkiaSharp.Views.Desktop.SKPaintGLSurfaceEventArgs)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Desktop.SKGLControl.PaintSurface" /> event.</para>
           <para></para>
           <example>
             <code lang="C#"><![CDATA[SKGLControl myView = ...;
@@ -278,6 +279,7 @@ myView.PaintSurface += (sender, e) => {
     var surfaceHeight = e.RenderTarget.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
     canvas.Flush ();
 };]]></code>

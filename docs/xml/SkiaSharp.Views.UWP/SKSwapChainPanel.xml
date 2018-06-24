@@ -123,7 +123,7 @@
         <param name="e">The event arguments that contain the drawing surface and information.</param>
         <summary>Implement this to draw on the canvas.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.UWP.SKSwapChainPanel.OnPaintSurface" /> method, or by attaching a handler to the  <see cref="E:SkiaSharp.Views.UWP.SKSwapChainPanel.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.UWP.SKSwapChainPanel.OnPaintSurface(SkiaSharp.Views.UWP.SKPaintGLSurfaceEventArgs)" /> method, or by attaching a handler to the  <see cref="E:SkiaSharp.Views.UWP.SKSwapChainPanel.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
           <para></para>
           <example>
             <code lang="C#"><![CDATA[protected override void OnPaintSurface (SKPaintGLSurfaceEventArgs e)
@@ -136,6 +136,7 @@
     var surfaceHeight = e.RenderTarget.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
     canvas.Flush ();
 }]]></code>
@@ -185,7 +186,7 @@
       <Docs>
         <summary>Occurs when the surface needs to be redrawn.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.UWP.SKSwapChainPanel.OnPaintSurface" /> method, or by attaching a handler to the  <see cref="E:SkiaSharp.Views.UWP.SKSwapChainPanel.PaintSurface" /> event.</para>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.UWP.SKSwapChainPanel.OnPaintSurface(SkiaSharp.Views.UWP.SKPaintGLSurfaceEventArgs)" /> method, or by attaching a handler to the  <see cref="E:SkiaSharp.Views.UWP.SKSwapChainPanel.PaintSurface" /> event.</para>
           <para></para>
           <example>
             <code lang="C#"><![CDATA[SKSwapChainPanel myPanel = ...;
@@ -196,6 +197,7 @@ myPanel.PaintSurface += (sender, e) => {
     var surfaceHeight = e.RenderTarget.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
     canvas.Flush ();
 };]]></code>

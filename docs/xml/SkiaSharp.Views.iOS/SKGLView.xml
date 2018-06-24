@@ -191,7 +191,7 @@
         <param name="renderTarget">The render target that is currently being drawn.</param>
         <summary>Implement this to draw on the canvas.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.iOS.SKGLView.DrawInSurface" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.iOS.SKGLView.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.iOS.SKGLView.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTargetDesc)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.iOS.SKGLView.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
           <para></para>
           <example>
             <code lang="C#"><![CDATA[public override void DrawInSurface (SKSurface surface, SKBackendRenderTargetDesc renderTarget)
@@ -203,6 +203,7 @@
     var surfaceHeight = renderTarget.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
     canvas.Flush ();
 }]]></code>
@@ -268,7 +269,7 @@
       <Docs>
         <summary>Occurs when the surface needs to be redrawn.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.iOS.SKGLView.DrawInSurface" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.iOS.SKGLView.PaintSurface" /> event.</para>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.iOS.SKGLView.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTargetDesc)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.iOS.SKGLView.PaintSurface" /> event.</para>
           <para></para>
           <example>
             <code lang="C#"><![CDATA[SKGLView myView = ...;
@@ -279,6 +280,7 @@ myView.PaintSurface += (sender, e) => {
     var surfaceHeight = e.RenderTarget.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
     canvas.Flush ();
 };]]></code>

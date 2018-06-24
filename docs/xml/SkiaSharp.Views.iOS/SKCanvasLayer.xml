@@ -129,7 +129,7 @@
         <param name="info">The information about the surface.</param>
         <summary>Implement this to draw on the canvas.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.iOS.SKCanvasLayer.DrawInSurface" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.iOS.SKCanvasLayer.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.iOS.SKCanvasLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.iOS.SKCanvasLayer.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
           <para></para>
           <example>
             <code lang="C#"><![CDATA[public override void DrawInSurface (SKSurface surface, SKImageInfo info)
@@ -141,6 +141,7 @@
     var surfaceHeight = info.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
     canvas.Flush ();
 }]]></code>
@@ -187,7 +188,7 @@
       <Docs>
         <summary>Occurs when the the canvas needs to be redrawn.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.iOS.SKCanvasLayer.DrawInSurface" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.iOS.SKCanvasLayer.PaintSurface" /> event.</para>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.iOS.SKCanvasLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.iOS.SKCanvasLayer.PaintSurface" /> event.</para>
           <para></para>
           <example>
             <code lang="C#"><![CDATA[SKCanvasLayer myLayer = ...;
@@ -198,6 +199,7 @@ myLayer.PaintSurface += (sender, e) => {
     var surfaceHeight = e.Info.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
     canvas.Flush ();
 };]]></code>
