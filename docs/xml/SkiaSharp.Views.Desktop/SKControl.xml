@@ -22,10 +22,8 @@
     </Attribute>
   </Attributes>
   <Docs>
-    <summary>A control that can be drawn on using SkiaSharp drawing commands.</summary>
-    <remarks>
-      <para></para>
-    </remarks>
+    <summary>A control that can be drawn on using SkiaSharp drawing commands.</summary>
+    <remarks></remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -42,10 +40,8 @@
       </AssemblyInfo>
       <Parameters />
       <Docs>
-        <summary>Creates a new instance of the <see cref="T:SkiaSharp.Views.Desktop.SKControl" /> view.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Creates a new instance of the <see cref="T:SkiaSharp.Views.Desktop.SKControl" /> view.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CanvasSize">
@@ -79,7 +75,7 @@
       </ReturnValue>
       <Docs>
         <summary>Gets the current canvas size.</summary>
-        <value />
+        <value></value>
         <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
       </Docs>
     </Member>
@@ -128,9 +124,7 @@
       <Docs>
         <param name="e">A PaintEventArgs that contains the event data.</param>
         <summary>Raises the Paint event.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="OnPaintSurface">
@@ -155,7 +149,7 @@
         <param name="e">The event arguments that contain the drawing surface and information.</param>
         <summary>Implement this to draw on the canvas.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Desktop.SKControl.OnPaintSurface(SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs)" /> method, or by attaching a handler to the  <see cref="E:SkiaSharp.Views.Desktop.SKControl.PaintSurface" /> event. If the method is overriden, then the base must be called.</para>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Desktop.SKControl.OnPaintSurface(SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs)" /> method, or by attaching a handler to the  <see cref="E:SkiaSharp.Views.Desktop.SKControl.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
           <para></para>
           <example>
             <code lang="C#"><![CDATA[protected override void OnPaintSurface (SKPaintSurfaceEventArgs e)
@@ -168,6 +162,7 @@
     var surfaceHeight = e.Info.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
     canvas.Flush ();
 }]]></code>
@@ -196,9 +191,9 @@
         <ReturnType>System.EventHandler&lt;SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs&gt;</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Occurs when the the canvas needs to be re-drawn.</summary>
+        <summary>Occurs when the the canvas needs to be redrawn.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Desktop.SKControl.OnPaintSurface(SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs)" /> method, or by attaching a handler to the  <see cref="E:SkiaSharp.Views.Desktop.SKControl.PaintSurface" /> event.</para>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Desktop.SKControl.OnPaintSurface(SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs)" /> method, or by attaching a handler to the  <see cref="E:SkiaSharp.Views.Desktop.SKControl.PaintSurface" /> event.</para>
           <para></para>
           <example>
             <code lang="C#"><![CDATA[SKControl myView = ...;
@@ -209,6 +204,7 @@ myView.PaintSurface += (sender, e) => {
     var surfaceHeight = e.Info.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
     canvas.Flush ();
 };]]></code>

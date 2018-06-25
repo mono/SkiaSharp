@@ -15,7 +15,7 @@
   <Interfaces />
   <Docs>
     <summary>An abstraction layer directly on top of an image codec.</summary>
-    <remarks />
+    <remarks></remarks>
   </Docs>
   <Members>
     <Member MemberName="Create">
@@ -40,9 +40,7 @@
         <param name="data">The data to use when creating the codec.</param>
         <summary>Creates a codec from the specified data.</summary>
         <returns>Returns the new instance of the codec, or null if there was an error.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -67,7 +65,7 @@
         <param name="stream">The stream to use when creating the codec.</param>
         <summary>Creates a codec from the specified stream.</summary>
         <returns>Returns the new instance of the codec, or null if there was an error.</returns>
-        <remarks>If null is returned, the stream is deleted immediately. Otherwise, the codec takes ownership of it, and will delete it when done with it.</remarks>
+        <remarks>If null is returned, the stream is deleted immediately. Otherwise, the codec takes ownership of it, and will delete it when done with it.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -111,12 +109,8 @@
       </ReturnValue>
       <Docs>
         <summary>Gets the image encoding from the codec.</summary>
-        <value>
-          <para></para>
-        </value>
-        <remarks>
-          <para></para>
-        </remarks>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="EncodedInfo">
@@ -136,12 +130,8 @@
       </ReturnValue>
       <Docs>
         <summary>Gets the encoded image information from the codec.</summary>
-        <value>
-          <para></para>
-        </value>
-        <remarks>
-          <para></para>
-        </remarks>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FrameCount">
@@ -161,9 +151,7 @@
       </ReturnValue>
       <Docs>
         <summary>Gets the number of frames in the encoded image.</summary>
-        <value>
-          <para></para>
-        </value>
+        <value></value>
         <remarks>May require reading through the stream to determine info about the frames. As such, future decoding calls may require a rewind. For single-frame images, this will be zero.</remarks>
       </Docs>
     </Member>
@@ -184,9 +172,7 @@
       </ReturnValue>
       <Docs>
         <summary>Gets information about the frames in the encoded image.</summary>
-        <value>
-          <para></para>
-        </value>
+        <value></value>
         <remarks>May require reading through the stream to determine info about the frames. As such, future decoding calls may require a rewind. For single-frame images, this will be an empty array.</remarks>
       </Docs>
     </Member>
@@ -210,9 +196,9 @@
       </Parameters>
       <Docs>
         <param name="inputScanline">The scanline that is located in the encoded data.</param>
-        <summary>Returns the output y-coordinate of the row that corresponds to an input y-coordinate.</summary>
-        <returns>Returns the output y-coordinate of the row.</returns>
-        <remarks>This will equal <paramref name="inputScanline" />, except in the case of strangely encoded image types (bottom-up bmps, interlaced gifs).</remarks>
+        <summary>Returns the output y-coordinate of the row that corresponds to an input y-coordinate.</summary>
+        <returns>Returns the output y-coordinate of the row.</returns>
+        <remarks>This will equal <paramref name="inputScanline" />, except in the case of strangely encoded image types (bottom-up BMPs, interlaced GIFs).</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPixels">
@@ -236,10 +222,8 @@
       <Docs>
         <param name="pixels">The memory block with the decoded bitmap.</param>
         <summary>Decode the bitmap into the specified memory block.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPixels">
@@ -263,13 +247,12 @@
       </Parameters>
       <Docs>
         <param name="info">The description of the desired output format expected by the caller.</param>
-        <param name="pixels">The memory block to hold the decoded bitmap, with a length of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
+        <param name="pixels">The memory block to hold the decoded bitmap, with a length of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
         <summary>Decode the bitmap into the specified memory block.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
-          <para></para>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
         </remarks>
       </Docs>
     </Member>
@@ -296,10 +279,10 @@
         <param name="info">The description of the desired output format expected by the caller.</param>
         <param name="pixels">The memory block with the decoded bitmap.</param>
         <summary>Decode the bitmap into the specified memory block.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
         </remarks>
       </Docs>
     </Member>
@@ -324,12 +307,12 @@
       </Parameters>
       <Docs>
         <param name="info">The description of the desired output format expected by the caller.</param>
-        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
+        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
         <summary>Decode the bitmap into the specified memory block.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
         </remarks>
       </Docs>
     </Member>
@@ -355,13 +338,13 @@
       </Parameters>
       <Docs>
         <param name="info">The description of the desired output format expected by the caller.</param>
-        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
+        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
         <param name="options">The bitmap decoding options.</param>
         <summary>Decode the bitmap into the specified memory block.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
         </remarks>
       </Docs>
     </Member>
@@ -388,16 +371,15 @@
       </Parameters>
       <Docs>
         <param name="info">The description of the desired output format expected by the caller.</param>
-        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
+        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
         <param name="colorTable">The color table to hold the color entries.</param>
         <param name="colorTableCount">The logical number of color table entries.</param>
         <summary>Decode the bitmap into the specified memory block.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
-          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a <see cref="T:SkiaSharp.SKColorTable" />. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
-          <para></para>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a <see cref="T:SkiaSharp.SKColorTable" />. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
         </remarks>
       </Docs>
     </Member>
@@ -424,14 +406,14 @@
       </Parameters>
       <Docs>
         <param name="info">The description of the desired output format expected by the caller.</param>
-        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
-        <param name="rowBytes">The number of bytes in a row, typically <see cref="P:SkiaSharp.SKImageInfo.RowBytes" />.</param>
+        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
+        <param name="rowBytes">The number of bytes in a row, typically <see cref="P:SkiaSharp.SKImageInfo.RowBytes" />.</param>
         <param name="options">The bitmap decoding options.</param>
         <summary>Decode the bitmap into the specified memory block.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
         </remarks>
       </Docs>
     </Member>
@@ -458,15 +440,15 @@
       </Parameters>
       <Docs>
         <param name="info">The description of the desired output format expected by the caller.</param>
-        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
-        <param name="colorTable">The pointer to the color table to hold the color entries, with a length of at least <see cref="F:SkiaSharp.SKColorTable.MaxLength" /> (256).</param>
+        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
+        <param name="colorTable">The pointer to the color table to hold the color entries, with a length of at least <see cref="F:SkiaSharp.SKColorTable.MaxLength" /> (256).</param>
         <param name="colorTableCount">The logical number of color table entries.</param>
         <summary>Decode the bitmap into the specified memory block.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
-          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a color table array, with a length of at least 256. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a color table array, with a length of at least 256. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
         </remarks>
       </Docs>
     </Member>
@@ -494,16 +476,16 @@
       </Parameters>
       <Docs>
         <param name="info">The description of the desired output format expected by the caller.</param>
-        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
+        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
         <param name="options">The bitmap decoding options.</param>
         <param name="colorTable">The color table to hold the color entries.</param>
         <param name="colorTableCount">The logical number of color table entries.</param>
         <summary>Decode the bitmap into the specified memory block.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
-          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a <see cref="T:SkiaSharp.SKColorTable" />. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a <see cref="T:SkiaSharp.SKColorTable" />. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
         </remarks>
       </Docs>
     </Member>
@@ -531,16 +513,16 @@
       </Parameters>
       <Docs>
         <param name="info">The description of the desired output format expected by the caller.</param>
-        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
+        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
         <param name="options">The bitmap decoding options.</param>
-        <param name="colorTable">The pointer to the color table to hold the color entries, with a length of at least <see cref="F:SkiaSharp.SKColorTable.MaxLength" /> (256).</param>
+        <param name="colorTable">The pointer to the color table to hold the color entries, with a length of at least <see cref="F:SkiaSharp.SKColorTable.MaxLength" /> (256).</param>
         <param name="colorTableCount">The logical number of color table entries.</param>
         <summary>Decode the bitmap into the specified memory block.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
-          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a color table array, with a length of at least 256. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a color table array, with a length of at least 256. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
         </remarks>
       </Docs>
     </Member>
@@ -569,17 +551,17 @@
       </Parameters>
       <Docs>
         <param name="info">The description of the desired output format expected by the caller.</param>
-        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
-        <param name="rowBytes">The number of bytes in a row, typically <see cref="P:SkiaSharp.SKImageInfo.RowBytes" />.</param>
+        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
+        <param name="rowBytes">The number of bytes in a row, typically <see cref="P:SkiaSharp.SKImageInfo.RowBytes" />.</param>
         <param name="options">The bitmap decoding options.</param>
         <param name="colorTable">The color table to hold the color entries.</param>
         <param name="colorTableCount">The logical number of color table entries.</param>
         <summary>Decode the bitmap into the specified memory block.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
-          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a <see cref="T:SkiaSharp.SKColorTable" />. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a <see cref="T:SkiaSharp.SKColorTable" />. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
         </remarks>
       </Docs>
     </Member>
@@ -608,17 +590,17 @@
       </Parameters>
       <Docs>
         <param name="info">The description of the desired output format expected by the caller.</param>
-        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
-        <param name="rowBytes">The number of bytes in a row, typically <see cref="P:SkiaSharp.SKImageInfo.RowBytes" />.</param>
+        <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
+        <param name="rowBytes">The number of bytes in a row, typically <see cref="P:SkiaSharp.SKImageInfo.RowBytes" />.</param>
         <param name="options">The bitmap decoding options.</param>
-        <param name="colorTable">The pointer to the color table to hold the color entries, with a length of at least <see cref="F:SkiaSharp.SKColorTable.MaxLength" /> (256).</param>
+        <param name="colorTable">The pointer to the color table to hold the color entries, with a length of at least <see cref="F:SkiaSharp.SKColorTable.MaxLength" /> (256).</param>
         <param name="colorTableCount">The logical number of color table entries.</param>
         <summary>Decode the bitmap into the specified memory block.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the spcified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
-          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a color table array, with a length of at least 256. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
+          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
+          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a color table array, with a length of at least 256. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
         </remarks>
       </Docs>
     </Member>
@@ -644,7 +626,7 @@
         <param name="desiredScale">The desired scale factor.</param>
         <summary>Returns a size that approximately supports the desired scale factor.</summary>
         <returns>Returns a supported size.</returns>
-        <remarks>The codec may not be able to scale efficiently to the exact scale factor requested, so return a size that approximates that scale. Upscaling is not supported, so the original size will be returned.</remarks>
+        <remarks>The codec may not be able to scale efficiently to the exact scale factor requested, so return a size that approximates that scale. Upscaling is not supported, so the original size will be returned.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetScanlines">
@@ -673,7 +655,7 @@
         <param name="rowBytes">The number of bytes per row.</param>
         <summary>Writes the next set of scanlines into the destination.</summary>
         <returns>Returns the number of lines successfully decoded.</returns>
-        <remarks>If number of lines successfully decoded is less than <paramref name="countLines" />, this will fill the remaining lines with a default value.</remarks>
+        <remarks>If number of lines successfully decoded is less than <paramref name="countLines" />, this will fill the remaining lines with a default value.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetValidSubset">
@@ -695,12 +677,10 @@
         <Parameter Name="desiredSubset" Type="SkiaSharp.SKRectI&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="desiredSubset">The desired subset of the original bounds, which may be modified to a subset which is supported.</param>
+        <param name="desiredSubset">The desired subset of the original bounds, which may be modified to a subset which is supported.</param>
         <summary>Modifies the specified subset to one that can decoded from this codec.</summary>
-        <returns>Returns true if this codec supports decoding the desired subset, otherwise false. The final subset can be used with <see cref="P:SkiaSharp.SKCodecOptions.Subset" />.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns true if this codec supports decoding the desired subset, otherwise false. The final subset can be used with <see cref="P:SkiaSharp.SKCodecOptions.Subset" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="IncrementalDecode">
@@ -721,8 +701,8 @@
       <Parameters />
       <Docs>
         <summary>Start or continue the incremental decode.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> if all lines requested in <see cref="M:SkiaSharp.SKCodec.StartIncrementalDecode" /> have been completely decoded. <see cref="F:SkiaSharp.SKCodecResult.IncompleteInput" /> otherwise.</returns>
-        <remarks>Unlike <see cref="M:SkiaSharp.SKCodec.GetPixels(System.Byte[]@)" />, this does not do any filling. This is left up to the caller, since they may be skipping lines or continuing the decode later.</remarks>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> if all lines requested in <see cref="M:SkiaSharp.SKCodec.StartIncrementalDecode(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32)" /> have been completely decoded. <see cref="F:SkiaSharp.SKCodecResult.IncompleteInput" /> otherwise.</returns>
+        <remarks>Unlike <see cref="M:SkiaSharp.SKCodec.GetPixels(System.Byte[]@)" />, this does not do any filling. This is left up to the caller, since they may be skipping lines or continuing the decode later.</remarks>
       </Docs>
     </Member>
     <Member MemberName="IncrementalDecode">
@@ -744,10 +724,10 @@
         <Parameter Name="rowsDecoded" Type="System.Int32&amp;" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="rowsDecoded">The total number of lines initialized. Only meaningful if this method returns <see cref="F:SkiaSharp.SKCodecResult.IncompleteInput" />.</param>
+        <param name="rowsDecoded">The total number of lines initialized. Only meaningful if this method returns <see cref="F:SkiaSharp.SKCodecResult.IncompleteInput" />.</param>
         <summary>Start or continue the incremental decode.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> if all lines requested in <see cref="M:SkiaSharp.SKCodec.StartIncrementalDecode" /> have been completely decoded. <see cref="F:SkiaSharp.SKCodecResult.IncompleteInput" /> otherwise.</returns>
-        <remarks>Unlike <see cref="M:SkiaSharp.SKCodec.GetPixels(System.Byte[]@)" />, this does not do any filling. This is left up to the caller, since they may be skipping lines or continuing the decode later.</remarks>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> if all lines requested in <see cref="M:SkiaSharp.SKCodec.StartIncrementalDecode(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32)" /> have been completely decoded. <see cref="F:SkiaSharp.SKCodecResult.IncompleteInput" /> otherwise.</returns>
+        <remarks>Unlike <see cref="M:SkiaSharp.SKCodec.GetPixels(System.Byte[]@)" />, this does not do any filling. This is left up to the caller, since they may be skipping lines or continuing the decode later.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Info">
@@ -767,12 +747,8 @@
       </ReturnValue>
       <Docs>
         <summary>Gets the image information from the codec.</summary>
-        <value>
-          <para></para>
-        </value>
-        <remarks>
-          <para></para>
-        </remarks>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="MinBufferedBytesNeeded">
@@ -792,12 +768,8 @@
       </ReturnValue>
       <Docs>
         <summary>Gets the minimum number of bytes that must be buffered in stream input.</summary>
-        <value>
-          <para></para>
-        </value>
-        <remarks>
-          <para></para>
-        </remarks>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="NextScanline">
@@ -816,13 +788,9 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Gets the y-coordinate of the next row to be returned by the scanline decoder.</summary>
-        <value>
-          <para></para>
-        </value>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Gets the y-coordinate of the next row to be returned by the scanline decoder.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Origin">
@@ -842,12 +810,8 @@
       </ReturnValue>
       <Docs>
         <summary>Gets the image origin from the codec.</summary>
-        <value>
-          <para></para>
-        </value>
-        <remarks>
-          <para></para>
-        </remarks>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Pixels">
@@ -866,13 +830,9 @@
         <ReturnType>System.Byte[]</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Gets the image data from the codec using the current <see cref="P:SkiaSharp.SKCodec.Info" />.</summary>
-        <value>
-          <para></para>
-        </value>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Gets the image data from the codec using the current <see cref="P:SkiaSharp.SKCodec.Info" />.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="RepetitionCount">
@@ -892,9 +852,7 @@
       </ReturnValue>
       <Docs>
         <summary>Gets the number of times to repeat, if this image is animated.</summary>
-        <value>
-          <para></para>
-        </value>
+        <value></value>
         <remarks>
           <para>For infinite repetition of frames, this will be -1.</para>
           <para>May require reading the stream to find the repetition count. As such, future decoding calls may require a rewind. For single-frame images, this will be 0.</para>
@@ -917,13 +875,9 @@
         <ReturnType>SkiaSharp.SKCodecScanlineOrder</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Gets the order in which scanlines will be returned by the scanline decoder.</summary>
-        <value>
-          <para></para>
-        </value>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Gets the order in which scanlines will be returned by the scanline decoder.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="SkipScanlines">
@@ -947,10 +901,8 @@
       <Docs>
         <param name="countLines">The number of scanlines to skip.</param>
         <summary>Skip the specified number of scanlines.</summary>
-        <returns>Returns <see langword="true" /> if the scanlines were successfully skipped, otherwise <see langword="false" /> on failure (incomplete input, the number of lines is less than zero, read all the lines).</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns <see langword="true" /> if the scanlines were successfully skipped, otherwise <see langword="false" /> on failure (incomplete input, the number of lines is less than zero, read all the lines).</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="StartIncrementalDecode">
@@ -974,14 +926,12 @@
         <Parameter Name="rowBytes" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
-        <param name="pixels">The memory to write to. Needs to be large enough to hold the subset, if present, or the full image.</param>
+        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+        <param name="pixels">The memory to write to. Needs to be large enough to hold the subset, if present, or the full image.</param>
         <param name="rowBytes">The stride of the memory to write to.</param>
         <summary>Prepare for an incremental decode with the specified options.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="StartIncrementalDecode">
@@ -1006,15 +956,13 @@
         <Parameter Name="options" Type="SkiaSharp.SKCodecOptions" />
       </Parameters>
       <Docs>
-        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
-        <param name="pixels">The memory to write to. Needs to be large enough to hold the subset, if present, or the full image.</param>
+        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+        <param name="pixels">The memory to write to. Needs to be large enough to hold the subset, if present, or the full image.</param>
         <param name="rowBytes">The stride of the memory to write to.</param>
-        <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
+        <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
         <summary>Prepare for an incremental decode with the specified options.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="StartIncrementalDecode">
@@ -1041,17 +989,15 @@
         <Parameter Name="colorTableCount" Type="System.Int32&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
-        <param name="pixels">The memory to write to. Needs to be large enough to hold the subset, if present, or the full image.</param>
+        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+        <param name="pixels">The memory to write to. Needs to be large enough to hold the subset, if present, or the full image.</param>
         <param name="rowBytes">The stride of the memory to write to.</param>
-        <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
+        <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
         <param name="colorTable">The color table to use.</param>
         <param name="colorTableCount">The size of the color table.</param>
         <summary>Prepare for an incremental decode with the specified options.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="StartIncrementalDecode">
@@ -1078,17 +1024,15 @@
         <Parameter Name="colorTableCount" Type="System.Int32&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
-        <param name="pixels">The memory to write to. Needs to be large enough to hold the subset, if present, or the full image.</param>
+        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+        <param name="pixels">The memory to write to. Needs to be large enough to hold the subset, if present, or the full image.</param>
         <param name="rowBytes">The stride of the memory to write to.</param>
-        <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
+        <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
         <param name="colorTable">The pointer to the color table to use.</param>
         <param name="colorTableCount">The size of the color table.</param>
         <summary>Prepare for an incremental decode with the specified options.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="StartScanlineDecode">
@@ -1110,9 +1054,9 @@
         <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
       </Parameters>
       <Docs>
-        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
         <summary>Prepare for a scanline decode.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>Not all codecs support this.</remarks>
       </Docs>
     </Member>
@@ -1136,10 +1080,10 @@
         <Parameter Name="options" Type="SkiaSharp.SKCodecOptions" />
       </Parameters>
       <Docs>
-        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
-        <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
+        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+        <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
         <summary>Prepare for a scanline decode with the specified options.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>Not all codecs support this.</remarks>
       </Docs>
     </Member>
@@ -1165,12 +1109,12 @@
         <Parameter Name="colorTableCount" Type="System.Int32&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
-        <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
+        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+        <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
         <param name="colorTable">The color table to use.</param>
         <param name="colorTableCount">The size of the color table.</param>
         <summary>Prepare for a scanline decode with the specified options.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>Not all codecs support this.</remarks>
       </Docs>
     </Member>
@@ -1196,12 +1140,12 @@
         <Parameter Name="colorTableCount" Type="System.Int32&amp;" RefType="ref" />
       </Parameters>
       <Docs>
-        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
-        <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
+        <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+        <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
         <param name="colorTable">The pointer to the color table to use.</param>
         <param name="colorTableCount">The size of the color table.</param>
         <summary>Prepare for a scanline decode with the specified options.</summary>
-        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+        <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>Not all codecs support this.</remarks>
       </Docs>
     </Member>

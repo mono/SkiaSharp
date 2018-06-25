@@ -22,10 +22,8 @@
     </Attribute>
   </Attributes>
   <Docs>
-    <summary>A view that can be drawn on using SkiaSharp drawing commands.</summary>
-    <remarks>
-      <para></para>
-    </remarks>
+    <summary>A view that can be drawn on using SkiaSharp drawing commands.</summary>
+    <remarks></remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -42,10 +40,8 @@
       </AssemblyInfo>
       <Parameters />
       <Docs>
-        <summary>Default constructor that initializes a new instance of <see cref="T:SkiaSharp.Views.Mac.SKCanvasView" />.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Default constructor that initializes a new instance of <see cref="T:SkiaSharp.Views.Mac.SKCanvasView" />.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -65,10 +61,8 @@
       </Parameters>
       <Docs>
         <param name="frame">The frame used by the view.</param>
-        <summary>Initializes the <see cref="T:SkiaSharp.Views.Mac.SKCanvasView" /> with the specified frame.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Initializes the <see cref="T:SkiaSharp.Views.Mac.SKCanvasView" /> with the specified frame.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -89,9 +83,7 @@
       <Docs>
         <param name="p">The pointer (handle) to the unmanaged object.</param>
         <summary>A constructor used when creating managed representations of unmanaged objects; Called by the runtime.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="AwakeFromNib">
@@ -112,9 +104,7 @@
       <Parameters />
       <Docs>
         <summary>Called after the object has been loaded from the nib file. Overriders must call the base method.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CanvasSize">
@@ -183,10 +173,10 @@
       </Parameters>
       <Docs>
         <param name="surface">The surface to draw on.</param>
-        <param name="info">The information about the surface.</param>
+        <param name="info">The information about the surface.</param>
         <summary>Implement this to draw on the canvas.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Mac.SKCanvasView.DrawInSurface" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Mac.SKCanvasView.PaintSurface" /> event. If the method is overriden, then the base must be called.</para>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Mac.SKCanvasView.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Mac.SKCanvasView.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
           <para></para>
           <example>
             <code lang="C#"><![CDATA[protected override void DrawInSurface (SKSurface surface, SKImageInfo info)
@@ -198,6 +188,7 @@
     var surfaceHeight = info.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
     canvas.Flush ();
 }]]></code>
@@ -226,9 +217,7 @@
       <Docs>
         <param name="dirtyRect">The rectangle to draw.</param>
         <summary>Draws the view within the passed-in rectangle.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="IgnorePixelScaling">
@@ -248,10 +237,8 @@
       </ReturnValue>
       <Docs>
         <summary>Gets or sets a value indicating whether the drawing canvas should be resized on high resolution displays.</summary>
-        <value>
-          <para />
-        </value>
-        <remarks>By default, when false, the canvas is resized to 1 canvas pixel per display pixel. When true, the canvas is resized to device independent pixels, and then stretched to fill the view. Although performance is improved and all objects are the same size on different display densities, blurring and pixellation may occur.</remarks>
+        <value></value>
+        <remarks>By default, when false, the canvas is resized to 1 canvas pixel per display pixel. When true, the canvas is resized to device independent pixels, and then stretched to fill the view. Although performance is improved and all objects are the same size on different display densities, blurring and pixelation may occur.</remarks>
       </Docs>
     </Member>
     <Member MemberName="PaintSurface">
@@ -270,9 +257,9 @@
         <ReturnType>System.EventHandler&lt;SkiaSharp.Views.Mac.SKPaintSurfaceEventArgs&gt;</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Occurs when the the canvas needs to be re-drawn.</summary>
+        <summary>Occurs when the the canvas needs to be redrawn.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Mac.SKCanvasView.DrawInSurface" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Mac.SKCanvasView.PaintSurface" /> event.</para>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Mac.SKCanvasView.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Mac.SKCanvasView.PaintSurface" /> event.</para>
           <para></para>
           <example>
             <code lang="C#"><![CDATA[SKCanvasView myView = ...;
@@ -283,6 +270,7 @@ myView.PaintSurface += (sender, e) => {
     var surfaceHeight = e.Info.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
     canvas.Flush ();
 };]]></code>

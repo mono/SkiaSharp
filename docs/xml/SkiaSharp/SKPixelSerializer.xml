@@ -12,7 +12,7 @@
   <Interfaces />
   <Docs>
     <summary>Represents a mechanism for serializing pixels.</summary>
-    <remarks />
+    <remarks></remarks>
   </Docs>
   <Members>
     <Member MemberName="Create">
@@ -33,10 +33,8 @@
       <Docs>
         <param name="onEncode">The delegate to use to serialize the pixel data.</param>
         <summary>Create a new pixel serializer using the specified delegate to encode the pixel data.</summary>
-        <returns>Returns an instance of the <see cref="T:SkiaSharp.SKPixelSerializer" />.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns an instance of the <see cref="T:SkiaSharp.SKPixelSerializer" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -59,10 +57,8 @@
         <param name="onUseEncodedData">The delegate to use to determine whether to use the previous encoded data, or to encode another version.</param>
         <param name="onEncode">The delegate to use to serialize the pixel data.</param>
         <summary>Create a new pixel serializer using the specified delegate to encode the pixel data.</summary>
-        <returns>Returns an instance of the <see cref="T:SkiaSharp.SKPixelSerializer" />.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns an instance of the <see cref="T:SkiaSharp.SKPixelSerializer" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -105,9 +101,7 @@
         <param name="pixmap">The pixel data to encode.</param>
         <summary>Encode the specified pixel data.</summary>
         <returns>Returns the encoded pixel data, or <see langword="null" /> if the raw pixels should be used.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="UseEncodedData">
@@ -131,7 +125,15 @@
         <param name="length">The length of the encoded data buffer.</param>
         <summary>Determines whether the serializer wants to use the specified encoded data instead of encoding a new version.</summary>
         <returns>Returns <see langword="true" /> if the specified encoded data should be used, otherwise <see langword="false" /> to serialize another version.</returns>
-        <remarks>If this method returns <see langword="true" />, then <see cref="M:SkiaSharp.SKPixelSerializer.Encode" /> may not be called to encode the source data.</remarks>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+If this method returns `true`, then
+<xref:SkiaSharp.SKPixelSerializer.Encode%2A> may not be called to encode the
+source data.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
   </Members>

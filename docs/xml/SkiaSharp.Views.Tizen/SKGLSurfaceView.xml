@@ -11,10 +11,8 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>A hardware-accelerated view that can be drawn on using SkiaSharp drawing commands.</summary>
-    <remarks>
-      <para></para>
-    </remarks>
+    <summary>A hardware-accelerated view that can be drawn on using SkiaSharp drawing commands.</summary>
+    <remarks></remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -31,10 +29,8 @@
       </Parameters>
       <Docs>
         <param name="parent">The parent object.</param>
-        <summary>Simple constructor to use when creating a <see cref="T:SkiaSharp.Views.Tizen.SKGLSurfaceView" /> from code.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Simple constructor to use when creating a <see cref="T:SkiaSharp.Views.Tizen.SKGLSurfaceView" /> from code.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateDrawingSurface">
@@ -51,10 +47,8 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to construct the drawing surface.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to construct the drawing surface.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateNativeResources">
@@ -74,10 +68,8 @@
       </Parameters>
       <Docs>
         <param name="parent">The parent object.</param>
-        <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to create the native resources which should be present throughout whole life of the control.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to create the native resources which should be present throughout whole life of the control.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="DestroyDrawingSurface">
@@ -94,10 +86,8 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to destroy the drawing surface.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to destroy the drawing surface.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="DestroyNativeResources">
@@ -114,10 +104,8 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to destroy the native resources.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to destroy the native resources.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="GetSurfaceSize">
@@ -134,11 +122,9 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to provide the dimensions of the current drawing surface.</summary>
+        <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to provide the dimensions of the current drawing surface.</summary>
         <returns>Returns the current drawing surface dimensions.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="GRContext">
@@ -155,12 +141,8 @@
       </ReturnValue>
       <Docs>
         <summary>Gets the current GPU context.</summary>
-        <value>
-          <para></para>
-        </value>
-        <remarks>
-          <para></para>
-        </remarks>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="OnDrawFrame">
@@ -177,10 +159,8 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to draw the next frame or paint the control.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to draw the next frame or paint the control.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="OnDrawFrame">
@@ -202,7 +182,7 @@
         <param name="e">The event arguments that contain the drawing surface and information.</param>
         <summary>Implement this to draw on the canvas.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Tizen.SKGLSurfaceView.OnDrawFrame" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Tizen.SKGLSurfaceView.PaintSurface" /> event. If the method is overriden, then the base must be called.</para>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Tizen.SKGLSurfaceView.OnDrawFrame" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Tizen.SKGLSurfaceView.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
           <para></para>
           <example>
             <code lang="C#"><![CDATA[protected override void OnDrawFrame (SKPaintGLSurfaceEventArgs e)
@@ -215,6 +195,7 @@
     var surfaceHeight = e.RenderTarget.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
     canvas.Flush ();
 }]]></code>
@@ -235,9 +216,9 @@
         <ReturnType>System.EventHandler&lt;SkiaSharp.Views.Tizen.SKPaintGLSurfaceEventArgs&gt;</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Occurs when the surface needs to be re-drawn.</summary>
+        <summary>Occurs when the surface needs to be redrawn.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Tizen.SKGLSurfaceView.OnDrawFrame" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Tizen.SKGLSurfaceView.PaintSurface" /> event.</para>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Tizen.SKGLSurfaceView.OnDrawFrame" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Tizen.SKGLSurfaceView.PaintSurface" /> event.</para>
           <para></para>
           <example>
             <code lang="C#"><![CDATA[SKGLSurfaceView myCanvas = ...;
@@ -248,6 +229,7 @@ myCanvas.PaintSurface += (sender, e) => {
     var surfaceHeight = e.RenderTarget.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
     canvas.Flush ();
 };]]></code>
@@ -272,11 +254,9 @@ myCanvas.PaintSurface += (sender, e) => {
       </Parameters>
       <Docs>
         <param name="geometry">The current geometry of the control.</param>
-        <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to update the drawing surface dimensions.</summary>
-        <returns>Returs <see langword="true" /> if the size has changed, otherwise <see langword="false" />.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Implemented by derived <see cref="T:SkiaSharp.Views.Tizen.CustomRenderingView" /> types to update the drawing surface dimensions.</summary>
+        <returns>Returns <see langword="true" /> if the size has changed, otherwise <see langword="false" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
   </Members>

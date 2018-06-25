@@ -32,10 +32,8 @@
     </Attribute>
   </Attributes>
   <Docs>
-    <summary>A hardware-accelerated view that can be drawn on using SkiaSharp drawing commands.</summary>
-    <remarks>
-      <para></para>
-    </remarks>
+    <summary>A hardware-accelerated view that can be drawn on using SkiaSharp drawing commands.</summary>
+    <remarks></remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -52,10 +50,8 @@
       </AssemblyInfo>
       <Parameters />
       <Docs>
-        <summary>Default constructor that initializes a new instance of <see cref="T:SkiaSharp.Views.tvOS.SKGLView" />.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Default constructor that initializes a new instance of <see cref="T:SkiaSharp.Views.tvOS.SKGLView" />.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -75,10 +71,8 @@
       </Parameters>
       <Docs>
         <param name="frame">The frame used by the view, expressed in tvOS points.</param>
-        <summary>Initializes the <see cref="T:SkiaSharp.Views.tvOS.SKGLView" /> with the specified frame.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Initializes the <see cref="T:SkiaSharp.Views.tvOS.SKGLView" /> with the specified frame.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -99,9 +93,7 @@
       <Docs>
         <param name="p">The pointer (handle) to the unmanaged object.</param>
         <summary>A constructor used when creating managed representations of unmanaged objects; Called by the runtime.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="AwakeFromNib">
@@ -122,9 +114,7 @@
       <Parameters />
       <Docs>
         <summary>Called after the object has been loaded from the nib file. Overriders must call the base method.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CanvasSize">
@@ -174,9 +164,7 @@
         <param name="view">The view to draw on.</param>
         <param name="rect">The rectangle to draw.</param>
         <summary>Draws the view within the passed-in rectangle.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawInSurface">
@@ -203,7 +191,7 @@
         <param name="renderTarget">The render target that is currently being drawn.</param>
         <summary>Implement this to draw on the canvas.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.tvOS.SKGLView.DrawInSurface" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.tvOS.SKGLView.PaintSurface" /> event. If the method is overriden, then the base must be called.</para>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.tvOS.SKGLView.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTargetDesc)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.tvOS.SKGLView.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
           <para></para>
           <example>
             <code lang="C#"><![CDATA[public override void DrawInSurface (SKSurface surface, SKBackendRenderTargetDesc renderTarget)
@@ -215,6 +203,7 @@
     var surfaceHeight = renderTarget.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
     canvas.Flush ();
 }]]></code>
@@ -238,13 +227,9 @@
         <ReturnType>CoreGraphics.CGRect</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Gets or sets the view’s frame rectangle.</summary>
-        <value>
-          <para></para>
-        </value>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Gets or sets the view's frame rectangle.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="GRContext">
@@ -262,12 +247,8 @@
       </ReturnValue>
       <Docs>
         <summary>Gets the current GPU context.</summary>
-        <value>
-          <para />
-        </value>
-        <remarks>
-          <para />
-        </remarks>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="PaintSurface">
@@ -286,9 +267,9 @@
         <ReturnType>System.EventHandler&lt;SkiaSharp.Views.tvOS.SKPaintGLSurfaceEventArgs&gt;</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Occurs when the surface needs to be re-drawn.</summary>
+        <summary>Occurs when the surface needs to be redrawn.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.tvOS.SKGLView.DrawInSurface" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.tvOS.SKGLView.PaintSurface" /> event.</para>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.tvOS.SKGLView.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTargetDesc)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.tvOS.SKGLView.PaintSurface" /> event.</para>
           <para></para>
           <example>
             <code lang="C#"><![CDATA[SKGLView myView = ...;
@@ -299,6 +280,7 @@ myView.PaintSurface += (sender, e) => {
     var surfaceHeight = e.RenderTarget.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
     canvas.Flush ();
 };]]></code>

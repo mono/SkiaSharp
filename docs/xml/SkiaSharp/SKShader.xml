@@ -14,113 +14,241 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>Shaders specify the source color(s) for what is being drawn in the <see cref="T:SkiaSharp.SKPaint" />.</summary>
+    <summary>Shaders specify the source color(s) for what is being drawn in the <see cref="T:SkiaSharp.SKPaint" />.</summary>
     <remarks>
-      <para>Shaders specify the source colors for what is being drawn. If a paint has no shader, then the paint's color is used. If the paint has a shader, then the shader's colors are used instead, but they are modulated by the paint's alpha. </para>
-      <para></para>
-      <para>This makes it easy to create a shader once (e.g. bitmap tiling or gradient) and then change its transparency without having to modify the original shader, only the paint's alpha needs to be modified.</para>
-      <para>Shaders are created by calling one of the static “Create” methods in the SKShader method that create a shader of the appropriate type.</para>
-      <format type="text/html">
-        <h2>Linear Gradient Shader</h2>
-      </format>
-      <example>
-        <code lang="c#"><![CDATA[
-var colors = new SKColor [] { new SKColor (0, 255, 255), new SKColor (255, 0, 255), new SKColor (255, 255, 0), new SKColor (0, 255, 255)};
-var shader = SKShader.CreateLinearGradient (new SKPoint (0, 0), new SKPoint (255, 255), colors, null, SKShaderTileMode.Clamp);
-var paint = new SKPaint () { Shader = shader };
-canvas.DrawPaint (paint);
-]]></code>
-      </example>
-      <para>
-        <img href="xamarin-media/SkiaSharp/linear.png" />
-      </para>
-      <format type="text/html">
-        <h2>Radial Gradient Shader</h2>
-      </format>
-      <example>
-        <code lang="c#"><![CDATA[var colors = new SKColor [] {
-    new SKColor (0, 0, 255),
-    new SKColor (0, 255, 0)
-};
-var shader = SKShader.CreateRadialGradient (new SKPoint (128, 128), 180, colors, null, SKShaderTileMode.Clamp);
-var paint = new SKPaint () {
-    Shader = shader,
-};
-canvas.DrawPaint (paint);]]></code>
-      </example>
-      <para>
-        <img href="xamarin-media/SkiaSharp/radial.png" />
-      </para>
-      <format type="text/html">
-        <h2>Two-point Conical Gradient Shader</h2>
-      </format>
-      <example>
-        <code lang="c#"><![CDATA[var colors = new SKColor [] {
-    new SKColor (0, 0, 255),
-    new SKColor (0, 255, 0)
-};
-var shader = SKShader.CreateTwoPointConicalGradient (new SKPoint (128, 128), 128, new SKPoint (128, 16), 16, colors, null, SKShaderTileMode.Clamp);
-var paint = new SKPaint () {
-    Shader = shader,
-};
-canvas.DrawPaint (paint);]]></code>
-      </example>
-      <para>
-        <img href="xamarin-media/SkiaSharp/twopoint.png" />
-      </para>
-      <format type="text/html">
-        <h2>Sweep Gradient Shader</h2>
-      </format>
-      <example>
-        <code lang="c#"><![CDATA[var colors = new SKColor [] {
-    new SKColor (0, 255, 255),
-    new SKColor (255, 0, 255),
-    new SKColor (255, 255, 0),
-    new SKColor (0, 255, 255)
-};
-var shader = SKShader.CreateSweepGradient (new SKPoint (128, 128), colors, null);
-var paint = new SKPaint () {
-    Shader = shader
-};
-canvas.DrawPaint (paint);]]></code>
-      </example>
-      <format type="text/html">
-        <h2>Fractal Perlin Noise</h2>
-      </format>
-      <example>
-        <code lang="c#"><![CDATA[var shader = SKShader.CreatePerlinNoiseFractalNoise (0.5f, 0.5f, 4, 0);
-var paint = new SKPaint () { Shader = shader };
-canvas.DrawPaint (paint);]]></code>
-      </example>
-      <para>
-        <img href="xamarin-media/SkiaSharp/fractalnoise.png" />
-      </para>
-      <format type="text/html">
-        <h2>Turbulence Perlin Noise</h2>
-      </format>
-      <example>
-        <code lang="c#"><![CDATA[var turbulence = SKShader.CreatePerlinNoiseTurbulence (0.05f, 0.05f, 4, 0);
-var paint = new SKPaint () { Shader = turbulence };
-canvas.DrawPaint (paint);]]></code>
-      </example>
-      <para>
-        <img href="xamarin-media/SkiaSharp/turbulence.png" />
-      </para>
-      <format type="text/html">
-        <h2>Compose Shader</h2>
-      </format>
-      <example>
-        <code lang="c#"><![CDATA[
-var colors = new SKColor [] { new SKColor (0, 255, 255), new SKColor (255, 0, 255), new SKColor (255, 255, 0), new SKColor (0, 255, 255)};
-var sweep = SKShader.CreateSweepGradient (new SKPoint (128, 128), colors, null);
-var turbulence = SKShader.CreatePerlinNoiseTurbulence (0.05f, 0.05f, 4, 0);
-var shader = SKShader.CreateCompose (sweep, turbulence);
-var paint = new SKPaint () { Shader = shader };
-canvas.DrawPaint (paint);]]></code>
-      </example>
-      <para>
-        <img href="xamarin-media/SkiaSharp/compose.png" />
-      </para>
+      <format type="text/markdown"><![CDATA[
+## Remarks
+
+Shaders specify the source colors for what is being drawn. If a paint has no
+shader, then the paint's color is used. If the paint has a shader, then the
+shader's colors are used instead, but they are modulated by the paint's alpha.
+
+This makes it easy to create a shader once (for example, bitmap tiling or
+gradient) and then change its transparency without having to modify the
+original shader, only the paint's alpha needs to be modified.
+
+Shaders are created by calling one of the static "Create" methods.
+
+## Examples
+
+### Linear Gradient Shader Example
+
+```csharp
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear(SKColors.White);
+
+    // create the shader
+    var colors = new SKColor[] {
+        new SKColor(0, 0, 255),
+        new SKColor(0, 255, 0)
+    };
+    var shader = SKShader.CreateLinearGradient(
+        new SKPoint(0, 0),
+        new SKPoint(255, 255),
+        colors,
+        null,
+        SKShaderTileMode.Clamp);
+
+    // use the shader
+    var paint = new SKPaint {
+        Shader = shader
+    };
+    canvas.DrawPaint(paint);
+}
+```
+
+The example above produces the following:
+
+![Linear Gradient](xamarin-media/SkiaSharp/linear.png "Linear Gradient")
+
+### Radial Gradient Shader Example
+
+```csharp
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear(SKColors.White);
+
+    // create the shader
+    var colors = new SKColor[] {
+        new SKColor(0, 0, 255),
+        new SKColor(0, 255, 0)
+    };
+    var shader = SKShader.CreateRadialGradient(
+        new SKPoint(128, 128),
+        180,
+        colors,
+        null,
+        SKShaderTileMode.Clamp);
+
+    // use the shader
+    var paint = new SKPaint {
+        Shader = shader
+    };
+    canvas.DrawPaint(paint);
+}
+```
+
+The example above produces the following:
+
+![Radial Gradient](xamarin-media/SkiaSharp/radial.png "Radial Gradient")
+
+### Two-point Conical Gradient Shader Example
+
+```csharp
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear(SKColors.White);
+
+    // create the shader
+    var colors = new SKColor[] {
+        new SKColor(0, 0, 255),
+        new SKColor(0, 255, 0)
+    };
+    var shader = SKShader.CreateTwoPointConicalGradient(
+        new SKPoint(128, 128),
+        128,
+        new SKPoint(128, 16),
+        16,
+        colors,
+        null,
+        SKShaderTileMode.Clamp);
+
+    // use the shader
+    var paint = new SKPaint {
+        Shader = shader
+    };
+    canvas.DrawPaint(paint);
+}
+```
+
+The example above produces the following:
+
+![Two-point Conical Gradient](xamarin-media/SkiaSharp/twopoint.png "Two-point Conical Gradient")
+
+### Sweep Gradient Shader Example
+
+```csharp
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear(SKColors.White);
+
+    // create the shader
+    var colors = new SKColor[] {
+        new SKColor(0, 255, 255),
+        new SKColor(255, 0, 255),
+        new SKColor(255, 255, 0),
+        new SKColor(0, 255, 255)
+    };
+    var shader = SKShader.CreateSweepGradient(
+        new SKPoint(128, 128),
+        colors,
+        null);
+
+    // use the shader
+    var paint = new SKPaint {
+        Shader = shader
+    };
+    canvas.DrawPaint(paint);
+}
+```
+
+The example above produces the following:
+
+![Sweep Gradient](xamarin-media/SkiaSharp/sweep.png "Sweep Gradient")
+
+### Fractal Perlin Noise Shader Example
+
+```csharp
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear(SKColors.White);
+
+    // create the shader
+    var shader = SKShader.CreatePerlinNoiseFractalNoise(0.5f, 0.5f, 4, 0);
+
+    // use the shader
+    var paint = new SKPaint {
+        Shader = shader
+    };
+    canvas.DrawPaint(paint);
+}
+```
+
+The example above produces the following:
+
+![Fractal Perlin Noise](xamarin-media/SkiaSharp/fractal-perlin-noise.png "Fractal Perlin Noise")
+
+### Perlin Noise Turbulence Shader Example
+
+```csharp
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear(SKColors.White);
+
+    // create the shader
+    var shader = SKShader.CreatePerlinNoiseTurbulence(0.05f, 0.05f, 4, 0);
+
+    // use the shader
+    var paint = new SKPaint {
+        Shader = shader
+    };
+    canvas.DrawPaint(paint);
+}
+```
+
+The example above produces the following:
+
+![Fractal Perlin Noise](xamarin-media/SkiaSharp/perlin-noise-turbulence.png "Fractal Perlin Noise")
+
+### Compose Shader Example
+
+```csharp
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear(SKColors.White);
+
+    // create the first shader
+    var colors = new SKColor[] {
+        new SKColor(0, 255, 255),
+        new SKColor(255, 0, 255),
+        new SKColor(255, 255, 0),
+        new SKColor(0, 255, 255)
+    };
+    var sweep = SKShader.CreateSweepGradient(new SKPoint(128, 128), colors, null);
+
+    // create the second shader
+    var turbulence = SKShader.CreatePerlinNoiseTurbulence(0.05f, 0.05f, 4, 0);
+
+    // create the compose shader
+    var shader = SKShader.CreateCompose(sweep, turbulence, SKBlendMode.SrcOver);
+
+    // use the compose shader
+    var paint = new SKPaint {
+        Shader = shader
+    };
+    canvas.DrawPaint(paint);
+}
+```
+
+The example above produces the following:
+
+![Compose Shader](xamarin-media/SkiaSharp/compose.png "Compose Shader")
+]]></format>
     </remarks>
   </Docs>
   <Members>
@@ -149,10 +277,10 @@ canvas.DrawPaint (paint);]]></code>
         <param name="tmx">The tiling mode to use when sampling the bitmap in the x-direction.</param>
         <param name="tmy">The tiling mode to use when sampling the bitmap in the y-direction.</param>
         <summary>Creates a new shader that will draw with the specified bitmap.</summary>
-        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
         <remarks>
-          <para>If the bitmap cannot be used (has no pixels, or its dimensions exceed implementation limits) then an empty shader may be returned. </para>
-          <para>If the source bitmap’s color type is <see cref="F:SkiaSharp.SKColorType.Alpha8" /> then that mask will be colorized using the color on the paint.</para>
+          <para>If the bitmap cannot be used (has no pixels, or its dimensions exceed implementation limits) then an empty shader may be returned. </para>
+          <para>If the source bitmap's color type is <see cref="F:SkiaSharp.SKColorType.Alpha8" /> then that mask will be colorized using the color on the paint.</para>
         </remarks>
       </Docs>
     </Member>
@@ -183,10 +311,10 @@ canvas.DrawPaint (paint);]]></code>
         <param name="tmy">The tiling mode to use when sampling the bitmap in the y-direction.</param>
         <param name="localMatrix">The matrix to apply before applying the shader.</param>
         <summary>Creates a new shader that will draw with the specified bitmap.</summary>
-        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
         <remarks>
-          <para>If the bitmap cannot be used (has no pixels, or its dimensions exceed implementation limits) then an empty shader may be returned. </para>
-          <para>If the source bitmap’s color type is <see cref="F:SkiaSharp.SKColorType.Alpha8" /> then that mask will be colorized using the color on the paint.</para>
+          <para>If the bitmap cannot be used (has no pixels, or its dimensions exceed implementation limits) then an empty shader may be returned. </para>
+          <para>If the source bitmap's color type is <see cref="F:SkiaSharp.SKColorType.Alpha8" /> then that mask will be colorized using the color on the paint.</para>
         </remarks>
       </Docs>
     </Member>
@@ -211,7 +339,7 @@ canvas.DrawPaint (paint);]]></code>
       <Docs>
         <param name="color">The color to paint.</param>
         <summary>Creates a new shader that just draws the specified color.</summary>
-        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
         <remarks></remarks>
       </Docs>
     </Member>
@@ -237,11 +365,9 @@ canvas.DrawPaint (paint);]]></code>
       <Docs>
         <param name="shader">The shader to apply.</param>
         <param name="filter">The color filter to apply.</param>
-        <summary>Creates a new shader that produces the same colors as invoking this shader and then applying the color filter.</summary>
-        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Creates a new shader that produces the same colors as invoking this shader and then applying the color filter.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <MemberGroup MemberName="CreateCompose">
@@ -259,30 +385,41 @@ canvas.DrawPaint (paint);]]></code>
 
 Create a new compose shader, which combines two shaders by a blend mode.
 
-## Example  
+## Examples
 
 ```csharp
-// create the first shader
-var colors = new SKColor [] {
-    new SKColor (0, 255, 255),
-    new SKColor (255, 0, 255),
-    new SKColor (255, 255, 0),
-    new SKColor (0, 255, 255)
-};
-var sweep = SKShader.CreateSweepGradient (new SKPoint (128, 128), colors, null);
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
 
-// create the second shader
-var turbulence = SKShader.CreatePerlinNoiseTurbulence (0.05f, 0.05f, 4, 0);
+    canvas.Clear(SKColors.White);
 
-// create the compose shader
-var shader = SKShader.CreateCompose (sweep, turbulence, SKBlendMode.SrcOver);
+    // create the first shader
+    var colors = new SKColor[] {
+        new SKColor(0, 255, 255),
+        new SKColor(255, 0, 255),
+        new SKColor(255, 255, 0),
+        new SKColor(0, 255, 255)
+    };
+    var sweep = SKShader.CreateSweepGradient(new SKPoint(128, 128), colors, null);
 
-// use the compose shader
-var paint = new SKPaint {
-    Shader = shader
-};
-canvas.DrawPaint (paint);
+    // create the second shader
+    var turbulence = SKShader.CreatePerlinNoiseTurbulence(0.05f, 0.05f, 4, 0);
+
+    // create the compose shader
+    var shader = SKShader.CreateCompose(sweep, turbulence, SKBlendMode.SrcOver);
+
+    // use the compose shader
+    var paint = new SKPaint {
+        Shader = shader
+    };
+    canvas.DrawPaint(paint);
+}
 ```
+
+The example above produces the following:
+
+![Compose Shader](xamarin-media/SkiaSharp/compose.png "Compose Shader")
 ]]></format>
         </remarks>
       </Docs>
@@ -309,11 +446,9 @@ canvas.DrawPaint (paint);
       <Docs>
         <param name="shaderA">The colors from this shader are seen as the destination by the blend mode.</param>
         <param name="shaderB">The colors from this shader are seen as the source by the blend mode.</param>
-        <summary>Create a new compose shader, which combines two shaders by the <see cref="F:SkiaSharp.SKBlendMode.SrcOver" /> blend mode.</summary>
-        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Create a new compose shader, which combines two shaders by the <see cref="F:SkiaSharp.SKBlendMode.SrcOver" /> blend mode.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateCompose">
@@ -341,10 +476,8 @@ canvas.DrawPaint (paint);
         <param name="shaderB">The colors from this shader are seen as the source by the blend mode.</param>
         <param name="mode">The blend mode that combines the two shaders.</param>
         <summary>Create a new compose shader, which combines two shaders by a blend mode.</summary>
-        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateCompose">
@@ -375,11 +508,9 @@ canvas.DrawPaint (paint);
         <param name="shaderA">The colors from this shader are seen as the destination by the transfer mode.</param>
         <param name="shaderB">The colors from this shader are seen as the source by the transfer mode.</param>
         <param name="mode">The transfer mode that combines the two shaders.</param>
-        <summary>Create a new compose shader, which combines two shaders by a transfer mode.</summary>
-        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Create a new compose shader, which combines two shaders by a transfer mode.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateEmpty">
@@ -400,10 +531,8 @@ canvas.DrawPaint (paint);
       <Parameters />
       <Docs>
         <summary>Creates a new "empty" shader that will not draw anything.</summary>
-        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <MemberGroup MemberName="CreateLinearGradient">
@@ -419,28 +548,41 @@ canvas.DrawPaint (paint);
           <format type="text/markdown"><![CDATA[
 ## Remarks
 
-Creates a shader that generates a linear gradient between the two specified points.
+Creates a shader that generates a linear gradient between the two specified
+points.
 
-![Linear Gradient](xamarin-media/SkiaSharp/linear.png "Linear Gradient")  
-
-## Example  
+## Examples
 
 ```csharp
-// create the shader
-var colors = new SKColor [] {
-    new SKColor (0, 255, 255),
-    new SKColor (255, 0, 255),
-    new SKColor (255, 255, 0),
-    new SKColor (0, 255, 255)
-};
-var shader = SKShader.CreateLinearGradient (new SKPoint (0, 0), new SKPoint (255, 255), colors, null, SKShaderTileMode.Clamp);
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
 
-// use the shader
-var paint = new SKPaint {
-    Shader = shader
-};
-canvas.DrawPaint (paint);
+    canvas.Clear(SKColors.White);
+
+    // create the shader
+    var colors = new SKColor[] {
+        new SKColor(0, 0, 255),
+        new SKColor(0, 255, 0)
+    };
+    var shader = SKShader.CreateLinearGradient(
+        new SKPoint(0, 0),
+        new SKPoint(255, 255),
+        colors,
+        null,
+        SKShaderTileMode.Clamp);
+
+    // use the shader
+    var paint = new SKPaint {
+        Shader = shader
+    };
+    canvas.DrawPaint(paint);
+}
 ```
+
+The example above produces the following:
+
+![Linear Gradient](xamarin-media/SkiaSharp/linear.png "Linear Gradient")
 ]]></format>
         </remarks>
       </Docs>
@@ -473,11 +615,9 @@ canvas.DrawPaint (paint);
         <param name="colors">The array colors to be distributed between the two points.</param>
         <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
         <param name="mode">The tiling mode.</param>
-        <summary>Creates a shader that generates a linear gradient between the two specified points.</summary>
-        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Creates a shader that generates a linear gradient between the two specified points.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateLinearGradient">
@@ -510,11 +650,9 @@ canvas.DrawPaint (paint);
         <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
         <param name="mode">The tiling mode.</param>
         <param name="localMatrix">The matrix to apply before applying the shader.</param>
-        <summary>Creates a shader that generates a linear gradient between the two specified points.</summary>
-        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Creates a shader that generates a linear gradient between the two specified points.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateLocalMatrix">
@@ -540,10 +678,8 @@ canvas.DrawPaint (paint);
         <param name="shader">The shader to apply.</param>
         <param name="localMatrix">The matrix to apply before applying the shader.</param>
         <summary>Creates a shader that first applies the specified matrix and then applies the shader.</summary>
-        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or null on error.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or null on error.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreatePerlinNoiseFractalNoise">
@@ -573,10 +709,8 @@ canvas.DrawPaint (paint);
         <param name="numOctaves">The number of octaves, usually fairly small.</param>
         <param name="seed">The randomization seed.</param>
         <summary>Creates a new shader that draws Perlin fractal noise.</summary>
-        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreatePerlinNoiseFractalNoise">
@@ -608,10 +742,8 @@ canvas.DrawPaint (paint);
         <param name="seed">The randomization seed.</param>
         <param name="tileSize">The tile size used to modify the frequencies so that the noise will be tileable for the given size.</param>
         <summary>Creates a new shader that draws Perlin fractal noise.</summary>
-        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreatePerlinNoiseTurbulence">
@@ -641,10 +773,8 @@ canvas.DrawPaint (paint);
         <param name="numOctaves">The number of octaves, usually fairly small.</param>
         <param name="seed">The randomization seed.</param>
         <summary>Creates a new shader that draws Perlin turbulence noise.</summary>
-        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreatePerlinNoiseTurbulence">
@@ -676,10 +806,8 @@ canvas.DrawPaint (paint);
         <param name="seed">The randomization seed.</param>
         <param name="tileSize">The tile size used to modify the frequencies so that the noise will be tileable for the given size.</param>
         <summary>Creates a new shader that draws Perlin turbulence noise.</summary>
-        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateRadialGradient">
@@ -710,11 +838,9 @@ canvas.DrawPaint (paint);
         <param name="colors">The array colors to be distributed between the center and edge of the circle.</param>
         <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
         <param name="mode">The tiling mode.</param>
-        <summary>Creates a shader that generates a radial gradient given the center and radius.</summary>
-        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Creates a shader that generates a radial gradient given the center and radius.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateRadialGradient">
@@ -747,11 +873,9 @@ canvas.DrawPaint (paint);
         <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
         <param name="mode">The tiling mode.</param>
         <param name="localMatrix">The matrix to apply before applying the shader.</param>
-        <summary>Creates a shader that generates a radial gradient given the center and radius.</summary>
-        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Creates a shader that generates a radial gradient given the center and radius.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateSweepGradient">
@@ -778,11 +902,9 @@ canvas.DrawPaint (paint);
         <param name="center">The coordinates of the center of the sweep.</param>
         <param name="colors">The array colors to be distributed around the center.</param>
         <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
-        <summary>Creates a shader that generates a sweep gradient given a center.</summary>
-        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Creates a shader that generates a sweep gradient given a center.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateSweepGradient">
@@ -811,11 +933,9 @@ canvas.DrawPaint (paint);
         <param name="colors">The array colors to be distributed around the center.</param>
         <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
         <param name="localMatrix">The matrix to apply before applying the shader.</param>
-        <summary>Creates a shader that generates a sweep gradient given a center.</summary>
-        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Creates a shader that generates a sweep gradient given a center.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateTwoPointConicalGradient">
@@ -850,11 +970,9 @@ canvas.DrawPaint (paint);
         <param name="colors">The array colors to be distributed between the two points.</param>
         <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
         <param name="mode">The tiling mode.</param>
-        <summary>Creates a shader that generates a conical gradient given two circles.</summary>
-        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or null on error.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Creates a shader that generates a conical gradient given two circles.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or null on error.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateTwoPointConicalGradient">
@@ -891,11 +1009,9 @@ canvas.DrawPaint (paint);
         <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
         <param name="mode">The tiling mode.</param>
         <param name="localMatrix">The matrix to apply before applying the shader.</param>
-        <summary>Creates a shader that generates a conical gradient given two circles.</summary>
-        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Creates a shader that generates a conical gradient given two circles.</summary>
+        <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">

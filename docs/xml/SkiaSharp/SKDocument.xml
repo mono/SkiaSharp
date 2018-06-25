@@ -14,8 +14,17 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>A high-level API for creating a document-based canvas.</summary>
-    <remarks>For each page, call <see cref="M:SkiaSharp.SKDocument.BeginPage" /> to get the canvas, and then complete the page with a call to <see cref="M:SkiaSharp.SKDocument.EndPage" />. Finally, call <see cref="M:SkiaSharp.SKDocument.Close" /> to complete the document.</remarks>
+    <summary>A high-level API for creating a document-based canvas.</summary>
+    <remarks>
+      <format type="text/markdown"><![CDATA[
+## Remarks
+
+For each page, call <xref:SkiaSharp.SKDocument.BeginPage%2A> to get the
+canvas, and then complete the page with a call to
+<xref:SkiaSharp.SKDocument.EndPage%2A>. Finally, call
+<xref:SkiaSharp.SKDocument.Close%2A> to complete the document.
+]]></format>
+    </remarks>
   </Docs>
   <Members>
     <Member MemberName="Abort">
@@ -36,9 +45,7 @@
       <Parameters />
       <Docs>
         <summary>Stops producing the document immediately.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="BeginPage">
@@ -63,9 +70,9 @@
       <Docs>
         <param name="width">The width of the page.</param>
         <param name="height">The height of the page.</param>
-        <summary>Begins a new page for the document, returning the canvas that will draw into the page.</summary>
+        <summary>Begins a new page for the document, returning the canvas that will draw into the page.</summary>
         <returns>Returns a canvas for the new page.</returns>
-        <remarks>The document owns this canvas, and it will go out of scope when <see cref="M:SkiaSharp.SKDocument.EndPage" /> or <see cref="M:SkiaSharp.SKDocument.Close" /> is called, or the document is deleted.</remarks>
+        <remarks>The document owns this canvas, and it will go out of scope when <see cref="M:SkiaSharp.SKDocument.EndPage" /> or <see cref="M:SkiaSharp.SKDocument.Close" /> is called, or the document is deleted.</remarks>
       </Docs>
     </Member>
     <Member MemberName="BeginPage">
@@ -92,9 +99,9 @@
         <param name="width">The width of the page.</param>
         <param name="height">The height of the page.</param>
         <param name="content">The area for the page contents.</param>
-        <summary>Begins a new page for the document, returning the canvas that will draw into the page.</summary>
+        <summary>Begins a new page for the document, returning the canvas that will draw into the page.</summary>
         <returns>Returns a canvas for the new page.</returns>
-        <remarks>The document owns this canvas, and it will go out of scope when <see cref="M:SkiaSharp.SKDocument.EndPage" /> or <see cref="M:SkiaSharp.SKDocument.Close" /> is called, or the document is deleted.</remarks>
+        <remarks>The document owns this canvas, and it will go out of scope when <see cref="M:SkiaSharp.SKDocument.EndPage" /> or <see cref="M:SkiaSharp.SKDocument.Close" /> is called, or the document is deleted.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Close">
@@ -114,10 +121,8 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Closes the current file or stream holding the document’s contents.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Closes the current file or stream holding the document's contents.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreatePdf">
@@ -141,10 +146,10 @@
       </Parameters>
       <Docs>
         <param name="stream">The stream to write to.</param>
-        <param name="dpi">The DPI (pixels-per-inch) at which features without native PDF support will be rasterized.</param>
+        <param name="dpi">The DPI (pixels-per-inch) at which features without native PDF support will be rasterized.</param>
         <summary>Create a PDF-backed document, writing the results into a stream.</summary>
         <returns>Returns the new PDF-backed document.</returns>
-        <remarks>PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.</remarks>
+        <remarks>PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.</remarks>
       </Docs>
     </Member>
     <Member MemberName="CreatePdf">
@@ -173,10 +178,10 @@
       </Parameters>
       <Docs>
         <param name="path">The path of the file to write to.</param>
-        <param name="dpi">The DPI (pixels-per-inch) at which features without native PDF support will be rasterized.</param>
+        <param name="dpi">The DPI (pixels-per-inch) at which features without native PDF support will be rasterized.</param>
         <summary>Create a PDF-backed document, writing the results into a file.</summary>
         <returns>Returns the new PDF-backed document.</returns>
-        <remarks>PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.</remarks>
+        <remarks>PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.</remarks>
       </Docs>
     </Member>
     <Member MemberName="CreatePdf">
@@ -202,10 +207,10 @@
       <Docs>
         <param name="stream">The stream to write to.</param>
         <param name="metadata">The document metadata to include.</param>
-        <param name="dpi">The DPI (pixels-per-inch) at which features without native PDF support will be rasterized.</param>
+        <param name="dpi">The DPI (pixels-per-inch) at which features without native PDF support will be rasterized.</param>
         <summary>Create a PDF-backed document with the specified metadata, writing the results into a stream.</summary>
         <returns>Returns the new PDF-backed document.</returns>
-        <remarks>PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.</remarks>
+        <remarks>PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.</remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateXps">
@@ -229,10 +234,10 @@
       </Parameters>
       <Docs>
         <param name="stream">The stream to write to.</param>
-        <param name="dpi">The DPI (pixels-per-inch) at which features without native XPS support will be rasterized.</param>
+        <param name="dpi">The DPI (pixels-per-inch) at which features without native XPS support will be rasterized.</param>
         <summary>Create a XPS-backed document, writing the results into a stream.</summary>
         <returns>Returns the new XPS-backed document.</returns>
-        <remarks>XPS pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.</remarks>
+        <remarks>XPS pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.</remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateXps">
@@ -261,10 +266,10 @@
       </Parameters>
       <Docs>
         <param name="path">The path of the file to write to.</param>
-        <param name="dpi">The DPI (pixels-per-inch) at which features without native XPS support will be rasterized.</param>
+        <param name="dpi">The DPI (pixels-per-inch) at which features without native XPS support will be rasterized.</param>
         <summary>Create a XPS-backed document, writing the results into a stream.</summary>
         <returns>Returns the new XPS-backed document.</returns>
-        <remarks>XPS pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.</remarks>
+        <remarks>XPS pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.</remarks>
       </Docs>
     </Member>
     <Member MemberName="DefaultRasterDpi">
@@ -285,9 +290,7 @@
       <MemberValue>72</MemberValue>
       <Docs>
         <summary>Gets the default DPI for raster graphics.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -331,10 +334,8 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Completes the drawing for the current page created by <see cref="M:SkiaSharp.SKDocument.BeginPage" />.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Completes the drawing for the current page created by <see cref="M:SkiaSharp.SKDocument.BeginPage(System.Single,System.Single)" />.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
   </Members>

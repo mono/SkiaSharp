@@ -18,7 +18,7 @@
     <remarks>
       <para>An image is an abstraction of pixels, though the particular type of image could be actually storing its data on the GPU, or as drawing commands (picture or PDF or otherwise), ready to be played back into another canvas.</para>
       <para></para>
-      <para>The content of an image is always immutable, though the actual storage may change, if for example that image can be re-created via encoded data or other means.</para>
+      <para>The content of an image is always immutable, though the actual storage may change, if for example that image can be recreated via encoded data or other means.</para>
       <para></para>
       <para>An image always has a non-zero dimensions. If there is a request to create a new image, either directly or via a surface, and either of the requested dimensions are zero, then <see langword="null" /> will be returned.</para>
     </remarks>
@@ -40,13 +40,9 @@
         <ReturnType>SkiaSharp.SKAlphaType</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Gets the configured <see cref="T:SkiaSharp.SKAlphaType" /> for the bitmap.</summary>
-        <value>
-          <para></para>
-        </value>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Gets the configured <see cref="T:SkiaSharp.SKAlphaType" /> for the bitmap.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="ApplyImageFilter">
@@ -74,14 +70,12 @@
       <Docs>
         <param name="filter">The filter to apply to the current image.</param>
         <param name="subset">The active portion of this image.</param>
-        <param name="clipBounds">Constrains the device-space extent of the image to the given rectangle.</param>
+        <param name="clipBounds">Constrains the device-space extent of the image to the given rectangle.</param>
         <param name="outSubset">The active portion of the resulting image</param>
         <param name="outOffset">The amount to translate the resulting image relative to the source when it is drawn.</param>
         <summary>Applies a given image filter to this image, and return the filtered result.</summary>
         <returns>Returns the resulting image after the filter is applied, or <see langword="null" /> if the image could not be created or would be transparent black (#00000000).</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -104,11 +98,9 @@
       </Parameters>
       <Docs>
         <param name="info">The image information to use.</param>
-        <summary>Creates a new raster-based <see cref="T:SkiaSharp.SKImage" /> using the specified information.</summary>
-        <returns>Returns the new <see cref="T:SkiaSharp.SKImage" /> instance.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Creates a new raster-based <see cref="T:SkiaSharp.SKImage" /> using the specified information.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImage" /> instance.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -152,9 +144,9 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Encodes the image using the <see cref="F:SkiaSharp.SKImageEncodeFormat.Png" /> format.</summary>
-        <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded image.</returns>
-        <remarks>Use the overload that takes a <see cref="T:SkiaSharp.SKImageEncodeFormat" /> if you want to encode in a different format.</remarks>
+        <summary>Encodes the image using the <see cref="F:SkiaSharp.SKImageEncodeFormat.Png" /> format.</summary>
+        <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded image.</returns>
+        <remarks>Use the overload that takes a <see cref="T:SkiaSharp.SKImageEncodeFormat" /> if you want to encode in a different format.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Encode">
@@ -175,10 +167,8 @@
       <Docs>
         <param name="serializer">The serializer to use to encode the image.</param>
         <summary>Encodes the image using the specified serializer.</summary>
-        <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded image.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded image.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Encode">
@@ -204,8 +194,8 @@
         <param name="format">The file format used to encode the image.</param>
         <param name="quality">The quality level to use for the image. This is in the range from 0-100.</param>
         <summary>Encodes the image using the specified format.</summary>
-        <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded image.</returns>
-        <remarks>The quality is a suggestion, and not all formats (eg: png) respect or support it.</remarks>
+        <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded image.</returns>
+        <remarks>The quality is a suggestion, and not all formats (for example, PNG) respect or support it.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Encode">
@@ -235,10 +225,8 @@
         <param name="format">The file format used to encode the image.</param>
         <param name="quality">The quality level to use for the image.</param>
         <summary>Encodes the image using the specified format.</summary>
-        <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded image.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded image.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromAdoptedTexture">
@@ -265,7 +253,7 @@
         <param name="desc">The description of the existing texture.</param>
         <summary>Creates a new image from the specified texture descriptor.</summary>
         <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
-        <remarks>SkiaSharp will delete or recycle the texture when the image is released.</remarks>
+        <remarks>SkiaSharp will delete or recycle the texture when the image is released.</remarks>
       </Docs>
     </Member>
     <Member MemberName="FromAdoptedTexture">
@@ -288,7 +276,7 @@
         <param name="context">The graphics context.</param>
         <param name="desc">The description of the existing OpenGL texture.</param>
         <summary>Creates a new image from the specified OpenGL texture descriptor.</summary>
-        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
         <remarks>SkiaSharp will delete or recycle the OpenGL texture when the image is released.</remarks>
       </Docs>
     </Member>
@@ -316,9 +304,9 @@
         <param name="context">The graphics context.</param>
         <param name="desc">The description of the existing texture.</param>
         <param name="alpha">The alpha type of the texture.</param>
-        <summary>Creates a new image from the specified texture descriptor.</summary>
-        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
-        <remarks>SkiaSharp will delete or recycle the texture when the image is released.</remarks>
+        <summary>Creates a new image from the specified texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>SkiaSharp will delete or recycle the texture when the image is released.</remarks>
       </Docs>
     </Member>
     <Member MemberName="FromAdoptedTexture">
@@ -342,9 +330,9 @@
         <param name="context">The graphics context.</param>
         <param name="desc">The description of the existing OpenGL texture.</param>
         <param name="alpha">The alpha type of the texture.</param>
-        <summary>Creates a new image from the specified OpenGL texture descriptor.</summary>
-        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
-        <remarks>SkiaSharp will delete or recycle the texture when the image is released.</remarks>
+        <summary>Creates a new image from the specified OpenGL texture descriptor.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks>SkiaSharp will delete or recycle the texture when the image is released.</remarks>
       </Docs>
     </Member>
     <Member MemberName="FromBitmap">
@@ -367,7 +355,7 @@
       </Parameters>
       <Docs>
         <param name="bitmap">The bitmap that will be used as the source for the image.</param>
-        <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKBitmap" />.</summary>
+        <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKBitmap" />.</summary>
         <returns>An image whose contents are the contents of the specified bitmap.</returns>
         <remarks>If the bitmap is marked immutable, and its pixel memory is shareable, it may be shared instead of copied.</remarks>
       </Docs>
@@ -396,11 +384,9 @@
       </Parameters>
       <Docs>
         <param name="data">The data holding the encoded image.</param>
-        <summary>Creates a new image from an encoded image wrapped by the data.</summary>
-        <returns>The decoded image, or <see langword="null" /> on error.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Creates a new image from an encoded image wrapped by the data.</summary>
+        <returns>The decoded image, or <see langword="null" /> on error.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromData">
@@ -431,9 +417,7 @@
         <param name="subset">The bounds for a subset of the image.</param>
         <summary>Creates a new image from an encoded image wrapped by the data.</summary>
         <returns>The decoded image, or <see langword="null" /> on error.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromEncodedData">
@@ -456,11 +440,9 @@
       </Parameters>
       <Docs>
         <param name="data">The data holding the encoded image.</param>
-        <summary>Creates a new image from an encoded image wrapped by the data.</summary>
-        <returns>The decoded image, or <see langword="null" /> on error.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Creates a new image from an encoded image wrapped by the data.</summary>
+        <returns>The decoded image, or <see langword="null" /> on error.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromEncodedData">
@@ -486,10 +468,8 @@
         <param name="data">The data holding the encoded image.</param>
         <param name="subset">The bounds for a subset of the image.</param>
         <summary>Creates a new image from an encoded image wrapped by the data.</summary>
-        <returns>The decoded image, or <see langword="null" /> on error.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>The decoded image, or <see langword="null" /> on error.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPicture">
@@ -514,11 +494,9 @@
       <Docs>
         <param name="picture">The picture.</param>
         <param name="dimensions">The size of the raster surface.</param>
-        <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.</summary>
+        <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.</summary>
         <returns>An image whose contents is the picture.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPicture">
@@ -545,11 +523,9 @@
         <param name="picture">The picture.</param>
         <param name="dimensions">The size of the raster surface.</param>
         <param name="matrix">The matrix to use when reading the image.</param>
-        <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.</summary>
+        <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.</summary>
         <returns>An image whose contents is the picture.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPicture">
@@ -576,11 +552,9 @@
         <param name="picture">The picture.</param>
         <param name="dimensions">The size of the raster surface.</param>
         <param name="paint">The paint to use when reading the image.</param>
-        <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.</summary>
+        <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.</summary>
         <returns>An image whose contents is the picture.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPicture">
@@ -609,11 +583,9 @@
         <param name="dimensions">The size of the raster surface.</param>
         <param name="matrix">The matrix to use when reading the image.</param>
         <param name="paint">The paint to use when reading the image.</param>
-        <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.</summary>
+        <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.</summary>
         <returns>An image whose contents is the picture.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPixelCopy">
@@ -637,10 +609,8 @@
       <Docs>
         <param name="pixmap">The pixmap that contains the image information and buffer location.</param>
         <summary>Creates a new image from a copy of an in-memory buffer.</summary>
-        <returns>A new image with a copy of the contents of the specified buffer, or <see langword="null" /> on error.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>A new image with a copy of the contents of the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPixelCopy">
@@ -666,10 +636,8 @@
         <param name="info">The image information describing the encoding of the image in memory.</param>
         <param name="pixels">The pointer to the image in memory.</param>
         <summary>Creates a new image from a copy of an in-memory buffer.</summary>
-        <returns>A new image with a copy of the contents of the specified buffer, or <see langword="null" /> on error.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>A new image with a copy of the contents of the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPixelCopy">
@@ -697,10 +665,8 @@
         <param name="pixels">The pointer to the image in memory.</param>
         <param name="rowBytes">The specified the number of bytes used per row in the image.</param>
         <summary>Creates a new image from a copy of an in-memory buffer.</summary>
-        <returns>A new image with a copy of the contents of the specified buffer, or <see langword="null" /> on error.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>A new image with a copy of the contents of the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPixelCopy">
@@ -730,10 +696,8 @@
         <param name="rowBytes">The specified the number of bytes used per row in the image.</param>
         <param name="ctable">The color table to use with the image data.</param>
         <summary>Creates a new image from a copy of an in-memory buffer.</summary>
-        <returns>A new image with a copy of the contents of the specified buffer, or <see langword="null" /> on error.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>A new image with a copy of the contents of the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPixelData">
@@ -761,10 +725,8 @@
         <param name="data">The data object that contains the pixel data.</param>
         <param name="rowBytes">The specified the number of bytes used per row in the image.</param>
         <summary>Creates a new image from an in-memory buffer.</summary>
-        <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPixels">
@@ -788,10 +750,8 @@
       <Docs>
         <param name="pixmap">The pixmap that contains the image information and buffer location.</param>
         <summary>Creates a new image from an in-memory buffer.</summary>
-        <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPixels">
@@ -817,10 +777,8 @@
         <param name="info">The image information describing the encoding of the image in memory.</param>
         <param name="pixels">The pointer to the image in memory.</param>
         <summary>Creates a new image from an in-memory buffer.</summary>
-        <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPixels">
@@ -846,10 +804,8 @@
         <param name="pixmap">The pixmap that contains the image information and buffer location.</param>
         <param name="releaseProc">The delegate to invoke when the image is about to be destroyed.</param>
         <summary>Creates a new image from an in-memory buffer.</summary>
-        <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPixels">
@@ -878,9 +834,7 @@
         <param name="rowBytes">The specified the number of bytes used per row in the image.</param>
         <summary>Creates a new image from an in-memory buffer.</summary>
         <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromPixels">
@@ -908,10 +862,8 @@
         <param name="releaseProc">The delegate to invoke when the image is about to be destroyed.</param>
         <param name="releaseContext">The user data to use when invoking the delegate.</param>
         <summary>Creates a new image from an in-memory buffer.</summary>
-        <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>A new image wrapping the specified buffer, or <see langword="null" /> on error.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTexture">
@@ -937,10 +889,8 @@
         <param name="context">The graphics context.</param>
         <param name="desc">The description of the existing texture.</param>
         <summary>Creates a new image from the specified texture descriptor.</summary>
-        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTexture">
@@ -963,10 +913,8 @@
         <param name="context">The graphics context.</param>
         <param name="desc">The description of the existing texture.</param>
         <summary>Creates a new image from the specified OpenGL texture descriptor.</summary>
-        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTexture">
@@ -994,10 +942,8 @@
         <param name="desc">The description of the existing texture.</param>
         <param name="alpha">The alpha type of the texture.</param>
         <summary>Creates a new image from the specified texture descriptor.</summary>
-        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTexture">
@@ -1022,10 +968,8 @@
         <param name="desc">The description of the existing OpenGL texture.</param>
         <param name="alpha">The alpha type of the texture.</param>
         <summary>Creates a new image from the specified OpenGL texture descriptor.</summary>
-        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTexture">
@@ -1055,10 +999,8 @@
         <param name="alpha">The alpha type of the texture.</param>
         <param name="releaseProc">The delegate to invoke when the image is about to be destroyed.</param>
         <summary>Creates a new image from the specified texture descriptor.</summary>
-        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTexture">
@@ -1085,10 +1027,8 @@
         <param name="alpha">The alpha type of the texture.</param>
         <param name="releaseProc">The delegate to invoke when the image is about to be destroyed.</param>
         <summary>Creates a new image from the specified OpenGL texture descriptor.</summary>
-        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
-        <remarks>
-          <para />
-        </remarks>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTexture">
@@ -1120,10 +1060,8 @@
         <param name="releaseProc">The delegate to invoke when the image is about to be destroyed.</param>
         <param name="releaseContext">The user data to use when invoking the delegate.</param>
         <summary>Creates a new image from the specified texture descriptor.</summary>
-        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTexture">
@@ -1152,10 +1090,8 @@
         <param name="releaseProc">The delegate to invoke when the image is about to be destroyed.</param>
         <param name="releaseContext">The user data to use when invoking the delegate.</param>
         <summary>Creates a new image from the specified OpenGL texture descriptor.</summary>
-        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported</returns>
-        <remarks>
-          <para />
-        </remarks>
+        <returns>Returns the new image, or <see langword="null" /> if the specified descriptor is unsupported</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Height">
@@ -1175,12 +1111,8 @@
       </ReturnValue>
       <Docs>
         <summary>Gets the image height.</summary>
-        <value>
-          <para></para>
-        </value>
-        <remarks>
-          <para></para>
-        </remarks>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="IsAlphaOnly">
@@ -1200,12 +1132,8 @@
       </ReturnValue>
       <Docs>
         <summary>Gets a value indicating whether the image will be drawn as a mask, with no intrinsic color of its own</summary>
-        <value>
-          <para></para>
-        </value>
-        <remarks>
-          <para></para>
-        </remarks>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="IsLazyGenerated">
@@ -1221,10 +1149,8 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Gets a value indicating whether the image is backed by an image-generator or other source that creates (and caches) its pixels / texture on-demand.</summary>
-        <value>
-          <para></para>
-        </value>
+        <summary>Gets a value indicating whether the image is backed by an image-generator or other source that creates (and caches) its pixels / texture on-demand.</summary>
+        <value></value>
         <remarks>If this method returns <see langword="false" />, then <see cref="M:SkiaSharp.SKImage.PeekPixels" /> will return <see langword="null" />.</remarks>
       </Docs>
     </Member>
@@ -1244,13 +1170,9 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Gets a value indicating whether the image is texture backed.</summary>
-        <value>
-          <para></para>
-        </value>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Gets a value indicating whether the image is texture backed.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="PeekPixels">
@@ -1272,9 +1194,7 @@
       <Docs>
         <summary>Returns the pixmap if the image is raster-based.</summary>
         <returns>Returns the pixmap, or <see langword="null" /> if the image does not have access to pixel data.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="PeekPixels">
@@ -1299,9 +1219,7 @@
         <param name="pixmap">The pixmap to receive the pixel information.</param>
         <summary>Returns the pixmap if the image is raster-based.</summary>
         <returns>Returns <see langword="true" /> on success, or <see langword="false" /> if the image does not have access to pixel data.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="ReadPixels">
@@ -1329,7 +1247,7 @@
         <param name="srcX">The source x-coordinate to start reading from.</param>
         <param name="srcY">The source y-coordinate to start reading from.</param>
         <summary>Copies the pixels from the image into the specified buffer.</summary>
-        <returns>Returns <see langword="true" /> if the pexels were read, or <see langword="false" /> if there was an error.</returns>
+        <returns>Returns <see langword="true" /> if the pixels were read, or <see langword="false" /> if there was an error.</returns>
         <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dst.Info.Width, dst.Info.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
       </Docs>
     </Member>
@@ -1360,8 +1278,8 @@
         <param name="srcY">The source y-coordinate to start reading from.</param>
         <param name="cachingHint">Whether or not to cache intermediate results.</param>
         <summary>Copies the pixels from the image into the specified buffer.</summary>
-        <returns>Returns <see langword="true" /> if the pexels were read, or <see langword="false" /> if there was an error.</returns>
-        <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dst.Info.Width, dst.Info.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
+        <returns>Returns <see langword="true" /> if the pixels were read, or <see langword="false" /> if there was an error.</returns>
+        <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dst.Info.Width, dst.Info.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ReadPixels">
@@ -1393,8 +1311,8 @@
         <param name="srcX">The source x-coordinate to start reading from.</param>
         <param name="srcY">The source y-coordinate to start reading from.</param>
         <summary>Copies the pixels from the image into the specified buffer.</summary>
-        <returns>Returns <see langword="true" /> if the pixels were read, or <see langword="false" /> if there was an error.</returns>
-        <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dstInfo.Width, dstInfo.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
+        <returns>Returns <see langword="true" /> if the pixels were read, or <see langword="false" /> if there was an error.</returns>
+        <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dstInfo.Width, dstInfo.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ReadPixels">
@@ -1428,8 +1346,8 @@
         <param name="srcY">The source y-coordinate to start reading from.</param>
         <param name="cachingHint">Whether or not to cache intermediate results.</param>
         <summary>Copies the pixels from the image into the specified buffer.</summary>
-        <returns>Returns <see langword="true" /> if the pexels were read, or <see langword="false" /> if there was an error.</returns>
-        <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dstInfo.Width, dstInfo.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
+        <returns>Returns <see langword="true" /> if the pixels were read, or <see langword="false" /> if there was an error.</returns>
+        <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dstInfo.Width, dstInfo.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ScalePixels">
@@ -1455,10 +1373,8 @@
         <param name="dst">The pixmap describing the destination pixel buffer.</param>
         <param name="quality">The quality of scaling to use.</param>
         <summary>Copies the pixels from this image into the destination pixmap, scaling the image if the dimensions differ.</summary>
-        <returns>Rreturns <see langword="true" /> on success, or <see langword="false" /> if the color type/alpha type could not be converted to the destination types.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns <see langword="true" /> on success, or <see langword="false" /> if the color type/alpha type could not be converted to the destination types.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="ScalePixels">
@@ -1486,10 +1402,8 @@
         <param name="quality">The quality of scaling to use.</param>
         <param name="cachingHint">Whether or not to cache intermediate results.</param>
         <summary>Copies the pixels from this image into the destination pixmap, scaling the image if the dimensions differ.</summary>
-        <returns>Rreturns <see langword="true" /> on success, or <see langword="false" /> if the color type/alpha type could not be converted to the destination types.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <returns>Returns <see langword="true" /> on success, or <see langword="false" /> if the color type/alpha type could not be converted to the destination types.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Subset">
@@ -1513,8 +1427,8 @@
       <Docs>
         <param name="subset">The rectangle indicating the subset to obtain.</param>
         <summary>Returns a new image that is a subset of this image.</summary>
-        <returns>Returns the new image, or <see langword="null" /> if there was an error or the rectangle does not intersct the image.</returns>
-        <remarks>The underlying implementation may share the pixels, or it may make a copy.</remarks>
+        <returns>Returns the new image, or <see langword="null" /> if there was an error or the rectangle does not intersect the image.</returns>
+        <remarks>The underlying implementation may share the pixels, or it may make a copy.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ToRasterImage">
@@ -1536,9 +1450,7 @@
       <Docs>
         <summary>Returns a raster-based image of the current image.</summary>
         <returns>Returns a raster-based copy of a texture image, or the same image if it already raster-based.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="ToShader">
@@ -1565,9 +1477,7 @@
         <param name="tileY">The method in which to tile along the y-axis.</param>
         <summary>Creates a new bitmap shader from the current image.</summary>
         <returns>Returns a new bitmap shader that will draw the current image.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="ToShader">
@@ -1596,9 +1506,7 @@
         <param name="localMatrix">The local matrix to use with the shader.</param>
         <summary>Creates a new bitmap shader from the current image.</summary>
         <returns>Returns a new bitmap shader that will draw the current image.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="UniqueId">
@@ -1618,12 +1526,8 @@
       </ReturnValue>
       <Docs>
         <summary>Gets the unique ID associated with the image.</summary>
-        <value>
-          <para></para>
-        </value>
-        <remarks>
-          <para></para>
-        </remarks>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Width">
@@ -1643,12 +1547,8 @@
       </ReturnValue>
       <Docs>
         <summary>Gets the image width.</summary>
-        <value>
-          <para></para>
-        </value>
-        <remarks>
-          <para></para>
-        </remarks>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
   </Members>

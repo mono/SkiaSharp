@@ -14,10 +14,8 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>A view that can be drawn on using SkiaSharp drawing commands.</summary>
-    <remarks>
-      <para></para>
-    </remarks>
+    <summary>A view that can be drawn on using SkiaSharp drawing commands.</summary>
+    <remarks></remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -36,11 +34,9 @@
         <Parameter Name="context" Type="Android.Content.Context" />
       </Parameters>
       <Docs>
-        <param name="context">The <see cref="T:Android.Content.Context" /> the view is running in, through which it can access the current theme, resources, etc.</param>
-        <summary>Simple constructor to use when creating a <see cref="T:SkiaSharp.Views.Android.SKCanvasView" /> from code.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <param name="context">The <see cref="T:Android.Content.Context" /> the view is running in, through which it can access the current theme, resources, etc.</param>
+        <summary>Simple constructor to use when creating a <see cref="T:SkiaSharp.Views.Android.SKCanvasView" /> from code.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -60,12 +56,10 @@
         <Parameter Name="attrs" Type="Android.Util.IAttributeSet" />
       </Parameters>
       <Docs>
-        <param name="context">The <see cref="T:Android.Content.Context" /> the view is running in, through which it can access the current theme, resources, etc.</param>
+        <param name="context">The <see cref="T:Android.Content.Context" /> the view is running in, through which it can access the current theme, resources, etc.</param>
         <param name="attrs">The attributes of the XML tag that is inflating the view.</param>
-        <summary>Constructor that is called when inflating a <see cref="T:SkiaSharp.Views.Android.SKCanvasView" /> from XML.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Constructor that is called when inflating a <see cref="T:SkiaSharp.Views.Android.SKCanvasView" /> from XML.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -88,9 +82,7 @@
         <param name="javaReference">A <see cref="T:System.IntPtr" /> a Java Native Interface (JNI) object reference.</param>
         <param name="transfer">A <see cref="T:Android.Runtime.JniHandleOwnership" /> indicating how to handle Java reference.</param>
         <summary>A constructor used when creating managed representations of JNI objects; called by the runtime.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -115,9 +107,7 @@
         <param name="attrs">The attributes of the XML tag that is inflating the view.</param>
         <param name="defStyleAttr">An attribute in the current theme that contains a reference to a style resource that supplies default values for the view. Can be 0 to not look for defaults.</param>
         <summary>Perform inflation from XML and apply a class-specific base style from a theme attribute.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CanvasSize">
@@ -182,10 +172,8 @@
       </ReturnValue>
       <Docs>
         <summary>Gets or sets a value indicating whether the drawing canvas should be resized on high resolution displays.</summary>
-        <value>
-          <para></para>
-        </value>
-        <remarks>By default, when false, the canvas is resized to 1 canvas pixel per display pixel. When true, the canvas is resized to device independent pixels, and then stretched to fill the view. Although performance is improved and all objects are the same size on different display densities, blurring and pixellation may occur.</remarks>
+        <value></value>
+        <remarks>By default, when false, the canvas is resized to 1 canvas pixel per display pixel. When true, the canvas is resized to device independent pixels, and then stretched to fill the view. Although performance is improved and all objects are the same size on different display densities, blurring and pixelation may occur.</remarks>
       </Docs>
     </Member>
     <Member MemberName="OnDraw">
@@ -209,9 +197,7 @@
       <Docs>
         <param name="canvas">The canvas on which the background will be drawn.</param>
         <summary>Implement this to do your drawing.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="OnDraw">
@@ -235,25 +221,36 @@
       </Parameters>
       <Docs>
         <param name="surface">The surface to draw on.</param>
-        <param name="info">The information about the surface.</param>
+        <param name="info">The information about the surface.</param>
         <summary>Implement this to draw on the canvas.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Android.SKCanvasView.OnDraw(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Android.SKCanvasView.PaintSurface" /> event. If the method is overriden, then the base must be called.</para>
-          <para></para>
-          <example>
-            <code lang="C#"><![CDATA[protected override void OnDraw (SKSurface surface, SKImageInfo info)
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+There are two ways to draw on this surface: by overriding the
+<xref:SkiaSharp.Views.Android.SKCanvasView.OnDraw(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)>
+method, or by attaching a handler to the
+<xref:SkiaSharp.Views.Android.SKCanvasView.PaintSurface>
+event. If the method is overridden, then the base must be called.
+
+## Examples
+
+```csharp
+protected override void OnDraw(SKSurface surface, SKImageInfo info)
 {
     // call the base method
-    base.OnDraw (surface, info);
+    base.OnDraw(surface, info);
 
     var surfaceWidth = info.Width;
     var surfaceHeight = info.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
-    canvas.Flush ();
-}]]></code>
-          </example>
+    canvas.Flush();
+}
+```
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -284,9 +281,7 @@
         <param name="oldw">Old width of this view.</param>
         <param name="oldh">Old height of this view.</param>
         <summary>This is called during layout when the size of this view has changed. If you were just added to the view hierarchy, you're called with the old values of 0.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="PaintSurface">
@@ -305,12 +300,21 @@
         <ReturnType>System.EventHandler&lt;SkiaSharp.Views.Android.SKPaintSurfaceEventArgs&gt;</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Occurs when the the canvas needs to be re-drawn.</summary>
+        <summary>Occurs when the the canvas needs to be redrawn.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Android.SKCanvasView.OnDraw(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Android.SKCanvasView.PaintSurface" /> event.</para>
-          <para></para>
-          <example>
-            <code lang="C#"><![CDATA[SKCanvasView myView = ...;
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+There are two ways to draw on this surface: by overriding the
+<xref:SkiaSharp.Views.Android.SKCanvasView.OnDraw(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)>
+method, or by attaching a handler to the
+<xref:SkiaSharp.Views.Android.SKCanvasView.PaintSurface>
+event.
+
+## Examples
+
+```csharp
+SKCanvasView myView = ...;
 
 myView.PaintSurface += (sender, e) => {
     var surface = e.Surface;
@@ -318,10 +322,12 @@ myView.PaintSurface += (sender, e) => {
     var surfaceHeight = e.Info.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
-    canvas.Flush ();
-};]]></code>
-          </example>
+    canvas.Flush();
+};
+```
+]]></format>
         </remarks>
       </Docs>
     </Member>

@@ -16,7 +16,86 @@
   <Docs>
     <summary>A utility class that can be used to create 3D transformations.</summary>
     <remarks>
-      <para></para>
+      <format type="text/markdown"><![CDATA[
+## Examples
+
+```csharp
+var info = new SKImageInfo(256, 256);
+using (var surface = SKSurface.Create(info)) {
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear(SKColors.White);
+
+    // center the entire drawing
+    canvas.Translate(128, 128);
+
+    // the "3D camera"
+    var view = new SK3dView();
+
+    // rotate to a nice 3D view
+    view.RotateXDegrees(-25);
+    view.RotateYDegrees(45);
+
+    // move the origin of the 3D view
+    view.Translate(-50, 50, 50);
+
+    // define the cube face
+    var face = SKRect.Create(0, 0, 100, 100);
+
+    // draw the left face
+    using (new SKAutoCanvasRestore(canvas, true)) {
+        // get the face in the correct location
+        view.Save();
+        view.RotateYDegrees(-90);
+        view.ApplyToCanvas(canvas);
+        view.Restore();
+
+        // draw the face
+        var leftFace = new SKPaint {
+            Color = SKColors.LightGray,
+            IsAntialias = true
+        };
+        canvas.DrawRect(face, leftFace);
+    }
+
+    // draw the right face
+    using (new SKAutoCanvasRestore(canvas, true)) {
+        // get the face in the correct location
+        view.Save();
+        view.TranslateZ(-100);
+        view.ApplyToCanvas(canvas);
+        view.Restore();
+
+        // draw the face
+        var rightFace = new SKPaint {
+            Color = SKColors.Gray,
+            IsAntialias = true
+        };
+        canvas.DrawRect(face, rightFace);
+    }
+
+    // draw the top face
+    using (new SKAutoCanvasRestore(canvas, true)) {
+        // get the face in the correct location
+        view.Save();
+        view.RotateXDegrees(90);
+        view.ApplyToCanvas(canvas);
+        view.Restore();
+
+        // draw the face
+        var topFace = new SKPaint {
+            Color = SKColors.DarkGray,
+            IsAntialias = true
+        };
+        canvas.DrawRect(face, topFace);
+    }
+}
+```
+
+The example above produces the following:
+
+![3D View](xamarin-media/SkiaSharp/sk3dview.png "3D View")
+]]></format>
     </remarks>
   </Docs>
   <Members>
@@ -34,10 +113,8 @@
       </AssemblyInfo>
       <Parameters />
       <Docs>
-        <summary>Creates a new instance of <see cref="T:SkiaSharp.SK3dView" />.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Creates a new instance of <see cref="T:SkiaSharp.SK3dView" />.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="ApplyToCanvas">
@@ -60,10 +137,8 @@
       </Parameters>
       <Docs>
         <param name="canvas">The canvas to apply the transformation to.</param>
-        <summary>Applies the current transformation to the specfied canvas.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Applies the current transformation to the specified canvas.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -116,9 +191,7 @@
         <param name="dz">The z-axis of the normal.</param>
         <summary>Returns the dot product of the current transformation and the specified normal.</summary>
         <returns>Returns the dot product.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="GetMatrix">
@@ -142,9 +215,7 @@
       <Docs>
         <param name="matrix">The matrix to store the transformation.</param>
         <summary>Stores the current transformation in the specified matrix.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Matrix">
@@ -164,12 +235,8 @@
       </ReturnValue>
       <Docs>
         <summary>Gets the current transformation as a matrix.</summary>
-        <value>
-          <para></para>
-        </value>
-        <remarks>
-          <para></para>
-        </remarks>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Restore">
@@ -189,10 +256,8 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Restores the transformation to the last saved with <see cref="M:SkiaSharp.SK3dView.Save" />.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Restores the transformation to the last saved with <see cref="M:SkiaSharp.SK3dView.Save" />.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="RotateXDegrees">
@@ -216,9 +281,7 @@
       <Docs>
         <param name="degrees">The degrees to rotate by.</param>
         <summary>Rotates the transformation along the x-axis by the specified degrees.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="RotateXRadians">
@@ -242,9 +305,7 @@
       <Docs>
         <param name="radians">The radians to rotate by.</param>
         <summary>Rotates the transformation along the x-axis by the specified radians.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="RotateYDegrees">
@@ -268,9 +329,7 @@
       <Docs>
         <param name="degrees">The degrees to rotate by.</param>
         <summary>Rotates the transformation along the y-axis by the specified degrees.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="RotateYRadians">
@@ -294,9 +353,7 @@
       <Docs>
         <param name="radians">The radians to rotate by.</param>
         <summary>Rotates the transformation along the y-axis by the specified radians.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="RotateZDegrees">
@@ -320,9 +377,7 @@
       <Docs>
         <param name="degrees">The degrees to rotate by.</param>
         <summary>Rotates the transformation along the z-axis by the specified degrees.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="RotateZRadians">
@@ -346,9 +401,7 @@
       <Docs>
         <param name="radians">The radians to rotate by.</param>
         <summary>Rotates the transformation along the z-axis by the specified radians.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Save">
@@ -368,10 +421,8 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Saves the current transformation so that it can be restored later using <see cref="M:SkiaSharp.SK3dView.Restore" />.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Saves the current transformation so that it can be restored later using <see cref="M:SkiaSharp.SK3dView.Restore" />.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Translate">
@@ -398,10 +449,8 @@
         <param name="x">The amount to translate by along the x-axis.</param>
         <param name="y">The amount to translate by along the y-axis.</param>
         <param name="z">The amount to translate by along the z-axis.</param>
-        <summary>Translates the transformation.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Translates the transformation.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="TranslateX">
@@ -424,10 +473,8 @@
       </Parameters>
       <Docs>
         <param name="x">The amount to translate by.</param>
-        <summary>Translates the transformation along the x-axis.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Translates the transformation along the x-axis.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="TranslateY">
@@ -450,10 +497,8 @@
       </Parameters>
       <Docs>
         <param name="y">The amount to translate by.</param>
-        <summary>Translates the transformation along the y-axis.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Translates the transformation along the y-axis.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="TranslateZ">
@@ -476,10 +521,8 @@
       </Parameters>
       <Docs>
         <param name="z">The amount to translate by.</param>
-        <summary>Translates the transformation along the z-axis.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Translates the transformation along the z-axis.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
   </Members>

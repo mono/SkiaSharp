@@ -14,10 +14,8 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>A CoreAnimation layer that can be drawn on using SkiaSharp drawing commands.</summary>
-    <remarks>
-      <para></para>
-    </remarks>
+    <summary>A CoreAnimation layer that can be drawn on using SkiaSharp drawing commands.</summary>
+    <remarks></remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -35,9 +33,7 @@
       <Parameters />
       <Docs>
         <summary>Default constructor that initializes a new instance of <see cref="T:SkiaSharp.Views.tvOS.SKCanvasLayer" />.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CanvasSize">
@@ -106,9 +102,7 @@
       <Docs>
         <param name="ctx">The prepared context to draw into.</param>
         <summary>Draws the layer on the specified context.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawInSurface">
@@ -132,10 +126,10 @@
       </Parameters>
       <Docs>
         <param name="surface">The surface to draw on.</param>
-        <param name="info">The information about the surface.</param>
+        <param name="info">The information about the surface.</param>
         <summary>Implement this to draw on the canvas.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.tvOS.SKCanvasLayer.DrawInSurface" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.tvOS.SKCanvasLayer.PaintSurface" /> event. If the method is overriden, then the base must be called.</para>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.tvOS.SKCanvasLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.tvOS.SKCanvasLayer.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
           <para></para>
           <example>
             <code lang="C#"><![CDATA[public override void DrawInSurface (SKSurface surface, SKImageInfo info)
@@ -147,6 +141,7 @@
     var surfaceHeight = info.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
     canvas.Flush ();
 }]]></code>
@@ -171,10 +166,8 @@
       </ReturnValue>
       <Docs>
         <summary>Gets or sets a value indicating whether the drawing canvas should be resized on high resolution displays.</summary>
-        <value>
-          <para />
-        </value>
-        <remarks>By default, when false, the canvas is resized to 1 canvas pixel per display pixel. When true, the canvas is resized to device independent pixels, and then stretched to fill the view. Although performance is improved and all objects are the same size on different display densities, blurring and pixellation may occur.</remarks>
+        <value></value>
+        <remarks>By default, when false, the canvas is resized to 1 canvas pixel per display pixel. When true, the canvas is resized to device independent pixels, and then stretched to fill the view. Although performance is improved and all objects are the same size on different display densities, blurring and pixelation may occur.</remarks>
       </Docs>
     </Member>
     <Member MemberName="PaintSurface">
@@ -193,9 +186,9 @@
         <ReturnType>System.EventHandler&lt;SkiaSharp.Views.tvOS.SKPaintSurfaceEventArgs&gt;</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Occurs when the the canvas needs to be re-drawn.</summary>
+        <summary>Occurs when the the canvas needs to be redrawn.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.tvOS.SKCanvasLayer.DrawInSurface" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.tvOS.SKCanvasLayer.PaintSurface" /> event.</para>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.tvOS.SKCanvasLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.tvOS.SKCanvasLayer.PaintSurface" /> event.</para>
           <para></para>
           <example>
             <code lang="C#"><![CDATA[SKCanvasLayer myLayer = ...;
@@ -206,6 +199,7 @@ myLayer.PaintSurface += (sender, e) => {
     var surfaceHeight = e.Info.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
     canvas.Flush ();
 };]]></code>
@@ -229,13 +223,9 @@ myLayer.PaintSurface += (sender, e) => {
         <ReturnType>SkiaSharp.Views.tvOS.ISKCanvasLayerDelegate</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Gets or sets the layer’s delegate object.</summary>
-        <value>
-          <para></para>
-        </value>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Gets or sets the layer's delegate object.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
   </Members>

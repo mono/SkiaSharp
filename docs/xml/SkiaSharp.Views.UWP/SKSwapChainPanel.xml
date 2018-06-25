@@ -14,10 +14,8 @@
   </Base>
   <Interfaces />
   <Docs>
-    <summary>A SwapChainPanel that can be drawn on using SkiaSharp drawing commands.</summary>
-    <remarks>
-      <para></para>
-    </remarks>
+    <summary>A SwapChainPanel that can be drawn on using SkiaSharp drawing commands.</summary>
+    <remarks></remarks>
   </Docs>
   <Members>
     <Member MemberName=".ctor">
@@ -34,10 +32,8 @@
       </AssemblyInfo>
       <Parameters />
       <Docs>
-        <summary>Creates a new instance of <see cref="T:SkiaSharp.Views.UWP.SKSwapChainPanel" />.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Creates a new instance of <see cref="T:SkiaSharp.Views.UWP.SKSwapChainPanel" />.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="ArrangeOverride">
@@ -62,9 +58,7 @@
         <param name="finalSize">The available size that this object can give to child objects. Infinity can be specified as a value to indicate that the object will size to whatever content is available.</param>
         <summary>Provides the behavior for the "Measure" pass of the layout cycle. Classes can override this method to define their own "Measure" pass behavior.</summary>
         <returns>The size that this object determines it needs during layout, based on its calculations of the allocated sizes for child objects or based on other considerations such as a fixed container size.</returns>
-        <remarks>
-          <para></para>
-        </remarks>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CanvasSize">
@@ -84,7 +78,7 @@
       </ReturnValue>
       <Docs>
         <summary>Gets the current canvas size.</summary>
-        <value />
+        <value></value>
         <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
       </Docs>
     </Member>
@@ -103,12 +97,8 @@
       </ReturnValue>
       <Docs>
         <summary>Gets the current GPU context.</summary>
-        <value>
-          <para />
-        </value>
-        <remarks>
-          <para />
-        </remarks>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="OnPaintSurface">
@@ -133,7 +123,7 @@
         <param name="e">The event arguments that contain the drawing surface and information.</param>
         <summary>Implement this to draw on the canvas.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.UWP.SKSwapChainPanel.OnPaintSurface" /> method, or by attaching a handler to the  <see cref="E:SkiaSharp.Views.UWP.SKSwapChainPanel.PaintSurface" /> event. If the method is overriden, then the base must be called.</para>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.UWP.SKSwapChainPanel.OnPaintSurface(SkiaSharp.Views.UWP.SKPaintGLSurfaceEventArgs)" /> method, or by attaching a handler to the  <see cref="E:SkiaSharp.Views.UWP.SKSwapChainPanel.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
           <para></para>
           <example>
             <code lang="C#"><![CDATA[protected override void OnPaintSurface (SKPaintGLSurfaceEventArgs e)
@@ -146,6 +136,7 @@
     var surfaceHeight = e.RenderTarget.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
     canvas.Flush ();
 }]]></code>
@@ -173,10 +164,8 @@
       </Parameters>
       <Docs>
         <param name="rect">The rectangle to draw.</param>
-        <summary>Called to draw the current frame within the passed-in rectangle.</summary>
-        <remarks>
-          <para></para>
-        </remarks>
+        <summary>Called to draw the current frame within the passed-in rectangle.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="PaintSurface">
@@ -195,9 +184,9 @@
         <ReturnType>System.EventHandler&lt;SkiaSharp.Views.UWP.SKPaintGLSurfaceEventArgs&gt;</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Occurs when the surface needs to be re-drawn.</summary>
+        <summary>Occurs when the surface needs to be redrawn.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.UWP.SKSwapChainPanel.OnPaintSurface" /> method, or by attaching a handler to the  <see cref="E:SkiaSharp.Views.UWP.SKSwapChainPanel.PaintSurface" /> event.</para>
+          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.UWP.SKSwapChainPanel.OnPaintSurface(SkiaSharp.Views.UWP.SKPaintGLSurfaceEventArgs)" /> method, or by attaching a handler to the  <see cref="E:SkiaSharp.Views.UWP.SKSwapChainPanel.PaintSurface" /> event.</para>
           <para></para>
           <example>
             <code lang="C#"><![CDATA[SKSwapChainPanel myPanel = ...;
@@ -208,6 +197,7 @@ myPanel.PaintSurface += (sender, e) => {
     var surfaceHeight = e.RenderTarget.Height;
 
     var canvas = surface.Canvas;
+
     // draw on the canvas
     canvas.Flush ();
 };]]></code>
