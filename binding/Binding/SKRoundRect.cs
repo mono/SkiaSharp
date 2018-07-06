@@ -1,13 +1,4 @@
-﻿//
-// Bindings for SKRoundRect
-//
-// Author:
-//   Matthew Leibowitz
-//
-// Copyright 2018 Xamarin Inc
-//
-
-using System;
+﻿using System;
 
 namespace SkiaSharp
 {

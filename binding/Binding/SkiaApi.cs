@@ -1,12 +1,4 @@
-//
-// Low-level P/Invoke declarations
-//
-// Author:
-//   Miguel de Icaza
-//
-// Copyright 2015 Xamarin Inc
-//
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 

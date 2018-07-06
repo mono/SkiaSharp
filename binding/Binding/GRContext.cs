@@ -1,13 +1,4 @@
-﻿//
-// Bindings for GRContext
-//
-// Author:
-//   Matthew Leibowitz
-//
-// Copyright 2016 Xamarin Inc
-//
-
-using System;
+﻿using System;
 
 namespace SkiaSharp
 {

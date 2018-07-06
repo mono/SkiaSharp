@@ -1,13 +1,4 @@
-//
-// Bindings for SKBitmap
-//
-// Author:
-//   Matthew Leibowitz
-//
-// Copyright 2016 Xamarin Inc
-//
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;

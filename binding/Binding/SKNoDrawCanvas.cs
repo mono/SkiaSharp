@@ -1,12 +1,4 @@
-﻿//
-// Bindings for SKNoDrawCanvas
-//
-// Author:
-//   Matthew Leibowitz
-//
-// Copyright 2018 © Microsoft Corporation. All rights reserved.
-//
-using System;
+﻿using System;
 
 namespace SkiaSharp
 {
