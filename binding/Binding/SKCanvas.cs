@@ -651,8 +651,6 @@ namespace SkiaSharp
 		public void DrawBitmapLattice (SKBitmap bitmap, int[] xDivs, int[] yDivs, SKRect dst, SKPaint paint = null)
 		{
 			var lattice = new SKLattice {
-				Bounds = null,
-				Flags = null,
 				XDivs = xDivs,
 				YDivs = yDivs
 			};
@@ -662,8 +660,6 @@ namespace SkiaSharp
 		public void DrawImageLattice (SKImage image, int[] xDivs, int[] yDivs, SKRect dst, SKPaint paint = null)
 		{
 			var lattice = new SKLattice {
-				Bounds = null,
-				Flags = null,
 				XDivs = xDivs,
 				YDivs = yDivs
 			};
@@ -682,14 +678,16 @@ namespace SkiaSharp
 			unsafe {
 				fixed (int* x = &lattice.XDivs[0])
 				fixed (int* y = &lattice.YDivs[0])
-				fixed (SKLatticeFlags* f = &lattice.Flags[0]) {
+				fixed (SKLatticeRectType* r = &lattice.RectTypes[0])
+				fixed (SKColor* c = &lattice.Colors[0]) {
 					var nativeLattice = new SKLatticeInternal {
 						fBounds = null,
-						fFlags = f,
+						fRectTypes = r,
 						fXCount = lattice.XDivs.Length,
 						fXDivs = x,
 						fYCount = lattice.YDivs.Length,
 						fYDivs = y,
+						fColors = c,
 					};
 					if (lattice.Bounds != null) {
 						var bounds = lattice.Bounds.Value;
@@ -700,7 +698,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public unsafe void DrawImageLattice (SKImage image, SKLattice lattice, SKRect dst, SKPaint paint = null)
+		public void DrawImageLattice (SKImage image, SKLattice lattice, SKRect dst, SKPaint paint = null)
 		{
 			if (image == null)
 				throw new ArgumentNullException (nameof (image));
@@ -712,14 +710,16 @@ namespace SkiaSharp
 			unsafe {
 				fixed (int* x = &lattice.XDivs[0])
 				fixed (int* y = &lattice.YDivs[0])
-				fixed (SKLatticeFlags* f = &lattice.Flags[0]) {
+				fixed (SKLatticeRectType* r = &lattice.RectTypes[0])
+				fixed (SKColor* c = &lattice.Colors[0]) {
 					var nativeLattice = new SKLatticeInternal {
 						fBounds = null,
-						fFlags = f,
+						fRectTypes = r,
 						fXCount = lattice.XDivs.Length,
 						fXDivs = x,
 						fYCount = lattice.YDivs.Length,
 						fYDivs = y,
+						fColors = c,
 					};
 					if (lattice.Bounds != null) {
 						var bounds = lattice.Bounds.Value;

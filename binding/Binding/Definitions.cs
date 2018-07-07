@@ -9,15 +9,17 @@ namespace SkiaSharp
 	public enum SKCodecResult {
 		Success,
 		IncompleteInput,
+		ErrorInInput,
 		InvalidConversion,
 		InvalidScale,
 		InvalidParameters,
 		InvalidInput,
 		CouldNotRewind,
+		InternalError,
 		Unimplemented,
 	}
 
-	public enum SKCodecOrigin {
+	public enum SKEncodedOrigin {
 		TopLeft = 1,
 		TopRight = 2,
 		BottomRight = 3,
@@ -26,6 +28,7 @@ namespace SkiaSharp
 		RightTop = 6,
 		RightBottom = 7,
 		LeftBottom = 8,
+		Default = TopLeft,
 	}
 
 	public enum SKEncodedImageFormat {
@@ -40,14 +43,6 @@ namespace SkiaSharp
 		Ktx,
 		Astc,
 		Dng,
-	}
-
-	[Flags]
-	public enum SKTypefaceStyle {
-		Normal     = 0,
-		Bold       = 0x01,
-		Italic     = 0x02,
-		BoldItalic = 0x03
 	}
 
 	public enum SKFontStyleWeight {
@@ -118,8 +113,10 @@ namespace SkiaSharp
 		Rgb565,
 		Argb4444,
 		Rgba8888,
+		Rgb888x,
 		Bgra8888,
-		Index8,
+		Rgba1010102,
+		Rgb101010x,
 		Gray8,
 		RgbaF16
 	}
@@ -137,14 +134,6 @@ namespace SkiaSharp
 
 	public enum SKBlurStyle {
 		Normal, Solid, Outer, Inner
-	}
-
-	[Flags]
-	public enum SKBlurMaskFilterFlags {
-		None = 0x00,
-		IgnoreTransform = 0x01,
-		HighQuality = 0x02,
-		All = IgnoreTransform | HighQuality,
 	}
 
 	public enum SKBlendMode {
@@ -187,14 +176,6 @@ namespace SkiaSharp
 		BgrVertical
 	}
 
-	public enum SKBitmapResizeMethod {
-		Box,
-		Triangle,
-		Lanczos3,
-		Hamming,
-		Mitchell
-	}
-
 	[Flags]
 	public enum SKSurfacePropsFlags {
 		None = 0,
@@ -205,7 +186,7 @@ namespace SkiaSharp
 		Utf8, Utf16, Utf32
 	}
 
-	public static class SkiaExtensions {
+	public static partial class SkiaExtensions {
 		public static bool IsBgr (this SKPixelGeometry pg)
 		{
 			return pg == SKPixelGeometry.BgrHorizontal || pg == SKPixelGeometry.BgrVertical;
@@ -353,7 +334,7 @@ namespace SkiaSharp
 		public SKZeroInitialized fZeroInitialized;
 		public SKRectI* fSubset;
 		public int fFrameIndex;
-		public byte fHasPriorFrame;
+		public int fPriorFrame;
 		public SKTransferFunctionBehavior fPremulBehavior;
 
 		public static unsafe SKCodecOptionsInternal FromManaged (ref SKCodecOptions managed)
@@ -362,7 +343,7 @@ namespace SkiaSharp
 				fZeroInitialized = managed.ZeroInitialized,
 				fSubset = null,
 				fFrameIndex = managed.FrameIndex,
-				fHasPriorFrame = managed.HasPriorFrame ? (byte) 1 : (byte) 0,
+				fPriorFrame = managed.PriorFrame,
 				fPremulBehavior = managed.PremulBehavior,
 			};
 			if (managed.HasSubset) {
@@ -384,36 +365,42 @@ namespace SkiaSharp
 			ZeroInitialized = zeroInitialized;
 			Subset = null;
 			FrameIndex = 0;
-			HasPriorFrame = false;
+			PriorFrame = 0;
 			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (SKZeroInitialized zeroInitialized, SKRectI subset) {
 			ZeroInitialized = zeroInitialized;
 			Subset = subset;
 			FrameIndex = 0;
-			HasPriorFrame = false;
+			PriorFrame = 0;
 			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (SKRectI subset) {
 			ZeroInitialized = SKZeroInitialized.No;
 			Subset = subset;
 			FrameIndex = 0;
-			HasPriorFrame = false;
+			PriorFrame = 0;
 			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
-		public SKCodecOptions (int frameIndex, bool hasPriorFrame) {
+		public SKCodecOptions (int frameIndex, int priorFrame) {
 			ZeroInitialized = SKZeroInitialized.No;
 			Subset = null;
 			FrameIndex = frameIndex;
-			HasPriorFrame = hasPriorFrame;
+			PriorFrame = priorFrame;
 			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKZeroInitialized ZeroInitialized { get; set; }
 		public SKRectI? Subset { get; set; }
 		public bool HasSubset => Subset != null;
 		public int FrameIndex { get; set; }
-		public bool HasPriorFrame { get; set; }
+		public int PriorFrame { get; set; }
 		public SKTransferFunctionBehavior PremulBehavior { get; set; }
+	}
+
+	public enum SKCodecAnimationDisposalMethod {
+		Keep                     = 1,
+		RestoreBackgroundColor   = 2,
+		ResturePrevious          = 3,
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -422,6 +409,7 @@ namespace SkiaSharp
 		private int duration;
 		private byte fullyRecieved;
 		private SKAlphaType alphaType;
+		private SKCodecAnimationDisposalMethod disposalMethod;
 
 		public int RequiredFrame {
 			get { return requiredFrame; }
@@ -441,6 +429,11 @@ namespace SkiaSharp
 		public SKAlphaType AlphaType {
 			get { return alphaType; }
 			set { alphaType = value; }
+		}
+
+		public SKCodecAnimationDisposalMethod DisposalMethod {
+			get { return disposalMethod; }
+			set { disposalMethod = value; }
 		}
 	}
 
@@ -1562,6 +1555,11 @@ namespace SkiaSharp
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKFontMetrics
 	{
+		private const uint flagsUnderlineThicknessIsValid = (1U << 0);
+		private const uint flagsUnderlinePositionIsValid  = (1U << 1);
+		private const uint flagsStrikeoutThicknessIsValid = (1U << 2);
+		private const uint flagsStrikeoutPositionIsValid  = (1U << 3);
+
 		uint flags;                     // Bit field to identify which values are unknown
 		float top;                      // The greatest distance above the baseline for any glyph (will be <= 0)
 		float ascent;                   // The recommended distance above the baseline (will be <= 0)
@@ -1576,9 +1574,8 @@ namespace SkiaSharp
 		float capHeight;                // The cap height (> 0), or 0 if cannot be determined.
 		float underlineThickness;       // underline thickness, or 0 if cannot be determined
 		float underlinePosition;        // underline position, or 0 if cannot be determined
-
-		const uint flagsUnderlineThicknessIsValid = (1U << 0);
-		const uint flagsUnderlinePositionIsValid = (1U << 1);
+		float strikeoutThickness;
+		float strikeoutPosition;
 
 		public float Top
 		{
@@ -1635,24 +1632,17 @@ namespace SkiaSharp
 			get { return capHeight; }
 		}
 
-		public float? UnderlineThickness
-		{
-			get {
-				if ((flags & flagsUnderlineThicknessIsValid) != 0)
-					return underlineThickness;
-				else
-					return null;
-			}
-		}
+		public float? UnderlineThickness => GetIfValid(underlineThickness, flagsUnderlineThicknessIsValid);
+		public float? UnderlinePosition => GetIfValid(underlinePosition, flagsUnderlinePositionIsValid);
+		public float? StrikeoutThickness => GetIfValid(strikeoutThickness, flagsStrikeoutThicknessIsValid);
+		public float? StrikeoutPosition => GetIfValid(strikeoutPosition, flagsStrikeoutPositionIsValid);
 
-		public float? UnderlinePosition
+		private float? GetIfValid(float value, uint flag)
 		{
-			get {
-				if ((flags & flagsUnderlinePositionIsValid) != 0)
-					return underlinePosition;
-				else
-					return null;
-			}
+			if ((flags & flag) == flag)
+				return value;
+			else
+				return null;
 		}
 	}
 	
@@ -1670,26 +1660,29 @@ namespace SkiaSharp
 		Concave,
 	};
 
-	public enum SKLatticeFlags {
+	public enum SKLatticeRectType {
 		Default,
-		Transparent = 1 << 0,
+		Transparent,
+		FixedColor,
 	};
 
 	[StructLayout(LayoutKind.Sequential)]
 	internal unsafe struct SKLatticeInternal {
 		public int* fXDivs;
 		public int* fYDivs;
-		public SKLatticeFlags* fFlags;
+		public SKLatticeRectType* fRectTypes;
 		public int fXCount;
 		public int fYCount;
 		public SKRectI* fBounds;
+		public SKColor* fColors;
 	}
 
 	public struct SKLattice {
 		public int[] XDivs { get; set; }
 		public int[] YDivs { get; set; }
-		public SKLatticeFlags[] Flags { get; set; }
+		public SKLatticeRectType[] RectTypes { get; set; }
 		public SKRectI? Bounds { get; set; }
+		public SKColor[] Colors { get; set; }
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -1741,129 +1734,6 @@ namespace SkiaSharp
 		public DateTime? Modified { get; set; }
 	}
 
-	public struct SKEncodedInfo {
-		private SKEncodedInfoColor color;
-		private SKEncodedInfoAlpha alpha;
-		private byte bitsPerComponent;
-
-		public SKEncodedInfo (SKEncodedInfoColor color) {
-			this.color = color;
-			this.bitsPerComponent = 8;
-
-			switch (color) {
-				case SKEncodedInfoColor.Gray:
-				case SKEncodedInfoColor.Rgb:
-				case SKEncodedInfoColor.Bgr:
-				case SKEncodedInfoColor.Bgrx:
-				case SKEncodedInfoColor.Yuv:
-				case SKEncodedInfoColor.InvertedCmyk:
-				case SKEncodedInfoColor.Ycck:
-					this.alpha = SKEncodedInfoAlpha.Opaque;
-					break;
-				case SKEncodedInfoColor.GrayAlpha:
-				case SKEncodedInfoColor.Palette:
-				case SKEncodedInfoColor.Rgba:
-				case SKEncodedInfoColor.Bgra:
-				case SKEncodedInfoColor.Yuva:
-					this.alpha = SKEncodedInfoAlpha.Unpremul;
-					break;
-				default:
-					throw new ArgumentOutOfRangeException (nameof (color));
-			}
-		}
-
-		public SKEncodedInfo (SKEncodedInfoColor color, SKEncodedInfoAlpha alpha, byte bitsPerComponent) {
-			if (bitsPerComponent != 1 && bitsPerComponent != 2 && bitsPerComponent != 4 && bitsPerComponent != 8 && bitsPerComponent != 16) {
-				throw new ArgumentException ("The bits per component must be 1, 2, 4, 8 or 16.", nameof (bitsPerComponent));
-			}
-
-			switch (color) {
-				case SKEncodedInfoColor.Gray:
-					if (alpha != SKEncodedInfoAlpha.Opaque)
-						throw new ArgumentException ("The alpha must be opaque.", nameof (alpha));
-					break;
-				case SKEncodedInfoColor.GrayAlpha:
-					if (alpha == SKEncodedInfoAlpha.Opaque)
-						throw new ArgumentException ("The alpha must not be opaque.", nameof (alpha));
-					break;
-				case SKEncodedInfoColor.Palette:
-					if (bitsPerComponent == 16)
-						throw new ArgumentException ("The bits per component must be 1, 2, 4 or 8.", nameof (bitsPerComponent));
-					break;
-				case SKEncodedInfoColor.Rgb:
-				case SKEncodedInfoColor.Bgr:
-				case SKEncodedInfoColor.Bgrx:
-					if (alpha != SKEncodedInfoAlpha.Opaque)
-						throw new ArgumentException ("The alpha must be opaque.", nameof (alpha));
-					if (bitsPerComponent < 8)
-						throw new ArgumentException ("The bits per component must be 8 or 16.", nameof (bitsPerComponent));
-					break;
-				case SKEncodedInfoColor.Yuv:
-				case SKEncodedInfoColor.InvertedCmyk:
-				case SKEncodedInfoColor.Ycck:
-					if (alpha != SKEncodedInfoAlpha.Opaque)
-						throw new ArgumentException ("The alpha must be opaque.", nameof (alpha));
-					if (bitsPerComponent != 8)
-						throw new ArgumentException ("The bits per component must be 8.", nameof (bitsPerComponent));
-					break;
-				case SKEncodedInfoColor.Rgba:
-					if (alpha == SKEncodedInfoAlpha.Opaque)
-						throw new ArgumentException ("The alpha must not be opaque.", nameof (alpha));
-					if (bitsPerComponent < 8)
-						throw new ArgumentException ("The bits per component must be 8 or 16.", nameof (bitsPerComponent));
-					break;
-				case SKEncodedInfoColor.Bgra:
-				case SKEncodedInfoColor.Yuva:
-					if (alpha == SKEncodedInfoAlpha.Opaque)
-						throw new ArgumentException ("The alpha must not be opaque.", nameof (alpha));
-					if (bitsPerComponent != 8)
-						throw new ArgumentException ("The bits per component must be 8.", nameof (bitsPerComponent));
-					break;
-				default:
-					throw new ArgumentOutOfRangeException (nameof (color));
-			}
-
-			this.color = color;
-			this.alpha = alpha;
-			this.bitsPerComponent = bitsPerComponent;
-		}
-
-		public SKEncodedInfoColor Color => color;
-		public SKEncodedInfoAlpha Alpha => alpha;
-		public byte BitsPerComponent => bitsPerComponent;
-		public byte BitsPerPixel {
-			get {
-				switch (color) {
-					case SKEncodedInfoColor.Gray:
-						return bitsPerComponent;
-					case SKEncodedInfoColor.GrayAlpha:
-						return (byte)(2 * bitsPerComponent);
-					case SKEncodedInfoColor.Palette:
-						return bitsPerComponent;
-					case SKEncodedInfoColor.Rgb:
-					case SKEncodedInfoColor.Bgr:
-					case SKEncodedInfoColor.Yuv:
-						return (byte)(3 * bitsPerComponent);
-					case SKEncodedInfoColor.Rgba:
-					case SKEncodedInfoColor.Bgra:
-					case SKEncodedInfoColor.Bgrx:
-					case SKEncodedInfoColor.Yuva:
-					case SKEncodedInfoColor.InvertedCmyk:
-					case SKEncodedInfoColor.Ycck:
-						return (byte)(4 * bitsPerComponent);
-					default:
-						return (byte)0;
-				}
-			}
-		}
-	}
-
-	public enum SKEncodedInfoAlpha {
-		Opaque,
-		Unpremul,
-		Binary,
-	}
-
 	public enum SKColorSpaceGamut {
 		Srgb,
 		AdobeRgb,
@@ -1880,21 +1750,6 @@ namespace SkiaSharp
 	public enum SKColorSpaceRenderTargetGamma {
 		Linear,
 		Srgb,
-	}
-
-	public enum SKEncodedInfoColor {
-		Gray,
-		GrayAlpha,
-		Palette,
-		Rgb,
-		Rgba,
-		Bgr,
-		Bgrx,
-		Bgra,
-		Yuv,
-		Yuva,
-		InvertedCmyk,
-		Ycck,
 	}
 
 	public enum SKMaskFormat {
@@ -1993,6 +1848,7 @@ namespace SkiaSharp
 		private SKPngEncoderFilterFlags fFilterFlags;
 		private int fZLibLevel;
 		private SKTransferFunctionBehavior fUnpremulBehavior;
+		private IntPtr fComments; // TODO: get and set comments
 
 		public static readonly SKPngEncoderOptions Default;
 
@@ -2006,6 +1862,7 @@ namespace SkiaSharp
 			fFilterFlags = filterFlags;
 			fZLibLevel = zLibLevel;
 			fUnpremulBehavior = SKTransferFunctionBehavior.Respect;
+			fComments = IntPtr.Zero;
 		}
 
 		public SKPngEncoderOptions (SKPngEncoderFilterFlags filterFlags, int zLibLevel, SKTransferFunctionBehavior unpremulBehavior)
@@ -2013,6 +1870,7 @@ namespace SkiaSharp
 			fFilterFlags = filterFlags;
 			fZLibLevel = zLibLevel;
 			fUnpremulBehavior = unpremulBehavior;
+			fComments = IntPtr.Zero;
 		}
 
 		public SKPngEncoderFilterFlags FilterFlags { 

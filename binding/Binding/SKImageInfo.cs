@@ -119,7 +119,6 @@ namespace SkiaSharp
 				case SKColorType.Unknown:
 					return 0;
 				case SKColorType.Alpha8:
-				case SKColorType.Index8:
 				case SKColorType.Gray8:
 					return 1;
 				case SKColorType.Rgb565:
@@ -127,6 +126,9 @@ namespace SkiaSharp
 					return 2;
 				case SKColorType.Bgra8888:
 				case SKColorType.Rgba8888:
+				case SKColorType.Rgb888x:
+				case SKColorType.Rgba1010102:
+				case SKColorType.Rgb101010x:
 					return 4;
 				case SKColorType.RgbaF16:
 					return 8;
@@ -141,7 +143,6 @@ namespace SkiaSharp
 				case SKColorType.Unknown:
 					return 0;
 				case SKColorType.Alpha8:
-				case SKColorType.Index8:
 				case SKColorType.Gray8:
 					return 8;
 				case SKColorType.Rgb565:
@@ -149,6 +150,9 @@ namespace SkiaSharp
 					return 16;
 				case SKColorType.Bgra8888:
 				case SKColorType.Rgba8888:
+				case SKColorType.Rgb888x:
+				case SKColorType.Rgba1010102:
+				case SKColorType.Rgb101010x:
 					return 32;
 				case SKColorType.RgbaF16:
 					return 64;

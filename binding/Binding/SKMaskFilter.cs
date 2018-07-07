@@ -2,6 +2,17 @@
 
 namespace SkiaSharp
 {
+	[Flags]
+	[Obsolete]
+	public enum SKBlurMaskFilterFlags
+	{
+		None = 0x00,
+		IgnoreTransform = 0x01,
+		HighQuality = 0x02,
+		All = IgnoreTransform | HighQuality,
+	}
+
+
 	// TODO: `getFormat`
 	// TODO: `computeFastBounds`
 
@@ -39,19 +50,26 @@ namespace SkiaSharp
 			return GetObject<SKMaskFilter> (SkiaApi.sk_maskfilter_new_blur (blurStyle, sigma));
 		}
 
+		[Obsolete("Use CreateBlur(SKBlurStyle, float) instead.")]
 		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKBlurMaskFilterFlags flags)
 		{
-			return CreateBlur (blurStyle, sigma, SKRect.Empty, flags);
+			return CreateBlur (blurStyle, sigma, SKRect.Empty, true);
 		}
 
 		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder)
 		{
-			return CreateBlur (blurStyle, sigma, occluder, SKBlurMaskFilterFlags.None);
+			return CreateBlur (blurStyle, sigma, occluder, true);
 		}
 
+		[Obsolete("Use CreateBlur(SKBlurStyle, float, SKRect) instead.")]
 		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder, SKBlurMaskFilterFlags flags)
 		{
-			return GetObject<SKMaskFilter> (SkiaApi.sk_maskfilter_new_blur_with_flags (blurStyle, sigma, ref occluder, flags));
+			return CreateBlur (blurStyle, sigma, occluder, true);
+		}
+
+		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder, bool respectCTM)
+		{
+			return GetObject<SKMaskFilter> (SkiaApi.sk_maskfilter_new_blur_with_flags (blurStyle, sigma, ref occluder, respectCTM));
 		}
 
 		public static SKMaskFilter CreateTable(byte[] table)

@@ -2,13 +2,12 @@
 using System.Runtime.InteropServices;
 
 using GRBackendObject = System.IntPtr;
-using GRBackendContext = System.IntPtr;
 
 namespace SkiaSharp
 {
 	public enum GRSurfaceOrigin
 	{
-		TopLeft = 1,
+		TopLeft,
 		BottomLeft,
 	}
 
@@ -20,61 +19,34 @@ namespace SkiaSharp
 		Rgb565,
 		Rgba4444,
 		Rgba8888,
+		Rgb888,
 		Bgra8888,
 		Srgba8888,
 		Sbgra8888,
-		Rgba8888SInt,
+		Rgba1010102,
 		RgbaFloat,
 		RgFloat,
 		AlphaHalf,
 		RgbaHalf,
 	}
 
-	[StructLayout (LayoutKind.Sequential)]
+	[Obsolete("Use GRBackendRenderTarget instead.")]
 	public struct GRBackendRenderTargetDesc
 	{
-		private int width;
-		private int height;
-		private GRPixelConfig config;
-		private GRSurfaceOrigin origin;
-		private int sampleCount;
-		private int stencilBits;
-		private GRBackendObject renderTargetHandle;
-
-		public int Width {
-			get { return width; }
-			set { width = value; }
-		}
-		public int Height {
-			get { return height; }
-			set { height = value; }
-		}
-		public GRPixelConfig Config {
-			get { return config; }
-			set { config = value; }
-		}
-		public GRSurfaceOrigin Origin {
-			get { return origin; }
-			set { origin = value; }
-		}
-		public int SampleCount {
-			get { return sampleCount; }
-			set { sampleCount = value; }
-		}
-		public int StencilBits {
-			get { return stencilBits; }
-			set { stencilBits = value; }
-		}
-		public GRBackendObject RenderTargetHandle {
-			get { return renderTargetHandle; }
-			set { renderTargetHandle = value; }
-		}
-		public SKSizeI Size => new SKSizeI (width, height);
-		public SKRectI Rect => new SKRectI (0, 0, width, height);
+		public int Width { get; set; }
+		public int Height { get; set; }
+		public GRPixelConfig Config { get; set; }
+		public GRSurfaceOrigin Origin { get; set; }
+		public int SampleCount { get; set; }
+		public int StencilBits { get; set; }
+		public GRBackendObject RenderTargetHandle { get; set; }
+		public SKSizeI Size => new SKSizeI (Width, Height);
+		public SKRectI Rect => new SKRectI (0, 0, Width, Height);
 	}
 
 	public enum GRBackend
 	{
+		Metal,
 		OpenGL,
 		Vulkan,
 	}
@@ -105,11 +77,32 @@ namespace SkiaSharp
 		All = 0xffffffff,
 	}
 
-	[Flags]
-	public enum GRBackendTextureDescFlags
+	[StructLayout (LayoutKind.Sequential)]
+	public struct GRGlFramebufferInfo
 	{
-		None = 0,
-		RenderTarget = 1,
+		private uint fboId;
+		private uint format;
+
+		public GRGlFramebufferInfo (uint fboId)
+		{
+			this.fboId = fboId;
+			this.format = 0;
+		}
+
+		public GRGlFramebufferInfo (uint fboId, uint format)
+		{
+			this.fboId = fboId;
+			this.format = format;
+		}
+
+		public uint FramebufferObjectId {
+			get => fboId;
+			set => fboId = value;
+		}
+		public uint Format {
+			get => format;
+			set => format = value;
+		}
 	}
 
 	[StructLayout (LayoutKind.Sequential)]
@@ -117,6 +110,14 @@ namespace SkiaSharp
 	{
 		private uint fTarget;
 		private uint fID;
+		private uint fFormat;
+
+		public GRGlTextureInfo (uint target, uint id, uint format)
+		{
+			fTarget = target;
+			fID = id;
+			fFormat = format;
+		}
 
 		public uint Target {
 			get { return fTarget; }
@@ -126,52 +127,15 @@ namespace SkiaSharp
 			get { return fID; }
 			set { fID = value; }
 		}
+		public uint Format {
+			get { return fFormat; }
+			set { fFormat = value; }
+		}
 	};
 
-	[StructLayout (LayoutKind.Sequential)]
-	public struct GRBackendTextureDesc
-	{
-		private GRBackendTextureDescFlags flags;
-		private GRSurfaceOrigin origin;
-		private int width;
-		private int height;
-		private GRPixelConfig config;
-		private int sampleCount;
-		private GRBackendObject textureHandle;
-
-		public GRBackendTextureDescFlags Flags {
-			get { return flags; }
-			set { flags = value; }
-		}
-		public GRSurfaceOrigin Origin {
-			get { return origin; }
-			set { origin = value; }
-		}
-		public int Width {
-			get { return width; }
-			set { width = value; }
-		}
-		public int Height {
-			get { return height; }
-			set { height = value; }
-		}
-		public GRPixelConfig Config {
-			get { return config; }
-			set { config = value; }
-		}
-		public int SampleCount {
-			get { return sampleCount; }
-			set { sampleCount = value; }
-		}
-		public GRBackendObject TextureHandle {
-			get { return textureHandle; }
-			set { textureHandle = value; }
-		}
-	}
-
+	[Obsolete("Use GRBackendTexture instead.")]
 	public struct GRGlBackendTextureDesc
 	{
-		public GRBackendTextureDescFlags Flags { get; set; }
 		public GRSurfaceOrigin Origin { get; set; }
 		public int Width { get; set; }
 		public int Height { get; set; }
@@ -180,139 +144,43 @@ namespace SkiaSharp
 		public GRGlTextureInfo TextureHandle { get; set; }
 	}
 
-	public enum GRContextOptionsGpuPathRenderers
+	public static partial class SkiaExtensions
 	{
-		None = 0,
-		DashLine = 1 << 0,
-		StencilAndCover = 1 << 1,
-		Msaa = 1 << 2,
-		AaHairline = 1 << 3,
-		AaConvex = 1 << 4,
-		AaLinearizing = 1 << 5,
-		Small = 1 << 6,
-		Tessellating = 1 << 7,
-		Default = 1 << 8,
-
-		All = GRContextOptionsGpuPathRenderers.Default | (GRContextOptionsGpuPathRenderers.Default - 1)
-	}
-
-	[StructLayout (LayoutKind.Sequential)]
-	public struct GRContextOptions
-	{
-		private byte fSuppressPrints;
-		private int fMaxTextureSizeOverride;
-		private int fMaxTileSizeOverride;
-		private byte fSuppressDualSourceBlending;
-		private int fBufferMapThreshold;
-		private byte fUseDrawInsteadOfPartialRenderTargetWrite;
-		private byte fImmediateMode;
-		private byte fUseShaderSwizzling;
-		private byte fDoManualMipmapping;
-		private byte fEnableInstancedRendering;
-		private byte fAllowPathMaskCaching;
-		private byte fRequireDecodeDisableForSRGB;
-		private byte fDisableGpuYUVConversion;
-		private byte fSuppressPathRendering;
-		private byte fWireframeMode;
-		private GRContextOptionsGpuPathRenderers fGpuPathRenderers;
-		private float fGlyphCacheTextureMaximumBytes;
-		private byte fAvoidStencilBuffers;
-
-		public bool SuppressPrints {
-			get { return fSuppressPrints != 0; }
-			set { fSuppressPrints = value ? (byte)1 : (byte)0; }
-		}
-		public int MaxTextureSizeOverride {
-			get { return fMaxTextureSizeOverride; }
-			set { fMaxTextureSizeOverride = value; }
-		}
-		public int MaxTileSizeOverride {
-			get { return fMaxTileSizeOverride; }
-			set { fMaxTileSizeOverride = value; }
-		}
-		public bool SuppressDualSourceBlending {
-			get { return fSuppressDualSourceBlending != 0; }
-			set { fSuppressDualSourceBlending = value ? (byte)1 : (byte)0; }
-		}
-		public int BufferMapThreshold {
-			get { return fBufferMapThreshold; }
-			set { fBufferMapThreshold = value; }
-		}
-		public bool UseDrawInsteadOfPartialRenderTargetWrite {
-			get { return fUseDrawInsteadOfPartialRenderTargetWrite != 0; }
-			set { fUseDrawInsteadOfPartialRenderTargetWrite = value ? (byte)1 : (byte)0; }
-		}
-		public bool ImmediateMode {
-			get { return fImmediateMode != 0; }
-			set { fImmediateMode = value ? (byte)1 : (byte)0; }
-		}
-		public bool UseShaderSwizzling {
-			get { return fUseShaderSwizzling != 0; }
-			set { fUseShaderSwizzling = value ? (byte)1 : (byte)0; }
-		}
-		public bool DoManualMipmapping {
-			get { return fDoManualMipmapping != 0; }
-			set { fDoManualMipmapping = value ? (byte)1 : (byte)0; }
-		}
-		public bool EnableInstancedRendering {
-			get { return fEnableInstancedRendering != 0; }
-			set { fEnableInstancedRendering = value ? (byte)1 : (byte)0; }
-		}
-		public bool AllowPathMaskCaching {
-			get { return fAllowPathMaskCaching != 0; }
-			set { fAllowPathMaskCaching = value ? (byte)1 : (byte)0; }
-		}
-		public bool RequireDecodeDisableForSrgb {
-			get { return fRequireDecodeDisableForSRGB != 0; }
-			set { fRequireDecodeDisableForSRGB = value ? (byte)1 : (byte)0; }
-		}
-		public bool DisableGpuYuvConversion {
-			get { return fDisableGpuYUVConversion != 0; }
-			set { fDisableGpuYUVConversion = value ? (byte)1 : (byte)0; }
-		}
-		public bool SuppressPathRendering {
-			get { return fSuppressPathRendering != 0; }
-			set { fSuppressPathRendering = value ? (byte)1 : (byte)0; }
-		}
-		public bool WireframeMode {
-			get { return fWireframeMode != 0; }
-			set { fWireframeMode = value ? (byte)1 : (byte)0; }
-		}
-		public GRContextOptionsGpuPathRenderers GpuPathRenderers {
-			get { return fGpuPathRenderers; }
-			set { fGpuPathRenderers = value; }
-		}
-		public float GlyphCacheTextureMaximumBytes {
-			get { return fGlyphCacheTextureMaximumBytes; }
-			set { fGlyphCacheTextureMaximumBytes = value; }
-		}
-		public bool AvoidStencilBuffers {
-			get { return fAvoidStencilBuffers != 0; }
-			set { fAvoidStencilBuffers = value ? (byte)1 : (byte)0; }
-		}
-
-		public static GRContextOptions Default {
-			get {
-				return new GRContextOptions {
-					fSuppressPrints = 0,
-					fMaxTextureSizeOverride = 0x7FFFFFFF,
-					fMaxTileSizeOverride = 0,
-					fSuppressDualSourceBlending = 0,
-					fBufferMapThreshold = -1,
-					fUseDrawInsteadOfPartialRenderTargetWrite = 0,
-					fImmediateMode = 0,
-					fUseShaderSwizzling = 0,
-					fDoManualMipmapping = 0,
-					fEnableInstancedRendering = 0,
-					fAllowPathMaskCaching = 0,
-					fRequireDecodeDisableForSRGB = 1,
-					fDisableGpuYUVConversion = 0,
-					fSuppressPathRendering = 0,
-					fWireframeMode = 0,
-					fGpuPathRenderers = GRContextOptionsGpuPathRenderers.All,
-					fGlyphCacheTextureMaximumBytes = 2048 * 1024 * 4,
-					fAvoidStencilBuffers = 0,
-				};
+		public static SKColorType ToColorType (this GRPixelConfig config)
+		{
+			switch (config) {
+				case GRPixelConfig.Unknown:
+					return SKColorType.Unknown;
+				case GRPixelConfig.Alpha8:
+					return SKColorType.Alpha8;
+				case GRPixelConfig.Gray8:
+					return SKColorType.Gray8;
+				case GRPixelConfig.Rgb565:
+					return SKColorType.Rgb565;
+				case GRPixelConfig.Rgba4444:
+					return SKColorType.Argb4444;
+				case GRPixelConfig.Rgba8888:
+					return SKColorType.Rgba8888;
+				case GRPixelConfig.Rgb888:
+					return SKColorType.Rgb888x;
+				case GRPixelConfig.Bgra8888:
+					return SKColorType.Bgra8888;
+				case GRPixelConfig.Srgba8888:
+					return SKColorType.Rgba8888;
+				case GRPixelConfig.Sbgra8888:
+					return SKColorType.Bgra8888;
+				case GRPixelConfig.Rgba1010102:
+					return SKColorType.Rgba1010102;
+				case GRPixelConfig.RgbaFloat:
+					return SKColorType.Unknown;
+				case GRPixelConfig.RgFloat:
+					return SKColorType.Unknown;
+				case GRPixelConfig.AlphaHalf:
+					return SKColorType.Unknown;
+				case GRPixelConfig.RgbaHalf:
+					return SKColorType.RgbaF16;
+				default:
+					throw new ArgumentOutOfRangeException (nameof (config));
 			}
 		}
 	}

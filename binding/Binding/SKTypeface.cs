@@ -4,6 +4,15 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
+	[Flags]
+	[Obsolete("Use SKFontStyleWeight and SKFontStyleSlant instead.")]
+	public enum SKTypefaceStyle {
+		Normal     = 0,
+		Bold       = 0x01,
+		Italic     = 0x02,
+		BoldItalic = 0x03
+	}
+
 	public class SKTypeface : SKObject
 	{
 		[Preserve]
@@ -21,9 +30,13 @@ namespace SkiaSharp
 			base.Dispose (disposing);
 		}
 		
+		[Obsolete ("Use FromFamilyName(string, SKFontStyleWeight, SKFontStyleWidth, SKFontStyleSlant) instead.")]
 		public static SKTypeface FromFamilyName (string familyName, SKTypefaceStyle style = SKTypefaceStyle.Normal)
 		{
-			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_name (familyName, style));
+			var weight = style.HasFlag (SKTypefaceStyle.Bold) ? SKFontStyleWeight.Bold : SKFontStyleWeight.Normal;
+			var slant = style.HasFlag (SKTypefaceStyle.Italic) ? SKFontStyleSlant.Italic : SKFontStyleSlant.Upright;
+
+			return FromFamilyName (familyName, weight, SKFontStyleWidth.Normal, slant);
 		}
 
 		public static SKTypeface FromFamilyName (string familyName, int weight, int width, SKFontStyleSlant slant)
@@ -36,11 +49,12 @@ namespace SkiaSharp
 			return FromFamilyName(familyName, (int)weight, (int)width, slant);
 		}
 
+		[Obsolete ("Use FromFamilyName(string, SKFontStyleWeight, SKFontStyleWidth, SKFontStyleSlant) instead.")]
 		public static SKTypeface FromTypeface (SKTypeface typeface, SKTypefaceStyle style = SKTypefaceStyle.Normal)
 		{
 			if (typeface == null)
 				throw new ArgumentNullException (nameof (typeface));
-			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_typeface (typeface.Handle, style));
+			return FromFamilyName (typeface.FamilyName, style);
 		}
 
 		public static SKTypeface FromFile (string path, int index = 0)
@@ -153,7 +167,18 @@ namespace SkiaSharp
 		public int FontWeight => SkiaApi.sk_typeface_get_font_weight (Handle);
 		public int FontWidth => SkiaApi.sk_typeface_get_font_width (Handle);
 		public SKFontStyleSlant FontSlant => SkiaApi.sk_typeface_get_font_slant (Handle);
-		public SKTypefaceStyle Style => SkiaApi.sk_typeface_get_style (Handle);
+
+		[Obsolete ("Use FontWeight and FontSlant instead.")]
+		public SKTypefaceStyle Style {
+			get {
+				var style = SKTypefaceStyle.Normal;
+				if (FontWeight >= (int)SKFontStyleWeight.SemiBold)
+					style |= SKTypefaceStyle.Bold;
+				if (FontSlant != (int)SKFontStyleSlant.Upright)
+					style |= SKTypefaceStyle.Italic;
+				return style;
+			}
+		}
 
 		public int UnitsPerEm => SkiaApi.sk_typeface_get_units_per_em(Handle);
 

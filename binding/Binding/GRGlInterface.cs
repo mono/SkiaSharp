@@ -117,11 +117,6 @@ namespace SkiaSharp
 			}
 		}
 
-		public GRGlInterface Clone ()
-		{
-			return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_clone (Handle));
-		}
-
 		public bool Validate ()
 		{
 			return SkiaApi.gr_glinterface_validate (Handle);

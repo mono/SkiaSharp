@@ -36,15 +36,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public SKEncodedInfo EncodedInfo {
-			get {
-				SKEncodedInfo info;
-				SkiaApi.sk_codec_get_encodedinfo (Handle, out info);
-				return info;
-			}
-		}
-
-		public SKCodecOrigin Origin {
+		public SKEncodedOrigin Origin {
 			get { return SkiaApi.sk_codec_get_origin (Handle); }
 		}
 
@@ -82,7 +74,7 @@ namespace SkiaSharp
 		public SKCodecFrameInfo[] FrameInfo {
 			get {
 				var length = SkiaApi.sk_codec_get_frame_count (Handle);
-				var info = new SKCodecFrameInfo [length];
+				var info = new SKCodecFrameInfo[length];
 				SkiaApi.sk_codec_get_frame_info (Handle, info);
 				return info;
 			}
@@ -113,82 +105,88 @@ namespace SkiaSharp
 
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options)
 		{
-			var colorTableCount = 0;
-			return GetPixels (info, pixels, rowBytes, options, IntPtr.Zero, ref colorTableCount);
-		}
-
-		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
-		{
 			if (pixels == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (pixels));
 
-			var nativeOptions = SKCodecOptionsInternal.FromManaged (ref options);
-			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return SkiaApi.sk_codec_get_pixels (Handle, ref cinfo, pixels, (IntPtr)rowBytes, ref nativeOptions, colorTable, ref colorTableCount);
+			var nOptions = SKCodecOptionsInternal.FromManaged (ref options);
+			var nInfo = SKImageInfoNative.FromManaged (ref info);
+
+			return SkiaApi.sk_codec_get_pixels (Handle, ref nInfo, pixels, (IntPtr)rowBytes, ref nOptions);
+		}
+
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, int, SKCodecOptions) instead.")]
+		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
+		{
+			return GetPixels (info, pixels, rowBytes, options);
 		}
 
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options)
 		{
-			var colorTableCount = 0;
-			return GetPixels (info, pixels, options, IntPtr.Zero, ref colorTableCount);
+			return GetPixels (info, pixels, info.RowBytes, options);
 		}
 
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, SKCodecOptions) instead.")]
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
 		{
-			return GetPixels (info, pixels, info.RowBytes, options, colorTable, ref colorTableCount);
+			return GetPixels (info, pixels, info.RowBytes, options);
 		}
 
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr) instead.")]
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, IntPtr colorTable, ref int colorTableCount)
 		{
-			return GetPixels (info, pixels, info.RowBytes, SKCodecOptions.Default, colorTable, ref colorTableCount);
+			return GetPixels (info, pixels, info.RowBytes, SKCodecOptions.Default);
 		}
 
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels)
 		{
-			int colorTableCount = 0;
-			return GetPixels (info, pixels, info.RowBytes, SKCodecOptions.Default, IntPtr.Zero, ref colorTableCount);
+			return GetPixels (info, pixels, info.RowBytes, SKCodecOptions.Default);
 		}
 
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, int, SKCodecOptions) instead.")]
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount)
 		{
-			return GetPixels (info, pixels, rowBytes, options, colorTable == null ? IntPtr.Zero : colorTable.ReadColors (), ref colorTableCount);
+			return GetPixels (info, pixels, rowBytes, options);
 		}
 
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, SKCodecOptions) instead.")]
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount)
 		{
-			return GetPixels (info, pixels, info.RowBytes, options, colorTable, ref colorTableCount);
+			return GetPixels (info, pixels, info.RowBytes, options);
 		}
 
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr) instead.")]
 		public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKColorTable colorTable, ref int colorTableCount)
 		{
-			return GetPixels (info, pixels, info.RowBytes, SKCodecOptions.Default, colorTable, ref colorTableCount);
+			return GetPixels (info, pixels, info.RowBytes, SKCodecOptions.Default);
 		}
 
-		public SKCodecResult StartIncrementalDecode(SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use StartIncrementalDecode(SKImageInfo, IntPtr, int, SKCodecOptions) instead.")]
+		public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
 		{
-			if (pixels == IntPtr.Zero)
-				throw new ArgumentNullException (nameof (pixels));
-
-			var nativeOptions = SKCodecOptionsInternal.FromManaged (ref options);
-			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return SkiaApi.sk_codec_start_incremental_decode (Handle, ref cinfo, pixels, (IntPtr)rowBytes, ref nativeOptions, colorTable, ref colorTableCount);
+			return StartIncrementalDecode (info, pixels, rowBytes, options);
 		}
 
 		public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options)
 		{
-			int colorTableCount = 0;
-			return StartIncrementalDecode (info, pixels, rowBytes, options, IntPtr.Zero, ref colorTableCount);
+			if (pixels == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (pixels));
+
+			var nOptions = SKCodecOptionsInternal.FromManaged (ref options);
+			var nInfo = SKImageInfoNative.FromManaged (ref info);
+
+			return SkiaApi.sk_codec_start_incremental_decode (Handle, ref nInfo, pixels, (IntPtr)rowBytes, ref nOptions);
 		}
 
 		public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return SkiaApi.sk_codec_start_incremental_decode (Handle, ref cinfo, pixels, (IntPtr)rowBytes, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+			return SkiaApi.sk_codec_start_incremental_decode (Handle, ref cinfo, pixels, (IntPtr)rowBytes, IntPtr.Zero);
 		}
 
-		public SKCodecResult StartIncrementalDecode(SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount)
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use StartIncrementalDecode(SKImageInfo, IntPtr, int, SKCodecOptions) instead.")]
+		public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount)
 		{
-			return StartIncrementalDecode (info, pixels, rowBytes, options, colorTable == null ? IntPtr.Zero : colorTable.ReadColors (), ref colorTableCount);
+			return StartIncrementalDecode (info, pixels, rowBytes, options);
 		}
 
 		public SKCodecResult IncrementalDecode (out int rowsDecoded)
@@ -198,32 +196,33 @@ namespace SkiaSharp
 
 		public SKCodecResult IncrementalDecode ()
 		{
-			int rowsDecoded;
-			return SkiaApi.sk_codec_incremental_decode (Handle, out rowsDecoded);
+			return SkiaApi.sk_codec_incremental_decode (Handle, out var rowsDecoded);
 		}
 
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use StartScanlineDecode(SKImageInfo, SKCodecOptions) instead.")]
 		public SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount)
 		{
-			var nativeOptions = SKCodecOptionsInternal.FromManaged (ref options);
-			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return SkiaApi.sk_codec_start_scanline_decode (Handle, ref cinfo, ref nativeOptions, colorTable, ref colorTableCount);
+			return StartScanlineDecode (info, options);
 		}
 
 		public SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options)
 		{
-			int colorTableCount = 0;
-			return StartScanlineDecode (info, options, IntPtr.Zero, ref colorTableCount);
+			var nOptions = SKCodecOptionsInternal.FromManaged (ref options);
+			var nInfo = SKImageInfoNative.FromManaged (ref info);
+
+			return SkiaApi.sk_codec_start_scanline_decode (Handle, ref nInfo, ref nOptions);
 		}
 
 		public SKCodecResult StartScanlineDecode (SKImageInfo info)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return SkiaApi.sk_codec_start_scanline_decode (Handle, ref cinfo, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+			return SkiaApi.sk_codec_start_scanline_decode (Handle, ref cinfo, IntPtr.Zero);
 		}
 
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use StartScanlineDecode(SKImageInfo, SKCodecOptions) instead.")]
 		public SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount)
 		{
-			return StartScanlineDecode (info, options, colorTable == null ? IntPtr.Zero : colorTable.ReadColors (), ref colorTableCount);
+			return StartScanlineDecode (info, options);
 		}
 
 		public int GetScanlines (IntPtr dst, int countLines, int rowBytes)
@@ -244,9 +243,14 @@ namespace SkiaSharp
 
 		public static SKCodec Create (SKStream stream)
 		{
+			return Create (stream, out var result);
+		}
+
+		public static SKCodec Create (SKStream stream, out SKCodecResult result)
+		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
-			var codec = GetObject<SKCodec> (SkiaApi.sk_codec_new_from_stream (stream.Handle));
+			var codec = GetObject<SKCodec> (SkiaApi.sk_codec_new_from_stream (stream.Handle, out result));
 			stream.RevokeOwnership ();
 			return codec;
 		}
