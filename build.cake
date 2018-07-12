@@ -1,6 +1,9 @@
 #addin nuget:?package=Cake.Xamarin&version=2.0.1
 #addin nuget:?package=Cake.XCode&version=3.0.0
 #addin nuget:?package=Cake.FileHelpers&version=2.0.0
+#addin nuget:?package=Cake.MonoApiTools&version=2.0.0
+
+#tool nuget:?package=Cake.MonoApiTools&version=2.0.0
 
 #reference "tools/SharpCompress/lib/net45/SharpCompress.dll"
 #reference "tools/Newtonsoft.Json/lib/net45/Newtonsoft.Json.dll"
@@ -371,6 +374,54 @@ Task ("nuget")
     DeleteFiles ("output/nugets/*.nupkg");
     foreach (var nuspec in GetFiles ("./output/*/nuget/*.nuspec")) {
         PackageNuGet (nuspec, "./output/nugets/");
+    }
+});
+
+Task ("api-diff")
+    .Does (() =>
+{
+    try {
+
+    var nuget = "SkiaSharp";
+    var pathToAssembly = "lib/netstandard1.3/SkiaSharp.dll";
+
+        // find the latest version for this id
+        var version = "0.0";
+        var mdFile = DownloadFile ($"https://api.nuget.org/v3/registration3/{nuget.ToLower()}/index.json");
+        var mdObj = JObject.Parse (FileReadText (mdFile));
+        foreach (var package in mdObj ["items"] [0] ["items"]) {
+            var v = (string) package ["catalogEntry"] ["version"];
+            if (!v.Contains("-") && Version.Parse (v) > Version.Parse (version))
+                version = v;
+        }
+
+        // download nugets
+        var tempPath = $"./externals/api-diff/{nuget}";
+        var oldDest = $"{tempPath}/{nuget}.{version}.nupkg";
+        if (!FileExists (oldDest)) {
+            CleanDirectories (tempPath);
+            EnsureDirectoryExists (tempPath);
+
+            var url = $"https://api.nuget.org/v3-flatcontainer/{nuget}/{version}/{nuget}.{version}.nupkg";
+            DownloadFile (url, oldDest);
+            Unzip (oldDest, tempPath);
+        }
+
+        // run the diff
+        var outPath = $"./output/{nuget}/api-diff";
+        var oldApi = $"{outPath}/{nuget}.api-info.old.xml";
+        var newApi = $"{outPath}/{nuget}.api-info.new.xml";
+        EnsureDirectoryExists (outPath);
+        CleanDirectories (outPath);
+        MonoApiInfo ($"{tempPath}/{pathToAssembly}", oldApi);
+        MonoApiInfo ($"./output/{nuget}/nuget/{pathToAssembly}", newApi);
+        MonoApiDiff (oldApi, newApi, $"{outPath}/{nuget}.api-info.diff.xml");
+        MonoApiHtml (oldApi, newApi, $"{outPath}/{nuget}.api-info.diff.html");
+
+    } catch (AggregateException ex) {
+        Error ("{0}", ex.InnerException);
+    } catch (Exception ex) {
+        Error ("{0}", ex);
     }
 });
 
