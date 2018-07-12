@@ -36,7 +36,8 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		private void DrawGpuTexture(Action<SKSurface, GRGlBackendTextureDesc> draw)
+		[Obsolete]
+		private void DrawGpuTextureWithDesc(Action<SKSurface, GRGlBackendTextureDesc> draw)
 		{
 			using (var ctx = CreateGlContext())
 			{
@@ -44,13 +45,15 @@ namespace SkiaSharp.Tests
 
 				// create the texture
 				var textureInfo = ctx.CreateTexture(new SKSizeI(100, 100));
+				// this is a new field that was added to the struct
+				textureInfo.Format = 0;
 				var textureDesc = new GRGlBackendTextureDesc
 				{
 					Width = 100,
 					Height = 100,
 					Config = GRPixelConfig.Rgba8888,
 					Flags = GRBackendTextureDescFlags.RenderTarget,
-					Origin = GRSurfaceOrigin.TopLeft,
+					Origin = GRSurfaceOrigin.BottomLeft,
 					SampleCount = 0,
 					TextureHandle = textureInfo,
 				};
@@ -62,6 +65,30 @@ namespace SkiaSharp.Tests
 					Assert.NotNull(surface);
 
 					draw(surface, textureDesc);
+				}
+
+				// clean up
+				ctx.DestroyTexture(textureInfo.Id);
+			}
+		}
+
+		private void DrawGpuTexture(Action<SKSurface, GRBackendTexture> draw)
+		{
+			using (var ctx = CreateGlContext())
+			{
+				ctx.MakeCurrent();
+
+				// create the texture
+				var textureInfo = ctx.CreateTexture(new SKSizeI(100, 100));
+				var texture = new GRBackendTexture(100, 100, false, textureInfo);
+
+				// create the surface
+				using (var grContext = GRContext.Create(GRBackend.OpenGL))
+				using (var surface = SKSurface.CreateAsRenderTarget(grContext, texture, SKColorType.Rgba8888))
+				{
+					Assert.NotNull(surface);
+
+					draw(surface, texture);
 				}
 
 				// clean up
@@ -86,9 +113,54 @@ namespace SkiaSharp.Tests
 
 		[Trait(Category, GpuCategory)]
 		[SkippableFact]
+		[Obsolete]
+		public void GpuTextureSurfaceIsCreatedWithDesc()
+		{
+			DrawGpuTextureWithDesc((surface, desc) =>
+			{
+				Assert.NotNull(surface);
+
+				var canvas = surface.Canvas;
+				Assert.NotNull(canvas);
+
+				canvas.Clear(SKColors.Transparent);
+			});
+		}
+
+		[Trait(Category, GpuCategory)]
+		[SkippableFact]
+		[Obsolete]
+		public void GpuTextureSurfaceCanBeReadWithDesc()
+		{
+			DrawGpuTextureWithDesc((surface, desc) =>
+			{
+				var canvas = surface.Canvas;
+
+				canvas.Clear(SKColors.Red);
+				canvas.Flush();
+
+				using (var image = surface.Snapshot())
+				{
+					Assert.True(image.IsTextureBacked);
+
+					using (var raster = image.ToRasterImage())
+					{
+						Assert.False(raster.IsTextureBacked);
+
+						using (var bmp = SKBitmap.FromImage(raster))
+						{
+							Assert.Equal(SKColors.Red, bmp.GetPixel(0, 0));
+						}
+					}
+				}
+			});
+		}
+
+		[Trait(Category, GpuCategory)]
+		[SkippableFact]
 		public void GpuTextureSurfaceIsCreated()
 		{
-			DrawGpuTexture((surface, desc) =>
+			DrawGpuTexture((surface, texture) =>
 			{
 				Assert.NotNull(surface);
 
@@ -103,7 +175,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void GpuTextureSurfaceCanBeRead()
 		{
-			DrawGpuTexture((surface, desc) =>
+			DrawGpuTexture((surface, texture) =>
 			{
 				var canvas = surface.Canvas;
 
@@ -134,7 +206,8 @@ namespace SkiaSharp.Tests
 			{
 				var data = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
 
-				using (var surface = SKSurface.Create(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, data.Scan0, data.Stride))
+				var info = new SKImageInfo(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
+				using (var surface = SKSurface.Create(info, data.Scan0, data.Stride))
 				{
 					Assert.NotNull(surface);
 
@@ -168,7 +241,8 @@ namespace SkiaSharp.Tests
 		{
 			DrawBitmap((surface, data) =>
 			{
-				var surface2 = SKSurface.Create(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, data.Scan0, data.Stride);
+				var info = new SKImageInfo(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
+				var surface2 = SKSurface.Create(info, data.Scan0, data.Stride);
 
 				Assert.NotNull(surface2);
 

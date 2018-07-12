@@ -89,23 +89,6 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void TestFontManagerMatchCharacter()
-		{
-			var fonts = SKFontManager.Default;
-			var emoji = "🚀";
-			var emojiChar = StringUtilities.GetUnicodeCharacterCode(emoji, SKTextEncoding.Utf32);
-			using (var typeface = fonts.MatchCharacter(emojiChar))
-			{
-				if (IsLinux)
-					Assert.Equal("Symbola", typeface.FamilyName);
-				else if (IsMac)
-					Assert.Equal("Apple Color Emoji", typeface.FamilyName);
-				else if (IsWindows)
-					Assert.Contains(typeface.FamilyName, new[] { "Segoe UI Emoji", "Segoe UI Symbol" });
-			}
-		}
-
-		[SkippableFact]
 		public void ExceptionInInvalidGetTableData()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Distortable.ttf")))

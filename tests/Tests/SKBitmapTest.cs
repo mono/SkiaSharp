@@ -181,7 +181,7 @@ namespace SkiaSharp.Tests
 				var info = new SKImageInfo(1, 1);
 				var pixels = Marshal.AllocCoTaskMem(info.BytesSize);
 
-				bitmap.InstallPixels(info, pixels, info.RowBytes, null, onRelease, "RELEASING!");
+				bitmap.InstallPixels(info, pixels, info.RowBytes, onRelease, "RELEASING!");
 			}
 
 			Assert.True(released, "The SKBitmapReleaseDelegate was not called.");
@@ -251,7 +251,9 @@ namespace SkiaSharp.Tests
 
 			Assert.True(bitmap.ExtractAlpha(alpha, paint, out offset));
 
-			Assert.Equal(new SKPointI(-7, -7), offset);
+			Assert.Equal(new SKPointI(-12, -12), offset);
+
+			SaveBitmap(alpha);
 		}
 
 		[SkippableFact]
@@ -296,6 +298,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		[Obsolete]
 		public void BitmapResizes()
 		{
 			var srcInfo = new SKImageInfo(200, 200);

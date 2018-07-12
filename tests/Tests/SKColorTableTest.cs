@@ -29,16 +29,6 @@ namespace SkiaSharp.Tests
 		};
 
 		[SkippableFact]
-		public void CreateIndex8Bitmap()
-		{
-			var info = new SKImageInfo(320, 240, SKColorType.Index8, SKAlphaType.Opaque);
-			var ct = new SKColorTable(Colors);
-			var bitmap = new SKBitmap(info, ct);
-			Assert.NotNull(bitmap);
-			Assert.Equal(ct, bitmap.ColorTable);
-		}
-
-		[SkippableFact]
 		public void MembersRetrieveSingleColorWithAlpha()
 		{
 			var c = (SKColor)0x33008200;
@@ -95,73 +85,6 @@ namespace SkiaSharp.Tests
 			{
 				var color = colorTable[250];
 			});
-		}
-
-		[SkippableFact]
-		public void Index8ImageHasColorTable()
-		{
-			var path = Path.Combine(PathToImages, "index8.png");
-
-			var codec = SKCodec.Create(new SKFileStream(path));
-
-			// It appears I can't use Unpremul as the alpha type, as the color table is not premultiplied then
-			// https://groups.google.com/forum/#!topic/skia-discuss/mNUxQon5OMY
-			var info = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Index8, SKAlphaType.Premul);
-
-			var bitmap = SKBitmap.Decode(codec, info);
-
-			var colorTable = bitmap.ColorTable;
-
-			Assert.NotNull(colorTable);
-
-			Assert.Equal((SKPMColor)0x000000, colorTable[0]);
-			Assert.Equal((SKColor)0x000000, colorTable.GetUnPreMultipliedColor(0));
-
-			if (IsWindows || IsLinux) {
-				Assert.Equal((SKPMColor)0xFFA4C639, colorTable[255]);
-			} else {
-				Assert.Equal((SKPMColor)0xFF39C6A4, colorTable[255]);
-			}
-			Assert.Equal((SKColor)0xFFA4C639, colorTable.GetUnPreMultipliedColor(255));
-
-			if (IsWindows || IsLinux) {
-				Assert.Equal((SKPMColor)0x7E51621C, colorTable[140]);
-			} else {
-				Assert.Equal((SKPMColor)0x7E1C6251, colorTable[140]);
-			}
-			Assert.Equal((SKColor)0x7EA4C639, colorTable.GetUnPreMultipliedColor(140));
-
-			if (IsWindows || IsLinux) {
-				Assert.Equal((SKPMColor)0x7E51621C, bitmap.GetIndex8Color(182, 348));
-			} else {
-				Assert.Equal((SKPMColor)0x7E1C6251, bitmap.GetIndex8Color(182, 348));
-			}
-			Assert.Equal((SKColor)0x7EA4C639, bitmap.GetPixel(182, 348));
-		}
-
-		[SkippableFact]
-		public void Index8ImageCanChangeColorTable()
-		{
-			var path = Path.Combine(PathToImages, "index8.png");
-
-			var codec = SKCodec.Create(new SKFileStream(path));
-			var info = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Index8, SKAlphaType.Premul);
-			var bitmap = SKBitmap.Decode(codec, info);
-
-			var colorTable = bitmap.ColorTable;
-			Assert.Equal((SKColor)0xFFA4C639, colorTable.GetUnPreMultipliedColor(255));
-
-			var invertedColors = colorTable.Colors.Select(c =>
-			{
-				var c2 = (SKColor)c;
-				var inv = new SKColor((byte)(255 - c2.Red), (byte)(255 - c2.Green), (byte)(255 - c2.Blue), c2.Alpha);
-				return (SKPMColor)inv;
-			}).ToArray();
-
-			colorTable = new SKColorTable(invertedColors);
-			bitmap.SetColorTable(colorTable);
-
-			Assert.Equal((SKColor)0xFF5B39C6, colorTable.GetUnPreMultipliedColor(255));
 		}
 	}
 }

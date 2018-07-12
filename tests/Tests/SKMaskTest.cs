@@ -44,6 +44,25 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void AutoMaskFreeImageReleasesMemory()
+		{
+			byte rawMask = 1 << 7 | 0 << 6 | 0 << 5 | 1 << 4 | 1 << 3 | 0 << 2 | 1 << 1 | 1;
+			var buffer = new byte[] { rawMask };
+			var bounds = new SKRectI(0, 0, 8, 1);
+			UInt32 rowBytes = 1;
+			var format = SKMaskFormat.BW;
+
+			var mask = new SKMask(bounds, rowBytes, format);
+
+			mask.Image = SKMask.AllocateImage(100);
+
+			using (new SKAutoMaskFreeImage(mask.Image))
+			{
+				Assert.Equal(rawMask, mask.GetAddr1(0, 0));
+			}
+		}
+
+		[SkippableFact]
 		public void Alpha8MaskBufferIsCopied()
 		{
 			var buffer = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };

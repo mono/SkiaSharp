@@ -179,7 +179,8 @@ namespace SkiaSharp.Tests
 			return new GRGlTextureInfo
 			{
 				Id = textureId,
-				Target = Wgl.GL_TEXTURE_2D
+				Target = Wgl.GL_TEXTURE_2D,
+				Format = Wgl.GL_RGBA8
 			};
 		}
 
