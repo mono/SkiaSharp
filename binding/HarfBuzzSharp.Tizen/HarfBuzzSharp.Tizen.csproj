@@ -11,6 +11,12 @@
     <PackagingPlatform>tizen40</PackagingPlatform>
     <DefineConstants>$(DefineConstants);HARFBUZZ</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugType>pdbonly</DebugType>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="MSBuild.Sdk.Extras" Version="1.4.0" PrivateAssets="All" />
     <PackageReference Include="Tizen.NET" Version="4.0.0" ExcludeAssets="Runtime" />
