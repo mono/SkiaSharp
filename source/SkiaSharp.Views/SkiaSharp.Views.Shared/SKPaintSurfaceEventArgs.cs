@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 #if __ANDROID__
 namespace SkiaSharp.Views.Android

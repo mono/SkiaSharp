@@ -1,4 +1,4 @@
-#if !__WATCHOS__
+﻿#if !__WATCHOS__
 using System;
 
 #if __ANDROID__
