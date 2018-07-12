@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -54,7 +55,10 @@ namespace SkiaSharp.Tests
 
 			var mask = new SKMask(bounds, rowBytes, format);
 
-			mask.Image = SKMask.AllocateImage(100);
+			var size = mask.ComputeTotalImageSize();
+			mask.Image = SKMask.AllocateImage(size);
+
+			Marshal.Copy(buffer, 0, mask.Image, (int)size);
 
 			using (new SKAutoMaskFreeImage(mask.Image))
 			{

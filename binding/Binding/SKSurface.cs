@@ -217,11 +217,15 @@ namespace SkiaSharp
 		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProps) instead.")]
 		public static SKSurface Create (GRContext context, GRGlBackendTextureDesc desc, SKSurfaceProps props)
 		{
-			if (context == null)
-				throw new ArgumentNullException (nameof (context));
-
 			var texture = new GRBackendTexture (desc);
 			return Create (context, texture, desc.Origin, desc.SampleCount, desc.Config.ToColorType(), null, props);
+		}
+
+		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProps) instead.")]
+		public static SKSurface Create (GRContext context, GRBackendTextureDesc desc, SKSurfaceProps props)
+		{
+			var texture = new GRBackendTexture (desc);
+			return Create (context, texture, desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, props);
 		}
 
 		public static SKSurface Create (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace)
@@ -253,9 +257,13 @@ namespace SkiaSharp
 		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
 		public static SKSurface Create (GRContext context, GRGlBackendTextureDesc desc)
 		{
-			if (context == null)
-				throw new ArgumentNullException (nameof (context));
+			var texture = new GRBackendTexture (desc);
+			return Create (context, texture, desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null);
+		}
 
+		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
+		public static SKSurface Create (GRContext context, GRBackendTextureDesc desc)
+		{
 			var texture = new GRBackendTexture (desc);
 			return Create (context, texture, desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null);
 		}
@@ -298,6 +306,16 @@ namespace SkiaSharp
 			return CreateAsRenderTarget (context, texture, desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, props);
 		}
 
+		[Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProps) instead.")]
+		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTextureDesc desc, SKSurfaceProps props)
+		{
+			if (context == null)
+				throw new ArgumentNullException (nameof (context));
+
+			var texture = new GRBackendTexture (desc);
+			return CreateAsRenderTarget (context, texture, desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, props);
+		}
+
 		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace)
 		{
 			if (context == null)
@@ -326,6 +344,16 @@ namespace SkiaSharp
 
 		[Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
 		public static SKSurface CreateAsRenderTarget (GRContext context, GRGlBackendTextureDesc desc)
+		{
+			if (context == null)
+				throw new ArgumentNullException (nameof (context));
+
+			var texture = new GRBackendTexture (desc);
+			return CreateAsRenderTarget (context, texture, desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null);
+		}
+
+		[Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
+		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTextureDesc desc)
 		{
 			if (context == null)
 				throw new ArgumentNullException (nameof (context));

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
@@ -18,6 +19,17 @@ namespace SkiaSharp
 			if (handle.Format == 0) {
 				handle.Format = desc.Config.ToSizedFormat ();
 			}
+			CreateGl (desc.Width, desc.Height, false, handle);
+		}
+
+		[Obsolete ("Use GRBackendTexture(int, int, bool, GRGlTextureInfo) instead.")]
+		public GRBackendTexture (GRBackendTextureDesc desc)
+			: this (IntPtr.Zero, true)
+		{
+			var handlePtr = desc.TextureHandle;
+			var oldHandle = PtrToStructure<GRTextureInfoObsolete> (handlePtr);
+
+			var handle = new GRGlTextureInfo (oldHandle.fTarget, oldHandle.fID, desc.Config.ToSizedFormat ());
 			CreateGl (desc.Width, desc.Height, false, handle);
 		}
 
@@ -60,6 +72,13 @@ namespace SkiaSharp
 		public bool GetGlTextureInfo (out GRGlTextureInfo glInfo)
 		{
 			return SkiaApi.gr_backendtexture_get_gl_textureinfo (Handle, out glInfo);
+		}
+
+		[StructLayout (LayoutKind.Sequential)]
+		internal struct GRTextureInfoObsolete
+		{
+			public uint fTarget;
+			public uint fID;
 		}
 	}
 }

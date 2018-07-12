@@ -141,6 +141,47 @@ namespace SkiaSharp
 		RenderTarget = 1,
 	}
 
+	[Obsolete ("Use GRBackendTexture instead.")]
+	[StructLayout (LayoutKind.Sequential)]
+	public struct GRBackendTextureDesc
+	{
+		private GRBackendTextureDescFlags flags;
+		private GRSurfaceOrigin origin;
+		private int width;
+		private int height;
+		private GRPixelConfig config;
+		private int sampleCount;
+		private GRBackendObject textureHandle;
+
+		public GRBackendTextureDescFlags Flags {
+			get { return flags; }
+			set { flags = value; }
+		}
+		public GRSurfaceOrigin Origin {
+			get { return origin; }
+			set { origin = value; }
+		}
+		public int Width {
+			get { return width; }
+			set { width = value; }
+		}
+		public int Height {
+			get { return height; }
+			set { height = value; }
+		}
+		public GRPixelConfig Config {
+			get { return config; }
+			set { config = value; }
+		}
+		public int SampleCount {
+			get { return sampleCount; }
+			set { sampleCount = value; }
+		}
+		public GRBackendObject TextureHandle {
+			get { return textureHandle; }
+			set { textureHandle = value; }
+		}
+	}
 
 	[Obsolete ("Use GRBackendTexture instead.")]
 	public struct GRGlBackendTextureDesc

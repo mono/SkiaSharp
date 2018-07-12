@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public abstract class SKPixelSerializer
+	public abstract class SKPixelSerializer : IDisposable
 	{
 		public bool UseEncodedData (IntPtr data, ulong length)
 		{
@@ -33,6 +33,14 @@ namespace SkiaSharp
 		{
 			return new SKSimplePixelSerializer (onUseEncodedData, onEncode);
 		}
+
+		public void Dispose ()
+		{
+		}
+
+		protected virtual void Dispose (bool disposing)
+		{
+		}
 	}
 
 	internal class SKSimplePixelSerializer : SKPixelSerializer
@@ -60,5 +68,8 @@ namespace SkiaSharp
 	[Obsolete ("Use SKPixelSerializer instead.")]
 	public abstract class SKManagedPixelSerializer : SKPixelSerializer
 	{
+		public SKManagedPixelSerializer()
+		{
+		}
 	}
 }

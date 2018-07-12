@@ -13,11 +13,7 @@ namespace SkiaSharp
 	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 	internal delegate void SKImageTextureReleaseDelegateInternal (IntPtr context);
 
-	// TODO: `FromTexture` with color space
-	// TODO: `FromTexture` with `GRBackendTexture` [and color space]
 	// TODO: `MakeCrossContextFromEncoded`
-	// TODO: `FromAdoptedTexture` with color space
-	// TODO: `FromAdoptedTexture` with `GRBackendTexture` [and color space]
 	// TODO: `MakeFromYUVTexturesCopy` and `MakeFromNV12TexturesCopy`
 	// TODO: `FromPicture` with bit depth and color space
 	// TODO: `IsValid`
@@ -180,6 +176,34 @@ namespace SkiaSharp
 		// create a new image from a GPU texture
 
 		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
+		public static SKImage FromTexture (GRContext context, GRBackendTextureDesc desc)
+		{
+			return FromTexture (context, desc, SKAlphaType.Premul, null, null);
+		}
+
+		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType) instead.")]
+		public static SKImage FromTexture (GRContext context, GRBackendTextureDesc desc, SKAlphaType alpha)
+		{
+			return FromTexture (context, desc, alpha, null, null);
+		}
+
+		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType, SKColorSpace, SKImageTextureReleaseDelegate) instead.")]
+		public static SKImage FromTexture (GRContext context, GRBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc)
+		{
+			return FromTexture (context, desc, alpha, releaseProc, null);
+		}
+
+		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType, SKColorSpace, SKImageTextureReleaseDelegate, object) instead.")]
+		public static SKImage FromTexture (GRContext context, GRBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc, object releaseContext)
+		{
+			if (context == null)
+				throw new ArgumentNullException (nameof (context));
+
+			var texture = new GRBackendTexture (desc);
+			return FromTexture (context, texture, desc.Origin, desc.Config.ToColorType (), alpha, null, releaseProc, releaseContext);
+		}
+
+		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
 		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc)
 		{
 			return FromTexture (context, desc, SKAlphaType.Premul, null, null);
@@ -200,9 +224,6 @@ namespace SkiaSharp
 		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType, SKColorSpace, SKImageTextureReleaseDelegate, object) instead.")]
 		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc, object releaseContext)
 		{
-			if (context == null)
-				throw new ArgumentNullException (nameof (context));
-
 			var texture = new GRBackendTexture (desc);
 			return FromTexture (context, texture, desc.Origin, desc.Config.ToColorType (), alpha, null, releaseProc, releaseContext);
 		}
@@ -249,6 +270,19 @@ namespace SkiaSharp
 		}
 
 		[Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
+		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTextureDesc desc)
+		{
+			return FromAdoptedTexture (context, desc, SKAlphaType.Premul);
+		}
+
+		[Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType) instead.")]
+		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTextureDesc desc, SKAlphaType alpha)
+		{
+			var texture = new GRBackendTexture (desc);
+			return FromAdoptedTexture (context, texture, desc.Origin, desc.Config.ToColorType (), alpha, null);
+		}
+
+		[Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
 		public static SKImage FromAdoptedTexture (GRContext context, GRGlBackendTextureDesc desc)
 		{
 			return FromAdoptedTexture (context, desc, SKAlphaType.Premul);
@@ -257,9 +291,6 @@ namespace SkiaSharp
 		[Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType) instead.")]
 		public static SKImage FromAdoptedTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha)
 		{
-			if (context == null)
-				throw new ArgumentNullException (nameof (context));
-
 			var texture = new GRBackendTexture (desc);
 			return FromAdoptedTexture (context, texture, desc.Origin, desc.Config.ToColorType (), alpha, null);
 		}
