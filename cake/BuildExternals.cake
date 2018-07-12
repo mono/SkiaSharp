@@ -98,7 +98,7 @@ Task ("externals-windows")
             $"target_os='win' target_cpu='{skiaArch}' " +
             $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true " +
             $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '/MD', '/EHsc' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '/MD', '/EHsc', '/Zi', '/FS' ] " +
             $"extra_ldflags=[ '/DEBUG' ]");
 
         // copy libSkiaSharp to output
@@ -145,7 +145,7 @@ Task ("externals-uwp")
             $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
             $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
             $"extra_cflags=[  " +
-            $"  '-DSKIA_C_DLL', '/MD', '/EHsc',  " +
+            $"  '-DSKIA_C_DLL', '/MD', '/EHsc', '/Zi', '/FS',  " +
             $"  '-DWINAPI_FAMILY=WINAPI_FAMILY_APP', '-DSK_BUILD_FOR_WINRT', '-DSK_HAS_DWRITE_1_H', '-DSK_HAS_DWRITE_2_H', '-DNO_GETENV' ] " +
             $"extra_ldflags=[ '/APPCONTAINER', '/DEBUG', 'WindowsApp.lib' ]");
 
