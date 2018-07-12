@@ -10,6 +10,7 @@ namespace SkiaSharp
 		{
 		}
 
+		[Obsolete ("Use GRBackendRenderTarget(int, int, int, int, GRGlFramebufferInfo) instead.")]
 		public GRBackendRenderTarget (GRBackend backend, GRBackendRenderTargetDesc desc)
 			: this (IntPtr.Zero, true)
 		{

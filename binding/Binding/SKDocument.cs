@@ -71,7 +71,7 @@ namespace SkiaSharp
 			return GetObject<SKDocument> (SkiaApi.sk_document_create_xps_from_stream (stream.Handle, dpi));
 		}
 
-		[Obsolete ("Use CreatePdf(SKWStream, float) instead.")]
+		[Obsolete ("Use CreatePdf(SKWStream) instead.")]
 		public static SKDocument CreatePdf (string path, float dpi = DefaultRasterDpi)
 		{
 			if (path == null) {

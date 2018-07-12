@@ -31,7 +31,7 @@ namespace SkiaSharp
 		}
 		
 		[Obsolete ("Use FromFamilyName(string, SKFontStyleWeight, SKFontStyleWidth, SKFontStyleSlant) instead.")]
-		public static SKTypeface FromFamilyName (string familyName, SKTypefaceStyle style = SKTypefaceStyle.Normal)
+		public static SKTypeface FromFamilyName (string familyName, SKTypefaceStyle style)
 		{
 			var weight = style.HasFlag (SKTypefaceStyle.Bold) ? SKFontStyleWeight.Bold : SKFontStyleWeight.Normal;
 			var slant = style.HasFlag (SKTypefaceStyle.Italic) ? SKFontStyleSlant.Italic : SKFontStyleSlant.Upright;
@@ -41,7 +41,20 @@ namespace SkiaSharp
 
 		public static SKTypeface FromFamilyName (string familyName, int weight, int width, SKFontStyleSlant slant)
 		{
-			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_name_with_font_style (familyName, weight, width, slant));
+			return FromFamilyName (familyName, new SKFontStyle (weight, width, slant));
+		}
+
+		public static SKTypeface FromFamilyName (string familyName)
+		{
+			return FromFamilyName (familyName, SKFontStyle.Normal);
+		}
+
+		public static SKTypeface FromFamilyName (string familyName, SKFontStyle style)
+		{
+			if (style == null)
+				throw new ArgumentNullException (nameof (style));
+
+			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_name_with_font_style (familyName, style.Handle));
 		}
 
 		public static SKTypeface FromFamilyName (string familyName, SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant)
@@ -49,12 +62,17 @@ namespace SkiaSharp
 			return FromFamilyName(familyName, (int)weight, (int)width, slant);
 		}
 
-		[Obsolete ("Use FromFamilyName(string, SKFontStyleWeight, SKFontStyleWidth, SKFontStyleSlant) instead.")]
-		public static SKTypeface FromTypeface (SKTypeface typeface, SKTypefaceStyle style = SKTypefaceStyle.Normal)
+		[Obsolete ("Use SKFontManager.MatchTypeface(SKTypeface, SKFontStyle) instead.")]
+		public static SKTypeface FromTypeface (SKTypeface typeface, SKTypefaceStyle style)
 		{
 			if (typeface == null)
 				throw new ArgumentNullException (nameof (typeface));
-			return FromFamilyName (typeface.FamilyName, style);
+
+			var weight = style.HasFlag (SKTypefaceStyle.Bold) ? SKFontStyleWeight.Bold : SKFontStyleWeight.Normal;
+			var width = SKFontStyleWidth.Normal;
+			var slant = style.HasFlag (SKTypefaceStyle.Italic) ? SKFontStyleSlant.Italic : SKFontStyleSlant.Upright;
+
+			return SKFontManager.Default.MatchTypeface (typeface, new SKFontStyle (weight, width, slant));
 		}
 
 		public static SKTypeface FromFile (string path, int index = 0)
@@ -158,14 +176,14 @@ namespace SkiaSharp
 			}
 		}
 
-		public string FamilyName {
-			get {
-				return (string) GetObject<SKString> (SkiaApi.sk_typeface_get_family_name (Handle));
-			}
-		}
+		public string FamilyName => (string)GetObject<SKString> (SkiaApi.sk_typeface_get_family_name (Handle));
+
+		public SKFontStyle FontStyle => GetObject<SKFontStyle> (SkiaApi.sk_typeface_get_fontstyle (Handle));
 
 		public int FontWeight => SkiaApi.sk_typeface_get_font_weight (Handle);
+
 		public int FontWidth => SkiaApi.sk_typeface_get_font_width (Handle);
+
 		public SKFontStyleSlant FontSlant => SkiaApi.sk_typeface_get_font_slant (Handle);
 
 		[Obsolete ("Use FontWeight and FontSlant instead.")]
@@ -228,4 +246,3 @@ namespace SkiaSharp
 		}
 	}
 }
-

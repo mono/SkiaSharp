@@ -809,9 +809,7 @@ namespace SkiaSharp
 
 		public void Dispose ()
 		{
-			if (canvas != null) {
-				canvas.RestoreToCount (saveCount);
-			}
+			Restore ();
 		}
 
 		/// <summary>

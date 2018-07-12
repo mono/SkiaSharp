@@ -80,6 +80,11 @@ namespace SkiaSharp
 			}
 		}
 
+		public bool GetFrameInfo (int index, out SKCodecFrameInfo frameInfo)
+		{
+			return SkiaApi.sk_codec_get_frame_info_for_index (Handle, index, out frameInfo);
+		}
+
 		public SKCodecResult GetPixels (out byte[] pixels)
 		{
 			return GetPixels (Info, out pixels);

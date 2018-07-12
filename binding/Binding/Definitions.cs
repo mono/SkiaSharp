@@ -400,7 +400,7 @@ namespace SkiaSharp
 	public enum SKCodecAnimationDisposalMethod {
 		Keep                     = 1,
 		RestoreBackgroundColor   = 2,
-		ResturePrevious          = 3,
+		RestorePrevious          = 3,
 	}
 
 	[StructLayout(LayoutKind.Sequential)]

@@ -93,8 +93,7 @@ namespace SkiaSharp
 		public SKBitmap (SKImageInfo info, int rowBytes)
 			: this ()
 		{
-			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			if (!SkiaApi.sk_bitmap_try_alloc_pixels (Handle, ref cinfo, (IntPtr)rowBytes)) {
+			if (!TryAllocPixels (info, rowBytes)) {
 				throw new Exception (UnableToAllocatePixelsMessage);
 			}
 		}
@@ -118,12 +117,6 @@ namespace SkiaSharp
 			: this (info, SKBitmapAllocFlags.None)
 		{
 		}
-		
-		private bool TryAllocPixels (SKImageInfo info, SKBitmapAllocFlags flags = SKBitmapAllocFlags.None)
-		{
-			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return SkiaApi.sk_bitmap_try_alloc_pixels_with_flags (Handle, ref cinfo, flags);
-		}
 
 		protected override void Dispose (bool disposing)
 		{
@@ -132,6 +125,23 @@ namespace SkiaSharp
 			}
 
 			base.Dispose (disposing);
+		}
+
+		public bool TryAllocPixels (SKImageInfo info)
+		{
+			return TryAllocPixels (info, info.RowBytes);
+		}
+
+		public bool TryAllocPixels (SKImageInfo info, int rowBytes)
+		{
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return SkiaApi.sk_bitmap_try_alloc_pixels (Handle, ref cinfo, (IntPtr)rowBytes);
+		}
+		
+		public bool TryAllocPixels (SKImageInfo info, SKBitmapAllocFlags flags)
+		{
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return SkiaApi.sk_bitmap_try_alloc_pixels_with_flags (Handle, ref cinfo, flags);
 		}
 
 		public void Reset ()
@@ -657,7 +667,7 @@ namespace SkiaSharp
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use InstallPixels(SKImageInfo, IntPtr, int, SKBitmapReleaseDelegate, object) instead.")]
 		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable, SKBitmapReleaseDelegate releaseProc, object context)
 		{
-			return InstallPixels (info, pixels, rowBytes, null, null);
+			return InstallPixels (info, pixels, rowBytes, releaseProc, context);
 		}
 
 		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKBitmapReleaseDelegate releaseProc)

@@ -54,6 +54,8 @@ using sk_color_t = System.UInt32;
 using sk_pmcolor_t = System.UInt32;
 using sk_vertices_t = System.IntPtr;
 using sk_rrect_t = System.IntPtr;
+using sk_fontstyle_t = System.IntPtr;
+using sk_fontstyleset_t = System.IntPtr;
 using gr_backendtexture_t = System.IntPtr;
 using gr_backendrendertarget_t = System.IntPtr;
 
@@ -83,8 +85,7 @@ namespace SkiaSharp
 		private const string SKIA = "libSkiaSharp";
 #endif
 
-		// ColorSpace
-
+		// color space
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_colorspace_unref(sk_colorspace_t cColorSpace);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -124,13 +125,11 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_colorspace_transfer_fn_invert(ref SKColorSpaceTransferFn transfer, out SKColorSpaceTransferFn inverted);
 
-		// ColorType
-
+		// color type
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SKColorType sk_colortype_get_default_8888();
 
-		// Surface
-
+		// surface
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_surface_t sk_surface_new_null(int width, int height);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -175,9 +174,7 @@ namespace SkiaSharp
 		public extern static void sk_surface_get_props(sk_surface_t surface, out SKSurfaceProps props);
 
 
-		// Canvas
-
-
+		// canvas
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_canvas_save(sk_canvas_t t);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -205,10 +202,6 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_canvas_quick_reject(sk_canvas_t t, ref SKRect rect);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_canvas_clip_rect(sk_canvas_t t, ref SKRect rect);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_canvas_clip_path(sk_canvas_t t, sk_path_t p);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_paint(sk_canvas_t t, sk_paint_t p);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -243,7 +236,6 @@ namespace SkiaSharp
 		public extern static void sk_canvas_draw_point(sk_canvas_t t, float x, float y, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_line(sk_canvas_t t, float x0, float y0, float x1, float y1, sk_paint_t paint);
-
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_text(sk_canvas_t t, byte[] text, int len, float x, float y, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -256,7 +248,6 @@ namespace SkiaSharp
 		public extern static void sk_canvas_draw_pos_text(sk_canvas_t t, IntPtr text, int len, [In] SKPoint[] points, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_text_on_path(sk_canvas_t t, IntPtr text, int len, sk_path_t path, float hOffset, float vOffset, sk_paint_t paint);
-
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_bitmap(sk_canvas_t t, sk_bitmap_t bitmap, float x, float y, sk_paint_t paint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -269,7 +260,6 @@ namespace SkiaSharp
 		public extern static  void sk_canvas_set_matrix(sk_canvas_t canvas, ref SKMatrix matrix);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_get_total_matrix(sk_canvas_t canvas, ref SKMatrix matrix);
-
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_annotation(sk_canvas_t t, ref SKRect rect, byte[] key, sk_data_t value);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -309,11 +299,13 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_vertices(sk_canvas_t canvas, sk_vertices_t vertices, SKBlendMode mode, sk_paint_t paint);
 
+		// no draw canvas
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_nodraw_canvas_t sk_nodraw_canvas_new(int width, int height);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_nodraw_canvas_destroy(sk_nodraw_canvas_t t);
 
+		// n-way canvas
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_nway_canvas_t sk_nway_canvas_new(int width, int height);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -325,8 +317,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_nway_canvas_remove_all(sk_nway_canvas_t t);
 
-		// Paint
-
+		// paint
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_paint_t sk_paint_new();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -418,7 +409,6 @@ namespace SkiaSharp
 		public extern static float sk_paint_get_text_skew_x(sk_paint_t t);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_paint_set_text_skew_x(sk_paint_t t, float skew);
-
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static float sk_paint_measure_text (sk_paint_t t, byte [] text, IntPtr length, ref SKRect bounds);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -427,8 +417,6 @@ namespace SkiaSharp
 		public extern static float sk_paint_measure_text(sk_paint_t t, IntPtr text, IntPtr length, ref SKRect bounds);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static float sk_paint_measure_text(sk_paint_t t, IntPtr text, IntPtr length, IntPtr boundsZero);
-
-
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_paint_break_text(sk_paint_t t, IntPtr text, IntPtr length, float maxWidth, out float measuredWidth);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -442,17 +430,14 @@ namespace SkiaSharp
 		public extern static sk_path_t sk_paint_get_pos_text_path(sk_paint_t t, IntPtr text, IntPtr length, [In] SKPoint[] points);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_path_t sk_paint_get_pos_text_path(sk_paint_t t, byte [] text, IntPtr length, [In] SKPoint[] points);
-
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static float sk_paint_get_fontmetrics(sk_paint_t t, out SKFontMetrics fontMetrics, float scale);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static float sk_paint_get_fontmetrics(sk_paint_t t, IntPtr fontMetricsZero, float scale);
-
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_path_effect_t sk_paint_get_path_effect(sk_paint_t cpaint);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_paint_set_path_effect(sk_paint_t cpaint, sk_path_effect_t effect);
-
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_paint_is_linear_text(sk_paint_t cpaint);
@@ -501,8 +486,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_paint_t sk_paint_clone(sk_paint_t cpaint);
 
-		// Image
-
+		// image
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_image_ref(sk_image_t image);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -579,8 +563,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_image_t sk_image_make_with_filter(sk_image_t image, sk_imagefilter_t filter, ref SKRectI subset, ref SKRectI clipbounds, out SKRectI outSubset, out SKPoint outOffset);
 
-		// Path
-
+		// path
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_path_contains (sk_path_t cpath, float x, float y);
@@ -685,8 +668,8 @@ namespace SkiaSharp
 		public extern static void sk_path_add_poly (sk_path_t cpath, [In] SKPoint[] points, int count, [MarshalAs(UnmanagedType.I1)] bool close);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SKPathSegmentMask sk_path_get_segment_masks (sk_path_t t);
-		
 
+		// path measure
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_pathmeasure_t sk_pathmeasure_new();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -773,7 +756,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_maskfilter_t sk_maskfilter_new_blur(SKBlurStyle style, float sigma);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_maskfilter_t sk_maskfilter_new_blur_with_flags(SKBlurStyle style, float sigma, ref SKRect occluder, bool respectCTM);
+		public extern static sk_maskfilter_t sk_maskfilter_new_blur_with_flags(SKBlurStyle style, float sigma, ref SKRect occluder, [MarshalAs (UnmanagedType.I1)] bool respectCTM);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_maskfilter_t sk_maskfilter_new_table(byte[] table /*[256]*/);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -851,8 +834,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_imagefilter_t sk_imagefilter_new_paint(sk_paint_t paint, sk_imagefilter_croprect_t cropRect /*NULL*/);
 
-		// SkColorFilter
-
+		// color filter
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_colorfilter_unref(sk_colorfilter_t filter);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -872,17 +854,13 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_colorfilter_t sk_colorfilter_new_high_contrast(ref SKHighContrastConfig config);
 
-		// SkData
+		// data
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_data_t sk_data_new_empty();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_data_t sk_data_new_with_copy(IntPtr src, IntPtr length);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_data_t sk_data_new_with_copy(byte[] src, IntPtr length);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_data_t sk_data_new_from_malloc(IntPtr malloc, IntPtr length);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_data_t sk_data_new_from_malloc(byte[] malloc, IntPtr length);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_data_t sk_data_new_subset(sk_data_t src, IntPtr offset, IntPtr length);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -891,7 +869,6 @@ namespace SkiaSharp
 		public extern static sk_data_t sk_data_new_from_stream(sk_stream_t stream, IntPtr length);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_data_t sk_data_new_with_proc(IntPtr ptr, IntPtr length, IntPtr proc, IntPtr ctx);
-
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_data_unref(sk_data_t d);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -901,7 +878,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_data_t sk_data_new_uninitialized(IntPtr size);
 
-		// SkString
+		// string
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_string_t sk_string_new_empty();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -913,7 +890,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_string_get_c_str(sk_string_t skstring);
 
-		// SkPicture
+		// picture
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_picture_recorder_delete(sk_picture_recorder_t r);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -931,26 +908,21 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_picture_get_cull_rect(sk_picture_t p, out SKRect rect);
 
-		// SkShader
+		// shader
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_shader_unref(sk_shader_t t);
-
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_empty();
-
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_color(SKColor color);
-
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_local_matrix(sk_shader_t proxy, ref SKMatrix matrix);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_color_filter(sk_shader_t proxy, sk_colorfilter_t filter);
-
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_bitmap(sk_bitmap_t src, SKShaderTileMode tmx, SKShaderTileMode tmy, ref SKMatrix matrix);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_bitmap(sk_bitmap_t src, SKShaderTileMode tmx, SKShaderTileMode tmy, IntPtr matrixZero);
-
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_linear_gradient([In] SKPoint[] points, [In] SKColor[] colors, float[] colorPos, int count, SKShaderTileMode mode, ref SKMatrix matrix);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -983,7 +955,6 @@ namespace SkiaSharp
 		public extern static sk_shader_t sk_shader_new_two_point_conical_gradient(ref SKPoint start, float startRadius, ref SKPoint end, float endRadius, [In] SKColor[] colors, IntPtr colorPosZero, int count, SKShaderTileMode mode, ref SKMatrix matrix);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_two_point_conical_gradient(ref SKPoint start, float startRadius, ref SKPoint end, float endRadius, [In] SKColor[] colors, IntPtr colorPosZero, int count, SKShaderTileMode mode, IntPtr matrixZero);
-
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_perlin_noise_fractal_noise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, IntPtr tileSizeZero);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -992,16 +963,14 @@ namespace SkiaSharp
 		public extern static sk_shader_t sk_shader_new_perlin_noise_turbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, IntPtr tileSizeZero);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_perlin_noise_turbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, ref SKPointI tileSize);
-
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_compose(sk_shader_t shaderA, sk_shader_t shaderB);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_compose_with_mode(sk_shader_t shaderA, sk_shader_t shaderB, SKBlendMode mode);
 
-		// Typeface
+		// typeface
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_typeface_t sk_typeface_create_from_name_with_font_style([MarshalAs(UnmanagedType.LPStr)] string familyName, int weight, int width, SKFontStyleSlant slant);
-
+		public extern static sk_typeface_t sk_typeface_create_from_name_with_font_style([MarshalAs(UnmanagedType.LPStr)] string familyName, sk_fontstyle_t style);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_typeface_t sk_typeface_create_from_file([MarshalAs(UnmanagedType.LPStr)] string path, int index);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1021,6 +990,8 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_typeface_get_table_data(sk_typeface_t typeface, sk_font_table_tag_t tag, IntPtr offset, IntPtr length, byte[] data);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_fontstyle_t sk_typeface_get_fontstyle (sk_typeface_t typeface);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_typeface_get_font_weight(sk_typeface_t typeface);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_typeface_get_font_width(sk_typeface_t typeface);
@@ -1031,7 +1002,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_typeface_get_units_per_em(sk_typeface_t typeface);
 
-		// FontMgr
+		// font manager
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_fontmgr_t sk_fontmgr_create_default();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1043,16 +1014,55 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_fontmgr_get_family_name(sk_fontmgr_t fontmgr, int index, sk_string_t familyName);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_typeface_t sk_fontmgr_match_family_style_character(sk_fontmgr_t fontmgr, [MarshalAs(UnmanagedType.LPStr)] string familyName, int weight, int width, SKFontStyleSlant slant, [In] [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] bcp47, int bcp47Count, int character);
+		public extern static sk_typeface_t sk_fontmgr_match_family_style_character(sk_fontmgr_t fontmgr, [MarshalAs(UnmanagedType.LPStr)] string familyName, sk_fontstyle_t style, [In] [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] string[] bcp47, int bcp47Count, int character);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_fontstyleset_t sk_fontmgr_create_styleset (sk_fontmgr_t fontmgr, int index);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_fontstyleset_t sk_fontmgr_match_family (sk_fontmgr_t fontmgr, [MarshalAs (UnmanagedType.LPStr)] string familyName);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_typeface_t sk_fontmgr_match_family_style (sk_fontmgr_t fontmgr, [MarshalAs (UnmanagedType.LPStr)] string familyName, sk_fontstyle_t style);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_typeface_t sk_fontmgr_match_face_style (sk_fontmgr_t fontmgr, sk_typeface_t face, sk_fontstyle_t style);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_typeface_t sk_fontmgr_create_from_data (sk_fontmgr_t fontmgr, sk_data_t data, int index);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_typeface_t sk_fontmgr_create_from_stream (sk_fontmgr_t fontmgr, sk_stream_assetstream_t stream, int index);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_typeface_t sk_fontmgr_create_from_file (sk_fontmgr_t fontmgr, [MarshalAs (UnmanagedType.LPStr)] string path, int index);
 
-		// Streams
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		// font style
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_fontstyle_t sk_fontstyle_new (int weight, int width, SKFontStyleSlant slant);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_fontstyle_delete (sk_fontstyle_t fs);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_fontstyle_get_weight (sk_fontstyle_t fs);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_fontstyle_get_width (sk_fontstyle_t fs);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKFontStyleSlant sk_fontstyle_get_slant (sk_fontstyle_t fs);
+
+		// font style set
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_fontstyleset_t sk_fontstyleset_create_empty();
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_fontstyleset_unref(sk_fontstyleset_t fss);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_fontstyleset_get_count(sk_fontstyleset_t fss);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_fontstyleset_get_style(sk_fontstyleset_t fss, int index, sk_fontstyle_t fs, sk_string_t style);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_typeface_t sk_fontstyleset_create_typeface(sk_fontstyleset_t fss, int index);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_typeface_t sk_fontstyleset_match_style(sk_fontstyleset_t fss, sk_fontstyle_t style);
+
+		// streams
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_memorystream_destroy(sk_stream_memorystream_t stream);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_filestream_destroy(sk_stream_filestream_t stream);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_stream_asset_destroy(sk_stream_assetstream_t stream);
-
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_stream_read(sk_stream_t stream, IntPtr buffer, IntPtr size);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1115,7 +1125,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_memorystream_set_memory(sk_stream_memorystream_t s, byte[] data, IntPtr length, [MarshalAs(UnmanagedType.I1)] bool copyData);
 
-		// Managed streams
+		// managed streams
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_stream_managedstream_t sk_managedstream_new();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1129,12 +1139,11 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_managedwstream_set_delegates(IntPtr pWrite, IntPtr pFlush, IntPtr pBytesWritten, IntPtr pDestroy);
 
-		// Writeable streams
+		// writeable streams
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_filewstream_destroy(sk_wstream_filestream_t cstream);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_dynamicmemorywstream_destroy(sk_wstream_dynamicmemorystream_t cstream);
-
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_wstream_filestream_t sk_filewstream_new([MarshalAs(UnmanagedType.LPStr)] string path);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1200,7 +1209,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_wstream_get_size_of_packed_uint(IntPtr value);
 
-		// Document
+		// document
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_document_unref(sk_document_t document);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1220,7 +1229,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_document_abort(sk_document_t document);
 
-		// Codec
+		// codec
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_codec_min_buffered_bytes_needed();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1243,8 +1252,6 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SKCodecResult sk_codec_get_pixels(sk_codec_t codec, ref SKImageInfoNative info, IntPtr pixels, IntPtr rowBytes, ref SKCodecOptionsInternal options);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static SKCodecResult sk_codec_get_pixels_using_defaults(sk_codec_t codec, ref SKImageInfoNative info, IntPtr pixels, IntPtr rowBytes);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SKCodecResult sk_codec_start_incremental_decode(sk_codec_t codec, ref SKImageInfoNative info, IntPtr pixels, IntPtr rowBytes, ref SKCodecOptionsInternal options);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SKCodecResult sk_codec_start_incremental_decode(sk_codec_t codec, ref SKImageInfoNative info, IntPtr pixels, IntPtr rowBytes, IntPtr optionsZero);
@@ -1256,6 +1263,9 @@ namespace SkiaSharp
 		public extern static int sk_codec_get_frame_count(sk_codec_t codec);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_codec_get_frame_info(sk_codec_t codec, [Out] SKCodecFrameInfo[] frameInfo);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_codec_get_frame_info_for_index(sk_codec_t codec, int index, out SKCodecFrameInfo frameInfo);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SKCodecResult sk_codec_start_scanline_decode(sk_codec_t codec, ref SKImageInfoNative info, ref SKCodecOptionsInternal options);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1272,7 +1282,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_codec_output_scanline(sk_codec_t codec, int inputScanline);
 
-		// Bitmap
+		// bitmap
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_bitmap_t sk_bitmap_new();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1351,15 +1361,12 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_bitmap_extract_alpha(sk_bitmap_t cbitmap, sk_bitmap_t dst, sk_paint_t paint, out SKPointI offset);
-
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_bitmap_notify_pixels_changed(sk_bitmap_t cbitmap);
-
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_bitmap_swap(sk_bitmap_t cbitmap, sk_bitmap_t cother);
 
-		// SKColor
-
+		// color
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_color_t sk_color_unpremultiply(SKPMColor pmcolor);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1371,8 +1378,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_color_get_bit_shift(out int a, out int r, out int g, out int b);
 
-		// SkPixmap
-
+		// pixmap
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_pixmap_destructor(sk_pixmap_t cpixmap);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1389,31 +1395,46 @@ namespace SkiaSharp
 		public extern static IntPtr sk_pixmap_get_row_bytes(sk_pixmap_t cpixmap);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_pixmap_get_pixels(sk_pixmap_t cpixmap);
-
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static IntPtr sk_pixmap_get_pixels_with_xy (sk_pixmap_t cpixmap, int x, int y);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_color_t sk_pixmap_get_pixel_color (sk_pixmap_t t, int x, int y);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_pixmap_extract_subset (sk_pixmap_t cpixmap, sk_pixmap_t result, ref SKRectI subset);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		public extern static bool sk_pixmap_erase_color (sk_pixmap_t cpixmap, SKColor color, ref SKRectI subset);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_pixmap_encode_image(sk_wstream_t dst, sk_pixmap_t src, SKEncodedImageFormat encoder, int quality);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		public extern static bool sk_pixmap_read_pixels(sk_pixmap_t cpixmap, ref SKImageInfoNative dstInfo, IntPtr dstPixels, IntPtr dstRowBytes, int srcX, int srcY);
+		public extern static bool sk_pixmap_read_pixels(sk_pixmap_t cpixmap, ref SKImageInfoNative dstInfo, IntPtr dstPixels, IntPtr dstRowBytes, int srcX, int srcY, SKTransferFunctionBehavior behavior);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		public extern static bool sk_pixmap_scale_pixels (sk_pixmap_t cpixmap, sk_pixmap_t dst, SKFilterQuality quality);
 
+		// swizzle
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_swizzle_swap_rb(IntPtr dest, IntPtr src, int count);
 
+		// webp encoder
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		public extern static bool sk_webpencoder_encode (sk_wstream_t dst, sk_pixmap_t src, SKWebpEncoderOptions options);
+
+		// jpeg encoder
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		public extern static bool sk_jpegencoder_encode (sk_wstream_t dst, sk_pixmap_t src, SKJpegEncoderOptions options);
+
+		// png encoder
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		public extern static bool sk_pngencoder_encode (sk_wstream_t dst, sk_pixmap_t src, SKPngEncoderOptions options);
 
-		// Mask
+		// mask
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_mask_alloc_image(IntPtr bytes);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1436,8 +1457,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_mask_get_addr(ref SKMask cmask, int x, int y);
 
-		// Matrix
-
+		// matrix
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_matrix_try_invert(ref SKMatrix matrix, out SKMatrix result);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1459,6 +1479,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static float sk_matrix_map_radius (ref SKMatrix matrix, float radius);
 
+		// 3d view
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_3dview_t sk_3dview_new ();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1488,8 +1509,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static float sk_3dview_dot_with_normal (sk_3dview_t cview, float dx, float dy, float dz);
 
-		// Matrix44
-
+		// matrix44
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_matrix44_destroy (sk_matrix44_t matrix);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1562,8 +1582,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static double sk_matrix44_determinant (sk_matrix44_t matrix);
 
-		// Path Effect
-
+		// path effect
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]  
 		public extern static void sk_path_effect_unref (sk_path_effect_t effect); 
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1583,8 +1602,7 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_path_effect_t sk_path_effect_create_dash(float[] intervals, int count, float phase);
 
-		// Color Table
-
+		// color table
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_colortable_unref (sk_colortable_t ctable);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1592,12 +1610,9 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_colortable_count (sk_colortable_t ctable);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_colortable_read_colors (sk_colortable_t ctable, [Out] SKPMColor[] colors);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_colortable_read_colors (sk_colortable_t ctable, out IntPtr colors);
 
-		// GRContext
-
+		// GPU context
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static gr_context_t gr_context_make_gl (gr_glinterface_t glInterface);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1621,8 +1636,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static GRBackend gr_context_get_backend (gr_context_t context);
 
-		// GLInterface
-
+		// GL interface
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static gr_glinterface_t gr_glinterface_assemble_interface (IntPtr ctx, IntPtr get);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1639,10 +1653,9 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool gr_glinterface_has_extension (gr_glinterface_t glInterface, [MarshalAs(UnmanagedType.LPStr)] string extension);
-		
-		// GRBackendTexture
 
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		// GPU backend texture
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static gr_backendtexture_t gr_backendtexture_new_gl(int width, int height, [MarshalAs(UnmanagedType.I1)] bool mipmapped, ref GRGlTextureInfo glInfo);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void gr_backendtexture_delete(gr_backendtexture_t texture);
@@ -1662,9 +1675,8 @@ namespace SkiaSharp
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool gr_backendtexture_get_gl_textureinfo(gr_backendtexture_t texture, out GRGlTextureInfo glInfo);
 
-		// GRBackendRenderTarget
-
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		// GPU backend render target
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static gr_backendrendertarget_t gr_backendrendertarget_new_gl(int width, int height, int samples, int stencils, ref GRGlFramebufferInfo glInfo);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void gr_backendrendertarget_delete(gr_backendrendertarget_t rendertarget);
@@ -1685,17 +1697,17 @@ namespace SkiaSharp
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool gr_backendrendertarget_get_gl_framebufferinfo(gr_backendrendertarget_t rendertarget, out GRGlFramebufferInfo glInfo);
 
-		// XML
+		// xml
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_xmlstreamwriter_t sk_xmlstreamwriter_new (sk_wstream_t stream);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_xmlstreamwriter_delete (sk_xmlstreamwriter_t writer);
 
-		// SVG
+		// svg
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_canvas_t sk_svgcanvas_create (ref SKRect bounds, sk_xmlwriter_t writer);
 
-		// SKRegion
+		// region
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_region_t sk_region_new();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1730,13 +1742,13 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_region_get_bounds(sk_region_t r, out SKRectI rect);
 
-		// Vertices
+		// vertices
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_vertices_unref(sk_vertices_t cvertices);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_vertices_t sk_vertices_make_copy(SKVertexMode vmode, int vertexCount, [In] SKPoint[] positions, [In] SKPoint[] texs, [In] SKColor[] colors, int indexCount, [In] UInt16[] indices);
 
-		// RRect
+		// round rect
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_rrect_t sk_rrect_new ();
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1749,9 +1761,6 @@ namespace SkiaSharp
 		public extern static void sk_rrect_get_rect (sk_rrect_t rrect, out SKRect rect);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_rrect_get_radii (sk_rrect_t rrect, SKRoundRectCorner corner, [Out] out SKPoint radii);
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs (UnmanagedType.I1)]
-		public extern static bool sk_rrect_all_corners_circular (sk_rrect_t rrect, float tolerance);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static float sk_rrect_get_width (sk_rrect_t rrect);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

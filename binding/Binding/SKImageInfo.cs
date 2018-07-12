@@ -55,62 +55,56 @@ namespace SkiaSharp
 		public static readonly int PlatformColorGreenShift;
 		public static readonly int PlatformColorBlueShift;
 
-		private int width;
-		private int height;
-		private SKColorType colorType;
-		private SKAlphaType alphaType;
-		private SKColorSpace colorSpace;
-
 		static SKImageInfo ()
 		{
 			PlatformColorType = SkiaApi.sk_colortype_get_default_8888 ();
 			SkiaApi.sk_color_get_bit_shift (out PlatformColorAlphaShift, out PlatformColorRedShift, out PlatformColorGreenShift, out PlatformColorBlueShift);
 		}
 
-		public int Width { get { return width; } set { width = value; } }
+		public int Width { get; set; }
 
-		public int Height { get { return height; } set { height = value; } }
+		public int Height { get; set; }
 
-		public SKColorType ColorType { get { return colorType; } set { colorType = value; } }
+		public SKColorType ColorType { get; set; }
 
-		public SKAlphaType AlphaType { get { return alphaType; } set { alphaType = value; } }
+		public SKAlphaType AlphaType { get; set; }
 
-		public SKColorSpace ColorSpace { get { return colorSpace; } set { colorSpace = value; } }
+		public SKColorSpace ColorSpace { get; set; }
 
 		public SKImageInfo (int width, int height)
 		{
-			this.width = width;
-			this.height = height;
-			this.colorType = PlatformColorType;
-			this.alphaType = SKAlphaType.Premul;
-			this.colorSpace = null;
+			Width = width;
+			Height = height;
+			ColorType = PlatformColorType;
+			AlphaType = SKAlphaType.Premul;
+			ColorSpace = null;
 		}
 
 		public SKImageInfo (int width, int height, SKColorType colorType)
 		{
-			this.width = width;
-			this.height = height;
-			this.colorType = colorType;
-			this.alphaType = SKAlphaType.Premul;
-			this.colorSpace = null;
+			Width = width;
+			Height = height;
+			ColorType = colorType;
+			AlphaType = SKAlphaType.Premul;
+			ColorSpace = null;
 		}
 
 		public SKImageInfo (int width, int height, SKColorType colorType, SKAlphaType alphaType)
 		{
-			this.width = width;
-			this.height = height;
-			this.colorType = colorType;
-			this.alphaType = alphaType;
-			this.colorSpace = null;
+			Width = width;
+			Height = height;
+			ColorType = colorType;
+			AlphaType = alphaType;
+			ColorSpace = null;
 		}
 
 		public SKImageInfo (int width, int height, SKColorType colorType, SKAlphaType alphaType, SKColorSpace colorspace)
 		{
-			this.width = width;
-			this.height = height;
-			this.colorType = colorType;
-			this.alphaType = alphaType;
-			this.colorSpace = colorspace;
+			Width = width;
+			Height = height;
+			ColorType = colorType;
+			AlphaType = alphaType;
+			ColorSpace = colorspace;
 		}
 
 		public int BytesPerPixel {
@@ -137,80 +131,50 @@ namespace SkiaSharp
 			}
 		}
 
-		public int BitsPerPixel {
-			get {
-				switch (ColorType) {
-				case SKColorType.Unknown:
-					return 0;
-				case SKColorType.Alpha8:
-				case SKColorType.Gray8:
-					return 8;
-				case SKColorType.Rgb565:
-				case SKColorType.Argb4444:
-					return 16;
-				case SKColorType.Bgra8888:
-				case SKColorType.Rgba8888:
-				case SKColorType.Rgb888x:
-				case SKColorType.Rgba1010102:
-				case SKColorType.Rgb101010x:
-					return 32;
-				case SKColorType.RgbaF16:
-					return 64;
-				}
-				throw new ArgumentOutOfRangeException (nameof (ColorType));
-			}
-		}
+		public int BitsPerPixel => BytesPerPixel * 8;
 
-		public int BytesSize {
-			get { return Width * Height * BytesPerPixel; }
-		}
+		public int BytesSize => Width * Height * BytesPerPixel;
 
-		public long BytesSize64 {
-			get { return (long)Width * (long)Height * (long)BytesPerPixel; }
-		}
+		public long BytesSize64 => (long)Width * (long)Height * (long)BytesPerPixel;
 
-		public int RowBytes {
-			get { return Width * BytesPerPixel; }
-		}
+		public int RowBytes => Width * BytesPerPixel;
 
-		public long RowBytes64 {
-			get { return (long)Width * (long)BytesPerPixel; }
-		}
+		public long RowBytes64 => (long)Width * (long)BytesPerPixel;
 
-		public bool IsEmpty {
-			get { return Width <= 0 || Height <= 0; }
-		}
+		public bool IsEmpty => Width <= 0 || Height <= 0;
 
-		public bool IsOpaque {
-			get { return AlphaType == SKAlphaType.Opaque; }
-		}
+		public bool IsOpaque => AlphaType == SKAlphaType.Opaque;
 
-		public SKSizeI Size {
-			get { return new SKSizeI (Width, Height); }
-		}
+		public SKSizeI Size => new SKSizeI (Width, Height);
 
-		public SKRectI Rect {
-			get { return SKRectI.Create (Width, Height); }
+		public SKRectI Rect => SKRectI.Create (Width, Height);
+
+		public SKImageInfo WithSize(int width, int height)
+		{
+			var copy = this;
+			copy.Width = width;
+			copy.Height = height;
+			return copy;
 		}
 
 		public SKImageInfo WithColorType (SKColorType newColorType)
 		{
 			var copy = this;
-			copy.colorType = newColorType;
+			copy.ColorType = newColorType;
 			return copy;
 		}
 
 		public SKImageInfo WithColorSpace (SKColorSpace newColorSpace)
 		{
 			var copy = this;
-			copy.colorSpace = newColorSpace;
+			copy.ColorSpace = newColorSpace;
 			return copy;
 		}
 
 		public SKImageInfo WithAlphaType (SKAlphaType newAlphaType)
 		{
 			var copy = this;
-			copy.alphaType = newAlphaType;
+			copy.AlphaType = newAlphaType;
 			return copy;
 		}
 	}

@@ -124,7 +124,7 @@ namespace SkiaSharp
 		}
 
 		[Obsolete("Use CreateMerge(SKImageFilter[], SKImageFilter.CropRect) instead.")]
-		public static SKImageFilter CreateMerge(SKImageFilter[] filters, SKBlendMode[] modes = null, SKImageFilter.CropRect cropRect = null)
+		public static SKImageFilter CreateMerge(SKImageFilter[] filters, SKBlendMode[] modes, SKImageFilter.CropRect cropRect = null)
 		{
 			return CreateMerge (filters, cropRect);
 		}

@@ -27,10 +27,22 @@ namespace SkiaSharp
 			this.image = IntPtr.Zero;
 		}
 
-		public IntPtr Image => image;
-		public SKRectI Bounds => bounds;
-		public UInt32 RowBytes => rowBytes;
-		public SKMaskFormat Format => format;
+		public IntPtr Image {
+			get => image;
+			set => image = value;
+		}
+		public SKRectI Bounds {
+			get => bounds;
+			set => bounds = value;
+		}
+		public UInt32 RowBytes {
+			get => rowBytes;
+			set => rowBytes = value;
+		}
+		public SKMaskFormat Format {
+			get => format;
+			set => format = value;
+		}
 		public bool IsEmpty => SkiaApi.sk_mask_is_empty(ref this);
 
 		public long AllocateImage()

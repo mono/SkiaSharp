@@ -179,21 +179,25 @@ namespace SkiaSharp
 
 		// create a new image from a GPU texture
 
+		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
 		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc)
 		{
 			return FromTexture (context, desc, SKAlphaType.Premul, null, null);
 		}
 
+		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType) instead.")]
 		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha)
 		{
 			return FromTexture (context, desc, alpha, null, null);
 		}
 
+		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType, SKColorSpace, SKImageTextureReleaseDelegate) instead.")]
 		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc)
 		{
 			return FromTexture (context, desc, alpha, releaseProc, null);
 		}
 
+		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType, SKColorSpace, SKImageTextureReleaseDelegate, object) instead.")]
 		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc, object releaseContext)
 		{
 			if (context == null)
@@ -201,6 +205,31 @@ namespace SkiaSharp
 
 			var texture = new GRBackendTexture (desc);
 			return FromTexture (context, texture, desc.Origin, desc.Config.ToColorType (), alpha, null, releaseProc, releaseContext);
+		}
+
+		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, SKColorType colorType)
+		{
+			return FromTexture (context, texture, GRSurfaceOrigin.BottomLeft, colorType, SKAlphaType.Premul, null, null, null);
+		}
+
+		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType)
+		{
+			return FromTexture (context, texture, origin, colorType, SKAlphaType.Premul, null, null, null);
+		}
+
+		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha)
+		{
+			return FromTexture (context, texture, origin, colorType, alpha, null, null, null);
+		}
+
+		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace)
+		{
+			return FromTexture (context, texture, origin, colorType, alpha, colorspace, null, null);
+		}
+
+		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace, SKImageTextureReleaseDelegate releaseProc)
+		{
+			return FromTexture (context, texture, origin, colorType, alpha, colorspace, releaseProc, null);
 		}
 
 		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace, SKImageTextureReleaseDelegate releaseProc, object releaseContext)
@@ -219,11 +248,13 @@ namespace SkiaSharp
 			}
 		}
 
+		[Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
 		public static SKImage FromAdoptedTexture (GRContext context, GRGlBackendTextureDesc desc)
 		{
 			return FromAdoptedTexture (context, desc, SKAlphaType.Premul);
 		}
 
+		[Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType) instead.")]
 		public static SKImage FromAdoptedTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha)
 		{
 			if (context == null)
@@ -231,6 +262,21 @@ namespace SkiaSharp
 
 			var texture = new GRBackendTexture (desc);
 			return FromAdoptedTexture (context, texture, desc.Origin, desc.Config.ToColorType (), alpha, null);
+		}
+
+		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, SKColorType colorType)
+		{
+			return FromAdoptedTexture (context, texture, GRSurfaceOrigin.BottomLeft, colorType, SKAlphaType.Premul, null);
+		}
+
+		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType)
+		{
+			return FromAdoptedTexture (context, texture, origin, colorType, SKAlphaType.Premul, null);
+		}
+
+		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha)
+		{
+			return FromAdoptedTexture (context, texture, origin, colorType, alpha, null);
 		}
 
 		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace)

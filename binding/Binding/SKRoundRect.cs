@@ -70,7 +70,16 @@ namespace SkiaSharp
 
 		public bool CheckAllCornersCircular (float tolerance)
 		{
-			return SkiaApi.sk_rrect_all_corners_circular (Handle, tolerance);
+			var ul = GetRadii (SKRoundRectCorner.UpperLeft);
+			var ur = GetRadii (SKRoundRectCorner.UpperRight);
+			var lr = GetRadii (SKRoundRectCorner.LowerRight);
+			var ll = GetRadii (SKRoundRectCorner.LowerLeft);
+
+			return
+				Utils.NearlyEqual (ul.X, ul.Y, tolerance) &&
+				Utils.NearlyEqual (ur.X, ur.Y, tolerance) &&
+				Utils.NearlyEqual (lr.X, lr.Y, tolerance) &&
+				Utils.NearlyEqual (ll.X, ll.Y, tolerance);
 		}
 
 		public void SetEmpty ()

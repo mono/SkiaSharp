@@ -10,11 +10,15 @@ namespace SkiaSharp
 		{
 		}
 
+		[Obsolete ("Use GRBackendTexture(int, int, bool, GRGlTextureInfo) instead.")]
 		public GRBackendTexture (GRGlBackendTextureDesc desc)
 			: this (IntPtr.Zero, true)
 		{
-			var glInfo = new GRGlTextureInfo (desc.TextureHandle.Target, desc.TextureHandle.Id, desc.TextureHandle.Format);
-			CreateGl (desc.Width, desc.Height, false, glInfo);
+			var handle = desc.TextureHandle;
+			if (handle.Format == 0) {
+				handle.Format = desc.Config.ToSizedFormat ();
+			}
+			CreateGl (desc.Width, desc.Height, false, handle);
 		}
 
 		public GRBackendTexture (int width, int height, bool mipmapped, GRGlTextureInfo glInfo)
