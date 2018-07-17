@@ -65,6 +65,9 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void TestMatchTypeface()
 		{
+			if (IsMac)
+				throw new SkipException("macOS does not support matching typefaces.");
+
 			var fonts = SKFontManager.Default;
 
 			var normal = fonts.MatchFamily("Arial", SKFontStyle.Normal);
@@ -76,6 +79,21 @@ namespace SkiaSharp.Tests
 			Assert.Equal((int)SKFontStyleWeight.Bold, bold.FontWeight);
 
 			Assert.Equal(normal.FamilyName, bold.FamilyName);
+		}
+
+		[SkippableFact]
+		public void TestMatchTypefaceFromStream()
+		{
+			if (IsMac)
+				throw new SkipException("macOS does not support matching typefaces.");
+
+			var fonts = SKFontManager.Default;
+
+			var typeface = fonts.FromFile(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
+			Assert.Equal("Roboto2", typeface.FamilyName);
+
+			var match = fonts.MatchTypeface(typeface, SKFontStyle.Bold);
+			Assert.NotNull(match);
 		}
 
 		[SkippableFact]
