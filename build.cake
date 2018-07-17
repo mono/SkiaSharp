@@ -1,7 +1,7 @@
 #addin nuget:?package=Cake.Xamarin&version=2.0.1
 #addin nuget:?package=Cake.XCode&version=3.0.0
 #addin nuget:?package=Cake.FileHelpers&version=2.0.0
-#addin nuget:https://ci.appveyor.com/nuget/cake-monoapitools-gunq9ba46ljl?package=Cake.MonoApiTools&version=2.0.0-preview2
+// #addin nuget:https://ci.appveyor.com/nuget/cake-monoapitools-gunq9ba46ljl?package=Cake.MonoApiTools&version=2.0.0-preview2
 
 #reference "tools/SharpCompress/lib/net45/SharpCompress.dll"
 #reference "tools/Newtonsoft.Json/lib/net45/Newtonsoft.Json.dll"
@@ -375,88 +375,88 @@ Task ("nuget")
     }
 });
 
-Task ("api-diff")
-    .Does (() =>
-{
-    var ids = new List<string> {
-        "skiasharp",
-        // "skiasharp.views",
-        // "skiasharp.views.forms",
-        // "harfbuzzsharp",
-        // "skiasharp.harfbuzz",
-    };
-
-    try {
-
-    foreach (var nuget in ids) {
-        Information ($"Comparing the assemblies in '{nuget}'...");
-
-        // find the latest version for this id
-        var version = "0.0";
-        var mdFile = DownloadFile ($"https://api.nuget.org/v3/registration3/{nuget.ToLower()}/index.json");
-        var mdObj = JObject.Parse (FileReadText (mdFile));
-        foreach (var package in mdObj ["items"] [0] ["items"]) {
-            var v = (string) package ["catalogEntry"] ["version"];
-            if (!v.Contains("-") && Version.Parse (v) > Version.Parse (version))
-                version = v;
-        }
-
-        // download nugets
-        var tempPath = $"./externals/api-diff/{nuget}.{version}";
-        var oldDest = $"{tempPath}/{nuget}.{version}.nupkg";
-        if (!FileExists (oldDest)) {
-            CleanDirectories (tempPath);
-            EnsureDirectoryExists (tempPath);
-
-            var url = $"https://api.nuget.org/v3-flatcontainer/{nuget}/{version}/{nuget}.{version}.nupkg";
-            DownloadFile (url, oldDest);
-            Unzip (oldDest, tempPath);
-        }
-
-        // find the dlls
-        var oldDlls = GetFiles ($"{tempPath}/lib/*/*.dll");
-        var newDlls = GetFiles ($"./output/{nuget}/nuget/lib/*/*.dll");
-        var oldPlatforms = oldDlls.Select (p => $"{p.GetDirectory ().GetDirectoryName ()}/{p.GetFilename ()}".ToLower ()).ToArray ();
-        var newPlatforms = newDlls.Select (p => $"{p.GetDirectory ().GetDirectoryName ()}/{p.GetFilename ()}".ToLower ()).ToArray ();
-        var missing = oldPlatforms.Except (newPlatforms);
-        foreach (var miss in missing) {
-            Warning ($"The '{miss}' dll is missing from the new '{nuget}' package.");
-        }
-        var added = newPlatforms.Except (oldPlatforms);
-        foreach (var add in added) {
-            Warning ($"The '{add}' dll was added to the new '{nuget}' package.");
-        }
-        var intersection = newPlatforms.Intersect (oldPlatforms);
-
-        // run the diff on each dll
-        var outPath = $"./output/{nuget}/api-diff";
-        EnsureDirectoryExists (outPath);
-        CleanDirectories (outPath);
-        foreach (var match in intersection) {
-            Information ($"Comparing the '{match}' assembly...");
-
-            var assembly = (FilePath)$"{outPath}/{match}";
-            EnsureDirectoryExists (assembly.GetDirectory ());
-
-            var oldApi = $"{outPath}/{match}.api-info.old.xml";
-            var newApi = $"{outPath}/{match}.api-info.new.xml";
-
-            var pathToAssembly = $"lib/{match}";
-            MonoApiInfo ($"{tempPath}/{pathToAssembly}", oldApi);
-            MonoApiInfo ($"./output/{nuget}/nuget/{pathToAssembly}", newApi);
-
-            MonoApiDiff (oldApi, newApi, $"{outPath}/{match}.api-info.diff.xml");
-            MonoApiHtmlColorized (oldApi, newApi, $"{outPath}/{match}.api-info.diff.html");
-            MonoApiMarkdownColorized (oldApi, newApi, $"{outPath}/{match}.api-info.diff.md");
-        }
-    }
-
-    } catch (AggregateException ex) {
-        Error ("{0}", ex.InnerException);
-    } catch (Exception ex) {
-        Error ("{0}", ex);
-    }
-});
+// Task ("api-diff")
+//     .Does (() =>
+// {
+//     var ids = new List<string> {
+//         "skiasharp",
+//         // "skiasharp.views",
+//         // "skiasharp.views.forms",
+//         // "harfbuzzsharp",
+//         // "skiasharp.harfbuzz",
+//     };
+//
+//     try {
+//
+//     foreach (var nuget in ids) {
+//         Information ($"Comparing the assemblies in '{nuget}'...");
+//
+//         // find the latest version for this id
+//         var version = "0.0";
+//         var mdFile = DownloadFile ($"https://api.nuget.org/v3/registration3/{nuget.ToLower()}/index.json");
+//         var mdObj = JObject.Parse (FileReadText (mdFile));
+//         foreach (var package in mdObj ["items"] [0] ["items"]) {
+//             var v = (string) package ["catalogEntry"] ["version"];
+//             if (!v.Contains("-") && Version.Parse (v) > Version.Parse (version))
+//                 version = v;
+//         }
+//
+//         // download nugets
+//         var tempPath = $"./externals/api-diff/{nuget}.{version}";
+//         var oldDest = $"{tempPath}/{nuget}.{version}.nupkg";
+//         if (!FileExists (oldDest)) {
+//             CleanDirectories (tempPath);
+//             EnsureDirectoryExists (tempPath);
+//
+//             var url = $"https://api.nuget.org/v3-flatcontainer/{nuget}/{version}/{nuget}.{version}.nupkg";
+//             DownloadFile (url, oldDest);
+//             Unzip (oldDest, tempPath);
+//         }
+//
+//         // find the dlls
+//         var oldDlls = GetFiles ($"{tempPath}/lib/*/*.dll");
+//         var newDlls = GetFiles ($"./output/{nuget}/nuget/lib/*/*.dll");
+//         var oldPlatforms = oldDlls.Select (p => $"{p.GetDirectory ().GetDirectoryName ()}/{p.GetFilename ()}".ToLower ()).ToArray ();
+//         var newPlatforms = newDlls.Select (p => $"{p.GetDirectory ().GetDirectoryName ()}/{p.GetFilename ()}".ToLower ()).ToArray ();
+//         var missing = oldPlatforms.Except (newPlatforms);
+//         foreach (var miss in missing) {
+//             Warning ($"The '{miss}' dll is missing from the new '{nuget}' package.");
+//         }
+//         var added = newPlatforms.Except (oldPlatforms);
+//         foreach (var add in added) {
+//             Warning ($"The '{add}' dll was added to the new '{nuget}' package.");
+//         }
+//         var intersection = newPlatforms.Intersect (oldPlatforms);
+//
+//         // run the diff on each dll
+//         var outPath = $"./output/{nuget}/api-diff";
+//         EnsureDirectoryExists (outPath);
+//         CleanDirectories (outPath);
+//         foreach (var match in intersection) {
+//             Information ($"Comparing the '{match}' assembly...");
+//
+//             var assembly = (FilePath)$"{outPath}/{match}";
+//             EnsureDirectoryExists (assembly.GetDirectory ());
+//
+//             var oldApi = $"{outPath}/{match}.api-info.old.xml";
+//             var newApi = $"{outPath}/{match}.api-info.new.xml";
+//
+//             var pathToAssembly = $"lib/{match}";
+//             MonoApiInfo ($"{tempPath}/{pathToAssembly}", oldApi);
+//             MonoApiInfo ($"./output/{nuget}/nuget/{pathToAssembly}", newApi);
+//
+//             MonoApiDiff (oldApi, newApi, $"{outPath}/{match}.api-info.diff.xml");
+//             MonoApiHtmlColorized (oldApi, newApi, $"{outPath}/{match}.api-info.diff.html");
+//             MonoApiMarkdownColorized (oldApi, newApi, $"{outPath}/{match}.api-info.diff.md");
+//         }
+//     }
+//
+//     } catch (AggregateException ex) {
+//         Error ("{0}", ex.InnerException);
+//     } catch (Exception ex) {
+//         Error ("{0}", ex);
+//     }
+// });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // CLEAN - remove all the build artefacts
