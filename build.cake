@@ -3,8 +3,8 @@
 #addin nuget:?package=Cake.FileHelpers&version=2.0.0
 // #addin nuget:https://ci.appveyor.com/nuget/cake-monoapitools-gunq9ba46ljl?package=Cake.MonoApiTools&version=2.0.0-preview2
 
-#tool nuget:?package=xunit.runner.console&version=2.4.0
-#tool nuget:?package=mdoc&version=5.7.2
+// #tool nuget:?package=xunit.runner.console&version=2.4.0
+// #tool nuget:?package=mdoc&version=5.7.2
 
 #reference "tools/SharpCompress/lib/net45/SharpCompress.dll"
 #reference "tools/Newtonsoft.Json/lib/net45/Newtonsoft.Json.dll"
