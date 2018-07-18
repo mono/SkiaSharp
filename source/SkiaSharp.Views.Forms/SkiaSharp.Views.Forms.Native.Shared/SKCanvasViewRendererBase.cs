@@ -21,7 +21,7 @@ using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.UWP.SKPaintSurfaceEventArg
 using Xamarin.Forms.Platform.MacOS;
 using SKNativeView = SkiaSharp.Views.Mac.SKCanvasView;
 using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Mac.SKPaintSurfaceEventArgs;
-#elif TIZEN4_0
+#elif __TIZEN__
 using Xamarin.Forms.Platform.Tizen;
 using SKNativeView = SkiaSharp.Views.Tizen.SKCanvasView;
 using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Tizen.SKPaintSurfaceEventArgs;
@@ -109,7 +109,7 @@ namespace SkiaSharp.Views.Forms
 		{
 			return (TNativeView)Activator.CreateInstance(typeof(TNativeView), new[] { Context });
 		}
-#elif TIZEN4_0
+#elif __TIZEN__
 		protected virtual TNativeView CreateNativeControl()
 		{
 			TNativeView ret = (TNativeView)Activator.CreateInstance(typeof(TNativeView), new[] { TForms.NativeParent });
@@ -165,7 +165,7 @@ namespace SkiaSharp.Views.Forms
 #if __ANDROID__
 				x = Context.FromPixels(x);
 				x = Context.FromPixels(y);
-#elif TIZEN4_0
+#elif __TIZEN__
 				x = Tizen.ScalingInfo.FromPixel(x);
 				x = Tizen.ScalingInfo.FromPixel(y);
 #elif __IOS__ || __MACOS__ || WINDOWS_UWP
@@ -176,7 +176,7 @@ namespace SkiaSharp.Views.Forms
 			}
 			else
 			{
-#if __ANDROID__ || TIZEN4_0
+#if __ANDROID__ || __TIZEN__
 				// Tizen and Android are the reverse of the other platforms
 #elif __IOS__
 				x = x * Control.ContentScaleFactor;

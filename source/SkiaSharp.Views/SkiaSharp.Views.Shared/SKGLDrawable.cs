@@ -14,7 +14,7 @@ namespace SkiaSharp.Views.Desktop
 namespace SkiaSharp.Views.Mac
 #elif WINDOWS_UWP
 namespace SkiaSharp.Views.UWP
-#elif TIZEN4_0
+#elif __TIZEN__
 namespace SkiaSharp.Views.Tizen
 #endif
 {

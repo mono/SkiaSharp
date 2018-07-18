@@ -53,7 +53,7 @@ namespace SkiaSharp
 
 		public static GRGlInterface CreateNativeEvasInterface (IntPtr evas)
 		{
-#if TIZEN4_0
+#if __TIZEN__
 			var evasLoader = new EvasGlLoader (evas);
 			return AssembleGlesInterface ((ctx, name) => evasLoader.GetFunctionPointer (name));
 #else
@@ -208,7 +208,7 @@ namespace SkiaSharp
 			}
 		}
 
-#if TIZEN4_0
+#if __TIZEN__
 		private class EvasGlLoader
 		{
 			private IntPtr glEvas;
