@@ -689,7 +689,7 @@ Task ("externals-angle-uwp")
     .WithCriteria (!FileExists (ANGLE_PATH.CombineWithFilePath ("uwp/ANGLE.WindowsStore.nuspec")))
     .Does (() =>  
 {
-    var version = GetVersion ("ANGLE", "release");
+    var version = GetVersion ("ANGLE.WindowsStore", "release");
     var angleUrl = $"https://www.nuget.org/api/v2/package/ANGLE.WindowsStore/{version}";
     var angleRoot = ANGLE_PATH.Combine ("uwp");
     var angleNupkg = angleRoot.CombineWithFilePath ($"angle_{version}.nupkg");

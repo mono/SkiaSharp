@@ -1,7 +1,10 @@
-#addin nuget:?package=Cake.Xamarin&version=2.0.1
-#addin nuget:?package=Cake.XCode&version=3.0.0
+#addin nuget:?package=Cake.Xamarin&version=3.0.0
+#addin nuget:?package=Cake.XCode&version=4.0.0
 #addin nuget:?package=Cake.FileHelpers&version=2.0.0
 // #addin nuget:https://ci.appveyor.com/nuget/cake-monoapitools-gunq9ba46ljl?package=Cake.MonoApiTools&version=2.0.0-preview2
+
+#tool nuget:?package=xunit.runner.console&version=2.4.0
+#tool nuget:?package=mdoc&version=5.7.2
 
 #reference "tools/SharpCompress/lib/net45/SharpCompress.dll"
 #reference "tools/Newtonsoft.Json/lib/net45/Newtonsoft.Json.dll"
@@ -12,6 +15,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
+using SharpCompress.Common;
 using SharpCompress.Readers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -23,9 +27,9 @@ var VERBOSITY = (Verbosity) Enum.Parse (typeof(Verbosity), Argument ("v", Argume
 var SKIP_EXTERNALS = Argument ("skipexternals", Argument ("SkipExternals", "")).ToLower ().Split (',');
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
-var NugetToolPath = GetToolPath ("nuget.exe");
-var CakeToolPath = GetToolPath ("Cake/Cake.exe");
-var MDocPath = GetToolPath ("mdoc/tools/mdoc.exe");
+var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
+var CakeToolPath = Context.Tools.Resolve ("Cake.exe");
+var MDocPath = Context.Tools.Resolve ("mdoc.exe");
 var MSBuildToolPath = GetMSBuildToolPath (EnvironmentVariable ("MSBUILD_EXE"));
 var PythonToolPath = EnvironmentVariable ("PYTHON_EXE") ?? "python";
 
@@ -539,19 +543,42 @@ Task ("Linux-CI")
 // BUILD NOW 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Information ("Cake.exe ToolPath: {0}", CakeToolPath);
-Information ("NuGet.exe ToolPath: {0}", NugetToolPath);
-Information ("msbuild.exe ToolPath: {0}", MSBuildToolPath);
+Information ("");
+Information ("Tool Paths:");
+Information ("  Cake.exe:   {0}", CakeToolPath);
+Information ("  nuget.exe:  {0}", NuGetToolPath);
+Information ("  msbuild:    {0}", MSBuildToolPath);
+Information ("  python:     {0}", PythonToolPath);
+Information ("");
 
+Information ("Build Environment:");
 if (IS_ON_CI) {
-    Information ("Detected that we are building on CI, {0}.", IS_ON_FINAL_CI ? "and on FINAL CI" : "but NOT on final CI");
+    Information ("  Detected that we are building on CI, {0}.", IS_ON_FINAL_CI ? "and on FINAL CI" : "but NOT on final CI");
 } else {
-    Information ("Detected that we are {0} on CI.", "NOT");
+    Information ("  Detected that we are {0} on CI.", "NOT");
 }
+Information ("");
 
 Information ("Environment Variables:");
-foreach (var envVar in EnvironmentVariables ()) {
-    Information ("\tKey: {0}\tValue: \"{1}\"", envVar.Key, envVar.Value);
+var envars = EnvironmentVariables ();
+var max = envars.Max (v => v.Key.Length) + 2;
+foreach (var envVar in envars) {
+    var spaces = string.Concat (Enumerable.Repeat (" ", max - envVar.Key.Length));
+    if (envVar.Key.ToLower () == "path") {
+        var paths = new string [0];
+        if (IsRunningOnWindows ()) {
+            paths = envVar.Value.Split (';');
+        } else {
+            paths = envVar.Value.Split (':');
+        }
+        Information ($"  {envVar.Key}:{spaces}{{0}}", paths.FirstOrDefault ());
+        foreach (var path in paths.Skip (1)) {
+            Information ($"       {spaces}{{0}}", path);
+        }
+    } else {
+        Information ($"  {envVar.Key}:{spaces}{{0}}", envVar.Value);
+    }
 }
+Information ("");
 
 RunTarget (TARGET);

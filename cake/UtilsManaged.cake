@@ -73,7 +73,7 @@ var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath)
     NuGetPack (nuspecPath, new NuGetPackSettings {
         OutputDirectory = outputPath,
         BasePath = nuspecPath.GetDirectory (),
-        ToolPath = NugetToolPath
+        ToolPath = NuGetToolPath
     });
 });
 
