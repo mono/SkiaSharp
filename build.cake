@@ -115,7 +115,7 @@ Task ("tests")
     .IsDependentOn ("nuget")
     .Does (() => 
 {
-    var RunDestopTest = new Action<string> (arch => {
+    var RunDesktopTest = new Action<string> (arch => {
         var platform = "";
         if (IsRunningOnWindows ()) {
             platform = "windows";
@@ -138,16 +138,16 @@ Task ("tests")
 
     // Full .NET Framework
     if (IsRunningOnWindows ()) {
-        RunDestopTest ("x86");
-        RunDestopTest ("x64");
+        RunDesktopTest ("x86");
+        RunDesktopTest ("x64");
     } else if (IsRunningOnMac ()) {
-        RunDestopTest ("AnyCPU");
+        RunDesktopTest ("AnyCPU");
     } else if (IsRunningOnLinux ()) {
         // TODO: Disable x64 for the time being due to a bug in mono sn:
         //       https://github.com/mono/mono/issues/8218
 
-        RunDestopTest ("AnyCPU");
-        // RunDestopTest ("x64");
+        RunDesktopTest ("AnyCPU");
+        // RunDesktopTest ("x64");
     }
 
     // .NET Core
