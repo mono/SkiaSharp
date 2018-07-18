@@ -18,6 +18,7 @@ SONAME=$(grep "libSkiaSharp\W*soname\W*" VERSIONS.txt | sed 's/^libSkiaSharp\W*s
 SKIA_ROOT=externals/skia
 ARCH=x64
 BUILD_OUT=out/linux/$ARCH
+ROOT_OUT=output/native/linux/$ARCH
 
 
 ########################################
@@ -48,4 +49,10 @@ BUILD_OUT=out/linux/$ARCH
 ########################################
 # 4. copy output
 
+# copy inside skia
 cp $SKIA_ROOT/$BUILD_OUT/libSkiaSharp.so.$SONAME $SKIA_ROOT/$BUILD_OUT/libSkiaSharp.so
+
+# copy to root output
+mkdir -p $ROOT_OUT
+cp $SKIA_ROOT/$BUILD_OUT/libSkiaSharp.so.$SONAME $ROOT_OUT/libSkiaSharp.so.$SONAME
+cp $SKIA_ROOT/$BUILD_OUT/libSkiaSharp.so.$SONAME $ROOT_OUT/libSkiaSharp.so
