@@ -365,21 +365,28 @@ namespace SkiaSharp
 			ZeroInitialized = zeroInitialized;
 			Subset = null;
 			FrameIndex = 0;
-			PriorFrame = 0;
+			PriorFrame = -1;
 			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (SKZeroInitialized zeroInitialized, SKRectI subset) {
 			ZeroInitialized = zeroInitialized;
 			Subset = subset;
 			FrameIndex = 0;
-			PriorFrame = 0;
+			PriorFrame = -1;
 			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (SKRectI subset) {
 			ZeroInitialized = SKZeroInitialized.No;
 			Subset = subset;
 			FrameIndex = 0;
-			PriorFrame = 0;
+			PriorFrame = -1;
+			PremulBehavior = SKTransferFunctionBehavior.Respect;
+		}
+		public SKCodecOptions (int frameIndex) {
+			ZeroInitialized = SKZeroInitialized.No;
+			Subset = null;
+			FrameIndex = frameIndex;
+			PriorFrame = -1;
 			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (int frameIndex, int priorFrame) {
