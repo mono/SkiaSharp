@@ -86,6 +86,8 @@ namespace SkiaSharp.Tests
 		{
 			if (IsMac)
 				throw new SkipException("macOS does not support matching typefaces.");
+			if (IsLinux)
+				throw new SkipException("Linux does not support matching typefaces from a typeface that was loaded from a stream.");
 
 			var fonts = SKFontManager.Default;
 
