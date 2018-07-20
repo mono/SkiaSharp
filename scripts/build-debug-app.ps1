@@ -10,7 +10,7 @@ try {
     ./bin/gn gen "out/Debug"
 
     # ninja
-    ../../externals/depot_tools/ninja "gm" -C "out/Debug"
+    ../../externals/depot_tools/ninja "dm" -C "out/Debug"
 } finally {
     cd ../../
 }
