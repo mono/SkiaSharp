@@ -576,6 +576,17 @@ Task ("externals-linux")
     var BUILD_ARCH = arches.Split (',').Select (a => a.Trim ()).ToArray ();
     var SUPPORT_GPU = (EnvironmentVariable ("SUPPORT_GPU") ?? "1") == "1"; // 1 == true, 0 == false
 
+    var CC = EnvironmentVariable ("CC");
+    var CXX = EnvironmentVariable ("CXX");
+    var AR = EnvironmentVariable ("AR");
+    var CUSTOM_COMPILERS = "";
+    if (!string.IsNullOrEmpty (CC))
+        CUSTOM_COMPILERS += $"cc='{CC}' ";
+    if (!string.IsNullOrEmpty (CXX))
+        CUSTOM_COMPILERS += $"cxx='{CXX}' ";
+    if (!string.IsNullOrEmpty (AR))
+        CUSTOM_COMPILERS += $"ar='{AR}' ";
+
     var buildArch = new Action<string> ((arch) => {
         var soname = GetVersion ("libSkiaSharp", "soname");
 
@@ -588,6 +599,7 @@ Task ("externals-linux")
             $"skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")} " +
             $"extra_cflags=[ '-DSKIA_C_DLL' ] " +
             $"extra_ldflags=[ ] " +
+            $"{CUSTOM_COMPILERS} " +
             $"linux_soname_version='{soname}'");
 
         // copy libSkiaSharp to output

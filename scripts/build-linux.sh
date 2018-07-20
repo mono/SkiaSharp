@@ -20,6 +20,10 @@ ARCH=x64
 BUILD_OUT=out/linux/$ARCH
 ROOT_OUT=output/native/linux/$ARCH
 
+CUSTOM_COMPILERS=
+[[ ! -z $CC ]] && CUSTOM_COMPILERS="$CUSTOM_COMPILERS cc=\"$CC\""
+[[ ! -z $CXX ]] && CUSTOM_COMPILERS="$CUSTOM_COMPILERS cxx=\"$CXX\""
+[[ ! -z $AR ]] && CUSTOM_COMPILERS="$CUSTOM_COMPILERS ar=\"$AR\""
 
 ########################################
 # 2. sync dependencies
@@ -40,6 +44,7 @@ ROOT_OUT=output/native/linux/$ARCH
     skia_enable_gpu=true
     extra_cflags=[ \"-DSKIA_C_DLL\" ]
     extra_ldflags=[ ]
+    $CUSTOM_COMPILERS
     linux_soname_version=\"$SONAME\"")
 
 # ninja
