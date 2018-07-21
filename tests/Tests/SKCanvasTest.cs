@@ -92,6 +92,25 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void OverdrawCanvasDrawsProperly()
+		{
+			using (var bitmap = new SKBitmap(new SKImageInfo(100, 100)))
+			using (var canvas = new SKCanvas(bitmap))
+			using (var overdraw = new SKOverdrawCanvas(canvas))
+			{
+				bitmap.Erase(SKColors.Transparent);
+
+				overdraw.DrawRect(SKRect.Create(10, 10, 30, 30), new SKPaint());
+				overdraw.DrawRect(SKRect.Create(20, 20, 30, 30), new SKPaint());
+
+				Assert.Equal(0, bitmap.GetPixel(5, 5).Alpha);
+				Assert.Equal(1, bitmap.GetPixel(15, 15).Alpha);
+				Assert.Equal(2, bitmap.GetPixel(25, 25).Alpha);
+				Assert.Equal(1, bitmap.GetPixel(45, 45).Alpha);
+			}
+		}
+
+		[SkippableFact]
 		public void SvgCanvasSavesFile()
 		{
 			var stream = new MemoryStream();

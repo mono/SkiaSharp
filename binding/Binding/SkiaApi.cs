@@ -7,6 +7,7 @@ using GRBackendObject = System.IntPtr;
 using sk_surface_t = System.IntPtr;
 using sk_canvas_t = System.IntPtr;
 using sk_nodraw_canvas_t = System.IntPtr;
+using sk_overdraw_canvas_t = System.IntPtr;
 using sk_nway_canvas_t = System.IntPtr;
 using sk_image_t = System.IntPtr;
 using sk_paint_t = System.IntPtr;
@@ -316,6 +317,12 @@ namespace SkiaSharp
 		public extern static void sk_nway_canvas_remove_canvas(sk_nway_canvas_t t, sk_canvas_t canvas);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_nway_canvas_remove_all(sk_nway_canvas_t t);
+
+		// overdraw canvas
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_overdraw_canvas_t sk_overdraw_canvas_new(sk_canvas_t canvas);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_overdraw_canvas_destroy(sk_overdraw_canvas_t canvas);
 
 		// paint
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
