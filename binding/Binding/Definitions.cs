@@ -43,6 +43,7 @@ namespace SkiaSharp
 		Ktx,
 		Astc,
 		Dng,
+		// Heif // appears to be development still
 	}
 
 	public enum SKFontStyleWeight {
