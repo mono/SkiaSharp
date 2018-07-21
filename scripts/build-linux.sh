@@ -17,9 +17,13 @@
 SONAME=$(grep "libSkiaSharp\W*soname\W*" VERSIONS.txt | sed 's/^libSkiaSharp\W*soname\W*\(.*\)$/\1/')
 SKIA_ROOT=externals/skia
 ARCH=x64
-BUILD_OUT=out/linux/$ARCH
-ROOT_OUT=output/native/linux/$ARCH
 
+# output folders
+[[ -z $PLATFORM_DIR ]] && PLATFORM_DIR="linux"
+BUILD_OUT=out/$PLATFORM_DIR/$ARCH
+ROOT_OUT=output/native/$PLATFORM_DIR/$ARCH
+
+# compiler options
 CUSTOM_COMPILERS=
 [[ ! -z $CC ]] && CUSTOM_COMPILERS="$CUSTOM_COMPILERS cc=\"$CC\""
 [[ ! -z $CXX ]] && CUSTOM_COMPILERS="$CUSTOM_COMPILERS cxx=\"$CXX\""
