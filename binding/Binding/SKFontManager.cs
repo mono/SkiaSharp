@@ -60,6 +60,7 @@ namespace SkiaSharp
 			return GetObject<SKTypeface> (SkiaApi.sk_fontmgr_match_family_style (Handle, familyName, style.Handle));
 		}
 
+		[Obsolete]
 		public SKTypeface MatchTypeface (SKTypeface face, SKFontStyle style)
 		{
 			if (face == null)

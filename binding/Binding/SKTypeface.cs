@@ -62,7 +62,7 @@ namespace SkiaSharp
 			return FromFamilyName(familyName, (int)weight, (int)width, slant);
 		}
 
-		[Obsolete ("Use SKFontManager.MatchTypeface(SKTypeface, SKFontStyle) instead.")]
+		[Obsolete]
 		public static SKTypeface FromTypeface (SKTypeface typeface, SKTypefaceStyle style)
 		{
 			if (typeface == null)
