@@ -37,6 +37,9 @@ namespace SkiaSharp
 
 		public SKTypeface CreateTypeface (int index)
 		{
+			if (index < 0 || index >= Count)
+				throw new ArgumentOutOfRangeException ($"Index was out of range. Must be non-negative and less than the size of the set.", nameof (index));
+
 			return GetObject<SKTypeface> (SkiaApi.sk_fontstyleset_create_typeface (Handle, index));
 		}
 
