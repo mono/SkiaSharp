@@ -28,7 +28,7 @@ namespace SkiaSharp.Tests
 		{
 			var fonts = SKFontManager.Default;
 
-			var set = fonts.MatchFamily("Arial");
+			var set = fonts.MatchFamily(DefaultFontFamily);
 			Assert.NotNull(set);
 
 			Assert.True(set.Count > 0);
@@ -38,7 +38,7 @@ namespace SkiaSharp.Tests
 		public void TestCanGetStyles()
 		{
 			var fonts = SKFontManager.Default;
-			var set = fonts.MatchFamily("Arial");
+			var set = fonts.MatchFamily(DefaultFontFamily);
 
 			for (var i = 0; i < set.Count; i++)
 			{
@@ -53,7 +53,7 @@ namespace SkiaSharp.Tests
 		public void TestCanCreateBoldFromIndex()
 		{
 			var fonts = SKFontManager.Default;
-			var set = fonts.MatchFamily("Arial");
+			var set = fonts.MatchFamily(DefaultFontFamily);
 
 			int idx;
 			for (idx = 0; idx < set.Count; idx++)
@@ -81,7 +81,7 @@ namespace SkiaSharp.Tests
 		public void TestCanCreateBold()
 		{
 			var fonts = SKFontManager.Default;
-			var set = fonts.MatchFamily("Arial");
+			var set = fonts.MatchFamily(DefaultFontFamily);
 
 			var typeface = set.CreateTypeface(SKFontStyle.Bold);
 

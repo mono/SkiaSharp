@@ -45,7 +45,7 @@ namespace SkiaSharp.Tests
 		{
 			var fonts = SKFontManager.Default;
 
-			var set = fonts.MatchFamily("Arial");
+			var set = fonts.MatchFamily(DefaultFontFamily);
 			Assert.NotNull(set);
 
 			Assert.True(set.Count > 0);
@@ -56,7 +56,7 @@ namespace SkiaSharp.Tests
 		{
 			var fonts = SKFontManager.Default;
 
-			var tf = fonts.MatchFamily("Arial", SKFontStyle.Bold);
+			var tf = fonts.MatchFamily(DefaultFontFamily, SKFontStyle.Bold);
 			Assert.NotNull(tf);
 
 			Assert.Equal((int)SKFontStyleWeight.Bold, tf.FontWeight);
@@ -70,7 +70,7 @@ namespace SkiaSharp.Tests
 
 			var fonts = SKFontManager.Default;
 
-			var normal = fonts.MatchFamily("Arial", SKFontStyle.Normal);
+			var normal = fonts.MatchFamily(DefaultFontFamily, SKFontStyle.Normal);
 			Assert.NotNull(normal);
 			Assert.Equal((int)SKFontStyleWeight.Normal, normal.FontWeight);
 
