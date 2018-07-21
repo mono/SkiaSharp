@@ -62,6 +62,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal((int)SKFontStyleWeight.Bold, tf.FontWeight);
 		}
 
+		[Obsolete]
 		[SkippableFact]
 		public void TestMatchTypeface()
 		{
@@ -81,6 +82,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(normal.FamilyName, bold.FamilyName);
 		}
 
+		[Obsolete]
 		[SkippableFact]
 		public void TestMatchTypefaceFromStream()
 		{

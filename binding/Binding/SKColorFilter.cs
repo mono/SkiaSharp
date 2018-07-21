@@ -7,6 +7,7 @@ namespace SkiaSharp
 	public class SKColorFilter : SKObject
 	{
 		public const int ColorMatrixSize = 20;
+		public const int TableMaxLength = 256;
 
 		[Preserve]
 		internal SKColorFilter(IntPtr handle, bool owns)
@@ -61,21 +62,21 @@ namespace SkiaSharp
 		{
 			if (table == null)
 				throw new ArgumentNullException(nameof(table));
-			if (table.Length != SKColorTable.MaxLength)
-				throw new ArgumentException($"Table must have a length of {SKColorTable.MaxLength}.", nameof(table));
+			if (table.Length != TableMaxLength)
+				throw new ArgumentException($"Table must have a length of {TableMaxLength}.", nameof(table));
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_table(table));
 		}
 
 		public static SKColorFilter CreateTable(byte[] tableA, byte[] tableR, byte[] tableG, byte[] tableB)
 		{
-			if (tableA != null && tableA.Length != SKColorTable.MaxLength)
-				throw new ArgumentException($"Table A must have a length of {SKColorTable.MaxLength}.", nameof(tableA));
-			if (tableR != null && tableR.Length != SKColorTable.MaxLength)
-				throw new ArgumentException($"Table R must have a length of {SKColorTable.MaxLength}.", nameof(tableR));
-			if (tableG != null && tableG.Length != SKColorTable.MaxLength)
-				throw new ArgumentException($"Table G must have a length of {SKColorTable.MaxLength}.", nameof(tableG));
-			if (tableB != null && tableB.Length != SKColorTable.MaxLength)
-				throw new ArgumentException($"Table B must have a length of {SKColorTable.MaxLength}.", nameof(tableB));
+			if (tableA != null && tableA.Length != TableMaxLength)
+				throw new ArgumentException($"Table A must have a length of {TableMaxLength}.", nameof(tableA));
+			if (tableR != null && tableR.Length != TableMaxLength)
+				throw new ArgumentException($"Table R must have a length of {TableMaxLength}.", nameof(tableR));
+			if (tableG != null && tableG.Length != TableMaxLength)
+				throw new ArgumentException($"Table G must have a length of {TableMaxLength}.", nameof(tableG));
+			if (tableB != null && tableB.Length != TableMaxLength)
+				throw new ArgumentException($"Table B must have a length of {TableMaxLength}.", nameof(tableB));
 
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_table_argb(tableA, tableR, tableG, tableB));
 		}

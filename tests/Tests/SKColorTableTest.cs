@@ -28,6 +28,7 @@ namespace SkiaSharp.Tests
 			(SKPMColor)SKColors.Blue
 		};
 
+		[Obsolete]
 		[SkippableFact]
 		public void MembersRetrieveSingleColorWithAlpha()
 		{
@@ -47,6 +48,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKPMColor(0x33001A00), ct[0]);
 		}
 
+		[Obsolete]
 		[SkippableFact]
 		public void MembersRetrieveColors()
 		{
@@ -65,6 +67,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(PMColors[5], colorTable[5]);
 		}
 
+		[Obsolete]
 		[SkippableFact]
 		public void IndexerOutOfRangeBelow()
 		{
@@ -76,6 +79,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
+		[Obsolete]
 		[SkippableFact]
 		public void IndexerOutOfRangeAbove()
 		{

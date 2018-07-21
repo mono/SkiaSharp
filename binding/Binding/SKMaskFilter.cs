@@ -19,7 +19,8 @@ namespace SkiaSharp
 	public class SKMaskFilter : SKObject
 	{
 		private const float BlurSigmaScale = 0.57735f;
-		
+		public const int TableMaxLength = 256;
+
 		[Preserve]
 		internal SKMaskFilter (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -76,7 +77,7 @@ namespace SkiaSharp
 		{
 			if (table == null)
 				throw new ArgumentNullException(nameof(table));
-			if (table.Length != SKColorTable.MaxLength)
+			if (table.Length != TableMaxLength)
 				throw new ArgumentException("Table must have a length of {SKColorTable.MaxLength}.", nameof(table));
 			return GetObject<SKMaskFilter>(SkiaApi.sk_maskfilter_new_table(table));
 		}
