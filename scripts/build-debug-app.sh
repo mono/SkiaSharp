@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 # git-sync-deps
 (cd externals/skia && python tools/git-sync-deps)

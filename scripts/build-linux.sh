@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 ########################################
 # 0. assumptions
@@ -14,7 +15,7 @@
 ########################################
 # 1. set variables for convenience
 
-SONAME=$(grep "libSkiaSharp\W*soname\W*" VERSIONS.txt | sed 's/^libSkiaSharp\W*soname\W*\(.*\)$/\1/')
+SONAME=$(grep "libSkiaSharp\W*soname\W*" VERSIONS.txt | sed 's/^libSkiaSharp\W*soname\W*\([\.0-9]*\).*$/\1/')
 SKIA_ROOT=externals/skia
 ARCH=x64
 
