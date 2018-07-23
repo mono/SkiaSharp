@@ -26,19 +26,11 @@
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.4.0-beta.1.build3958" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Tests\*.cs" Link="%(FileName)%(Extension)" />
-    <Compile Include="..\Tests\GlContexts\*.cs" Link="GlContexts\%(FileName)%(Extension)" />
-    <Compile Include="..\Tests\GlContexts\Cgl\*.cs" Link="GlContexts\Cgl\%(FileName)%(Extension)" />
-    <Compile Include="..\Tests\GlContexts\Glx\*.cs" Link="GlContexts\Glx\%(FileName)%(Extension)" />
-    <Compile Include="..\Tests\GlContexts\Wgl\*.cs" Link="GlContexts\Wgl\%(FileName)%(Extension)" />
+  <ItemGroup>
+    <Compile Include="..\Tests\**\*.cs" Link="%(RecursiveDir)%(FileName)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Content\images\*" Link="images/%(FileName)%(Extension)">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\Content\fonts\*" Link="fonts/%(FileName)%(Extension)">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <Content Include="..\Content\**\*" Link="%(RecursiveDir)%(FileName)%(Extension)" CopyToOutputDirectory="Always" />
   </ItemGroup>
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
 </Project>
