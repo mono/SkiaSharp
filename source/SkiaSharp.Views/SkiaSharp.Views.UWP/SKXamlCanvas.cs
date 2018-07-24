@@ -15,7 +15,7 @@ namespace SkiaSharp.Views.UWP
 
 		private IntPtr pixels;
 		private WriteableBitmap bitmap;
-		private double dpi;
+		private double dpi = 1;
 		private bool ignorePixelScaling;
 
 		public SKXamlCanvas()
@@ -28,9 +28,12 @@ namespace SkiaSharp.Views.UWP
 			if (designMode)
 				return;
 
-			SizeChanged += OnSizeChanged;
-			Unloaded += OnUnloaded;
+			var display = DisplayInformation.GetForCurrentView();
+			OnDpiChanged(display);
+
 			Loaded += OnLoaded;
+			Unloaded += OnUnloaded;
+			SizeChanged += OnSizeChanged;
 		}
 
 		public SKSize CanvasSize => bitmap == null ? SKSize.Empty : new SKSize(bitmap.PixelWidth, bitmap.PixelHeight);
