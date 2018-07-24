@@ -164,10 +164,10 @@ namespace SkiaSharp.Views.Forms
 			{
 #if __ANDROID__
 				x = Context.FromPixels(x);
-				x = Context.FromPixels(y);
+				y = Context.FromPixels(y);
 #elif TIZEN4_0
 				x = Tizen.ScalingInfo.FromPixel(x);
-				x = Tizen.ScalingInfo.FromPixel(y);
+				y = Tizen.ScalingInfo.FromPixel(y);
 #elif __IOS__ || __MACOS__ || WINDOWS_UWP
 				// Tizen and Android are the reverse of the other platforms
 #else
