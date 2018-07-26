@@ -365,7 +365,7 @@ Task ("nuget")
         setVersion (xdoc, "");
         xdoc.Save ($"{outDir}/{id.Value}.nuspec");
 
-        setVersion (xdoc, $"-build-{BUILD_NUMBER}");
+        setVersion (xdoc, $"-preview-{BUILD_NUMBER}");
         xdoc.Save ($"{outDir}/{id.Value}.prerelease.nuspec");
 
         // the legal
