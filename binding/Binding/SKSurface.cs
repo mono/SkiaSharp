@@ -1,22 +1,34 @@
-﻿//
-// Bindings for SKSurface
-//
-// Author:
-//   Miguel de Icaza
-//
-// Copyright 2016 Xamarin Inc
-//
-
-using System;
+﻿using System;
+using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
+	// public delegates
+	public delegate void SKSurfaceReleaseDelegate (IntPtr address, object context);
+
+	// internal proxy delegates
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal delegate void SKSurfaceReleaseDelegateInternal (IntPtr address, IntPtr context);
+
 	public class SKSurface : SKObject
 	{
+		[Obsolete ("Use Create(SKImageInfo) instead.")]
 		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType) => Create (new SKImageInfo (width, height, colorType, alphaType));
+		[Obsolete ("Use Create(SKImageInfo, SKSurfaceProps) instead.")]
 		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, SKSurfaceProps props) => Create (new SKImageInfo (width, height, colorType, alphaType), props);
+		[Obsolete ("Use Create(SKImageInfo, IntPtr, int) instead.")]
 		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes) => Create (new SKImageInfo (width, height, colorType, alphaType), pixels, rowBytes);
+		[Obsolete ("Use Create(SKImageInfo, IntPtr, int, SKSurfaceProps) instead.")]
 		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes, SKSurfaceProps props) => Create (new SKImageInfo (width, height, colorType, alphaType), pixels, rowBytes, props);
+
+		// so the GC doesn't collect the delegate
+		private static readonly SKSurfaceReleaseDelegateInternal releaseDelegateInternal;
+		private static readonly IntPtr releaseDelegate;
+		static SKSurface ()
+		{
+			releaseDelegateInternal = new SKSurfaceReleaseDelegateInternal (SKSurfaceReleaseInternal);
+			releaseDelegate = Marshal.GetFunctionPointerForDelegate (releaseDelegateInternal);
+		}
 
 		[Preserve]
 		internal SKSurface (IntPtr h, bool owns)
@@ -24,17 +36,31 @@ namespace SkiaSharp
 		{
 		}
 		
+		// RASTER surface
+
 		public static SKSurface Create (SKImageInfo info)
 		{
+			return Create (info, 0);
+		}
+
+		public static SKSurface Create (SKImageInfo info, int rowBytes)
+		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster (ref cinfo, IntPtr.Zero));
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster (ref cinfo, (IntPtr)rowBytes, IntPtr.Zero));
 		}
 
 		public static SKSurface Create (SKImageInfo info, SKSurfaceProps props)
 		{
-			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster (ref cinfo, ref props));
+			return Create (info, 0, props);
 		}
+
+		public static SKSurface Create (SKImageInfo info, int rowBytes, SKSurfaceProps props)
+		{
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster (ref cinfo, (IntPtr)rowBytes, ref props));
+		}
+
+		// convenience RASTER DIRECT to use a SKPixmap instead of SKImageInfo and IntPtr
 
 		public static SKSurface Create (SKPixmap pixmap)
 		{
@@ -42,12 +68,6 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (pixmap));
 			}
 			return Create (pixmap.Info, pixmap.GetPixels (), pixmap.RowBytes);
-		}
-
-		public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes)
-		{
-			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster_direct (ref cinfo, pixels, (IntPtr)rowBytes, IntPtr.Zero));
 		}
 
 		public static SKSurface Create (SKPixmap pixmap, SKSurfaceProps props)
@@ -58,135 +78,339 @@ namespace SkiaSharp
 			return Create (pixmap.Info, pixmap.GetPixels (), pixmap.RowBytes, props);
 		}
 
+		// RASTER DIRECT surface
+
+		public static SKSurface Create (SKImageInfo info, IntPtr pixels)
+		{
+			return Create (info, pixels, info.RowBytes, null, null);
+		}
+
+		public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes)
+		{
+			return Create (info, pixels, rowBytes, null, null);
+		}
+
+		public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes, SKSurfaceReleaseDelegate releaseProc, object context)
+		{
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			if (releaseProc == null) {
+				return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster_direct (ref cinfo, pixels, (IntPtr)rowBytes, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero));
+			} else {
+				var ctx = new NativeDelegateContext (context, releaseProc);
+				return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster_direct (ref cinfo, pixels, (IntPtr)rowBytes, releaseDelegate, ctx.NativeContext, IntPtr.Zero));
+			}
+		}
+
+		public static SKSurface Create (SKImageInfo info, IntPtr pixels, SKSurfaceProps props)
+		{
+			return Create (info, pixels, info.RowBytes, null, null, props);
+		}
+
 		public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes, SKSurfaceProps props)
 		{
-			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster_direct (ref cinfo, pixels, (IntPtr)rowBytes, ref props));
+			return Create (info, pixels, rowBytes, null, null, props);
 		}
-		
+
+		public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes, SKSurfaceReleaseDelegate releaseProc, object context, SKSurfaceProps props)
+		{
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			if (releaseProc == null) {
+				return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster_direct (ref cinfo, pixels, (IntPtr)rowBytes, IntPtr.Zero, IntPtr.Zero, ref props));
+			} else {
+				var ctx = new NativeDelegateContext (context, releaseProc);
+				return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster_direct (ref cinfo, pixels, (IntPtr)rowBytes, releaseDelegate, ctx.NativeContext, ref props));
+			}
+		}
+
+		// GPU BACKEND RENDER TARGET surface
+
+		public static SKSurface Create (GRContext context, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProps props)
+		{
+			if (context == null)
+				throw new ArgumentNullException (nameof (context));
+			if (renderTarget == null)
+				throw new ArgumentNullException (nameof (renderTarget));
+
+			var cs = colorspace == null ? IntPtr.Zero : colorspace.Handle;
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_render_target (context.Handle, renderTarget.Handle, origin, colorType, cs, ref props));
+		}
+
+		public static SKSurface Create (GRContext context, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType, SKSurfaceProps props)
+		{
+			return Create (context, renderTarget, origin, colorType, null, props);
+		}
+
+		public static SKSurface Create (GRContext context, GRBackendRenderTarget renderTarget, SKColorType colorType, SKSurfaceProps props)
+		{
+			return Create (context, renderTarget, GRSurfaceOrigin.BottomLeft, colorType, null, props);
+		}
+
+		[Obsolete ("Use Create(GRContext, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType, SKSurfaceProps) instead.")]
 		public static SKSurface Create (GRContext context, GRBackendRenderTargetDesc desc, SKSurfaceProps props)
 		{
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_render_target (context.Handle, ref desc, ref props));
+			if (context == null)
+				throw new ArgumentNullException (nameof (context));
+
+			var renderTarget = new GRBackendRenderTarget (context.Backend, desc);
+			return Create (context, renderTarget, desc.Origin, desc.Config.ToColorType (), null, props);
 		}
 		
+		public static SKSurface Create (GRContext context, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType, SKColorSpace colorspace)
+		{
+			if (context == null)
+				throw new ArgumentNullException (nameof (context));
+			if (renderTarget == null)
+				throw new ArgumentNullException (nameof (renderTarget));
+
+			var cs = colorspace == null ? IntPtr.Zero : colorspace.Handle;
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_render_target (context.Handle, renderTarget.Handle, origin, colorType, cs, IntPtr.Zero));
+		}
+
+		public static SKSurface Create (GRContext context, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType)
+		{
+			return Create (context, renderTarget, origin, colorType, null);
+		}
+
+		public static SKSurface Create (GRContext context, GRBackendRenderTarget renderTarget, SKColorType colorType)
+		{
+			return Create (context, renderTarget, GRSurfaceOrigin.BottomLeft, colorType, null);
+		}
+
+		[Obsolete ("Use Create(GRContext, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType) instead.")]
 		public static SKSurface Create (GRContext context, GRBackendRenderTargetDesc desc)
 		{
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_render_target (context.Handle, ref desc, IntPtr.Zero));
+			if (context == null)
+				throw new ArgumentNullException (nameof (context));
+
+			var renderTarget = new GRBackendRenderTarget (context.Backend, desc);
+			return Create (context, renderTarget, desc.Origin, desc.Config.ToColorType (), null);
 		}
 
+		// GPU BACKEND TEXTURE surface
+
+		public static SKSurface Create (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProps props)
+		{
+			if (context == null)
+				throw new ArgumentNullException (nameof (context));
+			if (texture == null)
+				throw new ArgumentNullException (nameof (texture));
+
+			var cs = colorspace == null ? IntPtr.Zero : colorspace.Handle;
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_texture (context.Handle, texture.Handle, origin, sampleCount, colorType, cs, ref props));
+		}
+
+		public static SKSurface Create (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKSurfaceProps props)
+		{
+			return Create (context, texture, origin, sampleCount, colorType, null, props);
+		}
+
+		public static SKSurface Create (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKSurfaceProps props)
+		{
+			return Create (context, texture, origin, 0, colorType, null, props);
+		}
+
+		public static SKSurface Create (GRContext context, GRBackendTexture texture, SKColorType colorType, SKSurfaceProps props)
+		{
+			return Create (context, texture, GRSurfaceOrigin.BottomLeft, 0, colorType, null, props);
+		}
+
+		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProps) instead.")]
 		public static SKSurface Create (GRContext context, GRGlBackendTextureDesc desc, SKSurfaceProps props)
 		{
-			unsafe {
-				var h = desc.TextureHandle;
-				var hPtr = &h;
-				var d = new GRBackendTextureDesc {
-					Flags = desc.Flags,
-					Origin = desc.Origin,
-					Width = desc.Width,
-					Height = desc.Height,
-					Config = desc.Config,
-					SampleCount = desc.SampleCount,
-					TextureHandle = (IntPtr)hPtr,
-				};
-				return Create (context, d, props);
-			}
+			var texture = new GRBackendTexture (desc);
+			return Create (context, texture, desc.Origin, desc.SampleCount, desc.Config.ToColorType(), null, props);
 		}
 
-		public static SKSurface Create (GRContext context, GRGlBackendTextureDesc desc)
-		{
-			unsafe {
-				var h = desc.TextureHandle;
-				var hPtr = &h;
-				var d = new GRBackendTextureDesc
-				{
-					Flags = desc.Flags,
-					Origin = desc.Origin,
-					Width = desc.Width,
-					Height = desc.Height,
-					Config = desc.Config,
-					SampleCount = desc.SampleCount,
-					TextureHandle = (IntPtr)hPtr,
-				};
-				return Create (context, d);
-			}
-		}
-
-		public static SKSurface CreateAsRenderTarget (GRContext context, GRGlBackendTextureDesc desc, SKSurfaceProps props)
-		{
-			unsafe {
-				var h = desc.TextureHandle;
-				var hPtr = &h;
-				var d = new GRBackendTextureDesc
-				{
-					Flags = desc.Flags,
-					Origin = desc.Origin,
-					Width = desc.Width,
-					Height = desc.Height,
-					Config = desc.Config,
-					SampleCount = desc.SampleCount,
-					TextureHandle = (IntPtr)hPtr,
-				};
-				return CreateAsRenderTarget (context, d, props);
-			}
-		}
-
-		public static SKSurface CreateAsRenderTarget (GRContext context, GRGlBackendTextureDesc desc)
-		{
-			unsafe {
-				var h = desc.TextureHandle;
-				var hPtr = &h;
-				var d = new GRBackendTextureDesc
-				{
-					Flags = desc.Flags,
-					Origin = desc.Origin,
-					Width = desc.Width,
-					Height = desc.Height,
-					Config = desc.Config,
-					SampleCount = desc.SampleCount,
-					TextureHandle = (IntPtr)hPtr,
-				};
-				return CreateAsRenderTarget (context, d);
-			}
-		}
-
+		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProps) instead.")]
 		public static SKSurface Create (GRContext context, GRBackendTextureDesc desc, SKSurfaceProps props)
 		{
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_texture (context.Handle, ref desc, ref props));
+			var texture = new GRBackendTexture (desc);
+			return Create (context, texture, desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, props);
 		}
-		
+
+		public static SKSurface Create (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace)
+		{
+			if (context == null)
+				throw new ArgumentNullException (nameof (context));
+			if (texture == null)
+				throw new ArgumentNullException (nameof (texture));
+
+			var cs = colorspace == null ? IntPtr.Zero : colorspace.Handle;
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_texture (context.Handle, texture.Handle, origin, sampleCount, colorType, cs, IntPtr.Zero));
+		}
+
+		public static SKSurface Create (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType)
+		{
+			return Create (context, texture, origin, sampleCount, colorType, null);
+		}
+
+		public static SKSurface Create (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType)
+		{
+			return Create (context, texture, origin, 0, colorType, null);
+		}
+
+		public static SKSurface Create (GRContext context, GRBackendTexture texture, SKColorType colorType)
+		{
+			return Create (context, texture, GRSurfaceOrigin.BottomLeft, 0, colorType, null);
+		}
+
+		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
+		public static SKSurface Create (GRContext context, GRGlBackendTextureDesc desc)
+		{
+			var texture = new GRBackendTexture (desc);
+			return Create (context, texture, desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null);
+		}
+
+		[Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
 		public static SKSurface Create (GRContext context, GRBackendTextureDesc desc)
 		{
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_texture (context.Handle, ref desc, IntPtr.Zero));
+			var texture = new GRBackendTexture (desc);
+			return Create (context, texture, desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null);
 		}
-		
+
+		// GPU BACKEND TEXTURE AS RENDER TARGET surface
+
+		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProps props)
+		{
+			if (context == null)
+				throw new ArgumentNullException (nameof (context));
+			if (texture == null)
+				throw new ArgumentNullException (nameof (texture));
+
+			var cs = colorspace == null ? IntPtr.Zero : colorspace.Handle;
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_texture_as_render_target (context.Handle, texture.Handle, origin, sampleCount, colorType, cs, ref props));
+		}
+
+		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKSurfaceProps props)
+		{
+			return CreateAsRenderTarget (context, texture, origin, sampleCount, colorType, null, props);
+		}
+
+		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKSurfaceProps props)
+		{
+			return CreateAsRenderTarget (context, texture, origin, 0, colorType, null, props);
+		}
+
+		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, SKColorType colorType, SKSurfaceProps props)
+		{
+			return CreateAsRenderTarget (context, texture, GRSurfaceOrigin.BottomLeft, 0, colorType, null, props);
+		}
+
+		[Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProps) instead.")]
+		public static SKSurface CreateAsRenderTarget (GRContext context, GRGlBackendTextureDesc desc, SKSurfaceProps props)
+		{
+			if (context == null)
+				throw new ArgumentNullException (nameof (context));
+
+			var texture = new GRBackendTexture (desc);
+			return CreateAsRenderTarget (context, texture, desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, props);
+		}
+
+		[Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProps) instead.")]
 		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTextureDesc desc, SKSurfaceProps props)
 		{
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_texture_as_render_target (context.Handle, ref desc, ref props));
+			if (context == null)
+				throw new ArgumentNullException (nameof (context));
+
+			var texture = new GRBackendTexture (desc);
+			return CreateAsRenderTarget (context, texture, desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null, props);
 		}
-		
+
+		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace)
+		{
+			if (context == null)
+				throw new ArgumentNullException (nameof (context));
+			if (texture == null)
+				throw new ArgumentNullException (nameof (texture));
+
+			var cs = colorspace == null ? IntPtr.Zero : colorspace.Handle;
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_texture_as_render_target (context.Handle, texture.Handle, origin, sampleCount, colorType, cs, IntPtr.Zero));
+		}
+
+		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType)
+		{
+			return CreateAsRenderTarget (context, texture, origin, sampleCount, colorType, null);
+		}
+
+		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType)
+		{
+			return CreateAsRenderTarget (context, texture, origin, 0, colorType, null);
+		}
+
+		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, SKColorType colorType)
+		{
+			return CreateAsRenderTarget (context, texture, GRSurfaceOrigin.BottomLeft, 0, colorType, null);
+		}
+
+		[Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
+		public static SKSurface CreateAsRenderTarget (GRContext context, GRGlBackendTextureDesc desc)
+		{
+			if (context == null)
+				throw new ArgumentNullException (nameof (context));
+
+			var texture = new GRBackendTexture (desc);
+			return CreateAsRenderTarget (context, texture, desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null);
+		}
+
+		[Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
 		public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTextureDesc desc)
 		{
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_backend_texture_as_render_target (context.Handle, ref desc, IntPtr.Zero));
+			if (context == null)
+				throw new ArgumentNullException (nameof (context));
+
+			var texture = new GRBackendTexture (desc);
+			return CreateAsRenderTarget (context, texture, desc.Origin, desc.SampleCount, desc.Config.ToColorType (), null);
 		}
-		
+
+		// GPU NEW surface
+
+		public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, int sampleCount, GRSurfaceOrigin origin, SKSurfaceProps props, bool shouldCreateWithMips)
+		{
+			if (context == null)
+				throw new ArgumentNullException (nameof (context));
+
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, ref cinfo, sampleCount, origin, ref props, shouldCreateWithMips));
+		}
+
 		public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, int sampleCount, SKSurfaceProps props)
 		{
-			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, ref cinfo, sampleCount, ref props));
+			return Create (context, budgeted, info, sampleCount, GRSurfaceOrigin.BottomLeft, props, false);
 		}
 		
+		public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, SKSurfaceProps props)
+		{
+			return Create (context, budgeted, info, 0, GRSurfaceOrigin.BottomLeft, props, false);
+		}
+		
+		public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, int sampleCount, GRSurfaceOrigin origin)
+		{
+			if (context == null)
+				throw new ArgumentNullException (nameof (context));
+
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, ref cinfo, sampleCount, origin, IntPtr.Zero, false));
+		}
+
 		public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, int sampleCount)
 		{
-			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, ref cinfo, sampleCount, IntPtr.Zero));
+			return Create (context, budgeted, info, sampleCount, GRSurfaceOrigin.BottomLeft);
 		}
 		
 		public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info)
 		{
-			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, ref cinfo, 0, IntPtr.Zero));
+			return Create (context, budgeted, info, 0, GRSurfaceOrigin.BottomLeft);
 		}
-		
+
+		// NULL surface
+
+		public static SKSurface CreateNull (int width, int height)
+		{
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_null (width, height));
+		}
+
+		//
+
 		protected override void Dispose (bool disposing)
 		{
 			if (Handle != IntPtr.Zero && OwnsHandle) {
@@ -248,6 +472,15 @@ namespace SkiaSharp
 			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
 			return SkiaApi.sk_surface_read_pixels (Handle, ref cinfo, dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
 		}
+
+		// internal proxy
+
+		[MonoPInvokeCallback (typeof (SKSurfaceReleaseDelegateInternal))]
+		private static void SKSurfaceReleaseInternal (IntPtr address, IntPtr context)
+		{
+			using (var ctx = NativeDelegateContext.Unwrap (context)) {
+				ctx.GetDelegate<SKSurfaceReleaseDelegate> () (address, ctx.ManagedContext);
+			}
+		}
 	}
 }
-

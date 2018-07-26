@@ -1,12 +1,4 @@
-﻿//
-// Bindings for SKDocument
-//
-// Author:
-//   Matthew Leibowitz
-//
-// Copyright 2016 Xamarin Inc
-//
-using System;
+﻿using System;
 
 namespace SkiaSharp
 {
@@ -79,7 +71,7 @@ namespace SkiaSharp
 			return GetObject<SKDocument> (SkiaApi.sk_document_create_xps_from_stream (stream.Handle, dpi));
 		}
 
-		[Obsolete ("Use CreatePdf(SKWStream, float) instead.")]
+		[Obsolete ("Use CreatePdf(SKWStream) instead.")]
 		public static SKDocument CreatePdf (string path, float dpi = DefaultRasterDpi)
 		{
 			if (path == null) {
@@ -95,16 +87,28 @@ namespace SkiaSharp
 			return doc;
 		}
 
-		public static SKDocument CreatePdf (SKWStream stream, float dpi = DefaultRasterDpi)
+		[Obsolete("Use CreatePdf(SKWStream) instead.")]
+		public static SKDocument CreatePdf (SKWStream stream, float dpi)
+		{
+			return CreatePdf (stream);
+		}
+
+		public static SKDocument CreatePdf (SKWStream stream)
 		{
 			if (stream == null) {
 				throw new ArgumentNullException (nameof(stream));
 			}
 
-			return GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream (stream.Handle, dpi));
+			return GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream (stream.Handle));
 		}
 
-		public static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata, float dpi = DefaultRasterDpi)
+		[Obsolete("Use CreatePdf(SKWStream, SKDocumentPdfMetadata) instead.")]
+		public static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata, float dpi)
+		{
+			return CreatePdf (stream, metadata);
+		}
+
+		public static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata)
 		{
 			if (stream == null) {
 				throw new ArgumentNullException (nameof(stream));
@@ -136,7 +140,7 @@ namespace SkiaSharp
 						cmetadata.Modified = &modified;
 					}
 
-					return GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream_with_metadata (stream.Handle, dpi, ref cmetadata));
+					return GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream_with_metadata (stream.Handle, ref cmetadata));
 				}
 			}
 		}

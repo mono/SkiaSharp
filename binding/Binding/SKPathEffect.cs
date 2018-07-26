@@ -1,12 +1,4 @@
-﻿//
-// Bindings for SKPath
-//
-// Author:
-//   Matthew Leibowitz
-//
-// Copyright 2016 Xamarin Inc
-//
-using System;
+﻿using System;
 
 namespace SkiaSharp
 {
@@ -60,11 +52,6 @@ namespace SkiaSharp
 		public static SKPathEffect CreateCorner(float radius)
 		{
 			return GetObject<SKPathEffect>(SkiaApi.sk_path_effect_create_corner(radius));
-		}
-
-		public static SKPathEffect CreateArcTo(float radius)
-		{
-			return GetObject<SKPathEffect>(SkiaApi.sk_path_effect_create_arc_to(radius));
 		}
 
 		public static SKPathEffect Create1DPath(SKPath path, float advance, float phase, SKPath1DPathEffectStyle style)

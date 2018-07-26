@@ -1,4 +1,4 @@
-#if !__WATCHOS__
+﻿#if !__WATCHOS__
 using System;
 
 #if __ANDROID__
@@ -13,7 +13,7 @@ namespace SkiaSharp.Views.Desktop
 namespace SkiaSharp.Views.UWP
 #elif __MACOS__
 namespace SkiaSharp.Views.Mac
-#elif TIZEN4_0
+#elif __TIZEN__
 namespace SkiaSharp.Views.Tizen
 #endif
 {

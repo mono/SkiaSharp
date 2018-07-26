@@ -1,12 +1,4 @@
-﻿//
-// Bindings for SKImageFilter
-//
-// Author:
-//   Matthew Leibowitz
-//
-// Copyright 2016 Xamarin Inc
-//
-using System;
+﻿using System;
 
 namespace SkiaSharp
 {
@@ -120,23 +112,33 @@ namespace SkiaSharp
 			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_matrix_convolution(ref kernelSize, kernel, gain, bias, ref kernelOffset, tileMode, convolveAlpha, input == null ? IntPtr.Zero : input.Handle, cropRect == null ? IntPtr.Zero : cropRect.Handle));
 		}
 
+		[Obsolete("Use CreateMerge(SKImageFilter, SKImageFilter, SKImageFilter.CropRect) instead.")]
 		public static SKImageFilter CreateMerge(SKImageFilter first, SKImageFilter second, SKBlendMode mode, SKImageFilter.CropRect cropRect = null)
 		{
 			return CreateMerge(new [] { first, second }, new [] { mode, mode }, cropRect);
 		}
 
-		public static SKImageFilter CreateMerge(SKImageFilter[] filters, SKBlendMode[] modes = null, SKImageFilter.CropRect cropRect = null)
+		public static SKImageFilter CreateMerge(SKImageFilter first, SKImageFilter second, SKImageFilter.CropRect cropRect = null)
+		{
+			return CreateMerge(new [] { first, second }, cropRect);
+		}
+
+		[Obsolete("Use CreateMerge(SKImageFilter[], SKImageFilter.CropRect) instead.")]
+		public static SKImageFilter CreateMerge(SKImageFilter[] filters, SKBlendMode[] modes, SKImageFilter.CropRect cropRect = null)
+		{
+			return CreateMerge (filters, cropRect);
+		}
+
+		public static SKImageFilter CreateMerge(SKImageFilter[] filters, SKImageFilter.CropRect cropRect = null)
 		{
 			if (filters == null)
 				throw new ArgumentNullException(nameof(filters));
-			if (modes != null && modes.Length != filters.Length)
-				throw new ArgumentException("The numbers of modes must match the number of filters.", nameof(modes));
 			var f = new IntPtr[filters.Length];
 			for (int i = 0; i < filters.Length; i++)
 			{
 				f[i] = filters[i].Handle;
 			}
-			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_merge(f, filters.Length, modes, cropRect == null ? IntPtr.Zero : cropRect.Handle));
+			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_merge(f, filters.Length, cropRect == null ? IntPtr.Zero : cropRect.Handle));
 		}
 
 		public static SKImageFilter CreateDilate(int radiusX, int radiusY, SKImageFilter input = null, SKImageFilter.CropRect cropRect = null)
@@ -166,13 +168,6 @@ namespace SkiaSharp
 			if (picture == null)
 				throw new ArgumentNullException(nameof(picture));
 			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_picture_with_croprect(picture.Handle, ref cropRect));
-		}
-
-		public static SKImageFilter CreatePictureForLocalspace(SKPicture picture, SKRect cropRect, SKFilterQuality filterQuality)
-		{
-			if (picture == null)
-				throw new ArgumentNullException(nameof(picture));
-			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_picture_for_localspace(picture.Handle, ref cropRect, filterQuality));
 		}
 
 		public static SKImageFilter CreateTile(SKRect src, SKRect dst, SKImageFilter input)

@@ -1,12 +1,4 @@
-﻿//
-// Bindings for SKPath
-//
-// Author:
-//   Miguel de Icaza
-//
-// Copyright 2016 Xamarin Inc
-//
-using System;
+﻿using System;
 
 namespace SkiaSharp
 {

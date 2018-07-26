@@ -1,13 +1,4 @@
-﻿//
-// Bindings for GRContext
-//
-// Author:
-//   Matthew Leibowitz
-//
-// Copyright 2016 Xamarin Inc
-//
-
-using System;
+﻿using System;
 
 namespace SkiaSharp
 {
@@ -21,34 +12,58 @@ namespace SkiaSharp
 		
 		public static GRContext Create (GRBackend backend)
 		{
-			return Create (backend, IntPtr.Zero);
-		}
-
-		public static GRContext Create (GRBackend backend, IntPtr backendContext)
-		{
-			return GetObject<GRContext> (SkiaApi.gr_context_create_with_defaults (backend, backendContext));
+			switch (backend) {
+				case GRBackend.Metal:
+					throw new NotSupportedException ();
+				case GRBackend.OpenGL:
+					return CreateGl ();
+				case GRBackend.Vulkan:
+					throw new NotSupportedException ();
+				default:
+					throw new ArgumentOutOfRangeException (nameof (backend));
+			}
 		}
 
 		public static GRContext Create (GRBackend backend, GRGlInterface backendContext)
 		{
-			if (backendContext == null) {
-				throw new ArgumentNullException (nameof (backendContext));
+			switch (backend) {
+				case GRBackend.Metal:
+					throw new NotSupportedException ();
+				case GRBackend.OpenGL:
+					return CreateGl (backendContext);
+				case GRBackend.Vulkan:
+					throw new NotSupportedException ();
+				default:
+					throw new ArgumentOutOfRangeException (nameof (backend));
 			}
-			return GetObject<GRContext> (SkiaApi.gr_context_create_with_defaults (backend, backendContext.Handle));
 		}
 
-		public static GRContext Create (GRBackend backend, IntPtr backendContext, GRContextOptions options)
+		[Obsolete ("Use Create(GRBackend, GRGlInterface) instead.")]
+		public static GRContext Create (GRBackend backend, IntPtr backendContext)
 		{
-			return GetObject<GRContext> (SkiaApi.gr_context_create (backend, backendContext, ref options));
+			switch (backend) {
+				case GRBackend.Metal:
+					throw new NotSupportedException ();
+				case GRBackend.OpenGL:
+					return GetObject<GRContext> (SkiaApi.gr_context_make_gl (backendContext));
+				case GRBackend.Vulkan:
+					throw new NotSupportedException ();
+				default:
+					throw new ArgumentOutOfRangeException (nameof (backend));
+			}
 		}
 
-		public static GRContext Create (GRBackend backend, GRGlInterface backendContext, GRContextOptions options)
+		public static GRContext CreateGl ()
 		{
-			if (backendContext == null) {
-				throw new ArgumentNullException (nameof (backendContext));
-			}
-			return GetObject<GRContext> (SkiaApi.gr_context_create (backend, backendContext.Handle, ref options));
+			return CreateGl (null);
 		}
+
+		public static GRContext CreateGl (GRGlInterface backendContext)
+		{
+			return GetObject<GRContext> (SkiaApi.gr_context_make_gl (backendContext == null ? IntPtr.Zero : backendContext.Handle));
+		}
+
+		public GRBackend Backend => SkiaApi.gr_context_get_backend (Handle);
 
 		public void AbandonContext (bool releaseResources = false)
 		{
@@ -98,9 +113,15 @@ namespace SkiaSharp
 			SkiaApi.gr_context_flush (Handle);
 		}
 
+		public int GetMaxSurfaceSampleCountForColorType (SKColorType colorType)
+		{
+			return SkiaApi.gr_context_get_max_surface_sample_count_for_color_type (Handle, colorType);
+		}
+
+		[Obsolete ("Use GetMaxSurfaceSampleCountForColorType(SKColorType) instead.")]
 		public int GetRecommendedSampleCount (GRPixelConfig config, float dpi)
 		{
-			return SkiaApi.gr_context_get_recommended_sample_count (Handle, config, dpi);
+			return GetMaxSurfaceSampleCountForColorType (config.ToColorType ());
 		}
 
 		protected override void Dispose (bool disposing)
@@ -113,4 +134,3 @@ namespace SkiaSharp
 		}
 	}
 }
-

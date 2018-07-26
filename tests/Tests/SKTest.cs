@@ -9,11 +9,28 @@ namespace SkiaSharp.Tests
 {
 	public abstract class SKTest
 	{
-#if !NET_STANDARD
+		protected const string Category = nameof(Category);
+		protected const string GpuCategory = "GPU";
+
+		protected static bool IsLinux;
+		protected static bool IsMac;
+		protected static bool IsUnix;
+		protected static bool IsWindows;
+
+		protected static readonly string DefaultFontFamily;
+		protected static readonly string PathToAssembly;
+		protected static readonly string PathToFonts;
+		protected static readonly string PathToImages;
+
 		static SKTest()
 		{
-			// some platforms run the tests from a temporary location
+			// the the base paths
+			PathToAssembly = Directory.GetCurrentDirectory();
+			PathToFonts = Path.Combine(PathToAssembly, "fonts");
+			PathToImages = Path.Combine(PathToAssembly, "images");
 
+			// some platforms run the tests from a temporary location, so copy the native files
+#if !NET_STANDARD
 			var skiaRoot = Path.GetDirectoryName(typeof(SkiaSharp.SKImageInfo).Assembly.Location);
 			var harfRoot = Path.GetDirectoryName(typeof(HarfBuzzSharp.Buffer).Assembly.Location);
 
@@ -33,15 +50,24 @@ namespace SkiaSharp.Tests
 					File.Copy(file, harfDest, true);
 				}
 			}
-		}
 #endif
 
-		protected const string Category = nameof(Category);
-		protected const string GpuCategory = "GPU";
+			// set the OS fields
+#if NET_STANDARD
+			IsLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+			IsMac = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+			IsUnix = IsLinux || IsMac;
+			IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+#else
+			IsMac = MacPlatformDetector.IsMac.Value;
+			IsUnix = Environment.OSVersion.Platform == PlatformID.Unix || IsMac;
+			IsLinux = IsUnix && !IsMac;
+			IsWindows = !IsUnix;
+#endif
 
-		protected static readonly string PathToAssembly = Directory.GetCurrentDirectory();
-		protected static readonly string PathToFonts = Path.Combine(PathToAssembly, "fonts");
-		protected static readonly string PathToImages = Path.Combine(PathToAssembly, "images");
+			// set the test fields
+			DefaultFontFamily = IsLinux ? "DejaVu Sans" : "Arial";
+		}
 
 		protected static void SaveBitmap(SKBitmap bmp, string filename = "output.png")
 		{
@@ -89,12 +115,6 @@ namespace SkiaSharp.Tests
 			return bmp;
 		}
 
-#if NET_STANDARD
-		protected static bool IsLinux => RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
-		protected static bool IsMac => RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
-		protected static bool IsUnix => IsLinux || IsMac;
-		protected static bool IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-#else
 		private static class MacPlatformDetector
 		{
 			internal static readonly Lazy<bool> IsMac = new Lazy<bool> (IsRunningOnMac);
@@ -121,12 +141,6 @@ namespace SkiaSharp.Tests
 				return false;
 			}
 		}
-
-		protected static bool IsMac => MacPlatformDetector.IsMac.Value;
-		protected static bool IsUnix => Environment.OSVersion.Platform == PlatformID.Unix || IsMac;
-		protected static bool IsLinux => IsUnix && !IsMac;
-		protected static bool IsWindows => !IsUnix;
-#endif
 
 		public static class MacDynamicLibraries
 		{
