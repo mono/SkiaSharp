@@ -1,5 +1,6 @@
 <# https://msdn.microsoft.com/en-us/library/hh925568 #>
 
+$winVer = (Get-WmiObject win32_operatingsystem).Version
 $dotNetRegistry  = 'SOFTWARE\Microsoft\NET Framework Setup\NDP'
 $dotNet4Registry = 'SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full'
 $dotNet4Builds = @{
@@ -22,6 +23,9 @@ $dotNet4Builds = @{
     '461808' = @{ Version = [System.Version]'4.7.2'   ; Comment = '(Windows 10 1803)'                 }
     '461814' = @{ Version = [System.Version]'4.7.2'   ; Comment = '(NON Windows 10)'                  }
 }
+
+Write-Host
+Write-Host "Running Windows version $winVer..."
 
 if($regKey = [Microsoft.Win32.Registry]::LocalMachine) {
     if ($netRegKey = $regKey.OpenSubKey("$dotNetRegistry")) {
