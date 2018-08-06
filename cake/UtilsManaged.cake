@@ -41,7 +41,7 @@ var RunMSBuildRestore = new Action<FilePath> ((solution) =>
     });
 });
 
-var RunMSBuildRestoreLocal = new Action<FilePath> ((solution) =>
+var RunMSBuildRestoreLocal = new Action<FilePath, DirectoryPath> ((solution, packagesDir) =>
 {
     var dir = solution.GetDirectory ();
     MSBuild (solution, c => { 
@@ -50,7 +50,7 @@ var RunMSBuildRestoreLocal = new Action<FilePath> ((solution) =>
         c.Targets.Add("Restore");
         c.Verbosity = VERBOSITY;
         c.Properties ["RestoreNoCache"] = new [] { "true" };
-        c.Properties ["RestorePackagesPath"] = new [] { "./externals/packages" };
+        c.Properties ["RestorePackagesPath"] = new [] { packagesDir.FullPath };
         c.PlatformTarget = PlatformTarget.MSIL;
         c.MSBuildPlatform = MSBuildPlatform.x86;
         if (!string.IsNullOrEmpty (MSBuildToolPath)) {
@@ -177,7 +177,7 @@ var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath> ((samplesDirPath
     foreach (var file in GetFiles ($"{workingDir}/**/*")) {
         var abs = System.IO.Path.GetFullPath (toNativePath (file.FullPath));
         var absDir = System.IO.Path.GetDirectoryName (abs);
-        var ext = System.IO.Path.GetExtension (abs).ToLowerInvariant ();
+        var ext = System.IO.Path.GetExtension (abs).ToLower ();
         var rel = samplesUri.MakeRelativeUri (new Uri (abs)).ToString ();
 
         if (ext == ".sln") {
@@ -194,7 +194,7 @@ var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath> ((samplesDirPath
                     var projectPath = System.IO.Path.GetFullPath (System.IO.Path.Combine (absDir, relProjectPath));
                     if (!projectPath.StartsWith (samplesDir, StringComparison.OrdinalIgnoreCase)) {
                         // skip the next line as it is the "EndProject" line
-                        guids.Add (m.Groups[2].Value. ToLowerInvariant ());
+                        guids.Add (m.Groups[2].Value. ToLower ());
                         lines.RemoveAt (i);
                         i--;
                         lines.RemoveAt (i);
@@ -209,7 +209,7 @@ var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath> ((samplesDirPath
                 for (var i = 0; i < lines.Count; i++) {
                     var line = lines [i];
                     foreach (var guid in guids) {
-                        if (line.ToLowerInvariant ().Contains (guid)) {
+                        if (line.ToLower ().Contains (guid)) {
                             lines.RemoveAt (i);
                             i--;
                         }
@@ -294,3 +294,96 @@ var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath> ((samplesDirPath
     Zip (workingDir, outputDirPath.CombineWithFilePath ("samples.zip"));
     CleanDirectory (workingDir);
 });
+
+IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories (DirectoryPath rootDir)
+{
+    var platformDirs = GetDirectories ($"{rootDir}/*");
+
+    // try find any cross-platform frameworks
+    foreach (var dir in platformDirs) {
+        var d = dir.GetDirectoryName ().ToLower ();
+        if (d.StartsWith ("netstandard") || d.StartsWith ("portable")) {
+            // we just want this single platform
+            yield return (dir, null);
+            yield break;
+        }
+    }
+
+    // there were no cross-platform libraries, so process each platform
+    foreach (var dir in platformDirs) {
+        var d = dir.GetDirectoryName ().ToLower ();
+        if (d.StartsWith ("monoandroid"))
+            yield return (dir, "android");
+        else if (d.StartsWith ("net4"))
+            yield return (dir, "net");
+        else if (d.StartsWith ("uap"))
+            yield return (dir, "uwp");
+        else if (d.StartsWith ("xamarinios") || d.StartsWith ("xamarin.ios"))
+            yield return (dir, "ios");
+        else if (d.StartsWith ("xamarinmac") || d.StartsWith ("xamarin.mac"))
+            yield return (dir, "macos");
+        else if (d.StartsWith ("xamarintvos") || d.StartsWith ("xamarin.tvos"))
+            yield return (dir, "tvos");
+        else if (d.StartsWith ("xamarinwatchos") || d.StartsWith ("xamarin.watchos"))
+            yield return (dir, "watchos");
+        else if (d.StartsWith ("tizen"))
+            yield return (dir, "tizen");
+        else
+            throw new Exception ($"Unknown platform '{d}' found at '{dir}'.");
+    }
+}
+
+string[] referenceSearchPathsCache = null;
+string[] GetReferenceSearchPaths ()
+{
+    if (referenceSearchPathsCache != null)
+        return referenceSearchPathsCache;
+
+    var refs = new List<string> ();
+
+    if (IsRunningOnWindows ()) {
+        var vs = VSWhereLatest (new VSWhereLatestSettings { Requires = "Component.Xamarin" });
+        var referenceAssemblies = $"{vs}/Common7/IDE/ReferenceAssemblies/Microsoft/Framework";
+        var pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+        refs.Add ($"{referenceAssemblies}/MonoTouch/v1.0");
+        refs.Add ($"{referenceAssemblies}/MonoAndroid/v1.0");
+        refs.Add ($"{referenceAssemblies}/MonoAndroid/v4.0.3");
+        refs.Add ($"{referenceAssemblies}/Xamarin.iOS/v1.0");
+        refs.Add ($"{referenceAssemblies}/Xamarin.TVOS/v1.0");
+        refs.Add ($"{referenceAssemblies}/Xamarin.WatchOS/v1.0");
+        refs.Add ($"{referenceAssemblies}/Xamarin.Mac/v2.0");
+        refs.Add ($"{pf}/Windows Kits/10/References/Windows.Foundation.UniversalApiContract/1.0.0.0");
+        refs.Add ($"{pf}/Windows Kits/10/References/Windows.Foundation.FoundationContract/1.0.0.0");
+        refs.Add ($"{pf}/GtkSharp/2.12/lib");
+        refs.Add ($"{vs}/Common7/IDE/PublicAssemblies");
+    } else {
+        // TODO
+    }
+
+    referenceSearchPathsCache = refs.ToArray ();
+    return referenceSearchPathsCache;
+}
+
+async Task<NuGetDiff> CreateNuGetDiffAsync ()
+{
+    var comparer = new NuGetDiff ();
+    comparer.SearchPaths.AddRange (GetReferenceSearchPaths ());
+    comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
+
+    var AddDep = new Func<string, string, Task> (async (id, platform) => {
+        var version = GetVersion (id, "release");
+        var root = await comparer.ExtractCachedPackageAsync(id, version);
+        comparer.SearchPaths.Add(System.IO.Path.Combine(root, "lib", platform));
+    });
+
+    await AddDep ("OpenTK.GLControl", "NET40");
+    await AddDep ("Tizen.NET", "netstandard2.0");
+    await AddDep ("Xamarin.Forms", "netstandard2.0");
+    await AddDep ("Xamarin.Forms", "MonoAndroid10");
+    await AddDep ("Xamarin.Forms", "Xamarin.iOS10");
+    await AddDep ("Xamarin.Forms", "Xamarin.Mac");
+    await AddDep ("Xamarin.Forms", "tizen40");
+    await AddDep ("Xamarin.Forms", "uap10.0");
+
+    return comparer;
+}
