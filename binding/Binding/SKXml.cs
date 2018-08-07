@@ -1,13 +1,4 @@
-//
-// Bindings for Skia's XML features
-//
-// Author:
-//   Matthew Leibowitz
-//
-// Copyright 2017 Xamarin Inc
-//
-
-using System;
+﻿using System;
 
 namespace SkiaSharp
 {

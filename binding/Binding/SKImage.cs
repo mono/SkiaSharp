@@ -1,12 +1,4 @@
-﻿//
-// Bindings for SKImage
-//
-// Author:
-//   Miguel de Icaza
-//
-// Copyright 2016 Xamarin Inc
-//
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp
@@ -21,14 +13,9 @@ namespace SkiaSharp
 	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 	internal delegate void SKImageTextureReleaseDelegateInternal (IntPtr context);
 
-	// TODO: `FromTexture` with color space
-	// TODO: `FromTexture` with `GRBackendTexture` [and color space]
 	// TODO: `MakeCrossContextFromEncoded`
-	// TODO: `FromAdoptedTexture` with color space
-	// TODO: `FromAdoptedTexture` with `GRBackendTexture` [and color space]
 	// TODO: `MakeFromYUVTexturesCopy` and `MakeFromNV12TexturesCopy`
 	// TODO: `FromPicture` with bit depth and color space
-	// TODO: `ColorSpace` property
 	// TODO: `IsValid`
 	// TODO: `GetTextureHandle`
 	// TODO: `ToTextureImage`
@@ -69,6 +56,8 @@ namespace SkiaSharp
 		{
 		}
 
+		// create brand new image
+
 		public static SKImage Create (SKImageInfo info)
 		{
 			var pixels = Marshal.AllocCoTaskMem (info.BytesSize);
@@ -78,25 +67,26 @@ namespace SkiaSharp
 			}
 		}
 
+		// create a new image from a copy of pixel data
+
 		public static SKImage FromPixelCopy (SKImageInfo info, IntPtr pixels)
 		{
-			return FromPixelCopy (info, pixels, info.RowBytes, null);
+			return FromPixelCopy (info, pixels, info.RowBytes);
 		}
 
 		public static SKImage FromPixelCopy (SKImageInfo info, IntPtr pixels, int rowBytes)
 		{
-			return FromPixelCopy (info, pixels, rowBytes, null);
-		}
-
-		public static SKImage FromPixelCopy (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable)
-		{
 			if (pixels == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (pixels));
 
-			var ct = (ctable == null ? IntPtr.Zero : ctable.Handle);
-			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			var handle = SkiaApi.sk_image_new_raster_copy_with_colortable (ref cinfo, pixels, (IntPtr) rowBytes, ct);
-			return GetObject<SKImage> (handle);
+			var nInfo = SKImageInfoNative.FromManaged (ref info);
+			return GetObject<SKImage> (SkiaApi.sk_image_new_raster_copy (ref nInfo, pixels, (IntPtr)rowBytes));
+		}
+
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use FromPixelCopy(SKImageInfo, IntPtr, int) instead.")]
+		public static SKImage FromPixelCopy (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable)
+		{
+			return FromPixelCopy (info, pixels, rowBytes);
 		}
 
 		public static SKImage FromPixelCopy (SKPixmap pixmap)
@@ -105,6 +95,8 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (pixmap));
 			return GetObject<SKImage> (SkiaApi.sk_image_new_raster_copy_with_pixmap (pixmap.Handle));
 		}
+
+		// create a new image around existing pixel data
 
 		public static SKImage FromPixelData (SKImageInfo info, SKData data, int rowBytes)
 		{
@@ -153,6 +145,8 @@ namespace SkiaSharp
 			}
 		}
 
+		// create a new image from encoded data
+
 		public static SKImage FromEncodedData (SKData data, SKRectI subset)
 		{
 			if (data == null)
@@ -169,6 +163,8 @@ namespace SkiaSharp
 			return GetObject<SKImage> (handle);
 		}
 
+		// create a new image from a bitmap
+
 		public static SKImage FromBitmap (SKBitmap bitmap)
 		{
 			if (bitmap == null)
@@ -177,103 +173,156 @@ namespace SkiaSharp
 			return GetObject<SKImage> (handle);
 		}
 
-		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc)
-		{
-			return FromTexture (context, desc, SKAlphaType.Premul);
-		}
+		// create a new image from a GPU texture
 
-		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha)
-		{
-			return FromTexture (context, desc, alpha, null);
-		}
-
-		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc)
-		{
-			return FromTexture (context, desc, alpha, releaseProc, null);
-		}
-
-		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc, object releaseContext)
-		{
-			unsafe {
-				var h = desc.TextureHandle;
-				var hPtr = &h;
-				var d = new GRBackendTextureDesc {
-					Flags = desc.Flags,
-					Origin = desc.Origin,
-					Width = desc.Width,
-					Height = desc.Height,
-					Config = desc.Config,
-					SampleCount = desc.SampleCount,
-					TextureHandle = (IntPtr)hPtr,
-				};
-				return FromTexture (context, d, alpha, releaseProc, releaseContext);
-			}
-		}
-
+		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
 		public static SKImage FromTexture (GRContext context, GRBackendTextureDesc desc)
 		{
-			return FromTexture (context, desc, SKAlphaType.Premul);
+			return FromTexture (context, desc, SKAlphaType.Premul, null, null);
 		}
 
+		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType) instead.")]
 		public static SKImage FromTexture (GRContext context, GRBackendTextureDesc desc, SKAlphaType alpha)
 		{
-			return FromTexture (context, desc, alpha, null);
+			return FromTexture (context, desc, alpha, null, null);
 		}
 
+		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType, SKColorSpace, SKImageTextureReleaseDelegate) instead.")]
 		public static SKImage FromTexture (GRContext context, GRBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc)
 		{
 			return FromTexture (context, desc, alpha, releaseProc, null);
 		}
 
+		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType, SKColorSpace, SKImageTextureReleaseDelegate, object) instead.")]
 		public static SKImage FromTexture (GRContext context, GRBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc, object releaseContext)
 		{
 			if (context == null)
 				throw new ArgumentNullException (nameof (context));
 
+			var texture = new GRBackendTexture (desc);
+			return FromTexture (context, texture, desc.Origin, desc.Config.ToColorType (), alpha, null, releaseProc, releaseContext);
+		}
+
+		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
+		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc)
+		{
+			return FromTexture (context, desc, SKAlphaType.Premul, null, null);
+		}
+
+		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType) instead.")]
+		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha)
+		{
+			return FromTexture (context, desc, alpha, null, null);
+		}
+
+		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType, SKColorSpace, SKImageTextureReleaseDelegate) instead.")]
+		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc)
+		{
+			return FromTexture (context, desc, alpha, releaseProc, null);
+		}
+
+		[Obsolete ("Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType, SKColorSpace, SKImageTextureReleaseDelegate, object) instead.")]
+		public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc, object releaseContext)
+		{
+			var texture = new GRBackendTexture (desc);
+			return FromTexture (context, texture, desc.Origin, desc.Config.ToColorType (), alpha, null, releaseProc, releaseContext);
+		}
+
+		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, SKColorType colorType)
+		{
+			return FromTexture (context, texture, GRSurfaceOrigin.BottomLeft, colorType, SKAlphaType.Premul, null, null, null);
+		}
+
+		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType)
+		{
+			return FromTexture (context, texture, origin, colorType, SKAlphaType.Premul, null, null, null);
+		}
+
+		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha)
+		{
+			return FromTexture (context, texture, origin, colorType, alpha, null, null, null);
+		}
+
+		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace)
+		{
+			return FromTexture (context, texture, origin, colorType, alpha, colorspace, null, null);
+		}
+
+		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace, SKImageTextureReleaseDelegate releaseProc)
+		{
+			return FromTexture (context, texture, origin, colorType, alpha, colorspace, releaseProc, null);
+		}
+
+		public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace, SKImageTextureReleaseDelegate releaseProc, object releaseContext)
+		{
+			if (context == null)
+				throw new ArgumentNullException (nameof (context));
+			if (texture == null)
+				throw new ArgumentNullException (nameof (texture));
+
+			var cs = colorspace == null ? IntPtr.Zero : colorspace.Handle;
 			if (releaseProc == null) {
-				return GetObject<SKImage> (SkiaApi.sk_image_new_from_texture (context.Handle, ref desc, alpha, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero));
+				return GetObject<SKImage> (SkiaApi.sk_image_new_from_texture (context.Handle, texture.Handle, origin, colorType, alpha, cs, IntPtr.Zero, IntPtr.Zero));
 			} else {
 				var ctx = new NativeDelegateContext (releaseContext, releaseProc);
-				return GetObject<SKImage> (SkiaApi.sk_image_new_from_texture (context.Handle, ref desc, alpha, IntPtr.Zero, textureReleaseDelegate, ctx.NativeContext));
+				return GetObject<SKImage> (SkiaApi.sk_image_new_from_texture (context.Handle, texture.Handle, origin, colorType, alpha, cs, textureReleaseDelegate, ctx.NativeContext));
 			}
 		}
 
-		public static SKImage FromAdoptedTexture (GRContext context, GRGlBackendTextureDesc desc)
-		{
-			return FromAdoptedTexture (context, desc, SKAlphaType.Premul);
-		}
-
-		public static SKImage FromAdoptedTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha)
-		{
-			unsafe {
-				var h = desc.TextureHandle;
-				var hPtr = &h;
-				var d = new GRBackendTextureDesc {
-					Flags = desc.Flags,
-					Origin = desc.Origin,
-					Width = desc.Width,
-					Height = desc.Height,
-					Config = desc.Config,
-					SampleCount = desc.SampleCount,
-					TextureHandle = (IntPtr)hPtr,
-				};
-				return FromAdoptedTexture (context, d, alpha);
-			}
-		}
-		
+		[Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
 		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTextureDesc desc)
 		{
 			return FromAdoptedTexture (context, desc, SKAlphaType.Premul);
 		}
 
+		[Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType) instead.")]
 		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTextureDesc desc, SKAlphaType alpha)
+		{
+			var texture = new GRBackendTexture (desc);
+			return FromAdoptedTexture (context, texture, desc.Origin, desc.Config.ToColorType (), alpha, null);
+		}
+
+		[Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
+		public static SKImage FromAdoptedTexture (GRContext context, GRGlBackendTextureDesc desc)
+		{
+			return FromAdoptedTexture (context, desc, SKAlphaType.Premul);
+		}
+
+		[Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType) instead.")]
+		public static SKImage FromAdoptedTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha)
+		{
+			var texture = new GRBackendTexture (desc);
+			return FromAdoptedTexture (context, texture, desc.Origin, desc.Config.ToColorType (), alpha, null);
+		}
+
+		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, SKColorType colorType)
+		{
+			return FromAdoptedTexture (context, texture, GRSurfaceOrigin.BottomLeft, colorType, SKAlphaType.Premul, null);
+		}
+
+		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType)
+		{
+			return FromAdoptedTexture (context, texture, origin, colorType, SKAlphaType.Premul, null);
+		}
+
+		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha)
+		{
+			return FromAdoptedTexture (context, texture, origin, colorType, alpha, null);
+		}
+
+		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace)
 		{
 			if (context == null)
 				throw new ArgumentNullException (nameof (context));
+			if (texture == null)
+				throw new ArgumentNullException (nameof (texture));
 
-			return GetObject<SKImage> (SkiaApi.sk_image_new_from_adopted_texture (context.Handle, ref desc, alpha, IntPtr.Zero));
+			var cs = colorspace == null ? IntPtr.Zero : colorspace.Handle;
+			return GetObject<SKImage> (SkiaApi.sk_image_new_from_adopted_texture (context.Handle, texture.Handle, origin, colorType, alpha, cs));
 		}
 		
+		// create a new image from a picture
+
 		public static SKImage FromPicture (SKPicture picture, SKSizeI dimensions)
 		{
 			return FromPicture (picture, dimensions, null);
@@ -312,7 +361,38 @@ namespace SkiaSharp
 			if (serializer == null)
 				throw new ArgumentNullException (nameof (serializer));
 
-			return GetObject<SKData> (SkiaApi.sk_image_encode_with_serializer (Handle, serializer.Handle));
+			// try old data
+			var encoded = EncodedData;
+			if (encoded != null) {
+				if (serializer.UseEncodedData (encoded.Data, (ulong)encoded.Size)) {
+					return encoded;
+				} else {
+					encoded.Dispose ();
+					encoded = null;
+				}
+			}
+
+			// get new data (raster)
+			if (!IsTextureBacked) {
+				using (var pixmap = PeekPixels ()) {
+					return serializer.Encode (pixmap);
+				}
+			}
+
+			// get new data (texture / gpu)
+			// this involves a copy from gpu to cpu first
+			if (IsTextureBacked) {
+				var info = new SKImageInfo (Width, Height, ColorType, AlphaType, ColorSpace);
+				using (var temp = new SKBitmap (info))
+				using (var pixmap = temp.PeekPixels ()) {
+					if (pixmap != null && ReadPixels (pixmap, 0, 0)) {
+						return serializer.Encode (pixmap);
+					}
+				}
+			}
+
+			// some error
+			return null;
 		}
 
 		public SKData Encode (SKEncodedImageFormat format, int quality)
@@ -324,7 +404,10 @@ namespace SkiaSharp
 		public int Height => SkiaApi.sk_image_get_height (Handle); 
 		public uint UniqueId => SkiaApi.sk_image_get_unique_id (Handle);
 		public SKAlphaType AlphaType => SkiaApi.sk_image_get_alpha_type (Handle);
+		public SKColorType ColorType => SkiaApi.sk_image_get_color_type (Handle);
+		public SKColorSpace ColorSpace => GetObject<SKColorSpace> (SkiaApi.sk_image_get_colorspace (Handle));
 		public bool IsAlphaOnly => SkiaApi.sk_image_is_alpha_only(Handle);
+		public SKData EncodedData => GetObject<SKData> (SkiaApi.sk_image_ref_encoded (Handle));
 
 		public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY)
 		{

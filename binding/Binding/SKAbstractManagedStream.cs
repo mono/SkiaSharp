@@ -1,12 +1,4 @@
-//
-// SKAbstractManagedStream
-//
-// Author:
-//   Matthew Leibowitz
-//
-// Copyright 2017 Xamarin Inc
-//
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 using System.Threading;
 

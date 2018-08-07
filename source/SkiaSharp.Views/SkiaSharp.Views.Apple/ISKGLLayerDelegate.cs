@@ -1,4 +1,4 @@
-#if !__WATCHOS__
+﻿#if !__WATCHOS__
 #if __TVOS__
 namespace SkiaSharp.Views.tvOS
 #elif __IOS__

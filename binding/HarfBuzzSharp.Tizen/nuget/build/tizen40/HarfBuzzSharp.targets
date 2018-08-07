@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <!-- HACK: temporary until the Tizen/.NET Core tooling can understand the tizen-x86 RID as opposed to linux-x86 -->
-  <ItemGroup Condition="'$(RuntimeIdentifier)' == ''">
-    <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\..\runtimes\tizen-x86\native\libHarfBuzzSharp.so">
-      <TizenTpkSubDir>bin\runtimes\linux-x86\native\</TizenTpkSubDir>
-      <TizenTpkFileName>libHarfBuzzSharp.so</TizenTpkFileName>
-    </TizenTpkFiles>
-  </ItemGroup>
+    <!-- HACK: temporary until the Tizen/.NET Core tooling can understand the tizen-x86 RID as opposed to linux-x86 -->
+    <ItemGroup Condition="'$(RuntimeIdentifier)' == ''">
+        <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\..\runtimes\tizen-x86\native\libHarfBuzzSharp.so">
+            <TizenTpkSubDir>bin\runtimes\linux-x86\native\</TizenTpkSubDir>
+            <TizenTpkFileName>libHarfBuzzSharp.so</TizenTpkFileName>
+        </TizenTpkFiles>
+    </ItemGroup>
 
 </Project>

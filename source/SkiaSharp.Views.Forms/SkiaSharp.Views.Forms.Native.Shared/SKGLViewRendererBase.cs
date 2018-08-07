@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using Xamarin.Forms;
 
@@ -21,7 +21,7 @@ using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.UWP.SKPaintGLSurfaceEven
 using Xamarin.Forms.Platform.MacOS;
 using SKNativeView = SkiaSharp.Views.Mac.SKGLView;
 using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.Mac.SKPaintGLSurfaceEventArgs;
-#elif TIZEN4_0
+#elif __TIZEN__
 using Xamarin.Forms.Platform.Tizen;
 using SKNativeView = SkiaSharp.Views.Tizen.SKGLSurfaceView;
 using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.Tizen.SKPaintGLSurfaceEventArgs;
@@ -115,7 +115,7 @@ namespace SkiaSharp.Views.Forms
 		{
 			return (TNativeView)Activator.CreateInstance(typeof(TNativeView), new[] { Context });
 		}
-#elif TIZEN4_0
+#elif __TIZEN__
 		protected virtual TNativeView CreateNativeControl()
 		{
 			TNativeView ret = (TNativeView)Activator.CreateInstance(typeof(TNativeView), new[] { TForms.NativeParent });
@@ -172,7 +172,7 @@ namespace SkiaSharp.Views.Forms
 
 		private SKPoint GetScaledCoord(double x, double y)
 		{
-#if __ANDROID__ || TIZEN4_0
+#if __ANDROID__ || __TIZEN__
 			// Android and Tizen are the reverse of the other platforms
 #elif __IOS__
 			x = x * Control.ContentScaleFactor;

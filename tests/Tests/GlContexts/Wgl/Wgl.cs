@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
@@ -17,6 +17,7 @@ namespace SkiaSharp.Tests
 		public const int GL_TEXTURE_2D = 0x0DE1;
 		public const int GL_UNSIGNED_BYTE = 0x1401;
 		public const int GL_RGBA = 0x1908;
+		public const int GL_RGBA8 = 0x8058;
 
 		public const int WGL_NUMBER_PIXEL_FORMATS_ARB = 0x2000;
 		public const int WGL_DRAW_TO_WINDOW_ARB = 0x2001;

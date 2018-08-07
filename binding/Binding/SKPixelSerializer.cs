@@ -1,39 +1,15 @@
-﻿//
-// Bindings for SKPixelSerializer
-//
-// Author:
-//   Matthew Leibowitz
-//
-// Copyright 2017 Xamarin Inc
-//
-
-using System;
+﻿using System;
 
 namespace SkiaSharp
 {
-	public class SKPixelSerializer : SKObject
+	public abstract class SKPixelSerializer : IDisposable
 	{
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_pixelserializer_unref (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
-
-		[Preserve]
-		internal SKPixelSerializer (IntPtr x, bool owns)
-			: base (x, owns)
-		{
-		}
-
 		public bool UseEncodedData (IntPtr data, ulong length)
 		{
-			if (SizeOf<IntPtr> () == 4 && length > UInt32.MaxValue)
+			if (SKObject.SizeOf<IntPtr> () == 4 && length > UInt32.MaxValue)
 				throw new ArgumentOutOfRangeException (nameof (length), "The length exceeds the size of pointers.");
 
-			return SkiaApi.sk_pixelserializer_use_encoded_data (Handle, data, (IntPtr)length);
+			return OnUseEncodedData (data, (IntPtr)length);
 		}
 
 		public SKData Encode (SKPixmap pixmap)
@@ -41,8 +17,12 @@ namespace SkiaSharp
 			if (pixmap == null)
 				throw new ArgumentNullException (nameof (pixmap));
 
-			return GetObject<SKData> (SkiaApi.sk_pixelserializer_encode (Handle, pixmap.Handle));
+			return OnEncode (pixmap);
 		}
+
+		protected abstract bool OnUseEncodedData (IntPtr data, IntPtr length);
+
+		protected abstract SKData OnEncode (SKPixmap pixmap);
 
 		public static SKPixelSerializer Create (Func<SKPixmap, SKData> onEncode)
 		{
@@ -53,9 +33,17 @@ namespace SkiaSharp
 		{
 			return new SKSimplePixelSerializer (onUseEncodedData, onEncode);
 		}
+
+		public void Dispose ()
+		{
+		}
+
+		protected virtual void Dispose (bool disposing)
+		{
+		}
 	}
 
-	internal class SKSimplePixelSerializer : SKManagedPixelSerializer
+	internal class SKSimplePixelSerializer : SKPixelSerializer
 	{
 		private readonly Func<IntPtr, IntPtr, bool> onUseEncodedData;
 		private readonly Func<SKPixmap, SKData> onEncode;
@@ -74,6 +62,14 @@ namespace SkiaSharp
 		protected override bool OnUseEncodedData (IntPtr data, IntPtr length)
 		{
 			return onUseEncodedData?.Invoke (data, length) ?? false;
+		}
+	}
+
+	[Obsolete ("Use SKPixelSerializer instead.")]
+	public abstract class SKManagedPixelSerializer : SKPixelSerializer
+	{
+		public SKManagedPixelSerializer()
+		{
 		}
 	}
 }

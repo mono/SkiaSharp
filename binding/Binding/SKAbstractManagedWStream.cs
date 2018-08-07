@@ -1,12 +1,4 @@
-//
-// Bindings for SKAbstractManagedWStream
-//
-// Author:
-//   Matthew Leibowitz
-//
-// Copyright 2018 Xamarin Inc
-//
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 using System.Threading;
 

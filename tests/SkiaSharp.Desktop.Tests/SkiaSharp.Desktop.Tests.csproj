@@ -79,8 +79,8 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="xunit" Version="2.4.0-beta.1.build3958" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0-beta.1.build3958" />
+    <PackageReference Include="xunit" Version="2.4.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
     <PackageReference Include="System.Net.Http" Version="4.3.1" />
   </ItemGroup>
   <ItemGroup>
@@ -99,31 +99,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="..\Tests\*.cs">
-      <Link>%(FileName)%(Extension)</Link>
-    </Compile>
-    <Compile Include="..\Tests\GlContexts\*.cs">
-      <Link>GlContexts\%(FileName)%(Extension)</Link>
-    </Compile>
-    <Compile Include="..\Tests\GlContexts\Cgl\*.cs">
-      <Link>GlContexts\Cgl\%(FileName)%(Extension)</Link>
-    </Compile>
-    <Compile Include="..\Tests\GlContexts\Glx\*.cs">
-      <Link>GlContexts\Glx\%(FileName)%(Extension)</Link>
-    </Compile>
-    <Compile Include="..\Tests\GlContexts\Wgl\*.cs">
-      <Link>GlContexts\Wgl\%(FileName)%(Extension)</Link>
-    </Compile>
+    <Compile Include="..\Tests\**\*.cs" Link="%(RecursiveDir)%(FileName)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\Content\fonts\*">
-      <Link>fonts\%(FileName)%(Extension)</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\Content\images\*">
-      <Link>images\%(FileName)%(Extension)</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <Content Include="..\Content\**\*" Link="%(RecursiveDir)%(FileName)%(Extension)" CopyToOutputDirectory="Always" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />

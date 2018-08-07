@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using CoreAnimation;
 using CoreVideo;
 using OpenGL;

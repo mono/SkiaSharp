@@ -70,7 +70,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(data.ToArray(), bitmap.Bytes);
 		}
 
-		private class TestSerializer : SKManagedPixelSerializer
+		private class TestSerializer : SKPixelSerializer
 		{
 			public int DidEncode { get; set; }
 

@@ -1,17 +1,9 @@
-﻿//
-// Bindings for SKColorTable
-//
-// Author:
-//   Matthew Leibowitz
-//
-// Copyright 2016 Xamarin Inc
-//
-
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
+	[Obsolete ("The Index8 color type and color table is no longer supported.")]
 	public class SKColorTable : SKObject
 	{
 		public const int MaxLength = 256;

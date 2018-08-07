@@ -1,13 +1,4 @@
-﻿//
-// Bindings for GRContext
-//
-// Author:
-//   Matthew Leibowitz
-//
-// Copyright 2016 Xamarin Inc
-//
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -62,7 +53,7 @@ namespace SkiaSharp
 
 		public static GRGlInterface CreateNativeEvasInterface (IntPtr evas)
 		{
-#if TIZEN4_0
+#if __TIZEN__
 			var evasLoader = new EvasGlLoader (evas);
 			return AssembleGlesInterface ((ctx, name) => evasLoader.GetFunctionPointer (name));
 #else
@@ -124,11 +115,6 @@ namespace SkiaSharp
 			using (var ctx = new NativeDelegateContext (context, get)) {
 				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gles_interface (ctx.NativeContext, getProcDelegate));
 			}
-		}
-
-		public GRGlInterface Clone ()
-		{
-			return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_clone (Handle));
 		}
 
 		public bool Validate ()
@@ -222,7 +208,7 @@ namespace SkiaSharp
 			}
 		}
 
-#if TIZEN4_0
+#if __TIZEN__
 		private class EvasGlLoader
 		{
 			private IntPtr glEvas;

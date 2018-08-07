@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
@@ -11,6 +11,7 @@ namespace SkiaSharp.Tests
 		public const int GL_TEXTURE_2D = 0x0DE1;
 		public const int GL_UNSIGNED_BYTE = 0x1401;
 		public const int GL_RGBA = 0x1908;
+		public const int GL_RGBA8 = 0x8058;
 
 		[DllImport(libGL)]
 		public extern static void CGLGetVersion(out int majorvers, out int minorvers);
