@@ -82,13 +82,13 @@ public SKColor GetUnPreMultipliedColor (int index);
 Obsoleted constructors:
 
 ```diff
- [Obsolete ("Use SKData.Empty instead.")]
+ [Obsolete ("Use SKData.Empty instead.")]
  public SKData ();
- [Obsolete ("Use SKData.CreateCopy(byte[]) instead.")]
+ [Obsolete ("Use SKData.CreateCopy(byte[]) instead.")]
  public SKData (byte[] bytes);
- [Obsolete ("Use SKData.CreateCopy(byte[], ulong) instead.")]
+ [Obsolete ("Use SKData.CreateCopy(byte[], ulong) instead.")]
  public SKData (byte[] bytes, ulong length);
- [Obsolete ("Use SKData.CreateCopy(IntPtr, ulong) instead.")]
+ [Obsolete ("Use SKData.CreateCopy(IntPtr, ulong) instead.")]
  public SKData (IntPtr bytes, ulong length);
 ```
 
@@ -101,7 +101,7 @@ public static SKData Empty { get; }
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ()]
  public static SKData FromMallocMemory (IntPtr bytes, ulong length);
 ```
 
@@ -130,9 +130,9 @@ public bool IsTextureBacked { get; }
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use FromEncodedData instead.")]
+ [Obsolete ("Use FromEncodedData instead.")]
  public static SKImage FromData (SKData data);
- [Obsolete ("Use FromEncodedData instead.")]
+ [Obsolete ("Use FromEncodedData instead.")]
  public static SKImage FromData (SKData data, SKRectI subset);
 ```
 
@@ -212,11 +212,11 @@ public long RowBytes64 { get; }
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use AddPath(SKPath, SKPathAddMode) instead.")]
+ [Obsolete ("Use AddPath(SKPath, SKPathAddMode) instead.")]
  public void AddPath (SKPath other, SKPath.AddMode mode);
- [Obsolete ("Use AddPath(SKPath, ref SKMatrix, SKPathAddMode) instead.")]
+ [Obsolete ("Use AddPath(SKPath, ref SKMatrix, SKPathAddMode) instead.")]
  public void AddPath (SKPath other, ref SKMatrix matrix, SKPath.AddMode mode);
- [Obsolete ("Use AddPath(SKPath, float, float, SKPathAddMode) instead.")]
+ [Obsolete ("Use AddPath(SKPath, float, float, SKPathAddMode) instead.")]
  public void AddPath (SKPath other, float dx, float dy, SKPath.AddMode mode);
 ```
 
@@ -274,7 +274,7 @@ public SKPathVerb Peek ();
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use GetMatrix(float, out SKMatrix, SKPathMeasureMatrixFlags) instead.")]
+ [Obsolete ("Use GetMatrix(float, out SKMatrix, SKPathMeasureMatrixFlags) instead.")]
  public bool GetMatrix (float distance, out SKMatrix matrix, SKPathMeasure.MatrixFlags flags);
 ```
 

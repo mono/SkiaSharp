@@ -237,9 +237,9 @@ public static SKData FromMallocMemory (IntPtr bytes, ulong length);
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use CreatePdf(SKWStream, float) instead.")]
+ [Obsolete ("Use CreatePdf(SKWStream, float) instead.")]
  public static SKDocument CreatePdf (string path, float dpi);
- [Obsolete ("Use CreateXps(SKWStream, float) instead.")]
+ [Obsolete ("Use CreateXps(SKWStream, float) instead.")]
  public static SKDocument CreateXps (string path, float dpi);
 ```
 

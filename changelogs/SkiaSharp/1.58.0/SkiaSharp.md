@@ -71,9 +71,9 @@ public SKColorSpace ColorSpace { get; }
 Obsoleted properties:
 
 ```diff
- [Obsolete ("Use LocalClipBounds instead.")]
+ [Obsolete ("Use LocalClipBounds instead.")]
  public SKRect ClipBounds { get; }
- [Obsolete ("Use DeviceClipBounds instead.")]
+ [Obsolete ("Use DeviceClipBounds instead.")]
  public SKRectI ClipDeviceBounds { get; }
 ```
 
@@ -87,9 +87,9 @@ public SKRect LocalClipBounds { get; }
 Obsoleted methods:
 
 ```diff
- [Obsolete ("Use GetLocalClipBounds instead.")]
+ [Obsolete ("Use GetLocalClipBounds instead.")]
  public bool GetClipBounds (ref SKRect bounds);
- [Obsolete ("Use GetDeviceClipBounds instead.")]
+ [Obsolete ("Use GetDeviceClipBounds instead.")]
  public bool GetClipDeviceBounds (ref SKRectI bounds);
 ```
 

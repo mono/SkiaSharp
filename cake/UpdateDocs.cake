@@ -18,6 +18,7 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
         var mdFiles = $"{path}/*.diff.md";
         ReplaceTextInFiles (mdFiles, "<h4>", "> ");
         ReplaceTextInFiles (mdFiles, "</h4>", Environment.NewLine);
+        ReplaceTextInFiles (mdFiles, "\r\r", "\r");
         foreach (var file in GetFiles (mdFiles)) {
             var dllName = file.GetFilenameWithoutExtension ().GetFilenameWithoutExtension ().GetFilenameWithoutExtension ();
             var changelogPath = (FilePath)$"./changelogs/{id}/{version}/{dllName}.md";
