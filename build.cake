@@ -7,7 +7,7 @@
 #addin nuget:https://ci.appveyor.com/nuget/nugetcomparer-mmjynpq6dcr9?package=Mono.ApiTools.NuGetDiff&version=1.0.0-preview-19&loaddependencies=true
 
 #tool "nuget:?package=xunit.runner.console&version=2.4.0"
-#tool "nuget:?package=mdoc&version=5.7.2"
+#tool "nuget:?package=mdoc&version=5.7.2.3"
 #tool "nuget:?package=vswhere&version=2.5.2"
 
 using System.Linq;
