@@ -95,10 +95,11 @@ void ProcessNuGet(DirectoryPath docsTempPath, string id, string version, Directo
             foreach (var f in GetFiles ($"{dir}/*.dll")) {
                 CopyFileToDirectory (f, o);
             }
-            xFrameworks.Add (
-                new XElement ("Framework",
-                    new XAttribute ("Name", o.GetDirectoryName ()),
-                    new XAttribute ("Source", o.GetDirectoryName ())));
+            var name = o.GetDirectoryName ();
+            if (xFrameworks.Elements ("Framework").All (e => e.Attribute ("Name").Value != name)) {
+                xFrameworks.Add (new XElement ("Framework",
+                    new XAttribute ("Name", name), new XAttribute ("Source", name)));
+            }
         }
     } else {
         // copy netstandard/portable
@@ -113,10 +114,11 @@ void ProcessNuGet(DirectoryPath docsTempPath, string id, string version, Directo
                 break;
             }
         }
-        xFrameworks.Add (
-            new XElement ("Framework",
-                new XAttribute ("Name", o.GetDirectoryName ()),
-                new XAttribute ("Source", o.GetDirectoryName ())));
+        var name = o.GetDirectoryName ();
+        if (xFrameworks.Elements ("Framework").All (e => e.Attribute ("Name").Value != name)) {
+            xFrameworks.Add (new XElement ("Framework",
+                new XAttribute ("Name", name), new XAttribute ("Source", name)));
+        }
     }
 }
 
