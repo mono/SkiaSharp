@@ -30,11 +30,11 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.Rgb565, pixmap.ColorType);
 			Assert.Equal((IntPtr)123, pixmap.GetPixels());
 
-			var copy = pixmap.WithColorType(SKColorType.Index8);
+			var copy = pixmap.WithColorType(SKColorType.Gray8);
 
 			Assert.Equal(SKColorType.Rgb565, pixmap.ColorType);
 			Assert.Equal((IntPtr)123, pixmap.GetPixels());
-			Assert.Equal(SKColorType.Index8, copy.ColorType);
+			Assert.Equal(SKColorType.Gray8, copy.ColorType);
 			Assert.Equal((IntPtr)123, copy.GetPixels());
 		}
 

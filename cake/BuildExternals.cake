@@ -98,7 +98,7 @@ Task ("externals-windows")
             $"target_os='win' target_cpu='{skiaArch}' " +
             $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true " +
             $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '/MD', '/EHsc', '/Zi' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '/MD', '/EHsc', '/Zi', '/FS' ] " +
             $"extra_ldflags=[ '/DEBUG' ]");
 
         // copy libSkiaSharp to output
@@ -145,7 +145,7 @@ Task ("externals-uwp")
             $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
             $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
             $"extra_cflags=[  " +
-            $"  '-DSKIA_C_DLL', '/MD', '/EHsc', '/Zi',  " +
+            $"  '-DSKIA_C_DLL', '/MD', '/EHsc', '/Zi', '/FS',  " +
             $"  '-DWINAPI_FAMILY=WINAPI_FAMILY_APP', '-DSK_BUILD_FOR_WINRT', '-DSK_HAS_DWRITE_1_H', '-DSK_HAS_DWRITE_2_H', '-DNO_GETENV' ] " +
             $"extra_ldflags=[ '/APPCONTAINER', '/DEBUG', 'WindowsApp.lib' ]");
 
@@ -576,6 +576,17 @@ Task ("externals-linux")
     var BUILD_ARCH = arches.Split (',').Select (a => a.Trim ()).ToArray ();
     var SUPPORT_GPU = (EnvironmentVariable ("SUPPORT_GPU") ?? "1") == "1"; // 1 == true, 0 == false
 
+    var CC = EnvironmentVariable ("CC");
+    var CXX = EnvironmentVariable ("CXX");
+    var AR = EnvironmentVariable ("AR");
+    var CUSTOM_COMPILERS = "";
+    if (!string.IsNullOrEmpty (CC))
+        CUSTOM_COMPILERS += $"cc='{CC}' ";
+    if (!string.IsNullOrEmpty (CXX))
+        CUSTOM_COMPILERS += $"cxx='{CXX}' ";
+    if (!string.IsNullOrEmpty (AR))
+        CUSTOM_COMPILERS += $"ar='{AR}' ";
+
     var buildArch = new Action<string> ((arch) => {
         var soname = GetVersion ("libSkiaSharp", "soname");
 
@@ -588,6 +599,7 @@ Task ("externals-linux")
             $"skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")} " +
             $"extra_cflags=[ '-DSKIA_C_DLL' ] " +
             $"extra_ldflags=[ ] " +
+            $"{CUSTOM_COMPILERS} " +
             $"linux_soname_version='{soname}'");
 
         // copy libSkiaSharp to output
@@ -689,7 +701,7 @@ Task ("externals-angle-uwp")
     .WithCriteria (!FileExists (ANGLE_PATH.CombineWithFilePath ("uwp/ANGLE.WindowsStore.nuspec")))
     .Does (() =>  
 {
-    var version = GetVersion ("ANGLE", "release");
+    var version = GetVersion ("ANGLE.WindowsStore", "release");
     var angleUrl = $"https://www.nuget.org/api/v2/package/ANGLE.WindowsStore/{version}";
     var angleRoot = ANGLE_PATH.Combine ("uwp");
     var angleNupkg = angleRoot.CombineWithFilePath ($"angle_{version}.nupkg");

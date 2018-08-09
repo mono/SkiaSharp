@@ -17,28 +17,19 @@
     <SkipCopyToOutputDirectory>true</SkipCopyToOutputDirectory>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="xunit" Version="2.4.0-beta.1.build3958" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0-beta.1.build3958" />
-    <PackageReference Include="SkiaSharp" Version="1.60.2" />
-    <PackageReference Include="SkiaSharp.HarfBuzz" Version="1.60.2" />
+    <PackageReference Include="xunit" Version="2.4.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
+    <PackageReference Include="SkiaSharp" Version="1.67.0" />
+    <PackageReference Include="SkiaSharp.HarfBuzz" Version="1.67.0" />
   </ItemGroup>
   <ItemGroup>
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.4.0-beta.1.build3958" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Tests\*.cs" Link="%(FileName)%(Extension)" />
-    <Compile Include="..\Tests\GlContexts\*.cs" Link="GlContexts\%(FileName)%(Extension)" />
-    <Compile Include="..\Tests\GlContexts\Cgl\*.cs" Link="GlContexts\Cgl\%(FileName)%(Extension)" />
-    <Compile Include="..\Tests\GlContexts\Glx\*.cs" Link="GlContexts\Glx\%(FileName)%(Extension)" />
-    <Compile Include="..\Tests\GlContexts\Wgl\*.cs" Link="GlContexts\Wgl\%(FileName)%(Extension)" />
+    <Compile Include="..\Tests\**\*.cs" Link="%(RecursiveDir)%(FileName)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Content\images\*" Link="images/%(FileName)%(Extension)">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\Content\fonts\*" Link="fonts/%(FileName)%(Extension)">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <Content Include="..\Content\**\*" Link="%(RecursiveDir)%(FileName)%(Extension)" CopyToOutputDirectory="Always" />
   </ItemGroup>
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
 </Project>

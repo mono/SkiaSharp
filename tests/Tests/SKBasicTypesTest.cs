@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
@@ -17,10 +17,10 @@ namespace SkiaSharp.Tests
 
 			Assert.Equal(SKColorType.Rgb565, info.ColorType);
 
-			var copy = info.WithColorType(SKColorType.Index8);
+			var copy = info.WithColorType(SKColorType.Gray8);
 
 			Assert.Equal(SKColorType.Rgb565, info.ColorType);
-			Assert.Equal(SKColorType.Index8, copy.ColorType);
+			Assert.Equal(SKColorType.Gray8, copy.ColorType);
 		}
 
 		[SkippableFact]

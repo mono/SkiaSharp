@@ -72,7 +72,7 @@ namespace SkiaSharp.Tests
 		{
 			using (var bitmap = new SKBitmap(new SKImageInfo(200, 200)))
 			using (var canvas = new SKCanvas(bitmap))
-			using (var tf = SKTypeface.FromFamilyName("Arial"))
+			using (var tf = SKTypeface.FromFamilyName(DefaultFontFamily))
 			using (var paint = new SKPaint { TextSize = 50, IsAntialias = true, Typeface = tf })
 			{
 				canvas.Clear(SKColors.White);
@@ -86,7 +86,7 @@ namespace SkiaSharp.Tests
 
 			using (var bitmap = new SKBitmap(new SKImageInfo(200, 200)))
 			using (var canvas = new SKCanvas(bitmap))
-			using (var tf = SKTypeface.FromFamilyName("Arial"))
+			using (var tf = SKTypeface.FromFamilyName(DefaultFontFamily))
 			using (var paint = new SKPaint { TextSize = 50, Typeface = tf })
 			{
 				canvas.Clear(SKColors.White);
@@ -137,7 +137,7 @@ namespace SkiaSharp.Tests
 		public void DrawTransparentImageWithHighFilterQualityWithPremul()
 		{
 			var oceanColor = (SKColor)0xFF9EB4D6;
-			var landColor = (SKColor)0xFFACB69B;
+			var landColor = (SKColor)0xFFADB69C;
 
 			using (var bitmap = new SKBitmap(new SKImageInfo(300, 300)))
 			using (var canvas = new SKCanvas(bitmap))

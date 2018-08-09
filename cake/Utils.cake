@@ -1,13 +1,4 @@
 
-FilePath GetToolPath (FilePath toolPath)
-{
-    var appRoot = Context.Environment.ApplicationRoot;
-    var appRootExe = appRoot.Combine ("..").CombineWithFilePath (toolPath);
-    if (FileExists (appRootExe))
-        return appRootExe;
-    throw new FileNotFoundException ($"Unable to find tool: {appRootExe}"); 
-}
-
 internal static class MacPlatformDetector
 {
     internal static readonly Lazy<bool> IsMac = new Lazy<bool> (IsRunningOnMac);

@@ -1,43 +1,7 @@
-//
-// Skia Definitions, enumerations and interop structures
-//
-// Author:
-//    Miguel de Icaza (miguel@xamarin.com)
-//
-// Copyright 2016 Xamarin Inc
-//
-// Augmented primitives come from Mono:
-// Author:
-//   Mike Kestner (mkestner@speakeasy.net)
-//
-// Copyright (C) 2001 Mike Kestner
-// Copyright (C) 2004,2006 Novell, Inc (http://www.novell.com)
-//
-// Permission is hereby granted, free of charge, to any person obtaining
-// a copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to
-// permit persons to whom the Software is furnished to do so, subject to
-// the following conditions:
-// 
-// The above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-//
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 using System.Globalization;
 
-using GRBackendObject = System.IntPtr;
-using GRBackendContext = System.IntPtr;
 using sk_string_t = System.IntPtr;
  	
 namespace SkiaSharp
@@ -45,15 +9,17 @@ namespace SkiaSharp
 	public enum SKCodecResult {
 		Success,
 		IncompleteInput,
+		ErrorInInput,
 		InvalidConversion,
 		InvalidScale,
 		InvalidParameters,
 		InvalidInput,
 		CouldNotRewind,
+		InternalError,
 		Unimplemented,
 	}
 
-	public enum SKCodecOrigin {
+	public enum SKEncodedOrigin {
 		TopLeft = 1,
 		TopRight = 2,
 		BottomRight = 3,
@@ -62,6 +28,7 @@ namespace SkiaSharp
 		RightTop = 6,
 		RightBottom = 7,
 		LeftBottom = 8,
+		Default = TopLeft,
 	}
 
 	public enum SKEncodedImageFormat {
@@ -76,14 +43,7 @@ namespace SkiaSharp
 		Ktx,
 		Astc,
 		Dng,
-	}
-
-	[Flags]
-	public enum SKTypefaceStyle {
-		Normal     = 0,
-		Bold       = 0x01,
-		Italic     = 0x02,
-		BoldItalic = 0x03
+		// Heif // appears to be development still
 	}
 
 	public enum SKFontStyleWeight {
@@ -154,8 +114,10 @@ namespace SkiaSharp
 		Rgb565,
 		Argb4444,
 		Rgba8888,
+		Rgb888x,
 		Bgra8888,
-		Index8,
+		Rgba1010102,
+		Rgb101010x,
 		Gray8,
 		RgbaF16
 	}
@@ -173,14 +135,6 @@ namespace SkiaSharp
 
 	public enum SKBlurStyle {
 		Normal, Solid, Outer, Inner
-	}
-
-	[Flags]
-	public enum SKBlurMaskFilterFlags {
-		None = 0x00,
-		IgnoreTransform = 0x01,
-		HighQuality = 0x02,
-		All = IgnoreTransform | HighQuality,
 	}
 
 	public enum SKBlendMode {
@@ -223,14 +177,6 @@ namespace SkiaSharp
 		BgrVertical
 	}
 
-	public enum SKBitmapResizeMethod {
-		Box,
-		Triangle,
-		Lanczos3,
-		Hamming,
-		Mitchell
-	}
-
 	[Flags]
 	public enum SKSurfacePropsFlags {
 		None = 0,
@@ -241,7 +187,7 @@ namespace SkiaSharp
 		Utf8, Utf16, Utf32
 	}
 
-	public static class SkiaExtensions {
+	public static partial class SkiaExtensions {
 		public static bool IsBgr (this SKPixelGeometry pg)
 		{
 			return pg == SKPixelGeometry.BgrHorizontal || pg == SKPixelGeometry.BgrVertical;
@@ -389,7 +335,7 @@ namespace SkiaSharp
 		public SKZeroInitialized fZeroInitialized;
 		public SKRectI* fSubset;
 		public int fFrameIndex;
-		public byte fHasPriorFrame;
+		public int fPriorFrame;
 		public SKTransferFunctionBehavior fPremulBehavior;
 
 		public static unsafe SKCodecOptionsInternal FromManaged (ref SKCodecOptions managed)
@@ -398,7 +344,7 @@ namespace SkiaSharp
 				fZeroInitialized = managed.ZeroInitialized,
 				fSubset = null,
 				fFrameIndex = managed.FrameIndex,
-				fHasPriorFrame = managed.HasPriorFrame ? (byte) 1 : (byte) 0,
+				fPriorFrame = managed.PriorFrame,
 				fPremulBehavior = managed.PremulBehavior,
 			};
 			if (managed.HasSubset) {
@@ -420,36 +366,49 @@ namespace SkiaSharp
 			ZeroInitialized = zeroInitialized;
 			Subset = null;
 			FrameIndex = 0;
-			HasPriorFrame = false;
+			PriorFrame = -1;
 			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (SKZeroInitialized zeroInitialized, SKRectI subset) {
 			ZeroInitialized = zeroInitialized;
 			Subset = subset;
 			FrameIndex = 0;
-			HasPriorFrame = false;
+			PriorFrame = -1;
 			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (SKRectI subset) {
 			ZeroInitialized = SKZeroInitialized.No;
 			Subset = subset;
 			FrameIndex = 0;
-			HasPriorFrame = false;
+			PriorFrame = -1;
 			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
-		public SKCodecOptions (int frameIndex, bool hasPriorFrame) {
+		public SKCodecOptions (int frameIndex) {
 			ZeroInitialized = SKZeroInitialized.No;
 			Subset = null;
 			FrameIndex = frameIndex;
-			HasPriorFrame = hasPriorFrame;
+			PriorFrame = -1;
+			PremulBehavior = SKTransferFunctionBehavior.Respect;
+		}
+		public SKCodecOptions (int frameIndex, int priorFrame) {
+			ZeroInitialized = SKZeroInitialized.No;
+			Subset = null;
+			FrameIndex = frameIndex;
+			PriorFrame = priorFrame;
 			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKZeroInitialized ZeroInitialized { get; set; }
 		public SKRectI? Subset { get; set; }
 		public bool HasSubset => Subset != null;
 		public int FrameIndex { get; set; }
-		public bool HasPriorFrame { get; set; }
+		public int PriorFrame { get; set; }
 		public SKTransferFunctionBehavior PremulBehavior { get; set; }
+	}
+
+	public enum SKCodecAnimationDisposalMethod {
+		Keep                     = 1,
+		RestoreBackgroundColor   = 2,
+		RestorePrevious          = 3,
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -458,6 +417,7 @@ namespace SkiaSharp
 		private int duration;
 		private byte fullyRecieved;
 		private SKAlphaType alphaType;
+		private SKCodecAnimationDisposalMethod disposalMethod;
 
 		public int RequiredFrame {
 			get { return requiredFrame; }
@@ -477,6 +437,11 @@ namespace SkiaSharp
 		public SKAlphaType AlphaType {
 			get { return alphaType; }
 			set { alphaType = value; }
+		}
+
+		public SKCodecAnimationDisposalMethod DisposalMethod {
+			get { return disposalMethod; }
+			set { disposalMethod = value; }
 		}
 	}
 
@@ -1598,6 +1563,11 @@ namespace SkiaSharp
 	[StructLayout(LayoutKind.Sequential)]
 	public struct SKFontMetrics
 	{
+		private const uint flagsUnderlineThicknessIsValid = (1U << 0);
+		private const uint flagsUnderlinePositionIsValid  = (1U << 1);
+		private const uint flagsStrikeoutThicknessIsValid = (1U << 2);
+		private const uint flagsStrikeoutPositionIsValid  = (1U << 3);
+
 		uint flags;                     // Bit field to identify which values are unknown
 		float top;                      // The greatest distance above the baseline for any glyph (will be <= 0)
 		float ascent;                   // The recommended distance above the baseline (will be <= 0)
@@ -1612,9 +1582,8 @@ namespace SkiaSharp
 		float capHeight;                // The cap height (> 0), or 0 if cannot be determined.
 		float underlineThickness;       // underline thickness, or 0 if cannot be determined
 		float underlinePosition;        // underline position, or 0 if cannot be determined
-
-		const uint flagsUnderlineThicknessIsValid = (1U << 0);
-		const uint flagsUnderlinePositionIsValid = (1U << 1);
+		float strikeoutThickness;
+		float strikeoutPosition;
 
 		public float Top
 		{
@@ -1671,323 +1640,17 @@ namespace SkiaSharp
 			get { return capHeight; }
 		}
 
-		public float? UnderlineThickness
+		public float? UnderlineThickness => GetIfValid(underlineThickness, flagsUnderlineThicknessIsValid);
+		public float? UnderlinePosition => GetIfValid(underlinePosition, flagsUnderlinePositionIsValid);
+		public float? StrikeoutThickness => GetIfValid(strikeoutThickness, flagsStrikeoutThicknessIsValid);
+		public float? StrikeoutPosition => GetIfValid(strikeoutPosition, flagsStrikeoutPositionIsValid);
+
+		private float? GetIfValid(float value, uint flag)
 		{
-			get {
-				if ((flags & flagsUnderlineThicknessIsValid) != 0)
-					return underlineThickness;
-				else
-					return null;
-			}
-		}
-
-		public float? UnderlinePosition
-		{
-			get {
-				if ((flags & flagsUnderlinePositionIsValid) != 0)
-					return underlinePosition;
-				else
-					return null;
-			}
-		}
-	}
-
-	public enum GRSurfaceOrigin {
-		TopLeft = 1,
-		BottomLeft,
-	}
-
-	public enum GRPixelConfig {
-		Unknown,
-		Alpha8,
-		Gray8,
-		Rgb565,
-		Rgba4444,
-		Rgba8888,
-		Bgra8888,
-		Srgba8888,
-		Sbgra8888,
-		Rgba8888SInt,
-		RgbaFloat,
-		RgFloat,
-		AlphaHalf,
-		RgbaHalf,
-	}
-
-	[StructLayout(LayoutKind.Sequential)]
-	public struct GRBackendRenderTargetDesc {
-		private int width;
-		private int height;
-		private GRPixelConfig config;
-		private GRSurfaceOrigin origin;
-		private int sampleCount;
-		private int stencilBits;
-		private GRBackendObject renderTargetHandle;
-
-		public int Width {
-			get { return width; }
-			set { width = value; }
-		}
-		public int Height {
-			get { return height; }
-			set { height = value; }
-		}
-		public GRPixelConfig Config {
-			get { return config; }
-			set { config = value; }
-		}
-		public GRSurfaceOrigin Origin {
-			get { return origin; }
-			set { origin = value; }
-		}
-		public int SampleCount {
-			get { return sampleCount; }
-			set { sampleCount = value; }
-		}
-		public int StencilBits {
-			get { return stencilBits; }
-			set { stencilBits = value; }
-		}
-		public GRBackendObject RenderTargetHandle {
-			get { return renderTargetHandle; }
-			set { renderTargetHandle = value; }
-		}
-		public SKSizeI Size => new SKSizeI (width, height);
-		public SKRectI Rect => new SKRectI (0, 0, width, height);
-	}
-	
-	public enum GRBackend {
-		OpenGL,
-		Vulkan,
-	}
-
-	[Flags]
-	public enum GRGlBackendState : UInt32 {
-		None             = 0,
-		RenderTarget     = 1 << 0,
-		TextureBinding   = 1 << 1,
-		View             = 1 << 2, // scissor and viewport
-		Blend            = 1 << 3,
-		MSAAEnable       = 1 << 4,
-		Vertex           = 1 << 5,
-		Stencil          = 1 << 6,
-		PixelStore       = 1 << 7,
-		Program          = 1 << 8,
-		FixedFunction    = 1 << 9,
-		Misc             = 1 << 10,
-		PathRendering    = 1 << 11,
-		All              = 0xffff
-	}
-
-	[Flags]
-	public enum GRBackendState : UInt32 {
-		None = 0,
-		All = 0xffffffff,
-	}
-
-	[Flags]
-	public enum GRBackendTextureDescFlags {
-		None = 0,
-		RenderTarget = 1,
-	}
-
-	[StructLayout(LayoutKind.Sequential)]
-	public struct GRGlTextureInfo {
-		private uint fTarget;
-		private uint fID;
-		
-		public uint Target {
-			get { return fTarget; }
-			set { fTarget = value; }
-		}
-		public uint Id {
-			get { return fID; }
-			set { fID = value; }
-		}
-	};
-
-	[StructLayout(LayoutKind.Sequential)]
-	public struct GRBackendTextureDesc {
-		private GRBackendTextureDescFlags flags;
-		private GRSurfaceOrigin origin;
-		private int width;
-		private int height;
-		private GRPixelConfig config;
-		private int sampleCount;
-		private GRBackendObject textureHandle;
-		
-		public GRBackendTextureDescFlags Flags {
-			get { return flags; }
-			set { flags = value; }
-		}
-		public GRSurfaceOrigin Origin {
-			get { return origin; }
-			set { origin = value; }
-		}
-		public int Width {
-			get { return width; }
-			set { width = value; }
-		}
-		public int Height {
-			get { return height; }
-			set { height = value; }
-		}
-		public GRPixelConfig Config {
-			get { return config; }
-			set { config = value; }
-		}
-		public int SampleCount {
-			get { return sampleCount; }
-			set { sampleCount = value; }
-		}
-		public GRBackendObject TextureHandle {
-			get { return textureHandle; }
-			set { textureHandle = value; }
-		}
-	}
-
-	public struct GRGlBackendTextureDesc {
-		public GRBackendTextureDescFlags Flags { get; set; }
-		public GRSurfaceOrigin Origin { get; set; }
-		public int Width { get; set; }
-		public int Height { get; set; }
-		public GRPixelConfig Config { get; set; }
-		public int SampleCount { get; set; }
-		public GRGlTextureInfo TextureHandle { get; set; }
-	}
-
-	public enum GRContextOptionsGpuPathRenderers {
-		None              = 0,
-		DashLine          = 1 << 0,
-		StencilAndCover   = 1 << 1,
-		Msaa              = 1 << 2,
-		AaHairline        = 1 << 3,
-		AaConvex          = 1 << 4,
-		AaLinearizing     = 1 << 5,
-		Small             = 1 << 6,
-		Tessellating      = 1 << 7,
-		Default           = 1 << 8,
-
-		All               = GRContextOptionsGpuPathRenderers.Default | (GRContextOptionsGpuPathRenderers.Default - 1)
-	}
-
-	[StructLayout(LayoutKind.Sequential)]
-	public struct GRContextOptions {
-		private byte fSuppressPrints;
-		private int  fMaxTextureSizeOverride;
-		private int  fMaxTileSizeOverride;
-		private byte fSuppressDualSourceBlending;
-		private int  fBufferMapThreshold;
-		private byte fUseDrawInsteadOfPartialRenderTargetWrite;
-		private byte fImmediateMode;
-		private byte fUseShaderSwizzling;
-		private byte fDoManualMipmapping;
-		private byte fEnableInstancedRendering;
-		private byte fAllowPathMaskCaching;
-		private byte fRequireDecodeDisableForSRGB;
-		private byte fDisableGpuYUVConversion;
-		private byte fSuppressPathRendering;
-		private byte fWireframeMode;
-		private GRContextOptionsGpuPathRenderers fGpuPathRenderers;
-		private float fGlyphCacheTextureMaximumBytes;
-		private byte fAvoidStencilBuffers;
-
-		public bool SuppressPrints {
-			get { return fSuppressPrints != 0; }
-			set { fSuppressPrints = value ? (byte)1 : (byte)0; }
-		}
-		public int MaxTextureSizeOverride {
-			get { return fMaxTextureSizeOverride; }
-			set { fMaxTextureSizeOverride = value; }
-		}
-		public int MaxTileSizeOverride {
-			get { return fMaxTileSizeOverride; }
-			set { fMaxTileSizeOverride = value; }
-		}
-		public bool SuppressDualSourceBlending {
-			get { return fSuppressDualSourceBlending != 0; }
-			set { fSuppressDualSourceBlending = value ? (byte)1 : (byte)0; }
-		}
-		public int BufferMapThreshold {
-			get { return fBufferMapThreshold; }
-			set { fBufferMapThreshold = value; }
-		}
-		public bool UseDrawInsteadOfPartialRenderTargetWrite {
-			get { return fUseDrawInsteadOfPartialRenderTargetWrite != 0; }
-			set { fUseDrawInsteadOfPartialRenderTargetWrite = value ? (byte)1 : (byte)0; }
-		}
-		public bool ImmediateMode {
-			get { return fImmediateMode != 0; }
-			set { fImmediateMode = value ? (byte)1 : (byte)0; }
-		}
-		public bool UseShaderSwizzling {
-			get { return fUseShaderSwizzling != 0; }
-			set { fUseShaderSwizzling = value ? (byte)1 : (byte)0; }
-		}
-		public bool DoManualMipmapping {
-			get { return fDoManualMipmapping != 0; }
-			set { fDoManualMipmapping = value ? (byte)1 : (byte)0; }
-		}
-		public bool EnableInstancedRendering {
-			get { return fEnableInstancedRendering != 0; }
-			set { fEnableInstancedRendering = value ? (byte)1 : (byte)0; }
-		}
-		public bool AllowPathMaskCaching {
-			get { return fAllowPathMaskCaching != 0; }
-			set { fAllowPathMaskCaching = value ? (byte)1 : (byte)0; }
-		}
-		public bool RequireDecodeDisableForSrgb {
-			get { return fRequireDecodeDisableForSRGB != 0; }
-			set { fRequireDecodeDisableForSRGB = value ? (byte)1 : (byte)0; }
-		}
-		public bool DisableGpuYuvConversion {
-			get { return fDisableGpuYUVConversion != 0; }
-			set { fDisableGpuYUVConversion = value ? (byte)1 : (byte)0; }
-		}
-		public bool SuppressPathRendering {
-			get { return fSuppressPathRendering != 0; }
-			set { fSuppressPathRendering = value ? (byte)1 : (byte)0; }
-		}
-		public bool WireframeMode {
-			get { return fWireframeMode != 0; }
-			set { fWireframeMode = value ? (byte)1 : (byte)0; }
-		}
-		public GRContextOptionsGpuPathRenderers GpuPathRenderers {
-			get { return fGpuPathRenderers; }
-			set { fGpuPathRenderers = value; }
-		}
-		public float GlyphCacheTextureMaximumBytes {
-			get { return fGlyphCacheTextureMaximumBytes; }
-			set { fGlyphCacheTextureMaximumBytes = value; }
-		}
-		public bool AvoidStencilBuffers {
-			get { return fAvoidStencilBuffers != 0; }
-			set { fAvoidStencilBuffers = value ? (byte)1 : (byte)0; }
-		}
-
-		public static GRContextOptions Default {
-			get {
-				return new GRContextOptions {
-					fSuppressPrints = 0,
-					fMaxTextureSizeOverride = 0x7FFFFFFF,
-					fMaxTileSizeOverride = 0,
-					fSuppressDualSourceBlending = 0,
-					fBufferMapThreshold = -1,
-					fUseDrawInsteadOfPartialRenderTargetWrite = 0,
-					fImmediateMode = 0,
-					fUseShaderSwizzling = 0,
-					fDoManualMipmapping = 0,
-					fEnableInstancedRendering = 0,
-					fAllowPathMaskCaching = 0,
-					fRequireDecodeDisableForSRGB = 1,
-					fDisableGpuYUVConversion = 0,
-					fSuppressPathRendering = 0,
-					fWireframeMode = 0,
-					fGpuPathRenderers = GRContextOptionsGpuPathRenderers.All,
-					fGlyphCacheTextureMaximumBytes = 2048 * 1024 * 4,
-					fAvoidStencilBuffers = 0,
-				};
-			}
+			if ((flags & flag) == flag)
+				return value;
+			else
+				return null;
 		}
 	}
 	
@@ -2005,26 +1668,29 @@ namespace SkiaSharp
 		Concave,
 	};
 
-	public enum SKLatticeFlags {
+	public enum SKLatticeRectType {
 		Default,
-		Transparent = 1 << 0,
+		Transparent,
+		FixedColor,
 	};
 
 	[StructLayout(LayoutKind.Sequential)]
 	internal unsafe struct SKLatticeInternal {
 		public int* fXDivs;
 		public int* fYDivs;
-		public SKLatticeFlags* fFlags;
+		public SKLatticeRectType* fRectTypes;
 		public int fXCount;
 		public int fYCount;
 		public SKRectI* fBounds;
+		public SKColor* fColors;
 	}
 
 	public struct SKLattice {
 		public int[] XDivs { get; set; }
 		public int[] YDivs { get; set; }
-		public SKLatticeFlags[] Flags { get; set; }
+		public SKLatticeRectType[] RectTypes { get; set; }
 		public SKRectI? Bounds { get; set; }
+		public SKColor[] Colors { get; set; }
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
@@ -2076,129 +1742,6 @@ namespace SkiaSharp
 		public DateTime? Modified { get; set; }
 	}
 
-	public struct SKEncodedInfo {
-		private SKEncodedInfoColor color;
-		private SKEncodedInfoAlpha alpha;
-		private byte bitsPerComponent;
-
-		public SKEncodedInfo (SKEncodedInfoColor color) {
-			this.color = color;
-			this.bitsPerComponent = 8;
-
-			switch (color) {
-				case SKEncodedInfoColor.Gray:
-				case SKEncodedInfoColor.Rgb:
-				case SKEncodedInfoColor.Bgr:
-				case SKEncodedInfoColor.Bgrx:
-				case SKEncodedInfoColor.Yuv:
-				case SKEncodedInfoColor.InvertedCmyk:
-				case SKEncodedInfoColor.Ycck:
-					this.alpha = SKEncodedInfoAlpha.Opaque;
-					break;
-				case SKEncodedInfoColor.GrayAlpha:
-				case SKEncodedInfoColor.Palette:
-				case SKEncodedInfoColor.Rgba:
-				case SKEncodedInfoColor.Bgra:
-				case SKEncodedInfoColor.Yuva:
-					this.alpha = SKEncodedInfoAlpha.Unpremul;
-					break;
-				default:
-					throw new ArgumentOutOfRangeException (nameof (color));
-			}
-		}
-
-		public SKEncodedInfo (SKEncodedInfoColor color, SKEncodedInfoAlpha alpha, byte bitsPerComponent) {
-			if (bitsPerComponent != 1 && bitsPerComponent != 2 && bitsPerComponent != 4 && bitsPerComponent != 8 && bitsPerComponent != 16) {
-				throw new ArgumentException ("The bits per component must be 1, 2, 4, 8 or 16.", nameof (bitsPerComponent));
-			}
-
-			switch (color) {
-				case SKEncodedInfoColor.Gray:
-					if (alpha != SKEncodedInfoAlpha.Opaque)
-						throw new ArgumentException ("The alpha must be opaque.", nameof (alpha));
-					break;
-				case SKEncodedInfoColor.GrayAlpha:
-					if (alpha == SKEncodedInfoAlpha.Opaque)
-						throw new ArgumentException ("The alpha must not be opaque.", nameof (alpha));
-					break;
-				case SKEncodedInfoColor.Palette:
-					if (bitsPerComponent == 16)
-						throw new ArgumentException ("The bits per component must be 1, 2, 4 or 8.", nameof (bitsPerComponent));
-					break;
-				case SKEncodedInfoColor.Rgb:
-				case SKEncodedInfoColor.Bgr:
-				case SKEncodedInfoColor.Bgrx:
-					if (alpha != SKEncodedInfoAlpha.Opaque)
-						throw new ArgumentException ("The alpha must be opaque.", nameof (alpha));
-					if (bitsPerComponent < 8)
-						throw new ArgumentException ("The bits per component must be 8 or 16.", nameof (bitsPerComponent));
-					break;
-				case SKEncodedInfoColor.Yuv:
-				case SKEncodedInfoColor.InvertedCmyk:
-				case SKEncodedInfoColor.Ycck:
-					if (alpha != SKEncodedInfoAlpha.Opaque)
-						throw new ArgumentException ("The alpha must be opaque.", nameof (alpha));
-					if (bitsPerComponent != 8)
-						throw new ArgumentException ("The bits per component must be 8.", nameof (bitsPerComponent));
-					break;
-				case SKEncodedInfoColor.Rgba:
-					if (alpha == SKEncodedInfoAlpha.Opaque)
-						throw new ArgumentException ("The alpha must not be opaque.", nameof (alpha));
-					if (bitsPerComponent < 8)
-						throw new ArgumentException ("The bits per component must be 8 or 16.", nameof (bitsPerComponent));
-					break;
-				case SKEncodedInfoColor.Bgra:
-				case SKEncodedInfoColor.Yuva:
-					if (alpha == SKEncodedInfoAlpha.Opaque)
-						throw new ArgumentException ("The alpha must not be opaque.", nameof (alpha));
-					if (bitsPerComponent != 8)
-						throw new ArgumentException ("The bits per component must be 8.", nameof (bitsPerComponent));
-					break;
-				default:
-					throw new ArgumentOutOfRangeException (nameof (color));
-			}
-
-			this.color = color;
-			this.alpha = alpha;
-			this.bitsPerComponent = bitsPerComponent;
-		}
-
-		public SKEncodedInfoColor Color => color;
-		public SKEncodedInfoAlpha Alpha => alpha;
-		public byte BitsPerComponent => bitsPerComponent;
-		public byte BitsPerPixel {
-			get {
-				switch (color) {
-					case SKEncodedInfoColor.Gray:
-						return bitsPerComponent;
-					case SKEncodedInfoColor.GrayAlpha:
-						return (byte)(2 * bitsPerComponent);
-					case SKEncodedInfoColor.Palette:
-						return bitsPerComponent;
-					case SKEncodedInfoColor.Rgb:
-					case SKEncodedInfoColor.Bgr:
-					case SKEncodedInfoColor.Yuv:
-						return (byte)(3 * bitsPerComponent);
-					case SKEncodedInfoColor.Rgba:
-					case SKEncodedInfoColor.Bgra:
-					case SKEncodedInfoColor.Bgrx:
-					case SKEncodedInfoColor.Yuva:
-					case SKEncodedInfoColor.InvertedCmyk:
-					case SKEncodedInfoColor.Ycck:
-						return (byte)(4 * bitsPerComponent);
-					default:
-						return (byte)0;
-				}
-			}
-		}
-	}
-
-	public enum SKEncodedInfoAlpha {
-		Opaque,
-		Unpremul,
-		Binary,
-	}
-
 	public enum SKColorSpaceGamut {
 		Srgb,
 		AdobeRgb,
@@ -2215,21 +1758,6 @@ namespace SkiaSharp
 	public enum SKColorSpaceRenderTargetGamma {
 		Linear,
 		Srgb,
-	}
-
-	public enum SKEncodedInfoColor {
-		Gray,
-		GrayAlpha,
-		Palette,
-		Rgb,
-		Rgba,
-		Bgr,
-		Bgrx,
-		Bgra,
-		Yuv,
-		Yuva,
-		InvertedCmyk,
-		Ycck,
 	}
 
 	public enum SKMaskFormat {
@@ -2328,6 +1856,7 @@ namespace SkiaSharp
 		private SKPngEncoderFilterFlags fFilterFlags;
 		private int fZLibLevel;
 		private SKTransferFunctionBehavior fUnpremulBehavior;
+		private IntPtr fComments; // TODO: get and set comments
 
 		public static readonly SKPngEncoderOptions Default;
 
@@ -2341,6 +1870,7 @@ namespace SkiaSharp
 			fFilterFlags = filterFlags;
 			fZLibLevel = zLibLevel;
 			fUnpremulBehavior = SKTransferFunctionBehavior.Respect;
+			fComments = IntPtr.Zero;
 		}
 
 		public SKPngEncoderOptions (SKPngEncoderFilterFlags filterFlags, int zLibLevel, SKTransferFunctionBehavior unpremulBehavior)
@@ -2348,6 +1878,7 @@ namespace SkiaSharp
 			fFilterFlags = filterFlags;
 			fZLibLevel = zLibLevel;
 			fUnpremulBehavior = unpremulBehavior;
+			fComments = IntPtr.Zero;
 		}
 
 		public SKPngEncoderFilterFlags FilterFlags { 

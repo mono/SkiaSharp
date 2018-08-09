@@ -1,15 +1,4 @@
-//
-// Bindings for SKPixmap
-//
-// Author:
-//   Matthew Leibowitz
-//
-// Copyright 2017 Xamarin Inc
-//
-
-using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
+﻿using System;
 
 namespace SkiaSharp
 {
@@ -36,11 +25,17 @@ namespace SkiaSharp
 		{
 		}
 
-		public SKPixmap (SKImageInfo info, IntPtr addr, int rowBytes, SKColorTable ctable = null)
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use SKPixmap(SKImageInfo, IntPtr, int) instead.")]
+		public SKPixmap (SKImageInfo info, IntPtr addr, int rowBytes, SKColorTable ctable)
+			: this (info, addr, info.RowBytes)
+		{
+		}
+
+		public SKPixmap (SKImageInfo info, IntPtr addr, int rowBytes)
 			: this (IntPtr.Zero, true)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			Handle = SkiaApi.sk_pixmap_new_with_params (ref cinfo, addr, (IntPtr)rowBytes, ctable == null ? IntPtr.Zero : ctable.Handle);
+			Handle = SkiaApi.sk_pixmap_new_with_params (ref cinfo, addr, (IntPtr)rowBytes);
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException (UnableToCreateInstanceMessage);
 			}
@@ -60,81 +55,106 @@ namespace SkiaSharp
 			SkiaApi.sk_pixmap_reset (Handle);
 		}
 
-		public void Reset (SKImageInfo info, IntPtr addr, int rowBytes, SKColorTable ctable = null)
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use Reset(SKImageInfo, IntPtr, int) instead.")]
+		public void Reset (SKImageInfo info, IntPtr addr, int rowBytes, SKColorTable ctable)
+		{
+			Reset (info, addr, rowBytes);
+		}
+
+		public void Reset (SKImageInfo info, IntPtr addr, int rowBytes)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			SkiaApi.sk_pixmap_reset_with_params (Handle, ref cinfo, addr, (IntPtr)rowBytes, ctable == null ? IntPtr.Zero : ctable.Handle);
+			SkiaApi.sk_pixmap_reset_with_params (Handle, ref cinfo, addr, (IntPtr)rowBytes);
 		}
 
 		public SKImageInfo Info {
 			get {
-				SKImageInfoNative cinfo;
-				SkiaApi.sk_pixmap_get_info (Handle, out cinfo);
+				SkiaApi.sk_pixmap_get_info (Handle, out var cinfo);
 				return SKImageInfoNative.ToManaged (ref cinfo);
 			}
 		}
 
-		public int Width {
-			get { return Info.Width; }
-		}
+		public int Width => Info.Width;
 
-		public int Height {
-			get { return Info.Height; }
-		}
+		public int Height => Info.Height;
 
-		public SKColorType ColorType {
-			get { return Info.ColorType; }
-		}
+		public SKSizeI Size => new SKSizeI (Width, Height);
 
-		public SKAlphaType AlphaType {
-			get { return Info.AlphaType; }
-		}
+		public SKRectI Rect => SKRectI.Create (Width, Height);
 
-		public SKColorSpace ColorSpace {
-			get { return Info.ColorSpace; }
-		}
+		public SKColorType ColorType => Info.ColorType;
 
-		public int BytesPerPixel {
-			get { return Info.BytesPerPixel; }
-		}
+		public SKAlphaType AlphaType => Info.AlphaType;
 
-		public int RowBytes {
-			get { return (int)SkiaApi.sk_pixmap_get_row_bytes (Handle); }
-		}
+		public SKColorSpace ColorSpace => Info.ColorSpace;
+
+		public int BytesPerPixel => Info.BytesPerPixel;
+
+		public int RowBytes => (int)SkiaApi.sk_pixmap_get_row_bytes (Handle);
+
+		public int BytesSize => Info.BytesSize;
 
 		public IntPtr GetPixels ()
 		{
 			return SkiaApi.sk_pixmap_get_pixels (Handle);
 		}
 
-		public SKColorTable ColorTable {
-			get { return GetObject<SKColorTable> (SkiaApi.sk_pixmap_get_colortable (Handle), false); }
+		public IntPtr GetPixels (int x, int y)
+		{
+			return SkiaApi.sk_pixmap_get_pixels_with_xy (Handle, x, y);
 		}
 
+		public SKColor GetPixelColor (int x, int y)
+		{
+			return SkiaApi.sk_pixmap_get_pixel_color (Handle, x, y);
+		}
+
+		[Obsolete ("The Index8 color type and color table is no longer supported.")]
+		public SKColorTable ColorTable => null;
+
+		[Obsolete ("Use ScalePixels(SKPixmap, SKFilterQuality) instead.")]
 		public static bool Resize (SKPixmap dst, SKPixmap src, SKBitmapResizeMethod method)
 		{
-			return SkiaApi.sk_bitmapscaler_resize (dst.Handle, src.Handle, method);
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
+
+			return src.ScalePixels (dst, method.ToFilterQuality ());
+		}
+
+		public bool ScalePixels (SKPixmap destination, SKFilterQuality quality)
+		{
+			if (destination == null)
+				throw new ArgumentNullException (nameof (destination));
+
+			return SkiaApi.sk_pixmap_scale_pixels (Handle, destination.Handle, quality);
+		}
+
+		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY, SKTransferFunctionBehavior behavior)
+		{
+			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
+			return SkiaApi.sk_pixmap_read_pixels (Handle, ref cinfo, dstPixels, (IntPtr)dstRowBytes, srcX, srcY, behavior);
 		}
 
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)
 		{
-			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
-			return SkiaApi.sk_pixmap_read_pixels (Handle, ref cinfo, dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
+			return ReadPixels (dstInfo, dstPixels, dstRowBytes, 0, 0, SKTransferFunctionBehavior.Respect);
 		}
 
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes)
 		{
-			return ReadPixels (dstInfo, dstPixels, dstRowBytes, 0, 0);
+			return ReadPixels (dstInfo, dstPixels, dstRowBytes, 0, 0, SKTransferFunctionBehavior.Respect);
 		}
 
 		public bool ReadPixels (SKPixmap pixmap, int srcX, int srcY)
 		{
-			return ReadPixels (pixmap.Info, pixmap.GetPixels (), pixmap.RowBytes, srcX, srcY);
+			return ReadPixels (pixmap.Info, pixmap.GetPixels (), pixmap.RowBytes, srcX, srcY, SKTransferFunctionBehavior.Respect);
 		}
 
 		public bool ReadPixels (SKPixmap pixmap)
 		{
-			return ReadPixels (pixmap.Info, pixmap.GetPixels (), pixmap.RowBytes, 0, 0);
+			return ReadPixels (pixmap.Info, pixmap.GetPixels (), pixmap.RowBytes, 0, 0, SKTransferFunctionBehavior.Respect);
 		}
 
 		public SKData Encode (SKEncodedImageFormat encoder, int quality)
@@ -241,19 +261,47 @@ namespace SkiaSharp
 			return SkiaApi.sk_pngencoder_encode (dst.Handle, src.Handle, options);
 		}
 
+		public SKPixmap ExtractSubset (SKRectI subset)
+		{
+			var result = new SKPixmap ();
+			if (!ExtractSubset (result, subset)) {
+				result.Dispose ();
+				result = null;
+			}
+			return result;
+		}
+
+		public bool ExtractSubset (SKPixmap result, SKRectI subset)
+		{
+			if (result == null)
+				throw new ArgumentNullException (nameof (result));
+
+			return SkiaApi.sk_pixmap_extract_subset (Handle, result.Handle, ref subset);
+		}
+
+		public bool Erase (SKColor color)
+		{
+			return Erase (color, Rect);
+		}
+
+		public bool Erase (SKColor color, SKRectI subset)
+		{
+			return SkiaApi.sk_pixmap_erase_color (Handle, color, ref subset);
+		}
+
 		public SKPixmap WithColorType (SKColorType newColorType)
 		{
-			return new SKPixmap (Info.WithColorType (newColorType), GetPixels (), RowBytes, ColorTable);
+			return new SKPixmap (Info.WithColorType (newColorType), GetPixels (), RowBytes);
 		}
 
 		public SKPixmap WithColorSpace (SKColorSpace newColorSpace)
 		{
-			return new SKPixmap (Info.WithColorSpace (newColorSpace), GetPixels (), RowBytes, ColorTable);
+			return new SKPixmap (Info.WithColorSpace (newColorSpace), GetPixels (), RowBytes);
 		}
 
 		public SKPixmap WithAlphaType (SKAlphaType newAlphaType)
 		{
-			return new SKPixmap (Info.WithAlphaType (newAlphaType), GetPixels (), RowBytes, ColorTable);
+			return new SKPixmap (Info.WithAlphaType (newAlphaType), GetPixels (), RowBytes);
 		}
 	}
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Android.Opengl;
 using Android.Runtime;
 using Javax.Microedition.Khronos.Egl;

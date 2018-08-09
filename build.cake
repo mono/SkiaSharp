@@ -1,9 +1,14 @@
-#addin nuget:?package=Cake.Xamarin&version=2.0.1
-#addin nuget:?package=Cake.XCode&version=3.0.0
-#addin nuget:?package=Cake.FileHelpers&version=2.0.0
+#addin nuget:?package=Cake.Xamarin&version=3.0.0
+#addin nuget:?package=Cake.XCode&version=4.0.0
+#addin nuget:?package=Cake.FileHelpers&version=3.0.0
+#addin nuget:?package=SharpCompress&version=0.22.0
+#addin nuget:?package=Newtonsoft.Json&version=11.0.2
+#addin nuget:https://ci.appveyor.com/nuget/cake-monoapitools-gunq9ba46ljl?package=Cake.MonoApiTools&version=2.0.0-preview2
+#addin nuget:https://ci.appveyor.com/nuget/nugetcomparer-mmjynpq6dcr9?package=Mono.ApiTools.NuGetDiff&version=1.0.0-preview-19&loaddependencies=true
 
-#reference "tools/SharpCompress/lib/net45/SharpCompress.dll"
-#reference "tools/Newtonsoft.Json/lib/net45/Newtonsoft.Json.dll"
+#tool "nuget:?package=xunit.runner.console&version=2.4.0"
+#tool "nuget:?package=mdoc&version=5.7.2.3"
+#tool "nuget:?package=vswhere&version=2.5.2"
 
 using System.Linq;
 using System.Net.Http;
@@ -11,9 +16,13 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
+using SharpCompress.Common;
 using SharpCompress.Readers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Mono.ApiTools;
+using NuGet.Packaging;
+using NuGet.Versioning;
 
 #load "cake/Utils.cake"
 
@@ -22,9 +31,9 @@ var VERBOSITY = (Verbosity) Enum.Parse (typeof(Verbosity), Argument ("v", Argume
 var SKIP_EXTERNALS = Argument ("skipexternals", Argument ("SkipExternals", "")).ToLower ().Split (',');
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
-var NugetToolPath = GetToolPath ("nuget.exe");
-var CakeToolPath = GetToolPath ("Cake/Cake.exe");
-var MDocPath = GetToolPath ("mdoc/tools/mdoc.exe");
+var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
+var CakeToolPath = Context.Tools.Resolve ("Cake.exe");
+var MDocPath = Context.Tools.Resolve ("mdoc.exe");
 var MSBuildToolPath = GetMSBuildToolPath (EnvironmentVariable ("MSBUILD_EXE"));
 var PythonToolPath = EnvironmentVariable ("PYTHON_EXE") ?? "python";
 
@@ -42,6 +51,7 @@ DirectoryPath SKIA_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia"));
 DirectoryPath ANGLE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/angle"));
 DirectoryPath HARFBUZZ_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/harfbuzz"));
 DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/xml"));
+DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/package_cache"));
 
 DirectoryPath PROFILE_PATH = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
 DirectoryPath NUGET_PACKAGES = EnvironmentVariable ("NUGET_PACKAGES") ?? PROFILE_PATH.Combine (".nuget/packages");
@@ -57,6 +67,14 @@ var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? string.Empty;
 if (string.IsNullOrEmpty (BUILD_NUMBER)) {
     BUILD_NUMBER = "0";
 }
+
+var TRACKED_NUGETS = new Dictionary<string, Version> {
+    { "SkiaSharp",              new Version (1, 57, 0) },
+    { "SkiaSharp.Views",        new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Forms",  new Version (1, 57, 0) },
+    { "HarfBuzzSharp",          new Version (1, 0, 0) },
+    { "SkiaSharp.HarfBuzz",     new Version (1, 57, 0) },
+};
 
 #load "cake/UtilsManaged.cake"
 #load "cake/BuildExternals.cake"
@@ -110,7 +128,7 @@ Task ("tests")
     .IsDependentOn ("nuget")
     .Does (() => 
 {
-    var RunDestopTest = new Action<string> (arch => {
+    var RunDesktopTest = new Action<string> (arch => {
         var platform = "";
         if (IsRunningOnWindows ()) {
             platform = "windows";
@@ -133,16 +151,16 @@ Task ("tests")
 
     // Full .NET Framework
     if (IsRunningOnWindows ()) {
-        RunDestopTest ("x86");
-        RunDestopTest ("x64");
+        RunDesktopTest ("x86");
+        RunDesktopTest ("x64");
     } else if (IsRunningOnMac ()) {
-        RunDestopTest ("AnyCPU");
+        RunDesktopTest ("AnyCPU");
     } else if (IsRunningOnLinux ()) {
         // TODO: Disable x64 for the time being due to a bug in mono sn:
         //       https://github.com/mono/mono/issues/8218
 
-        RunDestopTest ("AnyCPU");
-        // RunDestopTest ("x64");
+        RunDesktopTest ("AnyCPU");
+        // RunDesktopTest ("x64");
     }
 
     // .NET Core
@@ -164,10 +182,10 @@ Task ("tests")
     if (changed) {
         xdoc.Save (netCoreTestProj);
     }
-    CleanDirectories ("./externals/packages/skiasharp*");
-    CleanDirectories ("./externals/packages/harfbuzzsharp*");
+    CleanDirectories ("./tests/packages/skiasharp*");
+    CleanDirectories ("./tests/packages/harfbuzzsharp*");
     EnsureDirectoryExists ("./output/tests/netcore");
-    RunMSBuildRestoreLocal (netCoreTestProj);
+    RunMSBuildRestoreLocal (netCoreTestProj, "./tests/packages");
     RunNetCoreTests (netCoreTestProj, null);
     CopyFileToDirectory ("./tests/SkiaSharp.NetCore.Tests/TestResult.xml", "./output/tests/netcore");
 });
@@ -360,7 +378,7 @@ Task ("nuget")
         setVersion (xdoc, "");
         xdoc.Save ($"{outDir}/{id.Value}.nuspec");
 
-        setVersion (xdoc, $"-build-{BUILD_NUMBER}");
+        setVersion (xdoc, $"-preview-{BUILD_NUMBER}");
         xdoc.Save ($"{outDir}/{id.Value}.prerelease.nuspec");
 
         // the legal
@@ -455,19 +473,42 @@ Task ("Linux-CI")
 // BUILD NOW 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Information ("Cake.exe ToolPath: {0}", CakeToolPath);
-Information ("NuGet.exe ToolPath: {0}", NugetToolPath);
-Information ("msbuild.exe ToolPath: {0}", MSBuildToolPath);
+Information ("");
+Information ("Tool Paths:");
+Information ("  Cake.exe:   {0}", CakeToolPath);
+Information ("  nuget.exe:  {0}", NuGetToolPath);
+Information ("  msbuild:    {0}", MSBuildToolPath);
+Information ("  python:     {0}", PythonToolPath);
+Information ("");
 
+Information ("Build Environment:");
 if (IS_ON_CI) {
-    Information ("Detected that we are building on CI, {0}.", IS_ON_FINAL_CI ? "and on FINAL CI" : "but NOT on final CI");
+    Information ("  Detected that we are building on CI, {0}.", IS_ON_FINAL_CI ? "and on FINAL CI" : "but NOT on final CI");
 } else {
-    Information ("Detected that we are {0} on CI.", "NOT");
+    Information ("  Detected that we are {0} on CI.", "NOT");
 }
+Information ("");
 
 Information ("Environment Variables:");
-foreach (var envVar in EnvironmentVariables ()) {
-    Information ("\tKey: {0}\tValue: \"{1}\"", envVar.Key, envVar.Value);
+var envars = EnvironmentVariables ();
+var max = envars.Max (v => v.Key.Length) + 2;
+foreach (var envVar in envars) {
+    var spaces = string.Concat (Enumerable.Repeat (" ", max - envVar.Key.Length));
+    if (envVar.Key.ToLower () == "path") {
+        var paths = new string [0];
+        if (IsRunningOnWindows ()) {
+            paths = envVar.Value.Split (';');
+        } else {
+            paths = envVar.Value.Split (':');
+        }
+        Information ($"  {envVar.Key}:{spaces}{{0}}", paths.FirstOrDefault ());
+        foreach (var path in paths.Skip (1)) {
+            Information ($"       {spaces}{{0}}", path);
+        }
+    } else {
+        Information ($"  {envVar.Key}:{spaces}{{0}}", envVar.Value);
+    }
 }
+Information ("");
 
 RunTarget (TARGET);

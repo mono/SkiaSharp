@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using Windows.UI.Xaml.Controls;
 using SkiaSharp.Views.GlesInterop;
