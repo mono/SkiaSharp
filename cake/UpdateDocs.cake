@@ -271,6 +271,7 @@ Task ("docs-format-docs")
 
 Task ("update-docs")
     .IsDependentOn ("docs-api-diff")
+    .IsDependentOn ("docs-api-diff-past")
     .IsDependentOn ("docs-update-frameworks")
     .IsDependentOn ("docs-format-docs")
     .Does (() => 
