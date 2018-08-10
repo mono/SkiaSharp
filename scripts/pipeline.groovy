@@ -1,6 +1,6 @@
 def commitHash = null
 
-def reportGitHubStatus(commitHash, context, backref, statusResult, statusResultMessage) {
+def reportGitHubStatus(commitHash: String, context: String, backref: String, statusResult: String, statusResultMessage: String) {
     step([
         $class: "GitHubCommitStatusSetter",
         commitShaSource: [$class: "ManuallyEnteredShaSource", sha: commitHash],
@@ -10,7 +10,7 @@ def reportGitHubStatus(commitHash, context, backref, statusResult, statusResultM
     ])
 }
 
-def cmd(script, encoding = 'UTF-8', returnStatus = false, returnStdout = false) {
+def cmd(script: String, encoding?: String, returnStatus?: boolean, returnStdout?: boolean) {
     if (isUnix()) {
         return sh(script: script, encoding: encoding, returnStatus: returnStatus, returnStdout: returnStdout)
     } else {
@@ -18,12 +18,13 @@ def cmd(script, encoding = 'UTF-8', returnStatus = false, returnStdout = false) 
     }
 }
 
-def createNativeBuilder(platform, host, label) {
+def createNativeBuilder(platform: String, host: String, label: String) {
     return {
-        githubContext = "Build Native - ${platform} on ${host}"
+        builderType = "${platform} on ${host}"
+        githubContext = "Build Native - ${builderType}"
 
         node(label) {
-            stage("Checkout") {
+            stage("Checkout (${builderType})") {
                 // clone and checkout repository
                 checkout scm
 
@@ -35,11 +36,11 @@ def createNativeBuilder(platform, host, label) {
             }
 
             try {
-                stage("Build") {
+                stage("Build (${builderType})") {
                     // do the main build
                 }
 
-                stage("Upload") {
+                stage("Upload (${builderType})") {
                     // do the upload
                 }
             } catch (Exception e) {
