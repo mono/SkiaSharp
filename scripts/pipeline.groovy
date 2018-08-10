@@ -13,15 +13,15 @@ def reportGitHubStatus(commitHash, context, backref, statusResult, statusResultM
 def createNode(label, platform, githubContext) {
     node(label) {
         stage("Checkout") {
-            // // clone and checkout repository
-            // checkout scm
+            // clone and checkout repository
+            checkout scm
 
-            // // get current commit sha
-            // commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
-            // currentBuild.displayName = "${commitHash.substring(0, 7)}"
+            // get current commit sha
+            commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+            currentBuild.displayName = "${commitHash.substring(0, 7)}"
 
-            // // let GitHub know we are building
-            // reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
+            // let GitHub know we are building
+            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
         }
         try {
             stage("Build") {
@@ -32,7 +32,7 @@ def createNode(label, platform, githubContext) {
                 // do the upload
             }
         } catch (Exception e) {
-            // reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
+            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
             throw e
         }
     }
