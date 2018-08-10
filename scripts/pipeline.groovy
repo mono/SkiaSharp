@@ -38,10 +38,10 @@ def createNativeBuilder(platform, host, label) {
             ws("workspace/SkiaSharp/${cleanBranch}/${cleanPlatform}") {
 
                 stage('checks') {
-                    bat 'dir "C:/Program Files"'
-                    bat 'dir "C:/Program Files/Git"'
-                    bat 'dir "C:/Program Files/Git/bin"'
-                    bat 'dir "C:/Program Files/Git/bin/git.exe"'
+                    sh 'dir "C:/Program Files"'
+                    sh 'dir "C:/Program Files/Git"'
+                    sh 'dir "C:/Program Files/Git/bin"'
+                    sh 'dir "C:/Program Files/Git/bin/git.exe"'
                 }
 
                 stage("Checkout (${builderType})") {
