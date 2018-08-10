@@ -21,7 +21,8 @@ def createNativeBuilder(platform, host, label) {
         node(label) {
             stage("Checkout") {
                 echo 'test'
-                echo System.properties['os.name']
+                ooss = System.properties['os.name']
+                echo "test => {ooss}"
 
                 if (platform.toLowerCase() == "windows") {
                     bat(script: "set")
