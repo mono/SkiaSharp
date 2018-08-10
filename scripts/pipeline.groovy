@@ -10,8 +10,12 @@ def reportGitHubStatus(commitHash, context, backref, statusResult, statusResultM
     ])
 }
 
-def cmd(script, returnStdout = false) {
-
+def cmd(script, encoding = 'UTF-8', returnStatus = false, returnStdout = false) {
+    if (isUnix()) {
+        sh(script: script, encoding: encoding, returnStatus: returnStatus, returnStdout: returnStdout)
+    } else {
+        bat(script: script, encoding: encoding, returnStatus: returnStatus, returnStdout: returnStdout)
+    }
 }
 
 def createNativeBuilder(platform, host, label) {
@@ -24,17 +28,17 @@ def createNativeBuilder(platform, host, label) {
                 ooss = System.properties['os.name']
                 echo "test => {ooss}"
 
-                if (platform.toLowerCase() == "windows") {
-                    bat(script: "set")
-                } else {
+                if (isUnix()) {
                     sh(script: "printenv")
+                } else {
+                    bat(script: "set")
                 }
 
                 // clone and checkout repository
                 checkout scm
 
                 // get current commit sha
-                commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+                commitHash = cmd(script: "git rev-parse HEAD", returnStdout: true).trim()
 
                 // let GitHub know we are building
                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
