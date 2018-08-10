@@ -61,7 +61,7 @@ createNativeBuilderNode ("Android", "Windows", "win-components")
 createNativeBuilderNode ("macOS", "macOS", "components")
 createNativeBuilderNode ("Android", "macOS", "components")
 createNativeBuilderNode ("iOS", "macOS", "components")
-parallel nativeBuilders;
+// parallel nativeBuilders;
 
 // run all the managed builds
 
