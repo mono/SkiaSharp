@@ -32,28 +32,30 @@ def createNativeBuilder(platform, host, label) {
         githubContext = "Build Native - ${builderType}"
 
         node(label) {
-            stage("Checkout (${builderType})") {
-                // clone and checkout repository
-                checkout scm
+            ws("workspace/SkiaSharp/${BRANCH_NAME}/${platform}") {
+                stage("Checkout (${builderType})") {
+                    // clone and checkout repository
+                    checkout scm
 
-                // get current commit sha
-                commitHash = cmdResult("git rev-parse HEAD").trim()
+                    // get current commit sha
+                    commitHash = cmdResult("git rev-parse HEAD").trim()
 
-                // let GitHub know we are building
-                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
-            }
-
-            try {
-                stage("Build (${builderType})") {
-                    // do the main build
+                    // let GitHub know we are building
+                    reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
                 }
 
-                stage("Upload (${builderType})") {
-                    // do the upload
+                try {
+                    stage("Build (${builderType})") {
+                        // do the main build
+                    }
+
+                    stage("Upload (${builderType})") {
+                        // do the upload
+                    }
+                } catch (Exception e) {
+                    reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
+                    throw e
                 }
-            } catch (Exception e) {
-                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
-                throw e
             }
         }
     }
@@ -66,13 +68,12 @@ properties([
 // run all the native builds
 def nativeBuilders = [:]
 nativeBuilders["linux"]             = createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64")
-nativeBuilders["linux2"]             = createNativeBuilder("Linux2",      "Linux2",    "ubuntu-1604-amd64")
-// nativeBuilders["win32"]             = createNativeBuilder("Win32",      "Windows",  "win-components")
-// nativeBuilders["uwp"]               = createNativeBuilder("UWP",        "Windows",  "win-components")
-// nativeBuilders["android_windows"]   = createNativeBuilder("Android",    "Windows",  "win-components")
-// nativeBuilders["macos"]             = createNativeBuilder("macOS",      "macOS",    "components")
-// nativeBuilders["android_macos"]     = createNativeBuilder("Android",    "macOS",    "components")
-// nativeBuilders["ios"]               = createNativeBuilder("iOS",        "macOS",    "components")
+nativeBuilders["win32"]             = createNativeBuilder("Win32",      "Windows",  "win-components")
+nativeBuilders["uwp"]               = createNativeBuilder("UWP",        "Windows",  "win-components")
+nativeBuilders["android_windows"]   = createNativeBuilder("Android",    "Windows",  "win-components")
+nativeBuilders["macos"]             = createNativeBuilder("macOS",      "macOS",    "components")
+nativeBuilders["android_macos"]     = createNativeBuilder("Android",    "macOS",    "components")
+nativeBuilders["ios"]               = createNativeBuilder("iOS",        "macOS",    "components")
 parallel nativeBuilders
 
 // run all the managed builds
