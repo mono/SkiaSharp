@@ -29,6 +29,7 @@ using NuGet.Versioning;
 var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")));
 var VERBOSITY = (Verbosity) Enum.Parse (typeof(Verbosity), Argument ("v", Argument ("verbosity", Argument ("Verbosity", "Normal"))), true);
 var SKIP_EXTERNALS = Argument ("skipexternals", Argument ("SkipExternals", "")).ToLower ().Split (',');
+var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAll", Argument ("PackAllPlatforms", TARGET.ToLower() == "ci" || TARGET.ToLower() == "nuget-only")));
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
@@ -36,10 +37,6 @@ var CakeToolPath = Context.Tools.Resolve ("Cake.exe");
 var MDocPath = Context.Tools.Resolve ("mdoc.exe");
 var MSBuildToolPath = GetMSBuildToolPath (EnvironmentVariable ("MSBUILD_EXE"));
 var PythonToolPath = EnvironmentVariable ("PYTHON_EXE") ?? "python";
-
-var CI_TARGETS = new string[] { "CI", "WINDOWS-CI", "LINUX-CI", "MAC-CI" };
-var IS_ON_CI = CI_TARGETS.Contains (TARGET.ToUpper ());
-var IS_ON_FINAL_CI = TARGET.ToUpper () == "CI";
 
 DirectoryPath ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? EnvironmentVariable ("ANDROID_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-sdk-macosx";
 DirectoryPath ANDROID_NDK_HOME = EnvironmentVariable ("ANDROID_NDK_HOME") ?? EnvironmentVariable ("ANDROID_NDK_ROOT") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-ndk";
@@ -288,10 +285,16 @@ Task ("samples")
 
 Task ("nuget")
     .IsDependentOn ("libs")
+    .IsDependentOn ("nuget-only")
+    .Does (() =>
+{
+});
+
+Task ("nuget-only")
     .Does (() =>
 {
     var platform = "";
-    if (!IS_ON_FINAL_CI) {
+    if (!PACK_ALL_PLATFORMS) {
         if (IsRunningOnWindows ()) {
             platform = "windows";
         } else if (IsRunningOnMac ()) {
@@ -474,14 +477,6 @@ Information ("  Cake.exe:   {0}", CakeToolPath);
 Information ("  nuget.exe:  {0}", NuGetToolPath);
 Information ("  msbuild:    {0}", MSBuildToolPath);
 Information ("  python:     {0}", PythonToolPath);
-Information ("");
-
-Information ("Build Environment:");
-if (IS_ON_CI) {
-    Information ("  Detected that we are building on CI, {0}.", IS_ON_FINAL_CI ? "and on FINAL CI" : "but NOT on final CI");
-} else {
-    Information ("  Detected that we are {0} on CI.", "NOT");
-}
 Information ("");
 
 Information ("Environment Variables:");
