@@ -29,7 +29,7 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
 }
 
 Task ("docs-api-diff")
-    .Does (async () => 
+    .Does (async () =>
 {
     var baseDir = "./output/api-diff";
     CleanDirectories (baseDir);
@@ -65,7 +65,7 @@ Task ("docs-api-diff")
 });
 
 Task ("docs-api-diff-past")
-    .Does (async () => 
+    .Does (async () =>
 {
     var baseDir = "./output/api-diffs-past";
     CleanDirectories (baseDir);
@@ -108,7 +108,7 @@ Task ("docs-api-diff-past")
 });
 
 Task ("docs-update-frameworks")
-    .Does (async () => 
+    .Does (async () =>
 {
     // clear the temp dir
     var docsTempPath = "./output/docs/temp";
@@ -177,7 +177,7 @@ Task ("docs-update-frameworks")
 });
 
 Task ("docs-format-docs")
-    .Does (() => 
+    .Does (() =>
 {
     // process the generated docs
     var docFiles = GetFiles ("./docs/**/*.xml");
@@ -273,7 +273,5 @@ Task ("update-docs")
     .IsDependentOn ("docs-api-diff")
     .IsDependentOn ("docs-api-diff-past")
     .IsDependentOn ("docs-update-frameworks")
-    .IsDependentOn ("docs-format-docs")
-    .Does (() => 
-{
-});
+    .IsDependentOn ("docs-format-docs");
+    

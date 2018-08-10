@@ -56,14 +56,14 @@ DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/pac
 DirectoryPath PROFILE_PATH = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
 DirectoryPath NUGET_PACKAGES = EnvironmentVariable ("NUGET_PACKAGES") ?? PROFILE_PATH.Combine (".nuget/packages");
 
-var GIT_SHA = EnvironmentVariable ("GIT_COMMIT") ?? string.Empty;
+var GIT_SHA = EnvironmentVariable ("GIT_COMMIT") ?? "";
 if (!string.IsNullOrEmpty (GIT_SHA) && GIT_SHA.Length >= 6) {
     GIT_SHA = GIT_SHA.Substring (0, 6);
 } else {
     GIT_SHA = "{GIT_SHA}";
 }
 
-var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? string.Empty;
+var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? "";
 if (string.IsNullOrEmpty (BUILD_NUMBER)) {
     BUILD_NUMBER = "0";
 }
@@ -86,10 +86,7 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
 
 // this builds all the externals
 Task ("externals")
-    .IsDependentOn ("externals-native")
-    .Does (() => 
-{
-});
+    .IsDependentOn ("externals-native");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // LIBS - the managed C# libraries
@@ -97,7 +94,7 @@ Task ("externals")
 
 Task ("libs")
     .IsDependentOn ("externals")
-    .Does (() => 
+    .Does (() =>
 {
     // build the managed libraries
     var platform = "";
@@ -126,7 +123,7 @@ Task ("libs")
 Task ("tests")
     .IsDependentOn ("libs")
     .IsDependentOn ("nuget")
-    .Does (() => 
+    .Does (() =>
 {
     var RunDesktopTest = new Action<string> (arch => {
         var platform = "";
@@ -195,7 +192,7 @@ Task ("tests")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("samples")
-    .Does (() => 
+    .Does (() =>
 {
     // create the samples archive
     CreateSamplesZip ("./samples/", "./output/");
@@ -291,7 +288,7 @@ Task ("samples")
 
 Task ("nuget")
     .IsDependentOn ("libs")
-    .Does (() => 
+    .Does (() =>
 {
     var platform = "";
     if (!IS_ON_FINAL_CI) {
@@ -398,11 +395,9 @@ Task ("nuget")
 
 Task ("clean")
     .IsDependentOn ("clean-externals")
-    .IsDependentOn ("clean-managed")
-    .Does (() => 
-{
-});
-Task ("clean-managed").Does (() => 
+    .IsDependentOn ("clean-managed");
+Task ("clean-managed")
+    .Does (() =>
 {
     CleanDirectories ("./binding/*/bin");
     CleanDirectories ("./binding/*/obj");

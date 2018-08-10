@@ -106,7 +106,7 @@ var RunTests = new Action<FilePath, string[], bool> ((testAssembly, skip, is32) 
 var RunNetCoreTests = new Action<FilePath, string[]> ((testAssembly, skip) =>
 {
     var dir = testAssembly.GetDirectory ();
-    string skipString = string.Empty;
+    string skipString = "";
     if (skip != null) {
         foreach (var s in skip) {
             skipString += $" -notrait \"Category={skip}\"";
