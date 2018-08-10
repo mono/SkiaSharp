@@ -38,7 +38,6 @@ def createNativeBuilder(platform, host, label) {
 
                 // get current commit sha
                 commitHash = cmdResult("git rev-parse HEAD").trim()
-                echo "Building '${commitHash}'..."
 
                 // let GitHub know we are building
                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
@@ -67,12 +66,12 @@ properties([
 // run all the native builds
 def nativeBuilders = [:]
 nativeBuilders["linux"]             = createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64")
-// nativeBuilders["win32"]             = createNativeBuilder("Win32",      "Windows",  "win-components")
-// nativeBuilders["uwp"]               = createNativeBuilder("UWP",        "Windows",  "win-components")
-// nativeBuilders["android_windows"]   = createNativeBuilder("Android",    "Windows",  "win-components")
-// nativeBuilders["macos"]             = createNativeBuilder("macOS",      "macOS",    "components")
-// nativeBuilders["android_macos"]     = createNativeBuilder("Android",    "macOS",    "components")
-// nativeBuilders["ios"]               = createNativeBuilder("iOS",        "macOS",    "components")
+nativeBuilders["win32"]             = createNativeBuilder("Win32",      "Windows",  "win-components")
+nativeBuilders["uwp"]               = createNativeBuilder("UWP",        "Windows",  "win-components")
+nativeBuilders["android_windows"]   = createNativeBuilder("Android",    "Windows",  "win-components")
+nativeBuilders["macos"]             = createNativeBuilder("macOS",      "macOS",    "components")
+nativeBuilders["android_macos"]     = createNativeBuilder("Android",    "macOS",    "components")
+nativeBuilders["ios"]               = createNativeBuilder("iOS",        "macOS",    "components")
 parallel nativeBuilders
 
 // run all the managed builds
