@@ -1,5 +1,4 @@
 def commitHash = null
-def nativeBuilders = [:]
 
 def reportGitHubStatus(commitHash, context, backref, statusResult, statusResultMessage) {
     step([
@@ -11,11 +10,10 @@ def reportGitHubStatus(commitHash, context, backref, statusResult, statusResultM
     ])
 }
 
-def createNativeBuilderNode(platform, host, label) {
-    builderName = "${platform} on ${host}"
-    githubContext = "Build Native - ${builderName}"
+def createNativeBuilder(platform, host, label) {
+    return {
+        githubContext = "Build Native - ${platform} on ${host}"
 
-    nativeBuilders[builderName] = {
         node(label) {
             stage("Checkout") {
                 if (platform.toLowerCase() == "windows") {
@@ -54,14 +52,15 @@ properties([
 ])
 
 // run all the native builds
-createNativeBuilderNode ("Linux", "Linux", "ubuntu-1604-amd64")
-createNativeBuilderNode ("Win32", "Windows", "win-components")
-createNativeBuilderNode ("UWP", "Windows", "win-components")
-createNativeBuilderNode ("Android", "Windows", "win-components")
-createNativeBuilderNode ("macOS", "macOS", "components")
-createNativeBuilderNode ("Android", "macOS", "components")
-createNativeBuilderNode ("iOS", "macOS", "components")
-// parallel nativeBuilders;
+def nativeBuilders = [:]
+nativeBuilders["linux"]             = createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64")
+nativeBuilders["win32"]             = createNativeBuilder("Win32",      "Windows",  "win-components")
+nativeBuilders["uwp"]               = createNativeBuilder("UWP",        "Windows",  "win-components")
+nativeBuilders["android_windows"]   = createNativeBuilder("Android",    "Windows",  "win-components")
+nativeBuilders["macos"]             = createNativeBuilder("macOS",      "macOS",    "components")
+nativeBuilders["android_macos"]     = createNativeBuilder("Android",    "macOS",    "components")
+nativeBuilders["ios"]               = createNativeBuilder("iOS",        "macOS",    "components")
+parallel nativeBuilders
 
 // run all the managed builds
 
