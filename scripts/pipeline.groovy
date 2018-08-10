@@ -20,9 +20,9 @@ def cmd(script) {
 
 def cmdResult(script) {
     if (isUnix()) {
-        return sh(script, returnStdout: true)
+        return sh(script: script, returnStdout: true)
     } else {
-        return bat(script, returnStdout: true)
+        return bat(script: script, returnStdout: true)
     }
 }
 
@@ -41,7 +41,7 @@ def createNativeBuilder(platform, host, label) {
                 checkout scm
 
                 // get current commit sha
-                commitHash = cmd(contents: "git rev-parse HEAD", returnStdout: true).trim()
+                commitHash = cmdResult("git rev-parse HEAD").trim()
 
                 // let GitHub know we are building
                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
