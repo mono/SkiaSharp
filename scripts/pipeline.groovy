@@ -43,5 +43,8 @@ properties([
 ])
 
 timestamps {
-    createNode ("ubuntu-1604-amd64", "linux", "TEST - Build Native - Linux")
+    createNode ("ubuntu-1604-amd64", "linux", "TEST - Build Native - Linux (Ubuntu 16.04 x64)")
+    createNode ("ubuntu-1804-amd64", "linux", "TEST - Build Native - Linux (Ubuntu 18.04 x64)")
+    createNode ("win-components", "windows", "TEST - Build Native - Windows")
+    createNode ("components", "macos", "TEST - Build Native - macOS")
 }
