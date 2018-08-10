@@ -10,12 +10,19 @@ def reportGitHubStatus(commitHash, context, backref, statusResult, statusResultM
     ])
 }
 
+def cmd(script, returnStdout = false) {
+
+}
+
 def createNativeBuilder(platform, host, label) {
     return {
         githubContext = "Build Native - ${platform} on ${host}"
 
         node(label) {
             stage("Checkout") {
+                echo 'test'
+                echo System.properties['os.name']
+
                 if (platform.toLowerCase() == "windows") {
                     bat(script: "set")
                 } else {
