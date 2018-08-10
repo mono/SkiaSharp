@@ -47,9 +47,15 @@ properties([
     compressBuildLog()
 ])
 
-parallel (
-    { createNode ("ubuntu-1604-amd64", "linux", "TEST - Build Native - Linux (Ubuntu 16.04 x64)") }
-    { createNode ("ubuntu-1804-amd64", "linux", "TEST - Build Native - Linux (Ubuntu 18.04 x64)") }
-    { createNode ("win-components", "windows", "TEST - Build Native - Windows") }
-    { createNode ("components", "macos", "TEST - Build Native - macOS") }
-)
+sh(script: "printenv", returnStdout: true)
+
+// run all the native builds
+def nativeBuilders = [:]
+nativeBuilders["linux"] =   { createNode ("ubuntu-1604-amd64", "linux", "TEST - Build Native - Linux (Ubuntu 16.04 x64)") }
+nativeBuilders["win32"] =   { createNode ("win-components", "windows", "TEST - Build Native - Windows") }
+nativeBuilders["uwp"] =     { createNode ("win-components", "windows", "TEST - Build Native - Windows") }
+nativeBuilders["macos"] =   { createNode ("components", "macos", "TEST - Build Native - macOS") }
+nativeBuilders["ios"] =     { createNode ("components", "macos", "TEST - Build Native - macOS") }
+parallel nativeBuilders;
+
+// run all the managed builds
