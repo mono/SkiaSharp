@@ -1,6 +1,6 @@
 def commitHash = null
 
-def reportGitHubStatus(commitHash: String, context: String, backref: String, statusResult: String, statusResultMessage: String) {
+def reportGitHubStatus(commitHash, context, backref, statusResult, statusResultMessage) {
     step([
         $class: "GitHubCommitStatusSetter",
         commitShaSource: [$class: "ManuallyEnteredShaSource", sha: commitHash],
@@ -10,7 +10,7 @@ def reportGitHubStatus(commitHash: String, context: String, backref: String, sta
     ])
 }
 
-def cmd(script: String, encoding?: String, returnStatus?: boolean, returnStdout?: boolean) {
+def cmd(script, encoding = 'UTF-8', returnStatus = false, returnStdout = false) {
     if (isUnix()) {
         return sh(script: script, encoding: encoding, returnStatus: returnStatus, returnStdout: returnStdout)
     } else {
@@ -18,7 +18,7 @@ def cmd(script: String, encoding?: String, returnStatus?: boolean, returnStdout?
     }
 }
 
-def createNativeBuilder(platform: String, host: String, label: String) {
+def createNativeBuilder(platform, host, label) {
     return {
         builderType = "${platform} on ${host}"
         githubContext = "Build Native - ${builderType}"
