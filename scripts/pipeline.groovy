@@ -13,6 +13,8 @@ def reportGitHubStatus(commitHash, context, backref, statusResult, statusResultM
 def createNode(label, platform, githubContext) {
     node(label) {
         stage("Checkout") {
+            printenv
+
             // clone and checkout repository
             checkout scm
 
