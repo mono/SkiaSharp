@@ -447,6 +447,8 @@ Task ("Everything")
     .IsDependentOn ("tests")
     .IsDependentOn ("samples");
 
+Task ("Nothing");
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // CI - the master target to build everything
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -472,11 +474,31 @@ Task ("Linux-CI")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Information ("");
+
 Information ("Tool Paths:");
 Information ("  Cake.exe:   {0}", CakeToolPath);
-Information ("  nuget.exe:  {0}", NuGetToolPath);
+Information ("  mdoc:       {0}", MDocPath);
 Information ("  msbuild:    {0}", MSBuildToolPath);
+Information ("  nuget.exe:  {0}", NuGetToolPath);
 Information ("  python:     {0}", PythonToolPath);
+Information ("");
+
+Information ("Build Paths:");
+Information ("  ~:              {0}", PROFILE_PATH);
+Information ("  NuGet Cache:    {0}", NUGET_PACKAGES);
+Information ("  root:           {0}", ROOT_PATH);
+Information ("  docs:           {0}", DOCS_PATH);
+Information ("  package_cache:  {0}", PACKAGE_CACHE_PATH);
+Information ("  ANGLE:          {0}", ANGLE_PATH);
+Information ("  depot_tools:    {0}", DEPOT_PATH);
+Information ("  harfbuzz:       {0}", HARFBUZZ_PATH);
+Information ("  skia:           {0}", SKIA_PATH);
+Information ("");
+
+Information ("SDK Paths:");
+Information ("  Android SDK:   {0}", ANDROID_SDK_ROOT);
+Information ("  Android NDK:   {0}", ANDROID_NDK_HOME);
+Information ("  Tizen Studio:  {0}", TIZEN_STUDIO_HOME);
 Information ("");
 
 Information ("Environment Variables:");
