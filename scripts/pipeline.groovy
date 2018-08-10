@@ -38,6 +38,7 @@ def createNativeBuilder(platform, host, label) {
             ws("workspace/SkiaSharp/${cleanBranch}/${cleanPlatform}") {
 
                 stage('checks') {
+                    echo "testing..."
                     sh 'dir "C:/Program Files"'
                     sh 'dir "C:/Program Files/Git"'
                     sh 'dir "C:/Program Files/Git/bin"'
@@ -79,9 +80,9 @@ properties([
 // run all the native builds
 def nativeBuilders = [:]
 // nativeBuilders["linux"]             = createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64")
-nativeBuilders["win32"]             = createNativeBuilder("Win32",      "Windows",  "win-components")
-// nativeBuilders["uwp"]               = createNativeBuilder("UWP",        "Windows",  "win-components")
-// nativeBuilders["android_windows"]   = createNativeBuilder("Android",    "Windows",  "win-components")
+nativeBuilders["win32"]             = createNativeBuilder("Win32",      "Windows",  "components-windows")
+// nativeBuilders["uwp"]               = createNativeBuilder("UWP",        "Windows",  "components-windows")
+// nativeBuilders["android_windows"]   = createNativeBuilder("Android",    "Windows",  "components-windows")
 // nativeBuilders["macos"]             = createNativeBuilder("macOS",      "macOS",    "components")
 // nativeBuilders["android_macos"]     = createNativeBuilder("Android",    "macOS",    "components")
 // nativeBuilders["ios"]               = createNativeBuilder("iOS",        "macOS",    "components")
