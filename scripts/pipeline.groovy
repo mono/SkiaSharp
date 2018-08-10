@@ -32,7 +32,10 @@ def createNativeBuilder(platform, host, label) {
         githubContext = "Build Native - ${builderType}"
 
         node(label) {
-            ws("workspace/SkiaSharp/${BRANCH_NAME}/${platform}") {
+            cleanBranch = BRANCH_NAME.replace('/', '_').replace('\\', '_')
+            cleanPlatform = platform.toLowerCase()
+
+            ws("workspace/SkiaSharp/${cleanBranch}/${cleanPlatform}") {
                 stage("Checkout (${builderType})") {
                     // clone and checkout repository
                     checkout scm
@@ -69,11 +72,11 @@ properties([
 def nativeBuilders = [:]
 nativeBuilders["linux"]             = createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64")
 nativeBuilders["win32"]             = createNativeBuilder("Win32",      "Windows",  "win-components")
-nativeBuilders["uwp"]               = createNativeBuilder("UWP",        "Windows",  "win-components")
-nativeBuilders["android_windows"]   = createNativeBuilder("Android",    "Windows",  "win-components")
+// nativeBuilders["uwp"]               = createNativeBuilder("UWP",        "Windows",  "win-components")
+// nativeBuilders["android_windows"]   = createNativeBuilder("Android",    "Windows",  "win-components")
 nativeBuilders["macos"]             = createNativeBuilder("macOS",      "macOS",    "components")
-nativeBuilders["android_macos"]     = createNativeBuilder("Android",    "macOS",    "components")
-nativeBuilders["ios"]               = createNativeBuilder("iOS",        "macOS",    "components")
+// nativeBuilders["android_macos"]     = createNativeBuilder("Android",    "macOS",    "components")
+// nativeBuilders["ios"]               = createNativeBuilder("iOS",        "macOS",    "components")
 parallel nativeBuilders
 
 // run all the managed builds
