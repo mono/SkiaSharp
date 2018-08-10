@@ -33,15 +33,12 @@ def createNativeBuilder(platform, host, label) {
 
         node(label) {
             stage("Checkout (${builderType})") {
-                cmd("echo hi there")
-                res = cmdResult("echo hi there")
-                echo "res => ${res}"
-
                 // clone and checkout repository
                 checkout scm
 
                 // get current commit sha
                 commitHash = cmdResult("git rev-parse HEAD").trim()
+                echo "Building '${commitHash}'..."
 
                 // let GitHub know we are building
                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
