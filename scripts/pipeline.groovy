@@ -24,7 +24,6 @@ def createNode(label, platform, githubContext) {
 
             // get current commit sha
             commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
-            currentBuild.displayName = "${commitHash.substring(0, 7)}"
 
             // let GitHub know we are building
             reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
