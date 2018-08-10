@@ -24,16 +24,6 @@ def createNativeBuilder(platform, host, label) {
 
         node(label) {
             stage("Checkout") {
-                echo 'test'
-                ooss = System.properties['os.name']
-                echo "test => {ooss}"
-
-                if (isUnix()) {
-                    sh(script: "printenv")
-                } else {
-                    bat(script: "set")
-                }
-
                 // clone and checkout repository
                 checkout scm
 
@@ -43,6 +33,7 @@ def createNativeBuilder(platform, host, label) {
                 // let GitHub know we are building
                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
             }
+
             try {
                 stage("Build") {
                     // do the main build
