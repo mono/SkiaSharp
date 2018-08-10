@@ -35,12 +35,15 @@ def createNativeBuilder(platform, host, label) {
             cleanBranch = BRANCH_NAME.replace('/', '_').replace('\\', '_')
             cleanPlatform = platform.toLowerCase()
 
-            bat "dir C:/Program Files"
-            bat "dir C:/Program Files/Git"
-            bat "dir C:/Program Files/Git/bin"
-            bat "dir C:/Program Files/Git/bin/git.exe"
-
             ws("workspace/SkiaSharp/${cleanBranch}/${cleanPlatform}") {
+
+                stage('checks') {
+                    bat 'dir "C:/Program Files"'
+                    bat 'dir "C:/Program Files/Git"'
+                    bat 'dir "C:/Program Files/Git/bin"'
+                    bat 'dir "C:/Program Files/Git/bin/git.exe"'
+                }
+
                 stage("Checkout (${builderType})") {
                     // clone and checkout repository
                     checkout scm
