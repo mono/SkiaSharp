@@ -12,9 +12,9 @@ def reportGitHubStatus(commitHash, context, backref, statusResult, statusResultM
 
 def cmd(script, encoding = 'UTF-8', returnStatus = false, returnStdout = false) {
     if (isUnix()) {
-        sh(script: script, encoding: encoding, returnStatus: returnStatus, returnStdout: returnStdout)
+        return sh(script: script, encoding: encoding, returnStatus: returnStatus, returnStdout: returnStdout)
     } else {
-        bat(script: script, encoding: encoding, returnStatus: returnStatus, returnStdout: returnStdout)
+        return bat(script: script, encoding: encoding, returnStatus: returnStatus, returnStdout: returnStdout)
     }
 }
 
