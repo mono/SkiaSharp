@@ -1,4 +1,5 @@
 def commitHash = null
+def nativeBuilders = [:]
 
 def reportGitHubStatus(commitHash, context, backref, statusResult, statusResultMessage) {
     step([
@@ -10,35 +11,40 @@ def reportGitHubStatus(commitHash, context, backref, statusResult, statusResultM
     ])
 }
 
-def createNode(label, platform, githubContext) {
-    node(label) {
-        stage("Checkout") {
-            if (platform == "windows") {
-                bat(script: "set", returnStdout: true)
-            } else {
-                sh(script: "printenv", returnStdout: true)
+def createNativeBuilderNode(platform, host, label) {
+    builderName = "${platform} on ${host}"
+    githubContext = "Build Native - ${builderName}"
+
+    nativeBuilders[builderName] = {
+        node(label) {
+            stage("Checkout") {
+                if (platform.toLowerCase() == "windows") {
+                    bat(script: "set")
+                } else {
+                    sh(script: "printenv")
+                }
+
+                // clone and checkout repository
+                checkout scm
+
+                // get current commit sha
+                commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+
+                // let GitHub know we are building
+                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
             }
+            try {
+                stage("Build") {
+                    // do the main build
+                }
 
-            // clone and checkout repository
-            checkout scm
-
-            // get current commit sha
-            commitHash = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
-
-            // let GitHub know we are building
-            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
-        }
-        try {
-            stage("Build") {
-                // do the main build
+                stage("Upload") {
+                    // do the upload
+                }
+            } catch (Exception e) {
+                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
+                throw e
             }
-
-            stage("Upload") {
-                // do the upload
-            }
-        } catch (Exception e) {
-            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
-            throw e
         }
     }
 }
@@ -47,15 +53,16 @@ properties([
     compressBuildLog()
 ])
 
-sh(script: "printenv", returnStdout: true)
-
 // run all the native builds
-def nativeBuilders = [:]
-nativeBuilders["linux"] =   { createNode ("ubuntu-1604-amd64", "linux", "TEST - Build Native - Linux (Ubuntu 16.04 x64)") }
-nativeBuilders["win32"] =   { createNode ("win-components", "windows", "TEST - Build Native - Windows") }
-nativeBuilders["uwp"] =     { createNode ("win-components", "windows", "TEST - Build Native - Windows") }
-nativeBuilders["macos"] =   { createNode ("components", "macos", "TEST - Build Native - macOS") }
-nativeBuilders["ios"] =     { createNode ("components", "macos", "TEST - Build Native - macOS") }
+createNativeBuilderNode ("Linux", "Linux", "ubuntu-1604-amd64")
+createNativeBuilderNode ("Win32", "Windows", "win-components")
+createNativeBuilderNode ("UWP", "Windows", "win-components")
+createNativeBuilderNode ("Android", "Windows", "win-components")
+createNativeBuilderNode ("macOS", "macOS", "components")
+createNativeBuilderNode ("Android", "macOS", "components")
+createNativeBuilderNode ("iOS", "macOS", "components")
 parallel nativeBuilders;
 
 // run all the managed builds
+
+// run the packaging
