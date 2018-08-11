@@ -40,7 +40,6 @@ def createNativeBuilder(platform, host, label) {
                 }
                 ws("${wsRoot}/SkiaSharp/${cleanBranch}/${cleanPlatform}") {
                     stage("Checkout Native") {
-                        cmd("set")
                         // clone and checkout repository
                         checkout scm
 
@@ -74,7 +73,7 @@ def createNativeBuilder(platform, host, label) {
                                 allowAnonymousAccess: true,
                                 cleanUpContainer: false,
                                 cntPubAccess: true,
-                                containerName: "${env.JOB_NAME}-Public-Artifacts",
+                                containerName: "SkiaSharp-Public-Artifacts",
                                 doNotFailIfArchivingReturnsNothing: false,
                                 doNotUploadIndividualFiles: false,
                                 doNotWaitForPreviousBuild: true,
