@@ -93,7 +93,7 @@ def createNativeBuilder(platform, host, label) {
                                 storageAccName: "credential for xamjenkinsartifact",
                                 storageCredentialId: "fbd29020e8166fbede5518e038544343",
                                 uploadArtifactsOnlyIfSuccessful: false,
-                                uploadZips: false,
+                                uploadZips: true,
                                 virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/${platform.toLowerCase()}_${host.toLowerCase()}"
                             ])
                         }
@@ -134,7 +134,7 @@ def createManagedBuilder(host, label) {
                                     value: "container",
                                     containerName: "SkiaSharp-Public-Artifacts",
                                 ],
-                                includeFilesPattern: "**/*",
+                                includeFilesPattern: "archive.zip",
                                 excludeFilesPattern: "",
                                 downloadDirLoc: "",
                                 flattenDirectories: false,
