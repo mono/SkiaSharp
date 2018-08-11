@@ -138,6 +138,7 @@ var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath> ((samplesDirPath
         ".gtk",
         ".ios",
         ".mac",
+        ".macos",
         ".netstandard",
         ".osx",
         ".portable",

@@ -29,37 +29,50 @@ def cmdResult(script) {
 def createNativeBuilder(platform, host, label) {
     return {
         node(label) {
-            def githubContext = "Build Native - ${platform} on ${host}"
-            def cleanBranch = env.BRANCH_NAME.replace('/', '_').replace('\\', '_')
-            def cleanPlatform = platform.toLowerCase()
+            timestamps {
+                def githubContext = "Build Native - ${platform} on ${host}"
+                def cleanBranch = env.BRANCH_NAME.replace('/', '_').replace('\\', '_')
+                def cleanPlatform = platform.toLowerCase()
 
-            def wsRoot = "workspace"
-            if (!isUnix()) {
-                wsRoot = "C:/bld"
-            }
-            ws("${wsRoot}/SkiaSharp/${cleanBranch}/${cleanPlatform}") {
-                stage("Checkout") {
-                    // clone and checkout repository
-                    checkout scm
-
-                    // get current commit sha
-                    commitHash = cmdResult("git rev-parse HEAD").trim()
-
-                    // let GitHub know we are building
-                    reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
+                def wsRoot = "workspace"
+                if (!isUnix()) {
+                    wsRoot = "C:/bld"
                 }
+                ws("${wsRoot}/SkiaSharp/${cleanBranch}/${cleanPlatform}") {
+                    stage("Checkout") {
+                        // clone and checkout repository
+                        checkout scm
 
-                try {
-                    stage("Build") {
-                        // do the main build
+                        // get current commit sha
+                        commitHash = cmdResult("git rev-parse HEAD").trim()
+
+                        // let GitHub know we are building
+                        reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
                     }
 
-                    stage("Upload") {
-                        // do the upload
+                    try {
+                        stage("Build") {
+                            if (host.toLowerCase() == "linux") {
+                                chroot(
+                                    chrootName: "${label}-stable",
+                                    command: "bash ./bootstrapper.sh -t externals-${platform.toLowerCase()} -v normal",
+                                    additionalPackages: "xvfb xauth libfontconfig1-dev libglu1-mesa-dev g++ mono-complete msbuild curl ca-certificates-mono unzip python git referenceassemblies-pcl dotnet-sdk-2.0.0 ttf-ancient-fonts openjdk-8-jdk zip gettext openvpn acl libxcb-render-util0 libv4l-0 libsdl1.2debian libxcb-image0 bridge-utils rpm2cpio libxcb-icccm4 libwebkitgtk-1.0-0 cpio")
+                            } else if (host.toLowerCase() == "macos") {
+                                sh("bash ./bootstrapper.sh -t externals-${platform.toLowerCase()} -v normal")
+                            } else if (host.toLowerCase() == "windows") {
+                                powershell(".\\bootstrapper.ps1 -t externals-${platform.toLowerCase()} -v normal")
+                            } else {
+                                throw new Exception("Unknown host platform: ${host}")
+                            }
+                        }
+
+                        stage("Upload") {
+                            // do the upload
+                        }
+                    } catch (Exception e) {
+                        reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
+                        throw e
                     }
-                } catch (Exception e) {
-                    reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
-                    throw e
                 }
             }
         }
@@ -69,8 +82,6 @@ def createNativeBuilder(platform, host, label) {
 properties([
     compressBuildLog()
 ])
-
-reportGitHubStatus(env.GIT_COMMIT, "Pipeline", env.BUILD_URL, "PENDING", "Building...")
 
 // run all the native builds
 def nativeBuilders = [:]
@@ -89,7 +100,8 @@ nativeBuilders["tizen_linux"]       = createNativeBuilder("Tizen",      "Linux",
 parallel nativeBuilders
 
 // run all the managed builds
+// def managedBuilders = [:]
+// nativeBuilders["macos"]             = createNativeBuilder("macOS",      "macOS",    "components")
+// parallel managedBuilders
 
 // run the packaging
-
-reportGitHubStatus(env.GIT_COMMIT, "Pipeline", env.BUILD_URL, "FAILURE", "Build failed.")

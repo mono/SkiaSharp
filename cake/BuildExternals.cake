@@ -181,6 +181,8 @@ Task ("externals-uwp")
 });
 
 // this builds the native C and C++ externals for Mac OS X
+Task ("externals-macos")
+    .IsDependentOn ("externals-osx");
 Task ("externals-osx")
     .IsDependentOn ("externals-init")
     .IsDependeeOf (ShouldBuildExternal ("osx") ? "externals-native" : "externals-native-skip")
