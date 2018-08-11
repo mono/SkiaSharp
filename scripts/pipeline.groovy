@@ -36,15 +36,6 @@ def createNativeBuilder(platform, host, label) {
             cleanPlatform = platform.toLowerCase()
 
             ws("workspace/SkiaSharp/${cleanBranch}/${cleanPlatform}") {
-
-                stage('checks') {
-                    echo "testing..."
-                    sh 'dir "C:/Program Files"'
-                    sh 'dir "C:/Program Files/Git"'
-                    sh 'dir "C:/Program Files/Git/bin"'
-                    sh 'dir "C:/Program Files/Git/bin/git.exe"'
-                }
-
                 stage("Checkout (${builderType})") {
                     // clone and checkout repository
                     checkout scm
