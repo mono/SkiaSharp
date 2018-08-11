@@ -28,13 +28,12 @@ def cmdResult(script) {
 
 def createNativeBuilder(platform, host, label) {
     return {
-        githubContext = "Build Native - ${platform} on ${host}"
-
         node(label) {
-            cleanBranch = BRANCH_NAME.replace('/', '_').replace('\\', '_')
-            cleanPlatform = platform.toLowerCase()
+            def githubContext = "Build Native - ${platform} on ${host}"
+            def cleanBranch = BRANCH_NAME.replace('/', '_').replace('\\', '_')
+            def cleanPlatform = platform.toLowerCase()
 
-            wsRoot = "workspace"
+            def wsRoot = "workspace"
             if (!isUnix()) {
                 wsRoot = "C:/bld"
             }
