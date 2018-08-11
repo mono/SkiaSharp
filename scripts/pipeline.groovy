@@ -35,7 +35,7 @@ parallel([
     // linux
     linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64"),
     tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64"),
-], failFast: true)
+])
 
 def createNativeBuilder(platform, host, label) {
     def githubContext = "Build Native - ${platform} on ${host}"
@@ -57,7 +57,7 @@ def createNativeBuilder(platform, host, label) {
                             if (host.toLowerCase() == "linux" && platform.toLowerCase() == "tizen") {
                                 pre = "./scripts/install-tizen.sh && "
                             }
-                            bootstrapper("-t externals-${platform.toLowerCase()} -v normal", host, pre)
+                            bootstrapper("-t externals-${platform.toLowerCase()} -v normal", host: host, label: label, pre: pre)
                         }
 
                         stage("End Native") {
@@ -80,7 +80,7 @@ parallel ([
     // windows: createManagedBuilder("Windows",    "components-windows"),
     macos:   createManagedBuilder("macOS",      "components"),
     linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64"),
-], failFast: true)
+])
 
 def createManagedBuilder(host, label) {
     def githubContext = "Build Managed - ${host}"
@@ -98,7 +98,7 @@ def createManagedBuilder(host, label) {
                         }
 
                         stage("Build Managed") {
-                            bootstrapper("-t everything -v normal --skipexternals=all", host)
+                            bootstrapper("-t everything -v normal --skipexternals=all", host: host, label: label)
                         }
 
                         stage("Test Managed") {
@@ -160,7 +160,7 @@ node("ubuntu-1604-amd64") {
                 }
 
                 stage("Build Packages") {
-                    bootstrapper("-t nuget-only -v normal", "linux")
+                    bootstrapper("-t nuget-only -v normal", host: "linux", label: "ubuntu-1604-amd64")
                 }
 
                 stage("End Packing") {
@@ -184,7 +184,7 @@ node("ubuntu-1604-amd64") {
     }
 }
 
-def bootstrapper(args, host, pre = "") {
+def bootstrapper(args, host, label = "", pre = "") {
     if (host.toLowerCase() == "linux") {
         chroot(
             chrootName: "${label}-stable",
