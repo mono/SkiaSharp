@@ -84,7 +84,7 @@ def createNativeBuilder(platform, host, label) {
                                 allowAnonymousAccess: true,
                                 cleanUpContainer: false,
                                 cntPubAccess: true,
-                                containerName: "SkiaSharp-Public-Artifacts",
+                                containerName: "skiasharp-public-artifacts",
                                 doNotFailIfArchivingReturnsNothing: false,
                                 doNotUploadIndividualFiles: false,
                                 doNotWaitForPreviousBuild: true,
@@ -131,13 +131,8 @@ def createManagedBuilder(host, label) {
                             step([
                                 $class: "AzureStorageBuilder",
                                 downloadType: [
-                                    value: "project",
-                                    containerName: "",
-                                    projectName: "${env.JOB_NAME}",
-                                    buildSelector: [
-                                        $class: "SpecificBuildSelector",
-                                        buildNumber: "${env.BUILD_NUMBER}"
-                                    ]
+                                    value: "container",
+                                    containerName: "skiasharp-public-artifacts",
                                 ],
                                 includeFilesPattern: "**/*",
                                 excludeFilesPattern: "",
@@ -176,7 +171,7 @@ def createManagedBuilder(host, label) {
                                 allowAnonymousAccess: true,
                                 cleanUpContainer: false,
                                 cntPubAccess: true,
-                                containerName: "SkiaSharp-Public-Artifacts",
+                                containerName: "skiasharp-public-artifacts",
                                 doNotFailIfArchivingReturnsNothing: false,
                                 doNotUploadIndividualFiles: false,
                                 doNotWaitForPreviousBuild: true,
