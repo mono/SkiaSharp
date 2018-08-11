@@ -43,7 +43,7 @@ def createNativeBuilder(platform, host, label) {
     return {
         node(label) {
             timestamps {
-                ws("${getWSRoot()}/Native-${platform.toLowerCase()}") {
+                ws("${getWSRoot()}/native-${platform.toLowerCase()}") {
                     try {
                         stage("Setup Native") {
                             reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
@@ -117,7 +117,7 @@ def createManagedBuilder(host, label) {
     return {
         node(label) {
             timestamps {
-                ws("${getWSRoot()}/Managed-${host.toLowerCase()}") {
+                ws("${getWSRoot()}/managed-${host.toLowerCase()}") {
                     try {
                         stage("Setup Managed") {
                             reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
@@ -141,8 +141,11 @@ def createManagedBuilder(host, label) {
                                 includeArchiveZips: false,
                                 strAccName: "credential for xamjenkinsartifact",
                                 storageCredentialId: "fbd29020e8166fbede5518e038544343"
-
                             ])
+                            if (isUnix()) {
+                                sh("mv -rf ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/* .")
+                                sh("rm -rf ArtifactsFor-*")
+                            }
                         }
 
                         stage("Build Managed") {
