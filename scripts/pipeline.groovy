@@ -55,11 +55,11 @@ def createNativeBuilder(platform, host, label) {
                             if (host.toLowerCase() == "linux") {
                                 install_tizen = ""
                                 if (platform.toLowerCase() == "tizen") {
-                                    install_tizen = "bash ./scripts/install-tizen.sh && "
+                                    install_tizen = "./scripts/install-tizen.sh && "
                                 }
                                 chroot(
                                     chrootName: "${label}-stable",
-                                    command: "${install_tizen} bash ./bootstrapper.sh -t externals-${platform.toLowerCase()} -v normal",
+                                    command: "bash ${install_tizen} ./bootstrapper.sh -t externals-${platform.toLowerCase()} -v normal",
                                     additionalPackages: "xvfb xauth libfontconfig1-dev libglu1-mesa-dev g++ mono-complete msbuild curl ca-certificates-mono unzip python git referenceassemblies-pcl dotnet-sdk-2.0.0 ttf-ancient-fonts openjdk-8-jdk zip gettext openvpn acl libxcb-render-util0 libv4l-0 libsdl1.2debian libxcb-image0 bridge-utils rpm2cpio libxcb-icccm4 libwebkitgtk-1.0-0 cpio")
                             } else if (host.toLowerCase() == "macos") {
                                 sh("bash ./bootstrapper.sh -t externals-${platform.toLowerCase()} -v normal")
