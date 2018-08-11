@@ -37,7 +37,7 @@ def createNativeBuilder(platform, host, label) {
             if (!isUnix()) {
                 wsRoot = "C:/bld"
             }
-            ws("${wsRoot}/SkiaSharp/${cleanBranch}/${cleanPlatform}") {
+            // ws("${wsRoot}/SkiaSharp/${cleanBranch}/${cleanPlatform}") {
                 stage("Checkout") {
                     cmd("echo testing")
 
@@ -63,7 +63,7 @@ def createNativeBuilder(platform, host, label) {
                     reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
                     throw e
                 }
-            }
+            // }
         }
     }
 }
