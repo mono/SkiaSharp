@@ -184,7 +184,7 @@ node("ubuntu-1604-amd64") {
     }
 }
 
-def bootstrapper(host, args, pre = "") {
+def bootstrapper(args, host, pre = "") {
     if (host.toLowerCase() == "linux") {
         chroot(
             chrootName: "${label}-stable",
