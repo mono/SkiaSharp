@@ -53,9 +53,13 @@ def createNativeBuilder(platform, host, label) {
                     try {
                         stage("Build Native") {
                             if (host.toLowerCase() == "linux") {
+                                install_tizen = ""
+                                if (platform.toLowerCase() == "tizen") {
+                                    install_tizen = "bash ./scripts/install-tizen.sh && "
+                                }
                                 chroot(
                                     chrootName: "${label}-stable",
-                                    command: "bash ./bootstrapper.sh -t externals-${platform.toLowerCase()} -v normal",
+                                    command: "${install_tizen} bash ./bootstrapper.sh -t externals-${platform.toLowerCase()} -v normal",
                                     additionalPackages: "xvfb xauth libfontconfig1-dev libglu1-mesa-dev g++ mono-complete msbuild curl ca-certificates-mono unzip python git referenceassemblies-pcl dotnet-sdk-2.0.0 ttf-ancient-fonts openjdk-8-jdk zip gettext openvpn acl libxcb-render-util0 libv4l-0 libsdl1.2debian libxcb-image0 bridge-utils rpm2cpio libxcb-icccm4 libwebkitgtk-1.0-0 cpio")
                             } else if (host.toLowerCase() == "macos") {
                                 sh("bash ./bootstrapper.sh -t externals-${platform.toLowerCase()} -v normal")
@@ -83,7 +87,7 @@ def createNativeBuilder(platform, host, label) {
                                 storageCredentialId: "fbd29020e8166fbede5518e038544343",
                                 uploadArtifactsOnlyIfSuccessful: false,
                                 uploadZips: false,
-                                virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/"
+                                virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/${platform.toLowerCase()}_${host.toLowerCase()}"
                             ])
 
                             reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
@@ -102,34 +106,26 @@ properties([
     compressBuildLog()
 ])
 
-echo "env.GIT_COMMIT: ${env.GIT_COMMIT}"
-echo "env.GIT_BRANCH: ${env.GIT_BRANCH}"
-echo "env.GIT_PREVIOUS_COMMIT: ${env.GIT_PREVIOUS_COMMIT}"
-echo "env.GIT_PREVIOUS_SUCCESSFUL_COMMIT: ${env.GIT_PREVIOUS_SUCCESSFUL_COMMIT}"
-echo "env.GIT_URL: ${env.GIT_URL}"
-echo "env.CHANGE_ID: ${env.CHANGE_ID}"
+// run all the native builds
+parallel([
+    // // windows
+    // win32:              createNativeBuilder("Win32",      "Windows",  "components-windows"),
+    // uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows"),
+    // android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows"),
+    // tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows"),
 
+    // // macos
+    // macos:              createNativeBuilder("macOS",      "macOS",    "components"),
+    // ios:                createNativeBuilder("iOS",        "macOS",    "components"),
+    // tvos:               createNativeBuilder("tvOS",       "macOS",    "components"),
+    // watchos:            createNativeBuilder("watchOS",    "macOS",    "components"),
+    // android_macos:      createNativeBuilder("Android",    "macOS",    "components"),
+    // tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components"),
 
-// // run all the native builds
-// parallel([
-//     // // windows
-//     // win32:              createNativeBuilder("Win32",      "Windows",  "components-windows"),
-//     // uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows"),
-//     // android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows"),
-//     // tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows"),
-
-//     // macos
-//     macos:              createNativeBuilder("macOS",      "macOS",    "components"),
-//     ios:                createNativeBuilder("iOS",        "macOS",    "components"),
-//     tvos:               createNativeBuilder("tvOS",       "macOS",    "components"),
-//     watchos:            createNativeBuilder("watchOS",    "macOS",    "components"),
-//     android_macos:      createNativeBuilder("Android",    "macOS",    "components"),
-//     tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components"),
-
-//     // linux
-//     linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64"),
-//     tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64")
-// ])
+    // linux
+    linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64"),
+    tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64")
+])
 
 // run all the managed builds
 // def managedBuilders = [:]
