@@ -134,7 +134,7 @@ def createManagedBuilder(host, label) {
                                     value: "container",
                                     containerName: "SkiaSharp-Public-Artifacts",
                                 ],
-                                includeFilesPattern: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/**/*",
+                                includeFilesPattern: "**/*",
                                 excludeFilesPattern: "",
                                 downloadDirLoc: "",
                                 flattenDirectories: false,
@@ -181,7 +181,7 @@ def createManagedBuilder(host, label) {
                                 storageCredentialId: "fbd29020e8166fbede5518e038544343",
                                 uploadArtifactsOnlyIfSuccessful: false,
                                 uploadZips: false,
-                                virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/${host.toLowerCase()}"
+                                virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/${host.toLowerCase()}/"
                             ])
                         }
 
