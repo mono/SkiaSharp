@@ -28,8 +28,7 @@ def cmdResult(script) {
 
 def createNativeBuilder(platform, host, label) {
     return {
-        builderType = "${platform} on ${host}"
-        githubContext = "Build Native - ${builderType}"
+        githubContext = "Build Native - ${platform} on ${host}"
 
         node(label) {
             cleanBranch = BRANCH_NAME.replace('/', '_').replace('\\', '_')
@@ -40,7 +39,7 @@ def createNativeBuilder(platform, host, label) {
                 wsRoot = "C:/bld"
             }
             ws("${wsRoot}/${cleanBranch}/${cleanPlatform}") {
-                stage("Checkout (${builderType})") {
+                stage("Checkout") {
                     // clone and checkout repository
                     checkout scm
 
@@ -52,11 +51,11 @@ def createNativeBuilder(platform, host, label) {
                 }
 
                 try {
-                    stage("Build (${builderType})") {
+                    stage("Build") {
                         // do the main build
                     }
 
-                    stage("Upload (${builderType})") {
+                    stage("Upload") {
                         // do the upload
                     }
                 } catch (Exception e) {
