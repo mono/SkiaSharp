@@ -39,7 +39,7 @@ def createNativeBuilder(platform, host, label) {
                     wsRoot = "C:/bld"
                 }
                 ws("${wsRoot}/SkiaSharp/${cleanBranch}/${cleanPlatform}") {
-                    stage("Checkout") {
+                    stage("Checkout Native") {
                         // clone and checkout repository
                         checkout scm
 
@@ -51,12 +51,16 @@ def createNativeBuilder(platform, host, label) {
                     }
 
                     try {
-                        stage("Build") {
+                        stage("Build Native") {
                             if (host.toLowerCase() == "linux") {
+                                linuxPkg = "libfontconfig1-dev libglu1-mesa-dev g++"
+                                tizenPkg = "openjdk-8-jdk zip gettext openvpn acl libxcb-render-util0 libv4l-0 libsdl1.2debian libxcb-image0 bridge-utils rpm2cpio libxcb-icccm4 libwebkitgtk-1.0-0 cpio"
+                                managedPkg = "mono-complete msbuild curl ca-certificates-mono unzip python git referenceassemblies-pcl dotnet-sdk-2.0.0 ttf-ancient-fonts"
+
                                 chroot(
                                     chrootName: "${label}-stable",
                                     command: "bash ./bootstrapper.sh -t externals-${platform.toLowerCase()} -v normal",
-                                    additionalPackages: "xvfb xauth libfontconfig1-dev libglu1-mesa-dev g++ mono-complete msbuild curl ca-certificates-mono unzip python git referenceassemblies-pcl dotnet-sdk-2.0.0 ttf-ancient-fonts openjdk-8-jdk zip gettext openvpn acl libxcb-render-util0 libv4l-0 libsdl1.2debian libxcb-image0 bridge-utils rpm2cpio libxcb-icccm4 libwebkitgtk-1.0-0 cpio")
+                                    additionalPackages: "")
                             } else if (host.toLowerCase() == "macos") {
                                 sh("bash ./bootstrapper.sh -t externals-${platform.toLowerCase()} -v normal")
                             } else if (host.toLowerCase() == "windows") {
@@ -66,7 +70,7 @@ def createNativeBuilder(platform, host, label) {
                             }
                         }
 
-                        stage("Upload") {
+                        stage("Upload Native") {
                             // do the upload
                         }
                     } catch (Exception e) {
