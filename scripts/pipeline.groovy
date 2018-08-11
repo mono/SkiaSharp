@@ -53,14 +53,10 @@ def createNativeBuilder(platform, host, label) {
                     try {
                         stage("Build Native") {
                             if (host.toLowerCase() == "linux") {
-                                linuxPkg = "libfontconfig1-dev libglu1-mesa-dev g++"
-                                tizenPkg = "openjdk-8-jdk zip gettext openvpn acl libxcb-render-util0 libv4l-0 libsdl1.2debian libxcb-image0 bridge-utils rpm2cpio libxcb-icccm4 libwebkitgtk-1.0-0 cpio"
-                                managedPkg = "mono-complete msbuild curl ca-certificates-mono unzip python git referenceassemblies-pcl dotnet-sdk-2.0.0 ttf-ancient-fonts"
-
                                 chroot(
                                     chrootName: "${label}-stable",
                                     command: "bash ./bootstrapper.sh -t externals-${platform.toLowerCase()} -v normal",
-                                    additionalPackages: "")
+                                    additionalPackages: "libfontconfig1-dev libglu1-mesa-dev g++ mono-complete msbuild curl ca-certificates-mono unzip python git referenceassemblies-pcl dotnet-sdk-2.0.0 ttf-ancient-fonts openjdk-8-jdk zip gettext openvpn acl libxcb-render-util0 libv4l-0 libsdl1.2debian libxcb-image0 bridge-utils rpm2cpio libxcb-icccm4 libwebkitgtk-1.0-0 cpio")
                             } else if (host.toLowerCase() == "macos") {
                                 sh("bash ./bootstrapper.sh -t externals-${platform.toLowerCase()} -v normal")
                             } else if (host.toLowerCase() == "windows") {
@@ -93,12 +89,12 @@ def nativeBuilders = [:]
 // nativeBuilders["uwp"]               = createNativeBuilder("UWP",        "Windows",  "components-windows")
 // nativeBuilders["android_windows"]   = createNativeBuilder("Android",    "Windows",  "components-windows")
 // nativeBuilders["tizen_windows"]     = createNativeBuilder("Tizen",      "Windows",  "components-windows")
-// nativeBuilders["macos"]             = createNativeBuilder("macOS",      "macOS",    "components")
-// nativeBuilders["ios"]               = createNativeBuilder("iOS",        "macOS",    "components")
-// nativeBuilders["tvos"]              = createNativeBuilder("tvOS",       "macOS",    "components")
-// nativeBuilders["watchos"]           = createNativeBuilder("watchOS",    "macOS",    "components")
-// nativeBuilders["android_macos"]     = createNativeBuilder("Android",    "macOS",    "components")
-// nativeBuilders["tizen_macos"]       = createNativeBuilder("Tizen",      "macOS",    "components")
+nativeBuilders["macos"]             = createNativeBuilder("macOS",      "macOS",    "components")
+nativeBuilders["ios"]               = createNativeBuilder("iOS",        "macOS",    "components")
+nativeBuilders["tvos"]              = createNativeBuilder("tvOS",       "macOS",    "components")
+nativeBuilders["watchos"]           = createNativeBuilder("watchOS",    "macOS",    "components")
+nativeBuilders["android_macos"]     = createNativeBuilder("Android",    "macOS",    "components")
+nativeBuilders["tizen_macos"]       = createNativeBuilder("Tizen",      "macOS",    "components")
 nativeBuilders["linux"]             = createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64")
 nativeBuilders["tizen_linux"]       = createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64")
 parallel nativeBuilders
