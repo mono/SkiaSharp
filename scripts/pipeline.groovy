@@ -6,13 +6,15 @@ pipeline {
     }
 
     stages {
-        stage("Prepare") {
+        stage("Setup") {
             agent {
                 label "components"
             }
             steps {
+                echo "Preparing..."
             }
         }
+
         stage("Build Native") {
             parallel {
                 stage("ios") {
@@ -20,33 +22,56 @@ pipeline {
                         label "components"
                     }
                     steps {
+                        echo "Building iOS..."
                     }
                 }
-            }
-        }
-        stage("Build Managed") {
-            parallel {
-                stage("ios") {
+                stage("android") {
                     agent {
                         label "components"
                     }
                     steps {
+                        echo "Building Android..."
                     }
                 }
             }
         }
+
+        stage("Build Managed") {
+            parallel {
+                stage("macos") {
+                    agent {
+                        label "components"
+                    }
+                    steps {
+                        echo "Building on macOS..."
+                    }
+                }
+                stage("linux") {
+                    agent {
+                        label "components"
+                    }
+                    steps {
+                        echo "Building on Linux..."
+                    }
+                }
+            }
+        }
+
         stage("Package") {
             agent {
                 label "components"
             }
             steps {
+                echo "Packing..."
             }
         }
+
         stage("Teardown") {
             agent {
                 label "components"
             }
             steps {
+                echo "Done."
             }
         }
     }
