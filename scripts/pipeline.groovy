@@ -35,7 +35,7 @@ parallel([
     // linux
     linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64"),
     tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64"),
-])
+], failFast: true)
 
 def createNativeBuilder(platform, host, label) {
     def githubContext = "Build Native - ${platform} on ${host}"
@@ -80,7 +80,7 @@ parallel ([
     // windows: createManagedBuilder("Windows",    "components-windows"),
     macos:   createManagedBuilder("macOS",      "components"),
     linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64"),
-])
+], failFast: true)
 
 def createManagedBuilder(host, label) {
     def githubContext = "Build Managed - ${host}"
