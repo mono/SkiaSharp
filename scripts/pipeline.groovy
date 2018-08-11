@@ -39,7 +39,7 @@ parallel([
 
 // run all the managed builds
 parallel ([
-    windows: createManagedBuilder("Windows",    "components-windows"),
+    // windows: createManagedBuilder("Windows",    "components-windows"),
     macos:   createManagedBuilder("macOS",      "components"),
     linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64"),
 ])
@@ -170,7 +170,7 @@ def createNativeBuilder(platform, host, label) {
                                 storageCredentialId: "fbd29020e8166fbede5518e038544343",
                                 uploadArtifactsOnlyIfSuccessful: false,
                                 uploadZips: false,
-                                virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/${platform.toLowerCase()}_${host.toLowerCase()}/",
+                                virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/native-${platform.toLowerCase()}_${host.toLowerCase()}/",
                             ])
                         }
 
@@ -263,7 +263,7 @@ def createManagedBuilder(host, label) {
                                 storageCredentialId: "fbd29020e8166fbede5518e038544343",
                                 uploadArtifactsOnlyIfSuccessful: false,
                                 uploadZips: false,
-                                virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/${host.toLowerCase()}/",
+                                virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/managed-${host.toLowerCase()}/",
                             ])
                         }
 
