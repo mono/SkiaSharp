@@ -56,7 +56,7 @@ def createNativeBuilder(platform, host, label) {
                                 chroot(
                                     chrootName: "${label}-stable",
                                     command: "bash ./bootstrapper.sh -t externals-${platform.toLowerCase()} -v normal",
-                                    additionalPackages: "libfontconfig1-dev libglu1-mesa-dev g++ mono-complete msbuild curl ca-certificates-mono unzip python git referenceassemblies-pcl dotnet-sdk-2.0.0 ttf-ancient-fonts openjdk-8-jdk zip gettext openvpn acl libxcb-render-util0 libv4l-0 libsdl1.2debian libxcb-image0 bridge-utils rpm2cpio libxcb-icccm4 libwebkitgtk-1.0-0 cpio")
+                                    additionalPackages: "xvfb xauth libfontconfig1-dev libglu1-mesa-dev g++ mono-complete msbuild curl ca-certificates-mono unzip python git referenceassemblies-pcl dotnet-sdk-2.0.0 ttf-ancient-fonts openjdk-8-jdk zip gettext openvpn acl libxcb-render-util0 libv4l-0 libsdl1.2debian libxcb-image0 bridge-utils rpm2cpio libxcb-icccm4 libwebkitgtk-1.0-0 cpio")
                             } else if (host.toLowerCase() == "macos") {
                                 sh("bash ./bootstrapper.sh -t externals-${platform.toLowerCase()} -v normal")
                             } else if (host.toLowerCase() == "windows") {
