@@ -143,8 +143,11 @@ def createManagedBuilder(host, label) {
                                 storageCredentialId: "fbd29020e8166fbede5518e038544343"
                             ])
                             if (isUnix()) {
-                                sh("mv -rf ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/* .")
+                                sh("cp -rf ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/* .")
                                 sh("rm -rf ArtifactsFor-*")
+                            } else {
+                                powershell("copy -recurse -force ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/* .")
+                                powershell("del -recurse -force ArtifactsFor-*")
                             }
                         }
 
