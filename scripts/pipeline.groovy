@@ -37,6 +37,44 @@ parallel([
     tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64"),
 ])
 
+def createNativeBuilder(platform, host, label) {
+    def githubContext = "Build Native - ${platform} on ${host}"
+
+    return {
+        node(label) {
+            timestamps {
+                ws("${getWSRoot()}/native-${platform.toLowerCase()}") {
+                    try {
+                        stage("Begin Native") {
+                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
+
+                            checkout scm
+                            cmd("git submodule update --init --recursive")
+                        }
+
+                        stage("Build Native") {
+                            def pre = ""
+                            if (host.toLowerCase() == "linux" && platform.toLowerCase() == "tizen") {
+                                pre = "./scripts/install-tizen.sh && "
+                            }
+                            bootstrapper("-t externals-${platform.toLowerCase()} -v normal", host, pre)
+                        }
+
+                        stage("End Native") {
+                            uploadBlobs("native-${platform.toLowerCase()}_${host.toLowerCase()}")
+
+                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
+                        }
+                    } catch (Exception e) {
+                        reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
+                        throw e
+                    }
+                }
+            }
+        }
+    }
+}
+
 // run all the managed builds
 parallel ([
     // windows: createManagedBuilder("Windows",    "components-windows"),
@@ -44,11 +82,96 @@ parallel ([
     linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64"),
 ])
 
+def createManagedBuilder(host, label) {
+    def githubContext = "Build Managed - ${host}"
+
+    return {
+        node(label) {
+            timestamps {
+                ws("${getWSRoot()}/managed-${host.toLowerCase()}") {
+                    try {
+                        stage("Begin Managed") {
+                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
+
+                            checkout scm
+                            downloadBlobs("native-*")
+                        }
+
+                        stage("Build Managed") {
+                            bootstrapper("-t everything -v normal --skipexternals=all", host)
+                        }
+
+                        stage("Test Managed") {
+                            step([
+                                $class: "XUnitBuilder",
+                                testTimeMargin: "3000",
+                                thresholdMode: 1,
+                                thresholds: [[
+                                    $class: "FailedThreshold",
+                                    failureNewThreshold: "0",
+                                    failureThreshold: "0",
+                                    unstableNewThreshold: "0",
+                                    unstableThreshold: "0"
+                                ], [
+                                    $class: "SkippedThreshold",
+                                    failureNewThreshold: "",
+                                    failureThreshold: "",
+                                    unstableNewThreshold: "",
+                                    unstableThreshold: ""
+                                ]],
+                                tools: [[
+                                    $class: "NUnitJunitHudsonTestType",
+                                    deleteOutputFiles: true,
+                                    failIfNotNew: true,
+                                    pattern: "output/tests/*/TestResult.xml",
+                                    skipNoTestFiles: false,
+                                    stopProcessingIfError: true
+                                ]]
+                            ])
+                        }
+
+                        stage("End Managed") {
+                            uploadBlobs("managed-${host.toLowerCase()}")
+
+                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
+                        }
+                    } catch (Exception e) {
+                        reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
+                        throw e
+                    }
+                }
+            }
+        }
+    }
+}
+
 // run the packaging
 node("ubuntu-1604-amd64") {
+    def githubContext = "Packing"
+
     timestamps {
-        stage("Packing") {
-            // checkout scm
+        ws("${getWSRoot()}/package-${platform.toLowerCase()}") {
+            try {
+                stage("Begin Packing") {
+                    reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Packing...")
+
+                    checkout scm
+                    downloadBlobs("managed-*");
+                }
+
+                stage("Build Packages") {
+                    bootstrapper("-t nuget-only -v normal", "linux")
+                }
+
+                stage("End Packing") {
+                    uploadBlobs("package-${host.toLowerCase()}")
+
+                    reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Pack complete.")
+                }
+            } catch (Exception e) {
+                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Pack failed.")
+                throw e
+            }
         }
     }
 }
@@ -57,8 +180,67 @@ node("ubuntu-1604-amd64") {
 node("ubuntu-1604-amd64") {
     timestamps {
         stage("Teardown") {
-            // checkout scm
         }
+    }
+}
+
+def bootstrapper(host, args, pre = "") {
+    if (host.toLowerCase() == "linux") {
+        chroot(
+            chrootName: "${label}-stable",
+            command: "bash ${pre} ./bootstrapper.sh ${args}",
+            additionalPackages: "xvfb xauth libfontconfig1-dev libglu1-mesa-dev g++ mono-complete msbuild curl ca-certificates-mono unzip python git referenceassemblies-pcl dotnet-sdk-2.0.0 ttf-ancient-fonts openjdk-8-jdk zip gettext openvpn acl libxcb-render-util0 libv4l-0 libsdl1.2debian libxcb-image0 bridge-utils rpm2cpio libxcb-icccm4 libwebkitgtk-1.0-0 cpio")
+    } else if (host.toLowerCase() == "macos") {
+        sh("bash ./bootstrapper.sh ${args}")
+    } else if (host.toLowerCase() == "windows") {
+        powershell(".\\bootstrapper.ps1 ${args}")
+    } else {
+        throw new Exception("Unknown host platform: ${host}")
+    }
+}
+
+def uploadBlobs(blobs) {
+    fingerprint("output/**/*")
+    step([
+        $class: "WAStoragePublisher",
+        allowAnonymousAccess: true,
+        cleanUpContainer: false,
+        cntPubAccess: true,
+        containerName: "skiasharp-public-artifacts",
+        doNotFailIfArchivingReturnsNothing: false,
+        doNotUploadIndividualFiles: false,
+        doNotWaitForPreviousBuild: true,
+        excludeFilesPath: "",
+        filesPath: "output/**/*",
+        storageAccName: "credential for xamjenkinsartifact",
+        storageCredentialId: "fbd29020e8166fbede5518e038544343",
+        uploadArtifactsOnlyIfSuccessful: false,
+        uploadZips: false,
+        virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/${blobs}/",
+    ])
+}
+
+def downloadBlobs(blobs) {
+    step([
+        $class: "AzureStorageBuilder",
+        downloadType: [
+            value: "container",
+            containerName: "skiasharp-public-artifacts",
+        ],
+        includeFilesPattern: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/${blobs}/**/*",
+        excludeFilesPattern: "",
+        downloadDirLoc: "",
+        flattenDirectories: false,
+        includeArchiveZips: false,
+        strAccName: "credential for xamjenkinsartifact",
+        storageCredentialId: "fbd29020e8166fbede5518e038544343",
+    ])
+    if (isUnix()) {
+        sh("cp -rf ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/*/* .")
+        sh("rm -rf ArtifactsFor-*")
+    } else {
+        powershell("copy -recurse -force ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/*/* .")
+        powershell("del -recurse -force ArtifactsFor-*")
     }
 }
 
@@ -92,7 +274,7 @@ def cmd(script) {
     if (isUnix()) {
         return sh(script)
     } else {
-        return bat(script)
+        return powershell(script)
     }
 }
 
@@ -100,7 +282,7 @@ def cmdResult(script) {
     if (isUnix()) {
         return sh(script: script, returnStdout: true)
     } else {
-        return bat(script: script, returnStdout: true)
+        return powershell(script: script, returnStdout: true)
     }
 }
 
@@ -111,171 +293,4 @@ def getWSRoot() {
         wsRoot = "C:/bld"
     }
     return "${wsRoot}/SkiaSharp/${cleanBranch}"
-}
-
-def createNativeBuilder(platform, host, label) {
-    def githubContext = "Build Native - ${platform} on ${host}"
-
-    return {
-        node(label) {
-            timestamps {
-                ws("${getWSRoot()}/native-${platform.toLowerCase()}") {
-                    try {
-                        stage("Setup Native") {
-                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
-                        }
-
-                        stage("Checkout Native") {
-                            checkout scm
-                            cmd("git submodule update --init --recursive")
-                        }
-
-                        stage("Build Native") {
-                            touch "output/native/${host}/${platform}/dummy.txt"
-                            // def target = "externals-${platform.toLowerCase()}"
-                            // def verbosity = "normal"
-
-                            // if (host.toLowerCase() == "linux") {
-                            //     def install_tizen = ""
-                            //     if (platform.toLowerCase() == "tizen") {
-                            //         install_tizen = "./scripts/install-tizen.sh && "
-                            //     }
-                            //     chroot(
-                            //         chrootName: "${label}-stable",
-                            //         command: "bash ${install_tizen} ./bootstrapper.sh -t ${target} -v ${verbosity}",
-                            //         additionalPackages: "xvfb xauth libfontconfig1-dev libglu1-mesa-dev g++ mono-complete msbuild curl ca-certificates-mono unzip python git referenceassemblies-pcl dotnet-sdk-2.0.0 ttf-ancient-fonts openjdk-8-jdk zip gettext openvpn acl libxcb-render-util0 libv4l-0 libsdl1.2debian libxcb-image0 bridge-utils rpm2cpio libxcb-icccm4 libwebkitgtk-1.0-0 cpio")
-                            // } else if (host.toLowerCase() == "macos") {
-                            //     sh("bash ./bootstrapper.sh -t ${target} -v ${verbosity}")
-                            // } else if (host.toLowerCase() == "windows") {
-                            //     powershell(".\\bootstrapper.ps1 -t ${target} -v ${verbosity}")
-                            // } else {
-                            //     throw new Exception("Unknown host platform: ${host}")
-                            // }
-                        }
-
-                        stage("Upload Native") {
-                            fingerprint("output/**/*")
-                            step([
-                                $class: "WAStoragePublisher",
-                                allowAnonymousAccess: true,
-                                cleanUpContainer: false,
-                                cntPubAccess: true,
-                                containerName: "skiasharp-public-artifacts",
-                                doNotFailIfArchivingReturnsNothing: false,
-                                doNotUploadIndividualFiles: false,
-                                doNotWaitForPreviousBuild: true,
-                                excludeFilesPath: "",
-                                filesPath: "output/**/*",
-                                storageAccName: "credential for xamjenkinsartifact",
-                                storageCredentialId: "fbd29020e8166fbede5518e038544343",
-                                uploadArtifactsOnlyIfSuccessful: false,
-                                uploadZips: false,
-                                virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/native-${platform.toLowerCase()}_${host.toLowerCase()}/",
-                            ])
-                        }
-
-                        stage("Teardown Native") {
-                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
-                        }
-                    } catch (Exception e) {
-                        reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
-                        throw e
-                    }
-                }
-            }
-        }
-    }
-}
-
-def createManagedBuilder(host, label) {
-    def githubContext = "Build Managed - ${host}"
-
-    return {
-        node(label) {
-            timestamps {
-                ws("${getWSRoot()}/managed-${host.toLowerCase()}") {
-                    try {
-                        stage("Setup Managed") {
-                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
-                        }
-
-                        stage("Checkout Managed") {
-                            checkout scm
-                        }
-
-                        stage("Download Native") {
-                            step([
-                                $class: "AzureStorageBuilder",
-                                downloadType: [
-                                    value: "container",
-                                    containerName: "skiasharp-public-artifacts",
-                                ],
-                                includeFilesPattern: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/**/*",
-                                excludeFilesPattern: "",
-                                downloadDirLoc: "",
-                                flattenDirectories: false,
-                                includeArchiveZips: false,
-                                strAccName: "credential for xamjenkinsartifact",
-                                storageCredentialId: "fbd29020e8166fbede5518e038544343",
-                            ])
-                            if (isUnix()) {
-                                sh("cp -rf ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/*/* .")
-                                sh("rm -rf ArtifactsFor-*")
-                            } else {
-                                powershell("copy -recurse -force ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/*/* .")
-                                powershell("del -recurse -force ArtifactsFor-*")
-                            }
-                        }
-
-                        stage("Build Managed") {
-                            touch "output/managed/${host}/dummy.txt"
-                            // def target = "Everything"
-                            // def verbosity = "normal"
-
-                            // if (host.toLowerCase() == "linux") {
-                            //     chroot(
-                            //         chrootName: "${label}-stable",
-                            //         command: "bash ./bootstrapper.sh -t ${target} -v ${verbosity}",
-                            //         additionalPackages: "xvfb xauth libfontconfig1-dev libglu1-mesa-dev g++ mono-complete msbuild curl ca-certificates-mono unzip python git referenceassemblies-pcl dotnet-sdk-2.0.0 ttf-ancient-fonts openjdk-8-jdk zip gettext openvpn acl libxcb-render-util0 libv4l-0 libsdl1.2debian libxcb-image0 bridge-utils rpm2cpio libxcb-icccm4 libwebkitgtk-1.0-0 cpio")
-                            // } else if (host.toLowerCase() == "macos") {
-                            //     sh("bash ./bootstrapper.sh -t ${target} -v ${verbosity}")
-                            // } else if (host.toLowerCase() == "windows") {
-                            //     powershell(".\\bootstrapper.ps1 -t ${target} -v ${verbosity}")
-                            // } else {
-                            //     throw new Exception("Unknown host platform: ${host}")
-                            // }
-                        }
-
-                        stage("Upload Managed") {
-                            fingerprint("output/**/*")
-                            step([
-                                $class: "WAStoragePublisher",
-                                allowAnonymousAccess: true,
-                                cleanUpContainer: false,
-                                cntPubAccess: true,
-                                containerName: "skiasharp-public-artifacts",
-                                doNotFailIfArchivingReturnsNothing: false,
-                                doNotUploadIndividualFiles: false,
-                                doNotWaitForPreviousBuild: true,
-                                excludeFilesPath: "",
-                                filesPath: "output/**/*",
-                                storageAccName: "credential for xamjenkinsartifact",
-                                storageCredentialId: "fbd29020e8166fbede5518e038544343",
-                                uploadArtifactsOnlyIfSuccessful: false,
-                                uploadZips: false,
-                                virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/managed-${host.toLowerCase()}/",
-                            ])
-                        }
-
-                        stage("Teardown Managed") {
-                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
-                        }
-                    } catch (Exception e) {
-                        reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
-                        throw e
-                    }
-                }
-            }
-        }
-    }
 }
