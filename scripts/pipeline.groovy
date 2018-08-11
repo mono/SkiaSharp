@@ -102,8 +102,10 @@ properties([
     compressBuildLog()
 ])
 
-echo "env"
-echo "${env}"
+node {
+    echo(env.getEnvironment().collect({environmentVariable ->  "${environmentVariable.key} = ${environmentVariable.value}"}).join("\n"))
+    echo(System.getenv().collect({environmentVariable ->  "${environmentVariable.key} = ${environmentVariable.value}"}).join("\n"))
+}
 
 // // run all the native builds
 // parallel([
