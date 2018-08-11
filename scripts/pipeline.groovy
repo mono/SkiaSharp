@@ -57,7 +57,7 @@ def createNativeBuilder(platform, host, label) {
                             if (host.toLowerCase() == "linux" && platform.toLowerCase() == "tizen") {
                                 pre = "./scripts/install-tizen.sh && "
                             }
-                            bootstrapper("-t externals-${platform.toLowerCase()} -v normal", host: host, label: label, pre: pre)
+                            bootstrapper(args: "-t externals-${platform.toLowerCase()} -v normal", host: host, label: label, pre: pre)
                         }
 
                         stage("End Native") {
@@ -98,7 +98,7 @@ def createManagedBuilder(host, label) {
                         }
 
                         stage("Build Managed") {
-                            bootstrapper("-t everything -v normal --skipexternals=all", host: host, label: label)
+                            bootstrapper(args: "-t everything -v normal --skipexternals=all", host: host, label: label)
                         }
 
                         stage("Test Managed") {
@@ -160,7 +160,7 @@ node("ubuntu-1604-amd64") {
                 }
 
                 stage("Build Packages") {
-                    bootstrapper("-t nuget-only -v normal", host: "linux", label: "ubuntu-1604-amd64")
+                    bootstrapper(args: "-t nuget-only -v normal", host: "linux", label: "ubuntu-1604-amd64")
                 }
 
                 stage("End Packing") {
