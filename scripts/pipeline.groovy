@@ -102,10 +102,13 @@ properties([
     compressBuildLog()
 ])
 
-node {
-    echo(env.getEnvironment().collect({environmentVariable ->  "${environmentVariable.key} = ${environmentVariable.value}"}).join("\n"))
-    echo(System.getenv().collect({environmentVariable ->  "${environmentVariable.key} = ${environmentVariable.value}"}).join("\n"))
-}
+echo "env.GIT_COMMIT: ${env.GIT_COMMIT}"
+echo "env.GIT_BRANCH: ${env.GIT_BRANCH}"
+echo "env.GIT_PREVIOUS_COMMIT: ${env.GIT_PREVIOUS_COMMIT}"
+echo "env.GIT_PREVIOUS_SUCCESSFUL_COMMIT: ${env.GIT_PREVIOUS_SUCCESSFUL_COMMIT}"
+echo "env.GIT_URL: ${env.GIT_URL}"
+echo "env.CHANGE_ID: ${env.CHANGE_ID}"
+
 
 // // run all the native builds
 // parallel([
