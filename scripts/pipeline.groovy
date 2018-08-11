@@ -82,7 +82,7 @@ def createNativeBuilder(platform, host, label) {
                                 storageAccName: "credential for xamjenkinsartifact",
                                 storageCredentialId: "fbd29020e8166fbede5518e038544343",
                                 uploadArtifactsOnlyIfSuccessful: false,
-                                uploadZips: true,
+                                uploadZips: false,
                                 virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/"
                             ])
 
@@ -102,6 +102,9 @@ properties([
     compressBuildLog()
 ])
 
+echo "env"
+echo "${env}"
+
 // run all the native builds
 parallel([
     // // windows
@@ -110,17 +113,17 @@ parallel([
     // android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows"),
     // tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows"),
 
-    // macos
-    macos:              createNativeBuilder("macOS",      "macOS",    "components"),
-    ios:                createNativeBuilder("iOS",        "macOS",    "components"),
-    tvos:               createNativeBuilder("tvOS",       "macOS",    "components"),
-    watchos:            createNativeBuilder("watchOS",    "macOS",    "components"),
-    android_macos:      createNativeBuilder("Android",    "macOS",    "components"),
-    tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components"),
+    // // macos
+    // macos:              createNativeBuilder("macOS",      "macOS",    "components"),
+    // ios:                createNativeBuilder("iOS",        "macOS",    "components"),
+    // tvos:               createNativeBuilder("tvOS",       "macOS",    "components"),
+    // watchos:            createNativeBuilder("watchOS",    "macOS",    "components"),
+    // android_macos:      createNativeBuilder("Android",    "macOS",    "components"),
+    // tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components"),
 
-    // linux
-    linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64"),
-    tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64")
+    // // linux
+    // linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64"),
+    // tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64")
 ])
 
 // run all the managed builds
