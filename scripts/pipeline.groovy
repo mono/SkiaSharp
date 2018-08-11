@@ -30,7 +30,7 @@ def createNativeBuilder(platform, host, label) {
     return {
         node(label) {
             def githubContext = "Build Native - ${platform} on ${host}"
-            def cleanBranch = BRANCH_NAME.replace('/', '_').replace('\\', '_')
+            def cleanBranch = env.BRANCH_NAME.replace('/', '_').replace('\\', '_')
             def cleanPlatform = platform.toLowerCase()
 
             def wsRoot = "workspace"
@@ -70,6 +70,8 @@ properties([
     compressBuildLog()
 ])
 
+reportGitHubStatus(env.GIT_COMMIT, "Pipeline", env.BUILD_URL, "PENDING", "Building...")
+
 // run all the native builds
 def nativeBuilders = [:]
 // nativeBuilders["win32"]             = createNativeBuilder("Win32",      "Windows",  "components-windows")
@@ -89,3 +91,5 @@ parallel nativeBuilders
 // run all the managed builds
 
 // run the packaging
+
+reportGitHubStatus(env.GIT_COMMIT, "Pipeline", env.BUILD_URL, "FAILURE", "Build failed.")
