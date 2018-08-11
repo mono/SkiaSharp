@@ -1,3 +1,5 @@
+import groovy.transform.Field
+
 @Field def commitHash = null
 
 def reportGitHubStatus(commitHash, context, backref, statusResult, statusResultMessage) {
