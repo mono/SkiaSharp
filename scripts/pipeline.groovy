@@ -134,7 +134,7 @@ def createManagedBuilder(host, label) {
                                     value: "container",
                                     containerName: "skiasharp-public-artifacts",
                                 ],
-                                includeFilesPattern: "**/*",
+                                includeFilesPattern: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/**/*",
                                 excludeFilesPattern: "",
                                 downloadDirLoc: "",
                                 flattenDirectories: false,
