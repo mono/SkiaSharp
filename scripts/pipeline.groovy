@@ -44,7 +44,7 @@ def createNativeBuilder(platform, host, label) {
                 ws("${getWSRoot()}/Native-${platform.toLowerCase()}") {
                     try {
                         stage("Setup Native") {
-                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
+                            reportGitHubStatus(this.commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
                         }
 
                         stage("Checkout Native") {
@@ -92,15 +92,15 @@ def createNativeBuilder(platform, host, label) {
                                 storageCredentialId: "fbd29020e8166fbede5518e038544343",
                                 uploadArtifactsOnlyIfSuccessful: false,
                                 uploadZips: false,
-                                virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/${platform.toLowerCase()}_${host.toLowerCase()}"
+                                virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${this.commitHash}/${platform.toLowerCase()}_${host.toLowerCase()}"
                             ])
                         }
 
                         stage("Teardown Native") {
-                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
+                            reportGitHubStatus(this.commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
                         }
                     } catch (Exception e) {
-                        reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
+                        reportGitHubStatus(this.commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
                         throw e
                     }
                 }
@@ -118,7 +118,7 @@ def createManagedBuilder(host, label) {
                 ws("${getWSRoot()}/Managed-${host.toLowerCase()}") {
                     try {
                         stage("Setup Managed") {
-                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
+                            reportGitHubStatus(this.commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
                         }
 
                         stage("Checkout Managed") {
@@ -132,7 +132,7 @@ def createManagedBuilder(host, label) {
                                     value: "container",
                                     containerName: "SkiaSharp-Public-Artifacts",
                                 ],
-                                includeFilesPattern: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/**/*",
+                                includeFilesPattern: "ArtifactsFor-${env.BUILD_NUMBER}/${this.commitHash}/**/*",
                                 excludeFilesPattern: "",
                                 downloadDirLoc: "",
                                 flattenDirectories: false,
@@ -179,15 +179,15 @@ def createManagedBuilder(host, label) {
                                 storageCredentialId: "fbd29020e8166fbede5518e038544343",
                                 uploadArtifactsOnlyIfSuccessful: false,
                                 uploadZips: false,
-                                virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/${host.toLowerCase()}"
+                                virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${this.commitHash}/${host.toLowerCase()}"
                             ])
                         }
 
                         stage("Teardown Managed") {
-                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
+                            reportGitHubStatus(this.commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
                         }
                     } catch (Exception e) {
-                        reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
+                        reportGitHubStatus(this.commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
                         throw e
                     }
                 }
@@ -205,7 +205,7 @@ node("ubuntu-1604-amd64") {
     timestamps {
         stage("Setup") {
             checkout scm
-            commitHash = cmdResult("git rev-parse HEAD").trim()
+            this.commitHash = cmdResult("git rev-parse HEAD").trim()
         }
     }
 }
