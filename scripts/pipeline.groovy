@@ -39,7 +39,7 @@ def createNativeBuilder(platform, host, label) {
             }
             ws("${wsRoot}/SkiaSharp/${cleanBranch}/${cleanPlatform}") {
                 stage("Checkout") {
-                    sh("echo testing")
+                    cmd("echo testing")
 
                     // // clone and checkout repository
                     // checkout scm
