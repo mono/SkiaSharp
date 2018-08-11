@@ -139,7 +139,7 @@ def createManagedBuilder(host, label) {
                                         buildNumber: "${env.BUILD_NUMBER}"
                                     ]
                                 ],
-                                includeFilesPattern: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/**/*",
+                                includeFilesPattern: "**/*",
                                 excludeFilesPattern: "",
                                 downloadDirLoc: "",
                                 flattenDirectories: false,
