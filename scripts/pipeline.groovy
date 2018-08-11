@@ -39,8 +39,8 @@ def createNativeBuilder(platform, host, label) {
             }
             ws("${wsRoot}/SkiaSharp/${cleanBranch}/${cleanPlatform}") {
                 stage("Checkout") {
-                    var = cmdResult("set").trim()
-                    echo "=====> ${var}"
+                    res = cmdResult("echo testing").trim()
+                    echo "=====> ${res}"
 
                     // // clone and checkout repository
                     // checkout scm
@@ -79,7 +79,7 @@ nativeBuilders["linux"]             = createNativeBuilder("Linux",      "Linux",
 nativeBuilders["win32"]             = createNativeBuilder("Win32",      "Windows",  "components-windows")
 // nativeBuilders["uwp"]               = createNativeBuilder("UWP",        "Windows",  "components-windows")
 // nativeBuilders["android_windows"]   = createNativeBuilder("Android",    "Windows",  "components-windows")
-// nativeBuilders["macos"]             = createNativeBuilder("macOS",      "macOS",    "components")
+nativeBuilders["macos"]             = createNativeBuilder("macOS",      "macOS",    "components")
 // nativeBuilders["android_macos"]     = createNativeBuilder("Android",    "macOS",    "components")
 // nativeBuilders["ios"]               = createNativeBuilder("iOS",        "macOS",    "components")
 parallel nativeBuilders
