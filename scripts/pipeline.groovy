@@ -39,17 +39,17 @@ def createNativeBuilder(platform, host, label) {
             }
             ws("${wsRoot}/SkiaSharp/${cleanBranch}/${cleanPlatform}") {
                 stage("Checkout") {
-                    var = cmdResult("set").trim()
-                    echo "=====> ${var}"
+                    // var = cmdResult("set").trim()
+                    // echo "=====> ${var}"
 
-                    // clone and checkout repository
-                    checkout scm
+                    // // clone and checkout repository
+                    // checkout scm
 
-                    // get current commit sha
-                    commitHash = cmdResult("git rev-parse HEAD").trim()
+                    // // get current commit sha
+                    // commitHash = cmdResult("git rev-parse HEAD").trim()
 
-                    // let GitHub know we are building
-                    reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
+                    // // let GitHub know we are building
+                    // reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
                 }
 
                 try {
