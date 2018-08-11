@@ -93,8 +93,8 @@ def createNativeBuilder(platform, host, label) {
                                 storageAccName: "credential for xamjenkinsartifact",
                                 storageCredentialId: "fbd29020e8166fbede5518e038544343",
                                 uploadArtifactsOnlyIfSuccessful: false,
-                                uploadZips: true,
-                                virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/${platform.toLowerCase()}_${host.toLowerCase()}"
+                                uploadZips: false,
+                                virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/${platform.toLowerCase()}_${host.toLowerCase()}/"
                             ])
                         }
 
@@ -131,10 +131,15 @@ def createManagedBuilder(host, label) {
                             step([
                                 $class: "AzureStorageBuilder",
                                 downloadType: [
-                                    value: "container",
-                                    containerName: "SkiaSharp-Public-Artifacts",
+                                    value: "project",
+                                    containerName: "",
+                                    projectName: "${env.JOB_NAME}",
+                                    buildSelector: [
+                                        $class: "SpecificBuildSelector",
+                                        buildNumber: "${env.BUILD_NUMBER}"
+                                    ]
                                 ],
-                                includeFilesPattern: "archive.zip",
+                                includeFilesPattern: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/**/*",
                                 excludeFilesPattern: "",
                                 downloadDirLoc: "",
                                 flattenDirectories: false,
