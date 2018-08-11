@@ -2,13 +2,89 @@ import groovy.transform.Field
 
 @Field def commitHash = null
 
+properties([
+    compressBuildLog()
+])
+
+// prepare the process
+node("ubuntu-1604-amd64") {
+    timestamps {
+        stage("Setup") {
+            checkout scm
+            commitHash = cmdResult("git rev-parse HEAD").trim()
+        }
+    }
+}
+
+// run all the native builds
+parallel([
+    // // windows
+    // win32:              createNativeBuilder("Win32",      "Windows",  "components-windows"),
+    // uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows"),
+    // android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows"),
+    // tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows"),
+
+    // macos
+    macos:              createNativeBuilder("macOS",      "macOS",    "components"),
+    ios:                createNativeBuilder("iOS",        "macOS",    "components"),
+    tvos:               createNativeBuilder("tvOS",       "macOS",    "components"),
+    watchos:            createNativeBuilder("watchOS",    "macOS",    "components"),
+    android_macos:      createNativeBuilder("Android",    "macOS",    "components"),
+    tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components"),
+
+    // linux
+    linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64"),
+    tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64"),
+])
+
+// run all the managed builds
+parallel ([
+    windows: createManagedBuilder("Windows",    "components-windows"),
+    macos:   createManagedBuilder("macOS",      "components"),
+    linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64"),
+])
+
+// run the packaging
+node("ubuntu-1604-amd64") {
+    timestamps {
+        stage("Packing") {
+            // checkout scm
+        }
+    }
+}
+
+// clean up
+node("ubuntu-1604-amd64") {
+    timestamps {
+        stage("Teardown") {
+            // checkout scm
+        }
+    }
+}
+
 def reportGitHubStatus(commitHash, context, backref, statusResult, statusResultMessage) {
     step([
         $class: "GitHubCommitStatusSetter",
-        commitShaSource: [$class: "ManuallyEnteredShaSource", sha: commitHash],
-        contextSource: [$class: "ManuallyEnteredCommitContextSource", context: context],
-        statusBackrefSource: [$class: "ManuallyEnteredBackrefSource", backref: backref],
-        statusResultSource: [$class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", state: statusResult, message: statusResultMessage]]]
+        commitShaSource: [
+            $class: "ManuallyEnteredShaSource",
+            sha: commitHash
+        ],
+        contextSource: [
+            $class: "ManuallyEnteredCommitContextSource",
+            context: context
+        ],
+        statusBackrefSource: [
+            $class: "ManuallyEnteredBackrefSource",
+            backref: backref
+        ],
+        statusResultSource: [
+            $class: "ConditionalStatusResultSource",
+            results: [[
+                $class: "AnyBuildResult",
+                state: statusResult,
+                message: statusResultMessage
+            ]]
+        ]
     ])
 }
 
@@ -50,8 +126,8 @@ def createNativeBuilder(platform, host, label) {
                         }
 
                         stage("Checkout Native") {
-                            // checkout scm
-                            // cmd("git submodule update --init --recursive")
+                            checkout scm
+                            cmd("git submodule update --init --recursive")
                         }
 
                         stage("Build Native") {
@@ -94,7 +170,7 @@ def createNativeBuilder(platform, host, label) {
                                 storageCredentialId: "fbd29020e8166fbede5518e038544343",
                                 uploadArtifactsOnlyIfSuccessful: false,
                                 uploadZips: false,
-                                virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/${platform.toLowerCase()}_${host.toLowerCase()}/"
+                                virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/${platform.toLowerCase()}_${host.toLowerCase()}/",
                             ])
                         }
 
@@ -124,7 +200,7 @@ def createManagedBuilder(host, label) {
                         }
 
                         stage("Checkout Managed") {
-                            // checkout scm
+                            checkout scm
                         }
 
                         stage("Download Native") {
@@ -140,7 +216,7 @@ def createManagedBuilder(host, label) {
                                 flattenDirectories: false,
                                 includeArchiveZips: false,
                                 strAccName: "credential for xamjenkinsartifact",
-                                storageCredentialId: "fbd29020e8166fbede5518e038544343"
+                                storageCredentialId: "fbd29020e8166fbede5518e038544343",
                             ])
                             if (isUnix()) {
                                 sh("cp -rf ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/*/* .")
@@ -187,7 +263,7 @@ def createManagedBuilder(host, label) {
                                 storageCredentialId: "fbd29020e8166fbede5518e038544343",
                                 uploadArtifactsOnlyIfSuccessful: false,
                                 uploadZips: false,
-                                virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/${host.toLowerCase()}/"
+                                virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/${host.toLowerCase()}/",
                             ])
                         }
 
@@ -200,66 +276,6 @@ def createManagedBuilder(host, label) {
                     }
                 }
             }
-        }
-    }
-}
-
-properties([
-    compressBuildLog()
-])
-
-// prepare the process
-node("ubuntu-1604-amd64") {
-    timestamps {
-        stage("Setup") {
-            checkout scm
-            commitHash = cmdResult("git rev-parse HEAD").trim()
-        }
-    }
-}
-
-// run all the native builds
-parallel([
-    // // windows
-    // win32:              createNativeBuilder("Win32",      "Windows",  "components-windows"),
-    // uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows"),
-    // android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows"),
-    // tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows"),
-
-    // macos
-    macos:              createNativeBuilder("macOS",      "macOS",    "components"),
-    ios:                createNativeBuilder("iOS",        "macOS",    "components"),
-    tvos:               createNativeBuilder("tvOS",       "macOS",    "components"),
-    watchos:            createNativeBuilder("watchOS",    "macOS",    "components"),
-    android_macos:      createNativeBuilder("Android",    "macOS",    "components"),
-    tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components"),
-
-    // linux
-    linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64"),
-    tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64")
-])
-
-// run all the managed builds
-parallel ([
-    windows: createManagedBuilder("Windows",    "components-windows")
-    macos:   createManagedBuilder("macOS",      "components")
-    linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64")
-])
-
-// run the packaging
-node("ubuntu-1604-amd64") {
-    timestamps {
-        stage("Packing") {
-            // checkout scm
-        }
-    }
-}
-
-// clean up
-node("ubuntu-1604-amd64") {
-    timestamps {
-        stage("Teardown") {
-            // checkout scm
         }
     }
 }
