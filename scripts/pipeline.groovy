@@ -226,13 +226,13 @@ parallel([
     // android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows"),
     // tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows"),
 
-    // // macos
-    // macos:              createNativeBuilder("macOS",      "macOS",    "components"),
-    // ios:                createNativeBuilder("iOS",        "macOS",    "components"),
-    // tvos:               createNativeBuilder("tvOS",       "macOS",    "components"),
-    // watchos:            createNativeBuilder("watchOS",    "macOS",    "components"),
-    // android_macos:      createNativeBuilder("Android",    "macOS",    "components"),
-    // tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components"),
+    // macos
+    macos:              createNativeBuilder("macOS",      "macOS",    "components"),
+    ios:                createNativeBuilder("iOS",        "macOS",    "components"),
+    tvos:               createNativeBuilder("tvOS",       "macOS",    "components"),
+    watchos:            createNativeBuilder("watchOS",    "macOS",    "components"),
+    android_macos:      createNativeBuilder("Android",    "macOS",    "components"),
+    tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components"),
 
     // linux
     linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64"),
@@ -241,7 +241,9 @@ parallel([
 
 // run all the managed builds
 parallel ([
-    linux: createManagedBuilder("Linux",    "ubuntu-1604-amd64")
+    windows: createManagedBuilder("Windows",    "components-windows")
+    macos:   createManagedBuilder("macOS",      "components")
+    linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64")
 ])
 
 // run the packaging
