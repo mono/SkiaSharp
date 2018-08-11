@@ -84,20 +84,25 @@ properties([
 ])
 
 // run all the native builds
-def nativeBuilders = [:]
-// nativeBuilders["win32"]             = createNativeBuilder("Win32",      "Windows",  "components-windows")
-// nativeBuilders["uwp"]               = createNativeBuilder("UWP",        "Windows",  "components-windows")
-// nativeBuilders["android_windows"]   = createNativeBuilder("Android",    "Windows",  "components-windows")
-// nativeBuilders["tizen_windows"]     = createNativeBuilder("Tizen",      "Windows",  "components-windows")
-nativeBuilders["macos"]             = createNativeBuilder("macOS",      "macOS",    "components")
-nativeBuilders["ios"]               = createNativeBuilder("iOS",        "macOS",    "components")
-nativeBuilders["tvos"]              = createNativeBuilder("tvOS",       "macOS",    "components")
-nativeBuilders["watchos"]           = createNativeBuilder("watchOS",    "macOS",    "components")
-nativeBuilders["android_macos"]     = createNativeBuilder("Android",    "macOS",    "components")
-nativeBuilders["tizen_macos"]       = createNativeBuilder("Tizen",      "macOS",    "components")
-nativeBuilders["linux"]             = createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64")
-nativeBuilders["tizen_linux"]       = createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64")
-parallel nativeBuilders
+parallel([
+    // // windows
+    // win32:              createNativeBuilder("Win32",      "Windows",  "components-windows"),
+    // uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows"),
+    // android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows"),
+    // tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows"),
+
+    // macos
+    macos:              createNativeBuilder("macOS",      "macOS",    "components"),
+    ios:                createNativeBuilder("iOS",        "macOS",    "components"),
+    tvos:               createNativeBuilder("tvOS",       "macOS",    "components"),
+    watchos:            createNativeBuilder("watchOS",    "macOS",    "components"),
+    android_macos:      createNativeBuilder("Android",    "macOS",    "components"),
+    tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components"),
+
+    // linux
+    linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64"),
+    tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64")
+])
 
 // run all the managed builds
 // def managedBuilders = [:]
