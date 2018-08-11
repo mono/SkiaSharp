@@ -31,7 +31,7 @@ def createNativeBuilder(platform, host, label) {
         node(label) {
             timestamps {
                 def githubContext = "Build Native - ${platform} on ${host}"
-                def cleanBranch = env.BRANCH_NAME.replace('/', '_').replace('\\', '_')
+                def cleanBranch = env.BRANCH_NAME.replace("/", "_").replace("\\", "_")
                 def cleanPlatform = platform.toLowerCase()
 
                 def wsRoot = "workspace"
@@ -67,7 +67,26 @@ def createNativeBuilder(platform, host, label) {
                         }
 
                         stage("Upload Native") {
-                            // do the upload
+                            fingerprint("output/**/*")
+                            step([
+                                $class: "WAStoragePublisher",
+                                allowAnonymousAccess: true,
+                                cleanUpContainer: false,
+                                cntPubAccess: true,
+                                containerName: "${env.JOB_NAME}-Public-Artifacts",
+                                doNotFailIfArchivingReturnsNothing: false,
+                                doNotUploadIndividualFiles: false,
+                                doNotWaitForPreviousBuild: true,
+                                excludeFilesPath: "",
+                                filesPath: "output/**/*",
+                                storageAccName: "credential for xamjenkinsartifact",
+                                storageCredentialId: "fbd29020e8166fbede5518e038544343",
+                                uploadArtifactsOnlyIfSuccessful: false,
+                                uploadZips: true,
+                                virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/"
+                            ])
+
+                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
                         }
                     } catch (Exception e) {
                         reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
