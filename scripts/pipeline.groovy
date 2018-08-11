@@ -39,8 +39,8 @@ def createNativeBuilder(platform, host, label) {
             }
             ws("${wsRoot}/SkiaSharp/${cleanBranch}/${cleanPlatform}") {
                 stage("Checkout") {
-                    // var = cmdResult("set").trim()
-                    // echo "=====> ${var}"
+                    var = cmdResult("set").trim()
+                    echo "=====> ${var}"
 
                     // // clone and checkout repository
                     // checkout scm
