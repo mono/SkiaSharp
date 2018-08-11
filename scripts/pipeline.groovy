@@ -52,6 +52,10 @@ def createNativeBuilder(platform, host, label) {
 
                     try {
                         stage("Build Native") {
+                            echo "NODE_ID ${env.NODE_ID}"
+                            echo "NODE_NAME ${env.NODE_NAME}"
+                            echo "Uploading to ${env.JOB_NAME}-Public-Artifacts/ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/"
+
                             if (host.toLowerCase() == "linux") {
                                 chroot(
                                     chrootName: "${label}-stable",
@@ -68,9 +72,6 @@ def createNativeBuilder(platform, host, label) {
 
                         stage("Upload Native") {
                             fingerprint("output/**/*")
-                            echo "NODE_ID ${env.NODE_ID}"
-                            echo "NODE_NAME ${env.NODE_NAME}"
-                            echo "Uploading to ${env.JOB_NAME}-Public-Artifacts/ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/"
                             step([
                                 $class: "WAStoragePublisher",
                                 allowAnonymousAccess: true,
