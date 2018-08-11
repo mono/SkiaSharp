@@ -37,18 +37,16 @@ def createNativeBuilder(platform, host, label) {
             if (!isUnix()) {
                 wsRoot = "C:/bld"
             }
-            // ws("${wsRoot}/SkiaSharp/${cleanBranch}/${cleanPlatform}") {
+            ws("${wsRoot}/SkiaSharp/${cleanBranch}/${cleanPlatform}") {
                 stage("Checkout") {
-                    cmd("echo testing")
+                    // clone and checkout repository
+                    checkout scm
 
-                    // // clone and checkout repository
-                    // checkout scm
+                    // get current commit sha
+                    commitHash = cmdResult("git rev-parse HEAD").trim()
 
-                    // // get current commit sha
-                    // commitHash = cmdResult("git rev-parse HEAD").trim()
-
-                    // // let GitHub know we are building
-                    // reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
+                    // let GitHub know we are building
+                    reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
                 }
 
                 try {
@@ -63,7 +61,7 @@ def createNativeBuilder(platform, host, label) {
                     reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
                     throw e
                 }
-            // }
+            }
         }
     }
 }
@@ -74,13 +72,18 @@ properties([
 
 // run all the native builds
 def nativeBuilders = [:]
-nativeBuilders["linux"]             = createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64")
-nativeBuilders["win32"]             = createNativeBuilder("Win32",      "Windows",  "components-windows")
+// nativeBuilders["win32"]             = createNativeBuilder("Win32",      "Windows",  "components-windows")
 // nativeBuilders["uwp"]               = createNativeBuilder("UWP",        "Windows",  "components-windows")
 // nativeBuilders["android_windows"]   = createNativeBuilder("Android",    "Windows",  "components-windows")
+// nativeBuilders["tizen_windows"]     = createNativeBuilder("Tizen",      "Windows",  "components-windows")
 nativeBuilders["macos"]             = createNativeBuilder("macOS",      "macOS",    "components")
-// nativeBuilders["android_macos"]     = createNativeBuilder("Android",    "macOS",    "components")
-// nativeBuilders["ios"]               = createNativeBuilder("iOS",        "macOS",    "components")
+nativeBuilders["ios"]               = createNativeBuilder("iOS",        "macOS",    "components")
+nativeBuilders["tvos"]              = createNativeBuilder("tvOS",       "macOS",    "components")
+nativeBuilders["watchos"]           = createNativeBuilder("watchOS",    "macOS",    "components")
+nativeBuilders["android_macos"]     = createNativeBuilder("Android",    "macOS",    "components")
+nativeBuilders["tizen_macos"]       = createNativeBuilder("Tizen",      "macOS",    "components")
+nativeBuilders["linux"]             = createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64")
+nativeBuilders["tizen_linux"]       = createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64")
 parallel nativeBuilders
 
 // run all the managed builds
