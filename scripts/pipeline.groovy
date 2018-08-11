@@ -34,11 +34,11 @@ def createNativeBuilder(platform, host, label) {
             cleanBranch = BRANCH_NAME.replace('/', '_').replace('\\', '_')
             cleanPlatform = platform.toLowerCase()
 
-            wsRoot = "workspace/SkiaSharp"
+            wsRoot = "workspace"
             if (!isUnix()) {
                 wsRoot = "C:/bld"
             }
-            ws("${wsRoot}/${cleanBranch}/${cleanPlatform}") {
+            ws("${wsRoot}/SkiaSharp/${cleanBranch}/${cleanPlatform}") {
                 stage("Checkout") {
                     // clone and checkout repository
                     checkout scm
