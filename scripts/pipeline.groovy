@@ -35,7 +35,11 @@ def createNativeBuilder(platform, host, label) {
             cleanBranch = BRANCH_NAME.replace('/', '_').replace('\\', '_')
             cleanPlatform = platform.toLowerCase()
 
-            ws("workspace/SkiaSharp/${cleanBranch}/${cleanPlatform}") {
+            wsRoot = "workspace/SkiaSharp"
+            if (!isUnix()) {
+                wsRoot = "C:/bld"
+            }
+            ws("${wsRoot}/${cleanBranch}/${cleanPlatform}") {
                 stage("Checkout (${builderType})") {
                     // clone and checkout repository
                     checkout scm
@@ -70,7 +74,7 @@ properties([
 
 // run all the native builds
 def nativeBuilders = [:]
-// nativeBuilders["linux"]             = createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64")
+nativeBuilders["linux"]             = createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64")
 nativeBuilders["win32"]             = createNativeBuilder("Win32",      "Windows",  "components-windows")
 // nativeBuilders["uwp"]               = createNativeBuilder("UWP",        "Windows",  "components-windows")
 // nativeBuilders["android_windows"]   = createNativeBuilder("Android",    "Windows",  "components-windows")
