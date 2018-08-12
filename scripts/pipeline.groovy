@@ -22,7 +22,7 @@ properties([
 // ============================================================================
 // Prepare
 
-node {
+node("ubuntu-1604-amd64") {
     timestamps {
         stage("Setup") {
             checkout scm
@@ -85,7 +85,8 @@ node {
 // Functions
 
 def createNativeBuilder(platform, host, label) {
-    def githubContext = "Build Native - ${platform} on ${host}"
+    def stage = "${platform} on ${host}"
+    def githubContext = "Build Native - ${stage}"
 
     return {
         node(label) {
@@ -93,14 +94,14 @@ def createNativeBuilder(platform, host, label) {
                 withEnv(customEnv[host]) {
                     ws("${getWSRoot()}/native-${platform.toLowerCase()}") {
                         try {
-                            stage("Begin Native") {
+                            stage("Begin Native ${stage}") {
                                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
 
                                 checkout scm
                                 cmd("git submodule update --init --recursive")
                             }
 
-                            stage("Build Native") {
+                            stage("Build Native ${stage}") {
                                 def pre = ""
                                 if (host.toLowerCase() == "linux" && platform.toLowerCase() == "tizen") {
                                     pre = "./scripts/install-tizen.sh && "
@@ -108,7 +109,7 @@ def createNativeBuilder(platform, host, label) {
                                 bootstrapper("-t externals-${platform.toLowerCase()} -v normal", host, pre)
                             }
 
-                            stage("End Native") {
+                            stage("End Native ${stage}") {
                                 uploadBlobs("native-${platform.toLowerCase()}_${host.toLowerCase()}")
 
                                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
@@ -133,18 +134,18 @@ def createManagedBuilder(host, label) {
                 withEnv(customEnv[host]) {
                     ws("${getWSRoot()}/managed-${host.toLowerCase()}") {
                         try {
-                            stage("Begin Managed") {
+                            stage("Begin Managed ${host}") {
                                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
 
                                 checkout scm
                                 downloadBlobs("native-*")
                             }
 
-                            stage("Build Managed") {
+                            stage("Build Managed ${host}") {
                                 bootstrapper("-t everything -v normal --skipexternals=all", host)
                             }
 
-                            stage("Test Managed") {
+                            stage("Test Managed ${host}") {
                                 step([
                                     $class: "XUnitBuilder",
                                     testTimeMargin: "3000",
@@ -173,7 +174,7 @@ def createManagedBuilder(host, label) {
                                 ])
                             }
 
-                            stage("End Managed") {
+                            stage("End Managed ${host}") {
                                 uploadBlobs("managed-${host.toLowerCase()}")
 
                                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
@@ -199,16 +200,22 @@ def createPackagingBuilder() {
                 withEnv(customEnv[host]) {
                     ws("${getWSRoot()}/package-${platform.toLowerCase()}") {
                         try {
-                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Packing...")
+                            stage("Begin Packaging") {
+                                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Packing...")
 
-                            checkout scm
-                            downloadBlobs("managed-*");
+                                checkout scm
+                                downloadBlobs("managed-*");
+                            }
 
-                            bootstrapper("-t nuget-only -v normal", host)
+                            stage("Build Packaging") {
+                                bootstrapper("-t nuget-only -v normal", host)
+                            }
 
-                            uploadBlobs("package-${host.toLowerCase()}")
+                            stage("End Packaging") {
+                                uploadBlobs("package-${host.toLowerCase()}")
 
-                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Pack complete.")
+                                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Pack complete.")
+                            }
                         } catch (Exception e) {
                             reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Pack failed.")
                             throw e
