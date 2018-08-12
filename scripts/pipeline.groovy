@@ -88,7 +88,6 @@ def createNativeBuilder(platform, host, label) {
                     withEnv(customEnv[host.toLowerCase()] + ["NODE_LABEL=${label}"]) {
                         ws("${getWSRoot()}/native-${platform.toLowerCase()}") {
                             try {
-                                cmd("set")
                                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
 
                                 checkout scm
