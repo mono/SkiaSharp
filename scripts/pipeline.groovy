@@ -3,6 +3,11 @@ pipeline {
 
     options {
         compressBuildLog()
+        timestamps()
+    }
+
+    environment {
+        CUSTOM_WORKSPACE_ROOT = null
     }
 
     stages {
@@ -12,27 +17,20 @@ pipeline {
             }
             steps {
                 echo "Preparing..."
+
+                script {
+                    def cleanBranch = env.BRANCH_NAME.replace("/", "_").replace("\\", "_")
+                    def wsRoot = (isUnix()) ? "workspace" : "C:/bld"
+                    env.CUSTOM_WORKSPACE_ROOT = "${wsRoot}/SkiaSharp/${cleanBranch}"
+                }
+                echo "Set custom workspace root to '${env.CUSTOM_WORKSPACE_ROOT}'."
             }
         }
 
         stage("Build Native") {
             parallel {
-                stage("ios") {
-                    agent {
-                        label "components"
-                    }
-                    steps {
-                        echo "Building iOS..."
-                    }
-                }
-                stage("android") {
-                    agent {
-                        label "components"
-                    }
-                    steps {
-                        echo "Building Android..."
-                    }
-                }
+                createNativeStage("macOS",      "macOS",    "components")
+                createNativeStage("iOS",        "macOS",    "components")
             }
         }
 
@@ -77,14 +75,43 @@ pipeline {
     }
 }
 
+def createNativeStage(platform, host, agentLabel) {
+    def stageName = "Build Native - ${platform} on ${host}"
+
+    stage(stageName) {
+        agent {
+            label "${agentLabel}"
+            customWorkspace "${env.CUSTOM_WORKSPACE_ROOT}/native-${platform.toLowerCase()}"
+        }
+        steps {
+            reportGitHubStatus(commitHash, stageName, env.BUILD_URL, "PENDING", "Building...")
+
+            // checkout scm
+            // cmd("git submodule update --init --recursive")
+
+            // def pre = ""
+            // if (host.toLowerCase() == "linux" && platform.toLowerCase() == "tizen") {
+            //     pre = "./scripts/install-tizen.sh && "
+            // }
+            // bootstrapper("-t externals-${platform.toLowerCase()} -v normal", host, label, pre)
+
+            // uploadBlobs("native-${platform.toLowerCase()}_${host.toLowerCase()}")
+        }
+        post {
+            success {
+                reportGitHubStatus(commitHash, stageName, env.BUILD_URL, "SUCCESS", "Build complete.")
+            }
+            failure {
+                reportGitHubStatus(commitHash, stageName, env.BUILD_URL, "FAILURE", "Build failed.")
+            }
+        }
+    }
+}
+
 
 // import groovy.transform.Field
 
 // @Field def commitHash = null
-
-// properties([
-//     compressBuildLog()
-// ])
 
 // // ============================================================================
 // // Prepare
