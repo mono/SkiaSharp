@@ -20,62 +20,56 @@ properties([
 ])
 
 // ============================================================================
-// Prepare
+// Stages
 
-node("ubuntu-1604-amd64") {
-    timestamps {
-        stage("Setup") {
+stage("Prepare") {
+    node("ubuntu-1604-amd64") {
+        timestamps {
             checkout scm
             commitHash = cmdResult("git rev-parse HEAD").trim()
         }
     }
 }
 
-// ============================================================================
-// Native Builds
+stage("Native Builds") {
+    parallel([
+        // // windows
+        // win32:              createNativeBuilder("Win32",      "Windows",  "components-windows"),
+        // uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows"),
+        // android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows"),
+        // tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows"),
 
-parallel([
-    // // windows
-    // win32:              createNativeBuilder("Win32",      "Windows",  "components-windows"),
-    // uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows"),
-    // android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows"),
-    // tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows"),
+        // macos
+        macos:              createNativeBuilder("macOS",      "macOS",    "components"),
+        ios:                createNativeBuilder("iOS",        "macOS",    "components"),
+        tvos:               createNativeBuilder("tvOS",       "macOS",    "components"),
+        watchos:            createNativeBuilder("watchOS",    "macOS",    "components"),
+        android_macos:      createNativeBuilder("Android",    "macOS",    "components"),
+        tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components"),
 
-    // macos
-    macos:              createNativeBuilder("macOS",      "macOS",    "components"),
-    ios:                createNativeBuilder("iOS",        "macOS",    "components"),
-    tvos:               createNativeBuilder("tvOS",       "macOS",    "components"),
-    watchos:            createNativeBuilder("watchOS",    "macOS",    "components"),
-    android_macos:      createNativeBuilder("Android",    "macOS",    "components"),
-    tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components"),
+        // linux
+        linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64"),
+        tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64"),
+    ])
+}
 
-    // linux
-    linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64"),
-    tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64"),
-])
+stage("Managed Builds") {
+    parallel ([
+        // windows: createManagedBuilder("Windows",    "components-windows"),
+        macos:   createManagedBuilder("macOS",      "components"),
+        linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64"),
+    ])
+}
 
-// ============================================================================
-// Managed Builds
+stage("Packaging") {
+    parallel([
+        package: createPackagingBuilder()
+    ])
+}
 
-parallel ([
-    // windows: createManagedBuilder("Windows",    "components-windows"),
-    macos:   createManagedBuilder("macOS",      "components"),
-    linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64"),
-])
-
-// ============================================================================
-// Packaging
-
-parallel([
-    package: createPackagingBuilder()
-])
-
-// ============================================================================
-// Clean Up
-
-node {
-    timestamps {
-        stage("Teardown") {
+stage("Clean Up") {
+    node {
+        timestamps {
 
         }
     }
@@ -85,38 +79,33 @@ node {
 // Functions
 
 def createNativeBuilder(platform, host, label) {
-    def stageName = "${platform} on ${host}"
-    def githubContext = "Build Native - ${stageName}"
-    def cenv = customEnv[host.toLowerCase()]
+    def githubContext = "Build Native - ${platform} on ${host}"
 
     return {
-        node(label) {
-            timestamps {
-                withEnv(cenv) {
-                    ws("${getWSRoot()}/native-${platform.toLowerCase()}") {
-                        try {
-                            stage("Begin Native ${stageName}") {
+        stage(githubContext) {
+            node(label) {
+                timestamps {
+                    withEnv(customEnv[host.toLowerCase()]) {
+                        ws("${getWSRoot()}/native-${platform.toLowerCase()}") {
+                            try {
                                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
+
                                 checkout scm
                                 cmd("git submodule update --init --recursive")
-                            }
 
-                            stage("Build Native ${stageName}") {
                                 def pre = ""
                                 if (host.toLowerCase() == "linux" && platform.toLowerCase() == "tizen") {
                                     pre = "./scripts/install-tizen.sh && "
                                 }
                                 bootstrapper("-t externals-${platform.toLowerCase()} -v normal", host, pre)
-                            }
 
-                            stage("End Native ${stageName}") {
                                 uploadBlobs("native-${platform.toLowerCase()}_${host.toLowerCase()}")
 
                                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
+                            } catch (Exception e) {
+                                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
+                                throw e
                             }
-                        } catch (Exception e) {
-                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
-                            throw e
                         }
                     }
                 }
@@ -126,28 +115,22 @@ def createNativeBuilder(platform, host, label) {
 }
 
 def createManagedBuilder(host, label) {
-    def stageName = "${host}"
     def githubContext = "Build Managed - ${host}"
-    def cenv = customEnv[host.toLowerCase()]
 
     return {
-        node(label) {
-            timestamps {
-                withEnv(cenv) {
-                    ws("${getWSRoot()}/managed-${host.toLowerCase()}") {
-                        try {
-                            stage("Begin Managed ${stageName}") {
+        stage(githubContext) {
+            node(label) {
+                timestamps {
+                    withEnv(customEnv[host.toLowerCase()]) {
+                        ws("${getWSRoot()}/managed-${host.toLowerCase()}") {
+                            try {
                                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
 
                                 checkout scm
                                 downloadBlobs("native-*")
-                            }
 
-                            stage("Build Managed ${stageName}") {
                                 bootstrapper("-t everything -v normal --skipexternals=all", host)
-                            }
 
-                            stage("Test Managed ${stageName}") {
                                 step([
                                     $class: "XUnitBuilder",
                                     testTimeMargin: "3000",
@@ -174,16 +157,14 @@ def createManagedBuilder(host, label) {
                                         stopProcessingIfError: true
                                     ]]
                                 ])
-                            }
 
-                            stage("End Managed ${stageName}") {
                                 uploadBlobs("managed-${host.toLowerCase()}")
 
                                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
+                            } catch (Exception e) {
+                                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
+                                throw e
                             }
-                        } catch (Exception e) {
-                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
-                            throw e
                         }
                     }
                 }
@@ -195,33 +176,28 @@ def createManagedBuilder(host, label) {
 def createPackagingBuilder() {
     def githubContext = "Packing"
     def host = "linux"
-    def cenv = customEnv[host.toLowerCase()]
 
     return {
-        node("ubuntu-1604-amd64") {
-            timestamps{
-                withEnv(cenv) {
-                    ws("${getWSRoot()}/package-${platform.toLowerCase()}") {
-                        try {
-                            stage("Begin Packaging") {
+        stage(githubContext) {
+            node("ubuntu-1604-amd64") {
+                timestamps{
+                    withEnv(customEnv[host.toLowerCase()]) {
+                        ws("${getWSRoot()}/package-${platform.toLowerCase()}") {
+                            try {
                                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Packing...")
 
                                 checkout scm
                                 downloadBlobs("managed-*");
-                            }
 
-                            stage("Build Packaging") {
                                 bootstrapper("-t nuget-only -v normal", host)
-                            }
 
-                            stage("End Packaging") {
                                 uploadBlobs("package-${host.toLowerCase()}")
 
                                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Pack complete.")
+                            } catch (Exception e) {
+                                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Pack failed.")
+                                throw e
                             }
-                        } catch (Exception e) {
-                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Pack failed.")
-                            throw e
                         }
                     }
                 }
