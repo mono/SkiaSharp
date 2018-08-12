@@ -84,6 +84,7 @@ def createNativeBuilder(platform, host, label) {
     return {
         stage(githubContext) {
             node(label) {
+                cmd("set")
                 timestamps {
                     withEnv(customEnv[host.toLowerCase()]) {
                         ws("${getWSRoot()}/native-${platform.toLowerCase()}") {
