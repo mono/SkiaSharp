@@ -91,10 +91,15 @@ def createNativeBuilder(platform, host, label) {
 
     return {
         node(label) {
+            echo "a"
             timestamps {
+            echo "b"
                 withEnv(cenv) {
+            echo "c"
                     ws("${getWSRoot()}/native-${platform.toLowerCase()}") {
+            echo "d"
                         try {
+            echo "e"
                             stage("Begin Native ${stage}") {
                                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
 
