@@ -84,11 +84,11 @@ def createNativeBuilder(platform, host, label) {
     return {
         stage(githubContext) {
             node(label) {
-                cmd("set")
                 timestamps {
-                    withEnv(customEnv[host.toLowerCase()]) {
+                    withEnv(customEnv[host.toLowerCase()] + ["NODE_LABEL=${label}"]) {
                         ws("${getWSRoot()}/native-${platform.toLowerCase()}") {
                             try {
+                                cmd("set")
                                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
 
                                 checkout scm
@@ -122,7 +122,7 @@ def createManagedBuilder(host, label) {
         stage(githubContext) {
             node(label) {
                 timestamps {
-                    withEnv(customEnv[host.toLowerCase()]) {
+                    withEnv(customEnv[host.toLowerCase()] + ["NODE_LABEL=${label}"]) {
                         ws("${getWSRoot()}/managed-${host.toLowerCase()}") {
                             try {
                                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
@@ -177,12 +177,13 @@ def createManagedBuilder(host, label) {
 def createPackagingBuilder() {
     def githubContext = "Packing"
     def host = "linux"
+    def label = "ubuntu-1604-amd64"
 
     return {
         stage(githubContext) {
-            node("ubuntu-1604-amd64") {
+            node(label) {
                 timestamps{
-                    withEnv(customEnv[host.toLowerCase()]) {
+                    withEnv(customEnv[host.toLowerCase()] + ["NODE_LABEL=${label}"]) {
                         ws("${getWSRoot()}/package-${platform.toLowerCase()}") {
                             try {
                                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Packing...")
@@ -210,7 +211,7 @@ def createPackagingBuilder() {
 def bootstrapper(args, host, pre) {
     if (host.toLowerCase() == "linux") {
         chroot(
-            chrootName: "${env.NODE_ID}-stable",
+            chrootName: "${env.NODE_LABEL}-stable",
             command: "bash ${pre} ./bootstrapper.sh ${args}",
             additionalPackages: "${linuxPackages}")
     } else if (host.toLowerCase() == "macos") {
