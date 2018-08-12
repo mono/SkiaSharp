@@ -87,11 +87,12 @@ node {
 def createNativeBuilder(platform, host, label) {
     def stage = "${platform} on ${host}"
     def githubContext = "Build Native - ${stage}"
+    def cenv = customEnv[host.toLowerCase()]
 
     return {
         node(label) {
             timestamps {
-                withEnv(customEnv[host.toLowerCase()]) {
+                withEnv(cenv) {
                     ws("${getWSRoot()}/native-${platform.toLowerCase()}") {
                         try {
                             stage("Begin Native ${stage}") {
@@ -128,11 +129,12 @@ def createNativeBuilder(platform, host, label) {
 def createManagedBuilder(host, label) {
     def stage = "${host}"
     def githubContext = "Build Managed - ${host}"
+    def cenv = customEnv[host.toLowerCase()]
 
     return {
         node(label) {
             timestamps {
-                withEnv(customEnv[host.toLowerCase()]) {
+                withEnv(cenv) {
                     ws("${getWSRoot()}/managed-${host.toLowerCase()}") {
                         try {
                             stage("Begin Managed ${stage}") {
@@ -194,11 +196,12 @@ def createManagedBuilder(host, label) {
 def createPackagingBuilder() {
     def githubContext = "Packing"
     def host = "linux"
+    def cenv = customEnv[host.toLowerCase()]
 
     return {
         node("ubuntu-1604-amd64") {
             timestamps{
-                withEnv(customEnv[host.toLowerCase()]) {
+                withEnv(cenv) {
                     ws("${getWSRoot()}/package-${platform.toLowerCase()}") {
                         try {
                             stage("Begin Packaging") {
