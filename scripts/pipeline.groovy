@@ -86,7 +86,7 @@ node {
 
 def createNativeBuilder(platform, host, label) {
     def stageName = "${platform} on ${host}"
-    def githubContext = "Build Native - ${stage}"
+    def githubContext = "Build Native - ${stageName}"
     def cenv = customEnv[host.toLowerCase()]
 
     return {
