@@ -67,7 +67,7 @@ parallel ([
 // Packaging
 
 parallel([
-    createPackagingBuilder()
+    package: createPackagingBuilder()
 ])
 
 // ============================================================================
@@ -87,7 +87,7 @@ node {
 def createNativeBuilder(platform, host, label) {
     def githubContext = "Build Native - ${platform} on ${host}"
 
-    {
+    return {
         node(label) {
             timestamps {
                 withEnv(customEnv[host]) {
@@ -127,7 +127,7 @@ def createNativeBuilder(platform, host, label) {
 def createManagedBuilder(host, label) {
     def githubContext = "Build Managed - ${host}"
 
-    {
+    return {
         node(label) {
             timestamps {
                 withEnv(customEnv[host]) {
@@ -193,24 +193,26 @@ def createPackagingBuilder() {
     def githubContext = "Packing"
     def host = "linux"
 
-    node("ubuntu-1604-amd64") {
-        timestamps{
-            withEnv(customEnv[host]) {
-                ws("${getWSRoot()}/package-${platform.toLowerCase()}") {
-                    try {
-                        reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Packing...")
+    return {
+        node("ubuntu-1604-amd64") {
+            timestamps{
+                withEnv(customEnv[host]) {
+                    ws("${getWSRoot()}/package-${platform.toLowerCase()}") {
+                        try {
+                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Packing...")
 
-                        checkout scm
-                        downloadBlobs("managed-*");
+                            checkout scm
+                            downloadBlobs("managed-*");
 
-                        bootstrapper("-t nuget-only -v normal", host)
+                            bootstrapper("-t nuget-only -v normal", host)
 
-                        uploadBlobs("package-${host.toLowerCase()}")
+                            uploadBlobs("package-${host.toLowerCase()}")
 
-                        reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Pack complete.")
-                    } catch (Exception e) {
-                        reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Pack failed.")
-                        throw e
+                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Pack complete.")
+                        } catch (Exception e) {
+                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Pack failed.")
+                            throw e
+                        }
                     }
                 }
             }
