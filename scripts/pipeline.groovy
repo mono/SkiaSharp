@@ -5,18 +5,19 @@ import groovy.transform.Field
 
 properties([
     compressBuildLog()
-    timestamps()
 ])
 
 // ============================================================================
 // Prepare
 
 node("ubuntu-1604-amd64") {
-    stage("Setup") {
-        aa()(script: "echo testing")
+    timestamps {
+        stage("Setup") {
+            aa()(script: "echo testing")
 
-        checkout scm
-        commitHash = cmdResult("git rev-parse HEAD").trim()
+            checkout scm
+            commitHash = cmdResult("git rev-parse HEAD").trim()
+        }
     }
 }
 
@@ -61,7 +62,10 @@ createPackagingBuilder()
 // Clean Up
 
 node("ubuntu-1604-amd64") {
-    stage("Teardown") {
+    timestamps {
+        stage("Teardown") {
+
+        }
     }
 }
 
@@ -70,23 +74,25 @@ node("ubuntu-1604-amd64") {
 
 def createPackagingBuilder() {
     node("ubuntu-1604-amd64") {
-        def githubContext = "Packing"
+        timestamps{
+            def githubContext = "Packing"
 
-        ws("${getWSRoot()}/package-${platform.toLowerCase()}") {
-            try {
-                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Packing...")
+            ws("${getWSRoot()}/package-${platform.toLowerCase()}") {
+                try {
+                    reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Packing...")
 
-                checkout scm
-                downloadBlobs("managed-*");
+                    checkout scm
+                    downloadBlobs("managed-*");
 
-                bootstrapper("-t nuget-only -v normal", "linux", "")
+                    bootstrapper("-t nuget-only -v normal", "linux", "")
 
-                uploadBlobs("package-${host.toLowerCase()}")
+                    uploadBlobs("package-${host.toLowerCase()}")
 
-                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Pack complete.")
-            } catch (Exception e) {
-                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Pack failed.")
-                throw e
+                    reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Pack complete.")
+                } catch (Exception e) {
+                    reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Pack failed.")
+                    throw e
+                }
             }
         }
     }
@@ -97,34 +103,36 @@ def createNativeBuilder(platform, host, label) {
 
     return {
         node(label) {
-            // environment {
-            //     ANDROID_NDK_HOME = "/Users/builder/Library/Developer/Xamarin/android-ndk"
-            // }
-            ws("${getWSRoot()}/native-${platform.toLowerCase()}") {
-                try {
-                    stage("Begin Native") {
-                        reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
+            timestamps {
+                // environment {
+                //     ANDROID_NDK_HOME = "/Users/builder/Library/Developer/Xamarin/android-ndk"
+                // }
+                ws("${getWSRoot()}/native-${platform.toLowerCase()}") {
+                    try {
+                        stage("Begin Native") {
+                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
 
-                        checkout scm
-                        cmd("git submodule update --init --recursive")
-                    }
-
-                    stage("Build Native") {
-                        def pre = ""
-                        if (host.toLowerCase() == "linux" && platform.toLowerCase() == "tizen") {
-                            pre = "./scripts/install-tizen.sh && "
+                            checkout scm
+                            cmd("git submodule update --init --recursive")
                         }
-                        bootstrapper("-t externals-${platform.toLowerCase()} -v normal", host, pre)
-                    }
 
-                    stage("End Native") {
-                        uploadBlobs("native-${platform.toLowerCase()}_${host.toLowerCase()}")
+                        stage("Build Native") {
+                            def pre = ""
+                            if (host.toLowerCase() == "linux" && platform.toLowerCase() == "tizen") {
+                                pre = "./scripts/install-tizen.sh && "
+                            }
+                            bootstrapper("-t externals-${platform.toLowerCase()} -v normal", host, pre)
+                        }
 
-                        reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
+                        stage("End Native") {
+                            uploadBlobs("native-${platform.toLowerCase()}_${host.toLowerCase()}")
+
+                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
+                        }
+                    } catch (Exception e) {
+                        reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
+                        throw e
                     }
-                } catch (Exception e) {
-                    reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
-                    throw e
                 }
             }
         }
@@ -136,56 +144,58 @@ def createManagedBuilder(host, label) {
 
     return {
         node(label) {
-            ws("${getWSRoot()}/managed-${host.toLowerCase()}") {
-                try {
-                    stage("Begin Managed") {
-                        reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
+            timestamps {
+                ws("${getWSRoot()}/managed-${host.toLowerCase()}") {
+                    try {
+                        stage("Begin Managed") {
+                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
 
-                        checkout scm
-                        downloadBlobs("native-*")
+                            checkout scm
+                            downloadBlobs("native-*")
+                        }
+
+                        stage("Build Managed") {
+                            bootstrapper("-t everything -v normal --skipexternals=all", host, "")
+                        }
+
+                        stage("Test Managed") {
+                            step([
+                                $class: "XUnitBuilder",
+                                testTimeMargin: "3000",
+                                thresholdMode: 1,
+                                thresholds: [[
+                                    $class: "FailedThreshold",
+                                    failureNewThreshold: "0",
+                                    failureThreshold: "0",
+                                    unstableNewThreshold: "0",
+                                    unstableThreshold: "0"
+                                ], [
+                                    $class: "SkippedThreshold",
+                                    failureNewThreshold: "",
+                                    failureThreshold: "",
+                                    unstableNewThreshold: "",
+                                    unstableThreshold: ""
+                                ]],
+                                tools: [[
+                                    $class: "NUnitJunitHudsonTestType",
+                                    deleteOutputFiles: true,
+                                    failIfNotNew: true,
+                                    pattern: "output/tests/*/TestResult.xml",
+                                    skipNoTestFiles: false,
+                                    stopProcessingIfError: true
+                                ]]
+                            ])
+                        }
+
+                        stage("End Managed") {
+                            uploadBlobs("managed-${host.toLowerCase()}")
+
+                            reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
+                        }
+                    } catch (Exception e) {
+                        reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
+                        throw e
                     }
-
-                    stage("Build Managed") {
-                        bootstrapper("-t everything -v normal --skipexternals=all", host, "")
-                    }
-
-                    stage("Test Managed") {
-                        step([
-                            $class: "XUnitBuilder",
-                            testTimeMargin: "3000",
-                            thresholdMode: 1,
-                            thresholds: [[
-                                $class: "FailedThreshold",
-                                failureNewThreshold: "0",
-                                failureThreshold: "0",
-                                unstableNewThreshold: "0",
-                                unstableThreshold: "0"
-                            ], [
-                                $class: "SkippedThreshold",
-                                failureNewThreshold: "",
-                                failureThreshold: "",
-                                unstableNewThreshold: "",
-                                unstableThreshold: ""
-                            ]],
-                            tools: [[
-                                $class: "NUnitJunitHudsonTestType",
-                                deleteOutputFiles: true,
-                                failIfNotNew: true,
-                                pattern: "output/tests/*/TestResult.xml",
-                                skipNoTestFiles: false,
-                                stopProcessingIfError: true
-                            ]]
-                        ])
-                    }
-
-                    stage("End Managed") {
-                        uploadBlobs("managed-${host.toLowerCase()}")
-
-                        reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
-                    }
-                } catch (Exception e) {
-                    reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
-                    throw e
                 }
             }
         }
