@@ -129,7 +129,7 @@ def createManagedBuilder(host, label) {
                                 checkout scm
                                 downloadBlobs("native-*")
 
-                                bootstrapper("-t everything -v normal --skipexternals=all", host)
+                                bootstrapper("-t everything -v normal --skipexternals=all", host, "")
 
                                 step([
                                     $class: "XUnitBuilder",
@@ -190,7 +190,7 @@ def createPackagingBuilder() {
                                 checkout scm
                                 downloadBlobs("managed-*");
 
-                                bootstrapper("-t nuget-only -v normal", host)
+                                bootstrapper("-t nuget-only -v normal", host, "")
 
                                 uploadBlobs("package-${host.toLowerCase()}")
 
