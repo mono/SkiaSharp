@@ -85,7 +85,7 @@ node {
 // Functions
 
 def createNativeBuilder(platform, host, label) {
-    def stage = "${platform} on ${host}"
+    def stageName = "${platform} on ${host}"
     def githubContext = "Build Native - ${stage}"
     def cenv = customEnv[host.toLowerCase()]
 
@@ -95,13 +95,13 @@ def createNativeBuilder(platform, host, label) {
                 withEnv(cenv) {
                     ws("${getWSRoot()}/native-${platform.toLowerCase()}") {
                         try {
-                            stage("Begin Native") {
+                            stage("Begin Native ${stageName}") {
                                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
                                 checkout scm
                                 cmd("git submodule update --init --recursive")
                             }
 
-                            stage("Build Native") {
+                            stage("Build Native ${stageName}") {
                                 def pre = ""
                                 if (host.toLowerCase() == "linux" && platform.toLowerCase() == "tizen") {
                                     pre = "./scripts/install-tizen.sh && "
@@ -109,7 +109,7 @@ def createNativeBuilder(platform, host, label) {
                                 bootstrapper("-t externals-${platform.toLowerCase()} -v normal", host, pre)
                             }
 
-                            stage("End Native") {
+                            stage("End Native ${stageName}") {
                                 uploadBlobs("native-${platform.toLowerCase()}_${host.toLowerCase()}")
 
                                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
@@ -126,7 +126,7 @@ def createNativeBuilder(platform, host, label) {
 }
 
 def createManagedBuilder(host, label) {
-    def stage = "${host}"
+    def stageName = "${host}"
     def githubContext = "Build Managed - ${host}"
     def cenv = customEnv[host.toLowerCase()]
 
@@ -136,18 +136,18 @@ def createManagedBuilder(host, label) {
                 withEnv(cenv) {
                     ws("${getWSRoot()}/managed-${host.toLowerCase()}") {
                         try {
-                            stage("Begin Managed") {
+                            stage("Begin Managed ${stageName}") {
                                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
 
                                 checkout scm
                                 downloadBlobs("native-*")
                             }
 
-                            stage("Build Managed") {
+                            stage("Build Managed ${stageName}") {
                                 bootstrapper("-t everything -v normal --skipexternals=all", host)
                             }
 
-                            stage("Test Managed") {
+                            stage("Test Managed ${stageName}") {
                                 step([
                                     $class: "XUnitBuilder",
                                     testTimeMargin: "3000",
@@ -176,7 +176,7 @@ def createManagedBuilder(host, label) {
                                 ])
                             }
 
-                            stage("End Managed") {
+                            stage("End Managed ${stageName}") {
                                 uploadBlobs("managed-${host.toLowerCase()}")
 
                                 reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
