@@ -29,6 +29,7 @@ using NuGet.Versioning;
 var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")));
 var VERBOSITY = (Verbosity) Enum.Parse (typeof(Verbosity), Argument ("v", Argument ("verbosity", Argument ("Verbosity", "Normal"))), true);
 var SKIP_EXTERNALS = Argument ("skipexternals", Argument ("SkipExternals", "")).ToLower ().Split (',');
+var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAll", Argument ("PackAllPlatforms", TARGET.ToLower() == "ci" || TARGET.ToLower() == "nuget-only")));
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
@@ -36,10 +37,6 @@ var CakeToolPath = Context.Tools.Resolve ("Cake.exe");
 var MDocPath = Context.Tools.Resolve ("mdoc.exe");
 var MSBuildToolPath = GetMSBuildToolPath (EnvironmentVariable ("MSBUILD_EXE"));
 var PythonToolPath = EnvironmentVariable ("PYTHON_EXE") ?? "python";
-
-var CI_TARGETS = new string[] { "CI", "WINDOWS-CI", "LINUX-CI", "MAC-CI" };
-var IS_ON_CI = CI_TARGETS.Contains (TARGET.ToUpper ());
-var IS_ON_FINAL_CI = TARGET.ToUpper () == "CI";
 
 DirectoryPath ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? EnvironmentVariable ("ANDROID_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-sdk-macosx";
 DirectoryPath ANDROID_NDK_HOME = EnvironmentVariable ("ANDROID_NDK_HOME") ?? EnvironmentVariable ("ANDROID_NDK_ROOT") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-ndk";
@@ -56,14 +53,14 @@ DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/pac
 DirectoryPath PROFILE_PATH = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
 DirectoryPath NUGET_PACKAGES = EnvironmentVariable ("NUGET_PACKAGES") ?? PROFILE_PATH.Combine (".nuget/packages");
 
-var GIT_SHA = EnvironmentVariable ("GIT_COMMIT") ?? string.Empty;
+var GIT_SHA = EnvironmentVariable ("GIT_COMMIT") ?? "";
 if (!string.IsNullOrEmpty (GIT_SHA) && GIT_SHA.Length >= 6) {
     GIT_SHA = GIT_SHA.Substring (0, 6);
 } else {
     GIT_SHA = "{GIT_SHA}";
 }
 
-var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? string.Empty;
+var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? "";
 if (string.IsNullOrEmpty (BUILD_NUMBER)) {
     BUILD_NUMBER = "0";
 }
@@ -86,10 +83,7 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
 
 // this builds all the externals
 Task ("externals")
-    .IsDependentOn ("externals-native")
-    .Does (() => 
-{
-});
+    .IsDependentOn ("externals-native");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // LIBS - the managed C# libraries
@@ -97,7 +91,7 @@ Task ("externals")
 
 Task ("libs")
     .IsDependentOn ("externals")
-    .Does (() => 
+    .Does (() =>
 {
     // build the managed libraries
     var platform = "";
@@ -126,7 +120,7 @@ Task ("libs")
 Task ("tests")
     .IsDependentOn ("libs")
     .IsDependentOn ("nuget")
-    .Does (() => 
+    .Does (() =>
 {
     var RunDesktopTest = new Action<string> (arch => {
         var platform = "";
@@ -195,7 +189,7 @@ Task ("tests")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("samples")
-    .Does (() => 
+    .Does (() =>
 {
     // create the samples archive
     CreateSamplesZip ("./samples/", "./output/");
@@ -291,10 +285,16 @@ Task ("samples")
 
 Task ("nuget")
     .IsDependentOn ("libs")
-    .Does (() => 
+    .IsDependentOn ("nuget-only")
+    .Does (() =>
+{
+});
+
+Task ("nuget-only")
+    .Does (() =>
 {
     var platform = "";
-    if (!IS_ON_FINAL_CI) {
+    if (!PACK_ALL_PLATFORMS) {
         if (IsRunningOnWindows ()) {
             platform = "windows";
         } else if (IsRunningOnMac ()) {
@@ -398,11 +398,9 @@ Task ("nuget")
 
 Task ("clean")
     .IsDependentOn ("clean-externals")
-    .IsDependentOn ("clean-managed")
-    .Does (() => 
-{
-});
-Task ("clean-managed").Does (() => 
+    .IsDependentOn ("clean-managed");
+Task ("clean-managed")
+    .Does (() =>
 {
     CleanDirectories ("./binding/*/bin");
     CleanDirectories ("./binding/*/obj");
@@ -449,6 +447,8 @@ Task ("Everything")
     .IsDependentOn ("tests")
     .IsDependentOn ("samples");
 
+Task ("Nothing");
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // CI - the master target to build everything
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -474,19 +474,31 @@ Task ("Linux-CI")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Information ("");
+
 Information ("Tool Paths:");
 Information ("  Cake.exe:   {0}", CakeToolPath);
-Information ("  nuget.exe:  {0}", NuGetToolPath);
+Information ("  mdoc:       {0}", MDocPath);
 Information ("  msbuild:    {0}", MSBuildToolPath);
+Information ("  nuget.exe:  {0}", NuGetToolPath);
 Information ("  python:     {0}", PythonToolPath);
 Information ("");
 
-Information ("Build Environment:");
-if (IS_ON_CI) {
-    Information ("  Detected that we are building on CI, {0}.", IS_ON_FINAL_CI ? "and on FINAL CI" : "but NOT on final CI");
-} else {
-    Information ("  Detected that we are {0} on CI.", "NOT");
-}
+Information ("Build Paths:");
+Information ("  ~:              {0}", PROFILE_PATH);
+Information ("  NuGet Cache:    {0}", NUGET_PACKAGES);
+Information ("  root:           {0}", ROOT_PATH);
+Information ("  docs:           {0}", DOCS_PATH);
+Information ("  package_cache:  {0}", PACKAGE_CACHE_PATH);
+Information ("  ANGLE:          {0}", ANGLE_PATH);
+Information ("  depot_tools:    {0}", DEPOT_PATH);
+Information ("  harfbuzz:       {0}", HARFBUZZ_PATH);
+Information ("  skia:           {0}", SKIA_PATH);
+Information ("");
+
+Information ("SDK Paths:");
+Information ("  Android SDK:   {0}", ANDROID_SDK_ROOT);
+Information ("  Android NDK:   {0}", ANDROID_NDK_HOME);
+Information ("  Tizen Studio:  {0}", TIZEN_STUDIO_HOME);
 Information ("");
 
 Information ("Environment Variables:");

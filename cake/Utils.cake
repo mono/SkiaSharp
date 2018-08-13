@@ -60,3 +60,26 @@ string GetVersion (string lib, string type = "nuget")
         return "";
     }
 }
+
+bool ShouldBuildExternal (string platform)
+{
+    platform = platform?.ToLower() ?? "";
+
+    if (SKIP_EXTERNALS.Contains ("all"))
+        return false;
+
+    switch (platform) {
+        case "mac":
+        case "macos":
+            platform = "osx";
+            break;
+        case "win":
+            platform = "windows";
+            break;
+    }
+
+    if (SKIP_EXTERNALS.Contains (platform))
+        return false;
+
+    return true;
+}

@@ -59,7 +59,7 @@ void RunLipo (DirectoryPath directory, FilePath output, FilePath[] inputs)
 Task ("externals-init")
     .IsDependentOn ("externals-angle-uwp")
     .IsDependentOn ("externals-harfbuzz")
-    .Does (() =>  
+    .Does (() =>
 {
     RunProcess (PythonToolPath, new ProcessSettings {
         Arguments = SKIA_PATH.CombineWithFilePath ("tools/git-sync-deps").FullPath,
@@ -68,26 +68,16 @@ Task ("externals-init")
 });
 
 // this builds the native C and C++ externals 
-Task ("externals-native")
-    .IsDependentOn ("externals-uwp")
-    .IsDependentOn ("externals-windows")
-    .IsDependentOn ("externals-osx")
-    .IsDependentOn ("externals-ios")
-    .IsDependentOn ("externals-tvos")
-    .IsDependentOn ("externals-watchos")
-    .IsDependentOn ("externals-android")
-    .IsDependentOn ("externals-linux")
-    .IsDependentOn ("externals-tizen")
-    .Does (() => 
-{
-});
+Task ("externals-native");
+Task ("externals-native-skip");
 
 // this builds the native C and C++ externals for Windows
 Task ("externals-windows")
     .IsDependentOn ("externals-init")
-    .WithCriteria (!SKIP_EXTERNALS.Contains ("windows"))
+    .IsDependeeOf (ShouldBuildExternal ("windows") ? "externals-native" : "externals-native-skip")
+    .WithCriteria (ShouldBuildExternal ("windows"))
     .WithCriteria (IsRunningOnWindows ())
-    .Does (() =>  
+    .Does (() =>
 {
     // libSkiaSharp
 
@@ -131,9 +121,10 @@ Task ("externals-windows")
 // this builds the native C and C++ externals for Windows UWP
 Task ("externals-uwp")
     .IsDependentOn ("externals-init")
-    .WithCriteria (!SKIP_EXTERNALS.Contains ("uwp"))
+    .IsDependeeOf (ShouldBuildExternal ("uwp") ? "externals-native" : "externals-native-skip")
+    .WithCriteria (ShouldBuildExternal ("uwp"))
     .WithCriteria (IsRunningOnWindows ())
-    .Does (() =>  
+    .Does (() =>
 {
     // libSkiaSharp
 
@@ -190,11 +181,14 @@ Task ("externals-uwp")
 });
 
 // this builds the native C and C++ externals for Mac OS X
+Task ("externals-macos")
+    .IsDependentOn ("externals-osx");
 Task ("externals-osx")
     .IsDependentOn ("externals-init")
-    .WithCriteria (!SKIP_EXTERNALS.Contains ("osx"))
+    .IsDependeeOf (ShouldBuildExternal ("osx") ? "externals-native" : "externals-native-skip")
+    .WithCriteria (ShouldBuildExternal ("osx"))
     .WithCriteria (IsRunningOnMac ())
-    .Does (() =>  
+    .Does (() =>
 {
     // SkiaSharp
 
@@ -265,9 +259,10 @@ Task ("externals-osx")
 // this builds the native C and C++ externals for iOS
 Task ("externals-ios")
     .IsDependentOn ("externals-init")
-    .WithCriteria (!SKIP_EXTERNALS.Contains ("ios"))
+    .IsDependeeOf (ShouldBuildExternal ("ios") ? "externals-native" : "externals-native-skip")
+    .WithCriteria (ShouldBuildExternal ("ios"))
     .WithCriteria (IsRunningOnMac ())
-    .Does (() => 
+    .Does (() =>
 {
     // SkiaSharp
 
@@ -362,9 +357,10 @@ Task ("externals-ios")
 // this builds the native C and C++ externals for tvOS
 Task ("externals-tvos")
     .IsDependentOn ("externals-init")
-    .WithCriteria (!SKIP_EXTERNALS.Contains ("tvos"))
+    .IsDependeeOf (ShouldBuildExternal ("tvos") ? "externals-native" : "externals-native-skip")
+    .WithCriteria (ShouldBuildExternal ("tvos"))
     .WithCriteria (IsRunningOnMac ())
-    .Does (() => 
+    .Does (() =>
 {
     // SkiaSharp
 
@@ -437,9 +433,10 @@ Task ("externals-tvos")
 // this builds the native C and C++ externals for watchOS
 Task ("externals-watchos")
     .IsDependentOn ("externals-init")
-    .WithCriteria (!SKIP_EXTERNALS.Contains ("watchos"))
+    .IsDependeeOf (ShouldBuildExternal ("watchos") ? "externals-native" : "externals-native-skip")
+    .WithCriteria (ShouldBuildExternal ("watchos"))
     .WithCriteria (IsRunningOnMac ())
-    .Does (() => 
+    .Does (() =>
 {
     // SkiaSharp
 
@@ -520,9 +517,10 @@ Task ("externals-watchos")
 // this builds the native C and C++ externals for Android
 Task ("externals-android")
     .IsDependentOn ("externals-init")
-    .WithCriteria (!SKIP_EXTERNALS.Contains ("android"))
+    .IsDependeeOf (ShouldBuildExternal ("android") ? "externals-native" : "externals-native-skip")
+    .WithCriteria (ShouldBuildExternal ("android"))
     .WithCriteria (IsRunningOnMac () || IsRunningOnWindows ())
-    .Does (() => 
+    .Does (() =>
 {
     var cmd = IsRunningOnWindows () ? ".cmd" : "";
     var ndkbuild = ANDROID_NDK_HOME.CombineWithFilePath ($"ndk-build{cmd}").FullPath;
@@ -568,9 +566,10 @@ Task ("externals-android")
 // this builds the native C and C++ externals for Linux
 Task ("externals-linux")
     .IsDependentOn ("externals-init")
-    .WithCriteria (!SKIP_EXTERNALS.Contains ("linux"))
+    .IsDependeeOf (ShouldBuildExternal ("linux") ? "externals-native" : "externals-native-skip")
+    .WithCriteria (ShouldBuildExternal ("linux"))
     .WithCriteria (IsRunningOnLinux ())
-    .Does (() => 
+    .Does (() =>
 {
     var arches = EnvironmentVariable ("BUILD_ARCH") ?? (Environment.Is64BitOperatingSystem ? "x64" : "x86");  // x64, x86, ARM
     var BUILD_ARCH = arches.Split (',').Select (a => a.Trim ()).ToArray ();
@@ -636,7 +635,8 @@ Task ("externals-linux")
 
 Task ("externals-tizen")
     .IsDependentOn ("externals-init")
-    .WithCriteria (!SKIP_EXTERNALS.Contains ("tizen"))
+    .IsDependeeOf (ShouldBuildExternal ("tizen") ? "externals-native" : "externals-native-skip")
+    .WithCriteria (ShouldBuildExternal ("tizen"))
     .Does (() =>
 {
     var bat = IsRunningOnWindows () ? ".bat" : "";
@@ -699,7 +699,7 @@ Task ("externals-tizen")
 
 Task ("externals-angle-uwp")
     .WithCriteria (!FileExists (ANGLE_PATH.CombineWithFilePath ("uwp/ANGLE.WindowsStore.nuspec")))
-    .Does (() =>  
+    .Does (() =>
 {
     var version = GetVersion ("ANGLE.WindowsStore", "release");
     var angleUrl = $"https://www.nuget.org/api/v2/package/ANGLE.WindowsStore/{version}";
@@ -717,7 +717,7 @@ Task ("externals-harfbuzz")
     .WithCriteria (
         !FileExists (HARFBUZZ_PATH.CombineWithFilePath ("harfbuzz/README")) || 
         !FileExists (HARFBUZZ_PATH.CombineWithFilePath ($"harfbuzz-{GetVersion ("harfbuzz", "release")}.tar.bz2")))
-    .Does (() =>  
+    .Does (() =>
 {
     var version = GetVersion ("harfbuzz", "release");
     var url = $"https://github.com/behdad/harfbuzz/releases/download/{version}/harfbuzz-{version}.tar.bz2";
