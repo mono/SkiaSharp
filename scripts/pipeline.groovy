@@ -96,8 +96,6 @@ def createNativeBuilder(platform, host, label) {
                     withEnv(customEnv[host] + ["NODE_LABEL=${label}"]) {
                         ws("${getWSRoot()}/native-${platform}") {
                             try {
-                                cmd("echo Executing ${githubContext}...")
-
                                 checkout scm
                                 cmd("git submodule update --init --recursive")
 
