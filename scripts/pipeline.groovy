@@ -49,6 +49,8 @@ node("ubuntu-1604-amd64") {
             // linux
             linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64"),
             tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64"),
+
+            failFast: true
         ])
     }
 
@@ -57,12 +59,16 @@ node("ubuntu-1604-amd64") {
             windows: createManagedBuilder("Windows",    "components-windows"),
             macos:   createManagedBuilder("macOS",      "components"),
             linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64"),
+
+            failFast: true
         ])
     }
 
     stage("Packaging") {
         parallel([
             package: createPackagingBuilder()
+
+            failFast: true
         ])
     }
 
