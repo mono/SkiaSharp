@@ -35,7 +35,7 @@ node("ubuntu-1604-amd64") {
             failFast: true,
 
             // windows
-            win32:              createNativeBuilder("Win32",      "Windows",  "components-windows"),
+            win32:              createNativeBuilder("Windows",    "Windows",  "components-windows"),
             uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows"),
             android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows"),
             tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows"),
