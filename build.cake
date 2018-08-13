@@ -266,7 +266,7 @@ Task ("samples")
         } else {
             // this is a platform variant
             slnPlatform = slnPlatform.ToLower ();
-            var shouldBuild = 
+            var shouldBuild =
                 (isLinux && slnPlatform == ".linux") ||
                 (isMac && slnPlatform == ".mac") ||
                 (isWin && slnPlatform == ".windows");
@@ -285,10 +285,7 @@ Task ("samples")
 
 Task ("nuget")
     .IsDependentOn ("libs")
-    .IsDependentOn ("nuget-only")
-    .Does (() =>
-{
-});
+    .IsDependentOn ("nuget-only");
 
 Task ("nuget-only")
     .Does (() =>
@@ -393,6 +390,16 @@ Task ("nuget-only")
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+// DOCS - creating the xml, markdown and other documentation
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Task ("update-docs")
+    .IsDependentOn ("docs-api-diff")
+    .IsDependentOn ("docs-api-diff-past")
+    .IsDependentOn ("docs-update-frameworks")
+    .IsDependentOn ("docs-format-docs");
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // CLEAN - remove all the build artefacts
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -470,7 +477,7 @@ Task ("Linux-CI")
     .IsDependentOn ("CI");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// BUILD NOW 
+// BUILD NOW
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Information ("");

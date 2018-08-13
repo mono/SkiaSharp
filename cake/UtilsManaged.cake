@@ -3,8 +3,8 @@ var MSBuildNS = (XNamespace) "http://schemas.microsoft.com/developer/msbuild/200
 
 var RunMSBuildWithPlatform = new Action<FilePath, string> ((solution, platform) =>
 {
-    MSBuild (solution, c => { 
-        c.Configuration = "Release"; 
+    MSBuild (solution, c => {
+        c.Configuration = "Release";
         c.Verbosity = VERBOSITY;
         c.Properties ["Platform"] = new [] { platform };
         c.MSBuildPlatform = MSBuildPlatform.x86;
@@ -16,8 +16,8 @@ var RunMSBuildWithPlatform = new Action<FilePath, string> ((solution, platform) 
 
 var RunMSBuildWithPlatformTarget = new Action<FilePath, string> ((solution, platformTarget) =>
 {
-    MSBuild (solution, c => { 
-        c.Configuration = "Release"; 
+    MSBuild (solution, c => {
+        c.Configuration = "Release";
         c.Verbosity = VERBOSITY;
         c.PlatformTarget = (PlatformTarget)Enum.Parse(typeof(PlatformTarget), platformTarget);
         if (!string.IsNullOrEmpty (MSBuildToolPath)) {
@@ -28,8 +28,8 @@ var RunMSBuildWithPlatformTarget = new Action<FilePath, string> ((solution, plat
 
 var RunMSBuildRestore = new Action<FilePath> ((solution) =>
 {
-    MSBuild (solution, c => { 
-        c.Configuration = "Release"; 
+    MSBuild (solution, c => {
+        c.Configuration = "Release";
         c.Targets.Clear();
         c.Targets.Add("Restore");
         c.Verbosity = VERBOSITY;
@@ -44,8 +44,8 @@ var RunMSBuildRestore = new Action<FilePath> ((solution) =>
 var RunMSBuildRestoreLocal = new Action<FilePath, DirectoryPath> ((solution, packagesDir) =>
 {
     var dir = solution.GetDirectory ();
-    MSBuild (solution, c => { 
-        c.Configuration = "Release"; 
+    MSBuild (solution, c => {
+        c.Configuration = "Release";
         c.Targets.Clear();
         c.Targets.Add("Restore");
         c.Verbosity = VERBOSITY;

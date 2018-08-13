@@ -42,7 +42,7 @@ void RunLipo (DirectoryPath directory, FilePath output, FilePath[] inputs)
     if (!IsRunningOnMac ()) {
         throw new InvalidOperationException ("lipo is only available on Unix.");
     }
-    
+
     EnsureDirectoryExists (directory.CombineWithFilePath (output).GetDirectory ());
 
     var inputString = string.Join(" ", inputs.Select (i => string.Format ("\"{0}\"", i)));
@@ -67,7 +67,7 @@ Task ("externals-init")
     });
 });
 
-// this builds the native C and C++ externals 
+// this builds the native C and C++ externals
 Task ("externals-native");
 Task ("externals-native-skip");
 
@@ -223,7 +223,7 @@ Task ("externals-osx")
 
     // create the fat dylib
     RunLipo ("output/native/osx/", "libSkiaSharp.dylib", new [] {
-        (FilePath) "i386/libSkiaSharp.dylib", 
+        (FilePath) "i386/libSkiaSharp.dylib",
         (FilePath) "x86_64/libSkiaSharp.dylib"
     });
 
@@ -251,7 +251,7 @@ Task ("externals-osx")
 
     // create the fat dylib
     RunLipo ("output/native/osx/", "libHarfBuzzSharp.dylib", new [] {
-        (FilePath) "i386/libHarfBuzzSharp.dylib", 
+        (FilePath) "i386/libHarfBuzzSharp.dylib",
         (FilePath) "x86_64/libHarfBuzzSharp.dylib"
     });
 });
@@ -310,14 +310,14 @@ Task ("externals-ios")
     buildArch ("iphonesimulator", "x86_64", "x64");
     buildArch ("iphoneos", "armv7", "arm");
     buildArch ("iphoneos", "arm64", "arm64");
-    
+
     // create the fat framework
     CopyDirectory ("output/native/ios/armv7/libSkiaSharp.framework/", "output/native/ios/libSkiaSharp.framework/");
     DeleteFile ("output/native/ios/libSkiaSharp.framework/libSkiaSharp");
     RunLipo ("output/native/ios/", "libSkiaSharp.framework/libSkiaSharp", new [] {
-        (FilePath) "i386/libSkiaSharp.framework/libSkiaSharp", 
-        (FilePath) "x86_64/libSkiaSharp.framework/libSkiaSharp", 
-        (FilePath) "armv7/libSkiaSharp.framework/libSkiaSharp", 
+        (FilePath) "i386/libSkiaSharp.framework/libSkiaSharp",
+        (FilePath) "x86_64/libSkiaSharp.framework/libSkiaSharp",
+        (FilePath) "armv7/libSkiaSharp.framework/libSkiaSharp",
         (FilePath) "arm64/libSkiaSharp.framework/libSkiaSharp"
     });
 
@@ -344,12 +344,12 @@ Task ("externals-ios")
     buildHarfBuzzArch ("iphonesimulator", "x86_64");
     buildHarfBuzzArch ("iphoneos", "armv7");
     buildHarfBuzzArch ("iphoneos", "arm64");
-    
+
     // create the fat archive
     RunLipo ("output/native/ios/", "libHarfBuzzSharp.a", new [] {
-        (FilePath) "i386/libHarfBuzzSharp.a", 
-        (FilePath) "x86_64/libHarfBuzzSharp.a", 
-        (FilePath) "armv7/libHarfBuzzSharp.a", 
+        (FilePath) "i386/libHarfBuzzSharp.a",
+        (FilePath) "x86_64/libHarfBuzzSharp.a",
+        (FilePath) "armv7/libHarfBuzzSharp.a",
         (FilePath) "arm64/libHarfBuzzSharp.a"
     });
 });
@@ -392,12 +392,12 @@ Task ("externals-tvos")
 
     buildArch ("appletvsimulator", "x86_64", "x64");
     buildArch ("appletvos", "arm64", "arm64");
-    
+
     // create the fat framework
     CopyDirectory ("output/native/tvos/arm64/libSkiaSharp.framework/", "output/native/tvos/libSkiaSharp.framework/");
     DeleteFile ("output/native/tvos/libSkiaSharp.framework/libSkiaSharp");
     RunLipo ("output/native/tvos/", "libSkiaSharp.framework/libSkiaSharp", new [] {
-        (FilePath) "x86_64/libSkiaSharp.framework/libSkiaSharp", 
+        (FilePath) "x86_64/libSkiaSharp.framework/libSkiaSharp",
         (FilePath) "arm64/libSkiaSharp.framework/libSkiaSharp"
     });
 
@@ -422,10 +422,10 @@ Task ("externals-tvos")
 
     buildHarfBuzzArch ("appletvsimulator", "x86_64");
     buildHarfBuzzArch ("appletvos", "arm64");
-    
+
     // create the fat framework
     RunLipo ("output/native/tvos/", "libHarfBuzzSharp.a", new [] {
-        (FilePath) "x86_64/libHarfBuzzSharp.a", 
+        (FilePath) "x86_64/libHarfBuzzSharp.a",
         (FilePath) "arm64/libHarfBuzzSharp.a"
     });
 });
@@ -481,7 +481,7 @@ Task ("externals-watchos")
     CopyDirectory ("output/native/watchos/armv7k/libSkiaSharp.framework/", "output/native/watchos/libSkiaSharp.framework/");
     DeleteFile ("output/native/watchos/libSkiaSharp.framework/libSkiaSharp");
     RunLipo ("output/native/watchos/", "libSkiaSharp.framework/libSkiaSharp", new [] {
-        (FilePath) "i386/libSkiaSharp.framework/libSkiaSharp", 
+        (FilePath) "i386/libSkiaSharp.framework/libSkiaSharp",
         (FilePath) "armv7k/libSkiaSharp.framework/libSkiaSharp"
     });
 
@@ -506,10 +506,10 @@ Task ("externals-watchos")
 
     buildHarfBuzzArch ("watchsimulator", "i386");
     buildHarfBuzzArch ("watchos", "armv7k");
-    
+
     // create the fat framework
     RunLipo ("output/native/watchos/", "libHarfBuzzSharp.a", new [] {
-        (FilePath) "i386/libHarfBuzzSharp.a", 
+        (FilePath) "i386/libHarfBuzzSharp.a",
         (FilePath) "armv7k/libHarfBuzzSharp.a"
     });
 });
@@ -554,7 +554,7 @@ Task ("externals-android")
     RunProcess (ndkbuild, new ProcessSettings {
         Arguments = "",
         WorkingDirectory = ROOT_PATH.Combine ("native-builds/libHarfBuzzSharp_android").FullPath,
-    }); 
+    });
 
     // copy libSkiaSharp to output
     foreach (var folder in new [] { "x86", "x86_64", "armeabi-v7a", "arm64-v8a" }) {
@@ -715,7 +715,7 @@ Task ("externals-angle-uwp")
 
 Task ("externals-harfbuzz")
     .WithCriteria (
-        !FileExists (HARFBUZZ_PATH.CombineWithFilePath ("harfbuzz/README")) || 
+        !FileExists (HARFBUZZ_PATH.CombineWithFilePath ("harfbuzz/README")) ||
         !FileExists (HARFBUZZ_PATH.CombineWithFilePath ($"harfbuzz-{GetVersion ("harfbuzz", "release")}.tar.bz2")))
     .Does (() =>
 {

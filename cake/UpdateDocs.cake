@@ -285,14 +285,7 @@ Task ("docs-format-docs")
 
     // log summary
     Information (
-        "Documentation missing in {0}/{1} ({2:0.0%}) types and {3}/{4} ({5:0.0%}) members.", 
-        typeCount, totalTypes, typeCount / totalTypes, 
+        "Documentation missing in {0}/{1} ({2:0.0%}) types and {3}/{4} ({5:0.0%}) members.",
+        typeCount, totalTypes, typeCount / totalTypes,
         memberCount, totalMembers, memberCount / totalMembers);
 });
-
-Task ("update-docs")
-    .IsDependentOn ("docs-api-diff")
-    .IsDependentOn ("docs-api-diff-past")
-    .IsDependentOn ("docs-update-frameworks")
-    .IsDependentOn ("docs-format-docs");
-    
