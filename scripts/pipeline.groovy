@@ -32,6 +32,8 @@ node("ubuntu-1604-amd64") {
 
     stage("Native Builds") {
         parallel([
+            failFast: true,
+
             // windows
             win32:              createNativeBuilder("Win32",      "Windows",  "components-windows"),
             uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows"),
@@ -49,26 +51,24 @@ node("ubuntu-1604-amd64") {
             // linux
             linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64"),
             tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64"),
-
-            failFast: true
         ])
     }
 
     stage("Managed Builds") {
         parallel([
+            failFast: true,
+
             windows: createManagedBuilder("Windows",    "components-windows"),
             macos:   createManagedBuilder("macOS",      "components"),
             linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64"),
-
-            failFast: true
         ])
     }
 
     stage("Packaging") {
         parallel([
-            package: createPackagingBuilder()
+            failFast: true,
 
-            failFast: true
+            package: createPackagingBuilder(),
         ])
     }
 
