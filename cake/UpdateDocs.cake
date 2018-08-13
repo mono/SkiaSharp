@@ -15,12 +15,19 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
         }
 
         // now copy the markdown files to the changelogs
-        var mdFiles = $"{path}/*.diff.md";
+        var mdFiles = $"{path}/*.*.md";
         ReplaceTextInFiles (mdFiles, "<h4>", "> ");
         ReplaceTextInFiles (mdFiles, "</h4>", Environment.NewLine);
         ReplaceTextInFiles (mdFiles, "\r\r", "\r");
         foreach (var file in GetFiles (mdFiles)) {
             var dllName = file.GetFilenameWithoutExtension ().GetFilenameWithoutExtension ().GetFilenameWithoutExtension ();
+            if (file.GetFilenameWithoutExtension ().GetExtension () == ".breaking") {
+                // skip over breaking changes without any breaking changes
+                if (!FindTextInFiles (file.FullPath, "###").Any ())
+                    continue;
+
+                dllName += ".breaking";
+            }
             var changelogPath = (FilePath)$"./changelogs/{id}/{version}/{dllName}.md";
             EnsureDirectoryExists (changelogPath.GetDirectory ());
             CopyFile (file, changelogPath);
@@ -53,6 +60,13 @@ Task ("docs-api-diff")
         Debug ($"Running a diff on '{latestVersion}' vs '{version}' of '{id}'...");
         var diffRoot = $"{baseDir}/{id}";
         using (var reader = new PackageArchiveReader ($"./output/nugets/{id.ToLower ()}.{version}.nupkg")) {
+            // run the diff with just the breaking changes
+            comparer.MarkdownDiffFileExtension = ".breaking.md";
+            comparer.IgnoreNonBreakingChanges = true;
+            await comparer.SaveCompleteDiffToDirectoryAsync (id, latestVersion, reader, diffRoot);
+            // run the diff on everything
+            comparer.MarkdownDiffFileExtension = null;
+            comparer.IgnoreNonBreakingChanges = false;
             await comparer.SaveCompleteDiffToDirectoryAsync (id, latestVersion, reader, diffRoot);
         }
         CopyChangelogs (diffRoot, id, version);
@@ -95,6 +109,13 @@ Task ("docs-api-diff-past")
             // generate the diff and copy to the changelogs
             Debug ($"Running a diff on '{previous}' vs '{version}' of '{id}'...");
             var diffRoot = $"{baseDir}/{id}/{version}";
+            // run the diff with just the breaking changes
+            comparer.MarkdownDiffFileExtension = ".breaking.md";
+            comparer.IgnoreNonBreakingChanges = true;
+            await comparer.SaveCompleteDiffToDirectoryAsync (id, previous, version, diffRoot);
+            // run the diff on everything
+            comparer.MarkdownDiffFileExtension = null;
+            comparer.IgnoreNonBreakingChanges = false;
             await comparer.SaveCompleteDiffToDirectoryAsync (id, previous, version, diffRoot);
             CopyChangelogs (diffRoot, id, version);
 
