@@ -3,6 +3,7 @@ import groovy.transform.Field
 @Field def isPr = false
 @Field def branchName = null
 @Field def commitHash = null
+@Field def githubStatusSha = null
 @Field def linuxPackages = "xvfb xauth libfontconfig1-dev libglu1-mesa-dev g++ mono-complete msbuild curl ca-certificates-mono unzip python git referenceassemblies-pcl dotnet-sdk-2.0.0 ttf-ancient-fonts openjdk-8-jdk zip gettext openvpn acl libxcb-render-util0 libv4l-0 libsdl1.2debian libxcb-image0 bridge-utils rpm2cpio libxcb-icccm4 libwebkitgtk-1.0-0 cpio"
 
 @Field def customEnv = [
@@ -32,6 +33,12 @@ node("ubuntu-1604-amd64") {
 
             isPr = env.ghprbPullId && !env.ghprbPullId.empty
             branchName = isPr ? "pr" : env.BRANCH_NAME
+            githubStatusSha = isPr ? env.ghprbActualCommit : commitHash
+
+            echo "Building SHA1: ${commitHash}..."
+            echo " - PR: ${isPr}..."
+            echo " - Branch Name: ${branchName}..."
+            echo " - Status SHA1: ${githubStatusSha}..."
         }
     }
 
@@ -285,7 +292,7 @@ def reportGitHubStatus(context, statusResult, statusResultMessage) {
         $class: "GitHubCommitStatusSetter",
         commitShaSource: [
             $class: "ManuallyEnteredShaSource",
-            sha: isPr ? env.ghprbActualCommit : commitHash
+            sha: githubStatusSha
         ],
         contextSource: [
             $class: "ManuallyEnteredCommitContextSource",
