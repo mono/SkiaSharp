@@ -203,6 +203,25 @@ Task ("docs-format-docs")
                 .Remove ();
         }
 
+        // remove the duplicate SKDynamicMemoryWStream.CopyTo method with a different return type
+        if (xdoc.Root.Name == "Type" && xdoc.Root.Attribute ("Name")?.Value == "SKDynamicMemoryWStream") {
+            var copyTos = xdoc.Root
+                .Elements ("Members")
+                .Elements ("Member")
+                .Where (e => e.Attribute ("MemberName")?.Value == "CopyTo")
+                .Where (e => e.Elements ("MemberSignature").Any (s => s.Attribute ("Value")?.Value == "M:SkiaSharp.SKDynamicMemoryWStream.CopyTo(SkiaSharp.SKWStream)"));
+            var voidReturn = copyTos.FirstOrDefault (e => e.Element ("ReturnValue")?.Element ("ReturnType")?.Value == "System.Void");
+            var boolReturn = copyTos.FirstOrDefault (e => e.Element ("ReturnValue")?.Element ("ReturnType")?.Value == "System.Boolean");
+            if (voidReturn != null && boolReturn != null) {
+                boolReturn
+                    .Element ("AssemblyInfo")
+                    .Elements ("AssemblyVersion")
+                    .FirstOrDefault ()
+                    .AddBeforeSelf (voidReturn.Element ("AssemblyInfo").Elements ("AssemblyVersion"));
+                voidReturn.Remove ();
+            }
+        }
+
         // count the types without docs
         var typesWithDocs = xdoc.Root
             .Elements ("Docs");
