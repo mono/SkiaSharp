@@ -44,8 +44,6 @@ node("ubuntu-1604-amd64") {
 
     stage("Native Builds") {
         parallel([
-            failFast: true,
-
             // windows
             win32:              createNativeBuilder("Windows",    "Windows",  "components-windows"),
             uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows"),
@@ -68,8 +66,6 @@ node("ubuntu-1604-amd64") {
 
     stage("Managed Builds") {
         parallel([
-            failFast: true,
-
             windows: createManagedBuilder("Windows",    "components-windows"),
             macos:   createManagedBuilder("macOS",      "components"),
             linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64"),
@@ -78,8 +74,6 @@ node("ubuntu-1604-amd64") {
 
     stage("Packaging") {
         parallel([
-            failFast: true,
-
             package: createPackagingBuilder(),
         ])
     }
@@ -332,6 +326,5 @@ def cmdResult(script) {
 def getWSRoot() {
     def cleanBranch = branchName.replace("/", "_").replace("\\", "_")
     def wsRoot = isUnix() ? "workspace" : "C:/bld"
-    def pr = isPr ? "-PR" : ""
-    return "${wsRoot}/SkiaSharp${pr}/${cleanBranch}"
+    return "${wsRoot}/SkiaSharp/${cleanBranch}"
 }
