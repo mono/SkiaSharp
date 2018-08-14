@@ -1,7 +1,7 @@
 import groovy.transform.Field
 
-@Field def isPr = (env.ghprbPullId && !env.ghprbPullId.empty ? true : false)
-@Field def branchName = (isPr ? "pr" : env.BRANCH_NAME)
+@Field def isPr = false // (env.ghprbPullId && !env.ghprbPullId.empty ? true : false)
+@Field def branchName = env.BRANCH_NAME // (isPr ? "pr" : env.BRANCH_NAME)
 @Field def commitHash = null
 @Field def linuxPackages = "xvfb xauth libfontconfig1-dev libglu1-mesa-dev g++ mono-complete msbuild curl ca-certificates-mono unzip python git referenceassemblies-pcl dotnet-sdk-2.0.0 ttf-ancient-fonts openjdk-8-jdk zip gettext openvpn acl libxcb-render-util0 libv4l-0 libsdl1.2debian libxcb-image0 bridge-utils rpm2cpio libxcb-icccm4 libwebkitgtk-1.0-0 cpio"
 
