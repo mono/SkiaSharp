@@ -296,7 +296,7 @@ def reportGitHubStatus(context, statusResult, statusResultMessage) {
         ],
         contextSource: [
             $class: "ManuallyEnteredCommitContextSource",
-            context: context
+            context: context + (isPr ? " (PR)" : "")
         ],
         statusBackrefSource: [
             $class: "ManuallyEnteredBackrefSource",
