@@ -87,7 +87,7 @@ def createNativeBuilder(platform, host, label) {
     platform = platform.toLowerCase();
     host = host.toLowerCase();
 
-    reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
+    reportGitHubStatus(githubContext, "PENDING", "Building...")
 
     return {
         stage(githubContext) {
@@ -107,9 +107,9 @@ def createNativeBuilder(platform, host, label) {
 
                                 uploadBlobs("native-${platform}_${host}")
 
-                                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
+                                reportGitHubStatus(githubContext, "SUCCESS", "Build complete.")
                             } catch (Exception e) {
-                                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
+                                reportGitHubStatus(githubContext, "FAILURE", "Build failed.")
                                 throw e
                             }
                         }
@@ -124,7 +124,7 @@ def createManagedBuilder(host, label) {
     def githubContext = "Build Managed - ${host}"
     host = host.toLowerCase();
 
-    reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
+    reportGitHubStatus(githubContext, "PENDING", "Building...")
 
     return {
         stage(githubContext) {
@@ -167,9 +167,9 @@ def createManagedBuilder(host, label) {
 
                                 uploadBlobs("managed-${host}")
 
-                                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
+                                reportGitHubStatus(githubContext, "SUCCESS", "Build complete.")
                             } catch (Exception e) {
-                                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
+                                reportGitHubStatus(githubContext, "FAILURE", "Build failed.")
                                 throw e
                             }
                         }
@@ -185,7 +185,7 @@ def createPackagingBuilder() {
     def host = "linux"
     def label = "ubuntu-1604-amd64"
 
-    reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Packing...")
+    reportGitHubStatus(githubContext, "PENDING", "Packing...")
 
     return {
         stage(githubContext) {
@@ -201,9 +201,9 @@ def createPackagingBuilder() {
 
                                 uploadBlobs("packing-${host}")
 
-                                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Pack complete.")
+                                reportGitHubStatus(githubContext, "SUCCESS", "Pack complete.")
                             } catch (Exception e) {
-                                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Pack failed.")
+                                reportGitHubStatus(githubContext, "FAILURE", "Pack failed.")
                                 throw e
                             }
                         }
@@ -275,7 +275,7 @@ def downloadBlobs(blobs) {
     }
 }
 
-def reportGitHubStatus(commitHash, context, backref, statusResult, statusResultMessage) {
+def reportGitHubStatus(context, statusResult, statusResultMessage) {
     step([
         $class: "GitHubCommitStatusSetter",
         commitShaSource: [
@@ -288,7 +288,7 @@ def reportGitHubStatus(commitHash, context, backref, statusResult, statusResultM
         ],
         statusBackrefSource: [
             $class: "ManuallyEnteredBackrefSource",
-            backref: backref
+            backref: env.BUILD_URL
         ],
         statusResultSource: [
             $class: "ConditionalStatusResultSource",
