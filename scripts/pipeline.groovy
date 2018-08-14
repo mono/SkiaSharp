@@ -1,7 +1,5 @@
 import groovy.transform.Field
 
-@Field def isPr = false // (env.ghprbPullId && !env.ghprbPullId.empty ? true : false)
-@Field def branchName = env.BRANCH_NAME // (isPr ? "pr" : env.BRANCH_NAME)
 @Field def commitHash = null
 @Field def linuxPackages = "xvfb xauth libfontconfig1-dev libglu1-mesa-dev g++ mono-complete msbuild curl ca-certificates-mono unzip python git referenceassemblies-pcl dotnet-sdk-2.0.0 ttf-ancient-fonts openjdk-8-jdk zip gettext openvpn acl libxcb-render-util0 libv4l-0 libsdl1.2debian libxcb-image0 bridge-utils rpm2cpio libxcb-icccm4 libwebkitgtk-1.0-0 cpio"
 
@@ -89,7 +87,7 @@ def createNativeBuilder(platform, host, label) {
     platform = platform.toLowerCase();
     host = host.toLowerCase();
 
-    reportGitHubStatus(githubContext, "PENDING", "Building...")
+    reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
 
     return {
         stage(githubContext) {
@@ -109,9 +107,9 @@ def createNativeBuilder(platform, host, label) {
 
                                 uploadBlobs("native-${platform}_${host}")
 
-                                reportGitHubStatus(githubContext, "SUCCESS", "Build complete.")
+                                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
                             } catch (Exception e) {
-                                reportGitHubStatus(githubContext, "FAILURE", "Build failed.")
+                                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
                                 throw e
                             }
                         }
@@ -126,7 +124,7 @@ def createManagedBuilder(host, label) {
     def githubContext = "Build Managed - ${host}"
     host = host.toLowerCase();
 
-    reportGitHubStatus(githubContext, "PENDING", "Building...")
+    reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Building...")
 
     return {
         stage(githubContext) {
@@ -169,9 +167,9 @@ def createManagedBuilder(host, label) {
 
                                 uploadBlobs("managed-${host}")
 
-                                reportGitHubStatus(githubContext, "SUCCESS", "Build complete.")
+                                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Build complete.")
                             } catch (Exception e) {
-                                reportGitHubStatus(githubContext, "FAILURE", "Build failed.")
+                                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Build failed.")
                                 throw e
                             }
                         }
@@ -187,7 +185,7 @@ def createPackagingBuilder() {
     def host = "linux"
     def label = "ubuntu-1604-amd64"
 
-    reportGitHubStatus(githubContext, "PENDING", "Packing...")
+    reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "PENDING", "Packing...")
 
     return {
         stage(githubContext) {
@@ -203,9 +201,9 @@ def createPackagingBuilder() {
 
                                 uploadBlobs("packing-${host}")
 
-                                reportGitHubStatus(githubContext, "SUCCESS", "Pack complete.")
+                                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "SUCCESS", "Pack complete.")
                             } catch (Exception e) {
-                                reportGitHubStatus(githubContext, "FAILURE", "Pack failed.")
+                                reportGitHubStatus(commitHash, githubContext, env.BUILD_URL, "FAILURE", "Pack failed.")
                                 throw e
                             }
                         }
@@ -277,12 +275,12 @@ def downloadBlobs(blobs) {
     }
 }
 
-def reportGitHubStatus(context, statusResult, statusResultMessage) {
+def reportGitHubStatus(commitHash, context, backref, statusResult, statusResultMessage) {
     step([
         $class: "GitHubCommitStatusSetter",
         commitShaSource: [
             $class: "ManuallyEnteredShaSource",
-            sha: commitHash // isPr ? env.ghprbActualCommit : commitHash
+            sha: commitHash
         ],
         contextSource: [
             $class: "ManuallyEnteredCommitContextSource",
@@ -290,7 +288,7 @@ def reportGitHubStatus(context, statusResult, statusResultMessage) {
         ],
         statusBackrefSource: [
             $class: "ManuallyEnteredBackrefSource",
-            backref: env.BUILD_URL
+            backref: backref
         ],
         statusResultSource: [
             $class: "ConditionalStatusResultSource",
@@ -320,8 +318,7 @@ def cmdResult(script) {
 }
 
 def getWSRoot() {
-    def cleanBranch = branchName.replace("/", "_").replace("\\", "_")
-    def wsRoot = isUnix() ? "workspace" : "C:/bld"
-    def pr = isPr ? "-PR" : ""
-    return "${wsRoot}/SkiaSharp${pr}/${cleanBranch}"
+    def cleanBranch = env.BRANCH_NAME.replace("/", "_").replace("\\", "_")
+    def wsRoot = (isUnix()) ? "workspace" : "C:/bld"
+    return "${wsRoot}/SkiaSharp/${cleanBranch}"
 }
