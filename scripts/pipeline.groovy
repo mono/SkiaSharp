@@ -282,7 +282,7 @@ def reportGitHubStatus(context, statusResult, statusResultMessage) {
         $class: "GitHubCommitStatusSetter",
         commitShaSource: [
             $class: "ManuallyEnteredShaSource",
-            sha: isPr ? env.ghprbActualCommit : commitHash
+            sha: commitHash // isPr ? env.ghprbActualCommit : commitHash
         ],
         contextSource: [
             $class: "ManuallyEnteredCommitContextSource",
