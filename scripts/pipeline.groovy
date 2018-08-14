@@ -285,7 +285,7 @@ def reportGitHubStatus(context, statusResult, statusResultMessage) {
         $class: "GitHubCommitStatusSetter",
         commitShaSource: [
             $class: "ManuallyEnteredShaSource",
-            sha: commitHash
+            sha: isPr ? env.ghprbActualCommit : commitHash
         ],
         contextSource: [
             $class: "ManuallyEnteredCommitContextSource",
@@ -323,7 +323,8 @@ def cmdResult(script) {
 }
 
 def getWSRoot() {
-    def cleanBranch = env.BRANCH_NAME.replace("/", "_").replace("\\", "_")
-    def wsRoot = (isUnix()) ? "workspace" : "C:/bld"
-    return "${wsRoot}/SkiaSharp/${cleanBranch}"
+    def cleanBranch = branchName.replace("/", "_").replace("\\", "_")
+    def wsRoot = isUnix() ? "workspace" : "C:/bld"
+    def pr = isPr ? "-PR" : ""
+    return "${wsRoot}/SkiaSharp${pr}/${cleanBranch}"
 }
