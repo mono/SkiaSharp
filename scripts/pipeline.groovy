@@ -38,7 +38,7 @@ node("ubuntu-1604-amd64") {
             echo "Building SHA1: ${commitHash}..."
             echo " - PR: ${isPr}..."
             echo " - Branch Name: ${branchName}..."
-            echo " - Status SHA1: ${githubStatusSha}..."
+            echo " - GitHub Status SHA1: ${githubStatusSha}..."
         }
     }
 
@@ -80,7 +80,7 @@ node("ubuntu-1604-amd64") {
 
     stage("Clean Up") {
         timestamps {
-
+            cleanWs()
         }
     }
 }
@@ -113,6 +113,7 @@ def createNativeBuilder(platform, host, label) {
 
                                 uploadBlobs("native-${platform}_${host}")
 
+                                cleanWs()
                                 reportGitHubStatus(githubContext, "SUCCESS", "Build complete.")
                             } catch (Exception e) {
                                 reportGitHubStatus(githubContext, "FAILURE", "Build failed.")
@@ -173,6 +174,7 @@ def createManagedBuilder(host, label) {
 
                                 uploadBlobs("managed-${host}")
 
+                                cleanWs()
                                 reportGitHubStatus(githubContext, "SUCCESS", "Build complete.")
                             } catch (Exception e) {
                                 reportGitHubStatus(githubContext, "FAILURE", "Build failed.")
@@ -207,6 +209,7 @@ def createPackagingBuilder() {
 
                                 uploadBlobs("packing-${host}")
 
+                                cleanWs()
                                 reportGitHubStatus(githubContext, "SUCCESS", "Pack complete.")
                             } catch (Exception e) {
                                 reportGitHubStatus(githubContext, "FAILURE", "Pack failed.")
