@@ -312,11 +312,6 @@ Task ("nuget-only")
                             file.Remove ();
                         }
                     }
-                } else {
-                    // special case as we don't add linux-only files on CI
-                    if (nuspecPlatform.Value == "linux") {
-                        file.Remove ();
-                    }
                 }
                 nuspecPlatform.Remove ();
             }
