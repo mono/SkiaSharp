@@ -24,7 +24,7 @@
 
     <!-- get the preferred paths -->
     <PropertyGroup>
-        <PreferredWindowsNativeSkiaSharpPath>$(MSBuildThisFileDirectory)..\..\runtimes\win7-$(PreferredNativeSkiaSharp)\native\libSkiaSharp.dll</PreferredWindowsNativeSkiaSharpPath>
+        <PreferredWindowsNativeSkiaSharpPath>$(MSBuildThisFileDirectory)..\..\runtimes\win-$(PreferredNativeSkiaSharp)\native\libSkiaSharp.dll</PreferredWindowsNativeSkiaSharpPath>
         <PreferredOSXNativeSkiaSharpPath>$(MSBuildThisFileDirectory)..\..\runtimes\osx\native\libSkiaSharp.dylib</PreferredOSXNativeSkiaSharpPath>
         <PreferredLinuxNativeSkiaSharpPath>$(MSBuildThisFileDirectory)..\..\runtimes\linux-$(PreferredNativeSkiaSharp)\native\libSkiaSharp.so</PreferredLinuxNativeSkiaSharpPath>
     </PropertyGroup>
@@ -47,13 +47,13 @@
     <!-- a special case for Any CPU -->
     <ItemGroup Condition=" '$(ShouldIncludeNativeSkiaSharp)' != 'False' and ( '$(PlatformTarget)' != 'x64' and '$(PlatformTarget)' != 'x86' ) ">
         <!-- Windows -->
-        <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win7-x86\native\libSkiaSharp.dll"
-              Condition="Exists('$(MSBuildThisFileDirectory)..\..\runtimes\win7-x86\native\libSkiaSharp.dll')">
+        <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win-x86\native\libSkiaSharp.dll"
+              Condition="Exists('$(MSBuildThisFileDirectory)..\..\runtimes\win-x86\native\libSkiaSharp.dll')">
             <Link>x86\libSkiaSharp.dll</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win7-x64\native\libSkiaSharp.dll"
-              Condition="Exists('$(MSBuildThisFileDirectory)..\..\runtimes\win7-x64\native\libSkiaSharp.dll')">
+        <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win-x64\native\libSkiaSharp.dll"
+              Condition="Exists('$(MSBuildThisFileDirectory)..\..\runtimes\win-x64\native\libSkiaSharp.dll')">
             <Link>x64\libSkiaSharp.dll</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
