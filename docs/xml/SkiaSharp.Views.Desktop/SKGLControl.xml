@@ -224,10 +224,19 @@
         <param name="e">The event arguments that contain the drawing surface and information.</param>
         <summary>Implement this to draw on the canvas.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Desktop.SKGLControl.OnPaintSurface(SkiaSharp.Views.Desktop.SKPaintGLSurfaceEventArgs)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Desktop.SKGLControl.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
-          <para></para>
-          <example>
-            <code lang="C#"><![CDATA[protected override void OnPaintSurface (SKPaintGLSurfaceEventArgs e)
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+There are two ways to draw on this surface: by overriding the
+<xref:SkiaSharp.Views.Desktop.SKGLControl.OnPaintSurface(SkiaSharp.Views.Desktop.SKPaintGLSurfaceEventArgs)>
+method, or by attaching a handler to the
+<xref:SkiaSharp.Views.Desktop.SKGLControl.PaintSurface>
+event. If the method is overridden, then the base must be called.
+
+## Examples
+
+```csharp
+protected override void OnPaintSurface (SKPaintGLSurfaceEventArgs e)
 {
     // call the base method
     base.OnPaintSurface (e);
@@ -240,8 +249,9 @@
 
     // draw on the canvas
     canvas.Flush ();
-}]]></code>
-          </example>
+}
+```
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -268,10 +278,19 @@
       <Docs>
         <summary>Occurs when the surface needs to be redrawn.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Desktop.SKGLControl.OnPaintSurface(SkiaSharp.Views.Desktop.SKPaintGLSurfaceEventArgs)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Desktop.SKGLControl.PaintSurface" /> event.</para>
-          <para></para>
-          <example>
-            <code lang="C#"><![CDATA[SKGLControl myView = ...;
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+There are two ways to draw on this surface: by overriding the
+<xref:SkiaSharp.Views.Desktop.SKGLControl.OnPaintSurface(SkiaSharp.Views.Desktop.SKPaintGLSurfaceEventArgs)>
+method, or by attaching a handler to the
+<xref:SkiaSharp.Views.Desktop.SKGLControl.PaintSurface>
+event.
+
+## Examples
+
+```csharp
+SKGLControl myView = ...;
 
 myView.PaintSurface += (sender, e) => {
     var surface = e.Surface;
@@ -282,8 +301,9 @@ myView.PaintSurface += (sender, e) => {
 
     // draw on the canvas
     canvas.Flush ();
-};]]></code>
-          </example>
+};
+```
+]]></format>
         </remarks>
       </Docs>
     </Member>

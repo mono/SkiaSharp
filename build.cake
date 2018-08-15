@@ -2,9 +2,7 @@
 #addin nuget:?package=Cake.XCode&version=4.0.0
 #addin nuget:?package=Cake.FileHelpers&version=3.0.0
 #addin nuget:?package=SharpCompress&version=0.22.0
-#addin nuget:?package=Newtonsoft.Json&version=11.0.2
-#addin nuget:https://ci.appveyor.com/nuget/cake-monoapitools-gunq9ba46ljl?package=Cake.MonoApiTools&version=2.0.0-preview2
-#addin nuget:https://ci.appveyor.com/nuget/nugetcomparer-mmjynpq6dcr9?package=Mono.ApiTools.NuGetDiff&version=1.0.0-preview-20&loaddependencies=true
+#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.0.0&loaddependencies=true
 
 #tool "nuget:?package=xunit.runner.console&version=2.4.0"
 #tool "nuget:?package=mdoc&version=5.7.2.3"
@@ -18,8 +16,6 @@ using System.Xml;
 using System.Xml.Linq;
 using SharpCompress.Common;
 using SharpCompress.Readers;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Mono.ApiTools;
 using NuGet.Packaging;
 using NuGet.Versioning;

@@ -17,11 +17,17 @@
   <Docs>
     <summary>Wraps a <see cref="T:System.IO.Stream" /> into a <see cref="T:SkiaSharp.SKStreamAsset" /> (a seekable, rewindable Skia stream)</summary>
     <remarks>
-      <para>The following example shows how to wrap a <see cref="T:System.IO.Stream" /> that represents a stream into an embedded resource in an assembly and use it with Skia APIs that use resources:</para>
-      <para></para>
-      <para></para>
-      <example>
-        <code lang="C#"><![CDATA[public static void BitmapShader (SKCanvas canvas, int width, int height)
+      <format type="text/markdown"><![CDATA[
+## Remarks
+
+The following example shows how to wrap a <xref:System.IO.Stream> that
+represents a stream into an embedded resource in an assembly and use it with
+SkiaSharp APIs that use resources:
+
+## Examples
+
+```csharp
+public static void BitmapShader (SKCanvas canvas, int width, int height)
 {
     var assembly = typeof(Demos).GetTypeInfo ().Assembly;
 
@@ -40,8 +46,9 @@
             canvas.DrawPaint (paint);
         }
     }
-}]]></code>
-      </example>
+}
+```
+]]></format>
     </remarks>
   </Docs>
   <Members>

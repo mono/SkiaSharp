@@ -1,8 +1,9 @@
 import groovy.transform.Field
 
-@Field def isPr = (env.ghprbPullId && !env.ghprbPullId.empty ? true : false)
-@Field def branchName = (isPr ? "pr" : env.BRANCH_NAME)
+@Field def isPr = false
+@Field def branchName = null
 @Field def commitHash = null
+@Field def githubStatusSha = null
 @Field def linuxPackages = "xvfb xauth libfontconfig1-dev libglu1-mesa-dev g++ mono-complete msbuild curl ca-certificates-mono unzip python git referenceassemblies-pcl dotnet-sdk-2.0.0 ttf-ancient-fonts openjdk-8-jdk zip gettext openvpn acl libxcb-render-util0 libv4l-0 libsdl1.2debian libxcb-image0 bridge-utils rpm2cpio libxcb-icccm4 libwebkitgtk-1.0-0 cpio"
 
 @Field def customEnv = [
@@ -29,13 +30,20 @@ node("ubuntu-1604-amd64") {
         timestamps {
             checkout scm
             commitHash = cmdResult("git rev-parse HEAD").trim()
+
+            isPr = env.ghprbPullId && !env.ghprbPullId.empty
+            branchName = isPr ? "pr" : env.BRANCH_NAME
+            githubStatusSha = isPr ? env.ghprbActualCommit : commitHash
+
+            echo "Building SHA1: ${commitHash}..."
+            echo " - PR: ${isPr}..."
+            echo " - Branch Name: ${branchName}..."
+            echo " - GitHub Status SHA1: ${githubStatusSha}..."
         }
     }
 
     stage("Native Builds") {
         parallel([
-            failFast: true,
-
             // windows
             win32:              createNativeBuilder("Windows",    "Windows",  "components-windows"),
             uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows"),
@@ -58,8 +66,6 @@ node("ubuntu-1604-amd64") {
 
     stage("Managed Builds") {
         parallel([
-            failFast: true,
-
             windows: createManagedBuilder("Windows",    "components-windows"),
             macos:   createManagedBuilder("macOS",      "components"),
             linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64"),
@@ -68,15 +74,13 @@ node("ubuntu-1604-amd64") {
 
     stage("Packaging") {
         parallel([
-            failFast: true,
-
             package: createPackagingBuilder(),
         ])
     }
 
     stage("Clean Up") {
         timestamps {
-
+            cleanWs()
         }
     }
 }
@@ -109,6 +113,7 @@ def createNativeBuilder(platform, host, label) {
 
                                 uploadBlobs("native-${platform}_${host}")
 
+                                cleanWs()
                                 reportGitHubStatus(githubContext, "SUCCESS", "Build complete.")
                             } catch (Exception e) {
                                 reportGitHubStatus(githubContext, "FAILURE", "Build failed.")
@@ -169,6 +174,7 @@ def createManagedBuilder(host, label) {
 
                                 uploadBlobs("managed-${host}")
 
+                                cleanWs()
                                 reportGitHubStatus(githubContext, "SUCCESS", "Build complete.")
                             } catch (Exception e) {
                                 reportGitHubStatus(githubContext, "FAILURE", "Build failed.")
@@ -203,6 +209,7 @@ def createPackagingBuilder() {
 
                                 uploadBlobs("packing-${host}")
 
+                                cleanWs()
                                 reportGitHubStatus(githubContext, "SUCCESS", "Pack complete.")
                             } catch (Exception e) {
                                 reportGitHubStatus(githubContext, "FAILURE", "Pack failed.")
@@ -282,11 +289,11 @@ def reportGitHubStatus(context, statusResult, statusResultMessage) {
         $class: "GitHubCommitStatusSetter",
         commitShaSource: [
             $class: "ManuallyEnteredShaSource",
-            sha: isPr ? env.ghprbActualCommit : commitHash
+            sha: githubStatusSha
         ],
         contextSource: [
             $class: "ManuallyEnteredCommitContextSource",
-            context: context
+            context: context + (isPr ? " (PR)" : "")
         ],
         statusBackrefSource: [
             $class: "ManuallyEnteredBackrefSource",
@@ -322,6 +329,5 @@ def cmdResult(script) {
 def getWSRoot() {
     def cleanBranch = branchName.replace("/", "_").replace("\\", "_")
     def wsRoot = isUnix() ? "workspace" : "C:/bld"
-    def pr = isPr ? "-PR" : ""
-    return "${wsRoot}/SkiaSharp${pr}/${cleanBranch}"
+    return "${wsRoot}/SkiaSharp/${cleanBranch}"
 }
