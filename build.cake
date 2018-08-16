@@ -502,9 +502,10 @@ Information ("");
 Information ("Environment Variables:");
 var envars = EnvironmentVariables ();
 var max = envars.Max (v => v.Key.Length) + 2;
-foreach (var envVar in envars) {
+foreach (var envVar in envars.OrderBy (e => e.Key.ToLower ())) {
     var spaces = string.Concat (Enumerable.Repeat (" ", max - envVar.Key.Length));
-    if (envVar.Key.ToLower () == "path") {
+    var toSplit = new [] { "path", "psmodulepath" };
+    if (toSplit.Contains (envVar.Key.ToLower ())) {
         var paths = new string [0];
         if (IsRunningOnWindows ()) {
             paths = envVar.Value.Split (';');
@@ -512,8 +513,9 @@ foreach (var envVar in envars) {
             paths = envVar.Value.Split (':');
         }
         Information ($"  {envVar.Key}:{spaces}{{0}}", paths.FirstOrDefault ());
+        var keySpaces = string.Concat (Enumerable.Repeat (" ", envVar.Key.Length));
         foreach (var path in paths.Skip (1)) {
-            Information ($"       {spaces}{{0}}", path);
+            Information ($"  {keySpaces} {spaces}{{0}}", path);
         }
     } else {
         Information ($"  {envVar.Key}:{spaces}{{0}}", envVar.Value);
