@@ -26,6 +26,7 @@ var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")))
 var VERBOSITY = (Verbosity) Enum.Parse (typeof(Verbosity), Argument ("v", Argument ("verbosity", Argument ("Verbosity", "Normal"))), true);
 var SKIP_EXTERNALS = Argument ("skipexternals", Argument ("SkipExternals", "")).ToLower ().Split (',');
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAll", Argument ("PackAllPlatforms", TARGET.ToLower() == "ci" || TARGET.ToLower() == "nuget-only")));
+var PRINT_ALL_ENV_VARS = Argument ("printAllenvVars", false);
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
@@ -499,10 +500,15 @@ Information ("  Android NDK:   {0}", ANDROID_NDK_HOME);
 Information ("  Tizen Studio:  {0}", TIZEN_STUDIO_HOME);
 Information ("");
 
-Information ("Environment Variables:");
-var envars = EnvironmentVariables ();
-var max = envars.Max (v => v.Key.Length) + 2;
-foreach (var envVar in envars.OrderBy (e => e.Key.ToLower ())) {
+Information ("Environment Variables (whiitelisted):");
+var envVarsWhitelist = new [] {
+    "path", "psmodulepath", "pwd", "shell", "processor_architecture"
+};
+var envVars = EnvironmentVariables ();
+var max = envVars.Max (v => v.Key.Length) + 2;
+foreach (var envVar in envVars.OrderBy (e => e.Key.ToLower ())) {
+    if (!PRINT_ALL_ENV_VARS && !envVarsWhitelist.Contains (envVar.Key.ToLower ()))
+        continue;
     var spaces = string.Concat (Enumerable.Repeat (" ", max - envVar.Key.Length));
     var toSplit = new [] { "path", "psmodulepath" };
     if (toSplit.Contains (envVar.Key.ToLower ())) {

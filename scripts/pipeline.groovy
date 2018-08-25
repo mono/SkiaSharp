@@ -109,7 +109,7 @@ def createNativeBuilder(platform, host, label) {
                                 if (host == "linux" && platform == "tizen") {
                                     pre = "./scripts/install-tizen.sh && "
                                 }
-                                bootstrapper("-t externals-${platform} -v normal", host, pre)
+                                bootstrapper("-t externals-${platform} -v minimal", host, pre)
 
                                 uploadBlobs("native-${platform}_${host}")
 
@@ -143,7 +143,7 @@ def createManagedBuilder(host, label) {
                                 checkout scm
                                 downloadBlobs("native-*")
 
-                                bootstrapper("-t everything -v normal --skipexternals=all", host, "")
+                                bootstrapper("-t everything -v minimal --skipexternals=all", host, "")
 
                                 step([
                                     $class: "XUnitBuilder",
@@ -205,7 +205,7 @@ def createPackagingBuilder() {
                                 checkout scm
                                 downloadBlobs("managed-*");
 
-                                bootstrapper("-t nuget-only -v normal", host, "")
+                                bootstrapper("-t nuget-only -v minimal", host, "")
 
                                 uploadBlobs("packing-${host}")
 
