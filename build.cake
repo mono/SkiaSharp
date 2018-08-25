@@ -500,7 +500,7 @@ Information ("  Android NDK:   {0}", ANDROID_NDK_HOME);
 Information ("  Tizen Studio:  {0}", TIZEN_STUDIO_HOME);
 Information ("");
 
-Information ("Environment Variables (whiitelisted):");
+Information ("Environment Variables (whitelisted):");
 var envVarsWhitelist = new [] {
     "path", "psmodulepath", "pwd", "shell", "processor_architecture"
 };
