@@ -168,6 +168,33 @@ Task ("externals-uwp")
     buildHarfBuzzArch ("x64", "x64");
     buildHarfBuzzArch ("ARM", "arm");
 
+    // SkiaSharp.Views.Interop.UWP
+
+    var buildInteropArch = new Action<string, string> ((arch, dir) => {
+        // build SkiaSharp.Views.Interop.UWP
+        RunMSBuildWithPlatformTarget ("source/SkiaSharp.Views.Interop.UWP.sln", arch);
+
+        // copy SkiaSharp.Views.Interop.UWP to native
+        var outDir = $"./output/native/uwp/{dir}";
+        EnsureDirectoryExists (outDir);
+        CopyFileToDirectory ($"source/SkiaSharp.Views.Interop.UWP/bin/{arch}/Release/SkiaSharp.Views.Interop.UWP.dll", outDir);
+        CopyFileToDirectory ($"source/SkiaSharp.Views.Interop.UWP/bin/{arch}/Release/SkiaSharp.Views.Interop.UWP.pdb", outDir);
+        CopyFileToDirectory ($"source/SkiaSharp.Views.Interop.UWP/bin/{arch}/Release/SkiaSharp.Views.Interop.UWP.winmd", outDir);
+        CopyFileToDirectory ($"source/SkiaSharp.Views.Interop.UWP/bin/{arch}/Release/SkiaSharp.Views.Interop.UWP.pri", outDir);
+
+        // copy SkiaSharp.Views.Interop.UWP to output
+        outDir = $"output/SkiaSharp/nuget/runtimes/win10-{dir}/nativeassets/uap10.0";
+        EnsureDirectoryExists (outDir);
+        CopyFileToDirectory ($"source/SkiaSharp.Views.Interop.UWP/bin/{arch}/Release/SkiaSharp.Views.Interop.UWP.dll", outDir);
+        CopyFileToDirectory ($"source/SkiaSharp.Views.Interop.UWP/bin/{arch}/Release/SkiaSharp.Views.Interop.UWP.pdb", outDir);
+        CopyFileToDirectory ($"source/SkiaSharp.Views.Interop.UWP/bin/{arch}/Release/SkiaSharp.Views.Interop.UWP.winmd", outDir);
+        CopyFileToDirectory ($"source/SkiaSharp.Views.Interop.UWP/bin/{arch}/Release/SkiaSharp.Views.Interop.UWP.pri", outDir);
+    });
+
+    buildInteropArch ("Win32", "x86");
+    buildInteropArch ("x64", "x64");
+    buildInteropArch ("ARM", "arm");
+
     // copy ANGLE externals
     EnsureDirectoryExists ("./output/native/uwp/arm/");
     EnsureDirectoryExists ("./output/native/uwp/x86/");
