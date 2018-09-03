@@ -18,13 +18,13 @@ namespace SkiaSharp
 				case GRBackend.Metal:
 					throw new NotSupportedException ();
 				case GRBackend.OpenGL:
-					var glInfo = new GRGlFramebufferInfo ((uint)desc.RenderTargetHandle);
+					var glInfo = new GRGlFramebufferInfo ((uint)desc.RenderTargetHandle, desc.Config.ToSizedFormat ());
 					CreateGl (desc.Width, desc.Height, desc.SampleCount, desc.StencilBits, glInfo);
 					break;
 				case GRBackend.Vulkan:
 					throw new NotSupportedException ();
 				default:
-					throw new ArgumentOutOfRangeException (nameof(backend));
+					throw new ArgumentOutOfRangeException (nameof (backend));
 			}
 		}
 
@@ -58,6 +58,8 @@ namespace SkiaSharp
 		public int SampleCount => SkiaApi.gr_backendrendertarget_get_samples (Handle);
 		public int StencilBits => SkiaApi.gr_backendrendertarget_get_stencils (Handle);
 		public GRBackend Backend => SkiaApi.gr_backendrendertarget_get_backend (Handle);
+		public SKSizeI Size => new SKSizeI (Width, Height);
+		public SKRectI Rect => new SKRectI (0, 0, Width, Height);
 
 		public GRGlFramebufferInfo GetGlFramebufferInfo ()
 		{
