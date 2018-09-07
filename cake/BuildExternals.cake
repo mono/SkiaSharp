@@ -179,12 +179,6 @@ Task ("externals-uwp")
         EnsureDirectoryExists (outDir);
         CopyFileToDirectory ($"source/SkiaSharp.Views.Interop.UWP/bin/{arch}/Release/SkiaSharp.Views.Interop.UWP.dll", outDir);
         CopyFileToDirectory ($"source/SkiaSharp.Views.Interop.UWP/bin/{arch}/Release/SkiaSharp.Views.Interop.UWP.pdb", outDir);
-
-        // copy SkiaSharp.Views.Interop.UWP to output
-        outDir = $"output/SkiaSharp.Views/nuget/runtimes/win10-{dir}/nativeassets/uap10.0";
-        EnsureDirectoryExists (outDir);
-        CopyFileToDirectory ($"source/SkiaSharp.Views.Interop.UWP/bin/{arch}/Release/SkiaSharp.Views.Interop.UWP.dll", outDir);
-        CopyFileToDirectory ($"source/SkiaSharp.Views.Interop.UWP/bin/{arch}/Release/SkiaSharp.Views.Interop.UWP.pdb", outDir);
     });
 
     buildInteropArch ("Win32", "x86");
