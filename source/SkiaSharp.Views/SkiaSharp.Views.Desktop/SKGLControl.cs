@@ -13,7 +13,8 @@ namespace SkiaSharp.Views.Desktop
 		private bool designMode;
 
 		private GRContext grContext;
-		private GRBackendRenderTargetDesc renderTarget;
+		private GRBackendRenderTarget renderTarget;
+		private SKSurface surface;
 
 		public SKGLControl()
 			: base(new GraphicsMode(new ColorFormat(8, 8, 8, 8), 24, 8))
@@ -54,7 +55,7 @@ namespace SkiaSharp.Views.Desktop
 
 		[Category("Appearance")]
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
-		
+
 		protected override void OnPaint(PaintEventArgs e)
 		{
 			if (designMode)
@@ -70,25 +71,28 @@ namespace SkiaSharp.Views.Desktop
 			{
 				var glInterface = GRGlInterface.CreateNativeGlInterface();
 				grContext = GRContext.Create(GRBackend.OpenGL, glInterface);
-
-				// get initial details
-				renderTarget = SKGLDrawable.CreateRenderTarget();
 			}
 
-			// update to the latest dimensions
-			renderTarget.Width = Width;
-			renderTarget.Height = Height;
+			// manage the drawing surface
+			if (renderTarget == null || surface == null || renderTarget.Width != Width || renderTarget.Height != Height)
+			{
+				// create or update the dimensions
+				renderTarget?.Dispose();
+				renderTarget = SKGLDrawable.CreateRenderTarget(Width, Height);
 
-			// create the surface
-			using (var surface = SKSurface.Create(grContext, renderTarget))
+				// create the surface
+				surface?.Dispose();
+				surface = SKSurface.Create(grContext, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+			}
+
+			using (new SKAutoCanvasRestore(surface.Canvas, true))
 			{
 				// start drawing
-				OnPaintSurface(new SKPaintGLSurfaceEventArgs(surface, renderTarget));
-
-				surface.Canvas.Flush();
+				OnPaintSurface(new SKPaintGLSurfaceEventArgs(surface, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888));
 			}
 
 			// update the control
+			surface.Canvas.Flush();
 			SwapBuffers();
 		}
 
@@ -103,11 +107,12 @@ namespace SkiaSharp.Views.Desktop
 			base.Dispose(disposing);
 
 			// clean up
-			if (grContext != null)
-			{
-				grContext.Dispose();
-				grContext = null;
-			}
+			surface?.Dispose();
+			surface = null;
+			renderTarget?.Dispose();
+			renderTarget = null;
+			grContext?.Dispose();
+			grContext = null;
 		}
 	}
 }

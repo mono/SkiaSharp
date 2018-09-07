@@ -26,6 +26,28 @@ namespace SkiaSharp.Views.Tizen
 			return new Point { X = point.X, Y = point.Y };
 		}
 
+		// Size
+
+		public static SKSize ToSKSize(this Size size)
+		{
+			return new SKSize(size.Width, size.Height);
+		}
+
+		public static SKSizeI ToSKSizeI(this Size size)
+		{
+			return new SKSizeI(size.Width, size.Height);
+		}
+
+		public static Size ToSize(this SKSize size)
+		{
+			return new Size((int)size.Width, (int)size.Height);
+		}
+
+		public static Size ToSize(this SKSizeI size)
+		{
+			return new Size(size.Width, size.Height);
+		}
+
 		// Rectangle
 
 		public static SKRect ToSKRect(this Rect rect)
