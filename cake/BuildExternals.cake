@@ -285,20 +285,12 @@ Task ("externals-ios")
 
     var buildArch = new Action<string, string, string> ((sdk, arch, skiaArch) => {
         // generate native skia build files
-
-        var specifics = "";
-        // several instances of "error: type 'XXX' requires 8 bytes of alignment and the default allocator only guarantees 4 bytes [-Werror,-Wover-aligned]
-        // https://groups.google.com/forum/#!topic/skia-discuss/hU1IPFwU6bI
-        if (arch == "armv7" || arch == "armv7s") {
-            specifics += ", '-Wno-over-aligned'";
-        }
-
         GnNinja ($"ios/{arch}", "skia",
             $"is_official_build=true skia_enable_tools=false " +
             $"target_os='ios' target_cpu='{skiaArch}' " +
             $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
             $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-mios-version-min=8.0' {specifics} ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-mios-version-min=8.0' ] " +
             $"extra_ldflags=[ '-Wl,ios_version_min=8.0' ]");
 
         // build native skia
@@ -458,13 +450,6 @@ Task ("externals-watchos")
     // SkiaSharp
 
     var buildArch = new Action<string, string, string> ((sdk, arch, skiaArch) => {
-        var specifics = "";
-        // several instances of "error: type 'XXX' requires 8 bytes of alignment and the default allocator only guarantees 4 bytes [-Werror,-Wover-aligned]
-        // https://groups.google.com/forum/#!topic/skia-discuss/hU1IPFwU6bI
-        if (arch == "armv7k") {
-            specifics += ", '-Wno-over-aligned'";
-        }
-
         // generate native skia build files
         GnNinja ($"watchos/{arch}", "skia",
             $"is_official_build=true skia_enable_tools=false " +
@@ -472,7 +457,7 @@ Task ("externals-watchos")
             $"skia_enable_gpu=false " +
             $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
             $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
-            $"extra_cflags=[ '-DSK_BUILD_FOR_WATCHOS', '-DSKIA_C_DLL', '-mwatchos-version-min=2.0' {specifics} ] " +
+            $"extra_cflags=[ '-DSK_BUILD_FOR_WATCHOS', '-DSKIA_C_DLL', '-mwatchos-version-min=2.0' ] " +
             $"extra_ldflags=[ '-Wl,watchos_version_min=2.0' ]");
 
         // build libSkiaSharp
