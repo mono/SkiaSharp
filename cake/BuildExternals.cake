@@ -235,12 +235,10 @@ Task ("externals-osx")
         StripSign ($"output/native/osx/{arch}/libSkiaSharp.dylib");
     });
 
-    buildArch ("i386", "x86");
     buildArch ("x86_64", "x64");
 
     // create the fat dylib
     RunLipo ("output/native/osx/", "libSkiaSharp.dylib", new [] {
-        (FilePath) "i386/libSkiaSharp.dylib",
         (FilePath) "x86_64/libSkiaSharp.dylib"
     });
 
@@ -263,12 +261,10 @@ Task ("externals-osx")
         StripSign ($"output/native/osx/{arch}/libHarfBuzzSharp.dylib");
     });
 
-    buildHarfBuzzArch ("i386", "x86");
     buildHarfBuzzArch ("x86_64", "x64");
 
     // create the fat dylib
     RunLipo ("output/native/osx/", "libHarfBuzzSharp.dylib", new [] {
-        (FilePath) "i386/libHarfBuzzSharp.dylib",
         (FilePath) "x86_64/libHarfBuzzSharp.dylib"
     });
 });
