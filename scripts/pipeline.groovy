@@ -7,7 +7,7 @@ import groovy.transform.Field
 
 @Field def nativeLinuxPackages = "curl mono-devel python git libfontconfig1-dev"
 @Field def nativeTizenPackages = "curl mono-devel python git openjdk-8-jdk zip libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn"
-@Field def managedLinuxPackages = "curl mono-devel msbuild dotnet-sdk-2.0.0"
+@Field def managedLinuxPackages = "curl mono-complete msbuild dotnet-sdk-2.0.0"
 
 @Field def customEnv = [
     "windows": [
