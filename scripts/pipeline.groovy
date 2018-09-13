@@ -4,7 +4,7 @@ import groovy.transform.Field
 @Field def branchName = null
 @Field def commitHash = null
 @Field def githubStatusSha = null
-@Field def linuxPackages = "xvfb xauth libfontconfig1-dev libglu1-mesa-dev g++ mono-complete msbuild curl ca-certificates-mono unzip python git referenceassemblies-pcl dotnet-sdk-2.0.0 ttf-ancient-fonts openjdk-8-jdk zip gettext openvpn acl libxcb-render-util0 libv4l-0 libsdl1.2debian libxcb-image0 bridge-utils rpm2cpio libxcb-icccm4 libwebkitgtk-1.0-0 cpio"
+@Field def linuxPackages = "xvfb xauth libfontconfig1-dev libglu1-mesa-dev g++-5 mono-complete msbuild curl ca-certificates-mono unzip python git referenceassemblies-pcl dotnet-sdk-2.0.0 ttf-ancient-fonts openjdk-8-jdk zip gettext openvpn acl libxcb-render-util0 libv4l-0 libsdl1.2debian libxcb-image0 bridge-utils rpm2cpio libxcb-icccm4 libwebkitgtk-1.0-0 cpio"
 
 @Field def customEnv = [
     "windows": [
@@ -44,37 +44,37 @@ node("ubuntu-1604-amd64") {
 
     stage("Native Builds") {
         parallel([
-            // windows
-            win32:              createNativeBuilder("Windows",    "Windows",  "components-windows"),
-            uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows"),
-            android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows"),
-            tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows"),
+            // // windows
+            // win32:              createNativeBuilder("Windows",    "Windows",  "components-windows", ""),
+            // uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows", ""),
+            // android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows", ""),
+            // tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows", ""),
 
-            // macos
-            macos:              createNativeBuilder("macOS",      "macOS",    "components"),
-            ios:                createNativeBuilder("iOS",        "macOS",    "components"),
-            tvos:               createNativeBuilder("tvOS",       "macOS",    "components"),
-            watchos:            createNativeBuilder("watchOS",    "macOS",    "components"),
-            android_macos:      createNativeBuilder("Android",    "macOS",    "components"),
-            tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components"),
+            // // macos
+            // macos:              createNativeBuilder("macOS",      "macOS",    "components", ""),
+            // ios:                createNativeBuilder("iOS",        "macOS",    "components", ""),
+            // tvos:               createNativeBuilder("tvOS",       "macOS",    "components", ""),
+            // watchos:            createNativeBuilder("watchOS",    "macOS",    "components", ""),
+            // android_macos:      createNativeBuilder("Android",    "macOS",    "components", ""),
+            // tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components", ""),
 
             // linux
-            linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64"),
-            tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64"),
+            linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64", ""),
+            // tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64", ""),
         ])
     }
 
     stage("Managed Builds") {
         parallel([
-            windows: createManagedBuilder("Windows",    "components-windows"),
-            macos:   createManagedBuilder("macOS",      "components"),
-            linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64"),
+            // windows: createManagedBuilder("Windows",    "components-windows", ""),
+            // macos:   createManagedBuilder("macOS",      "components", ""),
+            linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64", ""),
         ])
     }
 
     stage("Packaging") {
         parallel([
-            package: createPackagingBuilder(),
+            package: createPackagingBuilder(""),
         ])
     }
 
@@ -88,7 +88,7 @@ node("ubuntu-1604-amd64") {
 // ============================================================================
 // Functions
 
-def createNativeBuilder(platform, host, label) {
+def createNativeBuilder(platform, host, label, additionalPackages) {
     def githubContext = "Build Native - ${platform} on ${host}"
     platform = platform.toLowerCase();
     host = host.toLowerCase();
@@ -109,7 +109,7 @@ def createNativeBuilder(platform, host, label) {
                                 if (host == "linux" && platform == "tizen") {
                                     pre = "./scripts/install-tizen.sh && "
                                 }
-                                bootstrapper("-t externals-${platform} -v minimal", host, pre)
+                                bootstrapper("-t externals-${platform} -v minimal", host, pre, additionalPackages)
 
                                 uploadBlobs("native-${platform}_${host}")
 
@@ -127,7 +127,7 @@ def createNativeBuilder(platform, host, label) {
     }
 }
 
-def createManagedBuilder(host, label) {
+def createManagedBuilder(host, label, additionalPackages) {
     def githubContext = "Build Managed - ${host}"
     host = host.toLowerCase();
 
@@ -143,7 +143,7 @@ def createManagedBuilder(host, label) {
                                 checkout scm
                                 downloadBlobs("native-*")
 
-                                bootstrapper("-t everything -v minimal --skipexternals=all", host, "")
+                                bootstrapper("-t everything -v minimal --skipexternals=all", host, "", additionalPackages)
 
                                 step([
                                     $class: "XUnitBuilder",
@@ -188,7 +188,7 @@ def createManagedBuilder(host, label) {
     }
 }
 
-def createPackagingBuilder() {
+def createPackagingBuilder(additionalPackages) {
     def githubContext = "Packing"
     def host = "linux"
     def label = "ubuntu-1604-amd64"
@@ -205,7 +205,7 @@ def createPackagingBuilder() {
                                 checkout scm
                                 downloadBlobs("managed-*");
 
-                                bootstrapper("-t nuget-only -v minimal", host, "")
+                                bootstrapper("-t nuget-only -v minimal", host, "", additionalPackages)
 
                                 uploadBlobs("packing-${host}")
 
@@ -223,13 +223,13 @@ def createPackagingBuilder() {
     }
 }
 
-def bootstrapper(args, host, pre) {
+def bootstrapper(args, host, pre, additionalPackages) {
     host = host.toLowerCase()
     if (host == "linux") {
         chroot(
             chrootName: "${env.NODE_LABEL}-stable",
             command: "bash ${pre} ./bootstrapper.sh ${args}",
-            additionalPackages: "${linuxPackages}")
+            additionalPackages: "${additionalPackages}")
     } else if (host == "macos") {
         sh("bash ${pre} ./bootstrapper.sh ${args}")
     } else if (host == "windows") {
