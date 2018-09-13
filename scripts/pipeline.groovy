@@ -6,6 +6,8 @@ import groovy.transform.Field
 @Field def githubStatusSha = null
 @Field def linuxPackages = "xvfb xauth libfontconfig1-dev libglu1-mesa-dev g++-5 mono-complete msbuild curl ca-certificates-mono unzip python git referenceassemblies-pcl dotnet-sdk-2.0.0 ttf-ancient-fonts openjdk-8-jdk zip gettext openvpn acl libxcb-render-util0 libv4l-0 libsdl1.2debian libxcb-image0 bridge-utils rpm2cpio libxcb-icccm4 libwebkitgtk-1.0-0 cpio"
 
+@Field def nativeLinuxPackages = "curl"
+
 @Field def customEnv = [
     "windows": [
         "TIZEN_STUDIO_HOME=C:\\Tizen",
@@ -59,7 +61,7 @@ node("ubuntu-1604-amd64") {
             // tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components", ""),
 
             // linux
-            linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64", ""),
+            linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64", nativeLinuxPackages),
             // tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64", ""),
         ])
     }
