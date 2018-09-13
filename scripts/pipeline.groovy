@@ -6,7 +6,7 @@ import groovy.transform.Field
 @Field def githubStatusSha = null
 
 @Field def nativeLinuxPackages = "curl mono-devel python git libfontconfig1-dev"
-@Field def nativeTizenPackages = "curl mono-devel python git openjdk-8-jdk"
+@Field def nativeTizenPackages = "curl mono-devel python git openjdk-8-jdk zip"
 @Field def managedLinuxPackages = "curl mono-devel msbuild dotnet-sdk-2.0.0"
 
 @Field def customEnv = [
