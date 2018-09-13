@@ -62,7 +62,7 @@ node("ubuntu-1604-amd64") {
             // tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components", ""),
 
             // linux
-            // linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64", nativeLinuxPackages),
+            linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64", nativeLinuxPackages),
             tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64", nativeTizenPackages),
         ])
     }
