@@ -133,7 +133,7 @@
     <MakeDir Directories="$(MDocIntermediateOutputPath)" />
     <Exec Condition=" '$(_ShouldGenerateDocs)' == 'true' "
           WorkingDirectory="$(MDocIntermediateOutputPath)"
-          Command="$(_ManagedExeLauncher) &quot;$(MDocToolPath)&quot; export-msxdoc &quot;$(MDocDocumentationDirectory)&quot;" />
+          Command="$(_ManagedExeLauncher) &quot;$(MDocToolPath)&quot; export-msxdoc --quiet &quot;$(MDocDocumentationDirectory)&quot;" />
     <Copy Condition=" Exists('$(MDocIntermediateOutputPath)$(MDocOutputName)') "
           SourceFiles="$(MDocIntermediateOutputPath)$(MDocOutputName)"
           DestinationFiles="$(MDocOutputPath)"
