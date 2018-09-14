@@ -1,6 +1,6 @@
 import groovy.transform.Field
 
-@Field def verbosity = "normal"
+@Field def verbosity = "minimal"
 @Field def isPr = false
 @Field def branchName = null
 @Field def commitHash = null
