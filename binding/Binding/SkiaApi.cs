@@ -1080,20 +1080,26 @@ namespace SkiaSharp
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_stream_is_at_end(sk_stream_t stream);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static SByte sk_stream_read_s8(sk_stream_t stream);
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_stream_read_s8(sk_stream_t stream, out sbyte buffer);
+		[return: MarshalAs(UnmanagedType.I1)]
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static Int16 sk_stream_read_s16(sk_stream_t stream);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static Int32 sk_stream_read_s32(sk_stream_t stream);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static Byte sk_stream_read_u8(sk_stream_t stream);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static UInt16 sk_stream_read_u16(sk_stream_t stream);
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static UInt32 sk_stream_read_u32(sk_stream_t stream);
+		public extern static bool sk_stream_read_s16(sk_stream_t stream, out short buffer);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		public extern static bool sk_stream_read_bool(sk_stream_t stream);
+		public extern static bool sk_stream_read_s32(sk_stream_t stream, out int buffer);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_stream_read_u8(sk_stream_t stream, out byte buffer);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_stream_read_u16(sk_stream_t stream, out ushort buffer);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_stream_read_u32(sk_stream_t stream, out uint buffer);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs(UnmanagedType.I1)]
+		public extern static bool sk_stream_read_bool(sk_stream_t stream, [MarshalAs (UnmanagedType.I1)] out bool buffer);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_stream_rewind(sk_stream_t stream);
@@ -1179,25 +1185,25 @@ namespace SkiaSharp
 		public extern static IntPtr sk_wstream_bytes_written(sk_wstream_t cstream);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		public extern static bool sk_wstream_write_8(sk_wstream_t cstream, Byte value);
+		public extern static bool sk_wstream_write_8(sk_wstream_t cstream, byte value);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		public extern static bool sk_wstream_write_16(sk_wstream_t cstream, UInt16 value);
+		public extern static bool sk_wstream_write_16(sk_wstream_t cstream, ushort value);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		public extern static bool sk_wstream_write_32(sk_wstream_t cstream, UInt32 value);
+		public extern static bool sk_wstream_write_32(sk_wstream_t cstream, uint value);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_wstream_write_text(sk_wstream_t cstream, [MarshalAs(UnmanagedType.LPStr)] string value);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		public extern static bool sk_wstream_write_dec_as_text(sk_wstream_t cstream, Int32 value);
+		public extern static bool sk_wstream_write_dec_as_text(sk_wstream_t cstream, int value);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		public extern static bool sk_wstream_write_bigdec_as_text(sk_wstream_t cstream, Int64 value, int minDigits);
+		public extern static bool sk_wstream_write_bigdec_as_text(sk_wstream_t cstream, long value, int minDigits);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
-		public extern static bool sk_wstream_write_hex_as_text(sk_wstream_t cstream, UInt32 value, int minDigits);
+		public extern static bool sk_wstream_write_hex_as_text(sk_wstream_t cstream, uint value, int minDigits);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs(UnmanagedType.I1)]
 		public extern static bool sk_wstream_write_scalar_as_text(sk_wstream_t cstream, float value);
@@ -1328,9 +1334,9 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static byte sk_bitmap_get_addr_8(sk_bitmap_t cbitmap, int x, int y);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static UInt16 sk_bitmap_get_addr_16(sk_bitmap_t cbitmap, int x, int y);
+		public extern static ushort sk_bitmap_get_addr_16(sk_bitmap_t cbitmap, int x, int y);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static UInt32 sk_bitmap_get_addr_32(sk_bitmap_t cbitmap, int x, int y);
+		public extern static uint sk_bitmap_get_addr_32(sk_bitmap_t cbitmap, int x, int y);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_bitmap_get_addr(sk_bitmap_t cbitmap, int x, int y);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]

@@ -58,9 +58,14 @@ namespace SkiaSharp.Views.Mac
 
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
+		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)
+		{
+			PaintSurface?.Invoke(this, e);
+		}
+
+		[Obsolete("Use OnPaintSurface(SKPaintSurfaceEventArgs) instead.")]
 		public virtual void DrawInSurface(SKSurface surface, SKImageInfo info)
 		{
-			PaintSurface?.Invoke(this, new SKPaintSurfaceEventArgs(surface, info));
 		}
 
 		public override void DrawRect(CGRect dirtyRect)
@@ -70,14 +75,17 @@ namespace SkiaSharp.Views.Mac
 			var ctx = NSGraphicsContext.CurrentContext.CGContext;
 
 			// create the skia context
-			SKImageInfo info;
-			var surface = drawable.CreateSurface(Bounds, IgnorePixelScaling ? 1 : Window.BackingScaleFactor, out info);
+			using (var surface = drawable.CreateSurface(Bounds, IgnorePixelScaling ? 1 : Window.BackingScaleFactor, out var info))
+			{
+				// draw on the image using SKiaSharp
+				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
+#pragma warning disable CS0618 // Type or member is obsolete
+				DrawInSurface(surface, info);
+#pragma warning restore CS0618 // Type or member is obsolete
 
-			// draw on the image using SKiaSharp
-			DrawInSurface(surface, info);
-
-			// draw the surface to the context
-			drawable.DrawSurface(ctx, Bounds, info, surface);
+				// draw the surface to the context
+				drawable.DrawSurface(ctx, Bounds, info, surface);
+			}
 		}
 
 		protected override void Dispose(bool disposing)

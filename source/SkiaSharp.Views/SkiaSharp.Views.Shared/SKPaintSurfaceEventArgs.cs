@@ -18,7 +18,7 @@ namespace SkiaSharp.Views.Mac
 namespace SkiaSharp.Views.Tizen
 #endif
 {
-    public class SKPaintSurfaceEventArgs : EventArgs
+	public class SKPaintSurfaceEventArgs : EventArgs
 	{
 		public SKPaintSurfaceEventArgs(SKSurface surface, SKImageInfo info)
 		{

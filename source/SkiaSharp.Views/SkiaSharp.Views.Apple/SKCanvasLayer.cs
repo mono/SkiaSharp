@@ -25,6 +25,7 @@ namespace SkiaSharp.Views.Mac
 			NeedsDisplayOnBoundsChange = true;
 		}
 
+		[Obsolete("Use PaintSurface instead.")]
 		public ISKCanvasLayerDelegate SKDelegate { get; set; }
 
 		public SKSize CanvasSize => drawable.Info.Size;
@@ -44,22 +45,30 @@ namespace SkiaSharp.Views.Mac
 			base.DrawInContext(ctx);
 
 			// create the skia context
-			SKImageInfo info;
-			var surface = drawable.CreateSurface(Bounds, IgnorePixelScaling ? 1 : ContentsScale, out info);
+			using (var surface = drawable.CreateSurface(Bounds, IgnorePixelScaling ? 1 : ContentsScale, out var info))
+			{
+				// draw on the image using SKiaSharp
+				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
+#pragma warning disable CS0618 // Type or member is obsolete
+				DrawInSurface(surface, info);
+				SKDelegate?.DrawInSurface(surface, info);
+#pragma warning restore CS0618 // Type or member is obsolete
 
-			// draw on the image using SKiaSharp
-			DrawInSurface(surface, info);
-			SKDelegate?.DrawInSurface(surface, info);
-
-			// draw the surface to the context
-			drawable.DrawSurface(ctx, Bounds, info, surface);
+				// draw the surface to the context
+				drawable.DrawSurface(ctx, Bounds, info, surface);
+			}
 		}
 
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
+		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)
+		{
+			PaintSurface?.Invoke(this, e);
+		}
+
+		[Obsolete("Use OnPaintSurface(SKPaintSurfaceEventArgs) instead.")]
 		public virtual void DrawInSurface(SKSurface surface, SKImageInfo info)
 		{
-			PaintSurface?.Invoke(this, new SKPaintSurfaceEventArgs(surface, info));
 		}
 
 		protected override void Dispose(bool disposing)

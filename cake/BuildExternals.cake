@@ -168,6 +168,23 @@ Task ("externals-uwp")
     buildHarfBuzzArch ("x64", "x64");
     buildHarfBuzzArch ("ARM", "arm");
 
+    // SkiaSharp.Views.Interop.UWP
+
+    var buildInteropArch = new Action<string, string> ((arch, dir) => {
+        // build SkiaSharp.Views.Interop.UWP
+        RunMSBuildWithPlatformTarget ("source/SkiaSharp.Views.Interop.UWP.sln", arch);
+
+        // copy SkiaSharp.Views.Interop.UWP to native
+        var outDir = $"./output/native/uwp/{dir}";
+        EnsureDirectoryExists (outDir);
+        CopyFileToDirectory ($"source/SkiaSharp.Views.Interop.UWP/bin/{arch}/Release/SkiaSharp.Views.Interop.UWP.dll", outDir);
+        CopyFileToDirectory ($"source/SkiaSharp.Views.Interop.UWP/bin/{arch}/Release/SkiaSharp.Views.Interop.UWP.pdb", outDir);
+    });
+
+    buildInteropArch ("Win32", "x86");
+    buildInteropArch ("x64", "x64");
+    buildInteropArch ("ARM", "arm");
+
     // copy ANGLE externals
     EnsureDirectoryExists ("./output/native/uwp/arm/");
     EnsureDirectoryExists ("./output/native/uwp/x86/");
@@ -218,12 +235,10 @@ Task ("externals-osx")
         StripSign ($"output/native/osx/{arch}/libSkiaSharp.dylib");
     });
 
-    buildArch ("i386", "x86");
     buildArch ("x86_64", "x64");
 
     // create the fat dylib
     RunLipo ("output/native/osx/", "libSkiaSharp.dylib", new [] {
-        (FilePath) "i386/libSkiaSharp.dylib",
         (FilePath) "x86_64/libSkiaSharp.dylib"
     });
 
@@ -246,12 +261,10 @@ Task ("externals-osx")
         StripSign ($"output/native/osx/{arch}/libHarfBuzzSharp.dylib");
     });
 
-    buildHarfBuzzArch ("i386", "x86");
     buildHarfBuzzArch ("x86_64", "x64");
 
     // create the fat dylib
     RunLipo ("output/native/osx/", "libHarfBuzzSharp.dylib", new [] {
-        (FilePath) "i386/libHarfBuzzSharp.dylib",
         (FilePath) "x86_64/libHarfBuzzSharp.dylib"
     });
 });
@@ -268,20 +281,12 @@ Task ("externals-ios")
 
     var buildArch = new Action<string, string, string> ((sdk, arch, skiaArch) => {
         // generate native skia build files
-
-        var specifics = "";
-        // several instances of "error: type 'XXX' requires 8 bytes of alignment and the default allocator only guarantees 4 bytes [-Werror,-Wover-aligned]
-        // https://groups.google.com/forum/#!topic/skia-discuss/hU1IPFwU6bI
-        if (arch == "armv7" || arch == "armv7s") {
-            specifics += ", '-Wno-over-aligned'";
-        }
-
         GnNinja ($"ios/{arch}", "skia",
             $"is_official_build=true skia_enable_tools=false " +
             $"target_os='ios' target_cpu='{skiaArch}' " +
             $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
             $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-mios-version-min=8.0' {specifics} ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-mios-version-min=8.0' ] " +
             $"extra_ldflags=[ '-Wl,ios_version_min=8.0' ]");
 
         // build native skia
@@ -441,13 +446,6 @@ Task ("externals-watchos")
     // SkiaSharp
 
     var buildArch = new Action<string, string, string> ((sdk, arch, skiaArch) => {
-        var specifics = "";
-        // several instances of "error: type 'XXX' requires 8 bytes of alignment and the default allocator only guarantees 4 bytes [-Werror,-Wover-aligned]
-        // https://groups.google.com/forum/#!topic/skia-discuss/hU1IPFwU6bI
-        if (arch == "armv7k") {
-            specifics += ", '-Wno-over-aligned'";
-        }
-
         // generate native skia build files
         GnNinja ($"watchos/{arch}", "skia",
             $"is_official_build=true skia_enable_tools=false " +
@@ -455,7 +453,7 @@ Task ("externals-watchos")
             $"skia_enable_gpu=false " +
             $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
             $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
-            $"extra_cflags=[ '-DSK_BUILD_FOR_WATCHOS', '-DSKIA_C_DLL', '-mwatchos-version-min=2.0' {specifics} ] " +
+            $"extra_cflags=[ '-DSK_BUILD_FOR_WATCHOS', '-DSKIA_C_DLL', '-mwatchos-version-min=2.0' ] " +
             $"extra_ldflags=[ '-Wl,watchos_version_min=2.0' ]");
 
         // build libSkiaSharp

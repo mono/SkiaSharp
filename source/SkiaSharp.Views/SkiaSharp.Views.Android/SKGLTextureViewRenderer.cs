@@ -1,6 +1,5 @@
 ﻿using System;
 using Android.Opengl;
-using Android.Runtime;
 using Javax.Microedition.Khronos.Egl;
 using Javax.Microedition.Khronos.Opengles;
 
@@ -9,28 +8,59 @@ namespace SkiaSharp.Views.Android
 	public abstract class SKGLTextureViewRenderer : Java.Lang.Object, GLTextureView.IRenderer
 	{
 		private GRContext context;
-		private GRBackendRenderTargetDesc renderTarget;
+		private GRBackendRenderTarget renderTarget;
+		private SKSurface surface;
+		private int surfaceWidth;
+		private int surfaceHeight;
 
-		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
+		public SKSize CanvasSize => renderTarget.Size;
 
 		public GRContext GRContext => context;
 
-		protected abstract void OnDrawFrame(SKSurface surface, GRBackendRenderTargetDesc renderTarget);
+		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
+		{
+		}
+
+		[Obsolete("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
+		protected virtual void OnDrawFrame(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
+		{
+		}
 
 		public void OnDrawFrame(IGL10 gl)
 		{
-			GLES10.GlClear(GLES10.GlStencilBufferBit);
+			GLES10.GlClear(GLES10.GlColorBufferBit | GLES10.GlDepthBufferBit | GLES10.GlStencilBufferBit);
 
-			// create the surface
-			using (var surface = SKSurface.Create(context, renderTarget))
+			// create the contexts if not done already
+			if (context == null)
 			{
-				// draw using SkiaSharp
-				OnDrawFrame(surface, renderTarget);
+				var glInterface = GRGlInterface.CreateNativeGlInterface();
+				context = GRContext.Create(GRBackend.OpenGL, glInterface);
+			}
 
-				surface.Canvas.Flush();
+			// manage the drawing surface
+			if (renderTarget == null || surface == null || renderTarget.Width != surfaceWidth || renderTarget.Height != surfaceHeight)
+			{
+				// create or update the dimensions
+				renderTarget?.Dispose();
+				renderTarget = SKGLDrawable.CreateRenderTarget(surfaceWidth, surfaceHeight);
+
+				// create the surface
+				surface?.Dispose();
+				surface = SKSurface.Create(context, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+			}
+
+			using (new SKAutoCanvasRestore(surface.Canvas, true))
+			{
+				// start drawing
+				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+				OnPaintSurface(e);
+#pragma warning disable CS0618 // Type or member is obsolete
+				OnDrawFrame(e.Surface, e.RenderTarget);
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 
 			// flush the SkiaSharp contents to GL
+			surface.Canvas.Flush();
 			context.Flush();
 		}
 
@@ -38,45 +68,13 @@ namespace SkiaSharp.Views.Android
 		{
 			GLES20.GlViewport(0, 0, width, height);
 
-			renderTarget.Width = width;
-			renderTarget.Height = height;
-
-			CreateContext();
+			surfaceWidth = width;
+			surfaceHeight = height;
 		}
 
 		public void OnSurfaceCreated(IGL10 gl, EGLConfig config)
 		{
 			FreeContext();
-
-			// get the config
-			var egl = EGLContext.EGL.JavaCast<IEGL10>();
-			var disp = egl.EglGetCurrentDisplay();
-
-			// stencil buffers
-			int[] stencilbuffers = new int[1];
-			egl.EglGetConfigAttrib(disp, config, EGL10.EglStencilSize, stencilbuffers);
-
-			// samples
-			int[] samples = new int[1];
-			egl.EglGetConfigAttrib(disp, config, EGL10.EglSamples, samples);
-
-			// get the frame buffer
-			int[] framebuffers = new int[1];
-			gl.GlGetIntegerv(GLES20.GlFramebufferBinding, framebuffers, 0);
-
-			// create the render target
-			renderTarget = new GRBackendRenderTargetDesc
-			{
-				Width = 0, // set later
-				Height = 0, // set later
-				Config = GRPixelConfig.Rgba8888,
-				Origin = GRSurfaceOrigin.BottomLeft,
-				SampleCount = samples[0],
-				StencilBits = stencilbuffers[0],
-				RenderTargetHandle = (IntPtr)framebuffers[0],
-			};
-
-			CreateContext();
 		}
 
 		public void OnSurfaceDestroyed()
@@ -95,20 +93,12 @@ namespace SkiaSharp.Views.Android
 
 		private void FreeContext()
 		{
-			if (context != null)
-			{
-				context.Dispose();
-				context = null;
-			}
-		}
-
-		private void CreateContext()
-		{
-			if (context == null)
-			{
-				var glInterface = GRGlInterface.CreateNativeGlInterface();
-				context = GRContext.Create(GRBackend.OpenGL, glInterface);
-			}
+			surface?.Dispose();
+			surface = null;
+			renderTarget?.Dispose();
+			renderTarget = null;
+			context?.Dispose();
+			context = null;
 		}
 	}
 }

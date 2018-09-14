@@ -1,4 +1,6 @@
-﻿#if __TVOS__
+﻿using System;
+
+#if __TVOS__
 namespace SkiaSharp.Views.tvOS
 #elif __WATCHOS__
 namespace SkiaSharp.Views.watchOS
@@ -8,6 +10,7 @@ namespace SkiaSharp.Views.iOS
 namespace SkiaSharp.Views.Mac
 #endif
 {
+	[Obsolete("Use SKCanvasLayer.PaintSurface instead.")]
 	public interface ISKCanvasLayerDelegate
 	{
 		void DrawInSurface(SKSurface surface, SKImageInfo info);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using SkiaSharp.Views.GlesInterop;
 using Windows.ApplicationModel;
 using Windows.Foundation;
 using Windows.UI.Xaml;
@@ -13,14 +14,12 @@ namespace SkiaSharp.Views.UWP
 		private static bool designMode = DesignMode.DesignModeEnabled;
 
 		private GRContext context;
-		private GRBackendRenderTargetDesc renderTarget;
+		private GRBackendRenderTarget renderTarget;
+		private SKSurface surface;
 		private bool isVisible;
 
 		public SKSwapChainPanel()
 		{
-			Initialize();
-
-			CompositionScaleChanged += OnCompositionScaleChanged;
 		}
 
 		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
@@ -35,34 +34,6 @@ namespace SkiaSharp.Views.UWP
 			Invalidate();
 
 			return arrange;
-		}
-
-		private void OnCompositionScaleChanged(SwapChainPanel sender, object args)
-		{
-			var info = Windows.Graphics.Display.DisplayInformation.GetForCurrentView();
-			var dpi = info.LogicalDpi / 96.0f;
-
-			if (ContentsScale != dpi)
-			{
-				ContentsScale = dpi;
-				RenderTransform = new ScaleTransform
-				{
-					ScaleX = 1 / ContentsScale,
-					ScaleY = 1 / ContentsScale
-				};
-			}
-		}
-
-		private void Initialize()
-		{
-			if (designMode)
-				return;
-
-			//Multisampling = GlesMultisampling.FourTimes; not yet supported
-			DepthFormat = GlesDepthFormat.Format24;
-			StencilFormat = GlesStencilFormat.Format8;
-
-			Context = new GlesContext();
 		}
 
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
@@ -83,30 +54,36 @@ namespace SkiaSharp.Views.UWP
 			if (!isVisible)
 				return;
 
+			// clear everything
+			Gles.glClear(Gles.GL_COLOR_BUFFER_BIT | Gles.GL_DEPTH_BUFFER_BIT | Gles.GL_STENCIL_BUFFER_BIT);
+
 			// create the SkiaSharp context
 			if (context == null)
 			{
 				var glInterface = GRGlInterface.CreateNativeAngleInterface();
 				context = GRContext.Create(GRBackend.OpenGL, glInterface);
-
-				renderTarget = SKGLDrawable.CreateRenderTarget();
 			}
 
-			// set the size
-			renderTarget.Width = (int)rect.Width;
-			renderTarget.Height = (int)rect.Height;
-
-			// create the surface
-			using (var surface = SKSurface.Create(context, renderTarget))
+			// manage the drawing surface
+			if (renderTarget == null || surface == null || renderTarget.Width != (int)rect.Width || renderTarget.Height != (int)rect.Height)
 			{
-				// draw to the SkiaSharp surface
-				OnPaintSurface(new SKPaintGLSurfaceEventArgs(surface, renderTarget));
+				// create or update the dimensions
+				renderTarget?.Dispose();
+				renderTarget = SKGLDrawable.CreateRenderTarget((int)rect.Width, (int)rect.Height);
 
-				// flush the canvas
-				surface.Canvas.Flush();
+				// create the surface
+				surface?.Dispose();
+				surface = SKSurface.Create(context, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
 			}
 
-			// flush the SkiaSharp context to the GL context
+			using (new SKAutoCanvasRestore(surface.Canvas, true))
+			{
+				// start drawing
+				OnPaintSurface(new SKPaintGLSurfaceEventArgs(surface, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888));
+			}
+
+			// update the control
+			surface.Canvas.Flush();
 			context.Flush();
 		}
 	}

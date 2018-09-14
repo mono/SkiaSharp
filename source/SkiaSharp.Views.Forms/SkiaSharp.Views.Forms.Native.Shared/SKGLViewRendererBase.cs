@@ -88,11 +88,7 @@ namespace SkiaSharp.Views.Forms
 				if (Control == null)
 				{
 					var view = CreateNativeControl();
-#if __ANDROID__
-					view.SetRenderer(new Renderer(newController));
-#else
 					view.PaintSurface += OnPaintSurface;
-#endif
 					SetNativeControl(view);
 				}
 
@@ -120,6 +116,11 @@ namespace SkiaSharp.Views.Forms
 		{
 			TNativeView ret = (TNativeView)Activator.CreateInstance(typeof(TNativeView), new[] { TForms.NativeParent });
 			return ret;
+		}
+#elif __IOS__ || __MACOS__
+		protected override TNativeView CreateNativeControl()
+		{
+			return (TNativeView)Activator.CreateInstance(typeof(TNativeView));
 		}
 #else
 		protected virtual TNativeView CreateNativeControl()
@@ -155,11 +156,7 @@ namespace SkiaSharp.Views.Forms
 			var control = Control;
 			if (control != null)
 			{
-#if __ANDROID__
-				control.SetRenderer(null);
-#else
 				control.PaintSurface -= OnPaintSurface;
-#endif
 			}
 
 			// detach, regardless of state
@@ -218,24 +215,7 @@ namespace SkiaSharp.Views.Forms
 			var controller = Element as ISKGLViewController;
 
 			// the control is being repainted, let the user know
-			controller?.OnPaintSurface(new SKPaintGLSurfaceEventArgs(e.Surface, e.RenderTarget));
+			controller?.OnPaintSurface(new SKPaintGLSurfaceEventArgs(e.Surface, e.BackendRenderTarget));
 		}
-
-#if __ANDROID__
-		private class Renderer : SKNativeView.ISKRenderer
-		{
-			private readonly ISKGLViewController controller;
-
-			public Renderer(ISKGLViewController controller)
-			{
-				this.controller = controller;
-			}
-
-			public void OnDrawFrame(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
-			{
-				controller.OnPaintSurface(new SKPaintGLSurfaceEventArgs(surface, renderTarget));
-			}
-		}
-#endif
 	}
 }

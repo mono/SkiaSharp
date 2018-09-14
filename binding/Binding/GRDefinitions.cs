@@ -197,6 +197,36 @@ namespace SkiaSharp
 
 	public static partial class SkiaExtensions
 	{
+		public static uint ToSizedFormat (this SKColorType colorType)
+		{
+			switch (colorType) {
+				case SKColorType.Unknown:
+					return 0;
+				case SKColorType.Alpha8:
+					return GRGlSizedFormat.ALPHA8;
+				case SKColorType.Rgb565:
+					return GRGlSizedFormat.RGB565;
+				case SKColorType.Argb4444:
+					return GRGlSizedFormat.RGBA4;
+				case SKColorType.Rgba8888:
+					return GRGlSizedFormat.RGBA8;
+				case SKColorType.Rgb888x:
+					return GRGlSizedFormat.RGB8;
+				case SKColorType.Bgra8888:
+					return GRGlSizedFormat.BGRA8;
+				case SKColorType.Rgba1010102:
+					return GRGlSizedFormat.RGB10_A2;
+				case SKColorType.Rgb101010x:
+					return 0;
+				case SKColorType.Gray8:
+					return GRGlSizedFormat.LUMINANCE8;
+				case SKColorType.RgbaF16:
+					return GRGlSizedFormat.RGBA16F;
+				default:
+					throw new ArgumentOutOfRangeException (nameof (colorType));
+			}
+		}
+
 		public static uint ToSizedFormat (this GRPixelConfig config)
 		{
 			switch (config) {
@@ -232,6 +262,36 @@ namespace SkiaSharp
 					return 0;
 				default:
 					throw new ArgumentOutOfRangeException (nameof (config));
+			}
+		}
+
+		public static GRPixelConfig ToPixelConfig (this SKColorType colorType)
+		{
+			switch (colorType) {
+				case SKColorType.Unknown:
+					return GRPixelConfig.Unknown;
+				case SKColorType.Alpha8:
+					return GRPixelConfig.Alpha8;
+				case SKColorType.Gray8:
+					return GRPixelConfig.Gray8;
+				case SKColorType.Rgb565:
+					return GRPixelConfig.Rgb565;
+				case SKColorType.Argb4444:
+					return GRPixelConfig.Rgba4444;
+				case SKColorType.Rgba8888:
+					return GRPixelConfig.Rgba8888;
+				case SKColorType.Rgb888x:
+					return GRPixelConfig.Rgb888;
+				case SKColorType.Bgra8888:
+					return GRPixelConfig.Bgra8888;
+				case SKColorType.Rgba1010102:
+					return GRPixelConfig.Rgba1010102;
+				case SKColorType.RgbaF16:
+					return GRPixelConfig.RgbaHalf;
+				case SKColorType.Rgb101010x:
+					return GRPixelConfig.Unknown;
+				default:
+					throw new ArgumentOutOfRangeException (nameof (colorType));
 			}
 		}
 
