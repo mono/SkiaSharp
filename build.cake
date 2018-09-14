@@ -26,7 +26,7 @@ var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")))
 var VERBOSITY = (Verbosity) Enum.Parse (typeof(Verbosity), Argument ("v", Argument ("verbosity", Argument ("Verbosity", "Normal"))), true);
 var SKIP_EXTERNALS = Argument ("skipexternals", Argument ("SkipExternals", "")).ToLower ().Split (',');
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAll", Argument ("PackAllPlatforms", TARGET.ToLower() == "ci" || TARGET.ToLower() == "nuget-only")));
-var PRINT_ALL_ENV_VARS = Argument ("printAllenvVars", false);
+var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
@@ -354,21 +354,25 @@ Task ("nuget-only")
         }
     });
 
+    DeleteFiles ("./output/*/nuget/*.nuspec");
     foreach (var nuspec in GetFiles ("./nuget/*.nuspec")) {
         var xdoc = XDocument.Load (nuspec.FullPath);
         var metadata = xdoc.Root.Element ("metadata");
-        var id = metadata.Element ("id");
+        var id = metadata.Element ("id").Value;
+        var dir = id;
+        if (id.Contains(".NativeAssets")) {
+            dir = id.Substring(0, id.IndexOf(".NativeAssets"));
+        }
 
         removePlatforms (xdoc);
 
-        var outDir = $"./output/{id.Value}/nuget";
-        DeleteFiles ($"{outDir}/*.nuspec");
+        var outDir = $"./output/{dir}/nuget";
 
         setVersion (xdoc, "");
-        xdoc.Save ($"{outDir}/{id.Value}.nuspec");
+        xdoc.Save ($"{outDir}/{id}.nuspec");
 
         setVersion (xdoc, $"-preview-{BUILD_NUMBER}");
-        xdoc.Save ($"{outDir}/{id.Value}.prerelease.nuspec");
+        xdoc.Save ($"{outDir}/{id}.prerelease.nuspec");
 
         // the legal
         CopyFile ("./LICENSE.txt", $"{outDir}/LICENSE.txt");
