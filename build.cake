@@ -287,6 +287,12 @@ Task ("nuget")
 Task ("nuget-only")
     .Does (() =>
 {
+    Information("OUTPUT FILES:");
+    foreach(var f in GetFiles("./output/**/*")){
+        Information(f.FullPath);
+    }
+    Information("OUTPUT FILES COMPLETE.");
+
     var platform = "";
     if (!PACK_ALL_PLATFORMS) {
         if (IsRunningOnWindows ()) {

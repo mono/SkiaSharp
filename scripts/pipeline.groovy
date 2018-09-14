@@ -1,5 +1,6 @@
 import groovy.transform.Field
 
+@Field def verbosity = "normal"
 @Field def isPr = false
 @Field def branchName = null
 @Field def commitHash = null
@@ -112,7 +113,7 @@ def createNativeBuilder(platform, host, label, additionalPackages) {
                                 if (host == "linux" && platform == "tizen") {
                                     pre = "./scripts/install-tizen.sh && "
                                 }
-                                bootstrapper("-t externals-${platform} -v minimal", host, pre, additionalPackages)
+                                bootstrapper("-t externals-${platform} -v ${verbosity}", host, pre, additionalPackages)
 
                                 uploadBlobs("native-${platform}_${host}")
 
@@ -146,7 +147,7 @@ def createManagedBuilder(host, label, additionalPackages) {
                                 checkout scm
                                 downloadBlobs("native-*")
 
-                                bootstrapper("-t everything -v minimal --skipexternals=all", host, "", additionalPackages)
+                                bootstrapper("-t everything -v ${verbosity} --skipexternals=all", host, "", additionalPackages)
 
                                 step([
                                     $class: "XUnitBuilder",
@@ -208,7 +209,7 @@ def createPackagingBuilder(additionalPackages) {
                                 checkout scm
                                 downloadBlobs("managed-*");
 
-                                bootstrapper("-t nuget-only -v minimal", host, "", additionalPackages)
+                                bootstrapper("-t nuget-only -v ${verbosity}", host, "", additionalPackages)
 
                                 uploadBlobs("packing-${host}")
 
