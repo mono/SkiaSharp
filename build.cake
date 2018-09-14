@@ -63,11 +63,13 @@ if (string.IsNullOrEmpty (BUILD_NUMBER)) {
 }
 
 var TRACKED_NUGETS = new Dictionary<string, Version> {
-    { "SkiaSharp",              new Version (1, 57, 0) },
-    { "SkiaSharp.Views",        new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Forms",  new Version (1, 57, 0) },
-    { "HarfBuzzSharp",          new Version (1, 0, 0) },
-    { "SkiaSharp.HarfBuzz",     new Version (1, 57, 0) },
+    { "SkiaSharp",                          new Version (1, 57, 0) },
+    { "SkiaSharp.NativeAssets.Linux",       new Version (1, 57, 0) },
+    { "SkiaSharp.Views",                    new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Forms",              new Version (1, 57, 0) },
+    { "HarfBuzzSharp",                      new Version (1, 0, 0) },
+    { "HarfBuzzSharp.NativeAssets.Linux",   new Version (1, 0, 0) },
+    { "SkiaSharp.HarfBuzz",                 new Version (1, 57, 0) },
 };
 
 #load "cake/UtilsManaged.cake"
@@ -287,12 +289,6 @@ Task ("nuget")
 Task ("nuget-only")
     .Does (() =>
 {
-    Information("OUTPUT FILES:");
-    foreach(var f in GetFiles("./output/**/*")){
-        Information(f.FullPath);
-    }
-    Information("OUTPUT FILES COMPLETE.");
-
     var platform = "";
     if (!PACK_ALL_PLATFORMS) {
         if (IsRunningOnWindows ()) {
