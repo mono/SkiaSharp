@@ -6,9 +6,10 @@ import groovy.transform.Field
 @Field def commitHash = null
 @Field def githubStatusSha = null
 
-@Field def nativeLinuxPackages = "curl mono-devel python git libfontconfig1-dev"
-@Field def nativeTizenPackages = "curl mono-devel python git openjdk-8-jdk zip libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn"
-@Field def managedLinuxPackages = "curl mono-complete msbuild dotnet-sdk-2.0.0 ttf-ancient-fonts"
+@Field def minimalLinuxPackages = "curl mono-complete msbuild"
+@Field def nativeLinuxPackages = "python git libfontconfig1-dev"
+@Field def nativeTizenPackages = "python git openjdk-8-jdk zip libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn"
+@Field def managedLinuxPackages = "dotnet-sdk-2.0.0 ttf-ancient-fonts"
 
 @Field def customEnv = [
     "windows": [
@@ -40,45 +41,45 @@ node("ubuntu-1604-amd64") {
             githubStatusSha = isPr ? env.ghprbActualCommit : commitHash
 
             echo "Building SHA1: ${commitHash}..."
-            echo " - PR: ${isPr}..."
-            echo " - Branch Name: ${branchName}..."
-            echo " - GitHub Status SHA1: ${githubStatusSha}..."
+            echo " - PR: ${isPr}"
+            echo " - Branch Name: ${branchName}"
+            echo " - GitHub Status SHA1: ${githubStatusSha}"
         }
     }
 
     stage("Native Builds") {
         parallel([
-            // // windows
-            // win32:              createNativeBuilder("Windows",    "Windows",  "components-windows", ""),
-            // uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows", ""),
-            // android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows", ""),
-            // tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows", ""),
+            // windows
+            win32:              createNativeBuilder("Windows",    "Windows",  "components-windows",     ""),
+            uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows",     ""),
+            android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows",     ""),
+            tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows",     ""),
 
-            // // macos
-            // macos:              createNativeBuilder("macOS",      "macOS",    "components", ""),
-            // ios:                createNativeBuilder("iOS",        "macOS",    "components", ""),
-            // tvos:               createNativeBuilder("tvOS",       "macOS",    "components", ""),
-            // watchos:            createNativeBuilder("watchOS",    "macOS",    "components", ""),
-            // android_macos:      createNativeBuilder("Android",    "macOS",    "components", ""),
-            // tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components", ""),
+            // macos
+            macos:              createNativeBuilder("macOS",      "macOS",    "components",             ""),
+            ios:                createNativeBuilder("iOS",        "macOS",    "components",             ""),
+            tvos:               createNativeBuilder("tvOS",       "macOS",    "components",             ""),
+            watchos:            createNativeBuilder("watchOS",    "macOS",    "components",             ""),
+            android_macos:      createNativeBuilder("Android",    "macOS",    "components",             ""),
+            tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components",             ""),
 
             // linux
-            linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64", nativeLinuxPackages),
-            tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64", nativeTizenPackages),
+            linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64",      nativeLinuxPackages),
+            tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64",      nativeTizenPackages),
         ])
     }
 
     stage("Managed Builds") {
         parallel([
-            // windows: createManagedBuilder("Windows",    "components-windows", ""),
-            // macos:   createManagedBuilder("macOS",      "components", ""),
-            linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64", managedLinuxPackages),
+            windows: createManagedBuilder("Windows",    "components-windows",   ""),
+            macos:   createManagedBuilder("macOS",      "components",           ""),
+            linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64",    managedLinuxPackages),
         ])
     }
 
     stage("Packaging") {
         parallel([
-            package: createPackagingBuilder(""),
+            package: createPackagingBuilder(),
         ])
     }
 
@@ -192,7 +193,7 @@ def createManagedBuilder(host, label, additionalPackages) {
     }
 }
 
-def createPackagingBuilder(additionalPackages) {
+def createPackagingBuilder() {
     def githubContext = "Packing"
     def host = "linux"
     def label = "ubuntu-1604-amd64"
@@ -209,7 +210,7 @@ def createPackagingBuilder(additionalPackages) {
                                 checkout scm
                                 downloadBlobs("managed-*");
 
-                                bootstrapper("-t nuget-only -v ${verbosity}", host, "", additionalPackages)
+                                bootstrapper("-t nuget-only -v ${verbosity}", host, "", "")
 
                                 uploadBlobs("packing-${host}")
 
@@ -233,7 +234,7 @@ def bootstrapper(args, host, pre, additionalPackages) {
         chroot(
             chrootName: "${env.NODE_LABEL}-stable",
             command: "bash ${pre} ./bootstrapper.sh ${args}",
-            additionalPackages: "${additionalPackages}")
+            additionalPackages: "${minimalLinuxPackages} ${additionalPackages}")
     } else if (host == "macos") {
         sh("bash ${pre} ./bootstrapper.sh ${args}")
     } else if (host == "windows") {
