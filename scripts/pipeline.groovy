@@ -150,7 +150,7 @@ def createManagedBuilder(host, label, additionalPackages) {
                                 bootstrapper("-t everything -v ${verbosity} --skipexternals=all", host, "", additionalPackages)
 
                                 step([
-                                    $class: "XUnitBuilder",
+                                    $class: "XUnitPublisher",
                                     testTimeMargin: "3000",
                                     thresholdMode: 1,
                                     thresholds: [[
