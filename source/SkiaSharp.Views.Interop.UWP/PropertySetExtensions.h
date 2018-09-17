@@ -4,28 +4,19 @@
 #include <stddef.h>
 
 #if defined(_WIN32)
-#  if defined(INTEROP_LIBRARY)
 #    define API_EXPORT __declspec(dllexport)
-#  else
-#    define API_EXPORT __declspec(dllimport)
-#  endif
 #elif defined(__GNUC__)
-#  if defined(INTEROP_LIBRARY)
 #    define API_EXPORT __attribute__((visibility ("default")))
-#  else
-#    define API_EXPORT
-#  endif
 #else
-#  define API_EXPORT
+#    define API_EXPORT
 #endif
 
 #ifdef __cplusplus
-#   define C_PLUS_PLUS_BEGIN_GUARD    extern "C" {
-#   define C_PLUS_PLUS_END_GUARD      }
+#    define C_PLUS_PLUS_BEGIN_GUARD    extern "C" {
+#    define C_PLUS_PLUS_END_GUARD      }
 #else
-#   include <stdbool.h>
-#   define C_PLUS_PLUS_BEGIN_GUARD
-#   define C_PLUS_PLUS_END_GUARD
+#    define C_PLUS_PLUS_BEGIN_GUARD
+#    define C_PLUS_PLUS_END_GUARD
 #endif
 
 #include <windows.foundation.h>
