@@ -89,7 +89,6 @@ var RunTests = new Action<FilePath, string[], bool> ((testAssembly, skip, is32) 
 {
     var dir = testAssembly.GetDirectory ();
     var settings = new XUnit2Settings {
-        NUnitReport = true,
         ReportName = "TestResult",
         UseX86 = is32,
         Parallelism = ParallelismOption.Assemblies,
@@ -112,7 +111,7 @@ var RunNetCoreTests = new Action<FilePath, string[]> ((testAssembly, skip) =>
             skipString += $" -notrait \"Category={skip}\"";
         }
     }
-    DotNetCoreTool(testAssembly, "xunit", $"-verbose -parallel none -nunit \"TestResult.xml\" {skipString}", new DotNetCoreToolSettings {
+    DotNetCoreTool(testAssembly, "xunit", $"-verbose -parallel none -xml \"TestResult.xml\" {skipString}", new DotNetCoreToolSettings {
         WorkingDirectory = dir,
     });
 });

@@ -156,19 +156,13 @@ def createManagedBuilder(host, label, additionalPackages) {
                                     thresholdMode: 1,
                                     thresholds: [[
                                         $class: "FailedThreshold",
-                                        failureNewThreshold: "",
-                                        failureThreshold: "",
-                                        unstableNewThreshold: "",
-                                        unstableThreshold: ""
-                                    ], [
-                                        $class: "SkippedThreshold",
-                                        failureNewThreshold: "",
-                                        failureThreshold: "",
-                                        unstableNewThreshold: "",
-                                        unstableThreshold: ""
+                                        failureNewThreshold: "0",
+                                        failureThreshold: "0",
+                                        unstableNewThreshold: "0",
+                                        unstableThreshold: "0"
                                     ]],
                                     tools: [[
-                                        $class: "NUnitJunitHudsonTestType",
+                                        $class: "XUnitDotNetTestType",
                                         deleteOutputFiles: true,
                                         failIfNotNew: true,
                                         pattern: "output/tests/**/TestResult.xml",
