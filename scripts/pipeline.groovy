@@ -107,7 +107,7 @@ def createNativeBuilder(platform, host, label, additionalPackages) {
                     withEnv(customEnv[host] + ["NODE_LABEL=${label}"]) {
                         ws("${getWSRoot()}/native-${platform}") {
 
-                            touch(platform + ".txt")
+                            touch(platform + "-native.txt")
                             archiveArtifacts("**/*")
 
                             // try {
@@ -149,7 +149,15 @@ def createManagedBuilder(host, label, additionalPackages) {
                     withEnv(customEnv[host] + ["NODE_LABEL=${label}"]) {
                         ws("${getWSRoot()}/managed-${host}") {
 
-                            
+                            copyArtifacts(
+                                projectName: "${JOB_NAME}",
+                                selector: [
+                                    $class: "SpecificBuildSelector",
+                                    buildNumber: "${env.BUILD_NUMBER}"
+                                ]
+                            )
+                            touch(platform + "-managed.txt")
+                            archiveArtifacts("**/*")
 
                             // try {
                             //     checkout scm
