@@ -53,7 +53,7 @@ node("ubuntu-1604-amd64") {
     stage("Native Builds") {
         parallel([
             // windows
-            win32:              createNativeBuilder("Windows",    "Windows",  "components-windows",     ""),
+            // win32:              createNativeBuilder("Windows",    "Windows",  "components-windows",     ""),
             // uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows",     ""),
             // android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows",     ""),
             // tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows",     ""),
@@ -68,13 +68,13 @@ node("ubuntu-1604-amd64") {
 
             // // linux
             linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64",      nativeLinuxPackages),
-            // tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64",      nativeTizenPackages),
+            tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64",      nativeTizenPackages),
         ])
     }
 
     stage("Managed Builds") {
         parallel([
-            windows: createManagedBuilder("Windows",    "components-windows",   ""),
+            // windows: createManagedBuilder("Windows",    "components-windows",   ""),
             // macos:   createManagedBuilder("macOS",      "components",           ""),
             linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64",    managedLinuxPackages),
         ])
@@ -109,35 +109,26 @@ def createNativeBuilder(platform, host, label, additionalPackages) {
                 timestamps {
                     withEnv(customEnv[host] + ["NODE_LABEL=${label}"]) {
                         ws("${getWSRoot()}/native-${platform}") {
+                            try {
+                                checkout scm
+                                cmd("git submodule update --init --recursive")
 
-                            touch("output/" + platform + "-native.txt")
+                                def pre = ""
+                                if (host == "linux" && platform == "tizen") {
+                                    pre = "./scripts/install-tizen.sh && "
+                                }
+                                bootstrapper("-t externals-${platform} -v ${verbosity}", host, pre, additionalPackages)
 
-                            def stashName = "${platform}_${host}"
-                            nativeStashes.push(stashName)
-                            stash(
-                                name: stashName,
-                                includes: "output/**/*",
-                                allowEmpty: false
-                            )
+                                def stashName = "${platform}_${host}"
+                                nativeStashes.push(stashName)
+                                stash(name: stashName, includes: "output/**/*", allowEmpty: false)
 
-                            // try {
-                            //     checkout scm
-                            //     cmd("git submodule update --init --recursive")
-
-                            //     def pre = ""
-                            //     if (host == "linux" && platform == "tizen") {
-                            //         pre = "./scripts/install-tizen.sh && "
-                            //     }
-                            //     bootstrapper("-t externals-${platform} -v ${verbosity}", host, pre, additionalPackages)
-
-                            //     uploadBlobs("native-${platform}_${host}")
-
-                            //     cleanWs()
-                            //     reportGitHubStatus(githubContext, "SUCCESS", "Build complete.")
-                            // } catch (Exception e) {
-                            //     reportGitHubStatus(githubContext, "FAILURE", "Build failed.")
-                            //     throw e
-                            // }
+                                cleanWs()
+                                reportGitHubStatus(githubContext, "SUCCESS", "Build complete.")
+                            } catch (Exception e) {
+                                reportGitHubStatus(githubContext, "FAILURE", "Build failed.")
+                                throw e
+                            }
                         }
                     }
                 }
@@ -158,60 +149,43 @@ def createManagedBuilder(host, label, additionalPackages) {
                 timestamps {
                     withEnv(customEnv[host] + ["NODE_LABEL=${label}"]) {
                         ws("${getWSRoot()}/managed-${host}") {
+                            try {
+                                checkout scm
+                                nativeStashes.each { unstash(it) }
 
+                                bootstrapper("-t everything -v ${verbosity} --skipexternals=all", host, "", additionalPackages)
 
-                            for (stashName in nativeStashes) {
-                                unstash(stashName)
+                                step([
+                                    $class: "XUnitPublisher",
+                                    testTimeMargin: "3000",
+                                    thresholdMode: 1,
+                                    thresholds: [[
+                                        $class: "FailedThreshold",
+                                        failureNewThreshold: "0",
+                                        failureThreshold: "0",
+                                        unstableNewThreshold: "0",
+                                        unstableThreshold: "0"
+                                    ]],
+                                    tools: [[
+                                        $class: "XUnitDotNetTestType",
+                                        deleteOutputFiles: true,
+                                        failIfNotNew: true,
+                                        pattern: "output/tests/**/TestResult.xml",
+                                        skipNoTestFiles: false,
+                                        stopProcessingIfError: true
+                                    ]]
+                                ])
+
+                                def stashName = "${host}"
+                                nativeStashes.push(stashName)
+                                stash(name: stashName, includes: "output/**/*", allowEmpty: false)
+
+                                cleanWs()
+                                reportGitHubStatus(githubContext, "SUCCESS", "Build complete.")
+                            } catch (Exception e) {
+                                reportGitHubStatus(githubContext, "FAILURE", "Build failed.")
+                                throw e
                             }
-
-                            touch("output/" + host + "-managed.txt")
-
-                            def stashName = "${host}"
-                            managedStashes.push(stashName)
-                            stash(
-                                name: stashName,
-                                includes: "output/**/*",
-                                allowEmpty: false
-                            )
-
-
-                            // archiveArtifacts("**/*")
-
-                            // try {
-                            //     checkout scm
-                            //     downloadBlobs("native-*")
-
-                            //     bootstrapper("-t everything -v ${verbosity} --skipexternals=all", host, "", additionalPackages)
-
-                            //     step([
-                            //         $class: "XUnitPublisher",
-                            //         testTimeMargin: "3000",
-                            //         thresholdMode: 1,
-                            //         thresholds: [[
-                            //             $class: "FailedThreshold",
-                            //             failureNewThreshold: "0",
-                            //             failureThreshold: "0",
-                            //             unstableNewThreshold: "0",
-                            //             unstableThreshold: "0"
-                            //         ]],
-                            //         tools: [[
-                            //             $class: "XUnitDotNetTestType",
-                            //             deleteOutputFiles: true,
-                            //             failIfNotNew: true,
-                            //             pattern: "output/tests/**/TestResult.xml",
-                            //             skipNoTestFiles: false,
-                            //             stopProcessingIfError: true
-                            //         ]]
-                            //     ])
-
-                            //     uploadBlobs("managed-${host}")
-
-                            //     cleanWs()
-                            //     reportGitHubStatus(githubContext, "SUCCESS", "Build complete.")
-                            // } catch (Exception e) {
-                            //     reportGitHubStatus(githubContext, "FAILURE", "Build failed.")
-                            //     throw e
-                            // }
                         }
                     }
                 }
@@ -233,30 +207,20 @@ def createPackagingBuilder() {
                 timestamps{
                     withEnv(customEnv[host] + ["NODE_LABEL=${label}"]) {
                         ws("${getWSRoot()}/packing-${host}") {
+                            try {
+                                checkout scm
+                                managedStashes.each { unstash(it) }
 
+                                bootstrapper("-t nuget-only -v ${verbosity}", host, "", "")
 
-                            for (stashName in managedStashes) {
-                                unstash(stashName)
+                                uploadBlobs()
+
+                                cleanWs()
+                                reportGitHubStatus(githubContext, "SUCCESS", "Pack complete.")
+                            } catch (Exception e) {
+                                reportGitHubStatus(githubContext, "FAILURE", "Pack failed.")
+                                throw e
                             }
-
-                            touch("output/package.txt")
-
-                            uploadBlobs("packing-${host}")
-
-                            // try {
-                            //     checkout scm
-                            //     downloadBlobs("managed-*")
-
-                            //     bootstrapper("-t nuget-only -v ${verbosity}", host, "", "")
-
-                            //     uploadBlobs("packing-${host}")
-
-                            //     cleanWs()
-                            //     reportGitHubStatus(githubContext, "SUCCESS", "Pack complete.")
-                            // } catch (Exception e) {
-                            //     reportGitHubStatus(githubContext, "FAILURE", "Pack failed.")
-                            //     throw e
-                            // }
                         }
                     }
                 }
@@ -281,7 +245,7 @@ def bootstrapper(args, host, pre, additionalPackages) {
     }
 }
 
-def uploadBlobs(blobs) {
+def uploadBlobs() {
     fingerprint("output/**/*")
     step([
         $class: "WAStoragePublisher",
@@ -298,18 +262,18 @@ def uploadBlobs(blobs) {
         storageCredentialId: "fbd29020e8166fbede5518e038544343",
         uploadArtifactsOnlyIfSuccessful: false,
         uploadZips: false,
-        virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/${blobs}/",
+        virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/",
     ])
 }
 
-def downloadBlobs(blobs) {
+def downloadBlobs() {
     step([
         $class: "AzureStorageBuilder",
         downloadType: [
             value: "container",
             containerName: "skiasharp-public-artifacts",
         ],
-        includeFilesPattern: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/${blobs}/**/*",
+        includeFilesPattern: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/**/*",
         excludeFilesPattern: "",
         downloadDirLoc: "",
         flattenDirectories: false,
