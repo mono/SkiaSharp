@@ -11,6 +11,9 @@ import groovy.transform.Field
 @Field def nativeTizenPackages = "python git openjdk-8-jdk zip libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn"
 @Field def managedLinuxPackages = "dotnet-sdk-2.0.0 ttf-ancient-fonts"
 
+@Field def nativeStashes = []
+@Field def managedStashes = []
+
 @Field def customEnv = [
     "windows": [
         "TIZEN_STUDIO_HOME=C:\\Tizen",
@@ -78,9 +81,9 @@ node("ubuntu-1604-amd64") {
     }
 
     stage("Packaging") {
-        // parallel([
-        //     package: createPackagingBuilder(),
-        // ])
+        parallel([
+            package: createPackagingBuilder(),
+        ])
     }
 
     stage("Clean Up") {
@@ -95,8 +98,8 @@ node("ubuntu-1604-amd64") {
 
 def createNativeBuilder(platform, host, label, additionalPackages) {
     def githubContext = "Build Native - ${platform} on ${host}"
-    platform = platform.toLowerCase();
-    host = host.toLowerCase();
+    platform = platform.toLowerCase()
+    host = host.toLowerCase()
 
     reportGitHubStatus(githubContext, "PENDING", "Building...")
 
@@ -107,8 +110,15 @@ def createNativeBuilder(platform, host, label, additionalPackages) {
                     withEnv(customEnv[host] + ["NODE_LABEL=${label}"]) {
                         ws("${getWSRoot()}/native-${platform}") {
 
-                            // touch(platform + "-native.txt")
-                            // archiveArtifacts("**/*")
+                            touch(platform + "-native.txt")
+
+                            def stashName = "${platform}_${host}"
+                            nativeStashes.push(stashName)
+                            stash(
+                                name: stashName,
+                                includes: "output/**/*",
+                                allowEmpty: false
+                            )
 
                             // try {
                             //     checkout scm
@@ -138,7 +148,7 @@ def createNativeBuilder(platform, host, label, additionalPackages) {
 
 def createManagedBuilder(host, label, additionalPackages) {
     def githubContext = "Build Managed - ${host}"
-    host = host.toLowerCase();
+    host = host.toLowerCase()
 
     reportGitHubStatus(githubContext, "PENDING", "Building...")
 
@@ -149,14 +159,22 @@ def createManagedBuilder(host, label, additionalPackages) {
                     withEnv(customEnv[host] + ["NODE_LABEL=${label}"]) {
                         ws("${getWSRoot()}/managed-${host}") {
 
-                            copyArtifacts(
-                                projectName: "${env.JOB_NAME}",
-                                selector: [
-                                    $class: "SpecificBuildSelector",
-                                    buildNumber: "${env.BUILD_NUMBER}"
-                                ]
+
+                            for (stashName in nativeStashes) {
+                                unstash(stashName)
+                            }
+
+                            touch(platform + "-managed.txt")
+
+                            def stashName = "${host}"
+                            managedStashes.push(stashName)
+                            stash(
+                                name: stashName,
+                                includes: "output/**/*",
+                                allowEmpty: false
                             )
-                            // touch(platform + "-managed.txt")
+
+
                             // archiveArtifacts("**/*")
 
                             // try {
@@ -215,20 +233,30 @@ def createPackagingBuilder() {
                 timestamps{
                     withEnv(customEnv[host] + ["NODE_LABEL=${label}"]) {
                         ws("${getWSRoot()}/packing-${host}") {
-                            try {
-                                checkout scm
-                                downloadBlobs("managed-*");
 
-                                bootstrapper("-t nuget-only -v ${verbosity}", host, "", "")
 
-                                uploadBlobs("packing-${host}")
-
-                                cleanWs()
-                                reportGitHubStatus(githubContext, "SUCCESS", "Pack complete.")
-                            } catch (Exception e) {
-                                reportGitHubStatus(githubContext, "FAILURE", "Pack failed.")
-                                throw e
+                            for (stashName in managedStashes) {
+                                unstash(stashName)
                             }
+
+                            touch("package.txt")
+
+                            uploadBlobs("packing-${host}")
+
+                            // try {
+                            //     checkout scm
+                            //     downloadBlobs("managed-*")
+
+                            //     bootstrapper("-t nuget-only -v ${verbosity}", host, "", "")
+
+                            //     uploadBlobs("packing-${host}")
+
+                            //     cleanWs()
+                            //     reportGitHubStatus(githubContext, "SUCCESS", "Pack complete.")
+                            // } catch (Exception e) {
+                            //     reportGitHubStatus(githubContext, "FAILURE", "Pack failed.")
+                            //     throw e
+                            // }
                         }
                     }
                 }
