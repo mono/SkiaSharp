@@ -149,13 +149,13 @@ def createManagedBuilder(host, label, additionalPackages) {
                     withEnv(customEnv[host] + ["NODE_LABEL=${label}"]) {
                         ws("${getWSRoot()}/managed-${host}") {
 
-                            // copyArtifacts(
-                            //     projectName: "${env.JOB_NAME}",
-                            //     selector: [
-                            //         $class: "SpecificBuildSelector",
-                            //         buildNumber: "${env.BUILD_NUMBER}"
-                            //     ]
-                            // )
+                            copyArtifacts(
+                                projectName: "${env.JOB_NAME}",
+                                selector: [
+                                    $class: "SpecificBuildSelector",
+                                    buildNumber: "${env.BUILD_NUMBER}"
+                                ]
+                            )
                             // touch(platform + "-managed.txt")
                             // archiveArtifacts("**/*")
 
