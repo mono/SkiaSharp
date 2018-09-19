@@ -110,7 +110,7 @@ def createNativeBuilder(platform, host, label, additionalPackages) {
                     withEnv(customEnv[host] + ["NODE_LABEL=${label}"]) {
                         ws("${getWSRoot()}/native-${platform}") {
 
-                            touch(platform + "-native.txt")
+                            touch("output/" + platform + "-native.txt")
 
                             def stashName = "${platform}_${host}"
                             nativeStashes.push(stashName)
@@ -164,7 +164,7 @@ def createManagedBuilder(host, label, additionalPackages) {
                                 unstash(stashName)
                             }
 
-                            touch(platform + "-managed.txt")
+                            touch("output/" + platform + "-managed.txt")
 
                             def stashName = "${host}"
                             managedStashes.push(stashName)
@@ -239,7 +239,7 @@ def createPackagingBuilder() {
                                 unstash(stashName)
                             }
 
-                            touch("package.txt")
+                            touch("output/package.txt")
 
                             uploadBlobs("packing-${host}")
 
