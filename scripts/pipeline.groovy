@@ -164,7 +164,7 @@ def createManagedBuilder(host, label, additionalPackages) {
                                 unstash(stashName)
                             }
 
-                            touch("output/" + platform + "-managed.txt")
+                            touch("output/" + host + "-managed.txt")
 
                             def stashName = "${host}"
                             managedStashes.push(stashName)
