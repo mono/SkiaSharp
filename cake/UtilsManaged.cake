@@ -90,6 +90,7 @@ var RunTests = new Action<FilePath, string[], bool> ((testAssembly, skip, is32) 
     var dir = testAssembly.GetDirectory ();
     var settings = new XUnit2Settings {
         ReportName = "TestResult",
+        XmlReport = true,
         UseX86 = is32,
         Parallelism = ParallelismOption.Assemblies,
         OutputDirectory = dir,
