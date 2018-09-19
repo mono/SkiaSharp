@@ -51,36 +51,36 @@ node("ubuntu-1604-amd64") {
         parallel([
             // windows
             win32:              createNativeBuilder("Windows",    "Windows",  "components-windows",     ""),
-            uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows",     ""),
-            android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows",     ""),
-            tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows",     ""),
+            // uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows",     ""),
+            // android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows",     ""),
+            // tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows",     ""),
 
-            // macos
-            macos:              createNativeBuilder("macOS",      "macOS",    "components",             ""),
-            ios:                createNativeBuilder("iOS",        "macOS",    "components",             ""),
-            tvos:               createNativeBuilder("tvOS",       "macOS",    "components",             ""),
-            watchos:            createNativeBuilder("watchOS",    "macOS",    "components",             ""),
-            android_macos:      createNativeBuilder("Android",    "macOS",    "components",             ""),
-            tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components",             ""),
+            // // macos
+            // macos:              createNativeBuilder("macOS",      "macOS",    "components",             ""),
+            // ios:                createNativeBuilder("iOS",        "macOS",    "components",             ""),
+            // tvos:               createNativeBuilder("tvOS",       "macOS",    "components",             ""),
+            // watchos:            createNativeBuilder("watchOS",    "macOS",    "components",             ""),
+            // android_macos:      createNativeBuilder("Android",    "macOS",    "components",             ""),
+            // tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components",             ""),
 
-            // linux
+            // // linux
             linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64",      nativeLinuxPackages),
-            tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64",      nativeTizenPackages),
+            // tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64",      nativeTizenPackages),
         ])
     }
 
     stage("Managed Builds") {
         parallel([
             windows: createManagedBuilder("Windows",    "components-windows",   ""),
-            macos:   createManagedBuilder("macOS",      "components",           ""),
+            // macos:   createManagedBuilder("macOS",      "components",           ""),
             linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64",    managedLinuxPackages),
         ])
     }
 
     stage("Packaging") {
-        parallel([
-            package: createPackagingBuilder(),
-        ])
+        // parallel([
+        //     package: createPackagingBuilder(),
+        // ])
     }
 
     stage("Clean Up") {
@@ -106,24 +106,28 @@ def createNativeBuilder(platform, host, label, additionalPackages) {
                 timestamps {
                     withEnv(customEnv[host] + ["NODE_LABEL=${label}"]) {
                         ws("${getWSRoot()}/native-${platform}") {
-                            try {
-                                checkout scm
-                                cmd("git submodule update --init --recursive")
 
-                                def pre = ""
-                                if (host == "linux" && platform == "tizen") {
-                                    pre = "./scripts/install-tizen.sh && "
-                                }
-                                bootstrapper("-t externals-${platform} -v ${verbosity}", host, pre, additionalPackages)
+                            touch(platform + ".txt")
+                            archiveArtifacts("**/*")
 
-                                uploadBlobs("native-${platform}_${host}")
+                            // try {
+                            //     checkout scm
+                            //     cmd("git submodule update --init --recursive")
 
-                                cleanWs()
-                                reportGitHubStatus(githubContext, "SUCCESS", "Build complete.")
-                            } catch (Exception e) {
-                                reportGitHubStatus(githubContext, "FAILURE", "Build failed.")
-                                throw e
-                            }
+                            //     def pre = ""
+                            //     if (host == "linux" && platform == "tizen") {
+                            //         pre = "./scripts/install-tizen.sh && "
+                            //     }
+                            //     bootstrapper("-t externals-${platform} -v ${verbosity}", host, pre, additionalPackages)
+
+                            //     uploadBlobs("native-${platform}_${host}")
+
+                            //     cleanWs()
+                            //     reportGitHubStatus(githubContext, "SUCCESS", "Build complete.")
+                            // } catch (Exception e) {
+                            //     reportGitHubStatus(githubContext, "FAILURE", "Build failed.")
+                            //     throw e
+                            // }
                         }
                     }
                 }
@@ -144,41 +148,44 @@ def createManagedBuilder(host, label, additionalPackages) {
                 timestamps {
                     withEnv(customEnv[host] + ["NODE_LABEL=${label}"]) {
                         ws("${getWSRoot()}/managed-${host}") {
-                            try {
-                                checkout scm
-                                downloadBlobs("native-*")
 
-                                bootstrapper("-t everything -v ${verbosity} --skipexternals=all", host, "", additionalPackages)
+                            
 
-                                step([
-                                    $class: "XUnitPublisher",
-                                    testTimeMargin: "3000",
-                                    thresholdMode: 1,
-                                    thresholds: [[
-                                        $class: "FailedThreshold",
-                                        failureNewThreshold: "0",
-                                        failureThreshold: "0",
-                                        unstableNewThreshold: "0",
-                                        unstableThreshold: "0"
-                                    ]],
-                                    tools: [[
-                                        $class: "XUnitDotNetTestType",
-                                        deleteOutputFiles: true,
-                                        failIfNotNew: true,
-                                        pattern: "output/tests/**/TestResult.xml",
-                                        skipNoTestFiles: false,
-                                        stopProcessingIfError: true
-                                    ]]
-                                ])
+                            // try {
+                            //     checkout scm
+                            //     downloadBlobs("native-*")
 
-                                uploadBlobs("managed-${host}")
+                            //     bootstrapper("-t everything -v ${verbosity} --skipexternals=all", host, "", additionalPackages)
 
-                                cleanWs()
-                                reportGitHubStatus(githubContext, "SUCCESS", "Build complete.")
-                            } catch (Exception e) {
-                                reportGitHubStatus(githubContext, "FAILURE", "Build failed.")
-                                throw e
-                            }
+                            //     step([
+                            //         $class: "XUnitPublisher",
+                            //         testTimeMargin: "3000",
+                            //         thresholdMode: 1,
+                            //         thresholds: [[
+                            //             $class: "FailedThreshold",
+                            //             failureNewThreshold: "0",
+                            //             failureThreshold: "0",
+                            //             unstableNewThreshold: "0",
+                            //             unstableThreshold: "0"
+                            //         ]],
+                            //         tools: [[
+                            //             $class: "XUnitDotNetTestType",
+                            //             deleteOutputFiles: true,
+                            //             failIfNotNew: true,
+                            //             pattern: "output/tests/**/TestResult.xml",
+                            //             skipNoTestFiles: false,
+                            //             stopProcessingIfError: true
+                            //         ]]
+                            //     ])
+
+                            //     uploadBlobs("managed-${host}")
+
+                            //     cleanWs()
+                            //     reportGitHubStatus(githubContext, "SUCCESS", "Build complete.")
+                            // } catch (Exception e) {
+                            //     reportGitHubStatus(githubContext, "FAILURE", "Build failed.")
+                            //     throw e
+                            // }
                         }
                     }
                 }
