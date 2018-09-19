@@ -150,7 +150,7 @@ def createManagedBuilder(host, label, additionalPackages) {
                         ws("${getWSRoot()}/managed-${host}") {
 
                             copyArtifacts(
-                                projectName: "${JOB_NAME}",
+                                projectName: "${env.JOB_NAME}",
                                 selector: [
                                     $class: "SpecificBuildSelector",
                                     buildNumber: "${env.BUILD_NUMBER}"
