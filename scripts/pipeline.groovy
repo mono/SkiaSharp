@@ -177,7 +177,7 @@ def createManagedBuilder(host, label, additionalPackages) {
                                 ])
 
                                 def stashName = "${host}"
-                                nativeStashes.push(stashName)
+                                managedStashes.push(stashName)
                                 stash(name: stashName, includes: "output/**/*", allowEmpty: false)
 
                                 cleanWs()
