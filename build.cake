@@ -50,13 +50,6 @@ DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/pac
 DirectoryPath PROFILE_PATH = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
 DirectoryPath NUGET_PACKAGES = EnvironmentVariable ("NUGET_PACKAGES") ?? PROFILE_PATH.Combine (".nuget/packages");
 
-var GIT_SHA = EnvironmentVariable ("GIT_COMMIT") ?? "";
-if (!string.IsNullOrEmpty (GIT_SHA) && GIT_SHA.Length >= 6) {
-    GIT_SHA = GIT_SHA.Substring (0, 6);
-} else {
-    GIT_SHA = "{GIT_SHA}";
-}
-
 var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? "";
 if (string.IsNullOrEmpty (BUILD_NUMBER)) {
     BUILD_NUMBER = "0";
