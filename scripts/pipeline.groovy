@@ -47,6 +47,8 @@ node("ubuntu-1604-amd64") {
             echo " - PR: ${isPr}"
             echo " - Branch Name: ${branchName}"
             echo " - GitHub Status SHA1: ${githubStatusSha}"
+
+            customEnv.each { it.push("GIT_SHA=${githubStatusSha}") }
         }
     }
 

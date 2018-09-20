@@ -501,7 +501,10 @@ Information ("");
 
 Information ("Environment Variables (whitelisted):");
 var envVarsWhitelist = new [] {
-    "path", "psmodulepath", "pwd", "shell", "processor_architecture"
+    "path", "psmodulepath", "pwd", "shell", "processor_architecture",
+    "processor_identifier", "node_name", "node_labels", "branch_name",
+    "os", "build_url", "build_number", "number_of_processors",
+    "node_label", "build_id", "git_sha"
 };
 var envVars = EnvironmentVariables ();
 var max = envVars.Max (v => v.Key.Length) + 2;
