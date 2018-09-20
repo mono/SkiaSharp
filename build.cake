@@ -50,13 +50,6 @@ DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/pac
 DirectoryPath PROFILE_PATH = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
 DirectoryPath NUGET_PACKAGES = EnvironmentVariable ("NUGET_PACKAGES") ?? PROFILE_PATH.Combine (".nuget/packages");
 
-var GIT_SHA = EnvironmentVariable ("GIT_COMMIT") ?? "";
-if (!string.IsNullOrEmpty (GIT_SHA) && GIT_SHA.Length >= 6) {
-    GIT_SHA = GIT_SHA.Substring (0, 6);
-} else {
-    GIT_SHA = "{GIT_SHA}";
-}
-
 var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? "";
 if (string.IsNullOrEmpty (BUILD_NUMBER)) {
     BUILD_NUMBER = "0";
@@ -508,7 +501,10 @@ Information ("");
 
 Information ("Environment Variables (whitelisted):");
 var envVarsWhitelist = new [] {
-    "path", "psmodulepath", "pwd", "shell", "processor_architecture"
+    "path", "psmodulepath", "pwd", "shell", "processor_architecture",
+    "processor_identifier", "node_name", "node_labels", "branch_name",
+    "os", "build_url", "build_number", "number_of_processors",
+    "node_label", "build_id", "git_sha"
 };
 var envVars = EnvironmentVariables ();
 var max = envVars.Max (v => v.Key.Length) + 2;

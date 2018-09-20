@@ -11,6 +11,9 @@ import groovy.transform.Field
 @Field def nativeTizenPackages = "python git openjdk-8-jdk zip libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn"
 @Field def managedLinuxPackages = "dotnet-sdk-2.0.0 ttf-ancient-fonts"
 
+@Field def nativeStashes = []
+@Field def managedStashes = []
+
 @Field def customEnv = [
     "windows": [
         "TIZEN_STUDIO_HOME=C:\\Tizen",
@@ -44,11 +47,15 @@ node("ubuntu-1604-amd64") {
             echo " - PR: ${isPr}"
             echo " - Branch Name: ${branchName}"
             echo " - GitHub Status SHA1: ${githubStatusSha}"
+
+            customEnv.each { platform, vars -> vars.push("GIT_SHA=${commitHash}") }
         }
     }
 
     stage("Native Builds") {
         parallel([
+            failFast: true,
+
             // windows
             win32:              createNativeBuilder("Windows",    "Windows",  "components-windows",     ""),
             uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows",     ""),
@@ -71,6 +78,8 @@ node("ubuntu-1604-amd64") {
 
     stage("Managed Builds") {
         parallel([
+            failFast: true,
+
             windows: createManagedBuilder("Windows",    "components-windows",   ""),
             macos:   createManagedBuilder("macOS",      "components",           ""),
             linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64",    managedLinuxPackages),
@@ -79,6 +88,8 @@ node("ubuntu-1604-amd64") {
 
     stage("Packaging") {
         parallel([
+            failFast: true,
+
             package: createPackagingBuilder(),
         ])
     }
@@ -95,8 +106,8 @@ node("ubuntu-1604-amd64") {
 
 def createNativeBuilder(platform, host, label, additionalPackages) {
     def githubContext = "Build Native - ${platform} on ${host}"
-    platform = platform.toLowerCase();
-    host = host.toLowerCase();
+    platform = platform.toLowerCase()
+    host = host.toLowerCase()
 
     reportGitHubStatus(githubContext, "PENDING", "Building...")
 
@@ -116,7 +127,9 @@ def createNativeBuilder(platform, host, label, additionalPackages) {
                                 }
                                 bootstrapper("-t externals-${platform} -v ${verbosity}", host, pre, additionalPackages)
 
-                                uploadBlobs("native-${platform}_${host}")
+                                def stashName = "${platform}_${host}"
+                                nativeStashes.push(stashName)
+                                stash(name: stashName, includes: "output/**/*", allowEmpty: false)
 
                                 cleanWs()
                                 reportGitHubStatus(githubContext, "SUCCESS", "Build complete.")
@@ -134,7 +147,7 @@ def createNativeBuilder(platform, host, label, additionalPackages) {
 
 def createManagedBuilder(host, label, additionalPackages) {
     def githubContext = "Build Managed - ${host}"
-    host = host.toLowerCase();
+    host = host.toLowerCase()
 
     reportGitHubStatus(githubContext, "PENDING", "Building...")
 
@@ -146,7 +159,7 @@ def createManagedBuilder(host, label, additionalPackages) {
                         ws("${getWSRoot()}/managed-${host}") {
                             try {
                                 checkout scm
-                                downloadBlobs("native-*")
+                                nativeStashes.each { unstash(it) }
 
                                 bootstrapper("-t everything -v ${verbosity} --skipexternals=all", host, "", additionalPackages)
 
@@ -171,7 +184,9 @@ def createManagedBuilder(host, label, additionalPackages) {
                                     ]]
                                 ])
 
-                                uploadBlobs("managed-${host}")
+                                def stashName = "${host}"
+                                managedStashes.push(stashName)
+                                stash(name: stashName, includes: "output/**/*", allowEmpty: false)
 
                                 cleanWs()
                                 reportGitHubStatus(githubContext, "SUCCESS", "Build complete.")
@@ -202,11 +217,11 @@ def createPackagingBuilder() {
                         ws("${getWSRoot()}/packing-${host}") {
                             try {
                                 checkout scm
-                                downloadBlobs("managed-*");
+                                managedStashes.each { unstash(it) }
 
                                 bootstrapper("-t nuget-only -v ${verbosity}", host, "", "")
 
-                                uploadBlobs("packing-${host}")
+                                uploadBlobs()
 
                                 cleanWs()
                                 reportGitHubStatus(githubContext, "SUCCESS", "Pack complete.")
@@ -238,7 +253,7 @@ def bootstrapper(args, host, pre, additionalPackages) {
     }
 }
 
-def uploadBlobs(blobs) {
+def uploadBlobs() {
     fingerprint("output/**/*")
     step([
         $class: "WAStoragePublisher",
@@ -255,18 +270,18 @@ def uploadBlobs(blobs) {
         storageCredentialId: "fbd29020e8166fbede5518e038544343",
         uploadArtifactsOnlyIfSuccessful: false,
         uploadZips: false,
-        virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/${blobs}/",
+        virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/",
     ])
 }
 
-def downloadBlobs(blobs) {
+def downloadBlobs() {
     step([
         $class: "AzureStorageBuilder",
         downloadType: [
             value: "container",
             containerName: "skiasharp-public-artifacts",
         ],
-        includeFilesPattern: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/${blobs}/**/*",
+        includeFilesPattern: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/**/*",
         excludeFilesPattern: "",
         downloadDirLoc: "",
         flattenDirectories: false,
