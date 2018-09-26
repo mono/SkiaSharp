@@ -154,6 +154,9 @@ namespace SkiaSharp
 					var n = SkiaApi.sk_typeface_chars_to_glyphs (Handle, (IntPtr) p, SKEncoding.Utf16, IntPtr.Zero, chars.Length);
 					glyphs = new ushort[n];
 
+					if (n == 0)
+						return 0;
+
 					fixed (ushort *gp = &glyphs [0]){
 						return SkiaApi.sk_typeface_chars_to_glyphs (Handle, (IntPtr) p, SKEncoding.Utf16, (IntPtr) gp, n);
 					}
@@ -169,6 +172,9 @@ namespace SkiaSharp
 			unsafe {
 				var n = SkiaApi.sk_typeface_chars_to_glyphs (Handle, str, encoding, IntPtr.Zero, strlen);
 				glyphs = new ushort[n];
+
+				if (n == 0)
+					return 0;
 
 				fixed (ushort *gp = &glyphs [0]){
 					return SkiaApi.sk_typeface_chars_to_glyphs (Handle, str, encoding, (IntPtr) gp, n);
