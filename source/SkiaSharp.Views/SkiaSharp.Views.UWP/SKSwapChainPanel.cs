@@ -1,22 +1,15 @@
 ﻿using System;
-using System.Runtime.InteropServices;
-using SkiaSharp.Views.GlesInterop;
-using Windows.ApplicationModel;
 using Windows.Foundation;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media;
+using SkiaSharp.Views.GlesInterop;
 
 namespace SkiaSharp.Views.UWP
 {
 	public class SKSwapChainPanel : AngleSwapChainPanel
 	{
-		private static bool designMode = DesignMode.DesignModeEnabled;
-
+		private GRGlInterface glInterface;
 		private GRContext context;
 		private GRBackendRenderTarget renderTarget;
 		private SKSurface surface;
-		private bool isVisible;
 
 		public SKSwapChainPanel()
 		{
@@ -25,16 +18,6 @@ namespace SkiaSharp.Views.UWP
 		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
 
 		public GRContext GRContext => context;
-
-		protected override Size ArrangeOverride(Size finalSize)
-		{
-			var arrange = base.ArrangeOverride(finalSize);
-
-			isVisible = Visibility == Visibility.Visible;
-			Invalidate();
-
-			return arrange;
-		}
 
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
@@ -46,21 +29,13 @@ namespace SkiaSharp.Views.UWP
 
 		protected override void OnRenderFrame(Rect rect)
 		{
-			base.OnRenderFrame(rect);
-
-			if (designMode)
-				return;
-
-			if (!isVisible)
-				return;
-
 			// clear everything
 			Gles.glClear(Gles.GL_COLOR_BUFFER_BIT | Gles.GL_DEPTH_BUFFER_BIT | Gles.GL_STENCIL_BUFFER_BIT);
 
 			// create the SkiaSharp context
 			if (context == null)
 			{
-				var glInterface = GRGlInterface.CreateNativeAngleInterface();
+				glInterface = GRGlInterface.CreateNativeAngleInterface();
 				context = GRContext.Create(GRBackend.OpenGL, glInterface);
 			}
 

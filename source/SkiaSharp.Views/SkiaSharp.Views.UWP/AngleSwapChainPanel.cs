@@ -1,20 +1,37 @@
 ﻿using System;
-using System.Threading;
+using Windows.ApplicationModel;
 using Windows.Foundation;
 using Windows.System.Threading;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Data;
 using SkiaSharp.Views.GlesInterop;
 
 namespace SkiaSharp.Views.UWP
 {
 	public class AngleSwapChainPanel : SwapChainPanel
 	{
+		private static readonly DependencyProperty ProxyVisibilityProperty =
+			DependencyProperty.Register(
+				"ProxyVisibility",
+				typeof(Visibility),
+				typeof(AngleSwapChainPanel),
+				new PropertyMetadata(Visibility.Visible, OnVisibilityChanged));
+
+		private static readonly bool designMode = DesignMode.DesignModeEnabled;
+
+		private readonly object locker = new object();
+
+		private bool isVisible = true;
+		private bool isLoaded = false;
+
 		private GlesContext glesContext;
 
 		private IAsyncAction renderLoopWorker;
 		private IAsyncAction renderOnceWorker;
+
+		private bool enableRenderLoop;
 
 		public AngleSwapChainPanel()
 		{
@@ -32,6 +49,14 @@ namespace SkiaSharp.Views.UWP
 			Unloaded += OnUnloaded;
 
 			CompositionScaleChanged += OnCompositionChanged;
+			SizeChanged += OnSizeChanged;
+
+			var binding = new Binding
+			{
+				Path = new PropertyPath(nameof(Visibility)),
+				Source = this
+			};
+			SetBinding(ProxyVisibilityProperty, binding);
 		}
 
 		public bool DrawInBackground { get; set; }
@@ -40,50 +65,37 @@ namespace SkiaSharp.Views.UWP
 
 		public bool EnableRenderLoop
 		{
-			get { return renderLoopWorker != null; }
+			get => enableRenderLoop;
 			set
 			{
-				if (value)
+				if (enableRenderLoop != value)
 				{
-					// if the render loop is already running then do not start another thread. 
-					if (renderLoopWorker == null || renderLoopWorker.Status != AsyncStatus.Started)
-					{
-						// run task on a dedicated high priority background thread. 
-						renderLoopWorker = ThreadPool.RunAsync(RenderLoop);
-					}
-				}
-				else
-				{
-					// if the loop is running
-					if (renderLoopWorker != null)
-					{
-						// stop it
-						renderLoopWorker.Cancel();
-						renderLoopWorker = null;
-					}
+					enableRenderLoop = value;
+					UpdateRenderLoop(value);
 				}
 			}
 		}
 
 		public void Invalidate()
 		{
-			// we don't need to update if we have a loop
-			if (!EnableRenderLoop)
+			if (!isLoaded || EnableRenderLoop)
+				return;
+
+			if (DrawInBackground)
 			{
-				// we are finished drawing the previous background frame
-				if (Interlocked.CompareExchange(ref renderOnceWorker, null, null) == null)
+				lock (locker)
 				{
-					if (DrawInBackground)
+					// if we haven't fired a render thread, start one
+					if (renderOnceWorker == null)
 					{
-						// draw from another thread with normal priority (if nothing is running already)
-						var run = Interlocked.CompareExchange(ref renderOnceWorker, ThreadPool.RunAsync(RenderOnce), null);
-					}
-					else
-					{
-						// draw on this thread, blocking
-						RenderFrame();
+						renderOnceWorker = ThreadPool.RunAsync(RenderOnce);
 					}
 				}
+			}
+			else
+			{
+				// draw on this thread, blocking
+				RenderFrame();
 			}
 		}
 
@@ -93,34 +105,65 @@ namespace SkiaSharp.Views.UWP
 
 		private void OnLoaded(object sender, RoutedEventArgs e)
 		{
+			isLoaded = true;
+
 			ContentsScale = CompositionScaleX;
 
-			CreateRenderSurface();
-			EnableRenderLoop = true;
+			EnsureRenderSurface();
+			UpdateRenderLoop(EnableRenderLoop);
+			Invalidate();
 		}
 
 		private void OnUnloaded(object sender, RoutedEventArgs e)
 		{
-			EnableRenderLoop = false;
+			CompositionScaleChanged -= OnCompositionChanged;
+			SizeChanged -= OnSizeChanged;
+
+			UpdateRenderLoop(false);
 			DestroyRenderSurface();
+
+			isLoaded = false;
+		}
+
+		private static void OnVisibilityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			if (d is AngleSwapChainPanel panel && e.NewValue is Visibility visibility)
+			{
+				panel.isVisible = visibility == Visibility.Visible;
+				panel.UpdateRenderLoop(panel.isVisible);
+				panel.Invalidate();
+			}
 		}
 
 		private void OnCompositionChanged(SwapChainPanel sender, object args)
 		{
-			if (ContentsScale != CompositionScaleX)
-			{
-				ContentsScale = CompositionScaleX;
+			ContentsScale = CompositionScaleX;
 
-				DestroyRenderSurface();
-				CreateRenderSurface();
-			}
+			DestroyRenderSurface();
+			EnsureRenderSurface();
+			Invalidate();
 		}
 
-		private void CreateRenderSurface()
+		private void OnSizeChanged(object sender, SizeChangedEventArgs e)
 		{
-			if (glesContext != null && !glesContext.HasSurface)
+			EnsureRenderSurface();
+			Invalidate();
+		}
+
+		private void EnsureRenderSurface()
+		{
+			if (isLoaded && glesContext?.HasSurface != true && ActualWidth > 0 && ActualHeight > 0)
 			{
-				glesContext.CreateSurface(this, null, (float)ContentsScale);
+				// detach and re-attach the size events as we need to go after the event added by ANGLE
+				// otherwise our size will still be the old size
+
+				SizeChanged -= OnSizeChanged;
+				CompositionScaleChanged -= OnCompositionChanged;
+
+				glesContext.CreateSurface(this, null, CompositionScaleX);
+
+				SizeChanged += OnSizeChanged;
+				CompositionScaleChanged += OnCompositionChanged;
 			}
 		}
 
@@ -131,7 +174,7 @@ namespace SkiaSharp.Views.UWP
 
 		private void RenderFrame()
 		{
-			if (!glesContext.HasSurface)
+			if (designMode || !isLoaded || !isVisible || !glesContext.HasSurface)
 				return;
 
 			glesContext.MakeCurrent();
@@ -144,6 +187,30 @@ namespace SkiaSharp.Views.UWP
 			{
 				// The call to eglSwapBuffers might not be successful (i.e. due to Device Lost)
 				// If the call fails, then we must reinitialize EGL and the GL resources.
+			}
+		}
+
+		private void UpdateRenderLoop(bool start)
+		{
+			if (!isLoaded)
+				return;
+
+			lock (locker)
+			{
+				if (start)
+				{
+					// if the render loop is not running, start it
+					if (renderLoopWorker?.Status != AsyncStatus.Started)
+					{
+						renderLoopWorker = ThreadPool.RunAsync(RenderLoop);
+					}
+				}
+				else
+				{
+					// stop the current render loop
+					renderLoopWorker?.Cancel();
+					renderLoopWorker = null;
+				}
 			}
 		}
 
@@ -160,20 +227,17 @@ namespace SkiaSharp.Views.UWP
 				Dispatcher.RunAsync(CoreDispatcherPriority.Normal, RenderFrame).AsTask().Wait();
 			}
 
-			// we are finished, so null out
-			var run = Interlocked.Exchange(ref renderOnceWorker, null);
+			lock (locker)
+			{
+				// we are finished, so null out
+				renderOnceWorker = null;
+			}
 		}
 
 		private void RenderLoop(IAsyncAction action)
 		{
 			while (action.Status == AsyncStatus.Started)
 			{
-				// we are still drawing the previous frame that wace a once-off
-				if (Interlocked.CompareExchange(ref renderOnceWorker, null, null) != null)
-				{
-					continue;
-				}
-
 				if (DrawInBackground)
 				{
 					// run on this background thread

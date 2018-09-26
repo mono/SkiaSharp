@@ -134,6 +134,15 @@ namespace SkiaSharp.Views.Forms
 			{
 				touchHandler.SetEnabled(Control, Element.EnableTouchEvents);
 			}
+#if WINDOWS_UWP
+			else if (e.PropertyName == Xamarin.Forms.VisualElement.IsVisibleProperty.PropertyName)
+			{
+				// pass the visibility down to the view do disable drawing
+				Control.Visibility = Element.IsVisible
+					? Windows.UI.Xaml.Visibility.Visible
+					: Windows.UI.Xaml.Visibility.Collapsed;
+			}
+#endif
 		}
 
 		protected override void Dispose(bool disposing)
