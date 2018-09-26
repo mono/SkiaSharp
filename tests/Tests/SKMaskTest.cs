@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -41,6 +42,28 @@ namespace SkiaSharp.Tests
 			Assert.Equal(rawMask, mask.GetAddr1(0, 0));
 
 			mask.FreeImage();
+		}
+
+		[SkippableFact]
+		public void AutoMaskFreeImageReleasesMemory()
+		{
+			byte rawMask = 1 << 7 | 0 << 6 | 0 << 5 | 1 << 4 | 1 << 3 | 0 << 2 | 1 << 1 | 1;
+			var buffer = new byte[] { rawMask };
+			var bounds = new SKRectI(0, 0, 8, 1);
+			UInt32 rowBytes = 1;
+			var format = SKMaskFormat.BW;
+
+			var mask = new SKMask(bounds, rowBytes, format);
+
+			var size = mask.ComputeTotalImageSize();
+			mask.Image = SKMask.AllocateImage(size);
+
+			Marshal.Copy(buffer, 0, mask.Image, (int)size);
+
+			using (new SKAutoMaskFreeImage(mask.Image))
+			{
+				Assert.Equal(rawMask, mask.GetAddr1(0, 0));
+			}
 		}
 
 		[SkippableFact]

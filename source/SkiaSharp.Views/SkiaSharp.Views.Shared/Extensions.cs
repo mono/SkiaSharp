@@ -13,7 +13,7 @@ namespace SkiaSharp.Views.Desktop
 namespace SkiaSharp.Views.UWP
 #elif __MACOS__
 namespace SkiaSharp.Views.Mac
-#elif TIZEN4_0
+#elif __TIZEN__
 namespace SkiaSharp.Views.Tizen
 #endif
 {
@@ -39,7 +39,7 @@ namespace SkiaSharp.Views.Tizen
 
 		internal static bool IsValidEnvironment => isValidEnvironment.Value;
 
-#if !WINDOWS_UWP && !TIZEN4_0
+#if !WINDOWS_UWP && !__TIZEN__
 		// System.Drawing.Point*
 
 		public static SKPoint ToSKPoint(this System.Drawing.PointF point)

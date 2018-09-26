@@ -1,13 +1,4 @@
 
-FilePath GetToolPath (FilePath toolPath)
-{
-    var appRoot = Context.Environment.ApplicationRoot;
-    var appRootExe = appRoot.Combine ("..").CombineWithFilePath (toolPath);
-    if (FileExists (appRootExe))
-        return appRootExe;
-    throw new FileNotFoundException ($"Unable to find tool: {appRootExe}"); 
-}
-
 internal static class MacPlatformDetector
 {
     internal static readonly Lazy<bool> IsMac = new Lazy<bool> (IsRunningOnMac);
@@ -68,4 +59,27 @@ string GetVersion (string lib, string type = "nuget")
     } catch {
         return "";
     }
+}
+
+bool ShouldBuildExternal (string platform)
+{
+    platform = platform?.ToLower() ?? "";
+
+    if (SKIP_EXTERNALS.Contains ("all"))
+        return false;
+
+    switch (platform) {
+        case "mac":
+        case "macos":
+            platform = "osx";
+            break;
+        case "win":
+            platform = "windows";
+            break;
+    }
+
+    if (SKIP_EXTERNALS.Contains (platform))
+        return false;
+
+    return true;
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 #if __ANDROID__
 namespace SkiaSharp.Views.Android
@@ -14,11 +14,11 @@ namespace SkiaSharp.Views.Desktop
 namespace SkiaSharp.Views.UWP
 #elif __MACOS__
 namespace SkiaSharp.Views.Mac
-#elif TIZEN4_0
+#elif __TIZEN__
 namespace SkiaSharp.Views.Tizen
 #endif
 {
-    public class SKPaintSurfaceEventArgs : EventArgs
+	public class SKPaintSurfaceEventArgs : EventArgs
 	{
 		public SKPaintSurfaceEventArgs(SKSurface surface, SKImageInfo info)
 		{

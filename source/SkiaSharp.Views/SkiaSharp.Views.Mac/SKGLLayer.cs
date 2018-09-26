@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using CoreAnimation;
 using CoreVideo;
 using OpenGL;
@@ -8,7 +8,8 @@ namespace SkiaSharp.Views.Mac
 	public class SKGLLayer : CAOpenGLLayer
 	{
 		private GRContext context;
-		private GRBackendRenderTargetDesc renderTarget;
+		private GRBackendRenderTarget renderTarget;
+		private SKSurface surface;
 
 		public SKGLLayer()
 		{
@@ -16,17 +17,23 @@ namespace SkiaSharp.Views.Mac
 			NeedsDisplayOnBoundsChange = true;
 		}
 
+		[Obsolete("Use PaintSurface instead.")]
 		public ISKGLLayerDelegate SKDelegate { get; set; }
 
-		public SKSize CanvasSize => new SKSize(renderTarget.Width, renderTarget.Height);
+		public SKSize CanvasSize => renderTarget.Size;
 
 		public GRContext GRContext => context;
 
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
+		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
+		{
+			PaintSurface?.Invoke(this, e);
+		}
+
+		[Obsolete("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
 		public virtual void DrawInSurface(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
 		{
-			PaintSurface?.Invoke(this, new SKPaintGLSurfaceEventArgs(surface, renderTarget));
 		}
 
 		public override void DrawInCGLContext(CGLContext glContext, CGLPixelFormat pixelFormat, double timeInterval, ref CVTimeStamp timeStamp)
@@ -40,20 +47,33 @@ namespace SkiaSharp.Views.Mac
 				context = GRContext.Create(GRBackend.OpenGL, glInterface);
 			}
 
-			// create the surface
-			renderTarget = SKGLDrawable.CreateRenderTarget();
-			renderTarget.Width = (int)(Bounds.Width * ContentsScale);
-			renderTarget.Height = (int)(Bounds.Height * ContentsScale);
-			using (var surface = SKSurface.Create(context, renderTarget))
+			// manage the drawing surface
+			var surfaceWidth = (int)(Bounds.Width * ContentsScale);
+			var surfaceHeight = (int)(Bounds.Height * ContentsScale);
+			if (renderTarget == null || surface == null || renderTarget.Width != surfaceWidth || renderTarget.Height != surfaceHeight)
 			{
-				// draw on the surface
-				DrawInSurface(surface, renderTarget);
-				SKDelegate?.DrawInSurface(surface, renderTarget);
+				// create or update the dimensions
+				renderTarget?.Dispose();
+				renderTarget = SKGLDrawable.CreateRenderTarget(surfaceWidth, surfaceHeight);
 
-				surface.Canvas.Flush();
+				// create the surface
+				surface?.Dispose();
+				surface = SKSurface.Create(context, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+			}
+
+			using (new SKAutoCanvasRestore(surface.Canvas, true))
+			{
+				// start drawing
+				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+				OnPaintSurface(e);
+#pragma warning disable CS0618 // Type or member is obsolete
+				DrawInSurface(e.Surface, e.RenderTarget);
+				SKDelegate?.DrawInSurface(e.Surface, e.RenderTarget);
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 
 			// flush the SkiaSharp context to the GL context
+			surface.Canvas.Flush();
 			context.Flush();
 
 			base.DrawInCGLContext(glContext, pixelFormat, timeInterval, ref timeStamp);

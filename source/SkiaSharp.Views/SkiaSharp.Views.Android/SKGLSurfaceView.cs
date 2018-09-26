@@ -1,4 +1,5 @@
-﻿using Android.Content;
+﻿using System;
+using Android.Content;
 using Android.Opengl;
 using Android.Util;
 
@@ -7,6 +8,8 @@ namespace SkiaSharp.Views.Android
 	public class SKGLSurfaceView : GLSurfaceView
 	{
 		private SKGLSurfaceViewRenderer renderer;
+
+		[Obsolete]
 		private ISKRenderer skRenderer;
 
 		public SKGLSurfaceView(Context context)
@@ -34,11 +37,20 @@ namespace SkiaSharp.Views.Android
 
 		public GRContext GRContext => renderer.GRContext;
 
+		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
+
+		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
+		{
+			PaintSurface?.Invoke(this, e);
+		}
+
+		[Obsolete("Use PaintSurface instead.")]
 		public virtual void SetRenderer(ISKRenderer renderer)
 		{
 			skRenderer = renderer;
 		}
 
+		[Obsolete("Use SKGLSurfaceView.PaintSurface instead.")]
 		public interface ISKRenderer
 		{
 			void OnDrawFrame(SKSurface surface, GRBackendRenderTargetDesc renderTarget);
@@ -53,6 +65,12 @@ namespace SkiaSharp.Views.Android
 				this.surfaceView = surfaceView;
 			}
 
+			protected override void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
+			{
+				surfaceView.OnPaintSurface(e);
+			}
+
+			[Obsolete("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
 			protected override void OnDrawFrame(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
 			{
 				surfaceView.skRenderer?.OnDrawFrame(surface, renderTarget);

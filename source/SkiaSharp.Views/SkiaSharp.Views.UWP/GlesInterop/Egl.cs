@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 
 using EGLDisplay = System.IntPtr;
@@ -17,6 +17,7 @@ namespace SkiaSharp.Views.GlesInterop
 
 		// Out-of-band handle values
 		public static readonly EGLNativeDisplayType EGL_DEFAULT_DISPLAY = IntPtr.Zero;
+		public static readonly IntPtr EGL_NO_CONFIG = IntPtr.Zero;
 		public static readonly IntPtr EGL_NO_DISPLAY = IntPtr.Zero;
 		public static readonly IntPtr EGL_NO_CONTEXT = IntPtr.Zero;
 		public static readonly IntPtr EGL_NO_SURFACE = IntPtr.Zero;
@@ -76,6 +77,10 @@ namespace SkiaSharp.Views.GlesInterop
 		public const int EGL_PLATFORM_ANGLE_ENABLE_AUTOMATIC_TRIM_ANGLE = 0x320F;
 
 		public const int EGL_FIXED_SIZE_ANGLE = 0x3201;
+
+		public const string EGLNativeWindowTypeProperty = "EGLNativeWindowTypeProperty";
+		public const string EGLRenderSurfaceSizeProperty = "EGLRenderSurfaceSizeProperty";
+		public const string EGLRenderResolutionScaleProperty = "EGLRenderResolutionScaleProperty";
 
 		[DllImport(libEGL)]
 		private static extern IntPtr eglGetProcAddress([MarshalAs(UnmanagedType.LPStr)] string procname);

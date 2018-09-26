@@ -1,12 +1,4 @@
-﻿//
-// Bindings for SKStream
-//
-// Author:
-//   Matthew Leibowitz
-//
-// Copyright 2016 Xamarin Inc
-//
-using System;
+﻿using System;
 using System.IO;
 
 namespace SkiaSharp
@@ -26,32 +18,86 @@ namespace SkiaSharp
 
 		public SByte ReadSByte ()
 		{
-			return SkiaApi.sk_stream_read_s8 (Handle);
+			if (ReadSByte (out var buffer))
+				return buffer;
+			return default (SByte);
 		}
 
 		public Int16 ReadInt16 ()
 		{
-			return SkiaApi.sk_stream_read_s16 (Handle);
+			if (ReadInt16 (out var buffer))
+				return buffer;
+			return default (Int16);
 		}
 
 		public Int32 ReadInt32 ()
 		{
-			return SkiaApi.sk_stream_read_s32 (Handle);
+			if (ReadInt32 (out var buffer))
+				return buffer;
+			return default (Int32);
 		}
 
 		public Byte ReadByte ()
 		{
-			return SkiaApi.sk_stream_read_u8 (Handle);
+			if (ReadByte (out var buffer))
+				return buffer;
+			return default (Byte);
 		}
 
 		public UInt16 ReadUInt16 ()
 		{
-			return SkiaApi.sk_stream_read_u16 (Handle);
+			if (ReadUInt16 (out var buffer))
+				return buffer;
+			return default (UInt16);
 		}
 
 		public UInt32 ReadUInt32 ()
 		{
-			return SkiaApi.sk_stream_read_u32 (Handle);
+			if (ReadUInt32 (out var buffer))
+				return buffer;
+			return default (UInt32);
+		}
+
+		public bool ReadBool ()
+		{
+			if (ReadBool (out var buffer))
+				return buffer;
+			return default (bool);
+		}
+
+		public bool ReadSByte (out SByte buffer)
+		{
+			return SkiaApi.sk_stream_read_s8 (Handle, out buffer);
+		}
+
+		public bool ReadInt16 (out Int16 buffer)
+		{
+			return SkiaApi.sk_stream_read_s16 (Handle, out buffer);
+		}
+
+		public bool ReadInt32 (out Int32 buffer)
+		{
+			return SkiaApi.sk_stream_read_s32 (Handle, out buffer);
+		}
+
+		public bool ReadByte (out Byte buffer)
+		{
+			return SkiaApi.sk_stream_read_u8 (Handle, out buffer);
+		}
+
+		public bool ReadUInt16 (out UInt16 buffer)
+		{
+			return SkiaApi.sk_stream_read_u16 (Handle, out buffer);
+		}
+
+		public bool ReadUInt32 (out UInt32 buffer)
+		{
+			return SkiaApi.sk_stream_read_u32 (Handle, out buffer);
+		}
+
+		public bool ReadBool (out Boolean buffer)
+		{
+			return SkiaApi.sk_stream_read_bool (Handle, out buffer);
 		}
 
 		public int Read (byte[] buffer, int size)

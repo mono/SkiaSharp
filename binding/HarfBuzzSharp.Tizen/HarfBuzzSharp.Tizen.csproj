@@ -9,21 +9,27 @@
     <TizenCreateTpkOnBuild>false</TizenCreateTpkOnBuild>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
     <PackagingPlatform>tizen40</PackagingPlatform>
-    <DefineConstants>$(DefineConstants);HARFBUZZ</DefineConstants>
+    <DefineConstants>$(DefineConstants);HARFBUZZ;__TIZEN__;</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugType>pdbonly</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.4.0" PrivateAssets="All" />
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.55" PrivateAssets="All" />
     <PackageReference Include="Tizen.NET" Version="4.0.0" ExcludeAssets="Runtime" />
     <PackageReference Include="Tizen.NET.Sdk" Version="1.0.1" />
-    <PackageReference Include="mdoc" Version="5.6.4" PrivateAssets="All" />
+    <PackageReference Include="mdoc" Version="5.7.3.1" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\output\native\tizen\armel\libHarfBuzzSharp.so" Link="nuget\runtimes\tizen-armel\native\libHarfBuzzSharp.so" />
     <None Include="..\..\output\native\tizen\i386\libHarfBuzzSharp.so" Link="nuget\runtimes\tizen-x86\native\libHarfBuzzSharp.so" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)\%(Filename)%(Extension)" />
-    <Compile Include="..\HarfBuzzSharp.Shared\**\*.cs" Link="%(RecursiveDir)\%(Filename)%(Extension)" />
+    <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\HarfBuzzSharp.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
   <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />

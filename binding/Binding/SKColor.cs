@@ -1,13 +1,4 @@
-﻿//
-// SKColor and SKPMColor
-//
-// Author:
-//   Miguel de Icaza and Matthew Leibowitz
-//
-// Copyright 2016 Xamarin Inc, 2017 Microsoft Inc
-//
-
-using System;
+﻿using System;
 using System.Globalization;
 
 namespace SkiaSharp

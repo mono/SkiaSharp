@@ -20,10 +20,17 @@
   <Docs>
     <summary>Convenience class used to automatically free the image data for a mask in a using statement.</summary>
     <remarks>
-      <para>This class can be used in a using statement to automatically free the image data of a mask by virtue of having the <see cref="M:SkiaSharp.SKAutoMaskFreeImage.Dispose" /> method.</para>
-      <para></para>
-      <example>
-        <code lang="C#"><![CDATA[// some buffer
+      <format type="text/markdown"><![CDATA[
+## Remarks
+
+This class can be used in a using statement to automatically free the image
+data of a mask by virtue of having the
+<xref:SkiaSharp.SKAutoMaskFreeImage.Dispose> method.
+
+## Examples
+
+```csharp
+// some buffer
 byte[] buffer = ...;
 
 // create the mask, allocating the image
@@ -32,8 +39,9 @@ using (new SKAutoMaskFreeImage(mask.Image)) {
     // use the mask
 
     // automatically release the image data
-}]]></code>
-      </example>
+}
+```
+]]></format>
     </remarks>
   </Docs>
   <Members>

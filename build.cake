@@ -1,9 +1,12 @@
-#addin nuget:?package=Cake.Xamarin&version=2.0.1
-#addin nuget:?package=Cake.XCode&version=3.0.0
-#addin nuget:?package=Cake.FileHelpers&version=2.0.0
+#addin nuget:?package=Cake.Xamarin&version=3.0.0
+#addin nuget:?package=Cake.XCode&version=4.0.0
+#addin nuget:?package=Cake.FileHelpers&version=3.0.0
+#addin nuget:?package=SharpCompress&version=0.22.0
+#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.0.0&loaddependencies=true
 
-#reference "tools/SharpCompress/lib/net45/SharpCompress.dll"
-#reference "tools/Newtonsoft.Json/lib/net45/Newtonsoft.Json.dll"
+#tool "nuget:?package=xunit.runner.console&version=2.4.0"
+#tool "nuget:?package=mdoc&version=5.7.3.1"
+#tool "nuget:?package=vswhere&version=2.5.2"
 
 using System.Linq;
 using System.Net.Http;
@@ -11,26 +14,26 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
+using SharpCompress.Common;
 using SharpCompress.Readers;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using Mono.ApiTools;
+using NuGet.Packaging;
+using NuGet.Versioning;
 
 #load "cake/Utils.cake"
 
 var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")));
 var VERBOSITY = (Verbosity) Enum.Parse (typeof(Verbosity), Argument ("v", Argument ("verbosity", Argument ("Verbosity", "Normal"))), true);
 var SKIP_EXTERNALS = Argument ("skipexternals", Argument ("SkipExternals", "")).ToLower ().Split (',');
+var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAll", Argument ("PackAllPlatforms", TARGET.ToLower() == "ci" || TARGET.ToLower() == "nuget-only")));
+var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
-var NugetToolPath = GetToolPath ("nuget.exe");
-var CakeToolPath = GetToolPath ("Cake/Cake.exe");
-var MDocPath = GetToolPath ("mdoc/tools/mdoc.exe");
+var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
+var CakeToolPath = Context.Tools.Resolve ("Cake.exe");
+var MDocPath = Context.Tools.Resolve ("mdoc.exe");
 var MSBuildToolPath = GetMSBuildToolPath (EnvironmentVariable ("MSBUILD_EXE"));
 var PythonToolPath = EnvironmentVariable ("PYTHON_EXE") ?? "python";
-
-var CI_TARGETS = new string[] { "CI", "WINDOWS-CI", "LINUX-CI", "MAC-CI" };
-var IS_ON_CI = CI_TARGETS.Contains (TARGET.ToUpper ());
-var IS_ON_FINAL_CI = TARGET.ToUpper () == "CI";
 
 DirectoryPath ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? EnvironmentVariable ("ANDROID_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-sdk-macosx";
 DirectoryPath ANDROID_NDK_HOME = EnvironmentVariable ("ANDROID_NDK_HOME") ?? EnvironmentVariable ("ANDROID_NDK_ROOT") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-ndk";
@@ -42,21 +45,25 @@ DirectoryPath SKIA_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia"));
 DirectoryPath ANGLE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/angle"));
 DirectoryPath HARFBUZZ_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/harfbuzz"));
 DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/xml"));
+DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/package_cache"));
 
 DirectoryPath PROFILE_PATH = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
 DirectoryPath NUGET_PACKAGES = EnvironmentVariable ("NUGET_PACKAGES") ?? PROFILE_PATH.Combine (".nuget/packages");
 
-var GIT_SHA = EnvironmentVariable ("GIT_COMMIT") ?? string.Empty;
-if (!string.IsNullOrEmpty (GIT_SHA) && GIT_SHA.Length >= 6) {
-    GIT_SHA = GIT_SHA.Substring (0, 6);
-} else {
-    GIT_SHA = "{GIT_SHA}";
-}
-
-var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? string.Empty;
+var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? "";
 if (string.IsNullOrEmpty (BUILD_NUMBER)) {
     BUILD_NUMBER = "0";
 }
+
+var TRACKED_NUGETS = new Dictionary<string, Version> {
+    { "SkiaSharp",                          new Version (1, 57, 0) },
+    { "SkiaSharp.NativeAssets.Linux",       new Version (1, 57, 0) },
+    { "SkiaSharp.Views",                    new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Forms",              new Version (1, 57, 0) },
+    { "HarfBuzzSharp",                      new Version (1, 0, 0) },
+    { "HarfBuzzSharp.NativeAssets.Linux",   new Version (1, 0, 0) },
+    { "SkiaSharp.HarfBuzz",                 new Version (1, 57, 0) },
+};
 
 #load "cake/UtilsManaged.cake"
 #load "cake/BuildExternals.cake"
@@ -68,10 +75,7 @@ if (string.IsNullOrEmpty (BUILD_NUMBER)) {
 
 // this builds all the externals
 Task ("externals")
-    .IsDependentOn ("externals-native")
-    .Does (() => 
-{
-});
+    .IsDependentOn ("externals-native");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // LIBS - the managed C# libraries
@@ -79,7 +83,7 @@ Task ("externals")
 
 Task ("libs")
     .IsDependentOn ("externals")
-    .Does (() => 
+    .Does (() =>
 {
     // build the managed libraries
     var platform = "";
@@ -108,9 +112,9 @@ Task ("libs")
 Task ("tests")
     .IsDependentOn ("libs")
     .IsDependentOn ("nuget")
-    .Does (() => 
+    .Does (() =>
 {
-    var RunDestopTest = new Action<string> (arch => {
+    var RunDesktopTest = new Action<string> (arch => {
         var platform = "";
         if (IsRunningOnWindows ()) {
             platform = "windows";
@@ -133,16 +137,16 @@ Task ("tests")
 
     // Full .NET Framework
     if (IsRunningOnWindows ()) {
-        RunDestopTest ("x86");
-        RunDestopTest ("x64");
+        RunDesktopTest ("x86");
+        RunDesktopTest ("x64");
     } else if (IsRunningOnMac ()) {
-        RunDestopTest ("AnyCPU");
+        RunDesktopTest ("AnyCPU");
     } else if (IsRunningOnLinux ()) {
         // TODO: Disable x64 for the time being due to a bug in mono sn:
         //       https://github.com/mono/mono/issues/8218
 
-        RunDestopTest ("AnyCPU");
-        // RunDestopTest ("x64");
+        RunDesktopTest ("AnyCPU");
+        // RunDesktopTest ("x64");
     }
 
     // .NET Core
@@ -164,10 +168,10 @@ Task ("tests")
     if (changed) {
         xdoc.Save (netCoreTestProj);
     }
-    CleanDirectories ("./externals/packages/skiasharp*");
-    CleanDirectories ("./externals/packages/harfbuzzsharp*");
+    CleanDirectories ("./tests/packages/skiasharp*");
+    CleanDirectories ("./tests/packages/harfbuzzsharp*");
     EnsureDirectoryExists ("./output/tests/netcore");
-    RunMSBuildRestoreLocal (netCoreTestProj);
+    RunMSBuildRestoreLocal (netCoreTestProj, "./tests/packages");
     RunNetCoreTests (netCoreTestProj, null);
     CopyFileToDirectory ("./tests/SkiaSharp.NetCore.Tests/TestResult.xml", "./output/tests/netcore");
 });
@@ -177,7 +181,7 @@ Task ("tests")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("samples")
-    .Does (() => 
+    .Does (() =>
 {
     // create the samples archive
     CreateSamplesZip ("./samples/", "./output/");
@@ -254,7 +258,7 @@ Task ("samples")
         } else {
             // this is a platform variant
             slnPlatform = slnPlatform.ToLower ();
-            var shouldBuild = 
+            var shouldBuild =
                 (isLinux && slnPlatform == ".linux") ||
                 (isMac && slnPlatform == ".mac") ||
                 (isWin && slnPlatform == ".windows");
@@ -273,10 +277,13 @@ Task ("samples")
 
 Task ("nuget")
     .IsDependentOn ("libs")
-    .Does (() => 
+    .IsDependentOn ("nuget-only");
+
+Task ("nuget-only")
+    .Does (() =>
 {
     var platform = "";
-    if (!IS_ON_FINAL_CI) {
+    if (!PACK_ALL_PLATFORMS) {
         if (IsRunningOnWindows ()) {
             platform = "windows";
         } else if (IsRunningOnMac ()) {
@@ -300,11 +307,6 @@ Task ("nuget")
                         if (!nuspecPlatform.Value.Split (',').Contains (platform)) {
                             file.Remove ();
                         }
-                    }
-                } else {
-                    // special case as we don't add linux-only files on CI
-                    if (nuspecPlatform.Value == "linux") {
-                        file.Remove ();
                     }
                 }
                 nuspecPlatform.Remove ();
@@ -347,21 +349,25 @@ Task ("nuget")
         }
     });
 
+    DeleteFiles ("./output/*/nuget/*.nuspec");
     foreach (var nuspec in GetFiles ("./nuget/*.nuspec")) {
         var xdoc = XDocument.Load (nuspec.FullPath);
         var metadata = xdoc.Root.Element ("metadata");
-        var id = metadata.Element ("id");
+        var id = metadata.Element ("id").Value;
+        var dir = id;
+        if (id.Contains(".NativeAssets")) {
+            dir = id.Substring(0, id.IndexOf(".NativeAssets"));
+        }
 
         removePlatforms (xdoc);
 
-        var outDir = $"./output/{id.Value}/nuget";
-        DeleteFiles ($"{outDir}/*.nuspec");
+        var outDir = $"./output/{dir}/nuget";
 
         setVersion (xdoc, "");
-        xdoc.Save ($"{outDir}/{id.Value}.nuspec");
+        xdoc.Save ($"{outDir}/{id}.nuspec");
 
-        setVersion (xdoc, $"-build-{BUILD_NUMBER}");
-        xdoc.Save ($"{outDir}/{id.Value}.prerelease.nuspec");
+        setVersion (xdoc, $"-preview-{BUILD_NUMBER}");
+        xdoc.Save ($"{outDir}/{id}.prerelease.nuspec");
 
         // the legal
         CopyFile ("./LICENSE.txt", $"{outDir}/LICENSE.txt");
@@ -375,16 +381,24 @@ Task ("nuget")
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+// DOCS - creating the xml, markdown and other documentation
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Task ("update-docs")
+    .IsDependentOn ("docs-api-diff")
+    .IsDependentOn ("docs-api-diff-past")
+    .IsDependentOn ("docs-update-frameworks")
+    .IsDependentOn ("docs-format-docs");
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // CLEAN - remove all the build artefacts
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("clean")
     .IsDependentOn ("clean-externals")
-    .IsDependentOn ("clean-managed")
-    .Does (() => 
-{
-});
-Task ("clean-managed").Does (() => 
+    .IsDependentOn ("clean-managed");
+Task ("clean-managed")
+    .Does (() =>
 {
     CleanDirectories ("./binding/*/bin");
     CleanDirectories ("./binding/*/obj");
@@ -431,6 +445,8 @@ Task ("Everything")
     .IsDependentOn ("tests")
     .IsDependentOn ("samples");
 
+Task ("Nothing");
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // CI - the master target to build everything
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -452,22 +468,67 @@ Task ("Linux-CI")
     .IsDependentOn ("CI");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// BUILD NOW 
+// BUILD NOW
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Information ("Cake.exe ToolPath: {0}", CakeToolPath);
-Information ("NuGet.exe ToolPath: {0}", NugetToolPath);
-Information ("msbuild.exe ToolPath: {0}", MSBuildToolPath);
+Information ("");
 
-if (IS_ON_CI) {
-    Information ("Detected that we are building on CI, {0}.", IS_ON_FINAL_CI ? "and on FINAL CI" : "but NOT on final CI");
-} else {
-    Information ("Detected that we are {0} on CI.", "NOT");
-}
+Information ("Tool Paths:");
+Information ("  Cake.exe:   {0}", CakeToolPath);
+Information ("  mdoc:       {0}", MDocPath);
+Information ("  msbuild:    {0}", MSBuildToolPath);
+Information ("  nuget.exe:  {0}", NuGetToolPath);
+Information ("  python:     {0}", PythonToolPath);
+Information ("");
 
-Information ("Environment Variables:");
-foreach (var envVar in EnvironmentVariables ()) {
-    Information ("\tKey: {0}\tValue: \"{1}\"", envVar.Key, envVar.Value);
+Information ("Build Paths:");
+Information ("  ~:              {0}", PROFILE_PATH);
+Information ("  NuGet Cache:    {0}", NUGET_PACKAGES);
+Information ("  root:           {0}", ROOT_PATH);
+Information ("  docs:           {0}", DOCS_PATH);
+Information ("  package_cache:  {0}", PACKAGE_CACHE_PATH);
+Information ("  ANGLE:          {0}", ANGLE_PATH);
+Information ("  depot_tools:    {0}", DEPOT_PATH);
+Information ("  harfbuzz:       {0}", HARFBUZZ_PATH);
+Information ("  skia:           {0}", SKIA_PATH);
+Information ("");
+
+Information ("SDK Paths:");
+Information ("  Android SDK:   {0}", ANDROID_SDK_ROOT);
+Information ("  Android NDK:   {0}", ANDROID_NDK_HOME);
+Information ("  Tizen Studio:  {0}", TIZEN_STUDIO_HOME);
+Information ("");
+
+Information ("Environment Variables (whitelisted):");
+var envVarsWhitelist = new [] {
+    "path", "psmodulepath", "pwd", "shell", "processor_architecture",
+    "processor_identifier", "node_name", "node_labels", "branch_name",
+    "os", "build_url", "build_number", "number_of_processors",
+    "node_label", "build_id", "git_sha"
+};
+var envVars = EnvironmentVariables ();
+var max = envVars.Max (v => v.Key.Length) + 2;
+foreach (var envVar in envVars.OrderBy (e => e.Key.ToLower ())) {
+    if (!PRINT_ALL_ENV_VARS && !envVarsWhitelist.Contains (envVar.Key.ToLower ()))
+        continue;
+    var spaces = string.Concat (Enumerable.Repeat (" ", max - envVar.Key.Length));
+    var toSplit = new [] { "path", "psmodulepath" };
+    if (toSplit.Contains (envVar.Key.ToLower ())) {
+        var paths = new string [0];
+        if (IsRunningOnWindows ()) {
+            paths = envVar.Value.Split (';');
+        } else {
+            paths = envVar.Value.Split (':');
+        }
+        Information ($"  {envVar.Key}:{spaces}{{0}}", paths.FirstOrDefault ());
+        var keySpaces = string.Concat (Enumerable.Repeat (" ", envVar.Key.Length));
+        foreach (var path in paths.Skip (1)) {
+            Information ($"  {keySpaces} {spaces}{{0}}", path);
+        }
+    } else {
+        Information ($"  {envVar.Key}:{spaces}{{0}}", envVar.Value);
+    }
 }
+Information ("");
 
 RunTarget (TARGET);

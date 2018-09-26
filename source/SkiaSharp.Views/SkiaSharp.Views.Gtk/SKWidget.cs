@@ -28,8 +28,11 @@ namespace SkiaSharp.Views.Gtk
 			// get the pixbuf
 			CreateDrawingObjects();
 
-				// start drawing
-			OnPaintSurface(new SKPaintSurfaceEventArgs(surface, imgInfo));
+			// start drawing
+			using (new SKAutoCanvasRestore(surface.Canvas, true))
+			{
+				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, imgInfo));
+			}
 
 			surface.Canvas.Flush();
 

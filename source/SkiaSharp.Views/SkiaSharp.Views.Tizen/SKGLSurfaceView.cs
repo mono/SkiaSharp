@@ -16,7 +16,9 @@ namespace SkiaSharp.Views.Tizen
 		private IntPtr glSurface;
 
 		private GRContext context;
-		private GRBackendRenderTargetDesc renderTarget;
+		private GRBackendRenderTarget renderTarget;
+		private SKSurface surface;
+		private SKSizeI surfaceSize;
 
 		public SKGLSurfaceView(EvasObject parent)
 			: base(parent)
@@ -29,20 +31,13 @@ namespace SkiaSharp.Views.Tizen
 				options_bits = Evas.OptionsBits.NONE,
 				multisample_bits = Evas.MultisampleBits.HIGH,
 			};
-
-			var isBgra = SKImageInfo.PlatformColorType == SKColorType.Bgra8888;
-			renderTarget = new GRBackendRenderTargetDesc
-			{
-				Config = isBgra ? GRPixelConfig.Bgra8888 : GRPixelConfig.Rgba8888,
-				Origin = GRSurfaceOrigin.BottomLeft,
-			};
 		}
 
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
 		public GRContext GRContext => context;
 
-		protected override SKSizeI GetSurfaceSize() => renderTarget.Size;
+		protected override SKSizeI GetSurfaceSize() => surfaceSize;
 
 		protected virtual void OnDrawFrame(SKPaintGLSurfaceEventArgs e)
 		{
@@ -51,66 +46,10 @@ namespace SkiaSharp.Views.Tizen
 
 		protected sealed override void CreateNativeResources(EvasObject parent)
 		{
-			CreateGL(parent);
-		}
-
-		protected sealed override void DestroyNativeResources()
-		{
-			DestroyGL();
-		}
-
-		protected sealed override void OnDrawFrame()
-		{
-			if (glSurface != IntPtr.Zero)
-			{
-				Gles.glClear(Gles.GL_STENCIL_BUFFER_BIT);
-
-				// create the surface
-				using (var surface = SKSurface.Create(context, renderTarget))
-				{
-					// draw using SkiaSharp
-					OnDrawFrame(new SKPaintGLSurfaceEventArgs(surface, renderTarget));
-
-					surface.Canvas.Flush();
-				}
-
-				// flush the SkiaSharp contents to GL
-				context.Flush();
-			}
-		}
-
-		protected sealed override bool UpdateSurfaceSize(Rect geometry)
-		{
-			var changed =
-				geometry.Width != renderTarget.Width ||
-				geometry.Height != renderTarget.Height;
-
-			if (changed)
-			{
-				// size has changed, update geometry
-				renderTarget.Width = geometry.Width;
-				renderTarget.Height = geometry.Height;
-			}
-
-			return changed;
-		}
-
-		protected sealed override void CreateDrawingSurface()
-		{
-			CreateSurface();
-		}
-
-		protected sealed override void DestroyDrawingSurface()
-		{
-			DestroySurface();
-		}
-
-		private void CreateGL(EvasObject parent)
-		{
 			if (glEvas == IntPtr.Zero)
 			{
 				// initialize the OpenGL (the EFL way)
-				glEvas = Evas.evas_gl_new(Interop.Evas.evas_object_evas_get(parent));
+				glEvas = Evas.evas_gl_new(Evas.evas_object_evas_get(parent));
 
 				// copy the configuration to the native side
 				glConfigPtr = Marshal.AllocHGlobal(Marshal.SizeOf(glConfig));
@@ -121,7 +60,7 @@ namespace SkiaSharp.Views.Tizen
 			}
 		}
 
-		private void DestroyGL()
+		protected sealed override void DestroyNativeResources()
 		{
 			if (glEvas != IntPtr.Zero)
 			{
@@ -139,41 +78,86 @@ namespace SkiaSharp.Views.Tizen
 			}
 		}
 
-		private void CreateSurface()
+		protected sealed override void OnDrawFrame()
+		{
+			if (glSurface != IntPtr.Zero)
+			{
+				Gles.glClear(Gles.GL_COLOR_BUFFER_BIT | Gles.GL_DEPTH_BUFFER_BIT | Gles.GL_STENCIL_BUFFER_BIT);
+
+				if (surface != null && renderTarget != null && context != null)
+				{
+					using (new SKAutoCanvasRestore(surface.Canvas, true))
+					{
+						// draw using SkiaSharp
+						OnDrawFrame(new SKPaintGLSurfaceEventArgs(surface, renderTarget));
+					}
+
+					// flush the SkiaSharp contents to GL
+					surface.Canvas.Flush();
+					context.Flush();
+				}
+			}
+		}
+
+		protected sealed override bool UpdateSurfaceSize(Rect geometry)
+		{
+			var changed =
+				geometry.Width != surfaceSize.Width ||
+				geometry.Height != surfaceSize.Height;
+
+			if (changed)
+			{
+				// size has changed, update geometry
+				surfaceSize.Width = geometry.Width;
+				surfaceSize.Height = geometry.Height;
+			}
+
+			return changed;
+		}
+
+		protected sealed override void CreateDrawingSurface()
 		{
 			if (glSurface == IntPtr.Zero)
 			{
 				// create the surface
-				glSurface = Evas.evas_gl_surface_create(glEvas, glConfigPtr, renderTarget.Width, renderTarget.Height);
+				glSurface = Evas.evas_gl_surface_create(glEvas, glConfigPtr, surfaceSize.Width, surfaceSize.Height);
 
 				// copy the native surface to the image
-				Evas.NativeSurfaceOpenGL nativeSurface;
-				Evas.evas_gl_native_surface_get(glEvas, glSurface, out nativeSurface);
+				Evas.evas_gl_native_surface_get(glEvas, glSurface, out var nativeSurface);
 				Evas.evas_object_image_native_surface_set(evasImage, ref nativeSurface);
 
 				// switch to the current OpenGL context
 				Evas.evas_gl_make_current(glEvas, glSurface, glContext);
 
 				// resize the viewport
-				Gles.glViewport(0, 0, renderTarget.Width, renderTarget.Height);
+				Gles.glViewport(0, 0, surfaceSize.Width, surfaceSize.Height);
 
-				// initialize the Skia's context
-				CreateContext();
+				// create the interface using the function pointers provided by the EFL
+				var glInterface = GRGlInterface.CreateNativeEvasInterface(glEvas);
+				context?.Dispose();
+				context = GRContext.Create(GRBackend.OpenGL, glInterface);
 
-				// copy the properties of the current surface
-				var currentRenderTarget = SKGLDrawable.CreateRenderTarget();
-				renderTarget.SampleCount = currentRenderTarget.SampleCount;
-				renderTarget.StencilBits = currentRenderTarget.StencilBits;
-				renderTarget.RenderTargetHandle = currentRenderTarget.RenderTargetHandle;
+				// create the render target
+				renderTarget?.Dispose();
+				renderTarget = SKGLDrawable.CreateRenderTarget(surfaceSize.Width, surfaceSize.Height);
+
+				// create the surface
+				surface?.Dispose();
+				surface = SKSurface.Create(context, renderTarget, GRSurfaceOrigin.BottomLeft, SKImageInfo.PlatformColorType);
 			}
 		}
 
-		private void DestroySurface()
+		protected sealed override void DestroyDrawingSurface()
 		{
 			if (glSurface != IntPtr.Zero)
 			{
-				// finalize the Skia's context
-				DestroyContext();
+				// dispose the unmanaged memory
+				surface?.Dispose();
+				surface = null;
+				renderTarget?.Dispose();
+				renderTarget = null;
+				context?.Dispose();
+				context = null;
 
 				// disconnect the surface from the image
 				Evas.evas_object_image_native_surface_set(evasImage, IntPtr.Zero);
@@ -181,23 +165,6 @@ namespace SkiaSharp.Views.Tizen
 				// destroy the surface
 				Evas.evas_gl_surface_destroy(glEvas, glSurface);
 				glSurface = IntPtr.Zero;
-			}
-		}
-
-		private void CreateContext()
-		{
-			// create the interface using the function pointers provided by the EFL
-			var glInterface = GRGlInterface.CreateNativeEvasInterface(glEvas);
-			context = GRContext.Create(GRBackend.OpenGL, glInterface);
-		}
-
-		private void DestroyContext()
-		{
-			if (context != null)
-			{
-				// dispose the unmanaged memory
-				context.Dispose();
-				context = null;
 			}
 		}
 	}

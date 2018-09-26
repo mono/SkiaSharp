@@ -11,14 +11,14 @@
     <AssemblyName>SkiaSharpSample.UWP</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.10240.0</TargetPlatformVersion>
-    <TargetPlatformMinVersion>10.0.10240.0</TargetPlatformMinVersion>
+    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.16299.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.16299.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <EnableDotNetNativeCompatibleProfile>true</EnableDotNetNativeCompatibleProfile>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <PackageCertificateKeyFile>..\..\..\AppStoreCertificates\Skia.UWP.Demo_StoreKey.pfx</PackageCertificateKeyFile>
-    <PackageCertificateThumbprint>A9102DF7FB3501F23B65D59B624A9CB05C065366</PackageCertificateThumbprint>
+    <PackageCertificateKeyFile>..\..\..\AppStoreCertificates\SkiaSharpSample_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateThumbprint>8DD3DBEC438E69AF67465BF733A17DBA8397D719</PackageCertificateThumbprint>
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|ARM'">
@@ -92,7 +92,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.0.6" />
-    <PackageReference Include="Xamarin.Forms" Version="2.5.0.280555" />
+    <PackageReference Include="Xamarin.Forms" Version="3.0.0.561731" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\binding\HarfBuzzSharp.UWP\HarfBuzzSharp.UWP.csproj">
@@ -125,9 +125,10 @@
     <Content Include="..\..\..\..\output\native\uwp\$(Platform)\libHarfBuzzSharp.dll" Condition="Exists('..\..\..\..\output\native\uwp\$(Platform)\libHarfBuzzSharp.dll')" />
     <Content Include="..\..\..\..\output\native\uwp\$(Platform)\libEGL.dll" Condition="Exists('..\..\..\..\output\native\uwp\$(Platform)\libEGL.dll')" />
     <Content Include="..\..\..\..\output\native\uwp\$(Platform)\libGLESv2.dll" Condition="Exists('..\..\..\..\output\native\uwp\$(Platform)\libGLESv2.dll')" />
+    <Content Include="..\..\..\..\output\native\uwp\$(Platform)\SkiaSharp.Views.Interop.UWP.dll" Condition="Exists('..\..\..\..\output\native\uwp\$(Platform)\SkiaSharp.Views.Interop.UWP.dll')" />
   </ItemGroup>
   <ItemGroup>
-    <SDKReference Include="WindowsMobile, Version=10.0.10240.0">
+    <SDKReference Include="WindowsMobile, Version=10.0.16299.0">
       <Name>Windows Mobile Extensions for the UWP</Name>
     </SDKReference>
   </ItemGroup>

@@ -14,7 +14,7 @@ namespace SkiaSharp.Views.Android
 		private bool ignorePixelScaling;
 
 		private bool designMode;
-		
+
 		public SKCanvasView(Context context)
 			: base(context)
 		{
@@ -84,7 +84,10 @@ namespace SkiaSharp.Views.Android
 			using (var surface = SKSurface.Create(info, bitmap.LockPixels(), info.RowBytes))
 			{
 				// draw using SkiaSharp
+				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
+#pragma warning disable CS0618 // Type or member is obsolete
 				OnDraw(surface, info);
+#pragma warning restore CS0618 // Type or member is obsolete
 
 				surface.Canvas.Flush();
 			}
@@ -125,9 +128,14 @@ namespace SkiaSharp.Views.Android
 
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
+		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)
+		{
+			PaintSurface?.Invoke(this, e);
+		}
+
+		[Obsolete("Use OnPaintSurface(SKPaintSurfaceEventArgs) instead.")]
 		protected virtual void OnDraw(SKSurface surface, SKImageInfo info)
 		{
-			PaintSurface?.Invoke(this, new SKPaintSurfaceEventArgs(surface, info));
 		}
 
 		protected override void Dispose(bool disposing)

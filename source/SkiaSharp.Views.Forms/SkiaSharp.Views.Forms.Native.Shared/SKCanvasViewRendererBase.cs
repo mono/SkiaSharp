@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 
 using SKFormsView = SkiaSharp.Views.Forms.SKCanvasView;
@@ -21,7 +21,7 @@ using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.UWP.SKPaintSurfaceEventArg
 using Xamarin.Forms.Platform.MacOS;
 using SKNativeView = SkiaSharp.Views.Mac.SKCanvasView;
 using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Mac.SKPaintSurfaceEventArgs;
-#elif TIZEN4_0
+#elif __TIZEN__
 using Xamarin.Forms.Platform.Tizen;
 using SKNativeView = SkiaSharp.Views.Tizen.SKCanvasView;
 using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Tizen.SKPaintSurfaceEventArgs;
@@ -109,7 +109,7 @@ namespace SkiaSharp.Views.Forms
 		{
 			return (TNativeView)Activator.CreateInstance(typeof(TNativeView), new[] { Context });
 		}
-#elif TIZEN4_0
+#elif __TIZEN__
 		protected virtual TNativeView CreateNativeControl()
 		{
 			TNativeView ret = (TNativeView)Activator.CreateInstance(typeof(TNativeView), new[] { TForms.NativeParent });
@@ -134,6 +134,15 @@ namespace SkiaSharp.Views.Forms
 			{
 				touchHandler.SetEnabled(Control, Element.EnableTouchEvents);
 			}
+#if WINDOWS_UWP
+			else if (e.PropertyName == Xamarin.Forms.VisualElement.IsVisibleProperty.PropertyName)
+			{
+				// pass the visibility down to the view do disable drawing
+				Control.Visibility = Element.IsVisible
+					? Windows.UI.Xaml.Visibility.Visible
+					: Windows.UI.Xaml.Visibility.Collapsed;
+			}
+#endif
 		}
 
 		protected override void Dispose(bool disposing)
@@ -165,7 +174,7 @@ namespace SkiaSharp.Views.Forms
 #if __ANDROID__
 				x = Context.FromPixels(x);
 				y = Context.FromPixels(y);
-#elif TIZEN4_0
+#elif __TIZEN__
 				x = Tizen.ScalingInfo.FromPixel(x);
 				y = Tizen.ScalingInfo.FromPixel(y);
 #elif __IOS__ || __MACOS__ || WINDOWS_UWP
@@ -176,7 +185,7 @@ namespace SkiaSharp.Views.Forms
 			}
 			else
 			{
-#if __ANDROID__ || TIZEN4_0
+#if __ANDROID__ || __TIZEN__
 				// Tizen and Android are the reverse of the other platforms
 #elif __IOS__
 				x = x * Control.ContentScaleFactor;

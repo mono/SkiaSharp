@@ -10,20 +10,26 @@
     <DefineConstants>$(DefineConstants);__DESKTOP__;HARFBUZZ</DefineConstants>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugType>pdbonly</DebugType>
+  </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="mdoc" Version="5.6.4" PrivateAssets="All" />
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.4.0" PrivateAssets="All" />
+    <PackageReference Include="mdoc" Version="5.7.3.1" PrivateAssets="All" />
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.55" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\output\native\windows\x64\libHarfBuzzSharp.dll" Link="nuget\runtimes\win7-x64\native\libHarfBuzzSharp.dll" Condition=" '$(IsWindows)' == 'true' " />
-    <None Include="..\..\output\native\windows\x86\libHarfBuzzSharp.dll" Link="nuget\runtimes\win7-x86\native\libHarfBuzzSharp.dll" Condition=" '$(IsWindows)' == 'true' " />
+    <None Include="..\..\output\native\windows\x64\libHarfBuzzSharp.dll" Link="nuget\runtimes\win-x64\native\libHarfBuzzSharp.dll" Condition=" '$(IsWindows)' == 'true' " />
+    <None Include="..\..\output\native\windows\x86\libHarfBuzzSharp.dll" Link="nuget\runtimes\win-x86\native\libHarfBuzzSharp.dll" Condition=" '$(IsWindows)' == 'true' " />
     <None Include="..\..\output\native\osx\libHarfBuzzSharp.dylib" Link="nuget\runtimes\osx\native\libHarfBuzzSharp.dylib" Condition=" '$(IsMacOS)' == 'true' " />
     <None Include="..\..\output\native\linux\x64\libHarfBuzzSharp.so" Link="nuget\runtimes\linux-x64\native\libHarfBuzzSharp.so" Condition=" '$(IsLinux)' == 'true' " />
     <None Include="nuget\build\net45\HarfBuzzSharp.targets" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)\%(Filename)%(Extension)" />
-    <Compile Include="..\HarfBuzzSharp.Shared\**\*.cs" Link="%(RecursiveDir)\%(Filename)%(Extension)" />
+    <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\HarfBuzzSharp.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
   <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />

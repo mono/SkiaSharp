@@ -45,26 +45,46 @@ namespace SkiaSharp.Tests
 				var cachedFrames = new SKBitmap [FrameCount];
 				var info = new SKImageInfo (codec.Info.Width, codec.Info.Height);
 
-				var decode = new Action<SKBitmap, bool, int> ((bm, cached, index) => {
-					if (cached) {
-						var requiredFrame = frameInfos [index].RequiredFrame;
-						if (requiredFrame != -1) {
-							Assert.True (cachedFrames [requiredFrame].CopyTo (bm));
-						}
+				var decode = new Action<SKBitmap, int, int> ((bm, cachedIndex, index) => {
+					var decodeInfo = info;
+					if (index > 0) {
+						decodeInfo = info.WithAlphaType (frameInfos [index].AlphaType);
 					}
-					var opts = new SKCodecOptions (index, cached);
-					var result = codec.GetPixels (info, bm.GetPixels (), opts);
+					bm.TryAllocPixels (decodeInfo);
+					if (cachedIndex != -1) {
+						Assert.True (cachedFrames [cachedIndex].CopyTo (bm));
+					}
+					var opts = new SKCodecOptions (index, cachedIndex);
+					var result = codec.GetPixels (decodeInfo, bm.GetPixels (), opts);
+					if (cachedIndex != -1 && frameInfos [cachedIndex].DisposalMethod == SKCodecAnimationDisposalMethod.RestorePrevious) {
+						Assert.Equal (SKCodecResult.InvalidParameters, result);
+					}
 					Assert.Equal (SKCodecResult.Success, result);
 				});
 
 				for (var i = 0; i < FrameCount; i++) {
-					var cachedFrame = cachedFrames [i] = new SKBitmap (info);
-					decode (cachedFrame, true, i);
+					var cachedFrame = cachedFrames [i] = new SKBitmap ();
+					decode (cachedFrame, -1, i);
 
-					var uncachedFrame = new SKBitmap (info);
-					decode (uncachedFrame, false, i);
+					var uncachedFrame = new SKBitmap ();
+					decode (uncachedFrame, frameInfos [i].RequiredFrame, i);
 
 					Assert.Equal (cachedFrame.Bytes, uncachedFrame.Bytes);
+				}
+			}
+		}
+
+		[SkippableFact]
+		public void GetSingleGifFrame()
+		{
+			var stream = new SKFileStream(Path.Combine(PathToImages, "animated-heart.gif"));
+			using (var codec = SKCodec.Create(stream))
+			{
+				var frameInfos = codec.FrameInfo;
+				for (var i = 0; i < frameInfos.Length; i++)
+				{
+					Assert.True(codec.GetFrameInfo(i, out var info));
+					Assert.Equal(frameInfos[i], info);
 				}
 			}
 		}
@@ -74,9 +94,9 @@ namespace SkiaSharp.Tests
 		{
 			var stream = new SKFileStream (Path.Combine (PathToImages, "color-wheel.png"));
 			using (var codec = SKCodec.Create (stream)) {
-				Assert.Equal (SKEncodedInfoColor.Rgba, codec.EncodedInfo.Color);
-				Assert.Equal (SKEncodedInfoAlpha.Unpremul, codec.EncodedInfo.Alpha);
-				Assert.Equal (8, codec.EncodedInfo.BitsPerComponent);
+				Assert.Equal (SKImageInfo.PlatformColorType, codec.Info.ColorType);
+				Assert.Equal (SKAlphaType.Unpremul, codec.Info.AlphaType);
+				Assert.Equal (32, codec.Info.BitsPerPixel);
 			}
 		}
 

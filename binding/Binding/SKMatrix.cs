@@ -1,15 +1,4 @@
-//
-// Bindings for SkMatrix
-//
-// Author:
-//   Matthew Leibowitz
-//
-// SkMatrix could benefit from bringing some of the operators defined in C++
-//
-// Copyright 2017 Xamarin Inc
-//
-
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp

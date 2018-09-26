@@ -24,7 +24,7 @@
 
     <!-- get the preferred paths -->
     <PropertyGroup>
-        <PreferredWindowsNativeHarfBuzzSharpPath>$(MSBuildThisFileDirectory)..\..\runtimes\win7-$(PreferredNativeHarfBuzzSharp)\native\libHarfBuzzSharp.dll</PreferredWindowsNativeHarfBuzzSharpPath>
+        <PreferredWindowsNativeHarfBuzzSharpPath>$(MSBuildThisFileDirectory)..\..\runtimes\win-$(PreferredNativeHarfBuzzSharp)\native\libHarfBuzzSharp.dll</PreferredWindowsNativeHarfBuzzSharpPath>
         <PreferredOSXNativeHarfBuzzSharpPath>$(MSBuildThisFileDirectory)..\..\runtimes\osx\native\libHarfBuzzSharp.dylib</PreferredOSXNativeHarfBuzzSharpPath>
         <PreferredLinuxNativeHarfBuzzSharpPath>$(MSBuildThisFileDirectory)..\..\runtimes\linux-$(PreferredNativeHarfBuzzSharp)\native\libHarfBuzzSharp.so</PreferredLinuxNativeHarfBuzzSharpPath>
     </PropertyGroup>
@@ -47,13 +47,13 @@
     <!-- a special case for Any CPU -->
     <ItemGroup Condition=" '$(ShouldIncludeNativeHarfBuzzSharp)' != 'False' and ( '$(PlatformTarget)' != 'x64' and '$(PlatformTarget)' != 'x86' ) ">
         <!-- Windows -->
-        <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win7-x86\native\libHarfBuzzSharp.dll"
-              Condition="Exists('$(MSBuildThisFileDirectory)..\..\runtimes\win7-x86\native\libHarfBuzzSharp.dll')">
+        <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win-x86\native\libHarfBuzzSharp.dll"
+              Condition="Exists('$(MSBuildThisFileDirectory)..\..\runtimes\win-x86\native\libHarfBuzzSharp.dll')">
             <Link>x86\libHarfBuzzSharp.dll</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win7-x64\native\libHarfBuzzSharp.dll"
-              Condition="Exists('$(MSBuildThisFileDirectory)..\..\runtimes\win7-x64\native\libHarfBuzzSharp.dll')">
+        <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win-x64\native\libHarfBuzzSharp.dll"
+              Condition="Exists('$(MSBuildThisFileDirectory)..\..\runtimes\win-x64\native\libHarfBuzzSharp.dll')">
             <Link>x64\libHarfBuzzSharp.dll</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>

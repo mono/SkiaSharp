@@ -42,7 +42,7 @@ void RunLipo (DirectoryPath directory, FilePath output, FilePath[] inputs)
     if (!IsRunningOnMac ()) {
         throw new InvalidOperationException ("lipo is only available on Unix.");
     }
-    
+
     EnsureDirectoryExists (directory.CombineWithFilePath (output).GetDirectory ());
 
     var inputString = string.Join(" ", inputs.Select (i => string.Format ("\"{0}\"", i)));
@@ -59,7 +59,7 @@ void RunLipo (DirectoryPath directory, FilePath output, FilePath[] inputs)
 Task ("externals-init")
     .IsDependentOn ("externals-angle-uwp")
     .IsDependentOn ("externals-harfbuzz")
-    .Does (() =>  
+    .Does (() =>
 {
     RunProcess (PythonToolPath, new ProcessSettings {
         Arguments = SKIA_PATH.CombineWithFilePath ("tools/git-sync-deps").FullPath,
@@ -67,27 +67,17 @@ Task ("externals-init")
     });
 });
 
-// this builds the native C and C++ externals 
-Task ("externals-native")
-    .IsDependentOn ("externals-uwp")
-    .IsDependentOn ("externals-windows")
-    .IsDependentOn ("externals-osx")
-    .IsDependentOn ("externals-ios")
-    .IsDependentOn ("externals-tvos")
-    .IsDependentOn ("externals-watchos")
-    .IsDependentOn ("externals-android")
-    .IsDependentOn ("externals-linux")
-    .IsDependentOn ("externals-tizen")
-    .Does (() => 
-{
-});
+// this builds the native C and C++ externals
+Task ("externals-native");
+Task ("externals-native-skip");
 
 // this builds the native C and C++ externals for Windows
 Task ("externals-windows")
     .IsDependentOn ("externals-init")
-    .WithCriteria (!SKIP_EXTERNALS.Contains ("windows"))
+    .IsDependeeOf (ShouldBuildExternal ("windows") ? "externals-native" : "externals-native-skip")
+    .WithCriteria (ShouldBuildExternal ("windows"))
     .WithCriteria (IsRunningOnWindows ())
-    .Does (() =>  
+    .Does (() =>
 {
     // libSkiaSharp
 
@@ -98,8 +88,8 @@ Task ("externals-windows")
             $"target_os='win' target_cpu='{skiaArch}' " +
             $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true " +
             $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '/MD', '/EHsc', '/Zi' ] " +
-            $"extra_ldflags=[ '/DEBUG' ]");
+            $"extra_cflags=[ '-DSKIA_C_DLL', '/MD', '/EHsc', '/Z7' ] " +
+            $"extra_ldflags=[ '/DEBUG:FULL' ]");
 
         // copy libSkiaSharp to output
         var outDir = $"output/native/windows/{dir}";
@@ -131,9 +121,10 @@ Task ("externals-windows")
 // this builds the native C and C++ externals for Windows UWP
 Task ("externals-uwp")
     .IsDependentOn ("externals-init")
-    .WithCriteria (!SKIP_EXTERNALS.Contains ("uwp"))
+    .IsDependeeOf (ShouldBuildExternal ("uwp") ? "externals-native" : "externals-native-skip")
+    .WithCriteria (ShouldBuildExternal ("uwp"))
     .WithCriteria (IsRunningOnWindows ())
-    .Does (() =>  
+    .Does (() =>
 {
     // libSkiaSharp
 
@@ -145,9 +136,9 @@ Task ("externals-uwp")
             $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
             $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
             $"extra_cflags=[  " +
-            $"  '-DSKIA_C_DLL', '/MD', '/EHsc', '/Zi',  " +
+            $"  '-DSKIA_C_DLL', '/MD', '/EHsc', '/Z7', " +
             $"  '-DWINAPI_FAMILY=WINAPI_FAMILY_APP', '-DSK_BUILD_FOR_WINRT', '-DSK_HAS_DWRITE_1_H', '-DSK_HAS_DWRITE_2_H', '-DNO_GETENV' ] " +
-            $"extra_ldflags=[ '/APPCONTAINER', '/DEBUG', 'WindowsApp.lib' ]");
+            $"extra_ldflags=[ '/DEBUG:FULL', '/APPCONTAINER', 'WindowsApp.lib' ]");
 
         // copy libSkiaSharp to output
         var outDir = $"output/native/uwp/{dir}";
@@ -177,6 +168,23 @@ Task ("externals-uwp")
     buildHarfBuzzArch ("x64", "x64");
     buildHarfBuzzArch ("ARM", "arm");
 
+    // SkiaSharp.Views.Interop.UWP
+
+    var buildInteropArch = new Action<string, string> ((arch, dir) => {
+        // build SkiaSharp.Views.Interop.UWP
+        RunMSBuildWithPlatformTarget ("source/SkiaSharp.Views.Interop.UWP.sln", arch);
+
+        // copy SkiaSharp.Views.Interop.UWP to native
+        var outDir = $"./output/native/uwp/{dir}";
+        EnsureDirectoryExists (outDir);
+        CopyFileToDirectory ($"source/SkiaSharp.Views.Interop.UWP/bin/{arch}/Release/SkiaSharp.Views.Interop.UWP.dll", outDir);
+        CopyFileToDirectory ($"source/SkiaSharp.Views.Interop.UWP/bin/{arch}/Release/SkiaSharp.Views.Interop.UWP.pdb", outDir);
+    });
+
+    buildInteropArch ("Win32", "x86");
+    buildInteropArch ("x64", "x64");
+    buildInteropArch ("ARM", "arm");
+
     // copy ANGLE externals
     EnsureDirectoryExists ("./output/native/uwp/arm/");
     EnsureDirectoryExists ("./output/native/uwp/x86/");
@@ -190,11 +198,14 @@ Task ("externals-uwp")
 });
 
 // this builds the native C and C++ externals for Mac OS X
+Task ("externals-macos")
+    .IsDependentOn ("externals-osx");
 Task ("externals-osx")
     .IsDependentOn ("externals-init")
-    .WithCriteria (!SKIP_EXTERNALS.Contains ("osx"))
+    .IsDependeeOf (ShouldBuildExternal ("osx") ? "externals-native" : "externals-native-skip")
+    .WithCriteria (ShouldBuildExternal ("osx"))
     .WithCriteria (IsRunningOnMac ())
-    .Does (() =>  
+    .Does (() =>
 {
     // SkiaSharp
 
@@ -224,12 +235,10 @@ Task ("externals-osx")
         StripSign ($"output/native/osx/{arch}/libSkiaSharp.dylib");
     });
 
-    buildArch ("i386", "x86");
     buildArch ("x86_64", "x64");
 
     // create the fat dylib
     RunLipo ("output/native/osx/", "libSkiaSharp.dylib", new [] {
-        (FilePath) "i386/libSkiaSharp.dylib", 
         (FilePath) "x86_64/libSkiaSharp.dylib"
     });
 
@@ -252,12 +261,10 @@ Task ("externals-osx")
         StripSign ($"output/native/osx/{arch}/libHarfBuzzSharp.dylib");
     });
 
-    buildHarfBuzzArch ("i386", "x86");
     buildHarfBuzzArch ("x86_64", "x64");
 
     // create the fat dylib
     RunLipo ("output/native/osx/", "libHarfBuzzSharp.dylib", new [] {
-        (FilePath) "i386/libHarfBuzzSharp.dylib", 
         (FilePath) "x86_64/libHarfBuzzSharp.dylib"
     });
 });
@@ -265,28 +272,21 @@ Task ("externals-osx")
 // this builds the native C and C++ externals for iOS
 Task ("externals-ios")
     .IsDependentOn ("externals-init")
-    .WithCriteria (!SKIP_EXTERNALS.Contains ("ios"))
+    .IsDependeeOf (ShouldBuildExternal ("ios") ? "externals-native" : "externals-native-skip")
+    .WithCriteria (ShouldBuildExternal ("ios"))
     .WithCriteria (IsRunningOnMac ())
-    .Does (() => 
+    .Does (() =>
 {
     // SkiaSharp
 
     var buildArch = new Action<string, string, string> ((sdk, arch, skiaArch) => {
         // generate native skia build files
-
-        var specifics = "";
-        // several instances of "error: type 'XXX' requires 8 bytes of alignment and the default allocator only guarantees 4 bytes [-Werror,-Wover-aligned]
-        // https://groups.google.com/forum/#!topic/skia-discuss/hU1IPFwU6bI
-        if (arch == "armv7" || arch == "armv7s") {
-            specifics += ", '-Wno-over-aligned'";
-        }
-
         GnNinja ($"ios/{arch}", "skia",
             $"is_official_build=true skia_enable_tools=false " +
             $"target_os='ios' target_cpu='{skiaArch}' " +
             $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
             $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-mios-version-min=8.0' {specifics} ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-mios-version-min=8.0' ] " +
             $"extra_ldflags=[ '-Wl,ios_version_min=8.0' ]");
 
         // build native skia
@@ -315,14 +315,14 @@ Task ("externals-ios")
     buildArch ("iphonesimulator", "x86_64", "x64");
     buildArch ("iphoneos", "armv7", "arm");
     buildArch ("iphoneos", "arm64", "arm64");
-    
+
     // create the fat framework
     CopyDirectory ("output/native/ios/armv7/libSkiaSharp.framework/", "output/native/ios/libSkiaSharp.framework/");
     DeleteFile ("output/native/ios/libSkiaSharp.framework/libSkiaSharp");
     RunLipo ("output/native/ios/", "libSkiaSharp.framework/libSkiaSharp", new [] {
-        (FilePath) "i386/libSkiaSharp.framework/libSkiaSharp", 
-        (FilePath) "x86_64/libSkiaSharp.framework/libSkiaSharp", 
-        (FilePath) "armv7/libSkiaSharp.framework/libSkiaSharp", 
+        (FilePath) "i386/libSkiaSharp.framework/libSkiaSharp",
+        (FilePath) "x86_64/libSkiaSharp.framework/libSkiaSharp",
+        (FilePath) "armv7/libSkiaSharp.framework/libSkiaSharp",
         (FilePath) "arm64/libSkiaSharp.framework/libSkiaSharp"
     });
 
@@ -349,12 +349,12 @@ Task ("externals-ios")
     buildHarfBuzzArch ("iphonesimulator", "x86_64");
     buildHarfBuzzArch ("iphoneos", "armv7");
     buildHarfBuzzArch ("iphoneos", "arm64");
-    
+
     // create the fat archive
     RunLipo ("output/native/ios/", "libHarfBuzzSharp.a", new [] {
-        (FilePath) "i386/libHarfBuzzSharp.a", 
-        (FilePath) "x86_64/libHarfBuzzSharp.a", 
-        (FilePath) "armv7/libHarfBuzzSharp.a", 
+        (FilePath) "i386/libHarfBuzzSharp.a",
+        (FilePath) "x86_64/libHarfBuzzSharp.a",
+        (FilePath) "armv7/libHarfBuzzSharp.a",
         (FilePath) "arm64/libHarfBuzzSharp.a"
     });
 });
@@ -362,9 +362,10 @@ Task ("externals-ios")
 // this builds the native C and C++ externals for tvOS
 Task ("externals-tvos")
     .IsDependentOn ("externals-init")
-    .WithCriteria (!SKIP_EXTERNALS.Contains ("tvos"))
+    .IsDependeeOf (ShouldBuildExternal ("tvos") ? "externals-native" : "externals-native-skip")
+    .WithCriteria (ShouldBuildExternal ("tvos"))
     .WithCriteria (IsRunningOnMac ())
-    .Does (() => 
+    .Does (() =>
 {
     // SkiaSharp
 
@@ -396,12 +397,12 @@ Task ("externals-tvos")
 
     buildArch ("appletvsimulator", "x86_64", "x64");
     buildArch ("appletvos", "arm64", "arm64");
-    
+
     // create the fat framework
     CopyDirectory ("output/native/tvos/arm64/libSkiaSharp.framework/", "output/native/tvos/libSkiaSharp.framework/");
     DeleteFile ("output/native/tvos/libSkiaSharp.framework/libSkiaSharp");
     RunLipo ("output/native/tvos/", "libSkiaSharp.framework/libSkiaSharp", new [] {
-        (FilePath) "x86_64/libSkiaSharp.framework/libSkiaSharp", 
+        (FilePath) "x86_64/libSkiaSharp.framework/libSkiaSharp",
         (FilePath) "arm64/libSkiaSharp.framework/libSkiaSharp"
     });
 
@@ -426,10 +427,10 @@ Task ("externals-tvos")
 
     buildHarfBuzzArch ("appletvsimulator", "x86_64");
     buildHarfBuzzArch ("appletvos", "arm64");
-    
+
     // create the fat framework
     RunLipo ("output/native/tvos/", "libHarfBuzzSharp.a", new [] {
-        (FilePath) "x86_64/libHarfBuzzSharp.a", 
+        (FilePath) "x86_64/libHarfBuzzSharp.a",
         (FilePath) "arm64/libHarfBuzzSharp.a"
     });
 });
@@ -437,20 +438,14 @@ Task ("externals-tvos")
 // this builds the native C and C++ externals for watchOS
 Task ("externals-watchos")
     .IsDependentOn ("externals-init")
-    .WithCriteria (!SKIP_EXTERNALS.Contains ("watchos"))
+    .IsDependeeOf (ShouldBuildExternal ("watchos") ? "externals-native" : "externals-native-skip")
+    .WithCriteria (ShouldBuildExternal ("watchos"))
     .WithCriteria (IsRunningOnMac ())
-    .Does (() => 
+    .Does (() =>
 {
     // SkiaSharp
 
     var buildArch = new Action<string, string, string> ((sdk, arch, skiaArch) => {
-        var specifics = "";
-        // several instances of "error: type 'XXX' requires 8 bytes of alignment and the default allocator only guarantees 4 bytes [-Werror,-Wover-aligned]
-        // https://groups.google.com/forum/#!topic/skia-discuss/hU1IPFwU6bI
-        if (arch == "armv7k") {
-            specifics += ", '-Wno-over-aligned'";
-        }
-
         // generate native skia build files
         GnNinja ($"watchos/{arch}", "skia",
             $"is_official_build=true skia_enable_tools=false " +
@@ -458,7 +453,7 @@ Task ("externals-watchos")
             $"skia_enable_gpu=false " +
             $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
             $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
-            $"extra_cflags=[ '-DSK_BUILD_FOR_WATCHOS', '-DSKIA_C_DLL', '-mwatchos-version-min=2.0' {specifics} ] " +
+            $"extra_cflags=[ '-DSK_BUILD_FOR_WATCHOS', '-DSKIA_C_DLL', '-mwatchos-version-min=2.0' ] " +
             $"extra_ldflags=[ '-Wl,watchos_version_min=2.0' ]");
 
         // build libSkiaSharp
@@ -484,7 +479,7 @@ Task ("externals-watchos")
     CopyDirectory ("output/native/watchos/armv7k/libSkiaSharp.framework/", "output/native/watchos/libSkiaSharp.framework/");
     DeleteFile ("output/native/watchos/libSkiaSharp.framework/libSkiaSharp");
     RunLipo ("output/native/watchos/", "libSkiaSharp.framework/libSkiaSharp", new [] {
-        (FilePath) "i386/libSkiaSharp.framework/libSkiaSharp", 
+        (FilePath) "i386/libSkiaSharp.framework/libSkiaSharp",
         (FilePath) "armv7k/libSkiaSharp.framework/libSkiaSharp"
     });
 
@@ -509,10 +504,10 @@ Task ("externals-watchos")
 
     buildHarfBuzzArch ("watchsimulator", "i386");
     buildHarfBuzzArch ("watchos", "armv7k");
-    
+
     // create the fat framework
     RunLipo ("output/native/watchos/", "libHarfBuzzSharp.a", new [] {
-        (FilePath) "i386/libHarfBuzzSharp.a", 
+        (FilePath) "i386/libHarfBuzzSharp.a",
         (FilePath) "armv7k/libHarfBuzzSharp.a"
     });
 });
@@ -520,9 +515,10 @@ Task ("externals-watchos")
 // this builds the native C and C++ externals for Android
 Task ("externals-android")
     .IsDependentOn ("externals-init")
-    .WithCriteria (!SKIP_EXTERNALS.Contains ("android"))
+    .IsDependeeOf (ShouldBuildExternal ("android") ? "externals-native" : "externals-native-skip")
+    .WithCriteria (ShouldBuildExternal ("android"))
     .WithCriteria (IsRunningOnMac () || IsRunningOnWindows ())
-    .Does (() => 
+    .Does (() =>
 {
     var cmd = IsRunningOnWindows () ? ".cmd" : "";
     var ndkbuild = ANDROID_NDK_HOME.CombineWithFilePath ($"ndk-build{cmd}").FullPath;
@@ -556,7 +552,7 @@ Task ("externals-android")
     RunProcess (ndkbuild, new ProcessSettings {
         Arguments = "",
         WorkingDirectory = ROOT_PATH.Combine ("native-builds/libHarfBuzzSharp_android").FullPath,
-    }); 
+    });
 
     // copy libSkiaSharp to output
     foreach (var folder in new [] { "x86", "x86_64", "armeabi-v7a", "arm64-v8a" }) {
@@ -568,13 +564,25 @@ Task ("externals-android")
 // this builds the native C and C++ externals for Linux
 Task ("externals-linux")
     .IsDependentOn ("externals-init")
-    .WithCriteria (!SKIP_EXTERNALS.Contains ("linux"))
+    .IsDependeeOf (ShouldBuildExternal ("linux") ? "externals-native" : "externals-native-skip")
+    .WithCriteria (ShouldBuildExternal ("linux"))
     .WithCriteria (IsRunningOnLinux ())
-    .Does (() => 
+    .Does (() =>
 {
     var arches = EnvironmentVariable ("BUILD_ARCH") ?? (Environment.Is64BitOperatingSystem ? "x64" : "x86");  // x64, x86, ARM
     var BUILD_ARCH = arches.Split (',').Select (a => a.Trim ()).ToArray ();
     var SUPPORT_GPU = (EnvironmentVariable ("SUPPORT_GPU") ?? "1") == "1"; // 1 == true, 0 == false
+
+    var CC = EnvironmentVariable ("CC");
+    var CXX = EnvironmentVariable ("CXX");
+    var AR = EnvironmentVariable ("AR");
+    var CUSTOM_COMPILERS = "";
+    if (!string.IsNullOrEmpty (CC))
+        CUSTOM_COMPILERS += $"cc='{CC}' ";
+    if (!string.IsNullOrEmpty (CXX))
+        CUSTOM_COMPILERS += $"cxx='{CXX}' ";
+    if (!string.IsNullOrEmpty (AR))
+        CUSTOM_COMPILERS += $"ar='{AR}' ";
 
     var buildArch = new Action<string> ((arch) => {
         var soname = GetVersion ("libSkiaSharp", "soname");
@@ -588,6 +596,7 @@ Task ("externals-linux")
             $"skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")} " +
             $"extra_cflags=[ '-DSKIA_C_DLL' ] " +
             $"extra_ldflags=[ ] " +
+            $"{CUSTOM_COMPILERS} " +
             $"linux_soname_version='{soname}'");
 
         // copy libSkiaSharp to output
@@ -624,7 +633,8 @@ Task ("externals-linux")
 
 Task ("externals-tizen")
     .IsDependentOn ("externals-init")
-    .WithCriteria (!SKIP_EXTERNALS.Contains ("tizen"))
+    .IsDependeeOf (ShouldBuildExternal ("tizen") ? "externals-native" : "externals-native-skip")
+    .WithCriteria (ShouldBuildExternal ("tizen"))
     .Does (() =>
 {
     var bat = IsRunningOnWindows () ? ".bat" : "";
@@ -687,9 +697,9 @@ Task ("externals-tizen")
 
 Task ("externals-angle-uwp")
     .WithCriteria (!FileExists (ANGLE_PATH.CombineWithFilePath ("uwp/ANGLE.WindowsStore.nuspec")))
-    .Does (() =>  
+    .Does (() =>
 {
-    var version = GetVersion ("ANGLE", "release");
+    var version = GetVersion ("ANGLE.WindowsStore", "release");
     var angleUrl = $"https://www.nuget.org/api/v2/package/ANGLE.WindowsStore/{version}";
     var angleRoot = ANGLE_PATH.Combine ("uwp");
     var angleNupkg = angleRoot.CombineWithFilePath ($"angle_{version}.nupkg");
@@ -703,9 +713,9 @@ Task ("externals-angle-uwp")
 
 Task ("externals-harfbuzz")
     .WithCriteria (
-        !FileExists (HARFBUZZ_PATH.CombineWithFilePath ("harfbuzz/README")) || 
+        !FileExists (HARFBUZZ_PATH.CombineWithFilePath ("harfbuzz/README")) ||
         !FileExists (HARFBUZZ_PATH.CombineWithFilePath ($"harfbuzz-{GetVersion ("harfbuzz", "release")}.tar.bz2")))
-    .Does (() =>  
+    .Does (() =>
 {
     var version = GetVersion ("harfbuzz", "release");
     var url = $"https://github.com/behdad/harfbuzz/releases/download/{version}/harfbuzz-{version}.tar.bz2";

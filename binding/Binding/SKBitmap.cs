@@ -1,19 +1,40 @@
-//
-// Bindings for SKBitmap
-//
-// Author:
-//   Matthew Leibowitz
-//
-// Copyright 2016 Xamarin Inc
-//
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
+	[Obsolete]
+	public enum SKBitmapResizeMethod
+	{
+		Box,
+		Triangle,
+		Lanczos3,
+		Hamming,
+		Mitchell
+	}
+
+	public static partial class SkiaExtensions
+	{
+		[Obsolete]
+		public static SKFilterQuality ToFilterQuality (this SKBitmapResizeMethod method)
+		{
+			switch (method) {
+				case SKBitmapResizeMethod.Box:
+				case SKBitmapResizeMethod.Triangle:
+					return SKFilterQuality.Low;
+				case SKBitmapResizeMethod.Lanczos3:
+					return SKFilterQuality.Medium;
+				case SKBitmapResizeMethod.Hamming:
+				case SKBitmapResizeMethod.Mitchell:
+					return SKFilterQuality.High;
+				default:
+					return SKFilterQuality.Medium;
+			}
+		}
+	}
+
 	// public delegates
 	public delegate void SKBitmapReleaseDelegate (IntPtr address, object context);
 
@@ -72,29 +93,29 @@ namespace SkiaSharp
 		public SKBitmap (SKImageInfo info, int rowBytes)
 			: this ()
 		{
-			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			if (!SkiaApi.sk_bitmap_try_alloc_pixels (Handle, ref cinfo, (IntPtr)rowBytes)) {
+			if (!TryAllocPixels (info, rowBytes)) {
 				throw new Exception (UnableToAllocatePixelsMessage);
 			}
 		}
 
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use SKBitmap(SKImageInfo, SKBitmapAllocFlags) instead.")]
 		public SKBitmap (SKImageInfo info, SKColorTable ctable, SKBitmapAllocFlags flags)
+			: this (info, SKBitmapAllocFlags.None)
+		{
+		}
+
+		public SKBitmap (SKImageInfo info, SKBitmapAllocFlags flags)
 			: this ()
 		{
-			if (!TryAllocPixels (info, ctable, flags)) {
+			if (!TryAllocPixels (info, flags)) {
 				throw new Exception (UnableToAllocatePixelsMessage);
 			}
 		}
 
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use SKBitmap(SKImageInfo) instead.")]
 		public SKBitmap (SKImageInfo info, SKColorTable ctable)
-			: this (info, ctable, SKBitmapAllocFlags.None)
+			: this (info, SKBitmapAllocFlags.None)
 		{
-		}
-		
-		private bool TryAllocPixels (SKImageInfo info, SKColorTable ctable, SKBitmapAllocFlags flags = SKBitmapAllocFlags.None)
-		{
-			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return SkiaApi.sk_bitmap_try_alloc_pixels_with_color_table (Handle, ref cinfo, ctable != null ? ctable.Handle : IntPtr.Zero, flags);
 		}
 
 		protected override void Dispose (bool disposing)
@@ -104,6 +125,23 @@ namespace SkiaSharp
 			}
 
 			base.Dispose (disposing);
+		}
+
+		public bool TryAllocPixels (SKImageInfo info)
+		{
+			return TryAllocPixels (info, info.RowBytes);
+		}
+
+		public bool TryAllocPixels (SKImageInfo info, int rowBytes)
+		{
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return SkiaApi.sk_bitmap_try_alloc_pixels (Handle, ref cinfo, (IntPtr)rowBytes);
+		}
+		
+		public bool TryAllocPixels (SKImageInfo info, SKBitmapAllocFlags flags)
+		{
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return SkiaApi.sk_bitmap_try_alloc_pixels_with_flags (Handle, ref cinfo, flags);
 		}
 
 		public void Reset ()
@@ -131,9 +169,10 @@ namespace SkiaSharp
 		public UInt32 GetAddr32(int x, int y) => SkiaApi.sk_bitmap_get_addr_32 (Handle, x, y);
 		public IntPtr GetAddr(int x, int y) => SkiaApi.sk_bitmap_get_addr (Handle, x, y);
 
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixel(int, int) instead.")]
 		public SKPMColor GetIndex8Color (int x, int y)
 		{
-			return SkiaApi.sk_bitmap_get_index8_color (Handle, x, y);
+			return (SKPMColor) GetPixel (x, y);
 		}
 
 		public SKColor GetPixel (int x, int y)
@@ -143,10 +182,6 @@ namespace SkiaSharp
 
 		public void SetPixel (int x, int y, SKColor color)
 		{
-			if (ColorType == SKColorType.Index8)
-			{
-				throw new NotSupportedException ("This method is not supported for bitmaps with ColorTypes of Index8.");
-			}
 			SkiaApi.sk_bitmap_set_pixel_color (Handle, x, y, color);
 		}
 
@@ -167,6 +202,9 @@ namespace SkiaSharp
 				case SKColorType.Rgb565:
 				case SKColorType.Rgba8888:
 				case SKColorType.Bgra8888:
+				case SKColorType.Rgb888x:
+				case SKColorType.Rgba1010102:
+				case SKColorType.Rgb101010x:
 				case SKColorType.RgbaF16:
 					break;
 				case SKColorType.Gray8:
@@ -177,8 +215,7 @@ namespace SkiaSharp
 				case SKColorType.Argb4444:
 					return
 						sameConfigs || 
-						srcCT == SKImageInfo.PlatformColorType ||
-						srcCT == SKColorType.Index8;
+						srcCT == SKImageInfo.PlatformColorType;
 				default:
 					return false;
 			}
@@ -246,7 +283,7 @@ namespace SkiaSharp
 			}
 
 			var tmpDst = new SKBitmap ();
-			if (!tmpDst.TryAllocPixels (dstInfo, colorType == SKColorType.Index8 ? ColorTable : null)) {
+			if (!tmpDst.TryAllocPixels (dstInfo)) {
 				return false;
 			}
 
@@ -364,17 +401,19 @@ namespace SkiaSharp
 
 		public void SetPixels(IntPtr pixels)
 		{
-			SetPixels (pixels, ColorTable);
+			SkiaApi.sk_bitmap_set_pixels (Handle, pixels);
 		}
 
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use SetPixels(IntPtr) instead.")]
 		public void SetPixels(IntPtr pixels, SKColorTable ct)
 		{
-			SkiaApi.sk_bitmap_set_pixels (Handle, pixels, ct != null ? ct.Handle : IntPtr.Zero);
+			SetPixels (pixels);
 		}
 
-		public void SetColorTable(SKColorTable ct)
+		[Obsolete ("The Index8 color type and color table is no longer supported.")]
+		public void SetColorTable (SKColorTable ct)
 		{
-			SetPixels (GetPixels (), ct);
+			// no-op due to unsupperted action
 		}
 		
 		public byte[] Bytes {
@@ -420,9 +459,8 @@ namespace SkiaSharp
 			set { SkiaApi.sk_bitmap_set_volatile (Handle, value); }
 		}
 
-		public SKColorTable ColorTable {
-			get { return GetObject<SKColorTable> (SkiaApi.sk_bitmap_get_colortable (Handle), false); }
-		}
+		[Obsolete ("The Index8 color type and color table is no longer supported.")]
+		public SKColorTable ColorTable => null;
 
 		public static SKImageInfo DecodeBounds (Stream stream)
 		{
@@ -478,18 +516,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (codec));
 			}
 
-			// construct a color table for the decode if necessary
-			SKColorTable colorTable = null;
-			int colorCount = 0;
-			if (bitmapInfo.ColorType == SKColorType.Index8)
-			{
-				colorTable = new SKColorTable ();
-			}
-
 			// read the pixels and color table
-			var bitmap = new SKBitmap (bitmapInfo, colorTable);
+			var bitmap = new SKBitmap (bitmapInfo);
 			IntPtr length;
-			var result = codec.GetPixels (bitmapInfo, bitmap.GetPixels (out length), colorTable, ref colorCount);
+			var result = codec.GetPixels (bitmapInfo, bitmap.GetPixels (out length));
 			if (result != SKCodecResult.Success && result != SKCodecResult.IncompleteInput) {
 				bitmap.Dispose ();
 				bitmap = null;
@@ -621,28 +651,39 @@ namespace SkiaSharp
 
 		public bool InstallPixels (SKImageInfo info, IntPtr pixels)
 		{
-			return InstallPixels (info, pixels, info.RowBytes);
+			return InstallPixels (info, pixels, info.RowBytes, null, null);
 		}
 
 		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes)
 		{
-			return InstallPixels (info, pixels, rowBytes, null);
+			return InstallPixels (info, pixels, rowBytes, null, null);
 		}
 
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use InstallPixels(SKImageInfo, IntPtr, int) instead.")]
 		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable)
 		{
-			return InstallPixels (info, pixels, rowBytes, ctable, null, null);
+			return InstallPixels (info, pixels, rowBytes, null, null);
 		}
 
+		[Obsolete ("The Index8 color type and color table is no longer supported. Use InstallPixels(SKImageInfo, IntPtr, int, SKBitmapReleaseDelegate, object) instead.")]
 		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable, SKBitmapReleaseDelegate releaseProc, object context)
 		{
+			return InstallPixels (info, pixels, rowBytes, releaseProc, context);
+		}
+
+		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKBitmapReleaseDelegate releaseProc)
+		{
+			return InstallPixels (info, pixels, rowBytes, releaseProc, null);
+		}
+
+		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKBitmapReleaseDelegate releaseProc, object context)
+		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			IntPtr ct = ctable == null ? IntPtr.Zero : ctable.Handle;
 			if (releaseProc == null) {
-				return SkiaApi.sk_bitmap_install_pixels (Handle, ref cinfo, pixels, (IntPtr)rowBytes, ct, IntPtr.Zero, IntPtr.Zero);
+				return SkiaApi.sk_bitmap_install_pixels (Handle, ref cinfo, pixels, (IntPtr)rowBytes, IntPtr.Zero, IntPtr.Zero);
 			} else {
 				var ctx = new NativeDelegateContext (context, releaseProc);
-				return SkiaApi.sk_bitmap_install_pixels (Handle, ref cinfo, pixels, (IntPtr)rowBytes, ct, releaseDelegate, ctx.NativeContext);
+				return SkiaApi.sk_bitmap_install_pixels (Handle, ref cinfo, pixels, (IntPtr)rowBytes, releaseDelegate, ctx.NativeContext);
 			}
 		}
 
@@ -681,6 +722,7 @@ namespace SkiaSharp
 			return SkiaApi.sk_bitmap_peek_pixels (Handle, pixmap.Handle);
 		}
 
+		[Obsolete]
 		public SKBitmap Resize (SKImageInfo info, SKBitmapResizeMethod method)
 		{
 			var dst = new SKBitmap (info);
@@ -693,11 +735,13 @@ namespace SkiaSharp
 			}
 		}
 
+		[Obsolete]
 		public bool Resize (SKBitmap dst, SKBitmapResizeMethod method)
 		{
 			return Resize (dst, this, method);
 		}
 
+		[Obsolete]
 		public static bool Resize (SKBitmap dst, SKBitmap src, SKBitmapResizeMethod method)
 		{
 			using (var srcPix = src.PeekPixels ())

@@ -19,10 +19,18 @@
   <Docs>
     <summary>Convenience class used to lock and unlock the bitmap pixels in a using statement.</summary>
     <remarks>
-      <para>This class can be used in a using statement to lock the pixels of the bitmap allowing you to read those pixels. The pixels are automatically unlocked by virtue of having the <see cref="M:SkiaSharp.SKAutoLockPixels.Dispose" /> method unlock the bitmap pixels.</para>
-      <para></para>
-      <example>
-        <code lang="C#"><![CDATA[SKBitmap bitmap = ...;
+      <format type="text/markdown"><![CDATA[
+## Remarks
+
+This class can be used in a using statement to lock the pixels of the bitmap
+allowing you to read those pixels. The pixels are automatically unlocked by
+virtue of having the <xref:SkiaSharp.SKAutoLockPixels.Dispose> method unlock
+the bitmap pixels.
+
+## Examples
+
+```csharp
+SKBitmap bitmap = ...;
 
 using (new SKAutoLockPixels(bitmap)) {
     // get a pointer to the pixels
@@ -31,9 +39,9 @@ using (new SKAutoLockPixels(bitmap)) {
     // use the pointer
 
     // automatically unlock the pixels
-}]]></code>
-      </example>
-      <para></para>
+}
+```
+]]></format>
     </remarks>
   </Docs>
   <Members>

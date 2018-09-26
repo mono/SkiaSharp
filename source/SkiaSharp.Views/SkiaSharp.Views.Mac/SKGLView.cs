@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using AppKit;
 using CoreGraphics;
@@ -12,7 +12,8 @@ namespace SkiaSharp.Views.Mac
 	public class SKGLView : NSOpenGLView
 	{
 		private GRContext context;
-		private GRBackendRenderTargetDesc renderTarget;
+		private GRBackendRenderTarget renderTarget;
+		private SKSurface surface;
 
 		// created in code
 		public SKGLView()
@@ -72,29 +73,39 @@ namespace SkiaSharp.Views.Mac
 			// create the context
 			var glInterface = GRGlInterface.CreateNativeGlInterface();
 			context = GRContext.Create(GRBackend.OpenGL, glInterface);
-
-			renderTarget = SKGLDrawable.CreateRenderTarget();
 		}
 
 		public override void DrawRect(CGRect dirtyRect)
 		{
 			base.DrawRect(dirtyRect);
 
+			Gles.glClear(Gles.GL_COLOR_BUFFER_BIT | Gles.GL_DEPTH_BUFFER_BIT | Gles.GL_STENCIL_BUFFER_BIT);
+
+			// manage the drawing surface
 			var size = ConvertSizeToBacking(Bounds.Size);
-			renderTarget.Width = (int)size.Width;
-			renderTarget.Height = (int)size.Height;
-
-			Gles.glClear(Gles.GL_STENCIL_BUFFER_BIT);
-
-			using (var surface = SKSurface.Create(context, renderTarget))
+			if (renderTarget == null || surface == null || renderTarget.Width != size.Width || renderTarget.Height != size.Height)
 			{
-				// draw on the surface
-				DrawInSurface(surface, renderTarget);
+				// create or update the dimensions
+				renderTarget?.Dispose();
+				renderTarget = SKGLDrawable.CreateRenderTarget((int)size.Width, (int)size.Height);
 
-				surface.Canvas.Flush();
+				// create the surface
+				surface?.Dispose();
+				surface = SKSurface.Create(context, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+			}
+
+			using (new SKAutoCanvasRestore(surface.Canvas, true))
+			{
+				// start drawing
+				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+#pragma warning disable CS0618 // Type or member is obsolete
+				DrawInSurface(e.Surface, e.RenderTarget);
+#pragma warning restore CS0618 // Type or member is obsolete
+				OnPaintSurface(e);
 			}
 
 			// flush the SkiaSharp contents to GL
+			surface.Canvas.Flush();
 			context.Flush();
 
 			OpenGLContext.FlushBuffer();
@@ -102,9 +113,14 @@ namespace SkiaSharp.Views.Mac
 
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
+		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
+		{
+			PaintSurface?.Invoke(this, e);
+		}
+
+		[Obsolete("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")]
 		public virtual void DrawInSurface(SKSurface surface, GRBackendRenderTargetDesc renderTarget)
 		{
-			PaintSurface?.Invoke(this, new SKPaintGLSurfaceEventArgs(surface, renderTarget));
 		}
 	}
 }

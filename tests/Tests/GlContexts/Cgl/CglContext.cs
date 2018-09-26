@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
@@ -63,7 +63,8 @@ namespace SkiaSharp.Tests
 
 			return new GRGlTextureInfo {
 				Id = textureId,
-				Target = Cgl.GL_TEXTURE_2D
+				Target = Cgl.GL_TEXTURE_2D,
+				Format = Cgl.GL_RGBA8
 			};
 		}
 

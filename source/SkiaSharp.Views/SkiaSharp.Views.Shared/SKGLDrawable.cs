@@ -14,36 +14,32 @@ namespace SkiaSharp.Views.Desktop
 namespace SkiaSharp.Views.Mac
 #elif WINDOWS_UWP
 namespace SkiaSharp.Views.UWP
-#elif TIZEN4_0
+#elif __TIZEN__
 namespace SkiaSharp.Views.Tizen
 #endif
 {
 	internal static class SKGLDrawable
 	{
-		public static GRBackendRenderTargetDesc CreateRenderTarget()
+		public static GRBackendRenderTarget CreateRenderTarget(int bufferWidth, int bufferHeight)
 		{
-			int framebuffer, stencil, samples;
-			Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, out framebuffer);
-			Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out stencil);
-			Gles.glGetIntegerv(Gles.GL_SAMPLES, out samples);
+			Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, out var framebuffer);
+			Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out var stencil);
+			Gles.glGetIntegerv(Gles.GL_SAMPLES, out var samples);
 
-			int bufferWidth = 0;
-			int bufferHeight = 0;
 #if __IOS__ || __TVOS__
 			Gles.glGetRenderbufferParameteriv(Gles.GL_RENDERBUFFER, Gles.GL_RENDERBUFFER_WIDTH, out bufferWidth);
 			Gles.glGetRenderbufferParameteriv(Gles.GL_RENDERBUFFER, Gles.GL_RENDERBUFFER_HEIGHT, out bufferHeight);
 #endif
 
-			return new GRBackendRenderTargetDesc
-			{
-				Width = bufferWidth,
-				Height = bufferHeight,
-				Config = GRPixelConfig.Rgba8888,
-				Origin = GRSurfaceOrigin.BottomLeft,
-				SampleCount = samples,
-				StencilBits = stencil,
-				RenderTargetHandle = (IntPtr)framebuffer,
-			};
+#if __TIZEN__
+			var isBgra = SKImageInfo.PlatformColorType == SKColorType.Bgra8888;
+			var config = isBgra ? GRPixelConfig.Bgra8888 : GRPixelConfig.Rgba8888;
+#else
+			var config = GRPixelConfig.Rgba8888;
+#endif
+
+			var glInfo = new GRGlFramebufferInfo((uint)framebuffer, config.ToSizedFormat());
+			return new GRBackendRenderTarget(bufferWidth, bufferHeight, samples, stencil, glInfo);
 		}
 	}
 }
