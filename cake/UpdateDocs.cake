@@ -49,12 +49,14 @@ Task ("docs-api-diff")
         Information ($"Comparing the assemblies in '{id}'...");
 
         var version = GetVersion (id);
-        var latestVersion = (await NuGetVersions.GetLatestAsync (id)).ToNormalizedString ();
+        var latestVersion = (await NuGetVersions.GetLatestAsync (id))?.ToNormalizedString ();
         Debug ($"Version '{latestVersion}' is the latest version of '{id}'...");
 
         // pre-cache so we can have better logs
-        Debug ($"Caching version '{latestVersion}' of '{id}'...");
-        await comparer.ExtractCachedPackageAsync (id, latestVersion);
+        if (!string.IsNullOrEmpty (latestVersion)) {
+            Debug ($"Caching version '{latestVersion}' of '{id}'...");
+            await comparer.ExtractCachedPackageAsync (id, latestVersion);
+        }
 
         // generate the diff and copy to the changelogs
         Debug ($"Running a diff on '{latestVersion}' vs '{version}' of '{id}'...");
