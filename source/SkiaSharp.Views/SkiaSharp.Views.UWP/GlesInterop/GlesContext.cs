@@ -3,7 +3,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml.Controls;
 
-using SkiaSharp.Views.UWP;
+using SkiaSharp.Views.UWP.Interop;
 
 using EGLDisplay = System.IntPtr;
 using EGLContext = System.IntPtr;
@@ -12,7 +12,7 @@ using EGLSurface = System.IntPtr;
 
 namespace SkiaSharp.Views.GlesInterop
 {
-	public class GlesContext : IDisposable
+	internal class GlesContext : IDisposable
 	{
 		private EGLDisplay eglDisplay;
 		private EGLContext eglContext;
