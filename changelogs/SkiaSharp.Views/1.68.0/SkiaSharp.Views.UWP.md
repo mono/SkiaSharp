@@ -73,25 +73,3 @@ protected override Windows.Foundation.Size ArrangeOverride (Windows.Foundation.S
 #### Removed Type SkiaSharp.Views.UWP.GlesRenderTarget
 #### Removed Type SkiaSharp.Views.UWP.GlesStencilFormat
 
-### New Namespace SkiaSharp.Views.GlesInterop
-
-#### New Type: SkiaSharp.Views.GlesInterop.GlesContext
-
-```csharp
-public class GlesContext : System.IDisposable {
-	// constructors
-	public GlesContext ();
-	// properties
-	public bool HasSurface { get; }
-	// methods
-	public void CreateSurface (Windows.UI.Xaml.Controls.SwapChainPanel panel, Windows.Foundation.Size? renderSurfaceSize, float? resolutionScale);
-	public void DestroySurface ();
-	public virtual void Dispose ();
-	public void GetSurfaceDimensions (out int width, out int height);
-	public void MakeCurrent ();
-	public void Reset ();
-	public void SetViewportSize (int width, int height);
-	public bool SwapBuffers ();
-}
-```
-
