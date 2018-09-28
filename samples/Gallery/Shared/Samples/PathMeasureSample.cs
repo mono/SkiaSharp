@@ -18,8 +18,8 @@ namespace SkiaSharpSample.Samples
 		{
 			canvas.Clear(SKColors.White);
 
-			using (SKPaint paint = new SKPaint())
-			using (SKPath path = new SKPath())
+			using (var paint = new SKPaint())
+			using (var path = new SKPath())
 			{
 				paint.Style = SKPaintStyle.Stroke;
 				paint.StrokeWidth = 10;

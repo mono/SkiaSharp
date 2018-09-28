@@ -32,9 +32,11 @@ namespace SkiaSharpSample.Samples
 			SKMatrix.PreConcat(ref offsetMatrix, SKMatrix.MakeSkew(0.5f, 0));
 
 			// create the paint
-			var paint = new SKPaint();
-			paint.PathEffect = SKPathEffect.Create2DPath(offsetMatrix, path);
-			paint.Color = SKColors.LightGray;
+			var paint = new SKPaint
+			{
+				PathEffect = SKPathEffect.Create2DPath(offsetMatrix, path),
+				Color = SKColors.LightGray
+			};
 
 			// draw a rectangle
 			canvas.DrawRect(SKRect.Create(width + blockSize, height + blockSize), paint);

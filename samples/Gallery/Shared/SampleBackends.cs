@@ -8,7 +8,8 @@ namespace SkiaSharpSample
 		Memory = 1 << 0,
 		OpenGL = 1 << 1,
 		Vulkan = 1 << 2,
+		Metal  = 1 << 3,
 
-		All = Memory | OpenGL | Vulkan,
+		All = Memory | OpenGL | Vulkan | Metal,
 	}
 }

@@ -26,8 +26,8 @@ namespace SkiaSharpSample.Samples
 				new SKPoint(100, 150)
 			};
 
-			using (SKPaint paint = new SKPaint())
-			using (SKPaint textPaint = new SKPaint())
+			using (var paint = new SKPaint())
+			using (var textPaint = new SKPaint())
 			{
 				paint.Style = SKPaintStyle.Stroke;
 				paint.StrokeWidth = 5;
@@ -36,7 +36,7 @@ namespace SkiaSharpSample.Samples
 
 				textPaint.IsAntialias = true;
 
-				using (SKPath path = new SKPath())
+				using (var path = new SKPath())
 				{
 					// create a conic path
 					path.MoveTo(points[0]);
@@ -47,16 +47,16 @@ namespace SkiaSharpSample.Samples
 					canvas.DrawPath(path, paint);
 
 					// get the quads from the conic points
-					SKPoint[] pts;
-					var quads = SKPath.ConvertConicToQuads(points[0], points[1], points[2], 10, out pts, 2);
+					var quads = SKPath.ConvertConicToQuads(points[0], points[1], points[2], 10, out var pts, 2);
 
 					// move the points on a bit
-					for (int i = 0; i < pts.Length; i++) pts[i].Offset(120, 0);
+					for (var i = 0; i < pts.Length; i++)
+						pts[i].Offset(120, 0);
 					// draw the quad-based path
 					using (var quadsPath = new SKPath())
 					{
 						quadsPath.MoveTo(pts[0].X, pts[0].Y);
-						for (int i = 0; i < quads; i++)
+						for (var i = 0; i < quads; i++)
 						{
 							var idx = i * 2;
 							quadsPath.CubicTo(
@@ -70,7 +70,8 @@ namespace SkiaSharpSample.Samples
 					}
 
 					// move the points on a bit
-					for (int i = 0; i < pts.Length; i++) pts[i].Offset(120, 0);
+					for (var i = 0; i < pts.Length; i++)
+						pts[i].Offset(120, 0);
 					// draw the dots
 					paint.Color = SampleMedia.Colors.XamarinGreen;
 					canvas.DrawPoints(SKPointMode.Points, pts, paint);

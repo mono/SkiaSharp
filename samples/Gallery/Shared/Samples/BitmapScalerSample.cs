@@ -7,6 +7,7 @@ using System.Linq;
 namespace SkiaSharpSample.Samples
 {
 	[Preserve(AllMembers = true)]
+	[Obsolete]
 	public class BitmapScalerSample : SampleBase
 	{
 		private List<SKBitmapResizeMethod> methods;

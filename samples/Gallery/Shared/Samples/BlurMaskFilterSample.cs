@@ -19,7 +19,7 @@ namespace SkiaSharpSample.Samples
 			canvas.DrawColor(SKColors.White);
 
 			using (var paint = new SKPaint())
-			using (var filter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 5.0f, SKBlurMaskFilterFlags.HighQuality))
+			using (var filter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 5.0f))
 			{
 				paint.IsAntialias = true;
 				paint.TextSize = 120;
@@ -41,7 +41,7 @@ namespace SkiaSharpSample.Samples
 		{
 			// create the rounded rectangle
 			var roundedRect = new SKPath();
-			roundedRect.AddRoundedRect(rect, 10, 10);
+			roundedRect.AddRoundRect(rect, 10, 10);
 
 			// draw the white background
 			var p = new SKPaint
@@ -61,13 +61,13 @@ namespace SkiaSharpSample.Samples
 				p.Color = SKColors.Black;
 				p.Style = SKPaintStyle.Stroke;
 				p.StrokeWidth = 2;
-				p.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 2, SKBlurMaskFilterFlags.HighQuality);
+				p.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 2);
 				canvas.Translate(0.5f, 1.5f);
 				canvas.DrawPath(roundedRect, p);
 
 				// draw the narrow blur at the top
 				p.StrokeWidth = 1;
-				p.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 1, SKBlurMaskFilterFlags.HighQuality);
+				p.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 1);
 				canvas.DrawPath(roundedRect, p);
 			}
 
