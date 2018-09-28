@@ -152,5 +152,23 @@ namespace SkiaSharp.Tests
 
 			Assert.NotNull(fonts.CreateStyleSet(0));
 		}
+
+		[SkippableFact]
+		public void CanDisposeDefault()
+		{
+			// get the fist
+			var fonts = SKFontManager.Default;
+			Assert.NotNull(fonts);
+
+			// dispose and make sure that we didn't kill it
+			fonts.Dispose();
+			fonts = SKFontManager.Default;
+			Assert.NotNull(fonts);
+
+			// dispose and make sure that we didn't kill it again
+			fonts.Dispose();
+			fonts = SKFontManager.Default;
+			Assert.NotNull(fonts);
+		}
 	}
 }

@@ -30,6 +30,13 @@ namespace SkiaSharp
 			base.Dispose (disposing);
 		}
 		
+		public static SKTypeface Default => GetObject<SKTypeface> (SkiaApi.sk_typeface_ref_default ());
+
+		public static SKTypeface CreateDefault ()
+		{
+			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_default ());
+		}
+
 		[Obsolete ("Use FromFamilyName(string, SKFontStyleWeight, SKFontStyleWidth, SKFontStyleSlant) instead.")]
 		public static SKTypeface FromFamilyName (string familyName, SKTypefaceStyle style)
 		{
