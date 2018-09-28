@@ -330,29 +330,13 @@ namespace SkiaSharp
 	}
 
 
-	[StructLayout(LayoutKind.Sequential)]
+	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe struct SKCodecOptionsInternal {
 		public SKZeroInitialized fZeroInitialized;
 		public SKRectI* fSubset;
 		public int fFrameIndex;
 		public int fPriorFrame;
 		public SKTransferFunctionBehavior fPremulBehavior;
-
-		public static unsafe SKCodecOptionsInternal FromManaged (ref SKCodecOptions managed)
-		{
-			var nativeOptions = new SKCodecOptionsInternal {
-				fZeroInitialized = managed.ZeroInitialized,
-				fSubset = null,
-				fFrameIndex = managed.FrameIndex,
-				fPriorFrame = managed.PriorFrame,
-				fPremulBehavior = managed.PremulBehavior,
-			};
-			if (managed.HasSubset) {
-				var subset = managed.Subset.Value;
-				nativeOptions.fSubset = &subset;
-			}
-			return nativeOptions;
-		}
 	}
 
 	public struct SKCodecOptions {

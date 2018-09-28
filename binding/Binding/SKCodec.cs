@@ -113,10 +113,22 @@ namespace SkiaSharp
 			if (pixels == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (pixels));
 
-			var nOptions = SKCodecOptionsInternal.FromManaged (ref options);
 			var nInfo = SKImageInfoNative.FromManaged (ref info);
 
-			return SkiaApi.sk_codec_get_pixels (Handle, ref nInfo, pixels, (IntPtr)rowBytes, ref nOptions);
+			unsafe {
+				var nOptions = new SKCodecOptionsInternal {
+					fZeroInitialized = options.ZeroInitialized,
+					fSubset = null,
+					fFrameIndex = options.FrameIndex,
+					fPriorFrame = options.PriorFrame,
+					fPremulBehavior = options.PremulBehavior,
+				};
+				if (options.HasSubset) {
+					var subset = options.Subset.Value;
+					nOptions.fSubset = &subset;
+				}
+				return SkiaApi.sk_codec_get_pixels (Handle, ref nInfo, pixels, (IntPtr)rowBytes, ref nOptions);
+			}
 		}
 
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, int, SKCodecOptions) instead.")]
@@ -176,10 +188,23 @@ namespace SkiaSharp
 			if (pixels == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (pixels));
 
-			var nOptions = SKCodecOptionsInternal.FromManaged (ref options);
 			var nInfo = SKImageInfoNative.FromManaged (ref info);
 
-			return SkiaApi.sk_codec_start_incremental_decode (Handle, ref nInfo, pixels, (IntPtr)rowBytes, ref nOptions);
+			unsafe {
+				var nOptions = new SKCodecOptionsInternal {
+					fZeroInitialized = options.ZeroInitialized,
+					fSubset = null,
+					fFrameIndex = options.FrameIndex,
+					fPriorFrame = options.PriorFrame,
+					fPremulBehavior = options.PremulBehavior,
+				};
+				if (options.HasSubset) {
+					var subset = options.Subset.Value;
+					nOptions.fSubset = &subset;
+				}
+
+				return SkiaApi.sk_codec_start_incremental_decode (Handle, ref nInfo, pixels, (IntPtr)rowBytes, ref nOptions);
+			}
 		}
 
 		public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes)
@@ -212,10 +237,23 @@ namespace SkiaSharp
 
 		public SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options)
 		{
-			var nOptions = SKCodecOptionsInternal.FromManaged (ref options);
 			var nInfo = SKImageInfoNative.FromManaged (ref info);
 
-			return SkiaApi.sk_codec_start_scanline_decode (Handle, ref nInfo, ref nOptions);
+			unsafe {
+				var nOptions = new SKCodecOptionsInternal {
+					fZeroInitialized = options.ZeroInitialized,
+					fSubset = null,
+					fFrameIndex = options.FrameIndex,
+					fPriorFrame = options.PriorFrame,
+					fPremulBehavior = options.PremulBehavior,
+				};
+				if (options.HasSubset) {
+					var subset = options.Subset.Value;
+					nOptions.fSubset = &subset;
+				}
+
+				return SkiaApi.sk_codec_start_scanline_decode (Handle, ref nInfo, ref nOptions);
+			}
 		}
 
 		public SKCodecResult StartScanlineDecode (SKImageInfo info)

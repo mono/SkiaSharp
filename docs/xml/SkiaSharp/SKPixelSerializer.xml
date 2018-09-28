@@ -1,20 +1,41 @@
 <Type Name="SKPixelSerializer" FullName="SkiaSharp.SKPixelSerializer">
-  <TypeSignature Language="C#" Value="public class SKPixelSerializer : SkiaSharp.SKObject" />
-  <TypeSignature Language="ILAsm" Value=".class public auto ansi beforefieldinit SKPixelSerializer extends SkiaSharp.SKObject" />
+  <TypeSignature Language="C#" Value="public abstract class SKPixelSerializer : IDisposable" />
+  <TypeSignature Language="ILAsm" Value=".class public auto ansi abstract beforefieldinit SKPixelSerializer extends System.Object implements class System.IDisposable" />
   <TypeSignature Language="DocId" Value="T:SkiaSharp.SKPixelSerializer" />
   <AssemblyInfo>
     <AssemblyName>SkiaSharp</AssemblyName>
     <AssemblyVersion>1.60.0.0</AssemblyVersion>
+    <AssemblyVersion>1.68.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>SkiaSharp.SKObject</BaseTypeName>
+    <BaseTypeName FrameworkAlternate="skiasharp-1.68.0">System.Object</BaseTypeName>
   </Base>
-  <Interfaces />
+  <Interfaces>
+    <Interface>
+      <InterfaceName>System.IDisposable</InterfaceName>
+    </Interface>
+  </Interfaces>
   <Docs>
     <summary>Represents a mechanism for serializing pixels.</summary>
     <remarks></remarks>
   </Docs>
   <Members>
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="protected SKPixelSerializer ();" />
+      <MemberSignature Language="ILAsm" Value=".method familyhidebysig specialname rtspecialname instance void .ctor() cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPixelSerializer.#ctor" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters />
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="Create">
       <MemberSignature Language="C#" Value="public static SkiaSharp.SKPixelSerializer Create (Func&lt;SkiaSharp.SKPixmap,SkiaSharp.SKData&gt; onEncode);" />
       <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKPixelSerializer Create(class System.Func`2&lt;class SkiaSharp.SKPixmap, class SkiaSharp.SKData&gt; onEncode) cil managed" />
@@ -23,6 +44,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPixelSerializer</ReturnType>
@@ -45,6 +67,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPixelSerializer</ReturnType>
@@ -62,13 +85,35 @@
       </Docs>
     </Member>
     <Member MemberName="Dispose">
-      <MemberSignature Language="C#" Value="protected override void Dispose (bool disposing);" />
-      <MemberSignature Language="ILAsm" Value=".method familyhidebysig virtual instance void Dispose(bool disposing) cil managed" />
+      <MemberSignature Language="C#" Value="public void Dispose ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig newslot virtual instance void Dispose() cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPixelSerializer.Dispose" />
+      <MemberType>Method</MemberType>
+      <Implements>
+        <InterfaceMember>M:System.IDisposable.Dispose</InterfaceMember>
+      </Implements>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>To be added.</summary>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Dispose">
+      <MemberSignature Language="C#" Value="protected virtual void Dispose (bool disposing);" />
+      <MemberSignature Language="ILAsm" Value=".method familyhidebysig newslot virtual instance void Dispose(bool disposing) cil managed" />
       <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPixelSerializer.Dispose(System.Boolean)" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -90,6 +135,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKData</ReturnType>
@@ -104,6 +150,52 @@
         <remarks></remarks>
       </Docs>
     </Member>
+    <Member MemberName="OnEncode">
+      <MemberSignature Language="C#" Value="protected abstract SkiaSharp.SKData OnEncode (SkiaSharp.SKPixmap pixmap);" />
+      <MemberSignature Language="ILAsm" Value=".method familyhidebysig newslot virtual instance class SkiaSharp.SKData OnEncode(class SkiaSharp.SKPixmap pixmap) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPixelSerializer.OnEncode(SkiaSharp.SKPixmap)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKData</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pixmap" Type="SkiaSharp.SKPixmap" />
+      </Parameters>
+      <Docs>
+        <param name="pixmap">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OnUseEncodedData">
+      <MemberSignature Language="C#" Value="protected abstract bool OnUseEncodedData (IntPtr data, IntPtr length);" />
+      <MemberSignature Language="ILAsm" Value=".method familyhidebysig newslot virtual instance bool OnUseEncodedData(native int data, native int length) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPixelSerializer.OnUseEncodedData(System.IntPtr,System.IntPtr)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="data" Type="System.IntPtr" />
+        <Parameter Name="length" Type="System.IntPtr" />
+      </Parameters>
+      <Docs>
+        <param name="data">To be added.</param>
+        <param name="length">To be added.</param>
+        <summary>To be added.</summary>
+        <returns>To be added.</returns>
+        <remarks>To be added.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="UseEncodedData">
       <MemberSignature Language="C#" Value="public bool UseEncodedData (IntPtr data, ulong length);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool UseEncodedData(native int data, unsigned int64 length) cil managed" />
@@ -112,6 +204,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>

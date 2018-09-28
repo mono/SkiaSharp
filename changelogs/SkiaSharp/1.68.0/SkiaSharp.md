@@ -155,6 +155,8 @@ Obsoleted properties:
 Obsoleted methods:
 
 ```diff
+ [Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixel(int, int) instead.")]
+ public SKPMColor GetIndex8Color (int x, int y);
  [Obsolete ("The Index8 color type and color table is no longer supported. Use InstallPixels(SKImageInfo, IntPtr, int) instead.")]
  public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable);
  [Obsolete ("The Index8 color type and color table is no longer supported. Use InstallPixels(SKImageInfo, IntPtr, int, SKBitmapReleaseDelegate, object) instead.")]
@@ -656,6 +658,22 @@ public bool ScalePixels (SKPixmap destination, SKFilterQuality quality);
 ```
 
 
+#### Type Changed: SkiaSharp.SKStream
+
+Added methods:
+
+```csharp
+public bool ReadBool ();
+public bool ReadBool (out bool buffer);
+public bool ReadByte (out byte buffer);
+public bool ReadInt16 (out short buffer);
+public bool ReadInt32 (out int buffer);
+public bool ReadSByte (out sbyte buffer);
+public bool ReadUInt16 (out ushort buffer);
+public bool ReadUInt32 (out uint buffer);
+```
+
+
 #### Type Changed: SkiaSharp.SKSurface
 
 Obsoleted methods:
@@ -777,7 +795,9 @@ public static SKColorType ToColorType (this GRPixelConfig config);
 
 [Obsolete]
 public static SKFilterQuality ToFilterQuality (this SKBitmapResizeMethod method);
+public static GRPixelConfig ToPixelConfig (this SKColorType colorType);
 public static uint ToSizedFormat (this GRPixelConfig config);
+public static uint ToSizedFormat (this SKColorType colorType);
 ```
 
 
@@ -801,7 +821,9 @@ public GRBackendRenderTarget (GRBackend backend, GRBackendRenderTargetDesc desc)
 	public GRBackend Backend { get; }
 	public int Height { get; }
 	public bool IsValid { get; }
+	public SKRectI Rect { get; }
 	public int SampleCount { get; }
+	public SKSizeI Size { get; }
 	public int StencilBits { get; }
 	public int Width { get; }
 	// methods
