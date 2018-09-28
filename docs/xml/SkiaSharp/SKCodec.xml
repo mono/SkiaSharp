@@ -88,11 +88,11 @@
         <Parameter Name="result" Type="SkiaSharp.SKCodecResult" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="stream">To be added.</param>
-        <param name="result">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="stream">The stream to use when creating the codec.</param>
+        <param name="result">The result of the creation operation.</param>
+        <summary>Creates a codec from the specified stream.</summary>
+        <returns>Returns the new instance of the codec, or null if there was an error.</returns>
+        <remarks>If null is returned, the stream is deleted immediately. Otherwise, the codec takes ownership of it, and will delete it when done with it.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -224,11 +224,11 @@
         <Parameter Name="frameInfo" Type="SkiaSharp.SKCodecFrameInfo" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="index">To be added.</param>
-        <param name="frameInfo">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="index">The index of the frame to retrieve.</param>
+        <param name="frameInfo">The information about the frame.</param>
+        <summary>Gets information about a specific frame in the encoded image.</summary>
+        <returns>Returns true if the frame was successfully read, otherwise false.</returns>
+        <remarks>May require reading through the stream to determine info about the frames. As such, future decoding calls may require a rewind.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetOutputScanline">
