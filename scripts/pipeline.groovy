@@ -57,18 +57,18 @@ node("ubuntu-1604-amd64") {
             failFast: true,
 
             // windows
-            win32:              createNativeBuilder("Windows",    "Windows",  "components-windows",     ""),
             uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows",     ""),
+            win32:              createNativeBuilder("Windows",    "Windows",  "components-windows",     ""),
             android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows",     ""),
             tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows",     ""),
 
             // macos
-            macos:              createNativeBuilder("macOS",      "macOS",    "components",             ""),
-            ios:                createNativeBuilder("iOS",        "macOS",    "components",             ""),
-            tvos:               createNativeBuilder("tvOS",       "macOS",    "components",             ""),
-            watchos:            createNativeBuilder("watchOS",    "macOS",    "components",             ""),
             android_macos:      createNativeBuilder("Android",    "macOS",    "components",             ""),
             tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components",             ""),
+            tvos:               createNativeBuilder("tvOS",       "macOS",    "components",             ""),
+            ios:                createNativeBuilder("iOS",        "macOS",    "components",             ""),
+            macos:              createNativeBuilder("macOS",      "macOS",    "components",             ""),
+            watchos:            createNativeBuilder("watchOS",    "macOS",    "components",             ""),
 
             // linux
             linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64",      nativeLinuxPackages),
