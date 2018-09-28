@@ -78,10 +78,10 @@
         <Parameter Name="flags" Type="SkiaSharp.SKBitmapAllocFlags" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="flags">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="info">The description of the desired image format.</param>
+        <param name="flags">The additional flags.</param>
+        <summary>Constructor that configures the bitmap based on an <see cref="T:SkiaSharp.SKImageInfo" /> specification.</summary>
+        <remarks>This constructor might throw an exception if it is not possible to create a bitmap with the specified configuration (for example, the image info requires a color table, and there is no color table).</remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -1691,13 +1691,13 @@
         <Parameter Name="releaseProc" Type="SkiaSharp.SKBitmapReleaseDelegate" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <param name="rowBytes">To be added.</param>
-        <param name="releaseProc">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information describing the pixels.</param>
+        <param name="pixels">The pixels to install.</param>
+        <param name="rowBytes">The stride of the pixels being installed.</param>
+        <param name="releaseProc">The delegate to invoke when the pixels are no longer referenced.</param>
+        <summary>Installs the specified pixels into the bitmap.</summary>
+        <returns>Returns true on success, or false on failure. If there was an error, the bitmap will be set to empty.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="InstallPixels">
@@ -1757,14 +1757,14 @@
         <Parameter Name="context" Type="System.Object" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="pixels">To be added.</param>
-        <param name="rowBytes">To be added.</param>
-        <param name="releaseProc">To be added.</param>
-        <param name="context">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information describing the pixels.</param>
+        <param name="pixels">The pixels to install.</param>
+        <param name="rowBytes">The stride of the pixels being installed.</param>
+        <param name="releaseProc">The delegate to invoke when the pixels are no longer referenced.</param>
+        <param name="context">The user data to use when invoking the delegate.</param>
+        <summary>Installs the specified pixels into the bitmap.</summary>
+        <returns>Returns true on success, or false on failure. If there was an error, the bitmap will be set to empty.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="InstallPixels">
@@ -2333,10 +2333,10 @@
         <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information describing the pixels.</param>
+        <summary>Allocates the memory for the bitmap using the specified image information.</summary>
+        <returns>Returns true if the allocation was successful, otherwise false.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="TryAllocPixels">
@@ -2356,11 +2356,11 @@
         <Parameter Name="flags" Type="SkiaSharp.SKBitmapAllocFlags" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="flags">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information describing the pixels.</param>
+        <param name="flags">The additional flags.</param>
+        <summary>Allocates the memory for the bitmap using the specified image information.</summary>
+        <returns>Returns true if the allocation was successful, otherwise false.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="TryAllocPixels">
@@ -2380,11 +2380,11 @@
         <Parameter Name="rowBytes" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="info">To be added.</param>
-        <param name="rowBytes">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="info">The image information describing the pixels.</param>
+        <param name="rowBytes">The stride of the pixels being allocated.</param>
+        <summary>Allocates the memory for the bitmap using the specified image information.</summary>
+        <returns>Returns true if the allocation was successful, otherwise false.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="UnlockPixels">
