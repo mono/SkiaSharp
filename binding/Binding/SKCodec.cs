@@ -123,8 +123,9 @@ namespace SkiaSharp
 					fPriorFrame = options.PriorFrame,
 					fPremulBehavior = options.PremulBehavior,
 				};
+				var subset = default(SKRectI);
 				if (options.HasSubset) {
-					var subset = options.Subset.Value;
+					subset = options.Subset.Value;
 					nOptions.fSubset = &subset;
 				}
 				return SkiaApi.sk_codec_get_pixels (Handle, ref nInfo, pixels, (IntPtr)rowBytes, ref nOptions);
@@ -198,8 +199,9 @@ namespace SkiaSharp
 					fPriorFrame = options.PriorFrame,
 					fPremulBehavior = options.PremulBehavior,
 				};
+				var subset = default (SKRectI);
 				if (options.HasSubset) {
-					var subset = options.Subset.Value;
+					subset = options.Subset.Value;
 					nOptions.fSubset = &subset;
 				}
 
@@ -247,8 +249,9 @@ namespace SkiaSharp
 					fPriorFrame = options.PriorFrame,
 					fPremulBehavior = options.PremulBehavior,
 				};
+				var subset = default (SKRectI);
 				if (options.HasSubset) {
-					var subset = options.Subset.Value;
+					subset = options.Subset.Value;
 					nOptions.fSubset = &subset;
 				}
 
