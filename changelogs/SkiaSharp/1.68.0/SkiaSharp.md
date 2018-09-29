@@ -756,9 +756,10 @@ Obsoleted properties:
  public SKTypefaceStyle Style { get; }
 ```
 
-Added property:
+Added properties:
 
 ```csharp
+public static SKTypeface Default { get; }
 public SKFontStyle FontStyle { get; }
 ```
 
@@ -781,6 +782,7 @@ Modified methods:
 Added methods:
 
 ```csharp
+public static SKTypeface CreateDefault ();
 public static SKTypeface FromFamilyName (string familyName);
 public static SKTypeface FromFamilyName (string familyName, SKFontStyle style);
 ```

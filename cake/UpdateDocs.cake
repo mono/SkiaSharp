@@ -35,6 +35,31 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
     }
 }
 
+Task ("docs-download-output")
+    .Does (() =>
+{
+    if (string.IsNullOrEmpty (ARTIFACTS_ROOT_URL))
+        throw new Exception ("Specify an artifacts root URL with --artifactsRootUrl=<URL>");
+
+    EnsureDirectoryExists ("./output/nugets");
+    CleanDirectories ("./output/nugets");
+
+    foreach (var id in TRACKED_NUGETS.Keys) {
+        Information ($"Downloading '{id}'...");
+
+        var version = GetVersion (id);
+        var name = $"{id}.{version}.nupkg";
+
+        CleanDirectories ($"./output/{id}");
+        DownloadFile ($"{ARTIFACTS_ROOT_URL}/nugets/{name}", $"./output/nugets/{name}");
+        Unzip ($"./output/nugets/{name}", $"./output/{id}/nuget");
+    }
+
+    CleanDirectories ($"./output/samples");
+    DownloadFile ($"{ARTIFACTS_ROOT_URL}/samples.zip", $"./output/samples.zip");
+    Unzip ($"./output/samples.zip", $"./output/samples");
+});
+
 Task ("docs-api-diff")
     .Does (async () =>
 {
