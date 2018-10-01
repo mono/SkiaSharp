@@ -169,7 +169,7 @@ The example above produces the following:
       <Docs>
         <param name="context">The graphics context.</param>
         <param name="desc">The description of the existing render target.</param>
-        <summary>Wraps a preexisting 3D API rendering target as a surface.</summary>
+        <summary>Wraps a preexisting 3D API render target as a surface.</summary>
         <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
         <remarks></remarks>
       </Docs>
@@ -284,9 +284,9 @@ The example above produces the following:
       <Docs>
         <param name="info">The image configuration parameters.</param>
         <param name="rowBytes">The number of bytes per row in the pixel buffer.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Creates a new surface from the specified image parameters.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
+        <remarks>This will create a buffer with the parameters specified in <paramref name="info&amp;nbsp;" />.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -308,9 +308,9 @@ The example above produces the following:
       <Docs>
         <param name="info">The image configuration parameters.</param>
         <param name="pixels">The pointer to an in memory-buffer that can hold the image as specified.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Creates a new surface with the specified image parameters using a provided buffer.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -359,11 +359,11 @@ The example above produces the following:
       </Parameters>
       <Docs>
         <param name="context">The graphics context.</param>
-        <param name="renderTarget">To be added.</param>
-        <param name="colorType">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="renderTarget">The description of the existing render target.</param>
+        <param name="colorType">The color type to use for the surface.</param>
+        <summary>Wraps a preexisting 3D API render target as a surface.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -396,7 +396,7 @@ The example above produces the following:
         <param name="context">The graphics context.</param>
         <param name="desc">The description of the existing render target.</param>
         <param name="props">The surface property configuration.</param>
-        <summary>Wraps a preexisting 3D API rendering target as a surface.</summary>
+        <summary>Wraps a preexisting 3D API render target as a surface.</summary>
         <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
         <remarks></remarks>
       </Docs>
@@ -420,11 +420,11 @@ The example above produces the following:
       </Parameters>
       <Docs>
         <param name="context">The graphics context.</param>
-        <param name="texture">To be added.</param>
-        <param name="colorType">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="desc">The description of the existing texture.</param>
+        <param name="colorType">The color type to use for the surface.</param>
+        <summary>Wraps a preexisting 3D API texture as a surface.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -1794,9 +1794,10 @@ The example above produces the following:
         <Parameter Name="disposing" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="disposing">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="disposing">
+          <see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+        <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.SKSurface" /> and optionally releases the managed resources.</summary>
+        <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.SKSurface" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Draw">

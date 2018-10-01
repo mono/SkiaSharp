@@ -299,7 +299,6 @@ Task ("docs-format-docs")
         var membersWithDocs = xdoc.Root
             .Elements ("Members")
             .Elements ("Member")
-            .Where (m => m.Attribute ("MemberName")?.Value != "Dispose" && m.Attribute ("MemberName")?.Value != "Finalize")
             .Elements ("Docs");
         totalMembers += membersWithDocs.Count ();
         var currentMemberCount = membersWithDocs.Count (m => m.Value?.IndexOf ("To be added.") >= 0);
