@@ -267,9 +267,24 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating which frame, if any, the destination bitmap already contains.</summary>
+        <value></value>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Only meaningful for multi-frame images.
+
+If <xref:SkiaSharp.SKCodecOptions.FrameIndex> needs to be blended with a prior
+frame (as reported by `SKCodec.FrameInfo[FrameIndex].RequiredFrame`), the
+client can set this to any non-<xref:SkiaSharp.SKCodecAnimationDisposalMethod.RestorePrevious>
+frame in the range [RequiredFrame, FrameIndex) to indicate that that frame is
+already in the destination. <xref:SkiaSharp.SKCodecOptions.ZeroInitialized> is
+ignored in this case.
+
+If set to -1, the codec will decode any necessary required frame(s) first.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Subset">
