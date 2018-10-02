@@ -94,9 +94,9 @@
         <ReturnType>SkiaSharp.SKColorSpace</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the image color space.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="ColorType">
@@ -112,9 +112,9 @@
         <ReturnType>SkiaSharp.SKColorType</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the image color type.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -287,9 +287,9 @@
         <ReturnType>SkiaSharp.SKData</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the encoded image pixels as a <see cref="T:SkiaSharp.SKData" />, if the image was created from supported encoded stream format.</summary>
+        <value></value>
+        <remarks>Returns <see langword="null" /> if the image mage contents are not encoded.</remarks>
       </Docs>
     </Member>
     <Member MemberName="FromAdoptedTexture">
@@ -373,12 +373,12 @@
         <Parameter Name="colorType" Type="SkiaSharp.SKColorType" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="texture">To be added.</param>
-        <param name="colorType">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="texture">The description of the existing backend texture.</param>
+        <param name="colorType">The color type to use for the image.</param>
+        <summary>Creates a new image from the specified texture.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified texture is unsupported.</returns>
+        <remarks>SkiaSharp will delete or recycle the texture when the image is released.</remarks>
       </Docs>
     </Member>
     <Member MemberName="FromAdoptedTexture">
@@ -467,13 +467,13 @@
         <Parameter Name="colorType" Type="SkiaSharp.SKColorType" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="texture">To be added.</param>
-        <param name="origin">To be added.</param>
-        <param name="colorType">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="texture">The description of the existing backend texture.</param>
+        <param name="origin">The origin of the texture.</param>
+        <param name="colorType">The color type to use for the image.</param>
+        <summary>Creates a new image from the specified texture.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified texture is unsupported.</returns>
+        <remarks>SkiaSharp will delete or recycle the texture when the image is released.</remarks>
       </Docs>
     </Member>
     <Member MemberName="FromAdoptedTexture">
@@ -496,14 +496,14 @@
         <Parameter Name="alpha" Type="SkiaSharp.SKAlphaType" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="texture">To be added.</param>
-        <param name="origin">To be added.</param>
-        <param name="colorType">To be added.</param>
-        <param name="alpha">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="texture">The description of the existing backend texture.</param>
+        <param name="origin">The origin of the texture.</param>
+        <param name="colorType">The color type to use for the image.</param>
+        <param name="alpha">The transparency mode to use for the image.</param>
+        <summary>Creates a new image from the specified texture.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified texture is unsupported.</returns>
+        <remarks>SkiaSharp will delete or recycle the texture when the image is released.</remarks>
       </Docs>
     </Member>
     <Member MemberName="FromAdoptedTexture">
@@ -527,15 +527,15 @@
         <Parameter Name="colorspace" Type="SkiaSharp.SKColorSpace" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="texture">To be added.</param>
-        <param name="origin">To be added.</param>
-        <param name="colorType">To be added.</param>
-        <param name="alpha">To be added.</param>
-        <param name="colorspace">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="texture">The description of the existing backend texture.</param>
+        <param name="origin">The origin of the texture.</param>
+        <param name="colorType">The color type to use for the image.</param>
+        <param name="alpha">The transparency mode to use for the image.</param>
+        <param name="colorspace">The colorspace to use for the image.</param>
+        <summary>Creates a new image from the specified texture.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified texture is unsupported.</returns>
+        <remarks>SkiaSharp will delete or recycle the texture when the image is released.</remarks>
       </Docs>
     </Member>
     <Member MemberName="FromBitmap">
@@ -700,7 +700,7 @@
       </Parameters>
       <Docs>
         <param name="picture">The picture.</param>
-        <param name="dimensions">The size of the raster surface.</param>
+        <param name="dimensions">The size of the raster image.</param>
         <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.</summary>
         <returns>An image whose contents is the picture.</returns>
         <remarks></remarks>
@@ -729,7 +729,7 @@
       </Parameters>
       <Docs>
         <param name="picture">The picture.</param>
-        <param name="dimensions">The size of the raster surface.</param>
+        <param name="dimensions">The size of the raster image.</param>
         <param name="matrix">The matrix to use when reading the image.</param>
         <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.</summary>
         <returns>An image whose contents is the picture.</returns>
@@ -759,7 +759,7 @@
       </Parameters>
       <Docs>
         <param name="picture">The picture.</param>
-        <param name="dimensions">The size of the raster surface.</param>
+        <param name="dimensions">The size of the raster image.</param>
         <param name="paint">The paint to use when reading the image.</param>
         <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.</summary>
         <returns>An image whose contents is the picture.</returns>
@@ -790,7 +790,7 @@
       </Parameters>
       <Docs>
         <param name="picture">The picture.</param>
-        <param name="dimensions">The size of the raster surface.</param>
+        <param name="dimensions">The size of the raster image.</param>
         <param name="matrix">The matrix to use when reading the image.</param>
         <param name="paint">The paint to use when reading the image.</param>
         <summary>Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.</summary>
@@ -1172,12 +1172,12 @@
         <Parameter Name="colorType" Type="SkiaSharp.SKColorType" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="texture">To be added.</param>
-        <param name="colorType">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="texture">The description of the existing backend texture.</param>
+        <param name="colorType">The color type to use for the image.</param>
+        <summary>Creates a new image from the specified texture.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified texture is unsupported</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTexture">
@@ -1266,13 +1266,13 @@
         <Parameter Name="colorType" Type="SkiaSharp.SKColorType" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="texture">To be added.</param>
-        <param name="origin">To be added.</param>
-        <param name="colorType">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="texture">The description of the existing backend texture.</param>
+        <param name="origin">The origin of the texture.</param>
+        <param name="colorType">The color type to use for the image.</param>
+        <summary>Creates a new image from the specified texture.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified texture is unsupported</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTexture">
@@ -1366,14 +1366,14 @@
         <Parameter Name="alpha" Type="SkiaSharp.SKAlphaType" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="texture">To be added.</param>
-        <param name="origin">To be added.</param>
-        <param name="colorType">To be added.</param>
-        <param name="alpha">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="texture">The description of the existing backend texture.</param>
+        <param name="origin">The origin of the texture.</param>
+        <param name="colorType">The color type to use for the image.</param>
+        <param name="alpha">The transparency mode to use for the image.</param>
+        <summary>Creates a new image from the specified texture.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified texture is unsupported</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTexture">
@@ -1472,15 +1472,15 @@
         <Parameter Name="colorspace" Type="SkiaSharp.SKColorSpace" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="texture">To be added.</param>
-        <param name="origin">To be added.</param>
-        <param name="colorType">To be added.</param>
-        <param name="alpha">To be added.</param>
-        <param name="colorspace">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="texture">The description of the existing backend texture.</param>
+        <param name="origin">The origin of the texture.</param>
+        <param name="colorType">The color type to use for the image.</param>
+        <param name="alpha">The transparency mode to use for the image.</param>
+        <param name="colorspace">The colorspace to use for the image.</param>
+        <summary>Creates a new image from the specified texture.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified texture is unsupported</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTexture">
@@ -1505,16 +1505,16 @@
         <Parameter Name="releaseProc" Type="SkiaSharp.SKImageTextureReleaseDelegate" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="texture">To be added.</param>
-        <param name="origin">To be added.</param>
-        <param name="colorType">To be added.</param>
-        <param name="alpha">To be added.</param>
-        <param name="colorspace">To be added.</param>
-        <param name="releaseProc">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="texture">The description of the existing backend texture.</param>
+        <param name="origin">The origin of the texture.</param>
+        <param name="colorType">The color type to use for the image.</param>
+        <param name="alpha">The transparency mode to use for the image.</param>
+        <param name="colorspace">The colorspace to use for the image.</param>
+        <param name="releaseProc">The delegate to invoke when the image is about to be destroyed.</param>
+        <summary>Creates a new image from the specified texture.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified texture is unsupported</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="FromTexture">
@@ -1540,17 +1540,17 @@
         <Parameter Name="releaseContext" Type="System.Object" />
       </Parameters>
       <Docs>
-        <param name="context">To be added.</param>
-        <param name="texture">To be added.</param>
-        <param name="origin">To be added.</param>
-        <param name="colorType">To be added.</param>
-        <param name="alpha">To be added.</param>
-        <param name="colorspace">To be added.</param>
-        <param name="releaseProc">To be added.</param>
-        <param name="releaseContext">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="context">The graphics context.</param>
+        <param name="texture">The description of the existing backend texture.</param>
+        <param name="origin">The origin of the texture.</param>
+        <param name="colorType">The color type to use for the image.</param>
+        <param name="alpha">The transparency mode to use for the image.</param>
+        <param name="colorspace">The colorspace to use for the image.</param>
+        <param name="releaseProc">The delegate to invoke when the image is about to be destroyed.</param>
+        <param name="releaseContext">The user data to use when invoking the delegate.</param>
+        <summary>Creates a new image from the specified texture.</summary>
+        <returns>Returns the new image, or <see langword="null" /> if the specified texture is unsupported</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Height">

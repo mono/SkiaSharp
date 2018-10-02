@@ -33,9 +33,9 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Creates a new, default font manager.</summary>
+        <returns>Returns the new font manager.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateStyleSet">
@@ -147,11 +147,11 @@
         <Parameter Name="index" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="data">To be added.</param>
-        <param name="index">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="data">The data to read the typeface from.</param>
+        <param name="index">The TTC index.</param>
+        <summary>Creates a new <see cref="T:SkiaSharp.SKTypeface" /> from the specified <see cref="T:SkiaSharp.SKData" />.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKTypeface" />, or <see langword="null" /> if the data is not recognized.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateTypeface">
@@ -171,11 +171,11 @@
         <Parameter Name="index" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="path">To be added.</param>
-        <param name="index">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="path">The path to the typeface.</param>
+        <param name="index">The TTC index.</param>
+        <summary>Creates a new <see cref="T:SkiaSharp.SKTypeface" /> from the specified file path.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKTypeface" />, or <see langword="null" /> if the file does not exist or the contents are not recognized.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateTypeface">
@@ -195,11 +195,11 @@
         <Parameter Name="index" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="stream">To be added.</param>
-        <param name="index">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="stream">The stream to read the typeface from.</param>
+        <param name="index">The TTC index.</param>
+        <summary>Creates a new <see cref="T:SkiaSharp.SKTypeface" /> from the specified stream.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKTypeface" />, or <see langword="null" /> if the stream is not recognized.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateTypeface">
@@ -219,11 +219,11 @@
         <Parameter Name="index" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="stream">To be added.</param>
-        <param name="index">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="stream">The stream to read the typeface from.</param>
+        <param name="index">The TTC index.</param>
+        <summary>Creates a new <see cref="T:SkiaSharp.SKTypeface" /> from the specified stream.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKTypeface" />, or <see langword="null" /> if the stream is not recognized.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="GetFamilyName">
@@ -410,7 +410,20 @@
         <param name="character">The character to find a typeface for.</param>
         <summary>Use the system fallback to find a typeface for the given character.</summary>
         <returns>Returns the <see cref="T:SkiaSharp.SKTypeface" /> that contains the given character, or <see langword="null" /> if none was found.</returns>
-        <remarks>Note that <paramref name="bcp47" /> is a combination of ISO 639, 15924, and 3166-1 codes, so it is fine to just pass a ISO 639 here. The first item is the least significant fallback, and the last is the most significant. If no specified codes match, any font with the requested character will be matched.</remarks>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Note that `bcp47` is a combination of ISO 639, 15924, and3166-1 codes, so it
+is fine to just pass a ISO 639 here. The first item is the least significant
+fallback, and the last is the most significant.
+
+If no specified codes match, any font with the requested character will be
+matched.
+
+This method may return `null` if no family can be found for the character
+in the system fallback.]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="MatchCharacter">
@@ -440,7 +453,20 @@
         <param name="character">The character to find a typeface for.</param>
         <summary>Use the system fallback to find a typeface for the given character.</summary>
         <returns>Returns the <see cref="T:SkiaSharp.SKTypeface" /> that contains the given character, or <see langword="null" /> if none was found.</returns>
-        <remarks>Note that <paramref name="bcp47" /> is a combination of ISO 639, 15924, and 3166-1 codes, so it is fine to just pass a ISO 639 here. The first item is the least significant fallback, and the last is the most significant. If no specified codes match, any font with the requested character will be matched.</remarks>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Note that `bcp47` is a combination of ISO 639, 15924, and3166-1 codes, so it
+is fine to just pass a ISO 639 here. The first item is the least significant
+fallback, and the last is the most significant.
+
+If no specified codes match, any font with the requested character will be
+matched.
+
+This method may return `null` if no family can be found for the character
+in the system fallback.]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="MatchCharacter">
@@ -462,13 +488,26 @@
         <Parameter Name="character" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="familyName">To be added.</param>
-        <param name="style">To be added.</param>
-        <param name="bcp47">To be added.</param>
-        <param name="character">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="familyName">The family name to use when searching.</param>
+        <param name="style">The font style to use when searching.</param>
+        <param name="bcp47">The ISO 639, 15924, and 3166-1 code to use when searching, such as "ja" and "zh".</param>
+        <param name="character">The character to find a typeface for.</param>
+        <summary>Use the system fallback to find a typeface for the given character.</summary>
+        <returns>Returns the <see cref="T:SkiaSharp.SKTypeface" /> that contains the given character, or <see langword="null" /> if none was found.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Note that `bcp47` is a combination of ISO 639, 15924, and3166-1 codes, so it
+is fine to just pass a ISO 639 here. The first item is the least significant
+fallback, and the last is the most significant.
+
+If no specified codes match, any font with the requested character will be
+matched.
+
+This method may return `null` if no family can be found for the character
+in the system fallback.]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="MatchCharacter">
@@ -504,7 +543,20 @@
         <param name="character">The character to find a typeface for.</param>
         <summary>Use the system fallback to find a typeface for the given character.</summary>
         <returns>Returns the <see cref="T:SkiaSharp.SKTypeface" /> that contains the given character, or <see langword="null" /> if none was found.</returns>
-        <remarks>Note that <paramref name="bcp47" /> is a combination of ISO 639, 15924, and 3166-1 codes, so it is fine to just pass a ISO 639 here. The first item is the least significant fallback, and the last is the most significant. If no specified codes match, any font with the requested character will be matched.</remarks>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Note that `bcp47` is a combination of ISO 639, 15924, and3166-1 codes, so it
+is fine to just pass a ISO 639 here. The first item is the least significant
+fallback, and the last is the most significant.
+
+If no specified codes match, any font with the requested character will be
+matched.
+
+This method may return `null` if no family can be found for the character
+in the system fallback.]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="MatchCharacter">
@@ -540,7 +592,20 @@
         <param name="character">The character to find a typeface for.</param>
         <summary>Use the system fallback to find a typeface for the given character.</summary>
         <returns>Returns the <see cref="T:SkiaSharp.SKTypeface" /> that contains the given character, or <see langword="null" /> if none was found.</returns>
-        <remarks>Note that <paramref name="bcp47" /> is a combination of ISO 639, 15924, and 3166-1 codes, so it is fine to just pass a ISO 639 here. The first item is the least significant fallback, and the last is the most significant. If no specified codes match, any font with the requested character will be matched.</remarks>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Note that `bcp47` is a combination of ISO 639, 15924, and3166-1 codes, so it
+is fine to just pass a ISO 639 here. The first item is the least significant
+fallback, and the last is the most significant.
+
+If no specified codes match, any font with the requested character will be
+matched.
+
+This method may return `null` if no family can be found for the character
+in the system fallback.]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="MatchCharacter">
@@ -576,7 +641,20 @@
         <param name="character">The character to find a typeface for.</param>
         <summary>Use the system fallback to find a typeface for the given character.</summary>
         <returns>Returns the <see cref="T:SkiaSharp.SKTypeface" /> that contains the given character, or <see langword="null" /> if none was found.</returns>
-        <remarks>Note that <paramref name="bcp47" /> is a combination of ISO 639, 15924, and 3166-1 codes, so it is fine to just pass a ISO 639 here. The first item is the least significant fallback, and the last is the most significant. If no specified codes match, any font with the requested character will be matched.</remarks>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Note that `bcp47` is a combination of ISO 639, 15924, and3166-1 codes, so it
+is fine to just pass a ISO 639 here. The first item is the least significant
+fallback, and the last is the most significant.
+
+If no specified codes match, any font with the requested character will be
+matched.
+
+This method may return `null` if no family can be found for the character
+in the system fallback.]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="MatchFamily">
@@ -595,10 +673,10 @@
         <Parameter Name="familyName" Type="System.String" />
       </Parameters>
       <Docs>
-        <param name="familyName">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="familyName">The family name to use when searching.</param>
+        <summary>Use the system fallback to find the typeface styles for the given family.</summary>
+        <returns>Returns a <see cref="T:SkiaSharp.SKFontStyleSet" /> with all the font styles supported by the specified family.</returns>
+        <remarks>Never returns <see langword="null" /> and will return an empty set if the family is not found.</remarks>
       </Docs>
     </Member>
     <Member MemberName="MatchFamily">
@@ -618,11 +696,11 @@
         <Parameter Name="style" Type="SkiaSharp.SKFontStyle" />
       </Parameters>
       <Docs>
-        <param name="familyName">To be added.</param>
-        <param name="style">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="familyName">The family name to use when searching.</param>
+        <param name="style">The font style to use when searching.</param>
+        <summary>Find the closest matching typeface to the specified family name and style.</summary>
+        <returns>Returns the <see cref="T:SkiaSharp.SKTypeface" /> that contains the given family name and style, or the default font if no matching font was found.</returns>
+        <remarks>Will never return <see langword="null" />, as it will return the default font if no matching font is found.</remarks>
       </Docs>
     </Member>
     <Member MemberName="MatchTypeface">
@@ -642,11 +720,11 @@
         <Parameter Name="style" Type="SkiaSharp.SKFontStyle" />
       </Parameters>
       <Docs>
-        <param name="face">To be added.</param>
-        <param name="style">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="face">The typeface to use when searching.</param>
+        <param name="style">The font style to use when searching.</param>
+        <summary>Find the closest matching typeface to the specified typeface and style.</summary>
+        <returns>Returns the <see cref="T:SkiaSharp.SKTypeface" /> that contains the given typeface and style, or the default font if no matching font was found.</returns>
+        <remarks>Will never return <see langword="null" />, as it will return the default font if no matching font is found.</remarks>
       </Docs>
     </Member>
   </Members>
