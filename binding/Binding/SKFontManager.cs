@@ -60,7 +60,6 @@ namespace SkiaSharp
 			return GetObject<SKTypeface> (SkiaApi.sk_fontmgr_match_family_style (Handle, familyName, style.Handle));
 		}
 
-		[Obsolete]
 		public SKTypeface MatchTypeface (SKTypeface face, SKFontStyle style)
 		{
 			if (face == null)
@@ -71,7 +70,7 @@ namespace SkiaSharp
 			return GetObject<SKTypeface> (SkiaApi.sk_fontmgr_match_face_style (Handle, face.Handle, style.Handle));
 		}
 
-		public SKTypeface FromFile (string path, int index = 0)
+		public SKTypeface CreateTypeface (string path, int index = 0)
 		{
 			if (path == null)
 				throw new ArgumentNullException (nameof (path));
@@ -80,12 +79,12 @@ namespace SkiaSharp
 				if (stream == null) {
 					return null;
 				} else {
-					return FromStream (stream, index);
+					return CreateTypeface (stream, index);
 				}
 			}
 		}
 
-		public SKTypeface FromStream (Stream stream, int index = 0)
+		public SKTypeface CreateTypeface (Stream stream, int index = 0)
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
@@ -103,10 +102,10 @@ namespace SkiaSharp
 				fontStream = null;
 			}
 
-			return FromStream (new SKManagedStream (stream, true), index);
+			return CreateTypeface (new SKManagedStream (stream, true), index);
 		}
 
-		public SKTypeface FromStream (SKStreamAsset stream, int index = 0)
+		public SKTypeface CreateTypeface (SKStreamAsset stream, int index = 0)
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
@@ -116,7 +115,7 @@ namespace SkiaSharp
 			return typeface;
 		}
 
-		public SKTypeface FromData (SKData data, int index = 0)
+		public SKTypeface CreateTypeface (SKData data, int index = 0)
 		{
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
