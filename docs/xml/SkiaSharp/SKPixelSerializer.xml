@@ -32,8 +32,8 @@
       </AssemblyInfo>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Creates a new instance of <see cref="T:SkiaSharp.SKPixelSerializer" /> with an empty buffer.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Create">
@@ -167,10 +167,10 @@
         <Parameter Name="pixmap" Type="SkiaSharp.SKPixmap" />
       </Parameters>
       <Docs>
-        <param name="pixmap">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="pixmap">The pixel data to encode.</param>
+        <summary>Implemented by derived <see cref="T:SkiaSharp.SKPixelSerializer" /> types to encode the specified pixel data.</summary>
+        <returns>Returns the encoded pixel data, or <see langword="null" /> if the raw pixels should be used.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="OnUseEncodedData">
@@ -190,11 +190,20 @@
         <Parameter Name="length" Type="System.IntPtr" />
       </Parameters>
       <Docs>
-        <param name="data">To be added.</param>
-        <param name="length">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="data">The encoded data buffer.</param>
+        <param name="length">The length of the encoded data buffer.</param>
+        <summary>Implemented by derived <see cref="T:SkiaSharp.SKPixelSerializer" /> types to determine whether the caller should use the specified encoded data instead of encoding a new version.</summary>
+        <returns>Returns <see langword="true" /> if the specified encoded data should be used, otherwise <see langword="false" /> to serialize another version.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+If this method returns `true`, then
+<xref:SkiaSharp.SKPixelSerializer.Encode%2A> should not be called to encode
+the source data.
+]]></format>
+        </remarks>
+      </Docs>
       </Docs>
     </Member>
     <Member MemberName="UseEncodedData">
