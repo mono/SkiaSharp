@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace SkiaSharp
 {
@@ -24,6 +26,15 @@ namespace SkiaSharp
 
 		public int FontFamilyCount => SkiaApi.sk_fontmgr_count_families (Handle);
 
+		public IEnumerable<string> FontFamilies {
+			get {
+				var count = FontFamilyCount;
+				for (var i = 0; i < count; i++) {
+					yield return GetFamilyName (i);
+				}
+			}
+		}
+
 		public string GetFamilyName (int index)
 		{
 			using (var str = new SKString ()) {
@@ -32,22 +43,14 @@ namespace SkiaSharp
 			}
 		}
 
-		public string[] GetFontFamilies ()
-		{
-			var count = FontFamilyCount;
-			var families = new string[count];
-			for (int i = 0; i < count; i++) {
-				families[i] = GetFamilyName (i);
-			}
-			return families;
-		}
+		public string[] GetFontFamilies () => FontFamilies.ToArray ();
 
-		public SKFontStyleSet CreateStyleSet (int index)
+		public SKFontStyleSet GetFontStyles (int index)
 		{
 			return GetObject<SKFontStyleSet> (SkiaApi.sk_fontmgr_create_styleset (Handle, index));
 		}
 
-		public SKFontStyleSet MatchFamily (string familyName)
+		public SKFontStyleSet GetFontStyles (string familyName)
 		{
 			return GetObject<SKFontStyleSet> (SkiaApi.sk_fontmgr_match_family (Handle, familyName));
 		}

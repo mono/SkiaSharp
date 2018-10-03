@@ -365,13 +365,13 @@ Added methods:
 
 ```csharp
 public static SKFontManager CreateDefault ();
-public SKFontStyleSet CreateStyleSet (int index);
 public SKTypeface CreateTypeface (SKData data, int index);
 public SKTypeface CreateTypeface (string path, int index);
 public SKTypeface CreateTypeface (SKStreamAsset stream, int index);
 public SKTypeface CreateTypeface (System.IO.Stream stream, int index);
+public SKFontStyleSet GetFontStyles (int index);
+public SKFontStyleSet GetFontStyles (string familyName);
 public SKTypeface MatchCharacter (string familyName, SKFontStyle style, string[] bcp47, int character);
-public SKFontStyleSet MatchFamily (string familyName);
 public SKTypeface MatchFamily (string familyName, SKFontStyle style);
 public SKTypeface MatchTypeface (SKTypeface face, SKFontStyle style);
 ```

@@ -9,7 +9,7 @@ namespace SkiaSharp.Tests
 		{
 			var set = new SKFontStyleSet();
 
-			Assert.Equal(0, set.Count);
+			Assert.Empty(set);
 		}
 
 		[SkippableFact]
@@ -17,10 +17,10 @@ namespace SkiaSharp.Tests
 		{
 			var fonts = SKFontManager.Default;
 
-			var set = fonts.MatchFamily("Missing Font");
+			var set = fonts.GetFontStyles("Missing Font");
 			Assert.NotNull(set);
 
-			Assert.Equal(0, set.Count);
+			Assert.Empty(set);
 		}
 
 		[SkippableFact]
@@ -28,7 +28,7 @@ namespace SkiaSharp.Tests
 		{
 			var fonts = SKFontManager.Default;
 
-			var set = fonts.MatchFamily(DefaultFontFamily);
+			var set = fonts.GetFontStyles(DefaultFontFamily);
 			Assert.NotNull(set);
 
 			Assert.True(set.Count > 0);
@@ -38,14 +38,12 @@ namespace SkiaSharp.Tests
 		public void TestCanGetStyles()
 		{
 			var fonts = SKFontManager.Default;
-			var set = fonts.MatchFamily(DefaultFontFamily);
+			var set = fonts.GetFontStyles(DefaultFontFamily);
 
 			for (var i = 0; i < set.Count; i++)
 			{
-				set.GetStyle(i, out var style, out var name);
-
-				Assert.NotNull(style);
-				Assert.NotNull(name);
+				Assert.NotNull(set[i]);
+				Assert.NotNull(set.GetStyleName(i));
 			}
 		}
 
@@ -53,13 +51,12 @@ namespace SkiaSharp.Tests
 		public void TestCanCreateBoldFromIndex()
 		{
 			var fonts = SKFontManager.Default;
-			var set = fonts.MatchFamily(DefaultFontFamily);
+			var set = fonts.GetFontStyles(DefaultFontFamily);
 
 			int idx;
 			for (idx = 0; idx < set.Count; idx++)
 			{
-				set.GetStyle(idx, out var style, out var name);
-				if (style.Weight == (int)SKFontStyleWeight.Bold)
+				if (set[idx].Weight == (int)SKFontStyleWeight.Bold)
 				{
 					// flip the sign so we can confirm that we found it
 					idx *= -1;
@@ -81,12 +78,27 @@ namespace SkiaSharp.Tests
 		public void TestCanCreateBold()
 		{
 			var fonts = SKFontManager.Default;
-			var set = fonts.MatchFamily(DefaultFontFamily);
+			var set = fonts.GetFontStyles(DefaultFontFamily);
 
 			var typeface = set.CreateTypeface(SKFontStyle.Bold);
 
 			Assert.NotNull(typeface);
 			Assert.Equal((int)SKFontStyleWeight.Bold, typeface.FontStyle.Weight);
+		}
+
+		[SkippableFact]
+		public void TestCanIterate()
+		{
+			var fonts = SKFontManager.Default;
+			var set = fonts.GetFontStyles(DefaultFontFamily);
+
+			var count = 0;
+			foreach (var style in set)
+			{
+				count++;
+			}
+
+			Assert.Equal(set.Count, count);
 		}
 	}
 }
