@@ -16,8 +16,9 @@
       <format type="text/markdown"><![CDATA[
 ## Remarks
 
-The client is responsible for ensuring that the underlying 3D API object lives 
-at least as long as the GRBackendRenderTarget object wrapping it.
+The client is responsible for ensuring that the underlying 3D API object lives
+at least as long as the <xref:SkiaSharp.GRBackendRenderTarget> object wrapping
+it.
 
 We require the client to explicitly provide information about the target, such
 as width, height, and pixel configuration, rather than querying the 3D API for
@@ -133,7 +134,7 @@ doesn't require this (eg: OpenGL).
       <Parameters />
       <Docs>
         <summary>Returns the framebuffer info that this object wraps.</summary>
-        <returns>Returns the framebuffer info, if this object wraps an OpenGL texture, otherwise an empty info instance.</returns>
+        <returns>Returns the framebuffer info, if this object wraps an OpenGL framebuffer, otherwise an empty info instance.</returns>
         <remarks></remarks>
       </Docs>
     </Member>
@@ -153,9 +154,9 @@ doesn't require this (eg: OpenGL).
         <Parameter Name="glInfo" Type="SkiaSharp.GRGlFramebufferInfo" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="glInfo">The framebuffer info, if this object wraps an OpenGL texture.</param>
+        <param name="glInfo">The framebuffer info, if this object wraps an OpenGL framebuffer.</param>
         <summary>Returns the framebuffer info that this object wraps.</summary>
-        <returns>Returns true if this object wraps an OpenGL texture, otherwise false.</returns>
+        <returns>Returns true if this object wraps an OpenGL framebuffer, otherwise false.</returns>
         <remarks></remarks>
       </Docs>
     </Member>
@@ -190,7 +191,7 @@ doesn't require this (eg: OpenGL).
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>Gets a value indicating whether or not the GRBackendRenderTarget was initialized.</summary>
+        <summary>Gets a value indicating whether or not the <see cref="T:SkiaSharp.GRBackendRenderTarget" /> was initialized.</summary>
         <value></value>
         <remarks></remarks>
       </Docs>

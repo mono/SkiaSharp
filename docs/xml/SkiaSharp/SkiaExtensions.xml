@@ -139,10 +139,10 @@
         <Parameter Name="config" Type="SkiaSharp.GRPixelConfig" RefType="this" />
       </Parameters>
       <Docs>
-        <param name="config">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="config">The <see cref="T:SkiaSharp.GRPixelConfig" /> to convert.</param>
+        <summary>Converts a <see cref="T:SkiaSharp.GRPixelConfig" /> to an equivalent <see cref="T:SkiaSharp.SKColorType" />, if possible.</summary>
+        <returns>Returns the equivalent <see cref="T:SkiaSharp.SKColorType" />, or <see cref="F:SkiaSharp.SKColorType.Unknown" /> if there is none.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="ToFilterQuality">
@@ -166,10 +166,54 @@
         <Parameter Name="method" Type="SkiaSharp.SKBitmapResizeMethod" RefType="this" />
       </Parameters>
       <Docs>
-        <param name="method">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="method">The <see cref="T:SkiaSharp.SKBitmapResizeMethod" /> to convert.</param>
+        <summary>Converts a <see cref="T:SkiaSharp.SKBitmapResizeMethod" /> to an equivalent <see cref="T:SkiaSharp.SKFilterQuality" />.</summary>
+        <returns>Returns the equivalent <see cref="T:SkiaSharp.SKFilterQuality" />.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ToGlSizedFormat">
+      <MemberSignature Language="C#" Value="public static uint ToGlSizedFormat (this SkiaSharp.GRPixelConfig config);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig unsigned int32 ToGlSizedFormat(valuetype SkiaSharp.GRPixelConfig config) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SkiaExtensions.ToGlSizedFormat(SkiaSharp.GRPixelConfig)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.UInt32</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="config" Type="SkiaSharp.GRPixelConfig" RefType="this" />
+      </Parameters>
+      <Docs>
+        <param name="config">The <see cref="T:SkiaSharp.GRPixelConfig" /> to convert.</param>
+        <summary>Converts a <see cref="T:SkiaSharp.GRPixelConfig" /> to the equivalent OpenGL sized format, if possible.</summary>
+        <returns>Returns the equivalent OpenGL sized format, or 0 if there is none.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ToGlSizedFormat">
+      <MemberSignature Language="C#" Value="public static uint ToGlSizedFormat (this SkiaSharp.SKColorType colorType);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig unsigned int32 ToGlSizedFormat(valuetype SkiaSharp.SKColorType colorType) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SkiaExtensions.ToGlSizedFormat(SkiaSharp.SKColorType)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.UInt32</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="colorType" Type="SkiaSharp.SKColorType" RefType="this" />
+      </Parameters>
+      <Docs>
+        <param name="colorType">The <see cref="T:SkiaSharp.SKColorType" /> to convert.</param>
+        <summary>Converts a <see cref="T:SkiaSharp.SKColorType" /> to the equivalent OpenGL sized format, if possible.</summary>
+        <returns>Returns the equivalent OpenGL sized format, or 0 if there is none.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="ToPixelConfig">
@@ -188,54 +232,10 @@
         <Parameter Name="colorType" Type="SkiaSharp.SKColorType" RefType="this" />
       </Parameters>
       <Docs>
-        <param name="colorType">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ToSizedFormat">
-      <MemberSignature Language="C#" Value="public static uint ToSizedFormat (this SkiaSharp.GRPixelConfig config);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig unsigned int32 ToSizedFormat(valuetype SkiaSharp.GRPixelConfig config) cil managed" />
-      <MemberSignature Language="DocId" Value="M:SkiaSharp.SkiaExtensions.ToSizedFormat(SkiaSharp.GRPixelConfig)" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyName>SkiaSharp</AssemblyName>
-        <AssemblyVersion>1.68.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.UInt32</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="config" Type="SkiaSharp.GRPixelConfig" RefType="this" />
-      </Parameters>
-      <Docs>
-        <param name="config">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
-      </Docs>
-    </Member>
-    <Member MemberName="ToSizedFormat">
-      <MemberSignature Language="C#" Value="public static uint ToSizedFormat (this SkiaSharp.SKColorType colorType);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig unsigned int32 ToSizedFormat(valuetype SkiaSharp.SKColorType colorType) cil managed" />
-      <MemberSignature Language="DocId" Value="M:SkiaSharp.SkiaExtensions.ToSizedFormat(SkiaSharp.SKColorType)" />
-      <MemberType>Method</MemberType>
-      <AssemblyInfo>
-        <AssemblyName>SkiaSharp</AssemblyName>
-        <AssemblyVersion>1.68.0.0</AssemblyVersion>
-      </AssemblyInfo>
-      <ReturnValue>
-        <ReturnType>System.UInt32</ReturnType>
-      </ReturnValue>
-      <Parameters>
-        <Parameter Name="colorType" Type="SkiaSharp.SKColorType" RefType="this" />
-      </Parameters>
-      <Docs>
-        <param name="colorType">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="colorType">The <see cref="T:SkiaSharp.SKColorType" /> to convert.</param>
+        <summary>Converts a <see cref="T:SkiaSharp.SKColorType" /> to an equivalent <see cref="T:SkiaSharp.GRPixelConfig" />, if possible.</summary>
+        <returns>Returns the equivalent <see cref="T:SkiaSharp.GRPixelConfig" />, or <see cref="F:SkiaSharp.GRPixelConfig.Unknown" /> if there is none.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
   </Members>

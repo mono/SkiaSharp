@@ -361,14 +361,20 @@ public static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata meta
 
 #### Type Changed: SkiaSharp.SKFontManager
 
+Added property:
+
+```csharp
+public System.Collections.Generic.IEnumerable<string> FontFamilies { get; }
+```
+
 Added methods:
 
 ```csharp
 public static SKFontManager CreateDefault ();
 public SKTypeface CreateTypeface (SKData data, int index);
-public SKTypeface CreateTypeface (string path, int index);
 public SKTypeface CreateTypeface (SKStreamAsset stream, int index);
 public SKTypeface CreateTypeface (System.IO.Stream stream, int index);
+public SKTypeface CreateTypeface (string path, int index);
 public SKFontStyleSet GetFontStyles (int index);
 public SKFontStyleSet GetFontStyles (string familyName);
 public SKTypeface MatchCharacter (string familyName, SKFontStyle style, string[] bcp47, int character);
@@ -795,9 +801,9 @@ public static SKColorType ToColorType (this GRPixelConfig config);
 
 [Obsolete]
 public static SKFilterQuality ToFilterQuality (this SKBitmapResizeMethod method);
+public static uint ToGlSizedFormat (this GRPixelConfig config);
+public static uint ToGlSizedFormat (this SKColorType colorType);
 public static GRPixelConfig ToPixelConfig (this SKColorType colorType);
-public static uint ToSizedFormat (this GRPixelConfig config);
-public static uint ToSizedFormat (this SKColorType colorType);
 ```
 
 
@@ -923,16 +929,18 @@ public class SKFontStyle : SkiaSharp.SKObject, System.IDisposable {
 #### New Type: SkiaSharp.SKFontStyleSet
 
 ```csharp
-public class SKFontStyleSet : SkiaSharp.SKObject, System.IDisposable {
+public class SKFontStyleSet : SkiaSharp.SKObject, System.Collections.Generic.IEnumerable<SKFontStyle>, System.Collections.Generic.IReadOnlyCollection<SKFontStyle>, System.Collections.Generic.IReadOnlyList<SKFontStyle>, System.Collections.IEnumerable, System.IDisposable {
 	// constructors
 	public SKFontStyleSet ();
 	// properties
-	public int Count { get; }
+	public virtual int Count { get; }
+	public virtual SKFontStyle Item { get; }
 	// methods
 	public SKTypeface CreateTypeface (SKFontStyle style);
 	public SKTypeface CreateTypeface (int index);
 	protected override void Dispose (bool disposing);
-	public void GetStyle (int index, out SKFontStyle fontStyle, out string styleName);
+	public virtual System.Collections.Generic.IEnumerator<SKFontStyle> GetEnumerator ();
+	public string GetStyleName (int index);
 }
 ```
 

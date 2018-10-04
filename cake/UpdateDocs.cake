@@ -234,6 +234,8 @@ Task ("docs-format-docs")
     float totalTypes = 0;
     float totalMembers = 0;
     foreach (var file in docFiles) {
+        Debug("Processing {0}...", file.FullPath);
+
         var xdoc = XDocument.Load (file.FullPath);
 
         // remove IComponent docs as this is just designer

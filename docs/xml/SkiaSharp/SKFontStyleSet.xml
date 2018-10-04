@@ -1,6 +1,6 @@
 <Type Name="SKFontStyleSet" FullName="SkiaSharp.SKFontStyleSet">
-  <TypeSignature Language="C#" Value="public class SKFontStyleSet : SkiaSharp.SKObject" />
-  <TypeSignature Language="ILAsm" Value=".class public auto ansi beforefieldinit SKFontStyleSet extends SkiaSharp.SKObject" />
+  <TypeSignature Language="C#" Value="public class SKFontStyleSet : SkiaSharp.SKObject, System.Collections.Generic.IEnumerable&lt;SkiaSharp.SKFontStyle&gt;, System.Collections.Generic.IReadOnlyCollection&lt;SkiaSharp.SKFontStyle&gt;, System.Collections.Generic.IReadOnlyList&lt;SkiaSharp.SKFontStyle&gt;" />
+  <TypeSignature Language="ILAsm" Value=".class public auto ansi beforefieldinit SKFontStyleSet extends SkiaSharp.SKObject implements class System.Collections.Generic.IEnumerable`1&lt;class SkiaSharp.SKFontStyle&gt;, class System.Collections.Generic.IReadOnlyCollection`1&lt;class SkiaSharp.SKFontStyle&gt;, class System.Collections.Generic.IReadOnlyList`1&lt;class SkiaSharp.SKFontStyle&gt;, class System.Collections.IEnumerable" />
   <TypeSignature Language="DocId" Value="T:SkiaSharp.SKFontStyleSet" />
   <AssemblyInfo>
     <AssemblyName>SkiaSharp</AssemblyName>
@@ -9,7 +9,17 @@
   <Base>
     <BaseTypeName>SkiaSharp.SKObject</BaseTypeName>
   </Base>
-  <Interfaces />
+  <Interfaces>
+    <Interface>
+      <InterfaceName>System.Collections.Generic.IEnumerable&lt;SkiaSharp.SKFontStyle&gt;</InterfaceName>
+    </Interface>
+    <Interface>
+      <InterfaceName>System.Collections.Generic.IReadOnlyCollection&lt;SkiaSharp.SKFontStyle&gt;</InterfaceName>
+    </Interface>
+    <Interface>
+      <InterfaceName>System.Collections.Generic.IReadOnlyList&lt;SkiaSharp.SKFontStyle&gt;</InterfaceName>
+    </Interface>
+  </Interfaces>
   <Docs>
     <summary>Represets the set of styles for a particular font family.</summary>
     <remarks></remarks>
@@ -35,6 +45,9 @@
       <MemberSignature Language="ILAsm" Value=".property instance int32 Count" />
       <MemberSignature Language="DocId" Value="P:SkiaSharp.SKFontStyleSet.Count" />
       <MemberType>Property</MemberType>
+      <Implements>
+        <InterfaceMember>P:System.Collections.Generic.IReadOnlyCollection`1.Count</InterfaceMember>
+      </Implements>
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.68.0.0</AssemblyVersion>
@@ -64,10 +77,10 @@
         <Parameter Name="style" Type="SkiaSharp.SKFontStyle" />
       </Parameters>
       <Docs>
-        <param name="style">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="style">The font style to match.</param>
+        <summary>Creates a new <see cref="T:SkiaSharp.SKTypeface" /> with a style that is the closest match to the specified font style.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKTypeface" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateTypeface">
@@ -86,10 +99,10 @@
         <Parameter Name="index" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="index">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="index">The index of the font style to match.</param>
+        <summary>Creates a new <see cref="T:SkiaSharp.SKTypeface" /> with the style that is the closest match to the style at the specified index.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKTypeface" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -114,29 +127,95 @@
         <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.SKFontStyleSet" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
       </Docs>
     </Member>
-    <Member MemberName="GetStyle">
-      <MemberSignature Language="C#" Value="public void GetStyle (int index, out SkiaSharp.SKFontStyle fontStyle, out string styleName);" />
-      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void GetStyle(int32 index, [out] class SkiaSharp.SKFontStyle&amp; fontStyle, [out] string&amp; styleName) cil managed" />
-      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKFontStyleSet.GetStyle(System.Int32,SkiaSharp.SKFontStyle@,System.String@)" />
+    <Member MemberName="GetEnumerator">
+      <MemberSignature Language="C#" Value="public System.Collections.Generic.IEnumerator&lt;SkiaSharp.SKFontStyle&gt; GetEnumerator ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig newslot virtual instance class System.Collections.Generic.IEnumerator`1&lt;class SkiaSharp.SKFontStyle&gt; GetEnumerator() cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKFontStyleSet.GetEnumerator" />
+      <MemberType>Method</MemberType>
+      <Implements>
+        <InterfaceMember>M:System.Collections.Generic.IEnumerable`1.GetEnumerator</InterfaceMember>
+      </Implements>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Collections.Generic.IEnumerator&lt;SkiaSharp.SKFontStyle&gt;</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Returns an enumerator that iterates through the font styles.</summary>
+        <returns>Returns an enumerator.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetStyleName">
+      <MemberSignature Language="C#" Value="public string GetStyleName (int index);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance string GetStyleName(int32 index) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKFontStyleSet.GetStyleName(System.Int32)" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
-        <ReturnType>System.Void</ReturnType>
+        <ReturnType>System.String</ReturnType>
       </ReturnValue>
       <Parameters>
         <Parameter Name="index" Type="System.Int32" />
-        <Parameter Name="fontStyle" Type="SkiaSharp.SKFontStyle" RefType="out" />
-        <Parameter Name="styleName" Type="System.String" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="index">To be added.</param>
-        <param name="fontStyle">To be added.</param>
-        <param name="styleName">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="index">The index of the font style.</param>
+        <summary>Returns the name of the font style.</summary>
+        <returns>Returns the name of the font style.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Item">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKFontStyle this[int index] { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance class SkiaSharp.SKFontStyle Item(int32)" />
+      <MemberSignature Language="DocId" Value="P:SkiaSharp.SKFontStyleSet.Item(System.Int32)" />
+      <MemberType>Property</MemberType>
+      <Implements>
+        <InterfaceMember>P:System.Collections.Generic.IReadOnlyList`1.Item(System.Int32)</InterfaceMember>
+      </Implements>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKFontStyle</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="index" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="index">The index of the font style.</param>
+        <summary>Gets the font style at the specified index.</summary>
+        <value></value>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="System.Collections.IEnumerable.GetEnumerator">
+      <MemberSignature Language="C#" Value="System.Collections.IEnumerator IEnumerable.GetEnumerator ();" />
+      <MemberSignature Language="ILAsm" Value=".method hidebysig newslot virtual instance class System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKFontStyleSet.System#Collections#IEnumerable#GetEnumerator" />
+      <MemberType>Method</MemberType>
+      <Implements>
+        <InterfaceMember>M:System.Collections.IEnumerable.GetEnumerator</InterfaceMember>
+      </Implements>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Collections.IEnumerator</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Returns an enumerator that iterates through the font styles.</summary>
+        <returns>Returns an enumerator.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
   </Members>
