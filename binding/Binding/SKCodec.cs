@@ -5,7 +5,6 @@ namespace SkiaSharp
 {
 	// TODO: `Create(...)` should have overloads that accept a SKPngChunkReader
 	// TODO: missing the `QueryYuv8` and `GetYuv8Planes` members
-	// TODO: might be useful to wrap `GetFrameInfo` (single result)
 
 	public class SKCodec : SKObject
 	{
@@ -36,7 +35,10 @@ namespace SkiaSharp
 			}
 		}
 
-		public SKEncodedOrigin Origin {
+		[Obsolete ("Use EncodedOrigin instead.")]
+		public SKCodecOrigin Origin => (SKCodecOrigin)EncodedOrigin;
+
+		public SKEncodedOrigin EncodedOrigin {
 			get { return SkiaApi.sk_codec_get_origin (Handle); }
 		}
 
