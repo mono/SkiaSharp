@@ -18,7 +18,7 @@ namespace SkiaSharp
 				case GRBackend.Metal:
 					throw new NotSupportedException ();
 				case GRBackend.OpenGL:
-					var glInfo = new GRGlFramebufferInfo ((uint)desc.RenderTargetHandle, desc.Config.ToSizedFormat ());
+					var glInfo = new GRGlFramebufferInfo ((uint)desc.RenderTargetHandle, desc.Config.ToGlSizedFormat ());
 					CreateGl (desc.Width, desc.Height, desc.SampleCount, desc.StencilBits, glInfo);
 					break;
 				case GRBackend.Vulkan:

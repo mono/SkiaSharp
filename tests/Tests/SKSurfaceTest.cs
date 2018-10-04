@@ -187,7 +187,7 @@ namespace SkiaSharp.Tests
 			var newInfo = texture.GetGlTextureInfo();
 			Assert.Equal(oldInfo.Id, newInfo.Id);
 			Assert.Equal(oldInfo.Target, newInfo.Target);
-			Assert.Equal(GRPixelConfig.Rgba8888.ToSizedFormat(), newInfo.Format);
+			Assert.Equal(GRPixelConfig.Rgba8888.ToGlSizedFormat(), newInfo.Format);
 		}
 
 		[Obsolete]
@@ -229,7 +229,7 @@ namespace SkiaSharp.Tests
 			var newInfo = texture.GetGlTextureInfo();
 			Assert.Equal(oldInfo.Id, newInfo.Id);
 			Assert.Equal(oldInfo.Target, newInfo.Target);
-			Assert.Equal(GRPixelConfig.Rgba8888.ToSizedFormat(), newInfo.Format);
+			Assert.Equal(GRPixelConfig.Rgba8888.ToGlSizedFormat(), newInfo.Format);
 		}
 
 		[Trait(Category, GpuCategory)]
