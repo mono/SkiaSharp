@@ -116,10 +116,29 @@
         <param name="renderTarget">The render target that is currently being drawn.</param>
         <summary>Implement this to draw on the canvas.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.iOS.SKGLLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTargetDesc)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.iOS.SKGLLayer.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
-          <para></para>
-          <example>
-            <code lang="C#"><![CDATA[public override void DrawInSurface (SKSurface surface, SKBackendRenderTargetDesc renderTarget)
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+There are two ways to draw on this surface: by overriding the
+<xref:SkiaSharp.Views.iOS.SKGLLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTargetDesc)>
+method, or by attaching a handler to the
+<xref:SkiaSharp.Views.iOS.SKGLLayer.PaintSurface>
+event.
+
+> [!IMPORTANT]
+> If this method is overridden, then the base must be called, otherwise the
+> event may not be fired.
+
+> [!NOTE]
+> If SkiaSharp version v1.68.x or greater is being used, then the
+> <xref:SkiaSharp.Views.iOS.SKGLLayer.OnPaintSurface(SkiaSharp.Views.iOS.SKPaintGLSurfaceEventArgs)>
+> method should be overridden instead of
+> <xref:SkiaSharp.Views.iOS.SKGLLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTargetDesc))>.
+
+## Examples
+
+```csharp
+public override void DrawInSurface (SKSurface surface, SKBackendRenderTargetDesc renderTarget)
 {
     // call the base method
     base.DrawInSurface (surface, renderTarget);
@@ -130,10 +149,11 @@
     var canvas = surface.Canvas;
 
     // draw on the canvas
+
     canvas.Flush ();
-}]]></code>
-          </example>
-          <para></para>
+}
+```
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -195,9 +215,49 @@
         <Parameter Name="e" Type="SkiaSharp.Views.iOS.SKPaintGLSurfaceEventArgs" />
       </Parameters>
       <Docs>
-        <param name="e">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="e">The event arguments that contain the drawing surface and information.</param>
+        <summary>Implement this to draw on the canvas.</summary>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+There are two ways to draw on this surface: by overriding the
+<xref:SkiaSharp.Views.iOS.SKGLLayer.OnPaintSurface(SkiaSharp.Views.iOS.SKPaintGLSurfaceEventArgs)>
+method, or by attaching a handler to the
+<xref:SkiaSharp.Views.iOS.SKGLLayer.PaintSurface>
+event.
+
+> [!IMPORTANT]
+> If this method is overridden, then the base must be called, otherwise the
+> event will not be fired.
+
+> [!NOTE]
+> If a version of SkiaSharp prior to version v1.68.x is being used, then the
+> <xref:SkiaSharp.Views.iOS.SKGLLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTargetDesc)>
+> method should be overridden instead of
+> <xref:SkiaSharp.Views.iOS.SKGLLayer.OnPaintSurface(SkiaSharp.Views.iOS.SKPaintGLSurfaceEventArgs)>.
+
+## Examples
+
+```csharp
+protected override void OnPaintSurface (SKPaintGLSurfaceEventArgs e)
+{
+    // call the base method
+    base.OnPaintSurface (e);
+
+    var surface = e.Surface;
+    var surfaceWidth = e.BackendRenderTarget.Width;
+    var surfaceHeight = e.BackendRenderTarget.Height;
+
+    var canvas = surface.Canvas;
+
+    // draw on the canvas
+
+    canvas.Flush ();
+}
+```
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="PaintSurface">
@@ -219,22 +279,37 @@
       <Docs>
         <summary>Occurs when the the canvas needs to be redrawn.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.iOS.SKGLLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTargetDesc)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.iOS.SKGLLayer.PaintSurface" /> event.</para>
-          <para></para>
-          <example>
-            <code lang="C#"><![CDATA[SKGLLayer myLayer = ...;
+          <format type="text/markdown"><![CDATA[
+## Remarks
 
+There are two ways to draw on this surface: by overriding the
+<xref:SkiaSharp.Views.iOS.SKGLLayer.OnPaintSurface(SkiaSharp.Views.iOS.SKPaintSurfaceEventArgs)>
+method, or by attaching a handler to the
+<xref:SkiaSharp.Views.iOS.SKGLLayer.PaintSurface>
+event.
+
+> [!NOTE]
+> If a version of SkiaSharp prior to version v1.68.x is being used, then the
+> <xref:SkiaSharp.Views.iOS.SKGLLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)>
+> method should be overridden instead of
+> <xref:SkiaSharp.Views.iOS.SKGLLayer.OnPaintSurface(SkiaSharp.Views.iOS.SKPaintSurfaceEventArgs)>.
+
+## Examples
+
+```csharp
 myLayer.PaintSurface += (sender, e) => {
     var surface = e.Surface;
-    var surfaceWidth = e.Info.Width;
-    var surfaceHeight = e.Info.Height;
+    var surfaceWidth = e.BackendRenderTarget.Width;
+    var surfaceHeight = e.BackendRenderTarget.Height;
 
     var canvas = surface.Canvas;
 
     // draw on the canvas
+
     canvas.Flush ();
-};]]></code>
-          </example>
+};
+```
+]]></format>
         </remarks>
       </Docs>
     </Member>

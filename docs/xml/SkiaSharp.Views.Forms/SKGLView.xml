@@ -252,7 +252,11 @@ There are two ways to draw on this surface: by overriding the
 <xref:SkiaSharp.Views.Forms.SKGLView.OnPaintSurface(SkiaSharp.Views.Forms.SKPaintGLSurfaceEventArgs)>
 method, or by attaching a handler to the
 <xref:SkiaSharp.Views.Forms.SKGLView.PaintSurface>
-event. If the method is overridden, then the base must be called.
+event.
+
+> [!IMPORTANT]
+> If this method is overridden, then the base must be called, otherwise the
+> event will not be fired.
 
 ## Examples
 
@@ -263,12 +267,13 @@ protected override void OnPaintSurface (SKPaintGLSurfaceEventArgs e)
     base.OnPaintSurface (e);
 
     var surface = e.Surface;
-    var surfaceWidth = e.RenderTarget.Width;
-    var surfaceHeight = e.RenderTarget.Height;
+    var surfaceWidth = e.BackendRenderTarget.Width;
+    var surfaceHeight = e.BackendRenderTarget.Height;
 
     var canvas = surface.Canvas;
 
     // draw on the canvas
+
     canvas.Flush ();
 }
 ```
@@ -338,12 +343,13 @@ SKGLView myView = ...;
 
 myView.PaintSurface += (sender, e) => {
     var surface = e.Surface;
-    var surfaceWidth = e.RenderTarget.Width;
-    var surfaceHeight = e.RenderTarget.Height;
+    var surfaceWidth = e.BackendRenderTarget.Width;
+    var surfaceHeight = e.BackendRenderTarget.Height;
 
     var canvas = surface.Canvas;
 
     // draw on the canvas
+
     canvas.Flush ();
 };
 ```

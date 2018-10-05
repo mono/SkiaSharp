@@ -113,13 +113,26 @@
         <param name="e">The event arguments that contain the drawing surface and information.</param>
         <summary>Implement this to draw on the canvas.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Tizen.SKCanvasView.OnDrawFrame" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Tizen.SKCanvasView.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
-          <para></para>
-          <example>
-            <code lang="C#"><![CDATA[protected override void OnDrawFrame (SKPaintSurfaceEventArgs e)
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+There are two ways to draw on this surface: by overriding the
+<xref:SkiaSharp.Views.Tizen.SKCanvasView.OnDrawFrame(SkiaSharp.Views.Tizen.SKPaintSurfaceEventArgs)>
+method, or by attaching a handler to the
+<xref:SkiaSharp.Views.Tizen.SKCanvasView.PaintSurface>
+event.
+
+> [!IMPORTANT]
+> If this method is overridden, then the base must be called, otherwise the
+> event will not be fired.
+
+## Examples
+
+```csharp
+protected override void OnPaintSurface (SKPaintSurfaceEventArgs e)
 {
     // call the base method
-    base.OnDrawFrame (e);
+    base.OnPaintSurface (e);
 
     var surface = e.Surface;
     var surfaceWidth = e.Info.Width;
@@ -128,9 +141,11 @@
     var canvas = surface.Canvas;
 
     // draw on the canvas
+
     canvas.Flush ();
-}]]></code>
-          </example>
+}
+```
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -150,12 +165,19 @@
       <Docs>
         <summary>Occurs when the surface needs to be redrawn.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Tizen.SKCanvasView.OnDrawFrame" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Tizen.SKCanvasView.PaintSurface" /> event.</para>
-          <para></para>
-          <example>
-            <code lang="C#"><![CDATA[SKCanvasView myCanvas = ...;
+          <format type="text/markdown"><![CDATA[
+## Remarks
 
-myCanvas.PaintSurface += (sender, e) => {
+There are two ways to draw on this surface: by overriding the
+<xref:SkiaSharp.Views.Tizen.SKCanvasView.OnDrawFrame(SkiaSharp.Views.Tizen.SKPaintSurfaceEventArgs)>
+method, or by attaching a handler to the
+<xref:SkiaSharp.Views.Tizen.SKCanvasView.PaintSurface>
+event.
+
+## Examples
+
+```csharp
+myView.PaintSurface += (sender, e) => {
     var surface = e.Surface;
     var surfaceWidth = e.Info.Width;
     var surfaceHeight = e.Info.Height;
@@ -163,9 +185,11 @@ myCanvas.PaintSurface += (sender, e) => {
     var canvas = surface.Canvas;
 
     // draw on the canvas
+
     canvas.Flush ();
-};]]></code>
-          </example>
+};
+```
+]]></format>
         </remarks>
       </Docs>
     </Member>
