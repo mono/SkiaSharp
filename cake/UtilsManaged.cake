@@ -85,7 +85,7 @@ var RunProcess = new Action<FilePath, ProcessSettings> ((process, settings) =>
     }
 });
 
-var RunTests = new Action<FilePath, string[], bool> ((testAssembly, skip, is32) =>
+var RunTests = new Action<FilePath, bool> ((testAssembly, is32) =>
 {
     var dir = testAssembly.GetDirectory ();
     var settings = new XUnit2Settings {
@@ -97,22 +97,17 @@ var RunTests = new Action<FilePath, string[], bool> ((testAssembly, skip, is32) 
         WorkingDirectory = dir,
         ArgumentCustomization = args => args.Append ("-verbose"),
     };
-    if (skip != null) {
-        settings.TraitsToExclude.Add ("Category", skip);
-    }
     XUnit2 (new [] { testAssembly }, settings);
 });
 
-var RunNetCoreTests = new Action<FilePath, string[]> ((testAssembly, skip) =>
+var RunNetCoreTests = new Action<FilePath> ((testAssembly) =>
 {
     var dir = testAssembly.GetDirectory ();
-    string skipString = "";
-    if (skip != null) {
-        foreach (var s in skip) {
-            skipString += $" -notrait \"Category={skip}\"";
-        }
-    }
-    DotNetCoreTool(testAssembly, "xunit", $"-verbose -parallel none -xml \"TestResult.xml\" {skipString}", new DotNetCoreToolSettings {
+    DotNetCoreTest(testAssembly.GetFilename().ToString(), new DotNetCoreTestSettings {
+        Configuration = "Release",
+        NoRestore = true,
+        TestAdapterPath = ".",
+        Logger = "xunit",
         WorkingDirectory = dir,
     });
 });

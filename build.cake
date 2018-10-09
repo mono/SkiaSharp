@@ -132,7 +132,7 @@ Task ("tests")
         } else {
             RunMSBuildWithPlatform ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", arch);
         }
-        RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/Release/SkiaSharp.Tests.dll", null, arch == "x86");
+        RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/Release/SkiaSharp.Tests.dll", arch == "x86");
         CopyFileToDirectory ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/Release/TestResult.xml", $"./output/tests/{platform}/{arch}");
     });
 
@@ -173,8 +173,8 @@ Task ("tests")
     CleanDirectories ("./tests/packages/harfbuzzsharp*");
     EnsureDirectoryExists ("./output/tests/netcore");
     RunMSBuildRestoreLocal (netCoreTestProj, "./tests/packages");
-    RunNetCoreTests (netCoreTestProj, null);
-    CopyFileToDirectory ("./tests/SkiaSharp.NetCore.Tests/TestResult.xml", "./output/tests/netcore");
+    RunNetCoreTests (netCoreTestProj);
+    CopyFile ("./tests/SkiaSharp.NetCore.Tests/TestResults/TestResults.xml", "./output/tests/netcore/TestResult.xml");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
