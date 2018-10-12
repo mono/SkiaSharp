@@ -30,6 +30,7 @@ namespace SkiaSharp.Tests
 			Assert.False(image.IsLazyGenerated);
 		}
 
+		[Obsolete]
 		[SkippableFact]
 		public void EncodeWithSimpleSerializer()
 		{
@@ -52,6 +53,7 @@ namespace SkiaSharp.Tests
 			Assert.True(encoded);
 		}
 
+		[Obsolete]
 		[SkippableFact]
 		public void EncodeWithSerializer()
 		{
@@ -70,6 +72,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(data.ToArray(), bitmap.Bytes);
 		}
 
+		[Obsolete]
 		private class TestSerializer : SKPixelSerializer
 		{
 			public int DidEncode { get; set; }
