@@ -29,7 +29,6 @@ namespace SkiaSharp
 		RightTop = 6,
 		RightBottom = 7,
 		LeftBottom = 8,
-		Default = TopLeft,
 	}
 
 	public enum SKEncodedOrigin {
