@@ -73,9 +73,9 @@ namespace SkiaSharp.Views.GlesInterop
 		[DllImport(libGLESv2)]
 		public static extern void glGenRenderbuffers(int n, [In, Out] uint[] buffers);
 		[DllImport(libGLESv2)]
-		public static extern void glGenFramebuffers(int n, [In, Out] uint[] buffers);
-		[DllImport(libGLESv2)]
 		public static extern void glGenRenderbuffers(int n, ref uint buffer);
+		[DllImport(libGLESv2)]
+		public static extern void glGenFramebuffers(int n, [In, Out] uint[] buffers);
 		[DllImport(libGLESv2)]
 		public static extern void glGenFramebuffers(int n, ref uint buffer);
 		[DllImport(libGLESv2)]
@@ -91,19 +91,13 @@ namespace SkiaSharp.Views.GlesInterop
 		[DllImport(libGLESv2)]
 		public static extern void glClear(uint mask);
 		[DllImport(libGLESv2)]
-		public static extern void glRenderbufferStorageMultisampleANGLE(uint target, int samples, uint internalformat, int width, int height);
-		[DllImport(libGLESv2)]
-		public static extern void glRenderbufferStorage(uint target, uint internalformat, int width, int height);
-		[DllImport(libGLESv2)]
-		public static extern void glBlitFramebufferANGLE(int srcX0, int srcY0, int srcX1, int srcY1, int dstX0, int dstY0, int dstX1, int dstY1, uint mask, uint filter);
-		[DllImport(libGLESv2)]
 		public static extern void glBindFramebuffer(uint target, uint framebuffer);
 		[DllImport(libGLESv2)]
 		public static extern void glDeleteFramebuffers(int n, [In, Out] uint[] framebuffers);
 		[DllImport(libGLESv2)]
-		public static extern void glDeleteRenderbuffers(int n, [In, Out] uint[] renderbuffers);
-		[DllImport(libGLESv2)]
 		public static extern void glDeleteFramebuffers(int n, ref uint framebuffer);
+		[DllImport(libGLESv2)]
+		public static extern void glDeleteRenderbuffers(int n, [In, Out] uint[] renderbuffers);
 		[DllImport(libGLESv2)]
 		public static extern void glDeleteRenderbuffers(int n, ref uint renderbuffer);
 		[DllImport(libGLESv2)]
