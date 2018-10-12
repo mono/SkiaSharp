@@ -3,14 +3,12 @@ param(
     [string]$Platform = "linux"
 )
 
-$ErrorActionPreference = 'Stop'
-$ProgressPreference = 'SilentlyContinue'
-
 $name = "skiasharp-basic-$Platform-sample"
 
 # build the container
 docker stop $name
 docker rm $name
+New-Item "packages" -ItemType Directory -Force | Out-Null
 docker build --platform $Platform --tag $name --file "$Platform.Dockerfile" .
 
 # run
