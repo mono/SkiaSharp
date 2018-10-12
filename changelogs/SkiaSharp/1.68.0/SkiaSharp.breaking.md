@@ -85,13 +85,6 @@ Removed property:
 public SKEncodedInfo EncodedInfo { get; }
 ```
 
-Modified properties:
-
-```diff
--public SKCodecOrigin Origin { get; }
-+public SKEncodedOrigin Origin { get; }
-```
-
 
 #### Type Changed: SkiaSharp.SKCodecOptions
 
@@ -201,16 +194,6 @@ public static SKPathEffect CreateArcTo (float radius);
 ```
 
 
-#### Type Changed: SkiaSharp.SKPixelSerializer
-
-Modified base type:
-
-```diff
--SkiaSharp.SKObject
-+System.Object
-```
-
-
 #### Type Changed: SkiaSharp.SKPixmap
 
 Modified constructors:
@@ -238,7 +221,6 @@ Modified methods:
 
 #### Removed Type SkiaSharp.GRContextOptions
 #### Removed Type SkiaSharp.GRContextOptionsGpuPathRenderers
-#### Removed Type SkiaSharp.SKCodecOrigin
 #### Removed Type SkiaSharp.SKEncodedInfo
 #### Removed Type SkiaSharp.SKEncodedInfoAlpha
 #### Removed Type SkiaSharp.SKEncodedInfoColor

@@ -192,11 +192,17 @@ Removed property:
 public SKEncodedInfo EncodedInfo { get; }
 ```
 
-Modified properties:
+Obsoleted properties:
 
 ```diff
--public SKCodecOrigin Origin { get; }
-+public SKEncodedOrigin Origin { get; }
+ [Obsolete ("Use EncodedOrigin instead.")]
+ public SKCodecOrigin Origin { get; }
+```
+
+Added property:
+
+```csharp
+public SKEncodedOrigin EncodedOrigin { get; }
 ```
 
 Obsoleted methods:
@@ -406,6 +412,8 @@ public SKData EncodedData { get; }
 Obsoleted methods:
 
 ```diff
+ [Obsolete ()]
+ public SKData Encode (SKPixelSerializer serializer);
  [Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
  public static SKImage FromAdoptedTexture (GRContext context, GRBackendTextureDesc desc);
  [Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
@@ -567,30 +575,21 @@ public static SKPathEffect CreateArcTo (float radius);
 
 #### Type Changed: SkiaSharp.SKPixelSerializer
 
-Modified base type:
-
-```diff
--SkiaSharp.SKObject
-+System.Object
-```
-
 Added constructor:
 
 ```csharp
 protected SKPixelSerializer ();
 ```
 
-Modified methods:
+Removed method:
 
-```diff
--protected override void Dispose (bool disposing)
-+protected virtual void Dispose (bool disposing)
+```csharp
+protected override void Dispose (bool disposing);
 ```
 
 Added methods:
 
 ```csharp
-public virtual void Dispose ();
 protected virtual SKData OnEncode (SKPixmap pixmap);
 protected virtual bool OnUseEncodedData (IntPtr data, IntPtr length);
 ```
@@ -809,7 +808,6 @@ public static GRPixelConfig ToPixelConfig (this SKColorType colorType);
 
 #### Removed Type SkiaSharp.GRContextOptions
 #### Removed Type SkiaSharp.GRContextOptionsGpuPathRenderers
-#### Removed Type SkiaSharp.SKCodecOrigin
 #### Removed Type SkiaSharp.SKEncodedInfo
 #### Removed Type SkiaSharp.SKEncodedInfoAlpha
 #### Removed Type SkiaSharp.SKEncodedInfoColor
@@ -856,6 +854,8 @@ public GRBackendTexture (GRGlBackendTextureDesc desc);
 	public bool HasMipMaps { get; }
 	public int Height { get; }
 	public bool IsValid { get; }
+	public SKRectI Rect { get; }
+	public SKSizeI Size { get; }
 	public int Width { get; }
 	// methods
 	protected override void Dispose (bool disposing);
