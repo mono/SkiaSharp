@@ -260,6 +260,21 @@ Task ("docs-format-docs")
             }
         }
 
+        // remove any duplicate AssemblyVersions
+        if (xdoc.Root.Name == "Type") {
+            foreach (var info in xdoc.Root.Descendants ("AssemblyInfo")) {
+                var versions = info.Elements ("AssemblyVersion");
+                var newVersions = new List<XElement> ();
+                foreach (var version in versions) {
+                    if (newVersions.All (nv => nv.Value != version.Value)) {
+                        newVersions.Add (version);
+                    }
+                }
+                versions.Remove ();
+                info.Add (newVersions.OrderBy (e => e.Value));
+            }
+        }
+
         // Fix the type rename from SkPath1DPathEffectStyle to SKPath1DPathEffectStyle
         // this breaks linux as it is just a case change and that OS is case sensitive
         if (xdoc.Root.Name == "Overview") {
@@ -287,6 +302,17 @@ Task ("docs-format-docs")
                     .FirstOrDefault ()
                     .AddBeforeSelf (voidReturn.Element ("AssemblyInfo").Elements ("AssemblyVersion"));
                 voidReturn.Remove ();
+            }
+        }
+
+        // remove empty FrameworkAlternate elements
+        var emptyAlts = xdoc.Root
+            .Descendants ()
+            .Where (d => d.Attribute ("FrameworkAlternate") != null && string.IsNullOrEmpty (d.Attribute ("FrameworkAlternate").Value))
+            .ToArray ();
+        foreach (var empty in emptyAlts) {
+            if (empty?.Parent != null) {
+                empty.Remove ();
             }
         }
 
