@@ -116,7 +116,7 @@ namespace SkiaSharp.Views.Forms
 			return ret;
 		}
 #else
-		protected virtual TNativeView CreateNativeControl()
+		protected override TNativeView CreateNativeControl()
 		{
 			return (TNativeView)Activator.CreateInstance(typeof(TNativeView));
 		}
