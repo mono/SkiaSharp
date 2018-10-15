@@ -94,9 +94,9 @@ namespace SkiaSharpSample.Samples
 				var w = (float)width / cols;
 				var h = (float)height / rows;
 
-				for (int y = 0; y < rows; y++)
+				for (var y = 0; y < rows; y++)
 				{
-					for (int x = 0; x < cols; x++)
+					for (var x = 0; x < cols; x++)
 					{
 						f(SKRect.Create(x * w, y * h, w, h), matices[y * cols + x]);
 					}

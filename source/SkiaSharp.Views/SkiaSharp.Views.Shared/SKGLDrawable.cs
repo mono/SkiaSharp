@@ -38,7 +38,7 @@ namespace SkiaSharp.Views.Tizen
 			var config = GRPixelConfig.Rgba8888;
 #endif
 
-			var glInfo = new GRGlFramebufferInfo((uint)framebuffer, config.ToSizedFormat());
+			var glInfo = new GRGlFramebufferInfo((uint)framebuffer, config.ToGlSizedFormat());
 			return new GRBackendRenderTarget(bufferWidth, bufferHeight, samples, stencil, glInfo);
 		}
 	}

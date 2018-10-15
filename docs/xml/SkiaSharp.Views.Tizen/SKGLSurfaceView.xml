@@ -5,6 +5,7 @@
   <AssemblyInfo>
     <AssemblyName>SkiaSharp.Views.Tizen</AssemblyName>
     <AssemblyVersion>1.60.0.0</AssemblyVersion>
+    <AssemblyVersion>1.68.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>SkiaSharp.Views.Tizen.CustomRenderingView</BaseTypeName>
@@ -23,6 +24,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Tizen</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="parent" Type="ElmSharp.EvasObject" />
@@ -41,6 +43,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Tizen</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -59,6 +62,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Tizen</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -80,6 +84,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Tizen</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -98,6 +103,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Tizen</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -116,6 +122,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Tizen</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSizeI</ReturnType>
@@ -135,6 +142,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Tizen</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.GRContext</ReturnType>
@@ -153,6 +161,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Tizen</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -171,6 +180,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Tizen</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -182,24 +192,39 @@
         <param name="e">The event arguments that contain the drawing surface and information.</param>
         <summary>Implement this to draw on the canvas.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Tizen.SKGLSurfaceView.OnDrawFrame" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Tizen.SKGLSurfaceView.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
-          <para></para>
-          <example>
-            <code lang="C#"><![CDATA[protected override void OnDrawFrame (SKPaintGLSurfaceEventArgs e)
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+There are two ways to draw on this surface: by overriding the
+<xref:SkiaSharp.Views.Tizen.SKGLSurfaceView.OnDrawFrame(SkiaSharp.Views.Tizen.SKPaintGLSurfaceEventArgs)>
+method, or by attaching a handler to the
+<xref:SkiaSharp.Views.Tizen.SKGLSurfaceView.PaintSurface>
+event.
+
+> [!IMPORTANT]
+> If this method is overridden, then the base must be called, otherwise the
+> event will not be fired.
+
+## Examples
+
+```csharp
+protected override void OnDrawFrame (SKPaintGLSurfaceEventArgs e)
 {
     // call the base method
-    base.OnDrawFrame (e);
+    base.OnPaintSurface (e);
 
     var surface = e.Surface;
-    var surfaceWidth = e.RenderTarget.Width;
-    var surfaceHeight = e.RenderTarget.Height;
+    var surfaceWidth = e.BackendRenderTarget.Width;
+    var surfaceHeight = e.BackendRenderTarget.Height;
 
     var canvas = surface.Canvas;
 
     // draw on the canvas
+
     canvas.Flush ();
-}]]></code>
-          </example>
+}
+```
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -211,6 +236,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Tizen</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.EventHandler&lt;SkiaSharp.Views.Tizen.SKPaintGLSurfaceEventArgs&gt;</ReturnType>
@@ -218,22 +244,31 @@
       <Docs>
         <summary>Occurs when the surface needs to be redrawn.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Tizen.SKGLSurfaceView.OnDrawFrame" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Tizen.SKGLSurfaceView.PaintSurface" /> event.</para>
-          <para></para>
-          <example>
-            <code lang="C#"><![CDATA[SKGLSurfaceView myCanvas = ...;
+          <format type="text/markdown"><![CDATA[
+## Remarks
 
-myCanvas.PaintSurface += (sender, e) => {
+There are two ways to draw on this surface: by overriding the
+<xref:SkiaSharp.Views.Tizen.SKGLSurfaceView.OnDrawFrame(SkiaSharp.Views.Tizen.SKPaintGLSurfaceEventArgs)>
+method, or by attaching a handler to the
+<xref:SkiaSharp.Views.Tizen.SKGLSurfaceView.PaintSurface>
+event.
+
+## Examples
+
+```csharp
+myView.PaintSurface += (sender, e) => {
     var surface = e.Surface;
-    var surfaceWidth = e.RenderTarget.Width;
-    var surfaceHeight = e.RenderTarget.Height;
+    var surfaceWidth = e.BackendRenderTarget.Width;
+    var surfaceHeight = e.BackendRenderTarget.Height;
 
     var canvas = surface.Canvas;
 
     // draw on the canvas
+
     canvas.Flush ();
-};]]></code>
-          </example>
+};
+```
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -245,6 +280,7 @@ myCanvas.PaintSurface += (sender, e) => {
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Tizen</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>

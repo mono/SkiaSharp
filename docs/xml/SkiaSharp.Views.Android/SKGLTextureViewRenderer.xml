@@ -5,6 +5,7 @@
   <AssemblyInfo>
     <AssemblyName>SkiaSharp.Views.Android</AssemblyName>
     <AssemblyVersion>1.60.0.0</AssemblyVersion>
+    <AssemblyVersion>1.68.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>Java.Lang.Object</BaseTypeName>
@@ -27,6 +28,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Android</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
       <Docs>
@@ -42,6 +44,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Android</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSize</ReturnType>
@@ -60,6 +63,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Android</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -68,9 +72,10 @@
         <Parameter Name="disposing" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="disposing">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="disposing">
+          <see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+        <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.Views.Android.SKGLTextureViewRenderer" /> and optionally releases the managed resources.</summary>
+        <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.Views.Android.SKGLTextureViewRenderer" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GRContext">
@@ -81,6 +86,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Android</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.GRContext</ReturnType>
@@ -102,6 +108,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Android</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -116,14 +123,20 @@
       </Docs>
     </Member>
     <Member MemberName="OnDrawFrame">
-      <MemberSignature Language="C#" Value="protected abstract void OnDrawFrame (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);" />
+      <MemberSignature Language="C#" Value="protected virtual void OnDrawFrame (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);" />
       <MemberSignature Language="ILAsm" Value=".method familyhidebysig newslot virtual instance void OnDrawFrame(class SkiaSharp.SKSurface surface, valuetype SkiaSharp.GRBackendRenderTargetDesc renderTarget) cil managed" />
       <MemberSignature Language="DocId" Value="M:SkiaSharp.Views.Android.SKGLTextureViewRenderer.OnDrawFrame(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTargetDesc)" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Android</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-views-android-1.68.0">
+          <AttributeName>System.Obsolete("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
       </ReturnValue>
@@ -138,6 +151,27 @@
         <remarks></remarks>
       </Docs>
     </Member>
+    <Member MemberName="OnPaintSurface">
+      <MemberSignature Language="C#" Value="protected virtual void OnPaintSurface (SkiaSharp.Views.Android.SKPaintGLSurfaceEventArgs e);" />
+      <MemberSignature Language="ILAsm" Value=".method familyhidebysig newslot virtual instance void OnPaintSurface(class SkiaSharp.Views.Android.SKPaintGLSurfaceEventArgs e) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.Views.Android.SKGLTextureViewRenderer.OnPaintSurface(SkiaSharp.Views.Android.SKPaintGLSurfaceEventArgs)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp.Views.Android</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="e" Type="SkiaSharp.Views.Android.SKPaintGLSurfaceEventArgs" />
+      </Parameters>
+      <Docs>
+        <param name="e">The event arguments that contain the drawing surface and information.</param>
+        <summary>Called to draw the current frame on the surface.</summary>
+        <remarks></remarks>
+      </Docs>
+    </Member>
     <Member MemberName="OnSurfaceChanged">
       <MemberSignature Language="C#" Value="public void OnSurfaceChanged (Javax.Microedition.Khronos.Opengles.IGL10 gl, int width, int height);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig newslot virtual instance void OnSurfaceChanged(class Javax.Microedition.Khronos.Opengles.IGL10 gl, int32 width, int32 height) cil managed" />
@@ -149,6 +183,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Android</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -177,6 +212,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Android</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -203,6 +239,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Android</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>

@@ -197,7 +197,7 @@ namespace SkiaSharp
 
 	public static partial class SkiaExtensions
 	{
-		public static uint ToSizedFormat (this SKColorType colorType)
+		public static uint ToGlSizedFormat (this SKColorType colorType)
 		{
 			switch (colorType) {
 				case SKColorType.Unknown:
@@ -227,7 +227,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public static uint ToSizedFormat (this GRPixelConfig config)
+		public static uint ToGlSizedFormat (this GRPixelConfig config)
 		{
 			switch (config) {
 				case GRPixelConfig.Alpha8:

@@ -19,7 +19,7 @@ namespace SkiaSharpSample.Samples
 			canvas.Clear(SKColors.White);
 
 			var ct = new byte[256];
-			for (int i = 0; i < 256; ++i)
+			for (var i = 0; i < 256; ++i)
 			{
 				var x = (i - 96) * 255 / 64;
 				ct[i] = x < 0 ? (byte)0 : x > 255 ? (byte)255 : (byte)x;

@@ -192,11 +192,17 @@ Removed property:
 public SKEncodedInfo EncodedInfo { get; }
 ```
 
-Modified properties:
+Obsoleted properties:
 
 ```diff
--public SKCodecOrigin Origin { get; }
-+public SKEncodedOrigin Origin { get; }
+ [Obsolete ("Use EncodedOrigin instead.")]
+ public SKCodecOrigin Origin { get; }
+```
+
+Added property:
+
+```csharp
+public SKEncodedOrigin EncodedOrigin { get; }
 ```
 
 Obsoleted methods:
@@ -361,20 +367,24 @@ public static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata meta
 
 #### Type Changed: SkiaSharp.SKFontManager
 
+Added property:
+
+```csharp
+public System.Collections.Generic.IEnumerable<string> FontFamilies { get; }
+```
+
 Added methods:
 
 ```csharp
 public static SKFontManager CreateDefault ();
-public SKFontStyleSet CreateStyleSet (int index);
-public SKTypeface FromData (SKData data, int index);
-public SKTypeface FromFile (string path, int index);
-public SKTypeface FromStream (SKStreamAsset stream, int index);
-public SKTypeface FromStream (System.IO.Stream stream, int index);
+public SKTypeface CreateTypeface (SKData data, int index);
+public SKTypeface CreateTypeface (SKStreamAsset stream, int index);
+public SKTypeface CreateTypeface (System.IO.Stream stream, int index);
+public SKTypeface CreateTypeface (string path, int index);
+public SKFontStyleSet GetFontStyles (int index);
+public SKFontStyleSet GetFontStyles (string familyName);
 public SKTypeface MatchCharacter (string familyName, SKFontStyle style, string[] bcp47, int character);
-public SKFontStyleSet MatchFamily (string familyName);
 public SKTypeface MatchFamily (string familyName, SKFontStyle style);
-
-[Obsolete]
 public SKTypeface MatchTypeface (SKTypeface face, SKFontStyle style);
 ```
 
@@ -402,6 +412,8 @@ public SKData EncodedData { get; }
 Obsoleted methods:
 
 ```diff
+ [Obsolete ()]
+ public SKData Encode (SKPixelSerializer serializer);
  [Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
  public static SKImage FromAdoptedTexture (GRContext context, GRBackendTextureDesc desc);
  [Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
@@ -563,30 +575,21 @@ public static SKPathEffect CreateArcTo (float radius);
 
 #### Type Changed: SkiaSharp.SKPixelSerializer
 
-Modified base type:
-
-```diff
--SkiaSharp.SKObject
-+System.Object
-```
-
 Added constructor:
 
 ```csharp
 protected SKPixelSerializer ();
 ```
 
-Modified methods:
+Removed method:
 
-```diff
--protected override void Dispose (bool disposing)
-+protected virtual void Dispose (bool disposing)
+```csharp
+protected override void Dispose (bool disposing);
 ```
 
 Added methods:
 
 ```csharp
-public virtual void Dispose ();
 protected virtual SKData OnEncode (SKPixmap pixmap);
 protected virtual bool OnUseEncodedData (IntPtr data, IntPtr length);
 ```
@@ -756,9 +759,10 @@ Obsoleted properties:
  public SKTypefaceStyle Style { get; }
 ```
 
-Added property:
+Added properties:
 
 ```csharp
+public static SKTypeface Default { get; }
 public SKFontStyle FontStyle { get; }
 ```
 
@@ -781,6 +785,7 @@ Modified methods:
 Added methods:
 
 ```csharp
+public static SKTypeface CreateDefault ();
 public static SKTypeface FromFamilyName (string familyName);
 public static SKTypeface FromFamilyName (string familyName, SKFontStyle style);
 ```
@@ -795,15 +800,14 @@ public static SKColorType ToColorType (this GRPixelConfig config);
 
 [Obsolete]
 public static SKFilterQuality ToFilterQuality (this SKBitmapResizeMethod method);
+public static uint ToGlSizedFormat (this GRPixelConfig config);
+public static uint ToGlSizedFormat (this SKColorType colorType);
 public static GRPixelConfig ToPixelConfig (this SKColorType colorType);
-public static uint ToSizedFormat (this GRPixelConfig config);
-public static uint ToSizedFormat (this SKColorType colorType);
 ```
 
 
 #### Removed Type SkiaSharp.GRContextOptions
 #### Removed Type SkiaSharp.GRContextOptionsGpuPathRenderers
-#### Removed Type SkiaSharp.SKCodecOrigin
 #### Removed Type SkiaSharp.SKEncodedInfo
 #### Removed Type SkiaSharp.SKEncodedInfoAlpha
 #### Removed Type SkiaSharp.SKEncodedInfoColor
@@ -850,6 +854,8 @@ public GRBackendTexture (GRGlBackendTextureDesc desc);
 	public bool HasMipMaps { get; }
 	public int Height { get; }
 	public bool IsValid { get; }
+	public SKRectI Rect { get; }
+	public SKSizeI Size { get; }
 	public int Width { get; }
 	// methods
 	protected override void Dispose (bool disposing);
@@ -923,16 +929,18 @@ public class SKFontStyle : SkiaSharp.SKObject, System.IDisposable {
 #### New Type: SkiaSharp.SKFontStyleSet
 
 ```csharp
-public class SKFontStyleSet : SkiaSharp.SKObject, System.IDisposable {
+public class SKFontStyleSet : SkiaSharp.SKObject, System.Collections.Generic.IEnumerable<SKFontStyle>, System.Collections.Generic.IReadOnlyCollection<SKFontStyle>, System.Collections.Generic.IReadOnlyList<SKFontStyle>, System.Collections.IEnumerable, System.IDisposable {
 	// constructors
 	public SKFontStyleSet ();
 	// properties
-	public int Count { get; }
+	public virtual int Count { get; }
+	public virtual SKFontStyle Item { get; }
 	// methods
 	public SKTypeface CreateTypeface (SKFontStyle style);
 	public SKTypeface CreateTypeface (int index);
 	protected override void Dispose (bool disposing);
-	public void GetStyle (int index, out SKFontStyle fontStyle, out string styleName);
+	public virtual System.Collections.Generic.IEnumerator<SKFontStyle> GetEnumerator ();
+	public string GetStyleName (int index);
 }
 ```
 

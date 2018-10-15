@@ -19,8 +19,8 @@ namespace SkiaSharpSample.Samples
 			canvas.Clear(SKColors.White);
 			canvas.Scale(2, 2);
 
-			using (SKPaint paint = new SKPaint())
-			using (SKPaint textPaint = new SKPaint())
+			using (var paint = new SKPaint())
+			using (var textPaint = new SKPaint())
 			{
 				paint.Style = SKPaintStyle.Stroke;
 				paint.StrokeWidth = 1;
@@ -29,7 +29,7 @@ namespace SkiaSharpSample.Samples
 
 				textPaint.IsAntialias = true;
 
-				using (SKPath path = new SKPath())
+				using (var path = new SKPath())
 				{
 					path.MoveTo(-6.2157825e-7f, -25.814698f);
 					path.RCubicTo(-34.64102137842175f, 19.9999998f, 0f, 40f, 0f, 40f);
@@ -39,8 +39,7 @@ namespace SkiaSharpSample.Samples
 					paint.Color = SampleMedia.Colors.XamarinLightBlue;
 					canvas.DrawPath(path, paint);
 
-					SKRect rect;
-					path.GetBounds(out rect);
+					path.GetBounds(out var rect);
 
 					paint.Color = SampleMedia.Colors.XamarinDarkBlue;
 					canvas.DrawRect(rect, paint);

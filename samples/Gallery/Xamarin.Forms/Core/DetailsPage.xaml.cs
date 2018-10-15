@@ -58,8 +58,7 @@ namespace SkiaSharpSample
 			var items = Enum.GetNames(typeof(SampleBackends)).Except(new[] { nameof(SampleBackends.All) });
 			var backendString = await DisplayActionSheet("Select Backend:", "Close", null, items.ToArray());
 
-			SampleBackends backend;
-			if (Enum.TryParse(backendString, out backend))
+			if (Enum.TryParse(backendString, out SampleBackends backend))
 			{
 				((DetailContentsPage)CurrentPage).SwitchBackend(backend);
 			}

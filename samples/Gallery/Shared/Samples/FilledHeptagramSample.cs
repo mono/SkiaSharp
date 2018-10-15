@@ -25,7 +25,7 @@ namespace SkiaSharpSample.Samples
 			using (var path = new SKPath())
 			{
 				path.MoveTo(R, 0.0f);
-				for (int i = 1; i < 7; ++i)
+				for (var i = 1; i < 7; ++i)
 				{
 					var theta = 3f * i * TAU / 7f;
 					path.LineTo(R * (float)Math.Cos(theta), R * (float)Math.Sin(theta));

@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace SkiaSharp
 {
-	public class SKFontStyleSet : SKObject
+	public class SKFontStyleSet : SKObject, IEnumerable<SKFontStyle>, IReadOnlyCollection<SKFontStyle>, IReadOnlyList<SKFontStyle>
 	{
 		[Preserve]
 		internal SKFontStyleSet (IntPtr handle, bool owns)
@@ -26,12 +28,13 @@ namespace SkiaSharp
 
 		public int Count => SkiaApi.sk_fontstyleset_get_count (Handle);
 
-		public void GetStyle(int index, out SKFontStyle fontStyle, out string styleName)
+		public SKFontStyle this[int index] => GetStyle (index);
+
+		public string GetStyleName (int index)
 		{
-			fontStyle = new SKFontStyle ();
 			using (var str = new SKString ()) {
-				SkiaApi.sk_fontstyleset_get_style (Handle, index, fontStyle.Handle, str.Handle);
-				styleName = (string)str;
+				SkiaApi.sk_fontstyleset_get_style (Handle, index, IntPtr.Zero, str.Handle);
+				return (string)str;
 			}
 		}
 
@@ -49,6 +52,25 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (style));
 
 			return GetObject<SKTypeface> (SkiaApi.sk_fontstyleset_match_style (Handle, style.Handle));
+		}
+
+		public IEnumerator<SKFontStyle> GetEnumerator () => GetStyles ().GetEnumerator ();
+
+		IEnumerator IEnumerable.GetEnumerator () => GetStyles ().GetEnumerator ();
+
+		private IEnumerable<SKFontStyle> GetStyles ()
+		{
+			var count = Count;
+			for (var i = 0; i < count; i++) {
+				yield return GetStyle (i);
+			}
+		}
+
+		private SKFontStyle GetStyle (int index)
+		{
+			var fontStyle = new SKFontStyle ();
+			SkiaApi.sk_fontstyleset_get_style (Handle, index, fontStyle.Handle, IntPtr.Zero);
+			return fontStyle;
 		}
 	}
 }

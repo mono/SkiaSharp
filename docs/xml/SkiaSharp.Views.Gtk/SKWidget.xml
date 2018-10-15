@@ -5,13 +5,14 @@
   <AssemblyInfo>
     <AssemblyName>SkiaSharp.Views.Gtk</AssemblyName>
     <AssemblyVersion>1.60.0.0</AssemblyVersion>
+    <AssemblyVersion>1.68.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>Gtk.DrawingArea</BaseTypeName>
   </Base>
   <Interfaces />
   <Attributes>
-    <Attribute FrameworkAlternate="skiasharp-views-net-1.60.0;skiasharp-views-net-1.60.1;skiasharp-views-net-1.60.2;skiasharp-views-net-1.60.3">
+    <Attribute FrameworkAlternate="skiasharp-views-net-1.60.0;skiasharp-views-net-1.60.1;skiasharp-views-net-1.60.2;skiasharp-views-net-1.60.3;skiasharp-views-net-1.68.0">
       <AttributeName>System.ComponentModel.ToolboxItem(true)</AttributeName>
     </Attribute>
   </Attributes>
@@ -28,6 +29,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Gtk</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
       <Docs>
@@ -43,6 +45,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Gtk</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSize</ReturnType>
@@ -61,6 +64,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Gtk</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -79,14 +83,15 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Gtk</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Releases all resources used by this <see cref="T:SkiaSharp.Views.Gtk.SKWidget" />.</summary>
+        <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.Views.Gtk.SKWidget" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Dispose">
@@ -97,6 +102,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Gtk</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -105,9 +111,10 @@
         <Parameter Name="disposing" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="disposing">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="disposing">
+          <see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+        <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.Views.Gtk.SKWidget" /> and optionally releases the managed resources.</summary>
+        <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.Views.Gtk.SKWidget" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Finalize">
@@ -118,14 +125,15 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Gtk</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Allows an object to try to free resources and perform other cleanup operations before it is reclaimed by garbage collection.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="OnExposeEvent">
@@ -136,6 +144,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Gtk</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -158,6 +167,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Gtk</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -169,10 +179,23 @@
         <param name="e">The event arguments that contain the drawing surface and information.</param>
         <summary>Implement this to draw on the canvas.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Gtk.SKWidget.OnPaintSurface(SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Gtk.SKWidget.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
-          <para></para>
-          <example>
-            <code lang="C#"><![CDATA[protected override void OnPaintSurface (SKPaintSurfaceEventArgs e)
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+There are two ways to draw on this surface: by overriding the
+<xref:SkiaSharp.Views.Gtk.SKWidget.OnPaintSurface(SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs)>
+method, or by attaching a handler to the
+<xref:SkiaSharp.Views.Gtk.SKWidget.PaintSurface>
+event.
+
+> [!IMPORTANT]
+> If this method is overridden, then the base must be called, otherwise the
+> event will not be fired.
+
+## Examples
+
+```csharp
+protected override void OnPaintSurface (SKPaintSurfaceEventArgs e)
 {
     // call the base method
     base.OnPaintSurface (e);
@@ -184,9 +207,11 @@
     var canvas = surface.Canvas;
 
     // draw on the canvas
+
     canvas.Flush ();
-}]]></code>
-          </example>
+}
+```
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -198,9 +223,10 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Gtk</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <Attributes>
-        <Attribute FrameworkAlternate="skiasharp-views-net-1.60.0;skiasharp-views-net-1.60.1;skiasharp-views-net-1.60.2;skiasharp-views-net-1.60.3">
+        <Attribute FrameworkAlternate="skiasharp-views-net-1.60.0;skiasharp-views-net-1.60.1;skiasharp-views-net-1.60.2;skiasharp-views-net-1.60.3;skiasharp-views-net-1.68.0">
           <AttributeName>System.ComponentModel.Category("Appearance")</AttributeName>
         </Attribute>
       </Attributes>
@@ -210,11 +236,18 @@
       <Docs>
         <summary>Occurs when the the canvas needs to be redrawn.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.Gtk.SKWidget.OnPaintSurface(SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.Gtk.SKWidget.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
-          <para></para>
-          <example>
-            <code lang="C#"><![CDATA[SKControl myView = ...;
+          <format type="text/markdown"><![CDATA[
+## Remarks
 
+There are two ways to draw on this surface: by overriding the
+<xref:SkiaSharp.Views.Gtk.SKWidget.OnPaintSurface(SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs)>
+method, or by attaching a handler to the
+<xref:SkiaSharp.Views.Gtk.SKWidget.PaintSurface>
+event.
+
+## Examples
+
+```csharp
 myView.PaintSurface += (sender, e) => {
     var surface = e.Surface;
     var surfaceWidth = e.Info.Width;
@@ -224,9 +257,9 @@ myView.PaintSurface += (sender, e) => {
 
     // draw on the canvas
     canvas.Flush ();
-};]]></code>
-          </example>
-          <para></para>
+};
+```
+]]></format>
         </remarks>
       </Docs>
     </Member>

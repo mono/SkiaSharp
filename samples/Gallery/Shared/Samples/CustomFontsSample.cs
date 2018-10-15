@@ -18,7 +18,7 @@ namespace SkiaSharpSample.Samples
 
 		protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 		{
-			string text = "\u03A3 and \u0750";
+			var text = "\u03A3 and \u0750";
 
 			canvas.Clear(SKColors.White);
 

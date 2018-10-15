@@ -8,6 +8,7 @@
     <AssemblyVersion>1.58.0.0</AssemblyVersion>
     <AssemblyVersion>1.59.0.0</AssemblyVersion>
     <AssemblyVersion>1.60.0.0</AssemblyVersion>
+    <AssemblyVersion>1.68.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>SkiaSharp.SKObject</BaseTypeName>
@@ -29,6 +30,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodec</ReturnType>
@@ -54,6 +56,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodec</ReturnType>
@@ -63,6 +66,30 @@
       </Parameters>
       <Docs>
         <param name="stream">The stream to use when creating the codec.</param>
+        <summary>Creates a codec from the specified stream.</summary>
+        <returns>Returns the new instance of the codec, or null if there was an error.</returns>
+        <remarks>If null is returned, the stream is deleted immediately. Otherwise, the codec takes ownership of it, and will delete it when done with it.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Create">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKCodec Create (SkiaSharp.SKStream stream, out SkiaSharp.SKCodecResult result);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKCodec Create(class SkiaSharp.SKStream stream, [out] valuetype SkiaSharp.SKCodecResult&amp; result) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKCodec.Create(SkiaSharp.SKStream,SkiaSharp.SKCodecResult@)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKCodec</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="stream" Type="SkiaSharp.SKStream" />
+        <Parameter Name="result" Type="SkiaSharp.SKCodecResult" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="stream">The stream to use when creating the codec.</param>
+        <param name="result">The result of the creation operation.</param>
         <summary>Creates a codec from the specified stream.</summary>
         <returns>Returns the new instance of the codec, or null if there was an error.</returns>
         <remarks>If null is returned, the stream is deleted immediately. Otherwise, the codec takes ownership of it, and will delete it when done with it.</remarks>
@@ -79,6 +106,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -87,9 +115,10 @@
         <Parameter Name="disposing" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="disposing">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="disposing">
+          <see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+        <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.SKCodec" /> and optionally releases the managed resources.</summary>
+        <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.SKCodec" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
       </Docs>
     </Member>
     <Member MemberName="EncodedFormat">
@@ -103,6 +132,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKEncodedImageFormat</ReturnType>
@@ -134,6 +164,24 @@
         <remarks></remarks>
       </Docs>
     </Member>
+    <Member MemberName="EncodedOrigin">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKEncodedOrigin EncodedOrigin { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKEncodedOrigin EncodedOrigin" />
+      <MemberSignature Language="DocId" Value="P:SkiaSharp.SKCodec.EncodedOrigin" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKEncodedOrigin</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the image origin from the codec.</summary>
+        <value></value>
+        <remarks></remarks>
+      </Docs>
+    </Member>
     <Member MemberName="FrameCount">
       <MemberSignature Language="C#" Value="public int FrameCount { get; }" />
       <MemberSignature Language="ILAsm" Value=".property instance int32 FrameCount" />
@@ -145,6 +193,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -166,6 +215,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecFrameInfo[]</ReturnType>
@@ -174,6 +224,30 @@
         <summary>Gets information about the frames in the encoded image.</summary>
         <value></value>
         <remarks>May require reading through the stream to determine info about the frames. As such, future decoding calls may require a rewind. For single-frame images, this will be an empty array.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetFrameInfo">
+      <MemberSignature Language="C#" Value="public bool GetFrameInfo (int index, out SkiaSharp.SKCodecFrameInfo frameInfo);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool GetFrameInfo(int32 index, [out] valuetype SkiaSharp.SKCodecFrameInfo&amp; frameInfo) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKCodec.GetFrameInfo(System.Int32,SkiaSharp.SKCodecFrameInfo@)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="index" Type="System.Int32" />
+        <Parameter Name="frameInfo" Type="SkiaSharp.SKCodecFrameInfo" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="index">The index of the frame to retrieve.</param>
+        <param name="frameInfo">The information about the frame.</param>
+        <summary>Gets information about a specific frame in the encoded image.</summary>
+        <returns>Returns true if the frame was successfully read, otherwise false.</returns>
+        <remarks>May require reading through the stream to determine info about the frames. As such, future decoding calls may require a rewind.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetOutputScanline">
@@ -187,6 +261,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -212,6 +287,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
@@ -237,6 +313,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
@@ -251,8 +328,18 @@
         <summary>Decode the bitmap into the specified memory block.</summary>
         <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+The specified <xref:SkiaSharp.SKImageInfo>, can either be
+<xref:SkiaSharp.SKCodec.Info>, or a new instance with a different
+configuration - which the codec may choose to ignore.
+
+If the specified size is different from the size from
+<xref:SkiaSharp.SKCodec.Info>, then the codec will attempt to scale the
+resulting bitmap. If the codec cannot perform this scale, this method will
+return <xref:SkiaSharp.SKCodecResult.InvalidScale>.
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -267,6 +354,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
@@ -281,8 +369,18 @@
         <summary>Decode the bitmap into the specified memory block.</summary>
         <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+The specified <xref:SkiaSharp.SKImageInfo>, can either be
+<xref:SkiaSharp.SKCodec.Info>, or a new instance with a different
+configuration - which the codec may choose to ignore.
+
+If the specified size is different from the size from
+<xref:SkiaSharp.SKCodec.Info>, then the codec will attempt to scale the
+resulting bitmap. If the codec cannot perform this scale, this method will
+return <xref:SkiaSharp.SKCodecResult.InvalidScale>.
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -297,6 +395,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
@@ -311,8 +410,18 @@
         <summary>Decode the bitmap into the specified memory block.</summary>
         <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+The specified <xref:SkiaSharp.SKImageInfo>, can either be
+<xref:SkiaSharp.SKCodec.Info>, or a new instance with a different
+configuration - which the codec may choose to ignore.
+
+If the specified size is different from the size from
+<xref:SkiaSharp.SKCodec.Info>, then the codec will attempt to scale the
+resulting bitmap. If the codec cannot perform this scale, this method will
+return <xref:SkiaSharp.SKCodecResult.InvalidScale>.
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -327,6 +436,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
@@ -343,8 +453,18 @@
         <summary>Decode the bitmap into the specified memory block.</summary>
         <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+The specified <xref:SkiaSharp.SKImageInfo>, can either be
+<xref:SkiaSharp.SKCodec.Info>, or a new instance with a different
+configuration - which the codec may choose to ignore.
+
+If the specified size is different from the size from
+<xref:SkiaSharp.SKCodec.Info>, then the codec will attempt to scale the
+resulting bitmap. If the codec cannot perform this scale, this method will
+return <xref:SkiaSharp.SKCodecResult.InvalidScale>.
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -359,7 +479,13 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
       </ReturnValue>
@@ -377,9 +503,23 @@
         <summary>Decode the bitmap into the specified memory block.</summary>
         <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
-          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a <see cref="T:SkiaSharp.SKColorTable" />. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+The specified <xref:SkiaSharp.SKImageInfo>, can either be
+<xref:SkiaSharp.SKCodec.Info>, or a new instance with a different
+configuration - which the codec may choose to ignore.
+
+If the specified size is different from the size from
+<xref:SkiaSharp.SKCodec.Info>, then the codec will attempt to scale the
+resulting bitmap. If the codec cannot perform this scale, this method will
+return <xref:SkiaSharp.SKCodecResult.InvalidScale>.
+
+If specified color type is <xref:SkiaSharp.SKColorType.Index8>, then the
+caller must provide a <xref:SkiaSharp.SKColorTable>. On success, the codec
+will copy the colors into that storage, and set `colorTableCount` to the
+logical number of table entries.
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -394,6 +534,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
@@ -412,8 +553,18 @@
         <summary>Decode the bitmap into the specified memory block.</summary>
         <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+The specified <xref:SkiaSharp.SKImageInfo>, can either be
+<xref:SkiaSharp.SKCodec.Info>, or a new instance with a different
+configuration - which the codec may choose to ignore.
+
+If the specified size is different from the size from
+<xref:SkiaSharp.SKCodec.Info>, then the codec will attempt to scale the
+resulting bitmap. If the codec cannot perform this scale, this method will
+return <xref:SkiaSharp.SKCodecResult.InvalidScale>.
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -428,7 +579,13 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
       </ReturnValue>
@@ -446,9 +603,23 @@
         <summary>Decode the bitmap into the specified memory block.</summary>
         <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
-          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a color table array, with a length of at least 256. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+The specified <xref:SkiaSharp.SKImageInfo>, can either be
+<xref:SkiaSharp.SKCodec.Info>, or a new instance with a different
+configuration - which the codec may choose to ignore.
+
+If the specified size is different from the size from
+<xref:SkiaSharp.SKCodec.Info>, then the codec will attempt to scale the
+resulting bitmap. If the codec cannot perform this scale, this method will
+return <xref:SkiaSharp.SKCodecResult.InvalidScale>.
+
+If specified color type is <xref:SkiaSharp.SKColorType.Index8>, then the
+caller must provide a color table array, with a length of at least 256. On
+success, the codec will copy the colors into that storage, and set
+`colorTableCount` to the logical number of table entries.
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -463,7 +634,13 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, SKCodecOptions) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
       </ReturnValue>
@@ -483,9 +660,23 @@
         <summary>Decode the bitmap into the specified memory block.</summary>
         <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
-          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a <see cref="T:SkiaSharp.SKColorTable" />. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+The specified <xref:SkiaSharp.SKImageInfo>, can either be
+<xref:SkiaSharp.SKCodec.Info>, or a new instance with a different
+configuration - which the codec may choose to ignore.
+
+If the specified size is different from the size from
+<xref:SkiaSharp.SKCodec.Info>, then the codec will attempt to scale the
+resulting bitmap. If the codec cannot perform this scale, this method will
+return <xref:SkiaSharp.SKCodecResult.InvalidScale>.
+
+If specified color type is <xref:SkiaSharp.SKColorType.Index8>, then the
+caller must provide a <xref:SkiaSharp.SKColorTable>. On success, the codec
+will copy the colors into that storage, and set `colorTableCount` to the
+logical number of table entries.
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -500,7 +691,13 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, SKCodecOptions) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
       </ReturnValue>
@@ -520,9 +717,23 @@
         <summary>Decode the bitmap into the specified memory block.</summary>
         <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
-          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a color table array, with a length of at least 256. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+The specified <xref:SkiaSharp.SKImageInfo>, can either be
+<xref:SkiaSharp.SKCodec.Info>, or a new instance with a different
+configuration - which the codec may choose to ignore.
+
+If the specified size is different from the size from
+<xref:SkiaSharp.SKCodec.Info>, then the codec will attempt to scale the
+resulting bitmap. If the codec cannot perform this scale, this method will
+return <xref:SkiaSharp.SKCodecResult.InvalidScale>.
+
+If specified color type is <xref:SkiaSharp.SKColorType.Index8>, then the
+caller must provide a color table array, with a length of at least 256. On
+success, the codec will copy the colors into that storage, and set
+`colorTableCount` to the logical number of table entries.
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -537,7 +748,13 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, int, SKCodecOptions) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
       </ReturnValue>
@@ -559,9 +776,23 @@
         <summary>Decode the bitmap into the specified memory block.</summary>
         <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
-          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a <see cref="T:SkiaSharp.SKColorTable" />. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+The specified <xref:SkiaSharp.SKImageInfo>, can either be
+<xref:SkiaSharp.SKCodec.Info>, or a new instance with a different
+configuration - which the codec may choose to ignore.
+
+If the specified size is different from the size from
+<xref:SkiaSharp.SKCodec.Info>, then the codec will attempt to scale the
+resulting bitmap. If the codec cannot perform this scale, this method will
+return <xref:SkiaSharp.SKCodecResult.InvalidScale>.
+
+If specified color type is <xref:SkiaSharp.SKColorType.Index8>, then the
+caller must provide a <xref:SkiaSharp.SKColorTable>. On success, the codec
+will copy the colors into that storage, and set `colorTableCount` to the
+logical number of table entries.
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -576,7 +807,13 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, int, SKCodecOptions) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
       </ReturnValue>
@@ -598,9 +835,23 @@
         <summary>Decode the bitmap into the specified memory block.</summary>
         <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
         <remarks>
-          <para>The specified <see cref="T:SkiaSharp.SKImageInfo" />, can either be <see cref="P:SkiaSharp.SKCodec.Info" />, or a new instance with a different configuration - which the codec may choose to ignore.</para>
-          <para>If the specified size is different from the size from <see cref="P:SkiaSharp.SKCodec.Info" />, then the codec will attempt to scale the resulting bitmap. If the codec cannot perform this scale, this method will return <see cref="F:SkiaSharp.SKCodecResult.InvalidScale" />.</para>
-          <para>If specified color type is <see cref="F:SkiaSharp.SKColorType.Index8" />, then the caller must provide a color table array, with a length of at least 256. On success, the codec will copy the colors into that storage, and set colorTableCount to the logical number of table entries.</para>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+The specified <xref:SkiaSharp.SKImageInfo>, can either be
+<xref:SkiaSharp.SKCodec.Info>, or a new instance with a different
+configuration - which the codec may choose to ignore.
+
+If the specified size is different from the size from
+<xref:SkiaSharp.SKCodec.Info>, then the codec will attempt to scale the
+resulting bitmap. If the codec cannot perform this scale, this method will
+return <xref:SkiaSharp.SKCodecResult.InvalidScale>.
+
+If specified color type is <xref:SkiaSharp.SKColorType.Index8>, then the
+caller must provide a color table array, with a length of at least 256. On
+success, the codec will copy the colors into that storage, and set
+`colorTableCount` to the logical number of table entries.
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -615,6 +866,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSizeI</ReturnType>
@@ -640,6 +892,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -669,6 +922,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -694,6 +948,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
@@ -716,6 +971,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
@@ -741,6 +997,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKImageInfo</ReturnType>
@@ -762,6 +1019,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -783,6 +1041,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -804,7 +1063,13 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("Use EncodedOrigin instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecOrigin</ReturnType>
       </ReturnValue>
@@ -825,6 +1090,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Byte[]</ReturnType>
@@ -846,6 +1112,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -870,6 +1137,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecScanlineOrder</ReturnType>
@@ -891,6 +1159,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -916,6 +1185,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
@@ -945,6 +1215,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
@@ -976,7 +1247,13 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("The Index8 color type and color table is no longer supported. Use StartIncrementalDecode(SKImageInfo, IntPtr, int, SKCodecOptions) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
       </ReturnValue>
@@ -1011,7 +1288,13 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("The Index8 color type and color table is no longer supported. Use StartIncrementalDecode(SKImageInfo, IntPtr, int, SKCodecOptions) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
       </ReturnValue>
@@ -1046,6 +1329,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
@@ -1071,6 +1355,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
@@ -1098,7 +1383,13 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("The Index8 color type and color table is no longer supported. Use StartScanlineDecode(SKImageInfo, SKCodecOptions) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
       </ReturnValue>
@@ -1129,7 +1420,13 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("The Index8 color type and color table is no longer supported. Use StartScanlineDecode(SKImageInfo, SKCodecOptions) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKCodecResult</ReturnType>
       </ReturnValue>

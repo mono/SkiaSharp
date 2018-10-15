@@ -146,5 +146,23 @@ namespace SkiaSharp.Tests
 				Assert.NotNull(typeface);
 			}
 		}
+
+		[SkippableFact]
+		public void CanDisposeDefault()
+		{
+			// get the fist
+			var typeface = SKTypeface.Default;
+			Assert.NotNull(typeface);
+
+			// dispose and make sure that we didn't kill it
+			typeface.Dispose();
+			typeface = SKTypeface.Default;
+			Assert.NotNull(typeface);
+
+			// dispose and make sure that we didn't kill it again
+			typeface.Dispose();
+			typeface = SKTypeface.Default;
+			Assert.NotNull(typeface);
+		}
 	}
 }

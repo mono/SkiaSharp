@@ -9,7 +9,7 @@ import groovy.transform.Field
 @Field def minimalLinuxPackages = "curl mono-complete msbuild"
 @Field def nativeLinuxPackages = "python git libfontconfig1-dev"
 @Field def nativeTizenPackages = "python git openjdk-8-jdk zip libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn"
-@Field def managedLinuxPackages = "dotnet-sdk-2.0.0 ttf-ancient-fonts"
+@Field def managedLinuxPackages = "dotnet-sdk-2.1 ttf-ancient-fonts"
 
 @Field def nativeStashes = []
 @Field def managedStashes = []
@@ -57,18 +57,18 @@ node("ubuntu-1604-amd64") {
             failFast: true,
 
             // windows
-            win32:              createNativeBuilder("Windows",    "Windows",  "components-windows",     ""),
             uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows",     ""),
+            win32:              createNativeBuilder("Windows",    "Windows",  "components-windows",     ""),
             android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows",     ""),
             tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows",     ""),
 
             // macos
-            macos:              createNativeBuilder("macOS",      "macOS",    "components",             ""),
-            ios:                createNativeBuilder("iOS",        "macOS",    "components",             ""),
-            tvos:               createNativeBuilder("tvOS",       "macOS",    "components",             ""),
-            watchos:            createNativeBuilder("watchOS",    "macOS",    "components",             ""),
             android_macos:      createNativeBuilder("Android",    "macOS",    "components",             ""),
             tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components",             ""),
+            tvos:               createNativeBuilder("tvOS",       "macOS",    "components",             ""),
+            ios:                createNativeBuilder("iOS",        "macOS",    "components",             ""),
+            macos:              createNativeBuilder("macOS",      "macOS",    "components",             ""),
+            watchos:            createNativeBuilder("watchOS",    "macOS",    "components",             ""),
 
             // linux
             linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64",      nativeLinuxPackages),

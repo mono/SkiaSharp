@@ -527,8 +527,7 @@ namespace SkiaSharp
 		
 		public class Iterator : SKNativeObject
 		{
-			SKPath Path => path;
-			SKPath path;
+			private readonly SKPath path;
 
 			internal Iterator (SKPath path, bool forceClose)
 				: base (SkiaApi.sk_path_create_iter (path.Handle, forceClose ? 1 : 0))
@@ -562,8 +561,7 @@ namespace SkiaSharp
 
 		public class RawIterator : SKNativeObject
 		{
-			SKPath Path => path;
-			SKPath path;
+			private readonly SKPath path;
 
 			internal RawIterator (SKPath path)
 				: base (SkiaApi.sk_path_create_rawiter (path.Handle))

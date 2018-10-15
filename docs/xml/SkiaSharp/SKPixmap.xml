@@ -8,6 +8,7 @@
     <AssemblyVersion>1.58.0.0</AssemblyVersion>
     <AssemblyVersion>1.59.0.0</AssemblyVersion>
     <AssemblyVersion>1.60.0.0</AssemblyVersion>
+    <AssemblyVersion>1.68.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>SkiaSharp.SKObject</BaseTypeName>
@@ -29,6 +30,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
       <Docs>
@@ -47,6 +49,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters>
         <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
@@ -60,7 +63,29 @@
       </Docs>
     </Member>
     <Member MemberName=".ctor">
-      <MemberSignature Language="C#" Value="public SKPixmap (SkiaSharp.SKImageInfo info, IntPtr addr, int rowBytes, SkiaSharp.SKColorTable ctable = null);" />
+      <MemberSignature Language="C#" Value="public SKPixmap (SkiaSharp.SKImageInfo info, IntPtr addr, int rowBytes);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig specialname rtspecialname instance void .ctor(valuetype SkiaSharp.SKImageInfo info, native int addr, int32 rowBytes) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPixmap.#ctor(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32)" />
+      <MemberType>Constructor</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="addr" Type="System.IntPtr" />
+        <Parameter Name="rowBytes" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="info">The image information of the pixels.</param>
+        <param name="addr">The memory address of the pixels.</param>
+        <param name="rowBytes">The number of bytes per row.</param>
+        <summary>Creates an instance of <see cref="T:SkiaSharp.SKPixmap" />.</summary>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName=".ctor">
+      <MemberSignature Language="C#" Value="public SKPixmap (SkiaSharp.SKImageInfo info, IntPtr addr, int rowBytes, SkiaSharp.SKColorTable ctable);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig specialname rtspecialname instance void .ctor(valuetype SkiaSharp.SKImageInfo info, native int addr, int32 rowBytes, class SkiaSharp.SKColorTable ctable) cil managed" />
       <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPixmap.#ctor(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32,SkiaSharp.SKColorTable)" />
       <MemberType>Constructor</MemberType>
@@ -70,7 +95,13 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("The Index8 color type and color table is no longer supported. Use SKPixmap(SKImageInfo, IntPtr, int) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <Parameters>
         <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
         <Parameter Name="addr" Type="System.IntPtr" />
@@ -97,6 +128,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKAlphaType</ReturnType>
@@ -118,12 +150,31 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>Gets the number of bytes per pixel.</summary>
+        <value></value>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="BytesSize">
+      <MemberSignature Language="C#" Value="public int BytesSize { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance int32 BytesSize" />
+      <MemberSignature Language="DocId" Value="P:SkiaSharp.SKPixmap.BytesSize" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the total number of bytes needed to store the pixel data.</summary>
         <value></value>
         <remarks></remarks>
       </Docs>
@@ -138,6 +189,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKColorSpace</ReturnType>
@@ -159,7 +211,13 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("The Index8 color type and color table is no longer supported.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKColorTable</ReturnType>
       </ReturnValue>
@@ -180,6 +238,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKColorType</ReturnType>
@@ -201,6 +260,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -209,9 +269,10 @@
         <Parameter Name="disposing" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="disposing">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="disposing">
+          <see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+        <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.SKPixmap" /> and optionally releases the managed resources.</summary>
+        <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.SKPixmap" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Encode">
@@ -222,6 +283,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKData</ReturnType>
@@ -244,6 +306,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKData</ReturnType>
@@ -266,6 +329,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKData</ReturnType>
@@ -291,6 +355,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKData</ReturnType>
@@ -315,6 +380,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -339,6 +405,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -363,6 +430,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -390,6 +458,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -416,6 +485,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -442,6 +512,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -468,6 +539,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -494,6 +566,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -525,6 +598,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -545,6 +619,122 @@
         <remarks></remarks>
       </Docs>
     </Member>
+    <Member MemberName="Erase">
+      <MemberSignature Language="C#" Value="public bool Erase (SkiaSharp.SKColor color);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool Erase(valuetype SkiaSharp.SKColor color) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPixmap.Erase(SkiaSharp.SKColor)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="color" Type="SkiaSharp.SKColor" />
+      </Parameters>
+      <Docs>
+        <param name="color">The color to fill.</param>
+        <summary>Fill the entire pixmap with the specified color.</summary>
+        <returns>Returns <see langword="true" /> if the pixels were changed, otherwise <see langword="false" />.</returns>
+        <remarks>If the pixmap's color type does not support alpha (e.g. 565) then the alpha of the color is ignored (treated as opaque). If the color type only supports alpha (e.g. A1 or A8) then the color's R, G, B components are ignored.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Erase">
+      <MemberSignature Language="C#" Value="public bool Erase (SkiaSharp.SKColor color, SkiaSharp.SKRectI subset);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool Erase(valuetype SkiaSharp.SKColor color, valuetype SkiaSharp.SKRectI subset) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPixmap.Erase(SkiaSharp.SKColor,SkiaSharp.SKRectI)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="color" Type="SkiaSharp.SKColor" />
+        <Parameter Name="subset" Type="SkiaSharp.SKRectI" />
+      </Parameters>
+      <Docs>
+        <param name="color">The color to fill.</param>
+        <param name="subset">The subset of the pixmap to fill.</param>
+        <summary>Fill the entire pixmap with the specified color.</summary>
+        <returns>Returns <see langword="true" /> if the pixels were changed, otherwise <see langword="false" />.</returns>
+        <remarks>If the pixmap's color type does not support alpha (e.g. 565) then the alpha of the color is ignored (treated as opaque). If the color type only supports alpha (e.g. A1 or A8) then the color's R, G, B components are ignored.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ExtractSubset">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPixmap ExtractSubset (SkiaSharp.SKRectI subset);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKPixmap ExtractSubset(valuetype SkiaSharp.SKRectI subset) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPixmap.ExtractSubset(SkiaSharp.SKRectI)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPixmap</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="subset" Type="SkiaSharp.SKRectI" />
+      </Parameters>
+      <Docs>
+        <param name="subset">The bounds of the pixmap subset to retrieve.</param>
+        <summary>Creates a new <see cref="T:SkiaSharp.SKPixmap" /> which is a subset of this pixmap.</summary>
+        <returns>Returns a subset of the pixmap.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ExtractSubset">
+      <MemberSignature Language="C#" Value="public bool ExtractSubset (SkiaSharp.SKPixmap result, SkiaSharp.SKRectI subset);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool ExtractSubset(class SkiaSharp.SKPixmap result, valuetype SkiaSharp.SKRectI subset) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPixmap.ExtractSubset(SkiaSharp.SKPixmap,SkiaSharp.SKRectI)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="result" Type="SkiaSharp.SKPixmap" />
+        <Parameter Name="subset" Type="SkiaSharp.SKRectI" />
+      </Parameters>
+      <Docs>
+        <param name="result">The pixmap to store the subset pixels.</param>
+        <param name="subset">The bounds of the pixmap subset to retrieve.</param>
+        <summary>Creates a new <see cref="T:SkiaSharp.SKPixmap" /> which is a subset of this pixmap.</summary>
+        <returns>Returns <see langword="true" /> if the pixels were read, or <see langword="false" /> if there was an error.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetPixelColor">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKColor GetPixelColor (int x, int y);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKColor GetPixelColor(int32 x, int32 y) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPixmap.GetPixelColor(System.Int32,System.Int32)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKColor</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="x" Type="System.Int32" />
+        <Parameter Name="y" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="x">The column index, zero or greater, and less than the pixmap width.</param>
+        <param name="y">The row index, zero or greater, and less than the pixmap height.</param>
+        <summary>Returns the color of the pixel at the specified coordinates.</summary>
+        <returns>Returns the color of the pixel.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
     <Member MemberName="GetPixels">
       <MemberSignature Language="C#" Value="public IntPtr GetPixels ();" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance native int GetPixels() cil managed" />
@@ -556,6 +746,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.IntPtr</ReturnType>
@@ -563,6 +754,30 @@
       <Parameters />
       <Docs>
         <summary>Returns the memory address of the pixels.</summary>
+        <returns></returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetPixels">
+      <MemberSignature Language="C#" Value="public IntPtr GetPixels (int x, int y);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance native int GetPixels(int32 x, int32 y) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPixmap.GetPixels(System.Int32,System.Int32)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.IntPtr</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="x" Type="System.Int32" />
+        <Parameter Name="y" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="x">The column index, zero or greater, and less than the pixmap width.</param>
+        <param name="y">The row index, zero or greater, and less than the pixmap height.</param>
+        <summary>Returns the memory address of the pixels at (x, y).</summary>
         <returns></returns>
         <remarks></remarks>
       </Docs>
@@ -578,6 +793,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -599,6 +815,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKImageInfo</ReturnType>
@@ -618,6 +835,7 @@
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -641,6 +859,7 @@
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -668,6 +887,7 @@
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -695,6 +915,7 @@
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -717,6 +938,56 @@
         <remarks></remarks>
       </Docs>
     </Member>
+    <Member MemberName="ReadPixels">
+      <MemberSignature Language="C#" Value="public bool ReadPixels (SkiaSharp.SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY, SkiaSharp.SKTransferFunctionBehavior behavior);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool ReadPixels(valuetype SkiaSharp.SKImageInfo dstInfo, native int dstPixels, int32 dstRowBytes, int32 srcX, int32 srcY, valuetype SkiaSharp.SKTransferFunctionBehavior behavior) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPixmap.ReadPixels(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32,System.Int32,System.Int32,SkiaSharp.SKTransferFunctionBehavior)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="dstInfo" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="dstPixels" Type="System.IntPtr" />
+        <Parameter Name="dstRowBytes" Type="System.Int32" />
+        <Parameter Name="srcX" Type="System.Int32" />
+        <Parameter Name="srcY" Type="System.Int32" />
+        <Parameter Name="behavior" Type="SkiaSharp.SKTransferFunctionBehavior" />
+      </Parameters>
+      <Docs>
+        <param name="dstInfo">The image information describing the destination pixel buffer.</param>
+        <param name="dstPixels">The pixel buffer to read the pixel data into.</param>
+        <param name="dstRowBytes">The number of bytes in each row of in the destination buffer.</param>
+        <param name="srcX">The source x-coordinate to start reading from.</param>
+        <param name="srcY">The source y-coordinate to start reading from.</param>
+        <param name="behavior">The behavior to control whether or not the source pixels are first converted to linear space.</param>
+        <summary>Copies the pixels from the image into the specified buffer.</summary>
+        <returns>Returns <see langword="true" /> if the pixels were read, or <see langword="false" /> if there was an error.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Rect">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKRectI Rect { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKRectI Rect" />
+      <MemberSignature Language="DocId" Value="P:SkiaSharp.SKPixmap.Rect" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKRectI</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets a rectangle with the current width and height.</summary>
+        <value></value>
+        <remarks></remarks>
+      </Docs>
+    </Member>
     <Member MemberName="Reset">
       <MemberSignature Language="C#" Value="public void Reset ();" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Reset() cil managed" />
@@ -728,6 +999,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -739,7 +1011,32 @@
       </Docs>
     </Member>
     <Member MemberName="Reset">
-      <MemberSignature Language="C#" Value="public void Reset (SkiaSharp.SKImageInfo info, IntPtr addr, int rowBytes, SkiaSharp.SKColorTable ctable = null);" />
+      <MemberSignature Language="C#" Value="public void Reset (SkiaSharp.SKImageInfo info, IntPtr addr, int rowBytes);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Reset(valuetype SkiaSharp.SKImageInfo info, native int addr, int32 rowBytes) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPixmap.Reset(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="addr" Type="System.IntPtr" />
+        <Parameter Name="rowBytes" Type="System.Int32" />
+      </Parameters>
+      <Docs>
+        <param name="info">The image information of the pixels.</param>
+        <param name="addr">The memory address of the pixels.</param>
+        <param name="rowBytes">The number of bytes per row.</param>
+        <summary>Resets the pixmap to the specified pixels.</summary>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Reset">
+      <MemberSignature Language="C#" Value="public void Reset (SkiaSharp.SKImageInfo info, IntPtr addr, int rowBytes, SkiaSharp.SKColorTable ctable);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance void Reset(valuetype SkiaSharp.SKImageInfo info, native int addr, int32 rowBytes, class SkiaSharp.SKColorTable ctable) cil managed" />
       <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPixmap.Reset(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32,SkiaSharp.SKColorTable)" />
       <MemberType>Method</MemberType>
@@ -749,7 +1046,13 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("The Index8 color type and color table is no longer supported. Use Reset(SKImageInfo, IntPtr, int) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
       </ReturnValue>
@@ -779,7 +1082,13 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("Use ScalePixels(SKPixmap, SKFilterQuality) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
@@ -808,12 +1117,81 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
         <summary>Gets the number of bytes per row.</summary>
+        <value></value>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ScalePixels">
+      <MemberSignature Language="C#" Value="public bool ScalePixels (SkiaSharp.SKPixmap destination, SkiaSharp.SKFilterQuality quality);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool ScalePixels(class SkiaSharp.SKPixmap destination, valuetype SkiaSharp.SKFilterQuality quality) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPixmap.ScalePixels(SkiaSharp.SKPixmap,SkiaSharp.SKFilterQuality)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="destination" Type="SkiaSharp.SKPixmap" />
+        <Parameter Name="quality" Type="SkiaSharp.SKFilterQuality" />
+      </Parameters>
+      <Docs>
+        <param name="destination">The pixmap to recieve the scaled and converted pixels.</param>
+        <param name="quality">The level of quality to use when scaling the pixels.</param>
+        <summary>Copies this pixmap to the destination, scaling the pixels to fit the destination size and converting the pixels to match the color type and alpha type.</summary>
+        <returns>Returns <see langword="true" /> on success, or <see langword="false" /> if there was an error.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Pixels are copied only if pixel conversion is possible.
+
+If the color type is <xref:SkiaSharp.SKColorType.Gray8>, or
+<xref:SkiaSharp.SKColorType.Alpha8>, the destination color type must match.
+If the color type is <xref:SkiaSharp.SKColorType.Gray8>, destination
+colorspace must also match.
+
+If the alpha type is <xref:SkiaSharp.SKAlphaType.Opaque>, the destination
+alpha type must match. 
+
+If the colorspace is `null`, the destination colorspace must also be `null`.
+
+Filter Quality:
+
+ - <xref:SkiaSharp.SKFilterQuality.None> is fastest, typically implemented
+   with nearest neighbor filter.
+ - <xref:SkiaSharp.SKFilterQuality.Low> is typically implemented with bilerp
+   filter.
+ - <xref:SkiaSharp.SKFilterQuality.Medium> is typically implemented with
+   bilerp filter, and mipmap when size is reduced.
+ - <xref:SkiaSharp.SKFilterQuality.High> is slowest, typically implemented
+   with the bicubic filter.]]></format>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Size">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKSizeI Size { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKSizeI Size" />
+      <MemberSignature Language="DocId" Value="P:SkiaSharp.SKPixmap.Size" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKSizeI</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the current size of the pixmap.</summary>
         <value></value>
         <remarks></remarks>
       </Docs>
@@ -829,6 +1207,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
@@ -847,6 +1226,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPixmap</ReturnType>
@@ -869,6 +1249,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPixmap</ReturnType>
@@ -891,6 +1272,7 @@
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKPixmap</ReturnType>

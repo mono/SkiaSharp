@@ -27,6 +27,7 @@ var VERBOSITY = (Verbosity) Enum.Parse (typeof(Verbosity), Argument ("v", Argume
 var SKIP_EXTERNALS = Argument ("skipexternals", Argument ("SkipExternals", "")).ToLower ().Split (',');
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAll", Argument ("PackAllPlatforms", TARGET.ToLower() == "ci" || TARGET.ToLower() == "nuget-only")));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
+var ARTIFACTS_ROOT_URL = Argument ("artifactsRootUrl", "");
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
@@ -131,7 +132,7 @@ Task ("tests")
         } else {
             RunMSBuildWithPlatform ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", arch);
         }
-        RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/Release/SkiaSharp.Tests.dll", null, arch == "x86");
+        RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/Release/SkiaSharp.Tests.dll", arch == "x86");
         CopyFileToDirectory ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/Release/TestResult.xml", $"./output/tests/{platform}/{arch}");
     });
 
@@ -172,8 +173,8 @@ Task ("tests")
     CleanDirectories ("./tests/packages/harfbuzzsharp*");
     EnsureDirectoryExists ("./output/tests/netcore");
     RunMSBuildRestoreLocal (netCoreTestProj, "./tests/packages");
-    RunNetCoreTests (netCoreTestProj, null);
-    CopyFileToDirectory ("./tests/SkiaSharp.NetCore.Tests/TestResult.xml", "./output/tests/netcore");
+    RunNetCoreTests (netCoreTestProj);
+    CopyFile ("./tests/SkiaSharp.NetCore.Tests/TestResults/TestResults.xml", "./output/tests/netcore/TestResult.xml");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -366,7 +367,7 @@ Task ("nuget-only")
         setVersion (xdoc, "");
         xdoc.Save ($"{outDir}/{id}.nuspec");
 
-        setVersion (xdoc, $"-preview-{BUILD_NUMBER}");
+        setVersion (xdoc, $"-preview{BUILD_NUMBER}");
         xdoc.Save ($"{outDir}/{id}.prerelease.nuspec");
 
         // the legal

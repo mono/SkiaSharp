@@ -8,6 +8,7 @@
     <AssemblyVersion>1.58.0.0</AssemblyVersion>
     <AssemblyVersion>1.59.0.0</AssemblyVersion>
     <AssemblyVersion>1.60.0.0</AssemblyVersion>
+    <AssemblyVersion>1.68.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>Xamarin.Forms.View</BaseTypeName>
@@ -18,7 +19,7 @@
     </Interface>
   </Interfaces>
   <Attributes>
-    <Attribute FrameworkAlternate="skiasharp-views-forms-1.57.0;skiasharp-views-forms-1.57.1;skiasharp-views-forms-1.58.0;skiasharp-views-forms-1.58.1;skiasharp-views-forms-1.58.1.1;skiasharp-views-forms-1.59.0;skiasharp-views-forms-1.59.1;skiasharp-views-forms-1.59.1.1;skiasharp-views-forms-1.59.2;skiasharp-views-forms-1.59.3;skiasharp-views-forms-1.60.0;skiasharp-views-forms-1.60.1;skiasharp-views-forms-1.60.2;skiasharp-views-forms-1.60.3">
+    <Attribute FrameworkAlternate="skiasharp-views-forms-1.57.0;skiasharp-views-forms-1.57.1;skiasharp-views-forms-1.58.0;skiasharp-views-forms-1.58.1;skiasharp-views-forms-1.58.1.1;skiasharp-views-forms-1.59.0;skiasharp-views-forms-1.59.1;skiasharp-views-forms-1.59.1.1;skiasharp-views-forms-1.59.2;skiasharp-views-forms-1.59.3;skiasharp-views-forms-1.60.0;skiasharp-views-forms-1.60.1;skiasharp-views-forms-1.60.2;skiasharp-views-forms-1.60.3;skiasharp-views-forms-1.68.0">
       <AttributeName>Xamarin.Forms.RenderWith(typeof(SkiaSharp.Views.Forms.SKCanvasViewRenderer))</AttributeName>
     </Attribute>
   </Attributes>
@@ -38,6 +39,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
       <Docs>
@@ -56,6 +58,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSize</ReturnType>
@@ -76,6 +79,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -96,6 +100,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Xamarin.Forms.BindableProperty</ReturnType>
@@ -116,6 +121,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -137,6 +143,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Xamarin.Forms.BindableProperty</ReturnType>
@@ -157,6 +164,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -178,6 +186,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>Xamarin.Forms.SizeRequest</ReturnType>
@@ -208,6 +217,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -226,7 +236,11 @@ There are two ways to draw on this surface: by overriding the
 <xref:SkiaSharp.Views.Forms.SKCanvasView.OnPaintSurface(SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs)>
 method, or by attaching a handler to the
 <xref:SkiaSharp.Views.Forms.SKCanvasView.PaintSurface>
-event. If the method is overridden, then the base must be called.
+event.
+
+> [!IMPORTANT]
+> If this method is overridden, then the base must be called, otherwise the
+> event will not be fired.
 
 ## Examples
 
@@ -243,6 +257,7 @@ protected override void OnPaintSurface (SKPaintSurfaceEventArgs e)
     var canvas = surface.Canvas;
 
     // draw on the canvas
+
     canvas.Flush ();
 }
 ```
@@ -263,6 +278,7 @@ protected override void OnPaintSurface (SKPaintSurfaceEventArgs e)
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -287,6 +303,7 @@ protected override void OnPaintSurface (SKPaintSurfaceEventArgs e)
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.EventHandler&lt;SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs&gt;</ReturnType>
@@ -306,8 +323,6 @@ event.
 ## Examples
 
 ```csharp
-SKCanvasView myView = ...;
-
 myView.PaintSurface += (sender, e) => {
     var surface = e.Surface;
     var surfaceWidth = e.Info.Width;
@@ -316,6 +331,7 @@ myView.PaintSurface += (sender, e) => {
     var canvas = surface.Canvas;
 
     // draw on the canvas
+
     canvas.Flush ();
 };
 ```
@@ -334,6 +350,7 @@ myView.PaintSurface += (sender, e) => {
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Forms</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.EventHandler&lt;SkiaSharp.Views.Forms.GetPropertyValueEventArgs&lt;SkiaSharp.SKSize&gt;&gt;</ReturnType>
@@ -357,6 +374,7 @@ myView.PaintSurface += (sender, e) => {
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -383,6 +401,7 @@ myView.PaintSurface += (sender, e) => {
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -407,6 +426,7 @@ myView.PaintSurface += (sender, e) => {
       <AssemblyInfo>
         <AssemblyName>SkiaSharp.Views.Forms</AssemblyName>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.EventHandler</ReturnType>
@@ -426,6 +446,7 @@ myView.PaintSurface += (sender, e) => {
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.EventHandler&lt;SkiaSharp.Views.Forms.SKTouchEventArgs&gt;</ReturnType>

@@ -2,8 +2,14 @@
 
 namespace SkiaSharp
 {
-	public abstract class SKPixelSerializer : IDisposable
+	[Obsolete]
+	public abstract class SKPixelSerializer : SKObject
 	{
+		protected SKPixelSerializer ()
+			: base (IntPtr.Zero, false)
+		{
+		}
+
 		public bool UseEncodedData (IntPtr data, ulong length)
 		{
 			if (SKObject.SizeOf<IntPtr> () == 4 && length > UInt32.MaxValue)
@@ -33,16 +39,9 @@ namespace SkiaSharp
 		{
 			return new SKSimplePixelSerializer (onUseEncodedData, onEncode);
 		}
-
-		public void Dispose ()
-		{
-		}
-
-		protected virtual void Dispose (bool disposing)
-		{
-		}
 	}
 
+	[Obsolete]
 	internal class SKSimplePixelSerializer : SKPixelSerializer
 	{
 		private readonly Func<IntPtr, IntPtr, bool> onUseEncodedData;
@@ -65,7 +64,7 @@ namespace SkiaSharp
 		}
 	}
 
-	[Obsolete ("Use SKPixelSerializer instead.")]
+	[Obsolete]
 	public abstract class SKManagedPixelSerializer : SKPixelSerializer
 	{
 		public SKManagedPixelSerializer()

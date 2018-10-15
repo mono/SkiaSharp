@@ -14,7 +14,9 @@ namespace SkiaSharp.Views.Tizen
 			if (Profile == "tv")
 				return 72;
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			SystemInfo.TryGetValue("http://tizen.org/feature/screen.dpi", out int dpi);
+#pragma warning restore CS0618 // Type or member is obsolete
 			return dpi;
 		});
 

@@ -8,6 +8,7 @@
     <AssemblyVersion>1.58.0.0</AssemblyVersion>
     <AssemblyVersion>1.59.0.0</AssemblyVersion>
     <AssemblyVersion>1.60.0.0</AssemblyVersion>
+    <AssemblyVersion>1.68.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>CoreAnimation.CALayer</BaseTypeName>
@@ -29,6 +30,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
       <Docs>
@@ -47,6 +49,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSize</ReturnType>
@@ -68,6 +71,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -76,9 +80,10 @@
         <Parameter Name="disposing" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="disposing">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="disposing">
+          <see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+        <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.Views.iOS.SKCanvasLayer" /> and optionally releases the managed resources.</summary>
+        <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.Views.iOS.SKCanvasLayer" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawInContext">
@@ -92,6 +97,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -116,7 +122,13 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-views-ios-1.68.0">
+          <AttributeName>System.Obsolete("Use OnPaintSurface(SKPaintSurfaceEventArgs) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
       </ReturnValue>
@@ -129,10 +141,29 @@
         <param name="info">The information about the surface.</param>
         <summary>Implement this to draw on the canvas.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.iOS.SKCanvasLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.iOS.SKCanvasLayer.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
-          <para></para>
-          <example>
-            <code lang="C#"><![CDATA[public override void DrawInSurface (SKSurface surface, SKImageInfo info)
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+There are two ways to draw on this surface: by overriding the
+<xref:SkiaSharp.Views.iOS.SKCanvasLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)>
+method, or by attaching a handler to the
+<xref:SkiaSharp.Views.iOS.SKCanvasLayer.PaintSurface>
+event.
+
+> [!IMPORTANT]
+> If this method is overridden, then the base must be called, otherwise the
+> event may not be fired.
+
+> [!NOTE]
+> If SkiaSharp version v1.68.x or greater is being used, then the
+> <xref:SkiaSharp.Views.iOS.SKCanvasLayer.OnPaintSurface(SkiaSharp.Views.iOS.SKPaintSurfaceEventArgs)>
+> method should be overridden instead of
+> <xref:SkiaSharp.Views.iOS.SKCanvasLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)>.
+
+## Examples
+
+```csharp
+public override void DrawInSurface (SKSurface surface, SKImageInfo info)
 {
     // call the base method
     base.DrawInSurface (surface, info);
@@ -143,9 +174,11 @@
     var canvas = surface.Canvas;
 
     // draw on the canvas
+
     canvas.Flush ();
-}]]></code>
-          </example>
+}
+```
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -160,6 +193,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Boolean</ReturnType>
@@ -168,6 +202,67 @@
         <summary>Gets or sets a value indicating whether the drawing canvas should be resized on high resolution displays.</summary>
         <value></value>
         <remarks>By default, when false, the canvas is resized to 1 canvas pixel per display pixel. When true, the canvas is resized to device independent pixels, and then stretched to fill the view. Although performance is improved and all objects are the same size on different display densities, blurring and pixelation may occur.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OnPaintSurface">
+      <MemberSignature Language="C#" Value="protected virtual void OnPaintSurface (SkiaSharp.Views.iOS.SKPaintSurfaceEventArgs e);" />
+      <MemberSignature Language="ILAsm" Value=".method familyhidebysig newslot virtual instance void OnPaintSurface(class SkiaSharp.Views.iOS.SKPaintSurfaceEventArgs e) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.Views.iOS.SKCanvasLayer.OnPaintSurface(SkiaSharp.Views.iOS.SKPaintSurfaceEventArgs)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp.Views.iOS</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="e" Type="SkiaSharp.Views.iOS.SKPaintSurfaceEventArgs" />
+      </Parameters>
+      <Docs>
+        <param name="e">The event arguments that contain the drawing surface and information.</param>
+        <summary>Implement this to draw on the canvas.</summary>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+There are two ways to draw on this surface: by overriding the
+<xref:SkiaSharp.Views.iOS.SKCanvasLayer.OnPaintSurface(SkiaSharp.Views.iOS.SKPaintSurfaceEventArgs)>
+method, or by attaching a handler to the
+<xref:SkiaSharp.Views.iOS.SKCanvasLayer.PaintSurface>
+event.
+
+> [!IMPORTANT]
+> If this method is overridden, then the base must be called, otherwise the
+> event will not be fired.
+
+> [!NOTE]
+> If a version of SkiaSharp prior to version v1.68.x is being used, then the
+> <xref:SkiaSharp.Views.iOS.SKCanvasLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)>
+> method should be overridden instead of
+> <xref:SkiaSharp.Views.iOS.SKCanvasLayer.OnPaintSurface(SkiaSharp.Views.iOS.SKPaintSurfaceEventArgs)>.
+
+## Examples
+
+```csharp
+protected override void OnPaintSurface (SKPaintSurfaceEventArgs e)
+{
+    // call the base method
+    base.OnPaintSurface (e);
+
+    var surface = e.Surface;
+    var surfaceWidth = e.Info.Width;
+    var surfaceHeight = e.Info.Height;
+
+    var canvas = surface.Canvas;
+
+    // draw on the canvas
+
+    canvas.Flush ();
+}
+```
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="PaintSurface">
@@ -181,6 +276,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.EventHandler&lt;SkiaSharp.Views.iOS.SKPaintSurfaceEventArgs&gt;</ReturnType>
@@ -188,11 +284,24 @@
       <Docs>
         <summary>Occurs when the the canvas needs to be redrawn.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.iOS.SKCanvasLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.iOS.SKCanvasLayer.PaintSurface" /> event.</para>
-          <para></para>
-          <example>
-            <code lang="C#"><![CDATA[SKCanvasLayer myLayer = ...;
+          <format type="text/markdown"><![CDATA[
+## Remarks
 
+There are two ways to draw on this surface: by overriding the
+<xref:SkiaSharp.Views.iOS.SKCanvasLayer.OnPaintSurface(SkiaSharp.Views.iOS.SKPaintSurfaceEventArgs)>
+method, or by attaching a handler to the
+<xref:SkiaSharp.Views.iOS.SKCanvasLayer.PaintSurface>
+event.
+
+> [!NOTE]
+> If a version of SkiaSharp prior to version v1.68.x is being used, then the
+> <xref:SkiaSharp.Views.iOS.SKCanvasLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)>
+> method should be overridden instead of
+> <xref:SkiaSharp.Views.iOS.SKCanvasLayer.OnPaintSurface(SkiaSharp.Views.iOS.SKPaintSurfaceEventArgs)>.
+
+## Examples
+
+```csharp
 myLayer.PaintSurface += (sender, e) => {
     var surface = e.Surface;
     var surfaceWidth = e.Info.Width;
@@ -201,9 +310,11 @@ myLayer.PaintSurface += (sender, e) => {
     var canvas = surface.Canvas;
 
     // draw on the canvas
+
     canvas.Flush ();
-};]]></code>
-          </example>
+};
+```
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -218,7 +329,13 @@ myLayer.PaintSurface += (sender, e) => {
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-views-ios-1.68.0">
+          <AttributeName>System.Obsolete("Use PaintSurface instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.Views.iOS.ISKCanvasLayerDelegate</ReturnType>
       </ReturnValue>

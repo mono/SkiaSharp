@@ -8,6 +8,7 @@
     <AssemblyVersion>1.58.0.0</AssemblyVersion>
     <AssemblyVersion>1.59.0.0</AssemblyVersion>
     <AssemblyVersion>1.60.0.0</AssemblyVersion>
+    <AssemblyVersion>1.68.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>SkiaSharp.SKObject</BaseTypeName>
@@ -29,6 +30,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -39,6 +41,24 @@
       <Docs>
         <param name="releaseResources">Use true to indicate that the underlying 3D context is not yet lost and the <see cref="T:SkiaSharp.GRContext" /> will cleanup all allocated resources before returning. Using false will ensure that the destructors of the <see cref="T:SkiaSharp.GRContext" /> and any of its created resource objects will not make backend 3D API calls.</param>
         <summary>Abandons all GPU resources and assumes the underlying backend 3D API context is not longer usable. After returning it will assume that the underlying context may no longer be valid.</summary>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Backend">
+      <MemberSignature Language="C#" Value="public SkiaSharp.GRBackend Backend { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.GRBackend Backend" />
+      <MemberSignature Language="DocId" Value="P:SkiaSharp.GRContext.Backend" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.GRBackend</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the backend that this context is wrapping.</summary>
+        <value></value>
         <remarks></remarks>
       </Docs>
     </Member>
@@ -53,6 +73,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.GRContext</ReturnType>
@@ -78,6 +99,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.GRContext</ReturnType>
@@ -105,7 +127,13 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("Use Create(GRBackend, GRGlInterface) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.GRContext</ReturnType>
       </ReturnValue>
@@ -179,6 +207,47 @@
         <remarks></remarks>
       </Docs>
     </Member>
+    <Member MemberName="CreateGl">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.GRContext CreateGl ();" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.GRContext CreateGl() cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.GRContext.CreateGl" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.GRContext</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Creates a <see cref="T:SkiaSharp.GRContext" /> for an OpenGL context.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.GRContext" /> if one was created, otherwise null.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CreateGl">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.GRContext CreateGl (SkiaSharp.GRGlInterface backendContext);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.GRContext CreateGl(class SkiaSharp.GRGlInterface backendContext) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.GRContext.CreateGl(SkiaSharp.GRGlInterface)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.GRContext</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="backendContext" Type="SkiaSharp.GRGlInterface" />
+      </Parameters>
+      <Docs>
+        <param name="backendContext">The OpenGL interface to use.</param>
+        <summary>Creates a <see cref="T:SkiaSharp.GRContext" /> for an OpenGL context.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.GRContext" /> if one was created, otherwise null.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
     <Member MemberName="Dispose">
       <MemberSignature Language="C#" Value="protected override void Dispose (bool disposing);" />
       <MemberSignature Language="ILAsm" Value=".method familyhidebysig virtual instance void Dispose(bool disposing) cil managed" />
@@ -190,6 +259,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -198,9 +268,10 @@
         <Parameter Name="disposing" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="disposing">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="disposing">
+          <see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+        <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.GRContext" /> and optionally releases the managed resources.</summary>
+        <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.GRContext" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Flush">
@@ -214,6 +285,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -252,6 +324,28 @@
         <remarks></remarks>
       </Docs>
     </Member>
+    <Member MemberName="GetMaxSurfaceSampleCountForColorType">
+      <MemberSignature Language="C#" Value="public int GetMaxSurfaceSampleCountForColorType (SkiaSharp.SKColorType colorType);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance int32 GetMaxSurfaceSampleCountForColorType(valuetype SkiaSharp.SKColorType colorType) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.GRContext.GetMaxSurfaceSampleCountForColorType(SkiaSharp.SKColorType)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="colorType" Type="SkiaSharp.SKColorType" />
+      </Parameters>
+      <Docs>
+        <param name="colorType">The color type.</param>
+        <summary>Get the maximum supported sample count for the specified color type.</summary>
+        <returns>Returns the maximum supported sample count.</returns>
+        <remarks>1 is returned if only non-MSAA rendering is supported for the color type. 0 is returned if rendering to this color type is not supported at all.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="GetRecommendedSampleCount">
       <MemberSignature Language="C#" Value="public int GetRecommendedSampleCount (SkiaSharp.GRPixelConfig config, float dpi);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance int32 GetRecommendedSampleCount(valuetype SkiaSharp.GRPixelConfig config, float32 dpi) cil managed" />
@@ -263,7 +357,13 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("Use GetMaxSurfaceSampleCountForColorType(SKColorType) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
@@ -290,6 +390,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -316,6 +417,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -342,6 +444,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -366,6 +469,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -390,6 +494,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -414,6 +519,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>

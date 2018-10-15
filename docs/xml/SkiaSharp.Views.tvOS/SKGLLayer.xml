@@ -8,6 +8,7 @@
     <AssemblyVersion>1.58.0.0</AssemblyVersion>
     <AssemblyVersion>1.59.0.0</AssemblyVersion>
     <AssemblyVersion>1.60.0.0</AssemblyVersion>
+    <AssemblyVersion>1.68.0.0</AssemblyVersion>
   </AssemblyInfo>
   <Base>
     <BaseTypeName>CoreAnimation.CAEAGLLayer</BaseTypeName>
@@ -29,6 +30,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <Parameters />
       <Docs>
@@ -47,6 +49,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSize</ReturnType>
@@ -68,6 +71,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -76,9 +80,10 @@
         <Parameter Name="disposing" Type="System.Boolean" />
       </Parameters>
       <Docs>
-        <param name="disposing">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="disposing">
+          <see langword="true" /> to release both managed and unmanaged resources; <see langword="false" /> to release only unmanaged resources.</param>
+        <summary>Releases the unmanaged resources used by the <see cref="T:SkiaSharp.Views.tvOS.SKGLLayer" /> and optionally releases the managed resources.</summary>
+        <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.Views.tvOS.SKGLLayer" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
       </Docs>
     </Member>
     <Member MemberName="DrawInSurface">
@@ -92,7 +97,13 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-views-tvos-1.68.0">
+          <AttributeName>System.Obsolete("Use OnPaintSurface(SKPaintGLSurfaceEventArgs) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
       </ReturnValue>
@@ -105,10 +116,29 @@
         <param name="renderTarget">The render target that is currently being drawn.</param>
         <summary>Implement this to draw on the canvas.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.tvOS.SKGLLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTargetDesc)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.tvOS.SKGLLayer.PaintSurface" /> event. If the method is overridden, then the base must be called.</para>
-          <para></para>
-          <example>
-            <code lang="C#"><![CDATA[public override void DrawInSurface (SKSurface surface, SKBackendRenderTargetDesc renderTarget)
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+There are two ways to draw on this surface: by overriding the
+<xref:SkiaSharp.Views.tvOS.SKGLLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTargetDesc)>
+method, or by attaching a handler to the
+<xref:SkiaSharp.Views.tvOS.SKGLLayer.PaintSurface>
+event.
+
+> [!IMPORTANT]
+> If this method is overridden, then the base must be called, otherwise the
+> event may not be fired.
+
+> [!NOTE]
+> If SkiaSharp version v1.68.x or greater is being used, then the
+> <xref:SkiaSharp.Views.tvOS.SKGLLayer.OnPaintSurface(SkiaSharp.Views.tvOS.SKPaintGLSurfaceEventArgs)>
+> method should be overridden instead of
+> <xref:SkiaSharp.Views.tvOS.SKGLLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTargetDesc)>.
+
+## Examples
+
+```csharp
+public override void DrawInSurface (SKSurface surface, SKBackendRenderTargetDesc renderTarget)
 {
     // call the base method
     base.DrawInSurface (surface, renderTarget);
@@ -119,10 +149,11 @@
     var canvas = surface.Canvas;
 
     // draw on the canvas
+
     canvas.Flush ();
-}]]></code>
-          </example>
-          <para></para>
+}
+```
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -137,6 +168,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>CoreGraphics.CGRect</ReturnType>
@@ -156,6 +188,7 @@
         <AssemblyName>SkiaSharp.Views.tvOS</AssemblyName>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>SkiaSharp.GRContext</ReturnType>
@@ -164,6 +197,67 @@
         <summary>Gets the current GPU context.</summary>
         <value></value>
         <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="OnPaintSurface">
+      <MemberSignature Language="C#" Value="protected virtual void OnPaintSurface (SkiaSharp.Views.tvOS.SKPaintGLSurfaceEventArgs e);" />
+      <MemberSignature Language="ILAsm" Value=".method familyhidebysig newslot virtual instance void OnPaintSurface(class SkiaSharp.Views.tvOS.SKPaintGLSurfaceEventArgs e) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.Views.tvOS.SKGLLayer.OnPaintSurface(SkiaSharp.Views.tvOS.SKPaintGLSurfaceEventArgs)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp.Views.tvOS</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Void</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="e" Type="SkiaSharp.Views.tvOS.SKPaintGLSurfaceEventArgs" />
+      </Parameters>
+      <Docs>
+        <param name="e">The event arguments that contain the drawing surface and information.</param>
+        <summary>Implement this to draw on the canvas.</summary>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+There are two ways to draw on this surface: by overriding the
+<xref:SkiaSharp.Views.tvOS.SKGLLayer.OnPaintSurface(SkiaSharp.Views.tvOS.SKPaintGLSurfaceEventArgs)>
+method, or by attaching a handler to the
+<xref:SkiaSharp.Views.tvOS.SKGLLayer.PaintSurface>
+event.
+
+> [!IMPORTANT]
+> If this method is overridden, then the base must be called, otherwise the
+> event will not be fired.
+
+> [!NOTE]
+> If a version of SkiaSharp prior to version v1.68.x is being used, then the
+> <xref:SkiaSharp.Views.tvOS.SKGLLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTargetDesc)>
+> method should be overridden instead of
+> <xref:SkiaSharp.Views.tvOS.SKGLLayer.OnPaintSurface(SkiaSharp.Views.tvOS.SKPaintGLSurfaceEventArgs)>.
+
+## Examples
+
+```csharp
+protected override void OnPaintSurface (SKPaintGLSurfaceEventArgs e)
+{
+    // call the base method
+    base.OnPaintSurface (e);
+
+    var surface = e.Surface;
+    var surfaceWidth = e.BackendRenderTarget.Width;
+    var surfaceHeight = e.BackendRenderTarget.Height;
+
+    var canvas = surface.Canvas;
+
+    // draw on the canvas
+
+    canvas.Flush ();
+}
+```
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="PaintSurface">
@@ -177,6 +271,7 @@
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.EventHandler&lt;SkiaSharp.Views.tvOS.SKPaintGLSurfaceEventArgs&gt;</ReturnType>
@@ -184,22 +279,37 @@
       <Docs>
         <summary>Occurs when the the canvas needs to be redrawn.</summary>
         <remarks>
-          <para>There are two ways to draw on this surface: by overriding the <see cref="M:SkiaSharp.Views.tvOS.SKGLLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTargetDesc)" /> method, or by attaching a handler to the <see cref="E:SkiaSharp.Views.tvOS.SKGLLayer.PaintSurface" /> event.</para>
-          <para></para>
-          <example>
-            <code lang="C#"><![CDATA[SKGLLayer myLayer = ...;
+          <format type="text/markdown"><![CDATA[
+## Remarks
 
+There are two ways to draw on this surface: by overriding the
+<xref:SkiaSharp.Views.tvOS.SKGLLayer.OnPaintSurface(SkiaSharp.Views.tvOS.SKPaintGLSurfaceEventArgs)>
+method, or by attaching a handler to the
+<xref:SkiaSharp.Views.tvOS.SKGLLayer.PaintSurface>
+event.
+
+> [!NOTE]
+> If a version of SkiaSharp prior to version v1.68.x is being used, then the
+> <xref:SkiaSharp.Views.tvOS.SKGLLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTargetDesc)>
+> method should be overridden instead of
+> <xref:SkiaSharp.Views.tvOS.SKGLLayer.OnPaintSurface(SkiaSharp.Views.tvOS.SKPaintGLSurfaceEventArgs)>.
+
+## Examples
+
+```csharp
 myLayer.PaintSurface += (sender, e) => {
     var surface = e.Surface;
-    var surfaceWidth = e.Info.Width;
-    var surfaceHeight = e.Info.Height;
+    var surfaceWidth = e.BackendRenderTarget.Width;
+    var surfaceHeight = e.BackendRenderTarget.Height;
 
     var canvas = surface.Canvas;
 
     // draw on the canvas
+
     canvas.Flush ();
-};]]></code>
-          </example>
+};
+```
+]]></format>
         </remarks>
       </Docs>
     </Member>
@@ -214,6 +324,7 @@ myLayer.PaintSurface += (sender, e) => {
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
       <ReturnValue>
         <ReturnType>System.Void</ReturnType>
@@ -235,7 +346,13 @@ myLayer.PaintSurface += (sender, e) => {
         <AssemblyVersion>1.58.0.0</AssemblyVersion>
         <AssemblyVersion>1.59.0.0</AssemblyVersion>
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-views-tvos-1.68.0">
+          <AttributeName>System.Obsolete("Use PaintSurface instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.Views.tvOS.ISKGLLayerDelegate</ReturnType>
       </ReturnValue>

@@ -22,7 +22,7 @@ namespace SkiaSharpSample.Samples
 			{
 				// invert the pixels
 				var pixels = source.Pixels;
-				for (int i = 0; i < pixels.Length; i++)
+				for (var i = 0; i < pixels.Length; i++)
 				{
 					pixels[i] = new SKColor(
 						(byte)(255 - pixels[i].Red),

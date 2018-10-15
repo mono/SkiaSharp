@@ -23,13 +23,14 @@ namespace SkiaSharp.Views.Tizen
 		public SKGLSurfaceView(EvasObject parent)
 			: base(parent)
 		{
-			glConfig = new Evas.Config()
+			glConfig = new Evas.Config
 			{
 				color_format = Evas.ColorFormat.RGBA_8888,
 				depth_bits = Evas.DepthBits.BIT_24,
 				stencil_bits = Evas.StencilBits.BIT_8,
 				options_bits = Evas.OptionsBits.NONE,
 				multisample_bits = Evas.MultisampleBits.HIGH,
+				gles_version = default(int)
 			};
 		}
 

@@ -115,6 +115,11 @@ namespace SkiaSharp.Views.Forms
 			TNativeView ret = (TNativeView)Activator.CreateInstance(typeof(TNativeView), new[] { TForms.NativeParent });
 			return ret;
 		}
+#elif __IOS__ || __MACOS__
+		protected override TNativeView CreateNativeControl()
+		{
+			return (TNativeView)Activator.CreateInstance(typeof(TNativeView));
+		}
 #else
 		protected virtual TNativeView CreateNativeControl()
 		{

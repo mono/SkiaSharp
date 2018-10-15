@@ -17,7 +17,7 @@ namespace SkiaSharp
 		{
 			var handle = desc.TextureHandle;
 			if (handle.Format == 0) {
-				handle.Format = desc.Config.ToSizedFormat ();
+				handle.Format = desc.Config.ToGlSizedFormat ();
 			}
 			CreateGl (desc.Width, desc.Height, false, handle);
 		}
@@ -29,7 +29,7 @@ namespace SkiaSharp
 			var handlePtr = desc.TextureHandle;
 			var oldHandle = PtrToStructure<GRTextureInfoObsolete> (handlePtr);
 
-			var handle = new GRGlTextureInfo (oldHandle.fTarget, oldHandle.fID, desc.Config.ToSizedFormat ());
+			var handle = new GRGlTextureInfo (oldHandle.fTarget, oldHandle.fID, desc.Config.ToGlSizedFormat ());
 			CreateGl (desc.Width, desc.Height, false, handle);
 		}
 
@@ -62,6 +62,8 @@ namespace SkiaSharp
 		public int Height => SkiaApi.gr_backendtexture_get_height (Handle);
 		public bool HasMipMaps => SkiaApi.gr_backendtexture_has_mipmaps (Handle);
 		public GRBackend Backend => SkiaApi.gr_backendtexture_get_backend (Handle);
+		public SKSizeI Size => new SKSizeI (Width, Height);
+		public SKRectI Rect => new SKRectI (0, 0, Width, Height);
 
 		public GRGlTextureInfo GetGlTextureInfo ()
 		{

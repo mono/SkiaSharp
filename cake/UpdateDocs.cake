@@ -35,6 +35,31 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
     }
 }
 
+Task ("docs-download-output")
+    .Does (() =>
+{
+    if (string.IsNullOrEmpty (ARTIFACTS_ROOT_URL))
+        throw new Exception ("Specify an artifacts root URL with --artifactsRootUrl=<URL>");
+
+    EnsureDirectoryExists ("./output/nugets");
+    CleanDirectories ("./output/nugets");
+
+    foreach (var id in TRACKED_NUGETS.Keys) {
+        Information ($"Downloading '{id}'...");
+
+        var version = GetVersion (id);
+        var name = $"{id}.{version}.nupkg";
+
+        CleanDirectories ($"./output/{id}");
+        DownloadFile ($"{ARTIFACTS_ROOT_URL}/nugets/{name}", $"./output/nugets/{name}");
+        Unzip ($"./output/nugets/{name}", $"./output/{id}/nuget");
+    }
+
+    CleanDirectories ($"./output/samples");
+    DownloadFile ($"{ARTIFACTS_ROOT_URL}/samples.zip", $"./output/samples.zip");
+    Unzip ($"./output/samples.zip", $"./output/samples");
+});
+
 Task ("docs-api-diff")
     .Does (async () =>
 {
@@ -49,12 +74,14 @@ Task ("docs-api-diff")
         Information ($"Comparing the assemblies in '{id}'...");
 
         var version = GetVersion (id);
-        var latestVersion = (await NuGetVersions.GetLatestAsync (id)).ToNormalizedString ();
+        var latestVersion = (await NuGetVersions.GetLatestAsync (id))?.ToNormalizedString ();
         Debug ($"Version '{latestVersion}' is the latest version of '{id}'...");
 
         // pre-cache so we can have better logs
-        Debug ($"Caching version '{latestVersion}' of '{id}'...");
-        await comparer.ExtractCachedPackageAsync (id, latestVersion);
+        if (!string.IsNullOrEmpty (latestVersion)) {
+            Debug ($"Caching version '{latestVersion}' of '{id}'...");
+            await comparer.ExtractCachedPackageAsync (id, latestVersion);
+        }
 
         // generate the diff and copy to the changelogs
         Debug ($"Running a diff on '{latestVersion}' vs '{version}' of '{id}'...");
@@ -207,6 +234,8 @@ Task ("docs-format-docs")
     float totalTypes = 0;
     float totalMembers = 0;
     foreach (var file in docFiles) {
+        Debug("Processing {0}...", file.FullPath);
+
         var xdoc = XDocument.Load (file.FullPath);
 
         // remove IComponent docs as this is just designer
@@ -228,6 +257,21 @@ Task ("docs-format-docs")
                 mass.Elements ("AssemblyPublicKey")
                     .Skip (1)
                     .Remove ();
+            }
+        }
+
+        // remove any duplicate AssemblyVersions
+        if (xdoc.Root.Name == "Type") {
+            foreach (var info in xdoc.Root.Descendants ("AssemblyInfo")) {
+                var versions = info.Elements ("AssemblyVersion");
+                var newVersions = new List<XElement> ();
+                foreach (var version in versions) {
+                    if (newVersions.All (nv => nv.Value != version.Value)) {
+                        newVersions.Add (version);
+                    }
+                }
+                versions.Remove ();
+                info.Add (newVersions.OrderBy (e => e.Value));
             }
         }
 
@@ -261,6 +305,17 @@ Task ("docs-format-docs")
             }
         }
 
+        // remove empty FrameworkAlternate elements
+        var emptyAlts = xdoc.Root
+            .Descendants ()
+            .Where (d => d.Attribute ("FrameworkAlternate") != null && string.IsNullOrEmpty (d.Attribute ("FrameworkAlternate").Value))
+            .ToArray ();
+        foreach (var empty in emptyAlts) {
+            if (empty?.Parent != null) {
+                empty.Remove ();
+            }
+        }
+
         // count the types without docs
         var typesWithDocs = xdoc.Root
             .Elements ("Docs");
@@ -272,7 +327,6 @@ Task ("docs-format-docs")
         var membersWithDocs = xdoc.Root
             .Elements ("Members")
             .Elements ("Member")
-            .Where (m => m.Attribute ("MemberName")?.Value != "Dispose" && m.Attribute ("MemberName")?.Value != "Finalize")
             .Elements ("Docs");
         totalMembers += membersWithDocs.Count ();
         var currentMemberCount = membersWithDocs.Count (m => m.Value?.IndexOf ("To be added.") >= 0);

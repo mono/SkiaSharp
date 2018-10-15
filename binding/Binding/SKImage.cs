@@ -356,6 +356,7 @@ namespace SkiaSharp
 			return GetObject<SKData> (SkiaApi.sk_image_encode (Handle));
 		}
 
+		[Obsolete]
 		public SKData Encode (SKPixelSerializer serializer)
 		{
 			if (serializer == null)

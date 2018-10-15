@@ -36,8 +36,7 @@ namespace SkiaSharpSample.Samples
 				// decode the image
 				using (var bitmap = new SKBitmap(info.Width, info.Height, info.ColorType, info.IsOpaque ? SKAlphaType.Opaque : SKAlphaType.Premul))
 				{
-					IntPtr length;
-					var result = codec.GetPixels(bitmap.Info, bitmap.GetPixels(out length));
+					var result = codec.GetPixels(bitmap.Info, bitmap.GetPixels());
 					if (result == SKCodecResult.Success || result == SKCodecResult.IncompleteInput)
 					{
 						var x = 25;

@@ -41,11 +41,11 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void TestMatchFamily()
+		public void TestGetFontStyles()
 		{
 			var fonts = SKFontManager.Default;
 
-			var set = fonts.MatchFamily(DefaultFontFamily);
+			var set = fonts.GetFontStyles(DefaultFontFamily);
 			Assert.NotNull(set);
 
 			Assert.True(set.Count > 0);
@@ -62,7 +62,6 @@ namespace SkiaSharp.Tests
 			Assert.Equal((int)SKFontStyleWeight.Bold, tf.FontWeight);
 		}
 
-		[Obsolete]
 		[SkippableFact]
 		public void TestMatchTypeface()
 		{
@@ -82,7 +81,6 @@ namespace SkiaSharp.Tests
 			Assert.Equal(normal.FamilyName, bold.FamilyName);
 		}
 
-		[Obsolete]
 		[SkippableFact]
 		public void TestMatchTypefaceFromStream()
 		{
@@ -93,7 +91,7 @@ namespace SkiaSharp.Tests
 
 			var fonts = SKFontManager.Default;
 
-			var typeface = fonts.FromFile(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
+			var typeface = fonts.CreateTypeface(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
 			Assert.Equal("Roboto2", typeface.FamilyName);
 
 			var match = fonts.MatchTypeface(typeface, SKFontStyle.Bold);
@@ -105,7 +103,7 @@ namespace SkiaSharp.Tests
 		{
 			var fonts = SKFontManager.Default;
 
-			Assert.Null(fonts.FromFile(Path.Combine(PathToFonts, "font that doesn't exist.ttf")));
+			Assert.Null(fonts.CreateTypeface(Path.Combine(PathToFonts, "font that doesn't exist.ttf")));
 		}
 
 		[SkippableFact]
@@ -113,7 +111,7 @@ namespace SkiaSharp.Tests
 		{
 			var fonts = SKFontManager.Default;
 
-			using (var typeface = fonts.FromFile(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf")))
+			using (var typeface = fonts.CreateTypeface(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf")))
 			{
 				Assert.Equal("Roboto2", typeface.FamilyName);
 			}
@@ -126,7 +124,7 @@ namespace SkiaSharp.Tests
 
 			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
 			using (var data = SKData.CreateCopy(bytes))
-			using (var typeface = fonts.FromData(data))
+			using (var typeface = fonts.CreateTypeface(data))
 			{
 				Assert.NotNull(typeface);
 			}
@@ -139,18 +137,36 @@ namespace SkiaSharp.Tests
 
 			using (var stream = File.OpenRead(Path.Combine(PathToFonts, "Distortable.ttf")))
 			using (var nonSeekable = new NonSeekableReadOnlyStream(stream))
-			using (var typeface = fonts.FromStream(nonSeekable))
+			using (var typeface = fonts.CreateTypeface(nonSeekable))
 			{
 				Assert.NotNull(typeface);
 			}
 		}
 
 		[SkippableFact]
-		public void CanCreateStyleSet()
+		public void CanGetFontStyles()
 		{
 			var fonts = SKFontManager.Default;
 
-			Assert.NotNull(fonts.CreateStyleSet(0));
+			Assert.NotNull(fonts.GetFontStyles(0));
+		}
+
+		[SkippableFact]
+		public void CanDisposeDefault()
+		{
+			// get the fist
+			var fonts = SKFontManager.Default;
+			Assert.NotNull(fonts);
+
+			// dispose and make sure that we didn't kill it
+			fonts.Dispose();
+			fonts = SKFontManager.Default;
+			Assert.NotNull(fonts);
+
+			// dispose and make sure that we didn't kill it again
+			fonts.Dispose();
+			fonts = SKFontManager.Default;
+			Assert.NotNull(fonts);
 		}
 	}
 }

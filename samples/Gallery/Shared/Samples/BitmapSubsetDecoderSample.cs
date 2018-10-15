@@ -41,9 +41,7 @@ namespace SkiaSharpSample.Samples
 				var options = new SKCodecOptions(subset);
 				using (var bitmap = new SKBitmap(subset.Width, subset.Height, info.ColorType, SKAlphaType.Premul))
 				{
-					IntPtr length;
-					int count = 0;
-					var result = codec.GetPixels(bitmap.Info, bitmap.GetPixels(out length), options, null, ref count);
+					var result = codec.GetPixels(bitmap.Info, bitmap.GetPixels(), options);
 					if (result == SKCodecResult.Success || result == SKCodecResult.IncompleteInput)
 					{
 						canvas.DrawBitmap(bitmap, info.Width + 20, subset.Top + 10);
