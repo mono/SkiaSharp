@@ -73,7 +73,8 @@ var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath)
     NuGetPack (nuspecPath, new NuGetPackSettings {
         OutputDirectory = outputPath,
         BasePath = nuspecPath.GetDirectory (),
-        ToolPath = NuGetToolPath
+        ToolPath = NuGetToolPath,
+        RequireLicenseAcceptance = true, // TODO: work around a bug: https://github.com/cake-build/cake/issues/2061
     });
 });
 
