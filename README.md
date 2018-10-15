@@ -64,7 +64,7 @@ Mac/Linux:
 
 Windows:
 
-    > .\bootstrapper.ps1 -Target everything
+    > .\bootstrapper.ps1 -t everything
 
 ## Compare Code
 
