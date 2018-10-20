@@ -373,7 +373,7 @@ Task ("nuget-only")
 
         var outDir = $"./output/{dir}/nuget";
 
-        setVersion (xdoc, $"{feature}");
+        setVersion (xdoc, "");
         xdoc.Save ($"{outDir}/{id}.nuspec");
 
         setVersion (xdoc, $"{preview}{feature}");
