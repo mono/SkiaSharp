@@ -61,7 +61,7 @@ node("ubuntu-1604-amd64") {
                 "BUILD_NUMBER=${env.BUILD_NUMBER}",
                 "FEATURE_NAME=${featureName}",
             ]
-            customEnv.each { platform, vars -> vars += newVars }
+            customEnv.each { platform, vars -> vars.addAll(newVars) }
         }
     }
 
