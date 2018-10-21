@@ -255,7 +255,7 @@ def bootstrapper(args, host, pre, additionalPackages) {
     if (host == "linux") {
         chroot(
             chrootName: "${env.NODE_LABEL}-stable",
-            command: "bash ${customEnv[host].join(" ")} ${pre} ./bootstrapper.sh ${args}",
+            command: " ${customEnv[host].join(" ")} bash ${pre} ./bootstrapper.sh ${args}",
             additionalPackages: "${minimalLinuxPackages} ${additionalPackages}")
     } else if (host == "macos") {
         sh("bash ${pre} ./bootstrapper.sh ${args}")
