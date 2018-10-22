@@ -360,13 +360,15 @@ Task ("nuget-only")
         if (id.Contains(".NativeAssets")) {
             dir = id.Substring(0, id.IndexOf(".NativeAssets"));
         }
-        var feature = "";
-        if (!string.IsNullOrEmpty (FEATURE_NAME)) {
-            feature = $"-{FEATURE_NAME}";
-        }
+
         var preview = "";
+        if (!string.IsNullOrEmpty (FEATURE_NAME)) {
+            preview += $"-{FEATURE_NAME}-featurepreview";
+        } else {
+            preview += $"-preview";
+        }
         if (!string.IsNullOrEmpty (BUILD_NUMBER)) {
-            preview = $"-preview{BUILD_NUMBER}";
+            preview += $"{BUILD_NUMBER}";
         }
 
         removePlatforms (xdoc);
@@ -376,7 +378,7 @@ Task ("nuget-only")
         setVersion (xdoc, "");
         xdoc.Save ($"{outDir}/{id}.nuspec");
 
-        setVersion (xdoc, $"{preview}{feature}");
+        setVersion (xdoc, $"{preview}");
         xdoc.Save ($"{outDir}/{id}.prerelease.nuspec");
 
         // the legal
