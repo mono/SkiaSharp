@@ -51,6 +51,7 @@ DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/pac
 DirectoryPath PROFILE_PATH = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
 DirectoryPath NUGET_PACKAGES = EnvironmentVariable ("NUGET_PACKAGES") ?? PROFILE_PATH.Combine (".nuget/packages");
 
+var FEATURE_NAME = EnvironmentVariable ("FEATURE_NAME") ?? "";
 var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? "";
 if (string.IsNullOrEmpty (BUILD_NUMBER)) {
     BUILD_NUMBER = "0";
@@ -312,7 +313,7 @@ Task ("nuget-only")
                 }
                 nuspecPlatform.Remove ();
             }
-            // copy the src arrtibute and set it for the target
+            // copy the src attribute and set it for the target
             file.Add (new XAttribute ("target", file.Attribute ("src").Value));
         }
     });
@@ -360,6 +361,16 @@ Task ("nuget-only")
             dir = id.Substring(0, id.IndexOf(".NativeAssets"));
         }
 
+        var preview = "";
+        if (!string.IsNullOrEmpty (FEATURE_NAME)) {
+            preview += $"-{FEATURE_NAME}-featurepreview";
+        } else {
+            preview += $"-preview";
+        }
+        if (!string.IsNullOrEmpty (BUILD_NUMBER)) {
+            preview += $"{BUILD_NUMBER}";
+        }
+
         removePlatforms (xdoc);
 
         var outDir = $"./output/{dir}/nuget";
@@ -367,7 +378,7 @@ Task ("nuget-only")
         setVersion (xdoc, "");
         xdoc.Save ($"{outDir}/{id}.nuspec");
 
-        setVersion (xdoc, $"-preview{BUILD_NUMBER}");
+        setVersion (xdoc, $"{preview}");
         xdoc.Save ($"{outDir}/{id}.prerelease.nuspec");
 
         // the legal
@@ -505,7 +516,8 @@ var envVarsWhitelist = new [] {
     "path", "psmodulepath", "pwd", "shell", "processor_architecture",
     "processor_identifier", "node_name", "node_labels", "branch_name",
     "os", "build_url", "build_number", "number_of_processors",
-    "node_label", "build_id", "git_sha"
+    "node_label", "build_id", "git_sha", "git_branch_name",
+    "feature_name"
 };
 var envVars = EnvironmentVariables ();
 var max = envVars.Max (v => v.Key.Length) + 2;
