@@ -939,9 +939,9 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_radial_gradient(ref SKPoint center, float radius, [In] SKColor[] colors, float[] colorPos, int count, SKShaderTileMode mode, IntPtr matrixZero);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_shader_t sk_shader_new_sweep_gradient(ref SKPoint center, [In] SKColor[] colors, float[] colorPos, int count, IntPtr matrixZero);
+		public extern static sk_shader_t sk_shader_new_sweep_gradient(ref SKPoint center, [In] SKColor[] colors, float[] colorPos, int count, SKShaderTileMode mode, float startAngle, float endAngle, IntPtr matrixZero);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_shader_t sk_shader_new_sweep_gradient(ref SKPoint center, [In] SKColor[] colors, float[] colorPos, int count, ref SKMatrix matrixZero);
+		public extern static sk_shader_t sk_shader_new_sweep_gradient(ref SKPoint center, [In] SKColor[] colors, float[] colorPos, int count, SKShaderTileMode mode, float startAngle, float endAngle, ref SKMatrix matrixZero);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_two_point_conical_gradient(ref SKPoint start, float startRadius, ref SKPoint end, float endRadius, [In] SKColor[] colors, float[] colorPos, int count, SKShaderTileMode mode, ref SKMatrix matrix);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -955,9 +955,9 @@ namespace SkiaSharp
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_radial_gradient(ref SKPoint center, float radius, [In] SKColor[] colors, IntPtr colorPosZero, int count, SKShaderTileMode mode, IntPtr matrixZero);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_shader_t sk_shader_new_sweep_gradient(ref SKPoint center, [In] SKColor[] colors, IntPtr colorPosZero, int count, IntPtr matrixZero);
+		public extern static sk_shader_t sk_shader_new_sweep_gradient(ref SKPoint center, [In] SKColor[] colors, IntPtr colorPosZero, int count, SKShaderTileMode mode, float startAngle, float endAngle, IntPtr matrixZero);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_shader_t sk_shader_new_sweep_gradient(ref SKPoint center, [In] SKColor[] colors, IntPtr colorPosZero, int count, ref SKMatrix matrixZero);
+		public extern static sk_shader_t sk_shader_new_sweep_gradient(ref SKPoint center, [In] SKColor[] colors, IntPtr colorPosZero, int count, SKShaderTileMode mode, float startAngle, float endAngle, ref SKMatrix matrixZero);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_two_point_conical_gradient(ref SKPoint start, float startRadius, ref SKPoint end, float endRadius, [In] SKColor[] colors, IntPtr colorPosZero, int count, SKShaderTileMode mode, ref SKMatrix matrix);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
