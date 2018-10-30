@@ -252,8 +252,6 @@ namespace SkiaSharp.Tests
 			Assert.True(bitmap.ExtractAlpha(alpha, paint, out offset));
 
 			Assert.Equal(new SKPointI(-12, -12), offset);
-
-			SaveBitmap(alpha);
 		}
 
 		[SkippableFact]

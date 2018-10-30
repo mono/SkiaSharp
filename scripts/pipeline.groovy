@@ -1,10 +1,13 @@
 import groovy.transform.Field
 
-@Field def verbosity = "minimal"
+@Field def verbosity = "normal"
 @Field def isPr = false
 @Field def branchName = null
 @Field def commitHash = null
 @Field def githubStatusSha = null
+@Field def featureName = null
+
+@Field def featureNamePrefix = "feature/"
 
 @Field def minimalLinuxPackages = "curl mono-complete msbuild"
 @Field def nativeLinuxPackages = "python git libfontconfig1-dev"
@@ -42,13 +45,23 @@ node("ubuntu-1604-amd64") {
             isPr = env.ghprbPullId && !env.ghprbPullId.empty
             branchName = isPr ? "pr" : env.BRANCH_NAME
             githubStatusSha = isPr ? env.ghprbActualCommit : commitHash
+            featureName = branchName.startsWith(featureNamePrefix)
+                ? branchName.substring(featureNamePrefix.length())
+                : ""
 
             echo "Building SHA1: ${commitHash}..."
             echo " - PR: ${isPr}"
             echo " - Branch Name: ${branchName}"
             echo " - GitHub Status SHA1: ${githubStatusSha}"
+            echo " - Feature Name: ${featureName}"
 
-            customEnv.each { platform, vars -> vars.push("GIT_SHA=${commitHash}") }
+            def newVars = [
+                "GIT_SHA=${commitHash}",
+                "GIT_BRANCH_NAME=${branchName}",
+                "BUILD_NUMBER=${env.BUILD_NUMBER}",
+                "FEATURE_NAME=${featureName}",
+            ]
+            customEnv.each { platform, vars -> vars.addAll(newVars) }
         }
     }
 
@@ -242,7 +255,7 @@ def bootstrapper(args, host, pre, additionalPackages) {
     if (host == "linux") {
         chroot(
             chrootName: "${env.NODE_LABEL}-stable",
-            command: "bash ${pre} ./bootstrapper.sh ${args}",
+            command: " ${customEnv[host].join(" ")} bash ${pre} ./bootstrapper.sh ${args}",
             additionalPackages: "${minimalLinuxPackages} ${additionalPackages}")
     } else if (host == "macos") {
         sh("bash ${pre} ./bootstrapper.sh ${args}")

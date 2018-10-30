@@ -68,7 +68,7 @@ Windows:
 
 ## Compare Code
 
-Here are some links to show the differences in our code as compared to Google's.
+Here are some links to show the differences in our code as compared to Google's code.
 
 What version are we on? [**m68**](https://github.com/google/skia/tree/chrome/m68)  
 Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/xamarin-mobile-bindings...google:chrome/m68)  

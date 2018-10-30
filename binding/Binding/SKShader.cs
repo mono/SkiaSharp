@@ -113,27 +113,37 @@ namespace SkiaSharp
 
 		public static SKShader CreateSweepGradient (SKPoint center, SKColor [] colors, float [] colorPos)
 		{
-			if (colors == null)
-				throw new ArgumentNullException (nameof (colors));
-			if (colorPos == null) {
-				return GetObject<SKShader> (SkiaApi.sk_shader_new_sweep_gradient (ref center, colors, IntPtr.Zero, colors.Length, IntPtr.Zero));
-			} else {
-				if (colors.Length != colorPos.Length)
-					throw new ArgumentException ("The number of colors must match the number of color positions.");
-				return GetObject<SKShader> (SkiaApi.sk_shader_new_sweep_gradient (ref center, colors, colorPos, colors.Length, IntPtr.Zero));
-			}
+			return CreateSweepGradient (center, colors, colorPos, SKShaderTileMode.Clamp, 0, 360);
 		}
-		
+
 		public static SKShader CreateSweepGradient (SKPoint center, SKColor [] colors, float [] colorPos, SKMatrix localMatrix)
+		{
+			return CreateSweepGradient (center, colors, colorPos, SKShaderTileMode.Clamp, 0, 360, localMatrix);
+		}
+
+		public static SKShader CreateSweepGradient (SKPoint center, SKColor [] colors, float [] colorPos, SKShaderTileMode tileMode, float startAngle, float endAngle)
 		{
 			if (colors == null)
 				throw new ArgumentNullException (nameof (colors));
 			if (colorPos == null) {
-				return GetObject<SKShader> (SkiaApi.sk_shader_new_sweep_gradient (ref center, colors, IntPtr.Zero, colors.Length, ref localMatrix));
+				return GetObject<SKShader> (SkiaApi.sk_shader_new_sweep_gradient (ref center, colors, IntPtr.Zero, colors.Length, tileMode, startAngle, endAngle, IntPtr.Zero));
 			} else {
 				if (colors.Length != colorPos.Length)
 					throw new ArgumentException ("The number of colors must match the number of color positions.");
-				return GetObject<SKShader> (SkiaApi.sk_shader_new_sweep_gradient (ref center, colors, colorPos, colors.Length, ref localMatrix));
+				return GetObject<SKShader> (SkiaApi.sk_shader_new_sweep_gradient (ref center, colors, colorPos, colors.Length, tileMode, startAngle, endAngle, IntPtr.Zero));
+			}
+		}
+		
+		public static SKShader CreateSweepGradient (SKPoint center, SKColor [] colors, float [] colorPos, SKShaderTileMode tileMode, float startAngle, float endAngle, SKMatrix localMatrix)
+		{
+			if (colors == null)
+				throw new ArgumentNullException (nameof (colors));
+			if (colorPos == null) {
+				return GetObject<SKShader> (SkiaApi.sk_shader_new_sweep_gradient (ref center, colors, IntPtr.Zero, colors.Length, tileMode, startAngle, endAngle, ref localMatrix));
+			} else {
+				if (colors.Length != colorPos.Length)
+					throw new ArgumentException ("The number of colors must match the number of color positions.");
+				return GetObject<SKShader> (SkiaApi.sk_shader_new_sweep_gradient (ref center, colors, colorPos, colors.Length, tileMode, startAngle, endAngle, ref localMatrix));
 			}
 		}
 
