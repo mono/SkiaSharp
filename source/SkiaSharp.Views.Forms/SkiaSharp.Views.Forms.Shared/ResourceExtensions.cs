@@ -18,7 +18,7 @@ namespace SkiaSharp.Views.Forms
 {
 	public static class ResourceExtensions
 	{
-		public static async Task<SKData> CreateImageDataAsync(string resource)
+		public static async Task<SKData> LoadImageDataAsync(string resource)
 		{
 			if (string.IsNullOrEmpty(resource))
 				throw new ArgumentNullException(nameof(resource));
@@ -65,9 +65,9 @@ namespace SkiaSharp.Views.Forms
 			}
 		}
 
-		public static async Task<SKImage> CreateImageAsync(string resource)
+		public static async Task<SKImage> DecodeImageAsync(string resource)
 		{
-			using (var data = await CreateImageDataAsync(resource))
+			using (var data = await LoadImageDataAsync(resource))
 			{
 				if (data == null)
 					return null;
@@ -76,7 +76,7 @@ namespace SkiaSharp.Views.Forms
 			}
 		}
 
-		public static async Task<SKBitmap> CreateBitmapAsync(string resource)
+		public static async Task<SKBitmap> DecodeBitmapAsync(string resource)
 		{
 			if (string.IsNullOrEmpty(resource))
 				throw new ArgumentNullException(nameof(resource));
