@@ -2,7 +2,7 @@
 set -e
 
 # download tizen
-mkdir ~/tizen-temp
+mkdir -p ~/tizen-temp
 cd ~/tizen-temp
 curl -L -o "tizen-install.bin" http://download.tizen.org/sdk/Installer/tizen-studio_2.4/web-cli_Tizen_Studio_2.4_ubuntu-64.bin
 
@@ -12,4 +12,4 @@ chmod +x tizen-install.bin
 
 # install packages
 cd ~/tizen-studio
-./package-manager/package-manager-cli.bin install --no-java-check --accept-license MOBILE-4.0
+./package-manager/package-manager-cli.bin install --no-java-check --accept-license MOBILE-4.0,NativeToolchain-Gcc-6.2
