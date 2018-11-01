@@ -12,4 +12,4 @@ chmod +x tizen-install.bin
 
 # install packages
 cd ~/tizen-studio
-./package-manager/package-manager-cli.bin install --no-java-check --accept-license MOBILE-4.0,NativeToolchain-Gcc-6.2
+./package-manager/package-manager-cli.bin install --no-java-check --accept-license MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment
