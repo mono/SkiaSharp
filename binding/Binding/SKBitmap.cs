@@ -777,7 +777,7 @@ namespace SkiaSharp
 			SkiaApi.sk_bitmap_swap (Handle, other.Handle);
 		}
 
-		private static SKStream WrapManagedStream (Stream stream)
+		internal static SKStream WrapManagedStream (Stream stream)
 		{
 			if (stream == null) {
 				throw new ArgumentNullException (nameof (stream));
@@ -791,7 +791,7 @@ namespace SkiaSharp
 			}
 		}
 
-		private static SKStream OpenStream (string path)
+		internal static SKStream OpenStream (string path)
 		{
 			if (!SKFileStream.IsPathSupported (path)) {
 				// due to a bug (https://github.com/mono/SkiaSharp/issues/390)

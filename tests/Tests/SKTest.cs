@@ -115,6 +115,30 @@ namespace SkiaSharp.Tests
 			return bmp;
 		}
 
+		protected static void ValidateTestBitmap(SKBitmap bmp, byte alpha = 255)
+		{
+			Assert.NotNull(bmp);
+			Assert.Equal(40, bmp.Width);
+			Assert.Equal(40, bmp.Height);
+
+			Assert.Equal(SKColors.Red.WithAlpha(alpha), bmp.GetPixel(10, 10));
+			Assert.Equal(SKColors.Green.WithAlpha(alpha), bmp.GetPixel(30, 10));
+			Assert.Equal(SKColors.Blue.WithAlpha(alpha), bmp.GetPixel(10, 30));
+			Assert.Equal(SKColors.Yellow.WithAlpha(alpha), bmp.GetPixel(30, 30));
+		}
+
+		protected static void ValidateTestPixmap(SKPixmap pix, byte alpha = 255)
+		{
+			Assert.NotNull(pix);
+			Assert.Equal(40, pix.Width);
+			Assert.Equal(40, pix.Height);
+
+			Assert.Equal(SKColors.Red.WithAlpha(alpha), pix.GetPixelColor(10, 10));
+			Assert.Equal(SKColors.Green.WithAlpha(alpha), pix.GetPixelColor(30, 10));
+			Assert.Equal(SKColors.Blue.WithAlpha(alpha), pix.GetPixelColor(10, 30));
+			Assert.Equal(SKColors.Yellow.WithAlpha(alpha), pix.GetPixelColor(30, 30));
+		}
+
 		private static class MacPlatformDetector
 		{
 			internal static readonly Lazy<bool> IsMac = new Lazy<bool> (IsRunningOnMac);

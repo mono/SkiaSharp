@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp
@@ -69,6 +70,48 @@ namespace SkiaSharp
 
 		// create a new image from a copy of pixel data
 
+		public static SKImage FromPixelCopy (SKImageInfo info, SKStream pixels)
+		{
+			return FromPixelCopy (info, pixels, info.RowBytes);
+		}
+
+		public static SKImage FromPixelCopy (SKImageInfo info, SKStream pixels, int rowBytes)
+		{
+			if (pixels == null)
+				throw new ArgumentNullException (nameof (pixels));
+			using (var data = SKData.Create (pixels)) {
+				return FromPixelData (info, data, rowBytes);
+			}
+		}
+
+		public static SKImage FromPixelCopy (SKImageInfo info, Stream pixels)
+		{
+			return FromPixelCopy (info, pixels, info.RowBytes);
+		}
+
+		public static SKImage FromPixelCopy (SKImageInfo info, Stream pixels, int rowBytes)
+		{
+			if (pixels == null)
+				throw new ArgumentNullException (nameof (pixels));
+			using (var data = SKData.Create (pixels)) {
+				return FromPixelData (info, data, rowBytes);
+			}
+		}
+
+		public static SKImage FromPixelCopy (SKImageInfo info, byte[] pixels)
+		{
+			return FromPixelCopy (info, pixels, info.RowBytes);
+		}
+
+		public static SKImage FromPixelCopy (SKImageInfo info, byte[] pixels, int rowBytes)
+		{
+			if (pixels == null)
+				throw new ArgumentNullException (nameof (pixels));
+			using (var data = SKData.CreateCopy (pixels)) {
+				return FromPixelData (info, data, rowBytes);
+			}
+		}
+
 		public static SKImage FromPixelCopy (SKImageInfo info, IntPtr pixels)
 		{
 			return FromPixelCopy (info, pixels, info.RowBytes);
@@ -99,6 +142,14 @@ namespace SkiaSharp
 		// create a new image around existing pixel data
 
 		public static SKImage FromPixelData (SKImageInfo info, SKData data, int rowBytes)
+		{
+			if (data == null)
+				throw new ArgumentNullException (nameof (data));
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return GetObject<SKImage> (SkiaApi.sk_image_new_raster_data (ref cinfo, data.Handle, (IntPtr) rowBytes));	
+		}
+
+		public static SKImage FromPixels (SKImageInfo info, SKData data, int rowBytes)
 		{
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
@@ -161,6 +212,63 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (data));
 			var handle = SkiaApi.sk_image_new_from_encoded (data.Handle, IntPtr.Zero);
 			return GetObject<SKImage> (handle);
+		}
+
+		public static SKImage FromEncodedData (SKStream data)
+		{
+			if (data == null)
+				throw new ArgumentNullException (nameof (data));
+			using (var codec = SKCodec.Create (data))
+			using (var bitmap = SKBitmap.Decode (codec, codec.Info)) {
+				if (bitmap == null)
+					return null;
+				return FromBitmap (bitmap);
+			}
+		}
+
+		public static SKImage FromEncodedData (Stream data)
+		{
+			if (data == null)
+				throw new ArgumentNullException (nameof (data));
+			using (var stream = SKBitmap.WrapManagedStream (data))
+			using (var codec = SKCodec.Create (stream))
+			using (var bitmap = SKBitmap.Decode (codec, codec.Info)) {
+				if (bitmap == null)
+					return null;
+				return FromBitmap (bitmap);
+			}
+		}
+
+		public static SKImage FromEncodedData (byte[] data)
+		{
+			if (data == null)
+				throw new ArgumentNullException (nameof (data));
+			if (data.Length == 0)
+				throw new ArgumentException ("The data buffer was empty.");
+			unsafe {
+				fixed (byte* b = &data[0]) {
+					using (var skdata = SKData.Create ((IntPtr)b, data.Length))
+					using (var codec = SKCodec.Create (skdata))
+					using (var bitmap = SKBitmap.Decode (codec, codec.Info)) {
+						if (bitmap == null)
+							return null;
+						return FromBitmap (bitmap);
+					}
+				}
+			}
+		}
+
+		public static SKImage FromEncodedData (string filename)
+		{
+			if (filename == null)
+				throw new ArgumentNullException (nameof (filename));
+			using (var stream = SKBitmap.OpenStream (filename))
+			using (var codec = SKCodec.Create (stream))
+			using (var bitmap = SKBitmap.Decode (codec, codec.Info)) {
+				if (bitmap == null)
+					return null;
+				return FromBitmap (bitmap);
+			}
 		}
 
 		// create a new image from a bitmap

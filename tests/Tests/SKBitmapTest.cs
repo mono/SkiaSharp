@@ -154,18 +154,6 @@ namespace SkiaSharp.Tests
 				.Copy(SKImageInfo.PlatformColorType));
 		}
 
-		private void ValidateTestBitmap(SKBitmap bmp)
-		{
-			Assert.NotNull(bmp);
-			Assert.Equal(40, bmp.Width);
-			Assert.Equal(40, bmp.Height);
-
-			Assert.Equal(SKColors.Red, bmp.GetPixel(10, 10));
-			Assert.Equal(SKColors.Green, bmp.GetPixel(30, 10));
-			Assert.Equal(SKColors.Blue, bmp.GetPixel(10, 30));
-			Assert.Equal(SKColors.Yellow, bmp.GetPixel(30, 30));
-		}
-
 		[SkippableFact]
 		public void ReleaseBitmapPixelsWasInvoked()
 		{
