@@ -23,6 +23,8 @@ namespace SkiaSharp.Views.Forms
 			if (string.IsNullOrEmpty(resource))
 				throw new ArgumentNullException(nameof(resource));
 
+			resource = NormalizePath(resource);
+
 			if (File.Exists(resource))
 			{
 				return SKData.Create(resource);
@@ -30,14 +32,33 @@ namespace SkiaSharp.Views.Forms
 			else
 			{
 #if __ANDROID__
-				var id = ResourceManager.GetDrawableByName(resource);
-				if (id == 0)
-					return null;
-
-				using (var fd = Application.Context.Resources.OpenRawResourceFd(id))
-				using (var stream = fd.CreateInputStream())
+				if ((await Application.Context.Assets.ListAsync(resource)).Length > 0)
 				{
-					return SKData.Create(stream, fd.Length);
+					using (var fd = Application.Context.Assets.OpenFd(resource))
+					{
+						if (fd != null)
+						{
+							using (var stream = fd.CreateInputStream())
+							{
+								return SKData.Create(stream, fd.Length);
+							}
+						}
+					}
+				}
+
+				var id = ResourceManager.GetDrawableByName(resource);
+				if (id != 0)
+				{
+					using (var fd = Application.Context.Resources.OpenRawResourceFd(id))
+					{
+						if (fd != null)
+						{
+							using (var stream = fd.CreateInputStream())
+							{
+								return SKData.Create(stream, fd.Length);
+							}
+						}
+					}
 				}
 #elif __IOS__ || __MACOS__
 				resource = NSBundle.MainBundle.PathForResource(resource, null);
@@ -52,16 +73,16 @@ namespace SkiaSharp.Views.Forms
 
 				return SKData.Create(resource);
 #elif WINDOWS_UWP
-				resource = resource.Replace('/', Path.DirectorySeparatorChar);
 				using (var stream = await Package.Current.InstalledLocation.OpenStreamForReadAsync(resource))
 				{
 					return SKData.Create(stream);
 				}
 #elif NETSTANDARD
-				return null;
 #else
 #error Missing platform logic
 #endif
+
+				return null;
 			}
 		}
 
@@ -81,6 +102,8 @@ namespace SkiaSharp.Views.Forms
 			if (string.IsNullOrEmpty(resource))
 				throw new ArgumentNullException(nameof(resource));
 
+			resource = NormalizePath(resource);
+
 			if (File.Exists(resource))
 			{
 				return SKBitmap.Decode(resource);
@@ -88,13 +111,24 @@ namespace SkiaSharp.Views.Forms
 			else
 			{
 #if __ANDROID__
-				var id = ResourceManager.GetDrawableByName(resource);
-				if (id == 0)
-					return null;
-
-				using (var stream = Application.Context.Resources.OpenRawResource(id))
+				if ((await Application.Context.Assets.ListAsync(resource)).Length > 0)
 				{
-					return SKBitmap.Decode(stream);
+					using (var stream = Application.Context.Assets.Open(resource))
+					{
+						if (stream != null)
+						{
+							return SKBitmap.Decode(stream);
+						}
+					}
+				}
+
+				var id = ResourceManager.GetDrawableByName(resource);
+				if (id != 0)
+				{
+					using (var stream = Application.Context.Resources.OpenRawResource(id))
+					{
+						return SKBitmap.Decode(stream);
+					}
 				}
 #elif __IOS__ || __MACOS__
 				resource = NSBundle.MainBundle.PathForResource(resource, null);
@@ -115,11 +149,19 @@ namespace SkiaSharp.Views.Forms
 					return SKBitmap.Decode(stream);
 				}
 #elif NETSTANDARD
-				return null;
 #else
 #error Missing platform logic
 #endif
+
+				return null;
 			}
 		}
+
+		private static string NormalizePath(string path) =>
+#if WINDOWS_UWP
+			path.Replace('/', Path.DirectorySeparatorChar);
+#else
+			path.Replace('\\', Path.DirectorySeparatorChar);
+#endif
 	}
 }
