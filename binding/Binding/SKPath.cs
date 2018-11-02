@@ -35,14 +35,14 @@ namespace SkiaSharp
 			}
 		}
 
-		public SKPath(SKPath path)
-			: this (SkiaApi.sk_path_clone(path.Handle), true)
+		public SKPath (SKPath path)
+			: this (SkiaApi.sk_path_clone (path.Handle), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to copy the SKPath instance.");
 			}
 		}
-		
+
 		protected override void Dispose (bool disposing)
 		{
 			if (Handle != IntPtr.Zero && OwnsHandle) {
@@ -71,10 +71,18 @@ namespace SkiaSharp
 		}
 
 		public bool IsConvex => Convexity == SKPathConvexity.Convex;
-		
+
 		public bool IsConcave => Convexity == SKPathConvexity.Concave;
 
 		public bool IsEmpty => VerbCount == 0;
+
+		public bool IsOval => SkiaApi.sk_path_is_oval (Handle, IntPtr.Zero);
+
+		public bool IsRoundRect => SkiaApi.sk_path_is_rrect (Handle, IntPtr.Zero);
+
+		public bool IsLine => SkiaApi.sk_path_is_line (Handle, IntPtr.Zero);
+
+		public bool IsRect => SkiaApi.sk_path_is_rect (Handle, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
 
 		public SKPathSegmentMask SegmentMasks => SkiaApi.sk_path_get_segment_masks (Handle);
 
@@ -90,7 +98,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public SKPoint this [int index] {
+		public SKPoint this[int index] {
 			get {
 				return GetPoint (index);
 			}
@@ -102,8 +110,7 @@ namespace SkiaSharp
 			}
 		}
 
-		public SKPoint LastPoint
-		{
+		public SKPoint LastPoint {
 			get {
 				SKPoint point;
 				SkiaApi.sk_path_get_last_point (Handle, out point);
@@ -130,6 +137,48 @@ namespace SkiaSharp
 				} else {
 					return SKRect.Empty;
 				}
+			}
+		}
+
+		public SKRect GetOvalBounds ()
+		{
+			if (SkiaApi.sk_path_is_oval (Handle, out var bounds)) {
+				return bounds;
+			} else {
+				return SKRect.Empty;
+			}
+		}
+
+		public SKRoundRect GetRoundRect ()
+		{
+			var rrect = new SKRoundRect ();
+			var result = SkiaApi.sk_path_is_rrect (Handle, rrect.Handle);
+			if (result) {
+				return rrect;
+			} else {
+				rrect.Dispose ();
+				return null;
+			}
+		}
+
+		public SKPoint[] GetLine ()
+		{
+			var temp = new SKPoint[2];
+			var result = SkiaApi.sk_path_is_line (Handle, temp);
+			if (result) {
+				return temp;
+			} else {
+				return null;
+			}
+		}
+
+		public SKRect GetRect (out bool isClosed, out SKPathDirection direction)
+		{
+			var result = SkiaApi.sk_path_is_rect (Handle, out var rect, out isClosed, out direction);
+			if (result) {
+				return rect;
+			} else {
+				return SKRect.Empty;
 			}
 		}
 

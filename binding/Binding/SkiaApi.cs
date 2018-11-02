@@ -675,9 +675,30 @@ namespace SkiaSharp
 		public extern static void sk_path_add_poly (sk_path_t cpath, [In] SKPoint[] points, int count, [MarshalAs(UnmanagedType.I1)] bool close);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static SKPathSegmentMask sk_path_get_segment_masks (sk_path_t t);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		public extern static bool sk_path_is_oval (sk_path_t cpath, out SKRect bounds);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		public extern static bool sk_path_is_rrect (sk_path_t cpath, sk_rrect_t bounds);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		public extern static bool sk_path_is_line (sk_path_t cpath, [Out] SKPoint[] line);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		public extern static bool sk_path_is_rect (sk_path_t cpath, out SKRect rect, [MarshalAs (UnmanagedType.I1)] out bool isClosed, out SKPathDirection direction);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		public extern static bool sk_path_is_oval (sk_path_t cpath, IntPtr boundsZero);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		public extern static bool sk_path_is_line (sk_path_t cpath, IntPtr lineZero);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		public extern static bool sk_path_is_rect (sk_path_t cpath, IntPtr rectZero, IntPtr isClosedZero, IntPtr directionZero);
 
 		// path measure
-		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_pathmeasure_t sk_pathmeasure_new();
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_pathmeasure_t sk_pathmeasure_new_with_path(sk_path_t path, [MarshalAs(UnmanagedType.I1)]bool forceClosed, float resScale);

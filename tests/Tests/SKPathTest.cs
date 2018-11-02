@@ -289,5 +289,71 @@ namespace SkiaSharp.Tests
 			Assert.Equal (rect.Right, bounds.Right, Precision);
 			Assert.Equal (rect.Bottom, bounds.Bottom, Precision);
 		}
+
+		[SkippableFact]
+		public void RectPathIsRect()
+		{
+			using (var path = new SKPath())
+			{
+				var rect = SKRect.Create(10, 10, 100, 100);
+				path.AddRect(rect, SKPathDirection.CounterClockwise);
+
+				Assert.False(path.IsOval);
+				Assert.False(path.IsLine);
+				Assert.True(path.IsRect);
+				Assert.False(path.IsRoundRect);
+				Assert.Equal(rect, path.GetRect(out var isClosed, out var dir));
+				Assert.True(isClosed);
+				Assert.Equal(SKPathDirection.CounterClockwise, dir);
+			}
+		}
+
+		[SkippableFact]
+		public void RoundRectPathIsRoundRect()
+		{
+			using (var path = new SKPath())
+			{
+				var rrect = new SKRoundRect(SKRect.Create(10, 10, 100, 100), 5, 5);
+				path.AddRoundRect(rrect);
+
+				Assert.False(path.IsOval);
+				Assert.False(path.IsLine);
+				Assert.False(path.IsRect);
+				Assert.True(path.IsRoundRect);
+				Assert.Equal(rrect.Rect, path.GetRoundRect().Rect);
+				Assert.Equal(rrect.Radii, path.GetRoundRect().Radii);
+			}
+		}
+
+		[SkippableFact]
+		public void LinePathIsLine()
+		{
+			using (var path = new SKPath())
+			{
+				path.LineTo(new SKPoint(100, 100));
+
+				Assert.False(path.IsOval);
+				Assert.True(path.IsLine);
+				Assert.False(path.IsRect);
+				Assert.False(path.IsRoundRect);
+				Assert.Equal(new[] { SKPoint.Empty, new SKPoint(100, 100) }, path.GetLine());
+			}
+		}
+
+		[SkippableFact]
+		public void OvalPathIsOval()
+		{
+			using (var path = new SKPath())
+			{
+				var rect = SKRect.Create(10, 10, 100, 100);
+				path.AddOval(rect);
+
+				Assert.True(path.IsOval);
+				Assert.False(path.IsLine);
+				Assert.False(path.IsRect);
+				Assert.False(path.IsRoundRect);
+				Assert.Equal(rect, path.GetOvalBounds());
+			}
+		}
 	}
 }
