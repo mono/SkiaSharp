@@ -27,7 +27,7 @@ available on the web to browse.
 
 ## Using SkiaSharp
 
-SkiaSharp is available as a convenience NuGet package, to use install the package like this:
+SkiaSharp is available as a convenient NuGet package, to use install the package like this:
 
 ```
 nuget install SkiaSharp
