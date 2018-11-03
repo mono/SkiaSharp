@@ -284,24 +284,12 @@ def uploadBlobs() {
         uploadArtifactsOnlyIfSuccessful: false,
         uploadZips: false,
         virtualPath: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/",
+        storageType: 'blobstorage'
     ])
 }
 
 def downloadBlobs() {
-    step([
-        $class: "AzureStorageBuilder",
-        downloadType: [
-            value: "container",
-            containerName: "skiasharp-public-artifacts",
-        ],
-        includeFilesPattern: "ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/**/*",
-        excludeFilesPattern: "",
-        downloadDirLoc: "",
-        flattenDirectories: false,
-        includeArchiveZips: false,
-        strAccName: "credential for xamjenkinsartifact",
-        storageCredentialId: "fbd29020e8166fbede5518e038544343",
-    ])
+    azureDownload containerName: 'skiasharp-public-artifacts', downloadType: 'container', fileShare: '', includeFilesPattern: 'ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/**/*', storageCredentialId: 'fbd29020e8166fbede5518e038544343'
     if (isUnix()) {
         sh("cp -rf ArtifactsFor-${env.BUILD_NUMBER}/${commitHash}/*/* .")
         sh("rm -rf ArtifactsFor-*")
