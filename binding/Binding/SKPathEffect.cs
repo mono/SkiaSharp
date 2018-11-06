@@ -9,6 +9,12 @@ namespace SkiaSharp
 		Morph,
 	}
 
+	public enum SKTrimPathEffectMode
+	{
+		Normal,
+		Inverted,
+	}
+
 	public class SKPathEffect : SKObject
 	{
 		[Preserve]
@@ -82,6 +88,15 @@ namespace SkiaSharp
 			return GetObject<SKPathEffect>(SkiaApi.sk_path_effect_create_dash(intervals, intervals.Length, phase));
 		}
 
+		public static SKPathEffect CreateTrim(float start, float stop)
+		{
+			return CreateTrim(start, stop, SKTrimPathEffectMode.Normal);
+		}
+
+		public static SKPathEffect CreateTrim(float start, float stop, SKTrimPathEffectMode mode)
+		{
+			return GetObject<SKPathEffect>(SkiaApi.sk_path_effect_create_trim(start, stop, mode));
+		}
 	}
 }
 

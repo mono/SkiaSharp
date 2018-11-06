@@ -1637,6 +1637,8 @@ namespace SkiaSharp
 		public extern static sk_path_effect_t sk_path_effect_create_2d_path(ref SKMatrix matrix, sk_path_t path);
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_path_effect_t sk_path_effect_create_dash(float[] intervals, int count, float phase);
+		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_path_effect_t sk_path_effect_create_trim(float start, float stop, SKTrimPathEffectMode mode);
 
 		// color table
 		[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
