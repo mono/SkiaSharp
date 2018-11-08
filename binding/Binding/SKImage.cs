@@ -246,7 +246,7 @@ namespace SkiaSharp
 			if (data.Length == 0)
 				throw new ArgumentException ("The data buffer was empty.");
 			unsafe {
-				fixed (byte* b = &data[0]) {
+				fixed (byte* b = data) {
 					using (var skdata = SKData.Create ((IntPtr)b, data.Length))
 					using (var codec = SKCodec.Create (skdata))
 					using (var bitmap = SKBitmap.Decode (codec, codec.Info)) {

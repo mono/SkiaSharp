@@ -1,6 +1,8 @@
 ﻿using System;
 using Xunit;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Linq;
 
 namespace SkiaSharp.Tests
 {
@@ -64,7 +66,8 @@ namespace SkiaSharp.Tests
 				var tables = typeface.GetTableTags();
 				Assert.Equal(ExpectedTablesSpiderFont.Length, tables.Length);
 
-				for (int i = 0; i < tables.Length; i++) {
+				for (int i = 0; i < tables.Length; i++)
+				{
 					Assert.Equal(ExpectedTablesSpiderFont[i], GetReadableTag(tables[i]));
 				}
 			}
@@ -78,7 +81,8 @@ namespace SkiaSharp.Tests
 				Assert.Equal("ReallyBigA", typeface.FamilyName);
 				var tables = typeface.GetTableTags();
 
-				for (int i = 0; i < tables.Length; i++) {
+				for (int i = 0; i < tables.Length; i++)
+				{
 					byte[] tableData = typeface.GetTableData(tables[i]);
 					Assert.Equal(ExpectedTableLengthsReallyBigAFont[i], tableData.Length);
 				}
@@ -103,7 +107,8 @@ namespace SkiaSharp.Tests
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "ReallyBigA.ttf")))
 			{
 				var tables = typeface.GetTableTags();
-				for (int i = 0; i < tables.Length; i++) {
+				for (int i = 0; i < tables.Length; i++)
+				{
 					byte[] tableData;
 					Assert.True(typeface.TryGetTableData(tables[i], out tableData));
 					Assert.Equal(ExpectedTableLengthsReallyBigAFont[i], tableData.Length);
@@ -163,6 +168,31 @@ namespace SkiaSharp.Tests
 			typeface.Dispose();
 			typeface = SKTypeface.Default;
 			Assert.NotNull(typeface);
+		}
+
+		[SkippableFact]
+		public void PlainGlyphsReturnsTheCorrectNumberOfCharacters()
+		{
+			const string text = "Hello World!";
+
+			var typeface = SKTypeface.Default;
+
+			Assert.Equal(text.Length, typeface.CountGlyphs(text));
+			Assert.Equal(text.Length, typeface.GetGlyphs(text).Length);
+		}
+
+		[SkippableFact]
+		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharacters()
+		{
+			const string text = "🚀";
+			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
+
+			var typeface = SKFontManager.Default.MatchCharacter(emojiChar);
+
+			Assert.Equal(1, typeface.CountGlyphs(text));
+			Assert.Equal(1, typeface.CountGlyphs(text, SKEncoding.Utf32));
+			Assert.Single(typeface.GetGlyphs(text));
+			Assert.Single(typeface.GetGlyphs(text, SKEncoding.Utf32));
 		}
 	}
 }

@@ -76,8 +76,7 @@ namespace SkiaSharp
 
 		public void GetResourceCacheLimits (out int maxResources, out long maxResourceBytes)
 		{
-			IntPtr maxResourceBytesPtr;
-			SkiaApi.gr_context_get_resource_cache_limits (Handle, out maxResources, out maxResourceBytesPtr);
+			SkiaApi.gr_context_get_resource_cache_limits (Handle, out maxResources, out var maxResourceBytesPtr);
 			maxResourceBytes = (long)maxResourceBytesPtr;
 		}
 
@@ -88,8 +87,7 @@ namespace SkiaSharp
 
 		public void GetResourceCacheUsage (out int maxResources, out long maxResourceBytes)
 		{
-			IntPtr maxResourceBytesPtr;
-			SkiaApi.gr_context_get_resource_cache_usage (Handle, out maxResources, out maxResourceBytesPtr);
+			SkiaApi.gr_context_get_resource_cache_usage (Handle, out maxResources, out var maxResourceBytesPtr);
 			maxResourceBytes = (long)maxResourceBytesPtr;
 		}
 		

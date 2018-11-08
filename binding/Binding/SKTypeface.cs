@@ -131,63 +131,13 @@ namespace SkiaSharp
 			return SKTypeface.FromStream (new SKMemoryStream (data), index);
 		}
 
-		public int CountGlyphs (string str)
-		{
-			if (str == null)
-				throw new ArgumentNullException (nameof (str));
-			
-			unsafe {
-				fixed (char *p = str) {
-					return  SkiaApi.sk_typeface_chars_to_glyphs (Handle, (IntPtr)p, SKEncoding.Utf16, IntPtr.Zero, str.Length);
-				}
-			}
-		}
+		[Obsolete ("Use GetGlyphs(string, out ushort[]) instead.")]
+		public int CharsToGlyphs (string chars, out ushort[] glyphs)
+			=> GetGlyphs (chars, out glyphs);
 
-		public int CountGlyphs (IntPtr str, int strLen, SKEncoding encoding)
-		{
-			if (str == IntPtr.Zero)
-				throw new ArgumentNullException (nameof (str));
-
-			return  SkiaApi.sk_typeface_chars_to_glyphs (Handle, str, encoding, IntPtr.Zero, strLen);
-		}
-
-		public int CharsToGlyphs (string chars, out ushort [] glyphs)
-		{
-			if (chars == null)
-				throw new ArgumentNullException (nameof (chars));
-
-			unsafe {
-				fixed (char *p = chars){
-					var n = SkiaApi.sk_typeface_chars_to_glyphs (Handle, (IntPtr) p, SKEncoding.Utf16, IntPtr.Zero, chars.Length);
-					glyphs = new ushort[n];
-
-					if (n == 0)
-						return 0;
-
-					fixed (ushort *gp = &glyphs [0]){
-						return SkiaApi.sk_typeface_chars_to_glyphs (Handle, (IntPtr) p, SKEncoding.Utf16, (IntPtr) gp, n);
-					}
-				}
-			}
-		}
-
+		[Obsolete ("Use GetGlyphs(IntPtr, int, SKEncoding, out ushort[]) instead.")]
 		public int CharsToGlyphs (IntPtr str, int strlen, SKEncoding encoding, out ushort [] glyphs)
-		{
-			if (str == IntPtr.Zero)
-				throw new ArgumentNullException (nameof (str));
-
-			unsafe {
-				var n = SkiaApi.sk_typeface_chars_to_glyphs (Handle, str, encoding, IntPtr.Zero, strlen);
-				glyphs = new ushort[n];
-
-				if (n == 0)
-					return 0;
-
-				fixed (ushort *gp = &glyphs [0]){
-					return SkiaApi.sk_typeface_chars_to_glyphs (Handle, str, encoding, (IntPtr) gp, n);
-				}
-			}
-		}
+			=> GetGlyphs (str, strlen, encoding, out glyphs);
 
 		public string FamilyName => (string)GetObject<SKString> (SkiaApi.sk_typeface_get_family_name (Handle));
 
@@ -247,10 +197,105 @@ namespace SkiaSharp
 			return true;
 		}
 
+		public int CountGlyphs (string text) => CountGlyphs (text, SKEncoding.Utf16);
+
+		public int CountGlyphs (string text, SKEncoding encoding)
+		{
+			if (text == null)
+				throw new ArgumentNullException (nameof (text));
+
+			var bytes = StringUtilities.GetEncodedText (text, encoding);
+			return CountGlyphs (bytes, encoding);
+		}
+
+		public int CountGlyphs (byte [] text, SKEncoding encoding)
+		{
+			if (text == null)
+				throw new ArgumentNullException (nameof (text));
+			
+			unsafe {
+				fixed (byte* p = text) {
+					return CountGlyphs ((IntPtr)p, text.Length, encoding);
+				}
+			}
+		}
+
+		public int CountGlyphs (IntPtr text, int length, SKEncoding encoding)
+		{
+			if (text == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (text));
+
+			unsafe {
+				return SkiaApi.sk_typeface_chars_to_glyphs (Handle, text, encoding, (ushort*)IntPtr.Zero, length);
+			}
+		}
+
+		public int GetGlyphs (string text, out ushort [] glyphs) => GetGlyphs (text, SKEncoding.Utf16, out glyphs);
+
+		public int GetGlyphs (string text, SKEncoding encoding, out ushort [] glyphs)
+		{
+			if (text == null)
+				throw new ArgumentNullException (nameof (text));
+
+			var bytes = StringUtilities.GetEncodedText (text, encoding);
+			return GetGlyphs (bytes, encoding, out glyphs);
+		}
+
+		public int GetGlyphs (byte [] text, SKEncoding encoding, out ushort [] glyphs)
+		{
+			if (text == null)
+				throw new ArgumentNullException (nameof (text));
+
+			unsafe {
+				fixed (byte* p = text) {
+					return GetGlyphs ((IntPtr)p, text.Length, encoding, out glyphs);
+				}
+			}
+		}
+
+		public int GetGlyphs (IntPtr text, int length, SKEncoding encoding, out ushort [] glyphs)
+		{
+			if (text == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (text));
+
+			unsafe {
+				var n = SkiaApi.sk_typeface_chars_to_glyphs (Handle, text, encoding, (ushort*)IntPtr.Zero, length);
+
+				if (n <= 0) {
+					glyphs = new ushort[0];
+					return 0;
+				}
+
+				glyphs = new ushort[n];
+				fixed (ushort* gp = glyphs) {
+					return SkiaApi.sk_typeface_chars_to_glyphs (Handle, text, encoding, gp, n);
+				}
+			}
+		}
+
+		public ushort [] GetGlyphs (string text) => GetGlyphs (text, SKEncoding.Utf16);
+
+		public ushort [] GetGlyphs (string text, SKEncoding encoding)
+		{
+			GetGlyphs (text, encoding, out var glyphs);
+			return glyphs;
+		}
+
+		public ushort [] GetGlyphs (byte [] text, SKEncoding encoding)
+		{
+			GetGlyphs (text, encoding, out var glyphs);
+			return glyphs;
+		}
+
+		public ushort [] GetGlyphs (IntPtr text, int length, SKEncoding encoding)
+		{
+			GetGlyphs (text, length, encoding, out var glyphs);
+			return glyphs;
+		}
+
 		public SKStreamAsset OpenStream()
 		{
-			int ttcIndex;
-			return OpenStream(out ttcIndex);
+			return OpenStream (out var ttcIndex);
 		}
 
 		public SKStreamAsset OpenStream(out int ttcIndex)

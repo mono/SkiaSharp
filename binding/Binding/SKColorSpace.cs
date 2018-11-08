@@ -125,8 +125,7 @@ namespace SkiaSharp
 
 		public SKColorSpaceTransferFn Invert ()
 		{
-			SKColorSpaceTransferFn inverted;
-			SkiaApi.sk_colorspace_transfer_fn_invert (ref this, out inverted);
+			SkiaApi.sk_colorspace_transfer_fn_invert (ref this, out var inverted);
 			return inverted;
 		}
 	}

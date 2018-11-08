@@ -29,8 +29,7 @@ namespace SkiaSharp
 
 		public SKImageInfo Info {
 			get {
-				SKImageInfoNative cinfo;
-				SkiaApi.sk_codec_get_info (Handle, out cinfo);
+				SkiaApi.sk_codec_get_info (Handle, out var cinfo);
 				return SKImageInfoNative.ToManaged (ref cinfo);
 			}
 		}
@@ -48,8 +47,7 @@ namespace SkiaSharp
 
 		public SKSizeI GetScaledDimensions (float desiredScale)
 		{
-			SKSizeI dimensions;
-			SkiaApi.sk_codec_get_scaled_dimensions (Handle, desiredScale, out dimensions);
+			SkiaApi.sk_codec_get_scaled_dimensions (Handle, desiredScale, out var dimensions);
 			return dimensions;
 		}
 
@@ -60,8 +58,7 @@ namespace SkiaSharp
 
 		public byte[] Pixels {
 			get {
-				byte[] pixels = null;
-				var result = GetPixels (out pixels);
+				var result = GetPixels (out var pixels);
 				if (result != SKCodecResult.Success && result != SKCodecResult.IncompleteInput) {
 					throw new Exception (result.ToString ());
 				}
@@ -104,7 +101,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (pixels));
 
 			unsafe {
-				fixed (byte* p = &pixels[0]) {
+				fixed (byte* p = pixels) {
 					return GetPixels (info, (IntPtr)p);
 				}
 			}

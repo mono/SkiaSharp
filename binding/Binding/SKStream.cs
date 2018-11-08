@@ -103,8 +103,8 @@ namespace SkiaSharp
 		public int Read (byte[] buffer, int size)
 		{
 			unsafe {
-				fixed (byte *b = &buffer [0]) {
-					return Read ((IntPtr) b, size);
+				fixed (byte* b = buffer) {
+					return Read ((IntPtr)b, size);
 				}
 			}
 		}
@@ -360,8 +360,8 @@ namespace SkiaSharp
 		public virtual bool Write (byte[] buffer, int size)
 		{
 			unsafe {
-				fixed (byte *b = &buffer [0]) {
-					return SkiaApi.sk_wstream_write (Handle, (IntPtr) b, (IntPtr)size);
+				fixed (byte* b = buffer) {
+					return SkiaApi.sk_wstream_write (Handle, (IntPtr)b, (IntPtr)size);
 				}
 			}
 		}

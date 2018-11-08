@@ -206,16 +206,14 @@ namespace SkiaSharp
 
 		public SKRect LocalClipBounds {
 			get {
-				SKRect bounds;
-				GetLocalClipBounds (out bounds);
+				GetLocalClipBounds (out var bounds);
 				return bounds;
 			}
 		}
 
 		public SKRectI DeviceClipBounds {
 			get {
-				SKRectI bounds;
-				GetDeviceClipBounds (out bounds);
+				GetDeviceClipBounds (out var bounds);
 				return bounds;
 			}
 		}
@@ -676,10 +674,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (lattice.YDivs));
 
 			unsafe {
-				fixed (int* x = &lattice.XDivs[0])
-				fixed (int* y = &lattice.YDivs[0])
-				fixed (SKLatticeRectType* r = &lattice.RectTypes[0])
-				fixed (SKColor* c = &lattice.Colors[0]) {
+				fixed (int* x = lattice.XDivs)
+				fixed (int* y = lattice.YDivs)
+				fixed (SKLatticeRectType* r = lattice.RectTypes)
+				fixed (SKColor* c = lattice.Colors) {
 					var nativeLattice = new SKLatticeInternal {
 						fBounds = null,
 						fRectTypes = r,
@@ -708,10 +706,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (lattice.YDivs));
 			
 			unsafe {
-				fixed (int* x = &lattice.XDivs[0])
-				fixed (int* y = &lattice.YDivs[0])
-				fixed (SKLatticeRectType* r = &lattice.RectTypes[0])
-				fixed (SKColor* c = &lattice.Colors[0]) {
+				fixed (int* x = lattice.XDivs)
+				fixed (int* y = lattice.YDivs)
+				fixed (SKLatticeRectType* r = lattice.RectTypes)
+				fixed (SKColor* c = lattice.Colors) {
 					var nativeLattice = new SKLatticeInternal {
 						fBounds = null,
 						fRectTypes = r,

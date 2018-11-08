@@ -386,8 +386,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 
 		public SKRect MapRect (SKRect source)
 		{
-			SKRect result;
-			MapRect (ref this, out result, ref source);
+			MapRect (ref this, out var result, ref source);
 			return result;
 		}
 
@@ -397,14 +396,13 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 				throw new ArgumentNullException (nameof (result));
 			if (points == null)
 				throw new ArgumentNullException (nameof (points));
-			int dl = result.Length;
-			if (dl != points.Length)
+			if (result.Length != points.Length)
 				throw new ArgumentException ("Buffers must be the same size.");
+
 			unsafe {
-				fixed (SKPoint *rp = &result[0]){
-					fixed (SKPoint *pp = &points[0]){
-						SkiaApi.sk_matrix_map_points (ref this, (IntPtr) rp, (IntPtr) pp, dl);
-					}
+				fixed (SKPoint* rp = result)
+				fixed (SKPoint* pp = points) {
+					SkiaApi.sk_matrix_map_points (ref this, (IntPtr)rp, (IntPtr)pp, result.Length);
 				}
 			}
 		}
@@ -413,6 +411,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		{
 			if (points == null)
 				throw new ArgumentNullException (nameof (points));
+
 			var res = new SKPoint [points.Length];
 			MapPoints (res, points);
 			return res;
@@ -424,14 +423,13 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 				throw new ArgumentNullException (nameof (result));
 			if (vectors == null)
 				throw new ArgumentNullException (nameof (vectors));
-			int dl = result.Length;
-			if (dl != vectors.Length)
+			if (result.Length != vectors.Length)
 				throw new ArgumentException ("Buffers must be the same size.");
+
 			unsafe {
-				fixed (SKPoint *rp = &result[0]){
-					fixed (SKPoint *pp = &vectors[0]){
-						SkiaApi.sk_matrix_map_vectors (ref this, (IntPtr) rp, (IntPtr) pp, dl);
-					}
+				fixed (SKPoint* rp = result)
+				fixed (SKPoint* pp = vectors) {
+					SkiaApi.sk_matrix_map_vectors (ref this, (IntPtr)rp, (IntPtr)pp, result.Length);
 				}
 			}
 		}
@@ -440,6 +438,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		{
 			if (vectors == null)
 				throw new ArgumentNullException (nameof (vectors));
+
 			var res = new SKPoint [vectors.Length];
 			MapVectors (res, vectors);
 			return res;
@@ -452,15 +451,13 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 
 		public SKPoint MapPoint (float x, float y)
 		{
-			SKPoint result;
-			SkiaApi.sk_matrix_map_xy (ref this, x, y, out result);
+			SkiaApi.sk_matrix_map_xy (ref this, x, y, out var result);
 			return result;
 		}
 
 		public SKPoint MapVector (float x, float y)
 		{
-			SKPoint result;
-			SkiaApi.sk_matrix_map_vector(ref this, x, y, out result);
+			SkiaApi.sk_matrix_map_vector (ref this, x, y, out var result);
 			return result;
 		}
 
@@ -706,8 +703,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 
 		public SKMatrix Matrix {
 			get {
-				SKMatrix matrix;
-				SkiaApi.sk_matrix44_to_matrix (Handle, out matrix);
+				SkiaApi.sk_matrix44_to_matrix (Handle, out var matrix);
 				return matrix;
 			}
 		}

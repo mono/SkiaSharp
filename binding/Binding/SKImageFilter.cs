@@ -241,8 +241,7 @@ namespace SkiaSharp
 			{
 				get
 				{
-					SKRect rect;
-					SkiaApi.sk_imagefilter_croprect_get_rect(Handle, out rect);
+					SkiaApi.sk_imagefilter_croprect_get_rect (Handle, out var rect);
 					return rect;
 				}
 			}

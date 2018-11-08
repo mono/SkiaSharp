@@ -83,8 +83,8 @@ namespace SkiaSharp
 		}
 
 		public bool IsStroke {
-			get => SkiaApi.sk_paint_get_style (Handle) != SKPaintStyle.Fill;
-			set => SkiaApi.sk_paint_set_style (Handle, value ? SKPaintStyle.Stroke : SKPaintStyle.Fill);
+			get => Style != SKPaintStyle.Fill;
+			set => Style = value ? SKPaintStyle.Stroke : SKPaintStyle.Fill;
 		}
 
 		public SKPaintStyle Style {
@@ -186,8 +186,7 @@ namespace SkiaSharp
 
 		public SKFontMetrics FontMetrics {
 			get {
-				SKFontMetrics metrics;
-				SkiaApi.sk_paint_get_fontmetrics (Handle, out metrics, 0f);
+				SkiaApi.sk_paint_get_fontmetrics (Handle, out var metrics, 0);
 				return metrics;
 			}
 		}
@@ -206,7 +205,11 @@ namespace SkiaSharp
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
 
-			return SkiaApi.sk_paint_measure_text (Handle, text, (IntPtr)text.Length, IntPtr.Zero);
+			unsafe {
+				fixed (byte* t = text) {
+					return MeasureText ((IntPtr)t, (IntPtr)text.Length);
+				}
+			}
 		}
 
 		public float MeasureText (IntPtr buffer, IntPtr length)
@@ -231,7 +234,11 @@ namespace SkiaSharp
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
 
-			return SkiaApi.sk_paint_measure_text (Handle, text, (IntPtr)text.Length, ref bounds);
+			unsafe {
+				fixed (byte* t = text) {
+					return MeasureText ((IntPtr)t, (IntPtr)text.Length, ref bounds);
+				}
+			}
 		}
 
 		public float MeasureText (IntPtr buffer, IntPtr length, ref SKRect bounds)
@@ -244,24 +251,23 @@ namespace SkiaSharp
 
 		public long BreakText (string text, float maxWidth)
 		{
-			float measuredWidth;
-			return BreakText (text, maxWidth, out measuredWidth);
+			return BreakText (text, maxWidth, out var measuredWidth);
 		}
 
 		public long BreakText (string text, float maxWidth, out float measuredWidth)
 		{
-			string measuredText;
-			return BreakText (text, maxWidth, out measuredWidth, out measuredText);
+			return BreakText (text, maxWidth, out measuredWidth, out var measuredText);
 		}
 
 		public long BreakText (string text, float maxWidth, out float measuredWidth, out string measuredText)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
+
 			var bytes = StringUtilities.GetEncodedText (text, TextEncoding);
-			var byteLength = (int)SkiaApi.sk_paint_break_text (Handle, bytes, (IntPtr)bytes.Length, maxWidth, out measuredWidth);
+			var byteLength = (int)BreakText (bytes, maxWidth, out measuredWidth);
 			if (byteLength == 0) {
-				measuredText = String.Empty;
+				measuredText = string.Empty;
 				return 0;
 			}
 			if (byteLength == bytes.Length) {
@@ -274,21 +280,24 @@ namespace SkiaSharp
 
 		public long BreakText (byte[] text, float maxWidth)
 		{
-			float measuredWidth;
-			return BreakText (text, maxWidth, out measuredWidth);
+			return BreakText (text, maxWidth, out var measuredWidth);
 		}
 
 		public long BreakText (byte[] text, float maxWidth, out float measuredWidth)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
-			return (long)SkiaApi.sk_paint_break_text (Handle, text, (IntPtr)text.Length, maxWidth, out measuredWidth);
+
+			unsafe {
+				fixed (byte* t = text) {
+					return BreakText ((IntPtr)t, (IntPtr)text.Length, maxWidth, out measuredWidth);
+				}
+			}
 		}
 
 		public long BreakText (IntPtr buffer, IntPtr length, float maxWidth)
 		{
-			float measuredWidth;
-			return BreakText (buffer, length, maxWidth, out measuredWidth);
+			return BreakText (buffer, length, maxWidth, out var measuredWidth);
 		}
 
 		public long BreakText (IntPtr buffer, IntPtr length, float maxWidth, out float measuredWidth)
@@ -303,6 +312,7 @@ namespace SkiaSharp
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
+
 			var bytes = StringUtilities.GetEncodedText (text, TextEncoding);
 			return GetTextPath (bytes, x, y);
 		}
@@ -311,36 +321,48 @@ namespace SkiaSharp
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
-			return GetObject<SKPath> (SkiaApi.sk_paint_get_text_path (Handle, text, (IntPtr)text.Length, x, y));
+
+			unsafe {
+				fixed (byte* t = text) {
+					return GetTextPath ((IntPtr)t, (IntPtr)text.Length, x, y);
+				}
+			}
 		}
 
 		public SKPath GetTextPath (IntPtr buffer, IntPtr length, float x, float y)
 		{
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (buffer));
-			return GetObject<SKPath> (SkiaApi.sk_paint_get_text_path (Handle, buffer, length, x, y));
 
+			return GetObject<SKPath> (SkiaApi.sk_paint_get_text_path (Handle, buffer, length, x, y));
 		}
 
 		public SKPath GetTextPath (string text, SKPoint[] points)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
+
 			var bytes = StringUtilities.GetEncodedText (text, TextEncoding);
-			return GetObject<SKPath> (SkiaApi.sk_paint_get_pos_text_path (Handle, bytes, (IntPtr)bytes.Length, points));
+			return GetTextPath (bytes, points);
 		}
 
 		public SKPath GetTextPath (byte[] text, SKPoint[] points)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
-			return GetObject<SKPath> (SkiaApi.sk_paint_get_pos_text_path (Handle, text, (IntPtr)text.Length, points));
+
+			unsafe {
+				fixed (byte* t = text) {
+					return GetTextPath ((IntPtr)t, (IntPtr)text.Length, points);
+				}
+			}
 		}
 
 		public SKPath GetTextPath (IntPtr buffer, IntPtr length, SKPoint[] points)
 		{
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (buffer));
+
 			return GetObject<SKPath> (SkiaApi.sk_paint_get_pos_text_path (Handle, buffer, length, points));
 		}
 
@@ -350,6 +372,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (src));
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
+
 			return SkiaApi.sk_paint_get_fill_path (Handle, src.Handle, dst.Handle, ref cullRect, resScale);
 		}
 

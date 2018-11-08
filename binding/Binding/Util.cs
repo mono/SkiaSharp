@@ -40,6 +40,21 @@ namespace SkiaSharp
 			return BitConverter.ToInt32(bytes, 0);
 		}
 
+		public static byte[] GetEncodedText(string text, SKEncoding encoding)
+		{
+			switch (encoding)
+			{
+				case SKEncoding.Utf8:
+					return Encoding.UTF8.GetBytes(text);
+				case SKEncoding.Utf16:
+					return Encoding.Unicode.GetBytes(text);
+				case SKEncoding.Utf32:
+					return Encoding.UTF32.GetBytes(text);
+				default:
+					throw new ArgumentOutOfRangeException(nameof(encoding), $"Encoding {encoding} is not supported.");
+			}
+		}
+
 		public static byte[] GetEncodedText(string text, SKTextEncoding encoding)
 		{
 			switch (encoding)

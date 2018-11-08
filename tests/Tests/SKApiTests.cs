@@ -107,8 +107,13 @@ namespace SkiaSharp.Tests
 							paramType = param.ParameterType.GetElementType();
 						}
 
-						// make sure only structs
-						Assert.False(paramType.GetTypeInfo().IsClass, $"{method.Name}({paramType})");
+						var paramTypeInfo = paramType.GetTypeInfo();
+
+						// make sure only structs and pointers to structs
+						if (!paramTypeInfo.IsPointer)
+						{
+							Assert.False(paramType.GetTypeInfo().IsClass, $"{method.Name}({paramType})");
+						}
 
 						// make sure our structs have a layout type
 						if (!paramType.GetTypeInfo().IsEnum && paramType.Namespace == "SkiaSharp")

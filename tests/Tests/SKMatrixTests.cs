@@ -144,5 +144,38 @@ namespace SkiaSharp.Tests
 
 			Assert.Equal(results, actualResults);
 		}
+
+		[SkippableFact]
+		public void MatrixMapsPoints()
+		{
+			var source = new[] {
+				new SKPoint(0, 0),
+				new SKPoint(-10, -10),
+				new SKPoint(-10, 10),
+				new SKPoint(10, -10),
+				new SKPoint(10, 10),
+				new SKPoint(-5, -5),
+				new SKPoint(-5, 5),
+				new SKPoint(5, -5),
+				new SKPoint(5, 5),
+			};
+
+			var expectedResult = new[] {
+				new SKPoint(10, 10),
+				new SKPoint(0, 0),
+				new SKPoint(0, 20),
+				new SKPoint(20, 0),
+				new SKPoint(20, 20),
+				new SKPoint(5, 5),
+				new SKPoint(5, 15),
+				new SKPoint(15, 5),
+				new SKPoint(15, 15),
+			};
+
+			var matrix = SKMatrix.MakeTranslation(10, 10);
+			matrix.MapPoints(source, source);
+
+			Assert.Equal(expectedResult, source);
+		}
 	}
 }

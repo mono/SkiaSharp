@@ -22,8 +22,7 @@ namespace SkiaSharp
 
 		public SKRectI Bounds {
 			get {
-				SKRectI rect;
-				SkiaApi.sk_region_get_bounds(Handle, out rect);
+				SkiaApi.sk_region_get_bounds (Handle, out var rect);
 				return rect;
 			}
 		}
@@ -84,14 +83,13 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (path));
 
 			using (var clip = new SKRegion()) {
-				SKRect rect;
-				if (path.GetBounds(out rect)) {
-					var recti = new SKRectI(
+				if (path.GetBounds (out var rect)) {
+					var recti = new SKRectI (
 						(int)rect.Left,
 						(int)rect.Top,
-						(int)Math.Ceiling(rect.Right),
-						(int)Math.Ceiling(rect.Bottom));
-					clip.SetRect(recti);
+						(int)Math.Ceiling (rect.Right),
+						(int)Math.Ceiling (rect.Bottom));
+					clip.SetRect (recti);
 				}
 
 				return SkiaApi.sk_region_set_path(Handle, path.Handle, clip.Handle);
