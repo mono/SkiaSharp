@@ -206,5 +206,53 @@ namespace SkiaSharp.Tests
 			Assert.Equal(1, paint.BreakText("ä", 50.0f));
 			Assert.Equal(1, paint.BreakText("a", 50.0f));
 		}
+
+		[SkippableFact]
+		public void MeastureTextMeasuresTheText()
+		{
+			var paint = new SKPaint();
+
+			paint.TextEncoding = SKTextEncoding.Utf8;
+			var width8 = paint.MeasureText("Hello World!");
+
+			paint.TextEncoding = SKTextEncoding.Utf16;
+			var width16 = paint.MeasureText("Hello World!");
+
+			paint.TextEncoding = SKTextEncoding.Utf32;
+			var width32 = paint.MeasureText("Hello World!");
+
+			Assert.True(width8 > 0);
+			Assert.Equal(width8, width16);
+			Assert.Equal(width8, width32);
+		}
+
+		[SkippableFact]
+		public void MeastureTextReturnsTheBounds()
+		{
+			var paint = new SKPaint();
+
+			paint.TextEncoding = SKTextEncoding.Utf8;
+			var bounds8 = new SKRect();
+			var width8 = paint.MeasureText("Hello World!", ref bounds8);
+
+			paint.TextEncoding = SKTextEncoding.Utf16;
+			var bounds16 = new SKRect();
+			var width16 = paint.MeasureText("Hello World!", ref bounds16);
+
+			paint.TextEncoding = SKTextEncoding.Utf32;
+			var bounds32 = new SKRect();
+			var width32 = paint.MeasureText("Hello World!", ref bounds32);
+
+			Assert.True(width8 > 0);
+			Assert.Equal(width8, width16);
+			Assert.Equal(width8, width32);
+
+			Assert.NotEqual(0, bounds8.Left);
+			Assert.NotEqual(0, bounds8.Top);
+			Assert.NotEqual(0, bounds8.Width);
+			Assert.NotEqual(0, bounds8.Height);
+			Assert.Equal(bounds8, bounds16);
+			Assert.Equal(bounds8, bounds32);
+		}
 	}
 }

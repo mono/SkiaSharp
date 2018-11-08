@@ -55,8 +55,7 @@ namespace SkiaSharp
 			var guid = (Guid)gchandle.Target;
 			lock (contexts)
 			{
-				NativeDelegateContext value;
-				contexts.TryGetValue(guid, out value);
+				contexts.TryGetValue (guid, out var value);
 				return value;
 			}
 		}

@@ -23,8 +23,7 @@ namespace SkiaSharp
 
 		public SKRect CullRect {
 			get {
-				SKRect rect;
- 				SkiaApi.sk_picture_get_cull_rect (Handle, out rect);
+				SkiaApi.sk_picture_get_cull_rect (Handle, out var rect);
 				return rect;
 			}
 		}

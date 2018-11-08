@@ -112,16 +112,14 @@ namespace SkiaSharp
 
 		public SKPoint LastPoint {
 			get {
-				SKPoint point;
-				SkiaApi.sk_path_get_last_point (Handle, out point);
+				SkiaApi.sk_path_get_last_point (Handle, out var point);
 				return point;
 			}
 		}
 
 		public SKRect Bounds {
 			get {
-				SKRect rect;
-				if (GetBounds (out rect)) {
+				if (GetBounds (out var rect)) {
 					return rect;
 				} else {
 					return SKRect.Empty;
@@ -131,8 +129,7 @@ namespace SkiaSharp
 
 		public SKRect TightBounds {
 			get {
-				SKRect rect;
-				if (GetTightBounds (out rect)) {
+				if (GetTightBounds (out var rect)) {
 					return rect;
 				} else {
 					return SKRect.Empty;
@@ -186,9 +183,8 @@ namespace SkiaSharp
 		{
 			if (index < 0 || index >= PointCount)
 				throw new ArgumentOutOfRangeException (nameof (index));
-			
-			SKPoint point;
-			SkiaApi.sk_path_get_point (Handle, index, out point);
+
+			SkiaApi.sk_path_get_point (Handle, index, out var point);
 			return point;
 		}
 
@@ -413,8 +409,7 @@ namespace SkiaSharp
 
 		public SKRect ComputeTightBounds ()
 		{
-			SKRect rect;
-			SkiaApi.sk_path_compute_tight_bounds (Handle, out rect);
+			SkiaApi.sk_path_compute_tight_bounds (Handle, out var rect);
 			return rect;
 		}
 
@@ -553,8 +548,7 @@ namespace SkiaSharp
 		
 		public static SKPoint [] ConvertConicToQuads (SKPoint p0, SKPoint p1, SKPoint p2, float w, int pow2)
 		{
-			SKPoint [] pts;
-			ConvertConicToQuads(p0, p1, p2, w, out pts, pow2);
+			ConvertConicToQuads (p0, p1, p2, w, out var pts, pow2);
 			return pts;
 		}
 		

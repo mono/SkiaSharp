@@ -323,8 +323,7 @@ namespace SkiaSharp
 
 		public bool ExtractAlpha(SKBitmap destination)
 		{
-			SKPointI offset;
-			return ExtractAlpha (destination, null, out offset);
+			return ExtractAlpha (destination, null, out var offset);
 		}
 
 		public bool ExtractAlpha(SKBitmap destination, out SKPointI offset)
@@ -334,8 +333,7 @@ namespace SkiaSharp
 
 		public bool ExtractAlpha(SKBitmap destination, SKPaint paint)
 		{
-			SKPointI offset;
-			return ExtractAlpha (destination, paint, out offset);
+			return ExtractAlpha (destination, paint, out var offset);
 		}
 
 		public bool ExtractAlpha(SKBitmap destination, SKPaint paint, out SKPointI offset)
@@ -350,8 +348,7 @@ namespace SkiaSharp
 
 		public SKImageInfo Info {
 			get {
-				SKImageInfoNative cinfo;
-				SkiaApi.sk_bitmap_get_info (Handle, out cinfo);
+				SkiaApi.sk_bitmap_get_info (Handle, out var cinfo);
 				return SKImageInfoNative.ToManaged (ref cinfo);
 			}
 		}
@@ -390,8 +387,7 @@ namespace SkiaSharp
 
 		public IntPtr GetPixels ()
 		{
-			IntPtr length;
-			return GetPixels (out length);
+			return GetPixels (out var length);
 		}
 
 		public IntPtr GetPixels (out IntPtr length)
@@ -417,9 +413,8 @@ namespace SkiaSharp
 		}
 		
 		public byte[] Bytes {
-			get { 
-				IntPtr length;
-				var pixelsPtr = GetPixels (out length);
+			get {
+				var pixelsPtr = GetPixels (out var length);
 				byte [] bytes = new byte [(int)length];
 				Marshal.Copy (pixelsPtr, bytes, 0, (int)length);
 				return bytes; 
@@ -518,8 +513,7 @@ namespace SkiaSharp
 
 			// read the pixels and color table
 			var bitmap = new SKBitmap (bitmapInfo);
-			IntPtr length;
-			var result = codec.GetPixels (bitmapInfo, bitmap.GetPixels (out length));
+			var result = codec.GetPixels (bitmapInfo, bitmap.GetPixels (out var length));
 			if (result != SKCodecResult.Success && result != SKCodecResult.IncompleteInput) {
 				bitmap.Dispose ();
 				bitmap = null;

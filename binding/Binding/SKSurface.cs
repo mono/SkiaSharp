@@ -428,8 +428,7 @@ namespace SkiaSharp
 
 		public SKSurfaceProps SurfaceProps {
 			get {
-				SKSurfaceProps props;
-				SkiaApi.sk_surface_get_props (Handle, out props);
+				SkiaApi.sk_surface_get_props (Handle, out var props);
 				return props;
 			}
 		}

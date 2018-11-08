@@ -83,14 +83,11 @@ namespace SkiaSharp
 			lock (instances)
 			{
 				// find any existing managed werappers
-				WeakReference reference;
-				if (instances.TryGetValue(handle, out reference))
-				{
+				if (instances.TryGetValue (handle, out var reference)) {
 					var instance = reference.Target as TSkiaObject;
-					if (instance != null && instance.Handle != IntPtr.Zero)
-					{
+					if (instance != null && instance.Handle != IntPtr.Zero) {
 						if (owns)
-							Interlocked.Increment(ref instance.referenceCount);
+							Interlocked.Increment (ref instance.referenceCount);
 						return instance;
 					}
 				}
@@ -118,23 +115,19 @@ namespace SkiaSharp
 			lock (instances)
 			{
 				// find old references
-				WeakReference reference;
-				if (instances.TryGetValue(handle, out reference))
-				{
+				if (instances.TryGetValue (handle, out var reference)) {
 					var shouldReplace =
 						reference == null ||
 						reference.Target == null ||
 						((SKObject)reference.Target).Handle == IntPtr.Zero;
 
-					Debug.WriteLineIf(!shouldReplace, "Not replacing existing, living, managed instance with new object.");
+					Debug.WriteLineIf (!shouldReplace, "Not replacing existing, living, managed instance with new object.");
 
 					// replace the old one if it is dead
-					instances[handle] = new WeakReference(instance);
-				}
-				else
-				{
+					instances[handle] = new WeakReference (instance);
+				} else {
 					// add a new reference
-					instances.Add(handle, new WeakReference(instance));
+					instances.Add (handle, new WeakReference (instance));
 				}
 			}
 		}
@@ -149,11 +142,9 @@ namespace SkiaSharp
 			lock (instances)
 			{
 				// find any references
-				WeakReference reference;
-				if (Interlocked.Decrement(ref instance.referenceCount) <= 0 && instances.TryGetValue(handle, out reference))
-				{
+				if (Interlocked.Decrement (ref instance.referenceCount) <= 0 && instances.TryGetValue (handle, out var reference)) {
 					// remove it if it is dead or the correct object
-					instances.Remove(handle);
+					instances.Remove (handle);
 					return true;
 				}
 			}
