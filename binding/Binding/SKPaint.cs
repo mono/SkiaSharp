@@ -9,7 +9,7 @@ namespace SkiaSharp
 			: base (handle, owns)
 		{
 		}
-		
+
 		public SKPaint ()
 			: this (SkiaApi.sk_paint_new (), true)
 		{
@@ -17,7 +17,7 @@ namespace SkiaSharp
 				throw new InvalidOperationException ("Unable to create a new SKPaint instance.");
 			}
 		}
-		
+
 		protected override void Dispose (bool disposing)
 		{
 			if (Handle != IntPtr.Zero && OwnsHandle) {
@@ -26,286 +26,169 @@ namespace SkiaSharp
 
 			base.Dispose (disposing);
 		}
-		
+
 		public bool IsAntialias {
-			get {
-				return SkiaApi.sk_paint_is_antialias (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_antialias (Handle, value);
-			}
+			get => SkiaApi.sk_paint_is_antialias (Handle);
+			set => SkiaApi.sk_paint_set_antialias (Handle, value);
 		}
 
 		public bool IsDither {
-			get {
-				return SkiaApi.sk_paint_is_dither (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_dither (Handle, value);
-			}
+			get => SkiaApi.sk_paint_is_dither (Handle);
+			set => SkiaApi.sk_paint_set_dither (Handle, value);
 		}
 
 		public bool IsVerticalText {
-			get {
-				return SkiaApi.sk_paint_is_verticaltext (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_verticaltext (Handle, value);
-			}
+			get => SkiaApi.sk_paint_is_verticaltext (Handle);
+			set => SkiaApi.sk_paint_set_verticaltext (Handle, value);
 		}
 
 		public bool IsLinearText {
-			get {
-				return SkiaApi.sk_paint_is_linear_text (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_linear_text (Handle, value);
-			}
+			get => SkiaApi.sk_paint_is_linear_text (Handle);
+			set => SkiaApi.sk_paint_set_linear_text (Handle, value);
 		}
 
 		public bool SubpixelText {
-			get {
-				return SkiaApi.sk_paint_is_subpixel_text (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_subpixel_text (Handle, value);
-			}
+			get => SkiaApi.sk_paint_is_subpixel_text (Handle);
+			set => SkiaApi.sk_paint_set_subpixel_text (Handle, value);
 		}
 
 		public bool LcdRenderText {
-			get {
-				return SkiaApi.sk_paint_is_lcd_render_text (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_lcd_render_text (Handle, value);
-			}
+			get => SkiaApi.sk_paint_is_lcd_render_text (Handle);
+			set => SkiaApi.sk_paint_set_lcd_render_text (Handle, value);
 		}
 
 		public bool IsEmbeddedBitmapText {
-			get {
-				return SkiaApi.sk_paint_is_embedded_bitmap_text (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_embedded_bitmap_text (Handle, value);
-			}
+			get => SkiaApi.sk_paint_is_embedded_bitmap_text (Handle);
+			set => SkiaApi.sk_paint_set_embedded_bitmap_text (Handle, value);
 		}
 
 		public bool IsAutohinted {
-			get {
-				return SkiaApi.sk_paint_is_autohinted (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_autohinted (Handle, value);
-			}
+			get => SkiaApi.sk_paint_is_autohinted (Handle);
+			set => SkiaApi.sk_paint_set_autohinted (Handle, value);
 		}
 
 		public SKPaintHinting HintingLevel {
-			get {
-				return SkiaApi.sk_paint_get_hinting (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_hinting (Handle, value);
-			}
+			get => SkiaApi.sk_paint_get_hinting (Handle);
+			set => SkiaApi.sk_paint_set_hinting (Handle, value);
 		}
 
 		public bool FakeBoldText {
-			get {
-				return SkiaApi.sk_paint_is_fake_bold_text (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_fake_bold_text (Handle, value);
-			}
+			get => SkiaApi.sk_paint_is_fake_bold_text (Handle);
+			set => SkiaApi.sk_paint_set_fake_bold_text (Handle, value);
 		}
 
 		public bool DeviceKerningEnabled {
-			get {
-				return SkiaApi.sk_paint_is_dev_kern_text (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_dev_kern_text (Handle, value);
-			}
+			get => SkiaApi.sk_paint_is_dev_kern_text (Handle);
+			set => SkiaApi.sk_paint_set_dev_kern_text (Handle, value);
 		}
 
 		public bool IsStroke {
-			get {
-				return SkiaApi.sk_paint_get_style (Handle) != SKPaintStyle.Fill;
-			}
-			set {
-				SkiaApi.sk_paint_set_style (Handle, value ? SKPaintStyle.Stroke : SKPaintStyle.Fill);
-			}
+			get => SkiaApi.sk_paint_get_style (Handle) != SKPaintStyle.Fill;
+			set => SkiaApi.sk_paint_set_style (Handle, value ? SKPaintStyle.Stroke : SKPaintStyle.Fill);
 		}
 
 		public SKPaintStyle Style {
-			get {
-				return SkiaApi.sk_paint_get_style (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_style (Handle, value);
-			}
+			get => SkiaApi.sk_paint_get_style (Handle);
+			set => SkiaApi.sk_paint_set_style (Handle, value);
 		}
 
 		public SKColor Color {
-			get {
-				return SkiaApi.sk_paint_get_color (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_color (Handle, value);
-			}
+			get => SkiaApi.sk_paint_get_color (Handle);
+			set => SkiaApi.sk_paint_set_color (Handle, value);
 		}
-		
+
 		public float StrokeWidth {
-			get {
-				return SkiaApi.sk_paint_get_stroke_width (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_stroke_width (Handle, value);
-			}
+			get => SkiaApi.sk_paint_get_stroke_width (Handle);
+			set => SkiaApi.sk_paint_set_stroke_width (Handle, value);
 		}
 
 		public float StrokeMiter {
-			get {
-				return SkiaApi.sk_paint_get_stroke_miter (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_stroke_miter (Handle, value);
-			}
+			get => SkiaApi.sk_paint_get_stroke_miter (Handle);
+			set => SkiaApi.sk_paint_set_stroke_miter (Handle, value);
 		}
 
 		public SKStrokeCap StrokeCap {
-			get {
-				return SkiaApi.sk_paint_get_stroke_cap (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_stroke_cap (Handle, value);
-			}
+			get => SkiaApi.sk_paint_get_stroke_cap (Handle);
+			set => SkiaApi.sk_paint_set_stroke_cap (Handle, value);
 		}
 
 		public SKStrokeJoin StrokeJoin {
-			get {
-				return SkiaApi.sk_paint_get_stroke_join (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_stroke_join (Handle, value);
-			}
+			get => SkiaApi.sk_paint_get_stroke_join (Handle);
+			set => SkiaApi.sk_paint_set_stroke_join (Handle, value);
 		}
 
 		public SKShader Shader {
-			get {
-				return GetObject<SKShader>(SkiaApi.sk_paint_get_shader(Handle), false);
-			}
-			set {
-				SkiaApi.sk_paint_set_shader(Handle, value == null ? IntPtr.Zero : value.Handle);
-			}
+			get => GetObject<SKShader> (SkiaApi.sk_paint_get_shader (Handle), false);
+			set => SkiaApi.sk_paint_set_shader (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
 		public SKMaskFilter MaskFilter {
-			get {
-				return GetObject<SKMaskFilter>(SkiaApi.sk_paint_get_maskfilter(Handle), false);
-			}
-			set {
-				SkiaApi.sk_paint_set_maskfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
-			}
+			get => GetObject<SKMaskFilter> (SkiaApi.sk_paint_get_maskfilter (Handle), false);
+			set => SkiaApi.sk_paint_set_maskfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
 		public SKColorFilter ColorFilter {
-			get {
-				return GetObject<SKColorFilter>(SkiaApi.sk_paint_get_colorfilter(Handle), false);
-			}
-			set {
-				SkiaApi.sk_paint_set_colorfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
-			}
+			get => GetObject<SKColorFilter> (SkiaApi.sk_paint_get_colorfilter (Handle), false);
+			set => SkiaApi.sk_paint_set_colorfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
-		
+
 		public SKImageFilter ImageFilter {
-			get {
-				return GetObject<SKImageFilter>(SkiaApi.sk_paint_get_imagefilter(Handle), false);
-			}
-			set {
-				SkiaApi.sk_paint_set_imagefilter(Handle, value == null ? IntPtr.Zero : value.Handle);
-			}
+			get => GetObject<SKImageFilter> (SkiaApi.sk_paint_get_imagefilter (Handle), false);
+			set => SkiaApi.sk_paint_set_imagefilter (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
 		public SKBlendMode BlendMode {
-			get {
-				return SkiaApi.sk_paint_get_blendmode(Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_blendmode (Handle, value);
-			}
+			get => SkiaApi.sk_paint_get_blendmode (Handle);
+			set => SkiaApi.sk_paint_set_blendmode (Handle, value);
 		}
 
-		public SKFilterQuality FilterQuality
-		{
-			get
-			{
-				return SkiaApi.sk_paint_get_filter_quality(Handle);
-			}
-			set
-			{
-				SkiaApi.sk_paint_set_filter_quality(Handle, value);
-			}
+		public SKFilterQuality FilterQuality {
+			get => SkiaApi.sk_paint_get_filter_quality (Handle);
+			set => SkiaApi.sk_paint_set_filter_quality (Handle, value);
 		}
 
 		public SKTypeface Typeface {
-			get {
-				return GetObject<SKTypeface> (SkiaApi.sk_paint_get_typeface (Handle), false);
-			}
-			set {
-				SkiaApi.sk_paint_set_typeface (Handle, value == null ? IntPtr.Zero : value.Handle);
-			}
+			get => GetObject<SKTypeface> (SkiaApi.sk_paint_get_typeface (Handle), false);
+			set => SkiaApi.sk_paint_set_typeface (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
 		public float TextSize {
-			get {
-				return SkiaApi.sk_paint_get_textsize (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_textsize (Handle, value);
-			}
+			get => SkiaApi.sk_paint_get_textsize (Handle);
+			set => SkiaApi.sk_paint_set_textsize (Handle, value);
 		}
 
 		public SKTextAlign TextAlign {
-			get {
-				return SkiaApi.sk_paint_get_text_align (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_text_align (Handle, value);
-			}
+			get => SkiaApi.sk_paint_get_text_align (Handle);
+			set => SkiaApi.sk_paint_set_text_align (Handle, value);
 		}
 
 		public SKTextEncoding TextEncoding {
-			get {
-				return SkiaApi.sk_paint_get_text_encoding (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_text_encoding (Handle, value);
-			}
+			get => SkiaApi.sk_paint_get_text_encoding (Handle);
+			set => SkiaApi.sk_paint_set_text_encoding (Handle, value);
 		}
 
 		public float TextScaleX {
-			get {
-				return SkiaApi.sk_paint_get_text_scale_x (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_text_scale_x (Handle, value);
-			}
+			get => SkiaApi.sk_paint_get_text_scale_x (Handle);
+			set => SkiaApi.sk_paint_set_text_scale_x (Handle, value);
 		}
 
 		public float TextSkewX {
-			get {
-				return SkiaApi.sk_paint_get_text_skew_x (Handle);
-			}
-			set {
-				SkiaApi.sk_paint_set_text_skew_x (Handle, value);
-			}
+			get => SkiaApi.sk_paint_get_text_skew_x (Handle);
+			set => SkiaApi.sk_paint_set_text_skew_x (Handle, value);
 		}
 
 		public SKPathEffect PathEffect {
+			get => GetObject<SKPathEffect> (SkiaApi.sk_paint_get_path_effect (Handle), false);
+			set => SkiaApi.sk_paint_set_path_effect (Handle, value == null ? IntPtr.Zero : value.Handle);
+		}
+
+		public float FontSpacing => SkiaApi.sk_paint_get_fontmetrics (Handle, IntPtr.Zero, 0);
+
+		public SKFontMetrics FontMetrics {
 			get {
-				return GetObject<SKPathEffect> (SkiaApi.sk_paint_get_path_effect (Handle), false);
-			}
-			set {
-				SkiaApi.sk_paint_set_path_effect (Handle, value == null ? IntPtr.Zero : value.Handle);
+				SKFontMetrics metrics;
+				SkiaApi.sk_paint_get_fontmetrics (Handle, out metrics, 0f);
+				return metrics;
 			}
 		}
 
@@ -376,21 +259,19 @@ namespace SkiaSharp
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
 			var bytes = StringUtilities.GetEncodedText (text, TextEncoding);
-			var byteLength = (int) SkiaApi.sk_paint_break_text (Handle, bytes, (IntPtr) bytes.Length, maxWidth, out measuredWidth);
-			if (byteLength == 0)
-			{
+			var byteLength = (int)SkiaApi.sk_paint_break_text (Handle, bytes, (IntPtr)bytes.Length, maxWidth, out measuredWidth);
+			if (byteLength == 0) {
 				measuredText = String.Empty;
 				return 0;
 			}
-			if (byteLength == bytes.Length)
-			{
+			if (byteLength == bytes.Length) {
 				measuredText = text;
 				return text.Length;
 			}
 			measuredText = StringUtilities.GetString (bytes, 0, byteLength, TextEncoding);
 			return measuredText.Length;
 		}
-		
+
 		public long BreakText (byte[] text, float maxWidth)
 		{
 			float measuredWidth;
@@ -401,9 +282,9 @@ namespace SkiaSharp
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
-			return (long) SkiaApi.sk_paint_break_text (Handle, text, (IntPtr) text.Length, maxWidth, out measuredWidth);
+			return (long)SkiaApi.sk_paint_break_text (Handle, text, (IntPtr)text.Length, maxWidth, out measuredWidth);
 		}
-		
+
 		public long BreakText (IntPtr buffer, IntPtr length, float maxWidth)
 		{
 			float measuredWidth;
@@ -415,7 +296,7 @@ namespace SkiaSharp
 			if (buffer == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (buffer));
 
-			return (long) SkiaApi.sk_paint_break_text (Handle, buffer, length, maxWidth, out measuredWidth);
+			return (long)SkiaApi.sk_paint_break_text (Handle, buffer, length, maxWidth, out measuredWidth);
 		}
 
 		public SKPath GetTextPath (string text, float x, float y)
@@ -430,7 +311,7 @@ namespace SkiaSharp
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
-			return GetObject<SKPath> (SkiaApi.sk_paint_get_text_path(Handle, text, (IntPtr) text.Length, x, y));
+			return GetObject<SKPath> (SkiaApi.sk_paint_get_text_path (Handle, text, (IntPtr)text.Length, x, y));
 		}
 
 		public SKPath GetTextPath (IntPtr buffer, IntPtr length, float x, float y)
@@ -444,16 +325,16 @@ namespace SkiaSharp
 		public SKPath GetTextPath (string text, SKPoint[] points)
 		{
 			if (text == null)
-				throw new ArgumentNullException(nameof(text));
+				throw new ArgumentNullException (nameof (text));
 			var bytes = StringUtilities.GetEncodedText (text, TextEncoding);
-			return GetObject<SKPath> (SkiaApi.sk_paint_get_pos_text_path (Handle, bytes, (IntPtr) bytes.Length, points));
+			return GetObject<SKPath> (SkiaApi.sk_paint_get_pos_text_path (Handle, bytes, (IntPtr)bytes.Length, points));
 		}
 
-		public SKPath GetTextPath(byte[] text, SKPoint[] points)
+		public SKPath GetTextPath (byte[] text, SKPoint[] points)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
-			return GetObject<SKPath> (SkiaApi.sk_paint_get_pos_text_path (Handle, text, (IntPtr) text.Length, points));
+			return GetObject<SKPath> (SkiaApi.sk_paint_get_pos_text_path (Handle, text, (IntPtr)text.Length, points));
 		}
 
 		public SKPath GetTextPath (IntPtr buffer, IntPtr length, SKPoint[] points)
@@ -463,44 +344,32 @@ namespace SkiaSharp
 			return GetObject<SKPath> (SkiaApi.sk_paint_get_pos_text_path (Handle, buffer, length, points));
 		}
 
-		public bool GetFillPath(SKPath src, SKPath dst, SKRect cullRect, float resScale = 1)
+		public bool GetFillPath (SKPath src, SKPath dst, SKRect cullRect, float resScale = 1)
 		{
 			if (src == null)
-				throw new ArgumentNullException(nameof(src));
+				throw new ArgumentNullException (nameof (src));
 			if (dst == null)
-				throw new ArgumentNullException(nameof(dst));
-			return SkiaApi.sk_paint_get_fill_path(Handle, src.Handle, dst.Handle, ref cullRect, resScale);
+				throw new ArgumentNullException (nameof (dst));
+			return SkiaApi.sk_paint_get_fill_path (Handle, src.Handle, dst.Handle, ref cullRect, resScale);
 		}
 
-		public bool GetFillPath(SKPath src, SKPath dst, float resScale = 1)
+		public bool GetFillPath (SKPath src, SKPath dst, float resScale = 1)
 		{
 			if (src == null)
-				throw new ArgumentNullException(nameof(src));
+				throw new ArgumentNullException (nameof (src));
 			if (dst == null)
-				throw new ArgumentNullException(nameof(dst));
-			return SkiaApi.sk_paint_get_fill_path(Handle, src.Handle, dst.Handle, IntPtr.Zero, resScale);
+				throw new ArgumentNullException (nameof (dst));
+			return SkiaApi.sk_paint_get_fill_path (Handle, src.Handle, dst.Handle, IntPtr.Zero, resScale);
 		}
-
-		public SKFontMetrics FontMetrics
-		{
-			get
-			{
-				SKFontMetrics metrics;
-				SkiaApi.sk_paint_get_fontmetrics(Handle, out metrics, 0f);
-				return metrics;
-			}
-		}
-
-		public float FontSpacing => SkiaApi.sk_paint_get_fontmetrics (Handle, IntPtr.Zero, 0);
 
 		public float GetFontMetrics (out SKFontMetrics metrics, float scale = 0f)
 		{
 			return SkiaApi.sk_paint_get_fontmetrics (Handle, out metrics, scale);
 		}
 
-		public SKPaint Clone()
+		public SKPaint Clone ()
 		{
-			return GetObject<SKPaint>(SkiaApi.sk_paint_clone(Handle));
+			return GetObject<SKPaint> (SkiaApi.sk_paint_clone (Handle));
 		}
 	}
 }
