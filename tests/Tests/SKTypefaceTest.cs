@@ -177,8 +177,8 @@ namespace SkiaSharp.Tests
 
 			var typeface = SKTypeface.Default;
 
-			Assert.Equal(text.Length, typeface.CountGlyphs(text));
-			Assert.Equal(text.Length, typeface.GetGlyphs(text).Length);
+			Assert.True(typeface.CountGlyphs(text) > 0);
+			Assert.True(typeface.GetGlyphs(text).Length > 0);
 		}
 
 		[SkippableFact]
