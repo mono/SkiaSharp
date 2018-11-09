@@ -189,10 +189,10 @@ namespace SkiaSharp.Tests
 
 			var typeface = SKFontManager.Default.MatchCharacter(emojiChar);
 
-			Assert.Equal(1, typeface.CountGlyphs(text));
-			Assert.Equal(1, typeface.CountGlyphs(text, SKEncoding.Utf32));
-			Assert.Single(typeface.GetGlyphs(text));
-			Assert.Single(typeface.GetGlyphs(text, SKEncoding.Utf32));
+			Assert.True(typeface.CountGlyphs(text) > 0);
+			Assert.True(typeface.CountGlyphs(text, SKEncoding.Utf32) > 0);
+			Assert.True(typeface.GetGlyphs(text).Length > 0);
+			Assert.True(typeface.GetGlyphs(text, SKEncoding.Utf32).Length > 0);
 		}
 	}
 }
