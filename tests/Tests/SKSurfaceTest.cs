@@ -147,6 +147,111 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[SkippableFact]
+		public void SimpleSurfaceIsUnknownPixelGeometry()
+		{
+			var info = new SKImageInfo(100, 100);
+			using (var surface = SKSurface.Create(info))
+			{
+				Assert.NotNull(surface);
+				Assert.NotNull(surface.SurfaceProperties);
+			}
+		}
+
+		[SkippableFact]
+		public void SimpleSurfaceWithPropertiesIsCorrect()
+		{
+			var info = new SKImageInfo(100, 100);
+			var props = new SKSurfaceProperties(SKSurfacePropsFlags.UseDeviceIndependentFonts, SKPixelGeometry.RgbVertical);
+			using (var surface = SKSurface.Create(info, props))
+			{
+				Assert.NotNull(surface);
+
+				Assert.Equal(SKPixelGeometry.RgbVertical, surface.SurfaceProperties.PixelGeometry);
+				Assert.Equal(SKSurfacePropsFlags.UseDeviceIndependentFonts, surface.SurfaceProperties.Flags);
+
+				Assert.Equal(props.PixelGeometry, surface.SurfaceProperties.PixelGeometry);
+				Assert.Equal(props.Flags, surface.SurfaceProperties.Flags);
+			}
+		}
+
+		[Obsolete]
+		[SkippableFact]
+		public void SimpleSurfaceWithPropsIsCorrect()
+		{
+			var info = new SKImageInfo(100, 100);
+			var props = new SKSurfaceProps
+			{
+				Flags = SKSurfacePropsFlags.UseDeviceIndependentFonts,
+				PixelGeometry = SKPixelGeometry.RgbVertical
+			};
+			using (var surface = SKSurface.Create(info, props))
+			{
+				Assert.NotNull(surface);
+
+				Assert.Equal(SKPixelGeometry.RgbVertical, surface.SurfaceProperties.PixelGeometry);
+				Assert.Equal(SKSurfacePropsFlags.UseDeviceIndependentFonts, surface.SurfaceProperties.Flags);
+
+				Assert.Equal(props.PixelGeometry, surface.SurfaceProperties.PixelGeometry);
+				Assert.Equal(props.Flags, surface.SurfaceProperties.Flags);
+
+				Assert.Equal(props.PixelGeometry, surface.SurfaceProps.PixelGeometry);
+				Assert.Equal(props.Flags, surface.SurfaceProps.Flags);
+			}
+		}
+
+		[SkippableFact]
+		public void CanCreateSimpleSurface()
+		{
+			var info = new SKImageInfo(100, 100);
+			using (var surface = SKSurface.Create(info))
+			{
+				Assert.NotNull(surface);
+			}
+		}
+
+		[SkippableFact]
+		public void CanCreateSurfaceFromExistingMemory()
+		{
+			var info = new SKImageInfo(100, 100);
+			var props = new SKSurfaceProperties(SKPixelGeometry.Unknown);
+
+			var memory = Marshal.AllocCoTaskMem(info.BytesSize);
+
+			using (var surface = SKSurface.Create(info, memory, info.RowBytes, props))
+			{
+				Assert.NotNull(surface);
+			}
+
+			Marshal.FreeCoTaskMem(memory);
+		}
+
+		[SkippableFact]
+		public void CanCreateSurfaceFromExistingMemoryUsingReleaseDelegate()
+		{
+			var hasReleased = false;
+
+			var info = new SKImageInfo(100, 100);
+			var props = new SKSurfaceProperties(SKPixelGeometry.Unknown);
+
+			var memory = Marshal.AllocCoTaskMem(info.BytesSize);
+
+			using (var surface = SKSurface.Create(info, memory, info.RowBytes, OnRelease, "Hello", props))
+			{
+				Assert.NotNull(surface);
+			}
+
+			Assert.True(hasReleased);
+
+			void OnRelease(IntPtr address, object context)
+			{
+				Marshal.FreeCoTaskMem(memory);
+				hasReleased = true;
+
+				Assert.Equal("Hello", context);
+			}
+		}
+
 		[Obsolete]
 		[Trait(Category, GpuCategory)]
 		[SkippableFact]

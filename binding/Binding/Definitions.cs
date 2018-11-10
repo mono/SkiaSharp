@@ -309,20 +309,10 @@ namespace SkiaSharp
 		Intersect,
 	}
 
-	[StructLayout(LayoutKind.Sequential)]
+	[Obsolete("Use SKSurfaceProperties instead.")]
 	public struct SKSurfaceProps {
-		private SKPixelGeometry pixelGeometry;
-		private SKSurfacePropsFlags flags;
-
-		public SKPixelGeometry PixelGeometry {
-			get { return pixelGeometry; }
-			set { pixelGeometry = value; }
-		}
-
-		public SKSurfacePropsFlags Flags {
-			get { return flags; }
-			set { flags = value; }
-		}
+		public SKPixelGeometry PixelGeometry { get; set; }
+		public SKSurfacePropsFlags Flags { get; set; }
 	}
 
 	public enum SKZeroInitialized {

@@ -52,6 +52,7 @@ using sk_stream_memorystream_t = System.IntPtr;
 using sk_stream_t = System.IntPtr;
 using sk_string_t = System.IntPtr;
 using sk_surface_t = System.IntPtr;
+using sk_surfaceprops_t = System.IntPtr;
 using sk_typeface_t = System.IntPtr;
 using sk_vertices_t = System.IntPtr;
 using sk_wstream_dynamicmemorystream_t = System.IntPtr;
@@ -137,33 +138,21 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_surface_unref (sk_surface_t t);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_surface_t sk_surface_new_raster (ref SKImageInfoNative info, size_t rowBytes, ref SKSurfaceProps props);
+		public extern static sk_surface_t sk_surface_new_raster (ref SKImageInfoNative info, size_t rowBytes, sk_surfaceprops_t props);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_surface_t sk_surface_new_raster (ref SKImageInfoNative info, size_t rowBytes, nullptr_t propsZero);
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_surface_t sk_surface_new_raster_direct (ref SKImageInfoNative info, voidptr_t pixels, size_t rowBytes, voidptr_t releaseProc, voidptr_t context, ref SKSurfaceProps props);
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_surface_t sk_surface_new_raster_direct (ref SKImageInfoNative info, voidptr_t pixels, size_t rowBytes, voidptr_t releaseProc, voidptr_t context, nullptr_t propsZero);
+		public extern static sk_surface_t sk_surface_new_raster_direct (ref SKImageInfoNative info, voidptr_t pixels, size_t rowBytes, voidptr_t releaseProc, voidptr_t context, sk_surfaceprops_t props);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_canvas_t sk_surface_get_canvas (sk_surface_t t);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_image_t sk_surface_new_image_snapshot (sk_surface_t t);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_surface_t sk_surface_new_backend_render_target (gr_context_t context, gr_backendrendertarget_t target, GRSurfaceOrigin origin, SKColorType colorType, sk_colorspace_t colorspace, ref SKSurfaceProps props);
+		public extern static sk_surface_t sk_surface_new_backend_render_target (gr_context_t context, gr_backendrendertarget_t target, GRSurfaceOrigin origin, SKColorType colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_surface_t sk_surface_new_backend_render_target (gr_context_t context, gr_backendrendertarget_t target, GRSurfaceOrigin origin, SKColorType colorType, sk_colorspace_t colorspace, nullptr_t propsZero);
+		public extern static sk_surface_t sk_surface_new_backend_texture (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, int samples, SKColorType colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_surface_t sk_surface_new_backend_texture (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, int samples, SKColorType colorType, sk_colorspace_t colorspace, ref SKSurfaceProps props);
+		public extern static sk_surface_t sk_surface_new_backend_texture_as_render_target (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, int samples, SKColorType colorType, sk_colorspace_t colorspace, sk_surfaceprops_t props);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_surface_t sk_surface_new_backend_texture (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, int samples, SKColorType colorType, sk_colorspace_t colorspace, nullptr_t propsZero);
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_surface_t sk_surface_new_backend_texture_as_render_target (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, int samples, SKColorType colorType, sk_colorspace_t colorspace, ref SKSurfaceProps props);
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_surface_t sk_surface_new_backend_texture_as_render_target (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, int samples, SKColorType colorType, sk_colorspace_t colorspace, nullptr_t propsZero);
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_surface_t sk_surface_new_render_target (gr_context_t context, [MarshalAs (UnmanagedType.I1)] bool budgeted, ref SKImageInfoNative info, int sampleCount, GRSurfaceOrigin origin, ref SKSurfaceProps props, [MarshalAs (UnmanagedType.I1)] bool shouldCreateWithMips);
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_surface_t sk_surface_new_render_target (gr_context_t context, [MarshalAs (UnmanagedType.I1)] bool budgeted, ref SKImageInfoNative info, int sampleCount, GRSurfaceOrigin origin, nullptr_t propsZero, [MarshalAs (UnmanagedType.I1)] bool shouldCreateWithMips);
+		public extern static sk_surface_t sk_surface_new_render_target (gr_context_t context, [MarshalAs (UnmanagedType.I1)] bool budgeted, ref SKImageInfoNative info, int sampleCount, GRSurfaceOrigin origin, sk_surfaceprops_t props, [MarshalAs (UnmanagedType.I1)] bool shouldCreateWithMips);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_surface_draw (sk_surface_t surface, sk_canvas_t canvas, float x, float y, sk_paint_t paint);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -173,8 +162,17 @@ namespace SkiaSharp
 		[return: MarshalAs (UnmanagedType.I1)]
 		public extern static bool sk_surface_read_pixels (sk_surface_t surface, ref SKImageInfoNative dstInfo, voidptr_t dstPixels, size_t dstRowBytes, int srcX, int srcY);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_surface_get_props (sk_surface_t surface, out SKSurfaceProps props);
+		public extern static sk_surfaceprops_t sk_surface_get_props (sk_surface_t surface);
 
+		// surface props
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_surfaceprops_t sk_surfaceprops_new (UInt32 flags, SKPixelGeometry geometry);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_surfaceprops_delete (sk_surfaceprops_t props);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static UInt32 sk_surfaceprops_get_flags (sk_surfaceprops_t props);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKPixelGeometry sk_surfaceprops_get_pixel_geometry (sk_surfaceprops_t props);
 
 		// canvas
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -618,8 +616,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_add_path_reverse (sk_path_t t, sk_path_t other);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs (UnmanagedType.I1)]
-		public extern static bool sk_path_get_bounds (sk_path_t t, out SKRect rect);
+		public extern static void sk_path_get_bounds (sk_path_t t, out SKRect rect);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_compute_tight_bounds (sk_path_t t, out SKRect rect);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -800,7 +797,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_imagefilter_t sk_imagefilter_new_matrix (ref SKMatrix matrix, SKFilterQuality quality, sk_imagefilter_t input /*NULL*/);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_imagefilter_t sk_imagefilter_new_alpha_threshold (ref SKRectI region, float innerThreshold, float outerThreshold, sk_imagefilter_t input /*NULL*/);
+		public extern static sk_imagefilter_t sk_imagefilter_new_alpha_threshold (sk_region_t region, float innerThreshold, float outerThreshold, sk_imagefilter_t input /*NULL*/);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_imagefilter_t sk_imagefilter_new_blur (float sigmaX, float sigmaY, sk_imagefilter_t input /*NULL*/, sk_imagefilter_croprect_t cropRect /*NULL*/);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

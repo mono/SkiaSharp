@@ -119,11 +119,8 @@ namespace SkiaSharp
 
 		public SKRect Bounds {
 			get {
-				if (GetBounds (out var rect)) {
-					return rect;
-				} else {
-					return SKRect.Empty;
-				}
+				SkiaApi.sk_path_get_bounds (Handle, out var rect);
+				return rect;
 			}
 		}
 
@@ -404,7 +401,13 @@ namespace SkiaSharp
 
 		public bool GetBounds (out SKRect rect)
 		{
-			return SkiaApi.sk_path_get_bounds (Handle, out rect);
+			var isEmpty = IsEmpty;
+			if (isEmpty) {
+				rect = SKRect.Empty;
+			} else {
+				SkiaApi.sk_path_get_bounds (Handle, out rect);
+			}
+			return !isEmpty;
 		}
 
 		public SKRect ComputeTightBounds ()

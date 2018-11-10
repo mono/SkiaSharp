@@ -83,7 +83,8 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (path));
 
 			using (var clip = new SKRegion()) {
-				if (path.GetBounds (out var rect)) {
+				var rect = path.Bounds;
+				if (!rect.IsEmpty) {
 					var recti = new SKRectI (
 						(int)rect.Left,
 						(int)rect.Top,
