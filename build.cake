@@ -85,6 +85,9 @@ Task ("externals")
 
 Task ("libs")
     .IsDependentOn ("externals")
+    .IsDependentOn ("libs-only");
+
+Task ("libs-only")
     .Does (() =>
 {
     // build the managed libraries
@@ -114,6 +117,9 @@ Task ("libs")
 Task ("tests")
     .IsDependentOn ("libs")
     .IsDependentOn ("nuget")
+    .IsDependentOn ("tests-only");
+
+Task ("tests-only")
     .Does (() =>
 {
     var RunDesktopTest = new Action<string> (arch => {
@@ -398,7 +404,6 @@ Task ("nuget-only")
 
 Task ("update-docs")
     .IsDependentOn ("docs-api-diff")
-    .IsDependentOn ("docs-api-diff-past")
     .IsDependentOn ("docs-update-frameworks")
     .IsDependentOn ("docs-format-docs");
 

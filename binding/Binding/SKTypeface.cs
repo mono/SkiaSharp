@@ -197,36 +197,36 @@ namespace SkiaSharp
 			return true;
 		}
 
-		public int CountGlyphs (string text) => CountGlyphs (text, SKEncoding.Utf16);
+		public int CountGlyphs (string str) => CountGlyphs (str, SKEncoding.Utf16);
 
-		public int CountGlyphs (string text, SKEncoding encoding)
+		public int CountGlyphs (string str, SKEncoding encoding)
 		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
+			if (str == null)
+				throw new ArgumentNullException (nameof (str));
 
-			var bytes = StringUtilities.GetEncodedText (text, encoding);
+			var bytes = StringUtilities.GetEncodedText (str, encoding);
 			return CountGlyphs (bytes, encoding);
 		}
 
-		public int CountGlyphs (byte [] text, SKEncoding encoding)
+		public int CountGlyphs (byte [] str, SKEncoding encoding)
 		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
+			if (str == null)
+				throw new ArgumentNullException (nameof (str));
 			
 			unsafe {
-				fixed (byte* p = text) {
-					return CountGlyphs ((IntPtr)p, text.Length, encoding);
+				fixed (byte* p = str) {
+					return CountGlyphs ((IntPtr)p, str.Length, encoding);
 				}
 			}
 		}
 
-		public int CountGlyphs (IntPtr text, int length, SKEncoding encoding)
+		public int CountGlyphs (IntPtr str, int strLen, SKEncoding encoding)
 		{
-			if (text == IntPtr.Zero)
-				throw new ArgumentNullException (nameof (text));
+			if (str == IntPtr.Zero)
+				throw new ArgumentNullException (nameof (str));
 
 			unsafe {
-				return SkiaApi.sk_typeface_chars_to_glyphs (Handle, text, encoding, (ushort*)IntPtr.Zero, length);
+				return SkiaApi.sk_typeface_chars_to_glyphs (Handle, str, encoding, (ushort*)IntPtr.Zero, strLen);
 			}
 		}
 
