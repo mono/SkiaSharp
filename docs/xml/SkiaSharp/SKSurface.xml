@@ -238,6 +238,30 @@ The example above produces the following:
       </Docs>
     </Member>
     <Member MemberName="Create">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.SKImageInfo info, SkiaSharp.SKSurfaceProperties props);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(valuetype SkiaSharp.SKImageInfo info, class SkiaSharp.SKSurfaceProperties props) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.SKImageInfo,SkiaSharp.SKSurfaceProperties)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKSurface</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProperties" />
+      </Parameters>
+      <Docs>
+        <param name="info">The image configuration parameters.</param>
+        <param name="props">The surface property configuration.</param>
+        <summary>Creates a new surface from the specified image parameters and surface properties.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
+        <remarks>This will create a buffer with the parameters specified in <paramref name="info&amp;nbsp;" />and the properties specified in <paramref name="props" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Create">
       <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.SKImageInfo info, SkiaSharp.SKSurfaceProps props);" />
       <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(valuetype SkiaSharp.SKImageInfo info, valuetype SkiaSharp.SKSurfaceProps props) cil managed" />
       <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.SKImageInfo,SkiaSharp.SKSurfaceProps)" />
@@ -250,6 +274,11 @@ The example above produces the following:
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
         <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("Use Create(SKImageInfo, SKSurfaceProperties) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurface</ReturnType>
       </ReturnValue>
@@ -314,6 +343,30 @@ The example above produces the following:
       </Docs>
     </Member>
     <Member MemberName="Create">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.SKPixmap pixmap, SkiaSharp.SKSurfaceProperties props);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.SKPixmap pixmap, class SkiaSharp.SKSurfaceProperties props) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.SKPixmap,SkiaSharp.SKSurfaceProperties)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKSurface</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="pixmap" Type="SkiaSharp.SKPixmap" />
+        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProperties" />
+      </Parameters>
+      <Docs>
+        <param name="pixmap">The pixmap.</param>
+        <param name="props">The surface property configuration.</param>
+        <summary>Creates a new surface with the specified pixmap and surface properties.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Create">
       <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.SKPixmap pixmap, SkiaSharp.SKSurfaceProps props);" />
       <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.SKPixmap pixmap, valuetype SkiaSharp.SKSurfaceProps props) cil managed" />
       <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.SKPixmap,SkiaSharp.SKSurfaceProps)" />
@@ -325,6 +378,11 @@ The example above produces the following:
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
         <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("Use Create(SKPixmap, SKSurfaceProperties) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurface</ReturnType>
       </ReturnValue>
@@ -381,7 +439,7 @@ The example above produces the following:
       </AssemblyInfo>
       <Attributes>
         <Attribute FrameworkAlternate="skiasharp-1.68.0">
-          <AttributeName>System.Obsolete("Use Create(GRContext, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType, SKSurfaceProps) instead.")</AttributeName>
+          <AttributeName>System.Obsolete("Use Create(GRContext, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType, SKSurfaceProperties) instead.")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -442,7 +500,7 @@ The example above produces the following:
       </AssemblyInfo>
       <Attributes>
         <Attribute FrameworkAlternate="skiasharp-1.68.0">
-          <AttributeName>System.Obsolete("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProps) instead.")</AttributeName>
+          <AttributeName>System.Obsolete("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -474,7 +532,7 @@ The example above produces the following:
       </AssemblyInfo>
       <Attributes>
         <Attribute FrameworkAlternate="skiasharp-1.68.0">
-          <AttributeName>System.Obsolete("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProps) instead.")</AttributeName>
+          <AttributeName>System.Obsolete("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -525,9 +583,9 @@ The example above produces the following:
       </Docs>
     </Member>
     <Member MemberName="Create">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.SKImageInfo info, int rowBytes, SkiaSharp.SKSurfaceProps props);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(valuetype SkiaSharp.SKImageInfo info, int32 rowBytes, valuetype SkiaSharp.SKSurfaceProps props) cil managed" />
-      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.SKImageInfo,System.Int32,SkiaSharp.SKSurfaceProps)" />
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.SKImageInfo info, int rowBytes, SkiaSharp.SKSurfaceProperties props);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(valuetype SkiaSharp.SKImageInfo info, int32 rowBytes, class SkiaSharp.SKSurfaceProperties props) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.SKImageInfo,System.Int32,SkiaSharp.SKSurfaceProperties)" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
@@ -539,7 +597,7 @@ The example above produces the following:
       <Parameters>
         <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
         <Parameter Name="rowBytes" Type="System.Int32" />
-        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
+        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProperties" />
       </Parameters>
       <Docs>
         <param name="info">The image configuration parameters.</param>
@@ -551,9 +609,9 @@ The example above produces the following:
       </Docs>
     </Member>
     <Member MemberName="Create">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.SKImageInfo info, IntPtr pixels, SkiaSharp.SKSurfaceProps props);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(valuetype SkiaSharp.SKImageInfo info, native int pixels, valuetype SkiaSharp.SKSurfaceProps props) cil managed" />
-      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.SKImageInfo,System.IntPtr,SkiaSharp.SKSurfaceProps)" />
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.SKImageInfo info, IntPtr pixels, SkiaSharp.SKSurfaceProperties props);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(valuetype SkiaSharp.SKImageInfo info, native int pixels, class SkiaSharp.SKSurfaceProperties props) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.SKImageInfo,System.IntPtr,SkiaSharp.SKSurfaceProperties)" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
@@ -565,7 +623,7 @@ The example above produces the following:
       <Parameters>
         <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
         <Parameter Name="pixels" Type="System.IntPtr" />
-        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
+        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProperties" />
       </Parameters>
       <Docs>
         <param name="info">The image configuration parameters.</param>
@@ -635,9 +693,9 @@ The example above produces the following:
       </Docs>
     </Member>
     <Member MemberName="Create">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.GRContext context, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.SKColorType colorType, SkiaSharp.SKSurfaceProps props);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendRenderTarget renderTarget, valuetype SkiaSharp.SKColorType colorType, valuetype SkiaSharp.SKSurfaceProps props) cil managed" />
-      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.GRContext,SkiaSharp.GRBackendRenderTarget,SkiaSharp.SKColorType,SkiaSharp.SKSurfaceProps)" />
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.GRContext context, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.SKColorType colorType, SkiaSharp.SKSurfaceProperties props);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendRenderTarget renderTarget, valuetype SkiaSharp.SKColorType colorType, class SkiaSharp.SKSurfaceProperties props) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.GRContext,SkiaSharp.GRBackendRenderTarget,SkiaSharp.SKColorType,SkiaSharp.SKSurfaceProperties)" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
@@ -650,7 +708,7 @@ The example above produces the following:
         <Parameter Name="context" Type="SkiaSharp.GRContext" />
         <Parameter Name="renderTarget" Type="SkiaSharp.GRBackendRenderTarget" />
         <Parameter Name="colorType" Type="SkiaSharp.SKColorType" />
-        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
+        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProperties" />
       </Parameters>
       <Docs>
         <param name="context">The graphics context.</param>
@@ -691,9 +749,9 @@ The example above produces the following:
       </Docs>
     </Member>
     <Member MemberName="Create">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.GRContext context, SkiaSharp.GRBackendTexture texture, SkiaSharp.SKColorType colorType, SkiaSharp.SKSurfaceProps props);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendTexture texture, valuetype SkiaSharp.SKColorType colorType, valuetype SkiaSharp.SKSurfaceProps props) cil managed" />
-      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.GRContext,SkiaSharp.GRBackendTexture,SkiaSharp.SKColorType,SkiaSharp.SKSurfaceProps)" />
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.GRContext context, SkiaSharp.GRBackendTexture texture, SkiaSharp.SKColorType colorType, SkiaSharp.SKSurfaceProperties props);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendTexture texture, valuetype SkiaSharp.SKColorType colorType, class SkiaSharp.SKSurfaceProperties props) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.GRContext,SkiaSharp.GRBackendTexture,SkiaSharp.SKColorType,SkiaSharp.SKSurfaceProperties)" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
@@ -706,7 +764,7 @@ The example above produces the following:
         <Parameter Name="context" Type="SkiaSharp.GRContext" />
         <Parameter Name="texture" Type="SkiaSharp.GRBackendTexture" />
         <Parameter Name="colorType" Type="SkiaSharp.SKColorType" />
-        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
+        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProperties" />
       </Parameters>
       <Docs>
         <param name="context">The graphics context.</param>
@@ -719,9 +777,9 @@ The example above produces the following:
       </Docs>
     </Member>
     <Member MemberName="Create">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.GRContext context, bool budgeted, SkiaSharp.SKImageInfo info, SkiaSharp.SKSurfaceProps props);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.GRContext context, bool budgeted, valuetype SkiaSharp.SKImageInfo info, valuetype SkiaSharp.SKSurfaceProps props) cil managed" />
-      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.GRContext,System.Boolean,SkiaSharp.SKImageInfo,SkiaSharp.SKSurfaceProps)" />
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.GRContext context, bool budgeted, SkiaSharp.SKImageInfo info, SkiaSharp.SKSurfaceProperties props);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.GRContext context, bool budgeted, valuetype SkiaSharp.SKImageInfo info, class SkiaSharp.SKSurfaceProperties props) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.GRContext,System.Boolean,SkiaSharp.SKImageInfo,SkiaSharp.SKSurfaceProperties)" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
@@ -734,7 +792,7 @@ The example above produces the following:
         <Parameter Name="context" Type="SkiaSharp.GRContext" />
         <Parameter Name="budgeted" Type="System.Boolean" />
         <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
-        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
+        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProperties" />
       </Parameters>
       <Docs>
         <param name="context">The graphics context.</param>
@@ -779,6 +837,34 @@ The example above produces the following:
       </Docs>
     </Member>
     <Member MemberName="Create">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.SKImageInfo info, IntPtr pixels, int rowBytes, SkiaSharp.SKSurfaceProperties props);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(valuetype SkiaSharp.SKImageInfo info, native int pixels, int32 rowBytes, class SkiaSharp.SKSurfaceProperties props) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32,SkiaSharp.SKSurfaceProperties)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKSurface</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="pixels" Type="System.IntPtr" />
+        <Parameter Name="rowBytes" Type="System.Int32" />
+        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProperties" />
+      </Parameters>
+      <Docs>
+        <param name="info">The image configuration parameters.</param>
+        <param name="pixels">The pointer to an in memory-buffer that can hold the image as specified.</param>
+        <param name="rowBytes">The number of bytes per row in the pixel buffer.</param>
+        <param name="props">The surface property configuration.</param>
+        <summary>Creates a new surface from the specified image parameters, the provided buffer and surface properties.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
+        <remarks>This will create a buffer that will be backend by the in-memory buffer provided in <paramref name="pixels" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Create">
       <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.SKImageInfo info, IntPtr pixels, int rowBytes, SkiaSharp.SKSurfaceProps props);" />
       <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(valuetype SkiaSharp.SKImageInfo info, native int pixels, int32 rowBytes, valuetype SkiaSharp.SKSurfaceProps props) cil managed" />
       <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32,SkiaSharp.SKSurfaceProps)" />
@@ -791,6 +877,11 @@ The example above produces the following:
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
         <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("Use Create(SKImageInfo, IntPtr, rowBytes, SKSurfaceProperties) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurface</ReturnType>
       </ReturnValue>
@@ -878,9 +969,9 @@ The example above produces the following:
       </Docs>
     </Member>
     <Member MemberName="Create">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.GRContext context, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.SKSurfaceProps props);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendRenderTarget renderTarget, valuetype SkiaSharp.GRSurfaceOrigin origin, valuetype SkiaSharp.SKColorType colorType, valuetype SkiaSharp.SKSurfaceProps props) cil managed" />
-      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.GRContext,SkiaSharp.GRBackendRenderTarget,SkiaSharp.GRSurfaceOrigin,SkiaSharp.SKColorType,SkiaSharp.SKSurfaceProps)" />
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.GRContext context, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.SKSurfaceProperties props);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendRenderTarget renderTarget, valuetype SkiaSharp.GRSurfaceOrigin origin, valuetype SkiaSharp.SKColorType colorType, class SkiaSharp.SKSurfaceProperties props) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.GRContext,SkiaSharp.GRBackendRenderTarget,SkiaSharp.GRSurfaceOrigin,SkiaSharp.SKColorType,SkiaSharp.SKSurfaceProperties)" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
@@ -894,7 +985,7 @@ The example above produces the following:
         <Parameter Name="renderTarget" Type="SkiaSharp.GRBackendRenderTarget" />
         <Parameter Name="origin" Type="SkiaSharp.GRSurfaceOrigin" />
         <Parameter Name="colorType" Type="SkiaSharp.SKColorType" />
-        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
+        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProperties" />
       </Parameters>
       <Docs>
         <param name="context">The graphics context.</param>
@@ -908,9 +999,9 @@ The example above produces the following:
       </Docs>
     </Member>
     <Member MemberName="Create">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.GRContext context, SkiaSharp.GRBackendTexture texture, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.SKSurfaceProps props);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendTexture texture, valuetype SkiaSharp.GRSurfaceOrigin origin, valuetype SkiaSharp.SKColorType colorType, valuetype SkiaSharp.SKSurfaceProps props) cil managed" />
-      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.GRContext,SkiaSharp.GRBackendTexture,SkiaSharp.GRSurfaceOrigin,SkiaSharp.SKColorType,SkiaSharp.SKSurfaceProps)" />
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.GRContext context, SkiaSharp.GRBackendTexture texture, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.SKSurfaceProperties props);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendTexture texture, valuetype SkiaSharp.GRSurfaceOrigin origin, valuetype SkiaSharp.SKColorType colorType, class SkiaSharp.SKSurfaceProperties props) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.GRContext,SkiaSharp.GRBackendTexture,SkiaSharp.GRSurfaceOrigin,SkiaSharp.SKColorType,SkiaSharp.SKSurfaceProperties)" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
@@ -924,7 +1015,7 @@ The example above produces the following:
         <Parameter Name="texture" Type="SkiaSharp.GRBackendTexture" />
         <Parameter Name="origin" Type="SkiaSharp.GRSurfaceOrigin" />
         <Parameter Name="colorType" Type="SkiaSharp.SKColorType" />
-        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
+        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProperties" />
       </Parameters>
       <Docs>
         <param name="context">The graphics context.</param>
@@ -998,6 +1089,36 @@ The example above produces the following:
       </Docs>
     </Member>
     <Member MemberName="Create">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.GRContext context, bool budgeted, SkiaSharp.SKImageInfo info, int sampleCount, SkiaSharp.SKSurfaceProperties props);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.GRContext context, bool budgeted, valuetype SkiaSharp.SKImageInfo info, int32 sampleCount, class SkiaSharp.SKSurfaceProperties props) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.GRContext,System.Boolean,SkiaSharp.SKImageInfo,System.Int32,SkiaSharp.SKSurfaceProperties)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKSurface</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="context" Type="SkiaSharp.GRContext" />
+        <Parameter Name="budgeted" Type="System.Boolean" />
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="sampleCount" Type="System.Int32" />
+        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProperties" />
+      </Parameters>
+      <Docs>
+        <param name="context">The graphics context.</param>
+        <param name="budgeted">Whether an allocation should count against a cache budget.</param>
+        <param name="info">The image configuration parameters.</param>
+        <param name="sampleCount">The number of samples.</param>
+        <param name="props">The surface property configuration.</param>
+        <summary>Creates a new surface whose contents will be drawn to an offscreen render target, allocated by the surface.</summary>
+        <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Create">
       <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.GRContext context, bool budgeted, SkiaSharp.SKImageInfo info, int sampleCount, SkiaSharp.SKSurfaceProps props);" />
       <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.GRContext context, bool budgeted, valuetype SkiaSharp.SKImageInfo info, int32 sampleCount, valuetype SkiaSharp.SKSurfaceProps props) cil managed" />
       <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.GRContext,System.Boolean,SkiaSharp.SKImageInfo,System.Int32,SkiaSharp.SKSurfaceProps)" />
@@ -1010,6 +1131,11 @@ The example above produces the following:
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
         <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("Use Create(GRContext, bool, SKImageInfo, int, SKSurfaceProperties) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurface</ReturnType>
       </ReturnValue>
@@ -1076,7 +1202,7 @@ The example above produces the following:
       </AssemblyInfo>
       <Attributes>
         <Attribute FrameworkAlternate="skiasharp-1.68.0">
-          <AttributeName>System.Obsolete("Use Create(SKImageInfo, SKSurfaceProps) instead.")</AttributeName>
+          <AttributeName>System.Obsolete("Use Create(SKImageInfo, SKSurfaceProperties) instead.")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -1101,9 +1227,9 @@ The example above produces the following:
       </Docs>
     </Member>
     <Member MemberName="Create">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.GRContext context, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.SKColorSpace colorspace, SkiaSharp.SKSurfaceProps props);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendRenderTarget renderTarget, valuetype SkiaSharp.GRSurfaceOrigin origin, valuetype SkiaSharp.SKColorType colorType, class SkiaSharp.SKColorSpace colorspace, valuetype SkiaSharp.SKSurfaceProps props) cil managed" />
-      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.GRContext,SkiaSharp.GRBackendRenderTarget,SkiaSharp.GRSurfaceOrigin,SkiaSharp.SKColorType,SkiaSharp.SKColorSpace,SkiaSharp.SKSurfaceProps)" />
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.GRContext context, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.SKColorSpace colorspace, SkiaSharp.SKSurfaceProperties props);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendRenderTarget renderTarget, valuetype SkiaSharp.GRSurfaceOrigin origin, valuetype SkiaSharp.SKColorType colorType, class SkiaSharp.SKColorSpace colorspace, class SkiaSharp.SKSurfaceProperties props) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.GRContext,SkiaSharp.GRBackendRenderTarget,SkiaSharp.GRSurfaceOrigin,SkiaSharp.SKColorType,SkiaSharp.SKColorSpace,SkiaSharp.SKSurfaceProperties)" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
@@ -1118,7 +1244,7 @@ The example above produces the following:
         <Parameter Name="origin" Type="SkiaSharp.GRSurfaceOrigin" />
         <Parameter Name="colorType" Type="SkiaSharp.SKColorType" />
         <Parameter Name="colorspace" Type="SkiaSharp.SKColorSpace" />
-        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
+        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProperties" />
       </Parameters>
       <Docs>
         <param name="context">The graphics context.</param>
@@ -1165,9 +1291,9 @@ The example above produces the following:
       </Docs>
     </Member>
     <Member MemberName="Create">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.GRContext context, SkiaSharp.GRBackendTexture texture, SkiaSharp.GRSurfaceOrigin origin, int sampleCount, SkiaSharp.SKColorType colorType, SkiaSharp.SKSurfaceProps props);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendTexture texture, valuetype SkiaSharp.GRSurfaceOrigin origin, int32 sampleCount, valuetype SkiaSharp.SKColorType colorType, valuetype SkiaSharp.SKSurfaceProps props) cil managed" />
-      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.GRContext,SkiaSharp.GRBackendTexture,SkiaSharp.GRSurfaceOrigin,System.Int32,SkiaSharp.SKColorType,SkiaSharp.SKSurfaceProps)" />
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.GRContext context, SkiaSharp.GRBackendTexture texture, SkiaSharp.GRSurfaceOrigin origin, int sampleCount, SkiaSharp.SKColorType colorType, SkiaSharp.SKSurfaceProperties props);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendTexture texture, valuetype SkiaSharp.GRSurfaceOrigin origin, int32 sampleCount, valuetype SkiaSharp.SKColorType colorType, class SkiaSharp.SKSurfaceProperties props) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.GRContext,SkiaSharp.GRBackendTexture,SkiaSharp.GRSurfaceOrigin,System.Int32,SkiaSharp.SKColorType,SkiaSharp.SKSurfaceProperties)" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
@@ -1182,7 +1308,7 @@ The example above produces the following:
         <Parameter Name="origin" Type="SkiaSharp.GRSurfaceOrigin" />
         <Parameter Name="sampleCount" Type="System.Int32" />
         <Parameter Name="colorType" Type="SkiaSharp.SKColorType" />
-        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
+        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProperties" />
       </Parameters>
       <Docs>
         <param name="context">The graphics context.</param>
@@ -1197,9 +1323,9 @@ The example above produces the following:
       </Docs>
     </Member>
     <Member MemberName="Create">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.SKImageInfo info, IntPtr pixels, int rowBytes, SkiaSharp.SKSurfaceReleaseDelegate releaseProc, object context, SkiaSharp.SKSurfaceProps props);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(valuetype SkiaSharp.SKImageInfo info, native int pixels, int32 rowBytes, class SkiaSharp.SKSurfaceReleaseDelegate releaseProc, object context, valuetype SkiaSharp.SKSurfaceProps props) cil managed" />
-      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32,SkiaSharp.SKSurfaceReleaseDelegate,System.Object,SkiaSharp.SKSurfaceProps)" />
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.SKImageInfo info, IntPtr pixels, int rowBytes, SkiaSharp.SKSurfaceReleaseDelegate releaseProc, object context, SkiaSharp.SKSurfaceProperties props);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(valuetype SkiaSharp.SKImageInfo info, native int pixels, int32 rowBytes, class SkiaSharp.SKSurfaceReleaseDelegate releaseProc, object context, class SkiaSharp.SKSurfaceProperties props) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32,SkiaSharp.SKSurfaceReleaseDelegate,System.Object,SkiaSharp.SKSurfaceProperties)" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
@@ -1214,7 +1340,7 @@ The example above produces the following:
         <Parameter Name="rowBytes" Type="System.Int32" />
         <Parameter Name="releaseProc" Type="SkiaSharp.SKSurfaceReleaseDelegate" />
         <Parameter Name="context" Type="System.Object" />
-        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
+        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProperties" />
       </Parameters>
       <Docs>
         <param name="info">The image configuration parameters.</param>
@@ -1270,9 +1396,9 @@ The example above produces the following:
       </Docs>
     </Member>
     <Member MemberName="Create">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.GRContext context, SkiaSharp.GRBackendTexture texture, SkiaSharp.GRSurfaceOrigin origin, int sampleCount, SkiaSharp.SKColorType colorType, SkiaSharp.SKColorSpace colorspace, SkiaSharp.SKSurfaceProps props);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendTexture texture, valuetype SkiaSharp.GRSurfaceOrigin origin, int32 sampleCount, valuetype SkiaSharp.SKColorType colorType, class SkiaSharp.SKColorSpace colorspace, valuetype SkiaSharp.SKSurfaceProps props) cil managed" />
-      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.GRContext,SkiaSharp.GRBackendTexture,SkiaSharp.GRSurfaceOrigin,System.Int32,SkiaSharp.SKColorType,SkiaSharp.SKColorSpace,SkiaSharp.SKSurfaceProps)" />
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.GRContext context, SkiaSharp.GRBackendTexture texture, SkiaSharp.GRSurfaceOrigin origin, int sampleCount, SkiaSharp.SKColorType colorType, SkiaSharp.SKColorSpace colorspace, SkiaSharp.SKSurfaceProperties props);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendTexture texture, valuetype SkiaSharp.GRSurfaceOrigin origin, int32 sampleCount, valuetype SkiaSharp.SKColorType colorType, class SkiaSharp.SKColorSpace colorspace, class SkiaSharp.SKSurfaceProperties props) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.GRContext,SkiaSharp.GRBackendTexture,SkiaSharp.GRSurfaceOrigin,System.Int32,SkiaSharp.SKColorType,SkiaSharp.SKColorSpace,SkiaSharp.SKSurfaceProperties)" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
@@ -1288,7 +1414,7 @@ The example above produces the following:
         <Parameter Name="sampleCount" Type="System.Int32" />
         <Parameter Name="colorType" Type="SkiaSharp.SKColorType" />
         <Parameter Name="colorspace" Type="SkiaSharp.SKColorSpace" />
-        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
+        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProperties" />
       </Parameters>
       <Docs>
         <param name="context">The graphics context.</param>
@@ -1304,9 +1430,9 @@ The example above produces the following:
       </Docs>
     </Member>
     <Member MemberName="Create">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.GRContext context, bool budgeted, SkiaSharp.SKImageInfo info, int sampleCount, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKSurfaceProps props, bool shouldCreateWithMips);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.GRContext context, bool budgeted, valuetype SkiaSharp.SKImageInfo info, int32 sampleCount, valuetype SkiaSharp.GRSurfaceOrigin origin, valuetype SkiaSharp.SKSurfaceProps props, bool shouldCreateWithMips) cil managed" />
-      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.GRContext,System.Boolean,SkiaSharp.SKImageInfo,System.Int32,SkiaSharp.GRSurfaceOrigin,SkiaSharp.SKSurfaceProps,System.Boolean)" />
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface Create (SkiaSharp.GRContext context, bool budgeted, SkiaSharp.SKImageInfo info, int sampleCount, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKSurfaceProperties props, bool shouldCreateWithMips);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface Create(class SkiaSharp.GRContext context, bool budgeted, valuetype SkiaSharp.SKImageInfo info, int32 sampleCount, valuetype SkiaSharp.GRSurfaceOrigin origin, class SkiaSharp.SKSurfaceProperties props, bool shouldCreateWithMips) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.Create(SkiaSharp.GRContext,System.Boolean,SkiaSharp.SKImageInfo,System.Int32,SkiaSharp.GRSurfaceOrigin,SkiaSharp.SKSurfaceProperties,System.Boolean)" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
@@ -1321,7 +1447,7 @@ The example above produces the following:
         <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
         <Parameter Name="sampleCount" Type="System.Int32" />
         <Parameter Name="origin" Type="SkiaSharp.GRSurfaceOrigin" />
-        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
+        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProperties" />
         <Parameter Name="shouldCreateWithMips" Type="System.Boolean" />
       </Parameters>
       <Docs>
@@ -1352,7 +1478,7 @@ The example above produces the following:
       </AssemblyInfo>
       <Attributes>
         <Attribute FrameworkAlternate="skiasharp-1.68.0">
-          <AttributeName>System.Obsolete("Use Create(SKImageInfo, IntPtr, int, SKSurfaceProps) instead.")</AttributeName>
+          <AttributeName>System.Obsolete("Use Create(SKImageInfo, IntPtr, int, SKSurfaceProperties) instead.")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -1484,7 +1610,7 @@ The example above produces the following:
       </AssemblyInfo>
       <Attributes>
         <Attribute FrameworkAlternate="skiasharp-1.68.0">
-          <AttributeName>System.Obsolete("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProps) instead.")</AttributeName>
+          <AttributeName>System.Obsolete("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -1516,7 +1642,7 @@ The example above produces the following:
       </AssemblyInfo>
       <Attributes>
         <Attribute FrameworkAlternate="skiasharp-1.68.0">
-          <AttributeName>System.Obsolete("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProps) instead.")</AttributeName>
+          <AttributeName>System.Obsolete("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -1565,9 +1691,9 @@ The example above produces the following:
       </Docs>
     </Member>
     <Member MemberName="CreateAsRenderTarget">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface CreateAsRenderTarget (SkiaSharp.GRContext context, SkiaSharp.GRBackendTexture texture, SkiaSharp.SKColorType colorType, SkiaSharp.SKSurfaceProps props);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface CreateAsRenderTarget(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendTexture texture, valuetype SkiaSharp.SKColorType colorType, valuetype SkiaSharp.SKSurfaceProps props) cil managed" />
-      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.CreateAsRenderTarget(SkiaSharp.GRContext,SkiaSharp.GRBackendTexture,SkiaSharp.SKColorType,SkiaSharp.SKSurfaceProps)" />
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface CreateAsRenderTarget (SkiaSharp.GRContext context, SkiaSharp.GRBackendTexture texture, SkiaSharp.SKColorType colorType, SkiaSharp.SKSurfaceProperties props);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface CreateAsRenderTarget(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendTexture texture, valuetype SkiaSharp.SKColorType colorType, class SkiaSharp.SKSurfaceProperties props) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.CreateAsRenderTarget(SkiaSharp.GRContext,SkiaSharp.GRBackendTexture,SkiaSharp.SKColorType,SkiaSharp.SKSurfaceProperties)" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
@@ -1580,7 +1706,7 @@ The example above produces the following:
         <Parameter Name="context" Type="SkiaSharp.GRContext" />
         <Parameter Name="texture" Type="SkiaSharp.GRBackendTexture" />
         <Parameter Name="colorType" Type="SkiaSharp.SKColorType" />
-        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
+        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProperties" />
       </Parameters>
       <Docs>
         <param name="context">The graphics context.</param>
@@ -1593,9 +1719,9 @@ The example above produces the following:
       </Docs>
     </Member>
     <Member MemberName="CreateAsRenderTarget">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface CreateAsRenderTarget (SkiaSharp.GRContext context, SkiaSharp.GRBackendTexture texture, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.SKSurfaceProps props);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface CreateAsRenderTarget(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendTexture texture, valuetype SkiaSharp.GRSurfaceOrigin origin, valuetype SkiaSharp.SKColorType colorType, valuetype SkiaSharp.SKSurfaceProps props) cil managed" />
-      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.CreateAsRenderTarget(SkiaSharp.GRContext,SkiaSharp.GRBackendTexture,SkiaSharp.GRSurfaceOrigin,SkiaSharp.SKColorType,SkiaSharp.SKSurfaceProps)" />
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface CreateAsRenderTarget (SkiaSharp.GRContext context, SkiaSharp.GRBackendTexture texture, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.SKSurfaceProperties props);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface CreateAsRenderTarget(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendTexture texture, valuetype SkiaSharp.GRSurfaceOrigin origin, valuetype SkiaSharp.SKColorType colorType, class SkiaSharp.SKSurfaceProperties props) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.CreateAsRenderTarget(SkiaSharp.GRContext,SkiaSharp.GRBackendTexture,SkiaSharp.GRSurfaceOrigin,SkiaSharp.SKColorType,SkiaSharp.SKSurfaceProperties)" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
@@ -1609,7 +1735,7 @@ The example above produces the following:
         <Parameter Name="texture" Type="SkiaSharp.GRBackendTexture" />
         <Parameter Name="origin" Type="SkiaSharp.GRSurfaceOrigin" />
         <Parameter Name="colorType" Type="SkiaSharp.SKColorType" />
-        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
+        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProperties" />
       </Parameters>
       <Docs>
         <param name="context">The graphics context.</param>
@@ -1685,9 +1811,9 @@ The example above produces the following:
       </Docs>
     </Member>
     <Member MemberName="CreateAsRenderTarget">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface CreateAsRenderTarget (SkiaSharp.GRContext context, SkiaSharp.GRBackendTexture texture, SkiaSharp.GRSurfaceOrigin origin, int sampleCount, SkiaSharp.SKColorType colorType, SkiaSharp.SKSurfaceProps props);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface CreateAsRenderTarget(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendTexture texture, valuetype SkiaSharp.GRSurfaceOrigin origin, int32 sampleCount, valuetype SkiaSharp.SKColorType colorType, valuetype SkiaSharp.SKSurfaceProps props) cil managed" />
-      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.CreateAsRenderTarget(SkiaSharp.GRContext,SkiaSharp.GRBackendTexture,SkiaSharp.GRSurfaceOrigin,System.Int32,SkiaSharp.SKColorType,SkiaSharp.SKSurfaceProps)" />
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface CreateAsRenderTarget (SkiaSharp.GRContext context, SkiaSharp.GRBackendTexture texture, SkiaSharp.GRSurfaceOrigin origin, int sampleCount, SkiaSharp.SKColorType colorType, SkiaSharp.SKSurfaceProperties props);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface CreateAsRenderTarget(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendTexture texture, valuetype SkiaSharp.GRSurfaceOrigin origin, int32 sampleCount, valuetype SkiaSharp.SKColorType colorType, class SkiaSharp.SKSurfaceProperties props) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.CreateAsRenderTarget(SkiaSharp.GRContext,SkiaSharp.GRBackendTexture,SkiaSharp.GRSurfaceOrigin,System.Int32,SkiaSharp.SKColorType,SkiaSharp.SKSurfaceProperties)" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
@@ -1702,7 +1828,7 @@ The example above produces the following:
         <Parameter Name="origin" Type="SkiaSharp.GRSurfaceOrigin" />
         <Parameter Name="sampleCount" Type="System.Int32" />
         <Parameter Name="colorType" Type="SkiaSharp.SKColorType" />
-        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
+        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProperties" />
       </Parameters>
       <Docs>
         <param name="context">The graphics context.</param>
@@ -1717,9 +1843,9 @@ The example above produces the following:
       </Docs>
     </Member>
     <Member MemberName="CreateAsRenderTarget">
-      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface CreateAsRenderTarget (SkiaSharp.GRContext context, SkiaSharp.GRBackendTexture texture, SkiaSharp.GRSurfaceOrigin origin, int sampleCount, SkiaSharp.SKColorType colorType, SkiaSharp.SKColorSpace colorspace, SkiaSharp.SKSurfaceProps props);" />
-      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface CreateAsRenderTarget(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendTexture texture, valuetype SkiaSharp.GRSurfaceOrigin origin, int32 sampleCount, valuetype SkiaSharp.SKColorType colorType, class SkiaSharp.SKColorSpace colorspace, valuetype SkiaSharp.SKSurfaceProps props) cil managed" />
-      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.CreateAsRenderTarget(SkiaSharp.GRContext,SkiaSharp.GRBackendTexture,SkiaSharp.GRSurfaceOrigin,System.Int32,SkiaSharp.SKColorType,SkiaSharp.SKColorSpace,SkiaSharp.SKSurfaceProps)" />
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKSurface CreateAsRenderTarget (SkiaSharp.GRContext context, SkiaSharp.GRBackendTexture texture, SkiaSharp.GRSurfaceOrigin origin, int sampleCount, SkiaSharp.SKColorType colorType, SkiaSharp.SKColorSpace colorspace, SkiaSharp.SKSurfaceProperties props);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKSurface CreateAsRenderTarget(class SkiaSharp.GRContext context, class SkiaSharp.GRBackendTexture texture, valuetype SkiaSharp.GRSurfaceOrigin origin, int32 sampleCount, valuetype SkiaSharp.SKColorType colorType, class SkiaSharp.SKColorSpace colorspace, class SkiaSharp.SKSurfaceProperties props) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKSurface.CreateAsRenderTarget(SkiaSharp.GRContext,SkiaSharp.GRBackendTexture,SkiaSharp.GRSurfaceOrigin,System.Int32,SkiaSharp.SKColorType,SkiaSharp.SKColorSpace,SkiaSharp.SKSurfaceProperties)" />
       <MemberType>Method</MemberType>
       <AssemblyInfo>
         <AssemblyName>SkiaSharp</AssemblyName>
@@ -1735,7 +1861,7 @@ The example above produces the following:
         <Parameter Name="sampleCount" Type="System.Int32" />
         <Parameter Name="colorType" Type="SkiaSharp.SKColorType" />
         <Parameter Name="colorspace" Type="SkiaSharp.SKColorSpace" />
-        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProps" />
+        <Parameter Name="props" Type="SkiaSharp.SKSurfaceProperties" />
       </Parameters>
       <Docs>
         <param name="context">The graphics context.</param>
@@ -1937,6 +2063,24 @@ The example above produces the following:
         <remarks>You can use this method to take an <see cref="T:SkiaSharp.SKImage" /> snapshot of the current state of the surface.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="SurfaceProperties">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKSurfaceProperties SurfaceProperties { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance class SkiaSharp.SKSurfaceProperties SurfaceProperties" />
+      <MemberSignature Language="DocId" Value="P:SkiaSharp.SKSurface.SurfaceProperties" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKSurfaceProperties</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets the surface property configuration.</summary>
+        <value></value>
+        <remarks></remarks>
+      </Docs>
+    </Member>
     <Member MemberName="SurfaceProps">
       <MemberSignature Language="C#" Value="public SkiaSharp.SKSurfaceProps SurfaceProps { get; }" />
       <MemberSignature Language="ILAsm" Value=".property instance valuetype SkiaSharp.SKSurfaceProps SurfaceProps" />
@@ -1950,6 +2094,11 @@ The example above produces the following:
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
         <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("Use SurfaceProperties instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>SkiaSharp.SKSurfaceProps</ReturnType>
       </ReturnValue>

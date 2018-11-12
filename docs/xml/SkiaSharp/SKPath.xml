@@ -56,7 +56,7 @@
       </Parameters>
       <Docs>
         <param name="path">The path to clone.</param>
-        <summary>Creates a path by making a copy of an existing path</summary>
+        <summary>Creates a path by making a copy of an existing path.</summary>
         <remarks>This constructor can throw InvalidOperationException if there is a problem copying the source path.</remarks>
       </Docs>
     </Member>
@@ -1243,6 +1243,44 @@ the first point is automatically set to (0, 0).
         <remarks>This bounds may be larger than the actual shape, since curves do not extend as far as their control points. Additionally this bound encompasses all points, even isolated MoveTo either preceding or following the last non-degenerate contour.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="GetLine">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKPoint[] GetLine ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKPoint[] GetLine() cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPath.GetLine" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKPoint[]</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Returns the two points of the path.</summary>
+        <returns>Returns the two points of the path.</returns>
+        <remarks>If the path is not a single, straight line, then null is returned. See also <see cref="P:SkiaSharp.SKPath.IsLine" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetOvalBounds">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKRect GetOvalBounds ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKRect GetOvalBounds() cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPath.GetOvalBounds" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKRect</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Returns the oval bounds of the path.</summary>
+        <returns>Returns the oval bounds of the path.</returns>
+        <remarks>If the path is not a single oval or circle, then an empty rectangle is returned. See also <see cref="P:SkiaSharp.SKPath.IsOval" />.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="GetPoint">
       <MemberSignature Language="C#" Value="public SkiaSharp.SKPoint GetPoint (int index);" />
       <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKPoint GetPoint(int32 index) cil managed" />
@@ -1321,6 +1359,68 @@ the first point is automatically set to (0, 0).
         <summary>Returns a subset of points in the path. Up to max points are copied.</summary>
         <returns>Returns the actual number of points in the path</returns>
         <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetRect">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKRect GetRect (out bool isClosed, out SkiaSharp.SKPathDirection direction);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKRect GetRect([out] bool&amp; isClosed, [out] valuetype SkiaSharp.SKPathDirection&amp; direction) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPath.GetRect(System.Boolean@,SkiaSharp.SKPathDirection@)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKRect</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="isClosed" Type="System.Boolean" RefType="out" />
+        <Parameter Name="direction" Type="SkiaSharp.SKPathDirection" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="isClosed">Whether or not the rectangle is closed.</param>
+        <param name="direction">The direction of the rectangle.</param>
+        <summary>Returns the rectangle of the path.</summary>
+        <returns>Returns the rectangle of the path.</returns>
+        <remarks>If the path is not a single rectangle, then an empty rectangle is returned. See also <see cref="P:SkiaSharp.SKPath.IsRect" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetRect">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKRect GetRect ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance valuetype SkiaSharp.SKRect GetRect() cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPath.GetRect" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKRect</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Returns the rectangle of the path.</summary>
+        <returns>Returns the rectangle of the path.</returns>
+        <remarks>If the path is not a single rectangle, then an empty rectangle is returned. See also <see cref="P:SkiaSharp.SKPath.IsRect" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetRoundRect">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKRoundRect GetRoundRect ();" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKRoundRect GetRoundRect() cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKPath.GetRoundRect" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKRoundRect</ReturnType>
+      </ReturnValue>
+      <Parameters />
+      <Docs>
+        <summary>Returns the round rectangle of the path.</summary>
+        <returns>Returns the round rectangle of the path.</returns>
+        <remarks>If the path is not a single round rectangle, then null is returned. See also <see cref="P:SkiaSharp.SKPath.IsRoundRect" />.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetTightBounds">
@@ -1413,6 +1513,78 @@ the first point is automatically set to (0, 0).
         <summary>Gets a value indicating whether or not the path is empty (contains no lines or curves).</summary>
         <value></value>
         <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="IsLine">
+      <MemberSignature Language="C#" Value="public bool IsLine { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance bool IsLine" />
+      <MemberSignature Language="DocId" Value="P:SkiaSharp.SKPath.IsLine" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets a value indicating whether the path is a single, straight line.</summary>
+        <value></value>
+        <remarks>See also <see cref="M:SkiaSharp.SKPath.GetLine" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="IsOval">
+      <MemberSignature Language="C#" Value="public bool IsOval { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance bool IsOval" />
+      <MemberSignature Language="DocId" Value="P:SkiaSharp.SKPath.IsOval" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets a value indicating whether the path is a single oval or circle.</summary>
+        <value></value>
+        <remarks>See also <see cref="M:SkiaSharp.SKPath.GetOvalBounds" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="IsRect">
+      <MemberSignature Language="C#" Value="public bool IsRect { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance bool IsRect" />
+      <MemberSignature Language="DocId" Value="P:SkiaSharp.SKPath.IsRect" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets a value indicating whether the path is a single rectangle.</summary>
+        <value></value>
+        <remarks>See also <see cref="M:SkiaSharp.SKPath.GetRect" /> and <see cref="M:SkiaSharp.SKPath.GetRect(System.Boolean@,SkiaSharp.SKPathDirection@)" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="IsRoundRect">
+      <MemberSignature Language="C#" Value="public bool IsRoundRect { get; }" />
+      <MemberSignature Language="ILAsm" Value=".property instance bool IsRoundRect" />
+      <MemberSignature Language="DocId" Value="P:SkiaSharp.SKPath.IsRoundRect" />
+      <MemberType>Property</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Docs>
+        <summary>Gets a value indicating whether the path is a single, round rectangle.</summary>
+        <value></value>
+        <remarks>See also <see cref="M:SkiaSharp.SKPath.GetRoundRect" />.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Item">

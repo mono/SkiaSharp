@@ -45,6 +45,11 @@ Typeface objects are immutable, and so they can be shared between threads.
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
         <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("Use GetGlyphs(string, out ushort[]) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
@@ -55,8 +60,8 @@ Typeface objects are immutable, and so they can be shared between threads.
       <Docs>
         <param name="chars">The string containing characters.</param>
         <param name="glyphs">Destination for the corresponding glyph IDs for each character.</param>
-        <summary>Given a string, optionally return their corresponding glyph IDs.</summary>
-        <returns>The number of number of continuous non-zero glyph IDs computed from the beginning of chars.</returns>
+        <summary>Retrieve the corresponding glyph IDs of a string of characters.</summary>
+        <returns>The number of number of continuous non-zero glyph IDs computed from the beginning of the character codes.</returns>
         <remarks></remarks>
       </Docs>
     </Member>
@@ -73,6 +78,11 @@ Typeface objects are immutable, and so they can be shared between threads.
         <AssemblyVersion>1.60.0.0</AssemblyVersion>
         <AssemblyVersion>1.68.0.0</AssemblyVersion>
       </AssemblyInfo>
+      <Attributes>
+        <Attribute FrameworkAlternate="skiasharp-1.68.0">
+          <AttributeName>System.Obsolete("Use GetGlyphs(IntPtr, int, SKEncoding, out ushort[]) instead.")</AttributeName>
+        </Attribute>
+      </Attributes>
       <ReturnValue>
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
@@ -85,10 +95,10 @@ Typeface objects are immutable, and so they can be shared between threads.
       <Docs>
         <param name="str">The buffer of character codes.</param>
         <param name="strlen">The length of the buffer.</param>
-        <param name="encoding">How the characters are encoded.</param>
+        <param name="encoding">How the character codes are encoded.</param>
         <param name="glyphs">Destination for the corresponding glyph IDs for each character.</param>
-        <summary>Given a buffer containing character codes, of the specified encoding, optionally return their corresponding glyph IDs.</summary>
-        <returns>The number of number of continuous non-zero glyph IDs computed from the beginning of chars.</returns>
+        <summary>Retrieve the corresponding glyph IDs of a buffer containing character codes, of the specified encoding.</summary>
+        <returns>The number of number of continuous non-zero glyph IDs computed from the beginning of the character codes.</returns>
         <remarks></remarks>
       </Docs>
     </Member>
@@ -113,6 +123,54 @@ Typeface objects are immutable, and so they can be shared between threads.
       </Parameters>
       <Docs>
         <param name="str">The string containing characters.</param>
+        <summary>Returns the number of glyphs in the string.</summary>
+        <returns>The number of number of continuous non-zero glyph IDs computed from the beginning of string.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CountGlyphs">
+      <MemberSignature Language="C#" Value="public int CountGlyphs (byte[] str, SkiaSharp.SKEncoding encoding);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance int32 CountGlyphs(unsigned int8[] str, valuetype SkiaSharp.SKEncoding encoding) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKTypeface.CountGlyphs(System.Byte[],SkiaSharp.SKEncoding)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="str" Type="System.Byte[]" />
+        <Parameter Name="encoding" Type="SkiaSharp.SKEncoding" />
+      </Parameters>
+      <Docs>
+        <param name="str">The buffer containing character codes.</param>
+        <param name="encoding">How the character are encoded.</param>
+        <summary>Returns the number of glyphs in the buffer.</summary>
+        <returns>The number of number of continuous non-zero glyph IDs computed from the beginning of the buffer.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="CountGlyphs">
+      <MemberSignature Language="C#" Value="public int CountGlyphs (string str, SkiaSharp.SKEncoding encoding);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance int32 CountGlyphs(string str, valuetype SkiaSharp.SKEncoding encoding) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKTypeface.CountGlyphs(System.String,SkiaSharp.SKEncoding)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="str" Type="System.String" />
+        <Parameter Name="encoding" Type="SkiaSharp.SKEncoding" />
+      </Parameters>
+      <Docs>
+        <param name="str">The text containing characters.</param>
+        <param name="encoding">How the characters are to be encoded.</param>
         <summary>Returns the number of glyphs on the string.</summary>
         <returns>The number of number of continuous non-zero glyph IDs computed from the beginning of chars.</returns>
         <remarks></remarks>
@@ -633,6 +691,206 @@ using (var surface = SKSurface.Create(info)) {
         <param name="style">The style (normal, bold, italic) of the type face.</param>
         <summary>Return a new reference to the typeface that most closely matches the requested typeface and specified style</summary>
         <returns>Returns to the closest-matching typeface.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetGlyphs">
+      <MemberSignature Language="C#" Value="public ushort[] GetGlyphs (string text);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance unsigned int16[] GetGlyphs(string text) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKTypeface.GetGlyphs(System.String)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.UInt16[]</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="text" Type="System.String" />
+      </Parameters>
+      <Docs>
+        <param name="text">The string of characters.</param>
+        <summary>Retrieve the corresponding glyph IDs of a string of characters.</summary>
+        <returns>Returns the corresponding glyph IDs for each character.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetGlyphs">
+      <MemberSignature Language="C#" Value="public ushort[] GetGlyphs (byte[] text, SkiaSharp.SKEncoding encoding);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance unsigned int16[] GetGlyphs(unsigned int8[] text, valuetype SkiaSharp.SKEncoding encoding) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKTypeface.GetGlyphs(System.Byte[],SkiaSharp.SKEncoding)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.UInt16[]</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="text" Type="System.Byte[]" />
+        <Parameter Name="encoding" Type="SkiaSharp.SKEncoding" />
+      </Parameters>
+      <Docs>
+        <param name="text">The buffer of character codes.</param>
+        <param name="encoding">How the character codes are encoded.</param>
+        <summary>Retrieve the corresponding glyph IDs of a buffer containing character codes, of the specified encoding.</summary>
+        <returns>Returns the corresponding glyph IDs for each character.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetGlyphs">
+      <MemberSignature Language="C#" Value="public ushort[] GetGlyphs (string text, SkiaSharp.SKEncoding encoding);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance unsigned int16[] GetGlyphs(string text, valuetype SkiaSharp.SKEncoding encoding) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKTypeface.GetGlyphs(System.String,SkiaSharp.SKEncoding)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.UInt16[]</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="text" Type="System.String" />
+        <Parameter Name="encoding" Type="SkiaSharp.SKEncoding" />
+      </Parameters>
+      <Docs>
+        <param name="text">The string of characters.</param>
+        <param name="encoding">How the characters are to be encoded.</param>
+        <summary>Retrieve the corresponding glyph IDs of a string of characters, of the specified encoding.</summary>
+        <returns>Returns the corresponding glyph IDs for each character.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetGlyphs">
+      <MemberSignature Language="C#" Value="public int GetGlyphs (string text, out ushort[] glyphs);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance int32 GetGlyphs(string text, [out] unsigned int16[]&amp; glyphs) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKTypeface.GetGlyphs(System.String,System.UInt16[]@)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="text" Type="System.String" />
+        <Parameter Name="glyphs" Type="System.UInt16[]" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="text">The string of characters.</param>
+        <param name="glyphs">Destination for the corresponding glyph IDs for each character.</param>
+        <summary>Retrieve the corresponding glyph IDs of a string of characters.</summary>
+        <returns>The number of number of continuous non-zero glyph IDs computed from the beginning of the character codes.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetGlyphs">
+      <MemberSignature Language="C#" Value="public int GetGlyphs (byte[] text, SkiaSharp.SKEncoding encoding, out ushort[] glyphs);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance int32 GetGlyphs(unsigned int8[] text, valuetype SkiaSharp.SKEncoding encoding, [out] unsigned int16[]&amp; glyphs) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKTypeface.GetGlyphs(System.Byte[],SkiaSharp.SKEncoding,System.UInt16[]@)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="text" Type="System.Byte[]" />
+        <Parameter Name="encoding" Type="SkiaSharp.SKEncoding" />
+        <Parameter Name="glyphs" Type="System.UInt16[]" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="text">The buffer of character codes.</param>
+        <param name="encoding">How the character codes are encoded.</param>
+        <param name="glyphs">Destination for the corresponding glyph IDs for each character.</param>
+        <summary>Retrieve the corresponding glyph IDs of a buffer containing character codes, of the specified encoding.</summary>
+        <returns>The number of number of continuous non-zero glyph IDs computed from the beginning of the character codes.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetGlyphs">
+      <MemberSignature Language="C#" Value="public ushort[] GetGlyphs (IntPtr text, int length, SkiaSharp.SKEncoding encoding);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance unsigned int16[] GetGlyphs(native int text, int32 length, valuetype SkiaSharp.SKEncoding encoding) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKTypeface.GetGlyphs(System.IntPtr,System.Int32,SkiaSharp.SKEncoding)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.UInt16[]</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="text" Type="System.IntPtr" />
+        <Parameter Name="length" Type="System.Int32" />
+        <Parameter Name="encoding" Type="SkiaSharp.SKEncoding" />
+      </Parameters>
+      <Docs>
+        <param name="text">The buffer of character codes.</param>
+        <param name="length">The length of the buffer.</param>
+        <param name="encoding">How the character codes are encoded.</param>
+        <summary>Retrieve the corresponding glyph IDs of a buffer containing character codes, of the specified encoding.</summary>
+        <returns>Returns the corresponding glyph IDs for each character.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetGlyphs">
+      <MemberSignature Language="C#" Value="public int GetGlyphs (string text, SkiaSharp.SKEncoding encoding, out ushort[] glyphs);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance int32 GetGlyphs(string text, valuetype SkiaSharp.SKEncoding encoding, [out] unsigned int16[]&amp; glyphs) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKTypeface.GetGlyphs(System.String,SkiaSharp.SKEncoding,System.UInt16[]@)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="text" Type="System.String" />
+        <Parameter Name="encoding" Type="SkiaSharp.SKEncoding" />
+        <Parameter Name="glyphs" Type="System.UInt16[]" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="text">The string of characters.</param>
+        <param name="encoding">How the characters are to be encoded.</param>
+        <param name="glyphs">Destination for the corresponding glyph IDs for each character.</param>
+        <summary>Retrieve the corresponding glyph IDs of a string of characters.</summary>
+        <returns>The number of number of continuous non-zero glyph IDs computed from the beginning of the character codes.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="GetGlyphs">
+      <MemberSignature Language="C#" Value="public int GetGlyphs (IntPtr text, int length, SkiaSharp.SKEncoding encoding, out ushort[] glyphs);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance int32 GetGlyphs(native int text, int32 length, valuetype SkiaSharp.SKEncoding encoding, [out] unsigned int16[]&amp; glyphs) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKTypeface.GetGlyphs(System.IntPtr,System.Int32,SkiaSharp.SKEncoding,System.UInt16[]@)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Int32</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="text" Type="System.IntPtr" />
+        <Parameter Name="length" Type="System.Int32" />
+        <Parameter Name="encoding" Type="SkiaSharp.SKEncoding" />
+        <Parameter Name="glyphs" Type="System.UInt16[]" RefType="out" />
+      </Parameters>
+      <Docs>
+        <param name="text">The buffer of character codes.</param>
+        <param name="length">The length of the buffer.</param>
+        <param name="encoding">How the character codes are encoded.</param>
+        <param name="glyphs">Destination for the corresponding glyph IDs for each character.</param>
+        <summary>Retrieve the corresponding glyph IDs of a buffer containing character codes, of the specified encoding.</summary>
+        <returns>The number of number of continuous non-zero glyph IDs computed from the beginning of the character codes.</returns>
         <remarks></remarks>
       </Docs>
     </Member>

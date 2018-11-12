@@ -51,6 +51,34 @@
         <remarks>If the sample is inside the region the alpha of the image is boosted up to a threshold value. If it is outside the region then the alpha is decreased to the threshold value. The (0, 0) point of the region corresponds to the upper left corner of the source image.</remarks>
       </Docs>
     </Member>
+    <Member MemberName="CreateAlphaThreshold">
+      <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateAlphaThreshold (SkiaSharp.SKRegion region, float innerThreshold, float outerThreshold, SkiaSharp.SKImageFilter input = null);" />
+      <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateAlphaThreshold(class SkiaSharp.SKRegion region, float32 innerThreshold, float32 outerThreshold, class SkiaSharp.SKImageFilter input) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKImageFilter.CreateAlphaThreshold(SkiaSharp.SKRegion,System.Single,System.Single,SkiaSharp.SKImageFilter)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKImageFilter</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="region" Type="SkiaSharp.SKRegion" />
+        <Parameter Name="innerThreshold" Type="System.Single" />
+        <Parameter Name="outerThreshold" Type="System.Single" />
+        <Parameter Name="input" Type="SkiaSharp.SKImageFilter" />
+      </Parameters>
+      <Docs>
+        <param name="region">The region to sample.</param>
+        <param name="innerThreshold">The minimum alpha for pixels within the region.</param>
+        <param name="outerThreshold">The maximum alpha for pixels outside the region.</param>
+        <param name="input">The input filter to use.</param>
+        <summary>Creates an image filter that samples a region.</summary>
+        <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+        <remarks>If the sample is inside the region the alpha of the image is boosted up to a threshold value. If it is outside the region then the alpha is decreased to the threshold value. The (0, 0) point of the region corresponds to the upper left corner of the source image.</remarks>
+      </Docs>
+    </Member>
     <Member MemberName="CreateArithmetic">
       <MemberSignature Language="C#" Value="public static SkiaSharp.SKImageFilter CreateArithmetic (float k1, float k2, float k3, float k4, bool enforcePMColor, SkiaSharp.SKImageFilter background, SkiaSharp.SKImageFilter foreground = null, SkiaSharp.SKImageFilter.CropRect cropRect = null);" />
       <MemberSignature Language="ILAsm" Value=".method public static hidebysig class SkiaSharp.SKImageFilter CreateArithmetic(float32 k1, float32 k2, float32 k3, float32 k4, bool enforcePMColor, class SkiaSharp.SKImageFilter background, class SkiaSharp.SKImageFilter foreground, class SkiaSharp.SKImageFilter/CropRect cropRect) cil managed" />
