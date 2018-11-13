@@ -44,7 +44,7 @@ Obsoleted methods:
 ```diff
  [Obsolete ("Use Create(GRBackend, GRGlInterface) instead.")]
  public static GRContext Create (GRBackend backend, IntPtr backendContext);
- [Obsolete ("Use GetMaxSurfaceSampleCountForColorType(SKColorType) instead.")]
+ [Obsolete ("Use GetMaxSurfaceSampleCount(SKColorType) instead.")]
  public int GetRecommendedSampleCount (GRPixelConfig config, float dpi);
 ```
 
@@ -53,7 +53,7 @@ Added methods:
 ```csharp
 public static GRContext CreateGl ();
 public static GRContext CreateGl (GRGlInterface backendContext);
-public int GetMaxSurfaceSampleCountForColorType (SKColorType colorType);
+public int GetMaxSurfaceSampleCount (SKColorType colorType);
 ```
 
 
