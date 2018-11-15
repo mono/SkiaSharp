@@ -443,6 +443,16 @@ namespace SkiaSharp
 			surface.Draw (this, x, y, paint);
 		}
 
+		public void DrawText (SKTextBlob text, float x, float y, SKPaint paint)
+		{
+			if (text == null)
+				throw new ArgumentNullException (nameof (text));
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
+
+			SkiaApi.sk_canvas_draw_text_blob (Handle, text.Handle, x, y, paint.Handle);
+		}
+
 		public void DrawText (string text, SKPoint p, SKPaint paint)
 		{
 			DrawText (text, p.X, p.Y, paint);

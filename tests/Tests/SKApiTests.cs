@@ -109,23 +109,24 @@ namespace SkiaSharp.Tests
 
 						var paramTypeInfo = paramType.GetTypeInfo();
 
-						// make sure only structs and pointers to structs
+						// the compiler will not alow invalid pointers, so we can skip those
 						if (!paramTypeInfo.IsPointer)
 						{
+							// make sure only structs
 							Assert.False(paramType.GetTypeInfo().IsClass, $"{method.Name}({paramType})");
-						}
 
-						// make sure our structs have a layout type
-						if (!paramType.GetTypeInfo().IsEnum && paramType.Namespace == "SkiaSharp")
-						{
-							// check blittable
-							try
+							// make sure our structs have a layout type
+							if (!paramType.GetTypeInfo().IsEnum && paramType.Namespace == "SkiaSharp")
 							{
-								GCHandle.Alloc(Activator.CreateInstance(paramType), GCHandleType.Pinned).Free();
-							}
-							catch
-							{
-								throw new XunitException($"not blittable : {method.Name}({paramType})");
+								// check blittable
+								try
+								{
+									GCHandle.Alloc(Activator.CreateInstance(paramType), GCHandleType.Pinned).Free();
+								}
+								catch
+								{
+									throw new XunitException($"not blittable : {method.Name}({paramType})");
+								}
 							}
 						}
 					}

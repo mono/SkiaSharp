@@ -35,6 +35,54 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void DrawTextBlobIsTheSameAsDrawText()
+		{
+			var info = new SKImageInfo(300, 300);
+			var text = "SkiaSharp";
+
+			byte[] textPixels;
+			using (var bmp = new SKBitmap(info))
+			using (var canvas = new SKCanvas(bmp))
+			using (var paint = new SKPaint())
+			{
+				paint.TextSize = 50;
+				paint.TextAlign = SKTextAlign.Center;
+
+				canvas.Clear(SKColors.White);
+				canvas.DrawText(text, 150, 175, paint);
+
+				textPixels = bmp.Bytes;
+			}
+
+			byte[] glyphsPixels;
+			using (var bmp = new SKBitmap(info))
+			using (var canvas = new SKCanvas(bmp))
+			using (var paint = new SKPaint())
+			{
+				ushort[] glyphs;
+				using (var glyphsp = new SKPaint())
+					glyphs = glyphsp.GetGlyphs(text);
+
+				paint.TextSize = 50;
+				paint.TextAlign = SKTextAlign.Center;
+				paint.TextEncoding = SKTextEncoding.GlyphId;
+
+				canvas.Clear(SKColors.White);
+				using (var builder = new SKTextBlobBuilder())
+				{
+					builder.AddRun(paint, 0, 0, glyphs);
+					canvas.DrawText(builder.Build(), 150, 175, paint);
+				}
+
+				glyphsPixels = bmp.Bytes;
+
+				SaveBitmap(bmp);
+			}
+
+			Assert.Equal(textPixels, glyphsPixels);
+		}
+
+		[SkippableFact]
 		public void CanvasCanClipRoundRect()
 		{
 			using (var canvas = new SKNWayCanvas(100, 100))

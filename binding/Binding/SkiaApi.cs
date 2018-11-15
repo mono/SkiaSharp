@@ -53,6 +53,8 @@ using sk_stream_t = System.IntPtr;
 using sk_string_t = System.IntPtr;
 using sk_surface_t = System.IntPtr;
 using sk_surfaceprops_t = System.IntPtr;
+using sk_textblob_builder_t = System.IntPtr;
+using sk_textblob_t = System.IntPtr;
 using sk_typeface_t = System.IntPtr;
 using sk_vertices_t = System.IntPtr;
 using sk_wstream_dynamicmemorystream_t = System.IntPtr;
@@ -248,6 +250,8 @@ namespace SkiaSharp
 		public extern static void sk_canvas_draw_pos_text (sk_canvas_t t, voidptr_t text, int len, [In] SKPoint[] points, sk_paint_t paint);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_text_on_path (sk_canvas_t t, voidptr_t text, int len, sk_path_t path, float hOffset, float vOffset, sk_paint_t paint);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_canvas_draw_text_blob (sk_canvas_t canvas, sk_textblob_t text, float x, float y, sk_paint_t paint);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_bitmap (sk_canvas_t t, sk_bitmap_t bitmap, float x, float y, sk_paint_t paint);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -480,6 +484,24 @@ namespace SkiaSharp
 		public extern static bool sk_paint_get_fill_path (sk_paint_t paint, sk_path_t src, sk_path_t dst, nullptr_t cullRectZero, float resScale);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_paint_t sk_paint_clone (sk_paint_t cpaint);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_paint_text_to_glyphs (sk_paint_t cpaint, voidptr_t text, size_t byteLength, UInt16* glyphs);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		public extern static bool sk_paint_contains_text (sk_paint_t cpaint, voidptr_t text, size_t byteLength);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_paint_count_text (sk_paint_t cpaint, voidptr_t text, size_t byteLength);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_paint_get_text_widths (sk_paint_t cpaint, voidptr_t text, size_t byteLength, float* widths, SKRect* bounds);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_paint_get_text_intercepts (sk_paint_t cpaint, voidptr_t text, size_t byteLength, float x, float y, float[] bounds, float* intervals);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_paint_get_pos_text_intercepts (sk_paint_t cpaint, voidptr_t text, size_t byteLength, SKPoint[] pos, float[] bounds, float* intervals);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_paint_get_pos_text_h_intercepts (sk_paint_t cpaint, voidptr_t text, size_t byteLength, float[] xpos, float y, float[] bounds, float* intervals);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_paint_get_pos_text_blob_intercepts (sk_paint_t cpaint, sk_textblob_t blob, float[] bounds, float* intervals);
+
 
 		// image
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1817,6 +1839,43 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		public extern static bool sk_rrect_transform (sk_rrect_t rrect, [In] ref SKMatrix matrix, sk_rrect_t dest);
+
+		// text blob
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_textblob_ref (sk_textblob_t blob);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_textblob_unref (sk_textblob_t blob);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static UInt32 sk_textblob_get_unique_id (sk_textblob_t blob);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_textblob_get_bounds (sk_textblob_t blob, out SKRect bounds);
+
+		// text blob builder
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_textblob_builder_t sk_textblob_builder_new ();
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_textblob_builder_delete (sk_textblob_builder_t builder);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_textblob_t sk_textblob_builder_make (sk_textblob_builder_t builder);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_textblob_builder_alloc_run_text (sk_textblob_builder_t builder, sk_paint_t font, int count, float x, float y, int textByteCount, sk_string_t lang, SKRect* bounds, out SKTextBlobBuilderRunBuffer runbuffer);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_textblob_builder_alloc_run_text_pos_h (sk_textblob_builder_t builder, sk_paint_t font, int count, float y, int textByteCount, sk_string_t lang, SKRect* bounds, out SKTextBlobBuilderRunBuffer runbuffer);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_textblob_builder_alloc_run_text_pos (sk_textblob_builder_t builder, sk_paint_t font, int count, int textByteCount, sk_string_t lang, SKRect* bounds, out SKTextBlobBuilderRunBuffer runbuffer);
+
+
+		// text blob builder run buffer
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_textblob_builder_runbuffer_set_glyphs (ref SKTextBlobBuilderRunBuffer buffer, UInt16* glyphs, int count);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_textblob_builder_runbuffer_set_pos (ref SKTextBlobBuilderRunBuffer buffer, float* pos, int count);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_textblob_builder_runbuffer_set_pos_points (ref SKTextBlobBuilderRunBuffer buffer, SKPoint* pos, int count);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_textblob_builder_runbuffer_set_utf8_text (ref SKTextBlobBuilderRunBuffer buffer, byte* text, int count);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_textblob_builder_runbuffer_set_clusters (ref SKTextBlobBuilderRunBuffer buffer, UInt32* clusters, int count);
 	}
 
 #pragma warning restore IDE1006 // Naming Styles

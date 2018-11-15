@@ -42,6 +42,9 @@ namespace SkiaSharp
 
 		public static byte[] GetEncodedText(string text, SKEncoding encoding)
 		{
+			if (text == null)
+				throw new ArgumentNullException (nameof (text));
+
 			switch (encoding)
 			{
 				case SKEncoding.Utf8:
@@ -57,6 +60,9 @@ namespace SkiaSharp
 
 		public static byte[] GetEncodedText(string text, SKTextEncoding encoding)
 		{
+			if (text == null)
+				throw new ArgumentNullException (nameof (text));
+
 			switch (encoding)
 			{
 				case SKTextEncoding.Utf8:
