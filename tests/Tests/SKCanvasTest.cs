@@ -75,8 +75,6 @@ namespace SkiaSharp.Tests
 				}
 
 				glyphsPixels = bmp.Bytes;
-
-				SaveBitmap(bmp);
 			}
 
 			Assert.Equal(textPixels, glyphsPixels);
