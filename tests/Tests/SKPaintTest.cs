@@ -337,18 +337,20 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public unsafe void TextInterceptsAreFoundCorrectly()
 		{
+			var text = "|";
+
 			var paint = new SKPaint();
 			paint.TextSize = 100;
 
-			var widths = paint.GetTextIntercepts("|", 50, 100, 40, 50);
+			var widths = paint.GetTextIntercepts(text, 50, 100, 0, 100);
 			Assert.Equal(2, widths.Length);
 
-			var diff = Math.Round(widths[1] - widths[0]);
+			var diff = widths[1] - widths[0];
 
-			var bounds = new SKRect();
-			paint.MeasureText("|", ref bounds);
+			var textPath = paint.GetTextPath(text, 0, 0);
+			var pathWidth = textPath.TightBounds.Width;
 
-			Assert.Equal(Math.Round(bounds.Width), diff);
+			Assert.Equal(pathWidth, diff, 2);
 		}
 	}
 }
