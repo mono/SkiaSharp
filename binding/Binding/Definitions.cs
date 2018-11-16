@@ -554,9 +554,71 @@ namespace SkiaSharp
 		public sk_string_t Producer;
 		public SKTimeDateTimeInternal* Creation;
 		public SKTimeDateTimeInternal* Modified;
+		public float RasterDPI;
+		public byte PDFA;
+		public int EncodingQuality;
 	}
 
 	public struct SKDocumentPdfMetadata {
+		public const float DefaultRasterDpi = 72.0f;
+		public const int DefaultEncodingQuality = 101;
+
+		public static readonly SKDocumentPdfMetadata Default;
+
+		static SKDocumentPdfMetadata ()
+		{
+			Default = new SKDocumentPdfMetadata () {
+				RasterDpi = DefaultRasterDpi,
+				PdfA = false,
+				EncodingQuality = 101,
+			};
+		}
+
+		public SKDocumentPdfMetadata (float rasterDpi)
+		{
+			Title = null;
+			Author = null;
+			Subject = null;
+			Keywords = null;
+			Creator = null;
+			Producer = null;
+			Creation = null;
+			Modified = null;
+			RasterDpi = rasterDpi;
+			PdfA = false;
+			EncodingQuality = DefaultEncodingQuality;
+		}
+
+		public SKDocumentPdfMetadata (int encodingQuality)
+		{
+			Title = null;
+			Author = null;
+			Subject = null;
+			Keywords = null;
+			Creator = null;
+			Producer = null;
+			Creation = null;
+			Modified = null;
+			RasterDpi = DefaultRasterDpi;
+			PdfA = false;
+			EncodingQuality = encodingQuality;
+		}
+
+		public SKDocumentPdfMetadata (float rasterDpi, int encodingQuality)
+		{
+			Title = null;
+			Author = null;
+			Subject = null;
+			Keywords = null;
+			Creator = null;
+			Producer = null;
+			Creation = null;
+			Modified = null;
+			RasterDpi = rasterDpi;
+			PdfA = false;
+			EncodingQuality = encodingQuality;
+		}
+
 		public string Title { get; set; }
 		public string Author { get; set; }
 		public string Subject { get; set; }
@@ -565,6 +627,9 @@ namespace SkiaSharp
 		public string Producer { get; set; }
 		public DateTime? Creation { get; set; }
 		public DateTime? Modified { get; set; }
+		public float RasterDpi { get; set; }
+		public bool PdfA { get; set; }
+		public int EncodingQuality { get; set; }
 	}
 
 	public enum SKColorSpaceGamut {

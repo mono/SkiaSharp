@@ -1,13 +1,14 @@
 ﻿using System;
+using System.IO;
 
 namespace SkiaSharp
 {
 	public class SKDocument : SKObject
 	{
-		public const float DefaultRasterDpi = 72.0f;
+		public const float DefaultRasterDpi = SKDocumentPdfMetadata.DefaultRasterDpi;
 
 		[Preserve]
-		internal SKDocument(IntPtr handle, bool owns)
+		internal SKDocument (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
@@ -21,97 +22,132 @@ namespace SkiaSharp
 			base.Dispose (disposing);
 		}
 
-		public void Abort ()
-		{
+		public void Abort () =>
 			SkiaApi.sk_document_abort (Handle);
-		}
 
-		public SKCanvas BeginPage (float width, float height)
-		{
-			return GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, IntPtr.Zero), false);
-		}
+		public SKCanvas BeginPage (float width, float height) =>
+			GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, IntPtr.Zero), false);
 
-		public SKCanvas BeginPage (float width, float height, SKRect content)
-		{
-			return GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, ref content), false);
-		}
+		public SKCanvas BeginPage (float width, float height, SKRect content) =>
+			GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, ref content), false);
 
-		public void EndPage ()
-		{
+		public void EndPage () =>
 			SkiaApi.sk_document_end_page (Handle);
-		}
 
-		public void Close ()
-		{
+		public void Close () =>
 			SkiaApi.sk_document_close (Handle);
-		}
 
-		[Obsolete ("Use CreateXps(SKWStream, float) instead.")]
-		public static SKDocument CreateXps (string path, float dpi = DefaultRasterDpi)
+		// CreateXps
+
+		public static SKDocument CreateXps (string path) =>
+			CreateXps (path, DefaultRasterDpi);
+
+		public static SKDocument CreateXps (Stream stream) =>
+			CreateXps (stream, DefaultRasterDpi);
+
+		public static SKDocument CreateXps (SKWStream stream) =>
+			CreateXps (stream, DefaultRasterDpi);
+
+		public static SKDocument CreateXps (string path, float dpi)
 		{
 			if (path == null) {
 				throw new ArgumentNullException (nameof (path));
 			}
 
 			var stream = SKFileWStream.OpenStream (path);
-			var doc = CreateXps (stream, dpi);
-			if (doc != null)
-				doc.SetDisposeChild (stream);
-			else
-				stream.Dispose();
-			return doc;
+			return Owned (CreateXps (stream, dpi), stream);
 		}
 
-		public static SKDocument CreateXps (SKWStream stream, float dpi = DefaultRasterDpi)
+		public static SKDocument CreateXps (Stream stream, float dpi)
 		{
 			if (stream == null) {
-				throw new ArgumentNullException (nameof(stream));
+				throw new ArgumentNullException (nameof (stream));
+			}
+
+			var managed = new SKManagedWStream (stream);
+			return Owned (CreateXps (managed, dpi), managed);
+		}
+
+		public static SKDocument CreateXps (SKWStream stream, float dpi)
+		{
+			if (stream == null) {
+				throw new ArgumentNullException (nameof (stream));
 			}
 
 			return GetObject<SKDocument> (SkiaApi.sk_document_create_xps_from_stream (stream.Handle, dpi));
 		}
 
-		[Obsolete ("Use CreatePdf(SKWStream) instead.")]
-		public static SKDocument CreatePdf (string path, float dpi = DefaultRasterDpi)
+		// CreatePdf
+
+		[Obsolete ("Use CreatePdf(SKWStream, SKDocumentPdfMetadata) instead.")]
+		public static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata, float dpi)
+		{
+			metadata.RasterDpi = dpi;
+			return CreatePdf (stream, metadata);
+		}
+
+		public static SKDocument CreatePdf (string path)
 		{
 			if (path == null) {
 				throw new ArgumentNullException (nameof (path));
 			}
 
 			var stream = SKFileWStream.OpenStream (path);
-			var doc = CreatePdf (stream, dpi);
-			if (doc != null)
-				doc.SetDisposeChild (stream);
-			else
-				stream.Dispose();
-			return doc;
+			return Owned (CreatePdf (stream), stream);
 		}
 
-		[Obsolete("Use CreatePdf(SKWStream) instead.")]
-		public static SKDocument CreatePdf (SKWStream stream, float dpi)
+		public static SKDocument CreatePdf (Stream stream)
 		{
-			return CreatePdf (stream);
+			if (stream == null) {
+				throw new ArgumentNullException (nameof (stream));
+			}
+
+			var managed = new SKManagedWStream (stream);
+			return Owned (CreatePdf (managed), managed);
 		}
 
 		public static SKDocument CreatePdf (SKWStream stream)
 		{
 			if (stream == null) {
-				throw new ArgumentNullException (nameof(stream));
+				throw new ArgumentNullException (nameof (stream));
 			}
 
 			return GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream (stream.Handle));
 		}
 
-		[Obsolete("Use CreatePdf(SKWStream, SKDocumentPdfMetadata) instead.")]
-		public static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata, float dpi)
+		public static SKDocument CreatePdf (string path, float dpi) =>
+			CreatePdf (path, new SKDocumentPdfMetadata (dpi));
+
+		public static SKDocument CreatePdf (Stream stream, float dpi) =>
+			CreatePdf (stream, new SKDocumentPdfMetadata (dpi));
+
+		public static SKDocument CreatePdf (SKWStream stream, float dpi) =>
+			CreatePdf (stream, new SKDocumentPdfMetadata (dpi));
+
+		public static SKDocument CreatePdf (string path, SKDocumentPdfMetadata metadata)
 		{
-			return CreatePdf (stream, metadata);
+			if (path == null) {
+				throw new ArgumentNullException (nameof (path));
+			}
+
+			var stream = SKFileWStream.OpenStream (path);
+			return Owned (CreatePdf (stream, metadata), stream);
+		}
+
+		public static SKDocument CreatePdf (Stream stream, SKDocumentPdfMetadata metadata)
+		{
+			if (stream == null) {
+				throw new ArgumentNullException (nameof (stream));
+			}
+
+			var managed = new SKManagedWStream (stream);
+			return Owned (CreatePdf (managed, metadata), managed);
 		}
 
 		public static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata)
 		{
 			if (stream == null) {
-				throw new ArgumentNullException (nameof(stream));
+				throw new ArgumentNullException (nameof (stream));
 			}
 
 			using (var title = SKString.Create (metadata.Title))
@@ -127,7 +163,10 @@ namespace SkiaSharp
 					Subject = subject?.Handle ?? IntPtr.Zero,
 					Keywords = keywords?.Handle ?? IntPtr.Zero,
 					Creator = creator?.Handle ?? IntPtr.Zero,
-					Producer = producer?.Handle ?? IntPtr.Zero
+					Producer = producer?.Handle ?? IntPtr.Zero,
+					RasterDPI = metadata.RasterDpi,
+					PDFA = metadata.PdfA ? (byte)1 : (byte)0,
+					EncodingQuality = metadata.EncodingQuality,
 				};
 
 				unsafe {
@@ -144,6 +183,17 @@ namespace SkiaSharp
 				}
 			}
 		}
+
+		private static SKDocument Owned (SKDocument doc, SKWStream stream)
+		{
+			if (stream != null) {
+				if (doc != null)
+					doc.SetDisposeChild (stream);
+				else
+					stream.Dispose ();
+			}
+
+			return doc;
+		}
 	}
 }
-
