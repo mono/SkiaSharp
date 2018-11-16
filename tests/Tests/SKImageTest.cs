@@ -132,7 +132,7 @@ namespace SkiaSharp.Tests
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
 
-			using (var managed = new FileStream(path, FileMode.Open))
+			using (var managed = new FileStream(path, FileMode.Open, FileAccess.Read))
 			using (var image = SKImage.FromEncodedData(managed))
 			using (var surface = SKSurface.Create(new SKImageInfo(200, 200)))
 			{
