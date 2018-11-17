@@ -305,6 +305,18 @@ Task ("docs-format-docs")
             }
         }
 
+        // remove the no-longer-obsolete document members
+        if (xdoc.Root.Name == "Type" && xdoc.Root.Attribute ("Name")?.Value == "SKDocument") {
+            xdoc.Root
+                .Elements ("Members")
+                .Elements ("Member")
+                .Where (e => e.Attribute ("MemberName")?.Value == "CreatePdf")
+                .Where (e => e.Elements ("MemberSignature").All (s => s.Attribute ("Value")?.Value != "M:SkiaSharp.SKDocument.CreatePdf(SkiaSharp.SKWStream,SkiaSharp.SKDocumentPdfMetadata,System.Single)"))
+                .SelectMany (e => e.Elements ("Attributes").Elements ("Attribute").Elements ("AttributeName"))
+                .Where (e => e.Value.Contains ("System.Obsolete"))
+                .Remove ();
+        }
+
         // remove empty FrameworkAlternate elements
         var emptyAlts = xdoc.Root
             .Descendants ()
@@ -315,6 +327,12 @@ Task ("docs-format-docs")
                 empty.Remove ();
             }
         }
+
+        // remove empty Attribute elements
+        xdoc.Root
+            .Descendants ("Attribute")
+            .Where (e => !e.Elements ().Any ())
+            .Remove ();
 
         // count the types without docs
         var typesWithDocs = xdoc.Root

@@ -430,6 +430,7 @@
       <Member Id="M:SkiaSharp.SKCanvas.DrawRoundRect(System.Single,System.Single,System.Single,System.Single,System.Single,System.Single,SkiaSharp.SKPaint)" />
       <Member Id="M:SkiaSharp.SKCanvas.DrawSurface(SkiaSharp.SKSurface,SkiaSharp.SKPoint,SkiaSharp.SKPaint)" />
       <Member Id="M:SkiaSharp.SKCanvas.DrawSurface(SkiaSharp.SKSurface,System.Single,System.Single,SkiaSharp.SKPaint)" />
+      <Member Id="M:SkiaSharp.SKCanvas.DrawText(SkiaSharp.SKTextBlob,System.Single,System.Single,SkiaSharp.SKPaint)" />
       <Member Id="M:SkiaSharp.SKCanvas.DrawText(System.Byte[],SkiaSharp.SKPoint,SkiaSharp.SKPaint)" />
       <Member Id="M:SkiaSharp.SKCanvas.DrawText(System.Byte[],System.Single,System.Single,SkiaSharp.SKPaint)" />
       <Member Id="M:SkiaSharp.SKCanvas.DrawText(System.IntPtr,System.Int32,SkiaSharp.SKPoint,SkiaSharp.SKPaint)" />
@@ -905,19 +906,37 @@
       <Member Id="M:SkiaSharp.SKDocument.CreatePdf(SkiaSharp.SKWStream,SkiaSharp.SKDocumentPdfMetadata)" />
       <Member Id="M:SkiaSharp.SKDocument.CreatePdf(SkiaSharp.SKWStream,SkiaSharp.SKDocumentPdfMetadata,System.Single)" />
       <Member Id="M:SkiaSharp.SKDocument.CreatePdf(SkiaSharp.SKWStream,System.Single)" />
+      <Member Id="M:SkiaSharp.SKDocument.CreatePdf(System.IO.Stream)" />
+      <Member Id="M:SkiaSharp.SKDocument.CreatePdf(System.IO.Stream,SkiaSharp.SKDocumentPdfMetadata)" />
+      <Member Id="M:SkiaSharp.SKDocument.CreatePdf(System.IO.Stream,System.Single)" />
+      <Member Id="M:SkiaSharp.SKDocument.CreatePdf(System.String)" />
+      <Member Id="M:SkiaSharp.SKDocument.CreatePdf(System.String,SkiaSharp.SKDocumentPdfMetadata)" />
       <Member Id="M:SkiaSharp.SKDocument.CreatePdf(System.String,System.Single)" />
+      <Member Id="M:SkiaSharp.SKDocument.CreateXps(SkiaSharp.SKWStream)" />
       <Member Id="M:SkiaSharp.SKDocument.CreateXps(SkiaSharp.SKWStream,System.Single)" />
+      <Member Id="M:SkiaSharp.SKDocument.CreateXps(System.IO.Stream)" />
+      <Member Id="M:SkiaSharp.SKDocument.CreateXps(System.IO.Stream,System.Single)" />
+      <Member Id="M:SkiaSharp.SKDocument.CreateXps(System.String)" />
       <Member Id="M:SkiaSharp.SKDocument.CreateXps(System.String,System.Single)" />
       <Member Id="M:SkiaSharp.SKDocument.Dispose(System.Boolean)" />
       <Member Id="M:SkiaSharp.SKDocument.EndPage" />
     </Type>
     <Type Name="SkiaSharp.SKDocumentPdfMetadata" Id="T:SkiaSharp.SKDocumentPdfMetadata">
+      <Member Id="F:SkiaSharp.SKDocumentPdfMetadata.Default" />
+      <Member Id="F:SkiaSharp.SKDocumentPdfMetadata.DefaultEncodingQuality" />
+      <Member Id="F:SkiaSharp.SKDocumentPdfMetadata.DefaultRasterDpi" />
+      <Member Id="M:SkiaSharp.SKDocumentPdfMetadata.#ctor(System.Int32)" />
+      <Member Id="M:SkiaSharp.SKDocumentPdfMetadata.#ctor(System.Single)" />
+      <Member Id="M:SkiaSharp.SKDocumentPdfMetadata.#ctor(System.Single,System.Int32)" />
       <Member Id="P:SkiaSharp.SKDocumentPdfMetadata.Author" />
       <Member Id="P:SkiaSharp.SKDocumentPdfMetadata.Creation" />
       <Member Id="P:SkiaSharp.SKDocumentPdfMetadata.Creator" />
+      <Member Id="P:SkiaSharp.SKDocumentPdfMetadata.EncodingQuality" />
       <Member Id="P:SkiaSharp.SKDocumentPdfMetadata.Keywords" />
       <Member Id="P:SkiaSharp.SKDocumentPdfMetadata.Modified" />
+      <Member Id="P:SkiaSharp.SKDocumentPdfMetadata.PdfA" />
       <Member Id="P:SkiaSharp.SKDocumentPdfMetadata.Producer" />
+      <Member Id="P:SkiaSharp.SKDocumentPdfMetadata.RasterDpi" />
       <Member Id="P:SkiaSharp.SKDocumentPdfMetadata.Subject" />
       <Member Id="P:SkiaSharp.SKDocumentPdfMetadata.Title" />
     </Type>
@@ -1541,10 +1560,41 @@
       <Member Id="M:SkiaSharp.SKPaint.BreakText(System.String,System.Single,System.Single@)" />
       <Member Id="M:SkiaSharp.SKPaint.BreakText(System.String,System.Single,System.Single@,System.String@)" />
       <Member Id="M:SkiaSharp.SKPaint.Clone" />
+      <Member Id="M:SkiaSharp.SKPaint.ContainsGlyphs(System.Byte[])" />
+      <Member Id="M:SkiaSharp.SKPaint.ContainsGlyphs(System.IntPtr,System.Int32)" />
+      <Member Id="M:SkiaSharp.SKPaint.ContainsGlyphs(System.String)" />
+      <Member Id="M:SkiaSharp.SKPaint.CountGlyphs(System.Byte[])" />
+      <Member Id="M:SkiaSharp.SKPaint.CountGlyphs(System.IntPtr,System.Int32)" />
+      <Member Id="M:SkiaSharp.SKPaint.CountGlyphs(System.String)" />
       <Member Id="M:SkiaSharp.SKPaint.Dispose(System.Boolean)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetFillPath(SkiaSharp.SKPath)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetFillPath(SkiaSharp.SKPath,SkiaSharp.SKPath)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetFillPath(SkiaSharp.SKPath,SkiaSharp.SKPath,SkiaSharp.SKRect)" />
       <Member Id="M:SkiaSharp.SKPaint.GetFillPath(SkiaSharp.SKPath,SkiaSharp.SKPath,SkiaSharp.SKRect,System.Single)" />
       <Member Id="M:SkiaSharp.SKPaint.GetFillPath(SkiaSharp.SKPath,SkiaSharp.SKPath,System.Single)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetFillPath(SkiaSharp.SKPath,SkiaSharp.SKRect)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetFillPath(SkiaSharp.SKPath,SkiaSharp.SKRect,System.Single)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetFillPath(SkiaSharp.SKPath,System.Single)" />
       <Member Id="M:SkiaSharp.SKPaint.GetFontMetrics(SkiaSharp.SKFontMetrics@,System.Single)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetGlyphs(System.Byte[])" />
+      <Member Id="M:SkiaSharp.SKPaint.GetGlyphs(System.IntPtr,System.Int32)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetGlyphs(System.String)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetGlyphWidths(System.Byte[])" />
+      <Member Id="M:SkiaSharp.SKPaint.GetGlyphWidths(System.Byte[],SkiaSharp.SKRect[]@)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetGlyphWidths(System.IntPtr,System.Int32)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetGlyphWidths(System.IntPtr,System.Int32,SkiaSharp.SKRect[]@)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetGlyphWidths(System.String)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetGlyphWidths(System.String,SkiaSharp.SKRect[]@)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetHorizontalTextIntercepts(System.Byte[],System.Single[],System.Single,System.Single,System.Single)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetHorizontalTextIntercepts(System.IntPtr,System.Int32,System.Single[],System.Single,System.Single,System.Single)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetHorizontalTextIntercepts(System.String,System.Single[],System.Single,System.Single,System.Single)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetPositionedTextIntercepts(System.Byte[],SkiaSharp.SKPoint[],System.Single,System.Single)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetPositionedTextIntercepts(System.IntPtr,System.Int32,SkiaSharp.SKPoint[],System.Single,System.Single)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetPositionedTextIntercepts(System.String,SkiaSharp.SKPoint[],System.Single,System.Single)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetTextIntercepts(SkiaSharp.SKTextBlob,System.Single,System.Single)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetTextIntercepts(System.Byte[],System.Single,System.Single,System.Single,System.Single)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetTextIntercepts(System.IntPtr,System.Int32,System.Single,System.Single,System.Single,System.Single)" />
+      <Member Id="M:SkiaSharp.SKPaint.GetTextIntercepts(System.String,System.Single,System.Single,System.Single,System.Single)" />
       <Member Id="M:SkiaSharp.SKPaint.GetTextPath(System.Byte[],SkiaSharp.SKPoint[])" />
       <Member Id="M:SkiaSharp.SKPaint.GetTextPath(System.Byte[],System.Single,System.Single)" />
       <Member Id="M:SkiaSharp.SKPaint.GetTextPath(System.IntPtr,System.IntPtr,SkiaSharp.SKPoint[])" />
@@ -1919,8 +1969,11 @@
       <Member Id="M:SkiaSharp.SKPoint.Add(SkiaSharp.SKPoint,SkiaSharp.SKPointI)" />
       <Member Id="M:SkiaSharp.SKPoint.Add(SkiaSharp.SKPoint,SkiaSharp.SKSize)" />
       <Member Id="M:SkiaSharp.SKPoint.Add(SkiaSharp.SKPoint,SkiaSharp.SKSizeI)" />
+      <Member Id="M:SkiaSharp.SKPoint.Distance(SkiaSharp.SKPoint,SkiaSharp.SKPoint)" />
+      <Member Id="M:SkiaSharp.SKPoint.DistanceSquared(SkiaSharp.SKPoint,SkiaSharp.SKPoint)" />
       <Member Id="M:SkiaSharp.SKPoint.Equals(System.Object)" />
       <Member Id="M:SkiaSharp.SKPoint.GetHashCode" />
+      <Member Id="M:SkiaSharp.SKPoint.Normalize(SkiaSharp.SKPoint)" />
       <Member Id="M:SkiaSharp.SKPoint.Offset(SkiaSharp.SKPoint)" />
       <Member Id="M:SkiaSharp.SKPoint.Offset(System.Single,System.Single)" />
       <Member Id="M:SkiaSharp.SKPoint.op_Addition(SkiaSharp.SKPoint,SkiaSharp.SKPoint)" />
@@ -1933,12 +1986,15 @@
       <Member Id="M:SkiaSharp.SKPoint.op_Subtraction(SkiaSharp.SKPoint,SkiaSharp.SKPointI)" />
       <Member Id="M:SkiaSharp.SKPoint.op_Subtraction(SkiaSharp.SKPoint,SkiaSharp.SKSize)" />
       <Member Id="M:SkiaSharp.SKPoint.op_Subtraction(SkiaSharp.SKPoint,SkiaSharp.SKSizeI)" />
+      <Member Id="M:SkiaSharp.SKPoint.Reflect(SkiaSharp.SKPoint,SkiaSharp.SKPoint)" />
       <Member Id="M:SkiaSharp.SKPoint.Subtract(SkiaSharp.SKPoint,SkiaSharp.SKPoint)" />
       <Member Id="M:SkiaSharp.SKPoint.Subtract(SkiaSharp.SKPoint,SkiaSharp.SKPointI)" />
       <Member Id="M:SkiaSharp.SKPoint.Subtract(SkiaSharp.SKPoint,SkiaSharp.SKSize)" />
       <Member Id="M:SkiaSharp.SKPoint.Subtract(SkiaSharp.SKPoint,SkiaSharp.SKSizeI)" />
       <Member Id="M:SkiaSharp.SKPoint.ToString" />
       <Member Id="P:SkiaSharp.SKPoint.IsEmpty" />
+      <Member Id="P:SkiaSharp.SKPoint.Length" />
+      <Member Id="P:SkiaSharp.SKPoint.LengthSquared" />
       <Member Id="P:SkiaSharp.SKPoint.X" />
       <Member Id="P:SkiaSharp.SKPoint.Y" />
     </Type>
@@ -1966,8 +2022,11 @@
       <Member Id="M:SkiaSharp.SKPointI.Add(SkiaSharp.SKPointI,SkiaSharp.SKPointI)" />
       <Member Id="M:SkiaSharp.SKPointI.Add(SkiaSharp.SKPointI,SkiaSharp.SKSizeI)" />
       <Member Id="M:SkiaSharp.SKPointI.Ceiling(SkiaSharp.SKPoint)" />
+      <Member Id="M:SkiaSharp.SKPointI.Distance(SkiaSharp.SKPointI,SkiaSharp.SKPointI)" />
+      <Member Id="M:SkiaSharp.SKPointI.DistanceSquared(SkiaSharp.SKPointI,SkiaSharp.SKPointI)" />
       <Member Id="M:SkiaSharp.SKPointI.Equals(System.Object)" />
       <Member Id="M:SkiaSharp.SKPointI.GetHashCode" />
+      <Member Id="M:SkiaSharp.SKPointI.Normalize(SkiaSharp.SKPointI)" />
       <Member Id="M:SkiaSharp.SKPointI.Offset(SkiaSharp.SKPointI)" />
       <Member Id="M:SkiaSharp.SKPointI.Offset(System.Int32,System.Int32)" />
       <Member Id="M:SkiaSharp.SKPointI.op_Addition(SkiaSharp.SKPointI,SkiaSharp.SKPointI)" />
@@ -1978,6 +2037,7 @@
       <Member Id="M:SkiaSharp.SKPointI.op_Inequality(SkiaSharp.SKPointI,SkiaSharp.SKPointI)" />
       <Member Id="M:SkiaSharp.SKPointI.op_Subtraction(SkiaSharp.SKPointI,SkiaSharp.SKPointI)" />
       <Member Id="M:SkiaSharp.SKPointI.op_Subtraction(SkiaSharp.SKPointI,SkiaSharp.SKSizeI)" />
+      <Member Id="M:SkiaSharp.SKPointI.Reflect(SkiaSharp.SKPointI,SkiaSharp.SKPointI)" />
       <Member Id="M:SkiaSharp.SKPointI.Round(SkiaSharp.SKPoint)" />
       <Member Id="M:SkiaSharp.SKPointI.Subtract(SkiaSharp.SKPointI,SkiaSharp.SKPointI)" />
       <Member Id="M:SkiaSharp.SKPointI.Subtract(SkiaSharp.SKPointI,SkiaSharp.SKSizeI)" />
@@ -2058,6 +2118,7 @@
       <Member Id="M:SkiaSharp.SKRectI.Intersect(SkiaSharp.SKRectI)" />
       <Member Id="M:SkiaSharp.SKRectI.Intersect(SkiaSharp.SKRectI,SkiaSharp.SKRectI)" />
       <Member Id="M:SkiaSharp.SKRectI.IntersectsWith(SkiaSharp.SKRectI)" />
+      <Member Id="M:SkiaSharp.SKRectI.IntersectsWithInclusive(SkiaSharp.SKRectI)" />
       <Member Id="M:SkiaSharp.SKRectI.Offset(SkiaSharp.SKPointI)" />
       <Member Id="M:SkiaSharp.SKRectI.Offset(System.Int32,System.Int32)" />
       <Member Id="M:SkiaSharp.SKRectI.op_Equality(SkiaSharp.SKRectI,SkiaSharp.SKRectI)" />
@@ -2362,6 +2423,34 @@
       <Member Id="F:SkiaSharp.SKTextAlign.Center" />
       <Member Id="F:SkiaSharp.SKTextAlign.Left" />
       <Member Id="F:SkiaSharp.SKTextAlign.Right" />
+    </Type>
+    <Type Name="SkiaSharp.SKTextBlob" Id="T:SkiaSharp.SKTextBlob">
+      <Member Id="M:SkiaSharp.SKTextBlob.Dispose(System.Boolean)" />
+      <Member Id="P:SkiaSharp.SKTextBlob.Bounds" />
+      <Member Id="P:SkiaSharp.SKTextBlob.UniqueId" />
+    </Type>
+    <Type Name="SkiaSharp.SKTextBlobBuilder" Id="T:SkiaSharp.SKTextBlobBuilder">
+      <Member Id="M:SkiaSharp.SKTextBlobBuilder.#ctor" />
+      <Member Id="M:SkiaSharp.SKTextBlobBuilder.AddHorizontalRun(SkiaSharp.SKPaint,System.Single,System.UInt16[],System.Single[])" />
+      <Member Id="M:SkiaSharp.SKTextBlobBuilder.AddHorizontalRun(SkiaSharp.SKPaint,System.Single,System.UInt16[],System.Single[],SkiaSharp.SKRect)" />
+      <Member Id="M:SkiaSharp.SKTextBlobBuilder.AddHorizontalRun(SkiaSharp.SKPaint,System.Single,System.UInt16[],System.Single[],System.Byte[],System.UInt32[])" />
+      <Member Id="M:SkiaSharp.SKTextBlobBuilder.AddHorizontalRun(SkiaSharp.SKPaint,System.Single,System.UInt16[],System.Single[],System.Byte[],System.UInt32[],SkiaSharp.SKRect)" />
+      <Member Id="M:SkiaSharp.SKTextBlobBuilder.AddHorizontalRun(SkiaSharp.SKPaint,System.Single,System.UInt16[],System.Single[],System.String,System.UInt32[])" />
+      <Member Id="M:SkiaSharp.SKTextBlobBuilder.AddHorizontalRun(SkiaSharp.SKPaint,System.Single,System.UInt16[],System.Single[],System.String,System.UInt32[],SkiaSharp.SKRect)" />
+      <Member Id="M:SkiaSharp.SKTextBlobBuilder.AddPositionedRun(SkiaSharp.SKPaint,System.UInt16[],SkiaSharp.SKPoint[])" />
+      <Member Id="M:SkiaSharp.SKTextBlobBuilder.AddPositionedRun(SkiaSharp.SKPaint,System.UInt16[],SkiaSharp.SKPoint[],SkiaSharp.SKRect)" />
+      <Member Id="M:SkiaSharp.SKTextBlobBuilder.AddPositionedRun(SkiaSharp.SKPaint,System.UInt16[],SkiaSharp.SKPoint[],System.Byte[],System.UInt32[])" />
+      <Member Id="M:SkiaSharp.SKTextBlobBuilder.AddPositionedRun(SkiaSharp.SKPaint,System.UInt16[],SkiaSharp.SKPoint[],System.Byte[],System.UInt32[],SkiaSharp.SKRect)" />
+      <Member Id="M:SkiaSharp.SKTextBlobBuilder.AddPositionedRun(SkiaSharp.SKPaint,System.UInt16[],SkiaSharp.SKPoint[],System.String,System.UInt32[])" />
+      <Member Id="M:SkiaSharp.SKTextBlobBuilder.AddPositionedRun(SkiaSharp.SKPaint,System.UInt16[],SkiaSharp.SKPoint[],System.String,System.UInt32[],SkiaSharp.SKRect)" />
+      <Member Id="M:SkiaSharp.SKTextBlobBuilder.AddRun(SkiaSharp.SKPaint,System.Single,System.Single,System.UInt16[])" />
+      <Member Id="M:SkiaSharp.SKTextBlobBuilder.AddRun(SkiaSharp.SKPaint,System.Single,System.Single,System.UInt16[],SkiaSharp.SKRect)" />
+      <Member Id="M:SkiaSharp.SKTextBlobBuilder.AddRun(SkiaSharp.SKPaint,System.Single,System.Single,System.UInt16[],System.Byte[],System.UInt32[])" />
+      <Member Id="M:SkiaSharp.SKTextBlobBuilder.AddRun(SkiaSharp.SKPaint,System.Single,System.Single,System.UInt16[],System.Byte[],System.UInt32[],SkiaSharp.SKRect)" />
+      <Member Id="M:SkiaSharp.SKTextBlobBuilder.AddRun(SkiaSharp.SKPaint,System.Single,System.Single,System.UInt16[],System.String,System.UInt32[])" />
+      <Member Id="M:SkiaSharp.SKTextBlobBuilder.AddRun(SkiaSharp.SKPaint,System.Single,System.Single,System.UInt16[],System.String,System.UInt32[],SkiaSharp.SKRect)" />
+      <Member Id="M:SkiaSharp.SKTextBlobBuilder.Build" />
+      <Member Id="M:SkiaSharp.SKTextBlobBuilder.Dispose(System.Boolean)" />
     </Type>
     <Type Name="SkiaSharp.SKTextEncoding" Id="T:SkiaSharp.SKTextEncoding">
       <Member Id="F:SkiaSharp.SKTextEncoding.GlyphId" />

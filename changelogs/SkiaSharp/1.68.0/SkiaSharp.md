@@ -184,6 +184,15 @@ public bool TryAllocPixels (SKImageInfo info, int rowBytes);
 ```
 
 
+#### Type Changed: SkiaSharp.SKCanvas
+
+Added method:
+
+```csharp
+public void DrawText (SKTextBlob text, float x, float y, SKPaint paint);
+```
+
+
 #### Type Changed: SkiaSharp.SKCodec
 
 Removed property:
@@ -341,27 +350,64 @@ Rgba1010102 = 7,
 
 #### Type Changed: SkiaSharp.SKDocument
 
-Obsoleted methods:
-
-```diff
- [Obsolete ("Use CreatePdf(SKWStream) instead.")]
- public static SKDocument CreatePdf (SKWStream stream, float dpi);
- [Obsolete ("Use CreatePdf(SKWStream, SKDocumentPdfMetadata) instead.")]
- public static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata, float dpi);
-```
-
 Modified methods:
 
 ```diff
  public SKDocument CreatePdf (SKWStream stream, float dpi--- = 72---)
+ public SKDocument CreatePdf (string path, float dpi--- = 72---)
  public SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata, float dpi--- = 72---)
+ public SKDocument CreateXps (SKWStream stream, float dpi--- = 72---)
+ public SKDocument CreateXps (string path, float dpi--- = 72---)
+```
+
+Obsoleted methods:
+
+```diff
+ [Obsolete ("Use CreatePdf(SKWStream, SKDocumentPdfMetadata) instead.")]
+ public static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata, float dpi);
 ```
 
 Added methods:
 
 ```csharp
 public static SKDocument CreatePdf (SKWStream stream);
+public static SKDocument CreatePdf (System.IO.Stream stream);
+public static SKDocument CreatePdf (string path);
 public static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata);
+public static SKDocument CreatePdf (System.IO.Stream stream, SKDocumentPdfMetadata metadata);
+public static SKDocument CreatePdf (System.IO.Stream stream, float dpi);
+public static SKDocument CreatePdf (string path, SKDocumentPdfMetadata metadata);
+public static SKDocument CreateXps (SKWStream stream);
+public static SKDocument CreateXps (System.IO.Stream stream);
+public static SKDocument CreateXps (string path);
+public static SKDocument CreateXps (System.IO.Stream stream, float dpi);
+```
+
+
+#### Type Changed: SkiaSharp.SKDocumentPdfMetadata
+
+Added constructors:
+
+```csharp
+public SKDocumentPdfMetadata (int encodingQuality);
+public SKDocumentPdfMetadata (float rasterDpi);
+public SKDocumentPdfMetadata (float rasterDpi, int encodingQuality);
+```
+
+Added fields:
+
+```csharp
+public static SKDocumentPdfMetadata Default;
+public static const int DefaultEncodingQuality;
+public static const float DefaultRasterDpi;
+```
+
+Added properties:
+
+```csharp
+public int EncodingQuality { get; set; }
+public bool PdfA { get; set; }
+public float RasterDpi { get; set; }
 ```
 
 
@@ -576,6 +622,52 @@ public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRec
 ```
 
 
+#### Type Changed: SkiaSharp.SKPaint
+
+Modified methods:
+
+```diff
+ public bool GetFillPath (SKPath src, SKPath dst, float resScale--- = 1---)
+ public bool GetFillPath (SKPath src, SKPath dst, SKRect cullRect, float resScale--- = 1---)
+```
+
+Added methods:
+
+```csharp
+public bool ContainsGlyphs (byte[] text);
+public bool ContainsGlyphs (string text);
+public bool ContainsGlyphs (IntPtr text, int length);
+public int CountGlyphs (byte[] text);
+public int CountGlyphs (string text);
+public int CountGlyphs (IntPtr text, int length);
+public SKPath GetFillPath (SKPath src);
+public bool GetFillPath (SKPath src, SKPath dst);
+public SKPath GetFillPath (SKPath src, SKRect cullRect);
+public SKPath GetFillPath (SKPath src, float resScale);
+public bool GetFillPath (SKPath src, SKPath dst, SKRect cullRect);
+public SKPath GetFillPath (SKPath src, SKRect cullRect, float resScale);
+public float[] GetGlyphWidths (byte[] text);
+public float[] GetGlyphWidths (string text);
+public float[] GetGlyphWidths (byte[] text, out SKRect[] bounds);
+public float[] GetGlyphWidths (IntPtr text, int length);
+public float[] GetGlyphWidths (string text, out SKRect[] bounds);
+public float[] GetGlyphWidths (IntPtr text, int length, out SKRect[] bounds);
+public ushort[] GetGlyphs (byte[] text);
+public ushort[] GetGlyphs (string text);
+public ushort[] GetGlyphs (IntPtr text, int length);
+public float[] GetHorizontalTextIntercepts (byte[] text, float[] xpositions, float y, float upperBounds, float lowerBounds);
+public float[] GetHorizontalTextIntercepts (string text, float[] xpositions, float y, float upperBounds, float lowerBounds);
+public float[] GetHorizontalTextIntercepts (IntPtr text, int length, float[] xpositions, float y, float upperBounds, float lowerBounds);
+public float[] GetPositionedTextIntercepts (byte[] text, SKPoint[] positions, float upperBounds, float lowerBounds);
+public float[] GetPositionedTextIntercepts (string text, SKPoint[] positions, float upperBounds, float lowerBounds);
+public float[] GetPositionedTextIntercepts (IntPtr text, int length, SKPoint[] positions, float upperBounds, float lowerBounds);
+public float[] GetTextIntercepts (SKTextBlob text, float upperBounds, float lowerBounds);
+public float[] GetTextIntercepts (byte[] text, float x, float y, float upperBounds, float lowerBounds);
+public float[] GetTextIntercepts (string text, float x, float y, float upperBounds, float lowerBounds);
+public float[] GetTextIntercepts (IntPtr text, int length, float x, float y, float upperBounds, float lowerBounds);
+```
+
+
 #### Type Changed: SkiaSharp.SKPath
 
 Added properties:
@@ -592,6 +684,7 @@ Added methods:
 ```csharp
 public SKPoint[] GetLine ();
 public SKRect GetOvalBounds ();
+public SKRect GetRect ();
 public SKRect GetRect (out bool isClosed, out SKPathDirection direction);
 public SKRoundRect GetRoundRect ();
 ```
@@ -698,6 +791,46 @@ public IntPtr GetPixels (int x, int y);
 public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY, SKTransferFunctionBehavior behavior);
 public void Reset (SKImageInfo info, IntPtr addr, int rowBytes);
 public bool ScalePixels (SKPixmap destination, SKFilterQuality quality);
+```
+
+
+#### Type Changed: SkiaSharp.SKPoint
+
+Added properties:
+
+```csharp
+public float Length { get; }
+public float LengthSquared { get; }
+```
+
+Added methods:
+
+```csharp
+public static float Distance (SKPoint point, SKPoint other);
+public static float DistanceSquared (SKPoint point, SKPoint other);
+public static SKPoint Normalize (SKPoint point);
+public static SKPoint Reflect (SKPoint point, SKPoint normal);
+```
+
+
+#### Type Changed: SkiaSharp.SKPointI
+
+Added methods:
+
+```csharp
+public static float Distance (SKPointI point, SKPointI other);
+public static float DistanceSquared (SKPointI point, SKPointI other);
+public static SKPointI Normalize (SKPointI point);
+public static SKPointI Reflect (SKPointI point, SKPointI normal);
+```
+
+
+#### Type Changed: SkiaSharp.SKRectI
+
+Added method:
+
+```csharp
+public bool IntersectsWithInclusive (SKRectI rect);
 ```
 
 
@@ -1101,6 +1234,48 @@ public sealed delegate SKSurfaceReleaseDelegate : System.MulticastDelegate, Syst
 	public virtual System.IAsyncResult BeginInvoke (IntPtr address, object context, System.AsyncCallback callback, object object);
 	public virtual void EndInvoke (System.IAsyncResult result);
 	public virtual void Invoke (IntPtr address, object context);
+}
+```
+
+#### New Type: SkiaSharp.SKTextBlob
+
+```csharp
+public class SKTextBlob : SkiaSharp.SKObject, System.IDisposable {
+	// properties
+	public SKRect Bounds { get; }
+	public uint UniqueId { get; }
+	// methods
+	protected override void Dispose (bool disposing);
+}
+```
+
+#### New Type: SkiaSharp.SKTextBlobBuilder
+
+```csharp
+public class SKTextBlobBuilder : SkiaSharp.SKObject, System.IDisposable {
+	// constructors
+	public SKTextBlobBuilder ();
+	// methods
+	public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions);
+	public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, SKRect bounds);
+	public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, byte[] utf8Text, uint[] clusters);
+	public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, string text, uint[] clusters);
+	public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, byte[] utf8Text, uint[] clusters, SKRect bounds);
+	public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, string text, uint[] clusters, SKRect bounds);
+	public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions);
+	public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, SKRect bounds);
+	public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, byte[] utf8Text, uint[] clusters);
+	public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, string text, uint[] clusters);
+	public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, byte[] utf8Text, uint[] clusters, SKRect bounds);
+	public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, string text, uint[] clusters, SKRect bounds);
+	public void AddRun (SKPaint font, float x, float y, ushort[] glyphs);
+	public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, SKRect bounds);
+	public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, byte[] utf8Text, uint[] clusters);
+	public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, string text, uint[] clusters);
+	public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, byte[] utf8Text, uint[] clusters, SKRect bounds);
+	public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, string text, uint[] clusters, SKRect bounds);
+	public SKTextBlob Build ();
+	protected override void Dispose (bool disposing);
 }
 ```
 

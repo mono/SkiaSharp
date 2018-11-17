@@ -147,7 +147,10 @@ Modified methods:
 
 ```diff
  public SKDocument CreatePdf (SKWStream stream, float dpi--- = 72---)
+ public SKDocument CreatePdf (string path, float dpi--- = 72---)
  public SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata, float dpi--- = 72---)
+ public SKDocument CreateXps (SKWStream stream, float dpi--- = 72---)
+ public SKDocument CreateXps (string path, float dpi--- = 72---)
 ```
 
 
@@ -182,6 +185,16 @@ Removed methods:
 ```csharp
 protected virtual SKData OnEncode (SKPixmap pixmap);
 protected virtual bool OnUseEncodedData (IntPtr data, IntPtr length);
+```
+
+
+#### Type Changed: SkiaSharp.SKPaint
+
+Modified methods:
+
+```diff
+ public bool GetFillPath (SKPath src, SKPath dst, float resScale--- = 1---)
+ public bool GetFillPath (SKPath src, SKPath dst, SKRect cullRect, float resScale--- = 1---)
 ```
 
 
