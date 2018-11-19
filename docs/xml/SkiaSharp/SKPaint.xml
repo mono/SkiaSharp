@@ -466,10 +466,10 @@ The example above produces the following:
         <Parameter Name="text" Type="System.Byte[]" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <summary>Returns a value indicating whether or not all the characters corresponds to a non-zero glyph index.</summary>
+        <returns>Returns true if all the characters corresponds to a non-zero glyph index, otherwise false if any characters in text are not supported in the typeface.</returns>
+        <remarks>This method does not check to see if the text contains invalid glyph indices.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ContainsGlyphs">
@@ -488,10 +488,10 @@ The example above produces the following:
         <Parameter Name="text" Type="System.String" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text.</param>
+        <summary>Returns a value indicating whether or not all the characters corresponds to a non-zero glyph index.</summary>
+        <returns>Returns true if all the characters corresponds to a non-zero glyph index, otherwise false if any characters in text are not supported in the typeface.</returns>
+        <remarks>This method does not check to see if the text contains invalid glyph indices.</remarks>
       </Docs>
     </Member>
     <Member MemberName="ContainsGlyphs">
@@ -511,11 +511,11 @@ The example above produces the following:
         <Parameter Name="length" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="length">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text buffer encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <param name="length">The length of the text buffer.</param>
+        <summary>Returns a value indicating whether or not all the characters corresponds to a non-zero glyph index.</summary>
+        <returns>Returns true if all the characters corresponds to a non-zero glyph index, otherwise false if any characters in text are not supported in the typeface.</returns>
+        <remarks>This method does not check to see if the text contains invalid glyph indices.</remarks>
       </Docs>
     </Member>
     <Member MemberName="CountGlyphs">
@@ -534,10 +534,10 @@ The example above produces the following:
         <Parameter Name="text" Type="System.Byte[]" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <summary>Returns the number of glyphs in text.</summary>
+        <returns>Returns the number of glyphs in text.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CountGlyphs">
@@ -556,10 +556,10 @@ The example above produces the following:
         <Parameter Name="text" Type="System.String" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text.</param>
+        <summary>Returns the number of glyphs in text.</summary>
+        <returns>Returns the number of glyphs in text.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CountGlyphs">
@@ -579,11 +579,11 @@ The example above produces the following:
         <Parameter Name="length" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="length">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text buffer encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <param name="length">The length of the text buffer.</param>
+        <summary>Returns the number of glyphs in text.</summary>
+        <returns>Returns the number of glyphs in text.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="DeviceKerningEnabled">
@@ -738,10 +738,10 @@ The example above produces the following:
         <Parameter Name="src" Type="SkiaSharp.SKPath" />
       </Parameters>
       <Docs>
-        <param name="src">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="src">The source path.</param>
+        <summary>Creates a new path from the result of applying any and all effects to a source path.</summary>
+        <returns>Returns the resulting fill path, or null if the source path should be drawn with a hairline.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="GetFillPath">
@@ -761,11 +761,11 @@ The example above produces the following:
         <Parameter Name="dst" Type="SkiaSharp.SKPath" />
       </Parameters>
       <Docs>
-        <param name="src">To be added.</param>
-        <param name="dst">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="src">The input path.</param>
+        <param name="dst">The output path.</param>
+        <summary>Applies any and all effects to a source path, returning the result in the destination.</summary>
+        <returns>Returns true if the path should be filled, or false if it should be drawn with a hairline.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="GetFillPath">
@@ -785,11 +785,11 @@ The example above produces the following:
         <Parameter Name="cullRect" Type="SkiaSharp.SKRect" />
       </Parameters>
       <Docs>
-        <param name="src">To be added.</param>
-        <param name="cullRect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="src">The source path.</param>
+        <param name="cullRect">The limit to be passed to the path effect.</param>
+        <summary>Creates a new path from the result of applying any and all effects to a source path.</summary>
+        <returns>Returns the resulting fill path, or null if the source path should be drawn with a hairline.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="GetFillPath">
@@ -809,11 +809,11 @@ The example above produces the following:
         <Parameter Name="resScale" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="src">To be added.</param>
-        <param name="resScale">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="src">The source path.</param>
+        <param name="resScale">If &gt; 1, increase precision, else if (0 &lt; res &lt; 1) reduce precision in favor of speed/size.</param>
+        <summary>Creates a new path from the result of applying any and all effects to a source path.</summary>
+        <returns>Returns the resulting fill path, or null if the source path should be drawn with a hairline.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="GetFillPath">
@@ -834,12 +834,12 @@ The example above produces the following:
         <Parameter Name="cullRect" Type="SkiaSharp.SKRect" />
       </Parameters>
       <Docs>
-        <param name="src">To be added.</param>
-        <param name="dst">To be added.</param>
-        <param name="cullRect">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="src">The source path.</param>
+        <param name="dst">The output path.</param>
+        <param name="cullRect">The limit to be passed to the path effect.</param>
+        <summary>Applies any and all effects to a source path, returning the result in the destination.</summary>
+        <returns>Returns true if the path should be filled, or false if it should be drawn with a hairline.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="GetFillPath">
@@ -890,12 +890,12 @@ The example above produces the following:
         <Parameter Name="resScale" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="src">To be added.</param>
-        <param name="cullRect">To be added.</param>
-        <param name="resScale">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="src">The source path.</param>
+        <param name="cullRect">The limit to be passed to the path effect.</param>
+        <param name="resScale">If &gt; 1, increase precision, else if (0 &lt; res &lt; 1) reduce precision in favor of speed/size.</param>
+        <summary>Creates a new path from the result of applying any and all effects to a source path.</summary>
+        <returns>Returns the resulting fill path, or null if the source path should be drawn with a hairline.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="GetFillPath">
@@ -974,10 +974,10 @@ The example above produces the following:
         <Parameter Name="text" Type="System.Byte[]" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <summary>Converts text into glyph indices.</summary>
+        <returns>Returns the glyph indices.</returns>
+        <remarks>This method does not check the text for valid character codes or valid glyph indices.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetGlyphs">
@@ -996,10 +996,10 @@ The example above produces the following:
         <Parameter Name="text" Type="System.String" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text.</param>
+        <summary>Converts text into glyph indices.</summary>
+        <returns>Returns the glyph indices.</returns>
+        <remarks>This method does not check the text for valid character codes or valid glyph indices.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetGlyphs">
@@ -1019,11 +1019,11 @@ The example above produces the following:
         <Parameter Name="length" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="length">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text buffer encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <param name="length">The length of the text buffer.</param>
+        <summary>Converts text into glyph indices.</summary>
+        <returns>Returns the glyph indices.</returns>
+        <remarks>This method does not check the text for valid character codes or valid glyph indices.</remarks>
       </Docs>
     </Member>
     <Member MemberName="GetGlyphWidths">
@@ -1042,10 +1042,22 @@ The example above produces the following:
         <Parameter Name="text" Type="System.Byte[]" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <summary>Retrieves the advance for each glyph in the text.</summary>
+        <returns>Returns the text advances for each glyph.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+If <xref:SkiaSharp.SKPaint.IsVerticalText> is false, this method returns the
+horizontal advance. If <xref:SkiaSharp.SKPaint.IsVerticalText> is true, this
+method returns the vertical advance.
+
+Uses <xref:SkiaSharp.SKPaint.TextEncoding> to decode text,
+<xref:SkiaSharp.SKPaint.Typeface> to get the font metrics, and
+<xref:SkiaSharp.SKPaint.TextSize> to scale the widths.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetGlyphWidths">
@@ -1064,10 +1076,22 @@ The example above produces the following:
         <Parameter Name="text" Type="System.String" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text.</param>
+        <summary>Retrieves the advance for each glyph in the text.</summary>
+        <returns>Returns the text advances for each glyph.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+If <xref:SkiaSharp.SKPaint.IsVerticalText> is false, this method returns the
+horizontal advance. If <xref:SkiaSharp.SKPaint.IsVerticalText> is true, this
+method returns the vertical advance.
+
+Uses <xref:SkiaSharp.SKPaint.TextEncoding> to decode text,
+<xref:SkiaSharp.SKPaint.Typeface> to get the font metrics, and
+<xref:SkiaSharp.SKPaint.TextSize> to scale the widths.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetGlyphWidths">
@@ -1087,11 +1111,23 @@ The example above produces the following:
         <Parameter Name="bounds" Type="SkiaSharp.SKRect[]" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="bounds">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <param name="bounds">The bounds for each glyph relative to (0, 0).</param>
+        <summary>Retrieves the advance and bounds for each glyph in the text.</summary>
+        <returns>Returns the text advances for each glyph.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+If <xref:SkiaSharp.SKPaint.IsVerticalText> is false, this method returns the
+horizontal advance. If <xref:SkiaSharp.SKPaint.IsVerticalText> is true, this
+method returns the vertical advance.
+
+Uses <xref:SkiaSharp.SKPaint.TextEncoding> to decode text,
+<xref:SkiaSharp.SKPaint.Typeface> to get the font metrics, and
+<xref:SkiaSharp.SKPaint.TextSize> to scale the widths and bounds.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetGlyphWidths">
@@ -1111,11 +1147,23 @@ The example above produces the following:
         <Parameter Name="length" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="length">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text buffer encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <param name="length">The length of the text buffer.</param>
+        <summary>Retrieves the advance for each glyph in the text.</summary>
+        <returns>Returns the text advances for each glyph.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+If <xref:SkiaSharp.SKPaint.IsVerticalText> is false, this method returns the
+horizontal advance. If <xref:SkiaSharp.SKPaint.IsVerticalText> is true, this
+method returns the vertical advance.
+
+Uses <xref:SkiaSharp.SKPaint.TextEncoding> to decode text,
+<xref:SkiaSharp.SKPaint.Typeface> to get the font metrics, and
+<xref:SkiaSharp.SKPaint.TextSize> to scale the widths.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetGlyphWidths">
@@ -1135,11 +1183,23 @@ The example above produces the following:
         <Parameter Name="bounds" Type="SkiaSharp.SKRect[]" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="bounds">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text.</param>
+        <param name="bounds">The bounds for each glyph relative to (0, 0).</param>
+        <summary>Retrieves the advance and bounds for each glyph in the text.</summary>
+        <returns>Returns the text advances for each glyph.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+If <xref:SkiaSharp.SKPaint.IsVerticalText> is false, this method returns the
+horizontal advance. If <xref:SkiaSharp.SKPaint.IsVerticalText> is true, this
+method returns the vertical advance.
+
+Uses <xref:SkiaSharp.SKPaint.TextEncoding> to decode text,
+<xref:SkiaSharp.SKPaint.Typeface> to get the font metrics, and
+<xref:SkiaSharp.SKPaint.TextSize> to scale the widths and bounds.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetGlyphWidths">
@@ -1160,12 +1220,24 @@ The example above produces the following:
         <Parameter Name="bounds" Type="SkiaSharp.SKRect[]" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="length">To be added.</param>
-        <param name="bounds">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text buffer encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <param name="length">The length of the text buffer.</param>
+        <param name="bounds">The bounds for each glyph relative to (0, 0).</param>
+        <summary>Retrieves the advance and bounds for each glyph in the text.</summary>
+        <returns>Returns the text advances for each glyph.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+If <xref:SkiaSharp.SKPaint.IsVerticalText> is false, this method returns the
+horizontal advance. If <xref:SkiaSharp.SKPaint.IsVerticalText> is true, this
+method returns the vertical advance.
+
+Uses <xref:SkiaSharp.SKPaint.TextEncoding> to decode text,
+<xref:SkiaSharp.SKPaint.Typeface> to get the font metrics, and
+<xref:SkiaSharp.SKPaint.TextSize> to scale the widths and bounds.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetHorizontalTextIntercepts">
@@ -1188,14 +1260,23 @@ The example above produces the following:
         <Parameter Name="lowerBounds" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="xpositions">To be added.</param>
-        <param name="y">To be added.</param>
-        <param name="upperBounds">To be added.</param>
-        <param name="lowerBounds">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <param name="xpositions">The positions of each glyph in the horizontal direction.</param>
+        <param name="y">The positions of all the glyphs along the y-coordinate.</param>
+        <param name="upperBounds">The upper line parallel to the advance.</param>
+        <param name="lowerBounds">The lower line parallel to the advance.</param>
+        <summary>Calculate the intersections of two parallel lines and the glyphs.</summary>
+        <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Uses <xref:SkiaSharp.SKPaint.TextEncoding> to decode text,
+<xref:SkiaSharp.SKPaint.Typeface> to get the font metrics, and
+<xref:SkiaSharp.SKPaint.TextSize>, <xref:SkiaSharp.SKPaint.FakeBoldText>
+and <xref:SkiaSharp.SKPaint.PathEffect> to scale and modify the glyph paths.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetHorizontalTextIntercepts">
@@ -1218,14 +1299,23 @@ The example above produces the following:
         <Parameter Name="lowerBounds" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="xpositions">To be added.</param>
-        <param name="y">To be added.</param>
-        <param name="upperBounds">To be added.</param>
-        <param name="lowerBounds">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text.</param>
+        <param name="xpositions">The positions of each glyph in the horizontal direction.</param>
+        <param name="y">The positions of all the glyphs along the y-coordinate.</param>
+        <param name="upperBounds">The upper line parallel to the advance.</param>
+        <param name="lowerBounds">The lower line parallel to the advance.</param>
+        <summary>Calculate the intersections of two parallel lines and the glyphs.</summary>
+        <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Uses <xref:SkiaSharp.SKPaint.TextEncoding> to decode text,
+<xref:SkiaSharp.SKPaint.Typeface> to get the font metrics, and
+<xref:SkiaSharp.SKPaint.TextSize>, <xref:SkiaSharp.SKPaint.FakeBoldText>
+and <xref:SkiaSharp.SKPaint.PathEffect> to scale and modify the glyph paths.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetHorizontalTextIntercepts">
@@ -1249,15 +1339,24 @@ The example above produces the following:
         <Parameter Name="lowerBounds" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="length">To be added.</param>
-        <param name="xpositions">To be added.</param>
-        <param name="y">To be added.</param>
-        <param name="upperBounds">To be added.</param>
-        <param name="lowerBounds">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text buffer encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <param name="length">The length of the text buffer.</param>
+        <param name="xpositions">The positions of each glyph in the horizontal direction.</param>
+        <param name="y">The positions of all the glyphs along the y-coordinate.</param>
+        <param name="upperBounds">The upper line parallel to the advance.</param>
+        <param name="lowerBounds">The lower line parallel to the advance.</param>
+        <summary>Calculate the intersections of two parallel lines and the glyphs.</summary>
+        <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Uses <xref:SkiaSharp.SKPaint.TextEncoding> to decode text,
+<xref:SkiaSharp.SKPaint.Typeface> to get the font metrics, and
+<xref:SkiaSharp.SKPaint.TextSize>, <xref:SkiaSharp.SKPaint.FakeBoldText>
+and <xref:SkiaSharp.SKPaint.PathEffect> to scale and modify the glyph paths.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPositionedTextIntercepts">
@@ -1279,13 +1378,22 @@ The example above produces the following:
         <Parameter Name="lowerBounds" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="positions">To be added.</param>
-        <param name="upperBounds">To be added.</param>
-        <param name="lowerBounds">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <param name="positions">The positions of each glyph.</param>
+        <param name="upperBounds">The upper line parallel to the advance.</param>
+        <param name="lowerBounds">The lower line parallel to the advance.</param>
+        <summary>Calculate the intersections of two parallel lines and the glyphs.</summary>
+        <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Uses <xref:SkiaSharp.SKPaint.TextEncoding> to decode text,
+<xref:SkiaSharp.SKPaint.Typeface> to get the font metrics, and
+<xref:SkiaSharp.SKPaint.TextSize>, <xref:SkiaSharp.SKPaint.FakeBoldText>
+and <xref:SkiaSharp.SKPaint.PathEffect> to scale and modify the glyph paths.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPositionedTextIntercepts">
@@ -1307,13 +1415,22 @@ The example above produces the following:
         <Parameter Name="lowerBounds" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="positions">To be added.</param>
-        <param name="upperBounds">To be added.</param>
-        <param name="lowerBounds">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text.</param>
+        <param name="positions">The positions of each glyph.</param>
+        <param name="upperBounds">The upper line parallel to the advance.</param>
+        <param name="lowerBounds">The lower line parallel to the advance.</param>
+        <summary>Calculate the intersections of two parallel lines and the glyphs.</summary>
+        <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Uses <xref:SkiaSharp.SKPaint.TextEncoding> to decode text,
+<xref:SkiaSharp.SKPaint.Typeface> to get the font metrics, and
+<xref:SkiaSharp.SKPaint.TextSize>, <xref:SkiaSharp.SKPaint.FakeBoldText>
+and <xref:SkiaSharp.SKPaint.PathEffect> to scale and modify the glyph paths.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetPositionedTextIntercepts">
@@ -1336,14 +1453,23 @@ The example above produces the following:
         <Parameter Name="lowerBounds" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="length">To be added.</param>
-        <param name="positions">To be added.</param>
-        <param name="upperBounds">To be added.</param>
-        <param name="lowerBounds">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text buffer encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <param name="length">The length of the text buffer.</param>
+        <param name="positions">The positions of each glyph.</param>
+        <param name="upperBounds">The upper line parallel to the advance.</param>
+        <param name="lowerBounds">The lower line parallel to the advance.</param>
+        <summary>Calculate the intersections of two parallel lines and the glyphs.</summary>
+        <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Uses <xref:SkiaSharp.SKPaint.TextEncoding> to decode text,
+<xref:SkiaSharp.SKPaint.Typeface> to get the font metrics, and
+<xref:SkiaSharp.SKPaint.TextSize>, <xref:SkiaSharp.SKPaint.FakeBoldText>
+and <xref:SkiaSharp.SKPaint.PathEffect> to scale and modify the glyph paths.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetTextIntercepts">
@@ -1364,12 +1490,21 @@ The example above produces the following:
         <Parameter Name="lowerBounds" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="upperBounds">To be added.</param>
-        <param name="lowerBounds">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text blob.</param>
+        <param name="upperBounds">The upper line parallel to the advance.</param>
+        <param name="lowerBounds">The lower line parallel to the advance.</param>
+        <summary>Calculate the intersections of two parallel lines and the glyphs.</summary>
+        <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Uses <xref:SkiaSharp.SKPaint.TextEncoding> to decode text,
+<xref:SkiaSharp.SKPaint.Typeface> to get the font metrics, and
+<xref:SkiaSharp.SKPaint.TextSize>, <xref:SkiaSharp.SKPaint.FakeBoldText>
+and <xref:SkiaSharp.SKPaint.PathEffect> to scale and modify the glyph paths.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetTextIntercepts">
@@ -1392,14 +1527,23 @@ The example above produces the following:
         <Parameter Name="lowerBounds" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <param name="upperBounds">To be added.</param>
-        <param name="lowerBounds">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <param name="x">The x-coordinate of the origin to the text.</param>
+        <param name="y">The y-coordinate of the origin to the text.</param>
+        <param name="upperBounds">The upper line parallel to the advance.</param>
+        <param name="lowerBounds">The lower line parallel to the advance.</param>
+        <summary>Calculate the intersections of two parallel lines and the glyphs.</summary>
+        <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Uses <xref:SkiaSharp.SKPaint.TextEncoding> to decode text,
+<xref:SkiaSharp.SKPaint.Typeface> to get the font metrics, and
+<xref:SkiaSharp.SKPaint.TextSize>, <xref:SkiaSharp.SKPaint.FakeBoldText>
+and <xref:SkiaSharp.SKPaint.PathEffect> to scale and modify the glyph paths.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetTextIntercepts">
@@ -1422,14 +1566,23 @@ The example above produces the following:
         <Parameter Name="lowerBounds" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <param name="upperBounds">To be added.</param>
-        <param name="lowerBounds">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text.</param>
+        <param name="x">The x-coordinate of the origin to the text.</param>
+        <param name="y">The y-coordinate of the origin to the text.</param>
+        <param name="upperBounds">The upper line parallel to the advance.</param>
+        <param name="lowerBounds">The lower line parallel to the advance.</param>
+        <summary>Calculate the intersections of two parallel lines and the glyphs.</summary>
+        <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Uses <xref:SkiaSharp.SKPaint.TextEncoding> to decode text,
+<xref:SkiaSharp.SKPaint.Typeface> to get the font metrics, and
+<xref:SkiaSharp.SKPaint.TextSize>, <xref:SkiaSharp.SKPaint.FakeBoldText>
+and <xref:SkiaSharp.SKPaint.PathEffect> to scale and modify the glyph paths.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetTextIntercepts">
@@ -1453,15 +1606,24 @@ The example above produces the following:
         <Parameter Name="lowerBounds" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="text">To be added.</param>
-        <param name="length">To be added.</param>
-        <param name="x">To be added.</param>
-        <param name="y">To be added.</param>
-        <param name="upperBounds">To be added.</param>
-        <param name="lowerBounds">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="text">The text buffer encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
+        <param name="length">The length of the text buffer.</param>
+        <param name="x">The x-coordinate of the origin to the text.</param>
+        <param name="y">The y-coordinate of the origin to the text.</param>
+        <param name="upperBounds">The upper line parallel to the advance.</param>
+        <param name="lowerBounds">The lower line parallel to the advance.</param>
+        <summary>Calculate the intersections of two parallel lines and the glyphs.</summary>
+        <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Uses <xref:SkiaSharp.SKPaint.TextEncoding> to decode text,
+<xref:SkiaSharp.SKPaint.Typeface> to get the font metrics, and
+<xref:SkiaSharp.SKPaint.TextSize>, <xref:SkiaSharp.SKPaint.FakeBoldText>
+and <xref:SkiaSharp.SKPaint.PathEffect> to scale and modify the glyph paths.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="GetTextPath">
@@ -1485,7 +1647,7 @@ The example above produces the following:
         <Parameter Name="points" Type="SkiaSharp.SKPoint[]" />
       </Parameters>
       <Docs>
-        <param name="text">The text to generate an outline for.</param>
+        <param name="text">The text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
         <param name="points">The position to use for each glyph in the text.</param>
         <summary>Returns the path (outline) for the specified text.</summary>
         <returns>Returns the <see cref="T:SkiaSharp.SKPath" /> containing the outline of the text.</returns>
@@ -1542,7 +1704,7 @@ The example above produces the following:
         <Parameter Name="y" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="text">The text to generate an outline for.</param>
+        <param name="text">The text encoded using the encoding specified in <see cref="P:SkiaSharp.SKPaint.TextEncoding" /> format.</param>
         <param name="x">The x-coordinate of the first glyph in the text.</param>
         <param name="y">The y-coordinate of the first glyph in the text.</param>
         <summary>Returns the path (outline) for the specified text.</summary>

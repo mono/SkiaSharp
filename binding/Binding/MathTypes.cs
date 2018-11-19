@@ -146,6 +146,10 @@ namespace SkiaSharp
 
 		public bool IsEmpty => this == Empty;
 
+		public int Length => (int)Math.Sqrt (x * x + y * y);
+
+		public int LengthSquared => x * x + y * y;
+
 		public void Offset (SKPointI p)
 		{
 			x += p.X;

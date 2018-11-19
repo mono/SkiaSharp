@@ -32,9 +32,9 @@
         <Parameter Name="encodingQuality" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="encodingQuality">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="encodingQuality">The encoding quality.</param>
+        <summary>Creates a new instance of <see cref="T:SkiaSharp.SKDocumentPdfMetadata" /> with the specified encoding quality.</summary>
+        <remarks>The encoding quality is between 0 and 100. A quality of 101 indicates lossless encoding.</remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -50,9 +50,9 @@
         <Parameter Name="rasterDpi" Type="System.Single" />
       </Parameters>
       <Docs>
-        <param name="rasterDpi">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rasterDpi">The DPI (pixels-per-inch) at which features without native PDF support will be rasterized.</param>
+        <summary>Creates a new instance of <see cref="T:SkiaSharp.SKDocumentPdfMetadata" /> with the specified raster DPI.</summary>
+        <remarks>PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.</remarks>
       </Docs>
     </Member>
     <Member MemberName=".ctor">
@@ -69,10 +69,10 @@
         <Parameter Name="encodingQuality" Type="System.Int32" />
       </Parameters>
       <Docs>
-        <param name="rasterDpi">To be added.</param>
-        <param name="encodingQuality">To be added.</param>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <param name="rasterDpi">The DPI (pixels-per-inch) at which features without native PDF support will be rasterized.</param>
+        <param name="encodingQuality">The encoding quality.</param>
+        <summary>Creates a new instance of <see cref="T:SkiaSharp.SKDocumentPdfMetadata" /> with the specified raster DPI and encoding quality.</summary>
+        <remarks>PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm. The encoding quality is between 0 and 100. A quality of 101 indicates lossless encoding.</remarks>
       </Docs>
     </Member>
     <Member MemberName="Author">
@@ -154,8 +154,8 @@
         <ReturnType>SkiaSharp.SKDocumentPdfMetadata</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Gets a new instance of <see cref="T:SkiaSharp.SKDocumentPdfMetadata" /> with the values set to the defaults.</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="DefaultEncodingQuality">
@@ -172,8 +172,8 @@
       </ReturnValue>
       <MemberValue>101</MemberValue>
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Gets the default encoding quality (101% or lossless).</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="DefaultRasterDpi">
@@ -190,8 +190,8 @@
       </ReturnValue>
       <MemberValue>72</MemberValue>
       <Docs>
-        <summary>To be added.</summary>
-        <remarks>To be added.</remarks>
+        <summary>Gets the default DPI (72.0 DPI).</summary>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="EncodingQuality">
@@ -207,9 +207,18 @@
         <ReturnType>System.Int32</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the encoding quality.</summary>
+        <value></value>
+        <remarks>
+      <format type="text/markdown"><![CDATA[
+## Remarks
+
+Encoding quality controls the trade-off between size and quality. By default
+this is set to 101 percent, which corresponds to lossless encoding. If this
+value is set to a value <= 100, and the image is opaque, it will be encoded
+(using JPEG) with that quality setting.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Keywords">
@@ -269,9 +278,17 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets a value indicating whether or not make the document PDF/A-2b conformant.</summary>
+        <value></value>
+        <remarks>
+      <format type="text/markdown"><![CDATA[
+## Remarks
+
+If true, include XMP metadata, a document UUID, and sRGB output intent
+information. This adds length to the document and makes it non-reproducable,
+but are necessary features for PDF/A-2b conformance.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Producer">
@@ -309,9 +326,20 @@
         <ReturnType>System.Single</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets or sets the DPI (pixels-per-inch) at which features without native PDF support will be rasterized.</summary>
+        <value></value>
+        <remarks>
+      <format type="text/markdown"><![CDATA[
+## Remarks
+
+PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.
+
+A larger DPI would create a PDF that reflects the original intent with better
+fidelity, but it can make for larger PDF files too, which would use more
+memory while rendering, and it would be slower to be processed or sent online
+or to printer.
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="Subject">
