@@ -26,6 +26,14 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void DoesNotCrashWhenDecodingInvalidPath()
+		{
+			var path = Path.Combine(PathToImages, "file-does-not-exist.png");
+
+			Assert.Null(SKBitmap.Decode(path));
+		}
+
+		[SkippableFact]
 		public void CopyIndex8ToPlatformPreservesData()
 		{
 			var path = Path.Combine(PathToImages, "index8.png");

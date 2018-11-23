@@ -471,7 +471,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 			}
 			using (var codec = SKCodec.Create (stream)) {
-				return codec.Info;
+				return codec?.Info ?? SKImageInfo.Empty;
 			}
 		}
 
@@ -481,7 +481,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (data));
 			}
 			using (var codec = SKCodec.Create (data)) {
-				return codec.Info;
+				return codec?.Info ?? SKImageInfo.Empty;
 			}
 		}
 
@@ -490,7 +490,10 @@ namespace SkiaSharp
 			if (filename == null) {
 				throw new ArgumentNullException (nameof (filename));
 			}
-			using (var stream = OpenStream (filename)) {
+			using (var stream = SKFileStream.OpenStream (filename)) {
+				if (stream == null) {
+					return SKImageInfo.Empty;
+				}
 				return DecodeBounds (stream);
 			}
 		}
@@ -608,7 +611,10 @@ namespace SkiaSharp
 			if (filename == null) {
 				throw new ArgumentNullException (nameof (filename));
 			}
-			using (var stream = OpenStream (filename)) {
+			using (var stream = SKFileStream.OpenStream (filename)) {
+				if (stream == null) {
+					return null;
+				}
 				return Decode (stream);
 			}
 		}
@@ -618,7 +624,10 @@ namespace SkiaSharp
 			if (filename == null) {
 				throw new ArgumentNullException (nameof (filename));
 			}
-			using (var stream = OpenStream (filename)) {
+			using (var stream = SKFileStream.OpenStream (filename)) {
+				if (stream == null) {
+					return null;
+				}
 				return Decode (stream, bitmapInfo);
 			}
 		}
@@ -782,16 +791,6 @@ namespace SkiaSharp
 				return new SKManagedStream (stream, true);
 			} else {
 				return new SKFrontBufferedManagedStream (stream, SKCodec.MinBufferedBytesNeeded, true);
-			}
-		}
-
-		internal static SKStream OpenStream (string path)
-		{
-			if (!SKFileStream.IsPathSupported (path)) {
-				// due to a bug (https://github.com/mono/SkiaSharp/issues/390)
-				return WrapManagedStream (File.OpenRead (path));
-			} else {
-				return new SKFileStream (path);
 			}
 		}
 

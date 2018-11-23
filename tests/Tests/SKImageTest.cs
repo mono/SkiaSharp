@@ -32,6 +32,14 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void DoesNotCrashWhenDecodingInvalidPath()
+		{
+			var path = Path.Combine(PathToImages, "file-does-not-exist.png");
+
+			Assert.Null(SKImage.FromEncodedData(path));
+		}
+
+		[SkippableFact]
 		public void DecodingJpegImagePreservesColorSpace()
 		{
 			var path = Path.Combine(PathToImages, "baboon.jpg");

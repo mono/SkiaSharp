@@ -262,12 +262,16 @@ namespace SkiaSharp
 		{
 			if (filename == null)
 				throw new ArgumentNullException (nameof (filename));
-			using (var stream = SKBitmap.OpenStream (filename))
-			using (var codec = SKCodec.Create (stream))
-			using (var bitmap = SKBitmap.Decode (codec, codec.Info)) {
-				if (bitmap == null)
+			using (var stream = SKFileStream.OpenStream (filename)) {
+				if (stream == null) {
 					return null;
-				return FromBitmap (bitmap);
+				}
+				using (var codec = SKCodec.Create (stream))
+				using (var bitmap = SKBitmap.Decode (codec, codec.Info)) {
+					if (bitmap == null)
+						return null;
+					return FromBitmap (bitmap);
+				}
 			}
 		}
 
