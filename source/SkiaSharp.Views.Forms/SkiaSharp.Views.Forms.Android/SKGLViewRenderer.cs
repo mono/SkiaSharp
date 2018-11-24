@@ -34,5 +34,15 @@ namespace SkiaSharp.Views.Forms
 				? Rendermode.Continuously
 				: Rendermode.WhenDirty;
 		}
+
+		protected override SKNativeView CreateNativeControl()
+		{
+			var view = base.CreateNativeControl();
+
+			// Force the opacity to false for consistency with the other platforms
+			view.SetOpaque(false);
+
+			return view;
+		}
 	}
 }
