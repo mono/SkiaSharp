@@ -117,6 +117,18 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+
+		[SkippableFact]
+		public void CanReadNonASCIIFile()
+		{
+			var fonts = SKFontManager.Default;
+
+			using (var typeface = fonts.CreateTypeface(Path.Combine(PathToFonts, "上田雅美.ttf")))
+			{
+				Assert.Equal("Roboto2", typeface.FamilyName);
+			}
+		}
+
 		[SkippableFact]
 		public void CanReadData()
 		{

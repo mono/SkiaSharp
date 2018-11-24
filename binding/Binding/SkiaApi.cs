@@ -901,7 +901,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_data_t sk_data_new_subset (sk_data_t src, size_t offset, size_t length);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_data_t sk_data_new_from_file ([MarshalAs (UnmanagedType.LPStr)] string path);
+		public extern static sk_data_t sk_data_new_from_file (byte[] utf8path);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_data_t sk_data_new_from_stream (sk_stream_t stream, size_t length);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1013,7 +1013,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_typeface_t sk_typeface_create_from_name_with_font_style ([MarshalAs (UnmanagedType.LPStr)] string familyName, sk_fontstyle_t style);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_typeface_t sk_typeface_create_from_file ([MarshalAs (UnmanagedType.LPStr)] string path, int index);
+		public extern static sk_typeface_t sk_typeface_create_from_file (byte[] utf8path, int index);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_typeface_t sk_typeface_create_from_stream (sk_stream_assetstream_t stream, int index);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1069,7 +1069,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_typeface_t sk_fontmgr_create_from_stream (sk_fontmgr_t fontmgr, sk_stream_assetstream_t stream, int index);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_typeface_t sk_fontmgr_create_from_file (sk_fontmgr_t fontmgr, [MarshalAs (UnmanagedType.LPStr)] string path, int index);
+		public extern static sk_typeface_t sk_fontmgr_create_from_file (sk_fontmgr_t fontmgr, byte[] utf8path, int index);
 
 		// font style
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1156,7 +1156,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static voidptr_t sk_stream_get_memory_base (sk_stream_t cstream);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_stream_filestream_t sk_filestream_new ([MarshalAs (UnmanagedType.LPStr)] string path);
+		public extern static sk_stream_filestream_t sk_filestream_new (byte[] utf8path);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_stream_memorystream_t sk_memorystream_new ();
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1171,6 +1171,9 @@ namespace SkiaSharp
 		public extern static void sk_memorystream_set_memory (sk_stream_memorystream_t s, voidptr_t data, size_t length, [MarshalAs (UnmanagedType.I1)] bool copyData);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_memorystream_set_memory (sk_stream_memorystream_t s, byte[] data, size_t length, [MarshalAs (UnmanagedType.I1)] bool copyData);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		public extern static bool sk_filestream_is_valid (sk_stream_filestream_t cstream);
 
 		// managed streams
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1192,7 +1195,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_dynamicmemorywstream_destroy (sk_wstream_dynamicmemorystream_t cstream);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_wstream_filestream_t sk_filewstream_new ([MarshalAs (UnmanagedType.LPStr)] string path);
+		public extern static sk_wstream_filestream_t sk_filewstream_new (byte[] utf8path);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_wstream_dynamicmemorystream_t sk_dynamicmemorywstream_new ();
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1255,6 +1258,9 @@ namespace SkiaSharp
 		public extern static bool sk_wstream_write_stream (sk_wstream_t cstream, sk_stream_t input, size_t length);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_wstream_get_size_of_packed_uint (size_t value);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		public extern static bool sk_filewstream_is_valid (sk_wstream_filestream_t cstream);
 
 		// document
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

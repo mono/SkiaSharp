@@ -82,13 +82,8 @@ namespace SkiaSharp
 			if (string.IsNullOrEmpty (filename))
 				throw new ArgumentException ("The filename cannot be empty.", nameof (filename));
 
-			using (var stream = SKFileStream.OpenStream (filename)) {
-				if (stream == null) {
-					return null;
-				} else {
-					return Create (stream);
-				}
-			}
+			var utf8path = StringUtilities.GetEncodedText (filename, SKEncoding.Utf8);
+			return GetObject<SKData> (SkiaApi.sk_data_new_from_file(utf8path));
 		}
 
 		public static SKData Create (Stream stream)

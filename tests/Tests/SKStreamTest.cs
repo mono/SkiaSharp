@@ -15,17 +15,9 @@ namespace SkiaSharp.Tests
 
 			using (var stream = new SKFileStream(path))
 			{
-				if (IsWindows)
-				{
-					Assert.Equal(0, stream.Length);
-
-					throw new SkipException("Windows does not support non-ASCII characters: https://github.com/mono/SkiaSharp/issues/390");
-				}
-				else
-				{
-					Assert.NotNull(stream);
-					Assert.True(stream.Length > 0);
-				}
+				Assert.NotNull(stream);
+				Assert.True(stream.Length > 0);
+				Assert.True(stream.IsValid);
 			}
 		}
 
@@ -47,14 +39,8 @@ namespace SkiaSharp.Tests
 
 			using (var stream = SKFileWStream.OpenStream(path))
 			{
-				if (IsWindows)
-				{
-					Assert.IsType<SKManagedWStream>(stream);
-				}
-				else
-				{
-					Assert.IsType<SKFileWStream>(stream);
-				}
+				Assert.IsType<SKFileWStream>(stream);
+				Assert.True(((SKFileWStream)stream).IsValid);
 			}
 		}
 
@@ -76,15 +62,22 @@ namespace SkiaSharp.Tests
 
 			using (var stream = SKFileStream.OpenStream(path))
 			{
-				if (IsWindows)
-				{
-					Assert.IsType<SKManagedStream>(stream);
-				}
-				else
-				{
-					Assert.IsType<SKFileStream>(stream);
-				}
+				Assert.IsType<SKFileStream>(stream);
+				Assert.True(((SKFileStream)stream).IsValid);
 			}
+		}
+
+		[SkippableFact]
+		public void FileStreamForMissingFile()
+		{
+			var path = Path.Combine(PathToImages, "missing-image.png");
+
+			Assert.Null(SKFileStream.OpenStream(path));
+
+			var stream = new SKFileStream(path);
+
+			Assert.Equal(0, stream.Length);
+			Assert.False(stream.IsValid);
 		}
 	}
 }

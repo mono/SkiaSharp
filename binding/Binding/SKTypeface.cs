@@ -86,13 +86,9 @@ namespace SkiaSharp
 		{
 			if (path == null)
 				throw new ArgumentNullException (nameof (path));
-			using (var stream = SKFileStream.OpenStream (path)) {
-				if (stream == null) {
-					return null;
-				} else {
-					return FromStream (stream, index);
-				}
-			}
+
+			var utf8path = StringUtilities.GetEncodedText (path, SKEncoding.Utf8);
+			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_file(utf8path, index));
 		}
 
 		public static SKTypeface FromStream (Stream stream, int index = 0)
