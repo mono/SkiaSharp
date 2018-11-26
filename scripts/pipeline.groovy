@@ -29,9 +29,10 @@ import groovy.transform.Field
     ]
 ]
 
-properties([
-    compressBuildLog()
-])
+// compression is incompatible with JEP-210 right now
+//properties([
+//    compressBuildLog()
+//])
 
 // ============================================================================
 // Stages
