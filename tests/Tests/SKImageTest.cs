@@ -32,6 +32,63 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void ImmutableBitmapsAreNotCopied()
+		{
+			// this is a really weird test as it is a mutable bitmap that is marked as immutable
+
+			var bitmap = new SKBitmap(100, 100);
+			bitmap.Erase(SKColors.Red);
+			bitmap.SetImmutable();
+
+			var image = SKImage.FromBitmap(bitmap);
+			Assert.Equal(SKColors.Red, image.PeekPixels().GetPixelColor(50, 50));
+
+			bitmap.Erase(SKColors.Blue);
+			Assert.Equal(SKColors.Blue, image.PeekPixels().GetPixelColor(50, 50));
+		}
+
+		[SkippableFact]
+		public void MutableBitmapsAreCopied()
+		{
+			var bitmap = new SKBitmap(100, 100);
+			bitmap.Erase(SKColors.Red);
+
+			var image = SKImage.FromBitmap(bitmap);
+			Assert.Equal(SKColors.Red, image.PeekPixels().GetPixelColor(50, 50));
+
+			bitmap.Erase(SKColors.Blue);
+			Assert.Equal(SKColors.Red, image.PeekPixels().GetPixelColor(50, 50));
+		}
+
+		[SkippableFact]
+		public void ReleaseImagePixelsWasInvoked()
+		{
+			bool released = false;
+
+			var onRelease = new SKImageRasterReleaseDelegate((addr, ctx) => {
+				Marshal.FreeCoTaskMem(addr);
+				released = true;
+				Assert.Equal("RELEASING!", ctx);
+			});
+
+			var info = new SKImageInfo(1, 1);
+			var pixels = Marshal.AllocCoTaskMem(info.BytesSize);
+
+			using (var pixmap = new SKPixmap(info, pixels))
+			using (var image = SKImage.FromPixels(pixmap, onRelease, "RELEASING!"))
+			{
+				Assert.False(image.IsTextureBacked);
+				using (var raster = image.ToRasterImage())
+				{
+					Assert.Equal(image, raster);
+				}
+				Assert.False(released, "The SKImageRasterReleaseDelegate was called too soon.");
+			}
+
+			Assert.True(released, "The SKImageRasterReleaseDelegate was not called.");
+		}
+
+		[SkippableFact]
 		public void DoesNotCrashWhenDecodingInvalidPath()
 		{
 			var path = Path.Combine(PathToImages, "file-does-not-exist.png");

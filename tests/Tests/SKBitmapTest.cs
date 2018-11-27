@@ -194,32 +194,6 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void ReleaseImagePixelsWasInvoked()
-		{
-			bool released = false;
-
-			var onRelease = new SKImageRasterReleaseDelegate((addr, ctx) => {
-				Marshal.FreeCoTaskMem(addr);
-				released = true;
-				Assert.Equal("RELEASING!", ctx);
-			});
-
-			var info = new SKImageInfo(1, 1);
-			var pixels = Marshal.AllocCoTaskMem(info.BytesSize);
-
-			using (var pixmap = new SKPixmap(info, pixels))
-			using (var image = SKImage.FromPixels(pixmap, onRelease, "RELEASING!")) {
-				Assert.False(image.IsTextureBacked);
-				using (var raster = image.ToRasterImage()) {
-					Assert.Equal(image, raster);
-				}
-				Assert.False(released, "The SKImageRasterReleaseDelegate was called too soon.");
-			}
-
-			Assert.True(released, "The SKImageRasterReleaseDelegate was not called.");
-		}
-
-		[SkippableFact]
 		public void ReleaseBitmapPixelsWithNullDelegate()
 		{
 			var info = new SKImageInfo(1, 1);
