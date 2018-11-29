@@ -242,7 +242,11 @@ Obsoleted methods:
 Added methods:
 
 ```csharp
+public static SKCodec Create (System.IO.Stream stream);
+public static SKCodec Create (string filename);
 public static SKCodec Create (SKStream stream, out SKCodecResult result);
+public static SKCodec Create (System.IO.Stream stream, out SKCodecResult result);
+public static SKCodec Create (string filename, out SKCodecResult result);
 public bool GetFrameInfo (int index, out SKCodecFrameInfo frameInfo);
 ```
 
@@ -408,6 +412,24 @@ Added properties:
 public int EncodingQuality { get; set; }
 public bool PdfA { get; set; }
 public float RasterDpi { get; set; }
+```
+
+
+#### Type Changed: SkiaSharp.SKFileStream
+
+Added property:
+
+```csharp
+public bool IsValid { get; }
+```
+
+
+#### Type Changed: SkiaSharp.SKFileWStream
+
+Added property:
+
+```csharp
+public bool IsValid { get; }
 ```
 
 
@@ -814,6 +836,13 @@ public static SKPoint Reflect (SKPoint point, SKPoint normal);
 
 
 #### Type Changed: SkiaSharp.SKPointI
+
+Added properties:
+
+```csharp
+public int Length { get; }
+public int LengthSquared { get; }
+```
 
 Added methods:
 
