@@ -744,12 +744,22 @@ namespace SkiaSharp
 			return SkiaApi.sk_bitmap_peek_pixels (Handle, pixmap.Handle);
 		}
 
-		[Obsolete]
-		public SKBitmap Resize (SKImageInfo info, SKBitmapResizeMethod method)
+		[Obsolete ("Use Resize(SKImageInfo, SKFilterQuality) instead.")]
+		public SKBitmap Resize (SKImageInfo info, SKBitmapResizeMethod method) =>
+			Resize (info, method.ToFilterQuality ());
+
+		[Obsolete ("Use ScalePixels(SKBitmap, SKFilterQuality) instead.")]
+		public bool Resize (SKBitmap dst, SKBitmapResizeMethod method) =>
+			ScalePixels (dst, method.ToFilterQuality ());
+
+		[Obsolete ("Use ScalePixels(SKBitmap, SKFilterQuality) instead.")]
+		public static bool Resize (SKBitmap dst, SKBitmap src, SKBitmapResizeMethod method) =>
+			src.ScalePixels (dst, method.ToFilterQuality ());
+
+		public SKBitmap Resize (SKImageInfo info, SKFilterQuality quality)
 		{
 			var dst = new SKBitmap (info);
-			var result = Resize (dst, this, method);
-			if (result) {
+			if (ScalePixels (dst, quality)) {
 				return dst;
 			} else {
 				dst.Dispose ();
@@ -757,18 +767,25 @@ namespace SkiaSharp
 			}
 		}
 
-		[Obsolete]
-		public bool Resize (SKBitmap dst, SKBitmapResizeMethod method)
+		public bool ScalePixels (SKBitmap destination, SKFilterQuality quality)
 		{
-			return Resize (dst, this, method);
+			if (destination == null) {
+				throw new ArgumentNullException (nameof (destination));
+			}
+
+			using (var dstPix = destination.PeekPixels ()) {
+				return ScalePixels (dstPix, quality);
+			}
 		}
 
-		[Obsolete]
-		public static bool Resize (SKBitmap dst, SKBitmap src, SKBitmapResizeMethod method)
+		public bool ScalePixels (SKPixmap destination, SKFilterQuality quality)
 		{
-			using (var srcPix = src.PeekPixels ())
-			using (var dstPix = dst.PeekPixels ()) {
-				return SKPixmap.Resize (dstPix, srcPix, method);// && dst.InstallPixels (dstPix); 
+			if (destination == null) {
+				throw new ArgumentNullException (nameof (destination));
+			}
+
+			using (var srcPix = PeekPixels ()) {
+				return srcPix.ScalePixels (destination, quality);
 			}
 		}
 

@@ -263,6 +263,34 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[SkippableFact]
+		public void CanScalePixels()
+		{
+			var srcInfo = new SKImageInfo(200, 200);
+			var dstInfo = new SKImageInfo(100, 100);
+
+			var srcSurface = SKSurface.Create(srcInfo);
+			var dstBmp = new SKBitmap(dstInfo);
+
+			using (var paint = new SKPaint { Color = SKColors.Green })
+			{
+				srcSurface.Canvas.Clear(SKColors.Blue);
+				srcSurface.Canvas.DrawRect(new SKRect(0, 0, 100, 200), paint);
+			}
+
+			var srcImage = srcSurface.Snapshot();
+			var srcPix = srcImage.PeekPixels();
+			var dstPix = dstBmp.PeekPixels();
+
+			Assert.Equal(SKColors.Green, srcPix.GetPixelColor(75, 75));
+			Assert.Equal(SKColors.Blue, srcPix.GetPixelColor(175, 175));
+
+			Assert.True(srcImage.ScalePixels(dstPix, SKFilterQuality.High));
+
+			Assert.Equal(SKColors.Green, dstBmp.GetPixel(25, 25));
+			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
+		}
+
 		[Obsolete]
 		[SkippableFact]
 		public void EncodeWithSimpleSerializer()

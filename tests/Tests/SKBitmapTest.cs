@@ -267,7 +267,7 @@ namespace SkiaSharp.Tests
 
 		[SkippableFact]
 		[Obsolete]
-		public void BitmapResizes()
+		public void BitmapResizesObsolete()
 		{
 			var srcInfo = new SKImageInfo(200, 200);
 			var dstInfo = new SKImageInfo(100, 100);
@@ -285,6 +285,55 @@ namespace SkiaSharp.Tests
 
 			var dstBmp = srcBmp.Resize(dstInfo, SKBitmapResizeMethod.Mitchell);
 			Assert.NotNull(dstBmp);
+
+			Assert.Equal(SKColors.Green, dstBmp.GetPixel(25, 25));
+			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
+		}
+
+		[SkippableFact]
+		public void BitmapResizes()
+		{
+			var srcInfo = new SKImageInfo(200, 200);
+			var dstInfo = new SKImageInfo(100, 100);
+
+			var srcBmp = new SKBitmap(srcInfo);
+
+			using (var canvas = new SKCanvas(srcBmp))
+			using (var paint = new SKPaint { Color = SKColors.Green }) {
+				canvas.Clear(SKColors.Blue);
+				canvas.DrawRect(new SKRect(0, 0, 100, 200), paint);
+			}
+
+			Assert.Equal(SKColors.Green, srcBmp.GetPixel(75, 75));
+			Assert.Equal(SKColors.Blue, srcBmp.GetPixel(175, 175));
+
+			var dstBmp = srcBmp.Resize(dstInfo, SKFilterQuality.High);
+			Assert.NotNull(dstBmp);
+
+			Assert.Equal(SKColors.Green, dstBmp.GetPixel(25, 25));
+			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
+		}
+
+		[SkippableFact]
+		public void CanScalePixels()
+		{
+			var srcInfo = new SKImageInfo(200, 200);
+			var dstInfo = new SKImageInfo(100, 100);
+
+			var srcBmp = new SKBitmap(srcInfo);
+			var dstBmp = new SKBitmap(dstInfo);
+
+			using (var canvas = new SKCanvas(srcBmp))
+			using (var paint = new SKPaint { Color = SKColors.Green })
+			{
+				canvas.Clear(SKColors.Blue);
+				canvas.DrawRect(new SKRect(0, 0, 100, 200), paint);
+			}
+
+			Assert.Equal(SKColors.Green, srcBmp.GetPixel(75, 75));
+			Assert.Equal(SKColors.Blue, srcBmp.GetPixel(175, 175));
+
+			Assert.True(srcBmp.ScalePixels(dstBmp, SKFilterQuality.High));
 
 			Assert.Equal(SKColors.Green, dstBmp.GetPixel(25, 25));
 			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
@@ -339,6 +388,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact(Skip = "This test takes a long time (~3mins), so ignore this most of the time.")]
+		[Obsolete]
 		public static void ImageScalingMultipleThreadsTest()
 		{
 			const int numThreads = 100;
@@ -365,6 +415,7 @@ namespace SkiaSharp.Tests
 			Console.WriteLine($"Test completed for {numThreads} tasks, {numIterationsPerThread} each.");
 		}
 
+		[Obsolete]
 		private static byte[] ComputeThumbnail(string fileName)
 		{
 			using (var ms = new MemoryStream())

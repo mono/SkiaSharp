@@ -7,6 +7,34 @@ namespace SkiaSharp.Tests
 	public class SKPixmapTest : SKTest
 	{
 		[SkippableFact]
+		public void CanScalePixels()
+		{
+			var srcInfo = new SKImageInfo(200, 200);
+			var dstInfo = new SKImageInfo(100, 100);
+
+			var srcBmp = new SKBitmap(srcInfo);
+			var dstBmp = new SKBitmap(dstInfo);
+
+			using (var canvas = new SKCanvas(srcBmp))
+			using (var paint = new SKPaint { Color = SKColors.Green })
+			{
+				canvas.Clear(SKColors.Blue);
+				canvas.DrawRect(new SKRect(0, 0, 100, 200), paint);
+			}
+
+			Assert.Equal(SKColors.Green, srcBmp.GetPixel(75, 75));
+			Assert.Equal(SKColors.Blue, srcBmp.GetPixel(175, 175));
+
+			var srcPix = srcBmp.PeekPixels();
+			var dstPix = dstBmp.PeekPixels();
+
+			Assert.True(srcPix.ScalePixels(dstPix, SKFilterQuality.High));
+
+			Assert.Equal(SKColors.Green, dstBmp.GetPixel(25, 25));
+			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
+		}
+
+		[SkippableFact]
 		public void ReadPixelSucceeds()
 		{
 			var info = new SKImageInfo(10, 10);
