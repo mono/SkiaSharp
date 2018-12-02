@@ -2072,7 +2072,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute FrameworkAlternate="skiasharp-1.68.0">
-          <AttributeName>System.Obsolete</AttributeName>
+          <AttributeName>System.Obsolete("Use ScalePixels(SKBitmap, SKFilterQuality) instead.")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -2105,7 +2105,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute FrameworkAlternate="skiasharp-1.68.0">
-          <AttributeName>System.Obsolete</AttributeName>
+          <AttributeName>System.Obsolete("Use Resize(SKImageInfo, SKFilterQuality) instead.")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -2119,6 +2119,30 @@
         <param name="info">The image information of the desired bitmap.</param>
         <param name="method">The resize method.</param>
         <summary>Resizes the current bitmap using the specified resize method.</summary>
+        <returns>Returns the resized bitmap if the resize operation could be performed, otherwise <see langword="null" />.</returns>
+        <remarks></remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="Resize">
+      <MemberSignature Language="C#" Value="public SkiaSharp.SKBitmap Resize (SkiaSharp.SKImageInfo info, SkiaSharp.SKFilterQuality quality);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance class SkiaSharp.SKBitmap Resize(valuetype SkiaSharp.SKImageInfo info, valuetype SkiaSharp.SKFilterQuality quality) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKBitmap.Resize(SkiaSharp.SKImageInfo,SkiaSharp.SKFilterQuality)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>SkiaSharp.SKBitmap</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="info" Type="SkiaSharp.SKImageInfo" />
+        <Parameter Name="quality" Type="SkiaSharp.SKFilterQuality" />
+      </Parameters>
+      <Docs>
+        <param name="info">The image information of the desired bitmap.</param>
+        <param name="quality">The level of quality to use when scaling the pixels.</param>
+        <summary>Resizes the current bitmap using the specified quality filter.</summary>
         <returns>Returns the resized bitmap if the resize operation could be performed, otherwise <see langword="null" />.</returns>
         <remarks></remarks>
       </Docs>
@@ -2138,7 +2162,7 @@
       </AssemblyInfo>
       <Attributes>
         <Attribute FrameworkAlternate="skiasharp-1.68.0">
-          <AttributeName>System.Obsolete</AttributeName>
+          <AttributeName>System.Obsolete("Use ScalePixels(SKBitmap, SKFilterQuality) instead.")</AttributeName>
         </Attribute>
       </Attributes>
       <ReturnValue>
@@ -2178,6 +2202,106 @@
         <summary>The number of bytes per row.</summary>
         <value></value>
         <remarks>The same as <see cref="P:SkiaSharp.SKImageInfo.RowBytes" />.</remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ScalePixels">
+      <MemberSignature Language="C#" Value="public bool ScalePixels (SkiaSharp.SKBitmap destination, SkiaSharp.SKFilterQuality quality);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool ScalePixels(class SkiaSharp.SKBitmap destination, valuetype SkiaSharp.SKFilterQuality quality) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKBitmap.ScalePixels(SkiaSharp.SKBitmap,SkiaSharp.SKFilterQuality)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="destination" Type="SkiaSharp.SKBitmap" />
+        <Parameter Name="quality" Type="SkiaSharp.SKFilterQuality" />
+      </Parameters>
+      <Docs>
+        <param name="destination">The bitmap to recieve the scaled and converted pixels.</param>
+        <param name="quality">The level of quality to use when scaling the pixels.</param>
+        <summary>Copies this pixmap to the destination, scaling the pixels to fit the destination size and converting the pixels to match the color type and alpha type.</summary>
+        <returns>Returns <see langword="true" /> on success, or <see langword="false" /> if there was an error.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Pixels are copied only if pixel conversion is possible.
+
+If the color type is <xref:SkiaSharp.SKColorType.Gray8>, or
+<xref:SkiaSharp.SKColorType.Alpha8>, the destination color type must match.
+If the color type is <xref:SkiaSharp.SKColorType.Gray8>, destination
+colorspace must also match.
+
+If the alpha type is <xref:SkiaSharp.SKAlphaType.Opaque>, the destination
+alpha type must match. 
+
+If the colorspace is `null`, the destination colorspace must also be `null`.
+
+Filter Quality:
+
+ - <xref:SkiaSharp.SKFilterQuality.None> is fastest, typically implemented
+   with nearest neighbor filter.
+ - <xref:SkiaSharp.SKFilterQuality.Low> is typically implemented with bilerp
+   filter.
+ - <xref:SkiaSharp.SKFilterQuality.Medium> is typically implemented with
+   bilerp filter, and mipmap when size is reduced.
+ - <xref:SkiaSharp.SKFilterQuality.High> is slowest, typically implemented
+   with the bicubic filter.]]></format>
+        </remarks>
+      </Docs>
+    </Member>
+    <Member MemberName="ScalePixels">
+      <MemberSignature Language="C#" Value="public bool ScalePixels (SkiaSharp.SKPixmap destination, SkiaSharp.SKFilterQuality quality);" />
+      <MemberSignature Language="ILAsm" Value=".method public hidebysig instance bool ScalePixels(class SkiaSharp.SKPixmap destination, valuetype SkiaSharp.SKFilterQuality quality) cil managed" />
+      <MemberSignature Language="DocId" Value="M:SkiaSharp.SKBitmap.ScalePixels(SkiaSharp.SKPixmap,SkiaSharp.SKFilterQuality)" />
+      <MemberType>Method</MemberType>
+      <AssemblyInfo>
+        <AssemblyName>SkiaSharp</AssemblyName>
+        <AssemblyVersion>1.68.0.0</AssemblyVersion>
+      </AssemblyInfo>
+      <ReturnValue>
+        <ReturnType>System.Boolean</ReturnType>
+      </ReturnValue>
+      <Parameters>
+        <Parameter Name="destination" Type="SkiaSharp.SKPixmap" />
+        <Parameter Name="quality" Type="SkiaSharp.SKFilterQuality" />
+      </Parameters>
+      <Docs>
+        <param name="destination">The pixmap to recieve the scaled and converted pixels.</param>
+        <param name="quality">The level of quality to use when scaling the pixels.</param>
+        <summary>Copies this pixmap to the destination, scaling the pixels to fit the destination size and converting the pixels to match the color type and alpha type.</summary>
+        <returns>Returns <see langword="true" /> on success, or <see langword="false" /> if there was an error.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+Pixels are copied only if pixel conversion is possible.
+
+If the color type is <xref:SkiaSharp.SKColorType.Gray8>, or
+<xref:SkiaSharp.SKColorType.Alpha8>, the destination color type must match.
+If the color type is <xref:SkiaSharp.SKColorType.Gray8>, destination
+colorspace must also match.
+
+If the alpha type is <xref:SkiaSharp.SKAlphaType.Opaque>, the destination
+alpha type must match. 
+
+If the colorspace is `null`, the destination colorspace must also be `null`.
+
+Filter Quality:
+
+ - <xref:SkiaSharp.SKFilterQuality.None> is fastest, typically implemented
+   with nearest neighbor filter.
+ - <xref:SkiaSharp.SKFilterQuality.Low> is typically implemented with bilerp
+   filter.
+ - <xref:SkiaSharp.SKFilterQuality.Medium> is typically implemented with
+   bilerp filter, and mipmap when size is reduced.
+ - <xref:SkiaSharp.SKFilterQuality.High> is slowest, typically implemented
+   with the bicubic filter.]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="SetColorTable">

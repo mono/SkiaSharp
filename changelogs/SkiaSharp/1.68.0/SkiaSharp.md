@@ -161,11 +161,11 @@ Obsoleted methods:
  public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable);
  [Obsolete ("The Index8 color type and color table is no longer supported. Use InstallPixels(SKImageInfo, IntPtr, int, SKBitmapReleaseDelegate, object) instead.")]
  public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable, SKBitmapReleaseDelegate releaseProc, object context);
- [Obsolete ()]
+ [Obsolete ("Use ScalePixels(SKBitmap, SKFilterQuality) instead.")]
  public bool Resize (SKBitmap dst, SKBitmapResizeMethod method);
- [Obsolete ()]
+ [Obsolete ("Use Resize(SKImageInfo, SKFilterQuality) instead.")]
  public SKBitmap Resize (SKImageInfo info, SKBitmapResizeMethod method);
- [Obsolete ()]
+ [Obsolete ("Use ScalePixels(SKBitmap, SKFilterQuality) instead.")]
  public static bool Resize (SKBitmap dst, SKBitmap src, SKBitmapResizeMethod method);
  [Obsolete ("The Index8 color type and color table is no longer supported.")]
  public void SetColorTable (SKColorTable ct);
@@ -178,6 +178,9 @@ Added methods:
 ```csharp
 public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKBitmapReleaseDelegate releaseProc);
 public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKBitmapReleaseDelegate releaseProc, object context);
+public SKBitmap Resize (SKImageInfo info, SKFilterQuality quality);
+public bool ScalePixels (SKBitmap destination, SKFilterQuality quality);
+public bool ScalePixels (SKPixmap destination, SKFilterQuality quality);
 public bool TryAllocPixels (SKImageInfo info);
 public bool TryAllocPixels (SKImageInfo info, SKBitmapAllocFlags flags);
 public bool TryAllocPixels (SKImageInfo info, int rowBytes);
