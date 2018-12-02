@@ -560,7 +560,7 @@ namespace SkiaSharp
 	}
 
 	public struct SKDocumentPdfMetadata {
-		public const float DefaultRasterDpi = 72.0f;
+		public const float DefaultRasterDpi = SKDocument.DefaultRasterDpi;
 		public const int DefaultEncodingQuality = 101;
 
 		public static readonly SKDocumentPdfMetadata Default;

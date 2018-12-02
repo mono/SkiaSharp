@@ -5,7 +5,7 @@ namespace SkiaSharp
 {
 	public class SKDocument : SKObject
 	{
-		public const float DefaultRasterDpi = SKDocumentPdfMetadata.DefaultRasterDpi;
+		public const float DefaultRasterDpi = 72.0f;
 
 		[Preserve]
 		internal SKDocument (IntPtr handle, bool owns)
