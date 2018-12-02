@@ -157,6 +157,20 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void TotalMatrixIsCorrect()
+		{
+			using (var bitmap = new SKBitmap(new SKImageInfo(100, 100)))
+			using (var canvas = new SKCanvas(bitmap))
+			{
+				canvas.Translate(10, 20);
+				Assert.Equal(SKMatrix.MakeTranslation(10, 20).Values, canvas.TotalMatrix.Values);
+
+				canvas.Translate(10, 20);
+				Assert.Equal(SKMatrix.MakeTranslation(20, 40).Values, canvas.TotalMatrix.Values);
+			}
+		}
+
+		[SkippableFact]
 		public void SvgCanvasSavesFile()
 		{
 			var stream = new MemoryStream();

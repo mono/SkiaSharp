@@ -146,6 +146,48 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void MatrixCanInvert()
+		{
+			var m = SKMatrix.MakeTranslation(10, 20);
+			Assert.True(m.TryInvert(out var inverse));
+			Assert.Equal(SKMatrix.MakeTranslation(-10, -20).Values, inverse.Values);
+		}
+
+		[SkippableFact]
+		public void MatrixCanConcat()
+		{
+			var a = SKMatrix.MakeTranslation(10, 20);
+			var b = SKMatrix.MakeTranslation(5, 7);
+			var c = new SKMatrix();
+
+			SKMatrix.Concat(ref c, ref a, ref b);
+			
+			Assert.Equal(SKMatrix.MakeTranslation(15, 27).Values, c.Values);
+		}
+
+		[SkippableFact]
+		public void MatrixCanPreConcat()
+		{
+			var a = SKMatrix.MakeTranslation(10, 20);
+			var b = SKMatrix.MakeTranslation(5, 7);
+
+			SKMatrix.PreConcat(ref a, ref b);
+			
+			Assert.Equal(SKMatrix.MakeTranslation(15, 27).Values, a.Values);
+		}
+
+		[SkippableFact]
+		public void MatrixCanPostConcat()
+		{
+			var a = SKMatrix.MakeTranslation(10, 20);
+			var b = SKMatrix.MakeTranslation(5, 7);
+
+			SKMatrix.PostConcat(ref a, ref b);
+			
+			Assert.Equal(SKMatrix.MakeTranslation(15, 27).Values, a.Values);
+		}
+
+		[SkippableFact]
 		public void MatrixMapsPoints()
 		{
 			var source = new[] {

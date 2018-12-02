@@ -1510,7 +1510,8 @@ namespace SkiaSharp
 
 		// matrix
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static int sk_matrix_try_invert (ref SKMatrix matrix, out SKMatrix result);
+		[return: MarshalAs (UnmanagedType.I1)]
+		public extern static bool sk_matrix_try_invert (ref SKMatrix matrix, out SKMatrix result);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_matrix_concat (ref SKMatrix target, ref SKMatrix first, ref SKMatrix second);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

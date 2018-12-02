@@ -346,7 +346,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 
 		public bool TryInvert (out SKMatrix inverse)
 		{
-			return SkiaApi.sk_matrix_try_invert (ref this, out inverse) != 0;
+			return SkiaApi.sk_matrix_try_invert (ref this, out inverse);
 		}
 
 		public static void Concat (ref SKMatrix target, SKMatrix first, SKMatrix second)
