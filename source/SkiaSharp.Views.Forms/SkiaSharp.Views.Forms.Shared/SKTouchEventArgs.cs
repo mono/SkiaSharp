@@ -10,7 +10,7 @@ namespace SkiaSharp.Views.Forms
 		{
 		}
 
-		public SKTouchEventArgs(long id, SKTouchAction type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SKPoint location, bool inContact)
+		public SKTouchEventArgs(long id, SKTouchAction type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SKPoint location, bool inContact, int wheelDelta = 0)
 		{
 			Id = id;
 			ActionType = type;
@@ -18,6 +18,7 @@ namespace SkiaSharp.Views.Forms
 			MouseButton = mouseButton;
 			Location = location;
 			InContact = inContact;
+			WheelDelta = wheelDelta;
 		}
 
 		public bool Handled { get; set; }
@@ -34,9 +35,11 @@ namespace SkiaSharp.Views.Forms
 
 		public bool InContact { get; private set; }
 
+		public int WheelDelta { get; private set; }
+
 		public override string ToString()
 		{
-			return $"{{ActionType={ActionType}, DeviceType={DeviceType}, Handled={Handled}, Id={Id}, InContact={InContact}, Location={Location}, MouseButton={MouseButton}}}";
+			return $"{{ActionType={ActionType}, DeviceType={DeviceType}, Handled={Handled}, Id={Id}, InContact={InContact}, Location={Location}, MouseButton={MouseButton}, WheelDelta={WheelDelta}}}";
 		}
 	}
 
@@ -48,6 +51,7 @@ namespace SkiaSharp.Views.Forms
 		Released,
 		Cancelled,
 		Exited,
+		WheelChanged,
 	}
 
 	public enum SKTouchDeviceType
