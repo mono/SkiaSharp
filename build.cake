@@ -403,41 +403,41 @@ Task("nuget-validation")
     .IsDependentOn("nuget")
     .Does(()=>
 {
-	// setup validation options
-	var options = new Xamarin.Nuget.Validator.NugetValidatorOptions()
-	{
-		Copyright = "© Microsoft Corporation. All rights reserved.",
-		Author = "Microsoft",
-		Owner = "Microsoft",
-		NeedsProjectUrl = true,
-		NeedsLicenseUrl = true,
-		ValidateRequireLicenseAcceptance = true,
-		ValidPackageNamespace = new [] { "Xamarin", "Mono", "SkiaSharp", "HarfBuzzSharp", "mdoc" },
-	};
+    // setup validation options
+    var options = new Xamarin.Nuget.Validator.NugetValidatorOptions()
+    {
+        Copyright = "© Microsoft Corporation. All rights reserved.",
+        Author = "Microsoft",
+        Owner = "Microsoft",
+        NeedsProjectUrl = true,
+        NeedsLicenseUrl = true,
+        ValidateRequireLicenseAcceptance = true,
+        ValidPackageNamespace = new [] { "Xamarin", "Mono", "SkiaSharp", "HarfBuzzSharp", "mdoc" },
+    };
 
-	var nupkgFiles = GetFiles ("./output/*.nupkg");
+    var nupkgFiles = GetFiles ("./output/*.nupkg");
 
-	Information ("Found ({0}) Nuget's to validate", nupkgFiles.Count ());
+    Information ("Found ({0}) Nuget's to validate", nupkgFiles.Count ());
 
-	foreach (var nupkgFile in nupkgFiles)
-	{
-		Information ("Verifiying Metadata of {0}", nupkgFile.GetFilename ());
+    foreach (var nupkgFile in nupkgFiles)
+    {
+        Information ("Verifiying Metadata of {0}", nupkgFile.GetFilename ());
 
-		var result = Xamarin.Nuget.Validator.NugetValidator.Validate(MakeAbsolute(nupkgFile).FullPath, options);
+        var result = Xamarin.Nuget.Validator.NugetValidator.Validate(MakeAbsolute(nupkgFile).FullPath, options);
 
-		if (!result.Success)
-		{
-			Information ("Metadata validation failed for: {0} \n\n", nupkgFile.GetFilename ());
-			Information (string.Join("\n    ", result.ErrorMessages));
-			throw new Exception ($"Invalid Metadata for: {nupkgFile.GetFilename ()}");
+        if (!result.Success)
+        {
+            Information ("Metadata validation failed for: {0} \n\n", nupkgFile.GetFilename ());
+            Information (string.Join("\n    ", result.ErrorMessages));
+            throw new Exception ($"Invalid Metadata for: {nupkgFile.GetFilename ()}");
 
-		}
-		else
-		{
-			Information ("Metadata validation passed for: {0}", nupkgFile.GetFilename ());
-		}
-			
-	}
+        }
+        else
+        {
+            Information ("Metadata validation passed for: {0}", nupkgFile.GetFilename ());
+        }
+            
+    }
 
 });
 ////////////////////////////////////////////////////////////////////////////////////////////////////
