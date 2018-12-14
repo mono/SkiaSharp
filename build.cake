@@ -7,6 +7,7 @@
 #tool "nuget:?package=xunit.runner.console&version=2.4.0"
 #tool "nuget:?package=mdoc&version=5.7.3.1"
 #tool "nuget:?package=vswhere&version=2.5.2"
+#addin nuget:?package=Xamarin.Nuget.Validator&version=1.1.1
 
 using System.Linq;
 using System.Net.Http;
@@ -398,6 +399,40 @@ Task ("nuget-only")
     }
 });
 
+Task ("nuget-validation")
+    .IsDependentOn ("nuget")
+    .Does(() =>
+{
+    // setup validation options
+    var options = new Xamarin.Nuget.Validator.NugetValidatorOptions {
+        Copyright = "© Microsoft Corporation. All rights reserved.",
+        Author = "Microsoft",
+        Owner = "Microsoft",
+        NeedsProjectUrl = true,
+        NeedsLicenseUrl = true,
+        ValidateRequireLicenseAcceptance = true,
+        ValidPackageNamespace = new [] { "SkiaSharp", "HarfBuzzSharp" },
+    };
+
+    var nupkgFiles = GetFiles ("./output/*.nupkg");
+
+    Information ("Found ({0}) Nuget's to validate", nupkgFiles.Count ());
+
+    foreach (var nupkgFile in nupkgFiles) {
+        Information ("Verifiying Metadata of {0}", nupkgFile.GetFilename ());
+
+        var result = Xamarin.Nuget.Validator.NugetValidator.Validate(MakeAbsolute(nupkgFile).FullPath, options);
+        if (!result.Success) {
+            Information ("Metadata validation failed for: {0} \n\n", nupkgFile.GetFilename ());
+            Information (string.Join("\n    ", result.ErrorMessages));
+            throw new Exception ($"Invalid Metadata for: {nupkgFile.GetFilename ()}");
+
+        } else {
+            Information ("Metadata validation passed for: {0}", nupkgFile.GetFilename ());
+        }
+    }
+});
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // DOCS - creating the xml, markdown and other documentation
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -471,7 +506,7 @@ Task ("Nothing");
 Task ("CI")
     .IsDependentOn ("externals")
     .IsDependentOn ("libs")
-    .IsDependentOn ("nuget")
+    .IsDependentOn ("nuget-validation")
     .IsDependentOn ("tests")
     .IsDependentOn ("samples");
 
