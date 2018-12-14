@@ -401,7 +401,7 @@ Task ("nuget-only")
 
 Task("nuget-validation")
     .IsDependentOn("nuget")
-	.Does(()=>
+    .Does(()=>
 {
 	//setup validation options
 	var options = new Xamarin.Nuget.Validator.NugetValidatorOptions()
