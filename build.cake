@@ -399,47 +399,40 @@ Task ("nuget-only")
     }
 });
 
-Task("nuget-validation")
-    .IsDependentOn("nuget")
-    .Does(()=>
+Task ("nuget-validation")
+    .IsDependentOn ("nuget")
+    .Does(() =>
 {
     // setup validation options
-    var options = new Xamarin.Nuget.Validator.NugetValidatorOptions()
-    {
+    var options = new Xamarin.Nuget.Validator.NugetValidatorOptions {
         Copyright = "© Microsoft Corporation. All rights reserved.",
         Author = "Microsoft",
         Owner = "Microsoft",
         NeedsProjectUrl = true,
         NeedsLicenseUrl = true,
         ValidateRequireLicenseAcceptance = true,
-        ValidPackageNamespace = new [] { "Xamarin", "Mono", "SkiaSharp", "HarfBuzzSharp", "mdoc" },
+        ValidPackageNamespace = new [] { "SkiaSharp", "HarfBuzzSharp" },
     };
 
     var nupkgFiles = GetFiles ("./output/*.nupkg");
 
     Information ("Found ({0}) Nuget's to validate", nupkgFiles.Count ());
 
-    foreach (var nupkgFile in nupkgFiles)
-    {
+    foreach (var nupkgFile in nupkgFiles) {
         Information ("Verifiying Metadata of {0}", nupkgFile.GetFilename ());
 
         var result = Xamarin.Nuget.Validator.NugetValidator.Validate(MakeAbsolute(nupkgFile).FullPath, options);
-
-        if (!result.Success)
-        {
+        if (!result.Success) {
             Information ("Metadata validation failed for: {0} \n\n", nupkgFile.GetFilename ());
             Information (string.Join("\n    ", result.ErrorMessages));
             throw new Exception ($"Invalid Metadata for: {nupkgFile.GetFilename ()}");
 
-        }
-        else
-        {
+        } else {
             Information ("Metadata validation passed for: {0}", nupkgFile.GetFilename ());
         }
-            
     }
-
 });
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // DOCS - creating the xml, markdown and other documentation
 ////////////////////////////////////////////////////////////////////////////////////////////////////
