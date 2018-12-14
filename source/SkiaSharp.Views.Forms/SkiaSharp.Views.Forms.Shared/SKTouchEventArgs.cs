@@ -6,11 +6,16 @@ namespace SkiaSharp.Views.Forms
 	public class SKTouchEventArgs : EventArgs
 	{
 		public SKTouchEventArgs(long id, SKTouchAction type, SKPoint location, bool inContact)
-			: this(id, type, SKMouseButton.Left, SKTouchDeviceType.Touch, location, inContact)
+			: this(id, type, SKMouseButton.Left, SKTouchDeviceType.Touch, location, inContact, 0)
 		{
 		}
 
-		public SKTouchEventArgs(long id, SKTouchAction type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SKPoint location, bool inContact, int wheelDelta = 0)
+		public SKTouchEventArgs(long id, SKTouchAction type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SKPoint location, bool inContact)
+			: this(id, type, mouseButton, deviceType, location, inContact, 0)
+		{
+		}
+
+		public SKTouchEventArgs(long id, SKTouchAction type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SKPoint location, bool inContact, int wheelDelta)
 		{
 			Id = id;
 			ActionType = type;
