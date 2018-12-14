@@ -403,7 +403,7 @@ Task("nuget-validation")
     .IsDependentOn("nuget")
     .Does(()=>
 {
-	//setup validation options
+	// setup validation options
 	var options = new Xamarin.Nuget.Validator.NugetValidatorOptions()
 	{
 		Copyright = "© Microsoft Corporation. All rights reserved.",
