@@ -81,6 +81,50 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void CanDrawText()
+		{
+			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
+			using (var canvas = new SKCanvas(bmp))
+			using (var paint = new SKPaint())
+			{
+				canvas.DrawText("text", 150, 175, paint);
+			}
+		}
+
+		[SkippableFact]
+		public void CanDrawEmptyText()
+		{
+			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
+			using (var canvas = new SKCanvas(bmp))
+			using (var paint = new SKPaint())
+			{
+				canvas.DrawText("", 150, 175, paint);
+			}
+		}
+
+		[SkippableFact]
+		public void CanDrawNullPointerZeroLengthText()
+		{
+			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
+			using (var canvas = new SKCanvas(bmp))
+			using (var paint = new SKPaint())
+			{
+				canvas.DrawText(IntPtr.Zero, 0, 150, 175, paint);
+			}
+		}
+
+		[SkippableFact]
+		public void ThrowsOnDrawNullPointerText()
+		{
+			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
+			using (var canvas = new SKCanvas(bmp))
+			using (var paint = new SKPaint())
+			{
+				Assert.Throws<ArgumentNullException>(() => canvas.DrawText(IntPtr.Zero, 123, 150, 175, paint));
+			}
+		}
+
+		[SkippableFact]
 		public void CanvasCanClipRoundRect()
 		{
 			using (var canvas = new SKNWayCanvas(100, 100))

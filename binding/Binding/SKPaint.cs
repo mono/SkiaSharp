@@ -221,9 +221,12 @@ namespace SkiaSharp
 			}
 		}
 
+		public float MeasureText (IntPtr buffer, int length) =>
+			MeasureText (buffer, (IntPtr)length);
+
 		public float MeasureText (IntPtr buffer, IntPtr length)
 		{
-			if (buffer == IntPtr.Zero)
+			if (buffer == IntPtr.Zero && length != IntPtr.Zero)
 				throw new ArgumentNullException (nameof (buffer));
 
 			return SkiaApi.sk_paint_measure_text (Handle, buffer, length, IntPtr.Zero);
@@ -250,9 +253,12 @@ namespace SkiaSharp
 			}
 		}
 
+		public float MeasureText (IntPtr buffer, int length, ref SKRect bounds) =>
+			MeasureText (buffer, (IntPtr)length, ref bounds);
+
 		public float MeasureText (IntPtr buffer, IntPtr length, ref SKRect bounds)
 		{
-			if (buffer == IntPtr.Zero)
+			if (buffer == IntPtr.Zero && length != IntPtr.Zero)
 				throw new ArgumentNullException (nameof (buffer));
 
 			return SkiaApi.sk_paint_measure_text (Handle, buffer, length, ref bounds);
@@ -261,10 +267,10 @@ namespace SkiaSharp
 		// BreakText
 
 		public long BreakText (string text, float maxWidth) =>
-			BreakText (text, maxWidth, out var measuredWidth);
+			BreakText (text, maxWidth, out _, out _);
 
 		public long BreakText (string text, float maxWidth, out float measuredWidth) =>
-			BreakText (text, maxWidth, out measuredWidth, out var measuredText);
+			BreakText (text, maxWidth, out measuredWidth, out _);
 
 		public long BreakText (string text, float maxWidth, out float measuredWidth, out string measuredText)
 		{
@@ -286,7 +292,7 @@ namespace SkiaSharp
 		}
 
 		public long BreakText (byte[] text, float maxWidth) =>
-			BreakText (text, maxWidth, out var measuredWidth);
+			BreakText (text, maxWidth, out _);
 
 		public long BreakText (byte[] text, float maxWidth, out float measuredWidth)
 		{
@@ -300,12 +306,18 @@ namespace SkiaSharp
 			}
 		}
 
+		public long BreakText (IntPtr buffer, int length, float maxWidth) =>
+			BreakText (buffer, (IntPtr)length, maxWidth, out _);
+
 		public long BreakText (IntPtr buffer, IntPtr length, float maxWidth) =>
-			BreakText (buffer, length, maxWidth, out var measuredWidth);
+			BreakText (buffer, length, maxWidth, out _);
+
+		public long BreakText (IntPtr buffer, int length, float maxWidth, out float measuredWidth) =>
+			BreakText (buffer, (IntPtr)length, maxWidth, out measuredWidth);
 
 		public long BreakText (IntPtr buffer, IntPtr length, float maxWidth, out float measuredWidth)
 		{
-			if (buffer == IntPtr.Zero)
+			if (buffer == IntPtr.Zero && length != IntPtr.Zero)
 				throw new ArgumentNullException (nameof (buffer));
 
 			return (long)SkiaApi.sk_paint_break_text (Handle, buffer, length, maxWidth, out measuredWidth);
@@ -334,9 +346,12 @@ namespace SkiaSharp
 			}
 		}
 
+		public SKPath GetTextPath (IntPtr buffer, int length, float x, float y) =>
+			GetTextPath (buffer, (IntPtr)length, x, y);
+
 		public SKPath GetTextPath (IntPtr buffer, IntPtr length, float x, float y)
 		{
-			if (buffer == IntPtr.Zero)
+			if (buffer == IntPtr.Zero && length != IntPtr.Zero)
 				throw new ArgumentNullException (nameof (buffer));
 
 			return GetObject<SKPath> (SkiaApi.sk_paint_get_text_path (Handle, buffer, length, x, y));
@@ -363,9 +378,12 @@ namespace SkiaSharp
 			}
 		}
 
+		public SKPath GetTextPath (IntPtr buffer, int length, SKPoint[] points) =>
+			GetTextPath (buffer, (IntPtr)length, points);
+
 		public SKPath GetTextPath (IntPtr buffer, IntPtr length, SKPoint[] points)
 		{
-			if (buffer == IntPtr.Zero)
+			if (buffer == IntPtr.Zero && length != IntPtr.Zero)
 				throw new ArgumentNullException (nameof (buffer));
 
 			return GetObject<SKPath> (SkiaApi.sk_paint_get_pos_text_path (Handle, buffer, length, points));
@@ -447,17 +465,20 @@ namespace SkiaSharp
 
 			unsafe {
 				fixed (byte* p = text) {
-					return CountGlyphs ((IntPtr)p, text.Length);
+					return CountGlyphs ((IntPtr)p, (IntPtr)text.Length);
 				}
 			}
 		}
 
-		public int CountGlyphs (IntPtr text, int length)
+		public int CountGlyphs (IntPtr text, int length) =>
+			CountGlyphs (text, (IntPtr)length);
+
+		public int CountGlyphs (IntPtr text, IntPtr length)
 		{
-			if (text == IntPtr.Zero)
+			if (text == IntPtr.Zero && length != IntPtr.Zero)
 				throw new ArgumentNullException (nameof (text));
 
-			return SkiaApi.sk_paint_count_text (Handle, text, (IntPtr)length);
+			return SkiaApi.sk_paint_count_text (Handle, text, length);
 		}
 
 		// GetGlyphs
@@ -478,18 +499,21 @@ namespace SkiaSharp
 
 			unsafe {
 				fixed (byte* p = text) {
-					return GetGlyphs ((IntPtr)p, text.Length);
+					return GetGlyphs ((IntPtr)p, (IntPtr)text.Length);
 				}
 			}
 		}
 
-		public ushort[] GetGlyphs (IntPtr text, int length)
+		public ushort[] GetGlyphs (IntPtr text, int length) =>
+			GetGlyphs (text, (IntPtr)length);
+
+		public ushort[] GetGlyphs (IntPtr text, IntPtr length)
 		{
-			if (text == IntPtr.Zero)
+			if (text == IntPtr.Zero && length != IntPtr.Zero)
 				throw new ArgumentNullException (nameof (text));
 
 			unsafe {
-				var n = SkiaApi.sk_paint_text_to_glyphs (Handle, text, (IntPtr)length, (ushort*)IntPtr.Zero);
+				var n = SkiaApi.sk_paint_text_to_glyphs (Handle, text, length, (ushort*)IntPtr.Zero);
 
 				if (n <= 0) {
 					return new ushort[0];
@@ -497,7 +521,7 @@ namespace SkiaSharp
 
 				var glyphs = new ushort[n];
 				fixed (ushort* gp = glyphs) {
-					SkiaApi.sk_paint_text_to_glyphs (Handle, text, (IntPtr)length, gp);
+					SkiaApi.sk_paint_text_to_glyphs (Handle, text, length, gp);
 				}
 				return glyphs;
 			}
@@ -521,17 +545,20 @@ namespace SkiaSharp
 
 			unsafe {
 				fixed (byte* p = text) {
-					return ContainsGlyphs ((IntPtr)p, text.Length);
+					return ContainsGlyphs ((IntPtr)p, (IntPtr)text.Length);
 				}
 			}
 		}
 
-		public bool ContainsGlyphs (IntPtr text, int length)
+		public bool ContainsGlyphs (IntPtr text, int length) =>
+			ContainsGlyphs (text, (IntPtr)length);
+
+		public bool ContainsGlyphs (IntPtr text, IntPtr length)
 		{
-			if (text == IntPtr.Zero)
+			if (text == IntPtr.Zero && length != IntPtr.Zero)
 				throw new ArgumentNullException (nameof (text));
 
-			return SkiaApi.sk_paint_contains_text (Handle, text, (IntPtr)length);
+			return SkiaApi.sk_paint_contains_text (Handle, text, length);
 		}
 
 		// GetGlyphWidths
@@ -552,18 +579,21 @@ namespace SkiaSharp
 
 			unsafe {
 				fixed (byte* p = text) {
-					return GetGlyphWidths ((IntPtr)p, text.Length);
+					return GetGlyphWidths ((IntPtr)p, (IntPtr)text.Length);
 				}
 			}
 		}
 
-		public float[] GetGlyphWidths (IntPtr text, int length)
+		public float[] GetGlyphWidths (IntPtr text, int length) =>
+			GetGlyphWidths (text, (IntPtr)length);
+
+		public float[] GetGlyphWidths (IntPtr text, IntPtr length)
 		{
-			if (text == IntPtr.Zero)
+			if (text == IntPtr.Zero && length != IntPtr.Zero)
 				throw new ArgumentNullException (nameof (text));
 
 			unsafe {
-				var n = SkiaApi.sk_paint_get_text_widths (Handle, text, (IntPtr)length, (float*)IntPtr.Zero, (SKRect*)IntPtr.Zero);
+				var n = SkiaApi.sk_paint_get_text_widths (Handle, text, length, (float*)IntPtr.Zero, (SKRect*)IntPtr.Zero);
 
 				if (n <= 0) {
 					return new float[0];
@@ -571,7 +601,7 @@ namespace SkiaSharp
 
 				var widths = new float[n];
 				fixed (float* wp = widths) {
-					SkiaApi.sk_paint_get_text_widths (Handle, text, (IntPtr)length, wp, (SKRect*)IntPtr.Zero);
+					SkiaApi.sk_paint_get_text_widths (Handle, text, length, wp, (SKRect*)IntPtr.Zero);
 				}
 				return widths;
 			}
@@ -593,18 +623,21 @@ namespace SkiaSharp
 
 			unsafe {
 				fixed (byte* p = text) {
-					return GetGlyphWidths ((IntPtr)p, text.Length, out bounds);
+					return GetGlyphWidths ((IntPtr)p, (IntPtr)text.Length, out bounds);
 				}
 			}
 		}
 
-		public float[] GetGlyphWidths (IntPtr text, int length, out SKRect[] bounds)
+		public float[] GetGlyphWidths (IntPtr text, int length, out SKRect[] bounds) =>
+			GetGlyphWidths (text, (IntPtr)length, out bounds);
+
+		public float[] GetGlyphWidths (IntPtr text, IntPtr length, out SKRect[] bounds)
 		{
-			if (text == IntPtr.Zero)
+			if (text == IntPtr.Zero && length != IntPtr.Zero)
 				throw new ArgumentNullException (nameof (text));
 
 			unsafe {
-				var n = SkiaApi.sk_paint_get_text_widths (Handle, text, (IntPtr)length, (float*)IntPtr.Zero, (SKRect*)IntPtr.Zero);
+				var n = SkiaApi.sk_paint_get_text_widths (Handle, text, length, (float*)IntPtr.Zero, (SKRect*)IntPtr.Zero);
 
 				if (n <= 0) {
 					bounds = new SKRect[0];
@@ -615,7 +648,7 @@ namespace SkiaSharp
 				bounds = new SKRect[n];
 				fixed (float* wp = widths)
 				fixed (SKRect* bp = bounds) {
-					SkiaApi.sk_paint_get_text_widths (Handle, text, (IntPtr)length, wp, bp);
+					SkiaApi.sk_paint_get_text_widths (Handle, text, length, wp, bp);
 				}
 				return widths;
 			}
@@ -639,20 +672,24 @@ namespace SkiaSharp
 
 			unsafe {
 				fixed (byte* p = text) {
-					return GetTextIntercepts ((IntPtr)p, text.Length, x, y, upperBounds, lowerBounds);
+					return GetTextIntercepts ((IntPtr)p, (IntPtr)text.Length, x, y, upperBounds, lowerBounds);
 				}
 			}
 		}
 
-		public float[] GetTextIntercepts (IntPtr text, int length, float x, float y, float upperBounds, float lowerBounds)
+		public float[] GetTextIntercepts (IntPtr text, int length, float x, float y, float upperBounds, float lowerBounds) =>
+			GetTextIntercepts (text, (IntPtr)length, x, y, upperBounds, lowerBounds);
+
+
+		public float[] GetTextIntercepts (IntPtr text, IntPtr length, float x, float y, float upperBounds, float lowerBounds)
 		{
-			if (text == IntPtr.Zero)
+			if (text == IntPtr.Zero && length != IntPtr.Zero)
 				throw new ArgumentNullException (nameof (text));
 
 			unsafe {
 				var bounds = new[] { upperBounds, lowerBounds };
 
-				var n = SkiaApi.sk_paint_get_text_intercepts (Handle, text, (IntPtr)length, x, y, bounds, (float*)IntPtr.Zero);
+				var n = SkiaApi.sk_paint_get_text_intercepts (Handle, text, length, x, y, bounds, (float*)IntPtr.Zero);
 
 				if (n <= 0) {
 					return new float[0];
@@ -660,7 +697,7 @@ namespace SkiaSharp
 
 				var intervals = new float[n];
 				fixed (float* ip = intervals) {
-					SkiaApi.sk_paint_get_text_intercepts (Handle, text, (IntPtr)length, x, y, bounds, ip);
+					SkiaApi.sk_paint_get_text_intercepts (Handle, text, length, x, y, bounds, ip);
 				}
 				return intervals;
 			}
@@ -708,20 +745,24 @@ namespace SkiaSharp
 
 			unsafe {
 				fixed (byte* p = text) {
-					return GetPositionedTextIntercepts ((IntPtr)p, text.Length, positions, upperBounds, lowerBounds);
+					return GetPositionedTextIntercepts ((IntPtr)p, (IntPtr)text.Length, positions, upperBounds, lowerBounds);
 				}
 			}
 		}
 
-		public float[] GetPositionedTextIntercepts (IntPtr text, int length, SKPoint[] positions, float upperBounds, float lowerBounds)
+		public float[] GetPositionedTextIntercepts (IntPtr text, int length, SKPoint[] positions, float upperBounds, float lowerBounds) =>
+			GetPositionedTextIntercepts (text, (IntPtr)length, positions, upperBounds, lowerBounds);
+
+
+		public float[] GetPositionedTextIntercepts (IntPtr text, IntPtr length, SKPoint[] positions, float upperBounds, float lowerBounds)
 		{
-			if (text == IntPtr.Zero)
+			if (text == IntPtr.Zero && length != IntPtr.Zero)
 				throw new ArgumentNullException (nameof (text));
 
 			unsafe {
 				var bounds = new[] { upperBounds, lowerBounds };
 
-				var n = SkiaApi.sk_paint_get_pos_text_intercepts (Handle, text, (IntPtr)length, positions, bounds, (float*)IntPtr.Zero);
+				var n = SkiaApi.sk_paint_get_pos_text_intercepts (Handle, text, length, positions, bounds, (float*)IntPtr.Zero);
 
 				if (n <= 0) {
 					return new float[0];
@@ -729,7 +770,7 @@ namespace SkiaSharp
 
 				var intervals = new float[n];
 				fixed (float* ip = intervals) {
-					SkiaApi.sk_paint_get_pos_text_intercepts (Handle, text, (IntPtr)length, positions, bounds, ip);
+					SkiaApi.sk_paint_get_pos_text_intercepts (Handle, text, length, positions, bounds, ip);
 				}
 				return intervals;
 			}
@@ -753,20 +794,23 @@ namespace SkiaSharp
 
 			unsafe {
 				fixed (byte* p = text) {
-					return GetHorizontalTextIntercepts ((IntPtr)p, text.Length, xpositions, y, upperBounds, lowerBounds);
+					return GetHorizontalTextIntercepts ((IntPtr)p, (IntPtr)text.Length, xpositions, y, upperBounds, lowerBounds);
 				}
 			}
 		}
 
-		public float[] GetHorizontalTextIntercepts (IntPtr text, int length, float[] xpositions, float y, float upperBounds, float lowerBounds)
+		public float[] GetHorizontalTextIntercepts (IntPtr text, int length, float[] xpositions, float y, float upperBounds, float lowerBounds) =>
+			GetHorizontalTextIntercepts (text, (IntPtr)length, xpositions, y, upperBounds, lowerBounds);
+
+		public float[] GetHorizontalTextIntercepts (IntPtr text, IntPtr length, float[] xpositions, float y, float upperBounds, float lowerBounds)
 		{
-			if (text == IntPtr.Zero)
+			if (text == IntPtr.Zero && length != IntPtr.Zero)
 				throw new ArgumentNullException (nameof (text));
 
 			unsafe {
 				var bounds = new[] { upperBounds, lowerBounds };
 
-				var n = SkiaApi.sk_paint_get_pos_text_h_intercepts (Handle, text, (IntPtr)length, xpositions, y, bounds, (float*)IntPtr.Zero);
+				var n = SkiaApi.sk_paint_get_pos_text_h_intercepts (Handle, text, length, xpositions, y, bounds, (float*)IntPtr.Zero);
 
 				if (n <= 0) {
 					return new float[0];
@@ -774,7 +818,7 @@ namespace SkiaSharp
 
 				var intervals = new float[n];
 				fixed (float* ip = intervals) {
-					SkiaApi.sk_paint_get_pos_text_h_intercepts (Handle, text, (IntPtr)length, xpositions, y, bounds, ip);
+					SkiaApi.sk_paint_get_pos_text_h_intercepts (Handle, text, length, xpositions, y, bounds, ip);
 				}
 				return intervals;
 			}
