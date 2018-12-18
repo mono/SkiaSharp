@@ -38,8 +38,9 @@ assignees: ''
   - UWP:  <!-- the version of the UWP SDK you are compiling against, e.g. 16299 --> 
   - watchOS:  <!-- the version of the watchOS SDK you are compiling against, e.g. 11.1 -->
   - Windows Classic:  <!-- the version of Windows you are building for, e.g. Windows 7 -->
-- Target Devices:
-  -   <!-- the devices that you noticed this on, e.g. iPhone X -->
+- Target Devices:   <!-- the devices that you noticed this on, e.g. iPhone X -->
+  - 
+  - 
 
 **Screenshots**
 
