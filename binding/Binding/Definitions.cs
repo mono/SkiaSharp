@@ -639,6 +639,7 @@ namespace SkiaSharp
 		Rec2020,
 	}
 
+	[Obsolete]
 	[Flags]
 	public enum SKColorSpaceFlags {
 		None = 0,
@@ -648,6 +649,19 @@ namespace SkiaSharp
 	public enum SKColorSpaceRenderTargetGamma {
 		Linear,
 		Srgb,
+	}
+
+	public enum SKColorSpaceType {
+		Rgb,
+		Cmyk,
+		Gray,
+	}
+
+	public enum SKNamedGamma {
+		Linear,
+		Srgb,
+		TwoDotTwoCurve,
+		NonStandard,
 	}
 
 	public enum SKMaskFormat {
