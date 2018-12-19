@@ -14,7 +14,7 @@ namespace SkiaSharp
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		internal delegate IntPtr draw_delegate (IntPtr managedDrawablePtr, IntPtr canvasPtr);
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate IntPtr getBounds_delegate (IntPtr managedDrawablePtr);
+		internal delegate IntPtr getBounds_delegate (IntPtr managedDrawablePtr, ref SKRect bounds);
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		internal delegate IntPtr newPictureSnapshot_delegate (IntPtr managedDrawablePtr);
 
@@ -94,9 +94,10 @@ namespace SkiaSharp
 		}
 
 		[MonoPInvokeCallback(typeof(getBounds_delegate))]
-		private static IntPtr GetBoundsInternal (IntPtr managedDrawablePtr)
+		private static IntPtr GetBoundsInternal (IntPtr managedDrawablePtr, ref SKRect bounds)
 		{
-			return AsManagedDrawable (managedDrawablePtr).OnGetBounds ();
+			bounds = AsManagedDrawable (managedDrawablePtr).OnGetBounds ();
+			return IntPtr.Zero;
 		}
 
 		[MonoPInvokeCallback(typeof(newPictureSnapshot_delegate))]
