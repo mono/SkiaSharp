@@ -71,7 +71,7 @@ namespace SkiaSharp
 			}
 
 			if (Interlocked.CompareExchange (ref fromNative, 0, 0) == 0 && Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_manageddrawable_unref (Handle);
+				SkiaApi.sk_manageddrawable_destroy (Handle);
 			}
 
 			base.Dispose (disposing);

@@ -956,7 +956,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_manageddrawable_t sk_manageddrawable_new ();
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_manageddrawable_unref (sk_manageddrawable_t t);
+		public extern static void sk_manageddrawable_destroy (sk_manageddrawable_t t);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_manageddrawable_set_delegates (voidptr_t pDraw, voidptr_t pGetBounds, voidptr_t pNewPictureSnapshot);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

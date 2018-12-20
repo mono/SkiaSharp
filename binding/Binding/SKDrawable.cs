@@ -18,7 +18,7 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing)
 		{
 			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_manageddrawable_unref (Handle);
+				SkiaApi.sk_manageddrawable_destroy (Handle);
 			}
 
 			base.Dispose (disposing);
