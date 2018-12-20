@@ -20,6 +20,7 @@ using sk_colorspace_t = System.IntPtr;
 using sk_colortable_t = System.IntPtr;
 using sk_data_t = System.IntPtr;
 using sk_document_t = System.IntPtr;
+using sk_drawable_t = System.IntPtr;
 using sk_font_table_tag_t = System.UInt32;
 using sk_fontmgr_t = System.IntPtr;
 using sk_fontstyle_t = System.IntPtr;
@@ -959,7 +960,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_picture_t sk_picture_recorder_end_recording (sk_picture_recorder_t r);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_manageddrawable_t sk_picture_recorder_end_recording_as_drawable (sk_picture_recorder_t r);
+		public extern static sk_drawable_t sk_picture_recorder_end_recording_as_drawable (sk_picture_recorder_t r);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_canvas_t sk_picture_get_recording_canvas (sk_picture_recorder_t r);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -977,15 +978,15 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_manageddrawable_set_delegates (voidptr_t pDraw, voidptr_t pGetBounds, voidptr_t pNewPictureSnapshot);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static uint sk_manageddrawable_get_generation_id (sk_manageddrawable_t d);
+		public extern static uint sk_drawable_get_generation_id (sk_drawable_t d);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static SKRect sk_manageddrawable_get_bounds (sk_manageddrawable_t d);
+		public extern static void sk_drawable_get_bounds (sk_drawable_t d, out SKRect rect);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_manageddrawable_draw (sk_manageddrawable_t d, sk_canvas_t c, ref SKMatrix matrix);
+		public extern static void sk_drawable_draw (sk_drawable_t d, sk_canvas_t c, ref SKMatrix matrix);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_picture_t sk_manageddrawable_new_picture_snapshot (sk_manageddrawable_t d);
+		public extern static sk_picture_t sk_drawable_new_picture_snapshot (sk_drawable_t d);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_manageddrawable_notify_drawing_changed (sk_manageddrawable_t d);
+		public extern static void sk_drawable_notify_drawing_changed (sk_drawable_t d);
 
 		// shader
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

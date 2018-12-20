@@ -44,6 +44,12 @@ namespace SkiaSharpSample
 			drawable.NewPictureSnapshot();
 			var id = drawable.GenerationID;
 			drawable.NotifyDrawingChanged();
+
+			var recorder = new SKPictureRecorder();
+			var recorderCanvas = recorder.BeginRecording(new SKRect(0,0,100,100));
+			recorderCanvas.DrawRect(new SKRect(20,20,80,80), paint);
+			var d = recorder.EndRecordingAsDrawable();
+			bounds = d.Bounds;
 		}
 	}
 }
