@@ -189,6 +189,38 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void BreakTextSucceedsForEmtptyString()
+		{
+			var paint = new SKPaint();
+
+			paint.TextEncoding = SKTextEncoding.Utf8;
+
+			Assert.Equal(0, paint.BreakText("", 50.0f));
+		}
+
+		[SkippableFact]
+		public void BreakTextSucceedsForNullPointerZeroLength()
+		{
+			var paint = new SKPaint();
+
+			paint.TextEncoding = SKTextEncoding.Utf8;
+
+			Assert.Equal(0, paint.BreakText(IntPtr.Zero, IntPtr.Zero, 50.0f));
+			Assert.Equal(0, paint.BreakText(IntPtr.Zero, 0, 50.0f));
+		}
+
+		[SkippableFact]
+		public void BreakTextThrowsForNullPointer()
+		{
+			var paint = new SKPaint();
+
+			paint.TextEncoding = SKTextEncoding.Utf8;
+
+			Assert.Throws<ArgumentNullException>(() => paint.BreakText(IntPtr.Zero, (IntPtr)123, 50.0f));
+			Assert.Throws<ArgumentNullException>(() => paint.BreakText(IntPtr.Zero, 123, 50.0f));
+		}
+
+		[SkippableFact]
 		public void BreakTextReturnsTheCorrectNumberOfCharacters()
 		{
 			var paint = new SKPaint();
@@ -301,6 +333,38 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void MeasureTextSucceedsForEmtptyString()
+		{
+			var paint = new SKPaint();
+
+			paint.TextEncoding = SKTextEncoding.Utf8;
+
+			Assert.Equal(0, paint.MeasureText(""));
+		}
+
+		[SkippableFact]
+		public void MeasureTextSucceedsForNullPointerZeroLength()
+		{
+			var paint = new SKPaint();
+
+			paint.TextEncoding = SKTextEncoding.Utf8;
+
+			Assert.Equal(0, paint.MeasureText(IntPtr.Zero, IntPtr.Zero));
+			Assert.Equal(0, paint.MeasureText(IntPtr.Zero, 0));
+		}
+
+		[SkippableFact]
+		public void MeasureTextThrowsForNullPointer()
+		{
+			var paint = new SKPaint();
+
+			paint.TextEncoding = SKTextEncoding.Utf8;
+
+			Assert.Throws<ArgumentNullException>(() => paint.MeasureText(IntPtr.Zero, (IntPtr)123));
+			Assert.Throws<ArgumentNullException>(() => paint.MeasureText(IntPtr.Zero, 123));
+		}
+
+		[SkippableFact]
 		public void GetGlyphWidthsReturnsTheCorrectAmount()
 		{
 			var paint = new SKPaint();
@@ -351,6 +415,16 @@ namespace SkiaSharp.Tests
 			var pathWidth = textPath.TightBounds.Width;
 
 			Assert.Equal(pathWidth, diff, 2);
+		}
+
+		[SkippableFact]
+		public void GetTextPathSucceedsForEmtptyString()
+		{
+			var paint = new SKPaint();
+
+			paint.TextEncoding = SKTextEncoding.Utf8;
+
+			Assert.NotNull(paint.GetTextPath("", 0, 0));
 		}
 	}
 }

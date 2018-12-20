@@ -530,7 +530,7 @@ namespace SkiaSharp
 
 		public void DrawTextOnPath (IntPtr buffer, int length, SKPath path, float hOffset, float vOffset, SKPaint paint)
 		{
-			if (buffer == IntPtr.Zero)
+			if (buffer == IntPtr.Zero && length != 0)
 				throw new ArgumentNullException (nameof (buffer));
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
@@ -547,7 +547,7 @@ namespace SkiaSharp
 
 		public void DrawText (IntPtr buffer, int length, float x, float y, SKPaint paint)
 		{
-			if (buffer == IntPtr.Zero)
+			if (buffer == IntPtr.Zero && length != 0)
 				throw new ArgumentNullException (nameof (buffer));
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
@@ -557,7 +557,7 @@ namespace SkiaSharp
 
 		public void DrawPositionedText (IntPtr buffer, int length, SKPoint[] points, SKPaint paint)
 		{
-			if (buffer == IntPtr.Zero)
+			if (buffer == IntPtr.Zero && length != 0)
 				throw new ArgumentNullException (nameof (buffer));
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
