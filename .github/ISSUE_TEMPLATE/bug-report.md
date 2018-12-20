@@ -1,20 +1,29 @@
-### Description
+---
+name: Bug report
+about: Create a report to help us improve
+title: "[BUG]"
+labels: ''
+assignees: ''
+
+---
+
+**Description**
 
 <!-- a general description goes here -->
 
-### Code
+**Code**
 
 <!-- a snippet of code that demonstrates the issue -->
 
-### Expected Behavior
+**Expected Behavior**
 
 <!-- a general description of what was the expected behavior or result -->
 
-### Actual Behavior
+**Actual Behavior**
 
 <!-- a general description of what really happened -->
 
-### Basic Information
+**Basic Information**
 
 - Version with issue:  <!-- the version of SkiaSharp that has the issue -->
 - Last known good version:  <!-- the version of SkiaSharp that still working -->
@@ -29,13 +38,14 @@
   - UWP:  <!-- the version of the UWP SDK you are compiling against, e.g. 16299 --> 
   - watchOS:  <!-- the version of the watchOS SDK you are compiling against, e.g. 11.1 -->
   - Windows Classic:  <!-- the version of Windows you are building for, e.g. Windows 7 -->
-- Target Devices:
-  -   <!-- the devices that you noticed this on, e.g. iPhone X -->
+- Target Devices:   <!-- the devices that you noticed this on, e.g. iPhone X -->
+  - 
+  - 
 
-### Screenshots
+**Screenshots**
 
 <!-- if the issue is a visual issue, please include screenshots showing the problem if possible -->
 
-### Reproduction Link
+**Reproduction Link**
 
 <!-- please upload or provide a link to a reproduction case -->
