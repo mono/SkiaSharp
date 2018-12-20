@@ -11,8 +11,12 @@
     <DefineConstants>$(DefineConstants);__DESKTOP__;__WPF__</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="mdoc" Version="5.7.3.1" PrivateAssets="All" />
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.55" PrivateAssets="All" />
     <PackageReference Include="OpenTK" Version="1.1.2349.61993" />
     <PackageReference Include="OpenTK.GLControl" Version="1.1.2349.61993" />
   </ItemGroup>
@@ -24,5 +28,4 @@
     <Compile Include="..\SkiaSharp.Views.Shared\Properties\SkiaSharpViewsAssemblyInfo.cs" Link="Properties\SkiaSharpViewsAssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="..\..\SkiaSharp.Build.targets" />
-  <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 </Project>
