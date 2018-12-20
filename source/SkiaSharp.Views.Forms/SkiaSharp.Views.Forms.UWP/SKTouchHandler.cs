@@ -27,6 +27,7 @@ namespace SkiaSharp.Views.Forms
 				view.PointerMoved -= OnPointerMoved;
 				view.PointerReleased -= OnPointerReleased;
 				view.PointerCanceled -= OnPointerCancelled;
+				view.PointerWheelChanged -= OnPointerWheelChanged;
 				if (enableTouchEvents)
 				{
 					view.PointerEntered += OnPointerEntered;
@@ -35,6 +36,7 @@ namespace SkiaSharp.Views.Forms
 					view.PointerMoved += OnPointerMoved;
 					view.PointerReleased += OnPointerReleased;
 					view.PointerCanceled += OnPointerCancelled;
+					view.PointerWheelChanged += OnPointerWheelChanged;
 				}
 			}
 		}
@@ -89,6 +91,11 @@ namespace SkiaSharp.Views.Forms
 			args.Handled = CommonHandler(sender, SKTouchAction.Cancelled, args);
 		}
 
+		private void OnPointerWheelChanged(object sender, PointerRoutedEventArgs args)
+		{
+			args.Handled = CommonHandler(sender, SKTouchAction.WheelChanged, args);
+		}
+
 		private bool CommonHandler(object sender, SKTouchAction touchActionType, PointerRoutedEventArgs evt)
 		{
 			if (onTouchAction == null || scalePixels == null)
@@ -105,7 +112,9 @@ namespace SkiaSharp.Views.Forms
 			var mouse = GetMouseButton(pointerPoint);
 			var device = GetTouchDevice(evt);
 
-			var args = new SKTouchEventArgs(id, touchActionType, mouse, device, skPoint, evt.Pointer.IsInContact);
+			var wheelDelta = pointerPoint?.Properties?.MouseWheelDelta ?? 0;
+
+			var args = new SKTouchEventArgs(id, touchActionType, mouse, device, skPoint, evt.Pointer.IsInContact, wheelDelta);
 			onTouchAction(args);
 			return args.Handled;
 		}

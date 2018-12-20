@@ -218,7 +218,7 @@ namespace SkiaSharp
 
 		public int CountGlyphs (IntPtr str, int strLen, SKEncoding encoding)
 		{
-			if (str == IntPtr.Zero)
+			if (str == IntPtr.Zero && strLen != 0)
 				throw new ArgumentNullException (nameof (str));
 
 			unsafe {
@@ -251,7 +251,7 @@ namespace SkiaSharp
 
 		public int GetGlyphs (IntPtr text, int length, SKEncoding encoding, out ushort [] glyphs)
 		{
-			if (text == IntPtr.Zero)
+			if (text == IntPtr.Zero && length != 0)
 				throw new ArgumentNullException (nameof (text));
 
 			unsafe {
