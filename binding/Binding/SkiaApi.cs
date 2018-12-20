@@ -962,15 +962,13 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static uint sk_manageddrawable_get_generation_id (sk_manageddrawable_t d);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_manageddrawable_get_bounds (sk_manageddrawable_t d, out SKRect rect);
+		public extern static SKRect sk_manageddrawable_get_bounds (sk_manageddrawable_t d);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_manageddrawable_draw (sk_canvas_t c, ref SKMatrix matrix);
+		public extern static void sk_manageddrawable_draw (sk_manageddrawable_t d, sk_canvas_t c, ref SKMatrix matrix);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_manageddrawable_draw (sk_canvas_t c, float x, float y);
+		public extern static sk_picture_t sk_manageddrawable_new_picture_snapshot (sk_manageddrawable_t d);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_picture_t sk_manageddrawable_new_picture_snapshot ();
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_manageddrawable_notify_drawing_changed ();
+		public extern static void sk_manageddrawable_notify_drawing_changed (sk_manageddrawable_t d);
 
 		// shader
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

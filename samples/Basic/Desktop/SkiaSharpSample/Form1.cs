@@ -38,6 +38,12 @@ namespace SkiaSharpSample
 			};
 			var coord = new SKPoint(scaledSize.Width / 2, (scaledSize.Height + paint.TextSize) / 2);
 			canvas.DrawText("SkiaSharp", coord, paint);
+			var drawable = new Class1();
+			var bounds = drawable.Bounds;
+			canvas.DrawDrawable(drawable, 0, 0);
+			drawable.NewPictureSnapshot();
+			var id = drawable.GenerationID;
+			drawable.NotifyDrawingChanged();
 		}
 	}
 }

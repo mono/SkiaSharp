@@ -11,6 +11,10 @@ namespace SkiaSharp
 		{
 		}
 
+		public SKDrawable() : base ()
+		{
+		}
+
 		protected override void Dispose (bool disposing)
 		{
 			if (Handle != IntPtr.Zero && OwnsHandle) {
@@ -24,29 +28,37 @@ namespace SkiaSharp
 
 		public SKRect Bounds {
 			get {
-				SkiaApi.sk_manageddrawable_get_bounds (Handle, out var rect);
-				return rect;
+				return SkiaApi.sk_manageddrawable_get_bounds (Handle);
 			}
 		}
 
 		public void Draw (SKCanvas canvas, ref SKMatrix matrix)
 		{
-			SkiaApi.sk_manageddrawable_draw (canvas.Handle, ref matrix);
+			SkiaApi.sk_manageddrawable_draw (Handle, canvas.Handle, ref matrix);
 		}
 
 		public void Draw (SKCanvas canvas, float x, float y)
 		{
-			SkiaApi.sk_manageddrawable_draw (canvas.Handle, x, y);
+			var matrix = SKMatrix.MakeTranslation (x, y);
+			SkiaApi.sk_manageddrawable_draw (Handle, canvas.Handle, ref matrix);
 		}
 
 		public SKPicture NewPictureSnapshot ()
 		{
-			return GetObject<SKPicture> (SkiaApi.sk_manageddrawable_new_picture_snapshot ());
+			return GetObject<SKPicture> (SkiaApi.sk_manageddrawable_new_picture_snapshot (Handle));
 		}
 
 		public void NotifyDrawingChanged ()
 		{
-			SkiaApi.sk_manageddrawable_notify_drawing_changed ();
+			SkiaApi.sk_manageddrawable_notify_drawing_changed (Handle);
+		}
+
+		protected override SKPicture OnNewPictureSnapshot ()
+		{
+			var recorder = new SKPictureRecorder ();
+			var canvas = recorder.BeginRecording (Bounds);
+			Draw (canvas, 0, 0);
+			return recorder.EndRecording ();
 		}
 	}
 }

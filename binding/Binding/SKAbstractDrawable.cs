@@ -14,9 +14,9 @@ namespace SkiaSharp
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		internal delegate IntPtr draw_delegate (IntPtr managedDrawablePtr, IntPtr canvasPtr);
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate IntPtr getBounds_delegate (IntPtr managedDrawablePtr, ref SKRect bounds);
+		internal delegate SKRect getBounds_delegate (IntPtr managedDrawablePtr);
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate IntPtr newPictureSnapshot_delegate (IntPtr managedDrawablePtr);
+		internal delegate SKPicture newPictureSnapshot_delegate (IntPtr managedDrawablePtr);
 
 		// delegate fields
 		private static readonly draw_delegate fDraw;
@@ -94,16 +94,15 @@ namespace SkiaSharp
 		}
 
 		[MonoPInvokeCallback(typeof(getBounds_delegate))]
-		private static IntPtr GetBoundsInternal (IntPtr managedDrawablePtr, ref SKRect bounds)
+		private static SKRect GetBoundsInternal (IntPtr managedDrawablePtr)
 		{
-			bounds = AsManagedDrawable (managedDrawablePtr).OnGetBounds ();
-			return IntPtr.Zero;
+			return AsManagedDrawable (managedDrawablePtr).OnGetBounds ();
 		}
 
 		[MonoPInvokeCallback(typeof(newPictureSnapshot_delegate))]
-		private static IntPtr NewPictureSnapshotInternal (IntPtr managedDrawablePtr)
+		private static SKPicture NewPictureSnapshotInternal (IntPtr managedDrawablePtr)
 		{
-			return AsManagedDrawable (managedDrawablePtr).OnNewPictureSnapshot ().Handle;
+			return GetObject<SKPicture> (AsManagedDrawable (managedDrawablePtr).OnNewPictureSnapshot ().Handle);
 		}
 
 		private static SKAbstractDrawable AsManagedDrawable (IntPtr ptr)

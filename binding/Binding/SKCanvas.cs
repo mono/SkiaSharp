@@ -404,6 +404,20 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_picture (Handle, picture.Handle, IntPtr.Zero, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
+		public void DrawDrawable (SKDrawable drawable, ref SKMatrix matrix)
+		{
+			if (drawable == null)
+				throw new ArgumentNullException (nameof (drawable));
+			SkiaApi.sk_canvas_draw_drawable (Handle, drawable.Handle, ref matrix);
+		}
+
+		public void DrawDrawable (SKDrawable drawable, float x, float y)
+		{
+			if (drawable == null)
+				throw new ArgumentNullException (nameof (drawable));
+			SkiaApi.sk_canvas_draw_drawable (Handle, drawable.Handle, x, y);
+		}
+
 		public void DrawBitmap (SKBitmap bitmap, SKPoint p, SKPaint paint = null)
 		{
 			DrawBitmap (bitmap, p.X, p.Y, paint);
