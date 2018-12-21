@@ -1,6 +1,5 @@
 ﻿using System;
 using Android.Opengl;
-using Javax.Microedition.Khronos.Egl;
 using Javax.Microedition.Khronos.Opengles;
 
 using EGLConfig = Javax.Microedition.Khronos.Egl.EGLConfig;
@@ -9,6 +8,9 @@ namespace SkiaSharp.Views.Android
 {
 	public abstract class SKGLSurfaceViewRenderer : Java.Lang.Object, GLSurfaceView.IRenderer
 	{
+		private const SKColorType colorType = SKColorType.Rgba8888;
+		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
+
 		private GRContext context;
 		private GRBackendRenderTarget renderTarget;
 		private SKSurface surface;
@@ -30,7 +32,7 @@ namespace SkiaSharp.Views.Android
 
 		public void OnDrawFrame(IGL10 gl)
 		{
-			GLES10.GlClear(GLES10.GlColorBufferBit | GLES10.GlDepthBufferBit | GLES10.GlStencilBufferBit);
+			GLES20.GlClear(GLES20.GlColorBufferBit | GLES20.GlDepthBufferBit | GLES20.GlStencilBufferBit);
 
 			// create the contexts if not done already
 			if (context == null)
@@ -44,17 +46,21 @@ namespace SkiaSharp.Views.Android
 			{
 				// create or update the dimensions
 				renderTarget?.Dispose();
-				renderTarget = SKGLDrawable.CreateRenderTarget(surfaceWidth, surfaceHeight);
+				var buffer = new int[2];
+				GLES20.GlGetIntegerv(GLES20.GlFramebufferBinding, buffer, 0);
+				GLES20.GlGetIntegerv(GLES20.GlStencilBits, buffer, 1);
+				var glInfo = new GRGlFramebufferInfo((uint)buffer[0], colorType.ToGlSizedFormat());
+				renderTarget = new GRBackendRenderTarget(surfaceWidth, surfaceHeight, context.GetMaxSurfaceSampleCount(colorType), buffer[1], glInfo);
 
 				// create the surface
 				surface?.Dispose();
-				surface = SKSurface.Create(context, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+				surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);
 			}
 
 			using (new SKAutoCanvasRestore(surface.Canvas, true))
 			{
 				// start drawing
-				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType);
 				OnPaintSurface(e);
 #pragma warning disable CS0618 // Type or member is obsolete
 				OnDrawFrame(e.Surface, e.RenderTarget);

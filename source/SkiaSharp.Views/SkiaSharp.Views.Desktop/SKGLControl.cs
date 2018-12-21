@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using OpenTK;
 using OpenTK.Graphics;
+using OpenTK.Graphics.ES20;
 
 namespace SkiaSharp.Views.Desktop
 {
@@ -10,6 +11,9 @@ namespace SkiaSharp.Views.Desktop
 	[DefaultProperty("Name")]
 	public class SKGLControl : GLControl
 	{
+		private const SKColorType colorType = SKColorType.Rgba8888;
+		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
+
 		private bool designMode;
 
 		private GRContext grContext;
@@ -78,17 +82,20 @@ namespace SkiaSharp.Views.Desktop
 			{
 				// create or update the dimensions
 				renderTarget?.Dispose();
-				renderTarget = SKGLDrawable.CreateRenderTarget(Width, Height);
+				GL.GetInteger(GetPName.FramebufferBinding, out var framebuffer);
+				GL.GetInteger(GetPName.StencilBits, out var stencil);
+				var glInfo = new GRGlFramebufferInfo((uint)framebuffer, colorType.ToGlSizedFormat());
+				renderTarget = new GRBackendRenderTarget(Width, Height, grContext.GetMaxSurfaceSampleCount(colorType), stencil, glInfo);
 
 				// create the surface
 				surface?.Dispose();
-				surface = SKSurface.Create(grContext, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+				surface = SKSurface.Create(grContext, renderTarget, surfaceOrigin, colorType);
 			}
 
 			using (new SKAutoCanvasRestore(surface.Canvas, true))
 			{
 				// start drawing
-				OnPaintSurface(new SKPaintGLSurfaceEventArgs(surface, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888));
+				OnPaintSurface(new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType));
 			}
 
 			// update the control

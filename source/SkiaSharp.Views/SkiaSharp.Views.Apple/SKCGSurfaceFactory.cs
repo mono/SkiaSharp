@@ -12,7 +12,7 @@ namespace SkiaSharp.Views.iOS
 namespace SkiaSharp.Views.Mac
 #endif
 {
-	internal class SKDrawable : IDisposable
+	internal class SKCGSurfaceFactory : IDisposable
 	{
 		private const int BitsPerByte = 8; // 1 byte = 8 bits
 		private const CGBitmapFlags BitmapFlags = CGBitmapFlags.ByteOrder32Big | CGBitmapFlags.PremultipliedLast;
