@@ -10,7 +10,7 @@ namespace SkiaSharp.Views.Mac
 	[DesignTimeVisible(true)]
 	public class SKCanvasView : NSView
 	{
-		private SKDrawable drawable;
+		private SKCGSurfaceFactory drawable;
 		private bool ignorePixelScaling;
 
 		// created in code
@@ -41,7 +41,7 @@ namespace SkiaSharp.Views.Mac
 
 		private void Initialize()
 		{
-			drawable = new SKDrawable();
+			drawable = new SKCGSurfaceFactory();
 		}
 
 		public SKSize CanvasSize => drawable.Info.Size;
