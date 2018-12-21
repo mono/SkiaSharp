@@ -3,6 +3,8 @@ using Android.Opengl;
 using Javax.Microedition.Khronos.Egl;
 using Javax.Microedition.Khronos.Opengles;
 
+using EGLConfig = Javax.Microedition.Khronos.Egl.EGLConfig;
+
 namespace SkiaSharp.Views.Android
 {
 	public abstract class SKGLTextureViewRenderer : Java.Lang.Object, GLTextureView.IRenderer
