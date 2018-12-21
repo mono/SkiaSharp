@@ -16,7 +16,7 @@ namespace SkiaSharp
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		internal delegate void getBounds_delegate (IntPtr managedDrawablePtr, out SKRect rect);
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate SKPicture newPictureSnapshot_delegate (IntPtr managedDrawablePtr);
+		internal delegate IntPtr newPictureSnapshot_delegate (IntPtr managedDrawablePtr);
 
 		// delegate fields
 		private static readonly draw_delegate fDraw;
@@ -46,7 +46,7 @@ namespace SkiaSharp
 			: base (SkiaApi.sk_manageddrawable_new (), owns)
 		{
 			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKAbstractDrawable instance.");
+				throw new InvalidOperationException ("Unable to create a new SKDrawable instance.");
 			}
 
 			managedDrawables.TryAdd (Handle, this);
@@ -77,7 +77,7 @@ namespace SkiaSharp
 			base.Dispose (disposing);
 		}
 
-		public uint GenerationID => SkiaApi.sk_drawable_get_generation_id (Handle);
+		public uint GenerationId => SkiaApi.sk_drawable_get_generation_id (Handle);
 
 		public SKRect Bounds {
 			get {
@@ -97,7 +97,7 @@ namespace SkiaSharp
 			SkiaApi.sk_drawable_draw (Handle, canvas.Handle, ref matrix);
 		}
 
-		public SKPicture NewPictureSnapshot ()
+		public SKPicture ToPicture ()
 		{
 			return GetObject<SKPicture> (SkiaApi.sk_drawable_new_picture_snapshot (Handle));
 		}
@@ -139,9 +139,9 @@ namespace SkiaSharp
 		}
 
 		[MonoPInvokeCallback(typeof(newPictureSnapshot_delegate))]
-		private static SKPicture NewPictureSnapshotInternal (IntPtr managedDrawablePtr)
+		private static IntPtr NewPictureSnapshotInternal (IntPtr managedDrawablePtr)
 		{
-			return GetObject<SKPicture> (AsManagedDrawable (managedDrawablePtr).OnNewPictureSnapshot ().Handle);
+			return AsManagedDrawable (managedDrawablePtr).OnNewPictureSnapshot ().Handle;
 		}
 
 		private static SKDrawable AsManagedDrawable (IntPtr ptr)
@@ -149,7 +149,7 @@ namespace SkiaSharp
 			if (AsManagedDrawable (ptr, out var target)) {
 				return target;
 			}
-			throw new ObjectDisposedException ("SKAbstractDrawable: " + ptr);
+			throw new ObjectDisposedException ("SKDrawable: " + ptr);
 		}
 
 		private static bool AsManagedDrawable (IntPtr ptr, out SKDrawable target)
