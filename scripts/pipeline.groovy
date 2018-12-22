@@ -345,5 +345,5 @@ def cmdResult(script) {
 def getWSRoot() {
     def cleanBranch = branchName.replace("/", "_").replace("\\", "_")
     def wsRoot = isUnix() ? "workspace" : "C:/bld"
-    return "${wsRoot}/SkiaSharp/${cleanBranch}"
+    return "${wsRoot}/SkiaSharp/${cleanBranch}/${env.BUILD_NUMBER}"
 }
