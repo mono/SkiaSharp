@@ -97,7 +97,7 @@ namespace SkiaSharp
 			SkiaApi.sk_drawable_draw (Handle, canvas.Handle, ref matrix);
 		}
 
-		public SKPicture ToPicture ()
+		public SKPicture Snapshot ()
 		{
 			return GetObject<SKPicture> (SkiaApi.sk_drawable_new_picture_snapshot (Handle));
 		}
@@ -116,7 +116,7 @@ namespace SkiaSharp
 			return new SKRect ();
 		}
 
-		protected virtual SKPicture OnNewPictureSnapshot ()
+		protected virtual SKPicture OnSnapshot ()
 		{
 			var recorder = new SKPictureRecorder ();
 			var canvas = recorder.BeginRecording (Bounds);
@@ -141,7 +141,7 @@ namespace SkiaSharp
 		[MonoPInvokeCallback(typeof(newPictureSnapshot_delegate))]
 		private static IntPtr NewPictureSnapshotInternal (IntPtr managedDrawablePtr)
 		{
-			return AsManagedDrawable (managedDrawablePtr).OnNewPictureSnapshot ().Handle;
+			return AsManagedDrawable (managedDrawablePtr).OnSnapshot ().Handle;
 		}
 
 		private static SKDrawable AsManagedDrawable (IntPtr ptr)

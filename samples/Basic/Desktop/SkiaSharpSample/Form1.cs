@@ -41,7 +41,7 @@ namespace SkiaSharpSample
 			var drawable = new Class1();
 			var bounds = drawable.Bounds;
 			canvas.DrawDrawable(drawable, 0, 0);
-			drawable.ToPicture();
+			drawable.Snapshot();
 			var id = drawable.GenerationId;
 			drawable.NotifyDrawingChanged();
 
@@ -50,8 +50,6 @@ namespace SkiaSharpSample
 			recorderCanvas.DrawRect(new SKRect(20,20,80,80), paint);
 			var d = recorder.EndRecordingAsDrawable();
 			bounds = d.Bounds;
-
-			var temp = new SKDrawable(true);
 		}
 	}
 }
