@@ -35,6 +35,13 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
     }
 }
 
+Task ("externals-mdoc")
+    .Does (() =>
+{
+    NuGetRestore ("externals/api-doc-tools/apidoctools.sln");
+    RunMSBuildWithPlatform ("externals/api-doc-tools/mdoc/mdoc.csproj", "AnyCPU");
+});
+
 Task ("docs-download-output")
     .Does (() =>
 {
@@ -156,6 +163,7 @@ Task ("docs-api-diff-past")
 });
 
 Task ("docs-update-frameworks")
+    .IsDependentOn ("externals-mdoc")
     .Does (async () =>
 {
     // clear the temp dir
@@ -213,10 +221,11 @@ Task ("docs-update-frameworks")
     xdoc.Save (fwxml);
 
     // generate doc files
+    comparer = await CreateNuGetDiffAsync ();
     var refArgs = string.Join (" ", comparer.SearchPaths.Select (r => $"--lib=\"{r}\""));
     var fw = MakeAbsolute ((FilePath) fwxml);
     RunProcess (MDocPath, new ProcessSettings {
-        Arguments = $"update --delete --out=\"{DOCS_PATH}\" -lang=DocId --frameworks={fw} {refArgs}",
+        Arguments = $"update --debug --delete --out=\"{DOCS_PATH}\" --lang=DocId --frameworks={fw} {refArgs}",
         WorkingDirectory = docsTempPath
     });
 
