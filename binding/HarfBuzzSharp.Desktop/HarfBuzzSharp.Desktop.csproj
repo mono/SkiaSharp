@@ -17,10 +17,6 @@
     <DebugType>pdbonly</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="mdoc" Version="5.7.3.1" PrivateAssets="All" />
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.55" PrivateAssets="All" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="..\..\output\native\windows\x64\libHarfBuzzSharp.dll" Link="nuget\runtimes\win-x64\native\libHarfBuzzSharp.dll" Condition=" '$(IsWindows)' == 'true' " />
     <None Include="..\..\output\native\windows\x86\libHarfBuzzSharp.dll" Link="nuget\runtimes\win-x86\native\libHarfBuzzSharp.dll" Condition=" '$(IsWindows)' == 'true' " />
     <None Include="..\..\output\native\osx\libHarfBuzzSharp.dylib" Link="nuget\runtimes\osx\native\libHarfBuzzSharp.dylib" Condition=" '$(IsMacOS)' == 'true' " />
@@ -32,5 +28,4 @@
     <Compile Include="..\HarfBuzzSharp.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
-  <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 </Project>

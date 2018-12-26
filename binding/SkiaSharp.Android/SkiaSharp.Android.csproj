@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="MSBuild.Sdk.Extras">
   <Import Project="..\..\source\SkiaSharp.Build.props" />
   <PropertyGroup>
-    <TargetFramework>monoandroid2.3</TargetFramework>
+    <TargetFramework>monoandroid4.4</TargetFramework>
     <OutputTypeEx>library</OutputTypeEx>
     <RootNamespace>SkiaSharp</RootNamespace>
     <AssemblyName>SkiaSharp</AssemblyName>
@@ -17,10 +17,6 @@
     <DebugType>pdbonly</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="mdoc" Version="5.7.3.1" PrivateAssets="All" />
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.55" PrivateAssets="All" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedNativeLibrary Include="..\..\output\native\android\arm64-v8a\libSkiaSharp.so" Link="libs\arm64-v8a\libSkiaSharp.so" />
     <EmbeddedNativeLibrary Include="..\..\output\native\android\armeabi-v7a\libSkiaSharp.so" Link="libs\armeabi-v7a\libSkiaSharp.so" />
     <EmbeddedNativeLibrary Include="..\..\output\native\android\x86\libSkiaSharp.so" Link="libs\x86\libSkiaSharp.so" />
@@ -31,5 +27,4 @@
     <Compile Include="..\Binding\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
-  <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
 </Project>

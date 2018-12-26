@@ -1,11 +1,10 @@
 #addin nuget:?package=Cake.Xamarin&version=3.0.0
 #addin nuget:?package=Cake.XCode&version=4.0.0
-#addin nuget:?package=Cake.FileHelpers&version=3.0.0
+#addin nuget:?package=Cake.FileHelpers&version=3.1.0
 #addin nuget:?package=SharpCompress&version=0.22.0
 #addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.0.0&loaddependencies=true
 
 #tool "nuget:?package=xunit.runner.console&version=2.4.0"
-#tool "nuget:?package=mdoc&version=5.7.3.1"
 #tool "nuget:?package=vswhere&version=2.5.2"
 #addin nuget:?package=Xamarin.Nuget.Validator&version=1.1.1
 
@@ -33,7 +32,7 @@ var ARTIFACTS_ROOT_URL = Argument ("artifactsRootUrl", "");
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
 var CakeToolPath = Context.Tools.Resolve ("Cake.exe");
-var MDocPath = Context.Tools.Resolve ("mdoc.exe");
+var MDocPath = MakeAbsolute ((FilePath)"externals/api-doc-tools/bin/Release/mdoc.exe");
 var MSBuildToolPath = GetMSBuildToolPath (EnvironmentVariable ("MSBUILD_EXE"));
 var PythonToolPath = EnvironmentVariable ("PYTHON_EXE") ?? "python";
 
@@ -78,7 +77,8 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
 
 // this builds all the externals
 Task ("externals")
-    .IsDependentOn ("externals-native");
+    .IsDependentOn ("externals-native")
+    .IsDependentOn ("externals-mdoc");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // LIBS - the managed C# libraries
@@ -89,6 +89,7 @@ Task ("libs")
     .IsDependentOn ("libs-only");
 
 Task ("libs-only")
+    .IsDependentOn ("externals-mdoc")
     .Does (() =>
 {
     // build the managed libraries

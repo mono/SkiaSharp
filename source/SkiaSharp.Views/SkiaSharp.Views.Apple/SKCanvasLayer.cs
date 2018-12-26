@@ -14,12 +14,12 @@ namespace SkiaSharp.Views.Mac
 {
 	public class SKCanvasLayer : CALayer
 	{
-		private readonly SKDrawable drawable;
+		private readonly SKCGSurfaceFactory drawable;
 		private bool ignorePixelScaling;
 
 		public SKCanvasLayer()
 		{
-			drawable = new SKDrawable();
+			drawable = new SKCGSurfaceFactory();
 
 			SetNeedsDisplay();
 			NeedsDisplayOnBoundsChange = true;

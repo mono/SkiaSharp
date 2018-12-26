@@ -14,6 +14,8 @@ namespace SkiaSharp.Views.GlesInterop
 {
 	internal class GlesContext : IDisposable
 	{
+		private bool isDisposed = false;
+
 		private EGLDisplay eglDisplay;
 		private EGLContext eglContext;
 		private EGLSurface eglSurface;
@@ -31,9 +33,32 @@ namespace SkiaSharp.Views.GlesInterop
 
 		public bool HasSurface => eglSurface != Egl.EGL_NO_SURFACE;
 
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!isDisposed)
+			{
+				if (disposing)
+				{
+					// dispose managed resources
+				}
+
+				// free unmanaged resources
+				DestroySurface();
+				Cleanup();
+
+				isDisposed = true;
+			}
+		}
+
+		~GlesContext()
+		{
+			Dispose(false);
+		}
+
 		public void Dispose()
 		{
-			Cleanup();
+			Dispose(true);
+			GC.SuppressFinalize(this);
 		}
 
 		public void CreateSurface(SwapChainPanel panel, Size? renderSurfaceSize, float? resolutionScale)

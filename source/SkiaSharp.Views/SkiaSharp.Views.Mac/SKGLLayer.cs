@@ -2,11 +2,15 @@
 using CoreAnimation;
 using CoreVideo;
 using OpenGL;
+using SkiaSharp.Views.GlesInterop;
 
 namespace SkiaSharp.Views.Mac
 {
 	public class SKGLLayer : CAOpenGLLayer
 	{
+		private const SKColorType colorType = SKColorType.Rgba8888;
+		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
+
 		private GRContext context;
 		private GRBackendRenderTarget renderTarget;
 		private SKSurface surface;
@@ -54,17 +58,20 @@ namespace SkiaSharp.Views.Mac
 			{
 				// create or update the dimensions
 				renderTarget?.Dispose();
-				renderTarget = SKGLDrawable.CreateRenderTarget(surfaceWidth, surfaceHeight);
+				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, out var framebuffer);
+				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out var stencil);
+				var glInfo = new GRGlFramebufferInfo((uint)framebuffer, colorType.ToGlSizedFormat());
+				renderTarget = new GRBackendRenderTarget(surfaceWidth, surfaceHeight, context.GetMaxSurfaceSampleCount(colorType), stencil, glInfo);
 
 				// create the surface
 				surface?.Dispose();
-				surface = SKSurface.Create(context, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+				surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);
 			}
 
 			using (new SKAutoCanvasRestore(surface.Canvas, true))
 			{
 				// start drawing
-				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType);
 				OnPaintSurface(e);
 #pragma warning disable CS0618 // Type or member is obsolete
 				DrawInSurface(e.Surface, e.RenderTarget);

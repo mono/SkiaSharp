@@ -28,7 +28,7 @@ namespace SkiaSharp.Views.iOS
 		}
 		private bool designMode;
 
-		private SKDrawable drawable;
+		private SKCGSurfaceFactory drawable;
 		private bool ignorePixelScaling;
 
 		// created in code
@@ -63,7 +63,7 @@ namespace SkiaSharp.Views.iOS
 			if (designMode)
 				return;
 
-			drawable = new SKDrawable();
+			drawable = new SKCGSurfaceFactory();
 		}
 
 		public SKSize CanvasSize => drawable?.Info.Size ?? SKSize.Empty;

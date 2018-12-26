@@ -6,6 +6,9 @@ namespace SkiaSharp.Views.UWP
 {
 	public class SKSwapChainPanel : AngleSwapChainPanel
 	{
+		private const SKColorType colorType = SKColorType.Rgba8888;
+		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
+
 		private GRGlInterface glInterface;
 		private GRContext context;
 		private GRBackendRenderTarget renderTarget;
@@ -44,17 +47,20 @@ namespace SkiaSharp.Views.UWP
 			{
 				// create or update the dimensions
 				renderTarget?.Dispose();
-				renderTarget = SKGLDrawable.CreateRenderTarget((int)rect.Width, (int)rect.Height);
+				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, out var framebuffer);
+				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out var stencil);
+				var glInfo = new GRGlFramebufferInfo((uint)framebuffer, colorType.ToGlSizedFormat());
+				renderTarget = new GRBackendRenderTarget((int)rect.Width, (int)rect.Height, context.GetMaxSurfaceSampleCount(colorType), stencil, glInfo);
 
 				// create the surface
 				surface?.Dispose();
-				surface = SKSurface.Create(context, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+				surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);
 			}
 
 			using (new SKAutoCanvasRestore(surface.Canvas, true))
 			{
 				// start drawing
-				OnPaintSurface(new SKPaintGLSurfaceEventArgs(surface, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888));
+				OnPaintSurface(new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType));
 			}
 
 			// update the control

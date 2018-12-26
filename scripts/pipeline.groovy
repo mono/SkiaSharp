@@ -173,6 +173,7 @@ def createManagedBuilder(host, label, additionalPackages) {
                         ws("${getWSRoot()}/managed-${host}") {
                             try {
                                 checkout scm
+                                cmd("git submodule update --init --recursive")
                                 nativeStashes.each { unstash(it) }
 
                                 bootstrapper("-t everything -v ${verbosity} --skipexternals=all", host, "", additionalPackages)
@@ -345,5 +346,5 @@ def cmdResult(script) {
 def getWSRoot() {
     def cleanBranch = branchName.replace("/", "_").replace("\\", "_")
     def wsRoot = isUnix() ? "workspace" : "C:/bld"
-    return "${wsRoot}/SkiaSharp/${cleanBranch}"
+    return "${wsRoot}/SkiaSharp/${cleanBranch}/${env.BUILD_NUMBER}"
 }

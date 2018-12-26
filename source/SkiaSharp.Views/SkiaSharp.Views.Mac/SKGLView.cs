@@ -11,6 +11,9 @@ namespace SkiaSharp.Views.Mac
 	[DesignTimeVisible(true)]
 	public class SKGLView : NSOpenGLView
 	{
+		private const SKColorType colorType = SKColorType.Rgba8888;
+		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
+
 		private GRContext context;
 		private GRBackendRenderTarget renderTarget;
 		private SKSurface surface;
@@ -44,20 +47,20 @@ namespace SkiaSharp.Views.Mac
 		{
 			WantsBestResolutionOpenGLSurface = true;
 
-			var attrs = new NSOpenGLPixelFormatAttribute[]
+			var attrs = new object[]
 			{
-				//NSOpenGLPixelFormatAttribute.OpenGLProfile, (NSOpenGLPixelFormatAttribute)NSOpenGLProfile.VersionLegacy,
+				//NSOpenGLPixelFormatAttribute.OpenGLProfile, NSOpenGLProfile.VersionLegacy,
 				NSOpenGLPixelFormatAttribute.Accelerated,
 				NSOpenGLPixelFormatAttribute.DoubleBuffer,
 				NSOpenGLPixelFormatAttribute.Multisample,
 
-				NSOpenGLPixelFormatAttribute.ColorSize, (NSOpenGLPixelFormatAttribute)32,
-				NSOpenGLPixelFormatAttribute.AlphaSize, (NSOpenGLPixelFormatAttribute)8,
-				NSOpenGLPixelFormatAttribute.DepthSize, (NSOpenGLPixelFormatAttribute)24,
-				NSOpenGLPixelFormatAttribute.StencilSize, (NSOpenGLPixelFormatAttribute)8,
-				NSOpenGLPixelFormatAttribute.SampleBuffers, (NSOpenGLPixelFormatAttribute)1,
-				NSOpenGLPixelFormatAttribute.Samples, (NSOpenGLPixelFormatAttribute)4,
-				(NSOpenGLPixelFormatAttribute)0,
+				NSOpenGLPixelFormatAttribute.ColorSize, 32,
+				NSOpenGLPixelFormatAttribute.AlphaSize, 8,
+				NSOpenGLPixelFormatAttribute.DepthSize, 24,
+				NSOpenGLPixelFormatAttribute.StencilSize, 8,
+				NSOpenGLPixelFormatAttribute.SampleBuffers, 1,
+				NSOpenGLPixelFormatAttribute.Samples, 4,
+				0,
 			};
 			PixelFormat = new NSOpenGLPixelFormat(attrs);
 		}
@@ -87,17 +90,20 @@ namespace SkiaSharp.Views.Mac
 			{
 				// create or update the dimensions
 				renderTarget?.Dispose();
-				renderTarget = SKGLDrawable.CreateRenderTarget((int)size.Width, (int)size.Height);
+				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, out var framebuffer);
+				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out var stencil);
+				var glInfo = new GRGlFramebufferInfo((uint)framebuffer, colorType.ToGlSizedFormat());
+				renderTarget = new GRBackendRenderTarget((int)size.Width, (int)size.Height, context.GetMaxSurfaceSampleCount(colorType), stencil, glInfo);
 
 				// create the surface
 				surface?.Dispose();
-				surface = SKSurface.Create(context, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+				surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);
 			}
 
 			using (new SKAutoCanvasRestore(surface.Canvas, true))
 			{
 				// start drawing
-				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType);
 #pragma warning disable CS0618 // Type or member is obsolete
 				DrawInSurface(e.Surface, e.RenderTarget);
 #pragma warning restore CS0618 // Type or member is obsolete
