@@ -252,8 +252,6 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_drawable (sk_canvas_t t, sk_manageddrawable_t drawable, ref SKMatrix mat);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_canvas_draw_drawable (sk_canvas_t t, sk_manageddrawable_t drawable, float x, float y);
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_color (sk_canvas_t t, SKColor color, SKBlendMode mode);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_points (sk_canvas_t t, SKPointMode mode, size_t count, [In] SKPoint[] points, sk_paint_t paint);

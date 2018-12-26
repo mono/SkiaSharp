@@ -415,7 +415,16 @@ namespace SkiaSharp
 		{
 			if (drawable == null)
 				throw new ArgumentNullException (nameof (drawable));
-			SkiaApi.sk_canvas_draw_drawable (Handle, drawable.Handle, x, y);
+			var matrix = SKMatrix.MakeTranslation (x, y);
+			DrawDrawable (drawable, ref matrix);
+		}
+
+		public void DrawDrawable (SKDrawable drawable, SKPoint p)
+		{
+			if (drawable == null)
+				throw new ArgumentNullException (nameof (drawable));
+			var matrix = SKMatrix.MakeTranslation (p.X, p.Y);
+			DrawDrawable (drawable, ref matrix);
 		}
 
 		public void DrawBitmap (SKBitmap bitmap, SKPoint p, SKPaint paint = null)

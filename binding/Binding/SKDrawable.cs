@@ -86,35 +86,26 @@ namespace SkiaSharp
 			}
 		}
 
-		public void Draw (SKCanvas canvas, ref SKMatrix matrix)
-		{
+		public void Draw (SKCanvas canvas, ref SKMatrix matrix) =>
 			SkiaApi.sk_drawable_draw (Handle, canvas.Handle, ref matrix);
-		}
 
 		public void Draw (SKCanvas canvas, float x, float y)
 		{
 			var matrix = SKMatrix.MakeTranslation (x, y);
-			SkiaApi.sk_drawable_draw (Handle, canvas.Handle, ref matrix);
+			Draw (canvas, ref matrix);
 		}
 
-		public SKPicture Snapshot ()
-		{
-			return GetObject<SKPicture> (SkiaApi.sk_drawable_new_picture_snapshot (Handle));
-		}
+		public SKPicture Snapshot () =>
+			GetObject<SKPicture> (SkiaApi.sk_drawable_new_picture_snapshot (Handle));
 
-		public void NotifyDrawingChanged ()
-		{
+		public void NotifyDrawingChanged () =>
 			SkiaApi.sk_drawable_notify_drawing_changed (Handle);
-		}
 
 		protected virtual void OnDraw (SKCanvas canvas)
 		{
 		}
 
-		protected virtual SKRect OnGetBounds ()
-		{
-			return new SKRect ();
-		}
+		protected virtual SKRect OnGetBounds () => new SKRect ();
 
 		protected virtual SKPicture OnSnapshot ()
 		{
@@ -132,13 +123,13 @@ namespace SkiaSharp
 			AsManagedDrawable (managedDrawablePtr).OnDraw (GetObject<SKCanvas> (canvas));
 		}
 
-		[MonoPInvokeCallback(typeof(getBounds_delegate))]
+		[MonoPInvokeCallback (typeof (getBounds_delegate))]
 		private static void GetBoundsInternal (IntPtr managedDrawablePtr, out SKRect rect)
 		{
 			rect = AsManagedDrawable (managedDrawablePtr).OnGetBounds ();
 		}
 
-		[MonoPInvokeCallback(typeof(newPictureSnapshot_delegate))]
+		[MonoPInvokeCallback (typeof (newPictureSnapshot_delegate))]
 		private static IntPtr NewPictureSnapshotInternal (IntPtr managedDrawablePtr)
 		{
 			return AsManagedDrawable (managedDrawablePtr).OnSnapshot ().Handle;
