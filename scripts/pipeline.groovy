@@ -173,6 +173,7 @@ def createManagedBuilder(host, label, additionalPackages) {
                         ws("${getWSRoot()}/managed-${host}") {
                             try {
                                 checkout scm
+                                cmd("git submodule update --init --recursive")
                                 nativeStashes.each { unstash(it) }
 
                                 bootstrapper("-t everything -v ${verbosity} --skipexternals=all", host, "", additionalPackages)
