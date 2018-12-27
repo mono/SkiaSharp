@@ -100,7 +100,6 @@ namespace SkiaSharp.Tests
 		}
 
 		// Test for issue #282
-		[SkippableFact(Skip = "Known to fail, see: https://github.com/mono/SkiaSharp/issues/282")]
 		public void DrawTransparentImageWithHighFilterQualityWithUnpremul()
 		{
 			var oceanColor = (SKColor)0xFF9EB4D6;
