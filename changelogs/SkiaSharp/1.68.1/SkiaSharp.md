@@ -4,6 +4,17 @@
 
 ### Namespace SkiaSharp
 
+#### Type Changed: SkiaSharp.SKCanvas
+
+Added methods:
+
+```csharp
+public void DrawDrawable (SKDrawable drawable, ref SKMatrix matrix);
+public void DrawDrawable (SKDrawable drawable, SKPoint p);
+public void DrawDrawable (SKDrawable drawable, float x, float y);
+```
+
+
 #### Type Changed: SkiaSharp.SKColorSpace
 
 Added properties:
@@ -108,6 +119,15 @@ public float MeasureText (IntPtr buffer, int length, ref SKRect bounds);
 ```
 
 
+#### Type Changed: SkiaSharp.SKPictureRecorder
+
+Added method:
+
+```csharp
+public SKDrawable EndRecordingAsDrawable ();
+```
+
+
 #### New Type: SkiaSharp.SKColorSpaceType
 
 ```csharp
@@ -116,6 +136,28 @@ public enum SKColorSpaceType {
 	Cmyk = 1,
 	Gray = 2,
 	Rgb = 0,
+}
+```
+
+#### New Type: SkiaSharp.SKDrawable
+
+```csharp
+public class SKDrawable : SkiaSharp.SKObject, System.IDisposable {
+	// constructors
+	protected SKDrawable ();
+	protected SKDrawable (bool owns);
+	// properties
+	public SKRect Bounds { get; }
+	public uint GenerationId { get; }
+	// methods
+	protected override void Dispose (bool disposing);
+	public void Draw (SKCanvas canvas, ref SKMatrix matrix);
+	public void Draw (SKCanvas canvas, float x, float y);
+	public void NotifyDrawingChanged ();
+	protected virtual void OnDraw (SKCanvas canvas);
+	protected virtual SKRect OnGetBounds ();
+	protected virtual SKPicture OnSnapshot ();
+	public SKPicture Snapshot ();
 }
 ```
 
