@@ -172,11 +172,11 @@
         <Parameter Name="gamut" Type="SkiaSharp.SKColorSpaceGamut" />
       </Parameters>
       <Docs>
-        <param name="gamma">To be added.</param>
-        <param name="gamut">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="gamma">The gamma transfer function.</param>
+        <param name="gamut">The color gamut.</param>
+        <summary>Creates a new instance of <see cref="T:SkiaSharp.SKColorSpace" /> from a transfer function and a color gamut.</summary>
+        <returns>Returns the new instance of <see cref="T:SkiaSharp.SKColorSpace" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateRgb">
@@ -196,11 +196,11 @@
         <Parameter Name="toXyzD50" Type="SkiaSharp.SKMatrix44" />
       </Parameters>
       <Docs>
-        <param name="gamma">To be added.</param>
-        <param name="toXyzD50">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="gamma">The gamma transfer function.</param>
+        <param name="toXyzD50">The matrix transformation to XYZ D50.</param>
+        <summary>Creates a new instance of <see cref="T:SkiaSharp.SKColorSpace" /> from a transfer function and a color gamut.</summary>
+        <returns>Returns the new instance of <see cref="T:SkiaSharp.SKColorSpace" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateRgb">
@@ -220,11 +220,11 @@
         <Parameter Name="gamut" Type="SkiaSharp.SKColorSpaceGamut" />
       </Parameters>
       <Docs>
-        <param name="coeffs">To be added.</param>
-        <param name="gamut">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="coeffs">The coefficients for a common transfer function equation.</param>
+        <param name="gamut">The color gamut.</param>
+        <summary>Creates a new instance of <see cref="T:SkiaSharp.SKColorSpace" /> from a transfer function and a color gamut.</summary>
+        <returns>Returns the new instance of <see cref="T:SkiaSharp.SKColorSpace" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateRgb">
@@ -244,11 +244,11 @@
         <Parameter Name="toXyzD50" Type="SkiaSharp.SKMatrix44" />
       </Parameters>
       <Docs>
-        <param name="coeffs">To be added.</param>
-        <param name="toXyzD50">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="coeffs">The coefficients for a common transfer function equation.</param>
+        <param name="toXyzD50">The matrix transformation to XYZ D50.</param>
+        <summary>Creates a new instance of <see cref="T:SkiaSharp.SKColorSpace" /> from a transfer function and a color gamut.</summary>
+        <returns>Returns the new instance of <see cref="T:SkiaSharp.SKColorSpace" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateRgb">
@@ -268,11 +268,11 @@
         <Parameter Name="gamut" Type="SkiaSharp.SKColorSpaceGamut" />
       </Parameters>
       <Docs>
-        <param name="gamma">To be added.</param>
-        <param name="gamut">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="gamma">The gamma.</param>
+        <param name="gamut">The color gamut.</param>
+        <summary>Creates a new instance of <see cref="T:SkiaSharp.SKColorSpace" /> from a named gamma and a color gamut.</summary>
+        <returns>Returns the new instance of <see cref="T:SkiaSharp.SKColorSpace" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateRgb">
@@ -292,11 +292,11 @@
         <Parameter Name="toXyzD50" Type="SkiaSharp.SKMatrix44" />
       </Parameters>
       <Docs>
-        <param name="gamma">To be added.</param>
-        <param name="toXyzD50">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="gamma">The gamma.</param>
+        <param name="toXyzD50">The matrix transformation to XYZ D50.</param>
+        <summary>Creates a new instance of <see cref="T:SkiaSharp.SKColorSpace" /> from a named gamma and a color gamut.</summary>
+        <returns>Returns the new instance of <see cref="T:SkiaSharp.SKColorSpace" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="CreateRgb">
@@ -545,9 +545,9 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Describes color space gamut as a transformation from XYZ D50.</summary>
+        <returns>Returns the matrix if the color gamut can be described as a matrix, otherwise <see langword="null" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="GammaIsCloseToSrgb">
@@ -608,10 +608,10 @@
         <Parameter Name="fn" Type="SkiaSharp.SKColorSpaceTransferFn" RefType="out" />
       </Parameters>
       <Docs>
-        <param name="fn">To be added.</param>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <param name="fn">The values of the coefficients to the standard equation.</param>
+        <summary>Returns the values of the coefficients to the standard equation.</summary>
+        <returns>Returns <see langword="true" /> if transfer function can be represented as coefficients to the standard equation, otherwise <see langword="false" />.</returns>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="IsNumericalTransferFunction">
@@ -627,9 +627,9 @@
         <ReturnType>System.Boolean</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets a value indicating whether the transfer function can be represented as coefficients to the standard equation.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="IsSrgb">
@@ -665,9 +665,9 @@
         <ReturnType>SkiaSharp.SKNamedGamma</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the gamma of the color space.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
     <Member MemberName="ToXyzD50">
@@ -687,7 +687,7 @@
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>Converts the color space to a XYZ D50 matrix that describes the color space.</summary>
+        <summary>Describes color space gamut as a transformation to XYZ D50.</summary>
         <returns>Returns the matrix if the color gamut can be described as a matrix, otherwise <see langword="null" />.</returns>
         <remarks></remarks>
       </Docs>
@@ -730,9 +730,9 @@
         <ReturnType>SkiaSharp.SKColorSpaceType</ReturnType>
       </ReturnValue>
       <Docs>
-        <summary>To be added.</summary>
-        <value>To be added.</value>
-        <remarks>To be added.</remarks>
+        <summary>Gets the color space type.</summary>
+        <value></value>
+        <remarks></remarks>
       </Docs>
     </Member>
   </Members>
