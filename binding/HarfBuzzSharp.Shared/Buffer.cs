@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 
 namespace HarfBuzzSharp
@@ -44,15 +43,49 @@ namespace HarfBuzzSharp
 			get { return HarfBuzzApi.hb_buffer_get_length(Handle); }
 		}
 
-		public void AddUtf8(string utf8text)
+		public void AddUtf8(string text)
 		{
-			var bytes = Encoding.UTF8.GetBytes(utf8text);
+			var bytes = Encoding.UTF8.GetBytes(text);
 			AddUtf8(bytes);
 		}
 
-		public void AddUtf8(byte[] bytes)
+		public void AddUtf8(byte[] text, uint itemOffset = 0, int itemLength = -1)
 		{
-			HarfBuzzApi.hb_buffer_add_utf8(Handle, bytes, bytes.Length, 0, bytes.Length);
+			if (itemLength == -1) {
+				itemLength = text.Length - (int)itemOffset;
+			}
+
+			HarfBuzzApi.hb_buffer_add_utf8(Handle, text, text.Length, itemOffset, itemLength);
+		}
+
+		public void AddUtf16(string text)
+		{
+			var bytes = Encoding.Unicode.GetBytes(text);
+			AddUtf16(bytes);
+		}
+
+		public void AddUtf16(byte[] text, uint itemOffset = 0, int itemLength = -1)
+		{
+			if (itemLength == -1) {
+				itemLength = text.Length / 2 - (int)itemOffset;
+			}
+
+			HarfBuzzApi.hb_buffer_add_utf16(Handle, text, text.Length, itemOffset, itemLength);
+		}
+
+		public void AddUtf32(string text)
+		{
+			var bytes = Encoding.UTF32.GetBytes (text);
+			AddUtf32(bytes);
+		}
+
+		public void AddUtf32(byte[] text, uint itemOffset = 0, int itemLength = -1)
+		{
+			if (itemLength == -1) {
+				itemLength = text.Length / 4 - (int)itemOffset;
+			}
+
+			HarfBuzzApi.hb_buffer_add_utf32(Handle, text, text.Length, itemOffset, itemLength);
 		}
 
 		public void GuessSegmentProperties() => HarfBuzzApi.hb_buffer_guess_segment_properties(Handle);
