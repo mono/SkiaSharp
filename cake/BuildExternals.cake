@@ -713,27 +713,12 @@ Task ("externals-angle-uwp")
 });
 
 Task ("externals-harfbuzz")
-    .WithCriteria (
-        !FileExists (HARFBUZZ_PATH.CombineWithFilePath ("harfbuzz/README")) ||
-        !FileExists (HARFBUZZ_PATH.CombineWithFilePath ($"harfbuzz-{GetVersion ("harfbuzz", "release")}.tar.bz2")))
     .Does (() =>
 {
-    var version = GetVersion ("harfbuzz", "release");
-    var url = $"https://github.com/behdad/harfbuzz/releases/download/{version}/harfbuzz-{version}.tar.bz2";
-    DirectoryPath root = HARFBUZZ_PATH;
-    FilePath archive = root.CombineWithFilePath ($"harfbuzz-{version}.tar.bz2");
-
-    EnsureDirectoryExists (root);
-    CleanDirectory (root);
-
-    DownloadFile (url, archive);
-    DecompressArchive (archive, root);
-    MoveDirectory (root.Combine ($"harfbuzz-{version}"), HARFBUZZ_PATH.Combine ("harfbuzz"));
-
     if (!IsRunningOnWindows ()) {
         RunProcess ("bash", new ProcessSettings {
             Arguments = "configure",
-            WorkingDirectory = HARFBUZZ_PATH.Combine ("harfbuzz"),
+            WorkingDirectory = HARFBUZZ_PATH,
         });
     }
 });
@@ -748,9 +733,6 @@ Task ("clean-externals")
     // skia
     CleanDirectories ("externals/skia/out");
     CleanDirectories ("externals/skia/xcodebuild");
-
-    // harfbuzz
-    CleanDirectories ("externals/harfbuzz");
 
     // angle
     CleanDirectories ("externals/angle");
