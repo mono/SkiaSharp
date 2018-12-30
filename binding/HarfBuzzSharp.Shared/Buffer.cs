@@ -51,10 +51,6 @@ namespace HarfBuzzSharp
 
 		public void AddUtf8(byte[] text, uint itemOffset = 0, int itemLength = -1)
 		{
-			if (itemLength == -1) {
-				itemLength = text.Length - (int)itemOffset;
-			}
-
 			HarfBuzzApi.hb_buffer_add_utf8(Handle, text, text.Length, itemOffset, itemLength);
 		}
 
@@ -66,25 +62,17 @@ namespace HarfBuzzSharp
 
 		public void AddUtf16(byte[] text, uint itemOffset = 0, int itemLength = -1)
 		{
-			if (itemLength == -1) {
-				itemLength = text.Length / 2 - (int)itemOffset;
-			}
-
 			HarfBuzzApi.hb_buffer_add_utf16(Handle, text, text.Length, itemOffset, itemLength);
 		}
 
 		public void AddUtf32(string text)
 		{
-			var bytes = Encoding.UTF32.GetBytes (text);
+			var bytes = Encoding.UTF32.GetBytes(text);
 			AddUtf32(bytes);
 		}
 
 		public void AddUtf32(byte[] text, uint itemOffset = 0, int itemLength = -1)
 		{
-			if (itemLength == -1) {
-				itemLength = text.Length / 4 - (int)itemOffset;
-			}
-
 			HarfBuzzApi.hb_buffer_add_utf32(Handle, text, text.Length, itemOffset, itemLength);
 		}
 
@@ -96,8 +84,7 @@ namespace HarfBuzzSharp
 		{
 			get
 			{
-				uint length;
-				var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_infos(Handle, out length);
+				var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_infos(Handle, out var length);
 				return PtrToStructureArray<GlyphInfo>(infoPtrs, (int)length);
 			}
 		}
@@ -106,8 +93,7 @@ namespace HarfBuzzSharp
 		{
 			get
 			{
-				uint length;
-				var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_positions(Handle, out length);
+				var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_positions(Handle, out var length);
 				return PtrToStructureArray<GlyphPosition>(infoPtrs, (int)length);
 			}
 		}
