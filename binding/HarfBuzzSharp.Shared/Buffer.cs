@@ -57,7 +57,7 @@ namespace HarfBuzzSharp
 		public void AddUtf16(string text)
 		{
 			var bytes = Encoding.Unicode.GetBytes(text);
-			AddUtf16(bytes);
+			AddUtf16(bytes, 0, bytes.Length / 2);
 		}
 
 		public void AddUtf16(byte[] text, uint itemOffset = 0, int itemLength = -1)
@@ -68,7 +68,7 @@ namespace HarfBuzzSharp
 		public void AddUtf32(string text)
 		{
 			var bytes = Encoding.UTF32.GetBytes(text);
-			AddUtf32(bytes);
+			AddUtf32(bytes, 0, bytes.Length / 4);
 		}
 
 		public void AddUtf32(byte[] text, uint itemOffset = 0, int itemLength = -1)
