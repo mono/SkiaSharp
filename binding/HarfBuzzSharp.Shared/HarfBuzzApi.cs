@@ -96,13 +96,13 @@ namespace HarfBuzzSharp
 		public extern static void hb_buffer_destroy(hb_buffer_t buffer);
 
 		[DllImport(HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_buffer_add_utf8(hb_buffer_t buffer, byte[] text, int text_length, uint item_offset, int item_length);
+		public extern static void hb_buffer_add_utf8(hb_buffer_t buffer, IntPtr text, int text_length, uint item_offset, int item_length);
 
 		[DllImport(HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_buffer_add_utf16(hb_buffer_t buffer, byte[] text, int text_length, uint item_offset, int item_length);
+		public extern static void hb_buffer_add_utf16(hb_buffer_t buffer, IntPtr text, int text_length, uint item_offset, int item_length);
 
 		[DllImport(HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_buffer_add_utf32(hb_buffer_t buffer, byte[] text, int text_length, uint item_offset, int item_length);
+		public extern static void hb_buffer_add_utf32(hb_buffer_t buffer, IntPtr text, int text_length, uint item_offset, int item_length);
 
 		[DllImport(HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_buffer_guess_segment_properties(hb_buffer_t buffer);

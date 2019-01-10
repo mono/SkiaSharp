@@ -49,9 +49,17 @@ namespace HarfBuzzSharp
 			AddUtf8(bytes);
 		}
 
-		public void AddUtf8(byte[] text, uint itemOffset = 0, int itemLength = -1)
+		public unsafe void AddUtf8(byte[] text, uint itemOffset = 0, int itemLength = -1)
 		{
-			HarfBuzzApi.hb_buffer_add_utf8(Handle, text, text.Length, itemOffset, itemLength);
+			fixed (byte* bytes = text)
+			{
+				AddUtf8((IntPtr)bytes, text.Length, itemOffset, itemLength);
+			}
+		}
+
+		public void AddUtf8(IntPtr text, int textLength, uint itemOffset = 0, int itemLength = -1)
+		{
+			HarfBuzzApi.hb_buffer_add_utf8(Handle, text, textLength, itemOffset, itemLength);
 		}
 
 		public void AddUtf16(string text)
@@ -60,9 +68,17 @@ namespace HarfBuzzSharp
 			AddUtf16(bytes, 0, bytes.Length / 2);
 		}
 
-		public void AddUtf16(byte[] text, uint itemOffset = 0, int itemLength = -1)
+		public unsafe void AddUtf16(byte[] text, uint itemOffset = 0, int itemLength = -1)
 		{
-			HarfBuzzApi.hb_buffer_add_utf16(Handle, text, text.Length, itemOffset, itemLength);
+			fixed (byte* bytes = text)
+			{
+				AddUtf16((IntPtr)bytes, text.Length, itemOffset, itemLength);
+			}
+		}
+
+		public void AddUtf16(IntPtr text, int textLength, uint itemOffset = 0, int itemLength = -1)
+		{
+			HarfBuzzApi.hb_buffer_add_utf16(Handle, text, textLength, itemOffset, itemLength);
 		}
 
 		public void AddUtf32(string text)
@@ -71,9 +87,17 @@ namespace HarfBuzzSharp
 			AddUtf32(bytes, 0, bytes.Length / 4);
 		}
 
-		public void AddUtf32(byte[] text, uint itemOffset = 0, int itemLength = -1)
+		public unsafe void AddUtf32(byte[] text, uint itemOffset = 0, int itemLength = -1)
 		{
-			HarfBuzzApi.hb_buffer_add_utf32(Handle, text, text.Length, itemOffset, itemLength);
+			fixed (byte* bytes = text)
+			{
+				AddUtf32((IntPtr)bytes, text.Length, itemOffset, itemLength);
+			}
+		}
+
+		public void AddUtf32(IntPtr text, int textLength, uint itemOffset = 0, int itemLength = -1)
+		{
+			HarfBuzzApi.hb_buffer_add_utf32(Handle, text, textLength, itemOffset, itemLength);
 		}
 
 		public void GuessSegmentProperties() => HarfBuzzApi.hb_buffer_guess_segment_properties(Handle);
