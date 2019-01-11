@@ -43,61 +43,61 @@ namespace HarfBuzzSharp
 			get { return HarfBuzzApi.hb_buffer_get_length(Handle); }
 		}
 
-		public void AddUtf8(string text)
+		public void AddUtf8(string utf8text)
 		{
-			var bytes = Encoding.UTF8.GetBytes(text);
+			var bytes = Encoding.UTF8.GetBytes(utf8text);
 			AddUtf8(bytes);
 		}
 
-		public unsafe void AddUtf8(byte[] text, uint itemOffset = 0, int itemLength = -1)
+		public unsafe void AddUtf8(byte[] bytes, uint itemOffset = 0, int itemLength = -1)
 		{
-			fixed (byte* bytes = text)
+			fixed (byte* b = bytes)
 			{
-				AddUtf8((IntPtr)bytes, text.Length, itemOffset, itemLength);
+				AddUtf8((IntPtr)b, bytes.Length, itemOffset, itemLength);
 			}
 		}
 
-		public void AddUtf8(IntPtr text, int textLength, uint itemOffset = 0, int itemLength = -1)
+		public void AddUtf8(IntPtr buffer, int textLength, uint itemOffset = 0, int itemLength = -1)
 		{
-			HarfBuzzApi.hb_buffer_add_utf8(Handle, text, textLength, itemOffset, itemLength);
+			HarfBuzzApi.hb_buffer_add_utf8(Handle, buffer, textLength, itemOffset, itemLength);
 		}
 
-		public void AddUtf16(string text)
+		public void AddUtf16(string utf16text)
 		{
-			var bytes = Encoding.Unicode.GetBytes(text);
+			var bytes = Encoding.Unicode.GetBytes(utf16text);
 			AddUtf16(bytes, 0, bytes.Length / 2);
 		}
 
-		public unsafe void AddUtf16(byte[] text, uint itemOffset = 0, int itemLength = -1)
+		public unsafe void AddUtf16(byte[] bytes, uint itemOffset = 0, int itemLength = -1)
 		{
-			fixed (byte* bytes = text)
+			fixed (byte* b = bytes)
 			{
-				AddUtf16((IntPtr)bytes, text.Length, itemOffset, itemLength);
+				AddUtf16((IntPtr)b, bytes.Length, itemOffset, itemLength);
 			}
 		}
 
-		public void AddUtf16(IntPtr text, int textLength, uint itemOffset = 0, int itemLength = -1)
+		public void AddUtf16(IntPtr buffer, int textLength, uint itemOffset = 0, int itemLength = -1)
 		{
-			HarfBuzzApi.hb_buffer_add_utf16(Handle, text, textLength, itemOffset, itemLength);
+			HarfBuzzApi.hb_buffer_add_utf16(Handle, buffer, textLength, itemOffset, itemLength);
 		}
 
-		public void AddUtf32(string text)
+		public void AddUtf32(string utf32text)
 		{
-			var bytes = Encoding.UTF32.GetBytes(text);
+			var bytes = Encoding.UTF32.GetBytes(utf32text);
 			AddUtf32(bytes, 0, bytes.Length / 4);
 		}
 
-		public unsafe void AddUtf32(byte[] text, uint itemOffset = 0, int itemLength = -1)
+		public unsafe void AddUtf32(byte[] bytes, uint itemOffset = 0, int itemLength = -1)
 		{
-			fixed (byte* bytes = text)
+			fixed (byte* b = bytes)
 			{
-				AddUtf32((IntPtr)bytes, text.Length, itemOffset, itemLength);
+				AddUtf32((IntPtr)b, bytes.Length, itemOffset, itemLength);
 			}
 		}
 
-		public void AddUtf32(IntPtr text, int textLength, uint itemOffset = 0, int itemLength = -1)
+		public void AddUtf32(IntPtr buffer, int textLength, uint itemOffset = 0, int itemLength = -1)
 		{
-			HarfBuzzApi.hb_buffer_add_utf32(Handle, text, textLength, itemOffset, itemLength);
+			HarfBuzzApi.hb_buffer_add_utf32(Handle, buffer, textLength, itemOffset, itemLength);
 		}
 
 		public void GuessSegmentProperties() => HarfBuzzApi.hb_buffer_guess_segment_properties(Handle);
