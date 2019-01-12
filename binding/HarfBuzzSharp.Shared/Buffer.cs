@@ -82,7 +82,7 @@ namespace HarfBuzzSharp
 		{
 			fixed (char* chars = text)
 			{
-				AddUtf16 ((IntPtr)chars, text.Length, itemOffset, itemLength);
+				AddUtf16((IntPtr)chars, text.Length, itemOffset, itemLength);
 			}
 		}
 
@@ -90,7 +90,7 @@ namespace HarfBuzzSharp
 		{
 			fixed (byte* bytes = text)
 			{
-				AddUtf16((IntPtr)bytes, text.Length);
+				AddUtf16((IntPtr)bytes, text.Length / 2);
 			}
 		}
 
@@ -117,7 +117,7 @@ namespace HarfBuzzSharp
 		{
 			fixed (byte* bytes = text)
 			{
-				AddUtf32((IntPtr)bytes, text.Length);
+				AddUtf32((IntPtr)bytes, text.Length / 4);
 			}
 		}
 
