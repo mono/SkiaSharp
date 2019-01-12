@@ -95,6 +95,9 @@ namespace HarfBuzzSharp
 		[DllImport(HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_buffer_destroy(hb_buffer_t buffer);
 
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void hb_buffer_add (hb_buffer_t buffer, hb_codepoint_t codepoint, uint cluster);
+
 		[DllImport(HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_buffer_add_utf8(hb_buffer_t buffer, IntPtr text, int text_length, uint item_offset, int item_length);
 

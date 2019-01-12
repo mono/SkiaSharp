@@ -43,61 +43,95 @@ namespace HarfBuzzSharp
 			get { return HarfBuzzApi.hb_buffer_get_length(Handle); }
 		}
 
-		public void AddUtf8(string utf8text)
+		public void Add(uint codepoint, uint cluster)
 		{
-			var bytes = Encoding.UTF8.GetBytes(utf8text);
-			AddUtf8(bytes);
+			HarfBuzzApi.hb_buffer_add(Handle, codepoint, cluster);
 		}
 
-		public unsafe void AddUtf8(byte[] bytes, uint itemOffset = 0, int itemLength = -1)
+		public void AddUtf8(string text)
+		{
+			var bytes = Encoding.UTF8.GetBytes(text);
+			AddUtf8 (bytes, 0, -1);
+		}
+
+		public void AddUtf8(byte[] bytes)
+		{
+			AddUtf8(bytes, 0, -1);
+		}
+		public unsafe void AddUtf8(byte[] bytes, uint itemOffset, int itemLength)
 		{
 			fixed (byte* b = bytes)
 			{
 				AddUtf8((IntPtr)b, bytes.Length, itemOffset, itemLength);
 			}
 		}
-
-		public void AddUtf8(IntPtr buffer, int textLength, uint itemOffset = 0, int itemLength = -1)
+		public unsafe void AddUtf8(ReadOnlySpan<byte> text, uint itemOffset = 0, int itemLength = -1)
 		{
-			HarfBuzzApi.hb_buffer_add_utf8(Handle, buffer, textLength, itemOffset, itemLength);
-		}
-
-		public void AddUtf16(string utf16text)
-		{
-			var bytes = Encoding.Unicode.GetBytes(utf16text);
-			AddUtf16(bytes, 0, bytes.Length / 2);
-		}
-
-		public unsafe void AddUtf16(byte[] bytes, uint itemOffset = 0, int itemLength = -1)
-		{
-			fixed (byte* b = bytes)
+			fixed (byte* bytes = text)
 			{
-				AddUtf16((IntPtr)b, bytes.Length, itemOffset, itemLength);
+				AddUtf8((IntPtr)bytes, text.Length, itemOffset, itemLength);
 			}
 		}
 
-		public void AddUtf16(IntPtr buffer, int textLength, uint itemOffset = 0, int itemLength = -1)
+		public void AddUtf8(IntPtr text, int textLength, uint itemOffset = 0, int itemLength = -1)
 		{
-			HarfBuzzApi.hb_buffer_add_utf16(Handle, buffer, textLength, itemOffset, itemLength);
+			HarfBuzzApi.hb_buffer_add_utf8(Handle, text, textLength, itemOffset, itemLength);
 		}
 
-		public void AddUtf32(string utf32text)
+		public unsafe void AddUtf16(string text, uint itemOffset = 0, int itemLength = -1)
 		{
-			var bytes = Encoding.UTF32.GetBytes(utf32text);
-			AddUtf32(bytes, 0, bytes.Length / 4);
-		}
-
-		public unsafe void AddUtf32(byte[] bytes, uint itemOffset = 0, int itemLength = -1)
-		{
-			fixed (byte* b = bytes)
+			fixed (char* chars = text)
 			{
-				AddUtf32((IntPtr)b, bytes.Length, itemOffset, itemLength);
+				AddUtf16 ((IntPtr)chars, text.Length, itemOffset, itemLength);
 			}
 		}
 
-		public void AddUtf32(IntPtr buffer, int textLength, uint itemOffset = 0, int itemLength = -1)
+		public unsafe void AddUtf16(byte[] text)
 		{
-			HarfBuzzApi.hb_buffer_add_utf32(Handle, buffer, textLength, itemOffset, itemLength);
+			fixed (byte* bytes = text)
+			{
+				AddUtf16((IntPtr)bytes, text.Length);
+			}
+		}
+
+		public unsafe void AddUtf16(ReadOnlySpan<char> text, uint itemOffset = 0, int itemLength = -1)
+		{
+			fixed (char* chars = text)
+			{
+				AddUtf16((IntPtr)chars, text.Length, itemOffset, itemLength);
+			}
+		}
+
+		public void AddUtf16(IntPtr text, int textLength, uint itemOffset = 0, int itemLength = -1)
+		{
+			HarfBuzzApi.hb_buffer_add_utf16(Handle, text, textLength, itemOffset, itemLength);
+		}
+
+		public void AddUtf32(string text)
+		{
+			var bytes = Encoding.UTF32.GetBytes(text);
+			AddUtf32(bytes);
+		}
+
+		public unsafe void AddUtf32(byte[] text)
+		{
+			fixed (byte* bytes = text)
+			{
+				AddUtf32((IntPtr)bytes, text.Length);
+			}
+		}
+
+		public unsafe void AddUtf32(ReadOnlySpan<uint> text, uint itemOffset = 0, int itemLength = -1)
+		{
+			fixed (uint* integers = text)
+			{
+				AddUtf32((IntPtr)integers, text.Length, itemOffset, itemLength);
+			}
+		}
+
+		public void AddUtf32(IntPtr text, int textLength, uint itemOffset = 0, int itemLength = -1)
+		{
+			HarfBuzzApi.hb_buffer_add_utf32(Handle, text, textLength, itemOffset, itemLength);
 		}
 
 		public void GuessSegmentProperties() => HarfBuzzApi.hb_buffer_guess_segment_properties(Handle);
@@ -108,7 +142,8 @@ namespace HarfBuzzSharp
 		{
 			get
 			{
-				var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_infos(Handle, out var length);
+				uint length;
+				var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_infos(Handle, out length);
 				return PtrToStructureArray<GlyphInfo>(infoPtrs, (int)length);
 			}
 		}
@@ -117,7 +152,8 @@ namespace HarfBuzzSharp
 		{
 			get
 			{
-				var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_positions(Handle, out var length);
+				uint length;
+				var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_positions(Handle, out length);
 				return PtrToStructureArray<GlyphPosition>(infoPtrs, (int)length);
 			}
 		}
