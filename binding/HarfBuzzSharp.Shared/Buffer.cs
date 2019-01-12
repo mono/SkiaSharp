@@ -48,9 +48,9 @@ namespace HarfBuzzSharp
 			HarfBuzzApi.hb_buffer_add(Handle, codepoint, cluster);
 		}
 
-		public void AddUtf8(string text)
+		public void AddUtf8(string utf8text)
 		{
-			var bytes = Encoding.UTF8.GetBytes(text);
+			var bytes = Encoding.UTF8.GetBytes(utf8text);
 			AddUtf8 (bytes, 0, -1);
 		}
 
