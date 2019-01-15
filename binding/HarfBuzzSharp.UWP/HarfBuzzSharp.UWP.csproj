@@ -1,4 +1,4 @@
-﻿<Project Sdk="MSBuild.Sdk.Extras">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\source\SkiaSharp.Build.props" />
   <PropertyGroup>
     <TargetFramework>uap10.0.10240</TargetFramework>
@@ -17,6 +17,9 @@
     <DebugType>pdbonly</DebugType>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="2.0.0-preview.14" PrivateAssets="All" />
+  </ItemGroup>
+  <ItemGroup>
     <None Include="..\..\output\native\uwp\x64\libHarfBuzzSharp.dll" Link="nuget\runtimes\win10-x64\nativeassets\uap10.0\libHarfBuzzSharp.dll" />
     <None Include="..\..\output\native\uwp\x86\libHarfBuzzSharp.dll" Link="nuget\runtimes\win10-x86\nativeassets\uap10.0\libHarfBuzzSharp.dll" />
     <None Include="..\..\output\native\uwp\arm\libHarfBuzzSharp.dll" Link="nuget\runtimes\win10-arm\nativeassets\uap10.0\libHarfBuzzSharp.dll" />
@@ -26,4 +29,5 @@
     <Compile Include="..\HarfBuzzSharp.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
+  <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />
 </Project>

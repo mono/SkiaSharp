@@ -1,4 +1,4 @@
-﻿<Project Sdk="MSBuild.Sdk.Extras">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\SkiaSharp.Build.props" />
   <PropertyGroup>
     <TargetFramework>monoandroid8.1</TargetFramework>
@@ -11,6 +11,7 @@
     <DefineConstants>$(DefineConstants);</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="2.0.0-preview.14" PrivateAssets="All" />
     <PackageReference Include="Xamarin.Forms" Version="3.3.0.912540" />
   </ItemGroup>
   <ItemGroup>
@@ -22,4 +23,5 @@
     <Compile Include="..\SkiaSharp.Views.Forms.Native.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <Import Project="..\..\SkiaSharp.Build.targets" />
+  <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />
 </Project>
