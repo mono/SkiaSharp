@@ -83,7 +83,6 @@ src = \
 	${src_root}/hb-static.cc	\
 	${src_root}/hb-unicode.cc	\
 	${src_root}/hb-warning.cc	\
-	${src_root}/hb-ft.cc	\
 	${src_root}/hb-fallback-shape.cc
 
 src_names = $(subst ${src_root}/,${noop},${src})
