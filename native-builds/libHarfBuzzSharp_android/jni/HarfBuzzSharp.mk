@@ -32,7 +32,7 @@ LOCAL_C_INCLUDES       := .                                             \
 LOCAL_CFLAGS           := -DHAVE_CONFIG_H
 
 LOCAL_SRC_FILES        := ../../../externals/harfbuzz/src/hb-ucdn/ucdn.c	\
-						  ../../../externals/harfbuzz/src/ucdn.cc	\
+						  ../../../externals/harfbuzz/src/hb-ucdn.cc	\
 						  ../../../externals/harfbuzz/src/hb-aat-layout.cc	\
 						  ../../../externals/harfbuzz/src/hb-aat-map.cc	\
                           ../../../externals/harfbuzz/src/hb-blob.cc	\

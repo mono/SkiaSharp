@@ -38,9 +38,8 @@ library_names = $(notdir ${library_paths})
 libraries = $(library_names:lib%.a=-l%)
 
 src = \
-	${src_root}/hb-blob.cc \
 	${src_root}/hb-ucdn/ucdn.c	\
-	${src_root}/ucdn.cc	\
+	${src_root}/hb-ucdn.cc	\
 	${src_root}/hb-aat-layout.cc	\
 	${src_root}/hb-aat-map.cc	\
     ${src_root}/hb-blob.cc	\
