@@ -38,7 +38,7 @@ LOCAL_SRC_FILES        := ../../../externals/harfbuzz/src/hb-ucdn/ucdn.c	\
                           ../../../externals/harfbuzz/src/hb-blob.cc	\
                           ../../../externals/harfbuzz/src/hb-buffer-serialize.cc	\
                           ../../../externals/harfbuzz/src/hb-buffer.cc	\
-                          ../../../externals/harfbuzz/src/hb-common.cc	\											  
+                          ../../../externals/harfbuzz/src/hb-common.cc	\			  
                           ../../../externals/harfbuzz/src/hb-face.cc	\
 						  ../../../externals/harfbuzz/src/hb-font.cc	\
 						  ../../../externals/harfbuzz/src/hb-map.cc	\
@@ -48,7 +48,7 @@ LOCAL_SRC_FILES        := ../../../externals/harfbuzz/src/hb-ucdn/ucdn.c	\
 						  ../../../externals/harfbuzz/src/hb-ot-face.cc	\
 						  ../../../externals/harfbuzz/src/hb-ot-font.cc	\
 						  ../../../externals/harfbuzz/src/hb-ot-layout.cc	\
-						  ../../../externals/harfbuzz/src/hb-ot-map.cc	\						 				
+						  ../../../externals/harfbuzz/src/hb-ot-map.cc	\		
 						  ../../../externals/harfbuzz/src/hb-ot-math.cc	\
 						  ../../../externals/harfbuzz/src/hb-ot-name-language.cc	\
 						  ../../../externals/harfbuzz/src/hb-ot-name.cc	\

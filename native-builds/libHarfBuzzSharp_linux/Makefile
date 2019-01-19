@@ -7,7 +7,7 @@ LDFLAGS +=
 noop = 
 space = ${noop} ${noop}
 
-src_root = ../../externals/harfbuzz/harfbuzz/src
+src_root = ../../externals/harfbuzz/src
 obj_root = obj
 bin_root = bin
 objarch_root = ${obj_root}/${ARCH}
@@ -38,15 +38,15 @@ library_names = $(notdir ${library_paths})
 libraries = $(library_names:lib%.a=-l%)
 
 src = \
-	${src_root}/hb-blob.cc                           \
+	${src_root}/hb-blob.cc \
 	${src_root}/hb-ucdn/ucdn.c	\
 	${src_root}/ucdn.cc	\
 	${src_root}/hb-aat-layout.cc	\
 	${src_root}/hb-aat-map.cc	\
     ${src_root}/hb-blob.cc	\
     ${src_root}/hb-buffer-serialize.cc	\
-    ${src_root}/hb-buffer.cc	\
-    ${src_root}/hb-common.cc	\											  
+    ${src_root}/hb-buffer.cc\
+    ${src_root}/hb-common.cc\
     ${src_root}/hb-face.cc	\
 	${src_root}/hb-font.cc	\
 	${src_root}/hb-map.cc	\
@@ -56,7 +56,7 @@ src = \
 	${src_root}/hb-ot-face.cc	\
 	${src_root}/hb-ot-font.cc	\
 	${src_root}/hb-ot-layout.cc	\
-	${src_root}/hb-ot-map.cc	\						 				
+	${src_root}/hb-ot-map.cc	\
 	${src_root}/hb-ot-math.cc	\
 	${src_root}/hb-ot-name-language.cc	\
 	${src_root}/hb-ot-name.cc	\
