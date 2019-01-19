@@ -10,9 +10,9 @@ cmd-strip = $(PRIVATE_STRIP) --strip-all $(call host-path,$1)
 LOCAL_MODULE           := HarfBuzzSharp
 
 LOCAL_C_INCLUDES       := .                                             \
-                          ../../externals/harfbuzz/harfbuzz/src/hb-ucdn \
-                          ../../externals/harfbuzz/harfbuzz/src         \
-                          ../../externals/harfbuzz/harfbuzz
+                          ../../externals/harfbuzz/src/hb-ucdn \
+                          ../../externals/harfbuzz/src         \
+                          ../../externals/harfbuzz
 
 # LOCAL_CFLAGS           := -DSK_INTERNAL -DSK_GAMMA_APPLY_TO_A8                                   \
 #                           -DSK_ALLOW_STATIC_GLOBAL_INITIALIZERS=0 -DSK_SUPPORT_GPU=1             \
@@ -31,40 +31,52 @@ LOCAL_C_INCLUDES       := .                                             \
 
 LOCAL_CFLAGS           := -DHAVE_CONFIG_H
 
-LOCAL_SRC_FILES        := ../../../externals/harfbuzz/harfbuzz/src/hb-ucdn/ucdn.c                      \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-blob.cc                          \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-buffer-serialize.cc              \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-buffer.cc                        \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-common.cc                        \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-face.cc                          \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-fallback-shape.cc                \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-font.cc                          \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-ot-font.cc                       \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-ot-layout.cc                     \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-ot-map.cc                        \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-ot-math.cc                       \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-ot-shape-complex-arabic.cc       \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-ot-shape-complex-default.cc      \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-ot-shape-complex-hangul.cc       \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-ot-shape-complex-hebrew.cc       \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-ot-shape-complex-indic-table.cc  \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-ot-shape-complex-indic.cc        \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-ot-shape-complex-myanmar.cc      \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-ot-shape-complex-thai.cc         \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-ot-shape-complex-tibetan.cc      \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-ot-shape-complex-use-table.cc    \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-ot-shape-complex-use.cc          \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-ot-shape-fallback.cc             \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-ot-shape-normalize.cc            \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-ot-shape.cc                      \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-ot-tag.cc                        \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-ot-var.cc                        \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-set.cc                           \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-shape-plan.cc                    \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-shape.cc                         \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-shaper.cc                        \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-ucdn.cc                          \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-unicode.cc                       \
-                          ../../../externals/harfbuzz/harfbuzz/src/hb-warning.cc
+LOCAL_SRC_FILES        := ../../../externals/harfbuzz/src/hb-ucdn/ucdn.c	\
+						  ../../../externals/harfbuzz/src/ucdn.cc	\
+						  ../../../externals/harfbuzz/src/hb-aat-layout.cc	\
+						  ../../../externals/harfbuzz/src/hb-aat-map.cc	\
+                          ../../../externals/harfbuzz/src/hb-blob.cc	\
+                          ../../../externals/harfbuzz/src/hb-buffer-serialize.cc	\
+                          ../../../externals/harfbuzz/src/hb-buffer.cc	\
+                          ../../../externals/harfbuzz/src/hb-common.cc	\											  
+                          ../../../externals/harfbuzz/src/hb-face.cc	\
+						  ../../../externals/harfbuzz/src/hb-font.cc	\
+						  ../../../externals/harfbuzz/src/hb-map.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-cff1-table.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-cff2-table.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-color.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-face.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-font.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-layout.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-map.cc	\						 				
+						  ../../../externals/harfbuzz/src/hb-ot-math.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-name-language.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-name.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-shape-complex-arabic.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-shape-complex-default.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-shape-complex-hangul.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-shape-complex-hebrew.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-shape-complex-indic-table.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-shape-complex-indic.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-shape-complex-khmer.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-shape-complex-myanmar.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-shape-complex-thai.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-shape-complex-use-table.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-shape-complex-use.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-shape-complex-vowel-constraints.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-shape-fallback.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-shape-normalize.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-shape.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-tag.cc	\
+						  ../../../externals/harfbuzz/src/hb-ot-var.cc	\
+						  ../../../externals/harfbuzz/src/hb-set.cc	\
+						  ../../../externals/harfbuzz/src/hb-shape-plan.cc	\
+						  ../../../externals/harfbuzz/src/hb-shape.cc	\
+						  ../../../externals/harfbuzz/src/hb-shaper.cc	\
+						  ../../../externals/harfbuzz/src/hb-static.cc	\
+						  ../../../externals/harfbuzz/src/hb-unicode.cc	\
+						  ../../../externals/harfbuzz/src/hb-warning.cc	\
+						  ../../../externals/harfbuzz/src/hb-ft.cc	\
+						  ../../../externals/harfbuzz/src/hb-fallback-shape.cc
 
 include $(BUILD_SHARED_LIBRARY)
