@@ -1,4 +1,4 @@
-﻿<Project Sdk="MSBuild.Sdk.Extras">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\source\SkiaSharp.Build.props" />
   <PropertyGroup>
     <TargetFramework>tizen40</TargetFramework>
@@ -21,6 +21,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.5.2" />
+    <PackageReference Include="Tizen.NET" Version="4.0.0" />
     <PackageReference Include="Tizen.NET.Sdk" Version="1.0.1" />
   </ItemGroup>
   <ItemGroup>
@@ -32,4 +33,5 @@
     <Compile Include="..\HarfBuzzSharp.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
+  <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />
 </Project>

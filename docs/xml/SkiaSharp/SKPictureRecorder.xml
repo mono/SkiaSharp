@@ -135,9 +135,24 @@ This invalidates the canvas returned by
       </ReturnValue>
       <Parameters />
       <Docs>
-        <summary>To be added.</summary>
-        <returns>To be added.</returns>
-        <remarks>To be added.</remarks>
+        <summary>Signal that the caller is done recording.</summary>
+        <returns>Returns the <see cref="T:SkiaSharp.SKDrawable" /> containing the recorded content.</returns>
+        <remarks>
+          <format type="text/markdown"><![CDATA[
+## Remarks
+
+This invalidates the canvas returned by
+<xref:SkiaSharp.SKPictureRecorder.BeginRecording%2A> and
+<xref:SkiaSharp.SKPictureRecorder.RecordingCanvas>.
+
+Unlike <xref:SkiaSharp.SKPictureRecorder.EndRecording%2A>, which returns an
+immutable picture, the returned drawable may contain live references to other
+drawables (if they were added to the recording canvas) and therefore this
+drawable will reflect the current state of those nested drawables anytime it
+is drawn or a new picture is snapped from it (by calling
+<xref:SkiaSharp.SKDrawable.Snapshot%2A>).
+]]></format>
+        </remarks>
       </Docs>
     </Member>
     <Member MemberName="RecordingCanvas">
