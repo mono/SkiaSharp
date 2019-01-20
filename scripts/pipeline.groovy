@@ -10,7 +10,7 @@ import groovy.transform.Field
 @Field def featureNamePrefix = "feature/"
 
 @Field def minimalLinuxPackages = "curl mono-complete msbuild"
-@Field def nativeLinuxPackages = "python git libfontconfig1-dev"
+@Field def nativeLinuxPackages = "python git libfontconfig1-dev libtool autoconf"
 @Field def nativeTizenPackages = "python git openjdk-8-jdk zip libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn"
 @Field def managedLinuxPackages = "dotnet-sdk-2.1 ttf-ancient-fonts"
 
@@ -68,7 +68,7 @@ node("ubuntu-1604-amd64") {
 
     stage("Native Builds") {
         parallel([
-            failFast: false,
+            failFast: true,
 
             // windows
             uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows",     ""),
