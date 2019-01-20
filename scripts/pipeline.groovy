@@ -68,7 +68,7 @@ node("ubuntu-1604-amd64") {
 
     stage("Native Builds") {
         parallel([
-            failFast: true,
+            failFast: false,
 
             // windows
             uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows",     ""),
