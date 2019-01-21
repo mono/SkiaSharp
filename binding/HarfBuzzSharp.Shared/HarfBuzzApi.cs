@@ -161,7 +161,7 @@ namespace HarfBuzzSharp
 			uint buf_size,
 			out uint buf_consumed,
 			IntPtr font,
-			Tag format,
+			SerializeFormat format,
 			SerializeFlag flags);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern bool hb_buffer_deserialize_glyphs (
@@ -170,7 +170,7 @@ namespace HarfBuzzSharp
 			int buf_len,
 			out IntPtr end_ptr,
 			IntPtr font,
-			Tag format);
+			SerializeFormat format);
 
 		// hb_shape
 

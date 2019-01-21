@@ -170,36 +170,43 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		public string Serialize (
+		public string SerializeGlyphs (
 			uint start,
 			uint end,
-			uint bufferSize,
-			Tag format,
-			SerializeFlag flags = SerializeFlag.Default,
-			Font font = null)
+			Font font = null,
+			SerializeFormat format = SerializeFormat.Text,
+			SerializeFlag flags = SerializeFlag.Default)
 		{
+			const uint bufferSize = 128;
+
+			var builder = new StringBuilder (128);
 			var buffer = Marshal.AllocHGlobal ((int)bufferSize);
+			var currentPosition = start;
 
 			try {
-				HarfBuzzApi.hb_buffer_serialize_glyphs (
-					Handle,
-					start,
-					end,
-					buffer,
-					bufferSize,
-					out var consumed,
-					font?.Handle ?? IntPtr.Zero,
-					format,
-					flags);
+				while (currentPosition < end) {
+					currentPosition += HarfBuzzApi.hb_buffer_serialize_glyphs (
+						Handle,
+						currentPosition,
+						end,
+						buffer,
+						bufferSize,
+						out var consumed,
+						font?.Handle ?? IntPtr.Zero,
+						format,
+						flags);
 
-				return Marshal.PtrToStringAnsi (buffer, (int)consumed);
+					builder.Append (Marshal.PtrToStringAnsi (buffer, (int)consumed));
+				}
 
 			} finally {
 				Marshal.FreeHGlobal (buffer);
 			}
+
+			return builder.ToString ();
 		}
 
-		public void Deserialize (string data, Tag format, Font font = null)
+		public void DeserializeGlyphs (string data, Font font = null, SerializeFormat format = SerializeFormat.Text)
 		{
 			var bytes = Encoding.ASCII.GetBytes (data);
 

@@ -182,13 +182,11 @@ namespace HarfBuzzSharp
 		NoAdvances = 0x00000020u
 	}
 
-	public static class SerializeFormat
+	public enum SerializeFormat : uint
 	{
-		public static readonly Tag Text = new Tag ('T', 'E', 'X', 'T');
-
-		public static readonly Tag Json = new Tag ('J', 'S', 'O', 'N');
-
-		public static readonly Tag Invalid = Tag.None;
+		Text = (uint)(((byte)'T' << 24) | ((byte)'E' << 16) | ((byte)'X' << 8) | (byte)'T'),
+		Json = (uint)(((byte)'J' << 24) | ((byte)'S' << 16) | ((byte)'O' << 8) | (byte)'N'),
+		Invalid = 0
 	}
 
 	public struct GlyphExtents
