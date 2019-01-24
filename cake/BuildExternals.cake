@@ -573,8 +573,8 @@ Task ("externals-linux")
     var BUILD_ARCH = arches.Split (',').Select (a => a.Trim ()).ToArray ();
     var SUPPORT_GPU = (EnvironmentVariable ("SUPPORT_GPU") ?? "1") == "1"; // 1 == true, 0 == false
 
-    var CC = EnvironmentVariable ("CC");
-    var CXX = EnvironmentVariable ("CXX");
+    var CC = EnvironmentVariable ("CC") ?? "clang";
+    var CXX = EnvironmentVariable ("CXX") ?? "clang++";
     var AR = EnvironmentVariable ("AR");
     var CUSTOM_COMPILERS = "";
     if (!string.IsNullOrEmpty (CC))
@@ -592,7 +592,7 @@ Task ("externals-linux")
             $"is_official_build=true skia_enable_tools=false " +
             $"target_os='linux' target_cpu='{arch}' " +
             $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
-            $"skia_use_system_expat=false skia_use_system_freetype2=true skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
+            $"skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
             $"skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")} " +
             $"extra_cflags=[ '-DSKIA_C_DLL' ] " +
             $"extra_ldflags=[ ] " +

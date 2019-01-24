@@ -45,7 +45,7 @@ CUSTOM_COMPILERS=
     is_official_build=true skia_enable_tools=false
     target_os=\"linux\" target_cpu=\"$ARCH\"
     skia_use_icu=false skia_use_sfntly=false skia_use_piex=true
-    skia_use_system_expat=false skia_use_system_freetype2=true skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false
+    skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false
     skia_enable_gpu=true
     extra_cflags=[ \"-DSKIA_C_DLL\" ]
     extra_ldflags=[ ]
