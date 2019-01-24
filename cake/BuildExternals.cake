@@ -715,17 +715,20 @@ Task ("externals-angle-uwp")
 Task ("externals-harfbuzz")
     .Does (() =>
 {
-	if (!IsRunningOnWindows ()) {
-        RunProcess ("bash", new ProcessSettings {
-            Arguments = "autogen.sh",
-            WorkingDirectory = HARFBUZZ_PATH,
-        });
-    }
     if (!IsRunningOnWindows ()) {
-        RunProcess ("bash", new ProcessSettings {
-            Arguments = "configure",
-            WorkingDirectory = HARFBUZZ_PATH,
-        });
+        if (!FileExists (HARFBUZZ_PATH.CombineWithFilePath ("configure"))) {
+            RunProcess ("bash", new ProcessSettings {
+                Arguments = "autogen.sh",
+                WorkingDirectory = HARFBUZZ_PATH,
+            });
+        }
+        if (!FileExists (HARFBUZZ_PATH.CombineWithFilePath ("configured"))) {
+            RunProcess ("bash", new ProcessSettings {
+                Arguments = "configure",
+                WorkingDirectory = HARFBUZZ_PATH,
+            });
+            FileWriteText (HARFBUZZ_PATH.CombineWithFilePath ("configured"), "");
+        }
     }
 });
 
