@@ -573,8 +573,8 @@ Task ("externals-linux")
     var BUILD_ARCH = arches.Split (',').Select (a => a.Trim ()).ToArray ();
     var SUPPORT_GPU = (EnvironmentVariable ("SUPPORT_GPU") ?? "1") == "1"; // 1 == true, 0 == false
 
-    var CC = EnvironmentVariable ("CC") ?? "clang";
-    var CXX = EnvironmentVariable ("CXX") ?? "clang++";
+    var CC = EnvironmentVariable ("CC");
+    var CXX = EnvironmentVariable ("CXX");
     var AR = EnvironmentVariable ("AR");
     var CUSTOM_COMPILERS = "";
     if (!string.IsNullOrEmpty (CC))

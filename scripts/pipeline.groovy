@@ -26,6 +26,8 @@ import groovy.transform.Field
         "ANDROID_NDK_HOME=/Users/builder/Library/Developer/Xamarin/android-ndk",
     ],
     "linux": [
+        "CC=clang-3.8",
+        "CXX=clang++-3.8",
     ]
 ]
 
