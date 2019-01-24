@@ -70,23 +70,25 @@ node("ubuntu-1604-amd64") {
         parallel([
             failFast: true,
 
-            // windows
-            uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows",     ""),
-            win32:              createNativeBuilder("Windows",    "Windows",  "components-windows",     ""),
-            android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows",     ""),
-            tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows",     ""),
+            //// windows
+            //uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows",     ""),
+            //win32:              createNativeBuilder("Windows",    "Windows",  "components-windows",     ""),
+            //android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows",     ""),
+            //tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows",     ""),
+            //
+            //// macos
+            //android_macos:      createNativeBuilder("Android",    "macOS",    "components",             ""),
+            //tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components",             ""),
+            //tvos:               createNativeBuilder("tvOS",       "macOS",    "components",             ""),
+            //ios:                createNativeBuilder("iOS",        "macOS",    "components",             ""),
+            //macos:              createNativeBuilder("macOS",      "macOS",    "components",             ""),
+            //watchos:            createNativeBuilder("watchOS",    "macOS",    "components",             ""),
+            //
+            //// linux
+            //linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64",      nativeLinuxPackages),
+            //tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64",      nativeTizenPackages),
 
-            // macos
-            android_macos:      createNativeBuilder("Android",    "macOS",    "components",             ""),
-            tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components",             ""),
-            tvos:               createNativeBuilder("tvOS",       "macOS",    "components",             ""),
-            ios:                createNativeBuilder("iOS",        "macOS",    "components",             ""),
-            macos:              createNativeBuilder("macOS",      "macOS",    "components",             ""),
-            watchos:            createNativeBuilder("watchOS",    "macOS",    "components",             ""),
-
-            // linux
-            linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64",      nativeLinuxPackages),
-            tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64",      nativeTizenPackages),
+            linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1404-amd64",      nativeLinuxPackages),
         ])
     }
 
