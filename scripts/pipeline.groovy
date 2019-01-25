@@ -68,25 +68,25 @@ node("ubuntu-1604-amd64") {
 
     stage("Native Builds") {
         parallel([
-            failFast: false,
+            failFast: true,
 
             // windows
-            //uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows",     ""),
-            //win32:              createNativeBuilder("Windows",    "Windows",  "components-windows",     ""),
-            //android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows",     ""),
-            //tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows",     ""),
+            uwp:                createNativeBuilder("UWP",        "Windows",  "components-windows",     ""),
+            win32:              createNativeBuilder("Windows",    "Windows",  "components-windows",     ""),
+            android_windows:    createNativeBuilder("Android",    "Windows",  "components-windows",     ""),
+            tizen_windows:      createNativeBuilder("Tizen",      "Windows",  "components-windows",     ""),
 
             // macos
-            //android_macos:      createNativeBuilder("Android",    "macOS",    "components",             ""),
-            //tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components",             ""),
+            android_macos:      createNativeBuilder("Android",    "macOS",    "components",             ""),
+            tizen_macos:        createNativeBuilder("Tizen",      "macOS",    "components",             ""),
             tvos:               createNativeBuilder("tvOS",       "macOS",    "components",             ""),
             ios:                createNativeBuilder("iOS",        "macOS",    "components",             ""),
             macos:              createNativeBuilder("macOS",      "macOS",    "components",             ""),
             watchos:            createNativeBuilder("watchOS",    "macOS",    "components",             ""),
 
             // linux
-            //linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64",      nativeLinuxPackages),
-            //tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64",      nativeTizenPackages),
+            linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64",      nativeLinuxPackages),
+            tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64",      nativeTizenPackages),
         ])
     }
 
@@ -94,9 +94,9 @@ node("ubuntu-1604-amd64") {
         parallel([
             failFast: true,
 
-            //windows: createManagedBuilder("Windows",    "components-windows",   ""),
+            windows: createManagedBuilder("Windows",    "components-windows",   ""),
             macos:   createManagedBuilder("macOS",      "components",           ""),
-            //linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64",    managedLinuxPackages),
+            linux:   createManagedBuilder("Linux",      "ubuntu-1604-amd64",    managedLinuxPackages),
         ])
     }
 
