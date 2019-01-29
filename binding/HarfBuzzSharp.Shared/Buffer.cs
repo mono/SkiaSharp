@@ -87,12 +87,12 @@ namespace HarfBuzzSharp
 				AddUtf8 ((IntPtr)b, bytes.Length, itemOffset, itemLength);
 			}
 		}
-		public unsafe void AddUtf8 (ReadOnlySpan<byte> text, uint itemOffset = 0, int itemLength = -1)
-		{
-			fixed (byte* bytes = text) {
-				AddUtf8 ((IntPtr)bytes, text.Length, itemOffset, itemLength);
-			}
-		}
+		//public unsafe void AddUtf8 (ReadOnlySpan<byte> text, uint itemOffset = 0, int itemLength = -1)
+		//{
+		//	fixed (byte* bytes = text) {
+		//		AddUtf8 ((IntPtr)bytes, text.Length, itemOffset, itemLength);
+		//	}
+		//}
 
 		public void AddUtf8 (IntPtr text, int textLength, uint itemOffset = 0, int itemLength = -1)
 		{
@@ -113,12 +113,12 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		public unsafe void AddUtf16 (ReadOnlySpan<char> text, uint itemOffset = 0, int itemLength = -1)
-		{
-			fixed (char* chars = text) {
-				AddUtf16 ((IntPtr)chars, text.Length, itemOffset, itemLength);
-			}
-		}
+		//public unsafe void AddUtf16 (ReadOnlySpan<char> text, uint itemOffset = 0, int itemLength = -1)
+		//{
+		//	fixed (char* chars = text) {
+		//		AddUtf16 ((IntPtr)chars, text.Length, itemOffset, itemLength);
+		//	}
+		//}
 
 		public void AddUtf16 (IntPtr text, int textLength, uint itemOffset = 0, int itemLength = -1)
 		{
@@ -138,12 +138,12 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		public unsafe void AddUtf32 (ReadOnlySpan<uint> text, uint itemOffset = 0, int itemLength = -1)
-		{
-			fixed (uint* integers = text) {
-				AddUtf32 ((IntPtr)integers, text.Length, itemOffset, itemLength);
-			}
-		}
+		//public unsafe void AddUtf32 (ReadOnlySpan<uint> text, uint itemOffset = 0, int itemLength = -1)
+		//{
+		//	fixed (uint* integers = text) {
+		//		AddUtf32 ((IntPtr)integers, text.Length, itemOffset, itemLength);
+		//	}
+		//}
 
 		public void AddUtf32 (IntPtr text, int textLength, uint itemOffset = 0, int itemLength = -1)
 		{
