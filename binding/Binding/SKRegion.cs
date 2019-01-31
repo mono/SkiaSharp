@@ -53,7 +53,7 @@ namespace SkiaSharp
 
 		public bool Intersects(SKRectI rect)
 		{
-			return SkiaApi.sk_region_intersects(Handle, rect);
+			return SkiaApi.sk_region_intersects_rect(Handle, ref rect);
 		}
 
 		public bool SetRegion(SKRegion region)
