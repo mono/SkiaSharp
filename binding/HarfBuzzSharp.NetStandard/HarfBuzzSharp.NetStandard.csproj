@@ -9,6 +9,7 @@
     <PackagingPlatform>netstandard1.3</PackagingPlatform>
     <DefineConstants>$(DefineConstants);HARFBUZZ;NET_STANDARD</DefineConstants>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugType>full</DebugType>
@@ -19,6 +20,9 @@
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\HarfBuzzSharp.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5.2" />
   </ItemGroup>
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
 </Project>

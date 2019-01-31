@@ -25,5 +25,7 @@ namespace HarfBuzzSharp
 				return Marshal.PtrToStringAnsi (HarfBuzzApi.hb_language_to_string (Handle));
 			}
 		}
+
+		public override string ToString () => Name;
 	}
 }

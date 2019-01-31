@@ -9,6 +9,7 @@
     <PackagingPlatform>MonoAndroid</PackagingPlatform>
     <DefineConstants>$(DefineConstants);HARFBUZZ</DefineConstants>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugType>full</DebugType>
@@ -18,6 +19,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.65" PrivateAssets="All" />
+    <PackageReference Include="System.Memory" Version="4.5.2" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedNativeLibrary Include="..\..\output\native\android\arm64-v8a\libHarfBuzzSharp.so" Link="libs\arm64-v8a\libHarfBuzzSharp.so" />

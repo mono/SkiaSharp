@@ -1,10 +1,9 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace HarfBuzzSharp
 {
-	using System.Runtime.InteropServices;
-
 	public class Buffer : NativeObject
 	{
 		internal Buffer (IntPtr handle)
@@ -56,14 +55,14 @@ namespace HarfBuzzSharp
 			set { HarfBuzzApi.hb_buffer_set_replacement_codepoint (Handle, value); }
 		}
 
-		public Tag Script {
-			set { HarfBuzzApi.hb_buffer_set_script (Handle, value); }
+		public Script Script {
 			get { return HarfBuzzApi.hb_buffer_get_script (Handle); }
+			set { HarfBuzzApi.hb_buffer_set_script (Handle, value); }
 		}
 
 		public uint Length {
-			set { HarfBuzzApi.hb_buffer_set_length (Handle, value); }
 			get { return HarfBuzzApi.hb_buffer_get_length (Handle); }
+			set { HarfBuzzApi.hb_buffer_set_length (Handle, value); }
 		}
 
 		public void Add (uint codepoint, uint cluster)
@@ -81,18 +80,20 @@ namespace HarfBuzzSharp
 		{
 			AddUtf8 (bytes, 0, -1);
 		}
+
 		public unsafe void AddUtf8 (byte[] bytes, uint itemOffset, int itemLength)
 		{
 			fixed (byte* b = bytes) {
 				AddUtf8 ((IntPtr)b, bytes.Length, itemOffset, itemLength);
 			}
 		}
-		//public unsafe void AddUtf8 (ReadOnlySpan<byte> text, uint itemOffset = 0, int itemLength = -1)
-		//{
-		//	fixed (byte* bytes = text) {
-		//		AddUtf8 ((IntPtr)bytes, text.Length, itemOffset, itemLength);
-		//	}
-		//}
+
+		public unsafe void AddUtf8 (ReadOnlySpan<byte> text, uint itemOffset = 0, int itemLength = -1)
+		{
+			fixed (byte* bytes = text) {
+				AddUtf8 ((IntPtr)bytes, text.Length, itemOffset, itemLength);
+			}
+		}
 
 		public void AddUtf8 (IntPtr text, int textLength, uint itemOffset = 0, int itemLength = -1)
 		{
@@ -113,12 +114,12 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		//public unsafe void AddUtf16 (ReadOnlySpan<char> text, uint itemOffset = 0, int itemLength = -1)
-		//{
-		//	fixed (char* chars = text) {
-		//		AddUtf16 ((IntPtr)chars, text.Length, itemOffset, itemLength);
-		//	}
-		//}
+		public unsafe void AddUtf16 (ReadOnlySpan<char> text, uint itemOffset = 0, int itemLength = -1)
+		{
+			fixed (char* chars = text) {
+				AddUtf16 ((IntPtr)chars, text.Length, itemOffset, itemLength);
+			}
+		}
 
 		public void AddUtf16 (IntPtr text, int textLength, uint itemOffset = 0, int itemLength = -1)
 		{
@@ -138,12 +139,12 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		//public unsafe void AddUtf32 (ReadOnlySpan<uint> text, uint itemOffset = 0, int itemLength = -1)
-		//{
-		//	fixed (uint* integers = text) {
-		//		AddUtf32 ((IntPtr)integers, text.Length, itemOffset, itemLength);
-		//	}
-		//}
+		public unsafe void AddUtf32 (ReadOnlySpan<uint> text, uint itemOffset = 0, int itemLength = -1)
+		{
+			fixed (uint* integers = text) {
+				AddUtf32 ((IntPtr)integers, text.Length, itemOffset, itemLength);
+			}
+		}
 
 		public void AddUtf32 (IntPtr text, int textLength, uint itemOffset = 0, int itemLength = -1)
 		{
@@ -212,5 +213,7 @@ namespace HarfBuzzSharp
 
 			HarfBuzzApi.hb_buffer_deserialize_glyphs (Handle, bytes, bytes.Length, out _, font?.Handle ?? IntPtr.Zero, format);
 		}
+
+		public override string ToString () => SerializeGlyphs(0,Length);
 	}
 }

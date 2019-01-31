@@ -37,14 +37,8 @@ namespace HarfBuzzSharp
 
 		public static readonly Tag MaxSigned = new Tag ((byte)sbyte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue);
 
-		public static implicit operator uint (Tag tag)
-		{
-			return tag.Value;
-		}
+		public static implicit operator uint (Tag tag) => tag.Value;
 
-		public static implicit operator Tag (uint tag)
-		{
-			return new Tag { Value = tag };
-		}
+		public static implicit operator Tag (uint tag) => new Tag { Value = tag };
 	}
 }

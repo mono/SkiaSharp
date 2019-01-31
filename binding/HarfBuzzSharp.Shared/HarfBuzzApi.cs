@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Text;
 using hb_blob_t = System.IntPtr;
 using hb_buffer_t = System.IntPtr;
 using hb_codepoint_t = System.UInt32;
@@ -10,8 +11,6 @@ using hb_script_t = System.UInt32;
 
 namespace HarfBuzzSharp
 {
-	using System.Text;
-
 	internal class HarfBuzzApi
 	{
 #if __TVOS__ && __UNIFIED__

@@ -184,8 +184,8 @@ namespace HarfBuzzSharp
 
 	public enum SerializeFormat : uint
 	{
-		Text = (uint)(((byte)'T' << 24) | ((byte)'E' << 16) | ((byte)'X' << 8) | (byte)'T'),
-		Json = (uint)(((byte)'J' << 24) | ((byte)'S' << 16) | ((byte)'O' << 8) | (byte)'N'),
+		Text = (((byte)'T' << 24) | ((byte)'E' << 16) | ((byte)'X' << 8) | (byte)'T'),
+		Json = (((byte)'J' << 24) | ((byte)'S' << 16) | ((byte)'O' << 8) | (byte)'N'),
 		Invalid = 0
 	}
 
