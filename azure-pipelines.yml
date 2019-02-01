@@ -30,6 +30,10 @@ jobs:
     pool:
       vmImage: vs2017-win2016
     steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '2.7'
+          architecture: 'x64'
       - checkout: self
         clean: true
         submodules: recursive
