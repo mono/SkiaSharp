@@ -15,6 +15,7 @@ variables:
 jobs:
   # PRE-BUILD JOBS
   - job: Prepare
+    displayName: Prepare Build Variables
     pool: 
       vmImage: ubuntu-16.04
     steps:
@@ -24,6 +25,7 @@ jobs:
 
   # NATIVE JOBS
   - job: Native_Win32
+    displayName: Build Native Win32 (Windows)
     dependsOn: Prepare
     pool:
       vmImage: vs2017-win2016
@@ -34,6 +36,7 @@ jobs:
           artifactName: nativeArtifacts
           targetPath: 'output'
   - job: Native_MacOS
+    displayName: Build Native macOS (macOS)
     dependsOn: Prepare
     pool:
       vmImage: macos-10.13
@@ -46,6 +49,7 @@ jobs:
 
   # MANAGED JOBS
   - job: Managed_Windows
+    displayName: Build Managed Windows
     dependsOn: 
       - Native_Win32
       - Native_MacOS
