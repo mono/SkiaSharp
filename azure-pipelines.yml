@@ -13,7 +13,8 @@ variables:
 
 jobs:
   - job: prepare
-    pool: 'ubuntu-16.04'
+    pool: 
+      vmImage: ubuntu-16.04
     steps:
       - script: |
           echo Preparing to build $(GIT_SHA) on branch $(GIT_BRANCH_NAME)...
