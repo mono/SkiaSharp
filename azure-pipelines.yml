@@ -19,6 +19,9 @@ jobs:
     pool: 
       vmImage: ubuntu-16.04
     steps:
+      - checkout: self
+        clean: true
+        subbodules: recursive
       - script: |
           echo Preparing to build $(GIT_SHA) on branch $(GIT_BRANCH_NAME)...
           echo Build started for build \# $(BUILD_NUMBER).
@@ -30,6 +33,9 @@ jobs:
     pool:
       vmImage: vs2017-win2016
     steps:
+      - checkout: self
+        clean: true
+        subbodules: recursive
       - powershell: .\bootstrapper.ps1 -t externals-windows -v $env:VERBOSITY
       - task: PublishPipelineArtifact@0
         inputs:
@@ -41,6 +47,9 @@ jobs:
     pool:
       vmImage: macos-10.13
     steps:
+      - checkout: self
+        clean: true
+        subbodules: recursive
       - bash: ./bootstrapper.sh -t externals-macos -v $VERBOSITY
       - task: PublishPipelineArtifact@0
         inputs:
@@ -56,6 +65,9 @@ jobs:
     pool:
       vmImage: vs2017-win2016
     steps:
+      - checkout: self
+        clean: true
+        subbodules: recursive
       - bash: .\bootstrapper.ps1 -t everything --skipexternals=all -v $env:VERBOSITY
       - task: PublishPipelineArtifact@0
         inputs:
