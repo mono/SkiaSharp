@@ -87,10 +87,8 @@ node("ubuntu-1604-amd64") {
             watchos:            createNativeBuilder("watchOS",    "macOS",    "components",             ""),
 
             // linux
-            linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64",      nativeLinuxPackages),
-            tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64",      nativeTizenPackages),
-
             linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1404-amd64",      nativeLinuxPackages),
+            tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64",      nativeTizenPackages),
         ])
     }
 
