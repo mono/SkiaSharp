@@ -1,33 +1,20 @@
-# .NET Desktop
-# Build and run tests for .NET Desktop or Windows classic desktop solutions.
-# Add steps that publish symbols, save build artifacts, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/apps/windows/dot-net
+# TODO: implement features
 
 trigger:
-- master
-
-pool:
-  vmImage: 'VS2017-Win2016'
+  - master
 
 variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
+  FeatureNamePrefix: 'feature/'
+  FeatureName: ''
+  GIT_SHA: $(Build.SourceVersion)
+  GIT_BRANCH_NAME: $(Build.SourceBranchName)
+  BUILD_NUMBER: $(Build.BuildId)
+  FEATURE_NAME: $(FeatureName)
 
-steps:
-- task: NuGetToolInstaller@0
-
-- task: NuGetCommand@2
-  inputs:
-    restoreSolution: '$(solution)'
-
-- task: VSBuild@1
-  inputs:
-    solution: '$(solution)'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
-
-- task: VSTest@2
-  inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+jobs:
+  - job: prepare
+    pool: 'ubuntu-16.04'
+    steps:
+      - script: |
+          echo Preparing to build $(GIT_SHA) on branch $(GIT_BRANCH_NAME)...
+          echo Build started for $(BUILD_NUMBER).
