@@ -30,7 +30,7 @@ jobs:
     pool:
       vmImage: vs2017-win2016
     steps:
-      - powershell: bootstrapper.ps1 -t externals-windows -v $env:VERBOSITY
+      - powershell: .\bootstrapper.ps1 -t externals-windows -v $env:VERBOSITY
       - task: PublishPipelineArtifact@0
         inputs:
           artifactName: nativeArtifacts
@@ -41,7 +41,7 @@ jobs:
     pool:
       vmImage: macos-10.13
     steps:
-      - bash: bootstrapper.sh -t externals-macos -v $VERBOSITY
+      - bash: ./bootstrapper.sh -t externals-macos -v $VERBOSITY
       - task: PublishPipelineArtifact@0
         inputs:
           artifactName: nativeArtifacts
@@ -56,7 +56,7 @@ jobs:
     pool:
       vmImage: vs2017-win2016
     steps:
-      - bash: bootstrapper.sh -t everything --skipexternals=all -v $env:VERBOSITY
+      - bash: .\bootstrapper.ps1 -t everything --skipexternals=all -v $env:VERBOSITY
       - task: PublishPipelineArtifact@0
         inputs:
           artifactName: nativeArtifacts
