@@ -6,16 +6,56 @@ trigger:
 variables:
   FeatureNamePrefix: 'feature/'
   FeatureName: ''
+  VERBOSITY: minimal
   GIT_SHA: $(Build.SourceVersion)
   GIT_BRANCH_NAME: $(Build.SourceBranchName)
   BUILD_NUMBER: $(Build.BuildId)
   FEATURE_NAME: $(FeatureName)
 
 jobs:
-  - job: prepare
+  # PRE-BUILD JOBS
+  - job: Prepare
     pool: 
       vmImage: ubuntu-16.04
     steps:
       - script: |
           echo Preparing to build $(GIT_SHA) on branch $(GIT_BRANCH_NAME)...
           echo Build started for build # $(BUILD_NUMBER).
+
+  # NATIVE JOBS
+  - job: Native_Win32
+    dependsOn: Prepare
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - powershell: bootstrapper.ps1 -t externals-windows -v $env:VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: nativeArtifacts
+          targetPath: 'output'
+  - job: Native_MacOS
+    dependsOn: Prepare
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - bash: bootstrapper.sh -t externals-macos -v $VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: nativeArtifacts
+          targetPath: 'output'
+
+  # MANAGED JOBS
+  - job: Managed_Windows
+    dependsOn: 
+      - Native_Win32
+      - Native_MacOS
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - bash: bootstrapper.sh -t everything --skipexternals=all -v $env:VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: nativeArtifacts
+          targetPath: 'output'
+
+  # POST-BUILD JOBS
