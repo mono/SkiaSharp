@@ -49,5 +49,27 @@ namespace SkiaSharp.Tests
 			Assert.True(isNonEmpty);
 			Assert.Equal(SKRectI.Intersect(clipRect, rect), region.Bounds);
 		}
+
+		[SkippableFact]
+		public void EmptyRegionDoesNotIntersectsWithRectI()
+		{
+			var region = new SKRegion();
+
+			var rect = new SKRectI(10, 20, 30, 40);
+
+			Assert.False(region.Intersects(rect));
+		}
+
+		// This was added for https://github.com/mono/SkiaSharp/issues/770
+		[SkippableFact]
+		public void RegionIntersectsWithRectI()
+		{
+			var region = new SKRegion();
+			region.SetRect(new SKRectI(25, 25, 50, 50));
+
+			var rect = new SKRectI(10, 20, 30, 40);
+
+			Assert.True(region.Intersects(rect));
+		}
 	}
 }

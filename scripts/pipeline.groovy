@@ -147,12 +147,13 @@ def createNativeBuilder(platform, host, label, additionalPackages) {
                                 nativeStashes.push(stashName)
                                 stash(name: stashName, includes: "output/**/*", allowEmpty: false)
 
-                                cleanWs()
                                 reportGitHubStatus(githubContext, "SUCCESS", "Build complete.")
                             } catch (Exception e) {
                                 reportGitHubStatus(githubContext, "FAILURE", "Build failed.")
                                 throw e
                             }
+
+                            cleanWs()
                         }
                     }
                 }
@@ -205,12 +206,13 @@ def createManagedBuilder(host, label, additionalPackages) {
                                 managedStashes.push(stashName)
                                 stash(name: stashName, includes: "output/**/*", allowEmpty: false)
 
-                                cleanWs()
                                 reportGitHubStatus(githubContext, "SUCCESS", "Build complete.")
                             } catch (Exception e) {
                                 reportGitHubStatus(githubContext, "FAILURE", "Build failed.")
                                 throw e
                             }
+
+                            cleanWs()
                         }
                     }
                 }
@@ -240,12 +242,13 @@ def createPackagingBuilder() {
 
                                 uploadBlobs()
 
-                                cleanWs()
                                 reportGitHubStatus(githubContext, "SUCCESS", "Pack complete.")
                             } catch (Exception e) {
                                 reportGitHubStatus(githubContext, "FAILURE", "Pack failed.")
                                 throw e
                             }
+
+                            cleanWs()
                         }
                     }
                 }
