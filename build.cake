@@ -558,7 +558,10 @@ var envVarsWhitelist = new [] {
     "processor_identifier", "node_name", "node_labels", "branch_name",
     "os", "build_url", "build_number", "number_of_processors",
     "node_label", "build_id", "git_sha", "git_branch_name",
-    "feature_name"
+    "feature_name", "msbuild_exe", "python_exe"
+    "home", "userprofile", "nuget_packages"
+    "android_sdk_root", "android_ndk_root",
+    "android_home", "android_ndk_home", "tizen_studio_home"
 };
 var envVars = EnvironmentVariables ();
 var max = envVars.Max (v => v.Key.Length) + 2;
