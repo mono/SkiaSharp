@@ -37,7 +37,7 @@ jobs:
       - checkout: self
         clean: true
         submodules: recursive
-      - powershell: cat $ANDROID_NDK_HOME/source.properties
+      - powershell: cat $env:ANDROID_NDK_HOME/source.properties
       - powershell: .\bootstrapper.ps1 -t externals-android -v $env:VERBOSITY
       - task: PublishPipelineArtifact@0
         inputs:
