@@ -149,6 +149,7 @@ jobs:
       - checkout: self
         clean: true
         submodules: recursive
+      - bash: ./scripts/install-tizen.sh
       - bash: ./bootstrapper.sh -t externals-tizen -v $VERBOSITY
       - task: PublishPipelineArtifact@0
         inputs:
