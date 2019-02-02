@@ -14,8 +14,8 @@ variables:
 
 jobs:
   # PRE-BUILD JOBS
-  - job: Prepare
-    displayName: Prepare Build Variables
+  - job: prepare
+    displayName: Prepare Build
     pool:
       vmImage: ubuntu-16.04
     steps:
@@ -24,9 +24,9 @@ jobs:
           echo Build started for build \# $(BUILD_NUMBER).
 
   # NATIVE JOBS - WINDOWS
-  - job: native-android-windows
+  - job: native_android_windows
     displayName: Build Native Android (Windows)
-    dependsOn: Prepare
+    dependsOn: prepare
     pool:
       vmImage: vs2017-win2016
     steps:
@@ -42,9 +42,9 @@ jobs:
         inputs:
           artifactName: native-android-windows
           targetPath: 'output'
-  - job: native-tizen-windows
+  - job: native_tizen_windows
     displayName: Build Native Tizen (Windows)
-    dependsOn: Prepare
+    dependsOn: prepare
     pool:
       vmImage: vs2017-win2016
     steps:
@@ -60,9 +60,9 @@ jobs:
         inputs:
           artifactName: native-tizen-windows
           targetPath: 'output'
-  - job: native-uwp-windows
+  - job: native_uwp_windows
     displayName: Build Native UWP (Windows)
-    dependsOn: Prepare
+    dependsOn: prepare
     pool:
       vmImage: vs2017-win2016
     steps:
@@ -78,9 +78,9 @@ jobs:
         inputs:
           artifactName: native-uwp-windows
           targetPath: 'output'
-  - job: native-win32-windows
+  - job: native_win32_windows
     displayName: Build Native Win32 (Windows)
-    dependsOn: Prepare
+    dependsOn: prepare
     pool:
       vmImage: vs2017-win2016
     steps:
@@ -98,9 +98,9 @@ jobs:
           targetPath: 'output'
 
   # NATIVE JOBS - MAC
-  - job: native-android-macos
+  - job: native_android_macos
     displayName: Build Native Android (macOS)
-    dependsOn: Prepare
+    dependsOn: prepare
     pool:
       vmImage: macos-10.13
     steps:
@@ -112,9 +112,9 @@ jobs:
         inputs:
           artifactName: native-android-macos
           targetPath: 'output'
-  - job: native-ios-macos
+  - job: native_ios_macos
     displayName: Build Native iOS (macOS)
-    dependsOn: Prepare
+    dependsOn: prepare
     pool:
       vmImage: macos-10.13
     steps:
@@ -126,9 +126,9 @@ jobs:
         inputs:
           artifactName: native-ios-macos
           targetPath: 'output'
-  - job: native-macos-macos
+  - job: native_macos_macos
     displayName: Build Native macOS (macOS)
-    dependsOn: Prepare
+    dependsOn: prepare
     pool:
       vmImage: macos-10.13
     steps:
@@ -140,9 +140,9 @@ jobs:
         inputs:
           artifactName: native-macos-macos
           targetPath: 'output'
-  - job: native-tizen-macos
+  - job: native_tizen_macos
     displayName: Build Native Tizen (macOS)
-    dependsOn: Prepare
+    dependsOn: prepare
     pool:
       vmImage: macos-10.13
     steps:
@@ -154,9 +154,9 @@ jobs:
         inputs:
           artifactName: native-tizen-macos
           targetPath: 'output'
-  - job: native-tvos-macos
+  - job: native_tvos_macos
     displayName: Build Native tvOS (macOS)
-    dependsOn: Prepare
+    dependsOn: prepare
     pool:
       vmImage: macos-10.13
     steps:
@@ -168,33 +168,33 @@ jobs:
         inputs:
           artifactName: native-tvos-macos
           targetPath: 'output'
-  - job: native-watchOS-macos
+  - job: native_watchos_macos
     displayName: Build Native watchOS (macOS)
-    dependsOn: Prepare
+    dependsOn: prepare
     pool:
       vmImage: macos-10.13
     steps:
       - checkout: self
         clean: true
         submodules: recursive
-      - bash: ./bootstrapper.sh -t externals-watchOS -v $VERBOSITY
+      - bash: ./bootstrapper.sh -t externals-watchos -v $VERBOSITY
       - task: PublishPipelineArtifact@0
         inputs:
-          artifactName: native-watchOS-macos
+          artifactName: native-watchos-macos
           targetPath: 'output'
 
   # MANAGED JOBS
-  - job: managed-windows
+  - job: managed_windows
     displayName: Build Managed Windows
     dependsOn:
-      - native-android-windows
-      - native-ios-macos
-      - native-macos-macos
-      - native-tizen-windows
-      - native-tvos-macos
-      - native-uwp-windows
-      - native-watchOS-macos
-      - native-win32-windows
+      - native_android_windows
+      - native_ios_macos
+      - native_macos_macos
+      - native_tizen_windows
+      - native_tvos_macos
+      - native_uwp_windows
+      - native_watchos_macos
+      - native_win32_windows
     pool:
       vmImage: vs2017-win2016
     steps:
@@ -206,11 +206,17 @@ jobs:
         inputs:
           artifactName: managed-windows
           targetPath: 'output'
-  - job: managed-macos
+  - job: managed_macos
     displayName: Build Managed Windows
-    dependsOn: 
-      - Native_Win32
-      - Native_MacOS
+    dependsOn:
+      - native_android_windows
+      - native_ios_macos
+      - native_macos_macos
+      - native_tizen_windows
+      - native_tvos_macos
+      - native_uwp_windows
+      - native_watchos_macos
+      - native_win32_windows
     pool:
       vmImage: vs2017-win2016
     steps:
