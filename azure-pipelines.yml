@@ -37,8 +37,10 @@ jobs:
       - checkout: self
         clean: true
         submodules: recursive
-      - powershell: cat $env:ANDROID_NDK_HOME/source.properties
+      - powershell: .\scripts\install-android-ndk.ps1
       - powershell: .\bootstrapper.ps1 -t externals-android -v $env:VERBOSITY
+        env:
+          ANDROID_NDK_HOME: $(USERPROFILE)\android-ndk
       - task: PublishPipelineArtifact@0
         inputs:
           artifactName: native-android-windows
@@ -108,8 +110,10 @@ jobs:
       - checkout: self
         clean: true
         submodules: recursive
-      - bash: ./scripts/install-android-ndk.sh && cat ~/android-ndk/source.properties
-      - bash: ANDROID_NDK_HOME=~/android-ndk ./bootstrapper.sh -t externals-android -v $VERBOSITY
+      - bash: ./scripts/install-android-ndk.sh
+      - bash: ./bootstrapper.sh -t externals-android -v $VERBOSITY
+        env:
+          ANDROID_NDK_HOME: $(HOME)/android-ndk
       - task: PublishPipelineArtifact@0
         inputs:
           artifactName: native-android-macos
