@@ -14,7 +14,6 @@ Write-Host "Extracting Android NDK..."
 [System.IO.Compression.ZipFile]::ExtractToDirectory(
     "$env:USERPROFILE\android-ndk-temp\android-ndk.zip",
     "$env:USERPROFILE\android-ndk-temp")
-New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\android-ndk" | Out-Null
 
 Write-Host "Moving Android NDK..."
 Move-Item "$env:USERPROFILE\android-ndk-temp\android-ndk-r15c" "$env:USERPROFILE\android-ndk"
