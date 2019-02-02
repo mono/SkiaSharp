@@ -41,10 +41,9 @@ jobs:
       - powershell: .\scripts\install-android-ndk.ps1
       - powershell: |
           ls "$env:ANDROID_NDK_HOME"
-          ls "$env:ANDROID_NDK_HOME/android-ndk"
-          ls "$env:ANDROID_NDK_HOME/android-ndk/sources"
-          ls "$env:ANDROID_NDK_HOME/android-ndk/sources/android"
-          ls "$env:ANDROID_NDK_HOME/android-ndk/sources/android/cpufeatures"
+          ls "$env:ANDROID_NDK_HOME/sources"
+          ls "$env:ANDROID_NDK_HOME/sources/android"
+          ls "$env:ANDROID_NDK_HOME/sources/android/cpufeatures"
         env:
           ANDROID_NDK_HOME: $(USERPROFILE)\android-ndk
       - powershell: .\bootstrapper.ps1 -t externals-android -v $env:VERBOSITY
