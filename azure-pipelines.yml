@@ -19,6 +19,7 @@ jobs:
     pool:
       vmImage: ubuntu-16.04
     steps:
+      - checkout: none
       - script: |
           echo Preparing to build $(GIT_SHA) on branch $(GIT_BRANCH_NAME)...
           echo Build started for build \# $(BUILD_NUMBER).
@@ -38,6 +39,14 @@ jobs:
         clean: true
         submodules: recursive
       - powershell: .\scripts\install-android-ndk.ps1
+      - powershell: |
+          ls "$env:ANDROID_NDK_HOME"
+          ls "$env:ANDROID_NDK_HOME/android-ndk"
+          ls "$env:ANDROID_NDK_HOME/android-ndk/sources"
+          ls "$env:ANDROID_NDK_HOME/android-ndk/sources/android"
+          ls "$env:ANDROID_NDK_HOME/android-ndk/sources/android/cpufeatures"
+        env:
+          ANDROID_NDK_HOME: $(USERPROFILE)\android-ndk
       - powershell: .\bootstrapper.ps1 -t externals-android -v $env:VERBOSITY
         env:
           ANDROID_NDK_HOME: $(USERPROFILE)\android-ndk
