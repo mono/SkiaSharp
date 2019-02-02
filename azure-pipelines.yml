@@ -23,8 +23,62 @@ jobs:
           echo Preparing to build $(GIT_SHA) on branch $(GIT_BRANCH_NAME)...
           echo Build started for build \# $(BUILD_NUMBER).
 
-  # NATIVE JOBS
-  - job: Native_Win32
+  # NATIVE JOBS - WINDOWS
+  - job: native-android-windows
+    displayName: Build Native Android (Windows)
+    dependsOn: Prepare
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '2.7'
+          architecture: 'x64'
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - powershell: .\bootstrapper.ps1 -t externals-android -v $env:VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-android-windows
+          targetPath: 'output'
+  - job: native-tizen-windows
+    displayName: Build Native Tizen (Windows)
+    dependsOn: Prepare
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '2.7'
+          architecture: 'x64'
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - powershell: .\bootstrapper.ps1 -t externals-tizen -v $env:VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-tizen-windows
+          targetPath: 'output'
+  - job: native-uwp-windows
+    displayName: Build Native UWP (Windows)
+    dependsOn: Prepare
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '2.7'
+          architecture: 'x64'
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - powershell: .\bootstrapper.ps1 -t externals-uwp -v $env:VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-uwp-windows
+          targetPath: 'output'
+  - job: native-win32-windows
     displayName: Build Native Win32 (Windows)
     dependsOn: Prepare
     pool:
@@ -40,9 +94,39 @@ jobs:
       - powershell: .\bootstrapper.ps1 -t externals-windows -v $env:VERBOSITY
       - task: PublishPipelineArtifact@0
         inputs:
-          artifactName: nativeArtifacts
+          artifactName: native-win32-windows
           targetPath: 'output'
-  - job: Native_MacOS
+
+  # NATIVE JOBS - MAC
+  - job: native-android-macos
+    displayName: Build Native Android (macOS)
+    dependsOn: Prepare
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - bash: ./bootstrapper.sh -t externals-android -v $VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-android-macos
+          targetPath: 'output'
+  - job: native-ios-macos
+    displayName: Build Native iOS (macOS)
+    dependsOn: Prepare
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - bash: ./bootstrapper.sh -t externals-ios -v $VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-ios-macos
+          targetPath: 'output'
+  - job: native-macos-macos
     displayName: Build Native macOS (macOS)
     dependsOn: Prepare
     pool:
@@ -54,11 +138,75 @@ jobs:
       - bash: ./bootstrapper.sh -t externals-macos -v $VERBOSITY
       - task: PublishPipelineArtifact@0
         inputs:
-          artifactName: nativeArtifacts
+          artifactName: native-macos-macos
+          targetPath: 'output'
+  - job: native-tizen-macos
+    displayName: Build Native Tizen (macOS)
+    dependsOn: Prepare
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - bash: ./bootstrapper.sh -t externals-tizen -v $VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-tizen-macos
+          targetPath: 'output'
+  - job: native-tvos-macos
+    displayName: Build Native tvOS (macOS)
+    dependsOn: Prepare
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - bash: ./bootstrapper.sh -t externals-tvos -v $VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-tvos-macos
+          targetPath: 'output'
+  - job: native-watchOS-macos
+    displayName: Build Native watchOS (macOS)
+    dependsOn: Prepare
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - bash: ./bootstrapper.sh -t externals-watchOS -v $VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-watchOS-macos
           targetPath: 'output'
 
   # MANAGED JOBS
-  - job: Managed_Windows
+  - job: managed-windows
+    displayName: Build Managed Windows
+    dependsOn:
+      - native-android-windows
+      - native-ios-macos
+      - native-macos-macos
+      - native-tizen-windows
+      - native-tvos-macos
+      - native-uwp-windows
+      - native-watchOS-macos
+      - native-win32-windows
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - bash: .\bootstrapper.ps1 -t everything --skipexternals=all -v $env:VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: managed-windows
+          targetPath: 'output'
+  - job: managed-macos
     displayName: Build Managed Windows
     dependsOn: 
       - Native_Win32
@@ -72,7 +220,7 @@ jobs:
       - bash: .\bootstrapper.ps1 -t everything --skipexternals=all -v $env:VERBOSITY
       - task: PublishPipelineArtifact@0
         inputs:
-          artifactName: nativeArtifacts
+          artifactName: managed-macos
           targetPath: 'output'
 
   # POST-BUILD JOBS
