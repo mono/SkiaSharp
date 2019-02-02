@@ -207,7 +207,7 @@ jobs:
           artifactName: managed-windows
           targetPath: 'output'
   - job: managed_macos
-    displayName: Build Managed Windows
+    displayName: Build Managed macOS
     dependsOn:
       - native_android_windows
       - native_ios_macos
@@ -218,12 +218,12 @@ jobs:
       - native_watchos_macos
       - native_win32_windows
     pool:
-      vmImage: vs2017-win2016
+      vmImage: macos-10.13
     steps:
       - checkout: self
         clean: true
         submodules: recursive
-      - bash: .\bootstrapper.ps1 -t everything --skipexternals=all -v $env:VERBOSITY
+      - bash: ./bootstrapper.sh1 -t everything --skipexternals=all -v $env:VERBOSITY
       - task: PublishPipelineArtifact@0
         inputs:
           artifactName: managed-macos
