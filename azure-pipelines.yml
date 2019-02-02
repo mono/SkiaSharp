@@ -108,8 +108,8 @@ jobs:
       - checkout: self
         clean: true
         submodules: recursive
-      - bash: cat $ANDROID_NDK_HOME/source.properties
-      - bash: ./bootstrapper.sh -t externals-android -v $VERBOSITY
+      - bash: ./scripts/install-android-ndk.sh && cat ~/android-ndk/source.properties
+      - bash: ANDROID_NDK_HOME=~/android-ndk ./bootstrapper.sh -t externals-android -v $VERBOSITY
       - task: PublishPipelineArtifact@0
         inputs:
           artifactName: native-android-macos
