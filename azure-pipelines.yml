@@ -20,6 +20,7 @@ jobs:
   # NATIVE JOBS - WINDOWS
   - job: native_android_windows
     displayName: Build Native Android (Windows)
+    timeoutInMinutes: 120
     pool:
       vmImage: vs2017-win2016
     steps:
@@ -40,6 +41,7 @@ jobs:
           targetPath: 'output'
   - job: native_tizen_windows
     displayName: Build Native Tizen (Windows)
+    timeoutInMinutes: 120
     pool:
       vmImage: vs2017-win2016
     steps:
@@ -76,6 +78,7 @@ jobs:
           targetPath: 'output'
   - job: native_win32_windows
     displayName: Build Native Win32 (Windows)
+    timeoutInMinutes: 120
     pool:
       vmImage: vs2017-win2016
     steps:
@@ -358,31 +361,31 @@ jobs:
   - job: tests_windows
     displayName: Tests (Windows)
     dependsOn:
-      - managed_windows
+      - package
     pool:
       vmImage: vs2017-win2016
     steps:
       - task: DownloadPipelineArtifact@0
         inputs:
-          artifactName: managed-windows
+          artifactName: package
           targetPath: 'output'
       - powershell: .\bootstrapper.ps1 -t tests-only -v $env:VERBOSITY
   - job: tests_macos
     displayName: Test (macOS)
     dependsOn:
-      - managed_macos
+      - package
     pool:
       vmImage: macos-10.13
     steps:
       - task: DownloadPipelineArtifact@0
         inputs:
-          artifactName: managed-macos
+          artifactName: package
           targetPath: 'output'
       - bash: ./bootstrapper.sh -t tests-only -v $VERBOSITY
   - job: tests_linux
     displayName: Tests (Linux)
     dependsOn:
-      - managed_linux
+      - package
     pool:
       vmImage: ubuntu-16.04
     steps:
@@ -391,7 +394,7 @@ jobs:
           sudo apt install -y $MANAGED_LINUX_PACKAGES
       - task: DownloadPipelineArtifact@0
         inputs:
-          artifactName: managed-linux
+          artifactName: package
           targetPath: 'output'
       - bash: ./bootstrapper.sh -t tests-only -v $VERBOSITY
 
