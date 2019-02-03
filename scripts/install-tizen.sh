@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-url=http://download.tizen.org/sdk/Installer/tizen-studio_2.4/web-cli_Tizen_Studio_2.4_$platform.bin
-packages=MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment
-
-mkdir -p ~/tizen-temp
-cd ~/tizen-temp
-
 # detect platform
 if [ "$(uname)" == "Darwin" ]; then
     platform="macos-64"
@@ -16,13 +10,15 @@ else
     exit 1
 fi
 
+url=http://download.tizen.org/sdk/Installer/tizen-studio_2.4/web-cli_Tizen_Studio_2.4_$platform.bin
+packages=MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment
+
 # download tizen
-curl -L -o "tizen-install.bin" "$url"
+curl -L -o "~/tizen-temp/tizen-install.bin" "$url"
 
 # install tizen
-chmod +x tizen-install.bin
-./tizen-install.bin --accept-license --no-java-check ~/tizen-studio
+chmod +x ~/tizen-temp/tizen-install.bin
+bash ~/tizen-temp/tizen-install.bin --accept-license --no-java-check ~/tizen-studio
 
 # install packages
-cd ~/tizen-studio
-./package-manager/package-manager-cli.bin install --no-java-check --accept-license $packages
+bash ~/tizen-studio/package-manager/package-manager-cli.bin install --no-java-check --accept-license $packages
