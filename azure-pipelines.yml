@@ -233,6 +233,14 @@ jobs:
       - checkout: self
         clean: true
         submodules: recursive
+      - task: DownloadPipelineArtifact@1
+        inputs:
+          artifactName:
+            - native-android-windows
+            - native-tizen-windows
+            - native-uwp-windows
+            - native-win32-windows
+          targetPath: 'output'
       - powershell: .\bootstrapper.ps1 -t libs-only -v $env:VERBOSITY
       - task: PublishPipelineArtifact@0
         inputs:
@@ -253,7 +261,17 @@ jobs:
       - checkout: self
         clean: true
         submodules: recursive
-      - bash: ./bootstrapper.sh -t libs-only -v $env:VERBOSITY
+      - task: DownloadPipelineArtifact@1
+        inputs:
+          artifactName:
+            - native-android-macos
+            - native-ios-macos
+            - native-macos-macos
+            - native-tizen-macos
+            - native-tvos-macos
+            - native-watchos-macos
+          targetPath: 'output'
+      - bash: ./bootstrapper.sh -t libs-only -v $VERBOSITY
       - task: PublishPipelineArtifact@0
         inputs:
           artifactName: managed-macos
@@ -272,6 +290,12 @@ jobs:
       - bash: |
           sudo apt update
           sudo apt install -y $MANAGED_LINUX_PACKAGES
+      - task: DownloadPipelineArtifact@1
+        inputs:
+          artifactName:
+            - native-linux-linux
+            - native-tizen-linux
+          targetPath: 'output'
       - bash: ./bootstrapper.sh -t libs-only -v $VERBOSITY
       - task: PublishPipelineArtifact@0
         inputs:
@@ -310,7 +334,7 @@ jobs:
     pool:
       vmImage: macos-10.13
     steps:
-      - bash: ./bootstrapper.sh -t tests-only -v $env:VERBOSITY
+      - bash: ./bootstrapper.sh -t tests-only -v $VERBOSITY
   - job: tests_linux
     displayName: Tests (Linux)
     dependsOn:
@@ -339,7 +363,7 @@ jobs:
     pool:
       vmImage: macos-10.13
     steps:
-      - bash: ./bootstrapper.sh -t samples-only -v $env:VERBOSITY
+      - bash: ./bootstrapper.sh -t samples-only -v $VERBOSITY
   - job: samples_linux
     displayName: Build Samples (Linux)
     dependsOn:
