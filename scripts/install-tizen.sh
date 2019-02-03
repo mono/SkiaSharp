@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
+url=http://download.tizen.org/sdk/Installer/tizen-studio_2.4/web-cli_Tizen_Studio_2.4_$platform.bin
+packages=MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment
+
 mkdir -p ~/tizen-temp
 cd ~/tizen-temp
 
@@ -14,7 +17,7 @@ else
 fi
 
 # download tizen
-curl -L -o "tizen-install.bin" "http://download.tizen.org/sdk/Installer/tizen-studio_2.4/web-cli_Tizen_Studio_2.4_$platform.bin"
+curl -L -o "tizen-install.bin" "$url"
 
 # install tizen
 chmod +x tizen-install.bin
@@ -22,4 +25,4 @@ chmod +x tizen-install.bin
 
 # install packages
 cd ~/tizen-studio
-./package-manager/package-manager-cli.bin install --no-java-check --accept-license MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment
+./package-manager/package-manager-cli.bin install --no-java-check --accept-license $packages

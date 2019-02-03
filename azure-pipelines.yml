@@ -59,6 +59,7 @@ jobs:
       - checkout: self
         clean: true
         submodules: recursive
+      - powershell: .\scripts\install-tizen.ps1
       - powershell: .\bootstrapper.ps1 -t externals-tizen -v $env:VERBOSITY
       - task: PublishPipelineArtifact@0
         inputs:
