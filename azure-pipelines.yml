@@ -232,8 +232,21 @@ jobs:
       - checkout: self
         clean: true
         submodules: recursive
-      - task: DownloadPipelineArtifact@1
+      - task: DownloadPipelineArtifact@0
         inputs:
+          artifactName: native-android-windows
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: native-tizen-windows
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: native-uwp-windows
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: native-win32-windows
           targetPath: 'output'
       - powershell: .\bootstrapper.ps1 -t libs-only -v $env:VERBOSITY
       - task: PublishPipelineArtifact@0
@@ -255,8 +268,29 @@ jobs:
       - checkout: self
         clean: true
         submodules: recursive
-      - task: DownloadPipelineArtifact@1
+      - task: DownloadPipelineArtifact@0
         inputs:
+          artifactName: native-android-macos
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: native-ios-macos
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: native-macos-macos
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: native-tizen-macos
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: native-tvos-macos
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: native-watchos-macos
           targetPath: 'output'
       - bash: ./bootstrapper.sh -t libs-only -v $VERBOSITY
       - task: PublishPipelineArtifact@0
@@ -277,8 +311,13 @@ jobs:
       - bash: |
           sudo apt update
           sudo apt install -y $MANAGED_LINUX_PACKAGES
-      - task: DownloadPipelineArtifact@1
+      - task: DownloadPipelineArtifact@0
         inputs:
+          artifactName: native-linux-linux
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: native-tizen-linux
           targetPath: 'output'
       - bash: ./bootstrapper.sh -t libs-only -v $VERBOSITY
       - task: PublishPipelineArtifact@0
@@ -290,14 +329,23 @@ jobs:
   - job: package
     displayName: Package NuGets
     dependsOn:
-      - managed_windows
-      - managed_macos
       - managed_linux
+      - managed_macos
+      - managed_windows
     pool:
       vmImage: vs2017-win2016
     steps:
-      - task: DownloadPipelineArtifact@1
+      - task: DownloadPipelineArtifact@0
         inputs:
+          artifactName: managed-linux
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: managed-macos
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: managed-windows
           targetPath: 'output'
       - powershell: .\bootstrapper.ps1 -t nuget-only -v $env:VERBOSITY
       - task: PublishPipelineArtifact@0
@@ -313,8 +361,9 @@ jobs:
     pool:
       vmImage: vs2017-win2016
     steps:
-      - task: DownloadPipelineArtifact@1
+      - task: DownloadPipelineArtifact@0
         inputs:
+          artifactName: managed-windows
           targetPath: 'output'
       - powershell: .\bootstrapper.ps1 -t tests-only -v $env:VERBOSITY
   - job: tests_macos
@@ -324,8 +373,9 @@ jobs:
     pool:
       vmImage: macos-10.13
     steps:
-      - task: DownloadPipelineArtifact@1
+      - task: DownloadPipelineArtifact@0
         inputs:
+          artifactName: managed-macos
           targetPath: 'output'
       - bash: ./bootstrapper.sh -t tests-only -v $VERBOSITY
   - job: tests_linux
@@ -338,8 +388,9 @@ jobs:
       - bash: |
           sudo apt update
           sudo apt install -y $MANAGED_LINUX_PACKAGES
-      - task: DownloadPipelineArtifact@1
+      - task: DownloadPipelineArtifact@0
         inputs:
+          artifactName: managed-linux
           targetPath: 'output'
       - bash: ./bootstrapper.sh -t tests-only -v $VERBOSITY
 
@@ -351,8 +402,9 @@ jobs:
     pool:
       vmImage: vs2017-win2016
     steps:
-      - task: DownloadPipelineArtifact@1
+      - task: DownloadPipelineArtifact@0
         inputs:
+          artifactName: managed-windows
           targetPath: 'output'
       - powershell: .\bootstrapper.ps1 -t samples-only -v $env:VERBOSITY
   - job: samples_macos
@@ -362,8 +414,9 @@ jobs:
     pool:
       vmImage: macos-10.13
     steps:
-      - task: DownloadPipelineArtifact@1
+      - task: DownloadPipelineArtifact@0
         inputs:
+          artifactName: managed-macos
           targetPath: 'output'
       - bash: ./bootstrapper.sh -t samples-only -v $VERBOSITY
   - job: samples_linux
@@ -376,7 +429,8 @@ jobs:
       - bash: |
           sudo apt update
           sudo apt install -y $MANAGED_LINUX_PACKAGES
-      - task: DownloadPipelineArtifact@1
+      - task: DownloadPipelineArtifact@0
         inputs:
+          artifactName: managed-linux
           targetPath: 'output'
       - bash: ./bootstrapper.sh -t samples-only -v $VERBOSITY
