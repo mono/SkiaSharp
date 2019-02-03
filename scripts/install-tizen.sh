@@ -14,6 +14,7 @@ url=http://download.tizen.org/sdk/Installer/tizen-studio_2.4/web-cli_Tizen_Studi
 packages=MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment
 
 # download tizen
+mkdir -p ~/tizen-temp
 curl -L -o "~/tizen-temp/tizen-install.bin" "$url"
 
 # install tizen
