@@ -354,8 +354,12 @@ jobs:
       - powershell: .\bootstrapper.ps1 -t nuget-only -v $env:VERBOSITY
       - task: PublishPipelineArtifact@0
         inputs:
-          artifactName: package
+          artifactName: nugets
           targetPath: 'output/nugets'
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: package
+          targetPath: 'output'
 
   # TEST JOBS
   - job: tests_windows
