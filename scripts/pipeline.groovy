@@ -10,7 +10,7 @@ import groovy.transform.Field
 @Field def featureNamePrefix = "feature/"
 
 @Field def minimalLinuxPackages = "curl mono-complete msbuild"
-@Field def nativeLinuxPackages = "python git libfontconfig1-dev"
+@Field def nativeLinuxPackages = "python git libfontconfig1-dev clang-3.8"
 @Field def nativeTizenPackages = "python git openjdk-8-jdk zip libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn"
 @Field def managedLinuxPackages = "dotnet-sdk-2.1 ttf-ancient-fonts"
 
@@ -26,6 +26,8 @@ import groovy.transform.Field
         "ANDROID_NDK_HOME=/Users/builder/Library/Developer/Xamarin/android-ndk",
     ],
     "linux": [
+        "CC=clang-3.8",
+        "CXX=clang++-3.8",
     ]
 ]
 
@@ -85,7 +87,7 @@ node("ubuntu-1604-amd64") {
             watchos:            createNativeBuilder("watchOS",    "macOS",    "components",             ""),
 
             // linux
-            linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1604-amd64",      nativeLinuxPackages),
+            linux:              createNativeBuilder("Linux",      "Linux",    "ubuntu-1404-amd64",      nativeLinuxPackages),
             tizen_linux:        createNativeBuilder("Tizen",      "Linux",    "ubuntu-1604-amd64",      nativeTizenPackages),
         ])
     }
