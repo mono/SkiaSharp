@@ -207,7 +207,12 @@ jobs:
       - checkout: self
         clean: true
         submodules: recursive
-      - bash: sudo apt-get update && sudo apt-get install -y $NATIVE_LINUX_PACKAGES
+      - bash: |
+          sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+          sudo apt install apt-transport-https
+          echo "deb https://download.mono-project.com/repo/ubuntu stable-trusty main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
+          sudo apt update
+          sudo apt install $NATIVE_LINUX_PACKAGES
       - bash: ./bootstrapper.sh -t externals-linux -v $VERBOSITY
         env:
           CC: clang-3.8
