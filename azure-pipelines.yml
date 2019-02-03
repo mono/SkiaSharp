@@ -203,6 +203,7 @@ jobs:
       - checkout: self
         clean: true
         submodules: recursive
+      - bash: sudo apt-get install -y curl
       - bash: ./bootstrapper.sh -t externals-linux -v $VERBOSITY
         env:
           CC: clang-3.8
