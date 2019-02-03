@@ -12,14 +12,15 @@ fi
 
 url=http://download.tizen.org/sdk/Installer/tizen-studio_2.4/web-cli_Tizen_Studio_2.4_$platform.bin
 packages=MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment
+bin=~/tizen-temp/tizen-install.bin
 
 # download tizen
 mkdir -p ~/tizen-temp
-curl -L -o "~/tizen-temp/tizen-install.bin" "$url"
+curl -L -o "$bin" "$url"
 
 # install tizen
-chmod +x ~/tizen-temp/tizen-install.bin
-bash ~/tizen-temp/tizen-install.bin --accept-license --no-java-check ~/tizen-studio
+chmod +x $bin
+bash $bin --accept-license --no-java-check ~/tizen-studio
 
 # install packages
 bash ~/tizen-studio/package-manager/package-manager-cli.bin install --no-java-check --accept-license $packages
