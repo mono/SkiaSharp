@@ -233,7 +233,7 @@ jobs:
       - checkout: self
         clean: true
         submodules: recursive
-      - task: DownloadPipelineArtifact@1
+      - task: DownloadPipelineArtifact@1.1
         inputs:
           artifactName:
             - native-android-windows
@@ -261,7 +261,7 @@ jobs:
       - checkout: self
         clean: true
         submodules: recursive
-      - task: DownloadPipelineArtifact@1
+      - task: DownloadPipelineArtifact@1.1
         inputs:
           artifactName:
             - native-android-macos
@@ -290,7 +290,7 @@ jobs:
       - bash: |
           sudo apt update
           sudo apt install -y $MANAGED_LINUX_PACKAGES
-      - task: DownloadPipelineArtifact@1
+      - task: DownloadPipelineArtifact@1.1
         inputs:
           artifactName:
             - native-linux-linux
