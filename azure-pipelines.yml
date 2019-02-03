@@ -233,7 +233,7 @@ jobs:
       - checkout: self
         clean: true
         submodules: recursive
-      - task: DownloadPipelineArtifact@1_1
+      - task: DownloadPipelineArtifact@1
         inputs:
           targetPath: 'output'
       - powershell: .\bootstrapper.ps1 -t libs-only -v $env:VERBOSITY
@@ -256,7 +256,7 @@ jobs:
       - checkout: self
         clean: true
         submodules: recursive
-      - task: DownloadPipelineArtifact@1_1
+      - task: DownloadPipelineArtifact@1
         inputs:
           targetPath: 'output'
       - bash: ./bootstrapper.sh -t libs-only -v $VERBOSITY
@@ -278,7 +278,7 @@ jobs:
       - bash: |
           sudo apt update
           sudo apt install -y $MANAGED_LINUX_PACKAGES
-      - task: DownloadPipelineArtifact@1_1
+      - task: DownloadPipelineArtifact@1
         inputs:
           targetPath: 'output'
       - bash: ./bootstrapper.sh -t libs-only -v $VERBOSITY
@@ -297,7 +297,7 @@ jobs:
     pool:
       vmImage: vs2017-win2016
     steps:
-      - task: DownloadPipelineArtifact@1_1
+      - task: DownloadPipelineArtifact@1
         inputs:
           targetPath: 'output'
       - powershell: .\bootstrapper.ps1 -t nuget-only -v $env:VERBOSITY
@@ -314,7 +314,7 @@ jobs:
     pool:
       vmImage: vs2017-win2016
     steps:
-      - task: DownloadPipelineArtifact@1_1
+      - task: DownloadPipelineArtifact@1
         inputs:
           targetPath: 'output'
       - powershell: .\bootstrapper.ps1 -t tests-only -v $env:VERBOSITY
@@ -325,7 +325,7 @@ jobs:
     pool:
       vmImage: macos-10.13
     steps:
-      - task: DownloadPipelineArtifact@1_1
+      - task: DownloadPipelineArtifact@1
         inputs:
           targetPath: 'output'
       - bash: ./bootstrapper.sh -t tests-only -v $VERBOSITY
@@ -339,7 +339,7 @@ jobs:
       - bash: |
           sudo apt update
           sudo apt install -y $MANAGED_LINUX_PACKAGES
-      - task: DownloadPipelineArtifact@1_1
+      - task: DownloadPipelineArtifact@1
         inputs:
           targetPath: 'output'
       - bash: ./bootstrapper.sh -t tests-only -v $VERBOSITY
@@ -352,7 +352,7 @@ jobs:
     pool:
       vmImage: vs2017-win2016
     steps:
-      - task: DownloadPipelineArtifact@1_1
+      - task: DownloadPipelineArtifact@1
         inputs:
           targetPath: 'output'
       - powershell: .\bootstrapper.ps1 -t samples-only -v $env:VERBOSITY
@@ -363,7 +363,7 @@ jobs:
     pool:
       vmImage: macos-10.13
     steps:
-      - task: DownloadPipelineArtifact@1_1
+      - task: DownloadPipelineArtifact@1
         inputs:
           targetPath: 'output'
       - bash: ./bootstrapper.sh -t samples-only -v $VERBOSITY
@@ -377,7 +377,7 @@ jobs:
       - bash: |
           sudo apt update
           sudo apt install -y $MANAGED_LINUX_PACKAGES
-      - task: DownloadPipelineArtifact@1_1
+      - task: DownloadPipelineArtifact@1
         inputs:
           targetPath: 'output'
       - bash: ./bootstrapper.sh -t samples-only -v $VERBOSITY
