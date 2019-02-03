@@ -222,6 +222,24 @@ jobs:
         inputs:
           artifactName: native-linux-linux
           targetPath: 'output'
+  - job: native_tizen_linux
+    displayName: Build Native Tizen (Linux)
+    dependsOn: prepare
+    pool:
+      vmImage: ubuntu-16.04
+    steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - bash: |
+          sudo apt update
+          sudo apt install -y $TIZEN_LINUX_PACKAGES
+      - bash: ./scripts/install-tizen.sh
+      - bash: ./bootstrapper.sh -t externals-tizen -v $VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-tizen-linux
+          targetPath: 'output'
 
   # # MANAGED JOBS
   # - job: managed_windows
