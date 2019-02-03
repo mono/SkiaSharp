@@ -407,7 +407,7 @@ jobs:
         inputs:
           artifactName: managed-windows
           targetPath: 'output'
-      - powershell: .\bootstrapper.ps1 -t samples-only -v $env:VERBOSITY
+      - powershell: .\bootstrapper.ps1 -t samples -v $env:VERBOSITY
   - job: samples_macos
     displayName: Build Samples (macOS)
     dependsOn:
@@ -419,7 +419,7 @@ jobs:
         inputs:
           artifactName: managed-macos
           targetPath: 'output'
-      - bash: ./bootstrapper.sh -t samples-only -v $VERBOSITY
+      - bash: ./bootstrapper.sh -t samples -v $VERBOSITY
   - job: samples_linux
     displayName: Build Samples (Linux)
     dependsOn:
@@ -434,4 +434,4 @@ jobs:
         inputs:
           artifactName: managed-linux
           targetPath: 'output'
-      - bash: ./bootstrapper.sh -t samples-only -v $VERBOSITY
+      - bash: ./bootstrapper.sh -t samples -v $VERBOSITY
