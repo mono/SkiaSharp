@@ -11,6 +11,10 @@ variables:
   GIT_BRANCH_NAME: $(Build.SourceBranchName)
   BUILD_NUMBER: $(Build.BuildId)
   FEATURE_NAME: $(FeatureName)
+  BASE_LINUX_PACKAGES: curl mono-complete msbuild
+  NATIVE_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) python git libfontconfig1-dev
+  TIZEN_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) python git openjdk-8-jdk zip libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn
+  MANAGED_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) dotnet-sdk-2.1 ttf-ancient-fonts
 
 jobs:
   # PRE-BUILD JOBS
@@ -203,7 +207,7 @@ jobs:
       - checkout: self
         clean: true
         submodules: recursive
-      - bash: sudo apt-get install -y curl
+      - bash: sudo apt-get update && sudo apt-get install -y $NATIVE_LINUX_PACKAGES
       - bash: ./bootstrapper.sh -t externals-linux -v $VERBOSITY
         env:
           CC: clang-3.8
@@ -212,21 +216,6 @@ jobs:
         inputs:
           artifactName: native-linux-linux
           targetPath: 'output'
-  # - job: native_tizen_linux
-  #   displayName: Build Native Tizen (Linux)
-  #   dependsOn: prepare
-  #   pool:
-  #     vmImage: ubuntu-16.04
-  #   steps:
-  #     - checkout: self
-  #       clean: true
-  #       submodules: recursive
-  #     - bash: ./scripts/install-tizen.sh
-  #     - bash: ./bootstrapper.sh -t externals-tizen -v $VERBOSITY
-  #     - task: PublishPipelineArtifact@0
-  #       inputs:
-  #         artifactName: native-tizen-linux
-  #         targetPath: 'output'
 
   # # MANAGED JOBS
   # - job: managed_windows
