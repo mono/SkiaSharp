@@ -198,11 +198,15 @@ jobs:
     dependsOn: prepare
     pool:
       vmImage: ubuntu-16.04
+    container: ubuntu:14.04
     steps:
       - checkout: self
         clean: true
         submodules: recursive
       - bash: ./bootstrapper.sh -t externals-linux -v $VERBOSITY
+        env:
+          CC: clang-3.8
+          CXX: clang++-3.8
       - task: PublishPipelineArtifact@0
         inputs:
           artifactName: native-linux-linux
