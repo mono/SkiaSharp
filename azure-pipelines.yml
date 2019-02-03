@@ -17,189 +17,168 @@ variables:
   MANAGED_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) dotnet-sdk-2.1 ttf-ancient-fonts
 
 jobs:
-  # PRE-BUILD JOBS
-  - job: prepare
-    displayName: Prepare Build
+  # NATIVE JOBS - WINDOWS
+  - job: native_android_windows
+    displayName: Build Native Android (Windows)
     pool:
-      vmImage: ubuntu-16.04
+      vmImage: vs2017-win2016
     steps:
-      - checkout: none
-      - script: |
-          echo Preparing to build $(GIT_SHA) on branch $(GIT_BRANCH_NAME)...
-          echo Build started for build \# $(BUILD_NUMBER).
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '2.7'
+          architecture: 'x64'
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - powershell: .\scripts\install-android-ndk.ps1
+      - powershell: .\bootstrapper.ps1 -t externals-android -v $env:VERBOSITY
+        env:
+          ANDROID_NDK_HOME: $(USERPROFILE)\android-ndk
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-android-windows
+          targetPath: 'output'
+  - job: native_tizen_windows
+    displayName: Build Native Tizen (Windows)
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '2.7'
+          architecture: 'x64'
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - powershell: .\scripts\install-tizen.ps1
+      - powershell: .\bootstrapper.ps1 -t externals-tizen -v $env:VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-tizen-windows
+          targetPath: 'output'
+  - job: native_uwp_windows
+    displayName: Build Native UWP (Windows)
+    cancelTimeoutInMinutes: 120
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '2.7'
+          architecture: 'x64'
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - powershell: .\bootstrapper.ps1 -t externals-uwp -v $env:VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-uwp-windows
+          targetPath: 'output'
+  - job: native_win32_windows
+    displayName: Build Native Win32 (Windows)
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '2.7'
+          architecture: 'x64'
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - powershell: .\bootstrapper.ps1 -t externals-windows -v $env:VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-win32-windows
+          targetPath: 'output'
 
-  # # NATIVE JOBS - WINDOWS
-  # - job: native_android_windows
-  #   displayName: Build Native Android (Windows)
-  #   dependsOn: prepare
-  #   pool:
-  #     vmImage: vs2017-win2016
-  #   steps:
-  #     - task: UsePythonVersion@0
-  #       inputs:
-  #         versionSpec: '2.7'
-  #         architecture: 'x64'
-  #     - checkout: self
-  #       clean: true
-  #       submodules: recursive
-  #     - powershell: .\scripts\install-android-ndk.ps1
-  #     - powershell: .\bootstrapper.ps1 -t externals-android -v $env:VERBOSITY
-  #       env:
-  #         ANDROID_NDK_HOME: $(USERPROFILE)\android-ndk
-  #     - task: PublishPipelineArtifact@0
-  #       inputs:
-  #         artifactName: native-android-windows
-  #         targetPath: 'output'
-  # - job: native_tizen_windows
-  #   displayName: Build Native Tizen (Windows)
-  #   dependsOn: prepare
-  #   pool:
-  #     vmImage: vs2017-win2016
-  #   steps:
-  #     - task: UsePythonVersion@0
-  #       inputs:
-  #         versionSpec: '2.7'
-  #         architecture: 'x64'
-  #     - checkout: self
-  #       clean: true
-  #       submodules: recursive
-  #     - powershell: .\scripts\install-tizen.ps1
-  #     - powershell: .\bootstrapper.ps1 -t externals-tizen -v $env:VERBOSITY
-  #     - task: PublishPipelineArtifact@0
-  #       inputs:
-  #         artifactName: native-tizen-windows
-  #         targetPath: 'output'
-  # - job: native_uwp_windows
-  #   displayName: Build Native UWP (Windows)
-  #   dependsOn: prepare
-  #   pool:
-  #     vmImage: vs2017-win2016
-  #   steps:
-  #     - task: UsePythonVersion@0
-  #       inputs:
-  #         versionSpec: '2.7'
-  #         architecture: 'x64'
-  #     - checkout: self
-  #       clean: true
-  #       submodules: recursive
-  #     - powershell: .\bootstrapper.ps1 -t externals-uwp -v $env:VERBOSITY
-  #     - task: PublishPipelineArtifact@0
-  #       inputs:
-  #         artifactName: native-uwp-windows
-  #         targetPath: 'output'
-  # - job: native_win32_windows
-  #   displayName: Build Native Win32 (Windows)
-  #   dependsOn: prepare
-  #   pool:
-  #     vmImage: vs2017-win2016
-  #   steps:
-  #     - task: UsePythonVersion@0
-  #       inputs:
-  #         versionSpec: '2.7'
-  #         architecture: 'x64'
-  #     - checkout: self
-  #       clean: true
-  #       submodules: recursive
-  #     - powershell: .\bootstrapper.ps1 -t externals-windows -v $env:VERBOSITY
-  #     - task: PublishPipelineArtifact@0
-  #       inputs:
-  #         artifactName: native-win32-windows
-  #         targetPath: 'output'
-
-  # # NATIVE JOBS - MAC
-  # - job: native_android_macos
-  #   displayName: Build Native Android (macOS)
-  #   dependsOn: prepare
-  #   pool:
-  #     vmImage: macos-10.13
-  #   steps:
-  #     - checkout: self
-  #       clean: true
-  #       submodules: recursive
-  #     - bash: ./scripts/install-android-ndk.sh
-  #     - bash: ./bootstrapper.sh -t externals-android -v $VERBOSITY
-  #       env:
-  #         ANDROID_NDK_HOME: $(HOME)/android-ndk
-  #     - task: PublishPipelineArtifact@0
-  #       inputs:
-  #         artifactName: native-android-macos
-  #         targetPath: 'output'
-  # - job: native_ios_macos
-  #   displayName: Build Native iOS (macOS)
-  #   dependsOn: prepare
-  #   pool:
-  #     vmImage: macos-10.13
-  #   steps:
-  #     - checkout: self
-  #       clean: true
-  #       submodules: recursive
-  #     - bash: ./bootstrapper.sh -t externals-ios -v $VERBOSITY
-  #     - task: PublishPipelineArtifact@0
-  #       inputs:
-  #         artifactName: native-ios-macos
-  #         targetPath: 'output'
-  # - job: native_macos_macos
-  #   displayName: Build Native macOS (macOS)
-  #   dependsOn: prepare
-  #   pool:
-  #     vmImage: macos-10.13
-  #   steps:
-  #     - checkout: self
-  #       clean: true
-  #       submodules: recursive
-  #     - bash: ./bootstrapper.sh -t externals-macos -v $VERBOSITY
-  #     - task: PublishPipelineArtifact@0
-  #       inputs:
-  #         artifactName: native-macos-macos
-  #         targetPath: 'output'
-  # - job: native_tizen_macos
-  #   displayName: Build Native Tizen (macOS)
-  #   dependsOn: prepare
-  #   pool:
-  #     vmImage: macos-10.13
-  #   steps:
-  #     - checkout: self
-  #       clean: true
-  #       submodules: recursive
-  #     - bash: ./scripts/install-tizen.sh
-  #     - bash: ./bootstrapper.sh -t externals-tizen -v $VERBOSITY
-  #     - task: PublishPipelineArtifact@0
-  #       inputs:
-  #         artifactName: native-tizen-macos
-  #         targetPath: 'output'
-  # - job: native_tvos_macos
-  #   displayName: Build Native tvOS (macOS)
-  #   dependsOn: prepare
-  #   pool:
-  #     vmImage: macos-10.13
-  #   steps:
-  #     - checkout: self
-  #       clean: true
-  #       submodules: recursive
-  #     - bash: ./bootstrapper.sh -t externals-tvos -v $VERBOSITY
-  #     - task: PublishPipelineArtifact@0
-  #       inputs:
-  #         artifactName: native-tvos-macos
-  #         targetPath: 'output'
-  # - job: native_watchos_macos
-  #   displayName: Build Native watchOS (macOS)
-  #   dependsOn: prepare
-  #   pool:
-  #     vmImage: macos-10.13
-  #   steps:
-  #     - checkout: self
-  #       clean: true
-  #       submodules: recursive
-  #     - bash: ./bootstrapper.sh -t externals-watchos -v $VERBOSITY
-  #     - task: PublishPipelineArtifact@0
-  #       inputs:
-  #         artifactName: native-watchos-macos
-  #         targetPath: 'output'
+  # NATIVE JOBS - MAC
+  - job: native_android_macos
+    displayName: Build Native Android (macOS)
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - bash: ./scripts/install-android-ndk.sh
+      - bash: ./bootstrapper.sh -t externals-android -v $VERBOSITY
+        env:
+          ANDROID_NDK_HOME: $(HOME)/android-ndk
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-android-macos
+          targetPath: 'output'
+  - job: native_ios_macos
+    displayName: Build Native iOS (macOS)
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - bash: ./bootstrapper.sh -t externals-ios -v $VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-ios-macos
+          targetPath: 'output'
+  - job: native_macos_macos
+    displayName: Build Native macOS (macOS)
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - bash: ./bootstrapper.sh -t externals-macos -v $VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-macos-macos
+          targetPath: 'output'
+  - job: native_tizen_macos
+    displayName: Build Native Tizen (macOS)
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - bash: ./scripts/install-tizen.sh
+      - bash: ./bootstrapper.sh -t externals-tizen -v $VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-tizen-macos
+          targetPath: 'output'
+  - job: native_tvos_macos
+    displayName: Build Native tvOS (macOS)
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - bash: ./bootstrapper.sh -t externals-tvos -v $VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-tvos-macos
+          targetPath: 'output'
+  - job: native_watchos_macos
+    displayName: Build Native watchOS (macOS)
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - bash: ./bootstrapper.sh -t externals-watchos -v $VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-watchos-macos
+          targetPath: 'output'
 
   # NATIVE JOBS - LINUX
   - job: native_linux_linux
     displayName: Build Native Linux (Linux)
-    dependsOn: prepare
     pool:
       vmImage: ubuntu-16.04
     container: ubuntu:14.04
@@ -224,7 +203,6 @@ jobs:
           targetPath: 'output'
   - job: native_tizen_linux
     displayName: Build Native Tizen (Linux)
-    dependsOn: prepare
     pool:
       vmImage: ubuntu-16.04
     steps:
@@ -241,52 +219,135 @@ jobs:
           artifactName: native-tizen-linux
           targetPath: 'output'
 
-  # # MANAGED JOBS
-  # - job: managed_windows
-  #   displayName: Build Managed Windows
-  #   dependsOn:
-  #     - native_android_windows
-  #     - native_ios_macos
-  #     - native_linux_linux
-  #     - native_macos_macos
-  #     - native_tizen_windows
-  #     - native_tvos_macos
-  #     - native_uwp_windows
-  #     - native_watchos_macos
-  #     - native_win32_windows
-  #   pool:
-  #     vmImage: vs2017-win2016
-  #   steps:
-  #     - checkout: self
-  #       clean: true
-  #       submodules: recursive
-  #     - bash: .\bootstrapper.ps1 -t everything --skipexternals=all -v $env:VERBOSITY
-  #     - task: PublishPipelineArtifact@0
-  #       inputs:
-  #         artifactName: managed-windows
-  #         targetPath: 'output'
-  # - job: managed_macos
-  #   displayName: Build Managed macOS
-  #   dependsOn:
-  #     - native_android_windows
-  #     - native_ios_macos
-  #     - native_linux_linux
-  #     - native_macos_macos
-  #     - native_tizen_windows
-  #     - native_tvos_macos
-  #     - native_uwp_windows
-  #     - native_watchos_macos
-  #     - native_win32_windows
-  #   pool:
-  #     vmImage: macos-10.13
-  #   steps:
-  #     - checkout: self
-  #       clean: true
-  #       submodules: recursive
-  #     - bash: ./bootstrapper.sh1 -t everything --skipexternals=all -v $env:VERBOSITY
-  #     - task: PublishPipelineArtifact@0
-  #       inputs:
-  #         artifactName: managed-macos
-  #         targetPath: 'output'
+  # MANAGED JOBS
+  - job: managed_windows
+    displayName: Build Managed (Windows)
+    dependsOn:
+      - native_android_windows
+      - native_tizen_windows
+      - native_uwp_windows
+      - native_win32_windows
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - powershell: .\bootstrapper.ps1 -t libs-only -v $env:VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: managed-windows
+          targetPath: 'output'
+  - job: managed_macos
+    displayName: Build Managed (macOS)
+    dependsOn:
+      - native_android_macos
+      - native_ios_macos
+      - native_macos_macos
+      - native_tizen_macos
+      - native_tvos_macos
+      - native_watchos_macos
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - bash: ./bootstrapper.sh -t libs-only -v $env:VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: managed-macos
+          targetPath: 'output'
+  - job: managed_linux
+    displayName: Build Managed (Linux)
+    dependsOn:
+      - native_linux_linux
+      - native_tizen_linux
+    pool:
+      vmImage: ubuntu-16.04
+    steps:
+      - checkout: self
+        clean: true
+        submodules: recursive
+      - bash: |
+          sudo apt update
+          sudo apt install -y $MANAGED_LINUX_PACKAGES
+      - bash: ./bootstrapper.sh -t libs-only -v $VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: managed-linux
+          targetPath: 'output'
 
-  # POST-BUILD JOBS
+  # PACKAGING JOBS
+  - job: package
+    displayName: Package NuGets
+    dependsOn:
+      - managed_windows
+      - managed_macos
+      - managed_linux
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - powershell: .\bootstrapper.ps1 -t nuget-only -v $env:VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: package
+          targetPath: 'output/nugets'
+
+  # TEST JOBS
+  - job: tests_windows
+    displayName: Tests (Windows)
+    dependsOn:
+      - managed_windows
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - powershell: .\bootstrapper.ps1 -t tests-only -v $env:VERBOSITY
+  - job: tests_macos
+    displayName: Test (macOS)
+    dependsOn:
+      - managed_macos
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - bash: ./bootstrapper.sh -t tests-only -v $env:VERBOSITY
+  - job: tests_linux
+    displayName: Tests (Linux)
+    dependsOn:
+      - managed_linux
+    pool:
+      vmImage: ubuntu-16.04
+    steps:
+      - bash: |
+          sudo apt update
+          sudo apt install -y $MANAGED_LINUX_PACKAGES
+      - bash: ./bootstrapper.sh -t tests-only -v $VERBOSITY
+
+  # SAMPLES JOBS
+  - job: samples_windows
+    displayName: Build Samples (Windows)
+    dependsOn:
+      - managed_windows
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - powershell: .\bootstrapper.ps1 -t samples-only -v $env:VERBOSITY
+  - job: samples_macos
+    displayName: Build Samples (macOS)
+    dependsOn:
+      - managed_macos
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - bash: ./bootstrapper.sh -t samples-only -v $env:VERBOSITY
+  - job: samples_linux
+    displayName: Build Samples (Linux)
+    dependsOn:
+      - managed_linux
+    pool:
+      vmImage: ubuntu-16.04
+    steps:
+      - bash: |
+          sudo apt update
+          sudo apt install -y $MANAGED_LINUX_PACKAGES
+      - bash: ./bootstrapper.sh -t samples-only -v $VERBOSITY
