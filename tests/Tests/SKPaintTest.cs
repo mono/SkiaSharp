@@ -100,6 +100,7 @@ namespace SkiaSharp.Tests
 		}
 
 		// Test for issue #282
+		[SkippableFact]
 		public void DrawTransparentImageWithHighFilterQualityWithUnpremul()
 		{
 			var oceanColor = (SKColor)0xFF9EB4D6;
