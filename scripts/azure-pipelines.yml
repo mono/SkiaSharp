@@ -352,6 +352,10 @@ jobs:
           artifactName: package
           targetPath: 'output'
       - powershell: .\bootstrapper.ps1 -t tests-only -v $env:VERBOSITY
+      - task: PublishTestResults@2
+        inputs:
+          testResultsFormat: xUnit
+          testResultsFiles: 'output/tests/**/*.xml' 
   - job: tests_macos
     displayName: Test (macOS)
     dependsOn:
@@ -364,6 +368,10 @@ jobs:
           artifactName: package
           targetPath: 'output'
       - bash: ./bootstrapper.sh -t tests-only -v $VERBOSITY
+      - task: PublishTestResults@2
+        inputs:
+          testResultsFormat: xUnit
+          testResultsFiles: 'output/tests/**/*.xml' 
   - job: tests_linux
     displayName: Tests (Linux)
     dependsOn:
@@ -379,6 +387,10 @@ jobs:
           artifactName: package
           targetPath: 'output'
       - bash: ./bootstrapper.sh -t tests-only -v $VERBOSITY
+      - task: PublishTestResults@2
+        inputs:
+          testResultsFormat: xUnit
+          testResultsFiles: 'output/tests/**/*.xml' 
 
   # SAMPLES JOBS
   - job: samples_windows
