@@ -360,25 +360,27 @@ jobs:
         inputs:
           artifactName: package
           targetPath: 'output'
-  # - job: Signing NuGets
-  #   dependsOn: package
-  #   pool:
-  #     name: VSEng-XamarinCustom
-  #   steps:
-  #     - task: JenkinsQueueJob@2
-  #       displayName: 'Sign NuGets'
-  #       inputs:
-  #         serverEndpoint: 'Xamarin Code Signing Jenkins'
-  #         jobName: 'sign-from-vsts'
-  #         isParameterizedJob: true
-  #         jobParameters: |
-  #           REPO=mono/SkiaSharp
-  #           COMMIT=$(Build.SourceVersion)
-  #           JOB_ID=10789
-  #           BUILD_ID=$(Build.BuildId)
-  #     - task: PublishBuildArtifacts@1
-  #       inputs:
-  #         ArtifactName: nugets-signed
+  - job: Signing NuGets
+    dependsOn: package
+    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'],'refs/tags/'))
+    pool:
+      name: VSEng-XamarinCustom
+    steps:
+      - task: JenkinsQueueJob@2
+        displayName: 'Sign NuGets'
+        inputs:
+          serverEndpoint: 'Xamarin Code Signing Jenkins'
+          jobName: 'sign-from-vsts'
+          isParameterizedJob: true
+          jobParameters: |
+            REPO=mono/SkiaSharp
+            COMMIT=$(Build.SourceVersion)
+            JOB_ID=10789
+            BUILD_ID=$(Build.BuildId)
+      # TODO: download artifacts from jenkins
+      # - task: PublishBuildArtifacts@1
+      #   inputs:
+      #     ArtifactName: nugets-signed
 
   # TEST JOBS
   - job: tests_windows
