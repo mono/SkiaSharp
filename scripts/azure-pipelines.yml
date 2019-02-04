@@ -360,7 +360,8 @@ jobs:
         inputs:
           artifactName: package
           targetPath: 'output'
-  - job: Signing NuGets
+  - job: signing
+    displayName: Signing NuGets
     dependsOn: package
     condition: and(succeeded(), startsWith(variables['Build.SourceBranch'],'refs/tags/'))
     pool:
