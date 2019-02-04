@@ -354,12 +354,31 @@ jobs:
       - powershell: .\bootstrapper.ps1 -t nuget-only -v $env:VERBOSITY
       - task: PublishPipelineArtifact@0
         inputs:
-          artifactName: nugets
+          artifactName: nugets-unsigned
           targetPath: 'output/nugets'
       - task: PublishPipelineArtifact@0
         inputs:
           artifactName: package
           targetPath: 'output'
+  # - job: Signing NuGets
+  #   dependsOn: package
+  #   pool:
+  #     name: VSEng-XamarinCustom
+  #   steps:
+  #     - task: JenkinsQueueJob@2
+  #       displayName: 'Sign NuGets'
+  #       inputs:
+  #         serverEndpoint: 'Xamarin Code Signing Jenkins'
+  #         jobName: 'sign-from-vsts'
+  #         isParameterizedJob: true
+  #         jobParameters: |
+  #           REPO=mono/SkiaSharp
+  #           COMMIT=$(Build.SourceVersion)
+  #           JOB_ID=10789
+  #           BUILD_ID=$(Build.BuildId)
+  #     - task: PublishBuildArtifacts@1
+  #       inputs:
+  #         ArtifactName: nugets-signed
 
   # TEST JOBS
   - job: tests_windows
