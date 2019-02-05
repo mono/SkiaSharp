@@ -215,11 +215,11 @@ Task ("samples")
     };
 
     var platformMatrix = new Dictionary<string, string> {
-        { "ios", "iPhoneSimulator" },
+        { "ios", "iPhone" },
         { "tvos", "iPhoneSimulator" },
         { "uwp", "x86" },
         { "watchos", "iPhoneSimulator" },
-        { "xamarin.forms.mac", "iPhoneSimulator" },
+        { "xamarin.forms.mac", "iPhone" },
         { "xamarin.forms.windows", "x86" },
     };
 
