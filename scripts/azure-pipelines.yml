@@ -18,31 +18,6 @@ variables:
   MANAGED_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) dotnet-sdk-2.1 ttf-ancient-fonts
 
 jobs:
-  - job: test_certs
-    pool:
-      vmImage: macos-10.13
-    steps:
-      - task: InstallAppleCertificate@2
-        displayName: Install iOS Certificate
-        inputs:
-          certSecureFile: 'b3a4ff8b-b7d7-40c6-a159-d4778979e299'
-      - task: InstallAppleCertificate@2
-        displayName: Install macOS Certificate
-        inputs:
-          certSecureFile: 'b7392ee6-5d68-4142-8002-13940dcddbb3'
-      - task: InstallAppleProvisioningProfile@1
-        displayName: Install iOS Provisioning Profile
-        inputs:
-          provProfileSecureFile: 'dbd66aa7-92c7-46c5-8d9a-10d31cffe168'
-      - task: InstallAppleProvisioningProfile@1
-        displayName: Install macOS Provisioning Profile
-        inputs:
-          provProfileSecureFile: '29730498-6c7b-46ea-ac53-8918528ead5d'
-      - task: InstallAppleProvisioningProfile@1
-        displayName: Install tvOS Provisioning Profile
-        inputs:
-          provProfileSecureFile: 'fcace840-a805-4f55-b7d1-aa471c9dfeb2'
-
   # NATIVE JOBS - WINDOWS
   - job: native_android_windows
     displayName: Build Native Android (Windows)
