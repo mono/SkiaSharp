@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace HarfBuzzSharp
+﻿namespace HarfBuzzSharp
 {
-	public class Script
+	public struct Script
 	{
 		/*1.1*/
 		public static readonly Script COMMON = new Script (new Tag ('Z', 'y', 'y', 'y'));
@@ -332,27 +330,27 @@ namespace HarfBuzzSharp
 
 		public static readonly Script MAX_VALUE_SIGNED = new Script (Tag.Max);
 
-		public Tag Tag { get; }
+		private readonly Tag _tag;
 
-		public Script (Tag tag)
+		private Script (Tag tag)
 		{
-			Tag = tag;
+			_tag = tag;
 		}
 
 		public Script (string script)
 		{
-			Tag = new Tag (script);
+			_tag = new Tag (script);
 		}
 
 		public Direction HorizontalDirection {
 			get {
-				return HarfBuzzApi.hb_script_get_horizontal_direction (Tag.Value);
+				return HarfBuzzApi.hb_script_get_horizontal_direction (_tag);
 			}
 		}
 
-		public override string ToString () => System.Text.Encoding.ASCII.GetString (BitConverter.GetBytes (Tag.Value));
+		public override string ToString () => _tag.ToString();
 
-		public static implicit operator uint (Script script) => script.Tag;
+		public static implicit operator uint (Script script) => script._tag;
 
 		public static implicit operator Script (uint tag) => new Script (tag);
 	}
