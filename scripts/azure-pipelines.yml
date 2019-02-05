@@ -1,0 +1,459 @@
+# TODO: implement features
+# TODO: download signed packages
+
+trigger:
+  - master
+
+variables:
+  FeatureNamePrefix: 'feature/'
+  FeatureName: ''
+  VERBOSITY: normal
+  GIT_SHA: $(Build.SourceVersion)
+  GIT_BRANCH_NAME: $(Build.SourceBranchName)
+  BUILD_NUMBER: $(Build.BuildId)
+  FEATURE_NAME: $(FeatureName)
+  BASE_LINUX_PACKAGES: curl mono-complete msbuild
+  NATIVE_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) python git libfontconfig1-dev clang-3.8 make
+  TIZEN_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) python git openjdk-8-jdk zip libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn
+  MANAGED_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) dotnet-sdk-2.1 ttf-ancient-fonts
+
+jobs:
+  - job: test_certs
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - task: InstallAppleCertificate@2
+        displayName: Install iOS Certificate
+        inputs:
+          certSecureFile: 'b3a4ff8b-b7d7-40c6-a159-d4778979e299'
+      - task: InstallAppleCertificate@2
+        displayName: Install macOS Certificate
+        inputs:
+          certSecureFile: 'b7392ee6-5d68-4142-8002-13940dcddbb3'
+      - task: InstallAppleProvisioningProfile@1
+        displayName: Install iOS Provisioning Profile
+        inputs:
+          provProfileSecureFile: 'dbd66aa7-92c7-46c5-8d9a-10d31cffe168'
+      - task: InstallAppleProvisioningProfile@1
+        displayName: Install macOS Provisioning Profile
+        inputs:
+          provProfileSecureFile: '29730498-6c7b-46ea-ac53-8918528ead5d'
+      - task: InstallAppleProvisioningProfile@1
+        displayName: Install tvOS Provisioning Profile
+        inputs:
+          provProfileSecureFile: 'fcace840-a805-4f55-b7d1-aa471c9dfeb2'
+
+  # NATIVE JOBS - WINDOWS
+  - job: native_android_windows
+    displayName: Build Native Android (Windows)
+    timeoutInMinutes: 120
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '2.7'
+          architecture: 'x64'
+      - powershell: .\scripts\install-android-ndk.ps1
+      - powershell: .\bootstrapper.ps1 -t externals-android -v $env:VERBOSITY
+        env:
+          ANDROID_NDK_HOME: $(USERPROFILE)\android-ndk
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-android-windows
+          targetPath: 'output'
+  - job: native_tizen_windows
+    displayName: Build Native Tizen (Windows)
+    timeoutInMinutes: 120
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '2.7'
+          architecture: 'x64'
+      - powershell: .\scripts\install-tizen.ps1
+      - powershell: .\bootstrapper.ps1 -t externals-tizen -v $env:VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-tizen-windows
+          targetPath: 'output'
+  - job: native_uwp_windows
+    displayName: Build Native UWP (Windows)
+    timeoutInMinutes: 120
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '2.7'
+          architecture: 'x64'
+      - powershell: .\bootstrapper.ps1 -t externals-uwp -v $env:VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-uwp-windows
+          targetPath: 'output'
+  - job: native_win32_windows
+    displayName: Build Native Win32 (Windows)
+    timeoutInMinutes: 120
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '2.7'
+          architecture: 'x64'
+      - powershell: .\bootstrapper.ps1 -t externals-windows -v $env:VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-win32-windows
+          targetPath: 'output'
+
+  # NATIVE JOBS - MAC
+  - job: native_android_macos
+    displayName: Build Native Android (macOS)
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - bash: ./scripts/install-android-ndk.sh
+      - bash: ./bootstrapper.sh -t externals-android -v $VERBOSITY
+        env:
+          ANDROID_NDK_HOME: $(HOME)/android-ndk
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-android-macos
+          targetPath: 'output'
+  - job: native_ios_macos
+    displayName: Build Native iOS (macOS)
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - bash: ./bootstrapper.sh -t externals-ios -v $VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-ios-macos
+          targetPath: 'output'
+  - job: native_macos_macos
+    displayName: Build Native macOS (macOS)
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - bash: ./bootstrapper.sh -t externals-macos -v $VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-macos-macos
+          targetPath: 'output'
+  - job: native_tizen_macos
+    displayName: Build Native Tizen (macOS)
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - bash: ./scripts/install-tizen.sh
+      - bash: ./bootstrapper.sh -t externals-tizen -v $VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-tizen-macos
+          targetPath: 'output'
+  - job: native_tvos_macos
+    displayName: Build Native tvOS (macOS)
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - bash: ./bootstrapper.sh -t externals-tvos -v $VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-tvos-macos
+          targetPath: 'output'
+  - job: native_watchos_macos
+    displayName: Build Native watchOS (macOS)
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - bash: ./bootstrapper.sh -t externals-watchos -v $VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-watchos-macos
+          targetPath: 'output'
+
+  # NATIVE JOBS - LINUX
+  - job: native_linux_linux
+    displayName: Build Native Linux (Linux)
+    pool:
+      vmImage: ubuntu-16.04
+    container: ubuntu:14.04
+    steps:
+      - bash: |
+          sudo apt update
+          sudo apt install -y apt-transport-https
+          sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+          echo "deb https://download.mono-project.com/repo/ubuntu stable-trusty main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
+          sudo apt update
+          sudo apt install -y $NATIVE_LINUX_PACKAGES
+      - bash: ./bootstrapper.sh -t externals-linux -v $VERBOSITY
+        env:
+          CC: clang-3.8
+          CXX: clang++-3.8
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-linux-linux
+          targetPath: 'output'
+  - job: native_tizen_linux
+    displayName: Build Native Tizen (Linux)
+    pool:
+      vmImage: ubuntu-16.04
+    steps:
+      - bash: |
+          sudo apt update
+          sudo apt install -y $TIZEN_LINUX_PACKAGES
+      - bash: ./scripts/install-tizen.sh
+      - bash: ./bootstrapper.sh -t externals-tizen -v $VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: native-tizen-linux
+          targetPath: 'output'
+
+  # MANAGED JOBS
+  - job: managed_windows
+    displayName: Build Managed (Windows)
+    dependsOn:
+      - native_android_windows
+      - native_tizen_windows
+      - native_uwp_windows
+      - native_win32_windows
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: native-android-windows
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: native-tizen-windows
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: native-uwp-windows
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: native-win32-windows
+          targetPath: 'output'
+      - powershell: .\bootstrapper.ps1 -t libs-only -v $env:VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: managed-windows
+          targetPath: 'output'
+  - job: managed_macos
+    displayName: Build Managed (macOS)
+    dependsOn:
+      - native_android_macos
+      - native_ios_macos
+      - native_macos_macos
+      - native_tizen_macos
+      - native_tvos_macos
+      - native_watchos_macos
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: native-android-macos
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: native-ios-macos
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: native-macos-macos
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: native-tizen-macos
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: native-tvos-macos
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: native-watchos-macos
+          targetPath: 'output'
+      - bash: ./bootstrapper.sh -t libs-only -v $VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: managed-macos
+          targetPath: 'output'
+  - job: managed_linux
+    displayName: Build Managed (Linux)
+    dependsOn:
+      - native_linux_linux
+      - native_tizen_linux
+    pool:
+      vmImage: ubuntu-16.04
+    steps:
+      - bash: |
+          sudo apt update
+          sudo apt install -y $MANAGED_LINUX_PACKAGES
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: native-linux-linux
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: native-tizen-linux
+          targetPath: 'output'
+      - bash: ./bootstrapper.sh -t libs-only -v $VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: managed-linux
+          targetPath: 'output'
+
+  # PACKAGING JOBS
+  - job: package
+    displayName: Package NuGets
+    dependsOn:
+      - managed_linux
+      - managed_macos
+      - managed_windows
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: managed-linux
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: managed-macos
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: managed-windows
+          targetPath: 'output'
+      - powershell: .\bootstrapper.ps1 -t nuget-only -v $env:VERBOSITY
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: nugets-unsigned
+          targetPath: 'output/nugets'
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: package
+          targetPath: 'output'
+  - job: signing
+    displayName: Signing NuGets
+    dependsOn: package
+    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'],'refs/tags/'))
+    pool:
+      name: VSEng-XamarinCustom
+    steps:
+      - task: JenkinsQueueJob@2
+        displayName: 'Sign NuGets'
+        inputs:
+          serverEndpoint: 'Xamarin Code Signing Jenkins'
+          jobName: 'sign-from-vsts'
+          isParameterizedJob: true
+          jobParameters: |
+            REPO=mono/SkiaSharp
+            COMMIT=$(Build.SourceVersion)
+            JOB_ID=10789
+            BUILD_ID=$(Build.BuildId)
+      # TODO: download artifacts from jenkins
+      # - task: PublishBuildArtifacts@1
+      #   inputs:
+      #     ArtifactName: nugets-signed
+
+  # TEST JOBS
+  - job: tests_windows
+    displayName: Tests (Windows)
+    dependsOn:
+      - package
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: package
+          targetPath: 'output'
+      - powershell: .\bootstrapper.ps1 -t tests-only -v $env:VERBOSITY
+      - task: PublishTestResults@2
+        inputs:
+          testResultsFormat: xUnit
+          testResultsFiles: 'output/tests/**/*.xml' 
+  - job: tests_macos
+    displayName: Test (macOS)
+    dependsOn:
+      - package
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: package
+          targetPath: 'output'
+      - bash: ./bootstrapper.sh -t tests-only -v $VERBOSITY
+      - task: PublishTestResults@2
+        inputs:
+          testResultsFormat: xUnit
+          testResultsFiles: 'output/tests/**/*.xml' 
+  - job: tests_linux
+    displayName: Tests (Linux)
+    dependsOn:
+      - package
+    pool:
+      vmImage: ubuntu-16.04
+    steps:
+      - bash: |
+          sudo apt update
+          sudo apt install -y $MANAGED_LINUX_PACKAGES
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: package
+          targetPath: 'output'
+      - bash: ./bootstrapper.sh -t tests-only -v $VERBOSITY
+      - task: PublishTestResults@2
+        inputs:
+          testResultsFormat: xUnit
+          testResultsFiles: 'output/tests/**/*.xml' 
+
+  # SAMPLES JOBS
+  - job: samples_windows
+    displayName: Build Samples (Windows)
+    dependsOn:
+      - managed_windows
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: managed-windows
+          targetPath: 'output'
+      - powershell: .\bootstrapper.ps1 -t samples -v $env:VERBOSITY
+  - job: samples_macos
+    displayName: Build Samples (macOS)
+    dependsOn:
+      - managed_macos
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: managed-macos
+          targetPath: 'output'
+      - bash: ./bootstrapper.sh -t samples -v $VERBOSITY
+  - job: samples_linux
+    displayName: Build Samples (Linux)
+    dependsOn:
+      - managed_linux
+    pool:
+      vmImage: ubuntu-16.04
+    steps:
+      - bash: |
+          sudo apt update
+          sudo apt install -y $MANAGED_LINUX_PACKAGES
+      - task: DownloadPipelineArtifact@0
+        inputs:
+          artifactName: managed-linux
+          targetPath: 'output'
+      - bash: ./bootstrapper.sh -t samples -v $VERBOSITY
