@@ -1818,7 +1818,7 @@ namespace SkiaSharp
 		public extern static bool sk_region_intersects (sk_region_t r, sk_region_t src);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		public extern static bool sk_region_intersects (sk_region_t r, SKRectI rect);
+		public extern static bool sk_region_intersects_rect (sk_region_t r, ref SKRectI rect);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		public extern static bool sk_region_set_region (sk_region_t r, sk_region_t src);
