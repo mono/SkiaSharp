@@ -58,7 +58,6 @@ void RunLipo (DirectoryPath directory, FilePath output, FilePath[] inputs)
 
 Task ("externals-init")
     .IsDependentOn ("externals-angle-uwp")
-    .IsDependentOn ("externals-harfbuzz")
     .Does (() =>
 {
     RunProcess (PythonToolPath, new ProcessSettings {
@@ -710,26 +709,6 @@ Task ("externals-angle-uwp")
 
     DownloadFile (angleUrl, angleNupkg);
     Unzip (angleNupkg, angleRoot);
-});
-
-Task ("externals-harfbuzz")
-    .Does (() =>
-{
-    if (!IsRunningOnWindows ()) {
-        if (!FileExists (HARFBUZZ_PATH.CombineWithFilePath ("configure"))) {
-            RunProcess ("bash", new ProcessSettings {
-                Arguments = "autogen.sh",
-                WorkingDirectory = HARFBUZZ_PATH,
-            });
-        }
-        if (!FileExists (HARFBUZZ_PATH.CombineWithFilePath ("configured"))) {
-            RunProcess ("bash", new ProcessSettings {
-                Arguments = "configure",
-                WorkingDirectory = HARFBUZZ_PATH,
-            });
-            FileWriteText (HARFBUZZ_PATH.CombineWithFilePath ("configured"), "");
-        }
-    }
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
