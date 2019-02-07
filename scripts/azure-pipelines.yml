@@ -19,6 +19,16 @@ variables:
 
 jobs:
 
+  - job: testing
+    pool:
+      vmImage: macos-10.13
+    steps:
+      - poweshell: |
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+          Invoke-WebRequest -Uri $env:PROVISIONATOR_URL -Headers @{"Authorization"="token $env:GITHUB_TOKEN";"Accept"="application/vnd.github.v3.raw"} -OutFile "bootstrapinator.ps1"
+          & .\bootstrapinator.ps1 -executeScript "provision-skiasharp.csx"
+          & .\provisionator.ps1 "provision-skiasharp.csx"
+
   # NATIVE JOBS - WINDOWS
   - job: native_android_windows
     displayName: Build Native Android (Windows)
