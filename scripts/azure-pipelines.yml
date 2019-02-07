@@ -19,15 +19,11 @@ variables:
 
 jobs:
 
-  - job: testing
+  - job: testssss
     pool:
       vmImage: macos-10.13
     steps:
-      - powershell: |
-          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-          Invoke-WebRequest -Uri $env:PROVISIONATOR_URL -Headers @{"Authorization"="token $env:GITHUB_TOKEN";"Accept"="application/vnd.github.v3.raw"} -OutFile "bootstrapinator.ps1"
-          & .\bootstrapinator.ps1 -executeScript "provision-skiasharp.csx"
-          & .\provisionator.ps1 "provision-skiasharp.csx"
+      - powershell: .\scripts\provision.ps1
 
   # NATIVE JOBS - WINDOWS
   - job: native_android_windows
