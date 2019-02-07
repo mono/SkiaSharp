@@ -23,7 +23,7 @@ jobs:
     pool:
       vmImage: macos-10.13
     steps:
-      - poweshell: |
+      - powershell: |
           [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
           Invoke-WebRequest -Uri $env:PROVISIONATOR_URL -Headers @{"Authorization"="token $env:GITHUB_TOKEN";"Accept"="application/vnd.github.v3.raw"} -OutFile "bootstrapinator.ps1"
           & .\bootstrapinator.ps1 -executeScript "provision-skiasharp.csx"
