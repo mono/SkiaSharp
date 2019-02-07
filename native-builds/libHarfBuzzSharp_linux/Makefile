@@ -15,10 +15,10 @@ target_name = libHarfBuzzSharp.so
 target = ${bin_root}/${ARCH}/${target_name}.${SONAME_VERSION}
 
 library_dirs = 
-include_dirs = \
-	${src_root}/..        \
-	${src_root}           \
-	${src_root}/hb-ucdn
+include_dirs = .                     \
+	           ${src_root}/..        \
+	           ${src_root}           \
+	           ${src_root}/hb-ucdn
 library_paths = 
 defines = \
 	-DHAVE_CONFIG_H
