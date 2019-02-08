@@ -6,4 +6,6 @@ jobs:
     pool:
       vmImage: macos-10.13
     steps:
+      - bash: cat $AGENT_HOMEDIRECTORY/scripts/select-xamarin-sdk.sh
+      - bash: sudo $AGENT_HOMEDIRECTORY/scripts/select-xamarin-sdk.sh 5_16_0
       - bash: msbuild /restore checks/checks.sln
