@@ -256,7 +256,6 @@ jobs:
         inputs:
           artifactName: native-watchos-macos
           targetPath: 'output'
-      - powershell: .\scripts\provision.ps1
       - bash: ./bootstrapper.sh -t libs-only -v $VERBOSITY
       - task: PublishPipelineArtifact@0
         inputs:
@@ -369,7 +368,6 @@ jobs:
         inputs:
           artifactName: package
           targetPath: 'output'
-      - powershell: .\scripts\provision.ps1
       - bash: ./bootstrapper.sh -t tests-only -v $VERBOSITY
       - task: PublishTestResults@2
         inputs:
@@ -434,7 +432,6 @@ jobs:
       - task: InstallAppleProvisioningProfile@1
         inputs:
           provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
-      - powershell: .\scripts\provision.ps1
       - bash: ./bootstrapper.sh -t samples -v $VERBOSITY
   - job: samples_linux
     displayName: Build Samples (Linux)
