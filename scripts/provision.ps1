@@ -11,8 +11,8 @@ Invoke-WebRequest -Uri "$env:PROVISIONATOR_URL" -Headers $headers -OutFile "boot
 Write-Host "Preparing..."
 & .\bootstrapinator.ps1 -executeScript "provision-skiasharp.csx"
 
-Write-Host "Authorizing..."
 if ($IsMacOS) {
+  Write-Host "Authorizing..."
   & .\provisionator.ps1 keychain set github.com "$env:GITHUB_TOKEN"
 }
 
