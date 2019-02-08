@@ -6,6 +6,7 @@ jobs:
     pool:
       vmImage: macos-10.13
     steps:
+      - bash: ls -l $AGENT_HOMEDIRECTORY/scripts
       - bash: ls -l /Library/Frameworks/Mono.framework/Versions
       - bash: cat $AGENT_HOMEDIRECTORY/scripts/select-xamarin-sdk.sh
       - bash: sudo $AGENT_HOMEDIRECTORY/scripts/select-xamarin-sdk.sh 5_16_0
