@@ -8,6 +8,9 @@ jobs:
     steps:
       - bash: ls -l $AGENT_HOMEDIRECTORY/scripts
       - bash: ls -l /Library/Frameworks/Mono.framework/Versions
+      - bash: ls -l /Library/Frameworks/Xamarin.iOS.framework/Versions
+      - bash: ls -l /Library/Frameworks/Xamarin.Android.framework/Versions
+      - bash: ls -l /Library/Frameworks/Xamarin.Mac.framework/Versions
       - bash: cat $AGENT_HOMEDIRECTORY/scripts/select-xamarin-sdk.sh
       - bash: sudo $AGENT_HOMEDIRECTORY/scripts/select-xamarin-sdk.sh 5_16_0
       - bash: msbuild /restore checks/checks.sln
