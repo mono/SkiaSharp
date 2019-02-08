@@ -9,7 +9,7 @@ $headers = @{
 Invoke-WebRequest -Uri "$env:PROVISIONATOR_URL" -Headers $headers -OutFile "bootstrapinator.ps1"
 
 Write-Host "Preparing..."
-& .\bootstrapinator.ps1 -executeScript "provision-skiasharp.csx" "$env:GITHUB_TOKEN"
+& .\bootstrapinator.ps1 -executeScript "provision-skiasharp.csx"
 
 Write-Host "Authorizing..."
 if ($IsMacOS) {
