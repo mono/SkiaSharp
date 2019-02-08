@@ -1,3 +1,7 @@
+Param([string]$githubToken)
+
+$env:GITHUB_TOKEN = $githubToken
+
 $errorActionPreference = 'Stop'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
