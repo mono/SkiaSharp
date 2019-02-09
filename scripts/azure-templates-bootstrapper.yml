@@ -45,7 +45,7 @@ jobs:
       # pre-build steps
       -  ${{ parameters.preBuildSteps }}
       # build
-      - powershell: .\bootstrapper.ps1 -t ${{ target }} -v $env:VERBOSITY
+      - powershell: .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY
         env:
           ANDROID_NDK_HOME: $(Agent.HomeDirectory)\android-ndk
           TIZEN_STUDIO_HOME: $(Agent.HomeDirectory)\tizen-studio
