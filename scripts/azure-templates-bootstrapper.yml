@@ -43,7 +43,7 @@ jobs:
             artifactName: ${{ dep }}
             targetPath: 'output'
       # pre-build steps
-      - ${{ if parameters.preBuildSteps }}
+      - ${{ if ne(parameters.preBuildSteps, []) }}:
         - ${{ parameters.preBuildSteps }}
       # build
       - powershell: .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY
@@ -51,7 +51,7 @@ jobs:
           ANDROID_NDK_HOME: $(Agent.HomeDirectory)\android-ndk
           TIZEN_STUDIO_HOME: $(Agent.HomeDirectory)\tizen-studio
       # post-build steps
-      - ${{ if parameters.additionalSteps }}
+      - ${{ if ne(parameters.additionalSteps, []) }}:
         - ${{ parameters.additionalSteps }}
       # publish artifacts
       - task: PublishPipelineArtifact@0
