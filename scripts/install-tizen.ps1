@@ -43,5 +43,6 @@ if ($IsMacOS -or $IsLinux) {
 }
 
 ls -l $ts
+ls -l ~/tizen-studio
 
 exit $LASTEXITCODE
