@@ -1,0 +1,58 @@
+parameters:
+  name: ''            # in the form type_platform_host
+  displayName: ''     # the human name
+  vmImage: ''         # the VM image
+  packages: ''        # any additional packages
+  target: ''          # the bootstrapper target
+  dependsOn: []       # the dependiencies
+  preBuildSteps: []   # any steps to run before the build
+  postBuildSteps: []  # any additional steps to run after the build
+
+jobs:
+  - job: ${{ parameters.name }}
+    displayName: ${{ parameters.displayName }}
+    timeoutInMinutes: 120
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn: ${{ parameters.dependsOn }}
+    steps:
+      # switch to Python 2.7
+      - ${{ if startsWith(parameters.name, 'native_') }}:
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: '2.7'
+            architecture: 'x64'
+      # install any packages on linux
+      - ${{ if endsWith(parameters.name, '_linux') }}:
+        - bash: |
+            sudo apt update
+            sudo apt install -y ${{ parameters.packages }}
+      # install android ndk
+      - ${{ if and(startsWith(parameters.name, 'native_'), contains(parameters.name, '_android_')) }}:
+        - powershell: .\scripts\install-android-ndk.ps1
+      # install tizen
+      - ${{ if and(startsWith(parameters.name, 'native_'), contains(parameters.name, '_tizen_')) }}:
+        - powershell: .\scripts\install-tizen.ps1
+      # switch to the correct mono version on mac
+      - ${{ if endsWith(parameters.name, '_macos') }}:
+        - bash: sudo $AGENT_HOMEDIRECTORY/scripts/select-xamarin-sdk.sh 5_16_0
+      # download artifacts
+      - ${{ each dep in parameters.dependsOn }}:
+        - task: DownloadPipelineArtifact@0
+          inputs:
+            artifactName: ${{ dep }}
+            targetPath: 'output'
+      # pre-build steps
+      -  ${{ parameters.preBuildSteps }}
+      # build
+      - powershell: .\bootstrapper.ps1 -t ${{ target }} -v $env:VERBOSITY
+        env:
+          ANDROID_NDK_HOME: $(Agent.HomeDirectory)\android-ndk
+          TIZEN_STUDIO_HOME: $(Agent.HomeDirectory)\tizen-studio
+      # publish artifacts
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: ${{ parameters.name }}
+          targetPath: 'output'
+      # post-build steps
+      -  ${{ parameters.additionalSteps }}
