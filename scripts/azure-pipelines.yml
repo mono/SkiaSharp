@@ -30,10 +30,10 @@ jobs:
       - powershell: |
           dotnet new classlib -o tester
           dotnet pack tester
-      - task: PublishBuildArtifacts@1
+      - task: PublishPipelineArtifact@0
         inputs:
           artifactName: nuget
-          pathToPublish: 'tester/bin/Debug'
+          targetPath: 'tester/bin/Debug'
   - job: signing
     dependsOn: package
     pool:

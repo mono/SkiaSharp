@@ -44,7 +44,7 @@ steps:
       $jobId = "${{ parameters.azureJobId }}"
       $buildId = "$(Build.BuildId)"
       $token = "${{ parameters.githubToken }}"
-      $url = "$artifactHost/$jobId-$buildId/metadata.json"
+      $url = "${{ parameters.artifactHost }}/$jobId-$buildId/metadata.json"
 
       Write-Host "Getting manifest from $url"
       $manifest = [string](Invoke-WebRequest -Uri $url -UseBasicParsing -Headers @{"Authorization"="token $token"} ) | Dump-Host | ConvertFrom-Json
