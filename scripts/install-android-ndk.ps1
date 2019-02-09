@@ -31,4 +31,6 @@ Write-Host "Extracting NDK..."
 Write-Host "Moving NDK..."
 Move-Item "${ndkTemp}\android-ndk-${version}" "$ndk"
 
+ls -l $ndk
+
 exit $LASTEXITCODE

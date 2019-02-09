@@ -7,15 +7,12 @@ $errorActionPreference = 'Stop'
 if ($IsMacOS) {
     $platform = "macos-64"
     $ext = "bin"
-    $cmd = "bash"
 } elseif ($IsLinux) {
     $platform = "ubuntu-64"
     $ext = "bin"
-    $cmd = "bash"
 } else {
     $platform = "windows-64"
     $ext = "exe"
-    $cmd = ""
 }
 
 $ts = "$HOME/tizen-studio"
@@ -31,10 +28,20 @@ New-Item -ItemType Directory -Force -Path "$tsTemp" | Out-Null
 
 # install
 Write-Host "Installing SDK..."
-& "$cmd" "$install" --accept-license --no-java-check "$ts"
+if ($IsMacOS -or $IsLinux) {
+    & "bash" "$install" --accept-license --no-java-check "$ts"
+} else {
+    & "$install" --accept-license --no-java-check "$ts"
+}
 
 # install packages
 Write-Host "Installing Additional Packages..."
-& "$cmd" "${ts}/package-manager/package-manager-cli.${ext}" install --no-java-check --accept-license "$packages"
+if ($IsMacOS -or $IsLinux) {
+    & "bash" "${ts}/package-manager/package-manager-cli.${ext}" install --no-java-check --accept-license "$packages"
+} else {
+    & "${ts}/package-manager/package-manager-cli.${ext}" install --no-java-check --accept-license "$packages"
+}
+
+ls -l $ts
 
 exit $LASTEXITCODE
