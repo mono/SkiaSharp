@@ -26,6 +26,7 @@ jobs:
     pool:
       vmImage: vs2017-win2016
     steps:
+      - checkout: none
       - powershell: |
           dotnet new classlib -o tester
           dotnet pack tester
