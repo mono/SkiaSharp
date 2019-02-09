@@ -32,7 +32,7 @@ jobs:
           dotnet pack tester
       - task: PublishBuildArtifacts@1
         inputs:
-          artifactName: nugets-unsigned
+          artifactName: nuget
           pathToPublish: 'tester/bin/Debug'
   - job: signing
     dependsOn: package
