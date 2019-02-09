@@ -20,7 +20,7 @@ if ($IsMacOS) {
 
 $ts = "$HOME/tizen-studio"
 $tsTemp = "$HOME/tizen-temp"
-$url = "http://download.tizen.org/sdk/Installer/tizen-studio_$version/web-cli_Tizen_Studio_$version_$platform.$ext"
+$url = "http://download.tizen.org/sdk/Installer/tizen-studio_${version}/web-cli_Tizen_Studio_${version}_${platform}.${ext}"
 $install = "$tsTemp/tizen-install.$ext"
 $packages = "MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment"
 
@@ -35,6 +35,6 @@ Write-Host "Installing SDK..."
 
 # install packages
 Write-Host "Installing Additional Packages..."
-& "$cmd" "$ts/package-manager/package-manager-cli.$ext" install --no-java-check --accept-license "$packages"
+& "$cmd" "${ts}/package-manager/package-manager-cli.${ext}" install --no-java-check --accept-license "$packages"
 
 exit $LASTEXITCODE

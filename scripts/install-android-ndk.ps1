@@ -13,7 +13,7 @@ if ($IsMacOS) {
     $platform = "windows-x86_64"
 }
 
-$url = "https://dl.google.com/android/repository/android-ndk-$version-$platform.zip"
+$url = "https://dl.google.com/android/repository/android-ndk-${version}-${platform}.zip"
 $ndk = "$HOME/android-ndk"
 $ndkTemp = "$HOME/android-ndk-temp"
 $install = "$ndkTemp/android-ndk.zip"
@@ -29,6 +29,6 @@ Write-Host "Extracting NDK..."
 
 # move / rename
 Write-Host "Moving NDK..."
-Move-Item "$ndkTemp\android-ndk-$version" "$ndk"
+Move-Item "${ndkTemp}\android-ndk-${version}" "$ndk"
 
 exit $LASTEXITCODE
