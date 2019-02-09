@@ -42,7 +42,4 @@ if ($IsMacOS -or $IsLinux) {
     & "${ts}/package-manager/package-manager-cli.${ext}" install --no-java-check --accept-license "$packages"
 }
 
-ls -l $ts
-ls -l ~/tizen-studio
-
 exit $LASTEXITCODE

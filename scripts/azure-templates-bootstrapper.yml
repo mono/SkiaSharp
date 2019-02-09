@@ -48,13 +48,13 @@ jobs:
       - ${{ if endsWith(parameters.name, '_windows') }}:
         - powershell: .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY
           env:
-            ANDROID_NDK_HOME: $(Agent.HomeDirectory)\android-ndk
-            TIZEN_STUDIO_HOME: $(Agent.HomeDirectory)\tizen-studio
+            ANDROID_NDK_HOME: $(USERPROFILE)/android-ndk
+            TIZEN_STUDIO_HOME: $(USERPROFILE)/tizen-studio
       - ${{ if or(endsWith(parameters.name, '_linux'), endsWith(parameters.name, '_macos')) }}:
         - bash: ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY
           env:
-            ANDROID_NDK_HOME: $(Agent.HomeDirectory)\android-ndk
-            TIZEN_STUDIO_HOME: $(Agent.HomeDirectory)\tizen-studio
+            ANDROID_NDK_HOME: $(HOME)/android-ndk
+            TIZEN_STUDIO_HOME: $(HOME)/tizen-studio
       # post-build steps
       - ${{ parameters.postBuildSteps }}
       # publish artifacts
