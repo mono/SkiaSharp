@@ -1,21 +1,39 @@
-$errorActionPreference = 'Stop'
+Param(
+    [string] $version = "r15c"
+)
 
+$errorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-# download ndk
-Write-Host "Downloading Android NDK..."
-New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\android-ndk-temp" | Out-Null
-(New-Object System.Net.WebClient).DownloadFile(
-    "https://dl.google.com/android/repository/android-ndk-r15c-windows-x86_64.zip",
-    "$env:USERPROFILE\android-ndk-temp\android-ndk.zip")
+if ($IsMacOS) {
+    $platform = "darwin-x86_64"
+} elseif ($IsLinux) {
+    $platform = "linux-x86_64"
+} else {
+    $platform = "windows-x86_64"
+}
 
-# unzip ndk
-Write-Host "Extracting Android NDK..."
-[System.IO.Compression.ZipFile]::ExtractToDirectory(
-    "$env:USERPROFILE\android-ndk-temp\android-ndk.zip",
-    "$env:USERPROFILE\android-ndk-temp")
+$url = "https://dl.google.com/android/repository/android-ndk-${version}-${platform}.zip"
+$ndk = "$HOME/android-ndk"
+$ndkTemp = "$HOME/android-ndk-temp"
+$install = "$ndkTemp/android-ndk.zip"
 
-Write-Host "Moving Android NDK..."
-Move-Item "$env:USERPROFILE\android-ndk-temp\android-ndk-r15c" "$env:USERPROFILE\android-ndk"
+# download
+Write-Host "Downloading NDK..."
+New-Item -ItemType Directory -Force -Path "$ndkTemp" | Out-Null
+(New-Object System.Net.WebClient).DownloadFile("$url", "$install")
+
+# extract
+Write-Host "Extracting NDK..."
+if ($IsMacOS -or $IsLinux) {
+    # use the native command to preserve permissions
+    unzip "$install" -d "$ndkTemp"
+}else {
+    [System.IO.Compression.ZipFile]::ExtractToDirectory("$install", "$ndkTemp")
+}
+
+# move / rename
+Write-Host "Moving NDK..."
+Move-Item "${ndkTemp}\android-ndk-${version}" "$ndk"
 
 exit $LASTEXITCODE

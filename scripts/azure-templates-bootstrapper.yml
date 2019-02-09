@@ -1,0 +1,76 @@
+parameters:
+  name: ''            # in the form type_platform_host
+  displayName: ''     # the human name
+  vmImage: ''         # the VM image
+  packages: ''        # any additional packages
+  target: ''          # the bootstrapper target
+  dependsOn: []       # the dependiencies
+  preBuildSteps: []   # any steps to run before the build
+  postBuildSteps: []  # any additional steps to run after the build
+
+jobs:
+  - job: ${{ parameters.name }}
+    displayName: ${{ parameters.displayName }}
+    timeoutInMinutes: 120
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    dependsOn: ${{ parameters.dependsOn }}
+    steps:
+      # install any packages on linux
+      - ${{ if endsWith(parameters.name, '_linux') }}:
+        - bash: |
+            sudo apt update
+            sudo apt install -y ${{ parameters.packages }}
+          displayName: Install any package dependencies
+      # install extra bits for the native builds
+      - ${{ if startsWith(parameters.name, 'native_') }}:
+        # switch to Python 2.7
+        - task: UsePythonVersion@0
+          displayName: Switch Python to 2.7
+          inputs:
+            versionSpec: '2.7'
+            architecture: 'x64'
+        # install android ndk
+        - ${{ if contains(parameters.name, '_android_') }}:
+          - powershell: .\scripts\install-android-ndk.ps1
+            displayName: Install the Android NDK
+        # install tizen
+        - ${{ if contains(parameters.name, '_tizen_') }}:
+          - powershell: .\scripts\install-tizen.ps1
+            displayName: Install the Tizen SDK
+      # switch to the correct mono version on mac
+      - ${{ if contains(parameters.vmImage, 'mac') }}:
+        - bash: sudo $AGENT_HOMEDIRECTORY/scripts/select-xamarin-sdk.sh $(MONO_VERSION)
+          displayName: Switch to the latest Xamarin SDK
+        - bash: echo '##vso[task.setvariable variable=MD_APPLE_SDK_ROOT;]'/Applications/Xcode_$(XCODE_VERSION).app;sudo xcode-select --switch /Applications/Xcode_$(XCODE_VERSION).app/Contents/Developer
+          displayName: Switch to the latest Xcode
+      # download artifacts
+      - ${{ each dep in parameters.dependsOn }}:
+        - task: DownloadPipelineArtifact@0
+          displayName: Download the ${{ dep }} artifacts
+          inputs:
+            artifactName: ${{ dep }}
+            targetPath: 'output'
+      # pre-build steps
+      - ${{ parameters.preBuildSteps }}
+      # build
+      - ${{ if contains(parameters.vmImage, 'win') }}:
+        - powershell: .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY
+          displayName: Run the bootstrapper for ${{ parameters.target }}
+          env:
+            ANDROID_NDK_HOME: $(USERPROFILE)/android-ndk
+            TIZEN_STUDIO_HOME: $(USERPROFILE)/tizen-studio
+      - ${{ if not(contains(parameters.vmImage, 'win')) }}:
+        - bash: ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY
+          displayName: Run the bootstrapper for ${{ parameters.target }}
+          env:
+            ANDROID_NDK_HOME: $(HOME)/android-ndk
+            TIZEN_STUDIO_HOME: $(HOME)/tizen-studio
+      # post-build steps
+      - ${{ parameters.postBuildSteps }}
+      # publish artifacts
+      - task: PublishPipelineArtifact@0
+        displayName: Publish the ${{ parameters.name }} artifacts
+        inputs:
+          artifactName: ${{ parameters.name }}
+          targetPath: 'output'
