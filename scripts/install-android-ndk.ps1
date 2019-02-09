@@ -25,7 +25,12 @@ New-Item -ItemType Directory -Force -Path "$ndkTemp" | Out-Null
 
 # extract
 Write-Host "Extracting NDK..."
-[System.IO.Compression.ZipFile]::ExtractToDirectory("$install", "$ndkTemp")
+if ($IsMacOS -or $IsLinux) {
+    # use the native command to preserve permissions
+    unzip "$install" -d "$ndkTemp"
+}else {
+    [System.IO.Compression.ZipFile]::ExtractToDirectory("$install", "$ndkTemp")
+}
 
 # move / rename
 Write-Host "Moving NDK..."
