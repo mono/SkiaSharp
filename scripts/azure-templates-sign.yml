@@ -1,10 +1,10 @@
 parameters:
   targetFolder: ''
   sourceRepo: ''
-  jenkinsEndpoint: 'Xamarin Code Signing Jenkins'
-  jenkinsJob: 'sign-from-vsts'
+  jenkinsEndpoint: '$(SIGNING_ENDPOINT)'
+  jenkinsJob: '$(SIGNING_JOB)'
   githubToken: '$(GITHUB_TOKEN)'
-  artifactHost: 'https://dl.internalx.com/vsts-devdiv'
+  artifactHost: '$(SIGNING_ARTIFACT_HOST)'
 
 steps:
 
@@ -23,20 +23,20 @@ steps:
       [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
       Function Dump-Host {
-          [cmdletbinding()]
-          Param(
-              $Message,
-              [parameter(ValueFromPipeline)]$Data)
-          Process {
-              $_ = $Data
-              if ($Message) {
-                  $Message = $ExecutionContext.InvokeCommand.ExpandString($Message)
-                  Write-Host $Message
-              } else {
-                  Write-Host $Data
-              }
-              $Data 
+        [cmdletbinding()]
+        Param(
+          $Message,
+          [parameter(ValueFromPipeline)]$Data)
+        Process {
+          $_ = $Data
+          if ($Message) {
+            $Message = $ExecutionContext.InvokeCommand.ExpandString($Message)
+            Write-Host $Message
+          } else {
+            Write-Host $Data
           }
+          $Data 
+        }
       }
 
       $targetRoot = "${{ parameters.targetFolder }}"
@@ -46,10 +46,10 @@ steps:
       $url = "${{ parameters.artifactHost }}/$jobId-$buildId/metadata.json"
 
       Write-Host "Getting manifest from $url"
-      $manifest = [string](Invoke-WebRequest -Uri $url -UseBasicParsing -Headers @{"Authorization"="token $token"} ) | Dump-Host | ConvertFrom-Json
+      $manifest = [string](Invoke-WebRequest -Uri $url -UseBasicParsing -Headers @{"Authorization"="token $token"}) | Dump-Host | ConvertFrom-Json
 
       if (!(Test-Path $targetRoot -PathType Container)) {
-          New-Item -ItemType Directory -Force -Path $targetRoot
+        New-Item -ItemType Directory -Force -Path $targetRoot
       }
 
       foreach ($file in $manifest) {
