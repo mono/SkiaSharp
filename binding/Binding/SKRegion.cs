@@ -5,13 +5,13 @@ namespace SkiaSharp
 	public class SKRegion : SKObject
 	{
 		[Preserve]
-		internal SKRegion(IntPtr handle,  bool owns)
-			: base (handle, owns)
+		internal SKRegion(IntPtr handle, bool owns)
+			: base(handle, owns)
 		{
 		}
 
 		public SKRegion()
-			: this (SkiaApi.sk_region_new(), true)
+			: this(SkiaApi.sk_region_new(), true)
 		{
 		}
 
@@ -22,7 +22,7 @@ namespace SkiaSharp
 
 		public SKRectI Bounds {
 			get {
-				SkiaApi.sk_region_get_bounds (Handle, out var rect);
+				SkiaApi.sk_region_get_bounds(Handle, out var rect);
 				return rect;
 			}
 		}
@@ -30,8 +30,8 @@ namespace SkiaSharp
 		public bool Contains(SKRegion src)
 		{
 			if (src == null)
-				throw new ArgumentNullException (nameof (src));
-			return SkiaApi.sk_region_contains(Handle, src.Handle); 
+				throw new ArgumentNullException(nameof(src));
+			return SkiaApi.sk_region_contains(Handle, src.Handle);
 		}
 
 		public bool Contains(SKPointI xy)
@@ -47,7 +47,7 @@ namespace SkiaSharp
 		public bool Intersects(SKRegion region)
 		{
 			if (region == null)
-				throw new ArgumentNullException (nameof (region));
+				throw new ArgumentNullException(nameof(region));
 			return SkiaApi.sk_region_intersects(Handle, region.Handle);
 		}
 
@@ -59,22 +59,22 @@ namespace SkiaSharp
 		public bool SetRegion(SKRegion region)
 		{
 			if (region == null)
-				throw new ArgumentNullException (nameof (region));
+				throw new ArgumentNullException(nameof(region));
 			return SkiaApi.sk_region_set_region(Handle, region.Handle);
 		}
 
 		public bool SetRect(SKRectI rect)
 		{
-			return SkiaApi.sk_region_set_rect(Handle, ref rect); 
+			return SkiaApi.sk_region_set_rect(Handle, ref rect);
 		}
 
 		public bool SetPath(SKPath path, SKRegion clip)
 		{
 			if (path == null)
-				throw new ArgumentNullException (nameof (path));
+				throw new ArgumentNullException(nameof(path));
 			if (clip == null)
-				throw new ArgumentNullException (nameof (clip));
-			return SkiaApi.sk_region_set_path(Handle, path.Handle, clip.Handle); 
+				throw new ArgumentNullException(nameof(clip));
+			return SkiaApi.sk_region_set_path(Handle, path.Handle, clip.Handle);
 		}
 
 		public bool SetPath(SKPath path)
