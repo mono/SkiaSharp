@@ -20,6 +20,18 @@ namespace SkiaSharp
 		{
 		}
 
+		public SKRegion(SKRectI rect)
+			: this(SkiaApi.sk_region_new2(region.Handle), true)
+		{
+			SetRect(rect);
+		}
+
+		public SKRegion(SKPath path)
+			: this(SKRectI.Ceiling(path.Bounds))
+		{
+			SetPath(path);
+		}
+
 		public SKRectI Bounds {
 			get {
 				SkiaApi.sk_region_get_bounds (Handle, out var rect);
@@ -42,6 +54,16 @@ namespace SkiaSharp
 		public bool Contains(int x, int y)
 		{
 			return SkiaApi.sk_region_contains2(Handle, x, y);
+		}
+
+		public bool Intersects(SKPath path)
+		{
+			if (path == null)
+				throw new ArgumentNullException(nameof(path));
+			using (SKRegion pathRegion = new SKRegion(path, true))
+			{
+				return SkiaApi.sk_region_intersects(Handle, pathRegion.Handle);
+			}
 		}
 
 		public bool Intersects(SKRegion region)
@@ -80,18 +102,13 @@ namespace SkiaSharp
 		public bool SetPath(SKPath path)
 		{
 			if (path == null)
-				throw new ArgumentNullException (nameof (path));
+				throw new ArgumentNullException(nameof(path));
 
-			using (var clip = new SKRegion()) {
-				var rect = path.Bounds;
-				if (!rect.IsEmpty) {
-					var recti = new SKRectI (
-						(int)rect.Left,
-						(int)rect.Top,
-						(int)Math.Ceiling (rect.Right),
-						(int)Math.Ceiling (rect.Bottom));
-					clip.SetRect (recti);
-				}
+			using (var clip = new SKRegion())
+			{
+				var rect = SKRectI.Ceiling(path.Bounds);
+				if (!rect.IsEmpty)
+					clip.SetRect(rect);
 
 				return SkiaApi.sk_region_set_path(Handle, path.Handle, clip.Handle);
 			}
@@ -110,6 +127,14 @@ namespace SkiaSharp
 		public bool Op(SKRegion region, SKRegionOperation op)
 		{
 			return SkiaApi.sk_region_op2(Handle, region.Handle, op);
+		}
+
+		public bool Op(SKPath path, SKRegionOperation op)
+		{
+			using (SKRegion pathRegion = new SKRegion(path, true))
+			{
+				return SkiaApi.sk_region_op2(Handle, pathRegion.Handle, op);
+			}
 		}
 	}
 }
