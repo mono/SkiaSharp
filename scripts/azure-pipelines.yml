@@ -95,11 +95,14 @@ jobs:
           echo "deb https://download.mono-project.com/repo/ubuntu stable-trusty main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
           sudo apt update
           sudo apt install -y $NATIVE_LINUX_PACKAGES
+        displayName: Install any package dependencies
       - bash: ./bootstrapper.sh -t externals-linux -v $VERBOSITY
+        displayName: Run the bootstrapper for externals-linux
         env:
           CC: clang-3.8
           CXX: clang++-3.8
       - task: PublishPipelineArtifact@0
+        displayName: Publish the native_linux_linux artifacts
         inputs:
           artifactName: native_linux_linux
           targetPath: 'output'
