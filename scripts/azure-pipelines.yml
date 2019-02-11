@@ -6,7 +6,7 @@ variables:
   VERBOSITY: normal
   GIT_SHA: $(Build.SourceVersion)
   GIT_BRANCH_NAME: $(Build.SourceBranchName)
-  BUILD_NUMBER: $(Build.BuildId)
+  BUILD_NUMBER: $[counter('$(Build.SourceBranchName)_counter', 1)]
   FEATURE_NAME: ''
   BASE_LINUX_PACKAGES: curl mono-complete msbuild
   NATIVE_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) python git libfontconfig1-dev clang-3.8 make
@@ -177,7 +177,7 @@ jobs:
     dependsOn: package
     pool:
       name: VSEng-XamarinCustom
-    # condition: and(succeeded(), startsWith(variables['Build.SourceBranch'],'refs/tags/'))
+    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'],'refs/tags/'))
     steps:
       - checkout: none
       - template: azure-templates-sign.yml
