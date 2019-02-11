@@ -1,17 +1,13 @@
-# TODO: implement features
-# TODO: download signed packages
-
 trigger:
   - master
 
 variables:
-  FeatureNamePrefix: 'feature/'
-  FeatureName: ''
+  FEATURE_NAME_PREFIX: 'feature/'
   VERBOSITY: normal
   GIT_SHA: $(Build.SourceVersion)
   GIT_BRANCH_NAME: $(Build.SourceBranchName)
-  BUILD_NUMBER: $(Build.BuildId)
-  FEATURE_NAME: $(FeatureName)
+  BUILD_NUMBER: $[counter('$(Build.SourceBranchName)_counter', 1)]
+  FEATURE_NAME: ''
   BASE_LINUX_PACKAGES: curl mono-complete msbuild
   NATIVE_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) python git libfontconfig1-dev clang-3.8 make
   TIZEN_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) python git openjdk-8-jdk zip libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn
@@ -99,11 +95,14 @@ jobs:
           echo "deb https://download.mono-project.com/repo/ubuntu stable-trusty main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
           sudo apt update
           sudo apt install -y $NATIVE_LINUX_PACKAGES
+        displayName: Install any package dependencies
       - bash: ./bootstrapper.sh -t externals-linux -v $VERBOSITY
+        displayName: Run the bootstrapper for externals-linux
         env:
           CC: clang-3.8
           CXX: clang++-3.8
       - task: PublishPipelineArtifact@0
+        displayName: Publish the native_linux_linux artifacts
         inputs:
           artifactName: native_linux_linux
           targetPath: 'output'
@@ -162,33 +161,33 @@ jobs:
         - managed_linux
         - managed_macos
         - managed_windows
+      preBuildSteps:
+        - powershell: |
+            if ($env:GIT_BRANCH_NAME.StartsWith($env:FEATURE_NAME_PREFIX)) {
+              $feature = $env:GIT_BRANCH_NAME.Substring($env:FEATURE_NAME_PREFIX.Length)
+              Write-Host "##vso[task.setvariable variable=FEATURE_NAME]$feature"
+            }
       postBuildSteps:
-        - task: PublishPipelineArtifact@0
+        - task: PublishBuildArtifacts@1
           inputs:
-            artifactName: nugets-unsigned
-            targetPath: 'output/nugets'
+            artifactName: nuget
+            pathToPublish: 'output/nugets'
   - job: signing
     displayName: Signing NuGets
     dependsOn: package
-    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'],'refs/tags/'))
     pool:
       name: VSEng-XamarinCustom
+    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'],'refs/tags/'))
     steps:
-      - task: JenkinsQueueJob@2
-        displayName: 'Sign NuGets'
+      - checkout: none
+      - template: azure-templates-sign.yml
+        parameters:
+          sourceRepo: mono/SkiaSharp
+          targetFolder: 'output/signed'
+      - task: PublishPipelineArtifact@0
         inputs:
-          serverEndpoint: 'Xamarin Code Signing Jenkins'
-          jobName: 'sign-from-vsts'
-          isParameterizedJob: true
-          jobParameters: |
-            REPO=mono/SkiaSharp
-            COMMIT=$(Build.SourceVersion)
-            JOB_ID=10789
-            BUILD_ID=$(Build.BuildId)
-      # - task: TODO (download artifacts from jenkins)
-      # - task: PublishBuildArtifacts@1
-      #   inputs:
-      #     ArtifactName: nugets-signed
+          artifactName: nuget-signed
+          targetPath: 'output/signed'
 
  # TEST JOBS
   - template: azure-templates-bootstrapper.yml
