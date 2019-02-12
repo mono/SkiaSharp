@@ -18,6 +18,7 @@ jobs:
     steps:
       - checkout: self
         submodules: recursive
+      - powershell: 'Get-ChildItem Env:'
       # install any packages on linux
       - ${{ if endsWith(parameters.name, '_linux') }}:
         - bash: |
