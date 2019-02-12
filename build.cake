@@ -28,6 +28,7 @@ var SKIP_EXTERNALS = Argument ("skipexternals", Argument ("SkipExternals", "")).
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAll", Argument ("PackAllPlatforms", TARGET.ToLower() == "ci" || TARGET.ToLower() == "nuget-only")));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
 var ARTIFACTS_ROOT_URL = Argument ("artifactsRootUrl", "");
+var HAS_APP_CERTS = Argument ("hasAppCerts", true);
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
@@ -35,8 +36,6 @@ var CakeToolPath = Context.Tools.Resolve ("Cake.exe");
 var MDocPath = MakeAbsolute ((FilePath)"externals/api-doc-tools/bin/Release/mdoc.exe");
 var MSBuildToolPath = GetMSBuildToolPath (EnvironmentVariable ("MSBUILD_EXE"));
 var PythonToolPath = EnvironmentVariable ("PYTHON_EXE") ?? "python";
-
-var HAS_APP_CERTS = bool.Parse (EnvironmentVariable ("HAS_APP_CERTS") ?? "true");
 
 DirectoryPath PROFILE_PATH = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
 

@@ -7,7 +7,7 @@ variables:
   GIT_SHA: $(Build.SourceVersion)
   GIT_BRANCH_NAME: $(Build.SourceBranchName)
   BUILD_NUMBER: $[counter('$(Build.SourceBranchName)_counter', 1)]
-  HAS_APP_CERTS: eq('$(System.TeamProject)', 'devdiv')
+  HAS_APP_CERTS: $(eq('$(System.TeamProject)', 'devdiv'))
   FEATURE_NAME: ''
   BASE_LINUX_PACKAGES: curl mono-complete msbuild
   NATIVE_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) python git libfontconfig1-dev clang-3.8 make

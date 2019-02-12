@@ -58,13 +58,13 @@ jobs:
       - ${{ parameters.preBuildSteps }}
       # build
       - ${{ if contains(parameters.vmImage, 'win') }}:
-        - powershell: .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY
+        - powershell: .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY --hasAppCerts=$env:HAS_APP_CERTS
           displayName: Run the bootstrapper for ${{ parameters.target }}
           env:
             ANDROID_NDK_HOME: $(USERPROFILE)/android-ndk
             TIZEN_STUDIO_HOME: $(USERPROFILE)/tizen-studio
       - ${{ if not(contains(parameters.vmImage, 'win')) }}:
-        - bash: ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY
+        - bash: ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY --hasAppCerts=$HAS_APP_CERTS
           displayName: Run the bootstrapper for ${{ parameters.target }}
           env:
             ANDROID_NDK_HOME: $(HOME)/android-ndk
