@@ -7,9 +7,7 @@ variables:
   GIT_SHA: $(Build.SourceVersion)
   GIT_BRANCH_NAME: $(Build.SourceBranchName)
   BUILD_NUMBER: $[counter('$(Build.SourceBranchName)_counter', 1)]
-  PRIVATE_BUILD_NAME: devdiv
-  IS_PRIVATE_BUILD: eq('$(System.TeamProject)', '$(PRIVATE_BUILD_NAME)')
-  IS_PUBLIC_BUILD: ne('$(System.TeamProject)', '$(PRIVATE_BUILD_NAME)')
+  HAS_APP_CERTS: eq('$(System.TeamProject)', 'devdiv')
   FEATURE_NAME: ''
   BASE_LINUX_PACKAGES: curl mono-complete msbuild
   NATIVE_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) python git libfontconfig1-dev clang-3.8 make
@@ -177,7 +175,7 @@ jobs:
           inputs:
             artifactName: nuget
             pathToPublish: 'output/nugets'
-  - ${{ if eq(variables['IS_PRIVATE_BUILD'], true) }}:
+  - ${{ if eq(variables['HAS_APP_CERTS'], true) }}:
     - job: signing
       displayName: Signing NuGets
       dependsOn: package
@@ -255,7 +253,7 @@ jobs:
       dependsOn:
         - managed_macos
       preBuildSteps:
-        - ${{ if eq(variables['IS_PRIVATE_BUILD'], true) }}:
+        - ${{ if eq(variables['HAS_APP_CERTS'], true) }}:
           - task: InstallAppleCertificate@2
             inputs:
               certSecureFile: 'SkiaSharp iOS Certificate.p12'
