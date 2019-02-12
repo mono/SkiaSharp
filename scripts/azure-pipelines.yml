@@ -241,30 +241,31 @@ jobs:
       target: samples
       dependsOn:
         - managed_windows
-  - template: azure-templates-bootstrapper.yml
-    parameters:
-      name: samples_macos
-      displayName: Build Samples (macOS)
-      vmImage: macos-10.13
-      target: samples
-      dependsOn:
-        - managed_macos
-      preBuildSteps:
-        - task: InstallAppleCertificate@2
-          inputs:
-            certSecureFile: 'SkiaSharp iOS Certificate.p12'
-        - task: InstallAppleCertificate@2
-          inputs:
-            certSecureFile: 'SkiaSharp Mac Certificate.p12'
-        - task: InstallAppleProvisioningProfile@1
-          inputs:
-            provProfileSecureFile: 'SkiaSharp iOS Provisioning.mobileprovision'
-        - task: InstallAppleProvisioningProfile@1
-          inputs:
-            provProfileSecureFile: 'SkiaSharp Mac Provisioning.provisionprofile'
-        - task: InstallAppleProvisioningProfile@1
-          inputs:
-            provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
+  - ${{ if ne(variables['System.TeamProject'], 'public') }}:
+    - template: azure-templates-bootstrapper.yml
+      parameters:
+        name: samples_macos
+        displayName: Build Samples (macOS)
+        vmImage: macos-10.13
+        target: samples
+        dependsOn:
+          - managed_macos
+        preBuildSteps:
+          - task: InstallAppleCertificate@2
+            inputs:
+              certSecureFile: 'SkiaSharp iOS Certificate.p12'
+          - task: InstallAppleCertificate@2
+            inputs:
+              certSecureFile: 'SkiaSharp Mac Certificate.p12'
+          - task: InstallAppleProvisioningProfile@1
+            inputs:
+              provProfileSecureFile: 'SkiaSharp iOS Provisioning.mobileprovision'
+          - task: InstallAppleProvisioningProfile@1
+            inputs:
+              provProfileSecureFile: 'SkiaSharp Mac Provisioning.provisionprofile'
+          - task: InstallAppleProvisioningProfile@1
+            inputs:
+              provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: samples_linux
