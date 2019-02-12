@@ -7,6 +7,9 @@ variables:
   GIT_SHA: $(Build.SourceVersion)
   GIT_BRANCH_NAME: $(Build.SourceBranchName)
   BUILD_NUMBER: $[counter('$(Build.SourceBranchName)_counter', 1)]
+  PRIVATE_BUILD_NAME: devdiv
+  IS_PRIVATE_BUILD: eq('$(System.TeamProject)', '$(PRIVATE_BUILD_NAME)')
+  IS_PUBLIC_BUILD: ne('$(System.TeamProject)', '$(PRIVATE_BUILD_NAME)')
   FEATURE_NAME: ''
   BASE_LINUX_PACKAGES: curl mono-complete msbuild
   NATIVE_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) python git libfontconfig1-dev clang-3.8 make
@@ -88,6 +91,8 @@ jobs:
       vmImage: ubuntu-16.04
     container: ubuntu:14.04
     steps:
+      - checkout: self
+        submodules: recursive
       - bash: |
           sudo apt update
           sudo apt install -y apt-transport-https
@@ -172,22 +177,23 @@ jobs:
           inputs:
             artifactName: nuget
             pathToPublish: 'output/nugets'
-  - job: signing
-    displayName: Signing NuGets
-    dependsOn: package
-    pool:
-      name: VSEng-XamarinCustom
-    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'],'refs/tags/'))
-    steps:
-      - checkout: none
-      - template: azure-templates-sign.yml
-        parameters:
-          sourceRepo: mono/SkiaSharp
-          targetFolder: 'output/signed'
-      - task: PublishPipelineArtifact@0
-        inputs:
-          artifactName: nuget-signed
-          targetPath: 'output/signed'
+  - ${{ if $(IS_PRIVATE_BUILD) }}:
+    - job: signing
+      displayName: Signing NuGets
+      dependsOn: package
+      pool:
+        name: VSEng-XamarinCustom
+      condition: and(succeeded(), startsWith('$(Build.SourceBranch)', 'refs/tags/'))
+      steps:
+        - checkout: none
+        - template: azure-templates-sign.yml
+          parameters:
+            sourceRepo: mono/SkiaSharp
+            targetFolder: 'output/signed'
+        - task: PublishPipelineArtifact@0
+          inputs:
+            artifactName: nuget-signed
+            targetPath: 'output/signed'
 
  # TEST JOBS
   - template: azure-templates-bootstrapper.yml
@@ -249,21 +255,22 @@ jobs:
       dependsOn:
         - managed_macos
       preBuildSteps:
-        - task: InstallAppleCertificate@2
-          inputs:
-            certSecureFile: 'SkiaSharp iOS Certificate.p12'
-        - task: InstallAppleCertificate@2
-          inputs:
-            certSecureFile: 'SkiaSharp Mac Certificate.p12'
-        - task: InstallAppleProvisioningProfile@1
-          inputs:
-            provProfileSecureFile: 'SkiaSharp iOS Provisioning.mobileprovision'
-        - task: InstallAppleProvisioningProfile@1
-          inputs:
-            provProfileSecureFile: 'SkiaSharp Mac Provisioning.provisionprofile'
-        - task: InstallAppleProvisioningProfile@1
-          inputs:
-            provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
+        - ${{ if $(IS_PRIVATE_BUILD )}}:
+          - task: InstallAppleCertificate@2
+            inputs:
+              certSecureFile: 'SkiaSharp iOS Certificate.p12'
+          - task: InstallAppleCertificate@2
+            inputs:
+              certSecureFile: 'SkiaSharp Mac Certificate.p12'
+          - task: InstallAppleProvisioningProfile@1
+            inputs:
+              provProfileSecureFile: 'SkiaSharp iOS Provisioning.mobileprovision'
+          - task: InstallAppleProvisioningProfile@1
+            inputs:
+              provProfileSecureFile: 'SkiaSharp Mac Provisioning.provisionprofile'
+          - task: InstallAppleProvisioningProfile@1
+            inputs:
+              provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: samples_linux

@@ -28,6 +28,7 @@ var SKIP_EXTERNALS = Argument ("skipexternals", Argument ("SkipExternals", "")).
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAll", Argument ("PackAllPlatforms", TARGET.ToLower() == "ci" || TARGET.ToLower() == "nuget-only")));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
 var ARTIFACTS_ROOT_URL = Argument ("artifactsRootUrl", "");
+var HAS_APP_CERTS = Argument ("hasAppCertificates", true);
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
@@ -101,7 +102,6 @@ Task ("libs-only")
     } else if (IsRunningOnLinux ()) {
         platform = ".Linux";
     }
-    RunMSBuildRestore ($"./source/SkiaSharpSource{platform}.sln");
     RunMSBuild ($"./source/SkiaSharpSource{platform}.sln");
 
     // assemble the mdoc docs
@@ -135,12 +135,7 @@ Task ("tests-only")
         }
 
         EnsureDirectoryExists ($"./output/tests/{platform}/{arch}");
-        RunMSBuildRestore ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
-        if (arch == "AnyCPU") {
-            RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
-        } else {
-            RunMSBuildWithPlatform ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", arch);
-        }
+        RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", platform: arch);
         RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/Release/SkiaSharp.Tests.dll", arch == "x86");
         CopyFileToDirectory ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/Release/TestResult.xml", $"./output/tests/{platform}/{arch}");
     });
@@ -150,12 +145,12 @@ Task ("tests-only")
         RunDesktopTest ("x86");
         RunDesktopTest ("x64");
     } else if (IsRunningOnMac ()) {
-        RunDesktopTest ("AnyCPU");
+        RunDesktopTest ("Any CPU");
     } else if (IsRunningOnLinux ()) {
         // TODO: Disable x64 for the time being due to a bug in mono sn:
         //       https://github.com/mono/mono/issues/8218
 
-        RunDesktopTest ("AnyCPU");
+        RunDesktopTest ("Any CPU");
         // RunDesktopTest ("x64");
     }
 
@@ -215,11 +210,11 @@ Task ("samples")
     };
 
     var platformMatrix = new Dictionary<string, string> {
-        { "ios", "iPhone" },
+        { "ios", HAS_APP_CERTS ? "iPhone" : "iPhoneSimulator" },
         { "tvos", "iPhoneSimulator" },
         { "uwp", "x86" },
         { "watchos", "iPhoneSimulator" },
-        { "xamarin.forms.mac", "iPhone" },
+        { "xamarin.forms.mac", HAS_APP_CERTS ? "iPhone" : "iPhoneSimulator" },
         { "xamarin.forms.windows", "x86" },
     };
 
@@ -242,12 +237,7 @@ Task ("samples")
                 buildPlatform = platformMatrix [platform];
             }
 
-            RunMSBuildRestore (sln);
-            if (string.IsNullOrEmpty (buildPlatform)) {
-                RunMSBuild (sln);
-            } else {
-                RunMSBuildWithPlatform (sln, buildPlatform);
-            }
+            RunMSBuild (sln, configuration: HAS_APP_CERTS ? "Release" : "Debug", platform: buildPlatform);
         }
     });
 

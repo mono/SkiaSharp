@@ -105,7 +105,7 @@ Task ("externals-windows")
 
     var buildHarfBuzzArch = new Action<string, string> ((arch, dir) => {
         // build libHarfBuzzSharp
-        RunMSBuildWithPlatformTarget ("native-builds/libHarfBuzzSharp_windows/libHarfBuzzSharp.sln", arch);
+        RunMSBuild ("native-builds/libHarfBuzzSharp_windows/libHarfBuzzSharp.sln", platformTarget: arch);
 
         // copy libHarfBuzzSharp to output
         var outDir = $"output/native/windows/{dir}";
@@ -155,7 +155,7 @@ Task ("externals-uwp")
 
     var buildHarfBuzzArch = new Action<string, string> ((arch, dir) => {
         // build libHarfBuzzSharp
-        RunMSBuildWithPlatformTarget ("native-builds/libHarfBuzzSharp_uwp/libHarfBuzzSharp.sln", arch);
+        RunMSBuild ("native-builds/libHarfBuzzSharp_uwp/libHarfBuzzSharp.sln", platformTarget: arch);
 
         // copy libHarfBuzzSharp to output
         var outDir = $"output/native/uwp/{dir}";
@@ -172,7 +172,7 @@ Task ("externals-uwp")
 
     var buildInteropArch = new Action<string, string> ((arch, dir) => {
         // build SkiaSharp.Views.Interop.UWP
-        RunMSBuildWithPlatformTarget ("source/SkiaSharp.Views.Interop.UWP.sln", arch);
+        RunMSBuild ("source/SkiaSharp.Views.Interop.UWP.sln", platformTarget: arch);
 
         // copy SkiaSharp.Views.Interop.UWP to native
         var outDir = $"./output/native/uwp/{dir}";
