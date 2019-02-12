@@ -172,22 +172,23 @@ jobs:
           inputs:
             artifactName: nuget
             pathToPublish: 'output/nugets'
-  - job: signing
-    displayName: Signing NuGets
-    dependsOn: package
-    pool:
-      name: VSEng-XamarinCustom
-    condition: and(succeeded(), startsWith(variables['Build.SourceBranch'],'refs/tags/'))
-    steps:
-      - checkout: none
-      - template: azure-templates-sign.yml
-        parameters:
-          sourceRepo: mono/SkiaSharp
-          targetFolder: 'output/signed'
-      - task: PublishPipelineArtifact@0
-        inputs:
-          artifactName: nuget-signed
-          targetPath: 'output/signed'
+  - ${{ if ne(variables['System.TeamProject'], 'public') }}:
+    - job: signing
+      displayName: Signing NuGets
+      dependsOn: package
+      pool:
+        name: VSEng-XamarinCustom
+      condition: and(succeeded(), startsWith(variables['Build.SourceBranch'],'refs/tags/'))
+      steps:
+        - checkout: none
+        - template: azure-templates-sign.yml
+          parameters:
+            sourceRepo: mono/SkiaSharp
+            targetFolder: 'output/signed'
+        - task: PublishPipelineArtifact@0
+          inputs:
+            artifactName: nuget-signed
+            targetPath: 'output/signed'
 
  # TEST JOBS
   - template: azure-templates-bootstrapper.yml
