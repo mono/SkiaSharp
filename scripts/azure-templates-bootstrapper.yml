@@ -63,7 +63,7 @@ jobs:
             ANDROID_NDK_HOME: $(USERPROFILE)/android-ndk
             TIZEN_STUDIO_HOME: $(USERPROFILE)/tizen-studio
       - ${{ if not(contains(parameters.vmImage, 'win')) }}:
-        - bash: ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY --hasAppCertificates=$env:IS_PRIVATE_BUILD
+        - bash: ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY --hasAppCertificates=$IS_PRIVATE_BUILD
           displayName: Run the bootstrapper for ${{ parameters.target }}
           env:
             ANDROID_NDK_HOME: $(HOME)/android-ndk
