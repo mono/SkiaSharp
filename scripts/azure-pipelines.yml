@@ -177,7 +177,7 @@ jobs:
           inputs:
             artifactName: nuget
             pathToPublish: 'output/nugets'
-  - ${{ if IS_PRIVATE_BUILD }}:
+  - ${{ if eq(IS_PRIVATE_BUILD, true) }}:
     - job: signing
       displayName: Signing NuGets
       dependsOn: package
@@ -255,7 +255,7 @@ jobs:
       dependsOn:
         - managed_macos
       preBuildSteps:
-        - ${{ IS_PRIVATE_BUILD }}:
+        - ${{ if eq(IS_PRIVATE_BUILD, true) }}:
           - task: InstallAppleCertificate@2
             inputs:
               certSecureFile: 'SkiaSharp iOS Certificate.p12'
