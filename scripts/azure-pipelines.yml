@@ -114,7 +114,7 @@ jobs:
       name: native_tizen_linux
       displayName: Build Native Tizen (Linux)
       vmImage: ubuntu-16.04
-      packages: variables['TIZEN_LINUX_PACKAGES']
+      packages: $(TIZEN_LINUX_PACKAGES)
       target: externals-tizen
 
  # MANAGED JOBS
@@ -147,7 +147,7 @@ jobs:
       name: managed_linux
       displayName: Build Managed (Linux)
       vmImage: ubuntu-16.04
-      packages: variables['MANAGED_LINUX_PACKAGES']
+      packages: $(MANAGED_LINUX_PACKAGES)
       target: libs-only
       dependsOn:
         - native_linux_linux
@@ -175,7 +175,7 @@ jobs:
           inputs:
             artifactName: nuget
             pathToPublish: 'output/nugets'
-  - ${{ if eq(variables['HAS_APP_CERTS'], true) }}:
+  - ${{ if eq('$(HAS_APP_CERTS)', true) }}:
     - job: signing
       displayName: Signing NuGets
       dependsOn: package
@@ -225,7 +225,7 @@ jobs:
       name: tests_linux
       displayName: Tests (Linux)
       vmImage: ubuntu-16.04
-      packages: variables['MANAGED_LINUX_PACKAGES']
+      packages: $(MANAGED_LINUX_PACKAGES)
       target: tests-only
       dependsOn:
         - package
@@ -253,7 +253,7 @@ jobs:
       dependsOn:
         - managed_macos
       preBuildSteps:
-        - ${{ if eq(variables['HAS_APP_CERTS'], true) }}:
+        - ${{ if eq('$(HAS_APP_CERTS)', true) }}:
           - task: InstallAppleCertificate@2
             inputs:
               certSecureFile: 'SkiaSharp iOS Certificate.p12'
@@ -274,7 +274,7 @@ jobs:
       name: samples_linux
       displayName: Build Samples (Linux)
       vmImage: ubuntu-16.04
-      packages: variables['MANAGED_LINUX_PACKAGES']
+      packages: $(MANAGED_LINUX_PACKAGES)
       target: samples
       dependsOn:
         - managed_linux
