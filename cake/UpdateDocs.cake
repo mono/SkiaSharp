@@ -38,7 +38,8 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
 Task ("externals-mdoc")
     .Does (() =>
 {
-    RunMSBuild ("externals/api-doc-tools/mdoc/mdoc.csproj", platform: "AnyCPU");
+    NuGetRestore ("externals/api-doc-tools/apidoctools.sln");
+    RunMSBuild ("externals/api-doc-tools/mdoc/mdoc.csproj", platform: "AnyCPU", restore: false);
 });
 
 Task ("docs-download-output")
