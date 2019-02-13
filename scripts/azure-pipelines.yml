@@ -88,6 +88,8 @@ jobs:
       vmImage: ubuntu-16.04
     container: ubuntu:14.04
     steps:
+      - checkout: self
+        submodules: recursive
       - bash: |
           sudo apt update
           sudo apt install -y apt-transport-https
