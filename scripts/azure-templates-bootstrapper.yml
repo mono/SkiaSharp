@@ -17,6 +17,8 @@ jobs:
     dependsOn: ${{ parameters.dependsOn }}
     steps:
       - checkout: none
+      # - checkout: self
+      #   submodules: recursive
       # # install any packages on linux
       # - ${{ if endsWith(parameters.name, '_linux') }}:
       #   - bash: |
@@ -52,7 +54,7 @@ jobs:
       #     inputs:
       #       artifactName: ${{ dep }}
       #       targetPath: 'output'
-      # pre-build steps
+      # # pre-build steps
       - ${{ parameters.preBuildSteps }}
       # # build
       # - ${{ if contains(parameters.vmImage, 'win') }}:
@@ -68,12 +70,7 @@ jobs:
       #       ANDROID_NDK_HOME: $(HOME)/android-ndk
       #       TIZEN_STUDIO_HOME: $(HOME)/tizen-studio
       # # post-build steps
-      # # - ${{ each step in parameters.postBuildSteps }}:
-      # #   - ${{ each pair in step }}:
-      # #       ${{ if eq(pair.key, 'true') }}:
-      # #         ${{ pair.value }}
-      # #       ${{ if and(ne(pair.key, 'true'), ne(pair.key, 'false')) }}:
-      # #         ${{ pair.key }}: ${{ pair.value }}
+      # - ${{ parameters.postBuildSteps }}
       # # publish artifacts
       # - task: PublishPipelineArtifact@0
       #   displayName: Publish the ${{ parameters.name }} artifacts
