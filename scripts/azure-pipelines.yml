@@ -18,12 +18,20 @@ variables:
 
 jobs:
 
-  - job: test_no_certs
+  - job: test_nothing
     pool:
       vmImage: macos-10.13
     steps:
       - checkout: none
       - powershell: 'echo .$env:HAS_APP_CERTS.'
+
+  - ${{ if eq('$(HAS_APP_CERTS)', 'false') }}:
+    - job: test_no_certs
+      pool:
+        vmImage: macos-10.13
+      steps:
+        - checkout: none
+        - powershell: 'echo .$env:HAS_APP_CERTS.'
 
   - ${{ if eq('$(HAS_APP_CERTS)', 'true') }}:
     - job: test_with_certs
