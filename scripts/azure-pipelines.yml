@@ -69,7 +69,7 @@ jobs:
           condition: eq(variables['HAS_APP_CERTS'], 'true')
         - powershell: echo not equal
           condition: ne(variables['HAS_APP_CERTS'], 'true')
-        - ${{ if eq(variables.HAS_APP_CERTS, 'true') }}:
+        - ${{ if eq(variables.HAS_APP_CERTS, '') }}:
           - task: InstallAppleCertificate@2
             inputs:
               certSecureFile: 'SkiaSharp iOS Certificate.p12'
@@ -197,7 +197,7 @@ jobs:
 #           inputs:
 #             artifactName: nuget
 #             pathToPublish: 'output/nugets'
-#   - ${{ if eq(variables['HAS_APP_CERTS'], 'true') }}:
+#   - ${{ if eq(variables.HAS_APP_CERTS, 'true') }}:
 #     - job: signing
 #       displayName: Signing NuGets
 #       dependsOn: package
