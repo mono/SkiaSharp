@@ -55,9 +55,9 @@ jobs:
             targetPath: 'output'
       # pre-build steps
       - ${{ each step in parameters.preBuildSteps }}:
-        - powershell: echo s = '$(step)'
-        - powershell: echo k = '$(step.key)'
-        - powershell: echo v = '$(step.value)'
+        - powershell: echo s = '${{ step }}'
+        - powershell: echo k = '${{ step.key }}'
+        - powershell: echo v = '${{ step.value }}'
         # - ${{ each pair in step }}:
         #     ${{ if eq(pair.key, 'true') }}:
         #       ${{ pair.value }}
