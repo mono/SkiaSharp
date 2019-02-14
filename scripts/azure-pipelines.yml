@@ -69,7 +69,7 @@ jobs:
           condition: eq(variables['HAS_APP_CERTS'], 'true')
         - powershell: echo not equal
           condition: ne(variables['HAS_APP_CERTS'], 'true')
-        - ${{ if ne(variables['HAS_APP_CERTS'], 'true') }}:
+        - ${{ if ne(HAS_APP_CERTS, 'true') }}:
           - task: InstallAppleCertificate@2
             inputs:
               certSecureFile: 'SkiaSharp iOS Certificate.p12'
