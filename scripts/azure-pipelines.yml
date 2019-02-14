@@ -235,24 +235,24 @@ jobs:
             testResultsFiles: 'output/tests/**/*.xml'
 
  # SAMPLES JOBS
-  - template: azure-templates-bootstrapper.yml
-    parameters:
-      name: samples_windows
-      displayName: Build Samples (Windows)
-      vmImage: vs2017-win2016
-      target: samples
-      dependsOn:
-        - managed_windows
-  - template: azure-templates-bootstrapper.yml
-    parameters:
-      name: samples_macos
-      displayName: Build Samples (macOS)
-      vmImage: macos-10.13
-      target: samples
-      dependsOn:
-        - managed_macos
-      preBuildSteps:
-        - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+  - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+    - template: azure-templates-bootstrapper.yml
+      parameters:
+        name: samples_windows
+        displayName: Build Samples (Windows)
+        vmImage: vs2017-win2016
+        target: samples
+        dependsOn:
+          - managed_windows
+    - template: azure-templates-bootstrapper.yml
+      parameters:
+        name: samples_macos
+        displayName: Build Samples (macOS)
+        vmImage: macos-10.13
+        target: samples
+        dependsOn:
+          - managed_macos
+        preBuildSteps:
           - task: InstallAppleCertificate@2
             inputs:
               certSecureFile: 'SkiaSharp iOS Certificate.p12'
@@ -268,12 +268,12 @@ jobs:
           - task: InstallAppleProvisioningProfile@1
             inputs:
               provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
-  - template: azure-templates-bootstrapper.yml
-    parameters:
-      name: samples_linux
-      displayName: Build Samples (Linux)
-      vmImage: ubuntu-16.04
-      packages: $(MANAGED_LINUX_PACKAGES)
-      target: samples
-      dependsOn:
-        - managed_linux
+    - template: azure-templates-bootstrapper.yml
+      parameters:
+        name: samples_linux
+        displayName: Build Samples (Linux)
+        vmImage: ubuntu-16.04
+        packages: $(MANAGED_LINUX_PACKAGES)
+        target: samples
+        dependsOn:
+          - managed_linux

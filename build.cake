@@ -28,7 +28,6 @@ var SKIP_EXTERNALS = Argument ("skipexternals", Argument ("SkipExternals", "")).
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAll", Argument ("PackAllPlatforms", TARGET.ToLower() == "ci" || TARGET.ToLower() == "nuget-only")));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
 var ARTIFACTS_ROOT_URL = Argument ("artifactsRootUrl", "");
-var HAS_APP_CERTS = Argument ("hasAppCerts", true);
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
@@ -210,11 +209,11 @@ Task ("samples")
     };
 
     var platformMatrix = new Dictionary<string, string> {
-        { "ios", HAS_APP_CERTS ? "iPhone" : "iPhoneSimulator" },
+        { "ios", "iPhone" },
         { "tvos", "iPhoneSimulator" },
         { "uwp", "x86" },
         { "watchos", "iPhoneSimulator" },
-        { "xamarin.forms.mac", HAS_APP_CERTS ? "iPhone" : "iPhoneSimulator" },
+        { "xamarin.forms.mac", "iPhone" },
         { "xamarin.forms.windows", "x86" },
     };
 
@@ -237,7 +236,7 @@ Task ("samples")
                 buildPlatform = platformMatrix [platform];
             }
 
-            RunMSBuild (sln, configuration: HAS_APP_CERTS ? "Release" : "Debug", platform: buildPlatform);
+            RunMSBuild (sln, platform: buildPlatform);
         }
     });
 
@@ -519,11 +518,11 @@ Information ("");
 Information ("Arguments:");
 Information ("  Target:                           {0}", TARGET);
 Information ("  Verbosity:                        {0}", VERBOSITY);
-Information ("  Has app certificates:             {0}", HAS_APP_CERTS);
 Information ("  Skip externals:                   {0}", SKIP_EXTERNALS);
 Information ("  Print all environment variables:  {0}", PRINT_ALL_ENV_VARS);
 Information ("  Pack all platforms:               {0}", PACK_ALL_PLATFORMS);
 Information ("  Artifacts root url:               {0}", ARTIFACTS_ROOT_URL);
+Information ("");
 
 Information ("Tool Paths:");
 Information ("  Cake.exe:   {0}", CakeToolPath);
