@@ -66,10 +66,10 @@ jobs:
       preBuildSteps:
         - powershell: echo $(HAS_APP_CERTS)
         - powershell: echo equal
-          condition: eq('$(HAS_APP_CERTS)', 'true')
+          condition: eq(variables['HAS_APP_CERTS'], true)
         - powershell: echo not equal
-          condition: ne('$(HAS_APP_CERTS)', 'true')
-        - ${{ if eq('$(HAS_APP_CERTS)', 'true') }}:
+          condition: ne(variables['HAS_APP_CERTS'], true)
+        - ${{ if eq(variables['HAS_APP_CERTS'], true) }}:
           - task: InstallAppleCertificate@2
             inputs:
               certSecureFile: 'SkiaSharp iOS Certificate.p12'
