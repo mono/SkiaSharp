@@ -56,10 +56,10 @@ jobs:
       # pre-build steps
       - ${{ each step in parameters.preBuildSteps }}:
         - ${{ each pair in step }}:
-          ${{ if eq(pair.key, 'true') }}:
-            ${{ pair.value }}
-          ${{ if and(ne(pair.key, 'true'), ne(pair.key, 'false')) }}:
-            ${{ pair.key }}: ${{ pair.value }}
+            ${{ if eq(pair.key, 'true') }}:
+              ${{ pair.value }}
+            ${{ if and(ne(pair.key, 'true'), ne(pair.key, 'false')) }}:
+              ${{ pair.key }}: ${{ pair.value }}
       # build
       - ${{ if contains(parameters.vmImage, 'win') }}:
         - powershell: .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY --hasAppCerts=$env:HAS_APP_CERTS
@@ -76,10 +76,10 @@ jobs:
       # post-build steps
       - ${{ each step in parameters.postBuildSteps }}:
         - ${{ each pair in step }}:
-          ${{ if eq(pair.key, 'true') }}:
-            ${{ pair.value }}
-          ${{ if and(ne(pair.key, 'true'), ne(pair.key, 'false')) }}:
-            ${{ pair.key }}: ${{ pair.value }}
+            ${{ if eq(pair.key, 'true') }}:
+              ${{ pair.value }}
+            ${{ if and(ne(pair.key, 'true'), ne(pair.key, 'false')) }}:
+              ${{ pair.key }}: ${{ pair.value }}
       # publish artifacts
       - task: PublishPipelineArtifact@0
         displayName: Publish the ${{ parameters.name }} artifacts
