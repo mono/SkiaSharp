@@ -1,54 +1,39 @@
 
 var MSBuildNS = (XNamespace) "http://schemas.microsoft.com/developer/msbuild/2003";
 
-var RunMSBuildWithPlatform = new Action<FilePath, string> ((solution, platform) =>
+void RunMSBuild (FilePath solution, string configuration = "Release", string platform = "Any CPU", string platformTarget = null, bool restore = true)
 {
     MSBuild (solution, c => {
-        c.Configuration = "Release";
+        c.Configuration = configuration;
         c.Verbosity = VERBOSITY;
-        c.Properties ["Platform"] = new [] { platform };
-        c.MSBuildPlatform = MSBuildPlatform.x86;
+        c.Restore = restore;
+
+        if (!string.IsNullOrEmpty (platformTarget)) {
+            platform = null;
+            c.PlatformTarget = (PlatformTarget)Enum.Parse(typeof(PlatformTarget), platformTarget);
+        } else {
+            c.PlatformTarget = PlatformTarget.MSIL;
+            c.MSBuildPlatform = MSBuildPlatform.x86;
+        }
+
+        if (!string.IsNullOrEmpty (platform)) {
+            c.Properties ["Platform"] = new [] { "\"" + platform + "\"" };
+        }
+
         if (!string.IsNullOrEmpty (MSBuildToolPath)) {
             c.ToolPath = MSBuildToolPath;
         }
     });
-});
+}
 
-var RunMSBuildWithPlatformTarget = new Action<FilePath, string> ((solution, platformTarget) =>
-{
-    MSBuild (solution, c => {
-        c.Configuration = "Release";
-        c.Verbosity = VERBOSITY;
-        c.PlatformTarget = (PlatformTarget)Enum.Parse(typeof(PlatformTarget), platformTarget);
-        if (!string.IsNullOrEmpty (MSBuildToolPath)) {
-            c.ToolPath = MSBuildToolPath;
-        }
-    });
-});
-
-var RunMSBuildRestore = new Action<FilePath> ((solution) =>
-{
-    MSBuild (solution, c => {
-        c.Configuration = "Release";
-        c.Targets.Clear();
-        c.Targets.Add("Restore");
-        c.Verbosity = VERBOSITY;
-        c.PlatformTarget = PlatformTarget.MSIL;
-        c.MSBuildPlatform = MSBuildPlatform.x86;
-        if (!string.IsNullOrEmpty (MSBuildToolPath)) {
-            c.ToolPath = MSBuildToolPath;
-        }
-    });
-});
-
-var RunMSBuildRestoreLocal = new Action<FilePath, DirectoryPath> ((solution, packagesDir) =>
+void RunMSBuildRestoreLocal (FilePath solution, DirectoryPath packagesDir, string configuration = "Release")
 {
     var dir = solution.GetDirectory ();
     MSBuild (solution, c => {
-        c.Configuration = "Release";
+        c.Configuration = configuration;
+        c.Verbosity = VERBOSITY;
         c.Targets.Clear();
         c.Targets.Add("Restore");
-        c.Verbosity = VERBOSITY;
         c.Properties ["RestoreNoCache"] = new [] { "true" };
         c.Properties ["RestorePackagesPath"] = new [] { packagesDir.FullPath };
         c.PlatformTarget = PlatformTarget.MSIL;
@@ -59,12 +44,7 @@ var RunMSBuildRestoreLocal = new Action<FilePath, DirectoryPath> ((solution, pac
         // c.Properties ["RestoreSources"] = NuGetSources;
         c.ArgumentCustomization = args => args.Append ($"/p:RestoreSources=\"{string.Join (IsRunningOnWindows () ? ";" : "%3B", NuGetSources)}\"");
     });
-});
-
-var RunMSBuild = new Action<FilePath> ((solution) =>
-{
-    RunMSBuildWithPlatform (solution, "\"Any CPU\"");
-});
+}
 
 var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath) =>
 {

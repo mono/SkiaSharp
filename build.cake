@@ -101,7 +101,6 @@ Task ("libs-only")
     } else if (IsRunningOnLinux ()) {
         platform = ".Linux";
     }
-    RunMSBuildRestore ($"./source/SkiaSharpSource{platform}.sln");
     RunMSBuild ($"./source/SkiaSharpSource{platform}.sln");
 
     // assemble the mdoc docs
@@ -135,12 +134,7 @@ Task ("tests-only")
         }
 
         EnsureDirectoryExists ($"./output/tests/{platform}/{arch}");
-        RunMSBuildRestore ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
-        if (arch == "AnyCPU") {
-            RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
-        } else {
-            RunMSBuildWithPlatform ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", arch);
-        }
+        RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", platform: arch);
         RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/Release/SkiaSharp.Tests.dll", arch == "x86");
         CopyFileToDirectory ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/Release/TestResult.xml", $"./output/tests/{platform}/{arch}");
     });
@@ -150,12 +144,12 @@ Task ("tests-only")
         RunDesktopTest ("x86");
         RunDesktopTest ("x64");
     } else if (IsRunningOnMac ()) {
-        RunDesktopTest ("AnyCPU");
+        RunDesktopTest ("Any CPU");
     } else if (IsRunningOnLinux ()) {
         // TODO: Disable x64 for the time being due to a bug in mono sn:
         //       https://github.com/mono/mono/issues/8218
 
-        RunDesktopTest ("AnyCPU");
+        RunDesktopTest ("Any CPU");
         // RunDesktopTest ("x64");
     }
 
@@ -242,12 +236,7 @@ Task ("samples")
                 buildPlatform = platformMatrix [platform];
             }
 
-            RunMSBuildRestore (sln);
-            if (string.IsNullOrEmpty (buildPlatform)) {
-                RunMSBuild (sln);
-            } else {
-                RunMSBuildWithPlatform (sln, buildPlatform);
-            }
+            RunMSBuild (sln, platform: buildPlatform);
         }
     });
 
@@ -524,6 +513,15 @@ Task ("Linux-CI")
 // BUILD NOW
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+Information ("");
+
+Information ("Arguments:");
+Information ("  Target:                           {0}", TARGET);
+Information ("  Verbosity:                        {0}", VERBOSITY);
+Information ("  Skip externals:                   {0}", SKIP_EXTERNALS);
+Information ("  Print all environment variables:  {0}", PRINT_ALL_ENV_VARS);
+Information ("  Pack all platforms:               {0}", PACK_ALL_PLATFORMS);
+Information ("  Artifacts root url:               {0}", ARTIFACTS_ROOT_URL);
 Information ("");
 
 Information ("Tool Paths:");

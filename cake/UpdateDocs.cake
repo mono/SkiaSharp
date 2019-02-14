@@ -39,7 +39,7 @@ Task ("externals-mdoc")
     .Does (() =>
 {
     NuGetRestore ("externals/api-doc-tools/apidoctools.sln");
-    RunMSBuildWithPlatform ("externals/api-doc-tools/mdoc/mdoc.csproj", "AnyCPU");
+    RunMSBuild ("externals/api-doc-tools/mdoc/mdoc.csproj", platform: "AnyCPU", restore: false);
 });
 
 Task ("docs-download-output")
