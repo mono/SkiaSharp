@@ -16,9 +16,8 @@ jobs:
       vmImage: ${{ parameters.vmImage }}
     dependsOn: ${{ parameters.dependsOn }}
     steps:
-      - checkout: none
-      - powershell: echo =${{ eq(variables['System.TeamProject'], 'devdiv') }}=
-      - powershell: echo =${{ eq('$(System.TeamProject)', 'devdiv') }}=
+      - checkout: self
+        submodules: recursive
       # install any packages on linux
       - ${{ if endsWith(parameters.name, '_linux') }}:
         - bash: |
