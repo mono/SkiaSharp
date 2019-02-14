@@ -8,6 +8,7 @@ variables:
   GIT_BRANCH_NAME: $(Build.SourceBranchName)
   BUILD_NUMBER: $[counter('$(Build.SourceBranchName)_counter', 1)]
   HAS_APP_CERTS: 'false'
+  PROJECTS_WITH_CERTS: [ 'devdiv', 'skiasharp' ]
   FEATURE_NAME: ''
   BASE_LINUX_PACKAGES: curl mono-complete msbuild
   NATIVE_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) python git libfontconfig1-dev clang-3.8 make
@@ -25,24 +26,8 @@ jobs:
       - checkout: none
       - powershell: 'echo .$env:HAS_APP_CERTS.'
 
-  - ${{ if eq(variables['System.TeamProject'], 'public') }}:
-    - job: test_no_certs
-      pool:
-        vmImage: macos-10.13
-      steps:
-        - checkout: none
-        - powershell: 'echo .$env:HAS_APP_CERTS.'
-
-  - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+  - ${{ if in(variables['System.TeamProject'], variables['PROJECTS_WITH_CERTS']) }}:
     - job: test_with_certs
-      pool:
-        vmImage: macos-10.13
-      steps:
-        - checkout: none
-        - powershell: 'echo .$env:HAS_APP_CERTS.'
-
-  - ${{ if eq(variables['System.TeamProject'], '') }}:
-    - job: test_empty
       pool:
         vmImage: macos-10.13
       steps:
