@@ -1,7 +1,6 @@
 parameters:
   name: ''            # in the form type_platform_host
   displayName: ''     # the human name
-  condition: true     # whether or not to run this job
   vmImage: ''         # the VM image
   packages: ''        # any additional packages
   target: ''          # the bootstrapper target
@@ -12,7 +11,6 @@ parameters:
 jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
-    condition: ${{ parameters.condition }}
     timeoutInMinutes: 120
     pool:
       vmImage: ${{ parameters.vmImage }}
@@ -56,7 +54,12 @@ jobs:
             artifactName: ${{ dep }}
             targetPath: 'output'
       # pre-build steps
-      - ${{ parameters.preBuildSteps }}
+      - ${{ each step in parameters.preBuildSteps }}:
+        - ${{ each pair in step }}:
+          ${{ if eq(pair.key, 'true') }}:
+            ${{ pair.value }}
+          ${{ if and(ne(pair.key, 'true'), ne(pair.key, 'false')) }}:
+            ${{ pair.key }}: ${{ pair.value }}
       # build
       - ${{ if contains(parameters.vmImage, 'win') }}:
         - powershell: .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY --hasAppCerts=$env:HAS_APP_CERTS
@@ -71,7 +74,12 @@ jobs:
             ANDROID_NDK_HOME: $(HOME)/android-ndk
             TIZEN_STUDIO_HOME: $(HOME)/tizen-studio
       # post-build steps
-      - ${{ parameters.postBuildSteps }}
+      - ${{ each step in parameters.postBuildSteps }}:
+        - ${{ each pair in step }}:
+          ${{ if eq(pair.key, 'true') }}:
+            ${{ pair.value }}
+          ${{ if and(ne(pair.key, 'true'), ne(pair.key, 'false')) }}:
+            ${{ pair.key }}: ${{ pair.value }}
       # publish artifacts
       - task: PublishPipelineArtifact@0
         displayName: Publish the ${{ parameters.name }} artifacts
