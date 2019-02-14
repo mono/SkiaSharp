@@ -23,7 +23,7 @@ jobs:
       vmImage: macos-10.13
     steps:
       - checkout: none
-      - powershell: echo ${{ variables.HAS_APP_CERTS }}
+      - powershell: 'echo .$env:HAS_APP_CERTS.'
 
   - ${{ if eq(variables['HAS_APP_CERTS'], 'true') }}:
     - job: test_with_certs
@@ -31,7 +31,7 @@ jobs:
         vmImage: macos-10.13
       steps:
         - checkout: none
-        - powershell: echo ${{ variables.HAS_APP_CERTS }}
+        - powershell: 'echo .$env:HAS_APP_CERTS.'
 
   - ${{ if eq(variables['HAS_APP_CERTS'], '') }}:
     - job: test_empty
@@ -39,7 +39,7 @@ jobs:
         vmImage: macos-10.13
       steps:
         - checkout: none
-        - powershell: echo ${{ variables.HAS_APP_CERTS }}
+        - powershell: 'echo .$env:HAS_APP_CERTS.'
 
 #  # NATIVE JOBS - WINDOWS
 #   - template: azure-templates-bootstrapper.yml
