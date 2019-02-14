@@ -516,6 +516,15 @@ Task ("Linux-CI")
 
 Information ("");
 
+Information ("Arguments:");
+Information ("  Target:                           {0}", TARGET);
+Information ("  Verbosity:                        {0}", VERBOSITY);
+Information ("  Has app certificates:             {0}", HAS_APP_CERTS);
+Information ("  Skip externals:                   {0}", SKIP_EXTERNALS);
+Information ("  Print all environment variables:  {0}", PRINT_ALL_ENV_VARS);
+Information ("  Pack all platforms:               {0}", PACK_ALL_PLATFORMS);
+Information ("  Artifacts root url:               {0}", ARTIFACTS_ROOT_URL);
+
 Information ("Tool Paths:");
 Information ("  Cake.exe:   {0}", CakeToolPath);
 Information ("  mdoc:       {0}", MDocPath);
