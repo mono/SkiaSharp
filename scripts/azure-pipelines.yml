@@ -33,7 +33,7 @@ jobs:
         - checkout: none
         - powershell: 'echo .$env:HAS_APP_CERTS.'
 
-  - ${{ if eq(variables['HAS_APP_CERTS'], 'devdiv') }}:
+  - ${{ if eq(variables['HAS_APP_CERTS'], 'true') }}:
     - job: test_with_certs
       pool:
         vmImage: macos-10.13
