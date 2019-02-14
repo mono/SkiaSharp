@@ -39,7 +39,7 @@ _Because there are multiple distros of Linux, and we cannot possibly support the
 Before building SkiaSharp:
 
  * [Python 2.7](https://www.python.org/downloads) is available in the `PATH` environment variable on Windows
- * [Android NDK r14](https://developer.android.com/ndk/downloads/index.html) is available in the `ANDROID_NDK_HOME` environment variable on macOS
+ * [Android NDK r15](https://developer.android.com/ndk/downloads/index.html) is available in the `ANDROID_NDK_HOME` environment variable on macOS
  * [.NET Core](https://www.microsoft.com/net/core) is installed on all platforms
  * C/C++ Compiler (MSVC / "Desktop development" package on Windows)
 
