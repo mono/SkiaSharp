@@ -47,7 +47,7 @@ jobs:
           displayName: Switch to the latest Xamarin SDK
         - bash: echo '##vso[task.setvariable variable=MD_APPLE_SDK_ROOT;]'/Applications/Xcode_$(XCODE_VERSION).app;sudo xcode-select --switch /Applications/Xcode_$(XCODE_VERSION).app/Contents/Developer
           displayName: Switch to the latest Xcode
-        - ${{ if eq(variables.HAS_APP_CERTS, 'true') }}:
+        - ${{ if eq('$(HAS_APP_CERTS)', 'true') }}:
           - task: InstallAppleCertificate@2
             inputs:
               certSecureFile: 'SkiaSharp iOS Certificate.p12'
