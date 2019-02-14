@@ -65,7 +65,7 @@ jobs:
       target: externals-macos
       preBuildSteps:
         - powershell: echo $(HAS_APP_CERTS)
-        - ${{ if eq('$(HAS_APP_CERTS)', true) }}:
+        - ${{ if eq(true, true) }}:
           - task: InstallAppleCertificate@2
             inputs:
               certSecureFile: 'SkiaSharp iOS Certificate.p12'
