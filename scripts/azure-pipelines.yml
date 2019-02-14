@@ -58,15 +58,15 @@ jobs:
 #       vmImage: macos-10.13
 #       target: externals-ios
   - template: azure-templates-bootstrapper.yml
-    condition: eq('$(HAS_APP_CERTS)', false)
     parameters:
+      condition: eq('$(HAS_APP_CERTS)', false)
       name: native_macos_macos
       displayName: Build Native macOS (macOS)
       vmImage: macos-10.13
       target: externals-macos
   - template: azure-templates-bootstrapper.yml
-    condition: eq('$(HAS_APP_CERTS)', true)
     parameters:
+      condition: eq('$(HAS_APP_CERTS)', true)
       name: native_macos_macos
       displayName: Build Native macOS (macOS)
       vmImage: macos-10.13

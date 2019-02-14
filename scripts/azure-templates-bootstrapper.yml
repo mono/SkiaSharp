@@ -1,6 +1,7 @@
 parameters:
   name: ''            # in the form type_platform_host
   displayName: ''     # the human name
+  condition: true     # whether or not to run this job
   vmImage: ''         # the VM image
   packages: ''        # any additional packages
   target: ''          # the bootstrapper target
@@ -11,6 +12,7 @@ parameters:
 jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
+    condition: ${{ parameters.condition }}
     timeoutInMinutes: 120
     pool:
       vmImage: ${{ parameters.vmImage }}
