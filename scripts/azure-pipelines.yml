@@ -25,7 +25,7 @@ jobs:
       - checkout: none
       - powershell: 'echo .$env:HAS_APP_CERTS.'
 
-  - ${{ if eq(variables['HAS_APP_CERTS'], 'false') }}:
+  - ${{ if eq(variables['System.TeamProject'], 'public') }}:
     - job: test_no_certs
       pool:
         vmImage: macos-10.13
@@ -33,7 +33,7 @@ jobs:
         - checkout: none
         - powershell: 'echo .$env:HAS_APP_CERTS.'
 
-  - ${{ if eq(variables['HAS_APP_CERTS'], 'true') }}:
+  - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
     - job: test_with_certs
       pool:
         vmImage: macos-10.13
@@ -41,7 +41,7 @@ jobs:
         - checkout: none
         - powershell: 'echo .$env:HAS_APP_CERTS.'
 
-  - ${{ if eq(variables['HAS_APP_CERTS'], '') }}:
+  - ${{ if eq(variables['System.TeamProject'], '') }}:
     - job: test_empty
       pool:
         vmImage: macos-10.13
