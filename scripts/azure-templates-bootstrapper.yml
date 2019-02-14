@@ -42,11 +42,27 @@ jobs:
       #     - powershell: .\scripts\install-tizen.ps1
       #       displayName: Install the Tizen SDK
       # # switch to the correct mono version on mac
-      # - ${{ if contains(parameters.vmImage, 'mac') }}:
-      #   - bash: sudo $AGENT_HOMEDIRECTORY/scripts/select-xamarin-sdk.sh $(MONO_VERSION)
-      #     displayName: Switch to the latest Xamarin SDK
-      #   - bash: echo '##vso[task.setvariable variable=MD_APPLE_SDK_ROOT;]'/Applications/Xcode_$(XCODE_VERSION).app;sudo xcode-select --switch /Applications/Xcode_$(XCODE_VERSION).app/Contents/Developer
-      #     displayName: Switch to the latest Xcode
+      - ${{ if contains(parameters.vmImage, 'mac') }}:
+        - bash: sudo $AGENT_HOMEDIRECTORY/scripts/select-xamarin-sdk.sh $(MONO_VERSION)
+          displayName: Switch to the latest Xamarin SDK
+        - bash: echo '##vso[task.setvariable variable=MD_APPLE_SDK_ROOT;]'/Applications/Xcode_$(XCODE_VERSION).app;sudo xcode-select --switch /Applications/Xcode_$(XCODE_VERSION).app/Contents/Developer
+          displayName: Switch to the latest Xcode
+        - ${{ if eq(variables.HAS_APP_CERTS, 'true') }}:
+          - task: InstallAppleCertificate@2
+            inputs:
+              certSecureFile: 'SkiaSharp iOS Certificate.p12'
+          - task: InstallAppleCertificate@2
+            inputs:
+              certSecureFile: 'SkiaSharp Mac Certificate.p12'
+          - task: InstallAppleProvisioningProfile@1
+            inputs:
+              provProfileSecureFile: 'SkiaSharp iOS Provisioning.mobileprovision'
+          - task: InstallAppleProvisioningProfile@1
+            inputs:
+              provProfileSecureFile: 'SkiaSharp Mac Provisioning.provisionprofile'
+          - task: InstallAppleProvisioningProfile@1
+            inputs:
+              provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
       # # download artifacts
       # - ${{ each dep in parameters.dependsOn }}:
       #   - task: DownloadPipelineArtifact@0

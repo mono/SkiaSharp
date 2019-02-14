@@ -63,28 +63,6 @@ jobs:
       displayName: Build Native macOS (macOS)
       vmImage: macos-10.13
       target: externals-macos
-      preBuildSteps:
-        - powershell: echo $(HAS_APP_CERTS)
-        - powershell: echo equal
-          condition: eq(variables['HAS_APP_CERTS'], 'true')
-        - powershell: echo not equal
-          condition: ne(variables['HAS_APP_CERTS'], 'true')
-        - ${{ if eq(variables.HAS_APP_CERTS, '') }}:
-          - task: InstallAppleCertificate@2
-            inputs:
-              certSecureFile: 'SkiaSharp iOS Certificate.p12'
-          - task: InstallAppleCertificate@2
-            inputs:
-              certSecureFile: 'SkiaSharp Mac Certificate.p12'
-          - task: InstallAppleProvisioningProfile@1
-            inputs:
-              provProfileSecureFile: 'SkiaSharp iOS Provisioning.mobileprovision'
-          - task: InstallAppleProvisioningProfile@1
-            inputs:
-              provProfileSecureFile: 'SkiaSharp Mac Provisioning.provisionprofile'
-          - task: InstallAppleProvisioningProfile@1
-            inputs:
-              provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
 #   - template: azure-templates-bootstrapper.yml
 #     parameters:
 #       name: native_tizen_macos
@@ -274,23 +252,6 @@ jobs:
 #       target: samples
 #       dependsOn:
 #         - managed_macos
-#       preBuildSteps:
-#         - ${{ if eq(variables['HAS_APP_CERTS'], 'true') }}:
-#           - task: InstallAppleCertificate@2
-#             inputs:
-#               certSecureFile: 'SkiaSharp iOS Certificate.p12'
-#           - task: InstallAppleCertificate@2
-#             inputs:
-#               certSecureFile: 'SkiaSharp Mac Certificate.p12'
-#           - task: InstallAppleProvisioningProfile@1
-#             inputs:
-#               provProfileSecureFile: 'SkiaSharp iOS Provisioning.mobileprovision'
-#           - task: InstallAppleProvisioningProfile@1
-#             inputs:
-#               provProfileSecureFile: 'SkiaSharp Mac Provisioning.provisionprofile'
-#           - task: InstallAppleProvisioningProfile@1
-#             inputs:
-#               provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
 #   - template: azure-templates-bootstrapper.yml
 #     parameters:
 #       name: samples_linux
