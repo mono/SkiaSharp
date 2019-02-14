@@ -53,13 +53,7 @@ jobs:
       #       artifactName: ${{ dep }}
       #       targetPath: 'output'
       # pre-build steps
-      - ${{ each step in parameters.preBuildSteps }}:
-        - powershell: echo test
-        # - ${{ each pair in step }}:
-        #     ${{ if eq(pair.key, 'true') }}:
-        #       ${{ pair.value }}
-        #     ${{ if and(ne(pair.key, 'true'), ne(pair.key, 'false')) }}:
-        #       ${{ pair.key }}: ${{ pair.value }}
+      - ${{ parameters.preBuildSteps }}
       # # build
       # - ${{ if contains(parameters.vmImage, 'win') }}:
       #   - powershell: .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY --hasAppCerts=$env:HAS_APP_CERTS
