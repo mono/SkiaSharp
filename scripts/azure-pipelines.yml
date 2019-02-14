@@ -25,7 +25,7 @@ jobs:
       - checkout: none
       - powershell: 'echo .$env:HAS_APP_CERTS.'
 
-  - ${{ if eq($(HAS_APP_CERTS), 'true') }}:
+  - ${{ if eq('$(HAS_APP_CERTS)', 'true') }}:
     - job: test_with_certs
       pool:
         vmImage: macos-10.13
