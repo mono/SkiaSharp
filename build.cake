@@ -134,7 +134,7 @@ Task ("tests-only")
         }
 
         EnsureDirectoryExists ($"./output/tests/{platform}/{arch}");
-        RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", platform: arch);
+        RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", platform: arch == "AnyCPU" ? "Any CPU" : arch);
         RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/Release/SkiaSharp.Tests.dll", arch == "x86");
         CopyFileToDirectory ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/Release/TestResult.xml", $"./output/tests/{platform}/{arch}");
     });
@@ -144,12 +144,12 @@ Task ("tests-only")
         RunDesktopTest ("x86");
         RunDesktopTest ("x64");
     } else if (IsRunningOnMac ()) {
-        RunDesktopTest ("Any CPU");
+        RunDesktopTest ("AnyCPU");
     } else if (IsRunningOnLinux ()) {
         // TODO: Disable x64 for the time being due to a bug in mono sn:
         //       https://github.com/mono/mono/issues/8218
 
-        RunDesktopTest ("Any CPU");
+        RunDesktopTest ("AnyCPU");
         // RunDesktopTest ("x64");
     }
 
