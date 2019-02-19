@@ -1,0 +1,61 @@
+parameters:
+  targetFolder: ''
+  sourceRepo: ''
+  jenkinsEndpoint: '$(SIGNING_ENDPOINT)'
+  jenkinsJob: '$(SIGNING_JOB)'
+  artifactHost: '$(SIGNING_ARTIFACT_HOST)'
+  githubToken: '$(GITHUB_TOKEN)'
+
+steps:
+
+  - task: JenkinsQueueJob@2
+    displayName: 'Request Artifact Signing'
+    inputs:
+      serverEndpoint: ${{ parameters.jenkinsEndpoint }}
+      jobName: ${{ parameters.jenkinsJob }}
+      isParameterizedJob: true
+      jobParameters: |
+        REPO=${{ parameters.sourceRepo }}
+        COMMIT=$(Build.SourceVersion)
+        JOB_ID=$(System.DefinitionId)
+        BUILD_ID=$(Build.BuildId)
+  - powershell: |
+      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+      Function Dump-Host {
+        [cmdletbinding()]
+        Param(
+          $Message,
+          [parameter(ValueFromPipeline)]$Data)
+        Process {
+          $_ = $Data
+          if ($Message) {
+            $Message = $ExecutionContext.InvokeCommand.ExpandString($Message)
+            Write-Host $Message
+          } else {
+            Write-Host $Data
+          }
+          $Data 
+        }
+      }
+
+      $targetRoot = "${{ parameters.targetFolder }}"
+      $jobId = "${{ parameters.azureJobId }}"
+      $buildId = "$(Build.BuildId)"
+      $token = "${{ parameters.githubToken }}"
+      $url = "${{ parameters.artifactHost }}/$jobId-$buildId/metadata.json"
+
+      Write-Host "Getting manifest from $url"
+      $manifest = [string](Invoke-WebRequest -Uri $url -UseBasicParsing -Headers @{"Authorization"="token $token"}) | Dump-Host | ConvertFrom-Json
+
+      if (!(Test-Path $targetRoot -PathType Container)) {
+        New-Item -ItemType Directory -Force -Path $targetRoot
+      }
+
+      foreach ($file in $manifest) {
+        $fileUrl = $file.url
+        $fileName = [IO.Path]::GetFileName($fileUrl)
+        Write-Host "Downloading artifact to $targetRoot/$fileName"
+        Invoke-WebRequest -Uri $fileUrl -Headers @{"Authorization"="token $token"} -OutFile "$targetRoot/$fileName"
+      }
+    displayName: 'Download Signed Artifacts'

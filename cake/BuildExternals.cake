@@ -105,7 +105,7 @@ Task ("externals-windows")
 
     var buildHarfBuzzArch = new Action<string, string> ((arch, dir) => {
         // build libHarfBuzzSharp
-        RunMSBuildWithPlatformTarget ("native-builds/libHarfBuzzSharp_windows/libHarfBuzzSharp.sln", arch);
+        RunMSBuild ("native-builds/libHarfBuzzSharp_windows/libHarfBuzzSharp.sln", platformTarget: arch);
 
         // copy libHarfBuzzSharp to output
         var outDir = $"output/native/windows/{dir}";
@@ -155,7 +155,7 @@ Task ("externals-uwp")
 
     var buildHarfBuzzArch = new Action<string, string> ((arch, dir) => {
         // build libHarfBuzzSharp
-        RunMSBuildWithPlatformTarget ("native-builds/libHarfBuzzSharp_uwp/libHarfBuzzSharp.sln", arch);
+        RunMSBuild ("native-builds/libHarfBuzzSharp_uwp/libHarfBuzzSharp.sln", platformTarget: arch);
 
         // copy libHarfBuzzSharp to output
         var outDir = $"output/native/uwp/{dir}";
@@ -172,7 +172,7 @@ Task ("externals-uwp")
 
     var buildInteropArch = new Action<string, string> ((arch, dir) => {
         // build SkiaSharp.Views.Interop.UWP
-        RunMSBuildWithPlatformTarget ("source/SkiaSharp.Views.Interop.UWP.sln", arch);
+        RunMSBuild ("source/SkiaSharp.Views.Interop.UWP.sln", platformTarget: arch);
 
         // copy SkiaSharp.Views.Interop.UWP to native
         var outDir = $"./output/native/uwp/{dir}";
@@ -216,8 +216,8 @@ Task ("externals-osx")
             $"target_os='mac' target_cpu='{skiaArch}' " +
             $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
             $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-mmacosx-version-min=10.9' ] " +
-            $"extra_ldflags=[ '-Wl,macosx_version_min=10.9' ]");
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-mmacosx-version-min=10.7', '-stdlib=libc++' ] " +
+            $"extra_ldflags=[ '-Wl,macosx_version_min=10.7', '-stdlib=libc++' ]");
 
         // build libSkiaSharp
         XCodeBuild (new XCodeBuildSettings {
