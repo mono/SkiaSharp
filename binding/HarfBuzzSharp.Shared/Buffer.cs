@@ -6,13 +6,13 @@ namespace HarfBuzzSharp
 {
 	public class Buffer : NativeObject
 	{
-		internal Buffer (IntPtr handle)
-			: base (handle)
+		public Buffer ()
+			: this (HarfBuzzApi.hb_buffer_create ())
 		{
 		}
 
-		public Buffer ()
-			: this (HarfBuzzApi.hb_buffer_create ())
+		internal Buffer (IntPtr handle)
+			: base (handle)
 		{
 		}
 
@@ -47,12 +47,22 @@ namespace HarfBuzzSharp
 
 		public ClusterLevel ClusterLevel {
 			get { return HarfBuzzApi.hb_buffer_get_cluster_level (Handle); }
-			set { HarfBuzzApi.hb_buffer_set_cluster_level (Handle, value); }
+			set {
+				if (value < 0) {
+					throw new ArgumentOutOfRangeException (nameof (value), "Value must be non negative.");
+				}
+				HarfBuzzApi.hb_buffer_set_cluster_level (Handle, value);
+			}
 		}
 
-		public uint ReplacementCodepoint {
+		public int ReplacementCodepoint {
 			get { return HarfBuzzApi.hb_buffer_get_replacement_codepoint (Handle); }
-			set { HarfBuzzApi.hb_buffer_set_replacement_codepoint (Handle, value); }
+			set {
+				if (value < 0) {
+					throw new ArgumentOutOfRangeException (nameof (value), "Value must be non negative.");
+				}
+				HarfBuzzApi.hb_buffer_set_replacement_codepoint (Handle, value);
+			}
 		}
 
 		public Script Script {
@@ -60,13 +70,26 @@ namespace HarfBuzzSharp
 			set { HarfBuzzApi.hb_buffer_set_script (Handle, value); }
 		}
 
-		public uint Length {
+		public int Length {
 			get { return HarfBuzzApi.hb_buffer_get_length (Handle); }
-			set { HarfBuzzApi.hb_buffer_set_length (Handle, value); }
+			set {
+				if (value < 0) {
+					throw new ArgumentOutOfRangeException (nameof (value), "Value must be non negative.");
+				}
+				HarfBuzzApi.hb_buffer_set_length (Handle, value);
+			}
 		}
 
-		public void Add (uint codepoint, uint cluster)
+		public void Add (int codepoint, int cluster)
 		{
+			if (codepoint < 0) {
+				throw new ArgumentOutOfRangeException (nameof (codepoint), "Value must be non negative.");
+			}
+
+			if (cluster < 0) {
+				throw new ArgumentOutOfRangeException (nameof (codepoint), "Value must be non negative.");
+			}
+
 			HarfBuzzApi.hb_buffer_add (Handle, codepoint, cluster);
 		}
 
@@ -81,26 +104,30 @@ namespace HarfBuzzSharp
 			AddUtf8 (bytes, 0, -1);
 		}
 
-		public unsafe void AddUtf8 (byte[] bytes, uint itemOffset, int itemLength)
+		public unsafe void AddUtf8 (byte[] bytes, int itemOffset, int itemLength)
 		{
 			fixed (byte* b = bytes) {
 				AddUtf8 ((IntPtr)b, bytes.Length, itemOffset, itemLength);
 			}
 		}
 
-		public unsafe void AddUtf8 (ReadOnlySpan<byte> text, uint itemOffset = 0, int itemLength = -1)
+		public unsafe void AddUtf8 (ReadOnlySpan<byte> text, int itemOffset = 0, int itemLength = -1)
 		{
 			fixed (byte* bytes = text) {
 				AddUtf8 ((IntPtr)bytes, text.Length, itemOffset, itemLength);
 			}
 		}
 
-		public void AddUtf8 (IntPtr text, int textLength, uint itemOffset = 0, int itemLength = -1)
+		public void AddUtf8 (IntPtr text, int textLength, int itemOffset = 0, int itemLength = -1)
 		{
+			if (itemOffset > 0) {
+				throw new ArgumentOutOfRangeException (nameof (itemOffset), "Value must be non negative.");
+			}
+
 			HarfBuzzApi.hb_buffer_add_utf8 (Handle, text, textLength, itemOffset, itemLength);
 		}
 
-		public unsafe void AddUtf16 (string text, uint itemOffset = 0, int itemLength = -1)
+		public unsafe void AddUtf16 (string text, int itemOffset = 0, int itemLength = -1)
 		{
 			fixed (char* chars = text) {
 				AddUtf16 ((IntPtr)chars, text.Length, itemOffset, itemLength);
@@ -114,15 +141,19 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		public unsafe void AddUtf16 (ReadOnlySpan<char> text, uint itemOffset = 0, int itemLength = -1)
+		public unsafe void AddUtf16 (ReadOnlySpan<char> text, int itemOffset = 0, int itemLength = -1)
 		{
 			fixed (char* chars = text) {
 				AddUtf16 ((IntPtr)chars, text.Length, itemOffset, itemLength);
 			}
 		}
 
-		public void AddUtf16 (IntPtr text, int textLength, uint itemOffset = 0, int itemLength = -1)
+		public void AddUtf16 (IntPtr text, int textLength, int itemOffset = 0, int itemLength = -1)
 		{
+			if (itemOffset > 0) {
+				throw new ArgumentOutOfRangeException (nameof (itemOffset), "Value must be non negative.");
+			}
+
 			HarfBuzzApi.hb_buffer_add_utf16 (Handle, text, textLength, itemOffset, itemLength);
 		}
 
@@ -139,15 +170,19 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		public unsafe void AddUtf32 (ReadOnlySpan<uint> text, uint itemOffset = 0, int itemLength = -1)
+		public unsafe void AddUtf32 (ReadOnlySpan<int> text, int itemOffset = 0, int itemLength = -1)
 		{
-			fixed (uint* integers = text) {
+			fixed (int* integers = text) {
 				AddUtf32 ((IntPtr)integers, text.Length, itemOffset, itemLength);
 			}
 		}
 
-		public void AddUtf32 (IntPtr text, int textLength, uint itemOffset = 0, int itemLength = -1)
+		public void AddUtf32 (IntPtr text, int textLength, int itemOffset = 0, int itemLength = -1)
 		{
+			if (itemOffset > 0) {
+				throw new ArgumentOutOfRangeException (nameof (itemOffset), "Value must be non negative.");
+			}
+
 			HarfBuzzApi.hb_buffer_add_utf32 (Handle, text, textLength, itemOffset, itemLength);
 		}
 
@@ -172,8 +207,8 @@ namespace HarfBuzzSharp
 		}
 
 		public string SerializeGlyphs (
-			uint start,
-			uint end,
+			int start,
+			int end,
 			Font font = null,
 			SerializeFormat format = SerializeFormat.Text,
 			SerializeFlag flags = SerializeFlag.Default)
@@ -214,6 +249,6 @@ namespace HarfBuzzSharp
 			HarfBuzzApi.hb_buffer_deserialize_glyphs (Handle, bytes, bytes.Length, out _, font?.Handle ?? IntPtr.Zero, format);
 		}
 
-		public override string ToString () => SerializeGlyphs(0,Length);
+		public override string ToString () => SerializeGlyphs (0, Length);
 	}
 }

@@ -15,23 +15,25 @@ namespace SkiaSharp.HarfBuzz
 		public SKShaper(SKTypeface typeface)
 		{
 			if (typeface == null)
-				throw new ArgumentNullException(nameof(typeface)); ;
+			{
+				throw new ArgumentNullException(nameof(typeface));
+			}
 
 			Typeface = typeface;
 
 			int index;
 			using (var blob = Typeface.OpenStream(out index).ToHarfBuzzBlob())
-			using (var face = new Face(blob, (uint)index))
+			using (var face = new Face(blob, index))
 			{
-				face.Index = (uint)index;
-				face.UnitsPerEm = (uint)Typeface.UnitsPerEm;
+				face.Index = index;
+				face.UnitsPerEm = Typeface.UnitsPerEm;
 
 				font = new Font(face);
 				font.SetScale(FONT_SIZE_SCALE, FONT_SIZE_SCALE);
 				font.SetFunctionsOpenType();
 			}
 
-			buffer = new HarfBuzzSharp.Buffer();
+			buffer = new Buffer();
 		}
 
 		public SKTypeface Typeface { get; private set; }
@@ -72,8 +74,8 @@ namespace SkiaSharp.HarfBuzz
 			float textSizeX = textSizeY * paint.TextScaleX;
 
 			var points = new SKPoint[len];
-			var clusters = new uint[len];
-			var codepoints = new uint[len];
+			var clusters = new int[len];
+			var codepoints = new int[len];
 
 			for (var i = 0; i < len; i++)
 			{
@@ -132,21 +134,21 @@ namespace SkiaSharp.HarfBuzz
 		{
 			public Result()
 			{
-				Codepoints = new uint[0];
-				Clusters = new uint[0];
+				Codepoints = new int[0];
+				Clusters = new int[0];
 				Points = new SKPoint[0];
 			}
 
-			public Result(uint[] codepoints, uint[] clusters, SKPoint[] points)
+			public Result(int[] codepoints, int[] clusters, SKPoint[] points)
 			{
 				Codepoints = codepoints;
 				Clusters = clusters;
 				Points = points;
 			}
 
-			public uint[] Codepoints { get; private set; }
+			public int[] Codepoints { get; private set; }
 
-			public uint[] Clusters { get; private set; }
+			public int[] Clusters { get; private set; }
 
 			public SKPoint[] Points { get; private set; }
 		}

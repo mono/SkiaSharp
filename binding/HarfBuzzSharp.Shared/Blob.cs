@@ -27,7 +27,7 @@ namespace HarfBuzzSharp
 		{
 		}
 
-		public Blob(IntPtr data, uint length, MemoryMode mode, object userData, BlobReleaseDelegate releaseDelegate)
+		public Blob(IntPtr data, int length, MemoryMode mode, object userData, BlobReleaseDelegate releaseDelegate)
 			: this(Create(data, length, mode, userData, releaseDelegate))
 		{
 		}
@@ -44,8 +44,12 @@ namespace HarfBuzzSharp
 
 		public void MakeImmutable() => HarfBuzzApi.hb_blob_make_immutable(Handle);
 
-		private static IntPtr Create(IntPtr data, uint length, MemoryMode mode, object user_data, BlobReleaseDelegate releaseProc)
+		private static IntPtr Create(IntPtr data, int length, MemoryMode mode, object user_data, BlobReleaseDelegate releaseProc)
 		{
+			if (length < 0) {
+				throw new ArgumentOutOfRangeException (nameof (length), "Length must be non negative.");
+			}
+
 			if (releaseProc == null)
 			{
 				return HarfBuzzApi.hb_blob_create(data, length, mode, IntPtr.Zero, IntPtr.Zero);

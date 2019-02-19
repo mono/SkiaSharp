@@ -3,10 +3,10 @@ using System.Runtime.InteropServices;
 using System.Text;
 using hb_blob_t = System.IntPtr;
 using hb_buffer_t = System.IntPtr;
-using hb_codepoint_t = System.UInt32;
+using hb_codepoint_t = System.Int32;
 using hb_face_t = System.IntPtr;
 using hb_font_t = System.IntPtr;
-using hb_position_t = System.UInt32;
+using hb_position_t = System.Int32;
 using hb_script_t = System.UInt32;
 
 namespace HarfBuzzSharp
@@ -36,7 +36,7 @@ namespace HarfBuzzSharp
 		// hb_blob_t
 
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static hb_blob_t hb_blob_create (IntPtr data, uint length, MemoryMode mode, IntPtr user_data, IntPtr destroy);
+		public extern static hb_blob_t hb_blob_create (IntPtr data, int length, MemoryMode mode, IntPtr user_data, IntPtr destroy);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_blob_destroy (hb_blob_t blob);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -45,21 +45,21 @@ namespace HarfBuzzSharp
 		// hb_face_t
 
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static hb_face_t hb_face_create (hb_blob_t blob, uint index);
+		public extern static hb_face_t hb_face_create (hb_blob_t blob, int index);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_face_destroy (hb_face_t face);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_face_set_index (hb_face_t face, uint index);
+		public extern static void hb_face_set_index (hb_face_t face, int index);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static uint hb_face_get_index (hb_face_t face);
+		public extern static int hb_face_get_index (hb_face_t face);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_face_set_upem (hb_face_t face, uint upem);
+		public extern static void hb_face_set_upem (hb_face_t face, int upem);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static uint hb_face_get_upem (hb_face_t face);
+		public extern static int hb_face_get_upem (hb_face_t face);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_face_set_glyph_count (hb_face_t face, uint glyph_count);
+		public extern static void hb_face_set_glyph_count (hb_face_t face, int glyph_count);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static uint hb_face_get_glyph_count (hb_face_t face);
+		public extern static int hb_face_get_glyph_count (hb_face_t face);
 
 		// hb_font_t
 
@@ -100,25 +100,25 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void hb_buffer_reset (hb_buffer_t buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_buffer_add (hb_buffer_t buffer, hb_codepoint_t codepoint, uint cluster);
+		public extern static void hb_buffer_add (hb_buffer_t buffer, int codepoint, int cluster);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_buffer_add_utf8 (hb_buffer_t buffer, IntPtr text, int text_length, uint item_offset, int item_length);
+		public extern static void hb_buffer_add_utf8 (hb_buffer_t buffer, IntPtr text, int text_length, int item_offset, int item_length);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_buffer_add_utf16 (hb_buffer_t buffer, IntPtr text, int text_length, uint item_offset, int item_length);
+		public extern static void hb_buffer_add_utf16 (hb_buffer_t buffer, IntPtr text, int text_length, int item_offset, int item_length);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_buffer_add_utf32 (hb_buffer_t buffer, IntPtr text, int text_length, uint item_offset, int item_length);
+		public extern static void hb_buffer_add_utf32 (hb_buffer_t buffer, IntPtr text, int text_length, int item_offset, int item_length);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_buffer_guess_segment_properties (hb_buffer_t buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_buffer_set_length (hb_buffer_t buffer, uint length);
+		public extern static void hb_buffer_set_length (hb_buffer_t buffer, int length);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static uint hb_buffer_get_length (hb_buffer_t buffer);
+		public extern static int hb_buffer_get_length (hb_buffer_t buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_buffer_clear_contents (hb_buffer_t buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static IntPtr hb_buffer_get_glyph_infos (hb_buffer_t buffer, out uint length);
+		public extern static IntPtr hb_buffer_get_glyph_infos (hb_buffer_t buffer, out int length);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static IntPtr hb_buffer_get_glyph_positions (hb_buffer_t buffer, out uint length);
+		public extern static IntPtr hb_buffer_get_glyph_positions (hb_buffer_t buffer, out int length);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_buffer_set_script (hb_buffer_t buffer, hb_script_t script);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -140,9 +140,9 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern ContentType hb_buffer_get_content_type (IntPtr buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern void hb_buffer_set_replacement_codepoint (IntPtr buffer, uint replacement);
+		public static extern void hb_buffer_set_replacement_codepoint (IntPtr buffer, hb_codepoint_t replacement);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern uint hb_buffer_get_replacement_codepoint (IntPtr buffer);
+		public static extern hb_codepoint_t hb_buffer_get_replacement_codepoint (IntPtr buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void hb_buffer_set_flags (IntPtr buffer, Flags flags);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -152,13 +152,13 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern ClusterLevel hb_buffer_get_cluster_level (IntPtr buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern uint hb_buffer_serialize_glyphs (
+		public static extern int hb_buffer_serialize_glyphs (
 			IntPtr buffer,
-			uint start,
-			uint end,
+			int start,
+			int end,
 			IntPtr buf,
 			uint buf_size,
-			out uint buf_consumed,
+			out int buf_consumed,
 			IntPtr font,
 			SerializeFormat format,
 			SerializeFlag flags);
@@ -174,9 +174,9 @@ namespace HarfBuzzSharp
 		// hb_shape
 
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_shape (hb_font_t font, hb_buffer_t buffer, IntPtr features, uint num_features);
+		public extern static void hb_shape (hb_font_t font, hb_buffer_t buffer, IntPtr features, int num_features);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static bool hb_shape_full (hb_font_t font, hb_buffer_t buffer, IntPtr features, uint num_features, IntPtr shaper_list);
+		public extern static bool hb_shape_full (hb_font_t font, hb_buffer_t buffer, IntPtr features, int num_features, IntPtr shaper_list);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr hb_shape_list_shapers();
 

@@ -9,11 +9,15 @@ namespace HarfBuzzSharp
 		{
 		}
 
-		public Face (Blob blob, uint index)
+		public Face (Blob blob, int index)
 			: this (IntPtr.Zero)
 		{
 			if (blob == null) {
 				throw new ArgumentNullException (nameof (blob));
+			}
+
+			if (index < 0) {
+				throw new ArgumentOutOfRangeException (nameof (index), "Index must be non negative.");
 			}
 
 			Handle = HarfBuzzApi.hb_face_create (blob.Handle, index);
@@ -28,17 +32,27 @@ namespace HarfBuzzSharp
 			base.Dispose (disposing);
 		}
 
-		public uint Index {
+		public int Index {
 			get { return HarfBuzzApi.hb_face_get_index (Handle); }
-			set { HarfBuzzApi.hb_face_set_index (Handle, value); }
+			set {
+				if (value < 0) {
+					throw new ArgumentOutOfRangeException(nameof(value), "Value must be non negative.");
+				}
+				HarfBuzzApi.hb_face_set_index (Handle, value);
+			}
 		}
 
-		public uint UnitsPerEm {
+		public int UnitsPerEm {
 			get { return HarfBuzzApi.hb_face_get_upem (Handle); }
-			set { HarfBuzzApi.hb_face_set_upem (Handle, value); }
+			set {
+				if (value < 0) {
+					throw new ArgumentOutOfRangeException (nameof (value), "Value must be non negative.");
+				}
+				HarfBuzzApi.hb_face_set_upem (Handle, value);
+			}
 		}
 
-		public uint GlyphCount {
+		public int GlyphCount {
 			get {
 				return HarfBuzzApi.hb_face_get_glyph_count (Handle);
 			}

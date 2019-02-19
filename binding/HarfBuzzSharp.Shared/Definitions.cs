@@ -2,7 +2,7 @@
 using System.Text;
 using System.Runtime.InteropServices;
 
-using hb_codepoint_t = System.UInt32;
+using hb_codepoint_t = System.Int32;
 using hb_mask_t = System.UInt32;
 using hb_position_t = System.Int32;
 using hb_tag_t = System.UInt32;
@@ -68,7 +68,7 @@ namespace HarfBuzzSharp
 	{
 		private hb_codepoint_t codepoint;
 		private hb_mask_t mask;
-		private uint cluster;
+		private int cluster;
 
 		private hb_var_int_t var1;
 		private hb_var_int_t var2;
@@ -83,7 +83,7 @@ namespace HarfBuzzSharp
 			set { mask = value; }
 		}
 
-		public uint Cluster {
+		public int Cluster {
 			get { return cluster; }
 			set { cluster = value; }
 		}

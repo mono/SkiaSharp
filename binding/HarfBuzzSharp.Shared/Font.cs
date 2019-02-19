@@ -41,18 +41,26 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		public uint GetHorizontalGlyphAdvance (uint glyph)
+		public int GetHorizontalGlyphAdvance (int glyph)
 		{
 			return HarfBuzzApi.hb_font_get_glyph_h_advance (Handle, glyph);
 		}
 
-		public uint GetVerticalGlyphAdvance (uint glyph)
+		public int GetVerticalGlyphAdvance (int glyph)
 		{
 			return HarfBuzzApi.hb_font_get_glyph_v_advance (Handle, glyph);
 		}
 
-		public uint GetGlyph (uint unicode, uint variationSelector = 0)
+		public int GetGlyph (int unicode, int variationSelector = 0)
 		{
+			if (unicode < 0) {
+				throw new ArgumentOutOfRangeException (nameof (unicode), "Value must be non negative.");
+			}
+
+			if (variationSelector < 0) {
+				throw new ArgumentOutOfRangeException (nameof (variationSelector), "Value must be non negative.");
+			}
+
 			if (HarfBuzzApi.hb_font_get_glyph (Handle, unicode, variationSelector, out var glyph)) {
 				return glyph;
 			}
@@ -60,8 +68,12 @@ namespace HarfBuzzSharp
 			return 0;
 		}
 
-		public string GetGlyphName (uint glyph)
+		public string GetGlyphName (int glyph)
 		{
+			if (glyph < 0) {
+				throw new ArgumentOutOfRangeException (nameof(glyph), "Value must be non negative.");
+			}
+
 			var builder = new StringBuilder ();
 
 			if (HarfBuzzApi.hb_font_get_glyph_name (Handle, glyph, builder, (uint)builder.Length)) {
@@ -71,8 +83,12 @@ namespace HarfBuzzSharp
 			return string.Empty;
 		}
 
-		public GlyphExtents GetGlyphExtents (uint glyph)
+		public GlyphExtents GetGlyphExtents (int glyph)
 		{
+			if (glyph < 0) {
+				throw new ArgumentOutOfRangeException(nameof(glyph), "Value must be non negative.");
+			}
+
 			if (HarfBuzzApi.hb_font_get_glyph_extents (Handle, glyph, out var extents)) {
 				return extents;
 			}
@@ -104,7 +120,7 @@ namespace HarfBuzzSharp
 				HarfBuzzApi.hb_shape (Handle, buffer.Handle, IntPtr.Zero, 0);
 			} else {
 				var ptr = StructureArrayToPtr (features);
-				HarfBuzzApi.hb_shape (Handle, buffer.Handle, ptr, (uint)features.Length);
+				HarfBuzzApi.hb_shape (Handle, buffer.Handle, ptr, features.Length);
 				Marshal.FreeCoTaskMem (ptr);
 			}
 		}
@@ -122,7 +138,7 @@ namespace HarfBuzzSharp
 				Handle,
 				buffer.Handle,
 				IntPtr.Zero,
-				featuresPtr != IntPtr.Zero ? (uint)features.Count : 0,
+				featuresPtr != IntPtr.Zero ? features.Count : 0,
 				shapersPtr);
 
 			if (featuresPtr != IntPtr.Zero) {
