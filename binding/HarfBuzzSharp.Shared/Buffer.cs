@@ -4,8 +4,12 @@ using System.Text;
 
 namespace HarfBuzzSharp
 {
+	using System.Globalization;
+
 	public class Buffer : NativeObject
 	{
+		public const int DefaultReplacementCodepoint = '\uFFFD';
+
 		public Buffer ()
 			: this (HarfBuzzApi.hb_buffer_create ())
 		{
@@ -14,6 +18,7 @@ namespace HarfBuzzSharp
 		internal Buffer (IntPtr handle)
 			: base (handle)
 		{
+			Language = new Language (CultureInfo.CurrentCulture);
 		}
 
 		protected override void Dispose (bool disposing)
@@ -47,12 +52,7 @@ namespace HarfBuzzSharp
 
 		public ClusterLevel ClusterLevel {
 			get { return HarfBuzzApi.hb_buffer_get_cluster_level (Handle); }
-			set {
-				if (value < 0) {
-					throw new ArgumentOutOfRangeException (nameof (value), "Value must be non negative.");
-				}
-				HarfBuzzApi.hb_buffer_set_cluster_level (Handle, value);
-			}
+			set { HarfBuzzApi.hb_buffer_set_cluster_level (Handle, value); }
 		}
 
 		public int ReplacementCodepoint {
@@ -99,12 +99,7 @@ namespace HarfBuzzSharp
 			AddUtf8 (bytes, 0, -1);
 		}
 
-		public void AddUtf8 (byte[] bytes)
-		{
-			AddUtf8 (bytes, 0, -1);
-		}
-
-		public unsafe void AddUtf8 (byte[] bytes, int itemOffset, int itemLength)
+		public unsafe void AddUtf8 (byte[] bytes, int itemOffset = 0, int itemLength = -1)
 		{
 			fixed (byte* b = bytes) {
 				AddUtf8 ((IntPtr)b, bytes.Length, itemOffset, itemLength);
@@ -207,13 +202,17 @@ namespace HarfBuzzSharp
 		}
 
 		public string SerializeGlyphs (
-			int start,
-			int end,
+			int start = 0,
+			int end = -1,
 			Font font = null,
 			SerializeFormat format = SerializeFormat.Text,
 			SerializeFlag flags = SerializeFlag.Default)
 		{
 			const uint bufferSize = 128;
+
+			if (end == -1) {
+				end = Length;
+			}
 
 			var builder = new StringBuilder (128);
 			var buffer = Marshal.AllocHGlobal ((int)bufferSize);

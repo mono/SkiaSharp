@@ -27,6 +27,18 @@ namespace HarfBuzzSharp
 
 		public override string ToString ()
 		{
+			if (_value == None) {
+				return "None";
+			}
+
+			if (_value == Max) {
+				return "Max";
+			}
+
+			if (_value == MaxSigned) {
+				return "MaxSigned";
+			}
+
 			return string.Concat ((char)(byte)(_value >> 24), (char)(byte)(_value >> 16),
 				(char)(byte)(_value >> 8), (char)(byte)_value);
 		}

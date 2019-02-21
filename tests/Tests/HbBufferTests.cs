@@ -1,21 +1,23 @@
 ﻿using System.IO;
 
+using System;
+using System.Text;
+
+using HarfBuzzSharp;
+
+using SkiaSharp.HarfBuzz;
+
+using Xunit;
+
+using Buffer = HarfBuzzSharp.Buffer;
+
 namespace SkiaSharp.Tests
 {
-	using System;
-	using System.Text;
-
-	using HarfBuzzSharp;
-
-	using SkiaSharp.HarfBuzz;
-
-	using Xunit;
-
-	using Buffer = HarfBuzzSharp.Buffer;
-
 	public class HbBufferTests : SKTest
 	{
-		private static string SimpleText = "1234";
+		private const string SimpleText = "1234";
+
+		private const string SerializedSimpleText = "gid49=0|gid50=1|gid51=2|gid52=3";
 
 		[SkippableFact]
 		public void ShouldHaveCorrectContentType()
@@ -54,7 +56,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void ShouldContainNoGlyphInfoAfterClearContents()
+		public void ShouldClearContents()
 		{
 			using (var buffer = new Buffer())
 			{
@@ -73,7 +75,7 @@ namespace SkiaSharp.Tests
 		{
 			using (var buffer = new Buffer())
 			{
-				buffer.AddUtf8("A");
+				 buffer.AddUtf8("A");
 
 				Assert.Equal(1, buffer.Length);
 
@@ -98,7 +100,7 @@ namespace SkiaSharp.Tests
 
 				Assert.Equal(1, buffer.Length);
 
-				var utf16 = "b".AsSpan();
+				var utf16 = "B".AsSpan();
 
 				buffer.AddUtf16(utf16);
 
@@ -109,6 +111,42 @@ namespace SkiaSharp.Tests
 				buffer.AddUtf32(utf32);
 
 				Assert.Equal(3, buffer.Length);
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldSerializeGlyphs()
+		{
+			using (var buffer = new Buffer())
+			{
+				buffer.AddUtf16(SimpleText);
+
+				var serializedGlyphs = buffer.SerializeGlyphs();
+
+				Assert.Equal(SerializedSimpleText, serializedGlyphs);
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldDeSerializeGlyphs()
+		{
+			using (var buffer = new Buffer())
+			{
+				buffer.DeserializeGlyphs(SerializedSimpleText);
+
+				Assert.Equal(SimpleText.Length, buffer.Length);
+
+				Assert.Equal(0, buffer.GlyphInfos[0].Cluster);
+				Assert.Equal(49, buffer.GlyphInfos[0].Codepoint);
+
+				Assert.Equal(1, buffer.GlyphInfos[1].Cluster);
+				Assert.Equal(50, buffer.GlyphInfos[1].Codepoint);
+
+				Assert.Equal(2, buffer.GlyphInfos[2].Cluster);
+				Assert.Equal(51, buffer.GlyphInfos[2].Codepoint);
+
+				Assert.Equal(3, buffer.GlyphInfos[3].Cluster);
+				Assert.Equal(52, buffer.GlyphInfos[3].Codepoint);
 			}
 		}
 	}

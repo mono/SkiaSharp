@@ -4,11 +4,6 @@ namespace HarfBuzzSharp
 {
 	public class Face : NativeObject
 	{
-		internal Face (IntPtr handle)
-			: base (handle)
-		{
-		}
-
 		public Face (Blob blob, int index)
 			: this (IntPtr.Zero)
 		{
@@ -21,6 +16,11 @@ namespace HarfBuzzSharp
 			}
 
 			Handle = HarfBuzzApi.hb_face_create (blob.Handle, index);
+		}
+
+		internal Face (IntPtr handle)
+			: base (handle)
+		{
 		}
 
 		protected override void Dispose (bool disposing)
@@ -36,8 +36,9 @@ namespace HarfBuzzSharp
 			get { return HarfBuzzApi.hb_face_get_index (Handle); }
 			set {
 				if (value < 0) {
-					throw new ArgumentOutOfRangeException(nameof(value), "Value must be non negative.");
+					throw new ArgumentOutOfRangeException (nameof (value), "Value must be non negative.");
 				}
+
 				HarfBuzzApi.hb_face_set_index (Handle, value);
 			}
 		}
@@ -48,6 +49,7 @@ namespace HarfBuzzSharp
 				if (value < 0) {
 					throw new ArgumentOutOfRangeException (nameof (value), "Value must be non negative.");
 				}
+
 				HarfBuzzApi.hb_face_set_upem (Handle, value);
 			}
 		}
@@ -56,6 +58,7 @@ namespace HarfBuzzSharp
 			get {
 				return HarfBuzzApi.hb_face_get_glyph_count (Handle);
 			}
+
 			set {
 				HarfBuzzApi.hb_face_set_glyph_count (Handle, value);
 			}
