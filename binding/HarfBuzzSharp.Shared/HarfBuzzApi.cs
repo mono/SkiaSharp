@@ -165,7 +165,7 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern bool hb_buffer_deserialize_glyphs (
 			IntPtr buffer,
-			byte[] buf,
+			[MarshalAs (UnmanagedType.LPStr)] string buf,
 			int buf_len,
 			out IntPtr end_ptr,
 			IntPtr font,

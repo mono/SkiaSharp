@@ -29,7 +29,7 @@ LOCAL_C_INCLUDES       := .                                    \
 # LOCAL_CPPFLAGS         := -std=c++11 -fno-rtti -fno-threadsafe-statics -Wnon-virtual-dtor        \
 #                           -Os -ffunction-sections -fdata-sections
 
-LOCAL_CFLAGS           := -DHAVE_CONFIG_H
+LOCAL_CFLAGS           := -DHAVE_CONFIG_H -NDEBUG
 
 LOCAL_SRC_FILES        := ../../../externals/harfbuzz/src/hb-ucdn/ucdn.c                            \
                           ../../../externals/harfbuzz/src/hb-ucdn.cc                                \

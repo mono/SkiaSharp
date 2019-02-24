@@ -1,14 +1,9 @@
-﻿using System.IO;
-
-using System;
+﻿using System;
+using System.IO;
 using System.Text;
-
 using HarfBuzzSharp;
-
 using SkiaSharp.HarfBuzz;
-
 using Xunit;
-
 using Buffer = HarfBuzzSharp.Buffer;
 
 namespace SkiaSharp.Tests
@@ -17,7 +12,7 @@ namespace SkiaSharp.Tests
 	{
 		private const string SimpleText = "1234";
 
-		private const string SerializedSimpleText = "gid49=0|gid50=1|gid51=2|gid52=3";
+		private const string SerializedSimpleText = "gid25=0+772|gid26=1+772|gid27=2+772|gid28=3+772";
 
 		[SkippableFact]
 		public void ShouldHaveCorrectContentType()
@@ -75,7 +70,7 @@ namespace SkiaSharp.Tests
 		{
 			using (var buffer = new Buffer())
 			{
-				 buffer.AddUtf8("A");
+				buffer.AddUtf8("A");
 
 				Assert.Equal(1, buffer.Length);
 
@@ -115,11 +110,56 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void ShouldSerializeGlyphs()
+		public void ShouldThrowInvalidOperationExceptionOnAddUtfWhenBufferIsShaped()
+		{
+			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
+			using (var blob = tf.OpenStream(out var index).ToHarfBuzzBlob())
+			using (var face = new Face(blob, index))
+			using (var font = new Font(face))
+			using (var buffer = new Buffer())
+			{
+				buffer.AddUtf8(SimpleText);
+
+				font.Shape(buffer);
+
+				Assert.Throws<InvalidOperationException>(() => { buffer.AddUtf8("A"); });
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldThrowInvalidOperationExceptionOnSerializeGlyphsWhenBufferIsEmpty()
 		{
 			using (var buffer = new Buffer())
 			{
+				Assert.Throws<InvalidOperationException>(() => { buffer.SerializeGlyphs(); });
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldThrowInvalidOperationExceptionOnSerializeGlyphsWhenBufferIsUnShaped()
+		{
+			using (var buffer = new Buffer())
+			{
+				buffer.AddUtf8("A");
+
+				Assert.Throws<InvalidOperationException>(() => { buffer.SerializeGlyphs(); });
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldSerializeGlyphs()
+		{
+			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
+			using (var blob = tf.OpenStream(out var index).ToHarfBuzzBlob())
+			using (var face = new Face(blob, index))
+			using (var font = new Font(face))
+			using (var buffer = new Buffer())
+			{
 				buffer.AddUtf16(SimpleText);
+
+				buffer.GuessSegmentProperties();
+
+				font.Shape(buffer);
 
 				var serializedGlyphs = buffer.SerializeGlyphs();
 
@@ -128,25 +168,36 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void ShouldThrowInvalidOperationExceptionOnDeSerializeGlyphsWhenBufferIsNonEmpty()
+		{
+			using (var buffer = new Buffer())
+			{
+				buffer.AddUtf8("A");
+
+				Assert.Throws<InvalidOperationException>(() => { buffer.DeSerializeGlyphs(SerializedSimpleText); });
+			}
+		}
+
+		[SkippableFact]
 		public void ShouldDeSerializeGlyphs()
 		{
 			using (var buffer = new Buffer())
 			{
-				buffer.DeserializeGlyphs(SerializedSimpleText);
+				buffer.DeSerializeGlyphs(SerializedSimpleText);
 
 				Assert.Equal(SimpleText.Length, buffer.Length);
 
 				Assert.Equal(0, buffer.GlyphInfos[0].Cluster);
-				Assert.Equal(49, buffer.GlyphInfos[0].Codepoint);
+				Assert.Equal(25, buffer.GlyphInfos[0].Codepoint);
 
 				Assert.Equal(1, buffer.GlyphInfos[1].Cluster);
-				Assert.Equal(50, buffer.GlyphInfos[1].Codepoint);
+				Assert.Equal(26, buffer.GlyphInfos[1].Codepoint);
 
 				Assert.Equal(2, buffer.GlyphInfos[2].Cluster);
-				Assert.Equal(51, buffer.GlyphInfos[2].Codepoint);
+				Assert.Equal(27, buffer.GlyphInfos[2].Codepoint);
 
 				Assert.Equal(3, buffer.GlyphInfos[3].Cluster);
-				Assert.Equal(52, buffer.GlyphInfos[3].Codepoint);
+				Assert.Equal(28, buffer.GlyphInfos[3].Codepoint);
 			}
 		}
 	}
