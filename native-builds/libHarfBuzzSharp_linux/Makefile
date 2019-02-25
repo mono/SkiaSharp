@@ -21,7 +21,7 @@ include_dirs = .                     \
 	           ${src_root}/hb-ucdn
 library_paths = 
 defines = \
-	-DHAVE_CONFIG_H -NDEBUG
+	-DHAVE_CONFIG_H -DNDEBUG
 cflags = \
 	-fno-exceptions -Wcast-align                       \
 	-g -Os -fPIC -fdata-sections -ffunction-sections
