@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace HarfBuzzSharp
 {
@@ -41,13 +40,37 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		public Scale Scale {
+			get {
+				HarfBuzzApi.hb_font_get_scale (Handle, out var x, out var y);
+				return new Scale (x, y);
+			}
+			set {
+				HarfBuzzApi.hb_font_set_scale (Handle, value.X, value.Y);
+			}
+		}
+
+		public IReadOnlyList<string> SupportedShapers {
+			get {
+				return PtrToStringArray (HarfBuzzApi.hb_shape_list_shapers ()).ToArray ();
+			}
+		}
+
 		public int GetHorizontalGlyphAdvance (int glyph)
 		{
+			if (glyph < 0) {
+				throw new ArgumentOutOfRangeException (nameof (glyph), "Value must be non negative.");
+			}
+
 			return HarfBuzzApi.hb_font_get_glyph_h_advance (Handle, glyph);
 		}
 
 		public int GetVerticalGlyphAdvance (int glyph)
 		{
+			if (glyph < 0) {
+				throw new ArgumentOutOfRangeException (nameof (glyph), "Value must be non negative.");
+			}
+
 			return HarfBuzzApi.hb_font_get_glyph_v_advance (Handle, glyph);
 		}
 
@@ -68,25 +91,10 @@ namespace HarfBuzzSharp
 			return 0;
 		}
 
-		public string GetGlyphName (int glyph)
-		{
-			if (glyph < 0) {
-				throw new ArgumentOutOfRangeException (nameof(glyph), "Value must be non negative.");
-			}
-
-			var builder = new StringBuilder ();
-
-			if (HarfBuzzApi.hb_font_get_glyph_name (Handle, glyph, builder, (uint)builder.Length)) {
-				return builder.ToString ();
-			}
-
-			return string.Empty;
-		}
-
 		public GlyphExtents GetGlyphExtents (int glyph)
 		{
 			if (glyph < 0) {
-				throw new ArgumentOutOfRangeException(nameof(glyph), "Value must be non negative.");
+				throw new ArgumentOutOfRangeException (nameof (glyph), "Value must be non negative.");
 			}
 
 			if (HarfBuzzApi.hb_font_get_glyph_extents (Handle, glyph, out var extents)) {
@@ -94,19 +102,6 @@ namespace HarfBuzzSharp
 			}
 			return new GlyphExtents ();
 		}
-
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero) {
-				HarfBuzzApi.hb_font_destroy (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
-
-		public void SetScale (int xScale, int yScale) => HarfBuzzApi.hb_font_set_scale (Handle, xScale, yScale);
-
-		public void GetScale (out int xScale, out int yScale) => HarfBuzzApi.hb_font_get_scale (Handle, out xScale, out yScale);
 
 		public void SetFunctionsOpenType () => HarfBuzzApi.hb_ot_font_set_funcs (Handle);
 
@@ -150,10 +145,13 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		public IReadOnlyList<string> SupportedShapers {
-			get {
-				return PtrToStringArray (HarfBuzzApi.hb_shape_list_shapers ()).ToArray ();
+		protected override void Dispose (bool disposing)
+		{
+			if (Handle != IntPtr.Zero) {
+				HarfBuzzApi.hb_font_destroy (Handle);
 			}
+
+			base.Dispose (disposing);
 		}
 	}
 }

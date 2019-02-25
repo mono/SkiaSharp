@@ -10,16 +10,11 @@ namespace SkiaSharp.HarfBuzz
 		internal const int FONT_SIZE_SCALE = 512;
 
 		private Font font;
-		private HarfBuzzSharp.Buffer buffer;
+		private Buffer buffer;
 
 		public SKShaper(SKTypeface typeface)
 		{
-			if (typeface == null)
-			{
-				throw new ArgumentNullException(nameof(typeface));
-			}
-
-			Typeface = typeface;
+			Typeface = typeface ?? throw new ArgumentNullException(nameof(typeface));
 
 			int index;
 			using (var blob = Typeface.OpenStream(out index).ToHarfBuzzBlob())
@@ -28,8 +23,11 @@ namespace SkiaSharp.HarfBuzz
 				face.Index = index;
 				face.UnitsPerEm = Typeface.UnitsPerEm;
 
-				font = new Font(face);
-				font.SetScale(FONT_SIZE_SCALE, FONT_SIZE_SCALE);
+				font = new Font(face)
+				{
+					Scale = new Scale(FONT_SIZE_SCALE, FONT_SIZE_SCALE)
+				};
+
 				font.SetFunctionsOpenType();
 			}
 
@@ -121,7 +119,7 @@ namespace SkiaSharp.HarfBuzz
 						buffer.AddUtf32(text);
 						break;
 					default:
-						throw new NotSupportedException("GlyphId encoding is not a valid value.");
+						throw new NotSupportedException("TextEncoding of type GlyphId is not supported.");
 				}
 
 				buffer.GuessSegmentProperties();

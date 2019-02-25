@@ -13,9 +13,8 @@ namespace SkiaSharp.HarfBuzz
 				throw new ArgumentNullException(nameof(font));
 			}
 
-			int x, y;
-			font.GetScale(out x, out y);
-			return new SKSizeI(x, y);
+			var scale = font.Scale;
+			return new SKSizeI(scale.X, scale.Y);
 		}
 
 		public static void SetScale(this Font font, SKSizeI scale)
@@ -25,7 +24,7 @@ namespace SkiaSharp.HarfBuzz
 				throw new ArgumentNullException(nameof(font));
 			}
 
-			font.SetScale(scale.Width, scale.Height);
+			font.Scale = new Scale(scale.Width, scale.Height);
 		}
 	}
 }

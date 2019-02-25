@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Text;
 using System.Runtime.InteropServices;
-
+using System.Text;
 using hb_codepoint_t = System.Int32;
 using hb_mask_t = System.UInt32;
 using hb_position_t = System.Int32;
-using hb_tag_t = System.UInt32;
 using hb_var_int_t = System.Int32;
 
 namespace HarfBuzzSharp
@@ -88,8 +86,7 @@ namespace HarfBuzzSharp
 			set { cluster = value; }
 		}
 
-		public GlyphFlags GlyphFlags
-		{
+		public GlyphFlags GlyphFlags {
 			get {
 				return HarfBuzzApi.hb_glyph_info_get_glyph_flags (ref this);
 			}
@@ -256,5 +253,34 @@ namespace HarfBuzzSharp
 			get => line_gap;
 			set => line_gap = value;
 		}
+	}
+
+	public struct Scale
+	{
+		public Scale (int x, int y)
+		{
+			X = x;
+			Y = y;
+		}
+
+		public int X { get; }
+
+		public int Y { get; }
+
+		public override bool Equals (object obj)
+		{
+			var other = (Scale)obj;
+
+			return X == other.X && Y == other.Y;
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked {
+				return (X * 397) ^ Y;
+			}
+		}
+
+		public override string ToString () => $"({X}, {Y})";
 	}
 }

@@ -82,8 +82,6 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static bool hb_font_get_glyph_extents (hb_font_t font, hb_codepoint_t glyph, out GlyphExtents extents);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static bool hb_font_get_glyph_name (hb_font_t font, hb_codepoint_t glyph, StringBuilder name, uint size);
-		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static bool hb_font_get_glyph (hb_font_t font, hb_codepoint_t unicode, hb_codepoint_t variation_selector, out hb_codepoint_t glyph);
 
 		// hb_font_t (OT)
