@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 namespace HarfBuzzSharp
 {
 	// public delegates
-	public delegate void BlobReleaseDelegate(object context);
+	public delegate void BlobReleaseDelegate (object context);
 
 	// internal proxy delegates
-	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-	internal delegate void hb_destroy_func_t(IntPtr context);
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal delegate void hb_destroy_func_t (IntPtr context);
 
 	public class Blob : NativeObject
 	{
@@ -16,14 +16,14 @@ namespace HarfBuzzSharp
 		private static readonly hb_destroy_func_t destroy_funcInternal;
 		private static readonly IntPtr destroy_func;
 
-		static Blob()
+		static Blob ()
 		{
-			destroy_funcInternal = new hb_destroy_func_t(DestroyInternal);
-			destroy_func = Marshal.GetFunctionPointerForDelegate(destroy_funcInternal);
+			destroy_funcInternal = new hb_destroy_func_t (DestroyInternal);
+			destroy_func = Marshal.GetFunctionPointerForDelegate (destroy_funcInternal);
 		}
 
-		internal Blob(IntPtr handle)
-			: base(handle)
+		internal Blob (IntPtr handle)
+			: base (handle)
 		{
 		}
 
@@ -44,7 +44,7 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		public void MakeImmutable() => HarfBuzzApi.hb_blob_make_immutable(Handle);
+		public void MakeImmutable () => HarfBuzzApi.hb_blob_make_immutable (Handle);
 
 		protected override void Dispose (bool disposing)
 		{

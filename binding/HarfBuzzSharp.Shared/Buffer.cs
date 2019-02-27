@@ -197,7 +197,7 @@ namespace HarfBuzzSharp
 			HarfBuzzApi.hb_buffer_add_utf32 (Handle, text, textLength, itemOffset, itemLength);
 		}
 
-		public unsafe void AddCodepoint (int[] text, int itemOffset = 0, int itemLength = -1)
+		public unsafe void AddCodepoints (int[] text, int itemOffset = 0, int itemLength = -1)
 		{
 			fixed (int* codepoints = text) {
 				AddCodepoints ((IntPtr)codepoints, text.Length, itemOffset, itemLength);
@@ -236,10 +236,21 @@ namespace HarfBuzzSharp
 
 		public void Append (Buffer buffer, int start = 0, int end = -1)
 		{
-			HarfBuzzApi.hb_buffer_append (Handle, buffer.Handle, start, end == -1 ? Length : end);
+			HarfBuzzApi.hb_buffer_append (Handle, buffer.Handle, start, end == -1 ? buffer.Length : end);
 		}
 
-		public void NormalizeGlyphs () => HarfBuzzApi.hb_buffer_normalize_glyphs (Handle);
+		public void NormalizeGlyphs ()
+		{
+			if (ContentType != ContentType.Glyphs) {
+				throw new InvalidOperationException ("ContentType must be of type Glyphs.");
+			}
+
+			if (GlyphPositions.Length == 0) {
+				throw new InvalidOperationException("GlyphPositions can't be empty.");
+			}
+
+			HarfBuzzApi.hb_buffer_normalize_glyphs (Handle);
+		}
 
 		public void Reverse () => HarfBuzzApi.hb_buffer_reverse (Handle);
 

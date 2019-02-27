@@ -168,6 +168,91 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void ShouldReverse()
+		{
+			using (var buffer = new Buffer())
+			{
+				buffer.AddUtf8("12");
+
+				buffer.Reverse();
+
+				Assert.Equal(50, buffer.GlyphInfos[0].Codepoint);
+				Assert.Equal(1, buffer.GlyphInfos[0].Cluster);
+
+				Assert.Equal(49, buffer.GlyphInfos[1].Codepoint);
+				Assert.Equal(0, buffer.GlyphInfos[1].Cluster);
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldReverseClusters()
+		{
+			using (var buffer = new Buffer())
+			{
+				buffer.AddUtf8("12");
+
+				buffer.ReverseClusters();
+
+				Assert.Equal(50, buffer.GlyphInfos[0].Codepoint);
+				Assert.Equal(1, buffer.GlyphInfos[0].Cluster);
+
+				Assert.Equal(49, buffer.GlyphInfos[1].Codepoint);
+				Assert.Equal(0, buffer.GlyphInfos[1].Cluster);
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldReverseRange()
+		{
+			using (var buffer = new Buffer())
+			{
+				buffer.AddUtf8("123");
+
+				buffer.ReverseRange(0, 2);
+
+				Assert.Equal(50, buffer.GlyphInfos[0].Codepoint);
+				Assert.Equal(1, buffer.GlyphInfos[0].Cluster);
+
+				Assert.Equal(49, buffer.GlyphInfos[1].Codepoint);
+				Assert.Equal(0, buffer.GlyphInfos[1].Cluster);
+
+				Assert.Equal(51, buffer.GlyphInfos[2].Codepoint);
+				Assert.Equal(2, buffer.GlyphInfos[2].Cluster);
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldAppendBuffer()
+		{
+			using (var buffer = new Buffer())
+			using (var source = new Buffer())
+			{
+				source.AddUtf8("123");
+
+				buffer.Append(source, 0, source.Length);
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldNormalize()
+		{
+			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
+			using (var blob = tf.OpenStream(out var index).ToHarfBuzzBlob())
+			using (var face = new Face(blob, index))
+			using (var font = new Font(face))
+			using (var buffer = new Buffer())
+			{
+				buffer.AddUtf16("Â̶");
+
+				font.Shape(buffer);
+
+				buffer.NormalizeGlyphs();
+
+				Assert.Equal(1027, buffer.GlyphPositions[1].YOffset);
+			}
+		}
+
+		[SkippableFact]
 		public void ShouldThrowInvalidOperationExceptionOnDeSerializeGlyphsWhenBufferIsNonEmpty()
 		{
 			using (var buffer = new Buffer())
