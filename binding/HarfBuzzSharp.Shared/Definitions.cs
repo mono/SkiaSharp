@@ -193,19 +193,19 @@ namespace HarfBuzzSharp
 		hb_position_t width; /* distance from left to right side. */
 		hb_position_t height; /* distance from top to bottom side. */
 
-		public int XBearing {
+		public hb_position_t XBearing {
 			get => x_bearing;
 			set => x_bearing = value;
 		}
-		public int YBearing {
+		public hb_position_t YBearing {
 			get => y_bearing;
 			set => y_bearing = value;
 		}
-		public int Width {
+		public hb_position_t Width {
 			get => width;
 			set => width = value;
 		}
-		public int Height {
+		public hb_position_t Height {
 			get => height;
 			set => height = value;
 		}
@@ -239,17 +239,17 @@ namespace HarfBuzzSharp
 
 		private hb_position_t reserved1;
 
-		public int Ascender {
+		public hb_position_t Ascender {
 			get => ascender;
 			set => ascender = value;
 		}
 
-		public int Descender {
+		public hb_position_t Descender {
 			get => descender;
 			set => descender = value;
 		}
 
-		public int LineGap {
+		public hb_position_t LineGap {
 			get => line_gap;
 			set => line_gap = value;
 		}

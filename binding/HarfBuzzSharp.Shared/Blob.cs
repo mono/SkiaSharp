@@ -27,48 +27,55 @@ namespace HarfBuzzSharp
 		{
 		}
 
-		public Blob(IntPtr data, int length, MemoryMode mode, object userData, BlobReleaseDelegate releaseDelegate)
-			: this(Create(data, length, mode, userData, releaseDelegate))
+		public Blob (IntPtr data, int length, MemoryMode mode, object userData, BlobReleaseDelegate releaseDelegate)
+			: this (Create (data, length, mode, userData, releaseDelegate))
 		{
 		}
 
-		protected override void Dispose(bool disposing)
-		{
-			if (Handle != IntPtr.Zero)
-			{
-				HarfBuzzApi.hb_blob_destroy(Handle);
+		public bool IsImmutable {
+			get {
+				return HarfBuzzApi.hb_blob_is_immutable (Handle);
 			}
+		}
 
-			base.Dispose(disposing);
+		public uint Length {
+			get {
+				return HarfBuzzApi.hb_blob_get_length (Handle);
+			}
 		}
 
 		public void MakeImmutable() => HarfBuzzApi.hb_blob_make_immutable(Handle);
 
-		private static IntPtr Create(IntPtr data, int length, MemoryMode mode, object user_data, BlobReleaseDelegate releaseProc)
+		protected override void Dispose (bool disposing)
 		{
-			if (length < 0) {
-				throw new ArgumentOutOfRangeException (nameof (length), "Length must be non negative.");
+			if (Handle != IntPtr.Zero) {
+				HarfBuzzApi.hb_blob_destroy (Handle);
 			}
 
-			if (releaseProc == null)
-			{
-				return HarfBuzzApi.hb_blob_create(data, length, mode, IntPtr.Zero, IntPtr.Zero);
+			base.Dispose (disposing);
+		}
+
+		private static IntPtr Create (IntPtr data, int length, MemoryMode mode, object user_data, BlobReleaseDelegate releaseProc)
+		{
+			if (length < 0) {
+				throw new ArgumentOutOfRangeException (nameof (length), "Value must be non negative.");
 			}
-			else
-			{
-				var ctx = new NativeDelegateContext(user_data, releaseProc);
-				return HarfBuzzApi.hb_blob_create(data, length, mode, ctx.NativeContext, destroy_func);
+
+			if (releaseProc == null) {
+				return HarfBuzzApi.hb_blob_create (data, length, mode, IntPtr.Zero, IntPtr.Zero);
+			} else {
+				var ctx = new NativeDelegateContext (user_data, releaseProc);
+				return HarfBuzzApi.hb_blob_create (data, length, mode, ctx.NativeContext, destroy_func);
 			}
 		}
 
 		// internal proxy
 
 		[MonoPInvokeCallback (typeof (hb_destroy_func_t))]
-		private static void DestroyInternal(IntPtr context)
+		private static void DestroyInternal (IntPtr context)
 		{
-			using (var ctx = NativeDelegateContext.Unwrap(context))
-			{
-				ctx.GetDelegate<BlobReleaseDelegate>()(ctx.ManagedContext);
+			using (var ctx = NativeDelegateContext.Unwrap (context)) {
+				ctx.GetDelegate<BlobReleaseDelegate> () (ctx.ManagedContext);
 			}
 		}
 	}

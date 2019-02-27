@@ -59,7 +59,7 @@ namespace HarfBuzzSharp
 		public int GetHorizontalGlyphAdvance (int glyph)
 		{
 			if (glyph < 0) {
-				throw new ArgumentOutOfRangeException (nameof (glyph), "Value must be non negative.");
+				throw new ArgumentOutOfRangeException (nameof (glyph), "Glyph must be non negative.");
 			}
 
 			return HarfBuzzApi.hb_font_get_glyph_h_advance (Handle, glyph);
@@ -68,7 +68,7 @@ namespace HarfBuzzSharp
 		public int GetVerticalGlyphAdvance (int glyph)
 		{
 			if (glyph < 0) {
-				throw new ArgumentOutOfRangeException (nameof (glyph), "Value must be non negative.");
+				throw new ArgumentOutOfRangeException (nameof (glyph), "Glyph must be non negative.");
 			}
 
 			return HarfBuzzApi.hb_font_get_glyph_v_advance (Handle, glyph);
@@ -77,11 +77,11 @@ namespace HarfBuzzSharp
 		public int GetGlyph (int unicode, int variationSelector = 0)
 		{
 			if (unicode < 0) {
-				throw new ArgumentOutOfRangeException (nameof (unicode), "Value must be non negative.");
+				throw new ArgumentOutOfRangeException (nameof (unicode), "Unicode must be non negative.");
 			}
 
 			if (variationSelector < 0) {
-				throw new ArgumentOutOfRangeException (nameof (variationSelector), "Value must be non negative.");
+				throw new ArgumentOutOfRangeException (nameof (variationSelector), "VariationSelector must be non negative.");
 			}
 
 			if (HarfBuzzApi.hb_font_get_glyph (Handle, unicode, variationSelector, out var glyph)) {
@@ -94,7 +94,7 @@ namespace HarfBuzzSharp
 		public GlyphExtents GetGlyphExtents (int glyph)
 		{
 			if (glyph < 0) {
-				throw new ArgumentOutOfRangeException (nameof (glyph), "Value must be non negative.");
+				throw new ArgumentOutOfRangeException (nameof (glyph), "Glyph must be non negative.");
 			}
 
 			if (HarfBuzzApi.hb_font_get_glyph_extents (Handle, glyph, out var extents)) {

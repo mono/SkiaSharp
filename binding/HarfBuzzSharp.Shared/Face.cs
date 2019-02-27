@@ -23,6 +23,29 @@ namespace HarfBuzzSharp
 		{
 		}
 
+		public int Index {
+			get { return HarfBuzzApi.hb_face_get_index (Handle); }
+			set { HarfBuzzApi.hb_face_set_index (Handle, value); }
+		}
+
+		public int UnitsPerEm {
+			get { return HarfBuzzApi.hb_face_get_upem (Handle); }
+			set { HarfBuzzApi.hb_face_set_upem (Handle, value); }
+		}
+
+		public int GlyphCount {
+			get { return HarfBuzzApi.hb_face_get_glyph_count (Handle); }
+			set { HarfBuzzApi.hb_face_set_glyph_count (Handle, value); }
+		}
+
+		public bool IsImmutable {
+			get {
+				return HarfBuzzApi.hb_face_is_immutable (Handle);
+			}
+		}
+
+		public void MakeImmutable () => HarfBuzzApi.hb_face_make_immutable (Handle);
+
 		protected override void Dispose (bool disposing)
 		{
 			if (Handle != IntPtr.Zero) {
@@ -30,38 +53,6 @@ namespace HarfBuzzSharp
 			}
 
 			base.Dispose (disposing);
-		}
-
-		public int Index {
-			get { return HarfBuzzApi.hb_face_get_index (Handle); }
-			set {
-				if (value < 0) {
-					throw new ArgumentOutOfRangeException (nameof (value), "Value must be non negative.");
-				}
-
-				HarfBuzzApi.hb_face_set_index (Handle, value);
-			}
-		}
-
-		public int UnitsPerEm {
-			get { return HarfBuzzApi.hb_face_get_upem (Handle); }
-			set {
-				if (value < 0) {
-					throw new ArgumentOutOfRangeException (nameof (value), "Value must be non negative.");
-				}
-
-				HarfBuzzApi.hb_face_set_upem (Handle, value);
-			}
-		}
-
-		public int GlyphCount {
-			get {
-				return HarfBuzzApi.hb_face_get_glyph_count (Handle);
-			}
-
-			set {
-				HarfBuzzApi.hb_face_set_glyph_count (Handle, value);
-			}
 		}
 	}
 }

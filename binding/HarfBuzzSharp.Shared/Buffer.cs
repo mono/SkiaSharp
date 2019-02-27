@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -17,7 +16,7 @@ namespace HarfBuzzSharp
 		internal Buffer (IntPtr handle)
 			: base (handle)
 		{
-			Language = new Language (CultureInfo.CurrentCulture);
+			Language = Language.Default;
 		}
 
 		public ContentType ContentType {
@@ -47,12 +46,12 @@ namespace HarfBuzzSharp
 
 		public int ReplacementCodepoint {
 			get { return HarfBuzzApi.hb_buffer_get_replacement_codepoint (Handle); }
-			set {
-				if (value < 0) {
-					throw new ArgumentOutOfRangeException (nameof (value), "Value must be non negative.");
-				}
-				HarfBuzzApi.hb_buffer_set_replacement_codepoint (Handle, value);
-			}
+			set { HarfBuzzApi.hb_buffer_set_replacement_codepoint (Handle, value); }
+		}
+
+		public int InvisibleGlyph {
+			get { return HarfBuzzApi.hb_buffer_get_invisible_glyph (Handle); }
+			set { HarfBuzzApi.hb_buffer_set_invisible_glyph (Handle, value); }
 		}
 
 		public Script Script {
@@ -62,22 +61,17 @@ namespace HarfBuzzSharp
 
 		public int Length {
 			get { return HarfBuzzApi.hb_buffer_get_length (Handle); }
-			set {
-				if (value < 0) {
-					throw new ArgumentOutOfRangeException (nameof (value), "Value must be non negative.");
-				}
-				HarfBuzzApi.hb_buffer_set_length (Handle, value);
-			}
+			set { HarfBuzzApi.hb_buffer_set_length (Handle, value); }
 		}
 
 		public void Add (int codepoint, int cluster)
 		{
 			if (codepoint < 0) {
-				throw new ArgumentOutOfRangeException (nameof (codepoint), "Value must be non negative.");
+				throw new ArgumentOutOfRangeException (nameof (codepoint), "Codepoint must be non negative.");
 			}
 
 			if (cluster < 0) {
-				throw new ArgumentOutOfRangeException (nameof (codepoint), "Value must be non negative.");
+				throw new ArgumentOutOfRangeException (nameof (codepoint), "Cluster must be non negative.");
 			}
 
 			if (Length != 0 && ContentType != ContentType.Unicode) {
@@ -114,7 +108,7 @@ namespace HarfBuzzSharp
 		public void AddUtf8 (IntPtr text, int textLength, int itemOffset = 0, int itemLength = -1)
 		{
 			if (itemOffset < 0) {
-				throw new ArgumentOutOfRangeException (nameof (itemOffset), "Value must be non negative.");
+				throw new ArgumentOutOfRangeException (nameof (itemOffset), "ItemOffset must be non negative.");
 			}
 
 			if (Length != 0 && ContentType != ContentType.Unicode) {
@@ -152,7 +146,7 @@ namespace HarfBuzzSharp
 		public void AddUtf16 (IntPtr text, int textLength, int itemOffset = 0, int itemLength = -1)
 		{
 			if (itemOffset < 0) {
-				throw new ArgumentOutOfRangeException (nameof (itemOffset), "Value must be non negative.");
+				throw new ArgumentOutOfRangeException (nameof (itemOffset), "ItemOffset must be non negative.");
 			}
 
 			if (Length != 0 && ContentType != ContentType.Unicode) {
@@ -189,18 +183,49 @@ namespace HarfBuzzSharp
 		public void AddUtf32 (IntPtr text, int textLength, int itemOffset = 0, int itemLength = -1)
 		{
 			if (itemOffset < 0) {
-				throw new ArgumentOutOfRangeException (nameof (itemOffset), "Value must be non negative.");
+				throw new ArgumentOutOfRangeException (nameof (itemOffset), "ItemOffset must be non negative.");
 			}
 
 			if (Length != 0 && ContentType != ContentType.Unicode) {
-				throw new InvalidOperationException("Non empty buffer's ContentType must be of type Unicode.");
+				throw new InvalidOperationException ("Non empty buffer's ContentType must be of type Unicode.");
 			}
 
 			if (ContentType == ContentType.Glyphs) {
-				throw new InvalidOperationException("ContentType must not be of type Glyphs");
+				throw new InvalidOperationException ("ContentType must not be of type Glyphs");
 			}
 
 			HarfBuzzApi.hb_buffer_add_utf32 (Handle, text, textLength, itemOffset, itemLength);
+		}
+
+		public unsafe void AddCodepoint (int[] text, int itemOffset = 0, int itemLength = -1)
+		{
+			fixed (int* codepoints = text) {
+				AddCodepoints ((IntPtr)codepoints, text.Length, itemOffset, itemLength);
+			}
+		}
+
+		public unsafe void AddCodepoints (ReadOnlySpan<int> text, int itemOffset = 0, int itemLength = -1)
+		{
+			fixed (int* codepoints = text) {
+				AddCodepoints ((IntPtr)codepoints, text.Length, itemOffset, itemLength);
+			}
+		}
+
+		public void AddCodepoints (IntPtr text, int textLength, int itemOffset = 0, int itemLength = -1)
+		{
+			if (itemOffset < 0) {
+				throw new ArgumentOutOfRangeException (nameof (itemOffset), "ItemOffset must be non negative.");
+			}
+
+			if (Length != 0 && ContentType != ContentType.Unicode) {
+				throw new InvalidOperationException ("Non empty buffer's ContentType must be of type Unicode.");
+			}
+
+			if (ContentType == ContentType.Glyphs) {
+				throw new InvalidOperationException ("ContentType must not be of type Glyphs");
+			}
+
+			HarfBuzzApi.hb_buffer_add_codepoints (Handle, text, textLength, itemOffset, itemLength);
 		}
 
 		public void GuessSegmentProperties () => HarfBuzzApi.hb_buffer_guess_segment_properties (Handle);
@@ -208,6 +233,22 @@ namespace HarfBuzzSharp
 		public void ClearContents () => HarfBuzzApi.hb_buffer_clear_contents (Handle);
 
 		public void Reset () => HarfBuzzApi.hb_buffer_reset (Handle);
+
+		public void Append (Buffer buffer, int start = 0, int end = -1)
+		{
+			HarfBuzzApi.hb_buffer_append (Handle, buffer.Handle, start, end == -1 ? Length : end);
+		}
+
+		public void NormalizeGlyphs () => HarfBuzzApi.hb_buffer_normalize_glyphs (Handle);
+
+		public void Reverse () => HarfBuzzApi.hb_buffer_reverse (Handle);
+
+		public void ReverseRange (int start, int end = -1)
+		{
+			HarfBuzzApi.hb_buffer_reverse_range (Handle, start, end == -1 ? Length : end);
+		}
+
+		public void ReverseClusters () => HarfBuzzApi.hb_buffer_reverse_clusters (Handle);
 
 		public GlyphInfo[] GlyphInfos {
 			get {
@@ -230,14 +271,14 @@ namespace HarfBuzzSharp
 			SerializeFormat format = SerializeFormat.Text,
 			SerializeFlag flags = SerializeFlag.Default)
 		{
-			const uint bufferSize = 128;
+			const int bufferSize = 128;
 
 			if (Length == 0) {
 				throw new InvalidOperationException ("Buffer should not be empty.");
 			}
 
 			if (ContentType != ContentType.Glyphs) {
-				throw  new InvalidOperationException("ContentType should be of type Glyphs.");
+				throw new InvalidOperationException ("ContentType should be of type Glyphs.");
 			}
 
 			if (end == -1) {
@@ -245,7 +286,7 @@ namespace HarfBuzzSharp
 			}
 
 			var builder = new StringBuilder (128);
-			var buffer = Marshal.AllocHGlobal ((int)bufferSize);
+			var buffer = Marshal.AllocHGlobal (bufferSize);
 			var currentPosition = start;
 
 			try {
@@ -261,7 +302,7 @@ namespace HarfBuzzSharp
 						format,
 						flags);
 
-					builder.Append (Marshal.PtrToStringAnsi (buffer, (int)consumed));
+					builder.Append (Marshal.PtrToStringAnsi (buffer, consumed));
 				}
 
 			} finally {
@@ -274,11 +315,11 @@ namespace HarfBuzzSharp
 		public void DeSerializeGlyphs (string data, Font font = null, SerializeFormat format = SerializeFormat.Text)
 		{
 			if (Length != 0) {
-				throw new InvalidOperationException("Buffer must be empty.");
+				throw new InvalidOperationException ("Buffer must be empty.");
 			}
 
 			if (ContentType == ContentType.Glyphs) {
-				throw new InvalidOperationException("ContentType must not be Glyphs.");
+				throw new InvalidOperationException ("ContentType must not be Glyphs.");
 			}
 
 			HarfBuzzApi.hb_buffer_deserialize_glyphs (Handle, data, -1, out _, font?.Handle ?? IntPtr.Zero, format);

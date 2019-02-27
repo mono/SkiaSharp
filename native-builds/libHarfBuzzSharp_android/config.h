@@ -141,7 +141,7 @@
 #define PACKAGE_NAME "HarfBuzz"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "HarfBuzz 2.3.0"
+#define PACKAGE_STRING "HarfBuzz 2.3.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "harfbuzz"
@@ -150,7 +150,7 @@
 #define PACKAGE_URL "http://harfbuzz.org/"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.3.0"
+#define PACKAGE_VERSION "2.3.1"
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */
