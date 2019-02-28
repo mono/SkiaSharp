@@ -7,7 +7,7 @@ namespace HarfBuzzSharp
 {
 	public class Language : NativeObject
 	{
-		public static readonly Language Default = new Language (HarfBuzzApi.hb_language_get_default ());
+		public static Language Default => new Language (HarfBuzzApi.hb_language_get_default ());
 
 		internal Language (IntPtr handle)
 			: base (handle) { }

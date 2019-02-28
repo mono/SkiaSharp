@@ -9,6 +9,7 @@ using hb_font_t = System.IntPtr;
 using hb_position_t = System.Int32;
 using hb_script_t = System.UInt32;
 using hb_bool_t = System.Boolean;
+using hb_unicode_funcs_t = System.IntPtr;
 
 namespace HarfBuzzSharp
 {
@@ -240,5 +241,30 @@ namespace HarfBuzzSharp
 
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern Direction hb_script_get_horizontal_direction (hb_script_t script);
+
+		// hb_unicode
+
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern hb_unicode_funcs_t hb_unicode_funcs_get_default ();
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern hb_unicode_funcs_t hb_unicode_funcs_get_empty ();
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern void hb_unicode_funcs_destroy (hb_unicode_funcs_t ufuncs);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern void hb_unicode_funcs_make_immutable (hb_unicode_funcs_t ufuncs);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern hb_bool_t hb_unicode_funcs_is_immutable (hb_unicode_funcs_t ufuncs);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern UnicodeCombiningClass hb_unicode_combining_class (hb_unicode_funcs_t ufuncs, hb_codepoint_t unicode);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern UnicodeGeneralCategory hb_unicode_general_category (hb_unicode_funcs_t ufuncs, hb_codepoint_t unicode);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern hb_codepoint_t hb_unicode_mirroring (hb_unicode_funcs_t ufuncs,hb_codepoint_t unicode);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern hb_script_t hb_unicode_script (hb_unicode_funcs_t ufuncs,hb_codepoint_t unicode);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern hb_bool_t hb_unicode_compose (hb_unicode_funcs_t ufuncs,hb_codepoint_t a,hb_codepoint_t b, out hb_codepoint_t ab);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern hb_bool_t hb_unicode_decompose (hb_unicode_funcs_t ufuncs, hb_codepoint_t ab, out hb_codepoint_t a,out hb_codepoint_t b);
 	}
 }

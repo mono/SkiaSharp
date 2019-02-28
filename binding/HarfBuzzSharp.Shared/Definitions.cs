@@ -274,7 +274,7 @@ namespace HarfBuzzSharp
 			return X == other.X && Y == other.Y;
 		}
 
-		public override int GetHashCode()
+		public override int GetHashCode ()
 		{
 			unchecked {
 				return (X * 397) ^ Y;
@@ -282,5 +282,116 @@ namespace HarfBuzzSharp
 		}
 
 		public override string ToString () => $"({X}, {Y})";
+	}
+
+	public enum UnicodeCombiningClass
+	{
+		NotReordered = 0,
+		Overlay = 1,
+		Nukta = 7,
+		KanaVoicing = 8,
+		Virama = 9,
+
+		/* Hebrew */
+		CCC10 = 10,
+		CCC11 = 11,
+		CCC12 = 12,
+		CCC13 = 13,
+		CCC14 = 14,
+		CCC15 = 15,
+		CCC16 = 16,
+		CCC17 = 17,
+		CCC18 = 18,
+		CCC19 = 19,
+		CCC20 = 20,
+		CCC21 = 21,
+		CCC22 = 22,
+		CCC23 = 23,
+		CCC24 = 24,
+		CCC25 = 25,
+		CCC26 = 26,
+
+		/* Arabic */
+		CCC27 = 27,
+		CCC28 = 28,
+		CCC29 = 29,
+		CCC30 = 30,
+		CCC31 = 31,
+		CCC32 = 32,
+		CCC33 = 33,
+		CCC34 = 34,
+		CCC35 = 35,
+
+		/* Syriac */
+		CCC36 = 36,
+
+		/* Telugu */
+		CCC84 = 84,
+		CCC91 = 91,
+
+		/* Thai */
+		CCC103 = 103,
+		CCC107 = 107,
+
+		/* Lao */
+		CCC118 = 118,
+		CCC122 = 122,
+
+		/* Tibetan */
+		CCC129 = 129,
+		CCC130 = 130,
+		CCC133 = 132,
+
+		AttachedBelowLeft = 200,
+		AttachedBelow = 202,
+		AttachedAbove = 214,
+		AttachedAboveRight = 216,
+		BelowLeft = 218,
+		Below = 220,
+		BelowRight = 222,
+		Left = 224,
+		Right = 226,
+		AboveLeft = 228,
+		Above = 230,
+		AboveRight = 232,
+		DoubleBelow = 233,
+		DoubleAbove = 234,
+		IotaSubscript = 240,
+
+		Invalid = 255
+	}
+
+	public enum UnicodeGeneralCategory
+	{
+		Control,            /* Cc */
+		Format,         /* Cf */
+		Unassigned,     /* Cn */
+		PrivateUse,        /* Co */
+		Surrogate,      /* Cs */
+		LowercaseLetter,       /* Ll */
+		ModifierLetter,        /* Lm */
+		OtherLetter,       /* Lo */
+		TitlecaseLetter,       /* Lt */
+		UppercaseLetter,       /* Lu */
+		SpacingMark,       /* Mc */
+		ENCLOSING_Mark,     /* Me */
+		NonSpacingMark,       /* Mn */
+		DecimalNumber,     /* Nd */
+		LetterNumber,      /* Nl */
+		OtherNumber,       /* No */
+		ConnectPunctuation,    /* Pc */
+		DashPunctuation,       /* Pd */
+		ClosePunctuation,  /* Pe */
+		FinalPunctuation,  /* Pf */
+		InitialPunctuation,    /* Pi */
+		OtherPunctuation,  /* Po */
+		OpenPunctuation,       /* Ps */
+		CurrencySymbol,        /* Sc */
+		ModifierSymbol,        /* Sk */
+		MathSymbol,        /* Sm */
+		OtherSymbol,       /* So */
+		LineSeparator,     /* Zl */
+		ParagraphSeparator,    /* Zp */
+		SpaceSeparator     /* Zs */
 	}
 }
