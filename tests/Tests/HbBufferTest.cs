@@ -176,11 +176,11 @@ namespace SkiaSharp.Tests
 
 				buffer.Reverse();
 
-				Assert.Equal(50, buffer.GlyphInfos[0].Codepoint);
-				Assert.Equal(1, buffer.GlyphInfos[0].Cluster);
+				Assert.Equal(50u, buffer.GlyphInfos[0].Codepoint);
+				Assert.Equal(1u, buffer.GlyphInfos[0].Cluster);
 
-				Assert.Equal(49, buffer.GlyphInfos[1].Codepoint);
-				Assert.Equal(0, buffer.GlyphInfos[1].Cluster);
+				Assert.Equal(49u, buffer.GlyphInfos[1].Codepoint);
+				Assert.Equal(0u, buffer.GlyphInfos[1].Cluster);
 			}
 		}
 
@@ -193,11 +193,11 @@ namespace SkiaSharp.Tests
 
 				buffer.ReverseClusters();
 
-				Assert.Equal(50, buffer.GlyphInfos[0].Codepoint);
-				Assert.Equal(1, buffer.GlyphInfos[0].Cluster);
+				Assert.Equal(50u, buffer.GlyphInfos[0].Codepoint);
+				Assert.Equal(1u, buffer.GlyphInfos[0].Cluster);
 
-				Assert.Equal(49, buffer.GlyphInfos[1].Codepoint);
-				Assert.Equal(0, buffer.GlyphInfos[1].Cluster);
+				Assert.Equal(49u, buffer.GlyphInfos[1].Codepoint);
+				Assert.Equal(0u, buffer.GlyphInfos[1].Cluster);
 			}
 		}
 
@@ -210,14 +210,14 @@ namespace SkiaSharp.Tests
 
 				buffer.ReverseRange(0, 2);
 
-				Assert.Equal(50, buffer.GlyphInfos[0].Codepoint);
-				Assert.Equal(1, buffer.GlyphInfos[0].Cluster);
+				Assert.Equal(50u, buffer.GlyphInfos[0].Codepoint);
+				Assert.Equal(1u, buffer.GlyphInfos[0].Cluster);
 
-				Assert.Equal(49, buffer.GlyphInfos[1].Codepoint);
-				Assert.Equal(0, buffer.GlyphInfos[1].Cluster);
+				Assert.Equal(49u, buffer.GlyphInfos[1].Codepoint);
+				Assert.Equal(0u, buffer.GlyphInfos[1].Cluster);
 
-				Assert.Equal(51, buffer.GlyphInfos[2].Codepoint);
-				Assert.Equal(2, buffer.GlyphInfos[2].Cluster);
+				Assert.Equal(51u, buffer.GlyphInfos[2].Codepoint);
+				Assert.Equal(2u, buffer.GlyphInfos[2].Cluster);
 			}
 		}
 
@@ -253,36 +253,36 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void ShouldThrowInvalidOperationExceptionOnDeSerializeGlyphsWhenBufferIsNonEmpty()
+		public void ShouldThrowInvalidOperationExceptionOnDeserializeGlyphsWhenBufferIsNonEmpty()
 		{
 			using (var buffer = new Buffer())
 			{
 				buffer.AddUtf8("A");
 
-				Assert.Throws<InvalidOperationException>(() => { buffer.DeSerializeGlyphs(SerializedSimpleText); });
+				Assert.Throws<InvalidOperationException>(() => { buffer.DeserializeGlyphs(SerializedSimpleText); });
 			}
 		}
 
 		[SkippableFact]
-		public void ShouldDeSerializeGlyphs()
+		public void ShouldDeserializeGlyphs()
 		{
 			using (var buffer = new Buffer())
 			{
-				buffer.DeSerializeGlyphs(SerializedSimpleText);
+				buffer.DeserializeGlyphs(SerializedSimpleText);
 
 				Assert.Equal(SimpleText.Length, buffer.Length);
 
-				Assert.Equal(0, buffer.GlyphInfos[0].Cluster);
-				Assert.Equal(25, buffer.GlyphInfos[0].Codepoint);
+				Assert.Equal(0u, buffer.GlyphInfos[0].Cluster);
+				Assert.Equal(25u, buffer.GlyphInfos[0].Codepoint);
 
-				Assert.Equal(1, buffer.GlyphInfos[1].Cluster);
-				Assert.Equal(26, buffer.GlyphInfos[1].Codepoint);
+				Assert.Equal(1u, buffer.GlyphInfos[1].Cluster);
+				Assert.Equal(26u, buffer.GlyphInfos[1].Codepoint);
 
-				Assert.Equal(2, buffer.GlyphInfos[2].Cluster);
-				Assert.Equal(27, buffer.GlyphInfos[2].Codepoint);
+				Assert.Equal(2u, buffer.GlyphInfos[2].Cluster);
+				Assert.Equal(27u, buffer.GlyphInfos[2].Codepoint);
 
-				Assert.Equal(3, buffer.GlyphInfos[3].Cluster);
-				Assert.Equal(28, buffer.GlyphInfos[3].Codepoint);
+				Assert.Equal(3u, buffer.GlyphInfos[3].Cluster);
+				Assert.Equal(28u, buffer.GlyphInfos[3].Codepoint);
 			}
 		}
 	}

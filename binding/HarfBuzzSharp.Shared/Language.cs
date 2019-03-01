@@ -20,11 +20,7 @@ namespace HarfBuzzSharp
 			Handle = HarfBuzzApi.hb_language_from_string (bytes, bytes.Length);
 		}
 
-		public string Name {
-			get {
-				return Marshal.PtrToStringAnsi (HarfBuzzApi.hb_language_to_string (Handle));
-			}
-		}
+		public string Name => Marshal.PtrToStringAnsi (HarfBuzzApi.hb_language_to_string (Handle));
 
 		public override string ToString () => Name;
 	}

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using hb_blob_t = System.IntPtr;
 using hb_buffer_t = System.IntPtr;
-using hb_codepoint_t = System.Int32;
+using hb_codepoint_t = System.UInt32;
 using hb_face_t = System.IntPtr;
 using hb_font_t = System.IntPtr;
 using hb_position_t = System.Int32;
@@ -46,7 +46,7 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static hb_bool_t hb_blob_is_immutable (hb_blob_t blob);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static uint hb_blob_get_length (hb_blob_t blob);
+		public extern static int hb_blob_get_length (hb_blob_t blob);
 
 		// hb_face_t
 
@@ -110,7 +110,7 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void hb_buffer_append (hb_buffer_t buffer, hb_buffer_t source, int start, int end);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_buffer_add (hb_buffer_t buffer, hb_codepoint_t codepoint, hb_codepoint_t cluster);
+		public static extern void hb_buffer_add (hb_buffer_t buffer, hb_codepoint_t codepoint, hb_codepoint_t cluster);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_buffer_add_utf8 (
 			hb_buffer_t buffer,
@@ -168,13 +168,13 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern ContentType hb_buffer_get_content_type (IntPtr buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern void hb_buffer_set_replacement_codepoint (IntPtr buffer, int replacement);
+		public static extern void hb_buffer_set_replacement_codepoint (IntPtr buffer, hb_codepoint_t replacement);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern int hb_buffer_get_replacement_codepoint (IntPtr buffer);
+		public static extern hb_codepoint_t hb_buffer_get_replacement_codepoint (IntPtr buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern void hb_buffer_set_invisible_glyph (hb_buffer_t buffer, int invisible);
+		public static extern void hb_buffer_set_invisible_glyph (hb_buffer_t buffer, hb_codepoint_t invisible);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern int hb_buffer_get_invisible_glyph (hb_buffer_t buffer);
+		public static extern hb_codepoint_t hb_buffer_get_invisible_glyph (hb_buffer_t buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void hb_buffer_set_flags (IntPtr buffer, Flags flags);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -210,6 +210,10 @@ namespace HarfBuzzSharp
 			out IntPtr end_ptr,
 			IntPtr font,
 			SerializeFormat format);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern void hb_buffer_set_unicode_funcs (hb_buffer_t buffer, hb_unicode_funcs_t unicode_funcs);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern hb_unicode_funcs_t hb_buffer_get_unicode_funcs (hb_buffer_t buffer);
 
 		// hb_shape
 
@@ -255,16 +259,14 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern hb_bool_t hb_unicode_funcs_is_immutable (hb_unicode_funcs_t ufuncs);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern UnicodeCombiningClass hb_unicode_combining_class (hb_unicode_funcs_t ufuncs, hb_codepoint_t unicode);
+		public static extern unsafe UnicodeCombiningClass hb_unicode_combining_class (
+			hb_unicode_funcs_t ufuncs,
+			hb_codepoint_t unicode);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern UnicodeGeneralCategory hb_unicode_general_category (hb_unicode_funcs_t ufuncs, hb_codepoint_t unicode);
+		public static extern unsafe UnicodeGeneralCategory hb_unicode_general_category (
+			hb_unicode_funcs_t ufuncs,
+			hb_codepoint_t unicode);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern hb_codepoint_t hb_unicode_mirroring (hb_unicode_funcs_t ufuncs,hb_codepoint_t unicode);
-		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern hb_script_t hb_unicode_script (hb_unicode_funcs_t ufuncs,hb_codepoint_t unicode);
-		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern hb_bool_t hb_unicode_compose (hb_unicode_funcs_t ufuncs,hb_codepoint_t a,hb_codepoint_t b, out hb_codepoint_t ab);
-		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern hb_bool_t hb_unicode_decompose (hb_unicode_funcs_t ufuncs, hb_codepoint_t ab, out hb_codepoint_t a,out hb_codepoint_t b);
+		public static extern unsafe hb_script_t hb_unicode_script (hb_unicode_funcs_t ufuncs, hb_codepoint_t unicode);
 	}
 }

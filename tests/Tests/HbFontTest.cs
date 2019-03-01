@@ -31,7 +31,9 @@ namespace SkiaSharp.Tests
 			using (var face = new Face(blob, index))
 			using (var font = new Font(face))
 			{
-				Assert.Equal(42, font.GetGlyph('A'));
+				var glyph = font.GetGlyph('A');
+
+				Assert.Equal(42u, glyph);
 			}
 		}
 

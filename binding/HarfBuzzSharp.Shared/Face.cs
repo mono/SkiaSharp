@@ -24,25 +24,21 @@ namespace HarfBuzzSharp
 		}
 
 		public int Index {
-			get { return HarfBuzzApi.hb_face_get_index (Handle); }
-			set { HarfBuzzApi.hb_face_set_index (Handle, value); }
+			get => HarfBuzzApi.hb_face_get_index (Handle);
+			set => HarfBuzzApi.hb_face_set_index (Handle, value);
 		}
 
 		public int UnitsPerEm {
-			get { return HarfBuzzApi.hb_face_get_upem (Handle); }
-			set { HarfBuzzApi.hb_face_set_upem (Handle, value); }
+			get => HarfBuzzApi.hb_face_get_upem (Handle);
+			set => HarfBuzzApi.hb_face_set_upem (Handle, value);
 		}
 
 		public int GlyphCount {
-			get { return HarfBuzzApi.hb_face_get_glyph_count (Handle); }
-			set { HarfBuzzApi.hb_face_set_glyph_count (Handle, value); }
+			get => HarfBuzzApi.hb_face_get_glyph_count (Handle);
+			set => HarfBuzzApi.hb_face_set_glyph_count (Handle, value);
 		}
 
-		public bool IsImmutable {
-			get {
-				return HarfBuzzApi.hb_face_is_immutable (Handle);
-			}
-		}
+		public bool IsImmutable => HarfBuzzApi.hb_face_is_immutable (Handle);
 
 		public void MakeImmutable () => HarfBuzzApi.hb_face_make_immutable (Handle);
 

@@ -72,8 +72,8 @@ namespace SkiaSharp.HarfBuzz
 			float textSizeX = textSizeY * paint.TextScaleX;
 
 			var points = new SKPoint[len];
-			var clusters = new int[len];
-			var codepoints = new int[len];
+			var clusters = new uint[len];
+			var codepoints = new uint[len];
 
 			for (var i = 0; i < len; i++)
 			{
@@ -132,21 +132,21 @@ namespace SkiaSharp.HarfBuzz
 		{
 			public Result()
 			{
-				Codepoints = new int[0];
-				Clusters = new int[0];
+				Codepoints = new uint[0];
+				Clusters = new uint[0];
 				Points = new SKPoint[0];
 			}
 
-			public Result(int[] codepoints, int[] clusters, SKPoint[] points)
+			public Result(uint[] codepoints, uint[] clusters, SKPoint[] points)
 			{
 				Codepoints = codepoints;
 				Clusters = clusters;
 				Points = points;
 			}
 
-			public int[] Codepoints { get; private set; }
+			public uint[] Codepoints { get; private set; }
 
-			public int[] Clusters { get; private set; }
+			public uint[] Clusters { get; private set; }
 
 			public SKPoint[] Points { get; private set; }
 		}

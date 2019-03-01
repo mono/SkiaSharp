@@ -38,7 +38,7 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		public uint Length {
+		public int Length {
 			get {
 				return HarfBuzzApi.hb_blob_get_length (Handle);
 			}
@@ -57,10 +57,6 @@ namespace HarfBuzzSharp
 
 		private static IntPtr Create (IntPtr data, int length, MemoryMode mode, object user_data, BlobReleaseDelegate releaseProc)
 		{
-			if (length < 0) {
-				throw new ArgumentOutOfRangeException (nameof (length), "Value must be non negative.");
-			}
-
 			if (releaseProc == null) {
 				return HarfBuzzApi.hb_blob_create (data, length, mode, IntPtr.Zero, IntPtr.Zero);
 			} else {

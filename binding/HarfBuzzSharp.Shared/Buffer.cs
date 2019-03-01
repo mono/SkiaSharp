@@ -20,51 +20,69 @@ namespace HarfBuzzSharp
 		}
 
 		public ContentType ContentType {
-			get { return HarfBuzzApi.hb_buffer_get_content_type (Handle); }
-			set { HarfBuzzApi.hb_buffer_set_content_type (Handle, value); }
+			get => HarfBuzzApi.hb_buffer_get_content_type (Handle);
+			set => HarfBuzzApi.hb_buffer_set_content_type (Handle, value);
 		}
 
 		public Direction Direction {
-			get { return HarfBuzzApi.hb_buffer_get_direction (Handle); }
-			set { HarfBuzzApi.hb_buffer_set_direction (Handle, value); }
+			get => HarfBuzzApi.hb_buffer_get_direction (Handle);
+			set => HarfBuzzApi.hb_buffer_set_direction (Handle, value);
 		}
 
 		public Language Language {
-			get { return new Language (HarfBuzzApi.hb_buffer_get_language (Handle)); }
-			set { HarfBuzzApi.hb_buffer_set_language (Handle, value.Handle); }
+			get => new Language (HarfBuzzApi.hb_buffer_get_language (Handle));
+			set => HarfBuzzApi.hb_buffer_set_language (Handle, value.Handle);
 		}
 
 		public Flags Flags {
-			get { return HarfBuzzApi.hb_buffer_get_flags (Handle); }
-			set { HarfBuzzApi.hb_buffer_set_flags (Handle, value); }
+			get => HarfBuzzApi.hb_buffer_get_flags (Handle);
+			set => HarfBuzzApi.hb_buffer_set_flags (Handle, value);
 		}
 
 		public ClusterLevel ClusterLevel {
-			get { return HarfBuzzApi.hb_buffer_get_cluster_level (Handle); }
-			set { HarfBuzzApi.hb_buffer_set_cluster_level (Handle, value); }
+			get => HarfBuzzApi.hb_buffer_get_cluster_level (Handle);
+			set => HarfBuzzApi.hb_buffer_set_cluster_level (Handle, value);
 		}
 
-		public int ReplacementCodepoint {
-			get { return HarfBuzzApi.hb_buffer_get_replacement_codepoint (Handle); }
-			set { HarfBuzzApi.hb_buffer_set_replacement_codepoint (Handle, value); }
+		public uint ReplacementCodepoint {
+			get => HarfBuzzApi.hb_buffer_get_replacement_codepoint (Handle);
+			set => HarfBuzzApi.hb_buffer_set_replacement_codepoint (Handle, value);
 		}
 
-		public int InvisibleGlyph {
-			get { return HarfBuzzApi.hb_buffer_get_invisible_glyph (Handle); }
-			set { HarfBuzzApi.hb_buffer_set_invisible_glyph (Handle, value); }
+		public uint InvisibleGlyph {
+			get => HarfBuzzApi.hb_buffer_get_invisible_glyph (Handle);
+			set => HarfBuzzApi.hb_buffer_set_invisible_glyph (Handle, value);
 		}
 
 		public Script Script {
-			get { return HarfBuzzApi.hb_buffer_get_script (Handle); }
-			set { HarfBuzzApi.hb_buffer_set_script (Handle, value); }
+			get => HarfBuzzApi.hb_buffer_get_script (Handle);
+			set => HarfBuzzApi.hb_buffer_set_script (Handle, value);
 		}
 
 		public int Length {
-			get { return HarfBuzzApi.hb_buffer_get_length (Handle); }
-			set { HarfBuzzApi.hb_buffer_set_length (Handle, value); }
+			get => HarfBuzzApi.hb_buffer_get_length (Handle);
+			set => HarfBuzzApi.hb_buffer_set_length (Handle, value);
 		}
 
-		public void Add (int codepoint, int cluster)
+		public UnicodeFunctions UnicodeFunctions {
+			get => new UnicodeFunctions (HarfBuzzApi.hb_buffer_get_unicode_funcs (Handle));
+			set => HarfBuzzApi.hb_buffer_set_unicode_funcs (Handle, value.Handle);
+		}
+
+		public unsafe void Add (uint codepoint, uint cluster)
+		{
+			if (Length != 0 && ContentType != ContentType.Unicode) {
+				throw new InvalidOperationException ("Non empty buffer's ContentType must be of type Unicode.");
+			}
+
+			if (ContentType == ContentType.Glyphs) {
+				throw new InvalidOperationException ("ContentType must not be of type Glyphs");
+			}
+
+			HarfBuzzApi.hb_buffer_add (Handle, codepoint, cluster);
+		}
+
+		public unsafe void Add (int codepoint, int cluster)
 		{
 			if (codepoint < 0) {
 				throw new ArgumentOutOfRangeException (nameof (codepoint), "Codepoint must be non negative.");
@@ -82,7 +100,7 @@ namespace HarfBuzzSharp
 				throw new InvalidOperationException ("ContentType must not be of type Glyphs");
 			}
 
-			HarfBuzzApi.hb_buffer_add (Handle, codepoint, cluster);
+			HarfBuzzApi.hb_buffer_add (Handle, (uint)codepoint, (uint)cluster);
 		}
 
 		public void AddUtf8 (string utf8text)
@@ -180,6 +198,13 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		public unsafe void AddUtf32 (ReadOnlySpan<uint> text, int itemOffset = 0, int itemLength = -1)
+		{
+			fixed (uint* integers = text) {
+				AddUtf32 ((IntPtr)integers, text.Length, itemOffset, itemLength);
+			}
+		}
+
 		public void AddUtf32 (IntPtr text, int textLength, int itemOffset = 0, int itemLength = -1)
 		{
 			if (itemOffset < 0) {
@@ -204,9 +229,23 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		public unsafe void AddCodepoints (uint[] text, int itemOffset = 0, int itemLength = -1)
+		{
+			fixed (uint* codepoints = text) {
+				AddCodepoints ((IntPtr)codepoints, text.Length, itemOffset, itemLength);
+			}
+		}
+
 		public unsafe void AddCodepoints (ReadOnlySpan<int> text, int itemOffset = 0, int itemLength = -1)
 		{
 			fixed (int* codepoints = text) {
+				AddCodepoints ((IntPtr)codepoints, text.Length, itemOffset, itemLength);
+			}
+		}
+
+		public unsafe void AddCodepoints (ReadOnlySpan<uint> text, int itemOffset = 0, int itemLength = -1)
+		{
+			fixed (uint* codepoints = text) {
 				AddCodepoints ((IntPtr)codepoints, text.Length, itemOffset, itemLength);
 			}
 		}
@@ -246,7 +285,7 @@ namespace HarfBuzzSharp
 			}
 
 			if (GlyphPositions.Length == 0) {
-				throw new InvalidOperationException("GlyphPositions can't be empty.");
+				throw new InvalidOperationException ("GlyphPositions can't be empty.");
 			}
 
 			HarfBuzzApi.hb_buffer_normalize_glyphs (Handle);
@@ -323,7 +362,7 @@ namespace HarfBuzzSharp
 			return builder.ToString ();
 		}
 
-		public void DeSerializeGlyphs (string data, Font font = null, SerializeFormat format = SerializeFormat.Text)
+		public void DeserializeGlyphs (string data, Font font = null, SerializeFormat format = SerializeFormat.Text)
 		{
 			if (Length != 0) {
 				throw new InvalidOperationException ("Buffer must be empty.");

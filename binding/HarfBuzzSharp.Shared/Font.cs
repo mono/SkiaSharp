@@ -62,8 +62,10 @@ namespace HarfBuzzSharp
 				throw new ArgumentOutOfRangeException (nameof (glyph), "Glyph must be non negative.");
 			}
 
-			return HarfBuzzApi.hb_font_get_glyph_h_advance (Handle, glyph);
+			return HarfBuzzApi.hb_font_get_glyph_h_advance (Handle, (uint)glyph);
 		}
+
+		public int GetHorizontalGlyphAdvance (uint glyph) => HarfBuzzApi.hb_font_get_glyph_h_advance (Handle, glyph);
 
 		public int GetVerticalGlyphAdvance (int glyph)
 		{
@@ -71,10 +73,12 @@ namespace HarfBuzzSharp
 				throw new ArgumentOutOfRangeException (nameof (glyph), "Glyph must be non negative.");
 			}
 
-			return HarfBuzzApi.hb_font_get_glyph_v_advance (Handle, glyph);
+			return HarfBuzzApi.hb_font_get_glyph_v_advance (Handle, (uint)glyph);
 		}
 
-		public int GetGlyph (int unicode, int variationSelector = 0)
+		public int GetVerticalGlyphAdvance (uint glyph) => HarfBuzzApi.hb_font_get_glyph_v_advance (Handle, glyph);
+
+		public uint GetGlyph (int unicode, int variationSelector = 0)
 		{
 			if (unicode < 0) {
 				throw new ArgumentOutOfRangeException (nameof (unicode), "Unicode must be non negative.");
@@ -84,6 +88,15 @@ namespace HarfBuzzSharp
 				throw new ArgumentOutOfRangeException (nameof (variationSelector), "VariationSelector must be non negative.");
 			}
 
+			if (HarfBuzzApi.hb_font_get_glyph (Handle, (uint)unicode, (uint)variationSelector, out var glyph)) {
+				return glyph;
+			}
+
+			return 0;
+		}
+
+		public uint GetGlyph (uint unicode, uint variationSelector = 0)
+		{
 			if (HarfBuzzApi.hb_font_get_glyph (Handle, unicode, variationSelector, out var glyph)) {
 				return glyph;
 			}
@@ -91,12 +104,20 @@ namespace HarfBuzzSharp
 			return 0;
 		}
 
-		public GlyphExtents GetGlyphExtents (int glyph)
+		public unsafe GlyphExtents GetGlyphExtents (int glyph)
 		{
 			if (glyph < 0) {
 				throw new ArgumentOutOfRangeException (nameof (glyph), "Glyph must be non negative.");
 			}
 
+			if (HarfBuzzApi.hb_font_get_glyph_extents (Handle, (uint)glyph, out var extents)) {
+				return extents;
+			}
+			return new GlyphExtents ();
+		}
+
+		public unsafe GlyphExtents GetGlyphExtents (uint glyph)
+		{
 			if (HarfBuzzApi.hb_font_get_glyph_extents (Handle, glyph, out var extents)) {
 				return extents;
 			}

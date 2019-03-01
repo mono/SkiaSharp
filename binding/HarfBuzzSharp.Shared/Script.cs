@@ -342,11 +342,7 @@
 			_tag = new Tag (script);
 		}
 
-		public Direction HorizontalDirection {
-			get {
-				return HarfBuzzApi.hb_script_get_horizontal_direction (_tag);
-			}
-		}
+		public Direction HorizontalDirection => HarfBuzzApi.hb_script_get_horizontal_direction (_tag);
 
 		public override string ToString () => _tag.ToString();
 
