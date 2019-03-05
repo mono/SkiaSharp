@@ -374,7 +374,7 @@ namespace HarfBuzzSharp
 		TitlecaseLetter,       /* Lt */
 		UppercaseLetter,       /* Lu */
 		SpacingMark,       /* Mc */
-		ENCLOSING_Mark,     /* Me */
+		EnclosingMark,     /* Me */
 		NonSpacingMark,       /* Mn */
 		DecimalNumber,     /* Nd */
 		LetterNumber,      /* Nl */
