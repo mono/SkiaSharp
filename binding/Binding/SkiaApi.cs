@@ -9,6 +9,15 @@ using gr_backendrendertarget_t = System.IntPtr;
 using gr_backendtexture_t = System.IntPtr;
 using gr_context_t = System.IntPtr;
 using gr_glinterface_t = System.IntPtr;
+using gr_vkinterface_t = System.IntPtr;
+using gr_vkbackendcontext_t = System.IntPtr;
+
+using vk_getinstanceprocaddr_t = System.IntPtr;
+using vk_getdeviceprocaddr_t = System.IntPtr;
+using vk_instance_t = System.IntPtr;
+using vk_physical_device_t = System.IntPtr;
+using vk_device_t = System.IntPtr;
+using vk_queue_t = System.IntPtr;
 
 using sk_3dview_t = System.IntPtr;
 using sk_bitmap_t = System.IntPtr;
@@ -1713,6 +1722,8 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static gr_context_t gr_context_make_gl (gr_glinterface_t glInterface);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static gr_context_t gr_context_make_vulkan (gr_vkbackendcontext_t vkBackendContext);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void gr_context_unref (gr_context_t context);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void gr_context_abandon_context (gr_context_t context);
@@ -1751,9 +1762,39 @@ namespace SkiaSharp
 		[return: MarshalAs (UnmanagedType.I1)]
 		public extern static bool gr_glinterface_has_extension (gr_glinterface_t glInterface, [MarshalAs (UnmanagedType.LPStr)] string extension);
 
+		// Vulkan insterface
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static gr_vkinterface_t gr_vkinterface_make (
+			vk_getinstanceprocaddr_t vkGetInstanceProc,
+			vk_getdeviceprocaddr_t vkGetDeviceProc,
+			vk_instance_t vkInstance,
+			vk_device_t vkDevice,
+			uint extensionFlags);
+
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void gr_vkinterface_unref (gr_vkinterface_t grVkInterface);
+
+		// Vulkan backend context
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static gr_vkbackendcontext_t gr_vkbackendcontext_assemble (
+			vk_instance_t vkInstance,
+			vk_physical_device_t vkPhysicalDevice,
+			vk_device_t vkDevice,
+			vk_queue_t vkQueue,
+			uint graphicsQueueIndex,
+			uint minAPIVersion,
+			uint extensions,
+			uint features,
+			gr_vkinterface_t grVkInterface);
+
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void gr_vkbackendcontext_unref (gr_vkbackendcontext_t grVkBackendContext);
+
 		// GPU backend texture
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static gr_backendtexture_t gr_backendtexture_new_gl (int width, int height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, ref GRGlTextureInfo glInfo);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static gr_backendtexture_t gr_backendtexture_new_vulkan (int width, int height, ref GRVkImageInfo vkInfo);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void gr_backendtexture_delete (gr_backendtexture_t texture);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1775,6 +1816,8 @@ namespace SkiaSharp
 		// GPU backend render target
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static gr_backendrendertarget_t gr_backendrendertarget_new_gl (int width, int height, int samples, int stencils, ref GRGlFramebufferInfo glInfo);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (int width, int height, int samples, ref GRVkImageInfo vkImageInfo);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void gr_backendrendertarget_delete (gr_backendrendertarget_t rendertarget);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

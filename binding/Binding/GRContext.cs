@@ -47,7 +47,21 @@ namespace SkiaSharp
 				case GRBackend.OpenGL:
 					return GetObject<GRContext> (SkiaApi.gr_context_make_gl (backendContext));
 				case GRBackend.Vulkan:
+					return GetObject<GRContext> (SkiaApi.gr_context_make_vulkan (backendContext));
+				default:
+					throw new ArgumentOutOfRangeException (nameof (backend));
+			}
+		}
+
+		public static GRContext Create (GRBackend backend, GRVkBackendContext backendContext)
+		{
+			switch (backend) {
+				case GRBackend.Metal:
 					throw new NotSupportedException ();
+				case GRBackend.OpenGL:
+					throw new NotSupportedException ();
+				case GRBackend.Vulkan:
+					return CreateVulkan (backendContext);
 				default:
 					throw new ArgumentOutOfRangeException (nameof (backend));
 			}
@@ -61,6 +75,11 @@ namespace SkiaSharp
 		public static GRContext CreateGl (GRGlInterface backendContext)
 		{
 			return GetObject<GRContext> (SkiaApi.gr_context_make_gl (backendContext == null ? IntPtr.Zero : backendContext.Handle));
+		}
+
+		public static GRContext CreateVulkan (GRVkBackendContext backendContext)
+		{
+			return GetObject<GRContext> (SkiaApi.gr_context_make_vulkan (backendContext == null ? IntPtr.Zero : backendContext.Handle));
 		}
 
 		public GRBackend Backend => SkiaApi.gr_context_get_backend (Handle);
