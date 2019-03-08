@@ -61,7 +61,7 @@ namespace SkiaSharp.Tests
 
 				buffer.ClearContents();
 
-				Assert.Empty(buffer.GlyphInfos);
+				Assert.Equal(0, buffer.GlyphInfos.Length);
 			}
 		}
 

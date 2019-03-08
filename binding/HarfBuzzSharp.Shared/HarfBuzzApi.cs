@@ -148,9 +148,9 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_buffer_clear_contents (hb_buffer_t buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static IntPtr hb_buffer_get_glyph_infos (hb_buffer_t buffer, out uint length);
+		public extern static unsafe void* hb_buffer_get_glyph_infos (hb_buffer_t buffer, out int length);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static IntPtr hb_buffer_get_glyph_positions (hb_buffer_t buffer, out uint length);
+		public extern static unsafe void* hb_buffer_get_glyph_positions (hb_buffer_t buffer, out int length);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_buffer_set_script (hb_buffer_t buffer, hb_script_t script);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]

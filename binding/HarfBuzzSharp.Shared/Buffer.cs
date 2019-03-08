@@ -300,17 +300,17 @@ namespace HarfBuzzSharp
 
 		public void ReverseClusters () => HarfBuzzApi.hb_buffer_reverse_clusters (Handle);
 
-		public GlyphInfo[] GlyphInfos {
+		public unsafe ReadOnlySpan<GlyphInfo> GlyphInfos {
 			get {
 				var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_infos (Handle, out var length);
-				return PtrToStructureArray<GlyphInfo> (infoPtrs, (int)length);
+				return new ReadOnlySpan<GlyphInfo> (infoPtrs, length);
 			}
 		}
 
-		public GlyphPosition[] GlyphPositions {
+		public unsafe ReadOnlySpan<GlyphPosition> GlyphPositions {
 			get {
 				var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_positions (Handle, out var length);
-				return PtrToStructureArray<GlyphPosition> (infoPtrs, (int)length);
+				return new ReadOnlySpan<GlyphPosition> (infoPtrs, length);
 			}
 		}
 

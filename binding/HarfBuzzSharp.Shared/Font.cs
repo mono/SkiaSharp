@@ -104,7 +104,7 @@ namespace HarfBuzzSharp
 			return 0;
 		}
 
-		public unsafe GlyphExtents GetGlyphExtents (int glyph)
+		public GlyphExtents GetGlyphExtents (int glyph)
 		{
 			if (glyph < 0) {
 				throw new ArgumentOutOfRangeException (nameof (glyph), "Glyph must be non negative.");
@@ -116,7 +116,7 @@ namespace HarfBuzzSharp
 			return new GlyphExtents ();
 		}
 
-		public unsafe GlyphExtents GetGlyphExtents (uint glyph)
+		public GlyphExtents GetGlyphExtents (uint glyph)
 		{
 			if (HarfBuzzApi.hb_font_get_glyph_extents (Handle, glyph, out var extents)) {
 				return extents;
