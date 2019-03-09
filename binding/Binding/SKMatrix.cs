@@ -68,6 +68,22 @@ namespace SkiaSharp
 			set { persp2 = value; }
 		}
 
+		public SKMatrix (
+			float scaleX, float skewX, float transX,
+			float skewY, float scaleY, float transY,
+			float persp0, float persp1, float persp2)
+		{
+			this.scaleX = scaleX;
+			this.skewX = skewX;
+			this.transX = transX;
+			this.skewY = skewY;
+			this.scaleY = scaleY;
+            this.transY = transY;
+			this.persp0 = persp0;
+			this.persp1 = persp1;
+			this.persp2 = persp2;
+		}
+
 		public float [] Values {
 			get {
 				return new float [9] {
