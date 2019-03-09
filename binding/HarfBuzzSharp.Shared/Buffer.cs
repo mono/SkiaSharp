@@ -69,6 +69,20 @@ namespace HarfBuzzSharp
 			set => HarfBuzzApi.hb_buffer_set_unicode_funcs (Handle, value.Handle);
 		}
 
+		public unsafe ReadOnlySpan<GlyphInfo> GlyphInfos {
+			get {
+				var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_infos (Handle, out var length);
+				return new ReadOnlySpan<GlyphInfo> (infoPtrs, length);
+			}
+		}
+
+		public unsafe ReadOnlySpan<GlyphPosition> GlyphPositions {
+			get {
+				var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_positions (Handle, out var length);
+				return new ReadOnlySpan<GlyphPosition> (infoPtrs, length);
+			}
+		}
+
 		public unsafe void Add (uint codepoint, uint cluster)
 		{
 			if (Length != 0 && ContentType != ContentType.Unicode) {
@@ -299,20 +313,6 @@ namespace HarfBuzzSharp
 		}
 
 		public void ReverseClusters () => HarfBuzzApi.hb_buffer_reverse_clusters (Handle);
-
-		public unsafe ReadOnlySpan<GlyphInfo> GlyphInfos {
-			get {
-				var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_infos (Handle, out var length);
-				return new ReadOnlySpan<GlyphInfo> (infoPtrs, length);
-			}
-		}
-
-		public unsafe ReadOnlySpan<GlyphPosition> GlyphPositions {
-			get {
-				var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_positions (Handle, out var length);
-				return new ReadOnlySpan<GlyphPosition> (infoPtrs, length);
-			}
-		}
 
 		public string SerializeGlyphs (
 			int start = 0,
