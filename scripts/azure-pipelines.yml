@@ -179,6 +179,10 @@ jobs:
       postBuildSteps:
         - task: PublishBuildArtifacts@1
           inputs:
+            artifactName: native
+            pathToPublish: 'output/native'
+        - task: PublishBuildArtifacts@1
+          inputs:
             artifactName: nuget
             pathToPublish: 'output/nugets'
   - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:

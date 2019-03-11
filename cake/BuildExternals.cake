@@ -691,9 +691,25 @@ Task ("externals-tizen")
     buildHarfBuzzArch ("armel", "arm");
     buildHarfBuzzArch ("i386", "x86");
 });
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXTERNALS DOWNLOAD - download any externals that are needed
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Task ("externals-download")
+    .Does (() =>
+{
+    if (string.IsNullOrEmpty (AZURE_BUILD_ID))
+        throw new Exception ("Specify a build ID with --azureBuildId=<ID>");
+
+    var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, "native");
+
+    EnsureDirectoryExists ("./output");
+    CleanDirectories ("./output");
+
+    DownloadFile(url, "./output/native.zip");
+    Unzip ($"./output/native.zip", $"./output");
+});
 
 Task ("externals-angle-uwp")
     .WithCriteria (!FileExists (ANGLE_PATH.CombineWithFilePath ("uwp/ANGLE.WindowsStore.nuspec")))
