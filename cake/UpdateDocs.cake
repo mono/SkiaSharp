@@ -47,7 +47,15 @@ Task ("docs-download-output")
     CleanDirectories ("./output");
 
     DownloadFile(url, "./output/nuget.zip");
-    Unzip ($"./output/nuget.zip", $"./output");
+    Unzip ("./output/nuget.zip", "./output");
+    MoveDirectory ("./output/nuget", "./output/nugets");
+
+    foreach (var id in TRACKED_NUGETS.Keys) {
+        var version = GetVersion (id);
+        var name = $"{id}.{version}.nupkg";
+        CleanDirectories ($"./output/{id}");
+        Unzip ($"./output/nugets/{name}", $"./output/{id}/nuget");
+    }
 });
 
 Task ("docs-api-diff")

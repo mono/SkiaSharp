@@ -58,6 +58,12 @@ if (string.IsNullOrEmpty (BUILD_NUMBER)) {
     BUILD_NUMBER = "0";
 }
 
+if (!string.IsNullOrEmpty (PythonToolPath) && FileExists (PythonToolPath)) {
+    var dir = MakeAbsolute ((FilePath) PythonToolPath).GetDirectory ();
+    var oldPath = EnvironmentVariable ("PATH");
+    System.Environment.SetEnvironmentVariable ("PATH", dir.FullPath + System.IO.Path.PathSeparator + oldPath);
+}
+
 var AZURE_BUILD_URL = "https://dev.azure.com/xamarin/6fd3d886-57a5-4e31-8db7-52a1b47c07a8/_apis/build/builds/{0}/artifacts?artifactName={1}&%24format=zip&api-version=5.0";
 
 var TRACKED_NUGETS = new Dictionary<string, Version> {
