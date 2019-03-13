@@ -20,16 +20,16 @@ namespace SkiaSharp
 		{
 		}
 
-		public SKRegion(SKRectI rect)
-			: this(SkiaApi.sk_region_new2(region.Handle), true)
+		public SKRegion (SKRectI rect)
+			: this ()
 		{
-			SetRect(rect);
+			SetRect (rect);
 		}
 
-		public SKRegion(SKPath path)
-			: this(SKRectI.Ceiling(path.Bounds))
+		public SKRegion (SKPath path)
+			: this (SKRectI.Ceiling (path.Bounds))
 		{
-			SetPath(path);
+			SetPath (path);
 		}
 
 		public SKRectI Bounds {
@@ -56,13 +56,12 @@ namespace SkiaSharp
 			return SkiaApi.sk_region_contains2(Handle, x, y);
 		}
 
-		public bool Intersects(SKPath path)
+		public bool Intersects (SKPath path)
 		{
 			if (path == null)
-				throw new ArgumentNullException(nameof(path));
-			using (SKRegion pathRegion = new SKRegion(path, true))
-			{
-				return SkiaApi.sk_region_intersects(Handle, pathRegion.Handle);
+				throw new ArgumentNullException (nameof (path));
+			using (var pathRegion = new SKRegion (path)) {
+				return Intersects (pathRegion);
 			}
 		}
 
@@ -99,18 +98,18 @@ namespace SkiaSharp
 			return SkiaApi.sk_region_set_path(Handle, path.Handle, clip.Handle); 
 		}
 
-		public bool SetPath(SKPath path)
+		public bool SetPath (SKPath path)
 		{
 			if (path == null)
-				throw new ArgumentNullException(nameof(path));
+				throw new ArgumentNullException (nameof (path));
 
-			using (var clip = new SKRegion())
-			{
-				var rect = SKRectI.Ceiling(path.Bounds);
-				if (!rect.IsEmpty)
-					clip.SetRect(rect);
+			using (var clip = new SKRegion ()) {
+				var rect = SKRectI.Ceiling (path.Bounds);
+				if (!rect.IsEmpty) {
+					clip.SetRect (rect);
+				}
 
-				return SkiaApi.sk_region_set_path(Handle, path.Handle, clip.Handle);
+				return SkiaApi.sk_region_set_path (Handle, path.Handle, clip.Handle);
 			}
 		}
 
@@ -129,11 +128,10 @@ namespace SkiaSharp
 			return SkiaApi.sk_region_op2(Handle, region.Handle, op);
 		}
 
-		public bool Op(SKPath path, SKRegionOperation op)
+		public bool Op (SKPath path, SKRegionOperation op)
 		{
-			using (SKRegion pathRegion = new SKRegion(path, true))
-			{
-				return SkiaApi.sk_region_op2(Handle, pathRegion.Handle, op);
+			using (var pathRegion = new SKRegion (path)) {
+				return Op (pathRegion, op);
 			}
 		}
 	}
