@@ -354,6 +354,8 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_paint_delete (sk_paint_t t);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_paint_reset (sk_paint_t t);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		public extern static bool sk_paint_is_antialias (sk_paint_t t);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

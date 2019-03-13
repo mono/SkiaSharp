@@ -179,6 +179,10 @@ jobs:
       postBuildSteps:
         - task: PublishBuildArtifacts@1
           inputs:
+            artifactName: native
+            pathToPublish: 'output/native'
+        - task: PublishBuildArtifacts@1
+          inputs:
             artifactName: nuget
             pathToPublish: 'output/nugets'
   - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
@@ -189,7 +193,7 @@ jobs:
         name: VSEng-XamarinCustom
         demands:
           - corpnet
-      condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
+      condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
       steps:
         - checkout: none
         - template: sign-artifacts.yml@xamarin-templates

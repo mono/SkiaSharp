@@ -3,10 +3,11 @@
 #addin nuget:?package=Cake.FileHelpers&version=3.1.0
 #addin nuget:?package=SharpCompress&version=0.22.0
 #addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.0.0&loaddependencies=true
-
-#tool "nuget:?package=xunit.runner.console&version=2.4.0"
-#tool "nuget:?package=vswhere&version=2.5.2"
 #addin nuget:?package=Xamarin.Nuget.Validator&version=1.1.1
+
+#tool nuget:?package=mdoc&version=5.7.4.8
+#tool nuget:?package=xunit.runner.console&version=2.4.0
+#tool nuget:?package=vswhere&version=2.5.2
 
 using System.Linq;
 using System.Net.Http;
@@ -27,12 +28,12 @@ var VERBOSITY = (Verbosity) Enum.Parse (typeof(Verbosity), Argument ("v", Argume
 var SKIP_EXTERNALS = Argument ("skipexternals", Argument ("SkipExternals", "")).ToLower ().Split (',');
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAll", Argument ("PackAllPlatforms", TARGET.ToLower() == "ci" || TARGET.ToLower() == "nuget-only")));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
-var ARTIFACTS_ROOT_URL = Argument ("artifactsRootUrl", "");
+var AZURE_BUILD_ID = Argument ("azureBuildId", "");
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
 var CakeToolPath = Context.Tools.Resolve ("Cake.exe");
-var MDocPath = MakeAbsolute ((FilePath)"externals/api-doc-tools/bin/Release/mdoc.exe");
+var MDocPath = Context.Tools.Resolve ("mdoc.exe");
 var MSBuildToolPath = GetMSBuildToolPath (EnvironmentVariable ("MSBUILD_EXE"));
 var PythonToolPath = EnvironmentVariable ("PYTHON_EXE") ?? "python";
 
@@ -57,6 +58,14 @@ if (string.IsNullOrEmpty (BUILD_NUMBER)) {
     BUILD_NUMBER = "0";
 }
 
+if (!string.IsNullOrEmpty (PythonToolPath) && FileExists (PythonToolPath)) {
+    var dir = MakeAbsolute ((FilePath) PythonToolPath).GetDirectory ();
+    var oldPath = EnvironmentVariable ("PATH");
+    System.Environment.SetEnvironmentVariable ("PATH", dir.FullPath + System.IO.Path.PathSeparator + oldPath);
+}
+
+var AZURE_BUILD_URL = "https://dev.azure.com/xamarin/6fd3d886-57a5-4e31-8db7-52a1b47c07a8/_apis/build/builds/{0}/artifacts?artifactName={1}&%24format=zip&api-version=5.0";
+
 var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp",                          new Version (1, 57, 0) },
     { "SkiaSharp.NativeAssets.Linux",       new Version (1, 57, 0) },
@@ -77,8 +86,7 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
 
 // this builds all the externals
 Task ("externals")
-    .IsDependentOn ("externals-native")
-    .IsDependentOn ("externals-mdoc");
+    .IsDependentOn ("externals-native");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // LIBS - the managed C# libraries
@@ -89,7 +97,6 @@ Task ("libs")
     .IsDependentOn ("libs-only");
 
 Task ("libs-only")
-    .IsDependentOn ("externals-mdoc")
     .Does (() =>
 {
     // build the managed libraries
@@ -521,7 +528,7 @@ Information ("  Verbosity:                        {0}", VERBOSITY);
 Information ("  Skip externals:                   {0}", SKIP_EXTERNALS);
 Information ("  Print all environment variables:  {0}", PRINT_ALL_ENV_VARS);
 Information ("  Pack all platforms:               {0}", PACK_ALL_PLATFORMS);
-Information ("  Artifacts root url:               {0}", ARTIFACTS_ROOT_URL);
+Information ("  Azure build ID:                   {0}", AZURE_BUILD_ID);
 Information ("");
 
 Information ("Tool Paths:");

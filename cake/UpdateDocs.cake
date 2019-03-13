@@ -35,36 +35,27 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
     }
 }
 
-Task ("externals-mdoc")
-    .Does (() =>
-{
-    NuGetRestore ("externals/api-doc-tools/apidoctools.sln");
-    RunMSBuild ("externals/api-doc-tools/mdoc/mdoc.csproj", platform: "AnyCPU", restore: false);
-});
-
 Task ("docs-download-output")
     .Does (() =>
 {
-    if (string.IsNullOrEmpty (ARTIFACTS_ROOT_URL))
-        throw new Exception ("Specify an artifacts root URL with --artifactsRootUrl=<URL>");
+    if (string.IsNullOrEmpty (AZURE_BUILD_ID))
+        throw new Exception ("Specify a build ID with --azureBuildId=<ID>");
 
-    EnsureDirectoryExists ("./output/nugets");
-    CleanDirectories ("./output/nugets");
+    var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, "nuget");
+
+    EnsureDirectoryExists ("./output");
+    CleanDirectories ("./output");
+
+    DownloadFile(url, "./output/nuget.zip");
+    Unzip ("./output/nuget.zip", "./output");
+    MoveDirectory ("./output/nuget", "./output/nugets");
 
     foreach (var id in TRACKED_NUGETS.Keys) {
-        Information ($"Downloading '{id}'...");
-
         var version = GetVersion (id);
         var name = $"{id}.{version}.nupkg";
-
         CleanDirectories ($"./output/{id}");
-        DownloadFile ($"{ARTIFACTS_ROOT_URL}/nugets/{name}", $"./output/nugets/{name}");
         Unzip ($"./output/nugets/{name}", $"./output/{id}/nuget");
     }
-
-    CleanDirectories ($"./output/samples");
-    DownloadFile ($"{ARTIFACTS_ROOT_URL}/samples.zip", $"./output/samples.zip");
-    Unzip ($"./output/samples.zip", $"./output/samples");
 });
 
 Task ("docs-api-diff")
@@ -163,7 +154,6 @@ Task ("docs-api-diff-past")
 });
 
 Task ("docs-update-frameworks")
-    .IsDependentOn ("externals-mdoc")
     .Does (async () =>
 {
     // clear the temp dir
