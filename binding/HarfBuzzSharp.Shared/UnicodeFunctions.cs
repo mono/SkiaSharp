@@ -4,19 +4,18 @@ namespace HarfBuzzSharp
 {
 	public class UnicodeFunctions : NativeObject
 	{
-		public static UnicodeFunctions Default => new UnicodeFunctions (HarfBuzzApi.hb_unicode_funcs_get_default ());
+		private static readonly IntPtr _default = HarfBuzzApi.hb_unicode_funcs_get_default ();
 
-		public static UnicodeFunctions Empty => new UnicodeFunctions (HarfBuzzApi.hb_unicode_funcs_get_empty ());
+		private static readonly IntPtr _empty = HarfBuzzApi.hb_unicode_funcs_get_empty ();
+
+		public static UnicodeFunctions Default => new UnicodeFunctions (_default);
+
+		public static UnicodeFunctions Empty => new UnicodeFunctions (_empty);
 
 		internal UnicodeFunctions (IntPtr handle)
 			: base (handle)
 		{
-
 		}
-
-		public bool IsImmutable => HarfBuzzApi.hb_unicode_funcs_is_immutable (Handle);
-
-		public void MakeImmutable () => HarfBuzzApi.hb_unicode_funcs_make_immutable (Handle);
 
 		public UnicodeCombiningClass GetCombiningClass (int unicode)
 		{
@@ -53,11 +52,14 @@ namespace HarfBuzzSharp
 
 		public Script GetScript (uint unicode) => HarfBuzzApi.hb_unicode_script (Handle, unicode);
 
-		protected override void Dispose (bool disposing)
+		protected override void DisposeHandler ()
 		{
-			HarfBuzzApi.hb_unicode_funcs_destroy (Handle);
-
-			base.Dispose (disposing);
+			if (Handle == _default || Handle == _empty) {
+				return;
+			}
+			if (Handle != IntPtr.Zero) {
+				HarfBuzzApi.hb_unicode_funcs_destroy (Handle);
+			}
 		}
 	}
 }

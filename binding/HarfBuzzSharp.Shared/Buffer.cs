@@ -374,13 +374,11 @@ namespace HarfBuzzSharp
 
 			HarfBuzzApi.hb_buffer_deserialize_glyphs (Handle, data, -1, out _, font?.Handle ?? IntPtr.Zero, format);
 		}
-		protected override void Dispose (bool disposing)
+		protected override void DisposeHandler()
 		{
 			if (Handle != IntPtr.Zero) {
 				HarfBuzzApi.hb_buffer_destroy (Handle);
 			}
-
-			base.Dispose (disposing);
 		}
 	}
 }

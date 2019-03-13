@@ -166,13 +166,11 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		protected override void Dispose (bool disposing)
+		protected override void DisposeHandler()
 		{
 			if (Handle != IntPtr.Zero) {
 				HarfBuzzApi.hb_font_destroy (Handle);
 			}
-
-			base.Dispose (disposing);
 		}
 	}
 }

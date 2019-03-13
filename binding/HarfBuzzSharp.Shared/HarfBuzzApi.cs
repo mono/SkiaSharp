@@ -255,18 +255,14 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void hb_unicode_funcs_destroy (hb_unicode_funcs_t ufuncs);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern void hb_unicode_funcs_make_immutable (hb_unicode_funcs_t ufuncs);
-		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern hb_bool_t hb_unicode_funcs_is_immutable (hb_unicode_funcs_t ufuncs);
-		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe UnicodeCombiningClass hb_unicode_combining_class (
+		public static extern UnicodeCombiningClass hb_unicode_combining_class (
 			hb_unicode_funcs_t ufuncs,
 			hb_codepoint_t unicode);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe UnicodeGeneralCategory hb_unicode_general_category (
+		public static extern UnicodeGeneralCategory hb_unicode_general_category (
 			hb_unicode_funcs_t ufuncs,
 			hb_codepoint_t unicode);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe hb_script_t hb_unicode_script (hb_unicode_funcs_t ufuncs, hb_codepoint_t unicode);
+		public static extern hb_script_t hb_unicode_script (hb_unicode_funcs_t ufuncs, hb_codepoint_t unicode);
 	}
 }

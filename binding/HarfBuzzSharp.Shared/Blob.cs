@@ -46,13 +46,11 @@ namespace HarfBuzzSharp
 
 		public void MakeImmutable () => HarfBuzzApi.hb_blob_make_immutable (Handle);
 
-		protected override void Dispose (bool disposing)
+		protected override void DisposeHandler()
 		{
 			if (Handle != IntPtr.Zero) {
 				HarfBuzzApi.hb_blob_destroy (Handle);
 			}
-
-			base.Dispose (disposing);
 		}
 
 		private static IntPtr Create (IntPtr data, int length, MemoryMode mode, object user_data, BlobReleaseDelegate releaseProc)

@@ -1,23 +1,24 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
 {
 	public class NativeObject : IDisposable
 	{
-		private readonly bool zero;
+		private readonly bool _zero;
 
-		internal NativeObject (IntPtr handle)
+		private bool _isDisposed;
+
+		internal NativeObject (bool zero = true)
+			: this (IntPtr.Zero, zero)
 		{
-			Handle = handle;
-			zero = true;
 		}
 
-		internal NativeObject (IntPtr handle, bool zero)
+		internal NativeObject (IntPtr handle, bool zero = true)
 		{
 			Handle = handle;
-			this.zero = zero;
+			_zero = zero;
 		}
 
 		~NativeObject ()
@@ -66,11 +67,35 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		protected virtual void Dispose (bool disposing)
+		/// <summary>
+		///     Intended to be overridden - always safe to use
+		///     since it will never be called unless applicable
+		/// </summary>
+		protected virtual void DisposeHandler ()
 		{
-			if (zero) {
+		}
+
+		/// <summary>
+		///     Dispose method - always called
+		/// </summary>
+		/// <param name="isDisposing"></param>
+		private void Dispose (bool isDisposing)
+		{
+			if (_isDisposed) {
+				return;
+			}
+
+			if (_zero) {
 				Handle = IntPtr.Zero;
 			}
+
+			_isDisposed = true;
+
+			if (!isDisposing) {
+				return;
+			}
+
+			DisposeHandler ();
 		}
 	}
 }
