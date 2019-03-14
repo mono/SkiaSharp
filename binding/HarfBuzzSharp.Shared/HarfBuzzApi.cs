@@ -227,7 +227,7 @@ namespace HarfBuzzSharp
 		// hb_language
 
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern IntPtr hb_language_from_string (byte[] str, int len);
+		public static extern IntPtr hb_language_from_string ([MarshalAs (UnmanagedType.LPStr)] string str, int len);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr hb_language_to_string (IntPtr language);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -240,11 +240,15 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void hb_feature_to_string (ref Feature feature,
 														[MarshalAs (UnmanagedType.LPStr)] StringBuilder buf, uint size);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern hb_bool_t hb_feature_from_string ([MarshalAs (UnmanagedType.LPStr)] string str, int len, out Feature feature);
 
 		// hb_script
 
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern Direction hb_script_get_horizontal_direction (hb_script_t script);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern hb_script_t hb_script_from_string ([MarshalAs (UnmanagedType.LPStr)] string str, int len);
 
 		// hb_unicode
 
@@ -254,6 +258,10 @@ namespace HarfBuzzSharp
 		public static extern hb_unicode_funcs_t hb_unicode_funcs_get_empty ();
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void hb_unicode_funcs_destroy (hb_unicode_funcs_t ufuncs);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern void hb_unicode_funcs_make_immutable (hb_unicode_funcs_t ufuncs);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern hb_bool_t hb_unicode_funcs_is_immutable (hb_unicode_funcs_t ufuncs);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern UnicodeCombiningClass hb_unicode_combining_class (
 			hb_unicode_funcs_t ufuncs,

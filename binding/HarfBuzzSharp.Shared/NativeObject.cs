@@ -85,10 +85,6 @@ namespace HarfBuzzSharp
 				return;
 			}
 
-			if (_zero) {
-				Handle = IntPtr.Zero;
-			}
-
 			_isDisposed = true;
 
 			if (!isDisposing) {
@@ -96,6 +92,10 @@ namespace HarfBuzzSharp
 			}
 
 			DisposeHandler ();
+
+			if (_zero) {
+				Handle = IntPtr.Zero;
+			}
 		}
 	}
 }

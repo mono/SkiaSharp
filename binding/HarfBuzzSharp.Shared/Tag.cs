@@ -52,5 +52,11 @@ namespace HarfBuzzSharp
 		public static implicit operator uint (Tag tag) => tag._value;
 
 		public static implicit operator Tag (uint tag) => new Tag { _value = tag };
+
+		public override bool Equals (object obj) => base.Equals (obj);
+
+		public bool Equals (Tag other) => _value == other._value;
+
+		public override int GetHashCode() => (int)_value;
 	}
 }

@@ -83,7 +83,7 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		public unsafe void Add (uint codepoint, uint cluster)
+		public void Add (uint codepoint, uint cluster)
 		{
 			if (Length != 0 && ContentType != ContentType.Unicode) {
 				throw new InvalidOperationException ("Non empty buffer's ContentType must be of type Unicode.");
@@ -96,7 +96,7 @@ namespace HarfBuzzSharp
 			HarfBuzzApi.hb_buffer_add (Handle, codepoint, cluster);
 		}
 
-		public unsafe void Add (int codepoint, int cluster)
+		public void Add (int codepoint, int cluster)
 		{
 			if (codepoint < 0) {
 				throw new ArgumentOutOfRangeException (nameof (codepoint), "Codepoint must be non negative.");

@@ -1,11 +1,20 @@
-﻿namespace SkiaSharp.Tests
+﻿using HarfBuzzSharp;
+
+using Xunit;
+
+namespace SkiaSharp.Tests
 {
-	using HarfBuzzSharp;
-
-	using Xunit;
-
 	public class HbUnicodeFuncsTest : SKTest
 	{
+		[SkippableFact]
+		public void ShouldBeImmutable()
+		{
+			using (var unicodeFuncs = UnicodeFunctions.Default)
+			{
+				Assert.True(unicodeFuncs.IsImmutable);
+			}
+		}
+
 		[SkippableFact]
 		public void ShouldGetScript()
 		{

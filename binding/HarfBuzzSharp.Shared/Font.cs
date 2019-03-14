@@ -7,11 +7,6 @@ namespace HarfBuzzSharp
 {
 	public class Font : NativeObject
 	{
-		internal Font (IntPtr handle)
-			: base (handle)
-		{
-		}
-
 		public Font (Face face)
 			: this (IntPtr.Zero)
 		{
@@ -20,6 +15,11 @@ namespace HarfBuzzSharp
 			}
 
 			Handle = HarfBuzzApi.hb_font_create (face.Handle);
+		}
+
+		internal Font (IntPtr handle)
+			: base (handle)
+		{
 		}
 
 		public FontExtents HorizontalFontExtents {

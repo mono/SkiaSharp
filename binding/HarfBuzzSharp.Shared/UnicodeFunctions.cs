@@ -17,6 +17,10 @@ namespace HarfBuzzSharp
 		{
 		}
 
+		public bool IsImmutable => HarfBuzzApi.hb_unicode_funcs_is_immutable (Handle);
+
+		public void MakeImmutable () => HarfBuzzApi.hb_unicode_funcs_make_immutable (Handle);
+
 		public UnicodeCombiningClass GetCombiningClass (int unicode)
 		{
 			if (unicode < 0) {

@@ -24,40 +24,49 @@ namespace HarfBuzzSharp
 		private uint start;
 		private uint end;
 
-		public Feature (Tag tag, uint value, uint start = 0, uint end = uint.MaxValue)
+		public Feature (Tag tag, bool isEnabled = true, uint start = 0, uint end = uint.MaxValue)
 		{
 			this.tag = tag;
-			this.val = value;
+			this.val = isEnabled ? 1u : 0u;
 			this.start = start;
 			this.end = end;
 		}
 
 		public Tag Tag {
-			get { return tag; }
-			set { tag = value; }
+			get => tag;
+			set => tag = value;
 		}
 
-		public uint Value {
-			get { return val; }
-			set { val = value; }
+		public bool IsEnabled {
+			get => val == 1u;
+			set => val = value ? 1u : 0u;
 		}
 
 		public uint Start {
-			get { return start; }
-			set { start = value; }
+			get => start;
+			set => start = value;
 		}
 
 		public uint End {
-			get { return end; }
-			set { end = value; }
+			get => end;
+			set => end = value;
 		}
 
 		public override string ToString ()
 		{
-			const int allocatedSize = 128;
-			var buffer = new StringBuilder (allocatedSize);
-			HarfBuzzApi.hb_feature_to_string (ref this, buffer, allocatedSize);
+			const int AllocatedSize = 128;
+			var buffer = new StringBuilder (AllocatedSize);
+			HarfBuzzApi.hb_feature_to_string (ref this, buffer, AllocatedSize);
 			return buffer.ToString ();
+		}
+
+		public static Feature FromString (string s)
+		{
+			if (HarfBuzzApi.hb_feature_from_string (s, -1, out var feature)) {
+				return feature;
+			}
+
+			return new Feature(Tag.None);
 		}
 	}
 
