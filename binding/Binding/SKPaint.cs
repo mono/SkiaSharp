@@ -27,6 +27,11 @@ namespace SkiaSharp
 			base.Dispose (disposing);
 		}
 
+		public void Reset ()
+		{
+			SkiaApi.sk_paint_reset (Handle);
+		}
+
 		public bool IsAntialias {
 			get => SkiaApi.sk_paint_is_antialias (Handle);
 			set => SkiaApi.sk_paint_set_antialias (Handle, value);
