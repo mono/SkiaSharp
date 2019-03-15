@@ -7,6 +7,18 @@ namespace SkiaSharp.Tests
 	public class SKRegionTest : SKTest
 	{
 		[SkippableFact]
+		public void FromPathWithoutClipDoesNotCreateEmptyRegion()
+		{
+			var path = new SKPath();
+			path.AddRect(SKRect.Create(10, 20, 30, 40));
+
+			var region = new SKRegion(path);
+
+			Assert.NotEqual(SKRectI.Empty, region.Bounds);
+			Assert.Equal(SKRectI.Truncate(path.Bounds), region.Bounds);
+		}
+
+		[SkippableFact]
 		public void SetPathWithoutClipDoesNotCreateEmptyRegion()
 		{
 			var path = new SKPath();
