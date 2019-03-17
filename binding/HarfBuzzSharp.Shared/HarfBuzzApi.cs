@@ -2,13 +2,13 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using hb_blob_t = System.IntPtr;
+using hb_bool_t = System.Boolean;
 using hb_buffer_t = System.IntPtr;
 using hb_codepoint_t = System.UInt32;
 using hb_face_t = System.IntPtr;
 using hb_font_t = System.IntPtr;
 using hb_position_t = System.Int32;
 using hb_script_t = System.UInt32;
-using hb_bool_t = System.Boolean;
 using hb_unicode_funcs_t = System.IntPtr;
 
 namespace HarfBuzzSharp
@@ -93,6 +93,14 @@ namespace HarfBuzzSharp
 		public extern static bool hb_font_get_glyph_extents (hb_font_t font, hb_codepoint_t glyph, out GlyphExtents extents);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static bool hb_font_get_glyph (hb_font_t font, hb_codepoint_t unicode, hb_codepoint_t variation_selector, out hb_codepoint_t glyph);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void hb_font_get_glyph_h_advances (hb_font_t font, int count, IntPtr first_glyph, uint glyph_stride, IntPtr first_advance, uint advance_stride);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void hb_font_get_glyph_v_advances (hb_font_t font, int count, IntPtr first_glyph, uint glyph_stride, IntPtr first_advance, uint advance_stride);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static hb_bool_t hb_font_get_glyph_h_origin (hb_font_t font, hb_codepoint_t glyph, out hb_position_t x, out hb_position_t y);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static hb_bool_t hb_font_get_glyph_v_origin (hb_font_t font, hb_codepoint_t glyph, out hb_position_t x, out hb_position_t y);
 
 		// hb_font_t (OT)
 
@@ -222,7 +230,7 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static bool hb_shape_full (hb_font_t font, hb_buffer_t buffer, IntPtr features, int num_features, IntPtr shaper_list);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static IntPtr hb_shape_list_shapers();
+		public extern static IntPtr hb_shape_list_shapers ();
 
 		// hb_language
 

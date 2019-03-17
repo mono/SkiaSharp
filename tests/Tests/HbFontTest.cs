@@ -69,7 +69,79 @@ namespace SkiaSharp.Tests
 			using (var face = new Face(blob, index))
 			using (var font = new Font(face))
 			{
-				Assert.Equal(new Scale(2048, 2048), font.Scale);
+				Assert.Equal(new Point(2048, 2048), font.Scale);
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldGetHorizontalGlyphOrigin()
+		{
+			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
+			using (var blob = tf.OpenStream(out var index).ToHarfBuzzBlob())
+			using (var face = new Face(blob, index))
+			using (var font = new Font(face))
+			{
+				Assert.Equal(new Point(), font.GetHorizontalGlyphOrigin(49));
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldGetVerticalGlyphOrigin()
+		{
+			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
+			using (var blob = tf.OpenStream(out var index).ToHarfBuzzBlob())
+			using (var face = new Face(blob, index))
+			using (var font = new Font(face))
+			{
+				Assert.Equal(new Point(557, 1022), font.GetVerticalGlyphOrigin(49));
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldGetHorizontalGlyphAdvance()
+		{
+			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
+			using (var blob = tf.OpenStream(out var index).ToHarfBuzzBlob())
+			using (var face = new Face(blob, index))
+			using (var font = new Font(face))
+			{
+				Assert.Equal(1114, font.GetHorizontalGlyphAdvance(49));
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldGetVerticalGlyphAdvance()
+		{
+			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
+			using (var blob = tf.OpenStream(out var index).ToHarfBuzzBlob())
+			using (var face = new Face(blob, index))
+			using (var font = new Font(face))
+			{
+				Assert.Equal(-2048, font.GetVerticalGlyphAdvance(49));
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldGetHorizontalGlyphAdvances()
+		{
+			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
+			using (var blob = tf.OpenStream(out var index).ToHarfBuzzBlob())
+			using (var face = new Face(blob, index))
+			using (var font = new Font(face))
+			{
+				Assert.Equal(new[] { -2048, 0, 0 }, font.GetHorizontalGlyphAdvances(new[] { 49, 50, 51 }));
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldGetVerticalGlyphAdvances()
+		{
+			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
+			using (var blob = tf.OpenStream(out var index).ToHarfBuzzBlob())
+			using (var face = new Face(blob, index))
+			using (var font = new Font(face))
+			{
+				Assert.Equal(new[] { -2048, 0, 0 }, font.GetVerticalGlyphAdvances(new[] { 49, 50, 51 }));
 			}
 		}
 	}

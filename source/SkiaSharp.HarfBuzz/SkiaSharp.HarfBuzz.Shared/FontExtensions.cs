@@ -24,7 +24,7 @@ namespace SkiaSharp.HarfBuzz
 				throw new ArgumentNullException(nameof(font));
 			}
 
-			font.Scale = new Scale(scale.Width, scale.Height);
+			font.Scale = new Point(scale.Width, scale.Height);
 		}
 	}
 }

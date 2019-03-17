@@ -101,7 +101,7 @@ namespace SkiaSharp.Tests
 
 				Assert.Equal(2, buffer.Length);
 
-				var utf32 = new[] { char.ConvertToUtf32("C", 0) }.AsSpan();
+				var utf32 = new[] { char.ConvertToUtf32("C", 0) };
 
 				buffer.AddUtf32(utf32);
 

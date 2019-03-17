@@ -264,9 +264,9 @@ namespace HarfBuzzSharp
 		}
 	}
 
-	public struct Scale
+	public readonly struct Point
 	{
-		public Scale (int x, int y)
+		public Point (int x, int y)
 		{
 			X = x;
 			Y = y;
@@ -278,7 +278,7 @@ namespace HarfBuzzSharp
 
 		public override bool Equals (object obj)
 		{
-			var other = (Scale)obj;
+			var other = (Point)obj;
 
 			return X == other.X && Y == other.Y;
 		}
