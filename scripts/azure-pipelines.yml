@@ -31,8 +31,6 @@ jobs:
       displayName: Build Native Android (Windows)
       vmImage: vs2017-win2016
       target: externals-android
-      demands:
-        - python
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_tizen_windows
@@ -40,7 +38,6 @@ jobs:
       vmImage: vs2017-win2016
       target: externals-tizen
       demands:
-        - python
         - java
   - template: azure-templates-bootstrapper.yml
     parameters:
@@ -48,16 +45,12 @@ jobs:
       displayName: Build Native UWP (Windows)
       vmImage: vs2017-win2016
       target: externals-uwp
-      demands:
-        - python
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_win32_windows
       displayName: Build Native Win32 (Windows)
       vmImage: vs2017-win2016
       target: externals-windows
-      demands:
-        - python
 
  # NATIVE JOBS - MAC
   - template: azure-templates-bootstrapper.yml
@@ -66,24 +59,18 @@ jobs:
       displayName: Build Native Android (macOS)
       vmImage: macos-10.13
       target: externals-android
-      demands:
-        - python
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_ios_macos
       displayName: Build Native iOS (macOS)
       vmImage: macos-10.13
       target: externals-ios
-      demands:
-        - python
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_macos_macos
       displayName: Build Native macOS (macOS)
       vmImage: macos-10.13
       target: externals-macos
-      demands:
-        - python
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_tizen_macos
@@ -91,7 +78,6 @@ jobs:
       vmImage: macos-10.13
       target: externals-tizen
       demands:
-        - python
         - java
   - template: azure-templates-bootstrapper.yml
     parameters:
@@ -99,24 +85,18 @@ jobs:
       displayName: Build Native tvOS (macOS)
       vmImage: macos-10.13
       target: externals-tvos
-      demands:
-        - python
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_watchos_macos
       displayName: Build Native watchOS (macOS)
       vmImage: macos-10.13
       target: externals-watchos
-      demands:
-        - python
 
  # NATIVE JOBS - LINUX
   - job: native_linux_linux
     displayName: Build Native Linux (Linux)
     pool:
       vmImage: ubuntu-16.04
-      demands:
-        - python
     container: ubuntu:14.04
     steps:
       - checkout: self
@@ -147,7 +127,6 @@ jobs:
       packages: $(TIZEN_LINUX_PACKAGES)
       target: externals-tizen
       demands:
-        - python
         - java
 
  # MANAGED JOBS
