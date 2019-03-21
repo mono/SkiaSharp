@@ -31,6 +31,8 @@ jobs:
       displayName: Build Native Android (Windows)
       vmImage: vs2017-win2016
       target: externals-android
+      preBuildSteps:
+        - powershell: 'cmd /c "where java"'
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_tizen_windows
@@ -39,18 +41,24 @@ jobs:
       target: externals-tizen
       demands:
         - java
+      preBuildSteps:
+        - powershell: 'cmd /c "where java"'
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_uwp_windows
       displayName: Build Native UWP (Windows)
       vmImage: vs2017-win2016
       target: externals-uwp
+      preBuildSteps:
+        - powershell: 'cmd /c "where java"'
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_win32_windows
       displayName: Build Native Win32 (Windows)
       vmImage: vs2017-win2016
       target: externals-windows
+      preBuildSteps:
+        - powershell: 'cmd /c "where java"'
 
  # NATIVE JOBS - MAC
   - template: azure-templates-bootstrapper.yml
