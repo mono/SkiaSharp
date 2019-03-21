@@ -121,7 +121,7 @@ namespace HarfBuzzSharp
 			var advances = new int[count];
 
 			fixed (int* firstAdvance = advances) {
-				HarfBuzzApi.hb_font_get_glyph_h_advances (Handle, count, firstGlyph, 0, (IntPtr)firstAdvance, 0);
+				HarfBuzzApi.hb_font_get_glyph_h_advances (Handle, count, firstGlyph, 4, (IntPtr)firstAdvance, 4);
 			}
 
 			return advances;
@@ -146,7 +146,7 @@ namespace HarfBuzzSharp
 			var advances = new int[count];
 
 			fixed (int* firstAdvance = advances) {
-				HarfBuzzApi.hb_font_get_glyph_v_advances (Handle, count, firstGlyph, 0, (IntPtr)firstAdvance, 0);
+				HarfBuzzApi.hb_font_get_glyph_v_advances (Handle, count, firstGlyph, 4, (IntPtr)firstAdvance, 4);
 			}
 
 			return advances;

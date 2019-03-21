@@ -118,8 +118,8 @@ namespace SkiaSharp.Tests
 				var advances = font.GetHorizontalGlyphAdvances(new[] { 49, 50, 51 });
 
 				Assert.Equal(1114, advances[0]);
-				Assert.Equal(0, advances[1]);
-				Assert.Equal(0, advances[2]);
+				Assert.Equal(514, advances[1]);
+				Assert.Equal(602, advances[2]);
 			}
 		}
 
@@ -132,8 +132,8 @@ namespace SkiaSharp.Tests
 				var advances = font.GetVerticalGlyphAdvances(new[] { 49, 50, 51 });
 
 				Assert.Equal(-2048, advances[0]);
-				Assert.Equal(0, advances[1]);
-				Assert.Equal(0, advances[2]);
+				Assert.Equal(-2048, advances[1]);
+				Assert.Equal(-2048, advances[2]);
 			}
 		}
 	}
