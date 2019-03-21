@@ -18,6 +18,8 @@ jobs:
     steps:
       - checkout: self
         submodules: recursive
+      - ${{ if contains(parameters.vmImage, 'win') }}:
+        - powershell: 'cmd /c "where java"'
       # install any packages on linux
       - ${{ if endsWith(parameters.name, '_linux') }}:
         - bash: |
