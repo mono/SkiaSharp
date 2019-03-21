@@ -1,14 +1,18 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+
 using HarfBuzzSharp;
+
 using SkiaSharp.HarfBuzz;
+
 using Xunit;
+
 using Buffer = HarfBuzzSharp.Buffer;
 
 namespace SkiaSharp.Tests
 {
-	public class HbBufferTests : SKTest
+	public class HbBufferTest : SKTest
 	{
 		private const string SimpleText = "1234";
 
@@ -17,8 +21,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldHaveCorrectContentType()
 		{
-			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
-			using (var blob = tf.OpenStream(out var index).ToHarfBuzzBlob())
+			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
+			using (var blob = typeface.OpenStream(out var index).ToHarfBuzzBlob())
 			using (var face = new Face(blob, index))
 			using (var font = new Font(face))
 			using (var buffer = new Buffer())
@@ -112,8 +116,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldThrowInvalidOperationExceptionOnAddUtfWhenBufferIsShaped()
 		{
-			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
-			using (var blob = tf.OpenStream(out var index).ToHarfBuzzBlob())
+			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
+			using (var blob = typeface.OpenStream(out var index).ToHarfBuzzBlob())
 			using (var face = new Face(blob, index))
 			using (var font = new Font(face))
 			using (var buffer = new Buffer())
@@ -149,8 +153,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldSerializeGlyphs()
 		{
-			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
-			using (var blob = tf.OpenStream(out var index).ToHarfBuzzBlob())
+			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
+			using (var blob = typeface.OpenStream(out var index).ToHarfBuzzBlob())
 			using (var face = new Face(blob, index))
 			using (var font = new Font(face))
 			using (var buffer = new Buffer())
@@ -236,8 +240,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldNormalize()
 		{
-			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
-			using (var blob = tf.OpenStream(out var index).ToHarfBuzzBlob())
+			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
+			using (var blob = typeface.OpenStream(out var index).ToHarfBuzzBlob())
 			using (var face = new Face(blob, index))
 			using (var font = new Font(face))
 			using (var buffer = new Buffer())

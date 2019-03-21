@@ -2,20 +2,25 @@
 
 using HarfBuzzSharp;
 
-using SkiaSharp.HarfBuzz;
-
 using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	public class HbFaceTests : SKTest
+	public class HbFaceTest : SKTest
 	{
+		private static readonly Blob s_blob;
+
+		static HbFaceTest()
+		{
+			s_blob = Blob.FromFile(Path.Combine(PathToFonts, "content-font.ttf"));
+			s_blob.MakeImmutable();
+		}
+
+
 		[SkippableFact]
 		public void ShouldHaveGlyphCount()
 		{
-			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
-			using (var blob = tf.OpenStream(out var index).ToHarfBuzzBlob())
-			using (var face = new Face(blob, index))
+			using (var face = new Face(s_blob, 0))
 			{
 				Assert.Equal(1147, face.GlyphCount);
 			}
@@ -24,9 +29,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldBeImmutable()
 		{
-			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
-			using (var blob = tf.OpenStream(out var index).ToHarfBuzzBlob())
-			using (var face = new Face(blob, index))
+			using (var face = new Face(s_blob, 0))
 			{
 				face.MakeImmutable();
 
@@ -37,9 +40,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldHaveIndex()
 		{
-			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
-			using (var blob = tf.OpenStream(out var index).ToHarfBuzzBlob())
-			using (var face = new Face(blob, index))
+			using (var face = new Face(s_blob, 0))
 			{
 				Assert.Equal(0, face.Index);
 			}
@@ -48,11 +49,28 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldHaveUnitsPerEm()
 		{
-			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
-			using (var blob = tf.OpenStream(out var index).ToHarfBuzzBlob())
-			using (var face = new Face(blob, index))
+			using (var face = new Face(s_blob, 0))
 			{
 				Assert.Equal(2048, face.UnitsPerEm);
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldHaveTableTags()
+		{
+			using (var face = new Face(s_blob, 0))
+			{
+				Assert.Equal(20, face.Tables.Count);
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldReferenceTable()
+		{
+			using (var face = new Face(s_blob, 0))
+			using (var tableBlob = face.ReferenceTable(new Tag("post")))
+			{
+				Assert.Equal(13378, tableBlob.Length);
 			}
 		}
 	}

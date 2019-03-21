@@ -2,6 +2,8 @@
 
 namespace HarfBuzzSharp
 {
+	using System.Collections.Generic;
+
 	public class Face : NativeObject
 	{
 		public Face (Blob blob, int index)
@@ -38,11 +40,28 @@ namespace HarfBuzzSharp
 			set => HarfBuzzApi.hb_face_set_glyph_count (Handle, value);
 		}
 
+		public unsafe IReadOnlyList<Tag> Tables {
+			get {
+				var tableCount = 0;
+				var count = HarfBuzzApi.hb_face_get_table_tags (Handle, 0, ref tableCount,  IntPtr.Zero);
+				var buffer = new Tag[count];
+				fixed (Tag* ptr = buffer) {
+					HarfBuzzApi.hb_face_get_table_tags (Handle, 0, ref count, (IntPtr)ptr);
+				}				
+				return buffer;
+			}
+		}
+
+		public Blob ReferenceTable (Tag table)
+		{
+			return new Blob (HarfBuzzApi.hb_face_reference_table (Handle, table));
+		}
+
 		public bool IsImmutable => HarfBuzzApi.hb_face_is_immutable (Handle);
 
 		public void MakeImmutable () => HarfBuzzApi.hb_face_make_immutable (Handle);
 
-		protected override void DisposeHandler()
+		protected override void DisposeHandler ()
 		{
 			if (Handle != IntPtr.Zero) {
 				HarfBuzzApi.hb_face_destroy (Handle);

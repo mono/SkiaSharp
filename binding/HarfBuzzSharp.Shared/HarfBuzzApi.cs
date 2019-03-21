@@ -47,9 +47,15 @@ namespace HarfBuzzSharp
 		public extern static hb_bool_t hb_blob_is_immutable (hb_blob_t blob);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int hb_blob_get_length (hb_blob_t blob);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static unsafe byte* hb_blob_get_data (hb_blob_t blob, out int length);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static hb_blob_t hb_blob_create_from_file ([MarshalAs (UnmanagedType.LPStr)] string file_name);
 
 		// hb_face_t
 
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int hb_face_count (hb_blob_t blob);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static hb_face_t hb_face_create (hb_blob_t blob, int index);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -70,6 +76,10 @@ namespace HarfBuzzSharp
 		public extern static void hb_face_make_immutable (hb_face_t face);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static hb_bool_t hb_face_is_immutable (hb_face_t face);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static hb_blob_t hb_face_reference_table (hb_face_t face, Tag tag);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int hb_face_get_table_tags (hb_face_t face, int start_offset, ref int table_count, IntPtr table_tags);
 
 		// hb_font_t
 

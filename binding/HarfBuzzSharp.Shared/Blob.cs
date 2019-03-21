@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
@@ -32,21 +33,57 @@ namespace HarfBuzzSharp
 		{
 		}
 
-		public bool IsImmutable {
-			get {
-				return HarfBuzzApi.hb_blob_is_immutable (Handle);
-			}
-		}
-
 		public int Length {
 			get {
 				return HarfBuzzApi.hb_blob_get_length (Handle);
 			}
 		}
 
+		public unsafe Stream Data {
+			get {
+				var dataPtr = HarfBuzzApi.hb_blob_get_data (Handle, out var length);
+				return new UnmanagedMemoryStream (dataPtr, length);
+			}
+		}
+
+		public int FaceCount {
+			get {
+				return HarfBuzzApi.hb_face_count (Handle);
+			}
+		}
+
+		public bool IsImmutable {
+			get {
+				return HarfBuzzApi.hb_blob_is_immutable (Handle);
+			}
+		}
+
+		public static Blob FromFile (string fileName)
+		{
+			if (!File.Exists (fileName)) {
+				throw new FileNotFoundException ();
+			}
+
+			var blob = HarfBuzzApi.hb_blob_create_from_file (fileName);
+
+			return new Blob (blob);
+		}
+
+		public static unsafe Blob FromStream (Stream stream)
+		{
+			using (var ms = new MemoryStream ()) {
+				stream.CopyTo (ms);
+				var data = ms.ToArray ();
+
+				fixed (byte* dataPtr = data) {
+					return new Blob (Create ((IntPtr)dataPtr, data.Length, MemoryMode.ReadOnly, null, null));
+				}
+			}
+		}
+
 		public void MakeImmutable () => HarfBuzzApi.hb_blob_make_immutable (Handle);
 
-		protected override void DisposeHandler()
+		protected override void DisposeHandler ()
 		{
 			if (Handle != IntPtr.Zero) {
 				HarfBuzzApi.hb_blob_destroy (Handle);
