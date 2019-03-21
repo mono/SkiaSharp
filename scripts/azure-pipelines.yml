@@ -37,6 +37,8 @@ jobs:
       displayName: Build Native Tizen (Windows)
       vmImage: vs2017-win2016
       target: externals-tizen
+      demands:
+        - java
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_uwp_windows
@@ -75,6 +77,8 @@ jobs:
       displayName: Build Native Tizen (macOS)
       vmImage: macos-10.13
       target: externals-tizen
+      demands:
+        - java
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_tvos_macos
@@ -122,6 +126,8 @@ jobs:
       vmImage: ubuntu-16.04
       packages: $(TIZEN_LINUX_PACKAGES)
       target: externals-tizen
+      demands:
+        - java
 
  # MANAGED JOBS
   - template: azure-templates-bootstrapper.yml
