@@ -13,7 +13,7 @@ namespace SkiaSharp.Tests
 
 		static HbFontTest()
 		{
-			s_blob = Blob.FromFile (Path.Combine(PathToFonts, "content-font.ttf"));
+			s_blob = Blob.FromFile(Path.Combine(PathToFonts, "content-font.ttf"));
 			s_blob.MakeImmutable();
 		}
 
@@ -115,7 +115,11 @@ namespace SkiaSharp.Tests
 			using (var face = new Face(s_blob, 0))
 			using (var font = new Font(face))
 			{
-				Assert.Equal(new[] { -2048, 0, 0 }, font.GetHorizontalGlyphAdvances(new[] { 49, 50, 51 }));
+				var advances = font.GetHorizontalGlyphAdvances(new[] { 49, 50, 51 });
+
+				Assert.Equal(1114, advances[0]);
+				Assert.Equal(0, advances[1]);
+				Assert.Equal(0, advances[2]);
 			}
 		}
 
@@ -125,7 +129,11 @@ namespace SkiaSharp.Tests
 			using (var face = new Face(s_blob, 0))
 			using (var font = new Font(face))
 			{
-				Assert.Equal(new[] { -2048, 0, 0 }, font.GetVerticalGlyphAdvances(new[] { 49, 50, 51 }));
+				var advances = font.GetVerticalGlyphAdvances(new[] { 49, 50, 51 });
+
+				Assert.Equal(-2048, advances[0]);
+				Assert.Equal(0, advances[1]);
+				Assert.Equal(0, advances[2]);
 			}
 		}
 	}

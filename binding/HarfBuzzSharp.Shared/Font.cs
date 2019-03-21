@@ -102,21 +102,21 @@ namespace HarfBuzzSharp
 
 		public int GetVerticalGlyphAdvance (uint glyph) => HarfBuzzApi.hb_font_get_glyph_v_advance (Handle, glyph);
 
-		public unsafe IReadOnlyList<int> GetHorizontalGlyphAdvances (ReadOnlySpan<int> glyphs)
+		public unsafe ReadOnlySpan<int> GetHorizontalGlyphAdvances (ReadOnlySpan<int> glyphs)
 		{
 			fixed (int* firstGlyph = glyphs) {
-				return GetVerticalGlyphAdvances (glyphs.Length, (IntPtr)firstGlyph);
+				return GetHorizontalGlyphAdvances (glyphs.Length, (IntPtr)firstGlyph);
 			}
 		}
 
-		public unsafe IReadOnlyList<int> GetHorizontalGlyphAdvances (ReadOnlySpan<uint> glyphs)
+		public unsafe ReadOnlySpan<int> GetHorizontalGlyphAdvances (ReadOnlySpan<uint> glyphs)
 		{
 			fixed (uint* firstGlyph = glyphs) {
-				return GetVerticalGlyphAdvances (glyphs.Length, (IntPtr)firstGlyph);
+				return GetHorizontalGlyphAdvances (glyphs.Length, (IntPtr)firstGlyph);
 			}
 		}
 
-		public unsafe IReadOnlyList<int> GetHorizontalGlyphAdvances (int count, IntPtr firstGlyph)
+		public unsafe ReadOnlySpan<int> GetHorizontalGlyphAdvances (int count, IntPtr firstGlyph)
 		{
 			var advances = new int[count];
 
@@ -127,21 +127,21 @@ namespace HarfBuzzSharp
 			return advances;
 		}
 
-		public unsafe IReadOnlyList<int> GetVerticalGlyphAdvances (ReadOnlySpan<int> glyphs)
+		public unsafe ReadOnlySpan<int> GetVerticalGlyphAdvances (ReadOnlySpan<int> glyphs)
 		{
 			fixed (int* firstGlyph = glyphs) {
 				return GetVerticalGlyphAdvances (glyphs.Length, (IntPtr)firstGlyph);
 			}
 		}
 
-		public unsafe IReadOnlyList<int> GetVerticalGlyphAdvances (ReadOnlySpan<uint> glyphs)
+		public unsafe ReadOnlySpan<int> GetVerticalGlyphAdvances (ReadOnlySpan<uint> glyphs)
 		{
 			fixed (uint* firstGlyph = glyphs) {
 				return GetVerticalGlyphAdvances (glyphs.Length, (IntPtr)firstGlyph);
 			}
 		}
 
-		public unsafe IReadOnlyList<int> GetVerticalGlyphAdvances (int count, IntPtr firstGlyph)
+		public unsafe ReadOnlySpan<int> GetVerticalGlyphAdvances (int count, IntPtr firstGlyph)
 		{
 			var advances = new int[count];
 
