@@ -37,9 +37,17 @@ jobs:
           - powershell: .\scripts\install-android-ndk.ps1
             displayName: Install the Android NDK
         # install tizen
-        - ${{ if contains(parameters.name, '_tizen_') }}:
+      - ${{ if contains(parameters.name, '_tizen_') }}:
+        - ${{ if not(contains(parameters.vmImage, 'win')) }}:
           - powershell: .\scripts\install-tizen.ps1
             displayName: Install the Tizen SDK
+        - ${{ if contains(parameters.vmImage, 'win') }}:
+          - powershell: .\scripts\install-openjdk.ps1
+            displayName: Install the OpenJDK
+          - powershell: .\scripts\install-tizen.ps1
+            displayName: Install the Tizen SDK
+            env:
+              JAVA_HOME: $(HOME)/openjdk/jdk-10.0.2
       # switch to the correct mono version on mac
       - ${{ if contains(parameters.vmImage, 'mac') }}:
         - bash: sudo $AGENT_HOMEDIRECTORY/scripts/select-xamarin-sdk.sh $(MONO_VERSION)

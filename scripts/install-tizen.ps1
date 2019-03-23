@@ -1,5 +1,5 @@
 Param(
-    [string] $version = "2.4"
+    [string] $version = "3.2"
 )
 
 $errorActionPreference = 'Stop'
@@ -20,6 +20,14 @@ $tsTemp = "$HOME/tizen-temp"
 $url = "http://download.tizen.org/sdk/Installer/tizen-studio_${version}/web-cli_Tizen_Studio_${version}_${platform}.${ext}"
 $install = "$tsTemp/tizen-install.$ext"
 $packages = "MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment"
+
+# make sure that JAVA_HOME/bin is in the PATH
+if ($env:JAVA_HOME) {
+    $javaBin = (Join-Path $env:JAVA_HOME "bin") + ";"
+    if(-not $env:PATH.Contains($javaBin)) {
+        $env:PATH = $javaBin + $env:PATH
+    }
+}
 
 # download
 Write-Host "Downloading SDK..."
