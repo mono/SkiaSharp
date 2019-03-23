@@ -20,6 +20,7 @@ jobs:
         submodules: recursive
       - ${{ if contains(parameters.vmImage, 'win') }}:
         - powershell: 'cmd /c "where java"'
+        - powershell: 'cmd /c "java -version"'
       # install any packages on linux
       - ${{ if endsWith(parameters.name, '_linux') }}:
         - bash: |
