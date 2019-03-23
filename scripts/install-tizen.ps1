@@ -44,7 +44,7 @@ Write-Host "Installing SDK to '$ts'..."
 if ($IsMacOS -or $IsLinux) {
     & "bash" "$install" --accept-license --no-java-check "$ts"
 } else {
-    & "$install" --accept-license --no-java-check "$ts"
+    & "$install" --accept-license "$ts"
 }
 
 # install packages
