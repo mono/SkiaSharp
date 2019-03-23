@@ -25,9 +25,14 @@ $packages = "MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment"
 if ($env:JAVA_HOME) {
     $javaBin = (Join-Path $env:JAVA_HOME "bin") + ";"
     if(-not $env:PATH.Contains($javaBin)) {
+        Write-Host "Adding $javaBin to PATH..."
         $env:PATH = $javaBin + $env:PATH
     }
 }
+
+# log the Java version
+Write-Host "Using Java version:"
+& "java" -version
 
 # download
 Write-Host "Downloading SDK to '$install'..."
