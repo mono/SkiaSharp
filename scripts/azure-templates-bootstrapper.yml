@@ -47,7 +47,7 @@ jobs:
           - powershell: .\scripts\install-tizen.ps1
             displayName: Install the Tizen SDK
             env:
-              JAVA_HOME: $(HOME)/openjdk/jdk-10.0.2
+              JAVA_HOME: $(USERPROFILE)/openjdk/jdk-10.0.2
       # switch to the correct mono version on mac
       - ${{ if contains(parameters.vmImage, 'mac') }}:
         - bash: sudo $AGENT_HOMEDIRECTORY/scripts/select-xamarin-sdk.sh $(MONO_VERSION)
