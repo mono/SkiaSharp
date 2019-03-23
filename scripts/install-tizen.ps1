@@ -23,10 +23,10 @@ $packages = "MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment"
 
 # make sure that JAVA_HOME/bin is in the PATH
 if ($env:JAVA_HOME) {
-    $javaBin = (Join-Path $env:JAVA_HOME "bin") + ";"
+    $javaBin = Join-Path "$env:JAVA_HOME" "bin"
     if(-not $env:PATH.Contains($javaBin)) {
         Write-Host "Adding $javaBin to PATH..."
-        $env:PATH = $javaBin + $env:PATH
+        $env:PATH = $javaBin + [System.IO.Path]::PathSeparator + $env:PATH
     }
 }
 
