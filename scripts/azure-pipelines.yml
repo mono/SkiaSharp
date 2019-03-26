@@ -31,12 +31,12 @@ jobs:
       displayName: Build Native Android (Windows)
       vmImage: vs2017-win2016
       target: externals-android
-  - template: azure-templates-bootstrapper.yml
-    parameters:
-      name: native_tizen_windows
-      displayName: Build Native Tizen (Windows)
-      vmImage: vs2017-win2016
-      target: externals-tizen
+  # - template: azure-templates-bootstrapper.yml
+  #   parameters:
+  #     name: native_tizen_windows
+  #     displayName: Build Native Tizen (Windows)
+  #     vmImage: vs2017-win2016
+  #     target: externals-tizen
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_uwp_windows
@@ -132,7 +132,8 @@ jobs:
       target: libs-only
       dependsOn:
         - native_android_windows
-        - native_tizen_windows
+        # - native_tizen_windows
+        - native_tizen_linux
         - native_uwp_windows
         - native_win32_windows
   - template: azure-templates-bootstrapper.yml
