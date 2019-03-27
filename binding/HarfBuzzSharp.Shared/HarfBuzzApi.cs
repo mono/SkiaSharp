@@ -2,13 +2,13 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using hb_blob_t = System.IntPtr;
+using hb_bool_t = System.Boolean;
 using hb_buffer_t = System.IntPtr;
 using hb_codepoint_t = System.UInt32;
 using hb_face_t = System.IntPtr;
 using hb_font_t = System.IntPtr;
 using hb_position_t = System.Int32;
 using hb_script_t = System.UInt32;
-using hb_bool_t = System.Boolean;
 using hb_unicode_funcs_t = System.IntPtr;
 
 namespace HarfBuzzSharp
@@ -47,9 +47,15 @@ namespace HarfBuzzSharp
 		public extern static hb_bool_t hb_blob_is_immutable (hb_blob_t blob);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int hb_blob_get_length (hb_blob_t blob);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static unsafe byte* hb_blob_get_data (hb_blob_t blob, out int length);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static hb_blob_t hb_blob_create_from_file ([MarshalAs (UnmanagedType.LPStr)] string file_name);
 
 		// hb_face_t
 
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int hb_face_count (hb_blob_t blob);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static hb_face_t hb_face_create (hb_blob_t blob, int index);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -70,6 +76,10 @@ namespace HarfBuzzSharp
 		public extern static void hb_face_make_immutable (hb_face_t face);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static hb_bool_t hb_face_is_immutable (hb_face_t face);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static hb_blob_t hb_face_reference_table (hb_face_t face, Tag tag);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int hb_face_get_table_tags (hb_face_t face, int start_offset, ref int table_count, IntPtr table_tags);
 
 		// hb_font_t
 
@@ -93,6 +103,14 @@ namespace HarfBuzzSharp
 		public extern static bool hb_font_get_glyph_extents (hb_font_t font, hb_codepoint_t glyph, out GlyphExtents extents);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static bool hb_font_get_glyph (hb_font_t font, hb_codepoint_t unicode, hb_codepoint_t variation_selector, out hb_codepoint_t glyph);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void hb_font_get_glyph_h_advances (hb_font_t font, int count, IntPtr first_glyph, uint glyph_stride, IntPtr first_advance, uint advance_stride);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void hb_font_get_glyph_v_advances (hb_font_t font, int count, IntPtr first_glyph, uint glyph_stride, IntPtr first_advance, uint advance_stride);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static hb_bool_t hb_font_get_glyph_h_origin (hb_font_t font, hb_codepoint_t glyph, out hb_position_t x, out hb_position_t y);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static hb_bool_t hb_font_get_glyph_v_origin (hb_font_t font, hb_codepoint_t glyph, out hb_position_t x, out hb_position_t y);
 
 		// hb_font_t (OT)
 
@@ -222,12 +240,12 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static bool hb_shape_full (hb_font_t font, hb_buffer_t buffer, IntPtr features, int num_features, IntPtr shaper_list);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static IntPtr hb_shape_list_shapers();
+		public extern static IntPtr hb_shape_list_shapers ();
 
 		// hb_language
 
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern IntPtr hb_language_from_string (byte[] str, int len);
+		public static extern IntPtr hb_language_from_string ([MarshalAs (UnmanagedType.LPStr)] string str, int len);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern IntPtr hb_language_to_string (IntPtr language);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -240,11 +258,15 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void hb_feature_to_string (ref Feature feature,
 														[MarshalAs (UnmanagedType.LPStr)] StringBuilder buf, uint size);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern hb_bool_t hb_feature_from_string ([MarshalAs (UnmanagedType.LPStr)] string str, int len, out Feature feature);
 
 		// hb_script
 
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern Direction hb_script_get_horizontal_direction (hb_script_t script);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern hb_script_t hb_script_from_string ([MarshalAs (UnmanagedType.LPStr)] string str, int len);
 
 		// hb_unicode
 
@@ -259,14 +281,14 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern hb_bool_t hb_unicode_funcs_is_immutable (hb_unicode_funcs_t ufuncs);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe UnicodeCombiningClass hb_unicode_combining_class (
+		public static extern UnicodeCombiningClass hb_unicode_combining_class (
 			hb_unicode_funcs_t ufuncs,
 			hb_codepoint_t unicode);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe UnicodeGeneralCategory hb_unicode_general_category (
+		public static extern UnicodeGeneralCategory hb_unicode_general_category (
 			hb_unicode_funcs_t ufuncs,
 			hb_codepoint_t unicode);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern unsafe hb_script_t hb_unicode_script (hb_unicode_funcs_t ufuncs, hb_codepoint_t unicode);
+		public static extern hb_script_t hb_unicode_script (hb_unicode_funcs_t ufuncs, hb_codepoint_t unicode);
 	}
 }

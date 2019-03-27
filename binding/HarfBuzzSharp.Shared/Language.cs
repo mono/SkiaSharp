@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace HarfBuzzSharp
 {
@@ -16,12 +15,16 @@ namespace HarfBuzzSharp
 
 		public Language (string name) : base (IntPtr.Zero)
 		{
-			var bytes = Encoding.UTF8.GetBytes (name);
-			Handle = HarfBuzzApi.hb_language_from_string (bytes, bytes.Length);
+			Handle = HarfBuzzApi.hb_language_from_string (name, -1);
+			Name = Marshal.PtrToStringAnsi (HarfBuzzApi.hb_language_to_string (Handle));
 		}
 
-		public string Name => Marshal.PtrToStringAnsi (HarfBuzzApi.hb_language_to_string (Handle));
+		public string Name { get; }
 
 		public override string ToString () => Name;
+
+		protected bool Equals (Language other) => string.Equals (Name, other.Name);
+
+		public override int GetHashCode () => (Name != null ? Name.GetHashCode () : 0);
 	}
 }

@@ -25,7 +25,7 @@ namespace SkiaSharp.HarfBuzz
 
 				font = new Font(face)
 				{
-					Scale = new Scale(FONT_SIZE_SCALE, FONT_SIZE_SCALE)
+					Scale = new Point(FONT_SIZE_SCALE, FONT_SIZE_SCALE)
 				};
 
 				font.SetFunctionsOpenType();

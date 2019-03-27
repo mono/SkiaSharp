@@ -337,17 +337,23 @@
 			_tag = tag;
 		}
 
-		public Script (string script)
-		{
-			_tag = new Tag (script);
-		}
-
 		public Direction HorizontalDirection => HarfBuzzApi.hb_script_get_horizontal_direction (_tag);
+
+		public static Script FromString (string s)
+		{
+			return HarfBuzzApi.hb_script_from_string (s, -1);
+		}
 
 		public override string ToString () => _tag.ToString();
 
 		public static implicit operator uint (Script script) => script._tag;
 
 		public static implicit operator Script (uint tag) => new Script (tag);
+
+		public override bool Equals (object obj) => base.Equals (obj);
+
+		public bool Equals (Script other) => _tag.Equals (other._tag);
+
+		public override int GetHashCode() => _tag.GetHashCode();
 	}
 }

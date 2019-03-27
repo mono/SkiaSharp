@@ -83,7 +83,7 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		public unsafe void Add (uint codepoint, uint cluster)
+		public void Add (uint codepoint, uint cluster)
 		{
 			if (Length != 0 && ContentType != ContentType.Unicode) {
 				throw new InvalidOperationException ("Non empty buffer's ContentType must be of type Unicode.");
@@ -96,7 +96,7 @@ namespace HarfBuzzSharp
 			HarfBuzzApi.hb_buffer_add (Handle, codepoint, cluster);
 		}
 
-		public unsafe void Add (int codepoint, int cluster)
+		public void Add (int codepoint, int cluster)
 		{
 			if (codepoint < 0) {
 				throw new ArgumentOutOfRangeException (nameof (codepoint), "Codepoint must be non negative.");
@@ -374,13 +374,11 @@ namespace HarfBuzzSharp
 
 			HarfBuzzApi.hb_buffer_deserialize_glyphs (Handle, data, -1, out _, font?.Handle ?? IntPtr.Zero, format);
 		}
-		protected override void Dispose (bool disposing)
+		protected override void DisposeHandler()
 		{
 			if (Handle != IntPtr.Zero) {
 				HarfBuzzApi.hb_buffer_destroy (Handle);
 			}
-
-			base.Dispose (disposing);
 		}
 	}
 }
