@@ -23,10 +23,8 @@ namespace SkiaSharp.HarfBuzz
 				face.Index = index;
 				face.UnitsPerEm = Typeface.UnitsPerEm;
 
-				font = new Font(face)
-				{
-					Scale = new Point(FONT_SIZE_SCALE, FONT_SIZE_SCALE)
-				};
+				font = new Font(face);
+				font.SetScale(FONT_SIZE_SCALE, FONT_SIZE_SCALE);
 
 				font.SetFunctionsOpenType();
 			}
@@ -42,10 +40,8 @@ namespace SkiaSharp.HarfBuzz
 			buffer?.Dispose();
 		}
 
-		public Result Shape(Buffer buffer, SKPaint paint)
-		{
-			return Shape(buffer, 0, 0, paint);
-		}
+		public Result Shape(Buffer buffer, SKPaint paint) =>
+			Shape(buffer, 0, 0, paint);
 
 		public Result Shape(Buffer buffer, float xOffset, float yOffset, SKPaint paint)
 		{
@@ -93,10 +89,8 @@ namespace SkiaSharp.HarfBuzz
 			return new Result(codepoints, clusters, points);
 		}
 
-		public Result Shape(string text, SKPaint paint)
-		{
-			return Shape(text, 0, 0, paint);
-		}
+		public Result Shape(string text, SKPaint paint) =>
+			Shape(text, 0, 0, paint);
 
 		public Result Shape(string text, float xOffset, float yOffset, SKPaint paint)
 		{

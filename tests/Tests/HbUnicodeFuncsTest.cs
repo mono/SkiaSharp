@@ -22,7 +22,7 @@ namespace SkiaSharp.Tests
 			{
 				var script = unicodeFuncs.GetScript('A');
 
-				Assert.Equal(Script.LATIN, script);
+				Assert.Equal(Script.Latin, script);
 			}
 		}
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable IDE1006 // Naming Styles
+using System;
 using System.Runtime.InteropServices;
 using System.Text;
 using hb_blob_t = System.IntPtr;
@@ -130,33 +131,13 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void hb_buffer_add (hb_buffer_t buffer, hb_codepoint_t codepoint, hb_codepoint_t cluster);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_buffer_add_utf8 (
-			hb_buffer_t buffer,
-			IntPtr text,
-			int text_length,
-			int item_offset,
-			int item_length);
+		public extern static void hb_buffer_add_utf8 (hb_buffer_t buffer, IntPtr text, int text_length, int item_offset, int item_length);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_buffer_add_utf16 (
-			hb_buffer_t buffer,
-			IntPtr text,
-			int text_length,
-			int item_offset,
-			int item_length);
+		public extern static void hb_buffer_add_utf16 (hb_buffer_t buffer, IntPtr text, int text_length, int item_offset, int item_length);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_buffer_add_utf32 (
-			hb_buffer_t buffer,
-			IntPtr text,
-			int text_length,
-			int item_offset,
-			int item_length);
+		public extern static void hb_buffer_add_utf32 (hb_buffer_t buffer, IntPtr text, int text_length, int item_offset, int item_length);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_buffer_add_codepoints (
-			hb_buffer_t buffer,
-			IntPtr text,
-			int text_length,
-			int item_offset,
-			int item_length);
+		public extern static void hb_buffer_add_codepoints (hb_buffer_t buffer, IntPtr text, int text_length, int item_offset, int item_length);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_buffer_guess_segment_properties (hb_buffer_t buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -210,24 +191,9 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void hb_buffer_reverse_clusters (hb_buffer_t buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern int hb_buffer_serialize_glyphs (
-			IntPtr buffer,
-			int start,
-			int end,
-			IntPtr buf,
-			int buf_size,
-			out int buf_consumed,
-			IntPtr font,
-			SerializeFormat format,
-			SerializeFlag flags);
+		public static extern int hb_buffer_serialize_glyphs (IntPtr buffer, int start, int end, IntPtr buf, int buf_size, out int buf_consumed, IntPtr font, SerializeFormat format, SerializeFlag flags);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern bool hb_buffer_deserialize_glyphs (
-			IntPtr buffer,
-			[MarshalAs (UnmanagedType.LPStr)] string buf,
-			int buf_len,
-			out IntPtr end_ptr,
-			IntPtr font,
-			SerializeFormat format);
+		public static extern bool hb_buffer_deserialize_glyphs (IntPtr buffer, [MarshalAs (UnmanagedType.LPStr)] string buf, int buf_len, out IntPtr end_ptr, IntPtr font, SerializeFormat format);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void hb_buffer_set_unicode_funcs (hb_buffer_t buffer, hb_unicode_funcs_t unicode_funcs);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -256,8 +222,7 @@ namespace HarfBuzzSharp
 		// hb_feature
 
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern void hb_feature_to_string (ref Feature feature,
-														[MarshalAs (UnmanagedType.LPStr)] StringBuilder buf, uint size);
+		public static extern void hb_feature_to_string (ref Feature feature, [MarshalAs (UnmanagedType.LPStr)] StringBuilder buf, uint size);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern hb_bool_t hb_feature_from_string ([MarshalAs (UnmanagedType.LPStr)] string str, int len, out Feature feature);
 
@@ -281,14 +246,11 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern hb_bool_t hb_unicode_funcs_is_immutable (hb_unicode_funcs_t ufuncs);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern UnicodeCombiningClass hb_unicode_combining_class (
-			hb_unicode_funcs_t ufuncs,
-			hb_codepoint_t unicode);
+		public static extern UnicodeCombiningClass hb_unicode_combining_class (hb_unicode_funcs_t ufuncs, hb_codepoint_t unicode);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern UnicodeGeneralCategory hb_unicode_general_category (
-			hb_unicode_funcs_t ufuncs,
-			hb_codepoint_t unicode);
+		public static extern UnicodeGeneralCategory hb_unicode_general_category (hb_unicode_funcs_t ufuncs, hb_codepoint_t unicode);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern hb_script_t hb_unicode_script (hb_unicode_funcs_t ufuncs, hb_codepoint_t unicode);
 	}
 }
+#pragma warning restore IDE1006 // Naming Styles

@@ -6,19 +6,19 @@ namespace HarfBuzzSharp
 {
 	public class NativeObject : IDisposable
 	{
-		private readonly bool _zero;
+		private bool isDisposed;
+		private readonly bool zero;
 
-		private bool _isDisposed;
-
-		internal NativeObject (bool zero = true)
-			: this (IntPtr.Zero, zero)
-		{
-		}
-
-		internal NativeObject (IntPtr handle, bool zero = true)
+		internal NativeObject (IntPtr handle)
 		{
 			Handle = handle;
-			_zero = zero;
+			zero = true;
+		}
+
+		internal NativeObject (IntPtr handle, bool zero)
+		{
+			Handle = handle;
+			this.zero = zero;
 		}
 
 		~NativeObject ()
@@ -27,6 +27,32 @@ namespace HarfBuzzSharp
 		}
 
 		public virtual IntPtr Handle { get; protected set; }
+
+		// Dispose method - always called
+		protected virtual void Dispose (bool disposing)
+		{
+			if (isDisposed) {
+				return;
+			}
+
+			isDisposed = true;
+
+			if (!disposing) {
+				return;
+			}
+
+			DisposeHandler ();
+
+			if (zero) {
+				Handle = IntPtr.Zero;
+			}
+		}
+
+		// Intended to be overridden - always safe to use
+		// since it will never be called unless applicable
+		protected virtual void DisposeHandler ()
+		{
+		}
 
 		public void Dispose ()
 		{
@@ -37,7 +63,7 @@ namespace HarfBuzzSharp
 		internal static int SizeOf<T> ()
 		{
 #if WINDOWS_UWP || NET_STANDARD
-			return Marshal.SizeOf<T>();
+			return Marshal.SizeOf<T> ();
 #else
 			return Marshal.SizeOf (typeof (T));
 #endif
@@ -64,37 +90,6 @@ namespace HarfBuzzSharp
 					intPtr = new IntPtr (intPtr.ToInt64 () + IntPtr.Size);
 					ptr = Marshal.ReadIntPtr (intPtr);
 				}
-			}
-		}
-
-		/// <summary>
-		///     Intended to be overridden - always safe to use
-		///     since it will never be called unless applicable
-		/// </summary>
-		protected virtual void DisposeHandler ()
-		{
-		}
-
-		/// <summary>
-		///     Dispose method - always called
-		/// </summary>
-		/// <param name="isDisposing"></param>
-		private void Dispose (bool isDisposing)
-		{
-			if (_isDisposed) {
-				return;
-			}
-
-			_isDisposed = true;
-
-			if (!isDisposing) {
-				return;
-			}
-
-			DisposeHandler ();
-
-			if (_zero) {
-				Handle = IntPtr.Zero;
 			}
 		}
 	}

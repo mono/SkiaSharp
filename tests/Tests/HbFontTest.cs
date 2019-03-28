@@ -65,7 +65,9 @@ namespace SkiaSharp.Tests
 			using (var face = new Face(s_blob, 0))
 			using (var font = new Font(face))
 			{
-				Assert.Equal(new Point(2048, 2048), font.Scale);
+				font.GetScale(out var xScale, out var yScale);
+				Assert.Equal(2048, xScale);
+				Assert.Equal(2048, yScale);
 			}
 		}
 
@@ -75,7 +77,9 @@ namespace SkiaSharp.Tests
 			using (var face = new Face(s_blob, 0))
 			using (var font = new Font(face))
 			{
-				Assert.Equal(new Point(), font.GetHorizontalGlyphOrigin(49));
+				font.GetHorizontalGlyphOrigin(49, out var xOrigin, out var yOrigin);
+				Assert.Equal(0, xOrigin);
+				Assert.Equal(0, yOrigin);
 			}
 		}
 
@@ -85,7 +89,9 @@ namespace SkiaSharp.Tests
 			using (var face = new Face(s_blob, 0))
 			using (var font = new Font(face))
 			{
-				Assert.Equal(new Point(557, 1022), font.GetVerticalGlyphOrigin(49));
+				font.GetVerticalGlyphOrigin(49, out var xOrigin, out var yOrigin);
+				Assert.Equal(557, xOrigin);
+				Assert.Equal(1022, yOrigin);
 			}
 		}
 

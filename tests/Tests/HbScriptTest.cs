@@ -11,7 +11,7 @@ namespace SkiaSharp.Tests
 		{
 			var script = Script.FromString("Latn");
 
-			Assert.Equal(Script.LATIN, script);
+			Assert.Equal(Script.Latin, script);
 		}
 	}
 }

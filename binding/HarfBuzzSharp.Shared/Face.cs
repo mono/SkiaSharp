@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace HarfBuzzSharp
 {
-	using System.Collections.Generic;
-
 	public class Face : NativeObject
 	{
+		public Face (Blob blob, uint index)
+			: this (blob, (int)index)
+		{
+		}
+
 		public Face (Blob blob, int index)
 			: this (IntPtr.Zero)
 		{
@@ -43,19 +47,17 @@ namespace HarfBuzzSharp
 		public unsafe IReadOnlyList<Tag> Tables {
 			get {
 				var tableCount = 0;
-				var count = HarfBuzzApi.hb_face_get_table_tags (Handle, 0, ref tableCount,  IntPtr.Zero);
+				var count = HarfBuzzApi.hb_face_get_table_tags (Handle, 0, ref tableCount, IntPtr.Zero);
 				var buffer = new Tag[count];
 				fixed (Tag* ptr = buffer) {
 					HarfBuzzApi.hb_face_get_table_tags (Handle, 0, ref count, (IntPtr)ptr);
-				}				
+				}
 				return buffer;
 			}
 		}
 
-		public Blob ReferenceTable (Tag table)
-		{
-			return new Blob (HarfBuzzApi.hb_face_reference_table (Handle, table));
-		}
+		public Blob ReferenceTable (Tag table) =>
+			new Blob (HarfBuzzApi.hb_face_reference_table (Handle, table));
 
 		public bool IsImmutable => HarfBuzzApi.hb_face_is_immutable (Handle);
 

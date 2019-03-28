@@ -97,6 +97,15 @@ public float Transform (float x);
 ```
 
 
+#### Type Changed: SkiaSharp.SKMatrix
+
+Added constructor:
+
+```csharp
+public SKMatrix (float scaleX, float skewX, float transX, float skewY, float scaleY, float transY, float persp0, float persp1, float persp2);
+```
+
+
 #### Type Changed: SkiaSharp.SKPaint
 
 Added methods:
@@ -116,6 +125,7 @@ public SKPath GetTextPath (IntPtr buffer, int length, SKPoint[] points);
 public SKPath GetTextPath (IntPtr buffer, int length, float x, float y);
 public float MeasureText (IntPtr buffer, int length);
 public float MeasureText (IntPtr buffer, int length, ref SKRect bounds);
+public void Reset ();
 ```
 
 
@@ -125,6 +135,23 @@ Added method:
 
 ```csharp
 public SKDrawable EndRecordingAsDrawable ();
+```
+
+
+#### Type Changed: SkiaSharp.SKRegion
+
+Added constructors:
+
+```csharp
+public SKRegion (SKPath path);
+public SKRegion (SKRectI rect);
+```
+
+Added methods:
+
+```csharp
+public bool Intersects (SKPath path);
+public bool Op (SKPath path, SKRegionOperation op);
 ```
 
 

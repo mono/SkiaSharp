@@ -4,13 +4,11 @@ namespace HarfBuzzSharp
 {
 	public class UnicodeFunctions : NativeObject
 	{
-		private static readonly IntPtr _default = HarfBuzzApi.hb_unicode_funcs_get_default ();
+		private static readonly IntPtr defaultHandle = HarfBuzzApi.hb_unicode_funcs_get_default ();
+		private static readonly IntPtr emptyHandle = HarfBuzzApi.hb_unicode_funcs_get_empty ();
 
-		private static readonly IntPtr _empty = HarfBuzzApi.hb_unicode_funcs_get_empty ();
-
-		public static UnicodeFunctions Default => new UnicodeFunctions (_default);
-
-		public static UnicodeFunctions Empty => new UnicodeFunctions (_empty);
+		public static UnicodeFunctions Default => new UnicodeFunctions (defaultHandle);
+		public static UnicodeFunctions Empty => new UnicodeFunctions (emptyHandle);
 
 		internal UnicodeFunctions (IntPtr handle)
 			: base (handle)
@@ -58,9 +56,10 @@ namespace HarfBuzzSharp
 
 		protected override void DisposeHandler ()
 		{
-			if (Handle == _default || Handle == _empty) {
+			if (Handle == defaultHandle || Handle == emptyHandle) {
 				return;
 			}
+
 			if (Handle != IntPtr.Zero) {
 				HarfBuzzApi.hb_unicode_funcs_destroy (Handle);
 			}

@@ -8,15 +8,14 @@ namespace HarfBuzzSharp
 	{
 		public const int DefaultReplacementCodepoint = '\uFFFD';
 
-		public Buffer ()
-			: this (HarfBuzzApi.hb_buffer_create ())
-		{
-		}
-
 		internal Buffer (IntPtr handle)
 			: base (handle)
 		{
-			Language = Language.Default;
+		}
+
+		public Buffer ()
+			: this (HarfBuzzApi.hb_buffer_create ())
+		{
 		}
 
 		public ContentType ContentType {
@@ -69,18 +68,21 @@ namespace HarfBuzzSharp
 			set => HarfBuzzApi.hb_buffer_set_unicode_funcs (Handle, value.Handle);
 		}
 
-		public unsafe ReadOnlySpan<GlyphInfo> GlyphInfos {
-			get {
-				var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_infos (Handle, out var length);
-				return new ReadOnlySpan<GlyphInfo> (infoPtrs, length);
-			}
-		}
+		public unsafe GlyphInfo[] GlyphInfos => GetGlyphInfoReferences ().ToArray ();
 
-		public unsafe ReadOnlySpan<GlyphPosition> GlyphPositions {
-			get {
-				var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_positions (Handle, out var length);
-				return new ReadOnlySpan<GlyphPosition> (infoPtrs, length);
+		public unsafe GlyphPosition[] GlyphPositions => GetGlyphPositionReferences ().ToArray ();
+
+		public void Add (int codepoint, int cluster)
+		{
+			if (codepoint < 0) {
+				throw new ArgumentOutOfRangeException (nameof (codepoint), "Codepoint must be non negative.");
 			}
+
+			if (cluster < 0) {
+				throw new ArgumentOutOfRangeException (nameof (codepoint), "Cluster must be non negative.");
+			}
+
+			Add ((uint)codepoint, (uint)cluster);
 		}
 
 		public void Add (uint codepoint, uint cluster)
@@ -96,48 +98,29 @@ namespace HarfBuzzSharp
 			HarfBuzzApi.hb_buffer_add (Handle, codepoint, cluster);
 		}
 
-		public void Add (int codepoint, int cluster)
-		{
-			if (codepoint < 0) {
-				throw new ArgumentOutOfRangeException (nameof (codepoint), "Codepoint must be non negative.");
-			}
+		public void AddUtf8 (string utf8text) => AddUtf8 (Encoding.UTF8.GetBytes (utf8text), 0, -1);
 
-			if (cluster < 0) {
-				throw new ArgumentOutOfRangeException (nameof (codepoint), "Cluster must be non negative.");
-			}
+		public void AddUtf8 (byte[] bytes) => AddUtf8 (bytes, 0, -1);
 
-			if (Length != 0 && ContentType != ContentType.Unicode) {
-				throw new InvalidOperationException ("Non empty buffer's ContentType must be of type Unicode.");
-			}
-
-			if (ContentType == ContentType.Glyphs) {
-				throw new InvalidOperationException ("ContentType must not be of type Glyphs");
-			}
-
-			HarfBuzzApi.hb_buffer_add (Handle, (uint)codepoint, (uint)cluster);
-		}
-
-		public void AddUtf8 (string utf8text)
-		{
-			var bytes = Encoding.UTF8.GetBytes (utf8text);
-			AddUtf8 (bytes, 0, -1);
-		}
-
-		public unsafe void AddUtf8 (byte[] bytes, int itemOffset = 0, int itemLength = -1)
+		public unsafe void AddUtf8 (byte[] bytes, int itemOffset, int itemLength)
 		{
 			fixed (byte* b = bytes) {
 				AddUtf8 ((IntPtr)b, bytes.Length, itemOffset, itemLength);
 			}
 		}
 
-		public unsafe void AddUtf8 (ReadOnlySpan<byte> text, int itemOffset = 0, int itemLength = -1)
+		public void AddUtf8 (ReadOnlySpan<byte> text) => AddUtf8 (text, 0, -1);
+
+		public unsafe void AddUtf8 (ReadOnlySpan<byte> text, int itemOffset, int itemLength)
 		{
 			fixed (byte* bytes = text) {
 				AddUtf8 ((IntPtr)bytes, text.Length, itemOffset, itemLength);
 			}
 		}
 
-		public void AddUtf8 (IntPtr text, int textLength, int itemOffset = 0, int itemLength = -1)
+		public void AddUtf8 (IntPtr text, int textLength) => AddUtf8 (text, textLength, 0, -1);
+
+		public void AddUtf8 (IntPtr text, int textLength, int itemOffset, int itemLength)
 		{
 			if (itemOffset < 0) {
 				throw new ArgumentOutOfRangeException (nameof (itemOffset), "ItemOffset must be non negative.");
@@ -154,7 +137,9 @@ namespace HarfBuzzSharp
 			HarfBuzzApi.hb_buffer_add_utf8 (Handle, text, textLength, itemOffset, itemLength);
 		}
 
-		public unsafe void AddUtf16 (string text, int itemOffset = 0, int itemLength = -1)
+		public void AddUtf16 (string text) => AddUtf16 (text, 0, -1);
+
+		public unsafe void AddUtf16 (string text, int itemOffset, int itemLength)
 		{
 			fixed (char* chars = text) {
 				AddUtf16 ((IntPtr)chars, text.Length, itemOffset, itemLength);
@@ -168,14 +153,19 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		public unsafe void AddUtf16 (ReadOnlySpan<char> text, int itemOffset = 0, int itemLength = -1)
+		public unsafe void AddUtf16 (ReadOnlySpan<char> text) => AddUtf16 (text, 0, -1);
+
+		public unsafe void AddUtf16 (ReadOnlySpan<char> text, int itemOffset, int itemLength)
 		{
 			fixed (char* chars = text) {
 				AddUtf16 ((IntPtr)chars, text.Length, itemOffset, itemLength);
 			}
 		}
 
-		public void AddUtf16 (IntPtr text, int textLength, int itemOffset = 0, int itemLength = -1)
+		public void AddUtf16 (IntPtr text, int textLength) =>
+			AddUtf16 (text, textLength, 0, -1);
+
+		public void AddUtf16 (IntPtr text, int textLength, int itemOffset, int itemLength)
 		{
 			if (itemOffset < 0) {
 				throw new ArgumentOutOfRangeException (nameof (itemOffset), "ItemOffset must be non negative.");
@@ -192,11 +182,7 @@ namespace HarfBuzzSharp
 			HarfBuzzApi.hb_buffer_add_utf16 (Handle, text, textLength, itemOffset, itemLength);
 		}
 
-		public void AddUtf32 (string text)
-		{
-			var bytes = Encoding.UTF32.GetBytes (text);
-			AddUtf32 (bytes);
-		}
+		public void AddUtf32 (string text) => AddUtf32 (Encoding.UTF32.GetBytes (text));
 
 		public unsafe void AddUtf32 (byte[] text)
 		{
@@ -205,21 +191,28 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		public unsafe void AddUtf32 (ReadOnlySpan<int> text, int itemOffset = 0, int itemLength = -1)
+		public void AddUtf32 (ReadOnlySpan<int> text) => AddUtf32 (text, 0, -1);
+
+		public unsafe void AddUtf32 (ReadOnlySpan<int> text, int itemOffset, int itemLength)
 		{
 			fixed (int* integers = text) {
 				AddUtf32 ((IntPtr)integers, text.Length, itemOffset, itemLength);
 			}
 		}
 
-		public unsafe void AddUtf32 (ReadOnlySpan<uint> text, int itemOffset = 0, int itemLength = -1)
+		public void AddUtf32 (ReadOnlySpan<uint> text) => AddUtf32 (text, 0, -1);
+
+		public unsafe void AddUtf32 (ReadOnlySpan<uint> text, int itemOffset, int itemLength)
 		{
 			fixed (uint* integers = text) {
 				AddUtf32 ((IntPtr)integers, text.Length, itemOffset, itemLength);
 			}
 		}
 
-		public void AddUtf32 (IntPtr text, int textLength, int itemOffset = 0, int itemLength = -1)
+		public void AddUtf32 (IntPtr text, int textLength) =>
+			AddUtf32 (text, textLength, 0, -1);
+
+		public void AddUtf32 (IntPtr text, int textLength, int itemOffset, int itemLength)
 		{
 			if (itemOffset < 0) {
 				throw new ArgumentOutOfRangeException (nameof (itemOffset), "ItemOffset must be non negative.");
@@ -236,35 +229,45 @@ namespace HarfBuzzSharp
 			HarfBuzzApi.hb_buffer_add_utf32 (Handle, text, textLength, itemOffset, itemLength);
 		}
 
-		public unsafe void AddCodepoints (int[] text, int itemOffset = 0, int itemLength = -1)
+		public void AddCodepoints (int[] text) => AddCodepoints (text, 0, -1);
+
+		public unsafe void AddCodepoints (int[] text, int itemOffset, int itemLength)
 		{
 			fixed (int* codepoints = text) {
 				AddCodepoints ((IntPtr)codepoints, text.Length, itemOffset, itemLength);
 			}
 		}
 
-		public unsafe void AddCodepoints (uint[] text, int itemOffset = 0, int itemLength = -1)
+		public void AddCodepoints (uint[] text) => AddCodepoints (text, 0, -1);
+
+		public unsafe void AddCodepoints (uint[] text, int itemOffset, int itemLength)
 		{
 			fixed (uint* codepoints = text) {
 				AddCodepoints ((IntPtr)codepoints, text.Length, itemOffset, itemLength);
 			}
 		}
 
-		public unsafe void AddCodepoints (ReadOnlySpan<int> text, int itemOffset = 0, int itemLength = -1)
+		public void AddCodepoints (ReadOnlySpan<int> text) => AddCodepoints (text, 0, -1);
+
+		public unsafe void AddCodepoints (ReadOnlySpan<int> text, int itemOffset, int itemLength)
 		{
 			fixed (int* codepoints = text) {
 				AddCodepoints ((IntPtr)codepoints, text.Length, itemOffset, itemLength);
 			}
 		}
 
-		public unsafe void AddCodepoints (ReadOnlySpan<uint> text, int itemOffset = 0, int itemLength = -1)
+		public void AddCodepoints (ReadOnlySpan<uint> text) => AddCodepoints (text, 0, -1);
+
+		public unsafe void AddCodepoints (ReadOnlySpan<uint> text, int itemOffset, int itemLength)
 		{
 			fixed (uint* codepoints = text) {
 				AddCodepoints ((IntPtr)codepoints, text.Length, itemOffset, itemLength);
 			}
 		}
 
-		public void AddCodepoints (IntPtr text, int textLength, int itemOffset = 0, int itemLength = -1)
+		public void AddCodepoints (IntPtr text, int textLength) => AddCodepoints (text, textLength, 0, -1);
+
+		public void AddCodepoints (IntPtr text, int textLength, int itemOffset, int itemLength)
 		{
 			if (itemOffset < 0) {
 				throw new ArgumentOutOfRangeException (nameof (itemOffset), "ItemOffset must be non negative.");
@@ -281,16 +284,28 @@ namespace HarfBuzzSharp
 			HarfBuzzApi.hb_buffer_add_codepoints (Handle, text, textLength, itemOffset, itemLength);
 		}
 
+		public unsafe ReadOnlySpan<GlyphInfo> GetGlyphInfoReferences ()
+		{
+			var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_infos (Handle, out var length);
+			return new ReadOnlySpan<GlyphInfo> (infoPtrs, length);
+		}
+
+		public unsafe ReadOnlySpan<GlyphPosition> GetGlyphPositionReferences ()
+		{
+			var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_positions (Handle, out var length);
+			return new ReadOnlySpan<GlyphPosition> (infoPtrs, length);
+		}
+
 		public void GuessSegmentProperties () => HarfBuzzApi.hb_buffer_guess_segment_properties (Handle);
 
 		public void ClearContents () => HarfBuzzApi.hb_buffer_clear_contents (Handle);
 
 		public void Reset () => HarfBuzzApi.hb_buffer_reset (Handle);
 
-		public void Append (Buffer buffer, int start = 0, int end = -1)
-		{
+		public void Append (Buffer buffer) => Append (buffer, 0, -1);
+
+		public void Append (Buffer buffer, int start, int end) =>
 			HarfBuzzApi.hb_buffer_append (Handle, buffer.Handle, start, end == -1 ? buffer.Length : end);
-		}
 
 		public void NormalizeGlyphs ()
 		{
@@ -307,19 +322,24 @@ namespace HarfBuzzSharp
 
 		public void Reverse () => HarfBuzzApi.hb_buffer_reverse (Handle);
 
-		public void ReverseRange (int start, int end = -1)
-		{
+		public void ReverseRange (int start, int end) =>
 			HarfBuzzApi.hb_buffer_reverse_range (Handle, start, end == -1 ? Length : end);
-		}
 
 		public void ReverseClusters () => HarfBuzzApi.hb_buffer_reverse_clusters (Handle);
 
-		public string SerializeGlyphs (
-			int start = 0,
-			int end = -1,
-			Font font = null,
-			SerializeFormat format = SerializeFormat.Text,
-			SerializeFlag flags = SerializeFlag.Default)
+		public string SerializeGlyphs () =>
+			SerializeGlyphs (0, -1, null, SerializeFormat.Text, SerializeFlag.Default);
+
+		public string SerializeGlyphs (int start, int end) =>
+			SerializeGlyphs (start, end, null, SerializeFormat.Text, SerializeFlag.Default);
+
+		public string SerializeGlyphs (Font font) =>
+			SerializeGlyphs (0, -1, font, SerializeFormat.Text, SerializeFlag.Default);
+
+		public string SerializeGlyphs (Font font, SerializeFormat format, SerializeFlag flags) =>
+			SerializeGlyphs (0, -1, font, format, flags);
+
+		public string SerializeGlyphs (int start, int end, Font font, SerializeFormat format, SerializeFlag flags)
 		{
 			const int bufferSize = 128;
 
@@ -336,7 +356,7 @@ namespace HarfBuzzSharp
 			}
 
 			var builder = new StringBuilder (128);
-			var buffer = Marshal.AllocHGlobal (bufferSize);
+			var buffer = Marshal.AllocCoTaskMem (bufferSize);
 			var currentPosition = start;
 
 			try {
@@ -354,15 +374,20 @@ namespace HarfBuzzSharp
 
 					builder.Append (Marshal.PtrToStringAnsi (buffer, consumed));
 				}
-
 			} finally {
-				Marshal.FreeHGlobal (buffer);
+				Marshal.FreeCoTaskMem (buffer);
 			}
 
 			return builder.ToString ();
 		}
 
-		public void DeserializeGlyphs (string data, Font font = null, SerializeFormat format = SerializeFormat.Text)
+		public void DeserializeGlyphs (string data) =>
+			DeserializeGlyphs (data, null, SerializeFormat.Text);
+
+		public void DeserializeGlyphs (string data, Font font) =>
+			DeserializeGlyphs (data, font, SerializeFormat.Text);
+
+		public void DeserializeGlyphs (string data, Font font, SerializeFormat format)
 		{
 			if (Length != 0) {
 				throw new InvalidOperationException ("Buffer must be empty.");
@@ -374,7 +399,7 @@ namespace HarfBuzzSharp
 
 			HarfBuzzApi.hb_buffer_deserialize_glyphs (Handle, data, -1, out _, font?.Handle ?? IntPtr.Zero, format);
 		}
-		protected override void DisposeHandler()
+		protected override void DisposeHandler ()
 		{
 			if (Handle != IntPtr.Zero) {
 				HarfBuzzApi.hb_buffer_destroy (Handle);

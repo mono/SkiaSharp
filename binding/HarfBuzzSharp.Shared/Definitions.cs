@@ -24,7 +24,15 @@ namespace HarfBuzzSharp
 		private uint start;
 		private uint end;
 
-		public Feature (Tag tag, bool isEnabled = true, uint start = 0, uint end = uint.MaxValue)
+		public Feature (Tag tag)
+		{
+			this.tag = tag;
+			this.val = 1u;
+			this.start = 0;
+			this.end = uint.MaxValue;
+		}
+
+		public Feature (Tag tag, bool isEnabled, uint start, uint end)
 		{
 			this.tag = tag;
 			this.val = isEnabled ? 1u : 0u;
@@ -35,6 +43,12 @@ namespace HarfBuzzSharp
 		public Tag Tag {
 			get => tag;
 			set => tag = value;
+		}
+
+		[Obsolete ("Use IsEnabled instead.")]
+		public uint Value {
+			get => val;
+			set => val = value;
 		}
 
 		public bool IsEnabled {
@@ -66,7 +80,7 @@ namespace HarfBuzzSharp
 				return feature;
 			}
 
-			return new Feature(Tag.None);
+			return new Feature (Tag.None);
 		}
 	}
 
@@ -77,29 +91,27 @@ namespace HarfBuzzSharp
 		private hb_mask_t mask;
 		private uint cluster;
 
+		// < private >
 		private hb_var_int_t var1;
 		private hb_var_int_t var2;
 
 		public hb_codepoint_t Codepoint {
-			get { return codepoint; }
-			set { codepoint = value; }
+			get => codepoint;
+			set => codepoint = value;
 		}
 
 		public hb_mask_t Mask {
-			get { return mask; }
-			set { mask = value; }
+			get => mask;
+			set => mask = value;
 		}
 
 		public uint Cluster {
-			get { return cluster; }
-			set { cluster = value; }
+			get => cluster;
+			set => cluster = value;
 		}
 
-		public GlyphFlags GlyphFlags {
-			get {
-				return HarfBuzzApi.hb_glyph_info_get_glyph_flags (ref this);
-			}
-		}
+		public GlyphFlags GlyphFlags =>
+			HarfBuzzApi.hb_glyph_info_get_glyph_flags (ref this);
 	}
 
 	[StructLayout (LayoutKind.Sequential)]
@@ -110,27 +122,27 @@ namespace HarfBuzzSharp
 		private hb_position_t x_offset;
 		private hb_position_t y_offset;
 
-		/*< private >*/
+		// < private >
 		private hb_var_int_t var;
 
 		public hb_position_t XAdvance {
-			get { return x_advance; }
-			set { x_advance = value; }
+			get => x_advance;
+			set => x_advance = value;
 		}
 
 		public hb_position_t YAdvance {
-			get { return y_advance; }
-			set { y_advance = value; }
+			get => y_advance;
+			set => y_advance = value;
 		}
 
 		public hb_position_t XOffset {
-			get { return x_offset; }
-			set { x_offset = value; }
+			get => x_offset;
+			set => x_offset = value;
 		}
 
 		public hb_position_t YOffset {
-			get { return y_offset; }
-			set { y_offset = value; }
+			get => y_offset;
+			set => y_offset = value;
 		}
 	}
 
@@ -222,30 +234,19 @@ namespace HarfBuzzSharp
 
 	public struct FontExtents
 	{
-		private hb_position_t ascender; /* typographic ascender. */
+		private hb_position_t ascender; // typographic ascender.
+		private hb_position_t descender; // typographic descender.
+		private hb_position_t line_gap; // suggested line spacing gap.
 
-		private hb_position_t descender; /* typographic descender. */
-
-		private hb_position_t line_gap; /* suggested line spacing gap. */
-
-		/*< private >*/
-
+		// < private >
 		private hb_position_t reserved9;
-
 		private hb_position_t reserved8;
-
 		private hb_position_t reserved7;
-
 		private hb_position_t reserved6;
-
 		private hb_position_t reserved5;
-
 		private hb_position_t reserved4;
-
 		private hb_position_t reserved3;
-
 		private hb_position_t reserved2;
-
 		private hb_position_t reserved1;
 
 		public hb_position_t Ascender {
@@ -264,35 +265,6 @@ namespace HarfBuzzSharp
 		}
 	}
 
-	public readonly struct Point
-	{
-		public Point (int x, int y)
-		{
-			X = x;
-			Y = y;
-		}
-
-		public int X { get; }
-
-		public int Y { get; }
-
-		public override bool Equals (object obj)
-		{
-			var other = (Point)obj;
-
-			return X == other.X && Y == other.Y;
-		}
-
-		public override int GetHashCode ()
-		{
-			unchecked {
-				return (X * 397) ^ Y;
-			}
-		}
-
-		public override string ToString () => $"({X}, {Y})";
-	}
-
 	public enum UnicodeCombiningClass
 	{
 		NotReordered = 0,
@@ -301,7 +273,7 @@ namespace HarfBuzzSharp
 		KanaVoicing = 8,
 		Virama = 9,
 
-		/* Hebrew */
+		// Hebrew
 		CCC10 = 10,
 		CCC11 = 11,
 		CCC12 = 12,
@@ -320,7 +292,7 @@ namespace HarfBuzzSharp
 		CCC25 = 25,
 		CCC26 = 26,
 
-		/* Arabic */
+		// Arabic
 		CCC27 = 27,
 		CCC28 = 28,
 		CCC29 = 29,
@@ -331,22 +303,22 @@ namespace HarfBuzzSharp
 		CCC34 = 34,
 		CCC35 = 35,
 
-		/* Syriac */
+		// Syriac
 		CCC36 = 36,
 
-		/* Telugu */
+		// Telugu
 		CCC84 = 84,
 		CCC91 = 91,
 
-		/* Thai */
+		// Thai
 		CCC103 = 103,
 		CCC107 = 107,
 
-		/* Lao */
+		// Lao
 		CCC118 = 118,
 		CCC122 = 122,
 
-		/* Tibetan */
+		// Tibetan
 		CCC129 = 129,
 		CCC130 = 130,
 		CCC133 = 132,
@@ -372,35 +344,41 @@ namespace HarfBuzzSharp
 
 	public enum UnicodeGeneralCategory
 	{
-		Control,            /* Cc */
-		Format,         /* Cf */
-		Unassigned,     /* Cn */
-		PrivateUse,        /* Co */
-		Surrogate,      /* Cs */
-		LowercaseLetter,       /* Ll */
-		ModifierLetter,        /* Lm */
-		OtherLetter,       /* Lo */
-		TitlecaseLetter,       /* Lt */
-		UppercaseLetter,       /* Lu */
-		SpacingMark,       /* Mc */
-		EnclosingMark,     /* Me */
-		NonSpacingMark,       /* Mn */
-		DecimalNumber,     /* Nd */
-		LetterNumber,      /* Nl */
-		OtherNumber,       /* No */
-		ConnectPunctuation,    /* Pc */
-		DashPunctuation,       /* Pd */
-		ClosePunctuation,  /* Pe */
-		FinalPunctuation,  /* Pf */
-		InitialPunctuation,    /* Pi */
-		OtherPunctuation,  /* Po */
-		OpenPunctuation,       /* Ps */
-		CurrencySymbol,        /* Sc */
-		ModifierSymbol,        /* Sk */
-		MathSymbol,        /* Sm */
-		OtherSymbol,       /* So */
-		LineSeparator,     /* Zl */
-		ParagraphSeparator,    /* Zp */
-		SpaceSeparator     /* Zs */
+		Control,              // Cc
+		Format,               // Cf
+		Unassigned,           // Cn
+		PrivateUse,           // Co
+		Surrogate,            // Cs
+
+		LowercaseLetter,      // Ll
+		ModifierLetter,       // Lm
+		OtherLetter,          // Lo
+		TitlecaseLetter,      // Lt
+		UppercaseLetter,      // Lu
+
+		SpacingMark,          // Mc
+		EnclosingMark,        // Me
+		NonSpacingMark,       // Mn
+
+		DecimalNumber,        // Nd
+		LetterNumber,         // Nl
+		OtherNumber,          // No
+
+		ConnectPunctuation,   // Pc
+		DashPunctuation,      // Pd
+		ClosePunctuation,     // Pe
+		FinalPunctuation,     // Pf
+		InitialPunctuation,   // Pi
+		OtherPunctuation,     // Po
+		OpenPunctuation,      // Ps
+
+		CurrencySymbol,       // Sc
+		ModifierSymbol,       // Sk
+		MathSymbol,           // Sm
+		OtherSymbol,          // So
+
+		LineSeparator,        // Zl
+		ParagraphSeparator,   // Zp
+		SpaceSeparator        // Zs
 	}
 }
