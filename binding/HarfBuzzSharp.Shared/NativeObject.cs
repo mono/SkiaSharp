@@ -83,9 +83,9 @@ namespace HarfBuzzSharp
 		internal static IEnumerable<string> PtrToStringArray (IntPtr intPtr)
 		{
 			if (intPtr != IntPtr.Zero) {
-				IntPtr ptr = Marshal.ReadIntPtr (intPtr);
+				var ptr = Marshal.ReadIntPtr (intPtr);
 				while (ptr != IntPtr.Zero) {
-					string element = Marshal.PtrToStringAnsi (ptr);
+					var element = Marshal.PtrToStringAnsi (ptr);
 					yield return element;
 					intPtr = new IntPtr (intPtr.ToInt64 () + IntPtr.Size);
 					ptr = Marshal.ReadIntPtr (intPtr);

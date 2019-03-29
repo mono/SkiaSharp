@@ -60,7 +60,7 @@ namespace SkiaSharp.Tests
 		{
 			using (var face = new Face(s_blob, 0))
 			{
-				Assert.Equal(20, face.Tables.Count);
+				Assert.Equal(20, face.Tables.Length);
 			}
 		}
 

@@ -40,7 +40,7 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		public IReadOnlyList<string> SupportedShapers =>
+		public string[] SupportedShapers =>
 			PtrToStringArray (HarfBuzzApi.hb_shape_list_shapers ()).ToArray ();
 
 		public void GetScale (out int xScale, out int yScale) =>

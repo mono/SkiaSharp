@@ -44,7 +44,7 @@ namespace HarfBuzzSharp
 			set => HarfBuzzApi.hb_face_set_glyph_count (Handle, value);
 		}
 
-		public unsafe IReadOnlyList<Tag> Tables {
+		public unsafe Tag[] Tables {
 			get {
 				var tableCount = 0;
 				var count = HarfBuzzApi.hb_face_get_table_tags (Handle, 0, ref tableCount, IntPtr.Zero);
