@@ -52,18 +52,23 @@ namespace HarfBuzzSharp
 
 		public int Length => HarfBuzzApi.hb_blob_get_length (Handle);
 
-		public unsafe Stream Data {
-			get {
-				var dataPtr = HarfBuzzApi.hb_blob_get_data (Handle, out var length);
-				return new UnmanagedMemoryStream (dataPtr, length);
-			}
-		}
-
 		public int FaceCount => HarfBuzzApi.hb_face_count (Handle);
 
 		public bool IsImmutable => HarfBuzzApi.hb_blob_is_immutable (Handle);
 
 		public void MakeImmutable () => HarfBuzzApi.hb_blob_make_immutable (Handle);
+
+		public unsafe Stream AsStream ()
+		{
+			var dataPtr = HarfBuzzApi.hb_blob_get_data (Handle, out var length);
+			return new UnmanagedMemoryStream (dataPtr, length);
+		}
+
+		public unsafe ReadOnlySpan<byte> AsSpan ()
+		{
+			var dataPtr = HarfBuzzApi.hb_blob_get_data (Handle, out var length);
+			return new ReadOnlySpan<byte> (dataPtr, length);
+		}
 
 		public static Blob FromFile (string fileName)
 		{

@@ -16,7 +16,6 @@ public Blob (IntPtr data, int length, MemoryMode mode, object userData, BlobRele
 Added properties:
 
 ```csharp
-public System.IO.Stream Data { get; }
 public int FaceCount { get; }
 public bool IsImmutable { get; }
 public int Length { get; }
@@ -31,6 +30,8 @@ protected override void Dispose (bool disposing);
 Added methods:
 
 ```csharp
+public System.ReadOnlySpan<byte> AsSpan ();
+public System.IO.Stream AsStream ();
 protected override void DisposeHandler ();
 public static Blob FromFile (string fileName);
 public static Blob FromStream (System.IO.Stream stream);
@@ -149,7 +150,7 @@ Added properties:
 ```csharp
 public int GlyphCount { get; set; }
 public bool IsImmutable { get; }
-public System.Collections.Generic.IReadOnlyList<Tag> Tables { get; }
+public Tag[] Tables { get; }
 ```
 
 Removed method:
@@ -210,7 +211,7 @@ Added properties:
 
 ```csharp
 public FontExtents HorizontalFontExtents { get; }
-public System.Collections.Generic.IReadOnlyList<string> SupportedShapers { get; }
+public string[] SupportedShapers { get; }
 public FontExtents VerticalFontExtents { get; }
 ```
 
