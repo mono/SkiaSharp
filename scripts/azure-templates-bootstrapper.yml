@@ -5,6 +5,7 @@ parameters:
   packages: ''        # any additional packages
   target: ''          # the bootstrapper target
   dependsOn: []       # the dependiencies
+  demands: []         # the demands
   preBuildSteps: []   # any steps to run before the build
   postBuildSteps: []  # any additional steps to run after the build
 
@@ -14,6 +15,7 @@ jobs:
     timeoutInMinutes: 120
     pool:
       vmImage: ${{ parameters.vmImage }}
+      demands: ${{ parameters.demands }}
     dependsOn: ${{ parameters.dependsOn }}
     steps:
       - checkout: self
@@ -52,7 +54,12 @@ jobs:
           displayName: Download the ${{ dep }} artifacts
           inputs:
             artifactName: ${{ dep }}
-            targetPath: 'output'
+            targetPath: 'output-temp'
+        - powershell: |
+            New-Item -Type Directory -Path output -Force
+            Copy-Item -Path output-temp/${{ dep }}/* -Destination output -Force -Recurse
+            Remove-Item -Path output-temp/${{ dep }} -Force -Recurse
+          displayName: Copy the ${{ dep }} artifacts to the output directory
       # pre-build steps
       - ${{ parameters.preBuildSteps }}
       # build
