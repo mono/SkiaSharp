@@ -94,7 +94,8 @@ void RunNetCoreTests (FilePath testAssembly)
         Logger = "xunit",
         WorkingDirectory = dir,
     };
-    var filter = string.Join("&", CreateTraitsFilter(UNSUPPORTED_TESTS));
+    var traits = CreateTraitsDictionary(UNSUPPORTED_TESTS);
+    var filter = string.Join("&", traits.Select(t => $"{t.Name}!={t.Value}"));
     if (!string.IsNullOrEmpty(filter)) {
         settings.Filter = filter;
     }
@@ -104,25 +105,12 @@ void RunNetCoreTests (FilePath testAssembly)
 IEnumerable<(string Name, string Value)> CreateTraitsDictionary (string args)
 {
     if (!string.IsNullOrEmpty(args)) {
-        var traits = args.Split(";");
+        var traits = args.Split(';');
         foreach (var trait in traits) {
-            var kv = trait.Split("=");
+            var kv = trait.Split('=');
             if (kv.Length != 2)
                 continue;
             yield return (kv[0], kv[1]);
-        }
-    }
-}
-
-IEnumerable<string> CreateTraitsFilter (string args)
-{
-    if (!string.IsNullOrEmpty(args)) {
-        var traits = args.Split(";");
-        foreach (var trait in traits) {
-            var kv = trait.Split("=");
-            if (kv.Length != 2)
-                continue;
-            yield return $"{kv[0]}!={kv[1]}";
         }
     }
 }
