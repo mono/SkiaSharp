@@ -29,6 +29,8 @@ var SKIP_EXTERNALS = Argument ("skipexternals", Argument ("SkipExternals", "")).
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAll", Argument ("PackAllPlatforms", TARGET.ToLower() == "ci" || TARGET.ToLower() == "nuget-only")));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
 var AZURE_BUILD_ID = Argument ("azureBuildId", "");
+var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
+var ADDITIONAL_GN_ARGS = Argument ("additionalGnArgs", "");
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
@@ -529,6 +531,8 @@ Information ("  Skip externals:                   {0}", SKIP_EXTERNALS);
 Information ("  Print all environment variables:  {0}", PRINT_ALL_ENV_VARS);
 Information ("  Pack all platforms:               {0}", PACK_ALL_PLATFORMS);
 Information ("  Azure build ID:                   {0}", AZURE_BUILD_ID);
+Information ("  Unsupported Tests:                {0}", UNSUPPORTED_TESTS);
+Information ("  Additional GN Arguments:          {0}", ADDITIONAL_GN_ARGS);
 Information ("");
 
 Information ("Tool Paths:");

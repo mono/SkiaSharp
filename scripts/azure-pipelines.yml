@@ -89,32 +89,19 @@ jobs:
       target: externals-watchos
 
  # NATIVE JOBS - LINUX
-  - job: native_linux_linux
-    displayName: Build Native Linux (Linux)
-    pool:
-      vmImage: ubuntu-16.04
-    container: ubuntu:14.04
-    steps:
-      - checkout: self
-        submodules: recursive
-      - bash: |
-          sudo apt update
-          sudo apt install -y apt-transport-https
-          sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-          echo "deb https://download.mono-project.com/repo/ubuntu stable-trusty main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
-          sudo apt update
-          sudo apt install -y $NATIVE_LINUX_PACKAGES
-        displayName: Install any package dependencies
-      - bash: ./bootstrapper.sh -t externals-linux -v $VERBOSITY
-        displayName: Run the bootstrapper for externals-linux
-        env:
-          CC: clang-3.8
-          CXX: clang++-3.8
-      - task: PublishPipelineArtifact@0
-        displayName: Publish the native_linux_linux artifacts
-        inputs:
-          artifactName: native_linux_linux
-          targetPath: 'output'
+  - template: azure-templates-native-linux.yml
+    parameters:
+      name: native_linux_linux
+      displayName: Build Native Linux (Linux)
+      packages: $(NATIVE_LINUX_PACKAGES)
+      target: externals-linux
+  - template: azure-templates-native-linux.yml
+    parameters:
+      name: native_linux_nofontconfig_linux
+      displayName: Build Native Linux [Without FontConfig] (Linux)
+      packages: $(NATIVE_LINUX_PACKAGES)
+      target: externals-linux
+      additionalArgs: --additionalGnArgs="skia_use_fontconfig=false"
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_tizen_linux
@@ -241,6 +228,22 @@ jobs:
       target: tests-only
       dependsOn:
         - package
+      postBuildSteps:
+        - task: PublishTestResults@2
+          inputs:
+            testResultsFormat: xUnit
+            testResultsFiles: 'output/tests/**/*.xml'
+  - template: azure-templates-bootstrapper.yml
+    parameters:
+      name: tests_nofontconfig_linux
+      displayName: Tests [Without FontConfig] (Linux)
+      vmImage: ubuntu-16.04
+      packages: $(MANAGED_LINUX_PACKAGES)
+      target: tests
+      additionalArgs: --skipExternals="all" --unsupportedTests="Feature=MatchCharacter"
+      dependsOn:
+        - native_linux_nofontconfig_linux
+        - native_tizen_linux
       postBuildSteps:
         - task: PublishTestResults@2
           inputs:

@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using Xunit;
+using Xunit.Categories;
 
 namespace SkiaSharp.Tests
 {
 	public class GRContextTest : SKTest
 	{
-		[Trait(Category, GpuCategory)]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		public void CreateDefaultContextIsValid()
 		{
@@ -19,7 +20,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(Category, GpuCategory)]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		public void CreateSpecificContextIsValid()
 		{
@@ -36,7 +37,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(Category, GpuCategory)]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		public void GpuSurfaceIsCreated()
 		{

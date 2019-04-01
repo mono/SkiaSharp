@@ -1,5 +1,6 @@
 ﻿using System;
 using Xunit;
+using Xunit.Categories;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Linq;
@@ -191,12 +192,14 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		[Feature(MatchCharacterFeature)]
 		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharacters()
 		{
 			const string text = "🚀";
 			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
 
 			var typeface = SKFontManager.Default.MatchCharacter(emojiChar);
+			Assert.NotNull(typeface);
 
 			Assert.True(typeface.CountGlyphs(text) > 0);
 			Assert.True(typeface.CountGlyphs(text, SKEncoding.Utf32) > 0);
