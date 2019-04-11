@@ -4883,7 +4883,9 @@ namespace SkiaSharp
 				(<any>SkiaSharp.ApiOverride).sk_path_parse_svg_string_0_Pre(parms);
 			}
 			var cpath = parms.cpath;
-			var str = parms.str;
+			var str_Length = parms.str.length*4+1
+			var str = CanvasKit._malloc(str_Length);
+			CanvasKit.stringToUTF8(parms.str, str, str_Length);
 			var ret = CanvasKit._sk_path_parse_svg_string(cpath, str);
 			if((<any>SkiaSharp.ApiOverride).sk_path_parse_svg_string_0_Post)
 			{
@@ -7788,7 +7790,9 @@ namespace SkiaSharp
 			{
 				(<any>SkiaSharp.ApiOverride).sk_typeface_create_from_name_with_font_style_0_Pre(parms);
 			}
-			var familyName = parms.familyName;
+			var familyName_Length = parms.familyName.length*4+1
+			var familyName = CanvasKit._malloc(familyName_Length);
+			CanvasKit.stringToUTF8(parms.familyName, familyName, familyName_Length);
 			var style = parms.style;
 			var ret = CanvasKit._sk_typeface_create_from_name_with_font_style(familyName, style);
 			if((<any>SkiaSharp.ApiOverride).sk_typeface_create_from_name_with_font_style_0_Post)
@@ -8126,7 +8130,9 @@ namespace SkiaSharp
 				(<any>SkiaSharp.ApiOverride).sk_fontmgr_match_family_style_character_0_Pre(parms);
 			}
 			var fontmgr = parms.fontmgr;
-			var familyName = parms.familyName;
+			var familyName_Length = parms.familyName.length*4+1
+			var familyName = CanvasKit._malloc(familyName_Length);
+			CanvasKit.stringToUTF8(parms.familyName, familyName, familyName_Length);
 			var style = parms.style;
 			var bcp47 = parms.bcp47; /* string */
 			var bcp47Count = parms.bcp47Count;
@@ -8162,7 +8168,9 @@ namespace SkiaSharp
 				(<any>SkiaSharp.ApiOverride).sk_fontmgr_match_family_0_Pre(parms);
 			}
 			var fontmgr = parms.fontmgr;
-			var familyName = parms.familyName;
+			var familyName_Length = parms.familyName.length*4+1
+			var familyName = CanvasKit._malloc(familyName_Length);
+			CanvasKit.stringToUTF8(parms.familyName, familyName, familyName_Length);
 			var ret = CanvasKit._sk_fontmgr_match_family(fontmgr, familyName);
 			if((<any>SkiaSharp.ApiOverride).sk_fontmgr_match_family_0_Post)
 			{
@@ -8178,7 +8186,9 @@ namespace SkiaSharp
 				(<any>SkiaSharp.ApiOverride).sk_fontmgr_match_family_style_0_Pre(parms);
 			}
 			var fontmgr = parms.fontmgr;
-			var familyName = parms.familyName;
+			var familyName_Length = parms.familyName.length*4+1
+			var familyName = CanvasKit._malloc(familyName_Length);
+			CanvasKit.stringToUTF8(parms.familyName, familyName, familyName_Length);
 			var style = parms.style;
 			var ret = CanvasKit._sk_fontmgr_match_family_style(fontmgr, familyName, style);
 			if((<any>SkiaSharp.ApiOverride).sk_fontmgr_match_family_style_0_Post)
@@ -9317,7 +9327,9 @@ namespace SkiaSharp
 				(<any>SkiaSharp.ApiOverride).sk_wstream_write_text_0_Pre(parms);
 			}
 			var cstream = parms.cstream;
-			var value = parms.value;
+			var value_Length = parms.value.length*4+1
+			var value = CanvasKit._malloc(value_Length);
+			CanvasKit.stringToUTF8(parms.value, value, value_Length);
 			var ret = CanvasKit._sk_wstream_write_text(cstream, value);
 			if((<any>SkiaSharp.ApiOverride).sk_wstream_write_text_0_Post)
 			{
@@ -12852,7 +12864,9 @@ namespace SkiaSharp
 				(<any>SkiaSharp.ApiOverride).gr_glinterface_has_extension_0_Pre(parms);
 			}
 			var glInterface = parms.glInterface;
-			var extension = parms.extension;
+			var extension_Length = parms.extension.length*4+1
+			var extension = CanvasKit._malloc(extension_Length);
+			CanvasKit.stringToUTF8(parms.extension, extension, extension_Length);
 			var ret = CanvasKit._gr_glinterface_has_extension(glInterface, extension);
 			if((<any>SkiaSharp.ApiOverride).gr_glinterface_has_extension_0_Post)
 			{

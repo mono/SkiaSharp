@@ -506,6 +506,8 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
+			Console.WriteLine ($"DrawText({text}): {string.Join(",", text)}");
+
 			SkiaApi.sk_canvas_draw_text (Handle, text, text.Length, x, y, paint.Handle);
 		}
 

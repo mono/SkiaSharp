@@ -133,7 +133,14 @@ namespace SkiaSharp.Wasm.Generator
 													w.AppendLineInvariant ($"var {parm.Name} = {paramString}; /* {arraySymbol.ElementType} */");
 												}
 											} else {
-												w.AppendLineInvariant ($"var {parm.Name} = {paramString};");
+												if (parm.Type == _stringSymbol) {
+													w.AppendLineInvariant ($"var {parm.Name}_Length = {paramString}.length*4+1");
+													w.AppendLineInvariant ($"var {parm.Name} = CanvasKit._malloc({parm.Name}_Length);");
+													w.AppendLineInvariant ($"CanvasKit.stringToUTF8({paramString}, {parm.Name}, {parm.Name}_Length);");
+
+												} else {
+													w.AppendLineInvariant ($"var {parm.Name} = {paramString};");
+												}
 											}
 										}
 									}

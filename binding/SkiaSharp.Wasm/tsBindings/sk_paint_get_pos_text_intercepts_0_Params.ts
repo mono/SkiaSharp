@@ -34,7 +34,7 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 16, "*");
+				var pArray = memoryContext.getValue(pData + 16, "*"); /*SkiaSharp.SKPoint 4 False*/
 				if(pArray !== 0)
 				{
 					ret.pos = new Array<SkiaSharp.SKPoint>();
@@ -55,7 +55,7 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 24, "*");
+				var pArray = memoryContext.getValue(pData + 24, "*"); /*float 4 False*/
 				if(pArray !== 0)
 				{
 					ret.bounds = new Array<number>();

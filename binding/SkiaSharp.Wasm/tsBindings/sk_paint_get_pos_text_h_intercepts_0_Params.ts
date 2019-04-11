@@ -35,7 +35,7 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 16, "*");
+				var pArray = memoryContext.getValue(pData + 16, "*"); /*float 4 False*/
 				if(pArray !== 0)
 				{
 					ret.xpos = new Array<number>();
@@ -61,7 +61,7 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 28, "*");
+				var pArray = memoryContext.getValue(pData + 28, "*"); /*float 4 False*/
 				if(pArray !== 0)
 				{
 					ret.bounds = new Array<number>();

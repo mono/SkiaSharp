@@ -22,13 +22,13 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 4, "*");
+				var pArray = memoryContext.getValue(pData + 4, "*"); /*byte 1 False*/
 				if(pArray !== 0)
 				{
 					ret.tableA = new Array<number>();
 					for(var i=0; i<ret.tableA_Length; i++)
 					{
-						var value = memoryContext.getValue(pArray + i * 4, "i8");
+						var value = memoryContext.getValue(pArray + i * 1, "i8");
 						ret.tableA.push(Number(value));
 					}
 				}
@@ -44,13 +44,13 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 12, "*");
+				var pArray = memoryContext.getValue(pData + 12, "*"); /*byte 1 False*/
 				if(pArray !== 0)
 				{
 					ret.tableR = new Array<number>();
 					for(var i=0; i<ret.tableR_Length; i++)
 					{
-						var value = memoryContext.getValue(pArray + i * 4, "i8");
+						var value = memoryContext.getValue(pArray + i * 1, "i8");
 						ret.tableR.push(Number(value));
 					}
 				}
@@ -66,13 +66,13 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 20, "*");
+				var pArray = memoryContext.getValue(pData + 20, "*"); /*byte 1 False*/
 				if(pArray !== 0)
 				{
 					ret.tableG = new Array<number>();
 					for(var i=0; i<ret.tableG_Length; i++)
 					{
-						var value = memoryContext.getValue(pArray + i * 4, "i8");
+						var value = memoryContext.getValue(pArray + i * 1, "i8");
 						ret.tableG.push(Number(value));
 					}
 				}
@@ -88,13 +88,13 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 28, "*");
+				var pArray = memoryContext.getValue(pData + 28, "*"); /*byte 1 False*/
 				if(pArray !== 0)
 				{
 					ret.tableB = new Array<number>();
 					for(var i=0; i<ret.tableB_Length; i++)
 					{
-						var value = memoryContext.getValue(pArray + i * 4, "i8");
+						var value = memoryContext.getValue(pArray + i * 1, "i8");
 						ret.tableB.push(Number(value));
 					}
 				}

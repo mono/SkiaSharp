@@ -33,7 +33,7 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 12, "*");
+				var pArray = memoryContext.getValue(pData + 12, "*"); /*SkiaSharp.SKPoint 4 False*/
 				if(pArray !== 0)
 				{
 					ret.positions = new Array<SkiaSharp.SKPoint>();
@@ -54,7 +54,7 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 20, "*");
+				var pArray = memoryContext.getValue(pData + 20, "*"); /*SkiaSharp.SKPoint 4 False*/
 				if(pArray !== 0)
 				{
 					ret.texs = new Array<SkiaSharp.SKPoint>();
@@ -75,7 +75,7 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 28, "*");
+				var pArray = memoryContext.getValue(pData + 28, "*"); /*SkiaSharp.SKColor 4 False*/
 				if(pArray !== 0)
 				{
 					ret.colors = new Array<SkiaSharp.SKColor>();
@@ -100,13 +100,13 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 40, "*");
+				var pArray = memoryContext.getValue(pData + 40, "*"); /*ushort 2 False*/
 				if(pArray !== 0)
 				{
 					ret.indices = new Array<number>();
 					for(var i=0; i<ret.indices_Length; i++)
 					{
-						var value = memoryContext.getValue(pArray + i * 4, "i16");
+						var value = memoryContext.getValue(pArray + i * 2, "i16");
 						ret.indices.push(Number(value));
 					}
 				}

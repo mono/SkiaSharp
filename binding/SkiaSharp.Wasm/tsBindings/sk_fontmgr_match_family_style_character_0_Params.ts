@@ -42,7 +42,7 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 16, "*");
+				var pArray = memoryContext.getValue(pData + 16, "*"); /*string 4 True*/
 				if(pArray !== 0)
 				{
 					ret.bcp47 = new Array<string>();

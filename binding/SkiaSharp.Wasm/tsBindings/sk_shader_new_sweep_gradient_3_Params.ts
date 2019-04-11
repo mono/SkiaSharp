@@ -27,7 +27,7 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 12, "*");
+				var pArray = memoryContext.getValue(pData + 12, "*"); /*SkiaSharp.SKColor 4 False*/
 				if(pArray !== 0)
 				{
 					ret.colors = new Array<SkiaSharp.SKColor>();

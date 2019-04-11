@@ -18,7 +18,7 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 4, "*");
+				var pArray = memoryContext.getValue(pData + 4, "*"); /*float 4 False*/
 				if(pArray !== 0)
 				{
 					ret.intervals = new Array<number>();

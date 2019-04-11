@@ -295,11 +295,11 @@ namespace SkiaSharp.Wasm.Generator
 						var elementType = arraySymbol.ElementType;
 						var elementTSType = GetTSType(elementType);
 						var isElementString = elementType == _stringSymbol;
-						var elementSize = isElementString ? 4 : fieldSize;
+						var elementSize = GetNativeElementSize (elementType);
 
 						using (sb.BlockInvariant(""))
 						{
-							sb.AppendLineInvariant($"var pArray = memoryContext.getValue(pData + {fieldOffset}, \"*\");");
+							sb.AppendLineInvariant($"var pArray = memoryContext.getValue(pData + {fieldOffset}, \"*\"); /*{elementType} {elementSize} {isElementString}*/");
 
 							using (sb.BlockInvariant("if(pArray !== 0)"))
 							{
@@ -404,6 +404,35 @@ namespace SkiaSharp.Wasm.Generator
 			else
 			{
 				throw new NotSupportedException($"The field [{field} {field.Type}] is not supported");
+			}
+		}
+
+		private int GetNativeElementSize (ITypeSymbol type)
+		{
+			switch (type.ToString ()) {
+				case "bool":
+				case "int":
+				case "uint":
+				case "System.IntPtr":
+				case "float":
+				case var _ when type.TypeKind == TypeKind.Enum:
+					return 4;
+
+				case "double":
+				case "long":
+					return 8;
+
+				case "short":
+				case "ushort":
+					return 2;
+
+				case "sbyte":
+				case "byte":
+					return 1;
+
+				default:
+					return 4; 
+					// throw new NotSupportedException ($"GetNativeElementSize for {type} is not supported");
 			}
 		}
 

@@ -23,7 +23,7 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 8, "*");
+				var pArray = memoryContext.getValue(pData + 8, "*"); /*SkiaSharp.SKPoint 4 False*/
 				if(pArray !== 0)
 				{
 					ret.points = new Array<SkiaSharp.SKPoint>();

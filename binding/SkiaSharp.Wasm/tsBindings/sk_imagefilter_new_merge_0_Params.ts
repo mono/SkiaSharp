@@ -18,7 +18,7 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 4, "*");
+				var pArray = memoryContext.getValue(pData + 4, "*"); /*System.IntPtr 4 False*/
 				if(pArray !== 0)
 				{
 					ret.filters = new Array<number>();

@@ -26,7 +26,7 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 24, "*");
+				var pArray = memoryContext.getValue(pData + 24, "*"); /*SkiaSharp.SKPoint 4 False*/
 				if(pArray !== 0)
 				{
 					ret.radii = new Array<SkiaSharp.SKPoint>();

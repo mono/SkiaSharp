@@ -24,7 +24,7 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 8, "*");
+				var pArray = memoryContext.getValue(pData + 8, "*"); /*float 4 False*/
 				if(pArray !== 0)
 				{
 					ret.src2 = new Array<number>();
@@ -50,7 +50,7 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 20, "*");
+				var pArray = memoryContext.getValue(pData + 20, "*"); /*float 4 False*/
 				if(pArray !== 0)
 				{
 					ret.dst = new Array<number>();

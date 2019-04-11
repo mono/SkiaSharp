@@ -16,13 +16,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="node_modules\canvaskit-wasm\bin\canvaskit.js" Link="WasmScripts\canvaskit.js" />
     <EmbeddedResource Include="WasmScripts\*.js" />
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="external\canvaskit\" />
     <Folder Include="tsBindings\" />
     <Folder Include="WasmScripts\" />
+    <EmbeddedResource Include="external\canvaskit\canvaskit.js" Link="WasmScripts\canvaskit.js" />
   </ItemGroup>
   
   <ItemGroup>

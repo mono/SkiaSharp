@@ -5235,7 +5235,9 @@ var SkiaSharp;
                 SkiaSharp.ApiOverride.sk_path_parse_svg_string_0_Pre(parms);
             }
             var cpath = parms.cpath;
-            var str = parms.str;
+            var str_Length = parms.str.length * 4 + 1;
+            var str = CanvasKit._malloc(str_Length);
+            CanvasKit.stringToUTF8(parms.str, str, str_Length);
             var ret = CanvasKit._sk_path_parse_svg_string(cpath, str);
             if (SkiaSharp.ApiOverride.sk_path_parse_svg_string_0_Post) {
                 ret = SkiaSharp.ApiOverride.sk_path_parse_svg_string_0_Post(ret, parms);
@@ -7651,7 +7653,9 @@ var SkiaSharp;
             if (SkiaSharp.ApiOverride.sk_typeface_create_from_name_with_font_style_0_Pre) {
                 SkiaSharp.ApiOverride.sk_typeface_create_from_name_with_font_style_0_Pre(parms);
             }
-            var familyName = parms.familyName;
+            var familyName_Length = parms.familyName.length * 4 + 1;
+            var familyName = CanvasKit._malloc(familyName_Length);
+            CanvasKit.stringToUTF8(parms.familyName, familyName, familyName_Length);
             var style = parms.style;
             var ret = CanvasKit._sk_typeface_create_from_name_with_font_style(familyName, style);
             if (SkiaSharp.ApiOverride.sk_typeface_create_from_name_with_font_style_0_Post) {
@@ -7924,7 +7928,9 @@ var SkiaSharp;
                 SkiaSharp.ApiOverride.sk_fontmgr_match_family_style_character_0_Pre(parms);
             }
             var fontmgr = parms.fontmgr;
-            var familyName = parms.familyName;
+            var familyName_Length = parms.familyName.length * 4 + 1;
+            var familyName = CanvasKit._malloc(familyName_Length);
+            CanvasKit.stringToUTF8(parms.familyName, familyName, familyName_Length);
             var style = parms.style;
             var bcp47 = parms.bcp47; /* string */
             var bcp47Count = parms.bcp47Count;
@@ -7954,7 +7960,9 @@ var SkiaSharp;
                 SkiaSharp.ApiOverride.sk_fontmgr_match_family_0_Pre(parms);
             }
             var fontmgr = parms.fontmgr;
-            var familyName = parms.familyName;
+            var familyName_Length = parms.familyName.length * 4 + 1;
+            var familyName = CanvasKit._malloc(familyName_Length);
+            CanvasKit.stringToUTF8(parms.familyName, familyName, familyName_Length);
             var ret = CanvasKit._sk_fontmgr_match_family(fontmgr, familyName);
             if (SkiaSharp.ApiOverride.sk_fontmgr_match_family_0_Post) {
                 ret = SkiaSharp.ApiOverride.sk_fontmgr_match_family_0_Post(ret, parms);
@@ -7967,7 +7975,9 @@ var SkiaSharp;
                 SkiaSharp.ApiOverride.sk_fontmgr_match_family_style_0_Pre(parms);
             }
             var fontmgr = parms.fontmgr;
-            var familyName = parms.familyName;
+            var familyName_Length = parms.familyName.length * 4 + 1;
+            var familyName = CanvasKit._malloc(familyName_Length);
+            CanvasKit.stringToUTF8(parms.familyName, familyName, familyName_Length);
             var style = parms.style;
             var ret = CanvasKit._sk_fontmgr_match_family_style(fontmgr, familyName, style);
             if (SkiaSharp.ApiOverride.sk_fontmgr_match_family_style_0_Post) {
@@ -8892,7 +8902,9 @@ var SkiaSharp;
                 SkiaSharp.ApiOverride.sk_wstream_write_text_0_Pre(parms);
             }
             var cstream = parms.cstream;
-            var value = parms.value;
+            var value_Length = parms.value.length * 4 + 1;
+            var value = CanvasKit._malloc(value_Length);
+            CanvasKit.stringToUTF8(parms.value, value, value_Length);
             var ret = CanvasKit._sk_wstream_write_text(cstream, value);
             if (SkiaSharp.ApiOverride.sk_wstream_write_text_0_Post) {
                 ret = SkiaSharp.ApiOverride.sk_wstream_write_text_0_Post(ret, parms);
@@ -11813,7 +11825,9 @@ var SkiaSharp;
                 SkiaSharp.ApiOverride.gr_glinterface_has_extension_0_Pre(parms);
             }
             var glInterface = parms.glInterface;
-            var extension = parms.extension;
+            var extension_Length = parms.extension.length * 4 + 1;
+            var extension = CanvasKit._malloc(extension_Length);
+            CanvasKit.stringToUTF8(parms.extension, extension, extension_Length);
             var ret = CanvasKit._gr_glinterface_has_extension(glInterface, extension);
             if (SkiaSharp.ApiOverride.gr_glinterface_has_extension_0_Post) {
                 ret = SkiaSharp.ApiOverride.gr_glinterface_has_extension_0_Post(ret, parms);
@@ -14092,7 +14106,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 4, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 8, "*");
+                var pArray = memoryContext.getValue(pData + 8, "*"); /*SkiaSharp.SKColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -14424,7 +14438,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 4, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 8, "*");
+                var pArray = memoryContext.getValue(pData + 8, "*"); /*SkiaSharp.SKColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -14759,11 +14773,11 @@ var SkiaSharp;
                 ret.key_Length = Number(memoryContext.getValue(pData + 20, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 24, "*");
+                var pArray = memoryContext.getValue(pData + 24, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.key = new Array();
                     for (var i = 0; i < ret.key_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.key.push(Number(value));
                     }
                 }
@@ -15634,7 +15648,7 @@ var SkiaSharp;
                 ret.points_Length = Number(memoryContext.getValue(pData + 12, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 16, "*");
+                var pArray = memoryContext.getValue(pData + 16, "*"); /*SkiaSharp.SKPoint 4 False*/
                 if (pArray !== 0) {
                     ret.points = new Array();
                     for (var i = 0; i < ret.points_Length; i++) {
@@ -15667,11 +15681,11 @@ var SkiaSharp;
                 ret.text_Length = Number(memoryContext.getValue(pData + 4, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 8, "*");
+                var pArray = memoryContext.getValue(pData + 8, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.text = new Array();
                     for (var i = 0; i < ret.text_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.text.push(Number(value));
                     }
                 }
@@ -15686,7 +15700,7 @@ var SkiaSharp;
                 ret.points_Length = Number(memoryContext.getValue(pData + 16, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 20, "*");
+                var pArray = memoryContext.getValue(pData + 20, "*"); /*SkiaSharp.SKPoint 4 False*/
                 if (pArray !== 0) {
                     ret.points = new Array();
                     for (var i = 0; i < ret.points_Length; i++) {
@@ -15725,7 +15739,7 @@ var SkiaSharp;
                 ret.points_Length = Number(memoryContext.getValue(pData + 12, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 16, "*");
+                var pArray = memoryContext.getValue(pData + 16, "*"); /*SkiaSharp.SKPoint 4 False*/
                 if (pArray !== 0) {
                     ret.points = new Array();
                     for (var i = 0; i < ret.points_Length; i++) {
@@ -15888,11 +15902,11 @@ var SkiaSharp;
                 ret.text_Length = Number(memoryContext.getValue(pData + 4, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 8, "*");
+                var pArray = memoryContext.getValue(pData + 8, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.text = new Array();
                     for (var i = 0; i < ret.text_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.text.push(Number(value));
                     }
                 }
@@ -15988,11 +16002,11 @@ var SkiaSharp;
                 ret.text_Length = Number(memoryContext.getValue(pData + 4, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 8, "*");
+                var pArray = memoryContext.getValue(pData + 8, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.text = new Array();
                     for (var i = 0; i < ret.text_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.text.push(Number(value));
                     }
                 }
@@ -16630,7 +16644,7 @@ var SkiaSharp;
                 ret.frameInfo_Length = Number(memoryContext.getValue(pData + 4, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 8, "*");
+                var pArray = memoryContext.getValue(pData + 8, "*"); /*SkiaSharp.SKCodecFrameInfo 4 False*/
                 if (pArray !== 0) {
                     ret.frameInfo = new Array();
                     for (var i = 0; i < ret.frameInfo_Length; i++) {
@@ -17288,7 +17302,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 0, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 4, "*");
+                var pArray = memoryContext.getValue(pData + 4, "*"); /*SkiaSharp.SKColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -17306,7 +17320,7 @@ var SkiaSharp;
                 ret.pmcolors_Length = Number(memoryContext.getValue(pData + 12, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 16, "*");
+                var pArray = memoryContext.getValue(pData + 16, "*"); /*SkiaSharp.SKPMColor 4 False*/
                 if (pArray !== 0) {
                     ret.pmcolors = new Array();
                     for (var i = 0; i < ret.pmcolors_Length; i++) {
@@ -17348,7 +17362,7 @@ var SkiaSharp;
                 ret.pmcolors_Length = Number(memoryContext.getValue(pData + 0, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 4, "*");
+                var pArray = memoryContext.getValue(pData + 4, "*"); /*SkiaSharp.SKPMColor 4 False*/
                 if (pArray !== 0) {
                     ret.pmcolors = new Array();
                     for (var i = 0; i < ret.pmcolors_Length; i++) {
@@ -17366,7 +17380,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 12, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 16, "*");
+                var pArray = memoryContext.getValue(pData + 16, "*"); /*SkiaSharp.SKColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -17393,7 +17407,7 @@ var SkiaSharp;
                 ret.array_Length = Number(memoryContext.getValue(pData + 0, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 4, "*");
+                var pArray = memoryContext.getValue(pData + 4, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.array = new Array();
                     for (var i = 0; i < ret.array_Length; i++) {
@@ -17510,11 +17524,11 @@ var SkiaSharp;
                 ret.table_Length = Number(memoryContext.getValue(pData + 0, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 4, "*");
+                var pArray = memoryContext.getValue(pData + 4, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.table = new Array();
                     for (var i = 0; i < ret.table_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.table.push(Number(value));
                     }
                 }
@@ -17538,11 +17552,11 @@ var SkiaSharp;
                 ret.tableA_Length = Number(memoryContext.getValue(pData + 0, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 4, "*");
+                var pArray = memoryContext.getValue(pData + 4, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.tableA = new Array();
                     for (var i = 0; i < ret.tableA_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.tableA.push(Number(value));
                     }
                 }
@@ -17554,11 +17568,11 @@ var SkiaSharp;
                 ret.tableR_Length = Number(memoryContext.getValue(pData + 8, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 12, "*");
+                var pArray = memoryContext.getValue(pData + 12, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.tableR = new Array();
                     for (var i = 0; i < ret.tableR_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.tableR.push(Number(value));
                     }
                 }
@@ -17570,11 +17584,11 @@ var SkiaSharp;
                 ret.tableG_Length = Number(memoryContext.getValue(pData + 16, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 20, "*");
+                var pArray = memoryContext.getValue(pData + 20, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.tableG = new Array();
                     for (var i = 0; i < ret.tableG_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.tableG.push(Number(value));
                     }
                 }
@@ -17586,11 +17600,11 @@ var SkiaSharp;
                 ret.tableB_Length = Number(memoryContext.getValue(pData + 24, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 28, "*");
+                var pArray = memoryContext.getValue(pData + 28, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.tableB = new Array();
                     for (var i = 0; i < ret.tableB_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.tableB.push(Number(value));
                     }
                 }
@@ -17805,11 +17819,11 @@ var SkiaSharp;
                 ret.input_Length = Number(memoryContext.getValue(pData + 0, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 4, "*");
+                var pArray = memoryContext.getValue(pData + 4, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.input = new Array();
                     for (var i = 0; i < ret.input_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.input.push(Number(value));
                     }
                 }
@@ -18145,7 +18159,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 0, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 4, "*");
+                var pArray = memoryContext.getValue(pData + 4, "*"); /*SkiaSharp.SKPMColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -18254,11 +18268,11 @@ var SkiaSharp;
                 ret.utf8path_Length = Number(memoryContext.getValue(pData + 0, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 4, "*");
+                var pArray = memoryContext.getValue(pData + 4, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.utf8path = new Array();
                     for (var i = 0; i < ret.utf8path_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.utf8path.push(Number(value));
                     }
                 }
@@ -18354,11 +18368,11 @@ var SkiaSharp;
                 ret.src_Length = Number(memoryContext.getValue(pData + 0, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 4, "*");
+                var pArray = memoryContext.getValue(pData + 4, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.src = new Array();
                     for (var i = 0; i < ret.src_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.src.push(Number(value));
                     }
                 }
@@ -18855,11 +18869,11 @@ var SkiaSharp;
                 ret.utf8path_Length = Number(memoryContext.getValue(pData + 0, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 4, "*");
+                var pArray = memoryContext.getValue(pData + 4, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.utf8path = new Array();
                     for (var i = 0; i < ret.utf8path_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.utf8path.push(Number(value));
                     }
                 }
@@ -18913,11 +18927,11 @@ var SkiaSharp;
                 ret.utf8path_Length = Number(memoryContext.getValue(pData + 0, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 4, "*");
+                var pArray = memoryContext.getValue(pData + 4, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.utf8path = new Array();
                     for (var i = 0; i < ret.utf8path_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.utf8path.push(Number(value));
                     }
                 }
@@ -18980,11 +18994,11 @@ var SkiaSharp;
                 ret.utf8path_Length = Number(memoryContext.getValue(pData + 4, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 8, "*");
+                var pArray = memoryContext.getValue(pData + 8, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.utf8path = new Array();
                     for (var i = 0; i < ret.utf8path_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.utf8path.push(Number(value));
                     }
                 }
@@ -19158,7 +19172,7 @@ var SkiaSharp;
                 ret.bcp47_Length = Number(memoryContext.getValue(pData + 12, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 16, "*");
+                var pArray = memoryContext.getValue(pData + 16, "*"); /*string 4 True*/
                 if (pArray !== 0) {
                     ret.bcp47 = new Array();
                     for (var i = 0; i < ret.bcp47_Length; i++) {
@@ -20829,7 +20843,7 @@ var SkiaSharp;
                 ret.kernel_Length = Number(memoryContext.getValue(pData + 8, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 12, "*");
+                var pArray = memoryContext.getValue(pData + 12, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.kernel = new Array();
                     for (var i = 0; i < ret.kernel_Length; i++) {
@@ -20900,7 +20914,7 @@ var SkiaSharp;
                 ret.filters_Length = Number(memoryContext.getValue(pData + 0, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 4, "*");
+                var pArray = memoryContext.getValue(pData + 4, "*"); /*System.IntPtr 4 False*/
                 if (pArray !== 0) {
                     ret.filters = new Array();
                     for (var i = 0; i < ret.filters_Length; i++) {
@@ -21933,11 +21947,11 @@ var SkiaSharp;
                 ret.table_Length = Number(memoryContext.getValue(pData + 0, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 4, "*");
+                var pArray = memoryContext.getValue(pData + 4, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.table = new Array();
                     for (var i = 0; i < ret.table_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.table.push(Number(value));
                     }
                 }
@@ -21979,7 +21993,7 @@ var SkiaSharp;
                 ret.dst_Length = Number(memoryContext.getValue(pData + 4, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 8, "*");
+                var pArray = memoryContext.getValue(pData + 8, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.dst = new Array();
                     for (var i = 0; i < ret.dst_Length; i++) {
@@ -22010,7 +22024,7 @@ var SkiaSharp;
                 ret.dst_Length = Number(memoryContext.getValue(pData + 4, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 8, "*");
+                var pArray = memoryContext.getValue(pData + 8, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.dst = new Array();
                     for (var i = 0; i < ret.dst_Length; i++) {
@@ -22143,7 +22157,7 @@ var SkiaSharp;
                 ret.src2_Length = Number(memoryContext.getValue(pData + 4, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 8, "*");
+                var pArray = memoryContext.getValue(pData + 8, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.src2 = new Array();
                     for (var i = 0; i < ret.src2_Length; i++) {
@@ -22162,7 +22176,7 @@ var SkiaSharp;
                 ret.dst_Length = Number(memoryContext.getValue(pData + 16, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 20, "*");
+                var pArray = memoryContext.getValue(pData + 20, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.dst = new Array();
                     for (var i = 0; i < ret.dst_Length; i++) {
@@ -22193,7 +22207,7 @@ var SkiaSharp;
                 ret.src_Length = Number(memoryContext.getValue(pData + 4, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 8, "*");
+                var pArray = memoryContext.getValue(pData + 8, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.src = new Array();
                     for (var i = 0; i < ret.src_Length; i++) {
@@ -22209,7 +22223,7 @@ var SkiaSharp;
                 ret.dst_Length = Number(memoryContext.getValue(pData + 12, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 16, "*");
+                var pArray = memoryContext.getValue(pData + 16, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.dst = new Array();
                     for (var i = 0; i < ret.dst_Length; i++) {
@@ -22482,7 +22496,7 @@ var SkiaSharp;
                 ret.src_Length = Number(memoryContext.getValue(pData + 4, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 8, "*");
+                var pArray = memoryContext.getValue(pData + 8, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.src = new Array();
                     for (var i = 0; i < ret.src_Length; i++) {
@@ -22630,7 +22644,7 @@ var SkiaSharp;
                 ret.src_Length = Number(memoryContext.getValue(pData + 4, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 8, "*");
+                var pArray = memoryContext.getValue(pData + 8, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.src = new Array();
                     for (var i = 0; i < ret.src_Length; i++) {
@@ -23208,11 +23222,11 @@ var SkiaSharp;
                 ret.data_Length = Number(memoryContext.getValue(pData + 0, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 4, "*");
+                var pArray = memoryContext.getValue(pData + 4, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.data = new Array();
                     for (var i = 0; i < ret.data_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.data.push(Number(value));
                     }
                 }
@@ -23299,11 +23313,11 @@ var SkiaSharp;
                 ret.data_Length = Number(memoryContext.getValue(pData + 4, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 8, "*");
+                var pArray = memoryContext.getValue(pData + 8, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.data = new Array();
                     for (var i = 0; i < ret.data_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.data.push(Number(value));
                     }
                 }
@@ -23908,7 +23922,7 @@ var SkiaSharp;
                 ret.bounds_Length = Number(memoryContext.getValue(pData + 8, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 12, "*");
+                var pArray = memoryContext.getValue(pData + 12, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.bounds = new Array();
                     for (var i = 0; i < ret.bounds_Length; i++) {
@@ -23948,7 +23962,7 @@ var SkiaSharp;
                 ret.xpos_Length = Number(memoryContext.getValue(pData + 12, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 16, "*");
+                var pArray = memoryContext.getValue(pData + 16, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.xpos = new Array();
                     for (var i = 0; i < ret.xpos_Length; i++) {
@@ -23967,7 +23981,7 @@ var SkiaSharp;
                 ret.bounds_Length = Number(memoryContext.getValue(pData + 24, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 28, "*");
+                var pArray = memoryContext.getValue(pData + 28, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.bounds = new Array();
                     for (var i = 0; i < ret.bounds_Length; i++) {
@@ -24007,7 +24021,7 @@ var SkiaSharp;
                 ret.pos_Length = Number(memoryContext.getValue(pData + 12, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 16, "*");
+                var pArray = memoryContext.getValue(pData + 16, "*"); /*SkiaSharp.SKPoint 4 False*/
                 if (pArray !== 0) {
                     ret.pos = new Array();
                     for (var i = 0; i < ret.pos_Length; i++) {
@@ -24022,7 +24036,7 @@ var SkiaSharp;
                 ret.bounds_Length = Number(memoryContext.getValue(pData + 20, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 24, "*");
+                var pArray = memoryContext.getValue(pData + 24, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.bounds = new Array();
                     for (var i = 0; i < ret.bounds_Length; i++) {
@@ -24062,7 +24076,7 @@ var SkiaSharp;
                 ret.points_Length = Number(memoryContext.getValue(pData + 12, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 16, "*");
+                var pArray = memoryContext.getValue(pData + 16, "*"); /*SkiaSharp.SKPoint 4 False*/
                 if (pArray !== 0) {
                     ret.points = new Array();
                     for (var i = 0; i < ret.points_Length; i++) {
@@ -24224,7 +24238,7 @@ var SkiaSharp;
                 ret.bounds_Length = Number(memoryContext.getValue(pData + 20, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 24, "*");
+                var pArray = memoryContext.getValue(pData + 24, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.bounds = new Array();
                     for (var i = 0; i < ret.bounds_Length; i++) {
@@ -25391,7 +25405,7 @@ var SkiaSharp;
                 ret.points_Length = Number(memoryContext.getValue(pData + 4, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 8, "*");
+                var pArray = memoryContext.getValue(pData + 8, "*"); /*SkiaSharp.SKPoint 4 False*/
                 if (pArray !== 0) {
                     ret.points = new Array();
                     for (var i = 0; i < ret.points_Length; i++) {
@@ -25842,7 +25856,7 @@ var SkiaSharp;
                 ret.pts_Length = Number(memoryContext.getValue(pData + 28, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 32, "*");
+                var pArray = memoryContext.getValue(pData + 32, "*"); /*SkiaSharp.SKPoint 4 False*/
                 if (pArray !== 0) {
                     ret.pts = new Array();
                     for (var i = 0; i < ret.pts_Length; i++) {
@@ -26140,7 +26154,7 @@ var SkiaSharp;
                 ret.intervals_Length = Number(memoryContext.getValue(pData + 0, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 4, "*");
+                var pArray = memoryContext.getValue(pData + 4, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.intervals = new Array();
                     for (var i = 0; i < ret.intervals_Length; i++) {
@@ -26390,7 +26404,7 @@ var SkiaSharp;
                 ret.points_Length = Number(memoryContext.getValue(pData + 4, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 8, "*");
+                var pArray = memoryContext.getValue(pData + 8, "*"); /*SkiaSharp.SKPoint 4 False*/
                 if (pArray !== 0) {
                     ret.points = new Array();
                     for (var i = 0; i < ret.points_Length; i++) {
@@ -26438,7 +26452,7 @@ var SkiaSharp;
                 ret.line_Length = Number(memoryContext.getValue(pData + 4, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 8, "*");
+                var pArray = memoryContext.getValue(pData + 8, "*"); /*SkiaSharp.SKPoint 4 False*/
                 if (pArray !== 0) {
                     ret.line = new Array();
                     for (var i = 0; i < ret.line_Length; i++) {
@@ -26678,7 +26692,7 @@ var SkiaSharp;
                 ret.points_Length = Number(memoryContext.getValue(pData + 4, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 8, "*");
+                var pArray = memoryContext.getValue(pData + 8, "*"); /*SkiaSharp.SKPoint 4 False*/
                 if (pArray !== 0) {
                     ret.points = new Array();
                     for (var i = 0; i < ret.points_Length; i++) {
@@ -26873,7 +26887,7 @@ var SkiaSharp;
                 ret.points_Length = Number(memoryContext.getValue(pData + 4, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 8, "*");
+                var pArray = memoryContext.getValue(pData + 8, "*"); /*SkiaSharp.SKPoint 4 False*/
                 if (pArray !== 0) {
                     ret.points = new Array();
                     for (var i = 0; i < ret.points_Length; i++) {
@@ -28808,7 +28822,7 @@ var SkiaSharp;
                 ret.radii_Length = Number(memoryContext.getValue(pData + 20, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 24, "*");
+                var pArray = memoryContext.getValue(pData + 24, "*"); /*SkiaSharp.SKPoint 4 False*/
                 if (pArray !== 0) {
                     ret.radii = new Array();
                     for (var i = 0; i < ret.radii_Length; i++) {
@@ -29080,7 +29094,7 @@ var SkiaSharp;
                 ret.points_Length = Number(memoryContext.getValue(pData + 0, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 4, "*");
+                var pArray = memoryContext.getValue(pData + 4, "*"); /*SkiaSharp.SKPoint 4 False*/
                 if (pArray !== 0) {
                     ret.points = new Array();
                     for (var i = 0; i < ret.points_Length; i++) {
@@ -29095,7 +29109,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 8, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 12, "*");
+                var pArray = memoryContext.getValue(pData + 12, "*"); /*SkiaSharp.SKColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -29110,7 +29124,7 @@ var SkiaSharp;
                 ret.colorPos_Length = Number(memoryContext.getValue(pData + 16, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 20, "*");
+                var pArray = memoryContext.getValue(pData + 20, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.colorPos = new Array();
                     for (var i = 0; i < ret.colorPos_Length; i++) {
@@ -29167,7 +29181,7 @@ var SkiaSharp;
                 ret.points_Length = Number(memoryContext.getValue(pData + 0, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 4, "*");
+                var pArray = memoryContext.getValue(pData + 4, "*"); /*SkiaSharp.SKPoint 4 False*/
                 if (pArray !== 0) {
                     ret.points = new Array();
                     for (var i = 0; i < ret.points_Length; i++) {
@@ -29182,7 +29196,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 8, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 12, "*");
+                var pArray = memoryContext.getValue(pData + 12, "*"); /*SkiaSharp.SKColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -29197,7 +29211,7 @@ var SkiaSharp;
                 ret.colorPos_Length = Number(memoryContext.getValue(pData + 16, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 20, "*");
+                var pArray = memoryContext.getValue(pData + 20, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.colorPos = new Array();
                     for (var i = 0; i < ret.colorPos_Length; i++) {
@@ -29234,7 +29248,7 @@ var SkiaSharp;
                 ret.points_Length = Number(memoryContext.getValue(pData + 0, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 4, "*");
+                var pArray = memoryContext.getValue(pData + 4, "*"); /*SkiaSharp.SKPoint 4 False*/
                 if (pArray !== 0) {
                     ret.points = new Array();
                     for (var i = 0; i < ret.points_Length; i++) {
@@ -29249,7 +29263,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 8, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 12, "*");
+                var pArray = memoryContext.getValue(pData + 12, "*"); /*SkiaSharp.SKColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -29308,7 +29322,7 @@ var SkiaSharp;
                 ret.points_Length = Number(memoryContext.getValue(pData + 0, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 4, "*");
+                var pArray = memoryContext.getValue(pData + 4, "*"); /*SkiaSharp.SKPoint 4 False*/
                 if (pArray !== 0) {
                     ret.points = new Array();
                     for (var i = 0; i < ret.points_Length; i++) {
@@ -29323,7 +29337,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 8, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 12, "*");
+                var pArray = memoryContext.getValue(pData + 12, "*"); /*SkiaSharp.SKColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -29554,7 +29568,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 12, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 16, "*");
+                var pArray = memoryContext.getValue(pData + 16, "*"); /*SkiaSharp.SKColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -29569,7 +29583,7 @@ var SkiaSharp;
                 ret.colorPos_Length = Number(memoryContext.getValue(pData + 20, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 24, "*");
+                var pArray = memoryContext.getValue(pData + 24, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.colorPos = new Array();
                     for (var i = 0; i < ret.colorPos_Length; i++) {
@@ -29634,7 +29648,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 12, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 16, "*");
+                var pArray = memoryContext.getValue(pData + 16, "*"); /*SkiaSharp.SKColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -29649,7 +29663,7 @@ var SkiaSharp;
                 ret.colorPos_Length = Number(memoryContext.getValue(pData + 20, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 24, "*");
+                var pArray = memoryContext.getValue(pData + 24, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.colorPos = new Array();
                     for (var i = 0; i < ret.colorPos_Length; i++) {
@@ -29712,7 +29726,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 12, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 16, "*");
+                var pArray = memoryContext.getValue(pData + 16, "*"); /*SkiaSharp.SKColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -29779,7 +29793,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 12, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 16, "*");
+                var pArray = memoryContext.getValue(pData + 16, "*"); /*SkiaSharp.SKColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -29841,7 +29855,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 8, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 12, "*");
+                var pArray = memoryContext.getValue(pData + 12, "*"); /*SkiaSharp.SKColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -29856,7 +29870,7 @@ var SkiaSharp;
                 ret.colorPos_Length = Number(memoryContext.getValue(pData + 16, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 20, "*");
+                var pArray = memoryContext.getValue(pData + 20, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.colorPos = new Array();
                     for (var i = 0; i < ret.colorPos_Length; i++) {
@@ -29922,7 +29936,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 8, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 12, "*");
+                var pArray = memoryContext.getValue(pData + 12, "*"); /*SkiaSharp.SKColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -29937,7 +29951,7 @@ var SkiaSharp;
                 ret.colorPos_Length = Number(memoryContext.getValue(pData + 16, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 20, "*");
+                var pArray = memoryContext.getValue(pData + 20, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.colorPos = new Array();
                     for (var i = 0; i < ret.colorPos_Length; i++) {
@@ -30005,7 +30019,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 8, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 12, "*");
+                var pArray = memoryContext.getValue(pData + 12, "*"); /*SkiaSharp.SKColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -30073,7 +30087,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 8, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 12, "*");
+                var pArray = memoryContext.getValue(pData + 12, "*"); /*SkiaSharp.SKColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -30152,7 +30166,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 24, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 28, "*");
+                var pArray = memoryContext.getValue(pData + 28, "*"); /*SkiaSharp.SKColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -30167,7 +30181,7 @@ var SkiaSharp;
                 ret.colorPos_Length = Number(memoryContext.getValue(pData + 32, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 36, "*");
+                var pArray = memoryContext.getValue(pData + 36, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.colorPos = new Array();
                     for (var i = 0; i < ret.colorPos_Length; i++) {
@@ -30240,7 +30254,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 24, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 28, "*");
+                var pArray = memoryContext.getValue(pData + 28, "*"); /*SkiaSharp.SKColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -30255,7 +30269,7 @@ var SkiaSharp;
                 ret.colorPos_Length = Number(memoryContext.getValue(pData + 32, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 36, "*");
+                var pArray = memoryContext.getValue(pData + 36, "*"); /*float 4 False*/
                 if (pArray !== 0) {
                     ret.colorPos = new Array();
                     for (var i = 0; i < ret.colorPos_Length; i++) {
@@ -30326,7 +30340,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 24, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 28, "*");
+                var pArray = memoryContext.getValue(pData + 28, "*"); /*SkiaSharp.SKColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -30401,7 +30415,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 24, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 28, "*");
+                var pArray = memoryContext.getValue(pData + 28, "*"); /*SkiaSharp.SKColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -30976,11 +30990,11 @@ var SkiaSharp;
                 ret.src_Length = Number(memoryContext.getValue(pData + 0, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 4, "*");
+                var pArray = memoryContext.getValue(pData + 4, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.src = new Array();
                     for (var i = 0; i < ret.src_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.src.push(Number(value));
                     }
                 }
@@ -32058,11 +32072,11 @@ var SkiaSharp;
                 ret.utf8path_Length = Number(memoryContext.getValue(pData + 0, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 4, "*");
+                var pArray = memoryContext.getValue(pData + 4, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.utf8path = new Array();
                     for (var i = 0; i < ret.utf8path_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.utf8path.push(Number(value));
                     }
                 }
@@ -32218,11 +32232,11 @@ var SkiaSharp;
                 ret.data_Length = Number(memoryContext.getValue(pData + 16, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 20, "*");
+                var pArray = memoryContext.getValue(pData + 20, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.data = new Array();
                     for (var i = 0; i < ret.data_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.data.push(Number(value));
                     }
                 }
@@ -32267,7 +32281,7 @@ var SkiaSharp;
                 ret.tags_Length = Number(memoryContext.getValue(pData + 4, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 8, "*");
+                var pArray = memoryContext.getValue(pData + 8, "*"); /*uint 4 False*/
                 if (pArray !== 0) {
                     ret.tags = new Array();
                     for (var i = 0; i < ret.tags_Length; i++) {
@@ -32365,7 +32379,7 @@ var SkiaSharp;
                 ret.positions_Length = Number(memoryContext.getValue(pData + 8, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 12, "*");
+                var pArray = memoryContext.getValue(pData + 12, "*"); /*SkiaSharp.SKPoint 4 False*/
                 if (pArray !== 0) {
                     ret.positions = new Array();
                     for (var i = 0; i < ret.positions_Length; i++) {
@@ -32380,7 +32394,7 @@ var SkiaSharp;
                 ret.texs_Length = Number(memoryContext.getValue(pData + 16, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 20, "*");
+                var pArray = memoryContext.getValue(pData + 20, "*"); /*SkiaSharp.SKPoint 4 False*/
                 if (pArray !== 0) {
                     ret.texs = new Array();
                     for (var i = 0; i < ret.texs_Length; i++) {
@@ -32395,7 +32409,7 @@ var SkiaSharp;
                 ret.colors_Length = Number(memoryContext.getValue(pData + 24, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 28, "*");
+                var pArray = memoryContext.getValue(pData + 28, "*"); /*SkiaSharp.SKColor 4 False*/
                 if (pArray !== 0) {
                     ret.colors = new Array();
                     for (var i = 0; i < ret.colors_Length; i++) {
@@ -32413,11 +32427,11 @@ var SkiaSharp;
                 ret.indices_Length = Number(memoryContext.getValue(pData + 36, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 40, "*");
+                var pArray = memoryContext.getValue(pData + 40, "*"); /*ushort 2 False*/
                 if (pArray !== 0) {
                     ret.indices = new Array();
                     for (var i = 0; i < ret.indices_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i16");
+                        var value = memoryContext.getValue(pArray + i * 2, "i16");
                         ret.indices.push(Number(value));
                     }
                 }
@@ -32579,11 +32593,11 @@ var SkiaSharp;
                 ret.buffer_Length = Number(memoryContext.getValue(pData + 4, "i32"));
             }
             {
-                var pArray = memoryContext.getValue(pData + 8, "*");
+                var pArray = memoryContext.getValue(pData + 8, "*"); /*byte 1 False*/
                 if (pArray !== 0) {
                     ret.buffer = new Array();
                     for (var i = 0; i < ret.buffer_Length; i++) {
-                        var value = memoryContext.getValue(pArray + i * 4, "i8");
+                        var value = memoryContext.getValue(pArray + i * 1, "i8");
                         ret.buffer.push(Number(value));
                     }
                 }

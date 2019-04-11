@@ -17,13 +17,13 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 4, "*");
+				var pArray = memoryContext.getValue(pData + 4, "*"); /*byte 1 False*/
 				if(pArray !== 0)
 				{
 					ret.src = new Array<number>();
 					for(var i=0; i<ret.src_Length; i++)
 					{
-						var value = memoryContext.getValue(pArray + i * 4, "i8");
+						var value = memoryContext.getValue(pArray + i * 1, "i8");
 						ret.src.push(Number(value));
 					}
 				}

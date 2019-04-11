@@ -21,7 +21,7 @@ namespace SkiaSharp
 			}
 			
 			{
-				var pArray = memoryContext.getValue(pData + 8, "*");
+				var pArray = memoryContext.getValue(pData + 8, "*"); /*SkiaSharp.SKCodecFrameInfo 4 False*/
 				if(pArray !== 0)
 				{
 					ret.frameInfo = new Array<SkiaSharp.SKCodecFrameInfo>();
