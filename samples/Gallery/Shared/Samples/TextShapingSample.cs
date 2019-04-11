@@ -1,4 +1,5 @@
-﻿using SkiaSharp;
+﻿#if !HAS_UNO
+using SkiaSharp;
 using SkiaSharp.HarfBuzz;
 
 namespace SkiaSharpSample.Samples
@@ -37,3 +38,4 @@ namespace SkiaSharpSample.Samples
 		}
 	}
 }
+#endif

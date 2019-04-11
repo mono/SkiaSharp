@@ -59,11 +59,13 @@ namespace SkiaSharp
 
 		public int SaveLayer (SKRect limit, SKPaint paint)
 		{
+			Console.WriteLine ($"SaveLayer {limit.Top};{limit.Bottom};{limit.Left};{limit.Right}");
 			return SkiaApi.sk_canvas_save_layer (Handle, ref limit, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
 		public int SaveLayer (SKPaint paint)
 		{
+			Console.WriteLine ($"SaveLayer2");
 			return SkiaApi.sk_canvas_save_layer (Handle, IntPtr.Zero, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 

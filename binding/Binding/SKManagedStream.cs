@@ -56,12 +56,12 @@ namespace SkiaSharp
 			return (IntPtr)result;
 		}
 
-		protected override IntPtr OnRead (IntPtr buffer, IntPtr size)
+		protected internal override IntPtr OnRead (IntPtr buffer, IntPtr size)
 		{
 			return OnReadManagedStream (buffer, size);
 		}
 
-		protected override IntPtr OnPeek (IntPtr buffer, IntPtr size)
+		protected internal override IntPtr OnPeek (IntPtr buffer, IntPtr size)
 		{
 			if (!stream.CanSeek) {
 				return (IntPtr)0;
@@ -72,7 +72,7 @@ namespace SkiaSharp
 			return result;
 		}
 
-		protected override bool OnIsAtEnd ()
+		protected internal override bool OnIsAtEnd ()
 		{
 			if (!stream.CanSeek) {
 				return isAsEnd;
@@ -80,17 +80,17 @@ namespace SkiaSharp
 			return stream.Position >= stream.Length;
 		}
 
-		protected override bool OnHasPosition ()
+		protected internal override bool OnHasPosition ()
 		{
 			return stream.CanSeek;
 		}
 
-		protected override bool OnHasLength ()
+		protected internal override bool OnHasLength ()
 		{
 			return stream.CanSeek;
 		}
 
-		protected override bool OnRewind ()
+		protected internal override bool OnRewind ()
 		{
 			if (!stream.CanSeek) {
 				return false;
@@ -99,7 +99,7 @@ namespace SkiaSharp
 			return true;
 		}
 
-		protected override IntPtr OnGetPosition ()
+		protected internal override IntPtr OnGetPosition ()
 		{
 			if (!stream.CanSeek) {
 				return (IntPtr)0;
@@ -107,7 +107,7 @@ namespace SkiaSharp
 			return (IntPtr)stream.Position;
 		}
 
-		protected override IntPtr OnGetLength ()
+		protected internal override IntPtr OnGetLength ()
 		{
 			if (!stream.CanSeek) {
 				return (IntPtr)0;
@@ -115,7 +115,7 @@ namespace SkiaSharp
 			return (IntPtr)stream.Length;
 		}
 
-		protected override bool OnSeek (IntPtr position)
+		protected internal override bool OnSeek (IntPtr position)
 		{
 			if (!stream.CanSeek) {
 				return false;
@@ -124,7 +124,7 @@ namespace SkiaSharp
 			return true;
 		}
 
-		protected override bool OnMove (int offset)
+		protected internal override bool OnMove (int offset)
 		{
 			if (!stream.CanSeek) {
 				return false;
@@ -133,7 +133,7 @@ namespace SkiaSharp
 			return true;
 		}
 
-		protected override IntPtr OnCreateNew ()
+		protected internal override IntPtr OnCreateNew ()
 		{
 			var newStream = new SKManagedStream (stream, false, false);
 			return newStream.Handle;

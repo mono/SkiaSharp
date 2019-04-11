@@ -1,0 +1,21 @@
+﻿<Page
+    x:Class="SkiaSharpSample.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:SkiaSharpSample"
+    xmlns:sk="using:SkiaSharp.Views.Uno"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+  <Grid Background="Gray">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+    <Border Grid.Row="1" BorderBrush="Red" BorderThickness="1" Margin="50">
+      <sk:SKXamlCanvas PaintSurface="OnPaintSurface" />
+    </Border>
+    <TextBlock Grid.Row="0" Text="Hello, world !" Margin="20" FontSize="30" />
+  </Grid>
+</Page>

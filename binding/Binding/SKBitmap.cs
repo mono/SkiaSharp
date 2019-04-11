@@ -535,9 +535,11 @@ namespace SkiaSharp
 			var bitmap = new SKBitmap (bitmapInfo);
 			var result = codec.GetPixels (bitmapInfo, bitmap.GetPixels (out var length));
 			if (result != SKCodecResult.Success && result != SKCodecResult.IncompleteInput) {
+				Console.WriteLine ($"Decode failed: {result}");
 				bitmap.Dispose ();
 				bitmap = null;
 			}
+			Console.WriteLine ($"Decode sucess");
 			return bitmap;
 		}
 
@@ -572,7 +574,12 @@ namespace SkiaSharp
 			if (stream == null) {
 				throw new ArgumentNullException (nameof (stream));
 			}
-			using (var codec = SKCodec.Create (stream)) {
+			using (var codec = SKCodec.Create (stream, out var result)) {
+
+				if(result != SKCodecResult.Success) {
+					throw new InvalidOperationException ($"Failed to create codec {result}");
+				}
+
 				if (codec == null) {
 					return null;
 				}

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-#if WINDOWS_UWP
+#if WINDOWS_UWP || HAS_UNO
 using Windows.ApplicationModel;
 using Windows.Storage;
 using Windows.System;
@@ -31,7 +31,7 @@ namespace SkiaSharpSample
 		{
 			var fontName = "content-font.ttf";
 
-#if WINDOWS_UWP
+#if WINDOWS_UWP || HAS_UNO
 			var pkg = Package.Current.InstalledLocation.Path;
 			var path = Path.Combine(pkg, "Assets", "Media", fontName);
 #elif __IOS__ || __TVOS__ || __MACOS__
@@ -43,14 +43,14 @@ namespace SkiaSharpSample
 			{
 				asset.CopyTo(dest);
 			}
-#elif __DESKTOP__
+#elif __DESKTOP__ || HAS_UNO
 			var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 			var path = Path.Combine(root, "Media", fontName);
 #elif __TIZEN__
 			var path = ResourcePath.GetPath(fontName);
 #endif
 
-#if WINDOWS_UWP
+#if WINDOWS_UWP || HAS_UNO
 			var localStorage = ApplicationData.Current.LocalFolder.Path;
 #elif __IOS__ || __TVOS__
 			var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
@@ -74,7 +74,7 @@ namespace SkiaSharpSample
 
 		private static async void OnOpenSampleFile(string path)
 		{
-#if WINDOWS_UWP
+#if WINDOWS_UWP || HAS_UNO
 			var file = await StorageFile.GetFileFromPathAsync(path);
 			await Launcher.LaunchFileAsync(file);
 #elif __MACOS__

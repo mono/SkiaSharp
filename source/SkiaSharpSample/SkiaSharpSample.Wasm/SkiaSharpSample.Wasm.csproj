@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <WasmHead>true</WasmHead>
+    <DefineConstants>$(DefineConstants);__WASM__</DefineConstants>
+    <NoWarn>NU1701</NoWarn>
+    <MonoRuntimeDebuggerEnabled>true</MonoRuntimeDebuggerEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="..\SkiaSharpSample.UWP\Assets\*.png" Link="Assets\%(FileName)%(Extension)" />
+    <None Remove="MainPage.xaml" />
+    <Compile Include="..\..\..\samples\Gallery\UWP\SkiaSharpSample\App.xaml.cs" Link="App.xaml.cs" />
+    <Compile Include="..\..\..\samples\Gallery\UWP\SkiaSharpSample\MainPage.xaml.cs" Link="MainPage.xaml.cs" />
+    <Content Include="Fonts\winjs-symbols.woff2" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="WasmCSS\Fonts.css" />
+    <EmbeddedResource Include="WasmScripts\AppManifest.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <LinkerDescriptor Include="LinkerConfig.xml" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.1" />
+    <PackageReference Include="Uno.UI" Version="1.45.0-dev.1163" />
+    <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.0.0-dev.258" />
+    <DotNetCliToolReference Include="Uno.Wasm.Bootstrap.Cli" Version="1.0.0-dev.258" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\..\binding\SkiaSharp.Wasm\node_modules\canvaskit-wasm\bin\canvaskit.wasm" Link="canvaskit.wasm" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="..\..\..\samples\Gallery\UWP\SkiaSharpSample\App.xaml" Link="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="..\..\..\samples\Gallery\UWP\SkiaSharpSample\MainPage.xaml" Link="MainPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp.Wasm\SkiaSharp.Wasm.csproj" />
+    <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Uno\SkiaSharp.Views.Uno.csproj" />
+  </ItemGroup>
+  <Import Project="..\..\..\samples\Gallery\Shared\Shared.projitems" Label="Shared" />
+  <Import Project="..\..\..\samples\Gallery\PlatformShared\PlatformShared.projitems" Label="Shared" />
+</Project>

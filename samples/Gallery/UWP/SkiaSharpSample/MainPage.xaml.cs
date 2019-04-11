@@ -15,7 +15,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using SkiaSharp;
-using SkiaSharp.Views.UWP;
+using SkiaSharp.Views.Uno;
 
 namespace SkiaSharpSample
 {
@@ -52,6 +52,21 @@ namespace SkiaSharpSample
 				titlebar.ButtonHoverForegroundColor = Colors.White;
 			}
 
+			var _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () => {
+
+				while (!SKXamlCanvas.IsInitialized)
+				{
+					await Task.Delay(100);
+				}
+
+				Initialize();
+			});
+			
+
+		}
+
+		private void Initialize()
+		{
 			samples = SamplesManager.GetSamples(SamplePlatforms.UWP).ToList();
 			sampleGroups = Enum.GetValues(typeof(SampleCategories))
 				.Cast<SampleCategories>()
@@ -89,14 +104,20 @@ namespace SkiaSharpSample
 			switch (backend)
 			{
 				case SampleBackends.Memory:
+#if !HAS_UNO
 					glview.Visibility = Visibility.Collapsed;
+#endif
 					canvas.Visibility = Visibility.Visible;
 					canvas.Invalidate();
 					break;
 				case SampleBackends.OpenGL:
+#if !HAS_UNO
 					glview.Visibility = Visibility.Visible;
+#endif
 					canvas.Visibility = Visibility.Collapsed;
+#if !HAS_UNO
 					glview.Invalidate();
+#endif
 					break;
 				default:
 					var msg = new MessageDialog("This functionality is not yet implemented.", "Configure Backend");
@@ -189,7 +210,9 @@ namespace SkiaSharpSample
 		private void OnRefreshRequested(object sender, EventArgs e)
 		{
 			canvas.Invalidate();
+#if !HAS_UNO
 			glview.Invalidate();
+#endif
 		}
 
 		private void OnPaintSurface(SKCanvas canvas, int width, int height)

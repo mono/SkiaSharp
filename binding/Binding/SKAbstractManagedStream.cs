@@ -54,6 +54,10 @@ namespace SkiaSharp
 
 		static SKAbstractManagedStream ()
 		{
+#if __WASM__
+			WebAssemblyRuntime.InvokeJS($"SkiaSharp.SurfaceManager.registerManagedStream();");
+
+#else
 			fRead = new read_delegate (ReadInternal);
 			fPeek = new peek_delegate (PeekInternal);
 			fIsAtEnd = new isAtEnd_delegate (IsAtEndInternal);
@@ -80,6 +84,7 @@ namespace SkiaSharp
 				Marshal.GetFunctionPointerForDelegate (fGetLength),
 				Marshal.GetFunctionPointerForDelegate (fCreateNew),
 				Marshal.GetFunctionPointerForDelegate (fDestroy));
+#endif
 		}
 
 		protected SKAbstractManagedStream ()
@@ -97,7 +102,7 @@ namespace SkiaSharp
 			managedStreams.TryAdd (Handle, this);
 		}
 
-		private void DisposeFromNative ()
+		internal void DisposeFromNative ()
 		{
 			Interlocked.Exchange (ref fromNative, 1);
 			Dispose ();
@@ -116,27 +121,27 @@ namespace SkiaSharp
 			base.Dispose (disposing);
 		}
 
-		protected abstract IntPtr OnRead (IntPtr buffer, IntPtr size);
+		protected internal abstract IntPtr OnRead (IntPtr buffer, IntPtr size);
 
-		protected abstract IntPtr OnPeek (IntPtr buffer, IntPtr size);
+		protected internal abstract IntPtr OnPeek (IntPtr buffer, IntPtr size);
 
-		protected abstract bool OnIsAtEnd ();
+		protected internal abstract bool OnIsAtEnd ();
 
-		protected abstract bool OnHasPosition ();
+		protected internal abstract bool OnHasPosition ();
 
-		protected abstract bool OnHasLength ();
+		protected internal abstract bool OnHasLength ();
 
-		protected abstract bool OnRewind ();
+		protected internal abstract bool OnRewind ();
 
-		protected abstract IntPtr OnGetPosition ();
+		protected internal abstract IntPtr OnGetPosition ();
 
-		protected abstract IntPtr OnGetLength ();
+		protected internal abstract IntPtr OnGetLength ();
 
-		protected abstract bool OnSeek (IntPtr position);
+		protected internal abstract bool OnSeek (IntPtr position);
 
-		protected abstract bool OnMove (int offset);
+		protected internal abstract bool OnMove (int offset);
 
-		protected abstract IntPtr OnCreateNew ();
+		protected internal abstract IntPtr OnCreateNew ();
 
 		// unmanaged <-> managed methods (static for iOS)
 
@@ -214,7 +219,7 @@ namespace SkiaSharp
 			}
 		}
 
-		private static SKAbstractManagedStream AsManagedStream (IntPtr ptr)
+		internal static SKAbstractManagedStream AsManagedStream (IntPtr ptr)
 		{
 			if (AsManagedStream (ptr, out var target)) {
 				return target;
@@ -222,13 +227,124 @@ namespace SkiaSharp
 			throw new ObjectDisposedException ("SKAbstractManagedStream: " + ptr);
 		}
 
-		private static bool AsManagedStream (IntPtr ptr, out SKAbstractManagedStream target)
+		internal static bool AsManagedStream (IntPtr ptr, out SKAbstractManagedStream target)
 		{
 			if (managedStreams.TryGetValue (ptr, out target)) {
 				return true;
 			}
 			target = null;
 			return false;
+		}
+	}
+
+	public static class ManagedStreamHelper
+	{
+		public static int ReadInternal (int managedStreamPtr, int buffer, int size)
+		{
+			var ret = (int)SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnRead ((IntPtr)buffer, (IntPtr)size);
+
+			Console.WriteLine ($"[{managedStreamPtr:X8}] ReadInternal({buffer:X8}, {size}) = {ret}");
+
+			return ret;
+		}
+
+		public static int PeekInternal (int managedStreamPtr, int buffer, int size)
+		{
+			var ret = (int)SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnPeek ((IntPtr)buffer, (IntPtr)size);
+
+			Console.WriteLine ($"[{managedStreamPtr:X8}] PeekInternal({buffer:X8}, {size}) = {ret}");
+
+			return ret;
+		}
+
+		public static bool IsAtEndInternal (int managedStreamPtr)
+		{
+			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnIsAtEnd ();
+
+			Console.WriteLine ($"[{managedStreamPtr:X8}] IsAtEndInternal() = {ret}");
+
+			return ret;
+		}
+
+		public static bool HasPositionInternal (int managedStreamPtr)
+		{
+			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnHasPosition ();
+
+			Console.WriteLine ($"[{managedStreamPtr:X8}] HasPositionInternal() = {ret}");
+
+			return ret;
+		}
+
+		public static bool HasLengthInternal (int managedStreamPtr)
+		{
+			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnHasLength ();
+
+			Console.WriteLine ($"[{managedStreamPtr:X8}] HasLengthInternal() = {ret}");
+
+			return ret;
+		}
+
+		public static bool RewindInternal (int managedStreamPtr)
+		{
+			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnRewind ();
+
+			Console.WriteLine ($"[{managedStreamPtr:X8}] RewindInternal() = {ret}");
+
+			return ret;
+		}
+
+		public static int GetPositionInternal (int managedStreamPtr)
+		{
+			var ret = (int)SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnGetPosition ();
+
+			Console.WriteLine ($"[{managedStreamPtr:X8}] GetPositionInternal() = {ret}");
+
+			return ret;
+		}
+
+		public static bool SeekInternal (int managedStreamPtr, int position)
+		{
+			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnSeek ((IntPtr)position);
+
+			Console.WriteLine ($"[{managedStreamPtr:X8}] SeekInternal({position}) = {ret}");
+
+			return ret;
+		}
+
+		public static bool MoveInternal (int managedStreamPtr, int offset)
+		{
+			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnMove (offset);
+
+			Console.WriteLine ($"[{managedStreamPtr:X8}] MoveInternal({offset}) = {ret}");
+
+			return ret;
+		}
+
+		public static int GetLengthInternal (int managedStreamPtr)
+		{
+			var ret = (int)SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnGetLength ();
+
+			Console.WriteLine ($"[{managedStreamPtr:X8}] GetLengthInternal() = {ret}");
+
+			return ret;
+		}
+
+		public static int CreateNewInternal (int managedStreamPtr)
+		{
+			var ret = (int)SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnCreateNew ();
+
+			Console.WriteLine ($"[{managedStreamPtr:X8}] CreateNewInternal()");
+
+			return ret;
+		}
+
+		public static void DestroyInternal (int managedStreamPtr)
+		{
+			Console.WriteLine ($"[{managedStreamPtr:X8}] DestroyInternal()");
+
+			if (SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr, out var managedStream)) {
+				managedStream.DisposeFromNative ();
+			}
 		}
 	}
 }

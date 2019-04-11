@@ -1,6 +1,6 @@
 ﻿<Page xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-      xmlns:views="using:SkiaSharp.Views.UWP"
+      xmlns:views="using:SkiaSharp.Views.Uno"
       xmlns:sample="using:SkiaSharpSample"
       xmlns:local="using:SkiaSharpSample"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -23,8 +23,12 @@
         <SolidColorBrush x:Key="XamarinLightBlue" Color="#3498DB" />
     </Page.Resources>
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <Grid>
+    <Grid Background="Gray">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="{ThemeResource SplitViewCompactPaneThemeLength}" />
                 <RowDefinition />
@@ -54,13 +58,13 @@
                     <!-- the samples canvas -->
                     <Grid Tapped="OnSampleTapped">
                         <views:SKXamlCanvas x:Name="canvas" Grid.Row="1" PaintSurface="OnPaintCanvas" />
-                        <views:SKSwapChainPanel x:Name="glview" Grid.Row="1" PaintSurface="OnPaintGL" DrawInBackground="True" Visibility="Collapsed" />
+                        <!--<views:SKSwapChainPanel x:Name="glview" Grid.Row="1" PaintSurface="OnPaintGL" DrawInBackground="True" Visibility="Collapsed" />-->
                     </Grid>
                 </SplitView.Content>
             </SplitView>
         </Grid>
 
-        <CommandBar x:Name="commandBar" Background="{StaticResource XamarinLightBlue}" Foreground="White">
+        <CommandBar x:Name="commandBar" Background="Gray" Foreground="White">
             <!-- the toolbar items -->
             <AppBarButton Icon="Repair" Label="Configure Backend" IsCompact="True" Foreground="White">
                 <Button.Flyout>
