@@ -2,24 +2,6 @@ require(["canvaskit"], (ckInit) => {
     ckInit().then((i) => {
         window.CanvasKit = i;
         MonoSupport.jsCallDispatcher.registerScope("Skia", SkiaSharp.SkiaApi);
-        //var ptr = CanvasKit._malloc(10 * 10 * 4);
-        //var array = new Uint8ClampedArray(ptr, 0, 10 * 10 * 4);
-        //var imageData = new ImageData(CanvasKit.HEAPU8.buffer, 10, 10);
-        //var width = 640;
-        //var height = 480;
-        ///* @dict */
-        //var imageInfo = {
-        //    'width': width,
-        //    'height': height,
-        //    'colorType': CanvasKit.ColorType.RGBA_8888,
-        //    // Since we are sending these pixels directly into the HTML canvas,
-        //    // (and those pixels are un-premultiplied, i.e. straight r,g,b,a)
-        //    'alphaType': CanvasKit.AlphaType.Unpremul
-        //};
-        //var pixelLen = width * height * 4; // it's 8888, so 4 bytes per pixel
-        //// Allocate the buffer of pixels to be drawn into.
-        //var pixelPtr = CanvasKit._malloc(pixelLen);
-        //var surface = CanvasKit._getRasterDirectSurface(imageInfo, pixelPtr, width * 4);
     });
 });
 var SkiaSharp;

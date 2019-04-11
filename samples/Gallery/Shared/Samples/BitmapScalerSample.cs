@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !__WASM__
+using System;
 using System.Threading.Tasks;
 using SkiaSharp;
 using System.Collections.Generic;
@@ -28,7 +29,7 @@ namespace SkiaSharpSample.Samples
 			methods = Enum.GetValues(typeof(SKBitmapResizeMethod)).Cast<SKBitmapResizeMethod>().ToList();
 			method = methods[0];
 
-			using (var stream = new SKManagedStream(SampleMedia.Images.AdobeDng))
+			using (var stream = new SKManagedStream(SampleMedia.Images.ColorWheel))
 			{
 				bitmap = SKBitmap.Decode(stream);
 			}
@@ -88,3 +89,4 @@ namespace SkiaSharpSample.Samples
 		}
 	}
 }
+#endif

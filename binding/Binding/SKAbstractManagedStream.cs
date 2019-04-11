@@ -36,6 +36,7 @@ namespace SkiaSharp
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		internal delegate void destroy_delegate (IntPtr managedStreamPtr);
 
+#if !__WASM__
 		// delegate fields
 		private static readonly read_delegate fRead;
 		private static readonly peek_delegate fPeek;
@@ -49,6 +50,7 @@ namespace SkiaSharp
 		private static readonly getLength_delegate fGetLength;
 		private static readonly createNew_delegate fCreateNew;
 		private static readonly destroy_delegate fDestroy;
+#endif
 
 		private int fromNative;
 

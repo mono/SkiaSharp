@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !__WASM__
+using System;
 
 using SkiaSharp;
 
@@ -27,7 +28,7 @@ namespace SkiaSharpSample.Samples
 				Color = SampleMedia.Colors.XamarinLightBlue
 			};
 
-			using (var stream = new SKManagedStream(SampleMedia.Images.BabyTux))
+			using (var stream = new SKManagedStream(SampleMedia.Images.ColorWheel))
 			using (var bigBitmap = SKBitmap.Decode(stream))
 			{
 				canvas.DrawBitmap(bigBitmap, 10, 10);
@@ -51,3 +52,4 @@ namespace SkiaSharpSample.Samples
 		}
 	}
 }
+#endif
