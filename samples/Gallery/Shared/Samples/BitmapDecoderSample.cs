@@ -26,7 +26,7 @@ namespace SkiaSharpSample.Samples
 			using (var paint = new SKPaint())
 			using (var tf = SKTypeface.FromFamilyName("Arial"))
 			{
-				Console.WriteLine($"TF: {tf.FamilyName}");
+				// Console.WriteLine($"TF: {tf.FamilyName}");
 
 				var info = codec.Info;
 

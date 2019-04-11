@@ -77,9 +77,14 @@ namespace SkiaSharpSample
 
 			SamplesInitializer.Init();
 
+#if !__WASM__
 			samplesViewSource.Source = sampleGroups;
-
 			SetSample(samples.First(s => s.Category.HasFlag(SampleCategories.Showcases)));
+#else
+			samplesViewSource.IsSourceGrouped = false;
+			samplesViewSource.Source = samples;
+#endif
+
 		}
 
 		protected override void OnNavigatedFrom(NavigationEventArgs e)

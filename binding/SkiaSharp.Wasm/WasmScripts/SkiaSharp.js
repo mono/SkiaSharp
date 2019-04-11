@@ -7132,7 +7132,13 @@ var SkiaSharp;
                 SkiaSharp.ApiOverride.sk_shader_new_linear_gradient_0_Pre(parms);
             }
             var points = parms.points;
-            var colors = parms.colors;
+            var colors = CanvasKit._malloc(parms.colors_Length * 4);
+            var colors_u32 = colors / 4;
+            {
+                for (var i = 0; i < parms.colors_Length; i++) {
+                    CanvasKit.HEAPU32[colors_u32 + i] = parms.colors[i].color;
+                }
+            }
             var colorPos = CanvasKit._malloc(parms.colorPos_Length * 4); /*float*/
             var colorPos_f32 = colorPos / 4;
             {
@@ -7158,7 +7164,13 @@ var SkiaSharp;
                 SkiaSharp.ApiOverride.sk_shader_new_linear_gradient_1_Pre(parms);
             }
             var points = parms.points;
-            var colors = parms.colors;
+            var colors = CanvasKit._malloc(parms.colors_Length * 4);
+            var colors_u32 = colors / 4;
+            {
+                for (var i = 0; i < parms.colors_Length; i++) {
+                    CanvasKit.HEAPU32[colors_u32 + i] = parms.colors[i].color;
+                }
+            }
             var colorPos = CanvasKit._malloc(parms.colorPos_Length * 4); /*float*/
             var colorPos_f32 = colorPos / 4;
             {
@@ -7182,7 +7194,13 @@ var SkiaSharp;
                 SkiaSharp.ApiOverride.sk_shader_new_linear_gradient_2_Pre(parms);
             }
             var points = parms.points;
-            var colors = parms.colors;
+            var colors = CanvasKit._malloc(parms.colors_Length * 4);
+            var colors_u32 = colors / 4;
+            {
+                for (var i = 0; i < parms.colors_Length; i++) {
+                    CanvasKit.HEAPU32[colors_u32 + i] = parms.colors[i].color;
+                }
+            }
             var colorPosZero = parms.colorPosZero;
             var count = parms.count;
             var mode = parms.mode;
@@ -7202,7 +7220,13 @@ var SkiaSharp;
                 SkiaSharp.ApiOverride.sk_shader_new_linear_gradient_3_Pre(parms);
             }
             var points = parms.points;
-            var colors = parms.colors;
+            var colors = CanvasKit._malloc(parms.colors_Length * 4);
+            var colors_u32 = colors / 4;
+            {
+                for (var i = 0; i < parms.colors_Length; i++) {
+                    CanvasKit.HEAPU32[colors_u32 + i] = parms.colors[i].color;
+                }
+            }
             var colorPosZero = parms.colorPosZero;
             var count = parms.count;
             var mode = parms.mode;
@@ -7221,7 +7245,13 @@ var SkiaSharp;
             }
             var center = parms.center.marshalNew(CanvasKit);
             var radius = parms.radius;
-            var colors = parms.colors;
+            var colors = CanvasKit._malloc(parms.colors_Length * 4);
+            var colors_u32 = colors / 4;
+            {
+                for (var i = 0; i < parms.colors_Length; i++) {
+                    CanvasKit.HEAPU32[colors_u32 + i] = parms.colors[i].color;
+                }
+            }
             var colorPos = CanvasKit._malloc(parms.colorPos_Length * 4); /*float*/
             var colorPos_f32 = colorPos / 4;
             {
@@ -7250,7 +7280,13 @@ var SkiaSharp;
             }
             var center = parms.center.marshalNew(CanvasKit);
             var radius = parms.radius;
-            var colors = parms.colors;
+            var colors = CanvasKit._malloc(parms.colors_Length * 4);
+            var colors_u32 = colors / 4;
+            {
+                for (var i = 0; i < parms.colors_Length; i++) {
+                    CanvasKit.HEAPU32[colors_u32 + i] = parms.colors[i].color;
+                }
+            }
             var colorPos = CanvasKit._malloc(parms.colorPos_Length * 4); /*float*/
             var colorPos_f32 = colorPos / 4;
             {
@@ -7278,7 +7314,13 @@ var SkiaSharp;
             }
             var center = parms.center.marshalNew(CanvasKit);
             var radius = parms.radius;
-            var colors = parms.colors;
+            var colors = CanvasKit._malloc(parms.colors_Length * 4);
+            var colors_u32 = colors / 4;
+            {
+                for (var i = 0; i < parms.colors_Length; i++) {
+                    CanvasKit.HEAPU32[colors_u32 + i] = parms.colors[i].color;
+                }
+            }
             var colorPosZero = parms.colorPosZero;
             var count = parms.count;
             var mode = parms.mode;
@@ -7301,7 +7343,13 @@ var SkiaSharp;
             }
             var center = parms.center.marshalNew(CanvasKit);
             var radius = parms.radius;
-            var colors = parms.colors;
+            var colors = CanvasKit._malloc(parms.colors_Length * 4);
+            var colors_u32 = colors / 4;
+            {
+                for (var i = 0; i < parms.colors_Length; i++) {
+                    CanvasKit.HEAPU32[colors_u32 + i] = parms.colors[i].color;
+                }
+            }
             var colorPosZero = parms.colorPosZero;
             var count = parms.count;
             var mode = parms.mode;
@@ -7322,7 +7370,13 @@ var SkiaSharp;
                 SkiaSharp.ApiOverride.sk_shader_new_sweep_gradient_0_Pre(parms);
             }
             var center = parms.center.marshalNew(CanvasKit);
-            var colors = parms.colors;
+            var colors = CanvasKit._malloc(parms.colors_Length * 4);
+            var colors_u32 = colors / 4;
+            {
+                for (var i = 0; i < parms.colors_Length; i++) {
+                    CanvasKit.HEAPU32[colors_u32 + i] = parms.colors[i].color;
+                }
+            }
             var colorPos = CanvasKit._malloc(parms.colorPos_Length * 4); /*float*/
             var colorPos_f32 = colorPos / 4;
             {
@@ -7351,7 +7405,13 @@ var SkiaSharp;
                 SkiaSharp.ApiOverride.sk_shader_new_sweep_gradient_1_Pre(parms);
             }
             var center = parms.center.marshalNew(CanvasKit);
-            var colors = parms.colors;
+            var colors = CanvasKit._malloc(parms.colors_Length * 4);
+            var colors_u32 = colors / 4;
+            {
+                for (var i = 0; i < parms.colors_Length; i++) {
+                    CanvasKit.HEAPU32[colors_u32 + i] = parms.colors[i].color;
+                }
+            }
             var colorPos = CanvasKit._malloc(parms.colorPos_Length * 4); /*float*/
             var colorPos_f32 = colorPos / 4;
             {
@@ -7381,7 +7441,13 @@ var SkiaSharp;
                 SkiaSharp.ApiOverride.sk_shader_new_sweep_gradient_2_Pre(parms);
             }
             var center = parms.center.marshalNew(CanvasKit);
-            var colors = parms.colors;
+            var colors = CanvasKit._malloc(parms.colors_Length * 4);
+            var colors_u32 = colors / 4;
+            {
+                for (var i = 0; i < parms.colors_Length; i++) {
+                    CanvasKit.HEAPU32[colors_u32 + i] = parms.colors[i].color;
+                }
+            }
             var colorPosZero = parms.colorPosZero;
             var count = parms.count;
             var mode = parms.mode;
@@ -7404,7 +7470,13 @@ var SkiaSharp;
                 SkiaSharp.ApiOverride.sk_shader_new_sweep_gradient_3_Pre(parms);
             }
             var center = parms.center.marshalNew(CanvasKit);
-            var colors = parms.colors;
+            var colors = CanvasKit._malloc(parms.colors_Length * 4);
+            var colors_u32 = colors / 4;
+            {
+                for (var i = 0; i < parms.colors_Length; i++) {
+                    CanvasKit.HEAPU32[colors_u32 + i] = parms.colors[i].color;
+                }
+            }
             var colorPosZero = parms.colorPosZero;
             var count = parms.count;
             var mode = parms.mode;
@@ -7431,7 +7503,13 @@ var SkiaSharp;
             var startRadius = parms.startRadius;
             var end = parms.end.marshalNew(CanvasKit);
             var endRadius = parms.endRadius;
-            var colors = parms.colors;
+            var colors = CanvasKit._malloc(parms.colors_Length * 4);
+            var colors_u32 = colors / 4;
+            {
+                for (var i = 0; i < parms.colors_Length; i++) {
+                    CanvasKit.HEAPU32[colors_u32 + i] = parms.colors[i].color;
+                }
+            }
             var colorPos = CanvasKit._malloc(parms.colorPos_Length * 4); /*float*/
             var colorPos_f32 = colorPos / 4;
             {
@@ -7463,7 +7541,13 @@ var SkiaSharp;
             var startRadius = parms.startRadius;
             var end = parms.end.marshalNew(CanvasKit);
             var endRadius = parms.endRadius;
-            var colors = parms.colors;
+            var colors = CanvasKit._malloc(parms.colors_Length * 4);
+            var colors_u32 = colors / 4;
+            {
+                for (var i = 0; i < parms.colors_Length; i++) {
+                    CanvasKit.HEAPU32[colors_u32 + i] = parms.colors[i].color;
+                }
+            }
             var colorPos = CanvasKit._malloc(parms.colorPos_Length * 4); /*float*/
             var colorPos_f32 = colorPos / 4;
             {
@@ -7494,7 +7578,13 @@ var SkiaSharp;
             var startRadius = parms.startRadius;
             var end = parms.end.marshalNew(CanvasKit);
             var endRadius = parms.endRadius;
-            var colors = parms.colors;
+            var colors = CanvasKit._malloc(parms.colors_Length * 4);
+            var colors_u32 = colors / 4;
+            {
+                for (var i = 0; i < parms.colors_Length; i++) {
+                    CanvasKit.HEAPU32[colors_u32 + i] = parms.colors[i].color;
+                }
+            }
             var colorPosZero = parms.colorPosZero;
             var count = parms.count;
             var mode = parms.mode;
@@ -7520,7 +7610,13 @@ var SkiaSharp;
             var startRadius = parms.startRadius;
             var end = parms.end.marshalNew(CanvasKit);
             var endRadius = parms.endRadius;
-            var colors = parms.colors;
+            var colors = CanvasKit._malloc(parms.colors_Length * 4);
+            var colors_u32 = colors / 4;
+            {
+                for (var i = 0; i < parms.colors_Length; i++) {
+                    CanvasKit.HEAPU32[colors_u32 + i] = parms.colors[i].color;
+                }
+            }
             var colorPosZero = parms.colorPosZero;
             var count = parms.count;
             var mode = parms.mode;
@@ -9585,7 +9681,13 @@ var SkiaSharp;
                 SkiaSharp.ApiOverride.sk_bitmap_get_pixel_colors_0_Pre(parms);
             }
             var b = parms.b;
-            var colors = parms.colors;
+            var colors = CanvasKit._malloc(parms.colors_Length * 4);
+            var colors_u32 = colors / 4;
+            {
+                for (var i = 0; i < parms.colors_Length; i++) {
+                    CanvasKit.HEAPU32[colors_u32 + i] = parms.colors[i].color;
+                }
+            }
             var ret = CanvasKit._sk_bitmap_get_pixel_colors(b, colors);
             if (SkiaSharp.ApiOverride.sk_bitmap_get_pixel_colors_0_Post) {
                 ret = SkiaSharp.ApiOverride.sk_bitmap_get_pixel_colors_0_Post(ret, parms);
@@ -9598,7 +9700,13 @@ var SkiaSharp;
                 SkiaSharp.ApiOverride.sk_bitmap_set_pixel_colors_0_Pre(parms);
             }
             var b = parms.b;
-            var colors = parms.colors;
+            var colors = CanvasKit._malloc(parms.colors_Length * 4);
+            var colors_u32 = colors / 4;
+            {
+                for (var i = 0; i < parms.colors_Length; i++) {
+                    CanvasKit.HEAPU32[colors_u32 + i] = parms.colors[i].color;
+                }
+            }
             var ret = CanvasKit._sk_bitmap_set_pixel_colors(b, colors);
             if (SkiaSharp.ApiOverride.sk_bitmap_set_pixel_colors_0_Post) {
                 ret = SkiaSharp.ApiOverride.sk_bitmap_set_pixel_colors_0_Post(ret, parms);
@@ -10036,7 +10144,13 @@ var SkiaSharp;
             }
             var pmcolors = parms.pmcolors;
             var size = parms.size;
-            var colors = parms.colors;
+            var colors = CanvasKit._malloc(parms.colors_Length * 4);
+            var colors_u32 = colors / 4;
+            {
+                for (var i = 0; i < parms.colors_Length; i++) {
+                    CanvasKit.HEAPU32[colors_u32 + i] = parms.colors[i].color;
+                }
+            }
             var ret = CanvasKit._sk_color_unpremultiply_array(pmcolors, size, colors);
             if (SkiaSharp.ApiOverride.sk_color_unpremultiply_array_0_Post) {
                 ret = SkiaSharp.ApiOverride.sk_color_unpremultiply_array_0_Post(ret, parms);
@@ -10048,7 +10162,13 @@ var SkiaSharp;
             if (SkiaSharp.ApiOverride.sk_color_premultiply_array_0_Pre) {
                 SkiaSharp.ApiOverride.sk_color_premultiply_array_0_Pre(parms);
             }
-            var colors = parms.colors;
+            var colors = CanvasKit._malloc(parms.colors_Length * 4);
+            var colors_u32 = colors / 4;
+            {
+                for (var i = 0; i < parms.colors_Length; i++) {
+                    CanvasKit.HEAPU32[colors_u32 + i] = parms.colors[i].color;
+                }
+            }
             var size = parms.size;
             var pmcolors = parms.pmcolors;
             var ret = CanvasKit._sk_color_premultiply_array(colors, size, pmcolors);
@@ -12293,7 +12413,13 @@ var SkiaSharp;
             var vertexCount = parms.vertexCount;
             var positions = parms.positions;
             var texs = parms.texs;
-            var colors = parms.colors;
+            var colors = CanvasKit._malloc(parms.colors_Length * 4);
+            var colors_u32 = colors / 4;
+            {
+                for (var i = 0; i < parms.colors_Length; i++) {
+                    CanvasKit.HEAPU32[colors_u32 + i] = parms.colors[i].color;
+                }
+            }
             var indexCount = parms.indexCount;
             var indices = parms.indices; /* ushort */
             var ret = CanvasKit._sk_vertices_make_copy(vmode, vertexCount, positions, texs, colors, indexCount, indices);

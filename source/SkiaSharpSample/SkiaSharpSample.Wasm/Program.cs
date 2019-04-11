@@ -33,6 +33,7 @@ namespace SkiaSharpSample.Wasm
 						{ "Uno", LogLevel.Warning },
 						{ "Windows", LogLevel.Warning },
 						{ "nVentive.Umbrella", LogLevel.Warning },
+						{ "SkiaSharp", LogLevel.Warning },
 						// { "ShiaTSInteropMarshaller", LogLevel.Warning },
 
 						// View Navigation related messages

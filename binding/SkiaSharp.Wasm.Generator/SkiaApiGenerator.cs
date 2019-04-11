@@ -109,7 +109,10 @@ namespace SkiaSharp.Wasm.Generator
 
 											if (
 												parm.Type is IArrayTypeSymbol arraySymbol
-												&& !(arraySymbol.ElementType.ContainingNamespace?.Name.StartsWith ("SkiaSharp") ?? false)
+												&& (
+												!(arraySymbol.ElementType.ContainingNamespace?.Name.StartsWith ("SkiaSharp") ?? false)
+												|| arraySymbol.ElementType == _skColorSymbol
+												)
 											) {
 												if (arraySymbol.ElementType == _byteSymbol) {
 													w.AppendLineInvariant ($"var {parm.Name} = CanvasKit._malloc(parms.{parm.Name}_Length * {GetNativeSize (arraySymbol.ElementType)}); /*{arraySymbol.ElementType}*/");
@@ -117,6 +120,15 @@ namespace SkiaSharp.Wasm.Generator
 													using (w.BlockInvariant ($"")) {
 														using (w.BlockInvariant ($"for(var i = 0; i < parms.{parm.Name}_Length; i++)")) {
 															w.AppendLineInvariant ($"CanvasKit.HEAPU8[{parm.Name} + i] = parms.{parm.Name}[i];");
+														}
+													}
+												} else if (arraySymbol.ElementType == _skColorSymbol) {
+													w.AppendLineInvariant ($"var {parm.Name} = CanvasKit._malloc(parms.{parm.Name}_Length * 4);");
+													w.AppendLineInvariant ($"var {parm.Name}_u32 = {parm.Name} / 4;");
+
+													using (w.BlockInvariant ($"")) {
+														using (w.BlockInvariant ($"for(var i = 0; i < parms.{parm.Name}_Length; i++)")) {
+															w.AppendLineInvariant ($"CanvasKit.HEAPU32[{parm.Name}_u32 + i] = parms.{parm.Name}[i].color;");
 														}
 													}
 												}
@@ -236,6 +248,7 @@ namespace SkiaSharp.Wasm.Generator
 				case "uint":
 				case "System.IntPtr":
 				case "float":
+				case "SkiaSharp.SKColor":
 				case var _ when type.TypeKind == TypeKind.Enum:
 					return 4;
 

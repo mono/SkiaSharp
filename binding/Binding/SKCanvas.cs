@@ -59,7 +59,6 @@ namespace SkiaSharp
 
 		public int SaveLayer (SKRect limit, SKPaint paint)
 		{
-			Console.WriteLine ($"SaveLayer {limit.Top};{limit.Bottom};{limit.Left};{limit.Right}");
 			return SkiaApi.sk_canvas_save_layer (Handle, ref limit, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
@@ -505,8 +504,6 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (text));
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
-
-			Console.WriteLine ($"DrawText({text}): {string.Join(",", text)}");
 
 			SkiaApi.sk_canvas_draw_text (Handle, text, text.Length, x, y, paint.Handle);
 		}

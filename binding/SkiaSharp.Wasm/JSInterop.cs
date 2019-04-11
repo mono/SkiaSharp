@@ -5,7 +5,9 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using SkiaSharp;
+using Uno.Extensions;
 
 namespace WebAssembly
 {
@@ -26,8 +28,8 @@ namespace WebAssembly
 	}
 
 	namespace JSInterop
-	{
-		internal static class InternalCalls
+	{ 
+		internal static class InternalCalls  
 		{ 
 			// Matches this signature:
 			// https://github.com/mono/mono/blob/f24d652d567c4611f9b4e3095be4e2a1a2ab23a4/sdks/wasm/driver.c#L21
@@ -190,6 +192,7 @@ namespace SkiaSharp
 	public static class TSInteropMarshaller
 	{
 		public const UnmanagedType LPUTF8Str = (UnmanagedType)48;
+		private static readonly ILogger _log = typeof (TSInteropMarshaller).Log ();
 
 		public static IntPtr InvokeJS<TParam> (
 			string methodName,
@@ -197,7 +200,9 @@ namespace SkiaSharp
 			[System.Runtime.CompilerServices.CallerMemberName] string memberName = null
 		)
 		{
-			Console.WriteLine($"InvokeJS for {memberName}/{typeof (TParam)}");
+			if (_log.IsEnabled (LogLevel.Debug)) {
+				_log.LogDebug ($"InvokeJS for {memberName}/{typeof (TParam)}");
+			}
 
 			var pParms = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (TParam)));
 
@@ -206,7 +211,9 @@ namespace SkiaSharp
 
 				return WebAssemblyRuntime.InvokeJSUnmarshalled (methodName, pParms);
 			} catch (Exception e) {
-				Console.WriteLine ($"Failed InvokeJS for {memberName}/{typeof (TParam)}: {e}");
+				if (_log.IsEnabled (LogLevel.Error)) {
+					_log.LogError ($"Failed InvokeJS for {memberName}/{typeof (TParam)}: {e}");
+				}
 				throw;
 			} finally {
 				Marshal.DestroyStructure (pParms, typeof (TParam));
@@ -220,8 +227,10 @@ namespace SkiaSharp
 			out TRet returnValue,
 			[System.Runtime.CompilerServices.CallerMemberName] string memberName = null
 		)
-		{  
-			Console.WriteLine ($"InvokeJS for {memberName}/{typeof (TParam)}/{typeof (TRet)}");
+		{
+			if (_log.IsEnabled (LogLevel.Debug)) {
+				_log.LogDebug ($"InvokeJS for {memberName}/{typeof (TParam)}/{typeof (TRet)}");
+			}
 			 
 			var pParms = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (TParam)));
 			var pReturnValue = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (TRet)));
@@ -238,7 +247,9 @@ namespace SkiaSharp
 
 				return ret;
 			} catch (Exception e) {
-					Console.WriteLine ($"Failed InvokeJS for {memberName}/{typeof (TParam)}: {e}");
+				if (_log.IsEnabled (LogLevel.Error)) {
+					_log.LogError ($"Failed InvokeJS for {memberName}/{typeof (TParam)}: {e}");
+				}
 				throw;
 			} finally {
 				Marshal.DestroyStructure (pParms, typeof (TParam));

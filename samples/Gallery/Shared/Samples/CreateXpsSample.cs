@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !__WASM__
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -99,3 +100,4 @@ namespace SkiaSharpSample.Samples
 		}
 	}
 }
+#endif

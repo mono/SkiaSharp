@@ -1,4 +1,5 @@
-﻿using SkiaSharp;
+﻿#if !__WASM__
+using SkiaSharp;
 
 namespace SkiaSharpSample.Samples
 {
@@ -91,3 +92,4 @@ namespace SkiaSharpSample.Samples
 		}
 	}
 }
+#endif
