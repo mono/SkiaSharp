@@ -28,8 +28,6 @@ namespace SkiaSharp.Wasm.Generator
 			_bindingsPaths = project.GetPropertyValue ("TSBindingsPath")?.ToString ();
 			_sourceAssemblies = project.GetItems ("TSBindingAssemblySource").Select (s => s.EvaluatedInclude).ToArray ();
 
-			Debugger.Launch ();
-
 			var skiaApiFile = Path.Combine (context.GetProjectInstance ().Directory, "..", "Binding", "SkiaApi.cs");
 
 			var skiaTree = SyntaxFactory.ParseCompilationUnit (File.ReadAllText (skiaApiFile).Replace ("SkiaApi", "OriginalSkiaApi"));

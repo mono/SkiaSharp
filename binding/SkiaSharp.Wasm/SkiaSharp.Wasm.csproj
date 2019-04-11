@@ -52,4 +52,13 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup Condition="'$(DocsGeneration)'==''">
+    <ProjectReference Include="..\SkiaSharp.Wasm.Generator\SkiaSharp.Wasm.Generator.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <SkipGetTargetFrameworkProperties>true</SkipGetTargetFrameworkProperties>
+      <UndefineProperties>TargetFramework</UndefineProperties>
+    </ProjectReference>
+  </ItemGroup>
+
+
 </Project>
