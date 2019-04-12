@@ -16,6 +16,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using SkiaSharp;
 using SkiaSharp.Views.Uno;
+using Windows.UI.Xaml.Data;
 
 namespace SkiaSharpSample
 {
@@ -61,25 +62,22 @@ namespace SkiaSharpSample
 
 				Initialize();
 			});
-			
-
 		}
 
 		private void Initialize()
 		{
 			samples = SamplesManager.GetSamples(SamplePlatforms.UWP).ToList();
+			SamplesInitializer.Init();
+
+#if !__WASM__
+			samplesViewSource.Source = sampleGroups;
+			SetSample(samples.First(s => s.Category.HasFlag(SampleCategories.Showcases)));
 			sampleGroups = Enum.GetValues(typeof(SampleCategories))
 				.Cast<SampleCategories>()
 				.Select(c => new GroupedSamples(c, samples.Where(s => s.Category.HasFlag(c))))
 				.Where(g => g.Count > 0)
 				.OrderBy(g => g.Category == SampleCategories.Showcases ? string.Empty : g.Name)
 				.ToList();
-
-			SamplesInitializer.Init();
-
-#if !__WASM__
-			samplesViewSource.Source = sampleGroups;
-			SetSample(samples.First(s => s.Category.HasFlag(SampleCategories.Showcases)));
 #else
 			samplesViewSource.IsSourceGrouped = false;
 			samplesViewSource.Source = samples;
@@ -199,7 +197,7 @@ namespace SkiaSharpSample
 			sample = newSample;
 
 			// set the title
-			titleBar.Text = sample?.Title ?? "SkiaSharp for Windows";
+			titleBar.Text = sample?.Title ?? "SkiaSharp for WebAssembly";
 
 			// prepare the sample
 			if (sample != null)
