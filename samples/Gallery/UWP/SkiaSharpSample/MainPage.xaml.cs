@@ -55,12 +55,22 @@ namespace SkiaSharpSample
 
 			var _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () => {
 
-				while (!SKXamlCanvas.IsInitialized)
+				try
 				{
-					await Task.Delay(100);
-				}
+					while (!SKXamlCanvas.IsInitialized)
+					{
+						Console.WriteLine("Waiting for Skia init");
+						await Task.Delay(500);
+					}
 
-				Initialize();
+					Initialize();
+
+					Console.WriteLine("Initialized");
+				}
+				catch(Exception e)
+				{
+					Console.WriteLine(e);
+				}
 			});
 		}
 
@@ -79,11 +89,19 @@ namespace SkiaSharpSample
 				.OrderBy(g => g.Category == SampleCategories.Showcases ? string.Empty : g.Name)
 				.ToList();
 #else
-			samplesViewSource.IsSourceGrouped = false;
-			samplesViewSource.Source = samples;
+			listView.ItemsSource = samples;
+
+
+			// Uno issue: https://github.com/nventive/Uno/issues/764
+			listView.Height = listView.ActualHeight - 1;
+
+			var _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+			{
+				listView.Height = double.NaN;
+			});
 #endif
 
-		}
+			}
 
 		protected override void OnNavigatedFrom(NavigationEventArgs e)
 		{
