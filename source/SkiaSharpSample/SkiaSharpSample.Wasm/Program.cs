@@ -19,6 +19,8 @@ namespace SkiaSharpSample.Wasm
 
 		static int Main(string[] args)
 		{
+			WebAssemblyRuntime.InvokeJS("Uno.UI.Demo.Analytics.reportPageView('main');");
+
 			ConfigureFilters(LogExtensionPoint.AmbientLoggerFactory);
 			  
 			Windows.UI.Xaml.Application.Start(_ => _app = new App());

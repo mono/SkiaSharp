@@ -9,10 +9,13 @@
     <MonoRuntimeDebuggerEnabled Condition="'$(Configuration)'=='Debug'">true</MonoRuntimeDebuggerEnabled>
     <!--<WasmShellMonoRuntimeExecutionMode Condition="$([MSBuild]::IsOsPlatform('Linux'))">InterpreterAndAOT</WasmShellMonoRuntimeExecutionMode>-->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TypeScriptToolsVersion>3.3</TypeScriptToolsVersion>
+    <CompileTypeScriptDependsOn>_UnoSourceGenerator; $(CompileTypeScriptDependsOn)</CompileTypeScriptDependsOn>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="..\SkiaSharpSample.UWP\Assets\*.png" Link="Assets\%(FileName)%(Extension)" />
     <None Remove="MainPage.xaml" />
+    <None Remove="ts\GoogleAnalytics.ts" />
     <Compile Include="..\..\..\samples\Gallery\UWP\SkiaSharpSample\App.xaml.cs" Link="App.xaml.cs" />
     <Compile Include="..\..\..\samples\Gallery\UWP\SkiaSharpSample\MainPage.xaml.cs" Link="MainPage.xaml.cs" />
     <Content Include="..\..\..\samples\Gallery\UWP\SkiaSharpSample\Assets\LockScreenLogo.scale-200.png" Link="Assets\LockScreenLogo.scale-200.png" />
@@ -23,10 +26,11 @@
     <Content Include="..\..\..\samples\Gallery\UWP\SkiaSharpSample\Assets\StoreLogo.png" Link="Assets\StoreLogo.png" />
     <Content Include="..\..\..\samples\Gallery\UWP\SkiaSharpSample\Assets\Wide310x150Logo.scale-200.png" Link="Assets\Wide310x150Logo.scale-200.png" />
     <Content Include="Fonts\winjs-symbols.woff2" />
+    <Content Include="ts\GoogleAnalytics.ts" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="WasmCSS\Fonts.css" />
-    <EmbeddedResource Include="WasmScripts\AppManifest.js" />
+    <EmbeddedResource Include="WasmScripts\*.js" />
   </ItemGroup>
   <ItemGroup>
     <LinkerDescriptor Include="LinkerConfig.xml" />
@@ -45,6 +49,16 @@
     <PackageReference Include="Uno.UI.Sample.Banner" Version="1.44.0-dev.14" />
     <PackageReference Include="Uno.Wasm.Bootstrap" Version="1.0.0-dev.258" />
     <DotNetCliToolReference Include="Uno.Wasm.Bootstrap.Cli" Version="1.0.0-dev.258" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.TypeScript.Compiler" Version="3.1.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="3.3.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\..\binding\SkiaSharp.Wasm\external\canvaskit\canvaskit.wasm" Link="canvaskit.wasm" />

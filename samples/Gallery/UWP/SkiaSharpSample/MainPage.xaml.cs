@@ -115,6 +115,7 @@ namespace SkiaSharpSample
 		{
 			var sample = e.AddedItems?.FirstOrDefault() as SampleBase;
 			SetSample(sample);
+			WebAssemblyRuntime.InvokeJS($"Uno.UI.Demo.Analytics.reportPageView('{sample.Title}');");
 		}
 
 		private void OnBackendSelected(object sender, RoutedEventArgs e)
