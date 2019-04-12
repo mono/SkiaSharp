@@ -7,7 +7,7 @@
     <DefineConstants>$(DefineConstants);__WASM__</DefineConstants>
     <NoWarn>NU1701</NoWarn>
     <MonoRuntimeDebuggerEnabled Condition="'$(Configuration)'=='Debug'">true</MonoRuntimeDebuggerEnabled>
-    <WasmShellMonoRuntimeExecutionMode Condition="$([MSBuild]::IsOsPlatform('Linux'))">FullAOT</WasmShellMonoRuntimeExecutionMode>
+    <WasmShellMonoRuntimeExecutionMode Condition="$([MSBuild]::IsOsPlatform('Linux'))">InterpreterAndAOT</WasmShellMonoRuntimeExecutionMode>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -25,6 +25,12 @@
   </ItemGroup>
   <ItemGroup>
     <LinkerDescriptor Include="LinkerConfig.xml" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <MonoRuntimeMixedModeExcludedAssembly Include="SkiaSharp.Views.Uno" />
+    <MonoRuntimeMixedModeExcludedAssembly Include="SkiaSharp.Wasm" />
+    <MonoRuntimeMixedModeExcludedAssembly Include="SkiaSharpSample.Wasm" />
   </ItemGroup>
   
   <ItemGroup>
