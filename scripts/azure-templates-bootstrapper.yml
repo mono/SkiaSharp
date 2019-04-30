@@ -58,6 +58,7 @@ jobs:
             targetPath: 'output-temp'
         - powershell: |
             New-Item -Type Directory -Path output -Force
+            Get-ChildItem -Path output-temp
             Copy-Item -Path output-temp/${{ dep }}/* -Destination output -Force -Recurse
             Remove-Item -Path output-temp/${{ dep }} -Force -Recurse
           displayName: Copy the ${{ dep }} artifacts to the output directory

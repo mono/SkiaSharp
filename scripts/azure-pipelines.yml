@@ -203,6 +203,7 @@ jobs:
         - package
       postBuildSteps:
         - task: PublishTestResults@2
+          condition: always()
           inputs:
             testResultsFormat: xUnit
             testResultsFiles: 'output/tests/**/*.xml'
@@ -216,6 +217,7 @@ jobs:
         - package
       postBuildSteps:
         - task: PublishTestResults@2
+          condition: always()
           inputs:
             testResultsFormat: xUnit
             testResultsFiles: 'output/tests/**/*.xml'
@@ -230,6 +232,7 @@ jobs:
         - package
       postBuildSteps:
         - task: PublishTestResults@2
+          condition: always()
           inputs:
             testResultsFormat: xUnit
             testResultsFiles: 'output/tests/**/*.xml'
@@ -246,6 +249,7 @@ jobs:
         - native_tizen_linux
       postBuildSteps:
         - task: PublishTestResults@2
+          condition: always()
           inputs:
             testResultsFormat: xUnit
             testResultsFiles: 'output/tests/**/*.xml'
