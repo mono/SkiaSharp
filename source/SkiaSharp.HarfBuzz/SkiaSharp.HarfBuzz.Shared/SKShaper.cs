@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Linq;
 
 using HarfBuzzSharp;
+using Buffer = HarfBuzzSharp.Buffer;
 
 namespace SkiaSharp.HarfBuzz
 {
@@ -10,28 +10,26 @@ namespace SkiaSharp.HarfBuzz
 		internal const int FONT_SIZE_SCALE = 512;
 
 		private Font font;
-		private HarfBuzzSharp.Buffer buffer;
+		private Buffer buffer;
 
 		public SKShaper(SKTypeface typeface)
 		{
-			if (typeface == null)
-				throw new ArgumentNullException(nameof(typeface)); ;
-
-			Typeface = typeface;
+			Typeface = typeface ?? throw new ArgumentNullException(nameof(typeface));
 
 			int index;
 			using (var blob = Typeface.OpenStream(out index).ToHarfBuzzBlob())
-			using (var face = new Face(blob, (uint)index))
+			using (var face = new Face(blob, index))
 			{
-				face.Index = (uint)index;
-				face.UnitsPerEm = (uint)Typeface.UnitsPerEm;
+				face.Index = index;
+				face.UnitsPerEm = Typeface.UnitsPerEm;
 
 				font = new Font(face);
 				font.SetScale(FONT_SIZE_SCALE, FONT_SIZE_SCALE);
+
 				font.SetFunctionsOpenType();
 			}
 
-			buffer = new HarfBuzzSharp.Buffer();
+			buffer = new Buffer();
 		}
 
 		public SKTypeface Typeface { get; private set; }
@@ -42,27 +40,20 @@ namespace SkiaSharp.HarfBuzz
 			buffer?.Dispose();
 		}
 
-		public Result Shape(string text, SKPaint paint)
-		{
-			return Shape(text, 0, 0, paint);
-		}
+		public Result Shape(Buffer buffer, SKPaint paint) =>
+			Shape(buffer, 0, 0, paint);
 
-		public Result Shape(string text, float xOffset, float yOffset, SKPaint paint)
+		public Result Shape(Buffer buffer, float xOffset, float yOffset, SKPaint paint)
 		{
-			if (text == null)
-				throw new ArgumentNullException(nameof(text));
+			if (buffer == null)
+			{
+				throw new ArgumentNullException(nameof(buffer));
+			}
+
 			if (paint == null)
+			{
 				throw new ArgumentNullException(nameof(paint));
-
-			if (string.IsNullOrEmpty(text))
-				return new Result();
-
-			// add the text to the buffer
-			buffer.ClearContents();
-			buffer.AddUtf8(text);
-
-			// try to understand the text
-			buffer.GuessSegmentProperties();
+			}
 
 			// do the shaping
 			font.Shape(buffer);
@@ -96,6 +87,39 @@ namespace SkiaSharp.HarfBuzz
 			}
 
 			return new Result(codepoints, clusters, points);
+		}
+
+		public Result Shape(string text, SKPaint paint) =>
+			Shape(text, 0, 0, paint);
+
+		public Result Shape(string text, float xOffset, float yOffset, SKPaint paint)
+		{
+			if (string.IsNullOrEmpty(text))
+			{
+				return new Result();
+			}
+
+			using (var buffer = new Buffer())
+			{
+				switch (paint.TextEncoding)
+				{
+					case SKTextEncoding.Utf8:
+						buffer.AddUtf8(text);
+						break;
+					case SKTextEncoding.Utf16:
+						buffer.AddUtf16(text);
+						break;
+					case SKTextEncoding.Utf32:
+						buffer.AddUtf32(text);
+						break;
+					default:
+						throw new NotSupportedException("TextEncoding of type GlyphId is not supported.");
+				}
+
+				buffer.GuessSegmentProperties();
+
+				return Shape(buffer, xOffset, yOffset, paint);
+			}
 		}
 
 		public class Result

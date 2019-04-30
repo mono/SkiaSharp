@@ -21,13 +21,13 @@ namespace SkiaSharp.HarfBuzz
 			var memoryBase = asset.GetMemoryBase();
 			if (memoryBase != IntPtr.Zero)
 			{
-				blob = new Blob(memoryBase, (uint)size, MemoryMode.ReadOnly, asset, p => ((SKStreamAsset)p).Dispose());
+				blob = new Blob(memoryBase, size, MemoryMode.ReadOnly, asset, p => ((SKStreamAsset)p).Dispose());
 			}
 			else
 			{
 				var ptr = Marshal.AllocCoTaskMem(size);
 				asset.Read(ptr, size);
-				blob = new Blob(ptr, (uint)size, MemoryMode.ReadOnly, ptr, p => Marshal.FreeCoTaskMem((IntPtr)p));
+				blob = new Blob(ptr, size, MemoryMode.ReadOnly, ptr, p => Marshal.FreeCoTaskMem((IntPtr)p));
 			}
 
 			blob.MakeImmutable();
