@@ -24,18 +24,6 @@ jobs:
             sudo apt update
             sudo apt install -y ${{ parameters.packages }}
           displayName: Install any package dependencies
-      # install extra bits for the native builds
-      - ${{ if startsWith(parameters.name, 'native_') }}:
-        # switch to Python 2.7
-        - task: UsePythonVersion@0
-          displayName: Switch to Python to 2.7
-          inputs:
-            versionSpec: '2.7'
-            architecture: 'x64'
-        # install android ndk
-        - ${{ if contains(parameters.name, '_android_') }}:
-          - powershell: .\scripts\install-android-ndk.ps1
-            displayName: Install the Android NDK
       # install tizen
       - ${{ if contains(parameters.name, '_tizen_') }}:
         # install openjdk on non-linux first
@@ -57,6 +45,18 @@ jobs:
         - ${{ if endsWith(parameters.name, '_linux') }}:
           - powershell: .\scripts\install-tizen.ps1
             displayName: Install the Tizen SDK
+      # install extra bits for the native builds
+      - ${{ if startsWith(parameters.name, 'native_') }}:
+        # switch to Python 2.7
+        - task: UsePythonVersion@0
+          displayName: Switch to Python to 2.7
+          inputs:
+            versionSpec: '2.7'
+            architecture: 'x64'
+        # install android ndk
+        - ${{ if contains(parameters.name, '_android_') }}:
+          - powershell: .\scripts\install-android-ndk.ps1
+            displayName: Install the Android NDK
       # switch to the correct mono version on mac
       - ${{ if endsWith(parameters.name, '_macos') }}:
         - bash: sudo $AGENT_HOMEDIRECTORY/scripts/select-xamarin-sdk.sh $(MONO_VERSION)
