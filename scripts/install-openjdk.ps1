@@ -26,4 +26,12 @@ if ($IsMacOS -or $IsLinux) {
     tar --force-local -vxzf "$archive" -C "$jdk"
 }
 
+if ($IsMacOS) {
+    $java_home = Join-Path "$jdk" "jdk-10.0.2/Contents/Home"
+} else {
+    $java_home = Join-Path "$jdk" "jdk-10.0.2"
+}
+Write-Host "##vso[task.setvariable variable=JAVA_HOME;]$java_home"
+Write-Host "Set environment variable to ($env:JAVA_HOME)"
+
 exit $LASTEXITCODE

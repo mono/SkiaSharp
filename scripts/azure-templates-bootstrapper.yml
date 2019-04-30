@@ -26,25 +26,10 @@ jobs:
           displayName: Install any package dependencies
       # install tizen
       - ${{ if contains(parameters.name, '_tizen_') }}:
-        # install openjdk on non-linux first
-        - ${{ if endsWith(parameters.name, '_windows') }}:
-          - powershell: .\scripts\install-openjdk.ps1
-            displayName: Install the OpenJDK
-          - powershell: .\scripts\install-tizen.ps1
-            displayName: Install the Tizen SDK
-            env:
-              JAVA_HOME: $(USERPROFILE)/openjdk/jdk-10.0.2
-        - ${{ if endsWith(parameters.name, '_macos') }}:
-          - powershell: .\scripts\install-openjdk.ps1
-            displayName: Install the OpenJDK
-          - powershell: .\scripts\install-tizen.ps1
-            displayName: Install the Tizen SDK
-            env:
-              JAVA_HOME: $(HOME)/openjdk/jdk-10.0.2
-        # install tizen as openjdk is a package
-        - ${{ if endsWith(parameters.name, '_linux') }}:
-          - powershell: .\scripts\install-tizen.ps1
-            displayName: Install the Tizen SDK
+        - powershell: .\scripts\install-openjdk.ps1
+          displayName: Install the OpenJDK
+        - powershell: .\scripts\install-tizen.ps1
+          displayName: Install the Tizen SDK
       # install extra bits for the native builds
       - ${{ if startsWith(parameters.name, 'native_') }}:
         # switch to Python 2.7
