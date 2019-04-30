@@ -163,7 +163,7 @@ jobs:
  # PACKAGING JOBS
   - template: azure-templates-bootstrapper.yml
     parameters:
-      name: package
+      name: package_windows
       displayName: Package NuGets
       vmImage: vs2017-win2016
       target: nuget-only
@@ -189,7 +189,7 @@ jobs:
   - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
     - job: signing
       displayName: Signing NuGets
-      dependsOn: package
+      dependsOn: package_windows
       pool:
         name: VSEng-XamarinCustom
         demands:
@@ -213,7 +213,7 @@ jobs:
       vmImage: vs2017-win2016
       target: tests-only
       dependsOn:
-        - package
+        - package_windows
       postBuildSteps:
         - task: PublishTestResults@2
           inputs:
@@ -226,7 +226,7 @@ jobs:
       vmImage: macos-10.13
       target: tests-only
       dependsOn:
-        - package
+        - package_windows
       postBuildSteps:
         - task: PublishTestResults@2
           inputs:
@@ -240,7 +240,7 @@ jobs:
       packages: $(MANAGED_LINUX_PACKAGES)
       target: tests-only
       dependsOn:
-        - package
+        - package_windows
       postBuildSteps:
         - task: PublishTestResults@2
           inputs:
