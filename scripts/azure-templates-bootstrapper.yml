@@ -36,20 +36,29 @@ jobs:
         - ${{ if contains(parameters.name, '_android_') }}:
           - powershell: .\scripts\install-android-ndk.ps1
             displayName: Install the Android NDK
-        # install tizen
+      # install tizen
       - ${{ if contains(parameters.name, '_tizen_') }}:
-        - ${{ if not(contains(parameters.vmImage, 'win')) }}:
-          - powershell: .\scripts\install-tizen.ps1
-            displayName: Install the Tizen SDK
-        - ${{ if contains(parameters.vmImage, 'win') }}:
+        # install openjdk on non-linux first
+        - ${{ if endsWith(parameters.name, '_windows') }}:
           - powershell: .\scripts\install-openjdk.ps1
             displayName: Install the OpenJDK
           - powershell: .\scripts\install-tizen.ps1
             displayName: Install the Tizen SDK
             env:
               JAVA_HOME: $(USERPROFILE)/openjdk/jdk-10.0.2
+        - ${{ if endsWith(parameters.name, '_macos') }}:
+          - powershell: .\scripts\install-openjdk.ps1
+            displayName: Install the OpenJDK
+          - powershell: .\scripts\install-tizen.ps1
+            displayName: Install the Tizen SDK
+            env:
+              JAVA_HOME: $(HOME)/openjdk/jdk-10.0.2
+        # install tizen as openjdk is a package
+        - ${{ if endsWith(parameters.name, '_linux') }}:
+          - powershell: .\scripts\install-tizen.ps1
+            displayName: Install the Tizen SDK
       # switch to the correct mono version on mac
-      - ${{ if contains(parameters.vmImage, 'mac') }}:
+      - ${{ if endsWith(parameters.name, '_macos') }}:
         - bash: sudo $AGENT_HOMEDIRECTORY/scripts/select-xamarin-sdk.sh $(MONO_VERSION)
           displayName: Switch to the latest Xamarin SDK
         - bash: echo '##vso[task.setvariable variable=MD_APPLE_SDK_ROOT;]'/Applications/Xcode_$(XCODE_VERSION).app;sudo xcode-select --switch /Applications/Xcode_$(XCODE_VERSION).app/Contents/Developer
@@ -64,13 +73,13 @@ jobs:
       # pre-build steps
       - ${{ parameters.preBuildSteps }}
       # build
-      - ${{ if contains(parameters.vmImage, 'win') }}:
+      - ${{ if endsWith(parameters.name, '_windows') }}:
         - powershell: .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY
           displayName: Run the bootstrapper for ${{ parameters.target }}
           env:
             ANDROID_NDK_HOME: $(USERPROFILE)/android-ndk
             TIZEN_STUDIO_HOME: $(USERPROFILE)/tizen-studio
-      - ${{ if not(contains(parameters.vmImage, 'win')) }}:
+      - ${{ if not(endsWith(parameters.name, '_windows')) }}:
         - bash: ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY
           displayName: Run the bootstrapper for ${{ parameters.target }}
           env:
