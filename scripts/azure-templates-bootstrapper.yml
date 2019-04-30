@@ -56,12 +56,17 @@ jobs:
           displayName: Download the ${{ dep }} artifacts
           inputs:
             artifactName: ${{ dep }}
-            targetPath: 'output-temp'
-        - powershell: |
-            New-Item -Type Directory -Path output -Force
-            Copy-Item -Path output-temp/${{ dep }}/* -Destination output -Force -Recurse
-            Remove-Item -Path output-temp/${{ dep }} -Force -Recurse
-          displayName: Copy the ${{ dep }} artifacts to the output directory
+            targetPath: 'output'
+        # - task: DownloadPipelineArtifact@0
+        #   displayName: Download the ${{ dep }} artifacts
+        #   inputs:
+        #     artifactName: ${{ dep }}
+        #     targetPath: 'output-temp'
+        # - powershell: |
+        #     New-Item -Type Directory -Path output -Force
+        #     Copy-Item -Path output-temp/${{ dep }}/* -Destination output -Force -Recurse
+        #     Remove-Item -Path output-temp/${{ dep }} -Force -Recurse
+        #   displayName: Copy the ${{ dep }} artifacts to the output directory
       # pre-build steps
       - ${{ parameters.preBuildSteps }}
       # build
