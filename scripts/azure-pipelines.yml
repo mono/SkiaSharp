@@ -171,9 +171,9 @@ jobs:
       postBuildSteps:
         - powershell: |
             $platforms = Get-ChildItem -Path ./output/native/*
-            $platforms | Where-Object { $_.Name -NotMatch "linux" } | ForEach-Object { Remove-Item -Path $_ }
+            $platforms | Where-Object { $_.Name -NotMatch "linux" } | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
             $nupkgs = Get-ChildItem -Path ./output/nugets/*
-            $nupkgs | Where-Object { $_.Name -NotMatch "NoDependencies" } | ForEach-Object { Remove-Item -Path $_ }
+            $nupkgs | Where-Object { $_.Name -NotMatch "NoDependencies" } | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
           displayName: Remove all unrelated files
         - task: PublishPipelineArtifact@0
           inputs:
