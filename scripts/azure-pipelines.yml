@@ -158,31 +158,31 @@ jobs:
         - native_tizen_linux
 
  # PACKAGING JOBS
-  # - template: azure-templates-bootstrapper.yml
-  #   parameters:
-  #     name: package_nodependencies_windows
-  #     displayName: Package NuGets [No Dependencies]
-  #     vmImage: vs2017-win2016
-  #     target: nuget-only
-  #     dependsOn:
-  #       - managed_nodependencies_linux
-  #       - managed_macos
-  #       - managed_windows
-  #     postBuildSteps:
-  #       - powershell: |
-  #           $platforms = Get-ChildItem -Path ./output/native/*
-  #           $platforms | Where-Object { $_.Name -NotMatch "linux" } | ForEach-Object { Remove-Item -Path $_ }
-  #           $nupkgs = Get-ChildItem -Path ./output/nugets/*
-  #           $nupkgs | Where-Object { $_.Name -NotMatch "NoDependencies" } | ForEach-Object { Remove-Item -Path $_ }
-  #         displayName: Remove all unrelated files
-  #       - task: PublishPipelineArtifact@1
-  #         inputs:
-  #           artifactName: native-nodependencies
-  #           targetPath: 'output/native'
-  #       - task: PublishPipelineArtifact@1
-  #         inputs:
-  #           artifactName: nuget-nodependencies
-  #           targetPath: 'output/nugets'
+  - template: azure-templates-bootstrapper.yml
+    parameters:
+      name: package_nodependencies_windows
+      displayName: Package NuGets [No Dependencies]
+      vmImage: vs2017-win2016
+      target: nuget-only
+      dependsOn:
+        - managed_nodependencies_linux
+        - managed_macos
+        - managed_windows
+      postBuildSteps:
+        - powershell: |
+            $platforms = Get-ChildItem -Path ./output/native/*
+            $platforms | Where-Object { $_.Name -NotMatch "linux" } | ForEach-Object { Remove-Item -Path $_ }
+            $nupkgs = Get-ChildItem -Path ./output/nugets/*
+            $nupkgs | Where-Object { $_.Name -NotMatch "NoDependencies" } | ForEach-Object { Remove-Item -Path $_ }
+          displayName: Remove all unrelated files
+        - task: PublishPipelineArtifact@1
+          inputs:
+            artifactName: native-nodependencies
+            targetPath: 'output/native'
+        - task: PublishPipelineArtifact@1
+          inputs:
+            artifactName: nuget-nodependencies
+            targetPath: 'output/nugets'
   # - template: azure-templates-bootstrapper.yml
   #   parameters:
   #     name: package_windows
