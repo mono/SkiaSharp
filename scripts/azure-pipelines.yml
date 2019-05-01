@@ -215,12 +215,12 @@ jobs:
         displayName: Download the nuget-nodependencies artifacts
         inputs:
           artifactName: nuget-nodependencies
-          targetPath: 'output'
+          targetPath: 'output/nugets'
       - task: DownloadPipelineArtifact@0
         displayName: Download the nuget-default artifacts
         inputs:
           artifactName: nuget-default
-          targetPath: 'output'
+          targetPath: 'output/nugets'
       - task: PublishBuildArtifacts@1
         inputs:
           artifactName: nuget
