@@ -21,6 +21,12 @@ jobs:
     steps:
       - checkout: self
         submodules: recursive
+      - powershell: |
+          if ($env:GIT_BRANCH_NAME.StartsWith($env:FEATURE_NAME_PREFIX)) {
+            $feature = $env:GIT_BRANCH_NAME.Substring($env:FEATURE_NAME_PREFIX.Length)
+            Write-Host "##vso[task.setvariable variable=FEATURE_NAME]$feature"
+          }
+        displayName: Determine the feature name, if any
       # install any packages on linux
       - ${{ if endsWith(parameters.name, '_linux') }}:
         - bash: |

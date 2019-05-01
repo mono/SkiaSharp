@@ -97,8 +97,8 @@ jobs:
       target: externals-linux
   - template: azure-templates-native-linux.yml
     parameters:
-      name: native_linux_nofontconfig_linux
-      displayName: Build Native Linux [Without FontConfig] (Linux)
+      name: native_linux_nodependencies_linux
+      displayName: Build Native Linux [No Dependencies] (Linux)
       packages: $(NATIVE_LINUX_PACKAGES)
       target: externals-linux
       additionalArgs: --additionalGnArgs="skia_use_fontconfig=false"
@@ -146,8 +146,43 @@ jobs:
       dependsOn:
         - native_linux_linux
         - native_tizen_linux
+  - template: azure-templates-bootstrapper.yml
+    parameters:
+      name: managed_nodependencies_linux
+      displayName: Build Managed [No Dependencies] (Linux)
+      vmImage: ubuntu-16.04
+      packages: $(MANAGED_LINUX_PACKAGES)
+      target: libs-only
+      dependsOn:
+        - native_linux_nodependencies_linux
+        - native_tizen_linux
 
  # PACKAGING JOBS
+  - template: azure-templates-bootstrapper.yml
+    parameters:
+      name: package_nodependencies_windows
+      displayName: Package NuGets [No Dependencies]
+      vmImage: vs2017-win2016
+      target: nuget-only
+      dependsOn:
+        - managed_nodependencies_linux
+        - managed_macos
+        - managed_windows
+      postBuildSteps:
+        - powershell: |
+            $platforms = Get-ChildItem -Path ./output/native/*
+            $platforms | Where-Object { $_.Name -NotMatch "linux" } | ForEach-Object { Remove-Item -Path $_ }
+            $nupkgs = Get-ChildItem -Path ./output/nugets/*
+            $nupkgs | Where-Object { $_.Name -NotMatch "NoDependencies" } | ForEach-Object { Remove-Item -Path $_ }
+          displayName: Remove all unrelated files
+        - task: PublishPipelineArtifact@1
+          inputs:
+            artifactName: native-nodependencies
+            targetPath: 'output/native'
+        - task: PublishPipelineArtifact@1
+          inputs:
+            artifactName: nuget-nodependencies
+            targetPath: 'output/nugets'
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: package_windows
@@ -158,17 +193,34 @@ jobs:
         - managed_linux
         - managed_macos
         - managed_windows
-      preBuildSteps:
-        - powershell: |
-            if ($env:GIT_BRANCH_NAME.StartsWith($env:FEATURE_NAME_PREFIX)) {
-              $feature = $env:GIT_BRANCH_NAME.Substring($env:FEATURE_NAME_PREFIX.Length)
-              Write-Host "##vso[task.setvariable variable=FEATURE_NAME]$feature"
-            }
       postBuildSteps:
-        - task: PublishBuildArtifacts@1
+        - task: PublishPipelineArtifact@1
           inputs:
-            artifactName: native
-            pathToPublish: 'output/native'
+            artifactName: native-default
+            targetPath: 'output/native'
+        - task: PublishPipelineArtifact@1
+          inputs:
+            artifactName: nuget-default
+            targetPath: 'output/nugets'
+    - job: package
+      displayName: Prepare Packaged NuGets
+      dependsOn:
+        - package_nodependencies_windows
+        - package_windows
+      pool:
+        vmImage: vs2017-win2016
+      steps:
+        - checkout: none
+        - task: DownloadPipelineArtifact@0
+          displayName: Download the nuget-nodependencies artifacts
+          inputs:
+            artifactName: nuget-nodependencies
+            targetPath: 'output'
+        - task: DownloadPipelineArtifact@0
+          displayName: Download the nuget-default artifacts
+          inputs:
+            artifactName: nuget-default
+            targetPath: 'output'
         - task: PublishBuildArtifacts@1
           inputs:
             artifactName: nuget
@@ -176,7 +228,7 @@ jobs:
   - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
     - job: signing
       displayName: Signing NuGets
-      dependsOn: package_windows
+      dependsOn: package
       pool:
         name: VSEng-XamarinCustom
         demands:
@@ -238,14 +290,14 @@ jobs:
             testResultsFiles: 'output/tests/**/*.xml'
   - template: azure-templates-bootstrapper.yml
     parameters:
-      name: tests_nofontconfig_linux
-      displayName: Tests [Without FontConfig] (Linux)
+      name: tests_nodependencies_linux
+      displayName: Tests [No Dependencies] (Linux)
       vmImage: ubuntu-16.04
       packages: $(MANAGED_LINUX_PACKAGES)
       target: tests
       additionalArgs: --skipExternals="all" --unsupportedTests="Feature=MatchCharacter"
       dependsOn:
-        - native_linux_nofontconfig_linux
+        - native_linux_nodependencies_linux
         - native_tizen_linux
       postBuildSteps:
         - task: PublishTestResults@2
