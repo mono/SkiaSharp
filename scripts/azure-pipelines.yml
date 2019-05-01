@@ -225,10 +225,10 @@ jobs:
         inputs:
           artifactName: nuget
           pathToPublish: 'output/nugets'
-        - task: PublishPipelineArtifact@0
-          inputs:
-            artifactName: package
-            targetPath: 'output'
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: package
+          targetPath: 'output'
   - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
     - job: signing
       displayName: Signing NuGets
