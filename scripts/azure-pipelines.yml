@@ -202,29 +202,29 @@ jobs:
           inputs:
             artifactName: nuget-default
             targetPath: 'output/nugets'
-    - job: package
-      displayName: Prepare Packaged NuGets
-      dependsOn:
-        - package_nodependencies_windows
-        - package_windows
-      pool:
-        vmImage: vs2017-win2016
-      steps:
-        - checkout: none
-        - task: DownloadPipelineArtifact@0
-          displayName: Download the nuget-nodependencies artifacts
-          inputs:
-            artifactName: nuget-nodependencies
-            targetPath: 'output'
-        - task: DownloadPipelineArtifact@0
-          displayName: Download the nuget-default artifacts
-          inputs:
-            artifactName: nuget-default
-            targetPath: 'output'
-        - task: PublishBuildArtifacts@1
-          inputs:
-            artifactName: nuget
-            pathToPublish: 'output/nugets'
+  - job: package
+    displayName: Prepare Packaged NuGets
+    dependsOn:
+      - package_nodependencies_windows
+      - package_windows
+    pool:
+      vmImage: vs2017-win2016
+    steps:
+      - checkout: none
+      - task: DownloadPipelineArtifact@0
+        displayName: Download the nuget-nodependencies artifacts
+        inputs:
+          artifactName: nuget-nodependencies
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        displayName: Download the nuget-default artifacts
+        inputs:
+          artifactName: nuget-default
+          targetPath: 'output'
+      - task: PublishBuildArtifacts@1
+        inputs:
+          artifactName: nuget
+          pathToPublish: 'output/nugets'
   - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
     - job: signing
       displayName: Signing NuGets
