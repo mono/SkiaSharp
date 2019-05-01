@@ -252,7 +252,7 @@ jobs:
       vmImage: vs2017-win2016
       target: tests-only
       dependsOn:
-        - package_windows
+        - package
       postBuildSteps:
         - task: PublishTestResults@2
           condition: always()
@@ -266,7 +266,7 @@ jobs:
       vmImage: macos-10.13
       target: tests-only
       dependsOn:
-        - package_windows
+        - package
       postBuildSteps:
         - task: PublishTestResults@2
           condition: always()
@@ -281,7 +281,7 @@ jobs:
       packages: $(MANAGED_LINUX_PACKAGES)
       target: tests-only
       dependsOn:
-        - package_windows
+        - package
       postBuildSteps:
         - task: PublishTestResults@2
           condition: always()
