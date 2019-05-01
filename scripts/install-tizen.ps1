@@ -1,5 +1,5 @@
 Param(
-    [string] $version = "2.4"
+    [string] $version = "3.2"
 )
 
 $errorActionPreference = 'Stop'
@@ -15,19 +15,32 @@ if ($IsMacOS) {
     $ext = "exe"
 }
 
-$ts = "$HOME/tizen-studio"
-$tsTemp = "$HOME/tizen-temp"
+$ts = Join-Path "$HOME" "tizen-studio"
+$tsTemp = Join-Path "$HOME" "tizen-temp"
 $url = "http://download.tizen.org/sdk/Installer/tizen-studio_${version}/web-cli_Tizen_Studio_${version}_${platform}.${ext}"
-$install = "$tsTemp/tizen-install.$ext"
+$install = Join-Path "$tsTemp" "tizen-install.$ext"
 $packages = "MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment"
 
+# make sure that JAVA_HOME/bin is in the PATH
+if ($env:JAVA_HOME) {
+    $javaBin = Join-Path "$env:JAVA_HOME" "bin"
+    if(-not $env:PATH.Contains($javaBin)) {
+        Write-Host "Adding $javaBin to PATH..."
+        $env:PATH = $javaBin + [System.IO.Path]::PathSeparator + $env:PATH
+    }
+}
+
+# log the Java version
+Write-Host "Using Java version:"
+& "java" -version
+
 # download
-Write-Host "Downloading SDK..."
+Write-Host "Downloading SDK to '$install'..."
 New-Item -ItemType Directory -Force -Path "$tsTemp" | Out-Null
 (New-Object System.Net.WebClient).DownloadFile("$url", "$install")
 
 # install
-Write-Host "Installing SDK..."
+Write-Host "Installing SDK to '$ts'..."
 if ($IsMacOS -or $IsLinux) {
     & "bash" "$install" --accept-license --no-java-check "$ts"
 } else {
@@ -35,11 +48,12 @@ if ($IsMacOS -or $IsLinux) {
 }
 
 # install packages
-Write-Host "Installing Additional Packages..."
+Write-Host "Installing Additional Packages: '$packages'..."
+$packMan = Join-Path (Join-Path "$ts" "package-manager") "package-manager-cli.${ext}"
 if ($IsMacOS -or $IsLinux) {
-    & "bash" "${ts}/package-manager/package-manager-cli.${ext}" install --no-java-check --accept-license "$packages"
+    & "bash" "$packMan" install --no-java-check --accept-license "$packages"
 } else {
-    & "${ts}/package-manager/package-manager-cli.${ext}" install --no-java-check --accept-license "$packages"
+    & "$packMan" install --no-java-check --accept-license "$packages"
 }
 
 exit $LASTEXITCODE

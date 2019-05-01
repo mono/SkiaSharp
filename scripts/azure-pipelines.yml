@@ -10,7 +10,7 @@ variables:
   FEATURE_NAME: ''
   BASE_LINUX_PACKAGES: curl mono-complete msbuild
   NATIVE_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) python git libfontconfig1-dev clang-3.8 make
-  TIZEN_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) python git openjdk-8-jdk zip libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn
+  TIZEN_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) python git zip libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn
   MANAGED_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) dotnet-sdk-2.1 ttf-ancient-fonts
   MONO_VERSION: 5_16_0
   XCODE_VERSION: 10.1
@@ -31,12 +31,12 @@ jobs:
       displayName: Build Native Android (Windows)
       vmImage: vs2017-win2016
       target: externals-android
-  # - template: azure-templates-bootstrapper.yml
-  #   parameters:
-  #     name: native_tizen_windows
-  #     displayName: Build Native Tizen (Windows)
-  #     vmImage: vs2017-win2016
-  #     target: externals-tizen
+  - template: azure-templates-bootstrapper.yml
+    parameters:
+      name: native_tizen_windows
+      displayName: Build Native Tizen (Windows)
+      vmImage: vs2017-win2016
+      target: externals-tizen
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_uwp_windows
@@ -69,12 +69,12 @@ jobs:
       displayName: Build Native macOS (macOS)
       vmImage: macos-10.13
       target: externals-macos
-  - template: azure-templates-bootstrapper.yml
-    parameters:
-      name: native_tizen_macos
-      displayName: Build Native Tizen (macOS)
-      vmImage: macos-10.13
-      target: externals-tizen
+  # - template: azure-templates-bootstrapper.yml
+  #   parameters:
+  #     name: native_tizen_macos
+  #     displayName: Build Native Tizen (macOS)
+  #     vmImage: macos-10.13
+  #     target: externals-tizen
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_tvos_macos
@@ -119,8 +119,7 @@ jobs:
       target: libs-only
       dependsOn:
         - native_android_windows
-        # - native_tizen_windows
-        - native_tizen_linux
+        - native_tizen_windows
         - native_uwp_windows
         - native_win32_windows
   - template: azure-templates-bootstrapper.yml
@@ -133,7 +132,8 @@ jobs:
         - native_android_macos
         - native_ios_macos
         - native_macos_macos
-        - native_tizen_macos
+        # - native_tizen_macos
+        - native_tizen_linux
         - native_tvos_macos
         - native_watchos_macos
   - template: azure-templates-bootstrapper.yml
@@ -150,7 +150,7 @@ jobs:
  # PACKAGING JOBS
   - template: azure-templates-bootstrapper.yml
     parameters:
-      name: package
+      name: package_windows
       displayName: Package NuGets
       vmImage: vs2017-win2016
       target: nuget-only
@@ -176,7 +176,7 @@ jobs:
   - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
     - job: signing
       displayName: Signing NuGets
-      dependsOn: package
+      dependsOn: package_windows
       pool:
         name: VSEng-XamarinCustom
         demands:
@@ -200,7 +200,7 @@ jobs:
       vmImage: vs2017-win2016
       target: tests-only
       dependsOn:
-        - package
+        - package_windows
       postBuildSteps:
         - task: PublishTestResults@2
           condition: always()
@@ -214,7 +214,7 @@ jobs:
       vmImage: macos-10.13
       target: tests-only
       dependsOn:
-        - package
+        - package_windows
       postBuildSteps:
         - task: PublishTestResults@2
           condition: always()
@@ -229,7 +229,7 @@ jobs:
       packages: $(MANAGED_LINUX_PACKAGES)
       target: tests-only
       dependsOn:
-        - package
+        - package_windows
       postBuildSteps:
         - task: PublishTestResults@2
           condition: always()
