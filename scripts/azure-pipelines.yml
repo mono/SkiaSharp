@@ -169,80 +169,80 @@ jobs:
         - managed_macos
         - managed_windows
       postBuildSteps:
-        # - powershell: |
-        #     $platforms = Get-ChildItem -Path ./output/native/*
-        #     $platforms | Where-Object { $_.Name -NotMatch "linux" } | ForEach-Object { Remove-Item -Path $_ }
-        #     $nupkgs = Get-ChildItem -Path ./output/nugets/*
-        #     $nupkgs | Where-Object { $_.Name -NotMatch "NoDependencies" } | ForEach-Object { Remove-Item -Path $_ }
-        #   displayName: Remove all unrelated files
-        - task: PublishPipelineArtifact@1
+        - powershell: |
+            $platforms = Get-ChildItem -Path ./output/native/*
+            $platforms | Where-Object { $_.Name -NotMatch "linux" } | ForEach-Object { Remove-Item -Path $_ }
+            $nupkgs = Get-ChildItem -Path ./output/nugets/*
+            $nupkgs | Where-Object { $_.Name -NotMatch "NoDependencies" } | ForEach-Object { Remove-Item -Path $_ }
+          displayName: Remove all unrelated files
+        - task: PublishPipelineArtifact@0
           inputs:
             artifactName: 'native-nodependencies'
             targetPath: 'output/native'
-        - task: PublishPipelineArtifact@1
+        - task: PublishPipelineArtifact@0
           inputs:
             artifactName: 'nuget-nodependencies'
             targetPath: 'output/nugets'
-  # - template: azure-templates-bootstrapper.yml
-  #   parameters:
-  #     name: package_windows
-  #     displayName: Package NuGets
-  #     vmImage: vs2017-win2016
-  #     target: nuget-only
-  #     dependsOn:
-  #       - managed_linux
-  #       - managed_macos
-  #       - managed_windows
-  #     postBuildSteps:
-  #       - task: PublishPipelineArtifact@1
-  #         inputs:
-  #           artifactName: native-default
-  #           targetPath: 'output/native'
-  #       - task: PublishPipelineArtifact@1
-  #         inputs:
-  #           artifactName: nuget-default
-  #           targetPath: 'output/nugets'
+  - template: azure-templates-bootstrapper.yml
+    parameters:
+      name: package_windows
+      displayName: Package NuGets
+      vmImage: vs2017-win2016
+      target: nuget-only
+      dependsOn:
+        - managed_linux
+        - managed_macos
+        - managed_windows
+      postBuildSteps:
+        - task: PublishPipelineArtifact@0
+          inputs:
+            artifactName: native-default
+            targetPath: 'output/native'
+        - task: PublishPipelineArtifact@0
+          inputs:
+            artifactName: nuget-default
+            targetPath: 'output/nugets'
   - job: package
     displayName: Prepare Packaged NuGets
-  #   dependsOn:
-  #     - package_nodependencies_windows
-  #     - package_windows
+    dependsOn:
+      - package_nodependencies_windows
+      - package_windows
     pool:
       vmImage: vs2017-win2016
     steps:
       - checkout: none
-  #     - task: DownloadPipelineArtifact@0
-  #       displayName: Download the nuget-nodependencies artifacts
-  #       inputs:
-  #         artifactName: nuget-nodependencies
-  #         targetPath: 'output'
-  #     - task: DownloadPipelineArtifact@0
-  #       displayName: Download the nuget-default artifacts
-  #       inputs:
-  #         artifactName: nuget-default
-  #         targetPath: 'output'
-  #     - task: PublishBuildArtifacts@1
-  #       inputs:
-  #         artifactName: nuget
-  #         pathToPublish: 'output/nugets'
-  # - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
-  #   - job: signing
-  #     displayName: Signing NuGets
-  #     dependsOn: package
-  #     pool:
-  #       name: VSEng-XamarinCustom
-  #       demands:
-  #         - corpnet
-  #     condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
-  #     steps:
-  #       - checkout: none
-  #       - template: sign-artifacts.yml@xamarin-templates
-  #         parameters:
-  #           targetFolder: 'output/signed'
-  #       - task: PublishPipelineArtifact@0
-  #         inputs:
-  #           artifactName: nuget-signed
-  #           targetPath: 'output/signed'
+      - task: DownloadPipelineArtifact@0
+        displayName: Download the nuget-nodependencies artifacts
+        inputs:
+          artifactName: nuget-nodependencies
+          targetPath: 'output'
+      - task: DownloadPipelineArtifact@0
+        displayName: Download the nuget-default artifacts
+        inputs:
+          artifactName: nuget-default
+          targetPath: 'output'
+      - task: PublishBuildArtifacts@1
+        inputs:
+          artifactName: nuget
+          pathToPublish: 'output/nugets'
+  - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+    - job: signing
+      displayName: Signing NuGets
+      dependsOn: package
+      pool:
+        name: VSEng-XamarinCustom
+        demands:
+          - corpnet
+      condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
+      steps:
+        - checkout: none
+        - template: sign-artifacts.yml@xamarin-templates
+          parameters:
+            targetFolder: 'output/signed'
+        - task: PublishPipelineArtifact@0
+          inputs:
+            artifactName: nuget-signed
+            targetPath: 'output/signed'
 
  # TEST JOBS
   - template: azure-templates-bootstrapper.yml
