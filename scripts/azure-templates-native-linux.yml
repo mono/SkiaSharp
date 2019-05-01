@@ -34,13 +34,8 @@ jobs:
         env:
           CC: clang-3.8
           CXX: clang++-3.8
-      - powershell: |
-          $soFiles = Get-ChildItem -Path ./output/native/linux/**/*.so
-          $soFiles | ForEach-Object {
-            Write-Host "Checking dependencies of '$_'..."
-            & "ldd" -v "$_"
-            Write-Host ""
-          }
+      - bash: |
+          find output/native/linux -type f -name "*.so" -print0 | xargs -0 ldd -v
         displayName: List the dependencies for the native binaries
       # post-build steps
       - ${{ parameters.postBuildSteps }}
