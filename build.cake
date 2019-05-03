@@ -333,8 +333,9 @@ Task ("nuget-only")
         if (id != null && version != null) {
             var v = GetVersion (id.Value);
             if (!string.IsNullOrEmpty (v)) {
-                version.Value = v + suffix;
+                version.Value = v;
             }
+            version.Value += suffix;
         }
 
         // <dependency>
@@ -363,8 +364,8 @@ Task ("nuget-only")
         var metadata = xdoc.Root.Element ("metadata");
         var id = metadata.Element ("id").Value;
         var dir = id;
-        if (id.Contains(".NativeAssets")) {
-            dir = id.Substring(0, id.IndexOf(".NativeAssets"));
+        if (id.Contains(".NativeAssets.")) {
+            dir = id.Substring(0, id.IndexOf(".NativeAssets."));
         }
 
         var preview = "";
