@@ -176,10 +176,12 @@ jobs:
             $nupkgs | Where-Object { $_.Name -NotMatch "NoDependencies" } | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
           displayName: Remove all unrelated files
         - task: PublishPipelineArtifact@0
+          displayName: Publish the native-nodependencies artifacts
           inputs:
             artifactName: native-nodependencies
             targetPath: 'output/native'
         - task: PublishPipelineArtifact@0
+          displayName: Publish the nuget-nodependencies artifacts
           inputs:
             artifactName: nuget-nodependencies
             targetPath: 'output/nugets'
@@ -195,15 +197,17 @@ jobs:
         - managed_windows
       postBuildSteps:
         - task: PublishPipelineArtifact@0
+          displayName: Publish the native-default artifacts
           inputs:
             artifactName: native-default
             targetPath: 'output/native'
         - task: PublishPipelineArtifact@0
+          displayName: Publish the nuget-default artifacts
           inputs:
             artifactName: nuget-default
             targetPath: 'output/nugets'
   - job: package
-    displayName: Prepare Packaged NuGets
+    displayName: Combine Packaged NuGets
     dependsOn:
       - package_nodependencies_windows
       - package_windows
@@ -222,16 +226,18 @@ jobs:
           artifactName: nuget-default
           targetPath: 'output/nugets'
       - task: PublishBuildArtifacts@1
+        displayName: Publish the nuget artifacts
         inputs:
           artifactName: nuget
           pathToPublish: 'output/nugets'
       - task: PublishPipelineArtifact@0
+        displayName: Publish the package artifacts
         inputs:
           artifactName: package
           targetPath: 'output'
   - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
     - job: signing
-      displayName: Signing NuGets
+      displayName: Sign NuGets
       dependsOn: package
       pool:
         name: VSEng-XamarinCustom
@@ -244,6 +250,7 @@ jobs:
           parameters:
             targetFolder: 'output/signed'
         - task: PublishPipelineArtifact@0
+          displayName: Publish the nuget-signed artifacts
           inputs:
             artifactName: nuget-signed
             targetPath: 'output/signed'
@@ -259,6 +266,7 @@ jobs:
         - package_windows
       postBuildSteps:
         - task: PublishTestResults@2
+          displayName: Publish the test results
           condition: always()
           inputs:
             testResultsFormat: xUnit
@@ -273,6 +281,7 @@ jobs:
         - package_windows
       postBuildSteps:
         - task: PublishTestResults@2
+          displayName: Publish the test results
           condition: always()
           inputs:
             testResultsFormat: xUnit
@@ -288,6 +297,7 @@ jobs:
         - package_windows
       postBuildSteps:
         - task: PublishTestResults@2
+          displayName: Publish the test results
           condition: always()
           inputs:
             testResultsFormat: xUnit
@@ -305,51 +315,51 @@ jobs:
         - native_tizen_linux
       postBuildSteps:
         - task: PublishTestResults@2
+          displayName: Publish the test results
           condition: always()
           inputs:
             testResultsFormat: xUnit
             testResultsFiles: 'output/tests/**/*.xml'
 
  # SAMPLES JOBS
-  - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
-    - template: azure-templates-bootstrapper.yml
-      parameters:
-        name: samples_windows
-        displayName: Build Samples (Windows)
-        vmImage: vs2017-win2016
-        target: samples
-        dependsOn:
-          - managed_windows
-    - template: azure-templates-bootstrapper.yml
-      parameters:
-        name: samples_macos
-        displayName: Build Samples (macOS)
-        vmImage: macos-10.13
-        target: samples
-        dependsOn:
-          - managed_macos
-        preBuildSteps:
-          - task: InstallAppleCertificate@2
-            inputs:
-              certSecureFile: 'SkiaSharp iOS Certificate.p12'
-          - task: InstallAppleCertificate@2
-            inputs:
-              certSecureFile: 'SkiaSharp Mac Certificate.p12'
-          - task: InstallAppleProvisioningProfile@1
-            inputs:
-              provProfileSecureFile: 'SkiaSharp iOS Provisioning.mobileprovision'
-          - task: InstallAppleProvisioningProfile@1
-            inputs:
-              provProfileSecureFile: 'SkiaSharp Mac Provisioning.provisionprofile'
-          - task: InstallAppleProvisioningProfile@1
-            inputs:
-              provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
-    - template: azure-templates-bootstrapper.yml
-      parameters:
-        name: samples_linux
-        displayName: Build Samples (Linux)
-        vmImage: ubuntu-16.04
-        packages: $(MANAGED_LINUX_PACKAGES)
-        target: samples
-        dependsOn:
-          - managed_linux
+  - template: azure-templates-bootstrapper.yml
+    parameters:
+      name: samples_windows
+      displayName: Build Samples (Windows)
+      vmImage: vs2017-win2016
+      target: samples
+      dependsOn:
+        - managed_windows
+  - template: azure-templates-bootstrapper.yml
+    parameters:
+      name: samples_macos
+      displayName: Build Samples (macOS)
+      vmImage: macos-10.13
+      target: samples
+      dependsOn:
+        - managed_macos
+      preBuildSteps:
+        - task: InstallAppleCertificate@2
+          inputs:
+            certSecureFile: 'SkiaSharp iOS Certificate.p12'
+        - task: InstallAppleCertificate@2
+          inputs:
+            certSecureFile: 'SkiaSharp Mac Certificate.p12'
+        - task: InstallAppleProvisioningProfile@1
+          inputs:
+            provProfileSecureFile: 'SkiaSharp iOS Provisioning.mobileprovision'
+        - task: InstallAppleProvisioningProfile@1
+          inputs:
+            provProfileSecureFile: 'SkiaSharp Mac Provisioning.provisionprofile'
+        - task: InstallAppleProvisioningProfile@1
+          inputs:
+            provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
+  - template: azure-templates-bootstrapper.yml
+    parameters:
+      name: samples_linux
+      displayName: Build Samples (Linux)
+      vmImage: ubuntu-16.04
+      packages: $(MANAGED_LINUX_PACKAGES)
+      target: samples
+      dependsOn:
+        - managed_linux
