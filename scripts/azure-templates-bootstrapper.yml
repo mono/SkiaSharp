@@ -8,6 +8,7 @@ parameters:
   demands: []         # the demands
   preBuildSteps: []   # any steps to run before the build
   postBuildSteps: []  # any additional steps to run after the build
+  additionalArgs: ''  # any additional arguments to pass to the bootstrapper
 
 jobs:
   - job: ${{ parameters.name }}
@@ -20,6 +21,12 @@ jobs:
     steps:
       - checkout: self
         submodules: recursive
+      - powershell: |
+          if ($env:GIT_BRANCH_NAME.StartsWith($env:FEATURE_NAME_PREFIX)) {
+            $feature = $env:GIT_BRANCH_NAME.Substring($env:FEATURE_NAME_PREFIX.Length)
+            Write-Host "##vso[task.setvariable variable=FEATURE_NAME]$feature"
+          }
+        displayName: Determine the feature name, if any
       # install any packages on linux
       - ${{ if endsWith(parameters.name, '_linux') }}:
         - bash: |
@@ -61,13 +68,13 @@ jobs:
       - ${{ parameters.preBuildSteps }}
       # build
       - ${{ if endsWith(parameters.name, '_windows') }}:
-        - powershell: .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY
+        - powershell: .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY ${{ parameters.additionalArgs }}
           displayName: Run the bootstrapper for ${{ parameters.target }}
           env:
             ANDROID_NDK_HOME: $(USERPROFILE)/android-ndk
             TIZEN_STUDIO_HOME: $(USERPROFILE)/tizen-studio
       - ${{ if not(endsWith(parameters.name, '_windows')) }}:
-        - bash: ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY
+        - bash: ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY ${{ parameters.additionalArgs }}
           displayName: Run the bootstrapper for ${{ parameters.target }}
           env:
             ANDROID_NDK_HOME: $(HOME)/android-ndk

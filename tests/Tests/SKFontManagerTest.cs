@@ -1,5 +1,6 @@
 ﻿using System;
 using Xunit;
+using Xunit.Categories;
 using System.IO;
 
 namespace SkiaSharp.Tests
@@ -7,6 +8,7 @@ namespace SkiaSharp.Tests
 	public class SKFontManagerTest : SKTest
 	{
 		[SkippableFact]
+		[Feature(MatchCharacterFeature)]
 		public void TestFontManagerMatchCharacter()
 		{
 			var fonts = SKFontManager.Default;
@@ -14,6 +16,7 @@ namespace SkiaSharp.Tests
 			var emojiChar = StringUtilities.GetUnicodeCharacterCode(emoji, SKTextEncoding.Utf32);
 			using (var typeface = fonts.MatchCharacter(emojiChar))
 			{
+				Assert.NotNull(typeface);
 				if (IsLinux)
 					Assert.Equal("Symbola", typeface.FamilyName);
 				else if (IsMac)

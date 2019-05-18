@@ -6,6 +6,7 @@
 using System;
 using System.Runtime.InteropServices;
 using Xunit;
+using Xunit.Categories;
 
 #if SYSTEM_DRAWING
 using System.Drawing;
@@ -253,7 +254,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Obsolete]
-		[Trait(Category, GpuCategory)]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		public void CanConvertFromPointerToDescToTextureWithNewInfo()
 		{
@@ -296,7 +297,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Obsolete]
-		[Trait(Category, GpuCategory)]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		public void CanConvertFromPointerToDescToTexture()
 		{
@@ -337,7 +338,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(GRPixelConfig.Rgba8888.ToGlSizedFormat(), newInfo.Format);
 		}
 
-		[Trait(Category, GpuCategory)]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		public void GpuBackendSurfaceIsCreated()
 		{
@@ -352,7 +353,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Trait(Category, GpuCategory)]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		[Obsolete]
 		public void GpuTextureSurfaceIsCreatedWithDesc()
@@ -368,7 +369,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Trait(Category, GpuCategory)]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		[Obsolete]
 		public void GpuTextureSurfaceCanBeReadWithDesc()
@@ -397,7 +398,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Trait(Category, GpuCategory)]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		[Obsolete]
 		public void GpuTextureSurfaceIsCreatedWithOldDesc()
@@ -413,7 +414,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Trait(Category, GpuCategory)]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		[Obsolete]
 		public void GpuTextureSurfaceCanBeReadWithOldDesc()
@@ -442,7 +443,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Trait(Category, GpuCategory)]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		public void GpuTextureSurfaceIsCreated()
 		{
@@ -457,7 +458,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Trait(Category, GpuCategory)]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		public void GpuTextureSurfaceCanBeRead()
 		{

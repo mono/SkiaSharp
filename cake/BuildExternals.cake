@@ -5,6 +5,10 @@ void GnNinja (DirectoryPath outDir, string target, string skiaArgs)
     var quote = IsRunningOnWindows () ? "\"" : "'";
     var innerQuote = IsRunningOnWindows () ? "\\\"" : "\"";
 
+    if (!string.IsNullOrEmpty(ADDITIONAL_GN_ARGS)) {
+        skiaArgs += " " + ADDITIONAL_GN_ARGS;
+    }
+
     // generate native skia build files
     RunProcess (SKIA_PATH.CombineWithFilePath($"bin/gn{exe}"), new ProcessSettings {
         Arguments = $"gen out/{outDir} --args={quote}{skiaArgs.Replace("'", innerQuote)}{quote}",

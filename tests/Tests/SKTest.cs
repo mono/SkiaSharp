@@ -9,14 +9,15 @@ namespace SkiaSharp.Tests
 {
 	public abstract class SKTest
 	{
-		protected const string Category = nameof(Category);
 		protected const string GpuCategory = "GPU";
+		protected const string MatchCharacterFeature = "MatchCharacter";
 
 		protected static bool IsLinux;
 		protected static bool IsMac;
 		protected static bool IsUnix;
 		protected static bool IsWindows;
 
+		protected static readonly string[] UnicodeFontFamilies;
 		protected static readonly string DefaultFontFamily;
 		protected static readonly string PathToAssembly;
 		protected static readonly string PathToFonts;
@@ -67,6 +68,10 @@ namespace SkiaSharp.Tests
 
 			// set the test fields
 			DefaultFontFamily = IsLinux ? "DejaVu Sans" : "Arial";
+			UnicodeFontFamilies =
+				IsLinux ? new[] { "Symbola" } :
+				IsMac ? new[] { "Apple Color Emoji" } :
+				new[] { "Segoe UI Emoji", "Segoe UI Symbol" };
 		}
 
 		protected static void SaveBitmap(SKBitmap bmp, string filename = "output.png")

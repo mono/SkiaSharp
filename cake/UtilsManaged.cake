@@ -65,7 +65,7 @@ var RunProcess = new Action<FilePath, ProcessSettings> ((process, settings) =>
     }
 });
 
-var RunTests = new Action<FilePath, bool> ((testAssembly, is32) =>
+void RunTests (FilePath testAssembly, bool is32)
 {
     var dir = testAssembly.GetDirectory ();
     var settings = new XUnit2Settings {
@@ -77,20 +77,43 @@ var RunTests = new Action<FilePath, bool> ((testAssembly, is32) =>
         WorkingDirectory = dir,
         ArgumentCustomization = args => args.Append ("-verbose"),
     };
+    var traits = CreateTraitsDictionary(UNSUPPORTED_TESTS);
+    foreach (var trait in traits) {
+        settings.ExcludeTrait(trait.Name, trait.Value);
+    }
     XUnit2 (new [] { testAssembly }, settings);
-});
+}
 
-var RunNetCoreTests = new Action<FilePath> ((testAssembly) =>
+void RunNetCoreTests (FilePath testAssembly)
 {
     var dir = testAssembly.GetDirectory ();
-    DotNetCoreTest(testAssembly.GetFilename().ToString(), new DotNetCoreTestSettings {
+    var settings = new DotNetCoreTestSettings {
         Configuration = "Release",
         NoRestore = true,
         TestAdapterPath = ".",
         Logger = "xunit",
         WorkingDirectory = dir,
-    });
-});
+    };
+    var traits = CreateTraitsDictionary(UNSUPPORTED_TESTS);
+    var filter = string.Join("&", traits.Select(t => $"{t.Name}!={t.Value}"));
+    if (!string.IsNullOrEmpty(filter)) {
+        settings.Filter = filter;
+    }
+    DotNetCoreTest(testAssembly.GetFilename().ToString(), settings);
+}
+
+IEnumerable<(string Name, string Value)> CreateTraitsDictionary (string args)
+{
+    if (!string.IsNullOrEmpty(args)) {
+        var traits = args.Split(';');
+        foreach (var trait in traits) {
+            var kv = trait.Split('=');
+            if (kv.Length != 2)
+                continue;
+            yield return (kv[0], kv[1]);
+        }
+    }
+}
 
 var DecompressArchive = new Action<FilePath, DirectoryPath> ((archive, outputDir) => {
     using (var stream = System.IO.File.OpenRead (archive.FullPath))
