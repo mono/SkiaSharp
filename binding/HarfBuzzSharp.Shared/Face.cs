@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace HarfBuzzSharp
 {
@@ -22,6 +21,12 @@ namespace HarfBuzzSharp
 			}
 
 			Handle = HarfBuzzApi.hb_face_create (blob.Handle, index);
+		}
+
+		public Face (Func<IntPtr, Tag, IntPtr, IntPtr> loadTableFunc)
+			: this (IntPtr.Zero)
+		{
+			Handle = HarfBuzzApi.hb_face_create_for_tables (loadTableFunc.Invoke, IntPtr.Zero, IntPtr.Zero);
 		}
 
 		internal Face (IntPtr handle)
