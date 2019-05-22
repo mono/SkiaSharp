@@ -248,12 +248,12 @@ jobs:
         - checkout: none
         - template: sign-artifacts.yml@xamarin-templates
           parameters:
-            targetFolder: 'output/signed'
-        - task: PublishPipelineArtifact@0
+            targetFolder: '$(Build.ArtifactStagingDirectory)/signed'
+        - task: PublishBuildArtifacts@1
           displayName: Publish the nuget-signed artifacts
           inputs:
             artifactName: nuget-signed
-            targetPath: 'output/signed'
+            pathToPublish: '$(Build.ArtifactStagingDirectory)/signed'
 
  # TEST JOBS
   - template: azure-templates-bootstrapper.yml
