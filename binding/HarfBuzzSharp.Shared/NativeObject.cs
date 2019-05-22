@@ -4,10 +4,27 @@ using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
 {
+	// internal proxy delegates
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal delegate void hb_destroy_func_t (IntPtr context);
+
+	// public delegates
+	public delegate void ReleaseDelegate (object context);
+
 	public class NativeObject : IDisposable
 	{
+		// so the GC doesn't collect the delegate
+		private static readonly hb_destroy_func_t destroy_funcInternal;
+		protected static readonly IntPtr destroy_func;
+
 		private bool isDisposed;
 		private readonly bool zero;
+
+		static NativeObject ()
+		{
+			destroy_funcInternal = new hb_destroy_func_t (DestroyInternal);
+			destroy_func = Marshal.GetFunctionPointerForDelegate (destroy_funcInternal);
+		}
 
 		internal NativeObject (IntPtr handle)
 		{
@@ -29,7 +46,7 @@ namespace HarfBuzzSharp
 		public virtual IntPtr Handle { get; protected set; }
 
 		// Dispose method - always called
-		protected virtual void Dispose (bool disposing)
+		private void Dispose (bool disposing)
 		{
 			if (isDisposed) {
 				return;
@@ -90,6 +107,16 @@ namespace HarfBuzzSharp
 					intPtr = new IntPtr (intPtr.ToInt64 () + IntPtr.Size);
 					ptr = Marshal.ReadIntPtr (intPtr);
 				}
+			}
+		}
+
+		// internal proxy
+
+		[MonoPInvokeCallback (typeof (hb_destroy_func_t))]
+		private static void DestroyInternal (IntPtr context)
+		{
+			using (var ctx = NativeDelegateContext.Unwrap (context)) {
+				ctx.GetDelegate<ReleaseDelegate> () (ctx.ManagedContext);
 			}
 		}
 	}

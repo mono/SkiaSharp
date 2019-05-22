@@ -20,7 +20,7 @@ namespace SkiaSharp.HarfBuzz
 				this.typeface = typeface;
 			}
 
-			public override unsafe Blob Load(Tag tag)
+			protected override unsafe Blob Load(Tag tag)
 			{
 				if (typeface.TryGetTableData(tag, out var table))
 				{

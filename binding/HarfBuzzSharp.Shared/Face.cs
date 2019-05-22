@@ -30,8 +30,9 @@ namespace HarfBuzzSharp
 			: this (IntPtr.Zero)
 		{
 			this.tableLoader = tableLoader;
+			var ctx = new NativeDelegateContext (null, new ReleaseDelegate (x => this.tableLoader.Dispose ()));
 			Handle = HarfBuzzApi.hb_face_create_for_tables (tableLoader.Load,
-				IntPtr.Zero, IntPtr.Zero);
+				ctx.NativeContext, destroy_func);
 		}
 
 		internal Face (IntPtr handle)
@@ -78,14 +79,43 @@ namespace HarfBuzzSharp
 			if (Handle != IntPtr.Zero) {
 				HarfBuzzApi.hb_face_destroy (Handle);
 			}
-		}		
+		}
 	}
 
-	public abstract class TableLoader
+	public abstract class TableLoader : IDisposable
 	{
 		private readonly Dictionary<Tag, Blob> tableCache = new Dictionary<Tag, Blob> ();
+		private bool isDisposed;	
 
-		public abstract Blob Load (Tag tag);
+		public void Dispose ()
+		{
+			Dispose (true);
+			GC.SuppressFinalize (this);
+		}
+
+		private void Dispose (bool disposing)
+		{
+			if (isDisposed) {
+				return;
+			}
+
+			isDisposed = true;
+
+			if (!disposing) {
+				return;
+			}
+
+			DisposeHandler ();
+		}
+
+		protected abstract Blob Load (Tag tag);
+
+		protected virtual void DisposeHandler ()
+		{
+			foreach (var blob in tableCache.Values) {
+				blob.Dispose ();
+			}
+		}
 
 		internal IntPtr Load (IntPtr face, Tag tag, IntPtr userData)
 		{
