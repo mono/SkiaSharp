@@ -1,7 +1,7 @@
 ﻿using System.IO;
 
 using HarfBuzzSharp;
-
+using SkiaSharp.HarfBuzz;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -68,6 +68,17 @@ namespace SkiaSharp.Tests
 		public void ShouldReferenceTable()
 		{
 			using (var face = new Face(s_blob, 0))
+			using (var tableBlob = face.ReferenceTable(new Tag("post")))
+			{
+				Assert.Equal(13378, tableBlob.Length);
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldCreateForTables()
+		{
+			var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf"));
+			using (var face = typeface.ToHarfBuzzFace())
 			using (var tableBlob = face.ReferenceTable(new Tag("post")))
 			{
 				Assert.Equal(13378, tableBlob.Length);

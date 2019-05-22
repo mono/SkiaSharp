@@ -21,19 +21,17 @@ namespace SkiaSharp.HarfBuzz
 				this.typeface = typeface;
 			}
 
-			public unsafe IntPtr LoadTable(IntPtr face, Tag tag, IntPtr user_data)
+			public unsafe Blob LoadTable(Face face, Tag tag)
 			{
 				if (typeface.TryGetTableData(tag, out var table))
 				{
 					fixed (byte* tablePtr = table)
 					{
-						var blob = new Blob((IntPtr)tablePtr, table.Length, MemoryMode.Writeable);
-
-						return blob.Handle;
+						return new Blob((IntPtr)tablePtr, table.Length, MemoryMode.Writeable);
 					}
 				}
 
-				return IntPtr.Zero;
+				return null;
 			}
 		}
 	}

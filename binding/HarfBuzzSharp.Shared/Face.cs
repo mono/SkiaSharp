@@ -23,10 +23,11 @@ namespace HarfBuzzSharp
 			Handle = HarfBuzzApi.hb_face_create (blob.Handle, index);
 		}
 
-		public Face (Func<IntPtr, Tag, IntPtr, IntPtr> loadTableFunc)
+		public Face (Func<Face, Tag, Blob> loadTableFunc)
 			: this (IntPtr.Zero)
 		{
-			Handle = HarfBuzzApi.hb_face_create_for_tables (loadTableFunc.Invoke, IntPtr.Zero, IntPtr.Zero);
+			Handle = HarfBuzzApi.hb_face_create_for_tables (new LoadTableFuncWrapper (this, loadTableFunc).Load,
+				IntPtr.Zero, IntPtr.Zero);
 		}
 
 		internal Face (IntPtr handle)
@@ -72,6 +73,25 @@ namespace HarfBuzzSharp
 		{
 			if (Handle != IntPtr.Zero) {
 				HarfBuzzApi.hb_face_destroy (Handle);
+			}
+		}
+
+		private struct LoadTableFuncWrapper
+		{
+			private readonly Face face;
+			private readonly Func<Face, Tag, Blob> loadTableFunc;
+
+			public LoadTableFuncWrapper (Face face, Func<Face, Tag, Blob> loadTableFunc)
+			{
+				this.face = face;
+				this.loadTableFunc = loadTableFunc;
+			}
+
+			public IntPtr Load (IntPtr face, Tag tag, IntPtr userData)
+			{
+				var blob = loadTableFunc.Invoke (this.face, tag);
+
+				return blob?.Handle ?? IntPtr.Zero;
 			}
 		}
 	}
