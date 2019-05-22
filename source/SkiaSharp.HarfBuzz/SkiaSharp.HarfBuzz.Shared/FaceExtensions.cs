@@ -7,27 +7,26 @@ namespace SkiaSharp.HarfBuzz
 	{
 		public static Face ToHarfBuzzFace(this SKTypeface typeface)
 		{
-			var loader = new TypefaceTableLoader(typeface);
-
-			return new Face(loader.LoadTable);
+			return new Face(new TypefaceTableLoader(typeface));
 		}
 
-		private struct TypefaceTableLoader
+		private class TypefaceTableLoader : TableLoader
 		{
 			private readonly SKTypeface typeface;
+
 
 			public TypefaceTableLoader(SKTypeface typeface)
 			{
 				this.typeface = typeface;
 			}
 
-			public unsafe Blob LoadTable(Face face, Tag tag)
+			public override unsafe Blob Load(Tag tag)
 			{
 				if (typeface.TryGetTableData(tag, out var table))
 				{
 					fixed (byte* tablePtr = table)
 					{
-						return new Blob((IntPtr)tablePtr, table.Length, MemoryMode.Writeable);
+						return new Blob((IntPtr)tablePtr, table.Length, MemoryMode.Duplicate);
 					}
 				}
 

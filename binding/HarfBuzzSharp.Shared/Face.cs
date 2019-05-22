@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace HarfBuzzSharp
 {
 	public class Face : NativeObject
 	{
+		private readonly TableLoader tableLoader;
+
 		public Face (Blob blob, uint index)
 			: this (blob, (int)index)
 		{
@@ -23,10 +26,11 @@ namespace HarfBuzzSharp
 			Handle = HarfBuzzApi.hb_face_create (blob.Handle, index);
 		}
 
-		public Face (Func<Face, Tag, Blob> loadTableFunc)
+		public Face (TableLoader tableLoader)
 			: this (IntPtr.Zero)
 		{
-			Handle = HarfBuzzApi.hb_face_create_for_tables (new LoadTableFuncWrapper (this, loadTableFunc).Load,
+			this.tableLoader = tableLoader;
+			Handle = HarfBuzzApi.hb_face_create_for_tables (tableLoader.Load,
 				IntPtr.Zero, IntPtr.Zero);
 		}
 
@@ -74,25 +78,27 @@ namespace HarfBuzzSharp
 			if (Handle != IntPtr.Zero) {
 				HarfBuzzApi.hb_face_destroy (Handle);
 			}
-		}
+		}		
+	}
 
-		private struct LoadTableFuncWrapper
+	public abstract class TableLoader
+	{
+		private readonly Dictionary<Tag, Blob> tableCache = new Dictionary<Tag, Blob> ();
+
+		public abstract Blob Load (Tag tag);
+
+		internal IntPtr Load (IntPtr face, Tag tag, IntPtr userData)
 		{
-			private readonly Face face;
-			private readonly Func<Face, Tag, Blob> loadTableFunc;
+			Blob blob;
 
-			public LoadTableFuncWrapper (Face face, Func<Face, Tag, Blob> loadTableFunc)
-			{
-				this.face = face;
-				this.loadTableFunc = loadTableFunc;
+			if (tableCache.ContainsKey (tag)) {
+				blob = tableCache[tag];
+			} else {
+				blob = Load (tag);
+				tableCache.Add (tag, blob);
 			}
 
-			public IntPtr Load (IntPtr face, Tag tag, IntPtr userData)
-			{
-				var blob = loadTableFunc.Invoke (this.face, tag);
-
-				return blob?.Handle ?? IntPtr.Zero;
-			}
+			return blob?.Handle ?? IntPtr.Zero;
 		}
 	}
 }

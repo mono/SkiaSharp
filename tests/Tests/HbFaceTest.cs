@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 
 using HarfBuzzSharp;
 using SkiaSharp.HarfBuzz;
@@ -77,10 +79,11 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldCreateForTables()
 		{
-			var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf"));
+			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
 			using (var face = typeface.ToHarfBuzzFace())
-			using (var tableBlob = face.ReferenceTable(new Tag("post")))
 			{
+				var tableBlob = face.ReferenceTable(new Tag("post"));
+
 				Assert.Equal(13378, tableBlob.Length);
 			}
 		}
