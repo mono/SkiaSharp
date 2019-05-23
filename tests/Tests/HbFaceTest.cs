@@ -75,17 +75,5 @@ namespace SkiaSharp.Tests
 				Assert.Equal(13378, tableBlob.Length);
 			}
 		}
-
-		[SkippableFact]
-		public void ShouldCreateForTables()
-		{
-			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
-			using (var face = typeface.ToHarfBuzzFace())
-			{
-				var tableBlob = face.ReferenceTable(new Tag("post"));
-
-				Assert.Equal(13378, tableBlob.Length);
-			}
-		}
 	}
 }
