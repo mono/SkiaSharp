@@ -207,8 +207,6 @@ namespace HarfBuzzSharp
 		// hb_shape
 
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_shape (hb_font_t font, hb_buffer_t buffer, IntPtr features, int num_features);
-		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static bool hb_shape_full (hb_font_t font, hb_buffer_t buffer, IntPtr features, int num_features, IntPtr shaper_list);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr hb_shape_list_shapers ();

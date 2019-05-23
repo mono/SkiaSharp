@@ -7,12 +7,12 @@ using Xunit;
 namespace SkiaSharp.Tests
 {
 	public class HbFaceTest : SKTest
-	{		
+	{
 		private static readonly SKTypeface Typeface;
 		public static readonly Blob Blob;
 
 		static HbFaceTest()
-		{			
+		{
 			Blob = Blob.FromFile(Path.Combine(PathToFonts, "content-font.ttf"));
 			Blob.MakeImmutable();
 
@@ -104,11 +104,13 @@ namespace SkiaSharp.Tests
 		{
 			using (var face = new Face(new SKTypefaceTableLoader(Typeface)))
 			using (var font = new Font(face))
-			using (var buffer = new HarfBuzzSharp.Buffer())
 			{
-				buffer.AddUtf16("Hello");
+				using (var buffer = new HarfBuzzSharp.Buffer())
+				{
+					buffer.AddUtf16("Hello");
 
-				font.Shape(buffer);
+					font.Shape(buffer);
+				}
 			}
 		}
 	}

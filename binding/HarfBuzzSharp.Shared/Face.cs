@@ -6,6 +6,7 @@ namespace HarfBuzzSharp
 	public class Face : NativeObject
 	{
 		private readonly TableLoader tableLoader;
+		private readonly HarfBuzzApi.hb_reference_table_func_t tableLoadFunc;
 
 		public Face (Blob blob, uint index)
 			: this (blob, (int)index)
@@ -30,8 +31,9 @@ namespace HarfBuzzSharp
 			: this (IntPtr.Zero)
 		{
 			this.tableLoader = tableLoader;
+			tableLoadFunc = tableLoader.Load;
 			var ctx = new NativeDelegateContext (null, new ReleaseDelegate (x => this.tableLoader.Dispose ()));
-			Handle = HarfBuzzApi.hb_face_create_for_tables (tableLoader.Load,
+			Handle = HarfBuzzApi.hb_face_create_for_tables (tableLoadFunc,
 				ctx.NativeContext, destroy_func);
 		}
 
@@ -85,7 +87,7 @@ namespace HarfBuzzSharp
 	public abstract class TableLoader : IDisposable
 	{
 		private readonly Dictionary<Tag, Blob> tableCache = new Dictionary<Tag, Blob> ();
-		private bool isDisposed;	
+		private bool isDisposed;
 
 		public void Dispose ()
 		{
