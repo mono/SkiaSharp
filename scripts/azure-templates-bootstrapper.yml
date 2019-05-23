@@ -9,6 +9,7 @@ parameters:
   preBuildSteps: []   # any steps to run before the build
   postBuildSteps: []  # any additional steps to run after the build
   additionalArgs: ''  # any additional arguments to pass to the bootstrapper
+  retryCount: 1       # the number of times to retry the bootstrapper
 
 jobs:
   - job: ${{ parameters.name }}
@@ -67,18 +68,8 @@ jobs:
       # pre-build steps
       - ${{ parameters.preBuildSteps }}
       # build
-      - ${{ if endsWith(parameters.name, '_windows') }}:
-        - powershell: .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY ${{ parameters.additionalArgs }}
-          displayName: Run the bootstrapper for ${{ parameters.target }}
-          env:
-            ANDROID_NDK_HOME: $(USERPROFILE)/android-ndk
-            TIZEN_STUDIO_HOME: $(USERPROFILE)/tizen-studio
-      - ${{ if not(endsWith(parameters.name, '_windows')) }}:
-        - bash: ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY ${{ parameters.additionalArgs }}
-          displayName: Run the bootstrapper for ${{ parameters.target }}
-          env:
-            ANDROID_NDK_HOME: $(HOME)/android-ndk
-            TIZEN_STUDIO_HOME: $(HOME)/tizen-studio
+      - powershell: ./scripts/retry-command.ps1 -RetryCount ${{ parameters.retryCount }} { ./bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY ${{ parameters.additionalArgs }} }
+        displayName: Run the bootstrapper for ${{ parameters.target }}
       # post-build steps
       - ${{ parameters.postBuildSteps }}
       # publish artifacts

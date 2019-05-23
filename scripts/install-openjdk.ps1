@@ -1,4 +1,4 @@
-$errorActionPreference = 'Stop'
+$ErrorActionPreference = 'Stop'
 
 if ($IsMacOS) {
     $url = "https://download.oracle.com/java/GA/jdk10/10.0.2/19aef61b38124481863b1413dce1855f/13/openjdk-10.0.2_osx-x64_bin.tar.gz"

@@ -1,4 +1,4 @@
-$errorActionPreference = 'Stop'
+$ErrorActionPreference = 'Stop'
 
 try {
     cd externals/skia
