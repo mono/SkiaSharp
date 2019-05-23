@@ -7,20 +7,22 @@ using Xunit;
 namespace SkiaSharp.Tests
 {
 	public class HbFaceTest : SKTest
-	{
-		private static readonly Blob s_blob;
+	{		
+		private static readonly SKTypeface Typeface;
+		public static readonly Blob Blob;
 
 		static HbFaceTest()
-		{
-			s_blob = Blob.FromFile(Path.Combine(PathToFonts, "content-font.ttf"));
-			s_blob.MakeImmutable();
-		}
+		{			
+			Blob = Blob.FromFile(Path.Combine(PathToFonts, "content-font.ttf"));
+			Blob.MakeImmutable();
 
+			Typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf"));
+		}
 
 		[SkippableFact]
 		public void ShouldHaveGlyphCount()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			{
 				Assert.Equal(1147, face.GlyphCount);
 			}
@@ -29,7 +31,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldBeImmutable()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			{
 				face.MakeImmutable();
 
@@ -40,7 +42,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldHaveIndex()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			{
 				Assert.Equal(0, face.Index);
 			}
@@ -49,7 +51,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldHaveUnitsPerEm()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			{
 				Assert.Equal(2048, face.UnitsPerEm);
 			}
@@ -58,7 +60,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldHaveTableTags()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			{
 				Assert.Equal(20, face.Tables.Length);
 			}
@@ -67,18 +69,18 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldReferenceTable()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			using (var tableBlob = face.ReferenceTable(new Tag("post")))
 			{
 				Assert.Equal(13378, tableBlob.Length);
 			}
 		}
 
-		private class TypefaceTableLoader : TableLoader
+		private class SKTypefaceTableLoader : TableLoader
 		{
 			private readonly SKTypeface _typeface;
 
-			public TypefaceTableLoader(SKTypeface typeface)
+			public SKTypefaceTableLoader(SKTypeface typeface)
 			{
 				_typeface = typeface;
 			}
@@ -100,8 +102,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldCreateForTables()
 		{
-			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
-			using (var face = new Face(new TypefaceTableLoader(typeface)))
+			using (var face = new Face(new SKTypefaceTableLoader(Typeface)))
 			using (var font = new Font(face))
 			using (var buffer = new HarfBuzzSharp.Buffer())
 			{

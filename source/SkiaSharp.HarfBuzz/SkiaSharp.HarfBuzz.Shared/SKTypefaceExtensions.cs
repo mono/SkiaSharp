@@ -3,19 +3,18 @@ using HarfBuzzSharp;
 
 namespace SkiaSharp.HarfBuzz
 {
-	public static class FaceExtensions
+	public static class SKTypefaceExtensions
 	{
 		public static Face ToHarfBuzzFace(this SKTypeface typeface)
 		{
-			return new Face(new TypefaceTableLoader(typeface));
+			return new Face(new SKTypefaceTableLoader(typeface));
 		}
 
-		private class TypefaceTableLoader : TableLoader
+		private class SKTypefaceTableLoader : TableLoader
 		{
 			private readonly SKTypeface typeface;
 
-
-			public TypefaceTableLoader(SKTypeface typeface)
+			public SKTypefaceTableLoader(SKTypeface typeface)
 			{
 				this.typeface = typeface;
 			}
