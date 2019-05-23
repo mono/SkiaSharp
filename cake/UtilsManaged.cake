@@ -341,17 +341,10 @@ string[] GetReferenceSearchPaths ()
         var referenceAssemblies = $"{vs}/Common7/IDE/ReferenceAssemblies/Microsoft/Framework";
         var pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
 
-        // HACK: https://github.com/mono/api-doc-tools/pull/401
-        if (!FileExists ("./externals/winmd/Windows.winmd")) {
-            EnsureDirectoryExists ("./externals/winmd/");
-            CopyFile ($"{pf}/Windows Kits/10/UnionMetadata/Facade/Windows.WinMD", "./externals/winmd/Windows.winmd");
-        }
-        refs.Add (MakeAbsolute ((FilePath)"./externals/winmd/").FullPath);
-
         refs.AddRange (GetDirectories ("./output/docs/temp/*").Select (d => d.FullPath));
         refs.Add ($"{referenceAssemblies}/MonoTouch/v1.0");
         refs.Add ($"{referenceAssemblies}/MonoAndroid/v1.0");
-        refs.Add ($"{referenceAssemblies}/MonoAndroid/v4.0.3");
+        refs.Add ($"{referenceAssemblies}/MonoAndroid/v4.4");
         refs.Add ($"{referenceAssemblies}/Xamarin.iOS/v1.0");
         refs.Add ($"{referenceAssemblies}/Xamarin.TVOS/v1.0");
         refs.Add ($"{referenceAssemblies}/Xamarin.WatchOS/v1.0");
