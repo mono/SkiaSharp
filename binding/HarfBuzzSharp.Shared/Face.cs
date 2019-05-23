@@ -113,7 +113,7 @@ namespace HarfBuzzSharp
 		protected virtual void DisposeHandler ()
 		{
 			foreach (var blob in tableCache.Values) {
-				blob.Dispose ();
+				blob?.Dispose ();
 			}
 		}
 

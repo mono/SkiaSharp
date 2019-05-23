@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 
 using HarfBuzzSharp;
-using SkiaSharp.HarfBuzz;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -73,6 +71,43 @@ namespace SkiaSharp.Tests
 			using (var tableBlob = face.ReferenceTable(new Tag("post")))
 			{
 				Assert.Equal(13378, tableBlob.Length);
+			}
+		}
+
+		private class TypefaceTableLoader : TableLoader
+		{
+			private readonly SKTypeface _typeface;
+
+			public TypefaceTableLoader(SKTypeface typeface)
+			{
+				_typeface = typeface;
+			}
+
+			protected override unsafe Blob Load(Tag tag)
+			{
+				if (_typeface.TryGetTableData(tag, out var table))
+				{
+					fixed (byte* tablePtr = table)
+					{
+						return new Blob((IntPtr)tablePtr, table.Length, MemoryMode.Duplicate);
+					}
+				}
+
+				return null;
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldCreateForTables()
+		{
+			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
+			using (var face = new Face(new TypefaceTableLoader(typeface)))
+			using (var font = new Font(face))
+			using (var buffer = new HarfBuzzSharp.Buffer())
+			{
+				buffer.AddUtf16("Hello");
+
+				font.Shape(buffer);
 			}
 		}
 	}
