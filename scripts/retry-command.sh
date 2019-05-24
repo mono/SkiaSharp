@@ -8,9 +8,9 @@ function retry()
         "$@" && break || {
             ((Attempt++))
             if [[ $Attempt -lt $RetryCount ]]; then
-                echo "[$Attempt of $RetryCount] Script failed to execute, retrying..."
+                echo "##vso[task.logissue type=warning] ($Attempt of $RetryCount) Script failed to execute, retrying..."
             else
-                echo "[$Attempt of $RetryCount] Script failed to execute.">&2
+                echo "##vso[task.logissue type=warning] ($Attempt of $RetryCount) Script failed to execute.">&2
                 exit 1
             fi
         }
