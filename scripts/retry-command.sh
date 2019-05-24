@@ -6,8 +6,8 @@ function retry()
     shift
     while true; do
         "$@" && break || {
+            ((Attempt++))
             if [[ $Attempt -lt $RetryCount ]]; then
-                ((Attempt++))
                 echo "[$Attempt of $RetryCount] Script failed to execute, retrying..."
             else
                 echo "[$Attempt of $RetryCount] Script failed to execute.">&2

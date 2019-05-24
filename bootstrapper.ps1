@@ -252,5 +252,5 @@ $cakeArguments += $ScriptArgs
 
 # Start Cake
 Write-Host "Running build script..."
-Invoke-Expression "& $CAKE_EXE_INVOCATION $($cakeArguments -join " ")"
+Invoke-Expression "& $CAKE_EXE_INVOCATION --settings_skipverification=true $($cakeArguments -join " ")"
 exit $LASTEXITCODE
