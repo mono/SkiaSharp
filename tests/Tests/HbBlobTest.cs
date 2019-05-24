@@ -11,18 +11,18 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldCreateFromFileName()
 		{
-			using (var blob = Blob.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
+			using (var blob = Blob.FromFile(Path.Combine(PathToFonts, "Distortable.ttf")))
 			{
-				Assert.Equal(246224, blob.Length);
+				Assert.Equal(16384, blob.Length);
 			}
 		}
 
 		[SkippableFact]
 		public void ShouldCreateFromStream()
 		{
-			using (var blob = Blob.FromStream(File.Open(Path.Combine(PathToFonts, "content-font.ttf"), FileMode.Open, FileAccess.Read)))
+			using (var blob = Blob.FromStream(File.Open(Path.Combine(PathToFonts, "Funkster.ttf"), FileMode.Open, FileAccess.Read)))
 			{
-				Assert.Equal(246224, blob.Length);
+				Assert.Equal(236808, blob.Length);
 			}
 		}
 	}
