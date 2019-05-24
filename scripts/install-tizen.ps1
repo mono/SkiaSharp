@@ -1,8 +1,8 @@
 Param(
-    [string] $version = "3.2"
+    [string] $Version = "3.2"
 )
 
-$errorActionPreference = 'Stop'
+$ErrorActionPreference = 'Stop'
 
 if ($IsMacOS) {
     $platform = "macos-64"
@@ -17,7 +17,7 @@ if ($IsMacOS) {
 
 $ts = Join-Path "$HOME" "tizen-studio"
 $tsTemp = Join-Path "$HOME" "tizen-temp"
-$url = "http://download.tizen.org/sdk/Installer/tizen-studio_${version}/web-cli_Tizen_Studio_${version}_${platform}.${ext}"
+$url = "http://download.tizen.org/sdk/Installer/tizen-studio_${Version}/web-cli_Tizen_Studio_${Version}_${platform}.${ext}"
 $install = Join-Path "$tsTemp" "tizen-install.$ext"
 $packages = "MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment"
 
