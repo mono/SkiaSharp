@@ -242,7 +242,7 @@ $CAKE_EXE_INVOCATION = if ($IsLinux -or $IsMacOS) {
 
 
 # Build Cake arguments
-$cakeArguments = @("$Script");
+$cakeArguments = @("$Script", "--settings_skipverification=true");
 if ($Target) { $cakeArguments += "-target=$Target" }
 if ($Configuration) { $cakeArguments += "-configuration=$Configuration" }
 if ($Verbosity) { $cakeArguments += "-verbosity=$Verbosity" }
@@ -252,5 +252,5 @@ $cakeArguments += $ScriptArgs
 
 # Start Cake
 Write-Host "Running build script..."
-Invoke-Expression "& $CAKE_EXE_INVOCATION --settings_skipverification=true $($cakeArguments -join " ")"
+Invoke-Expression "& $CAKE_EXE_INVOCATION $($cakeArguments -join " ")"
 exit $LASTEXITCODE
