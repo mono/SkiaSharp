@@ -31,8 +31,6 @@ jobs:
       # install any packages on linux
       - ${{ if endsWith(parameters.name, '_linux') }}:
         - bash: |
-            wget -q https://packages.microsoft.com/config/ubuntu/14.04/packages-microsoft-prod.deb
-            sudo dpkg -i packages-microsoft-prod.deb
             sudo apt update
             sudo apt install -y ${{ parameters.packages }}
           displayName: Install any package dependencies
@@ -70,11 +68,18 @@ jobs:
       # pre-build steps
       - ${{ parameters.preBuildSteps }}
       # build
-      - powershell: ./scripts/retry-command.ps1 -RetryCount ${{ parameters.retryCount }} { ./bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY ${{ parameters.additionalArgs }} }
-        displayName: Run the bootstrapper for ${{ parameters.target }}
-        env:
-          ANDROID_NDK_HOME: $(HOME)/android-ndk
-          TIZEN_STUDIO_HOME: $(HOME)/tizen-studio
+      - ${{ if endsWith(parameters.name, '_windows') }}:
+        - powershell: .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} { .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY ${{ parameters.additionalArgs }} }
+          displayName: Run the bootstrapper for ${{ parameters.target }}
+          env:
+            ANDROID_NDK_HOME: $(USERPROFILE)/android-ndk
+            TIZEN_STUDIO_HOME: $(USERPROFILE)/tizen-studio
+      - ${{ if not(endsWith(parameters.name, '_windows')) }}:
+        - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY ${{ parameters.additionalArgs }}
+          displayName: Run the bootstrapper for ${{ parameters.target }}
+          env:
+            ANDROID_NDK_HOME: $(HOME)/android-ndk
+            TIZEN_STUDIO_HOME: $(HOME)/tizen-studio
       # post-build steps
       - ${{ parameters.postBuildSteps }}
       # publish artifacts
