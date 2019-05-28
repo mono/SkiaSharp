@@ -1,4 +1,5 @@
-﻿using HarfBuzzSharp;
+﻿using System.Linq.Expressions;
+using HarfBuzzSharp;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -65,14 +66,13 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldCreateWithTableFunc()
 		{
-			using (var face = new Face((f, t, u) => Blob.Empty.Handle))
-			{
-				for (var i = 0; i < 10000; i++)
-				{
-					var blob = face.ReferenceTable(new Tag("abcd"));
+			var tag = new Tag("kern");
 
-					Assert.Equal(Blob.Empty.Handle, blob.Handle);
-				}
+			using (var face = new Face((f, t, u) => Face.ReferenceTable(t).Handle))
+			{
+				var blob = face.ReferenceTable(tag);
+
+				Assert.Equal(Face.ReferenceTable(tag).Handle, blob.Handle);
 			}
 		}
 	}
