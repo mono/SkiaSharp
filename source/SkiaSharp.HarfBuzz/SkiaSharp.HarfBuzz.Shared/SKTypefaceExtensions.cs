@@ -5,12 +5,10 @@ namespace SkiaSharp.HarfBuzz
 {
 	public static class SKTypefaceExtensions
 	{
-		public static Face ToHarfBuzzFace(this SKTypeface typeface)
-		{
-			return new Face(new SKTypefaceTableLoader(typeface));
-		}
+		public static Face ToHarfBuzzFace(this SKTypeface typeface) =>
+			new Face(new SKTypefaceTableLoader(typeface).Load);
 
-		private class SKTypefaceTableLoader : TableLoader
+		private class SKTypefaceTableLoader
 		{
 			private readonly SKTypeface typeface;
 
@@ -19,17 +17,19 @@ namespace SkiaSharp.HarfBuzz
 				this.typeface = typeface;
 			}
 
-			protected override unsafe Blob Load(Tag tag)
+			public unsafe IntPtr Load(IntPtr face, Tag tag, IntPtr userData)
 			{
 				if (typeface.TryGetTableData(tag, out var table))
 				{
 					fixed (byte* tablePtr = table)
 					{
-						return new Blob((IntPtr)tablePtr, table.Length, MemoryMode.Duplicate);
+						var blob = new Blob((IntPtr)tablePtr, table.Length, MemoryMode.ReadOnly);
+
+						return blob.Handle;
 					}
 				}
 
-				return null;
+				return IntPtr.Zero;
 			}
 		}
 	}

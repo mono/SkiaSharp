@@ -6,7 +6,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	public class HbBlobTest : SKTest
+	public class HBBlobTest : SKTest
 	{
 		[SkippableFact]
 		public void ShouldCreateFromFileName()

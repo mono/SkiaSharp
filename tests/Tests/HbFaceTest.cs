@@ -1,20 +1,10 @@
-﻿using System.IO;
-
-using HarfBuzzSharp;
+﻿using HarfBuzzSharp;
 using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	public class HbFaceTest : SKTest
+	public class HBFaceTest : HBTest
 	{
-		public static readonly Blob Blob;
-
-		static HbFaceTest()
-		{
-			Blob = Blob.FromFile(Path.Combine(PathToFonts, "content-font.ttf"));
-			Blob.MakeImmutable();
-		}
-
 		[SkippableFact]
 		public void ShouldHaveGlyphCount()
 		{
@@ -69,6 +59,20 @@ namespace SkiaSharp.Tests
 			using (var tableBlob = face.ReferenceTable(new Tag("post")))
 			{
 				Assert.Equal(13378, tableBlob.Length);
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldCreateWithTableFunc()
+		{
+			using (var face = new Face((f, t, u) => Blob.Empty.Handle))
+			{
+				for (var i = 0; i < 10000; i++)
+				{
+					var blob = face.ReferenceTable(new Tag("abcd"));
+
+					Assert.Equal(Blob.Empty.Handle, blob.Handle);
+				}
 			}
 		}
 	}

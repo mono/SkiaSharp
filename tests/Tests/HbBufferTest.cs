@@ -1,10 +1,7 @@
 ﻿using System;
-using System.IO;
 using System.Text;
 
 using HarfBuzzSharp;
-
-using SkiaSharp.HarfBuzz;
 
 using Xunit;
 
@@ -12,19 +9,12 @@ using Buffer = HarfBuzzSharp.Buffer;
 
 namespace SkiaSharp.Tests
 {
-	public class HbBufferTest : SKTest
+	public class HBBufferTest : HBTest
 	{
-		private static readonly Font Font;
-
 		private const string SimpleText = "1234";
 
 		private const string SerializedSimpleText = "gid25=0+772|gid26=1+772|gid27=2+772|gid28=3+772";
-
-		static HbBufferTest()
-		{
-			Font = new Font(new Face(HbFaceTest.Blob, 0));
-		}
-
+		
 		[SkippableFact]
 		public void ShouldHaveCorrectContentType()
 		{

@@ -1,12 +1,34 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
 {
 	public class Face : NativeObject
 	{
-		private readonly TableLoader tableLoader;
-		private readonly HarfBuzzApi.hb_reference_table_func_t tableLoadFunc;
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate IntPtr GetTableFuncUnmanagedDelegate (IntPtr face, Tag tag, IntPtr user_data);
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void DestroyFuncUnmanagedDelegate (IntPtr user_data);
+
+		private static readonly IntPtr table_func;
+		private static readonly IntPtr destroy_func;
+
+		private static readonly GetTableFuncUnmanagedDelegate GetTableFuncUnmanaged = InternalGetTableFunc;
+		private static readonly DestroyFuncUnmanagedDelegate DestroyFuncUnmanaged = InternalDestroyFunc;
+
+		public delegate IntPtr GetTableDelegate (IntPtr face, Tag tag, IntPtr userData);
+		public delegate void DestroyDelegate ();
+
+		private readonly GCHandle gcHandle;
+		private readonly GetTableDelegate getTableFunc;
+		private readonly DestroyDelegate destroyFunc;
+
+		static Face ()
+		{
+			table_func = Marshal.GetFunctionPointerForDelegate (GetTableFuncUnmanaged);
+			destroy_func = Marshal.GetFunctionPointerForDelegate (DestroyFuncUnmanaged);
+		}
 
 		public Face (Blob blob, uint index)
 			: this (blob, (int)index)
@@ -27,20 +49,21 @@ namespace HarfBuzzSharp
 			Handle = HarfBuzzApi.hb_face_create (blob.Handle, index);
 		}
 
-		public Face (TableLoader tableLoader)
-			: this (IntPtr.Zero)
+		public Face (GetTableDelegate getTableFunc, DestroyDelegate destroyFunc = null)
+				: this (IntPtr.Zero)
 		{
-			this.tableLoader = tableLoader;
-			tableLoadFunc = tableLoader.Load;
-			var ctx = new NativeDelegateContext (null, new ReleaseDelegate (x => this.tableLoader.Dispose ()));
-			Handle = HarfBuzzApi.hb_face_create_for_tables (tableLoadFunc,
-				ctx.NativeContext, destroy_func);
+			this.getTableFunc = getTableFunc ?? throw new ArgumentNullException (nameof (getTableFunc));
+			this.destroyFunc = destroyFunc;
+			gcHandle = GCHandle.Alloc (this);
+			Handle = HarfBuzzApi.hb_face_create_for_tables (table_func, GCHandle.ToIntPtr (gcHandle), destroy_func);
 		}
 
 		internal Face (IntPtr handle)
 			: base (handle)
 		{
 		}
+
+		public static Face Empty => new Face (HarfBuzzApi.hb_face_get_empty ());
 
 		public int Index {
 			get => HarfBuzzApi.hb_face_get_index (Handle);
@@ -81,56 +104,24 @@ namespace HarfBuzzSharp
 			if (Handle != IntPtr.Zero) {
 				HarfBuzzApi.hb_face_destroy (Handle);
 			}
-		}
-	}
 
-	public abstract class TableLoader : IDisposable
-	{
-		private readonly Dictionary<Tag, Blob> tableCache = new Dictionary<Tag, Blob> ();
-		private bool isDisposed;
-
-		public void Dispose ()
-		{
-			Dispose (true);
-			GC.SuppressFinalize (this);
-		}
-
-		private void Dispose (bool disposing)
-		{
-			if (isDisposed) {
-				return;
-			}
-
-			isDisposed = true;
-
-			if (!disposing) {
-				return;
-			}
-
-			DisposeHandler ();
-		}
-
-		protected abstract Blob Load (Tag tag);
-
-		protected virtual void DisposeHandler ()
-		{
-			foreach (var blob in tableCache.Values) {
-				blob?.Dispose ();
+			if (gcHandle.IsAllocated) {
+				gcHandle.Free ();
 			}
 		}
 
-		internal IntPtr Load (IntPtr face, Tag tag, IntPtr userData)
+		[MonoPInvokeCallback (typeof (GetTableFuncUnmanagedDelegate))]
+		private static IntPtr InternalGetTableFunc (IntPtr face, Tag tag, IntPtr user_data)
 		{
-			Blob blob;
+			var obj = (Face)GCHandle.FromIntPtr (user_data).Target;
+			return obj.getTableFunc.Invoke (face, tag, user_data);
+		}
 
-			if (tableCache.ContainsKey (tag)) {
-				blob = tableCache[tag];
-			} else {
-				blob = Load (tag);
-				tableCache.Add (tag, blob);
-			}
-
-			return blob?.Handle ?? IntPtr.Zero;
+		[MonoPInvokeCallback (typeof (DestroyFuncUnmanagedDelegate))]
+		private static void InternalDestroyFunc (IntPtr user_data)
+		{
+			var obj = (Face)GCHandle.FromIntPtr (user_data).Target;
+			obj.destroyFunc?.Invoke ();
 		}
 	}
 }

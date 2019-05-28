@@ -52,18 +52,19 @@ namespace HarfBuzzSharp
 		public extern static unsafe byte* hb_blob_get_data (hb_blob_t blob, out int length);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static hb_blob_t hb_blob_create_from_file ([MarshalAs (UnmanagedType.LPStr)] string file_name);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static hb_blob_t hb_blob_get_empty ();
 
 		// hb_face_t
-
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		public delegate hb_blob_t hb_reference_table_func_t (hb_face_t face, Tag tag, IntPtr user_data);
 
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int hb_face_count (hb_blob_t blob);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static hb_face_t hb_face_create (hb_blob_t blob, int index);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern hb_face_t hb_face_create_for_tables (hb_reference_table_func_t reference_table_func, IntPtr user_data, IntPtr destroy);
+		public static extern hb_face_t hb_face_create_for_tables (IntPtr reference_table_func, IntPtr user_data, IntPtr destroy);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern hb_face_t hb_face_get_empty ();
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_face_destroy (hb_face_t face);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
