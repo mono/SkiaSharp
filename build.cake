@@ -370,9 +370,9 @@ Task ("nuget-only")
 
         var preview = "";
         if (!string.IsNullOrEmpty (FEATURE_NAME)) {
-            preview += $"-{FEATURE_NAME}-featurepreview-";
+            preview += $"-{FEATURE_NAME}-featurepreview.";
         } else {
-            preview += $"-preview-";
+            preview += $"-preview.";
         }
         if (!string.IsNullOrEmpty (BUILD_NUMBER)) {
             preview += $"{BUILD_NUMBER}";
