@@ -54,6 +54,7 @@ DirectoryPath HARFBUZZ_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/harfbuzz
 DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/SkiaSharpAPI"));
 DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/package_cache"));
 
+var PREVIEW_LABEL = EnvironmentVariable ("PREVIEW_LABEL") ?? "preview";
 var FEATURE_NAME = EnvironmentVariable ("FEATURE_NAME") ?? "";
 var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? "";
 if (string.IsNullOrEmpty (BUILD_NUMBER)) {
@@ -370,9 +371,9 @@ Task ("nuget-only")
 
         var preview = "";
         if (!string.IsNullOrEmpty (FEATURE_NAME)) {
-            preview += $"-{FEATURE_NAME}-featurepreview.";
+            preview += $"-featurepreview-{FEATURE_NAME}.";
         } else {
-            preview += $"-preview.";
+            preview += $"-{PREVIEW_LABEL}.";
         }
         if (!string.IsNullOrEmpty (BUILD_NUMBER)) {
             preview += $"{BUILD_NUMBER}";
