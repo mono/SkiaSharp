@@ -224,7 +224,7 @@ jobs:
       - package_nodependencies_windows
       - package_windows
     pool:
-      vmImage: vs2017-win2016
+      vmImage: ubuntu-16.04
     steps:
       - checkout: none
       - task: DownloadPipelineArtifact@0
@@ -242,6 +242,7 @@ jobs:
         inputs:
           artifactName: nuget
           pathToPublish: 'output/nugets'
+      - bash: ./scripts/validate-linux-nugets.sh
       - task: PublishPipelineArtifact@0
         displayName: Publish the package artifacts
         inputs:
