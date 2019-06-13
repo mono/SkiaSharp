@@ -172,10 +172,14 @@ jobs:
         - managed_windows
       postBuildSteps:
         - powershell: |
-            $platforms = Get-ChildItem -Path ./output/native/*
-            $platforms | Where-Object { $_.Name -NotMatch "linux" } | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
-            $nupkgs = Get-ChildItem -Path ./output/nugets/*
-            $nupkgs | Where-Object { $_.Name -NotMatch "NoDependencies" } | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
+            $platforms = (Get-ChildItem -Path ./output/native/*) | Where-Object { $_.Name -NotMatch "linux" }
+            Write-Host "Removing the following platforms:"
+            $platforms | Foreach-Object { Write-Host $_.Name }
+            $platforms | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
+            $nupkgs = (Get-ChildItem -Path ./output/nugets/*) | Where-Object { $_.Name -NotMatch "NoDependencies" }
+            Write-Host "Removing the following packages:"
+            $nupkgs | Foreach-Object { Write-Host $_.Name }
+            $nupkgs | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
           displayName: Remove all unrelated files
         - task: PublishPipelineArtifact@0
           displayName: Publish the native-nodependencies artifacts
@@ -198,6 +202,12 @@ jobs:
         - managed_macos
         - managed_windows
       postBuildSteps:
+        - powershell: |
+            $nupkgs = (Get-ChildItem -Path ./output/nugets/*) | Where-Object { $_.Name -Match "NoDependencies" }
+            Write-Host "Removing the following packages:"
+            $nupkgs | Foreach-Object { Write-Host $_.Name }
+            $nupkgs | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
+          displayName: Remove all unrelated files
         - task: PublishPipelineArtifact@0
           displayName: Publish the native-default artifacts
           inputs:
@@ -214,9 +224,8 @@ jobs:
       - package_nodependencies_windows
       - package_windows
     pool:
-      vmImage: vs2017-win2016
+      vmImage: ubuntu-16.04
     steps:
-      - checkout: none
       - task: DownloadPipelineArtifact@0
         displayName: Download the nuget-nodependencies artifacts
         inputs:
@@ -232,6 +241,8 @@ jobs:
         inputs:
           artifactName: nuget
           pathToPublish: 'output/nugets'
+      - bash: ./scripts/validate-linux-nugets.sh
+        displayName: Validate the Linux NuGet packages
       - task: PublishPipelineArtifact@0
         displayName: Publish the package artifacts
         inputs:

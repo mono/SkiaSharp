@@ -56,10 +56,7 @@ DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/pac
 
 var PREVIEW_LABEL = EnvironmentVariable ("PREVIEW_LABEL") ?? "preview";
 var FEATURE_NAME = EnvironmentVariable ("FEATURE_NAME") ?? "";
-var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? "";
-if (string.IsNullOrEmpty (BUILD_NUMBER)) {
-    BUILD_NUMBER = "0";
-}
+var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? "0";
 
 if (!string.IsNullOrEmpty (PythonToolPath) && FileExists (PythonToolPath)) {
     var dir = MakeAbsolute ((FilePath) PythonToolPath).GetDirectory ();
@@ -371,12 +368,12 @@ Task ("nuget-only")
 
         var preview = "";
         if (!string.IsNullOrEmpty (FEATURE_NAME)) {
-            preview += $"-featurepreview-{FEATURE_NAME}.";
+            preview += $"-featurepreview-{FEATURE_NAME}";
         } else {
-            preview += $"-{PREVIEW_LABEL}.";
+            preview += $"-{PREVIEW_LABEL}";
         }
         if (!string.IsNullOrEmpty (BUILD_NUMBER)) {
-            preview += $"{BUILD_NUMBER}";
+            preview += $".{BUILD_NUMBER}";
         }
 
         removePlatforms (xdoc);
