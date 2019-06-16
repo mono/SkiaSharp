@@ -4,7 +4,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	public class HbUnicodeFuncsTest : SKTest
+	public class HBUnicodeFuncsTest : SKTest
 	{
 		[SkippableFact]
 		public void ShouldBeImmutable()

@@ -50,6 +50,8 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		public static Blob Empty => new Blob (HarfBuzzApi.hb_blob_get_empty ());
+
 		public int Length => HarfBuzzApi.hb_blob_get_length (Handle);
 
 		public int FaceCount => HarfBuzzApi.hb_face_count (Handle);

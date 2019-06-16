@@ -1,26 +1,15 @@
-﻿using System.IO;
-
+﻿using System.Linq.Expressions;
 using HarfBuzzSharp;
-
 using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	public class HbFaceTest : SKTest
+	public class HBFaceTest : HBTest
 	{
-		private static readonly Blob s_blob;
-
-		static HbFaceTest()
-		{
-			s_blob = Blob.FromFile(Path.Combine(PathToFonts, "content-font.ttf"));
-			s_blob.MakeImmutable();
-		}
-
-
 		[SkippableFact]
 		public void ShouldHaveGlyphCount()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			{
 				Assert.Equal(1147, face.GlyphCount);
 			}
@@ -29,7 +18,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldBeImmutable()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			{
 				face.MakeImmutable();
 
@@ -40,7 +29,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldHaveIndex()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			{
 				Assert.Equal(0, face.Index);
 			}
@@ -49,7 +38,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldHaveUnitsPerEm()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			{
 				Assert.Equal(2048, face.UnitsPerEm);
 			}
@@ -58,7 +47,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldHaveTableTags()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			{
 				Assert.Equal(20, face.Tables.Length);
 			}
@@ -67,10 +56,23 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldReferenceTable()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			using (var tableBlob = face.ReferenceTable(new Tag("post")))
 			{
 				Assert.Equal(13378, tableBlob.Length);
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldCreateWithTableFunc()
+		{
+			var tag = new Tag("kern");
+
+			using (var face = new Face((f, t, u) => Face.ReferenceTable(t).Handle))
+			{
+				var blob = face.ReferenceTable(tag);
+
+				Assert.Equal(Face.ReferenceTable(tag).Handle, blob.Handle);
 			}
 		}
 	}

@@ -32,10 +32,10 @@ namespace HarfBuzzSharp
 			this.end = uint.MaxValue;
 		}
 
-		public Feature (Tag tag, bool isEnabled, uint start, uint end)
+		public Feature (Tag tag, uint value, uint start = 0, uint end = uint.MaxValue)
 		{
 			this.tag = tag;
-			this.val = isEnabled ? 1u : 0u;
+			this.val = value;
 			this.start = start;
 			this.end = end;
 		}
@@ -45,15 +45,9 @@ namespace HarfBuzzSharp
 			set => tag = value;
 		}
 
-		[Obsolete ("Use IsEnabled instead.")]
 		public uint Value {
 			get => val;
 			set => val = value;
-		}
-
-		public bool IsEnabled {
-			get => val == 1u;
-			set => val = value ? 1u : 0u;
 		}
 
 		public uint Start {

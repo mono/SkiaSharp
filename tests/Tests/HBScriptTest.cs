@@ -4,7 +4,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	public class HbScriptTest : SKTest
+	public class HBScriptTest : SKTest
 	{
 		[SkippableFact]
 		public void ShouldCreateScriptFromString()

@@ -4,7 +4,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	public class HbFeatureTest : SKTest
+	public class HBFeatureTest : SKTest
 	{
 		[SkippableFact]
 		public void ShouldCreateFeatureFromString()

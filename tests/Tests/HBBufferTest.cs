@@ -1,10 +1,7 @@
 ﻿using System;
-using System.IO;
 using System.Text;
 
 using HarfBuzzSharp;
-
-using SkiaSharp.HarfBuzz;
 
 using Xunit;
 
@@ -12,19 +9,15 @@ using Buffer = HarfBuzzSharp.Buffer;
 
 namespace SkiaSharp.Tests
 {
-	public class HbBufferTest : SKTest
+	public class HBBufferTest : HBTest
 	{
 		private const string SimpleText = "1234";
 
 		private const string SerializedSimpleText = "gid25=0+772|gid26=1+772|gid27=2+772|gid28=3+772";
-
+		
 		[SkippableFact]
 		public void ShouldHaveCorrectContentType()
 		{
-			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
-			using (var blob = typeface.OpenStream(out var index).ToHarfBuzzBlob())
-			using (var face = new Face(blob, index))
-			using (var font = new Font(face))
 			using (var buffer = new Buffer())
 			{
 				Assert.Equal(ContentType.Invalid, buffer.ContentType);
@@ -33,7 +26,7 @@ namespace SkiaSharp.Tests
 
 				Assert.Equal(ContentType.Unicode, buffer.ContentType);
 
-				font.Shape(buffer);
+				Font.Shape(buffer);
 
 				Assert.Equal(ContentType.Glyphs, buffer.ContentType);
 			}
@@ -116,15 +109,11 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldThrowInvalidOperationExceptionOnAddUtfWhenBufferIsShaped()
 		{
-			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
-			using (var blob = typeface.OpenStream(out var index).ToHarfBuzzBlob())
-			using (var face = new Face(blob, index))
-			using (var font = new Font(face))
 			using (var buffer = new Buffer())
 			{
 				buffer.AddUtf8(SimpleText);
 
-				font.Shape(buffer);
+				Font.Shape(buffer);
 
 				Assert.Throws<InvalidOperationException>(() => { buffer.AddUtf8("A"); });
 			}
@@ -153,17 +142,13 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldSerializeGlyphs()
 		{
-			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
-			using (var blob = typeface.OpenStream(out var index).ToHarfBuzzBlob())
-			using (var face = new Face(blob, index))
-			using (var font = new Font(face))
 			using (var buffer = new Buffer())
 			{
 				buffer.AddUtf16(SimpleText);
 
 				buffer.GuessSegmentProperties();
 
-				font.Shape(buffer);
+				Font.Shape(buffer);
 
 				var serializedGlyphs = buffer.SerializeGlyphs();
 
@@ -240,15 +225,11 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldNormalize()
 		{
-			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
-			using (var blob = typeface.OpenStream(out var index).ToHarfBuzzBlob())
-			using (var face = new Face(blob, index))
-			using (var font = new Font(face))
 			using (var buffer = new Buffer())
 			{
 				buffer.AddUtf16("Â̶");
 
-				font.Shape(buffer);
+				Font.Shape(buffer);
 
 				buffer.NormalizeGlyphs();
 
