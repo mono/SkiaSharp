@@ -3,31 +3,23 @@ using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
 {
+	// public delegates
+	public delegate Blob GetTableDelegate (Face face, Tag tag, object context);
+
+	// internal proxy delegates
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal delegate IntPtr GetTableFuncUnmanagedDelegate (IntPtr face, Tag tag, IntPtr context);
+
 	public class Face : NativeObject
 	{
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate IntPtr GetTableFuncUnmanagedDelegate (IntPtr face, Tag tag, IntPtr user_data);
-
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate void DestroyFuncUnmanagedDelegate (IntPtr user_data);
-
+		// so the GC doesn't collect the delegates
+		private static readonly GetTableFuncUnmanagedDelegate table_funcInternal;
 		private static readonly IntPtr table_func;
-		private static readonly IntPtr destroy_func;
-
-		private static readonly GetTableFuncUnmanagedDelegate GetTableFuncUnmanaged = InternalGetTableFunc;
-		private static readonly DestroyFuncUnmanagedDelegate DestroyFuncUnmanaged = InternalDestroyFunc;
-
-		public delegate IntPtr GetTableDelegate (IntPtr face, Tag tag, IntPtr userData);
-		public delegate void DestroyDelegate ();
-
-		private readonly GCHandle gcHandle;
-		private readonly GetTableDelegate getTableFunc;
-		private readonly DestroyDelegate destroyFunc;
 
 		static Face ()
 		{
-			table_func = Marshal.GetFunctionPointerForDelegate (GetTableFuncUnmanaged);
-			destroy_func = Marshal.GetFunctionPointerForDelegate (DestroyFuncUnmanaged);
+			table_funcInternal = new GetTableFuncUnmanagedDelegate (GetTableFuncInternal);
+			table_func = Marshal.GetFunctionPointerForDelegate (table_funcInternal);
 		}
 
 		public Face (Blob blob, uint index)
@@ -49,13 +41,26 @@ namespace HarfBuzzSharp
 			Handle = HarfBuzzApi.hb_face_create (blob.Handle, index);
 		}
 
-		public Face (GetTableDelegate getTableFunc, DestroyDelegate destroyFunc = null)
-				: this (IntPtr.Zero)
+		public Face (GetTableDelegate getTable)
+			: this (getTable, null, null)
 		{
-			this.getTableFunc = getTableFunc ?? throw new ArgumentNullException (nameof (getTableFunc));
-			this.destroyFunc = destroyFunc;
-			gcHandle = GCHandle.Alloc (this);
-			Handle = HarfBuzzApi.hb_face_create_for_tables (table_func, GCHandle.ToIntPtr (gcHandle), destroy_func);
+		}
+
+		public Face (GetTableDelegate getTable, object context)
+			: this (getTable, context, null)
+		{
+		}
+
+		public Face (GetTableDelegate getTable, object context, ReleaseDelegate destroy)
+			: this (IntPtr.Zero)
+		{
+			if (getTable == null)
+				throw new ArgumentNullException (nameof (getTable));
+
+			var ctx = new NativeDelegateContext (
+				new object[] { context, this },
+				new Delegate[] { destroy, getTable });
+			Handle = HarfBuzzApi.hb_face_create_for_tables (table_func, ctx.NativeContext, DestroyFunction.NativePointer);
 		}
 
 		internal Face (IntPtr handle)
@@ -104,24 +109,16 @@ namespace HarfBuzzSharp
 			if (Handle != IntPtr.Zero) {
 				HarfBuzzApi.hb_face_destroy (Handle);
 			}
-
-			if (gcHandle.IsAllocated) {
-				gcHandle.Free ();
-			}
 		}
 
 		[MonoPInvokeCallback (typeof (GetTableFuncUnmanagedDelegate))]
-		private static IntPtr InternalGetTableFunc (IntPtr face, Tag tag, IntPtr user_data)
+		private static IntPtr GetTableFuncInternal (IntPtr face, Tag tag, IntPtr context)
 		{
-			var obj = (Face)GCHandle.FromIntPtr (user_data).Target;
-			return obj.getTableFunc.Invoke (face, tag, user_data);
-		}
-
-		[MonoPInvokeCallback (typeof (DestroyFuncUnmanagedDelegate))]
-		private static void InternalDestroyFunc (IntPtr user_data)
-		{
-			var obj = (Face)GCHandle.FromIntPtr (user_data).Target;
-			obj.destroyFunc?.Invoke ();
+			var ctx = NativeDelegateContext.Unwrap (context);
+			var f = (Face)ctx.GetManagedContext (1);
+			var c = ctx.ManagedContext;
+			var blob = ctx.GetDelegate<GetTableDelegate> (1)?.Invoke (f, tag, c);
+			return blob?.Handle ?? IntPtr.Zero;
 		}
 	}
 }

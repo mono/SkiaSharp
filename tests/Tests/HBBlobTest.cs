@@ -43,10 +43,7 @@ namespace HarfBuzzSharp.Tests
 			var emptyBlob = Blob.Empty;
 			emptyBlob.Dispose();
 
-			var isDisposedField = typeof(NativeObject).GetField("isDisposed", BindingFlags.NonPublic | BindingFlags.Instance);
-			var isDisposed = (bool)isDisposedField.GetValue(emptyBlob);
-
-			Assert.False(isDisposed);
+			Assert.False(emptyBlob.IsDisposed());
 			Assert.NotEqual(IntPtr.Zero, emptyBlob.Handle);
 		}
 	}

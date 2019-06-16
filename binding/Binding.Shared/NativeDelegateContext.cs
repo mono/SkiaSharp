@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 
 #if HARFBUZZ
@@ -14,32 +14,44 @@ namespace SkiaSharp
 	// us from having to marshal the user's callback too.
 	internal class NativeDelegateContext : IDisposable
 	{
-		// instead of pinning the struct, we pin a GUID which is paired to the struct
-		private static readonly IDictionary<Guid, NativeDelegateContext> contexts = new Dictionary<Guid, NativeDelegateContext> ();
+		// instead of pinning the class, we pin a GUID which is paired to the class
+		private static readonly ConcurrentDictionary<Guid, NativeDelegateContext> contextsMap = new ConcurrentDictionary<Guid, NativeDelegateContext> ();
 
-		// the "managed version" of the callback 
-		private readonly Delegate managedDelegate;
+		// the "managed version" of the callback
+		private readonly Delegate[] managedDelegates;
+		private readonly object[] managedContexts;
 
-		public NativeDelegateContext (object context, Delegate get)
+		public NativeDelegateContext (object context, Delegate del)
+			: this (new[] { context }, new[] { del })
 		{
-			managedDelegate = get;
-			ManagedContext = context;
+		}
+
+		public NativeDelegateContext (object[] contexts, Delegate[] delegates)
+		{
+			_ = contexts ?? throw new ArgumentNullException (nameof (contexts));
+			_ = delegates ?? throw new ArgumentNullException (nameof (delegates));
+
+			managedDelegates = delegates;
+			managedContexts = contexts;
+
 			NativeContext = Wrap ();
 		}
 
-		public object ManagedContext { get; }
-
 		public IntPtr NativeContext { get; }
 
-		public T GetDelegate<T> () => (T)(object)managedDelegate;
+		public object ManagedContext => managedContexts[0];
+
+		public object GetManagedContext (int i) => managedContexts[i];
+
+		public T GetDelegate<T> () => GetDelegate<T> (0);
+
+		public T GetDelegate<T> (int i) => (T)(object)managedDelegates[i];
 
 		// wrap this context into a "native" pointer
 		public IntPtr Wrap ()
 		{
 			var guid = Guid.NewGuid ();
-			lock (contexts) {
-				contexts.Add (guid, this);
-			}
+			contextsMap[guid] = this;
 			var gc = GCHandle.Alloc (guid, GCHandleType.Pinned);
 			return GCHandle.ToIntPtr (gc);
 		}
@@ -49,10 +61,8 @@ namespace SkiaSharp
 		{
 			var gchandle = GCHandle.FromIntPtr (ptr);
 			var guid = (Guid)gchandle.Target;
-			lock (contexts) {
-				contexts.TryGetValue (guid, out var value);
-				return value;
-			}
+			contextsMap.TryGetValue (guid, out var value);
+			return value;
 		}
 
 		public void Free () => Free (NativeContext);
@@ -62,9 +72,7 @@ namespace SkiaSharp
 		{
 			var gchandle = GCHandle.FromIntPtr (ptr);
 			var guid = (Guid)gchandle.Target;
-			lock (contexts) {
-				contexts.Remove (guid);
-			}
+			contextsMap.TryRemove (guid, out _);
 			gchandle.Free ();
 		}
 

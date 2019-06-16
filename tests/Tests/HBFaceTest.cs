@@ -1,5 +1,4 @@
-﻿using System.Linq.Expressions;
-using Xunit;
+﻿using Xunit;
 
 namespace HarfBuzzSharp.Tests
 {
@@ -67,12 +66,61 @@ namespace HarfBuzzSharp.Tests
 		{
 			var tag = new Tag("kern");
 
-			using (var face = new Face((f, t, u) => Face.ReferenceTable(t).Handle))
+			using (var face = new Face((f, t, u) => Face.ReferenceTable(t)))
 			{
 				var blob = face.ReferenceTable(tag);
 
 				Assert.Equal(Face.ReferenceTable(tag).Handle, blob.Handle);
 			}
+		}
+
+		[SkippableFact]
+		public void DelegateBasedConstructionSucceededs()
+		{
+			var didReference = 0;
+			var didDestroy = 0;
+
+			var tag = new Tag("kern");
+
+			Face face = null;
+			face = new Face(
+				(f, t, u) =>
+				{
+					Assert.Equal("User Data", u);
+					Assert.Equal(face, f);
+
+					didReference++;
+					return Face.ReferenceTable(t);
+				},
+				"User Data",
+				u =>
+				{
+					Assert.Equal("User Data", u);
+
+					didDestroy++;
+				});
+
+			Assert.Equal(0, didReference);
+			Assert.Equal(0, didDestroy);
+
+			var blob1 = face.ReferenceTable(tag);
+
+			Assert.Equal(1, didReference);
+			Assert.Equal(0, didDestroy);
+			Assert.NotNull(blob1);
+
+			var blob2 = face.ReferenceTable(tag);
+
+			Assert.Equal(2, didReference);
+			Assert.Equal(0, didDestroy);
+			Assert.NotNull(blob2);
+
+			Assert.Equal(blob1.Handle, blob2.Handle);
+
+			face.Dispose();
+
+			Assert.Equal(2, didReference);
+			Assert.Equal(1, didDestroy);
 		}
 	}
 }
