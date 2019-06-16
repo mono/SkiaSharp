@@ -13,6 +13,8 @@ namespace HarfBuzzSharp
 
 	public class Blob : NativeObject
 	{
+		private static readonly Lazy<Blob> emptyBlob;
+
 		// so the GC doesn't collect the delegate
 		private static readonly hb_destroy_func_t destroy_funcInternal;
 		private static readonly IntPtr destroy_func;
@@ -21,7 +23,11 @@ namespace HarfBuzzSharp
 		{
 			destroy_funcInternal = new hb_destroy_func_t (DestroyInternal);
 			destroy_func = Marshal.GetFunctionPointerForDelegate (destroy_funcInternal);
+
+			emptyBlob = new Lazy<Blob> (() => new StaticBlob (HarfBuzzApi.hb_blob_get_empty ()));
 		}
+
+		public static Blob Empty => emptyBlob.Value;
 
 		internal Blob (IntPtr handle)
 			: base (handle)
@@ -49,8 +55,6 @@ namespace HarfBuzzSharp
 				HarfBuzzApi.hb_blob_destroy (Handle);
 			}
 		}
-
-		public static Blob Empty => new Blob (HarfBuzzApi.hb_blob_get_empty ());
 
 		public int Length => HarfBuzzApi.hb_blob_get_length (Handle);
 
@@ -113,6 +117,19 @@ namespace HarfBuzzSharp
 		{
 			using (var ctx = NativeDelegateContext.Unwrap (context)) {
 				ctx.GetDelegate<BlobReleaseDelegate> () (ctx.ManagedContext);
+			}
+		}
+
+		internal class StaticBlob : Blob
+		{
+			public StaticBlob (IntPtr handle)
+				: base (handle)
+			{
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				// do not dispose
 			}
 		}
 	}

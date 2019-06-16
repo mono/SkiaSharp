@@ -1,10 +1,8 @@
-﻿using HarfBuzzSharp;
+﻿using Xunit;
 
-using Xunit;
-
-namespace SkiaSharp.Tests
+namespace HarfBuzzSharp.Tests
 {
-	public class HBUnicodeFuncsTest : SKTest
+	public class HBUnicodeFuncsTest : HBTest
 	{
 		[SkippableFact]
 		public void ShouldBeImmutable()

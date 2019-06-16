@@ -1,11 +1,9 @@
 ﻿using System.IO;
+
+using SkiaSharp.Tests;
 using Xunit;
 
-using SkiaSharp;
-using SkiaSharp.HarfBuzz;
-using SkiaSharp.Tests;
-
-namespace HarfBuzzSharp.Tests
+namespace SkiaSharp.HarfBuzz.Tests
 {
 	public class SKShaperTest : SKTest
 	{

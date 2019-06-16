@@ -1,12 +1,12 @@
-﻿using System.IO;
-
-using HarfBuzzSharp;
+﻿using System;
+using System.IO;
+using System.Reflection;
 
 using Xunit;
 
-namespace SkiaSharp.Tests
+namespace HarfBuzzSharp.Tests
 {
-	public class HBBlobTest : SKTest
+	public class HBBlobTest : HBTest
 	{
 		[SkippableFact]
 		public void ShouldCreateFromFileName()
@@ -24,6 +24,30 @@ namespace SkiaSharp.Tests
 			{
 				Assert.Equal(236808, blob.Length);
 			}
+		}
+
+		[SkippableFact]
+		public void EmptyBlobsAreExactlyTheSameInstance()
+		{
+			var emptyBlob1 = Blob.Empty;
+			var emptyBlob2 = Blob.Empty;
+
+			Assert.Equal(emptyBlob1, emptyBlob2);
+			Assert.Equal(emptyBlob1.Handle, emptyBlob2.Handle);
+			Assert.Same(emptyBlob1, emptyBlob2);
+		}
+
+		[SkippableFact]
+		public void EmptyBlobsAreNotDisposed()
+		{
+			var emptyBlob = Blob.Empty;
+			emptyBlob.Dispose();
+
+			var isDisposedField = typeof(NativeObject).GetField("isDisposed", BindingFlags.NonPublic | BindingFlags.Instance);
+			var isDisposed = (bool)isDisposedField.GetValue(emptyBlob);
+
+			Assert.False(isDisposed);
+			Assert.NotEqual(IntPtr.Zero, emptyBlob.Handle);
 		}
 	}
 }

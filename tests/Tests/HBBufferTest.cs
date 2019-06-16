@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Text;
 
-using HarfBuzzSharp;
-
 using Xunit;
 
-using Buffer = HarfBuzzSharp.Buffer;
-
-namespace SkiaSharp.Tests
+namespace HarfBuzzSharp.Tests
 {
 	public class HBBufferTest : HBTest
 	{

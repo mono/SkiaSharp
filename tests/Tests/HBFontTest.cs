@@ -1,10 +1,8 @@
 ﻿using System;
 
-using HarfBuzzSharp;
-
 using Xunit;
 
-namespace SkiaSharp.Tests
+namespace HarfBuzzSharp.Tests
 {
 	public class HbFontTest : HBTest
 	{

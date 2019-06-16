@@ -1,9 +1,9 @@
 ﻿using System.IO;
-using HarfBuzzSharp;
+using SkiaSharp.Tests;
 
-namespace SkiaSharp.Tests
+namespace HarfBuzzSharp.Tests
 {
-	public class HBTest : SKTest
+	public class HBTest : BaseTest
 	{
 		protected static readonly Blob Blob;
 		protected static readonly Face Face;

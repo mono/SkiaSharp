@@ -1,17 +1,25 @@
-﻿using HarfBuzzSharp;
+﻿using System;
 
 using Xunit;
 
-namespace SkiaSharp.Tests
+namespace HarfBuzzSharp.Tests
 {
-	public class HBScriptTest : SKTest
+	public class HBScriptTest : HBTest
 	{
 		[SkippableFact]
 		public void ShouldCreateScriptFromString()
 		{
-			var script = Script.FromString("Latn");
+			var script = Script.Parse("Latn");
 
 			Assert.Equal(Script.Latin, script);
+		}
+
+		[SkippableFact]
+		public void ShouldThrowFromUnknownString()
+		{
+			Assert.False(Script.TryParse("", out var script));
+			Assert.Equal(Script.Invalid, script);
+			Assert.Throws<FormatException>(() => Script.Parse(""));
 		}
 	}
 }
