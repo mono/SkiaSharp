@@ -1,4 +1,6 @@
-﻿using Xunit;
+﻿using System;
+
+using Xunit;
 
 namespace HarfBuzzSharp.Tests
 {
@@ -121,6 +123,28 @@ namespace HarfBuzzSharp.Tests
 
 			Assert.Equal(2, didReference);
 			Assert.Equal(1, didDestroy);
+		}
+
+
+		[SkippableFact]
+		public void EmptyFacesAreExactlyTheSameInstance()
+		{
+			var emptyFace1 = Face.Empty;
+			var emptyFace2 = Face.Empty;
+
+			Assert.Equal(emptyFace1, emptyFace2);
+			Assert.Equal(emptyFace1.Handle, emptyFace2.Handle);
+			Assert.Same(emptyFace1, emptyFace2);
+		}
+
+		[SkippableFact]
+		public void EmptyFacesAreNotDisposed()
+		{
+			var emptyFace = Face.Empty;
+			emptyFace.Dispose();
+
+			Assert.False(emptyFace.IsDisposed());
+			Assert.NotEqual(IntPtr.Zero, emptyFace.Handle);
 		}
 	}
 }

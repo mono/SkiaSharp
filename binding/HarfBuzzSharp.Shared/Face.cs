@@ -22,6 +22,10 @@ namespace HarfBuzzSharp
 			table_func = Marshal.GetFunctionPointerForDelegate (table_funcInternal);
 		}
 
+		private static readonly Lazy<Face> emptyFace = new Lazy<Face> (() => new StaticFace (HarfBuzzApi.hb_face_get_empty ()));
+
+		public static Face Empty => emptyFace.Value;
+
 		public Face (Blob blob, uint index)
 			: this (blob, (int)index)
 		{
@@ -67,8 +71,6 @@ namespace HarfBuzzSharp
 			: base (handle)
 		{
 		}
-
-		public static Face Empty => new Face (HarfBuzzApi.hb_face_get_empty ());
 
 		public int Index {
 			get => HarfBuzzApi.hb_face_get_index (Handle);
@@ -119,6 +121,19 @@ namespace HarfBuzzSharp
 			var c = ctx.ManagedContext;
 			var blob = ctx.GetDelegate<GetTableDelegate> (1)?.Invoke (f, tag, c);
 			return blob?.Handle ?? IntPtr.Zero;
+		}
+
+		private class StaticFace : Face
+		{
+			public StaticFace (IntPtr handle)
+				: base (handle)
+			{
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				// do not dispose
+			}
 		}
 	}
 }
