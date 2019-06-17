@@ -191,26 +191,26 @@ namespace SkiaSharp
 			return result;
 		}
 
-		public bool TryGetTableData (UInt32 tag, out byte[] data)
+		public bool TryGetTableData (UInt32 tag, out byte[] tableData)
 		{
 			var length = GetTableSize (tag);
 			var buffer = new byte[length];
 			unsafe {
 				fixed (byte* b = buffer) {
 					if (!TryGetTableData (tag, 0, length, (IntPtr)b)) {
-						data = null;
+						tableData = null;
 						return false;
 					}
 				}
 			}
-			data = buffer;
+			tableData = buffer;
 			return true;
 		}
 
-		public bool TryGetTableData (UInt32 tag, int offset, int length, IntPtr data)
+		public bool TryGetTableData (UInt32 tag, int offset, int length, IntPtr tableData)
 		{
 			unsafe {
-				var actual = SkiaApi.sk_typeface_get_table_data (Handle, tag, (IntPtr)offset, (IntPtr)length, (byte*)data);
+				var actual = SkiaApi.sk_typeface_get_table_data (Handle, tag, (IntPtr)offset, (IntPtr)length, (byte*)tableData);
 				return actual != IntPtr.Zero;
 			}
 		}
