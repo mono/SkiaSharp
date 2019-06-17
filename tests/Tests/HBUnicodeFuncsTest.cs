@@ -1,4 +1,6 @@
-﻿using Xunit;
+﻿using System;
+
+using Xunit;
 
 namespace HarfBuzzSharp.Tests
 {
@@ -44,6 +46,27 @@ namespace HarfBuzzSharp.Tests
 
 				Assert.Equal(UnicodeGeneralCategory.UppercaseLetter, generalCategory);
 			}
+		}
+
+		[SkippableFact]
+		public void EmptyUnicodeFunctionsAreExactlyTheSameInstance()
+		{
+			var emptyUnicodeFunctions1 = UnicodeFunctions.Empty;
+			var emptyUnicodeFunctions2 = UnicodeFunctions.Empty;
+
+			Assert.Equal(emptyUnicodeFunctions1, emptyUnicodeFunctions2);
+			Assert.Equal(emptyUnicodeFunctions1.Handle, emptyUnicodeFunctions2.Handle);
+			Assert.Same(emptyUnicodeFunctions1, emptyUnicodeFunctions2);
+		}
+
+		[SkippableFact]
+		public void EmptyUnicodeFunctionsAreNotDisposed()
+		{
+			var emptyUnicodeFunctions = UnicodeFunctions.Empty;
+			emptyUnicodeFunctions.Dispose();
+
+			Assert.False(emptyUnicodeFunctions.IsDisposed());
+			Assert.NotEqual(IntPtr.Zero, emptyUnicodeFunctions.Handle);
 		}
 	}
 }
