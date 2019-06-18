@@ -1,26 +1,15 @@
 ﻿using System;
-using System.IO;
-
-using HarfBuzzSharp;
 
 using Xunit;
 
-namespace SkiaSharp.Tests
+namespace HarfBuzzSharp.Tests
 {
-	public class HbFontTest : SKTest
+	public class HbFontTest : HBTest
 	{
-		private static readonly Blob s_blob;
-
-		static HbFontTest()
-		{
-			s_blob = Blob.FromFile(Path.Combine(PathToFonts, "content-font.ttf"));
-			s_blob.MakeImmutable();
-		}
-
 		[SkippableFact]
 		public void ShouldHaveDefaultSupportedShapers()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
 				Assert.Equal(new[] { "ot", "fallback" }, font.SupportedShapers);
@@ -30,7 +19,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldGetGlyphByUnicode()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
 				var glyph = font.GetGlyph('A');
@@ -42,7 +31,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldThrowInvalidOperationExceptionOnGetHorizontalGlyphAdvance()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
 				Assert.Throws<ArgumentOutOfRangeException>(() => font.GetHorizontalGlyphAdvance(-1));
@@ -52,7 +41,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldThrowInvalidOperationExceptionOnGetGlyphExtents()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
 				Assert.Throws<ArgumentOutOfRangeException>(() => font.GetGlyphExtents(-1));
@@ -62,7 +51,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldHaveDefaultScale()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
 				font.GetScale(out var xScale, out var yScale);
@@ -74,7 +63,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldGetHorizontalGlyphOrigin()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
 				font.GetHorizontalGlyphOrigin(49, out var xOrigin, out var yOrigin);
@@ -86,7 +75,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldGetVerticalGlyphOrigin()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
 				font.GetVerticalGlyphOrigin(49, out var xOrigin, out var yOrigin);
@@ -98,7 +87,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldGetHorizontalGlyphAdvance()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
 				Assert.Equal(1114, font.GetHorizontalGlyphAdvance(49));
@@ -108,7 +97,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldGetVerticalGlyphAdvance()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
 				Assert.Equal(-2048, font.GetVerticalGlyphAdvance(49));
@@ -118,7 +107,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldGetHorizontalGlyphAdvances()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
 				var advances = font.GetHorizontalGlyphAdvances(new[] { 49, 50, 51 });
@@ -132,7 +121,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ShouldGetVerticalGlyphAdvances()
 		{
-			using (var face = new Face(s_blob, 0))
+			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
 				var advances = font.GetVerticalGlyphAdvances(new[] { 49, 50, 51 });

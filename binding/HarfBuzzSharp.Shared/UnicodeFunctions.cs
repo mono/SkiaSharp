@@ -4,11 +4,12 @@ namespace HarfBuzzSharp
 {
 	public class UnicodeFunctions : NativeObject
 	{
-		private static readonly IntPtr defaultHandle = HarfBuzzApi.hb_unicode_funcs_get_default ();
-		private static readonly IntPtr emptyHandle = HarfBuzzApi.hb_unicode_funcs_get_empty ();
+		private static readonly Lazy<UnicodeFunctions> defaultFunctions = new Lazy<UnicodeFunctions> (() => new StaticUnicodeFunctions (HarfBuzzApi.hb_unicode_funcs_get_default ()));
+		private static readonly Lazy<UnicodeFunctions> emptyFunctions = new Lazy<UnicodeFunctions> (() => new StaticUnicodeFunctions (HarfBuzzApi.hb_unicode_funcs_get_empty ()));
 
-		public static UnicodeFunctions Default => new UnicodeFunctions (defaultHandle);
-		public static UnicodeFunctions Empty => new UnicodeFunctions (emptyHandle);
+		public static UnicodeFunctions Default => defaultFunctions.Value;
+
+		public static UnicodeFunctions Empty => emptyFunctions.Value;
 
 		internal UnicodeFunctions (IntPtr handle)
 			: base (handle)
@@ -56,12 +57,21 @@ namespace HarfBuzzSharp
 
 		protected override void DisposeHandler ()
 		{
-			if (Handle == defaultHandle || Handle == emptyHandle) {
-				return;
-			}
-
 			if (Handle != IntPtr.Zero) {
 				HarfBuzzApi.hb_unicode_funcs_destroy (Handle);
+			}
+		}
+
+		private class StaticUnicodeFunctions : UnicodeFunctions
+		{
+			public StaticUnicodeFunctions (IntPtr handle)
+				: base (handle)
+			{
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				// do not dispose
 			}
 		}
 	}

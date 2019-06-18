@@ -19,23 +19,27 @@ namespace HarfBuzzSharp
 	[StructLayout (LayoutKind.Sequential)]
 	public struct Feature
 	{
+		private const int MaxFeatureStringSize = 128;
+
 		private Tag tag;
 		private uint val;
 		private uint start;
 		private uint end;
 
 		public Feature (Tag tag)
+			: this (tag, 1u, 0, uint.MaxValue)
 		{
-			this.tag = tag;
-			this.val = 1u;
-			this.start = 0;
-			this.end = uint.MaxValue;
 		}
 
-		public Feature (Tag tag, bool isEnabled, uint start, uint end)
+		public Feature (Tag tag, uint value)
+			: this (tag, value, 0, uint.MaxValue)
+		{
+		}
+
+		public Feature (Tag tag, uint value, uint start, uint end)
 		{
 			this.tag = tag;
-			this.val = isEnabled ? 1u : 0u;
+			this.val = value;
 			this.start = start;
 			this.end = end;
 		}
@@ -45,15 +49,9 @@ namespace HarfBuzzSharp
 			set => tag = value;
 		}
 
-		[Obsolete ("Use IsEnabled instead.")]
 		public uint Value {
 			get => val;
 			set => val = value;
-		}
-
-		public bool IsEnabled {
-			get => val == 1u;
-			set => val = value ? 1u : 0u;
 		}
 
 		public uint Start {
@@ -68,20 +66,16 @@ namespace HarfBuzzSharp
 
 		public override string ToString ()
 		{
-			const int AllocatedSize = 128;
-			var buffer = new StringBuilder (AllocatedSize);
-			HarfBuzzApi.hb_feature_to_string (ref this, buffer, AllocatedSize);
+			var buffer = new StringBuilder (MaxFeatureStringSize);
+			HarfBuzzApi.hb_feature_to_string (ref this, buffer, MaxFeatureStringSize);
 			return buffer.ToString ();
 		}
 
-		public static Feature FromString (string s)
-		{
-			if (HarfBuzzApi.hb_feature_from_string (s, -1, out var feature)) {
-				return feature;
-			}
+		public static bool TryParse (string s, out Feature feature) =>
+			HarfBuzzApi.hb_feature_from_string (s, -1, out feature);
 
-			return new Feature (Tag.None);
-		}
+		public static Feature Parse (string s) =>
+			TryParse (s, out var feature) ? feature : throw new FormatException ("Unrecognized feature string format.");
 	}
 
 	[StructLayout (LayoutKind.Sequential)]

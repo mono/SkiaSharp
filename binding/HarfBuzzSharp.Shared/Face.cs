@@ -1,10 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
 {
+	// public delegates
+	public delegate Blob GetTableDelegate (Face face, Tag tag, object context);
+
+	// internal proxy delegates
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal delegate IntPtr GetTableFuncUnmanagedDelegate (IntPtr face, Tag tag, IntPtr context);
+
 	public class Face : NativeObject
 	{
+		// so the GC doesn't collect the delegates
+		private static readonly GetTableFuncUnmanagedDelegate table_funcInternal;
+		private static readonly IntPtr table_func;
+
+		static Face ()
+		{
+			table_funcInternal = new GetTableFuncUnmanagedDelegate (GetTableFuncInternal);
+			table_func = Marshal.GetFunctionPointerForDelegate (table_funcInternal);
+		}
+
+		private static readonly Lazy<Face> emptyFace = new Lazy<Face> (() => new StaticFace (HarfBuzzApi.hb_face_get_empty ()));
+
+		public static Face Empty => emptyFace.Value;
+
 		public Face (Blob blob, uint index)
 			: this (blob, (int)index)
 		{
@@ -22,6 +43,28 @@ namespace HarfBuzzSharp
 			}
 
 			Handle = HarfBuzzApi.hb_face_create (blob.Handle, index);
+		}
+
+		public Face (GetTableDelegate getTable)
+			: this (getTable, null, null)
+		{
+		}
+
+		public Face (GetTableDelegate getTable, object context)
+			: this (getTable, context, null)
+		{
+		}
+
+		public Face (GetTableDelegate getTable, object context, ReleaseDelegate destroy)
+			: this (IntPtr.Zero)
+		{
+			if (getTable == null)
+				throw new ArgumentNullException (nameof (getTable));
+
+			var ctx = new NativeDelegateContext (
+				new object[] { context, this },
+				new Delegate[] { destroy, getTable });
+			Handle = HarfBuzzApi.hb_face_create_for_tables (table_func, ctx.NativeContext, DestroyFunction.NativePointer);
 		}
 
 		internal Face (IntPtr handle)
@@ -67,6 +110,29 @@ namespace HarfBuzzSharp
 		{
 			if (Handle != IntPtr.Zero) {
 				HarfBuzzApi.hb_face_destroy (Handle);
+			}
+		}
+
+		[MonoPInvokeCallback (typeof (GetTableFuncUnmanagedDelegate))]
+		private static IntPtr GetTableFuncInternal (IntPtr face, Tag tag, IntPtr context)
+		{
+			var ctx = NativeDelegateContext.Unwrap (context);
+			var f = (Face)ctx.GetManagedContext (1);
+			var c = ctx.ManagedContext;
+			var blob = ctx.GetDelegate<GetTableDelegate> (1)?.Invoke (f, tag, c);
+			return blob?.Handle ?? IntPtr.Zero;
+		}
+
+		private class StaticFace : Face
+		{
+			public StaticFace (IntPtr handle)
+				: base (handle)
+			{
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				// do not dispose
 			}
 		}
 	}

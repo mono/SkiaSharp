@@ -335,8 +335,14 @@ namespace HarfBuzzSharp
 		public Direction HorizontalDirection =>
 			HarfBuzzApi.hb_script_get_horizontal_direction (tag);
 
-		public static Script FromString (string str) =>
-			HarfBuzzApi.hb_script_from_string (str, -1);
+		public static Script Parse (string str) =>
+			TryParse (str, out var script) ? script : throw new FormatException ("Unrecognized script string format.");
+
+		public static bool TryParse (string str, out Script script)
+		{
+			script = HarfBuzzApi.hb_script_from_string (str, -1);
+			return !script.Equals (Invalid);
+		}
 
 		public override string ToString () => tag.ToString ();
 

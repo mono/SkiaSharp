@@ -292,12 +292,6 @@ Task ("externals-ios")
             $"extra_cflags=[ '-DSKIA_C_DLL', '-mios-version-min=8.0' ] " +
             $"extra_ldflags=[ '-Wl,ios_version_min=8.0' ]");
 
-        // build native skia
-        RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja"), new ProcessSettings {
-            Arguments = $"skia -C out/ios/{arch}",
-            WorkingDirectory = SKIA_PATH.FullPath,
-        });
-
         // build libSkiaSharp
         XCodeBuild (new XCodeBuildSettings {
             Project = "native-builds/libSkiaSharp_ios/libSkiaSharp.xcodeproj",

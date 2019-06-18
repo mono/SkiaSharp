@@ -159,38 +159,60 @@ namespace SkiaSharp
 
 		public int UnitsPerEm => SkiaApi.sk_typeface_get_units_per_em(Handle);
 
-		public UInt32[] GetTableTags()
+		public int TableCount => SkiaApi.sk_typeface_count_tables (Handle);
+
+		public UInt32[] GetTableTags ()
 		{
-			int tableCount = SkiaApi.sk_typeface_count_tables(Handle);
-			UInt32[] result = new UInt32[tableCount];
-			int r = SkiaApi.sk_typeface_get_table_tags(Handle, result);
-			if (r == 0) {
-				throw new Exception("Unable to read the tables for the file.");
+			if (!TryGetTableTags (out var result)) {
+				throw new Exception ("Unable to read the tables for the file.");
 			}
 			return result;
 		}
 
-		public byte[] GetTableData(UInt32 tag)
+		public bool TryGetTableTags (out UInt32[] tags)
 		{
-			IntPtr dataSize = SkiaApi.sk_typeface_get_table_size(Handle, tag);
-			byte[] result = new byte[(int)dataSize];
-			IntPtr r = SkiaApi.sk_typeface_get_table_data(Handle, tag, IntPtr.Zero, dataSize, result);
-			if (r == IntPtr.Zero) {
-				throw new Exception("Unable to read the data table.");
-			}
-			return result;
-		}
-
-		public bool TryGetTableData(UInt32 tag, out byte[] tableData)
-		{
-			IntPtr dataSize = SkiaApi.sk_typeface_get_table_size(Handle, tag);
-			tableData = new byte[(int)dataSize];
-			IntPtr r = SkiaApi.sk_typeface_get_table_data(Handle, tag, IntPtr.Zero, dataSize, tableData);
-			if (r == IntPtr.Zero) {
-				tableData = null;
+			var buffer = new UInt32[TableCount];
+			if (SkiaApi.sk_typeface_get_table_tags (Handle, buffer) == 0) {
+				tags = null;
 				return false;
 			}
+			tags = buffer;
 			return true;
+		}
+
+		public int GetTableSize (UInt32 tag) =>
+			(int)SkiaApi.sk_typeface_get_table_size (Handle, tag);
+
+		public byte[] GetTableData (UInt32 tag)
+		{
+			if (!TryGetTableData (tag, out var result)) {
+				throw new Exception ("Unable to read the data table.");
+			}
+			return result;
+		}
+
+		public bool TryGetTableData (UInt32 tag, out byte[] tableData)
+		{
+			var length = GetTableSize (tag);
+			var buffer = new byte[length];
+			unsafe {
+				fixed (byte* b = buffer) {
+					if (!TryGetTableData (tag, 0, length, (IntPtr)b)) {
+						tableData = null;
+						return false;
+					}
+				}
+			}
+			tableData = buffer;
+			return true;
+		}
+
+		public bool TryGetTableData (UInt32 tag, int offset, int length, IntPtr tableData)
+		{
+			unsafe {
+				var actual = SkiaApi.sk_typeface_get_table_data (Handle, tag, (IntPtr)offset, (IntPtr)length, (byte*)tableData);
+				return actual != IntPtr.Zero;
+			}
 		}
 
 		public int CountGlyphs (string str) => CountGlyphs (str, SKEncoding.Utf16);
