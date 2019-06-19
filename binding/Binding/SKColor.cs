@@ -97,7 +97,7 @@ namespace SkiaSharp
 
 		public static readonly SKColor Empty;
 
-		private uint color;
+		internal uint color;
 
 		public SKColor (uint value)
 		{

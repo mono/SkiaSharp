@@ -1,18 +1,22 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="MSBuild.Sdk.Extras" ToolsVersion="15.0">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;xamarinios10;monoandroid80;monoandroid90</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  
+
   <ItemGroup>
-    <TypeScriptCompile Remove="ts\*.ts" />
+    <EmbeddedResource Include="WasmScripts\*.js" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <Compile Include="..\SkiaSharp.Views.Shared\SKPaintGLSurfaceEventArgs.cs" Link="SKPaintGLSurfaceEventArgs.cs" />
     <Compile Include="..\SkiaSharp.Views.Shared\SKPaintSurfaceEventArgs.cs" Link="SKPaintSurfaceEventArgs.cs" />
   </ItemGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+    <DefineConstants>$(DefineConstants);__WASM__</DefineConstants>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Uno.UI" Version="1.45.0-dev.1163" />
@@ -25,9 +29,24 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-
+  
   <ItemGroup>
+    <UpToDateCheckInput Include="ts\**\*" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <TypeScriptCompile Remove="ts\SurfaceManager.ts" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <UpToDateCheckInput Remove="ts\SurfaceManager.ts" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
     <ProjectReference Include="..\..\..\binding\SkiaSharp.Wasm\SkiaSharp.Wasm.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'=='xamarinios10' or '$(TargetFramework)'=='monoandroid80' or '$(TargetFramework)'=='monoandroid90'">
+    <PackageReference Include="SkiaSharp" Version="1.68.0" />
   </ItemGroup>
 
 </Project>

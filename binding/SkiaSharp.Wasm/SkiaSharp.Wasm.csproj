@@ -5,10 +5,11 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 
     <TSBindingsPath>$(MSBuildThisFileDirectory)tsBindings</TSBindingsPath>
-    <CompileTypeScriptDependsOn>_UnoSourceGenerator; $(CompileTypeScriptDependsOn)</CompileTypeScriptDependsOn>
 
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);__WASM__</DefineConstants>
+    <AssemblyName>SkiaSharp</AssemblyName>
+    <RootNamespace>SkiaSharp</RootNamespace>
   </PropertyGroup>
   
   <ItemGroup>
@@ -21,25 +22,15 @@
 
   <ItemGroup>
     <Folder Include="external\canvaskit\" />
-    <Folder Include="tsBindings\" />
     <Folder Include="WasmScripts\" />
     <EmbeddedResource Include="external\canvaskit\canvaskit.js" Link="WasmScripts\canvaskit.js" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <PackageReference Include="Uno.SourceGenerationTasks" Version="1.31.0-dev.285" />
-    <PackageReference Include="Uno.UI" Version="1.45.0-dev.1163" />
   </ItemGroup>
 
   <ItemGroup>
     <UpToDateCheckInput Include="ts\**\*" />
-    <UpToDateCheckInput Include="tsBindings\**\*" />
 
     <Compile Include="..\Binding.Shared\**\*.cs" Link="Binding\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\Binding\**\*.cs" Link="Binding\%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Remove="..\Binding\SkiaApi.cs" />
-
-    <SourceGenerator Include="..\SkiaSharp.Wasm.Generator\bin\$(Configuration)\netstandard2.0\SkiaSharp.Wasm.Generator.dll" />
   </ItemGroup>
 
   <ItemGroup>
@@ -52,14 +43,4 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-
-  <ItemGroup Condition="'$(DocsGeneration)'==''">
-    <ProjectReference Include="..\SkiaSharp.Wasm.Generator\SkiaSharp.Wasm.Generator.csproj">
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <SkipGetTargetFrameworkProperties>true</SkipGetTargetFrameworkProperties>
-      <UndefineProperties>TargetFramework</UndefineProperties>
-    </ProjectReference>
-  </ItemGroup>
-
-
 </Project>
