@@ -15,9 +15,12 @@ namespace SkiaSharp
 
 	public class SKData : SKObject
 	{
-		private const int CopyBufferSize = 8192;
+		// We pick a value that is the largest multiple of 4096 that is still smaller than the large object heap threshold (85K).
+		// The CopyTo/CopyToAsync buffer is short-lived and is likely to be collected at Gen0, and it offers a significant
+		// improvement in Copy performance.
+		private const int CopyBufferSize = 81920;
 
-		private static Lazy<SKData> empty;
+		private static readonly Lazy<SKData> empty;
 
 		// so the GC doesn't collect the delegate
 		private static readonly SKDataReleaseDelegateInternal releaseDelegateInternal;
