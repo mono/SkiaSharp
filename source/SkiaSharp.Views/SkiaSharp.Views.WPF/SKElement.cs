@@ -51,8 +51,7 @@ namespace SkiaSharp.Views.WPF
 			if (designMode)
 				return;
 
-			if (ActualWidth == 0 || ActualHeight == 0 ||
-				double.IsNaN(ActualWidth) || double.IsNaN(ActualHeight) ||
+			if (double.IsNaN(ActualWidth) || double.IsNaN(ActualHeight) ||
 				double.IsInfinity(ActualWidth) || double.IsInfinity(ActualHeight) ||
 				Visibility != Visibility.Visible)
 				return;
@@ -73,6 +72,9 @@ namespace SkiaSharp.Views.WPF
 				width = (int)(ActualWidth * dpiScaleX);
 				height = (int)(ActualHeight * dpiScaleY);
 			}
+
+			if (width == 0 || height == 0)
+				return;
 
 			var info = new SKImageInfo(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
 
