@@ -4,6 +4,15 @@
 
 ### Namespace SkiaSharp
 
+#### Type Changed: SkiaSharp.SKBitmap
+
+Added method:
+
+```csharp
+public System.ReadOnlySpan<byte> GetPixelSpan ();
+```
+
+
 #### Type Changed: SkiaSharp.SKCanvas
 
 Added methods:
@@ -97,6 +106,27 @@ public float Transform (float x);
 ```
 
 
+#### Type Changed: SkiaSharp.SKData
+
+Added methods:
+
+```csharp
+public System.ReadOnlySpan<byte> AsSpan ();
+public static SKData CreateCopy (System.ReadOnlySpan<byte> bytes);
+```
+
+
+#### Type Changed: SkiaSharp.SKImage
+
+Added methods:
+
+```csharp
+public static SKImage FromEncodedData (System.ReadOnlySpan<byte> data);
+public static SKImage FromPixelCopy (SKImageInfo info, System.ReadOnlySpan<byte> pixels);
+public static SKImage FromPixelCopy (SKImageInfo info, System.ReadOnlySpan<byte> pixels, int rowBytes);
+```
+
+
 #### Type Changed: SkiaSharp.SKMatrix
 
 Added constructor:
@@ -138,6 +168,15 @@ public SKDrawable EndRecordingAsDrawable ();
 ```
 
 
+#### Type Changed: SkiaSharp.SKPixmap
+
+Added method:
+
+```csharp
+public System.ReadOnlySpan<byte> GetPixelSpan ();
+```
+
+
 #### Type Changed: SkiaSharp.SKRegion
 
 Added constructors:
@@ -152,6 +191,16 @@ Added methods:
 ```csharp
 public bool Intersects (SKPath path);
 public bool Op (SKPath path, SKRegionOperation op);
+```
+
+
+#### Type Changed: SkiaSharp.SKSwizzle
+
+Added methods:
+
+```csharp
+public static void SwapRedBlue (System.ReadOnlySpan<byte> pixels, int count);
+public static void SwapRedBlue (System.ReadOnlySpan<byte> dest, System.ReadOnlySpan<byte> src, int count);
 ```
 
 
