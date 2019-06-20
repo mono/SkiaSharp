@@ -7,7 +7,10 @@
     <DefineConstants>$(DefineConstants);__WASM__</DefineConstants>
     <NoWarn>NU1701</NoWarn>
     <MonoRuntimeDebuggerEnabled Condition="'$(Configuration)'=='Debug'">true</MonoRuntimeDebuggerEnabled>
+    <!--
+    Disable interpreter until libSkiaSharp.bc can be linked
     <WasmShellMonoRuntimeExecutionMode Condition="$([MSBuild]::IsOsPlatform('Linux'))">InterpreterAndAOT</WasmShellMonoRuntimeExecutionMode>
+    -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <TypeScriptToolsVersion>3.3</TypeScriptToolsVersion>
     <CompileTypeScriptDependsOn>_UnoSourceGenerator; $(CompileTypeScriptDependsOn)</CompileTypeScriptDependsOn>
