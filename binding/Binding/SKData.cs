@@ -54,14 +54,19 @@ namespace SkiaSharp
 			return GetObject<SKData> (SkiaApi.sk_data_new_with_copy (bytes, (IntPtr) length));
 		}
 
-		public static SKData CreateCopy (byte[] bytes)
-		{
-			return CreateCopy (bytes, (ulong) bytes.Length);
-		}
+		public static SKData CreateCopy (byte[] bytes) =>
+			CreateCopy (bytes, (ulong)bytes.Length);
 
-		public static SKData CreateCopy (byte[] bytes, ulong length)
+		public static SKData CreateCopy (byte[] bytes, ulong length) =>
+			GetObject<SKData> (SkiaApi.sk_data_new_with_copy (bytes, (IntPtr)length));
+
+		public static SKData CreateCopy (ReadOnlySpan<byte> bytes)
 		{
-			return GetObject<SKData> (SkiaApi.sk_data_new_with_copy (bytes, (IntPtr) length));
+			unsafe {
+				fixed (byte* b = bytes) {
+					return CreateCopy ((IntPtr)b, (ulong)bytes.Length);
+				}
+			}
 		}
 
 		public static SKData Create (int size)
@@ -189,17 +194,7 @@ namespace SkiaSharp
 			return GetObject<SKData> (SkiaApi.sk_data_new_subset (Handle, (IntPtr) offset, (IntPtr) length));
 		}
 
-		public byte [] ToArray ()
-		{
-			var size = (int)Size;
-			var bytes = new byte [size];
-
-			if (size > 0) {
-				Marshal.Copy (Data, bytes, 0, size);
-			}
-
-			return bytes;
-		}
+		public byte[] ToArray () => AsSpan ().ToArray ();
 
 		public bool IsEmpty => Size == 0;
 
@@ -207,14 +202,17 @@ namespace SkiaSharp
 
 		public IntPtr Data => SkiaApi.sk_data_get_data (Handle);
 
-		public Stream AsStream ()
-		{
-			return new SKDataStream (this, false);
-		}
+		public Stream AsStream () =>
+			new SKDataStream (this, false);
 
-		public Stream AsStream (bool streamDisposesData)
+		public Stream AsStream (bool streamDisposesData) =>
+			new SKDataStream (this, streamDisposesData);
+
+		public ReadOnlySpan<byte> AsSpan ()
 		{
-			return new SKDataStream (this, streamDisposesData);
+			unsafe {
+				return new ReadOnlySpan<byte> ((void*)Data, (int)Size);
+			}
 		}
 
 		public void SaveTo (Stream target)

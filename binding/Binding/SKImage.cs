@@ -70,10 +70,8 @@ namespace SkiaSharp
 
 		// create a new image from a copy of pixel data
 
-		public static SKImage FromPixelCopy (SKImageInfo info, SKStream pixels)
-		{
-			return FromPixelCopy (info, pixels, info.RowBytes);
-		}
+		public static SKImage FromPixelCopy (SKImageInfo info, SKStream pixels) =>
+			FromPixelCopy (info, pixels, info.RowBytes);
 
 		public static SKImage FromPixelCopy (SKImageInfo info, SKStream pixels, int rowBytes)
 		{
@@ -84,10 +82,8 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKImage FromPixelCopy (SKImageInfo info, Stream pixels)
-		{
-			return FromPixelCopy (info, pixels, info.RowBytes);
-		}
+		public static SKImage FromPixelCopy (SKImageInfo info, Stream pixels) =>
+			FromPixelCopy (info, pixels, info.RowBytes);
 
 		public static SKImage FromPixelCopy (SKImageInfo info, Stream pixels, int rowBytes)
 		{
@@ -98,10 +94,8 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKImage FromPixelCopy (SKImageInfo info, byte[] pixels)
-		{
-			return FromPixelCopy (info, pixels, info.RowBytes);
-		}
+		public static SKImage FromPixelCopy (SKImageInfo info, byte[] pixels) =>
+			FromPixelCopy (info, pixels, info.RowBytes);
 
 		public static SKImage FromPixelCopy (SKImageInfo info, byte[] pixels, int rowBytes)
 		{
@@ -112,10 +106,8 @@ namespace SkiaSharp
 			}
 		}
 
-		public static SKImage FromPixelCopy (SKImageInfo info, IntPtr pixels)
-		{
-			return FromPixelCopy (info, pixels, info.RowBytes);
-		}
+		public static SKImage FromPixelCopy (SKImageInfo info, IntPtr pixels) =>
+			FromPixelCopy (info, pixels, info.RowBytes);
 
 		public static SKImage FromPixelCopy (SKImageInfo info, IntPtr pixels, int rowBytes)
 		{
@@ -127,16 +119,26 @@ namespace SkiaSharp
 		}
 
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use FromPixelCopy(SKImageInfo, IntPtr, int) instead.")]
-		public static SKImage FromPixelCopy (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable)
-		{
-			return FromPixelCopy (info, pixels, rowBytes);
-		}
+		public static SKImage FromPixelCopy (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable) =>
+			FromPixelCopy (info, pixels, rowBytes);
 
 		public static SKImage FromPixelCopy (SKPixmap pixmap)
 		{
 			if (pixmap == null)
 				throw new ArgumentNullException (nameof (pixmap));
 			return GetObject<SKImage> (SkiaApi.sk_image_new_raster_copy_with_pixmap (pixmap.Handle));
+		}
+
+		public static SKImage FromPixelCopy (SKImageInfo info, ReadOnlySpan<byte> pixels) =>
+			FromPixelCopy (info, pixels, info.RowBytes);
+
+		public static SKImage FromPixelCopy (SKImageInfo info, ReadOnlySpan<byte> pixels, int rowBytes)
+		{
+			if (pixels == null)
+				throw new ArgumentNullException (nameof (pixels));
+			using (var data = SKData.CreateCopy (pixels)) {
+				return FromPixelData (info, data, rowBytes);
+			}
 		}
 
 		// create a new image around existing pixel data
@@ -212,6 +214,22 @@ namespace SkiaSharp
 
 			var handle = SkiaApi.sk_image_new_from_encoded (data.Handle, IntPtr.Zero);
 			return GetObject<SKImage> (handle);
+		}
+
+		public static SKImage FromEncodedData (ReadOnlySpan<byte> data)
+		{
+			if (data == null)
+				throw new ArgumentNullException (nameof (data));
+			if (data.Length == 0)
+				throw new ArgumentException ("The data buffer was empty.");
+
+			unsafe {
+				fixed (byte* b = data) {
+					using (var skdata = SKData.Create ((IntPtr)b, data.Length)) {
+						return FromEncodedData (skdata);
+					}
+				}
+			}
 		}
 
 		public static SKImage FromEncodedData (byte[] data)
