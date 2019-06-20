@@ -1,7 +1,9 @@
 ﻿#if !__WATCHOS__
 using System;
 
-#if __ANDROID__
+#if HAS_UNO
+namespace SkiaSharp.Views.Uno
+#elif __ANDROID__
 namespace SkiaSharp.Views.Android
 #elif __TVOS__
 namespace SkiaSharp.Views.tvOS

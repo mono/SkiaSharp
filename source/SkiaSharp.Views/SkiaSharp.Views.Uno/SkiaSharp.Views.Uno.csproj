@@ -4,6 +4,7 @@
     <TargetFrameworks>netstandard2.0;xamarinios10;monoandroid80;monoandroid90</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GeneratePackageOnBuild Condition="'$(Configuration)'=='Release'">true</GeneratePackageOnBuild>
+    <NoWarn>$(NoWarm);NU1701</NoWarn>
     
     <!-- The "FilterAssemblies" task was not given a value for the required parameter "DesignTimeBuild".-->
     <DesignTimeBuild>false</DesignTimeBuild>
@@ -11,11 +12,6 @@
 
   <ItemGroup>
     <EmbeddedResource Include="WasmScripts\*.js" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\SkiaSharp.Views.Shared\SKPaintGLSurfaceEventArgs.cs" Link="SKPaintGLSurfaceEventArgs.cs" />
-    <Compile Include="..\SkiaSharp.Views.Shared\SKPaintSurfaceEventArgs.cs" Link="SKPaintSurfaceEventArgs.cs" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
@@ -41,9 +37,26 @@
   <ItemGroup>
     <TypeScriptCompile Remove="ts\SurfaceManager.ts" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <UpToDateCheckInput Remove="ts\SurfaceManager.ts" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Compile Include="..\SkiaSharp.Views.Shared\**\*.cs" Exclude="..\SkiaSharp.Views.Shared\Properties\**\*.cs" Link="SharedViews\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)'=='xamarinios10'">
+    <Compile Include="..\SkiaSharp.Views.AppleiOS\**\*.cs" Link="SharedViews\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SkiaSharp.Views.Apple\**\*.cs" Link="SharedViews\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Remove="..\SkiaSharp.Views.AppleiOS\SKCanvasView.cs" />
+    <Compile Remove="..\SkiaSharp.Views.Apple\SKCanvasLayer.cs" />
+    <Compile Remove="..\SkiaSharp.Views.AppleiOS\SKGLView.cs" />
+    <Compile Remove="..\SkiaSharp.Views.AppleiOS\SKGLLayer.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)'!='xamarinios10'">
+    <None Include="..\SkiaSharp.Views.AppleiOS\**\*.cs" Link="SharedViews\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="..\SkiaSharp.Views.Apple\**\*.cs" Link="SharedViews\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
@@ -51,6 +64,10 @@
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)'=='xamarinios10' or '$(TargetFramework)'=='monoandroid80' or '$(TargetFramework)'=='monoandroid90'">
     <PackageReference Include="SkiaSharp" Version="1.68.0" />
+  </ItemGroup>
+  
+  <ItemGroup Condition="'$(TargetFramework)'=='monoandroid80' or '$(TargetFramework)'=='monoandroid90'">
+    <Compile Include="..\SkiaSharp.Views.Android\AndroidExtensions.cs" Link="AndroidExtensions.cs" />
   </ItemGroup>
 
 </Project>

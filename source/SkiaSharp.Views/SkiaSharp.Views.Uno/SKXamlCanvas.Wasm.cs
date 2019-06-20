@@ -15,10 +15,8 @@ using Windows.UI.Xaml.Media;
 
 namespace SkiaSharp.Views.Uno
 {
-	public class SKXamlCanvas : FrameworkElement
+	public partial class SKXamlCanvas : FrameworkElement
 	{
-		private bool ignorePixelScaling;
-		private bool isVisible;
 		private IntPtr pixels;
 		private int _pixelWidth;
 		private int _pixelHeight;
@@ -36,41 +34,7 @@ namespace SkiaSharp.Views.Uno
 			OnVisibilityChanged(this);
 		}
 
-		public bool IgnorePixelScaling
-		{
-			get => ignorePixelScaling;
-			set
-			{
-				ignorePixelScaling = value;
-				Invalidate();
-			}
-		}
-
-		public double Dpi { get; private set; } = 1;
-
-		public static bool IsInitialized
-		{
-			get
-			{
-				return true;
-			}
-		}
-
-		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
-
-		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)
-		{
-			PaintSurface?.Invoke(this, e);
-		}
-
-		private static void OnVisibilityChanged(DependencyObject d)
-		{
-			if (d is SKXamlCanvas canvas)
-			{
-				canvas.isVisible = canvas.Visibility == Visibility.Visible;
-				canvas.Invalidate();
-			}
-		}
+		private static bool GetIsInitialized() => true;
 
 		private void OnDpiChanged(DisplayInformation sender, object args = null)
 		{
@@ -78,15 +42,10 @@ namespace SkiaSharp.Views.Uno
 			Invalidate();
 		}
 
-		private void OnSizeChanged(object sender, SizeChangedEventArgs e)
-		{
-			Invalidate();
-		}
-
 		private void OnLoaded(object sender, RoutedEventArgs e)
 		{
-			//var display = DisplayInformation.GetForCurrentView();
-			//display.DpiChanged += OnDpiChanged;
+			// var display = DisplayInformation.GetForCurrentView();
+			// display.DpiChanged += OnDpiChanged;
 
 			//OnDpiChanged(display);
 			Invalidate();
@@ -94,22 +53,10 @@ namespace SkiaSharp.Views.Uno
 
 		private void OnUnloaded(object sender, RoutedEventArgs e)
 		{
-			var display = DisplayInformation.GetForCurrentView();
-			display.DpiChanged -= OnDpiChanged;
+			// var display = DisplayInformation.GetForCurrentView();
+			// display.DpiChanged -= OnDpiChanged;
 
 			FreeBitmap();
-		}
-
-		public void Invalidate()
-		{
-			if (Dispatcher.HasThreadAccess)
-			{
-				DoInvalidate();
-			}
-			else
-			{
-				Dispatcher.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate);
-			}
 		}
 
 		private void DoInvalidate()
