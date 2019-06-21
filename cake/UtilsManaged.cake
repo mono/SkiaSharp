@@ -344,7 +344,7 @@ string[] GetReferenceSearchPaths ()
         refs.AddRange (GetDirectories ("./output/docs/temp/*").Select (d => d.FullPath));
         refs.Add ($"{referenceAssemblies}/MonoTouch/v1.0");
         refs.Add ($"{referenceAssemblies}/MonoAndroid/v1.0");
-        refs.Add ($"{referenceAssemblies}/MonoAndroid/v4.4");
+        refs.Add ($"{referenceAssemblies}/MonoAndroid/v9.0");
         refs.Add ($"{referenceAssemblies}/Xamarin.iOS/v1.0");
         refs.Add ($"{referenceAssemblies}/Xamarin.TVOS/v1.0");
         refs.Add ($"{referenceAssemblies}/Xamarin.WatchOS/v1.0");

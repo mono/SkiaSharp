@@ -56,32 +56,16 @@ namespace SkiaSharp.Views.WPF
 				Visibility != Visibility.Visible)
 				return;
 
-			int width, height;
-			double dpiScaleX = 1.0;
-			double dpiScaleY = 1.0;
-			if (IgnorePixelScaling)
-			{
-				width = (int)ActualWidth;
-				height = (int)ActualHeight;
-			}
-			else
-			{
-				var m = PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice;
-				dpiScaleX = m.M11;
-				dpiScaleY = m.M22;
-				width = (int)(ActualWidth * dpiScaleX);
-				height = (int)(ActualHeight * dpiScaleY);
-			}
-
-			if (width == 0 || height == 0)
+			var size = CreateSize(out var scaleX, out var scaleY);
+			if (size.Width <= 0 || size.Height <= 0)
 				return;
 
-			var info = new SKImageInfo(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
+			var info = new SKImageInfo(size.Width, size.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
 
 			// reset the bitmap if the size has changed
 			if (bitmap == null || info.Width != bitmap.PixelWidth || info.Height != bitmap.PixelHeight)
 			{
-				bitmap = new WriteableBitmap(width, height, 96 * dpiScaleX, 96 * dpiScaleY, PixelFormats.Pbgra32, null);
+				bitmap = new WriteableBitmap(info.Width, size.Height, 96 * scaleX, 96 * scaleY, PixelFormats.Pbgra32, null);
 			}
 
 			// draw on the bitmap
@@ -92,7 +76,7 @@ namespace SkiaSharp.Views.WPF
 			}
 
 			// draw the bitmap to the screen
-			bitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
+			bitmap.AddDirtyRect(new Int32Rect(0, 0, info.Width, size.Height));
 			bitmap.Unlock();
 			drawingContext.DrawImage(bitmap, new Rect(0, 0, ActualWidth, ActualHeight));
 		}
@@ -108,6 +92,31 @@ namespace SkiaSharp.Views.WPF
 			base.OnRenderSizeChanged(sizeInfo);
 
 			InvalidateVisual();
+		}
+
+		private SKSizeI CreateSize(out double scaleX, out double scaleY)
+		{
+			scaleX = 1.0;
+			scaleY = 1.0;
+
+			var w = ActualWidth;
+			var h = ActualHeight;
+
+			if (!IsPositive(w) || !IsPositive(h))
+				return SKSizeI.Empty;
+
+			if (IgnorePixelScaling)
+				return new SKSizeI((int)w, (int)h);
+
+			var m = PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice;
+			scaleX = m.M11;
+			scaleY = m.M22;
+			return new SKSizeI((int)(w * scaleX), (int)(h * scaleY));
+
+			bool IsPositive(double value)
+			{
+				return !double.IsNaN(value) && !double.IsInfinity(value) && value > 0;
+			}
 		}
 	}
 }
