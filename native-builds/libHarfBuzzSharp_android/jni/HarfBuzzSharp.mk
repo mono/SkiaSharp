@@ -14,9 +14,7 @@ LOCAL_CFLAGS           := -DHAVE_CONFIG_H -DNDEBUG                              
                           -fno-rtti -fno-exceptions -fno-threadsafe-statics -fPIC                   \
                           -g -Os -ffunction-sections -fdata-sections
 
-LOCAL_CPPFLAGS         := -std=c++11                                                                \
-                          -fno-rtti -fno-exceptions -fno-threadsafe-statics                         \
-                          -Os -ffunction-sections -fdata-sections
+LOCAL_CPPFLAGS         := -std=c++11
 
 LOCAL_SRC_FILES        := ../../../externals/harfbuzz/src/hb-aat-layout.cc                          \
                           ../../../externals/harfbuzz/src/hb-aat-map.cc                             \
