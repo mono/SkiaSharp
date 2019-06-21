@@ -3,32 +3,21 @@ include $(CLEAR_VARS)
 
 cmd-strip = $(PRIVATE_STRIP) --strip-all $(call host-path,$1)
 
-# LOCAL_LDLIBS           := -llog -lEGL -lGLESv2
-
-# LOCAL_LDFLAGS          := -s -Wl,--gc-sections
-
 LOCAL_MODULE           := HarfBuzzSharp
 
 LOCAL_C_INCLUDES       := .                                    \
                           ../../externals/harfbuzz/src         \
                           ../../externals/harfbuzz
 
-# LOCAL_CFLAGS           := -DSK_INTERNAL -DSK_GAMMA_APPLY_TO_A8                                   \
-#                           -DSK_ALLOW_STATIC_GLOBAL_INITIALIZERS=0 -DSK_SUPPORT_GPU=1             \
-#                           -DSK_SUPPORT_OPENCL=0 -DSK_FORCE_DISTANCE_FIELD_TEXT=0                 \
-#                           -DSK_BUILD_FOR_ANDROID -DSK_GAMMA_EXPONENT=1.4 -DSK_GAMMA_CONTRAST=0.0 \
-#                           -DSKIA_C_DLL -DSKIA_IMPLEMENTATION=1                                   \
-#                           -DSK_SUPPORT_LEGACY_CLIPTOLAYERFLAG -DNDEBUG
+LOCAL_LDFLAGS          := -s -Wl,--gc-sections
 
-# LOCAL_CFLAGS           += -fPIC -g -fno-exceptions -fstrict-aliasing -Wall -Wextra               \
-#                           -Winit-self -Wpointer-arith -Wsign-compare -Wno-unused-parameter       \
-#                           -Werror -fuse-ld=gold                                                  \
-#                           -Os -ffunction-sections -fdata-sections -fno-rtti
+LOCAL_CFLAGS           := -DHAVE_CONFIG_H -DNDEBUG                                                  \
+                          -fno-rtti -fno-exceptions -fno-threadsafe-statics -fPIC                   \
+                          -g -Os -ffunction-sections -fdata-sections
 
-# LOCAL_CPPFLAGS         := -std=c++11 -fno-rtti -fno-threadsafe-statics -Wnon-virtual-dtor        \
-#                           -Os -ffunction-sections -fdata-sections
-
-LOCAL_CFLAGS           := -DHAVE_CONFIG_H -DNDEBUG
+LOCAL_CPPFLAGS         := -std=c++11                                                                \
+                          -fno-rtti -fno-exceptions -fno-threadsafe-statics                         \
+                          -Os -ffunction-sections -fdata-sections
 
 LOCAL_SRC_FILES        := ../../../externals/harfbuzz/src/hb-aat-layout.cc                          \
                           ../../../externals/harfbuzz/src/hb-aat-map.cc                             \
@@ -48,7 +37,6 @@ LOCAL_SRC_FILES        := ../../../externals/harfbuzz/src/hb-aat-layout.cc      
                           ../../../externals/harfbuzz/src/hb-ot-layout.cc                           \
                           ../../../externals/harfbuzz/src/hb-ot-map.cc                              \
                           ../../../externals/harfbuzz/src/hb-ot-math.cc                             \
-                          ../../../externals/harfbuzz/src/hb-ot-name-language.cc                    \
                           ../../../externals/harfbuzz/src/hb-ot-name.cc                             \
                           ../../../externals/harfbuzz/src/hb-ot-shape-complex-arabic.cc             \
                           ../../../externals/harfbuzz/src/hb-ot-shape-complex-default.cc            \
@@ -72,9 +60,14 @@ LOCAL_SRC_FILES        := ../../../externals/harfbuzz/src/hb-aat-layout.cc      
                           ../../../externals/harfbuzz/src/hb-shape.cc                               \
                           ../../../externals/harfbuzz/src/hb-shaper.cc                              \
                           ../../../externals/harfbuzz/src/hb-static.cc                              \
+                          ../../../externals/harfbuzz/src/hb-subset-cff-common.cc                   \
+                          ../../../externals/harfbuzz/src/hb-subset-cff1.cc                         \
+                          ../../../externals/harfbuzz/src/hb-subset-cff2.cc                         \
+                          ../../../externals/harfbuzz/src/hb-subset-input.cc                        \
+                          ../../../externals/harfbuzz/src/hb-subset-plan.cc                         \
+                          ../../../externals/harfbuzz/src/hb-subset.cc                              \
                           ../../../externals/harfbuzz/src/hb-ucd.cc                                 \
                           ../../../externals/harfbuzz/src/hb-unicode.cc                             \
-                          ../../../externals/harfbuzz/src/hb-warning.cc                             \
-                          ../../externals/harfbuzz/src/hb-ft.cc
+                          ../../../externals/harfbuzz/src/hb-warning.cc
 
 include $(BUILD_SHARED_LIBRARY)
