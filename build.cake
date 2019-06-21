@@ -31,6 +31,7 @@ var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
 var AZURE_BUILD_ID = Argument ("azureBuildId", "");
 var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
 var ADDITIONAL_GN_ARGS = Argument ("additionalGnArgs", "");
+var CONFIGURATION = Argument ("c", Argument ("configuration", Argument ("Configuration", "Release"));
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
@@ -142,8 +143,8 @@ Task ("tests-only")
 
         EnsureDirectoryExists ($"./output/tests/{platform}/{arch}");
         RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", platform: arch == "AnyCPU" ? "Any CPU" : arch);
-        RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/Release/SkiaSharp.Tests.dll", arch == "x86");
-        CopyFileToDirectory ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/Release/TestResult.xml", $"./output/tests/{platform}/{arch}");
+        RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Tests.dll", arch == "x86");
+        CopyFileToDirectory ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/TestResult.xml", $"./output/tests/{platform}/{arch}");
     });
 
     // Full .NET Framework
@@ -531,6 +532,7 @@ Information ("  Print all environment variables:  {0}", PRINT_ALL_ENV_VARS);
 Information ("  Pack all platforms:               {0}", PACK_ALL_PLATFORMS);
 Information ("  Azure build ID:                   {0}", AZURE_BUILD_ID);
 Information ("  Unsupported Tests:                {0}", UNSUPPORTED_TESTS);
+Information ("  Configuration:                    {0}", CONFIGURATION);
 Information ("  Additional GN Arguments:          {0}", ADDITIONAL_GN_ARGS);
 Information ("");
 
