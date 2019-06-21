@@ -357,7 +357,6 @@ jobs:
       target: samples
       configuration: $(SAMPLES_CONFIGURATION)
       dependsOn:
-        - pull_request_samples
         - managed_windows
   - template: azure-templates-bootstrapper.yml
     parameters:
@@ -367,7 +366,6 @@ jobs:
       target: samples
       configuration: $(SAMPLES_CONFIGURATION)
       dependsOn:
-        - pull_request_samples
         - managed_macos
       preBuildSteps:
         - task: InstallAppleCertificate@2
@@ -394,5 +392,4 @@ jobs:
       target: samples
       configuration: $(SAMPLES_CONFIGURATION)
       dependsOn:
-        - pull_request_samples
         - managed_linux
