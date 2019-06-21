@@ -26,7 +26,7 @@ namespace SkiaSharp
 
 		public static SKShader CreateColor (SKColor color)
 		{
-			return GetObject<SKShader> (SkiaApi.sk_shader_new_color (color));
+			return GetObject<SKShader> (SkiaApi.sk_shader_new_color ((uint)color));
 		}
 
 		public static SKShader CreateBitmap (SKBitmap src, SKShaderTileMode tmx, SKShaderTileMode tmy)
