@@ -26,7 +26,7 @@ namespace SkiaSharp
 
 		public static SKShader CreateColor (SKColor color)
 		{
-			return GetObject<SKShader> (SkiaApi.sk_shader_new_color (color));
+			return GetObject<SKShader> (SkiaApi.sk_shader_new_color ((uint)color));
 		}
 
 		public static SKShader CreateBitmap (SKBitmap src, SKShaderTileMode tmx, SKShaderTileMode tmy)
@@ -90,11 +90,11 @@ namespace SkiaSharp
 			if (colors == null)
 				throw new ArgumentNullException (nameof (colors));
 			if (colorPos == null) {
-				return GetObject<SKShader> (SkiaApi.sk_shader_new_radial_gradient (ref center, radius, colors, IntPtr.Zero, colors.Length, mode, IntPtr.Zero));
+				return GetObject<SKShader> (SkiaApi.sk_shader_new_radial_gradient (ref center, colors, IntPtr.Zero, colors.Length, mode, IntPtr.Zero, radius));
 			} else {
 				if (colors.Length != colorPos.Length)
 					throw new ArgumentException ("The number of colors must match the number of color positions.");
-				return GetObject<SKShader> (SkiaApi.sk_shader_new_radial_gradient (ref center, radius, colors, colorPos, colors.Length, mode, IntPtr.Zero));
+				return GetObject<SKShader> (SkiaApi.sk_shader_new_radial_gradient (ref center, colors, colorPos, colors.Length, mode, IntPtr.Zero, radius));
 			}
 		}
 		
@@ -103,11 +103,11 @@ namespace SkiaSharp
 			if (colors == null)
 				throw new ArgumentNullException (nameof (colors));
 			if (colorPos == null) {
-				return GetObject<SKShader> (SkiaApi.sk_shader_new_radial_gradient (ref center, radius, colors, IntPtr.Zero, colors.Length, mode, ref localMatrix));
+				return GetObject<SKShader> (SkiaApi.sk_shader_new_radial_gradient (ref center, colors, IntPtr.Zero, colors.Length, mode, ref localMatrix, radius));
 			} else {
 				if (colors.Length != colorPos.Length)
 					throw new ArgumentException ("The number of colors must match the number of color positions.");
-				return GetObject<SKShader> (SkiaApi.sk_shader_new_radial_gradient (ref center, radius, colors, colorPos, colors.Length, mode, ref localMatrix));
+				return GetObject<SKShader> (SkiaApi.sk_shader_new_radial_gradient (ref center, colors, colorPos, colors.Length, mode, ref localMatrix, radius));
 			}
 		}
 
@@ -126,11 +126,11 @@ namespace SkiaSharp
 			if (colors == null)
 				throw new ArgumentNullException (nameof (colors));
 			if (colorPos == null) {
-				return GetObject<SKShader> (SkiaApi.sk_shader_new_sweep_gradient (ref center, colors, IntPtr.Zero, colors.Length, tileMode, startAngle, endAngle, IntPtr.Zero));
+				return GetObject<SKShader> (SkiaApi.sk_shader_new_sweep_gradient (ref center, colors, IntPtr.Zero, colors.Length, tileMode, IntPtr.Zero, startAngle, endAngle));
 			} else {
 				if (colors.Length != colorPos.Length)
 					throw new ArgumentException ("The number of colors must match the number of color positions.");
-				return GetObject<SKShader> (SkiaApi.sk_shader_new_sweep_gradient (ref center, colors, colorPos, colors.Length, tileMode, startAngle, endAngle, IntPtr.Zero));
+				return GetObject<SKShader> (SkiaApi.sk_shader_new_sweep_gradient (ref center, colors, colorPos, colors.Length, tileMode, IntPtr.Zero, startAngle, endAngle));
 			}
 		}
 		
@@ -139,11 +139,11 @@ namespace SkiaSharp
 			if (colors == null)
 				throw new ArgumentNullException (nameof (colors));
 			if (colorPos == null) {
-				return GetObject<SKShader> (SkiaApi.sk_shader_new_sweep_gradient (ref center, colors, IntPtr.Zero, colors.Length, tileMode, startAngle, endAngle, ref localMatrix));
+				return GetObject<SKShader> (SkiaApi.sk_shader_new_sweep_gradient (ref center, colors, IntPtr.Zero, colors.Length, tileMode, ref localMatrix, startAngle, endAngle));
 			} else {
 				if (colors.Length != colorPos.Length)
 					throw new ArgumentException ("The number of colors must match the number of color positions.");
-				return GetObject<SKShader> (SkiaApi.sk_shader_new_sweep_gradient (ref center, colors, colorPos, colors.Length, tileMode, startAngle, endAngle, ref localMatrix));
+				return GetObject<SKShader> (SkiaApi.sk_shader_new_sweep_gradient (ref center, colors, colorPos, colors.Length, tileMode, ref localMatrix, startAngle, endAngle));
 			}
 		}
 
@@ -175,12 +175,12 @@ namespace SkiaSharp
 		
 		public static SKShader CreatePerlinNoiseFractalNoise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed)
 		{
-			return GetObject<SKShader>(SkiaApi.sk_shader_new_perlin_noise_fractal_noise(baseFrequencyX, baseFrequencyY, numOctaves, seed, IntPtr.Zero));
+			return GetObject<SKShader>(SkiaApi.sk_shader_new_perlin_noise_fractal_noise(numOctaves, baseFrequencyX, baseFrequencyY, seed, IntPtr.Zero));
 		}
 
 		public static SKShader CreatePerlinNoiseFractalNoise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, SKPointI tileSize)
 		{
-			return GetObject<SKShader>(SkiaApi.sk_shader_new_perlin_noise_fractal_noise(baseFrequencyX, baseFrequencyY, numOctaves, seed, ref tileSize));
+			return GetObject<SKShader>(SkiaApi.sk_shader_new_perlin_noise_fractal_noise(numOctaves, baseFrequencyX, baseFrequencyY, seed, ref tileSize));
 		}
 
 		public static SKShader CreatePerlinNoiseTurbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed)

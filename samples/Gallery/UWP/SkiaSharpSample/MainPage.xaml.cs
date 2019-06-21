@@ -15,8 +15,9 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using SkiaSharp;
-using SkiaSharp.Views.Uno;
+using SkiaSharp.Views.UWP;
 using Windows.UI.Xaml.Data;
+using Uno.Foundation;
 
 namespace SkiaSharpSample
 {
@@ -115,7 +116,7 @@ namespace SkiaSharpSample
 		{
 			var sample = e.AddedItems?.FirstOrDefault() as SampleBase;
 			SetSample(sample);
-			WebAssemblyRuntime.InvokeJS($"Uno.UI.Demo.Analytics.reportPageView('{sample.Title}');");
+			SkiaSharp.WebAssemblyRuntime.InvokeJS($"Uno.UI.Demo.Analytics.reportPageView('{sample.Title}');");
 		}
 
 		private void OnBackendSelected(object sender, RoutedEventArgs e)

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using Microsoft.Extensions.Logging;
-using Uno.Extensions;
 
 namespace SkiaSharp
 {
@@ -50,8 +48,6 @@ namespace SkiaSharp
 
 	public class SKBitmap : SKObject
 	{
-		private static readonly ILogger _log = typeof (TSInteropMarshaller).Log ();
-
 		private const string UnsupportedColorTypeMessage = "Setting the ColorTable is only supported for bitmaps with ColorTypes of Index8.";
 		private const string UnableToAllocatePixelsMessage = "Unable to allocate pixels for the bitmap.";
 
@@ -159,12 +155,12 @@ namespace SkiaSharp
 
 		public void Erase (SKColor color)
 		{
-			SkiaApi.sk_bitmap_erase (Handle, color);
+			SkiaApi.sk_bitmap_erase (Handle, (uint)color);
 		}
 
 		public void Erase (SKColor color, SKRectI rect)
 		{
-			SkiaApi.sk_bitmap_erase_rect (Handle, color, ref rect);
+			SkiaApi.sk_bitmap_erase_rect (Handle, (uint)color, ref rect);
 		}
 
 		public byte GetAddr8(int x, int y) => SkiaApi.sk_bitmap_get_addr_8 (Handle, x, y);
@@ -185,7 +181,7 @@ namespace SkiaSharp
 
 		public void SetPixel (int x, int y, SKColor color)
 		{
-			SkiaApi.sk_bitmap_set_pixel_color (Handle, x, y, color);
+			SkiaApi.sk_bitmap_set_pixel_color (Handle, x, y, (uint)color);
 		}
 
 		public bool CanCopyTo (SKColorType colorType)
@@ -539,15 +535,8 @@ namespace SkiaSharp
 			var bitmap = new SKBitmap (bitmapInfo);
 			var result = codec.GetPixels (bitmapInfo, bitmap.GetPixels (out var length));
 			if (result != SKCodecResult.Success && result != SKCodecResult.IncompleteInput) {
-				if (_log.IsEnabled (LogLevel.Error)) {
-					_log.LogError ($"Decode failed: {result}");
-				}
-
 				bitmap.Dispose ();
 				bitmap = null;
-			}
-			if (_log.IsEnabled (LogLevel.Error)) {
-				_log.LogError ("Decode sucess");
 			}
 			return bitmap;
 		}

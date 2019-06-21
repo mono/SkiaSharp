@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Microsoft.Extensions.Logging;
-using Uno.Extensions;
 using NativePointerDictionary = System.Collections.Concurrent.ConcurrentDictionary<System.IntPtr, SkiaSharp.SKAbstractManagedStream>;
 
 namespace SkiaSharp
@@ -58,35 +56,36 @@ namespace SkiaSharp
 		static SKAbstractManagedStream ()
 		{
 #if __WASM__
-			WebAssemblyRuntime.InvokeJS($"SkiaSharp.SurfaceManager.registerManagedStream();");
-
+			WebAssembly.Runtime.InvokeJS($"SkiaSharp.SurfaceManager.registerManagedStream();");
 #else
-			fRead = new read_delegate (ReadInternal);
-			fPeek = new peek_delegate (PeekInternal);
-			fIsAtEnd = new isAtEnd_delegate (IsAtEndInternal);
-			fHasPosition = new hasPosition_delegate (HasPositionInternal);
-			fHasLength = new hasLength_delegate (HasLengthInternal);
-			fRewind = new rewind_delegate (RewindInternal);
-			fGetPosition = new getPosition_delegate (GetPositionInternal);
-			fSeek = new seek_delegate (SeekInternal);
-			fMove = new move_delegate (MoveInternal);
-			fGetLength = new getLength_delegate (GetLengthInternal);
-			fCreateNew = new createNew_delegate (CreateNewInternal);
-			fDestroy = new destroy_delegate (DestroyInternal);
+			{
+				fRead = new read_delegate (ReadInternal);
+				fPeek = new peek_delegate (PeekInternal);
+				fIsAtEnd = new isAtEnd_delegate (IsAtEndInternal);
+				fHasPosition = new hasPosition_delegate (HasPositionInternal);
+				fHasLength = new hasLength_delegate (HasLengthInternal);
+				fRewind = new rewind_delegate (RewindInternal);
+				fGetPosition = new getPosition_delegate (GetPositionInternal);
+				fSeek = new seek_delegate (SeekInternal);
+				fMove = new move_delegate (MoveInternal);
+				fGetLength = new getLength_delegate (GetLengthInternal);
+				fCreateNew = new createNew_delegate (CreateNewInternal);
+				fDestroy = new destroy_delegate (DestroyInternal);
 
-			SkiaApi.sk_managedstream_set_delegates (
-				Marshal.GetFunctionPointerForDelegate (fRead),
-				Marshal.GetFunctionPointerForDelegate (fPeek),
-				Marshal.GetFunctionPointerForDelegate (fIsAtEnd),
-				Marshal.GetFunctionPointerForDelegate (fHasPosition),
-				Marshal.GetFunctionPointerForDelegate (fHasLength),
-				Marshal.GetFunctionPointerForDelegate (fRewind),
-				Marshal.GetFunctionPointerForDelegate (fGetPosition),
-				Marshal.GetFunctionPointerForDelegate (fSeek),
-				Marshal.GetFunctionPointerForDelegate (fMove),
-				Marshal.GetFunctionPointerForDelegate (fGetLength),
-				Marshal.GetFunctionPointerForDelegate (fCreateNew),
-				Marshal.GetFunctionPointerForDelegate (fDestroy));
+				SkiaApi.sk_managedstream_set_delegates (
+					Marshal.GetFunctionPointerForDelegate (fRead),
+					Marshal.GetFunctionPointerForDelegate (fPeek),
+					Marshal.GetFunctionPointerForDelegate (fIsAtEnd),
+					Marshal.GetFunctionPointerForDelegate (fHasPosition),
+					Marshal.GetFunctionPointerForDelegate (fHasLength),
+					Marshal.GetFunctionPointerForDelegate (fRewind),
+					Marshal.GetFunctionPointerForDelegate (fGetPosition),
+					Marshal.GetFunctionPointerForDelegate (fSeek),
+					Marshal.GetFunctionPointerForDelegate (fMove),
+					Marshal.GetFunctionPointerForDelegate (fGetLength),
+					Marshal.GetFunctionPointerForDelegate (fCreateNew),
+					Marshal.GetFunctionPointerForDelegate (fDestroy));
+			}
 #endif
 		}
 
@@ -242,136 +241,74 @@ namespace SkiaSharp
 
 	public static class ManagedStreamHelper
 	{
-		private static readonly ILogger _log = typeof (TSInteropMarshaller).Log ();
-
 		public static int ReadInternal (int managedStreamPtr, int buffer, int size)
 		{
 			var ret = (int)SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnRead ((IntPtr)buffer, (IntPtr)size);
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] ReadInternal({buffer:X8}, {size}) = {ret}");
-			}
-
-
 			return ret;
 		}
 
 		public static int PeekInternal (int managedStreamPtr, int buffer, int size)
 		{
 			var ret = (int)SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnPeek ((IntPtr)buffer, (IntPtr)size);
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] PeekInternal({buffer:X8}, {size}) = {ret}");
-			}
-
 			return ret;
 		}
 
 		public static bool IsAtEndInternal (int managedStreamPtr)
 		{
 			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnIsAtEnd ();
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] IsAtEndInternal() = {ret}");
-			}
-
 			return ret;
 		}
 
 		public static bool HasPositionInternal (int managedStreamPtr)
 		{
 			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnHasPosition ();
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] HasPositionInternal() = {ret}");
-			}
-
 			return ret;
 		}
 
 		public static bool HasLengthInternal (int managedStreamPtr)
 		{
 			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnHasLength ();
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] HasLengthInternal() = {ret}");
-			}
-
 			return ret;
 		}
 
 		public static bool RewindInternal (int managedStreamPtr)
 		{
 			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnRewind ();
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] RewindInternal() = {ret}");
-			}
-
 			return ret;
 		}
 
 		public static int GetPositionInternal (int managedStreamPtr)
 		{
 			var ret = (int)SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnGetPosition ();
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] GetPositionInternal() = {ret}");
-			}
-
 			return ret;
 		}
 
 		public static bool SeekInternal (int managedStreamPtr, int position)
 		{
 			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnSeek ((IntPtr)position);
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] SeekInternal({position}) = {ret}");
-			}
-
 			return ret;
 		}
 
 		public static bool MoveInternal (int managedStreamPtr, int offset)
 		{
 			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnMove (offset);
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] MoveInternal({offset}) = {ret}");
-			}
-
 			return ret;
 		}
 
 		public static int GetLengthInternal (int managedStreamPtr)
 		{
 			var ret = (int)SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnGetLength ();
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] GetLengthInternal() = {ret}");
-			}
-
 			return ret;
 		}
 
 		public static int CreateNewInternal (int managedStreamPtr)
 		{
 			var ret = (int)SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnCreateNew ();
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] CreateNewInternal()");
-			}
-
 			return ret;
 		}
 
 		public static void DestroyInternal (int managedStreamPtr)
 		{
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] DestroyInternal()");
-			}
-
 			if (SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr, out var managedStream)) {
 				managedStream.DisposeFromNative ();
 			}
