@@ -24,13 +24,13 @@
 /* #undef HAVE_DIRECTWRITE */
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
-#define HAVE_DLFCN_H 1
+/* #undef HAVE_DLFCN_H */
 
 /* Define to 1 if you have the <dwrite.h> header file. */
 /* #undef HAVE_DWRITE_H */
 
 /* Have simple TrueType Layout backend */
-#define HAVE_FALLBACK 1
+/* #undef HAVE_FALLBACK */
 
 /* Have fontconfig library */
 /* #undef HAVE_FONTCONFIG */
@@ -136,9 +136,6 @@
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1
-
-/* Have UCDN Unicode functions */
-#define HAVE_UCDN 1
 
 /* Have Uniscribe library */
 /* #undef HAVE_UNISCRIBE */
