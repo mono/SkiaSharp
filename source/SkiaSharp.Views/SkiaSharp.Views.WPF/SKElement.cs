@@ -51,9 +51,7 @@ namespace SkiaSharp.Views.WPF
 			if (designMode)
 				return;
 
-			if (double.IsNaN(ActualWidth) || double.IsNaN(ActualHeight) ||
-				double.IsInfinity(ActualWidth) || double.IsInfinity(ActualHeight) ||
-				Visibility != Visibility.Visible)
+			if (Visibility != Visibility.Visible)
 				return;
 
 			var size = CreateSize(out var scaleX, out var scaleY);
