@@ -1,6 +1,6 @@
 ﻿using System;
 #if HAS_UNO
-namespace SkiaSharp.Views.Uno
+namespace SkiaSharp.Views.Uwp
 #elif __ANDROID__
 namespace SkiaSharp.Views.Android
 #elif __TVOS__
