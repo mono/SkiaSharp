@@ -30,8 +30,7 @@ LOCAL_C_INCLUDES       := .                                    \
 
 LOCAL_CFLAGS           := -DHAVE_CONFIG_H -DNDEBUG
 
-LOCAL_SRC_FILES        := 
-                          ../../../externals/harfbuzz/src/hb-aat-layout.cc                          \
+LOCAL_SRC_FILES        := ../../../externals/harfbuzz/src/hb-aat-layout.cc                          \
                           ../../../externals/harfbuzz/src/hb-aat-map.cc                             \
                           ../../../externals/harfbuzz/src/hb-blob.cc                                \
                           ../../../externals/harfbuzz/src/hb-buffer-serialize.cc                    \
