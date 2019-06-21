@@ -15,7 +15,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 using SkiaSharp;
-using SkiaSharp.Views.Uwp;
+using SkiaSharp.Views.UWP;
 using Windows.UI.Xaml.Data;
 using Uno.Foundation;
 

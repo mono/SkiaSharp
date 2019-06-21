@@ -1,4 +1,4 @@
 declare namespace SkiaSharp {
-    class SurfaceManager {
+    class Views {
     }
 }

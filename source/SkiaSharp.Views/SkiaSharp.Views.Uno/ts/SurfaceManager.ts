@@ -1,6 +1,6 @@
 ﻿namespace SkiaSharp {
 
-    export class SurfaceManager {
+    export class Views {
 
 
     }

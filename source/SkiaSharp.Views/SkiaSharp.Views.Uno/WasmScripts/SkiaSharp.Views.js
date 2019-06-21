@@ -1,6 +1,6 @@
 var SkiaSharp;
 (function (SkiaSharp) {
-    class SurfaceManager {
+    class Views {
     }
-    SkiaSharp.SurfaceManager = SurfaceManager;
+    SkiaSharp.Views = Views;
 })(SkiaSharp || (SkiaSharp = {}));
