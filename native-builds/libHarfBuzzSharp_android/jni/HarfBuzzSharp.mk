@@ -6,8 +6,7 @@ cmd-strip = $(PRIVATE_STRIP) --strip-all $(call host-path,$1)
 LOCAL_MODULE           := HarfBuzzSharp
 
 LOCAL_C_INCLUDES       := .                                    \
-                          ../../externals/harfbuzz/src         \
-                          ../../externals/harfbuzz
+                          ../../externals/harfbuzz/src
 
 LOCAL_LDFLAGS          := -s -Wl,--gc-sections
 
