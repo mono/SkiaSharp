@@ -17,8 +17,7 @@ target = ${bin_root}/${ARCH}/${target_name}.${SONAME_VERSION}
 library_dirs = 
 include_dirs = .                     \
 	           ${src_root}/..        \
-	           ${src_root}           \
-	           ${src_root}/hb-ucdn
+	           ${src_root}           
 library_paths = 
 defines = \
 	-DHAVE_CONFIG_H -DNDEBUG
@@ -38,8 +37,6 @@ library_names = $(notdir ${library_paths})
 libraries = $(library_names:lib%.a=-l%)
 
 src = \
-	${src_root}/hb-ucdn/ucdn.c	\
-	${src_root}/hb-ucdn.cc	\
 	${src_root}/hb-aat-layout.cc	\
 	${src_root}/hb-aat-map.cc	\
     ${src_root}/hb-blob.cc	\
@@ -47,6 +44,7 @@ src = \
     ${src_root}/hb-buffer.cc\
     ${src_root}/hb-common.cc\
     ${src_root}/hb-face.cc	\
+	${src_root}/hb-fallback-shape.cc  \
 	${src_root}/hb-font.cc	\
 	${src_root}/hb-map.cc	\
 	${src_root}/hb-ot-cff1-table.cc	\
@@ -81,9 +79,9 @@ src = \
 	${src_root}/hb-shape.cc	\
 	${src_root}/hb-shaper.cc	\
 	${src_root}/hb-static.cc	\
+	${src_root}/hb-ucd.cc  \
 	${src_root}/hb-unicode.cc	\
-	${src_root}/hb-warning.cc	\
-	${src_root}/hb-fallback-shape.cc
+	${src_root}/hb-warning.cc
 
 src_names = $(subst ${src_root}/,${noop},${src})
 objs = $(src_names:%=${objarch_root}/%.o)
