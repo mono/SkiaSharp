@@ -161,7 +161,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_surface_t sk_surface_new_raster (ref SKImageInfoNative info, size_t rowBytes, sk_surfaceprops_t props);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		extern static sk_surface_t sk_surface_new_raster_direct (ref SKImageInfoNative info, voidptr_t pixels, size_t rowBytes, voidptr_t releaseProc, voidptr_t context, sk_surfaceprops_t props);
+		public extern static sk_surface_t sk_surface_new_raster_direct (ref SKImageInfoNative info, voidptr_t pixels, size_t rowBytes, voidptr_t releaseProc, voidptr_t context, sk_surfaceprops_t props);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_canvas_t sk_surface_get_canvas (sk_surface_t t);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
