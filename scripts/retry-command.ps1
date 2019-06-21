@@ -17,9 +17,9 @@ Process {
         } catch {
             $Attempt = $Attempt + 1
             if ($Attempt -lt $RetryCount) {
-                Write-Host "[$Attempt of $RetryCount] Script failed to execute, retrying..."
+                Write-Host "##vso[task.logissue type=warning] ($Attempt of $RetryCount) Script failed to execute, retrying..."
             } else {
-                Write-Host "[$Attempt of $RetryCount] Script failed to execute."
+                Write-Host "##vso[task.logissue type=warning] ($Attempt of $RetryCount) Script failed to execute."
                 exit 1
             }
         }

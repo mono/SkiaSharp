@@ -16,6 +16,7 @@ public Blob (IntPtr data, int length, MemoryMode mode, object userData, BlobRele
 Added properties:
 
 ```csharp
+public static Blob Empty { get; }
 public int FaceCount { get; }
 public bool IsImmutable { get; }
 public int Length { get; }
@@ -130,10 +131,13 @@ public string SerializeGlyphs (int start, int end, Font font, SerializeFormat fo
 
 #### Type Changed: HarfBuzzSharp.Face
 
-Added constructor:
+Added constructors:
 
 ```csharp
+public Face (GetTableDelegate getTable);
 public Face (Blob blob, int index);
+public Face (GetTableDelegate getTable, object context);
+public Face (GetTableDelegate getTable, object context, ReleaseDelegate destroy);
 ```
 
 Modified properties:
@@ -148,6 +152,7 @@ Modified properties:
 Added properties:
 
 ```csharp
+public static Face Empty { get; }
 public int GlyphCount { get; set; }
 public bool IsImmutable { get; }
 public Tag[] Tables { get; }
@@ -174,7 +179,8 @@ Added constructors:
 
 ```csharp
 public Feature (Tag tag);
-public Feature (Tag tag, bool isEnabled, uint start, uint end);
+public Feature (Tag tag, uint value);
+public Feature (Tag tag, uint value, uint start, uint end);
 ```
 
 Modified properties:
@@ -184,24 +190,12 @@ Modified properties:
 +public Tag Tag { get; set; }
 ```
 
-Obsoleted properties:
-
-```diff
- [Obsolete ("Use IsEnabled instead.")]
- public uint Value { get; set; }
-```
-
-Added property:
-
-```csharp
-public bool IsEnabled { get; set; }
-```
-
 Added methods:
 
 ```csharp
-public static Feature FromString (string s);
+public static Feature Parse (string s);
 public override string ToString ();
+public static bool TryParse (string s, out Feature feature);
 ```
 
 
@@ -319,6 +313,19 @@ public struct FontExtents {
 }
 ```
 
+#### New Type: HarfBuzzSharp.GetTableDelegate
+
+```csharp
+public sealed delegate GetTableDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public GetTableDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (Face face, Tag tag, object context, System.AsyncCallback callback, object object);
+	public virtual Blob EndInvoke (System.IAsyncResult result);
+	public virtual Blob Invoke (Face face, Tag tag, object context);
+}
+```
+
 #### New Type: HarfBuzzSharp.GlyphExtents
 
 ```csharp
@@ -356,6 +363,19 @@ public class Language : HarfBuzzSharp.NativeObject, System.IDisposable {
 	protected bool Equals (Language other);
 	public override int GetHashCode ();
 	public override string ToString ();
+}
+```
+
+#### New Type: HarfBuzzSharp.ReleaseDelegate
+
+```csharp
+public sealed delegate ReleaseDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public ReleaseDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (object context, System.AsyncCallback callback, object object);
+	public virtual void EndInvoke (System.IAsyncResult result);
+	public virtual void Invoke (object context);
 }
 ```
 
@@ -521,9 +541,10 @@ public struct Script, System.IEquatable<Script> {
 	// methods
 	public virtual bool Equals (Script other);
 	public override bool Equals (object obj);
-	public static Script FromString (string str);
 	public override int GetHashCode ();
+	public static Script Parse (string str);
 	public override string ToString ();
+	public static bool TryParse (string str, out Script script);
 	public static uint op_Implicit (Script script);
 	public static Script op_Implicit (uint tag);
 }

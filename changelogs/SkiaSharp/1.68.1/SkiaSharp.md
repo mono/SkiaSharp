@@ -155,6 +155,23 @@ public bool Op (SKPath path, SKRegionOperation op);
 ```
 
 
+#### Type Changed: SkiaSharp.SKTypeface
+
+Added property:
+
+```csharp
+public int TableCount { get; }
+```
+
+Added methods:
+
+```csharp
+public int GetTableSize (uint tag);
+public bool TryGetTableData (uint tag, int offset, int length, IntPtr tableData);
+public bool TryGetTableTags (out uint[] tags);
+```
+
+
 #### New Type: SkiaSharp.SKColorSpaceType
 
 ```csharp
