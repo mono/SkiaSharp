@@ -347,7 +347,7 @@ jobs:
     condition: eq(variables['Build.Reason'], 'PullRequest')
     steps:
       - checkout: none
-      - powershell: Write-Host "##vso[task.setvariable variable=SAMPLES_CONFIGURATION]Debug"
+      - powershell: Write-Host "##vso[task.setvariable variable=SAMPLES_CONFIGURATION;isOutput=true]Debug"
         displayName: Request the samples be built in Debug configuration
   - template: azure-templates-bootstrapper.yml
     parameters:
