@@ -31,6 +31,8 @@ namespace SkiaSharp.Views.UWP
 
 			RegisterPropertyChangedCallback(VisibilityProperty, (s, e) => OnVisibilityChanged(s));
 			OnVisibilityChanged(this);
+
+			SetWillNotDraw(false);
 		}
 
 		private void Initialize()
@@ -70,8 +72,28 @@ namespace SkiaSharp.Views.UWP
 
 		private void DoInvalidate()
 		{
-
+			UpdateCanvasSize((int)ActualWidth, (int)ActualHeight);
+			base.Invalidate();
 		}
+
+		private void UpdateCanvasSize(int w, int h)
+		{
+			if (designMode)
+				return;
+
+			if (!IgnorePixelScaling)
+			{
+				var display = DisplayInformation.GetForCurrentView();
+				var scale = display.LogicalDpi / 100;
+
+				info = new SKImageInfo((int)(w * scale), (int)(h * scale), SKColorType.Rgba8888, SKAlphaType.Premul);
+			}
+			else
+			{
+				info = new SKImageInfo(w, h, SKColorType.Rgba8888, SKAlphaType.Premul);
+			}
+		}
+
 
 		protected override void OnDraw(global::Android.Graphics.Canvas canvas)
 		{
@@ -105,32 +127,6 @@ namespace SkiaSharp.Views.UWP
 				canvas.DrawBitmap(bitmap, info.Rect.ToRect(), new RectF(0, 0, (float)Width, (float)Height), null);
 			else
 				canvas.DrawBitmap(bitmap, 0, 0, null);
-		}
-
-		protected override void OnSizeChanged(int w, int h, int oldw, int oldh)
-		{
-			base.OnSizeChanged(w, h, oldw, oldh);
-
-			// update the info with the new sizes
-			UpdateCanvasSize(w, h);
-		}
-
-		private void UpdateCanvasSize(int w, int h)
-		{
-			if (designMode)
-				return;
-
-			if (IgnorePixelScaling)
-			{
-				var scale = global::Uno.UI.ContextHelper.Current.Resources.DisplayMetrics.Density;
-				info.Width = (int)(w / scale);
-				info.Height = (int)(h / scale);
-			}
-			else
-			{
-				info.Width = w;
-				info.Height = h;
-			}
 		}
 
 		private void FreeBitmap()

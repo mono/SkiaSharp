@@ -30,9 +30,18 @@ namespace SkiaSharp.Views.UWP
 
 			RegisterPropertyChangedCallback(VisibilityProperty, (s, e) => OnVisibilityChanged(s));
 			OnVisibilityChanged(this);
+			Initialize();
 		}
 
 		private static bool GetIsInitialized() => true;
+
+		private void Initialize()
+		{
+			if (designMode)
+				return;
+
+			drawable = new SKCGSurfaceFactory();
+		}
 
 		private void OnDpiChanged(DisplayInformation sender, object args = null)
 		{
