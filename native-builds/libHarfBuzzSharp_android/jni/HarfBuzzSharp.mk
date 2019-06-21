@@ -10,7 +10,6 @@ cmd-strip = $(PRIVATE_STRIP) --strip-all $(call host-path,$1)
 LOCAL_MODULE           := HarfBuzzSharp
 
 LOCAL_C_INCLUDES       := .                                    \
-                          ../../externals/harfbuzz/src/hb-ucdn \
                           ../../externals/harfbuzz/src         \
                           ../../externals/harfbuzz
 
@@ -31,8 +30,7 @@ LOCAL_C_INCLUDES       := .                                    \
 
 LOCAL_CFLAGS           := -DHAVE_CONFIG_H -DNDEBUG
 
-LOCAL_SRC_FILES        := ../../../externals/harfbuzz/src/hb-ucdn/ucdn.c                            \
-                          ../../../externals/harfbuzz/src/hb-ucdn.cc                                \
+LOCAL_SRC_FILES        := 
                           ../../../externals/harfbuzz/src/hb-aat-layout.cc                          \
                           ../../../externals/harfbuzz/src/hb-aat-map.cc                             \
                           ../../../externals/harfbuzz/src/hb-blob.cc                                \
@@ -40,6 +38,7 @@ LOCAL_SRC_FILES        := ../../../externals/harfbuzz/src/hb-ucdn/ucdn.c        
                           ../../../externals/harfbuzz/src/hb-buffer.cc                              \
                           ../../../externals/harfbuzz/src/hb-common.cc                              \
                           ../../../externals/harfbuzz/src/hb-face.cc                                \
+						  ../../../externals/harfbuzz/src/hb-fallback-shape.cc                      \
                           ../../../externals/harfbuzz/src/hb-font.cc                                \
                           ../../../externals/harfbuzz/src/hb-map.cc                                 \
                           ../../../externals/harfbuzz/src/hb-ot-cff1-table.cc                       \
@@ -74,8 +73,9 @@ LOCAL_SRC_FILES        := ../../../externals/harfbuzz/src/hb-ucdn/ucdn.c        
                           ../../../externals/harfbuzz/src/hb-shape.cc                               \
                           ../../../externals/harfbuzz/src/hb-shaper.cc                              \
                           ../../../externals/harfbuzz/src/hb-static.cc                              \
+						  ../../../externals/harfbuzz/src/hb-ucd.cc                                 \
                           ../../../externals/harfbuzz/src/hb-unicode.cc                             \
                           ../../../externals/harfbuzz/src/hb-warning.cc                             \
-                          ../../../externals/harfbuzz/src/hb-fallback-shape.cc
+						  ../../externals/harfbuzz/src/hb-ft.cc
 
 include $(BUILD_SHARED_LIBRARY)
