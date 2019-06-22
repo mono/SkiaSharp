@@ -112,7 +112,7 @@ ${target}: ${objs}
 	@mkdir -p $(dir $@)
 	$(CXX) -shared -rdynamic -s -o $@                                                                   \
 		${defines} ${includes} ${arch_cflags} ${cflags_c} ${cflags_cc}                                  \
-		-Wl,--start-group ${objarch_root}/*.o ${objarch_root}/**/*.o ${library_paths} -Wl,--end-group   \
+		-Wl,--start-group ${objarch_root}/*.o ${library_paths} -Wl,--end-group   \
 		${ldflags} -Wl,--gc-sections -Wl,--no-undefined                                                 \
 		-Wl,-soname,libHarfBuzzSharp.so.${SONAME_VERSION}
 
