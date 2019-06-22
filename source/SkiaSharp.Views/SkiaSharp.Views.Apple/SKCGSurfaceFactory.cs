@@ -29,8 +29,14 @@ namespace SkiaSharp.Views.Mac
 			contentsBounds.Height *= scale;
 
 			// get context details
-			info = new SKImageInfo((int)contentsBounds.Width, (int)contentsBounds.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
-			Info = info;
+			Info = info = CreateInfo((int)contentsBounds.Width, (int)contentsBounds.Height);
+
+			// if there are no pixels, clean up and return
+			if (info.Width == 0 || info.Height == 0 || lastLength == 0)
+			{
+				Dispose();
+				return null;
+			}
 
 			// allocate a memory block for the drawing process
 			var newLength = info.BytesSize;
@@ -48,8 +54,10 @@ namespace SkiaSharp.Views.Mac
 
 		public void DrawSurface(CGContext ctx, CGRect viewBounds, SKImageInfo info, SKSurface surface)
 		{
+			if (info.Width == 0 || info.Height == 0 || lastLength == 0)
+				return;
+
 			surface.Canvas.Flush();
-			surface.Dispose();
 
 			// draw the image onto the context
 			using (var dataProvider = new CGDataProvider(bitmapData, lastLength))
@@ -82,6 +90,10 @@ namespace SkiaSharp.Views.Mac
 				Marshal.FreeCoTaskMem(bitmapData);
 				bitmapData = IntPtr.Zero;
 			}
+			Info = CreateInfo(0, 0);
 		}
+
+		private SKImageInfo CreateInfo(int width, int height) =>
+			new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
 	}
 }

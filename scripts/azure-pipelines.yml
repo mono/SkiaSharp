@@ -16,6 +16,7 @@ variables:
   MANAGED_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) dotnet-sdk-2.1 ttf-ancient-fonts
   MONO_VERSION: 5_16_0
   XCODE_VERSION: 10.1
+  CONFIGURATION: 'Release'
 
 resources:
   repositories:
@@ -338,45 +339,48 @@ jobs:
             testResultsFormat: xUnit
             testResultsFiles: 'output/tests/**/*.xml'
 
-#  # SAMPLES JOBS
-#   - template: azure-templates-bootstrapper.yml
-#     parameters:
-#       name: samples_windows
-#       displayName: Build Samples (Windows)
-#       vmImage: vs2017-win2016
-#       target: samples
-#       dependsOn:
-#         - managed_windows
-#   - template: azure-templates-bootstrapper.yml
-#     parameters:
-#       name: samples_macos
-#       displayName: Build Samples (macOS)
-#       vmImage: macos-10.13
-#       target: samples
-#       dependsOn:
-#         - managed_macos
-#       preBuildSteps:
-#         - task: InstallAppleCertificate@2
-#           inputs:
-#             certSecureFile: 'SkiaSharp iOS Certificate.p12'
-#         - task: InstallAppleCertificate@2
-#           inputs:
-#             certSecureFile: 'SkiaSharp Mac Certificate.p12'
-#         - task: InstallAppleProvisioningProfile@1
-#           inputs:
-#             provProfileSecureFile: 'SkiaSharp iOS Provisioning.mobileprovision'
-#         - task: InstallAppleProvisioningProfile@1
-#           inputs:
-#             provProfileSecureFile: 'SkiaSharp Mac Provisioning.provisionprofile'
-#         - task: InstallAppleProvisioningProfile@1
-#           inputs:
-#             provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
-#   - template: azure-templates-bootstrapper.yml
-#     parameters:
-#       name: samples_linux
-#       displayName: Build Samples (Linux)
-#       vmImage: ubuntu-16.04
-#       packages: $(MANAGED_LINUX_PACKAGES)
-#       target: samples
-#       dependsOn:
-#         - managed_linux
+ # SAMPLES JOBS
+  - template: azure-templates-bootstrapper.yml
+    parameters:
+      name: samples_windows
+      displayName: Build Samples (Windows)
+      vmImage: vs2017-win2016
+      target: samples
+      dependsOn:
+        - managed_windows
+  - template: azure-templates-bootstrapper.yml
+    parameters:
+      name: samples_macos
+      displayName: Build Samples (macOS)
+      vmImage: macos-10.13
+      target: samples
+      dependsOn:
+        - managed_macos
+      preBuildSteps:
+        - powershell: Write-Host "##vso[task.setvariable variable=CONFIGURATION]Debug"
+          condition: eq(variables['Build.Reason'], 'PullRequest')
+          displayName: Request the samples be built in Debug configuration
+        - task: InstallAppleCertificate@2
+          inputs:
+            certSecureFile: 'SkiaSharp iOS Certificate.p12'
+        - task: InstallAppleCertificate@2
+          inputs:
+            certSecureFile: 'SkiaSharp Mac Certificate.p12'
+        - task: InstallAppleProvisioningProfile@1
+          inputs:
+            provProfileSecureFile: 'SkiaSharp iOS Provisioning.mobileprovision'
+        - task: InstallAppleProvisioningProfile@1
+          inputs:
+            provProfileSecureFile: 'SkiaSharp Mac Provisioning.provisionprofile'
+        - task: InstallAppleProvisioningProfile@1
+          inputs:
+            provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
+  - template: azure-templates-bootstrapper.yml
+    parameters:
+      name: samples_linux
+      displayName: Build Samples (Linux)
+      vmImage: ubuntu-16.04
+      packages: $(MANAGED_LINUX_PACKAGES)
+      target: samples
+      dependsOn:
+        - managed_linux

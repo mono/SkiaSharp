@@ -19,7 +19,14 @@ namespace SkiaSharpSample
 				.Where(t => samplesBase.IsAssignableFrom(t) && !t.IsAbstract)
 				.Select(t => (SampleBase)Activator.CreateInstance(t.AsType()))
 				.ToArray();
+
+			SkiaSharpVersion = GetAssemblyVersion<SkiaSharp.SKSurface>();
+			HarfBuzzSharpVersion = GetAssemblyVersion<HarfBuzzSharp.Blob>();
 		}
+
+		public static string SkiaSharpVersion { get; }
+
+		public static string HarfBuzzSharpVersion { get; }
 
 		public static string TempDataPath { get; set; }
 
@@ -57,6 +64,14 @@ namespace SkiaSharpSample
 		public static SampleBase GetSample(string title)
 		{
 			return sampleList.Where(s => s.Title == title).FirstOrDefault();
+		}
+
+		private static string GetAssemblyVersion<T>()
+		{
+			var apiAssembly = typeof(T).Assembly;
+			var attributes = apiAssembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute));
+			var attribute = (AssemblyInformationalVersionAttribute)attributes.FirstOrDefault();
+			return attribute.InformationalVersion;
 		}
 	}
 }

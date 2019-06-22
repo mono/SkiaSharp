@@ -39,11 +39,14 @@ namespace SkiaSharp.Views.Desktop
 			base.OnPaint(e);
 
 			// get the bitmap
-			CreateBitmap();
+			var info = CreateBitmap();
+
+			if (info.Width == 0 || info.Height == 0)
+				return;
+
 			var data = bitmap.LockBits(new Rectangle(0, 0, Width, Height), ImageLockMode.WriteOnly, bitmap.PixelFormat);
 
 			// create the surface
-			var info = new SKImageInfo(Width, Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
 			using (var surface = SKSurface.Create(info, data.Scan0, data.Stride))
 			{
 				// start drawing
@@ -62,7 +65,7 @@ namespace SkiaSharp.Views.Desktop
 			// invoke the event
 			PaintSurface?.Invoke(this, e);
 		}
-		
+
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);
@@ -70,14 +73,19 @@ namespace SkiaSharp.Views.Desktop
 			FreeBitmap();
 		}
 
-		private void CreateBitmap()
+		private SKImageInfo CreateBitmap()
 		{
-			if (bitmap == null || bitmap.Width != Width || bitmap.Height != Height)
+			var info = new SKImageInfo(Width, Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
+
+			if (bitmap == null || bitmap.Width != info.Width || bitmap.Height != info.Height)
 			{
 				FreeBitmap();
 
-				bitmap = new Bitmap(Width, Height, PixelFormat.Format32bppPArgb);
+				if (info.Width != 0 && info.Height != 0)
+					bitmap = new Bitmap(info.Width, info.Height, PixelFormat.Format32bppPArgb);
 			}
+
+			return info;
 		}
 
 		private void FreeBitmap()

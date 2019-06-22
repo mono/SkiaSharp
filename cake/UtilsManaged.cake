@@ -1,10 +1,10 @@
 
 var MSBuildNS = (XNamespace) "http://schemas.microsoft.com/developer/msbuild/2003";
 
-void RunMSBuild (FilePath solution, string configuration = "Release", string platform = "Any CPU", string platformTarget = null, bool restore = true)
+void RunMSBuild (FilePath solution, string platform = "Any CPU", string platformTarget = null, bool restore = true)
 {
     MSBuild (solution, c => {
-        c.Configuration = configuration;
+        c.Configuration = CONFIGURATION;
         c.Verbosity = VERBOSITY;
         c.Restore = restore;
 
@@ -26,11 +26,11 @@ void RunMSBuild (FilePath solution, string configuration = "Release", string pla
     });
 }
 
-void RunMSBuildRestoreLocal (FilePath solution, DirectoryPath packagesDir, string configuration = "Release")
+void RunMSBuildRestoreLocal (FilePath solution, DirectoryPath packagesDir)
 {
     var dir = solution.GetDirectory ();
     MSBuild (solution, c => {
-        c.Configuration = configuration;
+        c.Configuration = CONFIGURATION;
         c.Verbosity = VERBOSITY;
         c.Targets.Clear();
         c.Targets.Add("Restore");
@@ -88,7 +88,7 @@ void RunNetCoreTests (FilePath testAssembly)
 {
     var dir = testAssembly.GetDirectory ();
     var settings = new DotNetCoreTestSettings {
-        Configuration = "Release",
+        Configuration = CONFIGURATION,
         NoRestore = true,
         TestAdapterPath = ".",
         Logger = "xunit",
@@ -344,7 +344,7 @@ string[] GetReferenceSearchPaths ()
         refs.AddRange (GetDirectories ("./output/docs/temp/*").Select (d => d.FullPath));
         refs.Add ($"{referenceAssemblies}/MonoTouch/v1.0");
         refs.Add ($"{referenceAssemblies}/MonoAndroid/v1.0");
-        refs.Add ($"{referenceAssemblies}/MonoAndroid/v4.4");
+        refs.Add ($"{referenceAssemblies}/MonoAndroid/v9.0");
         refs.Add ($"{referenceAssemblies}/Xamarin.iOS/v1.0");
         refs.Add ($"{referenceAssemblies}/Xamarin.TVOS/v1.0");
         refs.Add ($"{referenceAssemblies}/Xamarin.WatchOS/v1.0");
