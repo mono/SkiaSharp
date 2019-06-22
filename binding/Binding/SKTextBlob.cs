@@ -81,26 +81,18 @@ namespace SkiaSharp
 
 		private void AddRunInternal (SKPaint font, float x, float y, ushort[] glyphs, byte[] utf8Text, uint[] clusters, SKRect? bounds, bool hasText)
 		{
-			if (font == null) {
+			if (font == null)
 				throw new ArgumentNullException (nameof (font));
-			}
-
-			if (glyphs == null) {
+			if (glyphs == null)
 				throw new ArgumentNullException (nameof (glyphs));
-			}
 
 			if (hasText) {
-				if (utf8Text == null) {
+				if (utf8Text == null)
 					throw new ArgumentNullException (nameof (utf8Text));
-				}
-
-				if (clusters == null) {
+				if (clusters == null)
 					throw new ArgumentNullException (nameof (clusters));
-				}
-
-				if (glyphs.Length != clusters.Length) {
+				if (glyphs.Length != clusters.Length)
 					throw new ArgumentException ("The number of glyphs and clusters must be the same.");
-				}
 			}
 
 			var run = AllocateRun (font, glyphs.Length, x, y, hasText ? utf8Text.Length : 0, bounds);
@@ -140,34 +132,22 @@ namespace SkiaSharp
 
 		private void AddHorizontalRunInternal (SKPaint font, float y, ushort[] glyphs, float[] positions, byte[] utf8Text, uint[] clusters, SKRect? bounds, bool hasText)
 		{
-			if (font == null) {
+			if (font == null)
 				throw new ArgumentNullException (nameof (font));
-			}
-
-			if (glyphs == null) {
+			if (glyphs == null)
 				throw new ArgumentNullException (nameof (glyphs));
-			}
-
-			if (positions == null) {
+			if (positions == null)
 				throw new ArgumentNullException (nameof (positions));
-			}
-
-			if (glyphs.Length != positions.Length) {
+			if (glyphs.Length != positions.Length)
 				throw new ArgumentException ("The number of glyphs and positions must be the same.");
-			}
 
 			if (hasText) {
-				if (utf8Text == null) {
+				if (utf8Text == null)
 					throw new ArgumentNullException (nameof (utf8Text));
-				}
-
-				if (clusters == null) {
+				if (clusters == null)
 					throw new ArgumentNullException (nameof (clusters));
-				}
-
-				if (glyphs.Length != clusters.Length) {
+				if (glyphs.Length != clusters.Length)
 					throw new ArgumentException ("The number of glyphs and clusters must be the same.");
-				}
 			}
 
 			var run = AllocateRunHorizontal (font, glyphs.Length, y, hasText ? utf8Text.Length : 0, bounds);
@@ -208,34 +188,22 @@ namespace SkiaSharp
 
 		private void AddPositionedRunInternal (SKPaint font, ushort[] glyphs, SKPoint[] positions, byte[] utf8Text, uint[] clusters, SKRect? bounds, bool hasText)
 		{
-			if (font == null) {
+			if (font == null)
 				throw new ArgumentNullException (nameof (font));
-			}
-
-			if (glyphs == null) {
+			if (glyphs == null)
 				throw new ArgumentNullException (nameof (glyphs));
-			}
-
-			if (positions == null) {
+			if (positions == null)
 				throw new ArgumentNullException (nameof (positions));
-			}
-
-			if (glyphs.Length != positions.Length) {
+			if (glyphs.Length != positions.Length)
 				throw new ArgumentException ("The number of glyphs and positions must be the same.");
-			}
 
 			if (hasText) {
-				if (utf8Text == null) {
+				if (utf8Text == null)
 					throw new ArgumentNullException (nameof (utf8Text));
-				}
-
-				if (clusters == null) {
+				if (clusters == null)
 					throw new ArgumentNullException (nameof (clusters));
-				}
-
-				if (glyphs.Length != clusters.Length) {
+				if (glyphs.Length != clusters.Length)
 					throw new ArgumentException ("The number of glyphs and clusters must be the same.");
-				}
 			}
 
 			var run = AllocateRunPositioned (font, glyphs.Length, hasText ? utf8Text.Length : 0, bounds);
@@ -255,9 +223,8 @@ namespace SkiaSharp
 
 		public RunBuffer AllocateRun (SKPaint font, int count, float x, float y, int textByteCount, SKRect? bounds)
 		{
-			if (font == null) {
+			if (font == null)
 				throw new ArgumentNullException (nameof (font));
-			}
 
 			using (var lang = new SKString ()) {
 				unsafe {
@@ -275,9 +242,8 @@ namespace SkiaSharp
 
 		public HorizontalRunBuffer AllocateRunHorizontal (SKPaint font, int count, float y, int textByteCount, SKRect? bounds)
 		{
-			if (font == null) {
+			if (font == null)
 				throw new ArgumentNullException (nameof (font));
-			}
 
 			using (var lang = new SKString ()) {
 				unsafe {
@@ -295,9 +261,8 @@ namespace SkiaSharp
 
 		public PositionedRunBuffer AllocateRunPositioned (SKPaint font, int count, int textByteCount, SKRect? bounds)
 		{
-			if (font == null) {
+			if (font == null)
 				throw new ArgumentNullException (nameof (font));
-			}
 
 			using (var lang = new SKString ()) {
 				unsafe {
@@ -316,26 +281,25 @@ namespace SkiaSharp
 
 	public class RunBuffer
 	{
-		protected readonly SKTextBlobBuilderRunBuffer _buffer;
-		protected readonly int _size;
-		protected readonly int _textSize;
+		protected readonly SKTextBlobBuilderRunBuffer buffer;
+		protected readonly int size;
+		protected readonly int textSize;
 
 		internal RunBuffer (SKTextBlobBuilderRunBuffer buffer, int size, int textSize)
 		{
-			_buffer = buffer;
-			_size = size;
-			_textSize = textSize;
+			this.buffer = buffer;
+			this.size = size;
+			this.textSize = textSize;
 		}
 
 		public void SetGlyphs (IReadOnlyList<ushort> glyphs)
 		{
-			if (glyphs.Count > _size) {
+			if (glyphs.Count > size)
 				throw new ArgumentOutOfRangeException (nameof (glyphs));
-			}
 
 			var glyphsSpan = GetGlyphsSpan ();
 
-			for (var i = 0; i < _size; i++) {
+			for (var i = 0; i < size; i++) {
 				glyphsSpan[i] = glyphs[i];
 			}
 		}
@@ -343,19 +307,18 @@ namespace SkiaSharp
 		public Span<ushort> GetGlyphsSpan ()
 		{
 			unsafe {
-				return new Span<ushort> ((void*)_buffer.GlyphsBuffer, _size);
+				return new Span<ushort> ((void*)buffer.GlyphsBuffer, size);
 			}
 		}
 
 		public void SetText (IReadOnlyList<byte> text)
 		{
-			if (text.Count > _textSize) {
+			if (text.Count > textSize)
 				throw new ArgumentOutOfRangeException (nameof (text));
-			}
 
-			var textSpan = GetTextSpan();
+			var textSpan = GetTextSpan ();
 
-			for (var i = 0; i < _textSize; i++) {
+			for (var i = 0; i < textSize; i++) {
 				textSpan[i] = text[i];
 			}
 		}
@@ -363,19 +326,18 @@ namespace SkiaSharp
 		public Span<byte> GetTextSpan ()
 		{
 			unsafe {
-				return new Span<byte> ((void*)_buffer.Utf8textBuffer, _textSize);
+				return new Span<byte> ((void*)buffer.Utf8textBuffer, textSize);
 			}
 		}
 
 		public void SetClusters (IReadOnlyList<uint> clusters)
 		{
-			if (clusters.Count > _size) {
+			if (clusters.Count > size)
 				throw new ArgumentOutOfRangeException (nameof (clusters));
-			}
 
 			var clustersSpan = GetClustersSpan ();
 
-			for (var i = 0; i < _size; i++) {
+			for (var i = 0; i < size; i++) {
 				clustersSpan[i] = clusters[i];
 			}
 		}
@@ -383,7 +345,7 @@ namespace SkiaSharp
 		public Span<uint> GetClustersSpan ()
 		{
 			unsafe {
-				return new Span<uint> ((void*)_buffer.ClustersBuffer, _size);
+				return new Span<uint> ((void*)buffer.ClustersBuffer, size);
 			}
 		}
 	}
@@ -397,13 +359,12 @@ namespace SkiaSharp
 
 		public void SetPositions (IReadOnlyList<float> positions)
 		{
-			if (positions.Count > _size) {
+			if (positions.Count > size)
 				throw new ArgumentOutOfRangeException (nameof (positions));
-			}
 
-			var positionsSpan = GetPositionsSpan();
+			var positionsSpan = GetPositionsSpan ();
 
-			for (var i = 0; i < _textSize; i++) {
+			for (var i = 0; i < textSize; i++) {
 				positionsSpan[i] = positions[i];
 			}
 		}
@@ -411,7 +372,7 @@ namespace SkiaSharp
 		public Span<float> GetPositionsSpan ()
 		{
 			unsafe {
-				return new Span<float> ((void*)_buffer.PositionsBuffer, _size);
+				return new Span<float> ((void*)buffer.PositionsBuffer, size);
 			}
 		}
 	}
@@ -425,13 +386,12 @@ namespace SkiaSharp
 
 		public void SetPositions (IReadOnlyList<SKPoint> positions)
 		{
-			if (positions.Count > _size) {
+			if (positions.Count > size)
 				throw new ArgumentOutOfRangeException (nameof (positions));
-			}
 
 			var positionsSpan = GetPositionsSpan ();
 
-			for (var i = 0; i < _textSize; i++) {
+			for (var i = 0; i < textSize; i++) {
 				positionsSpan[i] = positions[i];
 			}
 		}
@@ -439,7 +399,7 @@ namespace SkiaSharp
 		public Span<SKPoint> GetPositionsSpan ()
 		{
 			unsafe {
-				return new Span<SKPoint> ((void*)_buffer.PositionsBuffer, _size);
+				return new Span<SKPoint> ((void*)buffer.PositionsBuffer, size);
 			}
 		}
 	}
