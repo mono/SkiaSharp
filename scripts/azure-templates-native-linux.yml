@@ -1,13 +1,12 @@
 parameters:
-  name: ''                  # in the form type_platform_host
-  displayName: ''           # the human name
-  packages: ''              # any additional packages
-  target: ''                # the bootstrapper target
-  preBuildSteps: []         # any steps to run before the build
-  postBuildSteps: []        # any additional steps to run after the build
-  additionalArgs: ''        # any additional arguments to pass to the bootstrapper
-  retryCount: 1             # the number of times to retry the bootstrapper
-  configuration: 'Release'  # the managed build configuration
+  name: ''            # in the form type_platform_host
+  displayName: ''     # the human name
+  packages: ''        # any additional packages
+  target: ''          # the bootstrapper target
+  preBuildSteps: []   # any steps to run before the build
+  postBuildSteps: []  # any additional steps to run after the build
+  additionalArgs: ''  # any additional arguments to pass to the bootstrapper
+  retryCount: 1       # the number of times to retry the bootstrapper
 
 jobs:
   - job: ${{ parameters.name }}
@@ -31,7 +30,7 @@ jobs:
       # pre-build steps
       - ${{ parameters.preBuildSteps }}
       # build
-      - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY -c ${{ parameters.configuration }} ${{ parameters.additionalArgs }}
+      - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY -c $CONFIGURATION ${{ parameters.additionalArgs }}
         displayName: Run the bootstrapper for ${{ parameters.target }}
         env:
           CC: clang-3.8

@@ -1,16 +1,15 @@
 parameters:
-  name: ''                  # in the form type_platform_host
-  displayName: ''           # the human name
-  vmImage: ''               # the VM image
-  packages: ''              # any additional packages
-  target: ''                # the bootstrapper target
-  dependsOn: []             # the dependiencies
-  demands: []               # the demands
-  preBuildSteps: []         # any steps to run before the build
-  postBuildSteps: []        # any additional steps to run after the build
-  additionalArgs: ''        # any additional arguments to pass to the bootstrapper
-  retryCount: 1             # the number of times to retry the bootstrapper
-  configuration: 'Release'  # the managed build configuration
+  name: ''            # in the form type_platform_host
+  displayName: ''     # the human name
+  vmImage: ''         # the VM image
+  packages: ''        # any additional packages
+  target: ''          # the bootstrapper target
+  dependsOn: []       # the dependiencies
+  demands: []         # the demands
+  preBuildSteps: []   # any steps to run before the build
+  postBuildSteps: []  # any additional steps to run after the build
+  additionalArgs: ''  # any additional arguments to pass to the bootstrapper
+  retryCount: 1       # the number of times to retry the bootstrapper
 
 jobs:
   - job: ${{ parameters.name }}
@@ -70,13 +69,13 @@ jobs:
       - ${{ parameters.preBuildSteps }}
       # build
       - ${{ if endsWith(parameters.name, '_windows') }}:
-        - powershell: .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} { .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY -c ${{ parameters.configuration }} ${{ parameters.additionalArgs }} }
+        - powershell: .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} { .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY -c $env:CONFIGURATION ${{ parameters.additionalArgs }} }
           displayName: Run the bootstrapper for ${{ parameters.target }}
           env:
             ANDROID_NDK_HOME: $(USERPROFILE)/android-ndk
             TIZEN_STUDIO_HOME: $(USERPROFILE)/tizen-studio
       - ${{ if not(endsWith(parameters.name, '_windows')) }}:
-        - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY ${{ parameters.additionalArgs }}
+        - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY -c $CONFIGURATION ${{ parameters.additionalArgs }}
           displayName: Run the bootstrapper for ${{ parameters.target }}
           env:
             ANDROID_NDK_HOME: $(HOME)/android-ndk

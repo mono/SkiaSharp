@@ -16,7 +16,6 @@ variables:
   MANAGED_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) dotnet-sdk-2.1 ttf-ancient-fonts
   MONO_VERSION: 5_16_0
   XCODE_VERSION: 10.1
-  SAMPLES_CONFIGURATION: Release
 
 resources:
   repositories:
@@ -340,22 +339,12 @@ jobs:
             testResultsFiles: 'output/tests/**/*.xml'
 
  # SAMPLES JOBS
-  - job: pull_request_samples
-    displayName: Run Pre-Sample Steps (PRs Only)
-    pool:
-      vmImage: ubuntu-16.04
-    condition: eq(variables['Build.Reason'], 'PullRequest')
-    steps:
-      - checkout: none
-      - powershell: Write-Host "##vso[task.setvariable variable=SAMPLES_CONFIGURATION;isOutput=true]Debug"
-        displayName: Request the samples be built in Debug configuration
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: samples_windows
       displayName: Build Samples (Windows)
       vmImage: vs2017-win2016
       target: samples
-      configuration: $(SAMPLES_CONFIGURATION)
       dependsOn:
         - managed_windows
   - template: azure-templates-bootstrapper.yml
@@ -364,10 +353,12 @@ jobs:
       displayName: Build Samples (macOS)
       vmImage: macos-10.13
       target: samples
-      configuration: $(SAMPLES_CONFIGURATION)
       dependsOn:
         - managed_macos
       preBuildSteps:
+        - powershell: Write-Host "##vso[task.setvariable variable=CONFIGURATION]Debug"
+          condition: eq(variables['Build.Reason'], 'PullRequest')
+          displayName: Request the samples be built in Debug configuration
         - task: InstallAppleCertificate@2
           inputs:
             certSecureFile: 'SkiaSharp iOS Certificate.p12'
@@ -390,6 +381,5 @@ jobs:
       vmImage: ubuntu-16.04
       packages: $(MANAGED_LINUX_PACKAGES)
       target: samples
-      configuration: $(SAMPLES_CONFIGURATION)
       dependsOn:
         - managed_linux
