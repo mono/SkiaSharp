@@ -10,10 +10,17 @@ namespace SkiaSharpSample
 	{
 		private SampleBase sample;
 		//private SKImage lastImage;
+		private SKPaint textPaint;
 
 		public DetailContentsPage(SampleBase showcase)
 		{
 			InitializeComponent();
+
+			textPaint = new SKPaint
+			{
+				TextSize = 16,
+				IsAntialias = true
+			};
 
 			Sample = showcase;
 			BindingContext = this;
@@ -120,7 +127,7 @@ namespace SkiaSharpSample
 			//lastImage = e.Surface.Snapshot();
 
 			var view = sender as SKCanvasView;
-			DrawScaling(view, e.Surface.Canvas, view.CanvasSize);
+			DrawOverlayText(view, e.Surface.Canvas, view.CanvasSize);
 		}
 
 		private void OnPaintGLSample(object sender, SKPaintGLSurfaceEventArgs e)
@@ -131,27 +138,33 @@ namespace SkiaSharpSample
 			//lastImage = e.Surface.Snapshot();
 
 			var view = sender as SKGLView;
-			DrawScaling(view, e.Surface.Canvas, view.CanvasSize);
+			DrawOverlayText(view, e.Surface.Canvas, view.CanvasSize);
 		}
 
-		private void DrawScaling(View view, SKCanvas canvas, SKSize canvasSize)
+		private void DrawOverlayText(View view, SKCanvas canvas, SKSize canvasSize)
 		{
 			// make sure no previous transforms still apply
 			canvas.ResetMatrix();
 
-			// get the current scale
+			// get and apply the current scale
 			var scale = canvasSize.Width / (float)view.Width;
+			canvas.Scale(scale);
 
-			// write the scale into the bottom left
-			using (var paint = new SKPaint())
-			{
-				paint.IsAntialias = true;
-				paint.TextSize = 20 * scale;
+			var padding = 8;
+			var y = (float)view.Height - padding;
 
-				var text = $"Current scaling = {scale:0.0}x";
-				var padding = 10 * scale;
-				canvas.DrawText(text, padding, canvasSize.Height - padding, paint);
-			}
+			var text = $"Current scaling = {scale:0.0}x";
+			canvas.DrawText(text, padding, y, textPaint);
+
+			y -= textPaint.TextSize + padding;
+
+			text = "SkiaSharp: " + SamplesManager.SkiaSharpVersion;
+			canvas.DrawText(text, padding, y, textPaint);
+
+			y -= textPaint.TextSize + padding;
+
+			text = "HarfBuzzSharp: " + SamplesManager.HarfBuzzSharpVersion;
+			canvas.DrawText(text, padding, y, textPaint);
 		}
 
 		private void OnRefreshRequested(object sender, EventArgs e)

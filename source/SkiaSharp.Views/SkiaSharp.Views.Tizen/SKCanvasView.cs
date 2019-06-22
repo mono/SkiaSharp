@@ -39,6 +39,9 @@ namespace SkiaSharp.Views.Tizen
 
 		protected sealed override void OnDrawFrame()
 		{
+			if (info.Width == 0 || info.Height == 0)
+				return;
+
 			// draw directly into the EFL image data
 			using (var surface = SKSurface.Create(info, Evas.evas_object_image_data_get(evasImage, true), info.RowBytes))
 			{
