@@ -53,6 +53,11 @@ namespace SkiaSharp
 			base.Dispose (disposing);
 		}
 
+		// Build
+
+		public SKTextBlob Build () =>
+			GetObject<SKTextBlob> (SkiaApi.sk_textblob_builder_make (Handle));
+
 		// AddRun
 
 		public void AddRun (SKPaint font, float x, float y, ushort[] glyphs) =>
@@ -216,90 +221,89 @@ namespace SkiaSharp
 			}
 		}
 
-		//
+		// Allocate
 
-		public SKTextBlob Build () =>
-			GetObject<SKTextBlob> (SkiaApi.sk_textblob_builder_make (Handle));
-
-		public RunBuffer AllocateRun (SKPaint font, int count, float x, float y, int textByteCount, SKRect? bounds)
+		public SKRunBuffer AllocateRun (SKPaint font, int count, float x, float y, int textByteCount, SKRect? bounds)
 		{
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
 
 			using (var lang = new SKString ()) {
 				unsafe {
-					SKTextBlobBuilderRunBuffer runbuffer;
+					SKRunBufferInternal runbuffer;
 					if (bounds is SKRect b) {
 						SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.Handle, count, x, y, textByteCount, lang.Handle, &b, out runbuffer);
 					} else {
 						SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.Handle, count, x, y, textByteCount, lang.Handle, (SKRect*)IntPtr.Zero, out runbuffer);
 					}
 
-					return new RunBuffer (runbuffer, count, textByteCount);
+					return new SKRunBuffer (runbuffer, count, textByteCount);
 				}
 			}
 		}
 
-		public HorizontalRunBuffer AllocateRunHorizontal (SKPaint font, int count, float y, int textByteCount, SKRect? bounds)
+		public SKHorizontalRunBuffer AllocateRunHorizontal (SKPaint font, int count, float y, int textByteCount, SKRect? bounds)
 		{
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
 
 			using (var lang = new SKString ()) {
 				unsafe {
-					SKTextBlobBuilderRunBuffer runbuffer;
+					SKRunBufferInternal runbuffer;
 					if (bounds is SKRect b) {
 						SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.Handle, count, y, textByteCount, lang.Handle, &b, out runbuffer);
 					} else {
 						SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.Handle, count, y, textByteCount, lang.Handle, (SKRect*)IntPtr.Zero, out runbuffer);
 					}
 
-					return new HorizontalRunBuffer (runbuffer, count, textByteCount);
+					return new SKHorizontalRunBuffer (runbuffer, count, textByteCount);
 				}
 			}
 		}
 
-		public PositionedRunBuffer AllocateRunPositioned (SKPaint font, int count, int textByteCount, SKRect? bounds)
+		public SKPositionedRunBuffer AllocateRunPositioned (SKPaint font, int count, int textByteCount, SKRect? bounds)
 		{
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
 
 			using (var lang = new SKString ()) {
 				unsafe {
-					SKTextBlobBuilderRunBuffer runbuffer;
+					SKRunBufferInternal runbuffer;
 					if (bounds is SKRect b) {
 						SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.Handle, count, textByteCount, lang.Handle, &b, out runbuffer);
 					} else {
 						SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.Handle, count, textByteCount, lang.Handle, (SKRect*)IntPtr.Zero, out runbuffer);
 					}
 
-					return new PositionedRunBuffer (runbuffer, count, textByteCount);
+					return new SKPositionedRunBuffer (runbuffer, count, textByteCount);
 				}
 			}
 		}
 	}
 
-	public class RunBuffer
+	public class SKRunBuffer
 	{
-		protected readonly SKTextBlobBuilderRunBuffer buffer;
-		protected readonly int size;
-		protected readonly int textSize;
+		internal readonly SKRunBufferInternal internalBuffer;
 
-		internal RunBuffer (SKTextBlobBuilderRunBuffer buffer, int size, int textSize)
+		internal SKRunBuffer (SKRunBufferInternal buffer, int size, int textSize)
 		{
-			this.buffer = buffer;
-			this.size = size;
-			this.textSize = textSize;
+			internalBuffer = buffer;
+			Size = size;
+			TextSize = textSize;
 		}
+
+		public int Size { get; }
+
+		public int TextSize { get; }
 
 		public void SetGlyphs (IReadOnlyList<ushort> glyphs)
 		{
-			if (glyphs.Count > size)
+			if (glyphs.Count > Size)
 				throw new ArgumentOutOfRangeException (nameof (glyphs));
 
 			var glyphsSpan = GetGlyphsSpan ();
 
-			for (var i = 0; i < size; i++) {
+			for (var i = 0; i < Size; i++) {
 				glyphsSpan[i] = glyphs[i];
 			}
 		}
@@ -307,18 +311,18 @@ namespace SkiaSharp
 		public Span<ushort> GetGlyphsSpan ()
 		{
 			unsafe {
-				return new Span<ushort> ((void*)buffer.GlyphsBuffer, size);
+				return new Span<ushort> (internalBuffer.Glyphs, Size);
 			}
 		}
 
 		public void SetText (IReadOnlyList<byte> text)
 		{
-			if (text.Count > textSize)
+			if (text.Count > TextSize)
 				throw new ArgumentOutOfRangeException (nameof (text));
 
 			var textSpan = GetTextSpan ();
 
-			for (var i = 0; i < textSize; i++) {
+			for (var i = 0; i < TextSize; i++) {
 				textSpan[i] = text[i];
 			}
 		}
@@ -326,18 +330,18 @@ namespace SkiaSharp
 		public Span<byte> GetTextSpan ()
 		{
 			unsafe {
-				return new Span<byte> ((void*)buffer.Utf8textBuffer, textSize);
+				return new Span<byte> (internalBuffer.Utf8text, TextSize);
 			}
 		}
 
 		public void SetClusters (IReadOnlyList<uint> clusters)
 		{
-			if (clusters.Count > size)
+			if (clusters.Count > Size)
 				throw new ArgumentOutOfRangeException (nameof (clusters));
 
 			var clustersSpan = GetClustersSpan ();
 
-			for (var i = 0; i < size; i++) {
+			for (var i = 0; i < Size; i++) {
 				clustersSpan[i] = clusters[i];
 			}
 		}
@@ -345,26 +349,26 @@ namespace SkiaSharp
 		public Span<uint> GetClustersSpan ()
 		{
 			unsafe {
-				return new Span<uint> ((void*)buffer.ClustersBuffer, size);
+				return new Span<uint> (internalBuffer.Clusters, Size);
 			}
 		}
 	}
 
-	public sealed class HorizontalRunBuffer : RunBuffer
+	public sealed class SKHorizontalRunBuffer : SKRunBuffer
 	{
-		internal HorizontalRunBuffer (SKTextBlobBuilderRunBuffer buffer, int count, int textSize)
+		internal SKHorizontalRunBuffer (SKRunBufferInternal buffer, int count, int textSize)
 			: base (buffer, count, textSize)
 		{
 		}
 
 		public void SetPositions (IReadOnlyList<float> positions)
 		{
-			if (positions.Count > size)
+			if (positions.Count > Size)
 				throw new ArgumentOutOfRangeException (nameof (positions));
 
 			var positionsSpan = GetPositionsSpan ();
 
-			for (var i = 0; i < textSize; i++) {
+			for (var i = 0; i < TextSize; i++) {
 				positionsSpan[i] = positions[i];
 			}
 		}
@@ -372,26 +376,26 @@ namespace SkiaSharp
 		public Span<float> GetPositionsSpan ()
 		{
 			unsafe {
-				return new Span<float> ((void*)buffer.PositionsBuffer, size);
+				return new Span<float> (internalBuffer.Positions, Size);
 			}
 		}
 	}
 
-	public sealed class PositionedRunBuffer : RunBuffer
+	public sealed class SKPositionedRunBuffer : SKRunBuffer
 	{
-		internal PositionedRunBuffer (SKTextBlobBuilderRunBuffer buffer, int count, int textSize)
+		internal SKPositionedRunBuffer (SKRunBufferInternal buffer, int count, int textSize)
 			: base (buffer, count, textSize)
 		{
 		}
 
 		public void SetPositions (IReadOnlyList<SKPoint> positions)
 		{
-			if (positions.Count > size)
+			if (positions.Count > Size)
 				throw new ArgumentOutOfRangeException (nameof (positions));
 
 			var positionsSpan = GetPositionsSpan ();
 
-			for (var i = 0; i < textSize; i++) {
+			for (var i = 0; i < TextSize; i++) {
 				positionsSpan[i] = positions[i];
 			}
 		}
@@ -399,103 +403,17 @@ namespace SkiaSharp
 		public Span<SKPoint> GetPositionsSpan ()
 		{
 			unsafe {
-				return new Span<SKPoint> ((void*)buffer.PositionsBuffer, size);
+				return new Span<SKPoint> (internalBuffer.Positions, Size);
 			}
 		}
 	}
 
 	[StructLayout (LayoutKind.Sequential)]
-	public struct SKTextBlobBuilderRunBuffer
+	internal unsafe struct SKRunBufferInternal
 	{
-		private IntPtr glyphs;
-		private IntPtr pos;
-		private IntPtr utf8text;
-		private IntPtr clusters;
-
-		public IntPtr GlyphsBuffer => glyphs;
-
-		public IntPtr PositionsBuffer => pos;
-
-		public IntPtr Utf8textBuffer => utf8text;
-
-		public IntPtr ClustersBuffer => clusters;
-
-		public void SetGlyphs (IntPtr glyphs, int count)
-		{
-			unsafe {
-				SkiaApi.sk_textblob_builder_runbuffer_set_glyphs (ref this, (ushort*)glyphs, count);
-			}
-		}
-
-		public void SetGlyphs (ushort[] glyphs)
-		{
-			unsafe {
-				fixed (ushort* g = glyphs) {
-					SkiaApi.sk_textblob_builder_runbuffer_set_glyphs (ref this, g, glyphs.Length);
-				}
-			}
-		}
-
-		public void SetPositions (IntPtr pos, int count)
-		{
-			unsafe {
-				SkiaApi.sk_textblob_builder_runbuffer_set_pos (ref this, (float*)pos, count);
-			}
-		}
-
-		public void SetPositions (float[] pos)
-		{
-			unsafe {
-				fixed (float* p = pos) {
-					SkiaApi.sk_textblob_builder_runbuffer_set_pos (ref this, p, pos.Length);
-				}
-			}
-		}
-
-		public void SetPositions (SKPoint[] pos)
-		{
-			unsafe {
-				fixed (SKPoint* p = pos) {
-					SkiaApi.sk_textblob_builder_runbuffer_set_pos_points (ref this, p, pos.Length);
-				}
-			}
-		}
-		public void SetText (IntPtr utf8Text, int count)
-		{
-			unsafe {
-				SkiaApi.sk_textblob_builder_runbuffer_set_utf8_text (ref this, (byte*)utf8Text, count);
-			}
-		}
-
-		public void SetText (byte[] utf8Text)
-		{
-			unsafe {
-				fixed (byte* t = utf8Text) {
-					SkiaApi.sk_textblob_builder_runbuffer_set_utf8_text (ref this, t, utf8Text.Length);
-				}
-			}
-		}
-
-		public void SetText (string text)
-		{
-			var utf8Text = StringUtilities.GetEncodedText (text, SKEncoding.Utf8);
-			SetText (utf8Text);
-		}
-
-		public void SetClusters (IntPtr clusters, int count)
-		{
-			unsafe {
-				SkiaApi.sk_textblob_builder_runbuffer_set_clusters (ref this, (uint*)clusters, count);
-			}
-		}
-
-		public void SetClusters (uint[] clusters)
-		{
-			unsafe {
-				fixed (uint* c = clusters) {
-					SkiaApi.sk_textblob_builder_runbuffer_set_clusters (ref this, c, clusters.Length);
-				}
-			}
-		}
+		public void* Glyphs;
+		public void* Positions;
+		public void* Utf8text;
+		public void* Clusters;
 	}
 }
