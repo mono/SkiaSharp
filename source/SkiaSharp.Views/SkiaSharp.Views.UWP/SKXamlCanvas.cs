@@ -156,11 +156,11 @@ namespace SkiaSharp.Views.UWP
 			var size = CreateSize();
 			var info = new SKImageInfo(size.Width, size.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
 
-            if (bitmap?.PixelWidth != info.Width || bitmap?.PixelHeight != info.Height)
-                FreeBitmap();
+			if (bitmap?.PixelWidth != info.Width || bitmap?.PixelHeight != info.Height)
+				FreeBitmap();
 
-            if (bitmap == null && info.Width > 0 && info.Height > 0)
-            {
+			if (bitmap == null && info.Width > 0 && info.Height > 0)
+			{
 				bitmap = new WriteableBitmap(info.Width, info.Height);
 				pixels = bitmap.GetPixels();
 
