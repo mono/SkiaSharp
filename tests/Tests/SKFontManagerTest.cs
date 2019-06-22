@@ -1,5 +1,6 @@
 ﻿using System;
 using Xunit;
+using Xunit.Categories;
 using System.IO;
 
 namespace SkiaSharp.Tests
@@ -7,6 +8,7 @@ namespace SkiaSharp.Tests
 	public class SKFontManagerTest : SKTest
 	{
 		[SkippableFact]
+		[Feature(MatchCharacterFeature)]
 		public void TestFontManagerMatchCharacter()
 		{
 			var fonts = SKFontManager.Default;
@@ -14,6 +16,7 @@ namespace SkiaSharp.Tests
 			var emojiChar = StringUtilities.GetUnicodeCharacterCode(emoji, SKTextEncoding.Utf32);
 			using (var typeface = fonts.MatchCharacter(emojiChar))
 			{
+				Assert.NotNull(typeface);
 				if (IsLinux)
 					Assert.Equal("Symbola", typeface.FamilyName);
 				else if (IsMac)
@@ -112,6 +115,18 @@ namespace SkiaSharp.Tests
 			var fonts = SKFontManager.Default;
 
 			using (var typeface = fonts.CreateTypeface(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf")))
+			{
+				Assert.Equal("Roboto2", typeface.FamilyName);
+			}
+		}
+
+
+		[SkippableFact]
+		public void CanReadNonASCIIFile()
+		{
+			var fonts = SKFontManager.Default;
+
+			using (var typeface = fonts.CreateTypeface(Path.Combine(PathToFonts, "上田雅美.ttf")))
 			{
 				Assert.Equal("Roboto2", typeface.FamilyName);
 			}

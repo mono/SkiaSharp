@@ -1,12 +1,13 @@
 #addin nuget:?package=Cake.Xamarin&version=3.0.0
 #addin nuget:?package=Cake.XCode&version=4.0.0
-#addin nuget:?package=Cake.FileHelpers&version=3.0.0
+#addin nuget:?package=Cake.FileHelpers&version=3.1.0
 #addin nuget:?package=SharpCompress&version=0.22.0
 #addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.0.0&loaddependencies=true
+#addin nuget:?package=Xamarin.Nuget.Validator&version=1.1.1
 
-#tool "nuget:?package=xunit.runner.console&version=2.4.0"
-#tool "nuget:?package=mdoc&version=5.7.3.1"
-#tool "nuget:?package=vswhere&version=2.5.2"
+#tool nuget:?package=mdoc&version=5.7.4.8
+#tool nuget:?package=xunit.runner.console&version=2.4.0
+#tool nuget:?package=vswhere&version=2.5.2
 
 using System.Linq;
 using System.Net.Http;
@@ -27,7 +28,9 @@ var VERBOSITY = (Verbosity) Enum.Parse (typeof(Verbosity), Argument ("v", Argume
 var SKIP_EXTERNALS = Argument ("skipexternals", Argument ("SkipExternals", "")).ToLower ().Split (',');
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAll", Argument ("PackAllPlatforms", TARGET.ToLower() == "ci" || TARGET.ToLower() == "nuget-only")));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
-var ARTIFACTS_ROOT_URL = Argument ("artifactsRootUrl", "");
+var AZURE_BUILD_ID = Argument ("azureBuildId", "");
+var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
+var ADDITIONAL_GN_ARGS = Argument ("additionalGnArgs", "");
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
@@ -36,26 +39,32 @@ var MDocPath = Context.Tools.Resolve ("mdoc.exe");
 var MSBuildToolPath = GetMSBuildToolPath (EnvironmentVariable ("MSBUILD_EXE"));
 var PythonToolPath = EnvironmentVariable ("PYTHON_EXE") ?? "python";
 
-DirectoryPath ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? EnvironmentVariable ("ANDROID_HOME") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-sdk-macosx";
-DirectoryPath ANDROID_NDK_HOME = EnvironmentVariable ("ANDROID_NDK_HOME") ?? EnvironmentVariable ("ANDROID_NDK_ROOT") ?? EnvironmentVariable ("HOME") + "/Library/Developer/Xamarin/android-ndk";
-DirectoryPath TIZEN_STUDIO_HOME = EnvironmentVariable ("TIZEN_STUDIO_HOME") ?? EnvironmentVariable ("HOME") + "/tizen-studio";
+DirectoryPath PROFILE_PATH = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
+
+DirectoryPath NUGET_PACKAGES = EnvironmentVariable ("NUGET_PACKAGES") ?? PROFILE_PATH.Combine (".nuget/packages");
+DirectoryPath ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? EnvironmentVariable ("ANDROID_HOME") ?? PROFILE_PATH.Combine ("android-sdk");
+DirectoryPath ANDROID_NDK_HOME = EnvironmentVariable ("ANDROID_NDK_HOME") ?? EnvironmentVariable ("ANDROID_NDK_ROOT") ?? PROFILE_PATH.Combine ("android-ndk");
+DirectoryPath TIZEN_STUDIO_HOME = EnvironmentVariable ("TIZEN_STUDIO_HOME") ?? PROFILE_PATH.Combine ("tizen-studio");
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/depot_tools"));
 DirectoryPath SKIA_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia"));
 DirectoryPath ANGLE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/angle"));
 DirectoryPath HARFBUZZ_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/harfbuzz"));
-DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/xml"));
+DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/SkiaSharpAPI"));
 DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/package_cache"));
 
-DirectoryPath PROFILE_PATH = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
-DirectoryPath NUGET_PACKAGES = EnvironmentVariable ("NUGET_PACKAGES") ?? PROFILE_PATH.Combine (".nuget/packages");
-
+var PREVIEW_LABEL = EnvironmentVariable ("PREVIEW_LABEL") ?? "preview";
 var FEATURE_NAME = EnvironmentVariable ("FEATURE_NAME") ?? "";
-var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? "";
-if (string.IsNullOrEmpty (BUILD_NUMBER)) {
-    BUILD_NUMBER = "0";
+var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? "0";
+
+if (!string.IsNullOrEmpty (PythonToolPath) && FileExists (PythonToolPath)) {
+    var dir = MakeAbsolute ((FilePath) PythonToolPath).GetDirectory ();
+    var oldPath = EnvironmentVariable ("PATH");
+    System.Environment.SetEnvironmentVariable ("PATH", dir.FullPath + System.IO.Path.PathSeparator + oldPath);
 }
+
+var AZURE_BUILD_URL = "https://dev.azure.com/xamarin/6fd3d886-57a5-4e31-8db7-52a1b47c07a8/_apis/build/builds/{0}/artifacts?artifactName={1}&%24format=zip&api-version=5.0";
 
 var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp",                          new Version (1, 57, 0) },
@@ -85,6 +94,9 @@ Task ("externals")
 
 Task ("libs")
     .IsDependentOn ("externals")
+    .IsDependentOn ("libs-only");
+
+Task ("libs-only")
     .Does (() =>
 {
     // build the managed libraries
@@ -96,7 +108,6 @@ Task ("libs")
     } else if (IsRunningOnLinux ()) {
         platform = ".Linux";
     }
-    RunMSBuildRestore ($"./source/SkiaSharpSource{platform}.sln");
     RunMSBuild ($"./source/SkiaSharpSource{platform}.sln");
 
     // assemble the mdoc docs
@@ -114,6 +125,9 @@ Task ("libs")
 Task ("tests")
     .IsDependentOn ("libs")
     .IsDependentOn ("nuget")
+    .IsDependentOn ("tests-only");
+
+Task ("tests-only")
     .Does (() =>
 {
     var RunDesktopTest = new Action<string> (arch => {
@@ -127,12 +141,7 @@ Task ("tests")
         }
 
         EnsureDirectoryExists ($"./output/tests/{platform}/{arch}");
-        RunMSBuildRestore ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
-        if (arch == "AnyCPU") {
-            RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln");
-        } else {
-            RunMSBuildWithPlatform ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", arch);
-        }
+        RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", platform: arch == "AnyCPU" ? "Any CPU" : arch);
         RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/Release/SkiaSharp.Tests.dll", arch == "x86");
         CopyFileToDirectory ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/Release/TestResult.xml", $"./output/tests/{platform}/{arch}");
     });
@@ -234,12 +243,7 @@ Task ("samples")
                 buildPlatform = platformMatrix [platform];
             }
 
-            RunMSBuildRestore (sln);
-            if (string.IsNullOrEmpty (buildPlatform)) {
-                RunMSBuild (sln);
-            } else {
-                RunMSBuildWithPlatform (sln, buildPlatform);
-            }
+            RunMSBuild (sln, platform: buildPlatform);
         }
     });
 
@@ -327,8 +331,9 @@ Task ("nuget-only")
         if (id != null && version != null) {
             var v = GetVersion (id.Value);
             if (!string.IsNullOrEmpty (v)) {
-                version.Value = v + suffix;
+                version.Value = v;
             }
+            version.Value += suffix;
         }
 
         // <dependency>
@@ -357,18 +362,18 @@ Task ("nuget-only")
         var metadata = xdoc.Root.Element ("metadata");
         var id = metadata.Element ("id").Value;
         var dir = id;
-        if (id.Contains(".NativeAssets")) {
-            dir = id.Substring(0, id.IndexOf(".NativeAssets"));
+        if (id.Contains(".NativeAssets.")) {
+            dir = id.Substring(0, id.IndexOf(".NativeAssets."));
         }
 
         var preview = "";
         if (!string.IsNullOrEmpty (FEATURE_NAME)) {
-            preview += $"-{FEATURE_NAME}-featurepreview";
+            preview += $"-featurepreview-{FEATURE_NAME}";
         } else {
-            preview += $"-preview";
+            preview += $"-{PREVIEW_LABEL}";
         }
         if (!string.IsNullOrEmpty (BUILD_NUMBER)) {
-            preview += $"{BUILD_NUMBER}";
+            preview += $".{BUILD_NUMBER}";
         }
 
         removePlatforms (xdoc);
@@ -392,13 +397,46 @@ Task ("nuget-only")
     }
 });
 
+Task ("nuget-validation")
+    .IsDependentOn ("nuget")
+    .Does(() =>
+{
+    // setup validation options
+    var options = new Xamarin.Nuget.Validator.NugetValidatorOptions {
+        Copyright = "© Microsoft Corporation. All rights reserved.",
+        Author = "Microsoft",
+        Owner = "Microsoft",
+        NeedsProjectUrl = true,
+        NeedsLicenseUrl = true,
+        ValidateRequireLicenseAcceptance = true,
+        ValidPackageNamespace = new [] { "SkiaSharp", "HarfBuzzSharp" },
+    };
+
+    var nupkgFiles = GetFiles ("./output/*.nupkg");
+
+    Information ("Found ({0}) Nuget's to validate", nupkgFiles.Count ());
+
+    foreach (var nupkgFile in nupkgFiles) {
+        Information ("Verifiying Metadata of {0}", nupkgFile.GetFilename ());
+
+        var result = Xamarin.Nuget.Validator.NugetValidator.Validate(MakeAbsolute(nupkgFile).FullPath, options);
+        if (!result.Success) {
+            Information ("Metadata validation failed for: {0} \n\n", nupkgFile.GetFilename ());
+            Information (string.Join("\n    ", result.ErrorMessages));
+            throw new Exception ($"Invalid Metadata for: {nupkgFile.GetFilename ()}");
+
+        } else {
+            Information ("Metadata validation passed for: {0}", nupkgFile.GetFilename ());
+        }
+    }
+});
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // DOCS - creating the xml, markdown and other documentation
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("update-docs")
     .IsDependentOn ("docs-api-diff")
-    .IsDependentOn ("docs-api-diff-past")
     .IsDependentOn ("docs-update-frameworks")
     .IsDependentOn ("docs-format-docs");
 
@@ -466,7 +504,7 @@ Task ("Nothing");
 Task ("CI")
     .IsDependentOn ("externals")
     .IsDependentOn ("libs")
-    .IsDependentOn ("nuget")
+    .IsDependentOn ("nuget-validation")
     .IsDependentOn ("tests")
     .IsDependentOn ("samples");
 
@@ -483,6 +521,17 @@ Task ("Linux-CI")
 // BUILD NOW
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+Information ("");
+
+Information ("Arguments:");
+Information ("  Target:                           {0}", TARGET);
+Information ("  Verbosity:                        {0}", VERBOSITY);
+Information ("  Skip externals:                   {0}", SKIP_EXTERNALS);
+Information ("  Print all environment variables:  {0}", PRINT_ALL_ENV_VARS);
+Information ("  Pack all platforms:               {0}", PACK_ALL_PLATFORMS);
+Information ("  Azure build ID:                   {0}", AZURE_BUILD_ID);
+Information ("  Unsupported Tests:                {0}", UNSUPPORTED_TESTS);
+Information ("  Additional GN Arguments:          {0}", ADDITIONAL_GN_ARGS);
 Information ("");
 
 Information ("Tool Paths:");
@@ -517,7 +566,10 @@ var envVarsWhitelist = new [] {
     "processor_identifier", "node_name", "node_labels", "branch_name",
     "os", "build_url", "build_number", "number_of_processors",
     "node_label", "build_id", "git_sha", "git_branch_name",
-    "feature_name"
+    "feature_name", "msbuild_exe", "python_exe",
+    "home", "userprofile", "nuget_packages",
+    "android_sdk_root", "android_ndk_root",
+    "android_home", "android_ndk_home", "tizen_studio_home"
 };
 var envVars = EnvironmentVariables ();
 var max = envVars.Max (v => v.Key.Length) + 2;

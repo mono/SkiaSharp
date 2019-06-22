@@ -38,26 +38,24 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
 Task ("docs-download-output")
     .Does (() =>
 {
-    if (string.IsNullOrEmpty (ARTIFACTS_ROOT_URL))
-        throw new Exception ("Specify an artifacts root URL with --artifactsRootUrl=<URL>");
+    if (string.IsNullOrEmpty (AZURE_BUILD_ID))
+        throw new Exception ("Specify a build ID with --azureBuildId=<ID>");
 
-    EnsureDirectoryExists ("./output/nugets");
-    CleanDirectories ("./output/nugets");
+    var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, "nuget");
+
+    EnsureDirectoryExists ("./output");
+    CleanDirectories ("./output");
+
+    DownloadFile(url, "./output/nuget.zip");
+    Unzip ("./output/nuget.zip", "./output");
+    MoveDirectory ("./output/nuget", "./output/nugets");
 
     foreach (var id in TRACKED_NUGETS.Keys) {
-        Information ($"Downloading '{id}'...");
-
         var version = GetVersion (id);
         var name = $"{id}.{version}.nupkg";
-
         CleanDirectories ($"./output/{id}");
-        DownloadFile ($"{ARTIFACTS_ROOT_URL}/nugets/{name}", $"./output/nugets/{name}");
         Unzip ($"./output/nugets/{name}", $"./output/{id}/nuget");
     }
-
-    CleanDirectories ($"./output/samples");
-    DownloadFile ($"{ARTIFACTS_ROOT_URL}/samples.zip", $"./output/samples.zip");
-    Unzip ($"./output/samples.zip", $"./output/samples");
 });
 
 Task ("docs-api-diff")
@@ -213,10 +211,11 @@ Task ("docs-update-frameworks")
     xdoc.Save (fwxml);
 
     // generate doc files
+    comparer = await CreateNuGetDiffAsync ();
     var refArgs = string.Join (" ", comparer.SearchPaths.Select (r => $"--lib=\"{r}\""));
     var fw = MakeAbsolute ((FilePath) fwxml);
     RunProcess (MDocPath, new ProcessSettings {
-        Arguments = $"update --delete --out=\"{DOCS_PATH}\" -lang=DocId --frameworks={fw} {refArgs}",
+        Arguments = $"update --debug --delete --out=\"{DOCS_PATH}\" --lang=DocId --frameworks={fw} {refArgs}",
         WorkingDirectory = docsTempPath
     });
 
@@ -305,6 +304,18 @@ Task ("docs-format-docs")
             }
         }
 
+        // remove the no-longer-obsolete document members
+        if (xdoc.Root.Name == "Type" && xdoc.Root.Attribute ("Name")?.Value == "SKDocument") {
+            xdoc.Root
+                .Elements ("Members")
+                .Elements ("Member")
+                .Where (e => e.Attribute ("MemberName")?.Value == "CreatePdf")
+                .Where (e => e.Elements ("MemberSignature").All (s => s.Attribute ("Value")?.Value != "M:SkiaSharp.SKDocument.CreatePdf(SkiaSharp.SKWStream,SkiaSharp.SKDocumentPdfMetadata,System.Single)"))
+                .SelectMany (e => e.Elements ("Attributes").Elements ("Attribute").Elements ("AttributeName"))
+                .Where (e => e.Value.Contains ("System.Obsolete"))
+                .Remove ();
+        }
+
         // remove empty FrameworkAlternate elements
         var emptyAlts = xdoc.Root
             .Descendants ()
@@ -315,6 +326,12 @@ Task ("docs-format-docs")
                 empty.Remove ();
             }
         }
+
+        // remove empty Attribute elements
+        xdoc.Root
+            .Descendants ("Attribute")
+            .Where (e => !e.Elements ().Any ())
+            .Remove ();
 
         // count the types without docs
         var typesWithDocs = xdoc.Root

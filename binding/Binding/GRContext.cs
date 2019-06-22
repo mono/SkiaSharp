@@ -76,8 +76,7 @@ namespace SkiaSharp
 
 		public void GetResourceCacheLimits (out int maxResources, out long maxResourceBytes)
 		{
-			IntPtr maxResourceBytesPtr;
-			SkiaApi.gr_context_get_resource_cache_limits (Handle, out maxResources, out maxResourceBytesPtr);
+			SkiaApi.gr_context_get_resource_cache_limits (Handle, out maxResources, out var maxResourceBytesPtr);
 			maxResourceBytes = (long)maxResourceBytesPtr;
 		}
 
@@ -88,8 +87,7 @@ namespace SkiaSharp
 
 		public void GetResourceCacheUsage (out int maxResources, out long maxResourceBytes)
 		{
-			IntPtr maxResourceBytesPtr;
-			SkiaApi.gr_context_get_resource_cache_usage (Handle, out maxResources, out maxResourceBytesPtr);
+			SkiaApi.gr_context_get_resource_cache_usage (Handle, out maxResources, out var maxResourceBytesPtr);
 			maxResourceBytes = (long)maxResourceBytesPtr;
 		}
 		
@@ -113,15 +111,15 @@ namespace SkiaSharp
 			SkiaApi.gr_context_flush (Handle);
 		}
 
-		public int GetMaxSurfaceSampleCountForColorType (SKColorType colorType)
+		public int GetMaxSurfaceSampleCount (SKColorType colorType)
 		{
 			return SkiaApi.gr_context_get_max_surface_sample_count_for_color_type (Handle, colorType);
 		}
 
-		[Obsolete ("Use GetMaxSurfaceSampleCountForColorType(SKColorType) instead.")]
+		[Obsolete ("Use GetMaxSurfaceSampleCount(SKColorType) instead.")]
 		public int GetRecommendedSampleCount (GRPixelConfig config, float dpi)
 		{
-			return GetMaxSurfaceSampleCountForColorType (config.ToColorType ());
+			return GetMaxSurfaceSampleCount (config.ToColorType ());
 		}
 
 		protected override void Dispose (bool disposing)

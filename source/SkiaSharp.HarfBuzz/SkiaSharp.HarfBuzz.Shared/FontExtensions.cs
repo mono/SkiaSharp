@@ -13,9 +13,8 @@ namespace SkiaSharp.HarfBuzz
 				throw new ArgumentNullException(nameof(font));
 			}
 
-			int x, y;
-			font.GetScale(out x, out y);
-			return new SKSizeI(x, y);
+			font.GetScale(out var scaleX, out var scaleY);
+			return new SKSizeI(scaleX, scaleY);
 		}
 
 		public static void SetScale(this Font font, SKSizeI scale)

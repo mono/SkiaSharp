@@ -35,7 +35,7 @@ namespace SkiaSharp.Views.UWP
 
 		public AngleSwapChainPanel()
 		{
-			glesContext = new GlesContext();
+			glesContext = null;
 
 			renderLoopWorker = null;
 			renderOnceWorker = null;
@@ -105,6 +105,8 @@ namespace SkiaSharp.Views.UWP
 
 		private void OnLoaded(object sender, RoutedEventArgs e)
 		{
+			glesContext = new GlesContext();
+
 			isLoaded = true;
 
 			ContentsScale = CompositionScaleX;
@@ -123,6 +125,9 @@ namespace SkiaSharp.Views.UWP
 			DestroyRenderSurface();
 
 			isLoaded = false;
+
+			glesContext?.Dispose();
+			glesContext = null;
 		}
 
 		private static void OnVisibilityChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -174,7 +179,7 @@ namespace SkiaSharp.Views.UWP
 
 		private void RenderFrame()
 		{
-			if (designMode || !isLoaded || !isVisible || !glesContext.HasSurface)
+			if (designMode || !isLoaded || !isVisible || glesContext?.HasSurface != true)
 				return;
 
 			glesContext.MakeCurrent();

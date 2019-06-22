@@ -206,16 +206,14 @@ namespace SkiaSharp
 
 		public SKRect LocalClipBounds {
 			get {
-				SKRect bounds;
-				GetLocalClipBounds (out bounds);
+				GetLocalClipBounds (out var bounds);
 				return bounds;
 			}
 		}
 
 		public SKRectI DeviceClipBounds {
 			get {
-				SKRectI bounds;
-				GetDeviceClipBounds (out bounds);
+				GetDeviceClipBounds (out var bounds);
 				return bounds;
 			}
 		}
@@ -406,6 +404,29 @@ namespace SkiaSharp
 			SkiaApi.sk_canvas_draw_picture (Handle, picture.Handle, IntPtr.Zero, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
+		public void DrawDrawable (SKDrawable drawable, ref SKMatrix matrix)
+		{
+			if (drawable == null)
+				throw new ArgumentNullException (nameof (drawable));
+			SkiaApi.sk_canvas_draw_drawable (Handle, drawable.Handle, ref matrix);
+		}
+
+		public void DrawDrawable (SKDrawable drawable, float x, float y)
+		{
+			if (drawable == null)
+				throw new ArgumentNullException (nameof (drawable));
+			var matrix = SKMatrix.MakeTranslation (x, y);
+			DrawDrawable (drawable, ref matrix);
+		}
+
+		public void DrawDrawable (SKDrawable drawable, SKPoint p)
+		{
+			if (drawable == null)
+				throw new ArgumentNullException (nameof (drawable));
+			var matrix = SKMatrix.MakeTranslation (p.X, p.Y);
+			DrawDrawable (drawable, ref matrix);
+		}
+
 		public void DrawBitmap (SKBitmap bitmap, SKPoint p, SKPaint paint = null)
 		{
 			DrawBitmap (bitmap, p.X, p.Y, paint);
@@ -443,6 +464,16 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (surface));
 
 			surface.Draw (this, x, y, paint);
+		}
+
+		public void DrawText (SKTextBlob text, float x, float y, SKPaint paint)
+		{
+			if (text == null)
+				throw new ArgumentNullException (nameof (text));
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
+
+			SkiaApi.sk_canvas_draw_text_blob (Handle, text.Handle, x, y, paint.Handle);
 		}
 
 		public void DrawText (string text, SKPoint p, SKPaint paint)
@@ -508,7 +539,7 @@ namespace SkiaSharp
 
 		public void DrawTextOnPath (IntPtr buffer, int length, SKPath path, float hOffset, float vOffset, SKPaint paint)
 		{
-			if (buffer == IntPtr.Zero)
+			if (buffer == IntPtr.Zero && length != 0)
 				throw new ArgumentNullException (nameof (buffer));
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
@@ -525,7 +556,7 @@ namespace SkiaSharp
 
 		public void DrawText (IntPtr buffer, int length, float x, float y, SKPaint paint)
 		{
-			if (buffer == IntPtr.Zero)
+			if (buffer == IntPtr.Zero && length != 0)
 				throw new ArgumentNullException (nameof (buffer));
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
@@ -535,7 +566,7 @@ namespace SkiaSharp
 
 		public void DrawPositionedText (IntPtr buffer, int length, SKPoint[] points, SKPaint paint)
 		{
-			if (buffer == IntPtr.Zero)
+			if (buffer == IntPtr.Zero && length != 0)
 				throw new ArgumentNullException (nameof (buffer));
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
@@ -676,10 +707,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (lattice.YDivs));
 
 			unsafe {
-				fixed (int* x = &lattice.XDivs[0])
-				fixed (int* y = &lattice.YDivs[0])
-				fixed (SKLatticeRectType* r = &lattice.RectTypes[0])
-				fixed (SKColor* c = &lattice.Colors[0]) {
+				fixed (int* x = lattice.XDivs)
+				fixed (int* y = lattice.YDivs)
+				fixed (SKLatticeRectType* r = lattice.RectTypes)
+				fixed (SKColor* c = lattice.Colors) {
 					var nativeLattice = new SKLatticeInternal {
 						fBounds = null,
 						fRectTypes = r,
@@ -708,10 +739,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (lattice.YDivs));
 			
 			unsafe {
-				fixed (int* x = &lattice.XDivs[0])
-				fixed (int* y = &lattice.YDivs[0])
-				fixed (SKLatticeRectType* r = &lattice.RectTypes[0])
-				fixed (SKColor* c = &lattice.Colors[0]) {
+				fixed (int* x = lattice.XDivs)
+				fixed (int* y = lattice.YDivs)
+				fixed (SKLatticeRectType* r = lattice.RectTypes)
+				fixed (SKColor* c = lattice.Colors) {
 					var nativeLattice = new SKLatticeInternal {
 						fBounds = null,
 						fRectTypes = r,

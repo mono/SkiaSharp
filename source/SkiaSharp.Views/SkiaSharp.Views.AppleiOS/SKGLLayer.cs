@@ -14,6 +14,9 @@ namespace SkiaSharp.Views.iOS
 {
 	public class SKGLLayer : CAEAGLLayer
 	{
+		private const SKColorType colorType = SKColorType.Rgba8888;
+		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
+
 		private EAGLContext glContext;
 		private uint renderBuffer;
 		private uint framebuffer;
@@ -48,17 +51,22 @@ namespace SkiaSharp.Views.iOS
 			{
 				// create or update the dimensions
 				renderTarget?.Dispose();
-				renderTarget = SKGLDrawable.CreateRenderTarget(0, 0);
+				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, out var framebuffer);
+				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out var stencil);
+				Gles.glGetRenderbufferParameteriv(Gles.GL_RENDERBUFFER, Gles.GL_RENDERBUFFER_WIDTH, out var bufferWidth);
+				Gles.glGetRenderbufferParameteriv(Gles.GL_RENDERBUFFER, Gles.GL_RENDERBUFFER_HEIGHT, out var bufferHeight);
+				var glInfo = new GRGlFramebufferInfo((uint)framebuffer, colorType.ToGlSizedFormat());
+				renderTarget = new GRBackendRenderTarget(bufferWidth, bufferHeight, context.GetMaxSurfaceSampleCount(colorType), stencil, glInfo);
 
 				// create the surface
 				surface?.Dispose();
-				surface = SKSurface.Create(context, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+				surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);
 			}
 
 			using (new SKAutoCanvasRestore(surface.Canvas, true))
 			{
 				// start drawing
-				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType);
 				OnPaintSurface(e);
 #pragma warning disable CS0618 // Type or member is obsolete
 				DrawInSurface(e.Surface, e.RenderTarget);

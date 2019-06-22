@@ -6,6 +6,7 @@
 using System;
 using System.Runtime.InteropServices;
 using Xunit;
+using Xunit.Categories;
 
 #if SYSTEM_DRAWING
 using System.Drawing;
@@ -147,8 +148,113 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[SkippableFact]
+		public void SimpleSurfaceIsUnknownPixelGeometry()
+		{
+			var info = new SKImageInfo(100, 100);
+			using (var surface = SKSurface.Create(info))
+			{
+				Assert.NotNull(surface);
+				Assert.NotNull(surface.SurfaceProperties);
+			}
+		}
+
+		[SkippableFact]
+		public void SimpleSurfaceWithPropertiesIsCorrect()
+		{
+			var info = new SKImageInfo(100, 100);
+			var props = new SKSurfaceProperties(SKSurfacePropsFlags.UseDeviceIndependentFonts, SKPixelGeometry.RgbVertical);
+			using (var surface = SKSurface.Create(info, props))
+			{
+				Assert.NotNull(surface);
+
+				Assert.Equal(SKPixelGeometry.RgbVertical, surface.SurfaceProperties.PixelGeometry);
+				Assert.Equal(SKSurfacePropsFlags.UseDeviceIndependentFonts, surface.SurfaceProperties.Flags);
+
+				Assert.Equal(props.PixelGeometry, surface.SurfaceProperties.PixelGeometry);
+				Assert.Equal(props.Flags, surface.SurfaceProperties.Flags);
+			}
+		}
+
 		[Obsolete]
-		[Trait(Category, GpuCategory)]
+		[SkippableFact]
+		public void SimpleSurfaceWithPropsIsCorrect()
+		{
+			var info = new SKImageInfo(100, 100);
+			var props = new SKSurfaceProps
+			{
+				Flags = SKSurfacePropsFlags.UseDeviceIndependentFonts,
+				PixelGeometry = SKPixelGeometry.RgbVertical
+			};
+			using (var surface = SKSurface.Create(info, props))
+			{
+				Assert.NotNull(surface);
+
+				Assert.Equal(SKPixelGeometry.RgbVertical, surface.SurfaceProperties.PixelGeometry);
+				Assert.Equal(SKSurfacePropsFlags.UseDeviceIndependentFonts, surface.SurfaceProperties.Flags);
+
+				Assert.Equal(props.PixelGeometry, surface.SurfaceProperties.PixelGeometry);
+				Assert.Equal(props.Flags, surface.SurfaceProperties.Flags);
+
+				Assert.Equal(props.PixelGeometry, surface.SurfaceProps.PixelGeometry);
+				Assert.Equal(props.Flags, surface.SurfaceProps.Flags);
+			}
+		}
+
+		[SkippableFact]
+		public void CanCreateSimpleSurface()
+		{
+			var info = new SKImageInfo(100, 100);
+			using (var surface = SKSurface.Create(info))
+			{
+				Assert.NotNull(surface);
+			}
+		}
+
+		[SkippableFact]
+		public void CanCreateSurfaceFromExistingMemory()
+		{
+			var info = new SKImageInfo(100, 100);
+			var props = new SKSurfaceProperties(SKPixelGeometry.Unknown);
+
+			var memory = Marshal.AllocCoTaskMem(info.BytesSize);
+
+			using (var surface = SKSurface.Create(info, memory, info.RowBytes, props))
+			{
+				Assert.NotNull(surface);
+			}
+
+			Marshal.FreeCoTaskMem(memory);
+		}
+
+		[SkippableFact]
+		public void CanCreateSurfaceFromExistingMemoryUsingReleaseDelegate()
+		{
+			var hasReleased = false;
+
+			var info = new SKImageInfo(100, 100);
+			var props = new SKSurfaceProperties(SKPixelGeometry.Unknown);
+
+			var memory = Marshal.AllocCoTaskMem(info.BytesSize);
+
+			using (var surface = SKSurface.Create(info, memory, info.RowBytes, OnRelease, "Hello", props))
+			{
+				Assert.NotNull(surface);
+			}
+
+			Assert.True(hasReleased);
+
+			void OnRelease(IntPtr address, object context)
+			{
+				Marshal.FreeCoTaskMem(memory);
+				hasReleased = true;
+
+				Assert.Equal("Hello", context);
+			}
+		}
+
+		[Obsolete]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		public void CanConvertFromPointerToDescToTextureWithNewInfo()
 		{
@@ -191,7 +297,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Obsolete]
-		[Trait(Category, GpuCategory)]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		public void CanConvertFromPointerToDescToTexture()
 		{
@@ -232,7 +338,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(GRPixelConfig.Rgba8888.ToGlSizedFormat(), newInfo.Format);
 		}
 
-		[Trait(Category, GpuCategory)]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		public void GpuBackendSurfaceIsCreated()
 		{
@@ -247,7 +353,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Trait(Category, GpuCategory)]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		[Obsolete]
 		public void GpuTextureSurfaceIsCreatedWithDesc()
@@ -263,7 +369,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Trait(Category, GpuCategory)]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		[Obsolete]
 		public void GpuTextureSurfaceCanBeReadWithDesc()
@@ -292,7 +398,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Trait(Category, GpuCategory)]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		[Obsolete]
 		public void GpuTextureSurfaceIsCreatedWithOldDesc()
@@ -308,7 +414,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Trait(Category, GpuCategory)]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		[Obsolete]
 		public void GpuTextureSurfaceCanBeReadWithOldDesc()
@@ -337,7 +443,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Trait(Category, GpuCategory)]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		public void GpuTextureSurfaceIsCreated()
 		{
@@ -352,7 +458,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Trait(Category, GpuCategory)]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		public void GpuTextureSurfaceCanBeRead()
 		{

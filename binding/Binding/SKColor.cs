@@ -141,8 +141,7 @@ namespace SkiaSharp
 
 		public float Hue {
 			get {
-				float h, s, v;
-				ToHsv (out h, out s, out v);
+				ToHsv (out var h, out var s, out var v);
 				return h;
 			}
 		}
@@ -396,8 +395,7 @@ namespace SkiaSharp
 
 		public static SKColor Parse (string hexString)
 		{
-			SKColor color;
-			if (!TryParse (hexString, out color))
+			if (!TryParse (hexString, out var color))
 				throw new ArgumentException ("Invalid hexadecimal color string.", nameof (hexString));
 			return color;
 		}
@@ -417,7 +415,7 @@ namespace SkiaSharp
 
 			var len = hexString.Length;
 			if (len == 3 || len == 4) {
-				byte a, r, g, b;
+				byte a;
 				// parse [A]
 				if (len == 4) {
 					if (!byte.TryParse (string.Concat (hexString [len - 4], hexString [len - 4]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out a)) {
@@ -430,9 +428,9 @@ namespace SkiaSharp
 				}
 
 				// parse RGB
-				if (!byte.TryParse (string.Concat (hexString [len - 3], hexString [len - 3]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out r) ||
-					!byte.TryParse (string.Concat (hexString [len - 2], hexString [len - 2]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out g) ||
-					!byte.TryParse (string.Concat (hexString [len - 1], hexString [len - 1]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out b)) {
+				if (!byte.TryParse (string.Concat (hexString [len - 3], hexString [len - 3]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var r) ||
+					!byte.TryParse (string.Concat (hexString [len - 2], hexString [len - 2]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var g) ||
+					!byte.TryParse (string.Concat (hexString [len - 1], hexString [len - 1]), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var b)) {
 					// error
 					color = SKColor.Empty;
 					return false;
@@ -445,8 +443,7 @@ namespace SkiaSharp
 
 			if (len == 6 || len == 8) {
 				// parse [AA]RRGGBB
-				uint number;
-				if (!uint.TryParse (hexString, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out number)) {
+				if (!uint.TryParse (hexString, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var number)) {
 					// error
 					color = SKColor.Empty;
 					return false;

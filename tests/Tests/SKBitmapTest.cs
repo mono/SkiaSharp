@@ -26,6 +26,14 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void DoesNotCrashWhenDecodingInvalidPath()
+		{
+			var path = Path.Combine(PathToImages, "file-does-not-exist.png");
+
+			Assert.Null(SKBitmap.Decode(path));
+		}
+
+		[SkippableFact]
 		public void CopyIndex8ToPlatformPreservesData()
 		{
 			var path = Path.Combine(PathToImages, "index8.png");
@@ -154,18 +162,6 @@ namespace SkiaSharp.Tests
 				.Copy(SKImageInfo.PlatformColorType));
 		}
 
-		private void ValidateTestBitmap(SKBitmap bmp)
-		{
-			Assert.NotNull(bmp);
-			Assert.Equal(40, bmp.Width);
-			Assert.Equal(40, bmp.Height);
-
-			Assert.Equal(SKColors.Red, bmp.GetPixel(10, 10));
-			Assert.Equal(SKColors.Green, bmp.GetPixel(30, 10));
-			Assert.Equal(SKColors.Blue, bmp.GetPixel(10, 30));
-			Assert.Equal(SKColors.Yellow, bmp.GetPixel(30, 30));
-		}
-
 		[SkippableFact]
 		public void ReleaseBitmapPixelsWasInvoked()
 		{
@@ -195,32 +191,6 @@ namespace SkiaSharp.Tests
 				Assert.False(image.IsTextureBacked);
 				Assert.Equal(image, image.ToRasterImage());
 			}
-		}
-
-		[SkippableFact]
-		public void ReleaseImagePixelsWasInvoked()
-		{
-			bool released = false;
-
-			var onRelease = new SKImageRasterReleaseDelegate((addr, ctx) => {
-				Marshal.FreeCoTaskMem(addr);
-				released = true;
-				Assert.Equal("RELEASING!", ctx);
-			});
-
-			var info = new SKImageInfo(1, 1);
-			var pixels = Marshal.AllocCoTaskMem(info.BytesSize);
-
-			using (var pixmap = new SKPixmap(info, pixels))
-			using (var image = SKImage.FromPixels(pixmap, onRelease, "RELEASING!")) {
-				Assert.False(image.IsTextureBacked);
-				using (var raster = image.ToRasterImage()) {
-					Assert.Equal(image, raster);
-				}
-				Assert.False(released, "The SKImageRasterReleaseDelegate was called too soon.");
-			}
-
-			Assert.True(released, "The SKImageRasterReleaseDelegate was not called.");
 		}
 
 		[SkippableFact]
@@ -297,7 +267,7 @@ namespace SkiaSharp.Tests
 
 		[SkippableFact]
 		[Obsolete]
-		public void BitmapResizes()
+		public void BitmapResizesObsolete()
 		{
 			var srcInfo = new SKImageInfo(200, 200);
 			var dstInfo = new SKImageInfo(100, 100);
@@ -315,6 +285,55 @@ namespace SkiaSharp.Tests
 
 			var dstBmp = srcBmp.Resize(dstInfo, SKBitmapResizeMethod.Mitchell);
 			Assert.NotNull(dstBmp);
+
+			Assert.Equal(SKColors.Green, dstBmp.GetPixel(25, 25));
+			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
+		}
+
+		[SkippableFact]
+		public void BitmapResizes()
+		{
+			var srcInfo = new SKImageInfo(200, 200);
+			var dstInfo = new SKImageInfo(100, 100);
+
+			var srcBmp = new SKBitmap(srcInfo);
+
+			using (var canvas = new SKCanvas(srcBmp))
+			using (var paint = new SKPaint { Color = SKColors.Green }) {
+				canvas.Clear(SKColors.Blue);
+				canvas.DrawRect(new SKRect(0, 0, 100, 200), paint);
+			}
+
+			Assert.Equal(SKColors.Green, srcBmp.GetPixel(75, 75));
+			Assert.Equal(SKColors.Blue, srcBmp.GetPixel(175, 175));
+
+			var dstBmp = srcBmp.Resize(dstInfo, SKFilterQuality.High);
+			Assert.NotNull(dstBmp);
+
+			Assert.Equal(SKColors.Green, dstBmp.GetPixel(25, 25));
+			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
+		}
+
+		[SkippableFact]
+		public void CanScalePixels()
+		{
+			var srcInfo = new SKImageInfo(200, 200);
+			var dstInfo = new SKImageInfo(100, 100);
+
+			var srcBmp = new SKBitmap(srcInfo);
+			var dstBmp = new SKBitmap(dstInfo);
+
+			using (var canvas = new SKCanvas(srcBmp))
+			using (var paint = new SKPaint { Color = SKColors.Green })
+			{
+				canvas.Clear(SKColors.Blue);
+				canvas.DrawRect(new SKRect(0, 0, 100, 200), paint);
+			}
+
+			Assert.Equal(SKColors.Green, srcBmp.GetPixel(75, 75));
+			Assert.Equal(SKColors.Blue, srcBmp.GetPixel(175, 175));
+
+			Assert.True(srcBmp.ScalePixels(dstBmp, SKFilterQuality.High));
 
 			Assert.Equal(SKColors.Green, dstBmp.GetPixel(25, 25));
 			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
@@ -369,6 +388,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact(Skip = "This test takes a long time (~3mins), so ignore this most of the time.")]
+		[Obsolete]
 		public static void ImageScalingMultipleThreadsTest()
 		{
 			const int numThreads = 100;
@@ -395,6 +415,7 @@ namespace SkiaSharp.Tests
 			Console.WriteLine($"Test completed for {numThreads} tasks, {numIterationsPerThread} each.");
 		}
 
+		[Obsolete]
 		private static byte[] ComputeThumbnail(string fileName)
 		{
 			using (var ms = new MemoryStream())

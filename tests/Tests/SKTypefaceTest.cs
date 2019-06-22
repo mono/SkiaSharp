@@ -1,6 +1,9 @@
 ﻿using System;
 using Xunit;
+using Xunit.Categories;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Linq;
 
 namespace SkiaSharp.Tests
 {
@@ -37,6 +40,15 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[SkippableFact]
+		public void CanReadNonASCIIFile()
+		{
+			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "上田雅美.ttf")))
+			{
+				Assert.Equal("Roboto2", typeface.FamilyName);
+			}
+		}
+
 		private static string GetReadableTag(uint v)
 		{
 			return
@@ -64,7 +76,8 @@ namespace SkiaSharp.Tests
 				var tables = typeface.GetTableTags();
 				Assert.Equal(ExpectedTablesSpiderFont.Length, tables.Length);
 
-				for (int i = 0; i < tables.Length; i++) {
+				for (int i = 0; i < tables.Length; i++)
+				{
 					Assert.Equal(ExpectedTablesSpiderFont[i], GetReadableTag(tables[i]));
 				}
 			}
@@ -78,7 +91,8 @@ namespace SkiaSharp.Tests
 				Assert.Equal("ReallyBigA", typeface.FamilyName);
 				var tables = typeface.GetTableTags();
 
-				for (int i = 0; i < tables.Length; i++) {
+				for (int i = 0; i < tables.Length; i++)
+				{
 					byte[] tableData = typeface.GetTableData(tables[i]);
 					Assert.Equal(ExpectedTableLengthsReallyBigAFont[i], tableData.Length);
 				}
@@ -103,7 +117,8 @@ namespace SkiaSharp.Tests
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "ReallyBigA.ttf")))
 			{
 				var tables = typeface.GetTableTags();
-				for (int i = 0; i < tables.Length; i++) {
+				for (int i = 0; i < tables.Length; i++)
+				{
 					byte[] tableData;
 					Assert.True(typeface.TryGetTableData(tables[i], out tableData));
 					Assert.Equal(ExpectedTableLengthsReallyBigAFont[i], tableData.Length);
@@ -163,6 +178,33 @@ namespace SkiaSharp.Tests
 			typeface.Dispose();
 			typeface = SKTypeface.Default;
 			Assert.NotNull(typeface);
+		}
+
+		[SkippableFact]
+		public void PlainGlyphsReturnsTheCorrectNumberOfCharacters()
+		{
+			const string text = "Hello World!";
+
+			var typeface = SKTypeface.Default;
+
+			Assert.True(typeface.CountGlyphs(text) > 0);
+			Assert.True(typeface.GetGlyphs(text).Length > 0);
+		}
+
+		[SkippableFact]
+		[Feature(MatchCharacterFeature)]
+		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharacters()
+		{
+			const string text = "🚀";
+			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
+
+			var typeface = SKFontManager.Default.MatchCharacter(emojiChar);
+			Assert.NotNull(typeface);
+
+			Assert.True(typeface.CountGlyphs(text) > 0);
+			Assert.True(typeface.CountGlyphs(text, SKEncoding.Utf32) > 0);
+			Assert.True(typeface.GetGlyphs(text).Length > 0);
+			Assert.True(typeface.GetGlyphs(text, SKEncoding.Utf32).Length > 0);
 		}
 	}
 }

@@ -3,12 +3,13 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Xunit;
+using Xunit.Categories;
 
 namespace SkiaSharp.Tests
 {
 	public class SKCanvasTest : SKTest
 	{
-		[Trait(Category, GpuCategory)]
+		[Category(GpuCategory)]
 		[SkippableFact]
 		public void CanvasCanRestoreOnGpu()
 		{
@@ -31,6 +32,96 @@ namespace SkiaSharp.Tests
 
 					Assert.Equal(SKMatrix.MakeIdentity(), canvas.TotalMatrix);
 				}
+			}
+		}
+
+		[SkippableFact]
+		public void DrawTextBlobIsTheSameAsDrawText()
+		{
+			var info = new SKImageInfo(300, 300);
+			var text = "SkiaSharp";
+
+			byte[] textPixels;
+			using (var bmp = new SKBitmap(info))
+			using (var canvas = new SKCanvas(bmp))
+			using (var paint = new SKPaint())
+			{
+				paint.TextSize = 50;
+				paint.TextAlign = SKTextAlign.Center;
+
+				canvas.Clear(SKColors.White);
+				canvas.DrawText(text, 150, 175, paint);
+
+				textPixels = bmp.Bytes;
+			}
+
+			byte[] glyphsPixels;
+			using (var bmp = new SKBitmap(info))
+			using (var canvas = new SKCanvas(bmp))
+			using (var paint = new SKPaint())
+			{
+				ushort[] glyphs;
+				using (var glyphsp = new SKPaint())
+					glyphs = glyphsp.GetGlyphs(text);
+
+				paint.TextSize = 50;
+				paint.TextAlign = SKTextAlign.Center;
+				paint.TextEncoding = SKTextEncoding.GlyphId;
+
+				canvas.Clear(SKColors.White);
+				using (var builder = new SKTextBlobBuilder())
+				{
+					builder.AddRun(paint, 0, 0, glyphs);
+					canvas.DrawText(builder.Build(), 150, 175, paint);
+				}
+
+				glyphsPixels = bmp.Bytes;
+			}
+
+			Assert.Equal(textPixels, glyphsPixels);
+		}
+
+		[SkippableFact]
+		public void CanDrawText()
+		{
+			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
+			using (var canvas = new SKCanvas(bmp))
+			using (var paint = new SKPaint())
+			{
+				canvas.DrawText("text", 150, 175, paint);
+			}
+		}
+
+		[SkippableFact]
+		public void CanDrawEmptyText()
+		{
+			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
+			using (var canvas = new SKCanvas(bmp))
+			using (var paint = new SKPaint())
+			{
+				canvas.DrawText("", 150, 175, paint);
+			}
+		}
+
+		[SkippableFact]
+		public void CanDrawNullPointerZeroLengthText()
+		{
+			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
+			using (var canvas = new SKCanvas(bmp))
+			using (var paint = new SKPaint())
+			{
+				canvas.DrawText(IntPtr.Zero, 0, 150, 175, paint);
+			}
+		}
+
+		[SkippableFact]
+		public void ThrowsOnDrawNullPointerText()
+		{
+			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
+			using (var canvas = new SKCanvas(bmp))
+			using (var paint = new SKPaint())
+			{
+				Assert.Throws<ArgumentNullException>(() => canvas.DrawText(IntPtr.Zero, 123, 150, 175, paint));
 			}
 		}
 
@@ -107,6 +198,20 @@ namespace SkiaSharp.Tests
 				Assert.Equal(1, bitmap.GetPixel(15, 15).Alpha);
 				Assert.Equal(2, bitmap.GetPixel(25, 25).Alpha);
 				Assert.Equal(1, bitmap.GetPixel(45, 45).Alpha);
+			}
+		}
+
+		[SkippableFact]
+		public void TotalMatrixIsCorrect()
+		{
+			using (var bitmap = new SKBitmap(new SKImageInfo(100, 100)))
+			using (var canvas = new SKCanvas(bitmap))
+			{
+				canvas.Translate(10, 20);
+				Assert.Equal(SKMatrix.MakeTranslation(10, 20).Values, canvas.TotalMatrix.Values);
+
+				canvas.Translate(10, 20);
+				Assert.Equal(SKMatrix.MakeTranslation(20, 40).Values, canvas.TotalMatrix.Values);
 			}
 		}
 

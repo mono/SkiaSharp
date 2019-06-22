@@ -28,6 +28,15 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void DataCanBeCreatedFromNonASCIIFile()
+		{
+			var data = SKData.Create(Path.Combine(PathToImages, "上田雅美.jpg"));
+
+			Assert.NotNull(data);
+			Assert.True(data.Size > 0);
+		}
+
+		[SkippableFact]
 		public void ReleaseDataWasInvoked()
 		{
 			bool released = false;

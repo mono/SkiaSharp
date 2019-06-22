@@ -1,12 +1,11 @@
 # SkiaSharp
 
 [![SkiaSharp](https://img.shields.io/nuget/vpre/SkiaSharp.svg?maxAge=2592000&label=SkiaSharp%20nuget)](https://www.nuget.org/packages/SkiaSharp)  [![SkiaSharp.Views](https://img.shields.io/nuget/vpre/SkiaSharp.Views.svg?maxAge=2592000&label=SkiaSharp.Views%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views)  [![SkiaSharp.Views.Forms](https://img.shields.io/nuget/vpre/SkiaSharp.Views.Forms.svg?maxAge=2592000&label=SkiaSharp.Views.Forms%20nuget)](https://www.nuget.org/packages/SkiaSharp.Views.Forms)  
-[![Gitter.im](https://img.shields.io/badge/gitter.im-xamarin%2FXamarinComponents-E60256.svg)](https://gitter.im/xamarin/XamarinComponents)  [![Xamarin Forums](https://img.shields.io/badge/forums-Graphics%20%26%20Games%2FSkiaSharp-1faece.svg)](https://forums.xamarin.com/categories/skiasharp)  
-[![API Docs](https://img.shields.io/badge/docs-api-1faece.svg)](https://developer.xamarin.com/api/root/SkiaSharp/)  [![API Docs](https://img.shields.io/badge/docs-guides-1faece.svg)](https://docs.microsoft.com/en-us/xamarin/graphics-games/skiasharp/)  
-[![Windows Build Status](https://jenkins.mono-project.com/buildStatus/icon?job=Components-SkiaSharp-Windows)](https://jenkins.mono-project.com/view/SkiaSharp/job/Components-SkiaSharp-Windows/)  [![Linux Build Status](https://jenkins.mono-project.com/buildStatus/icon?job=Components-SkiaSharp-Linux)](https://jenkins.mono-project.com/view/SkiaSharp/job/Components-SkiaSharp-Linux/)  [![Linux Build Status](https://jenkins.mono-project.com/buildStatus/icon?job=Components-SkiaSharp-Ubuntu16)](https://jenkins.mono-project.com/view/SkiaSharp/job/Components-SkiaSharp-Ubuntu16/)  [![Mac Build Status](https://jenkins.mono-project.com/buildStatus/icon?job=Components-SkiaSharp)](https://jenkins.mono-project.com/view/SkiaSharp/job/Components-SkiaSharp/)  
+[![chat](https://img.shields.io/badge/chat-xamarin%2FXamarinComponents-E60256.svg)](https://gitter.im/xamarin/XamarinComponents)  [![API Docs](https://img.shields.io/badge/docs-api-1faece.svg)](https://docs.microsoft.com/en-us/dotnet/api/SkiaSharp)  [![API Docs](https://img.shields.io/badge/docs-guides-1faece.svg)](https://docs.microsoft.com/en-us/xamarin/graphics-games/skiasharp/)  
+[![Build Status](https://dev.azure.com/devdiv/DevDiv/_apis/build/status/Xamarin/Components/SkiaSharp?branchName=master)](https://dev.azure.com/devdiv/DevDiv/_build/latest?definitionId=10789&branchName=master)  [![Build Status](https://dev.azure.com/xamarin/public/_apis/build/status/mono/SkiaSharp/SkiaSharp%20(Public)?branchName=master)](https://dev.azure.com/xamarin/public/_build/latest?definitionId=4&branchName=master)
 
 SkiaSharp is a cross-platform 2D graphics API for .NET platforms based on Google's
-Skia Graphics Library (https://skia.org/). It provides a comprehensive 2D API that can
+Skia Graphics Library ([skia.org](https://skia.org/)). It provides a comprehensive 2D API that can
 be used across mobile, server and desktop models to render images.
 
 SkiaSharp provides cross-platform bindings for:
@@ -22,30 +21,27 @@ SkiaSharp provides cross-platform bindings for:
  - Windows Classic Desktop (Windows.Forms / WPF)
  - Windows UWP (Desktop / Mobile / Xbox / HoloLens)
 
-The [API Documentation](https://developer.xamarin.com/api/namespace/SkiaSharp/) is
+The [API Documentation](https://docs.microsoft.com/en-us/dotnet/api/SkiaSharp/) is
 available on the web to browse.
 
 ## Using SkiaSharp
 
-SkiaSharp is available as a convenience NuGet package, to use install the package like this:
+SkiaSharp is available as a convenient NuGet package, to use install the package like this:
 
 ```
 nuget install SkiaSharp
 ```
 
-_Make sure the [Visual C++ Redistributable for Visual Studio 2015](https://www.microsoft.com/en-us/download/details.aspx?id=48145) 
-is installed if this error occurs on Windows:_
- > Unable to load DLL 'libSkiaSharp.dll': The specified module could not be found.
-
-_At this point in time, we do not ship a native Linux binary in the NuGet package, but you can either download our internal [Linux binaries attached to the specific release](https://github.com/mono/SkiaSharp/releases) or you can build your own using the directions below._
+_Because there are multiple distros of Linux, and we cannot possibly support them all, we have a separate NuGet package that will contain the supported binaries for a few distros: [SkiaSharp.NativeAssets.Linux](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux). ([distros](https://github.com/mono/SkiaSharp/issues/453)) ([more info](https://github.com/mono/SkiaSharp/issues/312))_
 
 ## Building SkiaSharp
 
 Before building SkiaSharp:
 
  * [Python 2.7](https://www.python.org/downloads) is available in the `PATH` environment variable on Windows
- * [Android NDK r14](https://developer.android.com/ndk/downloads/index.html) is available in the `ANDROID_NDK_HOME` environment variable on macOS
+ * [Android NDK r15](https://developer.android.com/ndk/downloads/index.html) is available in the `ANDROID_NDK_HOME` environment variable on macOS
  * [.NET Core](https://www.microsoft.com/net/core) is installed on all platforms
+ * C/C++ Compiler (MSVC / "Desktop development" package on Windows)
 
 First, clone the repository:
 
@@ -64,7 +60,7 @@ Mac/Linux:
 
 Windows:
 
-    > .\bootstrapper.ps1 -Target everything
+    > .\bootstrapper.ps1 -t everything
 
 ## Compare Code
 

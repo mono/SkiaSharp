@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using Xunit;
+using Xunit.Categories;
 
 namespace SkiaSharp.Tests
 {
@@ -189,6 +190,38 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void BreakTextSucceedsForEmtptyString()
+		{
+			var paint = new SKPaint();
+
+			paint.TextEncoding = SKTextEncoding.Utf8;
+
+			Assert.Equal(0, paint.BreakText("", 50.0f));
+		}
+
+		[SkippableFact]
+		public void BreakTextSucceedsForNullPointerZeroLength()
+		{
+			var paint = new SKPaint();
+
+			paint.TextEncoding = SKTextEncoding.Utf8;
+
+			Assert.Equal(0, paint.BreakText(IntPtr.Zero, IntPtr.Zero, 50.0f));
+			Assert.Equal(0, paint.BreakText(IntPtr.Zero, 0, 50.0f));
+		}
+
+		[SkippableFact]
+		public void BreakTextThrowsForNullPointer()
+		{
+			var paint = new SKPaint();
+
+			paint.TextEncoding = SKTextEncoding.Utf8;
+
+			Assert.Throws<ArgumentNullException>(() => paint.BreakText(IntPtr.Zero, (IntPtr)123, 50.0f));
+			Assert.Throws<ArgumentNullException>(() => paint.BreakText(IntPtr.Zero, 123, 50.0f));
+		}
+
+		[SkippableFact]
 		public void BreakTextReturnsTheCorrectNumberOfCharacters()
 		{
 			var paint = new SKPaint();
@@ -205,6 +238,211 @@ namespace SkiaSharp.Tests
 			paint.TextEncoding = SKTextEncoding.Utf32;
 			Assert.Equal(1, paint.BreakText("ä", 50.0f));
 			Assert.Equal(1, paint.BreakText("a", 50.0f));
+		}
+
+		[SkippableFact]
+		public void PlainGlyphsReturnsTheCorrectNumberOfCharacters()
+		{
+			const string text = "Hello World!";
+
+			var paint = new SKPaint();
+
+			Assert.Equal(text.Length, paint.CountGlyphs(text));
+			Assert.Equal(text.Length, paint.GetGlyphs(text).Length);
+		}
+
+		[SkippableFact]
+		[Feature(MatchCharacterFeature)]
+		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharacters()
+		{
+			const string text = "🚀";
+			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
+
+			var typeface = SKFontManager.Default.MatchCharacter(emojiChar);
+			Assert.NotNull(typeface);
+
+			var paint = new SKPaint();
+			paint.TextEncoding = SKTextEncoding.Utf32;
+			paint.Typeface = typeface;
+
+			Assert.Equal(1, paint.CountGlyphs(text));
+			Assert.Single(paint.GetGlyphs(text));
+			Assert.NotEqual(0, paint.GetGlyphs(text)[0]);
+		}
+
+		[SkippableFact]
+		public void ContainsTextIsCorrect()
+		{
+			const string text = "A";
+
+			var paint = new SKPaint();
+			paint.TextEncoding = SKTextEncoding.Utf32;
+			paint.Typeface = SKTypeface.Default;
+
+			Assert.True(paint.ContainsGlyphs(text));
+		}
+
+		[SkippableFact]
+		[Feature(MatchCharacterFeature)]
+		public void ContainsUnicodeTextIsCorrect()
+		{
+			const string text = "🚀";
+			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
+
+			var paint = new SKPaint();
+			paint.TextEncoding = SKTextEncoding.Utf32;
+
+			// use the default typeface (which shouldn't have the emojis)
+			paint.Typeface = SKTypeface.Default;
+
+			Assert.False(paint.ContainsGlyphs(text));
+
+			// find a font with the character
+			var typeface = SKFontManager.Default.MatchCharacter(emojiChar);
+			Assert.NotNull(typeface);
+			paint.Typeface = typeface;
+
+			Assert.True(paint.ContainsGlyphs(text));
+		}
+
+		[SkippableFact]
+		public void MeasureTextMeasuresTheText()
+		{
+			var paint = new SKPaint();
+
+			paint.TextEncoding = SKTextEncoding.Utf8;
+			var width8 = paint.MeasureText("Hello World!");
+
+			paint.TextEncoding = SKTextEncoding.Utf16;
+			var width16 = paint.MeasureText("Hello World!");
+
+			paint.TextEncoding = SKTextEncoding.Utf32;
+			var width32 = paint.MeasureText("Hello World!");
+
+			Assert.True(width8 > 0);
+			Assert.Equal(width8, width16);
+			Assert.Equal(width8, width32);
+		}
+
+		[SkippableFact]
+		public void MeasureTextReturnsTheBounds()
+		{
+			var paint = new SKPaint();
+
+			paint.TextEncoding = SKTextEncoding.Utf8;
+			var bounds8 = new SKRect();
+			var width8 = paint.MeasureText("Hello World!", ref bounds8);
+
+			paint.TextEncoding = SKTextEncoding.Utf16;
+			var bounds16 = new SKRect();
+			var width16 = paint.MeasureText("Hello World!", ref bounds16);
+
+			paint.TextEncoding = SKTextEncoding.Utf32;
+			var bounds32 = new SKRect();
+			var width32 = paint.MeasureText("Hello World!", ref bounds32);
+
+			Assert.True(width8 > 0);
+			Assert.Equal(width8, width16);
+			Assert.Equal(width8, width32);
+
+			Assert.NotEqual(SKRect.Empty, bounds8);
+			Assert.Equal(bounds8, bounds16);
+			Assert.Equal(bounds8, bounds32);
+		}
+
+		[SkippableFact]
+		public void MeasureTextSucceedsForEmtptyString()
+		{
+			var paint = new SKPaint();
+
+			paint.TextEncoding = SKTextEncoding.Utf8;
+
+			Assert.Equal(0, paint.MeasureText(""));
+		}
+
+		[SkippableFact]
+		public void MeasureTextSucceedsForNullPointerZeroLength()
+		{
+			var paint = new SKPaint();
+
+			paint.TextEncoding = SKTextEncoding.Utf8;
+
+			Assert.Equal(0, paint.MeasureText(IntPtr.Zero, IntPtr.Zero));
+			Assert.Equal(0, paint.MeasureText(IntPtr.Zero, 0));
+		}
+
+		[SkippableFact]
+		public void MeasureTextThrowsForNullPointer()
+		{
+			var paint = new SKPaint();
+
+			paint.TextEncoding = SKTextEncoding.Utf8;
+
+			Assert.Throws<ArgumentNullException>(() => paint.MeasureText(IntPtr.Zero, (IntPtr)123));
+			Assert.Throws<ArgumentNullException>(() => paint.MeasureText(IntPtr.Zero, 123));
+		}
+
+		[SkippableFact]
+		public void GetGlyphWidthsReturnsTheCorrectAmount()
+		{
+			var paint = new SKPaint();
+
+			var widths = paint.GetGlyphWidths("Hello World!", out var bounds);
+
+			Assert.Equal(widths.Length, bounds.Length);
+		}
+
+		[SkippableFact]
+		public void GetGlyphWidthsAreCorrect()
+		{
+			var paint = new SKPaint();
+
+			var widths = paint.GetGlyphWidths("Hello World!", out var bounds);
+
+			// make sure the 'l' glyphs are the same width
+			Assert.True(widths[2] > 0);
+			Assert.True(widths[2] == widths[3]);
+			Assert.True(widths[2] == widths[9]);
+
+			// make sure the 'l' bounds are the same size
+			Assert.False(bounds[2].IsEmpty);
+			Assert.True(bounds[2] == bounds[3]);
+			Assert.True(bounds[2] == bounds[9]);
+
+			// make sure the 'l' and 'W' glyphs are NOT the same width
+			Assert.True(widths[2] != widths[6]);
+
+			// make sure the 'l' and 'W' bounds are NOT the same width
+			Assert.True(bounds[2] != bounds[6]);
+		}
+
+		[SkippableFact]
+		public unsafe void TextInterceptsAreFoundCorrectly()
+		{
+			var text = "|";
+
+			var paint = new SKPaint();
+			paint.TextSize = 100;
+
+			var widths = paint.GetTextIntercepts(text, 50, 100, 0, 100);
+			Assert.Equal(2, widths.Length);
+
+			var diff = widths[1] - widths[0];
+
+			var textPath = paint.GetTextPath(text, 0, 0);
+			var pathWidth = textPath.TightBounds.Width;
+
+			Assert.Equal(pathWidth, diff, 2);
+		}
+
+		[SkippableFact]
+		public void GetTextPathSucceedsForEmtptyString()
+		{
+			var paint = new SKPaint();
+
+			paint.TextEncoding = SKTextEncoding.Utf8;
+
+			Assert.NotNull(paint.GetTextPath("", 0, 0));
 		}
 	}
 }

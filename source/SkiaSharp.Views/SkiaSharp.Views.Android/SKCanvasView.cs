@@ -71,7 +71,10 @@ namespace SkiaSharp.Views.Android
 				return;
 
 			if (info.Width == 0 || info.Height == 0 || Visibility != ViewStates.Visible)
+			{
+				FreeBitmap();
 				return;
+			}
 
 			// create the bitmap data if we need it
 			if (bitmap == null || bitmap.Handle == IntPtr.Zero || bitmap.Width != info.Width || bitmap.Height != info.Height)

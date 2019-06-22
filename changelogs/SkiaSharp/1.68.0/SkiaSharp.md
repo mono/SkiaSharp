@@ -44,7 +44,7 @@ Obsoleted methods:
 ```diff
  [Obsolete ("Use Create(GRBackend, GRGlInterface) instead.")]
  public static GRContext Create (GRBackend backend, IntPtr backendContext);
- [Obsolete ("Use GetMaxSurfaceSampleCountForColorType(SKColorType) instead.")]
+ [Obsolete ("Use GetMaxSurfaceSampleCount(SKColorType) instead.")]
  public int GetRecommendedSampleCount (GRPixelConfig config, float dpi);
 ```
 
@@ -53,7 +53,7 @@ Added methods:
 ```csharp
 public static GRContext CreateGl ();
 public static GRContext CreateGl (GRGlInterface backendContext);
-public int GetMaxSurfaceSampleCountForColorType (SKColorType colorType);
+public int GetMaxSurfaceSampleCount (SKColorType colorType);
 ```
 
 
@@ -161,11 +161,11 @@ Obsoleted methods:
  public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable);
  [Obsolete ("The Index8 color type and color table is no longer supported. Use InstallPixels(SKImageInfo, IntPtr, int, SKBitmapReleaseDelegate, object) instead.")]
  public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable, SKBitmapReleaseDelegate releaseProc, object context);
- [Obsolete ()]
+ [Obsolete ("Use ScalePixels(SKBitmap, SKFilterQuality) instead.")]
  public bool Resize (SKBitmap dst, SKBitmapResizeMethod method);
- [Obsolete ()]
+ [Obsolete ("Use Resize(SKImageInfo, SKFilterQuality) instead.")]
  public SKBitmap Resize (SKImageInfo info, SKBitmapResizeMethod method);
- [Obsolete ()]
+ [Obsolete ("Use ScalePixels(SKBitmap, SKFilterQuality) instead.")]
  public static bool Resize (SKBitmap dst, SKBitmap src, SKBitmapResizeMethod method);
  [Obsolete ("The Index8 color type and color table is no longer supported.")]
  public void SetColorTable (SKColorTable ct);
@@ -178,9 +178,21 @@ Added methods:
 ```csharp
 public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKBitmapReleaseDelegate releaseProc);
 public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKBitmapReleaseDelegate releaseProc, object context);
+public SKBitmap Resize (SKImageInfo info, SKFilterQuality quality);
+public bool ScalePixels (SKBitmap destination, SKFilterQuality quality);
+public bool ScalePixels (SKPixmap destination, SKFilterQuality quality);
 public bool TryAllocPixels (SKImageInfo info);
 public bool TryAllocPixels (SKImageInfo info, SKBitmapAllocFlags flags);
 public bool TryAllocPixels (SKImageInfo info, int rowBytes);
+```
+
+
+#### Type Changed: SkiaSharp.SKCanvas
+
+Added method:
+
+```csharp
+public void DrawText (SKTextBlob text, float x, float y, SKPaint paint);
 ```
 
 
@@ -233,7 +245,11 @@ Obsoleted methods:
 Added methods:
 
 ```csharp
+public static SKCodec Create (System.IO.Stream stream);
+public static SKCodec Create (string filename);
 public static SKCodec Create (SKStream stream, out SKCodecResult result);
+public static SKCodec Create (System.IO.Stream stream, out SKCodecResult result);
+public static SKCodec Create (string filename, out SKCodecResult result);
 public bool GetFrameInfo (int index, out SKCodecFrameInfo frameInfo);
 ```
 
@@ -341,27 +357,82 @@ Rgba1010102 = 7,
 
 #### Type Changed: SkiaSharp.SKDocument
 
-Obsoleted methods:
-
-```diff
- [Obsolete ("Use CreatePdf(SKWStream) instead.")]
- public static SKDocument CreatePdf (SKWStream stream, float dpi);
- [Obsolete ("Use CreatePdf(SKWStream, SKDocumentPdfMetadata) instead.")]
- public static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata, float dpi);
-```
-
 Modified methods:
 
 ```diff
  public SKDocument CreatePdf (SKWStream stream, float dpi--- = 72---)
+ public SKDocument CreatePdf (string path, float dpi--- = 72---)
  public SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata, float dpi--- = 72---)
+ public SKDocument CreateXps (SKWStream stream, float dpi--- = 72---)
+ public SKDocument CreateXps (string path, float dpi--- = 72---)
+```
+
+Obsoleted methods:
+
+```diff
+ [Obsolete ("Use CreatePdf(SKWStream, SKDocumentPdfMetadata) instead.")]
+ public static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata, float dpi);
 ```
 
 Added methods:
 
 ```csharp
 public static SKDocument CreatePdf (SKWStream stream);
+public static SKDocument CreatePdf (System.IO.Stream stream);
+public static SKDocument CreatePdf (string path);
 public static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata);
+public static SKDocument CreatePdf (System.IO.Stream stream, SKDocumentPdfMetadata metadata);
+public static SKDocument CreatePdf (System.IO.Stream stream, float dpi);
+public static SKDocument CreatePdf (string path, SKDocumentPdfMetadata metadata);
+public static SKDocument CreateXps (SKWStream stream);
+public static SKDocument CreateXps (System.IO.Stream stream);
+public static SKDocument CreateXps (string path);
+public static SKDocument CreateXps (System.IO.Stream stream, float dpi);
+```
+
+
+#### Type Changed: SkiaSharp.SKDocumentPdfMetadata
+
+Added constructors:
+
+```csharp
+public SKDocumentPdfMetadata (int encodingQuality);
+public SKDocumentPdfMetadata (float rasterDpi);
+public SKDocumentPdfMetadata (float rasterDpi, int encodingQuality);
+```
+
+Added fields:
+
+```csharp
+public static SKDocumentPdfMetadata Default;
+public static const int DefaultEncodingQuality;
+public static const float DefaultRasterDpi;
+```
+
+Added properties:
+
+```csharp
+public int EncodingQuality { get; set; }
+public bool PdfA { get; set; }
+public float RasterDpi { get; set; }
+```
+
+
+#### Type Changed: SkiaSharp.SKFileStream
+
+Added property:
+
+```csharp
+public bool IsValid { get; }
+```
+
+
+#### Type Changed: SkiaSharp.SKFileWStream
+
+Added property:
+
+```csharp
+public bool IsValid { get; }
 ```
 
 
@@ -449,6 +520,17 @@ public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture te
 public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType);
 public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha);
 public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace);
+public static SKImage FromEncodedData (SKStream data);
+public static SKImage FromEncodedData (byte[] data);
+public static SKImage FromEncodedData (System.IO.Stream data);
+public static SKImage FromEncodedData (string filename);
+public static SKImage FromPixelCopy (SKImageInfo info, SKStream pixels);
+public static SKImage FromPixelCopy (SKImageInfo info, byte[] pixels);
+public static SKImage FromPixelCopy (SKImageInfo info, System.IO.Stream pixels);
+public static SKImage FromPixelCopy (SKImageInfo info, SKStream pixels, int rowBytes);
+public static SKImage FromPixelCopy (SKImageInfo info, byte[] pixels, int rowBytes);
+public static SKImage FromPixelCopy (SKImageInfo info, System.IO.Stream pixels, int rowBytes);
+public static SKImage FromPixels (SKImageInfo info, SKData data, int rowBytes);
 public static SKImage FromTexture (GRContext context, GRBackendTexture texture, SKColorType colorType);
 public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType);
 public static SKImage FromTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha);
@@ -484,6 +566,7 @@ Modified methods:
 Added methods:
 
 ```csharp
+public static SKImageFilter CreateAlphaThreshold (SKRegion region, float innerThreshold, float outerThreshold, SKImageFilter input);
 public static SKImageFilter CreateMerge (SKImageFilter[] filters, SKImageFilter.CropRect cropRect);
 public static SKImageFilter CreateMerge (SKImageFilter first, SKImageFilter second, SKImageFilter.CropRect cropRect);
 ```
@@ -564,12 +647,87 @@ public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRec
 ```
 
 
+#### Type Changed: SkiaSharp.SKPaint
+
+Modified methods:
+
+```diff
+ public bool GetFillPath (SKPath src, SKPath dst, float resScale--- = 1---)
+ public bool GetFillPath (SKPath src, SKPath dst, SKRect cullRect, float resScale--- = 1---)
+```
+
+Added methods:
+
+```csharp
+public bool ContainsGlyphs (byte[] text);
+public bool ContainsGlyphs (string text);
+public bool ContainsGlyphs (IntPtr text, int length);
+public int CountGlyphs (byte[] text);
+public int CountGlyphs (string text);
+public int CountGlyphs (IntPtr text, int length);
+public SKPath GetFillPath (SKPath src);
+public bool GetFillPath (SKPath src, SKPath dst);
+public SKPath GetFillPath (SKPath src, SKRect cullRect);
+public SKPath GetFillPath (SKPath src, float resScale);
+public bool GetFillPath (SKPath src, SKPath dst, SKRect cullRect);
+public SKPath GetFillPath (SKPath src, SKRect cullRect, float resScale);
+public float[] GetGlyphWidths (byte[] text);
+public float[] GetGlyphWidths (string text);
+public float[] GetGlyphWidths (byte[] text, out SKRect[] bounds);
+public float[] GetGlyphWidths (IntPtr text, int length);
+public float[] GetGlyphWidths (string text, out SKRect[] bounds);
+public float[] GetGlyphWidths (IntPtr text, int length, out SKRect[] bounds);
+public ushort[] GetGlyphs (byte[] text);
+public ushort[] GetGlyphs (string text);
+public ushort[] GetGlyphs (IntPtr text, int length);
+public float[] GetHorizontalTextIntercepts (byte[] text, float[] xpositions, float y, float upperBounds, float lowerBounds);
+public float[] GetHorizontalTextIntercepts (string text, float[] xpositions, float y, float upperBounds, float lowerBounds);
+public float[] GetHorizontalTextIntercepts (IntPtr text, int length, float[] xpositions, float y, float upperBounds, float lowerBounds);
+public float[] GetPositionedTextIntercepts (byte[] text, SKPoint[] positions, float upperBounds, float lowerBounds);
+public float[] GetPositionedTextIntercepts (string text, SKPoint[] positions, float upperBounds, float lowerBounds);
+public float[] GetPositionedTextIntercepts (IntPtr text, int length, SKPoint[] positions, float upperBounds, float lowerBounds);
+public float[] GetTextIntercepts (SKTextBlob text, float upperBounds, float lowerBounds);
+public float[] GetTextIntercepts (byte[] text, float x, float y, float upperBounds, float lowerBounds);
+public float[] GetTextIntercepts (string text, float x, float y, float upperBounds, float lowerBounds);
+public float[] GetTextIntercepts (IntPtr text, int length, float x, float y, float upperBounds, float lowerBounds);
+```
+
+
+#### Type Changed: SkiaSharp.SKPath
+
+Added properties:
+
+```csharp
+public bool IsLine { get; }
+public bool IsOval { get; }
+public bool IsRect { get; }
+public bool IsRoundRect { get; }
+```
+
+Added methods:
+
+```csharp
+public SKPoint[] GetLine ();
+public SKRect GetOvalBounds ();
+public SKRect GetRect ();
+public SKRect GetRect (out bool isClosed, out SKPathDirection direction);
+public SKRoundRect GetRoundRect ();
+```
+
+
 #### Type Changed: SkiaSharp.SKPathEffect
 
 Removed method:
 
 ```csharp
 public static SKPathEffect CreateArcTo (float radius);
+```
+
+Added methods:
+
+```csharp
+public static SKPathEffect CreateTrim (float start, float stop);
+public static SKPathEffect CreateTrim (float start, float stop, SKTrimPathEffectMode mode);
 ```
 
 
@@ -661,6 +819,72 @@ public bool ScalePixels (SKPixmap destination, SKFilterQuality quality);
 ```
 
 
+#### Type Changed: SkiaSharp.SKPoint
+
+Added properties:
+
+```csharp
+public float Length { get; }
+public float LengthSquared { get; }
+```
+
+Added methods:
+
+```csharp
+public static float Distance (SKPoint point, SKPoint other);
+public static float DistanceSquared (SKPoint point, SKPoint other);
+public static SKPoint Normalize (SKPoint point);
+public static SKPoint Reflect (SKPoint point, SKPoint normal);
+```
+
+
+#### Type Changed: SkiaSharp.SKPointI
+
+Added properties:
+
+```csharp
+public int Length { get; }
+public int LengthSquared { get; }
+```
+
+Added methods:
+
+```csharp
+public static float Distance (SKPointI point, SKPointI other);
+public static float DistanceSquared (SKPointI point, SKPointI other);
+public static SKPointI Normalize (SKPointI point);
+public static SKPointI Reflect (SKPointI point, SKPointI normal);
+```
+
+
+#### Type Changed: SkiaSharp.SKRectI
+
+Added method:
+
+```csharp
+public bool IntersectsWithInclusive (SKRectI rect);
+```
+
+
+#### Type Changed: SkiaSharp.SKRoundRect
+
+Added property:
+
+```csharp
+public SKPoint[] Radii { get; }
+```
+
+
+#### Type Changed: SkiaSharp.SKShader
+
+Added methods:
+
+```csharp
+public static SKShader CreateSweepGradient (SKPoint center, SKColor[] colors, float[] colorPos, SKShaderTileMode tileMode, float startAngle, float endAngle);
+public static SKShader CreateSweepGradient (SKPoint center, SKColor[] colors, float[] colorPos, SKShaderTileMode tileMode, float startAngle, float endAngle, SKMatrix localMatrix);
+```
+
+
 #### Type Changed: SkiaSharp.SKStream
 
 Added methods:
@@ -679,6 +903,19 @@ public bool ReadUInt32 (out uint buffer);
 
 #### Type Changed: SkiaSharp.SKSurface
 
+Obsoleted properties:
+
+```diff
+ [Obsolete ("Use SurfaceProperties instead.")]
+ public SKSurfaceProps SurfaceProps { get; }
+```
+
+Added property:
+
+```csharp
+public SKSurfaceProperties SurfaceProperties { get; }
+```
+
 Obsoleted methods:
 
 ```diff
@@ -688,64 +925,76 @@ Obsoleted methods:
  public static SKSurface Create (GRContext context, GRBackendTextureDesc desc);
  [Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
  public static SKSurface Create (GRContext context, GRGlBackendTextureDesc desc);
- [Obsolete ("Use Create(GRContext, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType, SKSurfaceProps) instead.")]
+ [Obsolete ("Use Create(SKImageInfo, SKSurfaceProperties) instead.")]
+ public static SKSurface Create (SKImageInfo info, SKSurfaceProps props);
+ [Obsolete ("Use Create(SKPixmap, SKSurfaceProperties) instead.")]
+ public static SKSurface Create (SKPixmap pixmap, SKSurfaceProps props);
+ [Obsolete ("Use Create(GRContext, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType, SKSurfaceProperties) instead.")]
  public static SKSurface Create (GRContext context, GRBackendRenderTargetDesc desc, SKSurfaceProps props);
- [Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProps) instead.")]
+ [Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")]
  public static SKSurface Create (GRContext context, GRBackendTextureDesc desc, SKSurfaceProps props);
- [Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProps) instead.")]
+ [Obsolete ("Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")]
  public static SKSurface Create (GRContext context, GRGlBackendTextureDesc desc, SKSurfaceProps props);
+ [Obsolete ("Use Create(SKImageInfo, IntPtr, rowBytes, SKSurfaceProperties) instead.")]
+ public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes, SKSurfaceProps props);
  [Obsolete ("Use Create(SKImageInfo) instead.")]
  public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType);
- [Obsolete ("Use Create(SKImageInfo, SKSurfaceProps) instead.")]
+ [Obsolete ("Use Create(GRContext, bool, SKImageInfo, int, SKSurfaceProperties) instead.")]
+ public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, int sampleCount, SKSurfaceProps props);
+ [Obsolete ("Use Create(SKImageInfo, SKSurfaceProperties) instead.")]
  public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, SKSurfaceProps props);
  [Obsolete ("Use Create(SKImageInfo, IntPtr, int) instead.")]
  public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes);
- [Obsolete ("Use Create(SKImageInfo, IntPtr, int, SKSurfaceProps) instead.")]
+ [Obsolete ("Use Create(SKImageInfo, IntPtr, int, SKSurfaceProperties) instead.")]
  public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes, SKSurfaceProps props);
  [Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
  public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTextureDesc desc);
  [Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.")]
  public static SKSurface CreateAsRenderTarget (GRContext context, GRGlBackendTextureDesc desc);
- [Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProps) instead.")]
+ [Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")]
  public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTextureDesc desc, SKSurfaceProps props);
- [Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProps) instead.")]
+ [Obsolete ("Use CreateAsRenderTarget(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.")]
  public static SKSurface CreateAsRenderTarget (GRContext context, GRGlBackendTextureDesc desc, SKSurfaceProps props);
 ```
 
 Added methods:
 
 ```csharp
+public static SKSurface Create (SKImageInfo info, SKSurfaceProperties props);
 public static SKSurface Create (SKImageInfo info, int rowBytes);
 public static SKSurface Create (SKImageInfo info, IntPtr pixels);
+public static SKSurface Create (SKPixmap pixmap, SKSurfaceProperties props);
 public static SKSurface Create (GRContext context, GRBackendRenderTarget renderTarget, SKColorType colorType);
 public static SKSurface Create (GRContext context, GRBackendTexture texture, SKColorType colorType);
-public static SKSurface Create (SKImageInfo info, int rowBytes, SKSurfaceProps props);
-public static SKSurface Create (SKImageInfo info, IntPtr pixels, SKSurfaceProps props);
+public static SKSurface Create (SKImageInfo info, int rowBytes, SKSurfaceProperties props);
+public static SKSurface Create (SKImageInfo info, IntPtr pixels, SKSurfaceProperties props);
 public static SKSurface Create (GRContext context, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType);
-public static SKSurface Create (GRContext context, GRBackendRenderTarget renderTarget, SKColorType colorType, SKSurfaceProps props);
+public static SKSurface Create (GRContext context, GRBackendRenderTarget renderTarget, SKColorType colorType, SKSurfaceProperties props);
 public static SKSurface Create (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType);
-public static SKSurface Create (GRContext context, GRBackendTexture texture, SKColorType colorType, SKSurfaceProps props);
-public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, SKSurfaceProps props);
+public static SKSurface Create (GRContext context, GRBackendTexture texture, SKColorType colorType, SKSurfaceProperties props);
+public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, SKSurfaceProperties props);
+public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes, SKSurfaceProperties props);
 public static SKSurface Create (GRContext context, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType, SKColorSpace colorspace);
-public static SKSurface Create (GRContext context, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType, SKSurfaceProps props);
-public static SKSurface Create (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKSurfaceProps props);
+public static SKSurface Create (GRContext context, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType, SKSurfaceProperties props);
+public static SKSurface Create (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKSurfaceProperties props);
 public static SKSurface Create (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType);
 public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, int sampleCount, GRSurfaceOrigin origin);
+public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, int sampleCount, SKSurfaceProperties props);
 public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes, SKSurfaceReleaseDelegate releaseProc, object context);
-public static SKSurface Create (GRContext context, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProps props);
+public static SKSurface Create (GRContext context, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props);
 public static SKSurface Create (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace);
-public static SKSurface Create (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKSurfaceProps props);
-public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes, SKSurfaceReleaseDelegate releaseProc, object context, SKSurfaceProps props);
-public static SKSurface Create (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProps props);
-public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, int sampleCount, GRSurfaceOrigin origin, SKSurfaceProps props, bool shouldCreateWithMips);
+public static SKSurface Create (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKSurfaceProperties props);
+public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes, SKSurfaceReleaseDelegate releaseProc, object context, SKSurfaceProperties props);
+public static SKSurface Create (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props);
+public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, int sampleCount, GRSurfaceOrigin origin, SKSurfaceProperties props, bool shouldCreateWithMips);
 public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, SKColorType colorType);
 public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType);
-public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, SKColorType colorType, SKSurfaceProps props);
-public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKSurfaceProps props);
+public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, SKColorType colorType, SKSurfaceProperties props);
+public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKSurfaceProperties props);
 public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType);
 public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace);
-public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKSurfaceProps props);
-public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProps props);
+public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKSurfaceProperties props);
+public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props);
 public static SKSurface CreateNull (int width, int height);
 ```
 
@@ -769,6 +1018,10 @@ public SKFontStyle FontStyle { get; }
 Obsoleted methods:
 
 ```diff
+ [Obsolete ("Use GetGlyphs(string, out ushort[]) instead.")]
+ public int CharsToGlyphs (string chars, out ushort[] glyphs);
+ [Obsolete ("Use GetGlyphs(IntPtr, int, SKEncoding, out ushort[]) instead.")]
+ public int CharsToGlyphs (IntPtr str, int strlen, SKEncoding encoding, out ushort[] glyphs);
  [Obsolete ("Use FromFamilyName(string, SKFontStyleWeight, SKFontStyleWidth, SKFontStyleSlant) instead.")]
  public static SKTypeface FromFamilyName (string familyName, SKTypefaceStyle style);
  [Obsolete ()]
@@ -785,9 +1038,19 @@ Modified methods:
 Added methods:
 
 ```csharp
+public int CountGlyphs (byte[] str, SKEncoding encoding);
+public int CountGlyphs (string str, SKEncoding encoding);
 public static SKTypeface CreateDefault ();
 public static SKTypeface FromFamilyName (string familyName);
 public static SKTypeface FromFamilyName (string familyName, SKFontStyle style);
+public ushort[] GetGlyphs (string text);
+public ushort[] GetGlyphs (byte[] text, SKEncoding encoding);
+public ushort[] GetGlyphs (string text, SKEncoding encoding);
+public int GetGlyphs (string text, out ushort[] glyphs);
+public int GetGlyphs (byte[] text, SKEncoding encoding, out ushort[] glyphs);
+public ushort[] GetGlyphs (IntPtr text, int length, SKEncoding encoding);
+public int GetGlyphs (string text, SKEncoding encoding, out ushort[] glyphs);
+public int GetGlyphs (IntPtr text, int length, SKEncoding encoding, out ushort[] glyphs);
 ```
 
 
@@ -803,6 +1066,15 @@ public static SKFilterQuality ToFilterQuality (this SKBitmapResizeMethod method)
 public static uint ToGlSizedFormat (this GRPixelConfig config);
 public static uint ToGlSizedFormat (this SKColorType colorType);
 public static GRPixelConfig ToPixelConfig (this SKColorType colorType);
+```
+
+
+#### Type Changed: SkiaSharp.StringUtilities
+
+Added method:
+
+```csharp
+public static byte[] GetEncodedText (string text, SKEncoding encoding);
 ```
 
 
@@ -964,6 +1236,26 @@ public class SKOverdrawCanvas : SkiaSharp.SKNWayCanvas, System.IDisposable {
 }
 ```
 
+#### New Type: SkiaSharp.SKSurfaceProperties
+
+```csharp
+public class SKSurfaceProperties : SkiaSharp.SKObject, System.IDisposable {
+	// constructors
+	public SKSurfaceProperties (SKPixelGeometry pixelGeometry);
+
+	[Obsolete]
+public SKSurfaceProperties (SKSurfaceProps props);
+	public SKSurfaceProperties (SKSurfacePropsFlags flags, SKPixelGeometry pixelGeometry);
+	public SKSurfaceProperties (uint flags, SKPixelGeometry pixelGeometry);
+	// properties
+	public SKSurfacePropsFlags Flags { get; }
+	public bool IsUseDeviceIndependentFonts { get; }
+	public SKPixelGeometry PixelGeometry { get; }
+	// methods
+	protected override void Dispose (bool disposing);
+}
+```
+
 #### New Type: SkiaSharp.SKSurfaceReleaseDelegate
 
 ```csharp
@@ -974,6 +1266,58 @@ public sealed delegate SKSurfaceReleaseDelegate : System.MulticastDelegate, Syst
 	public virtual System.IAsyncResult BeginInvoke (IntPtr address, object context, System.AsyncCallback callback, object object);
 	public virtual void EndInvoke (System.IAsyncResult result);
 	public virtual void Invoke (IntPtr address, object context);
+}
+```
+
+#### New Type: SkiaSharp.SKTextBlob
+
+```csharp
+public class SKTextBlob : SkiaSharp.SKObject, System.IDisposable {
+	// properties
+	public SKRect Bounds { get; }
+	public uint UniqueId { get; }
+	// methods
+	protected override void Dispose (bool disposing);
+}
+```
+
+#### New Type: SkiaSharp.SKTextBlobBuilder
+
+```csharp
+public class SKTextBlobBuilder : SkiaSharp.SKObject, System.IDisposable {
+	// constructors
+	public SKTextBlobBuilder ();
+	// methods
+	public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions);
+	public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, SKRect bounds);
+	public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, byte[] utf8Text, uint[] clusters);
+	public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, string text, uint[] clusters);
+	public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, byte[] utf8Text, uint[] clusters, SKRect bounds);
+	public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, string text, uint[] clusters, SKRect bounds);
+	public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions);
+	public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, SKRect bounds);
+	public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, byte[] utf8Text, uint[] clusters);
+	public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, string text, uint[] clusters);
+	public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, byte[] utf8Text, uint[] clusters, SKRect bounds);
+	public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, string text, uint[] clusters, SKRect bounds);
+	public void AddRun (SKPaint font, float x, float y, ushort[] glyphs);
+	public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, SKRect bounds);
+	public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, byte[] utf8Text, uint[] clusters);
+	public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, string text, uint[] clusters);
+	public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, byte[] utf8Text, uint[] clusters, SKRect bounds);
+	public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, string text, uint[] clusters, SKRect bounds);
+	public SKTextBlob Build ();
+	protected override void Dispose (bool disposing);
+}
+```
+
+#### New Type: SkiaSharp.SKTrimPathEffectMode
+
+```csharp
+[Serializable]
+public enum SKTrimPathEffectMode {
+	Inverted = 1,
+	Normal = 0,
 }
 ```
 

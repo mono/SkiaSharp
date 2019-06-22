@@ -116,23 +116,14 @@ namespace SkiaSharp.Views.UWP
 			if (designMode)
 				return;
 
-			if (!(ActualWidth > 0 && ActualHeight > 0) || !isVisible)
+			if (!isVisible)
 				return;
 
-			int width, height;
-			if (IgnorePixelScaling)
-			{
-				width = (int)ActualWidth;
-				height = (int)ActualHeight;
-			}
-			else
-			{
-				width = (int)(ActualWidth * Dpi);
-				height = (int)(ActualHeight * Dpi);
-			}
+			var info = CreateBitmap();
 
-			var info = new SKImageInfo(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
-			CreateBitmap(info);
+			if (info.Width <= 0 || info.Height <= 0)
+				return;
+
 			using (var surface = SKSurface.Create(info, pixels, info.RowBytes))
 			{
 				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
@@ -140,8 +131,31 @@ namespace SkiaSharp.Views.UWP
 			bitmap.Invalidate();
 		}
 
-		private void CreateBitmap(SKImageInfo info)
+		private SKSizeI CreateSize()
 		{
+			var w = ActualWidth;
+			var h = ActualHeight;
+
+			if (!IsPositive(w) || !IsPositive(h))
+				return SKSizeI.Empty;
+
+			if (IgnorePixelScaling)
+				return new SKSizeI((int)w, (int)h);
+
+			var dpi = Dpi;
+			return new SKSizeI((int)(w * dpi), (int)(h * dpi));
+
+			bool IsPositive(double value)
+			{
+				return !double.IsNaN(value) && !double.IsInfinity(value) && value > 0;
+			}
+		}
+
+		private SKImageInfo CreateBitmap()
+		{
+			var size = CreateSize();
+			var info = new SKImageInfo(size.Width, size.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
+
 			if (bitmap == null || bitmap.PixelWidth != info.Width || bitmap.PixelHeight != info.Height)
 			{
 				FreeBitmap();
@@ -167,6 +181,8 @@ namespace SkiaSharp.Views.UWP
 				}
 				Background = brush;
 			}
+
+			return info;
 		}
 
 		private void FreeBitmap()

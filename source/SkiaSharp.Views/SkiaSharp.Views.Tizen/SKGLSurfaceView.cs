@@ -8,6 +8,9 @@ namespace SkiaSharp.Views.Tizen
 {
 	public class SKGLSurfaceView : CustomRenderingView
 	{
+		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
+		private static readonly SKColorType colorType = SKImageInfo.PlatformColorType;
+
 		private readonly Evas.Config glConfig;
 
 		private IntPtr glConfigPtr;
@@ -90,7 +93,7 @@ namespace SkiaSharp.Views.Tizen
 					using (new SKAutoCanvasRestore(surface.Canvas, true))
 					{
 						// draw using SkiaSharp
-						OnDrawFrame(new SKPaintGLSurfaceEventArgs(surface, renderTarget));
+						OnDrawFrame(new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType));
 					}
 
 					// flush the SkiaSharp contents to GL
@@ -140,11 +143,14 @@ namespace SkiaSharp.Views.Tizen
 
 				// create the render target
 				renderTarget?.Dispose();
-				renderTarget = SKGLDrawable.CreateRenderTarget(surfaceSize.Width, surfaceSize.Height);
+				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, out var framebuffer);
+				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out var stencil);
+				var glInfo = new GRGlFramebufferInfo((uint)framebuffer, colorType.ToGlSizedFormat());
+				renderTarget = new GRBackendRenderTarget(surfaceSize.Width, surfaceSize.Height, context.GetMaxSurfaceSampleCount(colorType), stencil, glInfo);
 
 				// create the surface
 				surface?.Dispose();
-				surface = SKSurface.Create(context, renderTarget, GRSurfaceOrigin.BottomLeft, SKImageInfo.PlatformColorType);
+				surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);
 			}
 		}
 

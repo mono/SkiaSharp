@@ -6,6 +6,7 @@ using CoreGraphics;
 using Foundation;
 using GLKit;
 using OpenGLES;
+using SkiaSharp.Views.GlesInterop;
 
 #if __TVOS__
 namespace SkiaSharp.Views.tvOS
@@ -17,6 +18,9 @@ namespace SkiaSharp.Views.iOS
 	[DesignTimeVisible(true)]
 	public class SKGLView : GLKView, IGLKViewDelegate, IComponent
 	{
+		private const SKColorType colorType = SKColorType.Rgba8888;
+		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
+
 		// for IComponent
 #pragma warning disable 67
 		private event EventHandler DisposedInternal;
@@ -27,6 +31,7 @@ namespace SkiaSharp.Views.iOS
 			add { DisposedInternal += value; }
 			remove { DisposedInternal -= value; }
 		}
+
 		private bool designMode;
 
 		private GRContext context;
@@ -97,17 +102,20 @@ namespace SkiaSharp.Views.iOS
 			{
 				// create or update the dimensions
 				renderTarget?.Dispose();
-				renderTarget = SKGLDrawable.CreateRenderTarget((int)DrawableWidth, (int)DrawableHeight);
+				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, out var framebuffer);
+				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out var stencil);
+				var glInfo = new GRGlFramebufferInfo((uint)framebuffer, colorType.ToGlSizedFormat());
+				renderTarget = new GRBackendRenderTarget((int)DrawableWidth, (int)DrawableHeight, context.GetMaxSurfaceSampleCount(colorType), stencil, glInfo);
 
 				// create the surface
 				surface?.Dispose();
-				surface = SKSurface.Create(context, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+				surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);
 			}
 
 			using (new SKAutoCanvasRestore(surface.Canvas, true))
 			{
 				// start drawing
-				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType);
 				OnPaintSurface(e);
 #pragma warning disable CS0618 // Type or member is obsolete
 				DrawInSurface(e.Surface, e.RenderTarget);

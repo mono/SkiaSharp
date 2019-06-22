@@ -66,8 +66,7 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing)
 		{
 			if (disposing) {
-				SKAbstractManagedWStream managedStream;
-				managedStreams.TryRemove (Handle, out managedStream);
+				managedStreams.TryRemove (Handle, out var managedStream);
 			}
 
 			if (Interlocked.CompareExchange (ref fromNative, 0, 0) == 0 && Handle != IntPtr.Zero && OwnsHandle) {
@@ -106,16 +105,14 @@ namespace SkiaSharp
 		[MonoPInvokeCallback (typeof (destroy_delegate))]
 		private static void DestroyInternal (IntPtr managedStreamPtr)
 		{
-			SKAbstractManagedWStream managedStream;
-			if (AsManagedStream (managedStreamPtr, out managedStream)) {
+			if (AsManagedStream (managedStreamPtr, out var managedStream)) {
 				managedStream.DisposeFromNative ();
 			}
 		}
 
 		private static SKAbstractManagedWStream AsManagedStream (IntPtr ptr)
 		{
-			SKAbstractManagedWStream target;
-			if (AsManagedStream (ptr, out target)) {
+			if (AsManagedStream (ptr, out var target)) {
 				return target;
 			}
 			throw new ObjectDisposedException ("SKAbstractManagedWStream: " + ptr);

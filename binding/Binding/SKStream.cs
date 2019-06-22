@@ -103,8 +103,8 @@ namespace SkiaSharp
 		public int Read (byte[] buffer, int size)
 		{
 			unsafe {
-				fixed (byte *b = &buffer [0]) {
-					return Read ((IntPtr) b, size);
+				fixed (byte* b = buffer) {
+					return Read ((IntPtr)b, size);
 				}
 			}
 		}
@@ -231,7 +231,7 @@ namespace SkiaSharp
 		}
 
 		public SKFileStream (string path)
-			: base (SkiaApi.sk_filestream_new (path), true)
+			: base (SkiaApi.sk_filestream_new (StringUtilities.GetEncodedText (path, SKEncoding.Utf8)), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKFileStream instance.");
@@ -247,29 +247,18 @@ namespace SkiaSharp
 			base.Dispose (disposing);
 		}
 
-		public static bool IsPathSupported (string path)
-		{
-			// due to a bug (https://github.com/mono/SkiaSharp/issues/390)
-			if (PlatformConfiguration.IsWindows) {
-				for (int i = 0; i < path.Length; i++) {
-					if (path [i] >= byte.MaxValue)
-						return false;
-				}
-			}
+		public bool IsValid => SkiaApi.sk_filestream_is_valid (Handle);
 
-			return true;
-		}
+		public static bool IsPathSupported (string path) => true;
 
 		public static SKStreamAsset OpenStream (string path)
 		{
-			if (!File.Exists (path)) {
-				return null;
+			var stream = new SKFileStream (path);
+			if (!stream.IsValid) {
+				stream.Dispose ();
+				stream = null;
 			}
-			if (!IsPathSupported (path)) {
-				return new SKManagedStream (File.OpenRead (path), true);
-			} else {
-				return new SKFileStream (path);
-			}
+			return stream;
 		}
 	}
 
@@ -360,8 +349,8 @@ namespace SkiaSharp
 		public virtual bool Write (byte[] buffer, int size)
 		{
 			unsafe {
-				fixed (byte *b = &buffer [0]) {
-					return SkiaApi.sk_wstream_write (Handle, (IntPtr) b, (IntPtr)size);
+				fixed (byte* b = buffer) {
+					return SkiaApi.sk_wstream_write (Handle, (IntPtr)b, (IntPtr)size);
 				}
 			}
 		}
@@ -455,7 +444,7 @@ namespace SkiaSharp
 		}
 
 		public SKFileWStream (string path)
-			: base (SkiaApi.sk_filewstream_new (path), true)
+			: base (SkiaApi.sk_filewstream_new (StringUtilities.GetEncodedText (path, SKEncoding.Utf8)), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKFileWStream instance.");
@@ -471,15 +460,18 @@ namespace SkiaSharp
 			base.Dispose (disposing);
 		}
 
-		public static bool IsPathSupported (string path) => SKFileStream.IsPathSupported (path);
+		public bool IsValid => SkiaApi.sk_filewstream_is_valid (Handle);
+
+		public static bool IsPathSupported (string path) => true;
 
 		public static SKWStream OpenStream (string path)
 		{
-			if (!IsPathSupported (path)) {
-				return new SKManagedWStream (File.OpenWrite (path), true);
-			} else {
-				return new SKFileWStream (path);
+			var stream = new SKFileWStream (path);
+			if (!stream.IsValid) {
+				stream.Dispose ();
+				stream = null;
 			}
+			return stream;
 		}
 	}
 

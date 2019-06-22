@@ -10,6 +10,7 @@
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
     <PackagingPlatform>tizen40</PackagingPlatform>
     <DefineConstants>$(DefineConstants);HARFBUZZ;__TIZEN__;</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugType>full</DebugType>
@@ -18,10 +19,10 @@
     <DebugType>pdbonly</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.55" PrivateAssets="All" />
-    <PackageReference Include="Tizen.NET" Version="4.0.0" ExcludeAssets="Runtime" />
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.65" PrivateAssets="All" />
+    <PackageReference Include="System.Memory" Version="4.5.2" />
+    <PackageReference Include="Tizen.NET" Version="4.0.0" />
     <PackageReference Include="Tizen.NET.Sdk" Version="1.0.1" />
-    <PackageReference Include="mdoc" Version="5.7.3.1" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\output\native\tizen\armel\libHarfBuzzSharp.so" Link="nuget\runtimes\tizen-armel\native\libHarfBuzzSharp.so" />
@@ -32,5 +33,5 @@
     <Compile Include="..\HarfBuzzSharp.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
-  <Import Project="$(MSBuildSDKExtrasTargets)" Condition="Exists('$(MSBuildSDKExtrasTargets)')" />
+  <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />
 </Project>

@@ -10,7 +10,7 @@ namespace SkiaSharp.Views.Mac
 	[DesignTimeVisible(true)]
 	public class SKCanvasView : NSView
 	{
-		private SKDrawable drawable;
+		private SKCGSurfaceFactory drawable;
 		private bool ignorePixelScaling;
 
 		// created in code
@@ -41,7 +41,7 @@ namespace SkiaSharp.Views.Mac
 
 		private void Initialize()
 		{
-			drawable = new SKDrawable();
+			drawable = new SKCGSurfaceFactory();
 		}
 
 		public SKSize CanvasSize => drawable.Info.Size;
@@ -72,19 +72,23 @@ namespace SkiaSharp.Views.Mac
 		{
 			base.DrawRect(dirtyRect);
 
-			var ctx = NSGraphicsContext.CurrentContext.CGContext;
-
 			// create the skia context
 			using (var surface = drawable.CreateSurface(Bounds, IgnorePixelScaling ? 1 : Window.BackingScaleFactor, out var info))
 			{
-				// draw on the image using SKiaSharp
-				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
+				if (info.Width == 0 || info.Height == 0)
+					return;
+
+				using (var ctx = NSGraphicsContext.CurrentContext.CGContext)
+				{
+					// draw on the image using SKiaSharp
+					OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
 #pragma warning disable CS0618 // Type or member is obsolete
-				DrawInSurface(surface, info);
+					DrawInSurface(surface, info);
 #pragma warning restore CS0618 // Type or member is obsolete
 
-				// draw the surface to the context
-				drawable.DrawSurface(ctx, Bounds, info, surface);
+					// draw the surface to the context
+					drawable.DrawSurface(ctx, Bounds, info, surface);
+				}
 			}
 		}
 

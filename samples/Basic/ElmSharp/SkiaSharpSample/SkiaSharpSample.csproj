@@ -14,7 +14,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Tizen.NET" Version="4.0.0" ExcludeAssets="Runtime" />
+    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.65" PrivateAssets="All" />
+    <PackageReference Include="Tizen.NET" Version="4.0.0" />
     <PackageReference Include="Tizen.NET.Sdk" Version="1.0.1" />
   </ItemGroup>
 
@@ -37,5 +38,7 @@
   </ItemGroup>
 
   <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\tizen40\SkiaSharp.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\tizen40\SkiaSharp.targets')" />
+
+  <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />
 
 </Project>

@@ -1,54 +1,39 @@
 
 var MSBuildNS = (XNamespace) "http://schemas.microsoft.com/developer/msbuild/2003";
 
-var RunMSBuildWithPlatform = new Action<FilePath, string> ((solution, platform) =>
+void RunMSBuild (FilePath solution, string configuration = "Release", string platform = "Any CPU", string platformTarget = null, bool restore = true)
 {
     MSBuild (solution, c => {
-        c.Configuration = "Release";
+        c.Configuration = configuration;
         c.Verbosity = VERBOSITY;
-        c.Properties ["Platform"] = new [] { platform };
-        c.MSBuildPlatform = MSBuildPlatform.x86;
+        c.Restore = restore;
+
+        if (!string.IsNullOrEmpty (platformTarget)) {
+            platform = null;
+            c.PlatformTarget = (PlatformTarget)Enum.Parse(typeof(PlatformTarget), platformTarget);
+        } else {
+            c.PlatformTarget = PlatformTarget.MSIL;
+            c.MSBuildPlatform = MSBuildPlatform.x86;
+        }
+
+        if (!string.IsNullOrEmpty (platform)) {
+            c.Properties ["Platform"] = new [] { "\"" + platform + "\"" };
+        }
+
         if (!string.IsNullOrEmpty (MSBuildToolPath)) {
             c.ToolPath = MSBuildToolPath;
         }
     });
-});
+}
 
-var RunMSBuildWithPlatformTarget = new Action<FilePath, string> ((solution, platformTarget) =>
-{
-    MSBuild (solution, c => {
-        c.Configuration = "Release";
-        c.Verbosity = VERBOSITY;
-        c.PlatformTarget = (PlatformTarget)Enum.Parse(typeof(PlatformTarget), platformTarget);
-        if (!string.IsNullOrEmpty (MSBuildToolPath)) {
-            c.ToolPath = MSBuildToolPath;
-        }
-    });
-});
-
-var RunMSBuildRestore = new Action<FilePath> ((solution) =>
-{
-    MSBuild (solution, c => {
-        c.Configuration = "Release";
-        c.Targets.Clear();
-        c.Targets.Add("Restore");
-        c.Verbosity = VERBOSITY;
-        c.PlatformTarget = PlatformTarget.MSIL;
-        c.MSBuildPlatform = MSBuildPlatform.x86;
-        if (!string.IsNullOrEmpty (MSBuildToolPath)) {
-            c.ToolPath = MSBuildToolPath;
-        }
-    });
-});
-
-var RunMSBuildRestoreLocal = new Action<FilePath, DirectoryPath> ((solution, packagesDir) =>
+void RunMSBuildRestoreLocal (FilePath solution, DirectoryPath packagesDir, string configuration = "Release")
 {
     var dir = solution.GetDirectory ();
     MSBuild (solution, c => {
-        c.Configuration = "Release";
+        c.Configuration = configuration;
+        c.Verbosity = VERBOSITY;
         c.Targets.Clear();
         c.Targets.Add("Restore");
-        c.Verbosity = VERBOSITY;
         c.Properties ["RestoreNoCache"] = new [] { "true" };
         c.Properties ["RestorePackagesPath"] = new [] { packagesDir.FullPath };
         c.PlatformTarget = PlatformTarget.MSIL;
@@ -59,12 +44,7 @@ var RunMSBuildRestoreLocal = new Action<FilePath, DirectoryPath> ((solution, pac
         // c.Properties ["RestoreSources"] = NuGetSources;
         c.ArgumentCustomization = args => args.Append ($"/p:RestoreSources=\"{string.Join (IsRunningOnWindows () ? ";" : "%3B", NuGetSources)}\"");
     });
-});
-
-var RunMSBuild = new Action<FilePath> ((solution) =>
-{
-    RunMSBuildWithPlatform (solution, "\"Any CPU\"");
-});
+}
 
 var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath) =>
 {
@@ -74,7 +54,6 @@ var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath)
         OutputDirectory = outputPath,
         BasePath = nuspecPath.GetDirectory (),
         ToolPath = NuGetToolPath,
-        RequireLicenseAcceptance = true, // TODO: work around a bug: https://github.com/cake-build/cake/issues/2061
     });
 });
 
@@ -86,7 +65,7 @@ var RunProcess = new Action<FilePath, ProcessSettings> ((process, settings) =>
     }
 });
 
-var RunTests = new Action<FilePath, bool> ((testAssembly, is32) =>
+void RunTests (FilePath testAssembly, bool is32)
 {
     var dir = testAssembly.GetDirectory ();
     var settings = new XUnit2Settings {
@@ -98,20 +77,43 @@ var RunTests = new Action<FilePath, bool> ((testAssembly, is32) =>
         WorkingDirectory = dir,
         ArgumentCustomization = args => args.Append ("-verbose"),
     };
+    var traits = CreateTraitsDictionary(UNSUPPORTED_TESTS);
+    foreach (var trait in traits) {
+        settings.ExcludeTrait(trait.Name, trait.Value);
+    }
     XUnit2 (new [] { testAssembly }, settings);
-});
+}
 
-var RunNetCoreTests = new Action<FilePath> ((testAssembly) =>
+void RunNetCoreTests (FilePath testAssembly)
 {
     var dir = testAssembly.GetDirectory ();
-    DotNetCoreTest(testAssembly.GetFilename().ToString(), new DotNetCoreTestSettings {
+    var settings = new DotNetCoreTestSettings {
         Configuration = "Release",
         NoRestore = true,
         TestAdapterPath = ".",
         Logger = "xunit",
         WorkingDirectory = dir,
-    });
-});
+    };
+    var traits = CreateTraitsDictionary(UNSUPPORTED_TESTS);
+    var filter = string.Join("&", traits.Select(t => $"{t.Name}!={t.Value}"));
+    if (!string.IsNullOrEmpty(filter)) {
+        settings.Filter = filter;
+    }
+    DotNetCoreTest(testAssembly.GetFilename().ToString(), settings);
+}
+
+IEnumerable<(string Name, string Value)> CreateTraitsDictionary (string args)
+{
+    if (!string.IsNullOrEmpty(args)) {
+        var traits = args.Split(';');
+        foreach (var trait in traits) {
+            var kv = trait.Split('=');
+            if (kv.Length != 2)
+                continue;
+            yield return (kv[0], kv[1]);
+        }
+    }
+}
 
 var DecompressArchive = new Action<FilePath, DirectoryPath> ((archive, outputDir) => {
     using (var stream = System.IO.File.OpenRead (archive.FullPath))
@@ -330,25 +332,24 @@ IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories (Direc
     }
 }
 
-string[] referenceSearchPathsCache = null;
 string[] GetReferenceSearchPaths ()
 {
-    if (referenceSearchPathsCache != null)
-        return referenceSearchPathsCache;
-
     var refs = new List<string> ();
 
     if (IsRunningOnWindows ()) {
         var vs = VSWhereLatest (new VSWhereLatestSettings { Requires = "Component.Xamarin" });
         var referenceAssemblies = $"{vs}/Common7/IDE/ReferenceAssemblies/Microsoft/Framework";
         var pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+
+        refs.AddRange (GetDirectories ("./output/docs/temp/*").Select (d => d.FullPath));
         refs.Add ($"{referenceAssemblies}/MonoTouch/v1.0");
         refs.Add ($"{referenceAssemblies}/MonoAndroid/v1.0");
-        refs.Add ($"{referenceAssemblies}/MonoAndroid/v4.0.3");
+        refs.Add ($"{referenceAssemblies}/MonoAndroid/v9.0");
         refs.Add ($"{referenceAssemblies}/Xamarin.iOS/v1.0");
         refs.Add ($"{referenceAssemblies}/Xamarin.TVOS/v1.0");
         refs.Add ($"{referenceAssemblies}/Xamarin.WatchOS/v1.0");
         refs.Add ($"{referenceAssemblies}/Xamarin.Mac/v2.0");
+        refs.Add ($"{pf}/Windows Kits/10/UnionMetadata/Facade");
         refs.Add ($"{pf}/Windows Kits/10/References/Windows.Foundation.UniversalApiContract/1.0.0.0");
         refs.Add ($"{pf}/Windows Kits/10/References/Windows.Foundation.FoundationContract/1.0.0.0");
         refs.Add ($"{pf}/GtkSharp/2.12/lib");
@@ -357,8 +358,7 @@ string[] GetReferenceSearchPaths ()
         // TODO
     }
 
-    referenceSearchPathsCache = refs.ToArray ();
-    return referenceSearchPathsCache;
+    return refs.ToArray ();
 }
 
 async Task<NuGetDiff> CreateNuGetDiffAsync ()

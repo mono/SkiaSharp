@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp
@@ -8,9 +9,9 @@ namespace SkiaSharp
 	public delegate void SKImageTextureReleaseDelegate (object context);
 
 	// internal proxy delegates
-	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal delegate void SKImageRasterReleaseDelegateInternal (IntPtr pixels, IntPtr context);
-	[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal delegate void SKImageTextureReleaseDelegateInternal (IntPtr context);
 
 	// TODO: `MakeCrossContextFromEncoded`
@@ -30,7 +31,7 @@ namespace SkiaSharp
 		private static readonly IntPtr rasterReleaseDelegate;
 		private static readonly IntPtr textureReleaseDelegate;
 		private static readonly IntPtr coTaskMemReleaseDelegate;
-		static SKImage()
+		static SKImage ()
 		{
 			rasterReleaseDelegateInternal = new SKImageRasterReleaseDelegateInternal (RasterReleaseInternal);
 			textureReleaseDelegateInternal = new SKImageTextureReleaseDelegateInternal (TextureReleaseInternal);
@@ -69,6 +70,48 @@ namespace SkiaSharp
 
 		// create a new image from a copy of pixel data
 
+		public static SKImage FromPixelCopy (SKImageInfo info, SKStream pixels)
+		{
+			return FromPixelCopy (info, pixels, info.RowBytes);
+		}
+
+		public static SKImage FromPixelCopy (SKImageInfo info, SKStream pixels, int rowBytes)
+		{
+			if (pixels == null)
+				throw new ArgumentNullException (nameof (pixels));
+			using (var data = SKData.Create (pixels)) {
+				return FromPixelData (info, data, rowBytes);
+			}
+		}
+
+		public static SKImage FromPixelCopy (SKImageInfo info, Stream pixels)
+		{
+			return FromPixelCopy (info, pixels, info.RowBytes);
+		}
+
+		public static SKImage FromPixelCopy (SKImageInfo info, Stream pixels, int rowBytes)
+		{
+			if (pixels == null)
+				throw new ArgumentNullException (nameof (pixels));
+			using (var data = SKData.Create (pixels)) {
+				return FromPixelData (info, data, rowBytes);
+			}
+		}
+
+		public static SKImage FromPixelCopy (SKImageInfo info, byte[] pixels)
+		{
+			return FromPixelCopy (info, pixels, info.RowBytes);
+		}
+
+		public static SKImage FromPixelCopy (SKImageInfo info, byte[] pixels, int rowBytes)
+		{
+			if (pixels == null)
+				throw new ArgumentNullException (nameof (pixels));
+			using (var data = SKData.CreateCopy (pixels)) {
+				return FromPixelData (info, data, rowBytes);
+			}
+		}
+
 		public static SKImage FromPixelCopy (SKImageInfo info, IntPtr pixels)
 		{
 			return FromPixelCopy (info, pixels, info.RowBytes);
@@ -103,21 +146,27 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject<SKImage> (SkiaApi.sk_image_new_raster_data (ref cinfo, data.Handle, (IntPtr) rowBytes));	
+			return GetObject<SKImage> (SkiaApi.sk_image_new_raster_data (ref cinfo, data.Handle, (IntPtr)rowBytes));
+		}
+
+		public static SKImage FromPixels (SKImageInfo info, SKData data, int rowBytes)
+		{
+			if (data == null)
+				throw new ArgumentNullException (nameof (data));
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return GetObject<SKImage> (SkiaApi.sk_image_new_raster_data (ref cinfo, data.Handle, (IntPtr)rowBytes));
 		}
 
 		public static SKImage FromPixels (SKImageInfo info, IntPtr pixels)
 		{
-			using (var pixmap = new SKPixmap (info, pixels, info.RowBytes))
-			{
+			using (var pixmap = new SKPixmap (info, pixels, info.RowBytes)) {
 				return FromPixels (pixmap, null, null);
 			}
 		}
 
 		public static SKImage FromPixels (SKImageInfo info, IntPtr pixels, int rowBytes)
 		{
-			using (var pixmap = new SKPixmap (info, pixels, rowBytes))
-			{
+			using (var pixmap = new SKPixmap (info, pixels, rowBytes)) {
 				return FromPixels (pixmap, null, null);
 			}
 		}
@@ -151,6 +200,7 @@ namespace SkiaSharp
 		{
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
+
 			var handle = SkiaApi.sk_image_new_from_encoded (data.Handle, ref subset);
 			return GetObject<SKImage> (handle);
 		}
@@ -159,8 +209,88 @@ namespace SkiaSharp
 		{
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
+
 			var handle = SkiaApi.sk_image_new_from_encoded (data.Handle, IntPtr.Zero);
 			return GetObject<SKImage> (handle);
+		}
+
+		public static SKImage FromEncodedData (byte[] data)
+		{
+			if (data == null)
+				throw new ArgumentNullException (nameof (data));
+			if (data.Length == 0)
+				throw new ArgumentException ("The data buffer was empty.");
+
+			unsafe {
+				fixed (byte* b = data) {
+					using (var skdata = SKData.Create ((IntPtr)b, data.Length)) {
+						return FromEncodedData (skdata);
+					}
+				}
+			}
+		}
+
+		public static SKImage FromEncodedData (SKStream data)
+		{
+			if (data == null)
+				throw new ArgumentNullException (nameof (data));
+
+			using (var codec = SKCodec.Create (data)) {
+				if (codec == null)
+					return null;
+
+				var bitmap = SKBitmap.Decode (codec, codec.Info);
+				if (bitmap == null)
+					return null;
+
+				bitmap.SetImmutable ();
+				return FromPixels (bitmap.PeekPixels (), delegate {
+					bitmap.Dispose ();
+					bitmap = null;
+				});
+			}
+		}
+
+		public static SKImage FromEncodedData (Stream data)
+		{
+			if (data == null)
+				throw new ArgumentNullException (nameof (data));
+
+			using (var codec = SKCodec.Create (data)) {
+				if (codec == null)
+					return null;
+
+				var bitmap = SKBitmap.Decode (codec, codec.Info);
+				if (bitmap == null)
+					return null;
+
+				bitmap.SetImmutable ();
+				return FromPixels (bitmap.PeekPixels (), delegate {
+					bitmap.Dispose ();
+					bitmap = null;
+				});
+			}
+		}
+
+		public static SKImage FromEncodedData (string filename)
+		{
+			if (filename == null)
+				throw new ArgumentNullException (nameof (filename));
+
+			using (var codec = SKCodec.Create (filename)) {
+				if (codec == null)
+					return null;
+
+				var bitmap = SKBitmap.Decode (codec, codec.Info);
+				if (bitmap == null)
+					return null;
+
+				bitmap.SetImmutable ();
+				return FromPixels (bitmap.PeekPixels (), delegate {
+					bitmap.Dispose ();
+					bitmap = null;
+				});
+			}
 		}
 
 		// create a new image from a bitmap
@@ -169,6 +299,7 @@ namespace SkiaSharp
 		{
 			if (bitmap == null)
 				throw new ArgumentNullException (nameof (bitmap));
+
 			var handle = SkiaApi.sk_image_new_from_bitmap (bitmap.Handle);
 			return GetObject<SKImage> (handle);
 		}
@@ -320,7 +451,7 @@ namespace SkiaSharp
 			var cs = colorspace == null ? IntPtr.Zero : colorspace.Handle;
 			return GetObject<SKImage> (SkiaApi.sk_image_new_from_adopted_texture (context.Handle, texture.Handle, origin, colorType, alpha, cs));
 		}
-		
+
 		// create a new image from a picture
 
 		public static SKImage FromPicture (SKPicture picture, SKSizeI dimensions)
@@ -402,12 +533,12 @@ namespace SkiaSharp
 		}
 
 		public int Width => SkiaApi.sk_image_get_width (Handle);
-		public int Height => SkiaApi.sk_image_get_height (Handle); 
+		public int Height => SkiaApi.sk_image_get_height (Handle);
 		public uint UniqueId => SkiaApi.sk_image_get_unique_id (Handle);
 		public SKAlphaType AlphaType => SkiaApi.sk_image_get_alpha_type (Handle);
 		public SKColorType ColorType => SkiaApi.sk_image_get_color_type (Handle);
 		public SKColorSpace ColorSpace => GetObject<SKColorSpace> (SkiaApi.sk_image_get_colorspace (Handle));
-		public bool IsAlphaOnly => SkiaApi.sk_image_is_alpha_only(Handle);
+		public bool IsAlphaOnly => SkiaApi.sk_image_is_alpha_only (Handle);
 		public SKData EncodedData => GetObject<SKData> (SkiaApi.sk_image_ref_encoded (Handle));
 
 		public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY)

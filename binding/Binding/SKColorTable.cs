@@ -94,8 +94,7 @@ namespace SkiaSharp
 
 		public IntPtr ReadColors ()
 		{
-			IntPtr colors;
-			SkiaApi.sk_colortable_read_colors (Handle, out colors);
+			SkiaApi.sk_colortable_read_colors (Handle, out var colors);
 			return colors;
 		}
 	}

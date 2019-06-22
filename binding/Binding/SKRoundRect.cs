@@ -58,6 +58,13 @@ namespace SkiaSharp
 			}
 		}
 
+		public SKPoint[] Radii => new[] {
+			GetRadii(SKRoundRectCorner.UpperLeft),
+			GetRadii(SKRoundRectCorner.UpperRight),
+			GetRadii(SKRoundRectCorner.LowerRight),
+			GetRadii(SKRoundRectCorner.LowerLeft),
+		};
+
 		public SKRoundRectType Type => SkiaApi.sk_rrect_get_type (Handle);
 
 		public float Width => SkiaApi.sk_rrect_get_width (Handle);

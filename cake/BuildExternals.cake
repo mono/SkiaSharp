@@ -5,6 +5,10 @@ void GnNinja (DirectoryPath outDir, string target, string skiaArgs)
     var quote = IsRunningOnWindows () ? "\"" : "'";
     var innerQuote = IsRunningOnWindows () ? "\\\"" : "\"";
 
+    if (!string.IsNullOrEmpty(ADDITIONAL_GN_ARGS)) {
+        skiaArgs += " " + ADDITIONAL_GN_ARGS;
+    }
+
     // generate native skia build files
     RunProcess (SKIA_PATH.CombineWithFilePath($"bin/gn{exe}"), new ProcessSettings {
         Arguments = $"gen out/{outDir} --args={quote}{skiaArgs.Replace("'", innerQuote)}{quote}",
@@ -58,7 +62,6 @@ void RunLipo (DirectoryPath directory, FilePath output, FilePath[] inputs)
 
 Task ("externals-init")
     .IsDependentOn ("externals-angle-uwp")
-    .IsDependentOn ("externals-harfbuzz")
     .Does (() =>
 {
     RunProcess (PythonToolPath, new ProcessSettings {
@@ -105,7 +108,7 @@ Task ("externals-windows")
 
     var buildHarfBuzzArch = new Action<string, string> ((arch, dir) => {
         // build libHarfBuzzSharp
-        RunMSBuildWithPlatformTarget ("native-builds/libHarfBuzzSharp_windows/libHarfBuzzSharp.sln", arch);
+        RunMSBuild ("native-builds/libHarfBuzzSharp_windows/libHarfBuzzSharp.sln", platformTarget: arch);
 
         // copy libHarfBuzzSharp to output
         var outDir = $"output/native/windows/{dir}";
@@ -155,7 +158,7 @@ Task ("externals-uwp")
 
     var buildHarfBuzzArch = new Action<string, string> ((arch, dir) => {
         // build libHarfBuzzSharp
-        RunMSBuildWithPlatformTarget ("native-builds/libHarfBuzzSharp_uwp/libHarfBuzzSharp.sln", arch);
+        RunMSBuild ("native-builds/libHarfBuzzSharp_uwp/libHarfBuzzSharp.sln", platformTarget: arch);
 
         // copy libHarfBuzzSharp to output
         var outDir = $"output/native/uwp/{dir}";
@@ -172,7 +175,7 @@ Task ("externals-uwp")
 
     var buildInteropArch = new Action<string, string> ((arch, dir) => {
         // build SkiaSharp.Views.Interop.UWP
-        RunMSBuildWithPlatformTarget ("source/SkiaSharp.Views.Interop.UWP.sln", arch);
+        RunMSBuild ("source/SkiaSharp.Views.Interop.UWP.sln", platformTarget: arch);
 
         // copy SkiaSharp.Views.Interop.UWP to native
         var outDir = $"./output/native/uwp/{dir}";
@@ -216,8 +219,8 @@ Task ("externals-osx")
             $"target_os='mac' target_cpu='{skiaArch}' " +
             $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
             $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-mmacosx-version-min=10.9' ] " +
-            $"extra_ldflags=[ '-Wl,macosx_version_min=10.9' ]");
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-mmacosx-version-min=10.7', '-stdlib=libc++' ] " +
+            $"extra_ldflags=[ '-Wl,macosx_version_min=10.7', '-stdlib=libc++' ]");
 
         // build libSkiaSharp
         XCodeBuild (new XCodeBuildSettings {
@@ -288,12 +291,6 @@ Task ("externals-ios")
             $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-mios-version-min=8.0' ] " +
             $"extra_ldflags=[ '-Wl,ios_version_min=8.0' ]");
-
-        // build native skia
-        RunProcess (DEPOT_PATH.CombineWithFilePath ("ninja"), new ProcessSettings {
-            Arguments = $"skia -C out/ios/{arch}",
-            WorkingDirectory = SKIA_PATH.FullPath,
-        });
 
         // build libSkiaSharp
         XCodeBuild (new XCodeBuildSettings {
@@ -592,10 +589,10 @@ Task ("externals-linux")
             $"is_official_build=true skia_enable_tools=false " +
             $"target_os='linux' target_cpu='{arch}' " +
             $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
-            $"skia_use_system_expat=false skia_use_system_freetype2=true skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
+            $"skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
             $"skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")} " +
             $"extra_cflags=[ '-DSKIA_C_DLL' ] " +
-            $"extra_ldflags=[ ] " +
+            $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc' ] " +
             $"{CUSTOM_COMPILERS} " +
             $"linux_soname_version='{soname}'");
 
@@ -691,9 +688,25 @@ Task ("externals-tizen")
     buildHarfBuzzArch ("armel", "arm");
     buildHarfBuzzArch ("i386", "x86");
 });
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXTERNALS DOWNLOAD - download any externals that are needed
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Task ("externals-download")
+    .Does (() =>
+{
+    if (string.IsNullOrEmpty (AZURE_BUILD_ID))
+        throw new Exception ("Specify a build ID with --azureBuildId=<ID>");
+
+    var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, "native");
+
+    EnsureDirectoryExists ("./output");
+    CleanDirectories ("./output");
+
+    DownloadFile(url, "./output/native.zip");
+    Unzip ($"./output/native.zip", $"./output");
+});
 
 Task ("externals-angle-uwp")
     .WithCriteria (!FileExists (ANGLE_PATH.CombineWithFilePath ("uwp/ANGLE.WindowsStore.nuspec")))
@@ -712,32 +725,6 @@ Task ("externals-angle-uwp")
     Unzip (angleNupkg, angleRoot);
 });
 
-Task ("externals-harfbuzz")
-    .WithCriteria (
-        !FileExists (HARFBUZZ_PATH.CombineWithFilePath ("harfbuzz/README")) ||
-        !FileExists (HARFBUZZ_PATH.CombineWithFilePath ($"harfbuzz-{GetVersion ("harfbuzz", "release")}.tar.bz2")))
-    .Does (() =>
-{
-    var version = GetVersion ("harfbuzz", "release");
-    var url = $"https://github.com/behdad/harfbuzz/releases/download/{version}/harfbuzz-{version}.tar.bz2";
-    DirectoryPath root = HARFBUZZ_PATH;
-    FilePath archive = root.CombineWithFilePath ($"harfbuzz-{version}.tar.bz2");
-
-    EnsureDirectoryExists (root);
-    CleanDirectory (root);
-
-    DownloadFile (url, archive);
-    DecompressArchive (archive, root);
-    MoveDirectory (root.Combine ($"harfbuzz-{version}"), HARFBUZZ_PATH.Combine ("harfbuzz"));
-
-    if (!IsRunningOnWindows ()) {
-        RunProcess ("bash", new ProcessSettings {
-            Arguments = "configure",
-            WorkingDirectory = HARFBUZZ_PATH.Combine ("harfbuzz"),
-        });
-    }
-});
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // CLEAN - remove all the build artefacts
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -748,9 +735,6 @@ Task ("clean-externals")
     // skia
     CleanDirectories ("externals/skia/out");
     CleanDirectories ("externals/skia/xcodebuild");
-
-    // harfbuzz
-    CleanDirectories ("externals/harfbuzz");
 
     // angle
     CleanDirectories ("externals/angle");

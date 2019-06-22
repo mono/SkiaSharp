@@ -28,7 +28,7 @@ namespace SkiaSharp.Views.iOS
 		}
 		private bool designMode;
 
-		private SKDrawable drawable;
+		private SKCGSurfaceFactory drawable;
 		private bool ignorePixelScaling;
 
 		// created in code
@@ -63,7 +63,7 @@ namespace SkiaSharp.Views.iOS
 			if (designMode)
 				return;
 
-			drawable = new SKDrawable();
+			drawable = new SKCGSurfaceFactory();
 		}
 
 		public SKSize CanvasSize => drawable?.Info.Size ?? SKSize.Empty;
@@ -85,11 +85,13 @@ namespace SkiaSharp.Views.iOS
 			if (designMode || drawable == null)
 				return;
 
-			using (var ctx = UIGraphics.GetCurrentContext())
+			// create the skia context
+			using (var surface = drawable.CreateSurface(Bounds, IgnorePixelScaling ? 1 : ContentScaleFactor, out var info))
 			{
-				// create the skia context
-				SKImageInfo info;
-				using (var surface = drawable.CreateSurface(Bounds, IgnorePixelScaling ? 1 : ContentScaleFactor, out info))
+				if (info.Width == 0 || info.Height == 0)
+					return;
+
+				using (var ctx = UIGraphics.GetCurrentContext())
 				{
 					// draw on the image using SKiaSharp
 					OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));

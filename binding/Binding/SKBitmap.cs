@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -323,8 +322,7 @@ namespace SkiaSharp
 
 		public bool ExtractAlpha(SKBitmap destination)
 		{
-			SKPointI offset;
-			return ExtractAlpha (destination, null, out offset);
+			return ExtractAlpha (destination, null, out var offset);
 		}
 
 		public bool ExtractAlpha(SKBitmap destination, out SKPointI offset)
@@ -334,8 +332,7 @@ namespace SkiaSharp
 
 		public bool ExtractAlpha(SKBitmap destination, SKPaint paint)
 		{
-			SKPointI offset;
-			return ExtractAlpha (destination, paint, out offset);
+			return ExtractAlpha (destination, paint, out var offset);
 		}
 
 		public bool ExtractAlpha(SKBitmap destination, SKPaint paint, out SKPointI offset)
@@ -350,8 +347,7 @@ namespace SkiaSharp
 
 		public SKImageInfo Info {
 			get {
-				SKImageInfoNative cinfo;
-				SkiaApi.sk_bitmap_get_info (Handle, out cinfo);
+				SkiaApi.sk_bitmap_get_info (Handle, out var cinfo);
 				return SKImageInfoNative.ToManaged (ref cinfo);
 			}
 		}
@@ -390,8 +386,7 @@ namespace SkiaSharp
 
 		public IntPtr GetPixels ()
 		{
-			IntPtr length;
-			return GetPixels (out length);
+			return GetPixels (out var length);
 		}
 
 		public IntPtr GetPixels (out IntPtr length)
@@ -417,9 +412,8 @@ namespace SkiaSharp
 		}
 		
 		public byte[] Bytes {
-			get { 
-				IntPtr length;
-				var pixelsPtr = GetPixels (out length);
+			get {
+				var pixelsPtr = GetPixels (out var length);
 				byte [] bytes = new byte [(int)length];
 				Marshal.Copy (pixelsPtr, bytes, 0, (int)length);
 				return bytes; 
@@ -467,7 +461,9 @@ namespace SkiaSharp
 			if (stream == null) {
 				throw new ArgumentNullException (nameof (stream));
 			}
-			return DecodeBounds (WrapManagedStream (stream));
+			using (var codec = SKCodec.Create (stream)) {
+				return codec?.Info ?? SKImageInfo.Empty;
+			}
 		}
 
 		public static SKImageInfo DecodeBounds (SKStream stream)
@@ -476,7 +472,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 			}
 			using (var codec = SKCodec.Create (stream)) {
-				return codec.Info;
+				return codec?.Info ?? SKImageInfo.Empty;
 			}
 		}
 
@@ -486,7 +482,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (data));
 			}
 			using (var codec = SKCodec.Create (data)) {
-				return codec.Info;
+				return codec?.Info ?? SKImageInfo.Empty;
 			}
 		}
 
@@ -495,8 +491,8 @@ namespace SkiaSharp
 			if (filename == null) {
 				throw new ArgumentNullException (nameof (filename));
 			}
-			using (var stream = OpenStream (filename)) {
-				return DecodeBounds (stream);
+			using (var codec = SKCodec.Create (filename)) {
+				return codec?.Info ?? SKImageInfo.Empty;
 			}
 		}
 
@@ -505,26 +501,15 @@ namespace SkiaSharp
 			if (buffer == null) {
 				throw new ArgumentNullException (nameof (buffer));
 			}
-			using (var stream = new SKMemoryStream (buffer)) {
-				return DecodeBounds (stream);
-			}
-		}
 
-		public static SKBitmap Decode (SKCodec codec, SKImageInfo bitmapInfo)
-		{
-			if (codec == null) {
-				throw new ArgumentNullException (nameof (codec));
+			unsafe {
+				fixed (byte* b = buffer) {
+					using (var skdata = SKData.Create ((IntPtr)b, buffer.Length))
+					using (var codec = SKCodec.Create (skdata)) {
+						return codec?.Info ?? SKImageInfo.Empty;
+					}
+				}
 			}
-
-			// read the pixels and color table
-			var bitmap = new SKBitmap (bitmapInfo);
-			IntPtr length;
-			var result = codec.GetPixels (bitmapInfo, bitmap.GetPixels (out length));
-			if (result != SKCodecResult.Success && result != SKCodecResult.IncompleteInput) {
-				bitmap.Dispose ();
-				bitmap = null;
-			}
-			return bitmap;
 		}
 
 		public static SKBitmap Decode (SKCodec codec)
@@ -541,12 +526,32 @@ namespace SkiaSharp
 			return Decode (codec, info);
 		}
 
+		public static SKBitmap Decode (SKCodec codec, SKImageInfo bitmapInfo)
+		{
+			if (codec == null) {
+				throw new ArgumentNullException (nameof (codec));
+			}
+
+			var bitmap = new SKBitmap (bitmapInfo);
+			var result = codec.GetPixels (bitmapInfo, bitmap.GetPixels (out var length));
+			if (result != SKCodecResult.Success && result != SKCodecResult.IncompleteInput) {
+				bitmap.Dispose ();
+				bitmap = null;
+			}
+			return bitmap;
+		}
+
 		public static SKBitmap Decode (Stream stream)
 		{
 			if (stream == null) {
 				throw new ArgumentNullException (nameof (stream));
 			}
-			return Decode (WrapManagedStream (stream));
+			using (var codec = SKCodec.Create (stream)) {
+				if (codec == null) {
+					return null;
+				}
+				return Decode (codec);
+			}
 		}
 
 		public static SKBitmap Decode (Stream stream, SKImageInfo bitmapInfo)
@@ -554,7 +559,12 @@ namespace SkiaSharp
 			if (stream == null) {
 				throw new ArgumentNullException (nameof (stream));
 			}
-			return Decode (WrapManagedStream (stream), bitmapInfo);
+			using (var codec = SKCodec.Create (stream)) {
+				if (codec == null) {
+					return null;
+				}
+				return Decode (codec, bitmapInfo);
+			}
 		}
 
 		public static SKBitmap Decode (SKStream stream)
@@ -614,8 +624,11 @@ namespace SkiaSharp
 			if (filename == null) {
 				throw new ArgumentNullException (nameof (filename));
 			}
-			using (var stream = OpenStream (filename)) {
-				return Decode (stream);
+			using (var codec = SKCodec.Create (filename)) {
+				if (codec == null) {
+					return null;
+				}
+				return Decode (codec);
 			}
 		}
 
@@ -624,8 +637,11 @@ namespace SkiaSharp
 			if (filename == null) {
 				throw new ArgumentNullException (nameof (filename));
 			}
-			using (var stream = OpenStream (filename)) {
-				return Decode (stream, bitmapInfo);
+			using (var codec = SKCodec.Create (filename)) {
+				if (codec == null) {
+					return null;
+				}
+				return Decode (codec, bitmapInfo);
 			}
 		}
 
@@ -644,8 +660,14 @@ namespace SkiaSharp
 			if (buffer == null) {
 				throw new ArgumentNullException (nameof (buffer));
 			}
-			using (var stream = new SKMemoryStream (buffer)) {
-				return Decode (stream, bitmapInfo);
+
+			unsafe {
+				fixed (byte* b = buffer) {
+					using (var skdata = SKData.Create ((IntPtr)b, buffer.Length))
+					using (var codec = SKCodec.Create (skdata)) {
+						return Decode (codec, bitmapInfo);
+					}
+				}
 			}
 		}
 
@@ -722,12 +744,22 @@ namespace SkiaSharp
 			return SkiaApi.sk_bitmap_peek_pixels (Handle, pixmap.Handle);
 		}
 
-		[Obsolete]
-		public SKBitmap Resize (SKImageInfo info, SKBitmapResizeMethod method)
+		[Obsolete ("Use Resize(SKImageInfo, SKFilterQuality) instead.")]
+		public SKBitmap Resize (SKImageInfo info, SKBitmapResizeMethod method) =>
+			Resize (info, method.ToFilterQuality ());
+
+		[Obsolete ("Use ScalePixels(SKBitmap, SKFilterQuality) instead.")]
+		public bool Resize (SKBitmap dst, SKBitmapResizeMethod method) =>
+			ScalePixels (dst, method.ToFilterQuality ());
+
+		[Obsolete ("Use ScalePixels(SKBitmap, SKFilterQuality) instead.")]
+		public static bool Resize (SKBitmap dst, SKBitmap src, SKBitmapResizeMethod method) =>
+			src.ScalePixels (dst, method.ToFilterQuality ());
+
+		public SKBitmap Resize (SKImageInfo info, SKFilterQuality quality)
 		{
 			var dst = new SKBitmap (info);
-			var result = Resize (dst, this, method);
-			if (result) {
+			if (ScalePixels (dst, quality)) {
 				return dst;
 			} else {
 				dst.Dispose ();
@@ -735,18 +767,25 @@ namespace SkiaSharp
 			}
 		}
 
-		[Obsolete]
-		public bool Resize (SKBitmap dst, SKBitmapResizeMethod method)
+		public bool ScalePixels (SKBitmap destination, SKFilterQuality quality)
 		{
-			return Resize (dst, this, method);
+			if (destination == null) {
+				throw new ArgumentNullException (nameof (destination));
+			}
+
+			using (var dstPix = destination.PeekPixels ()) {
+				return ScalePixels (dstPix, quality);
+			}
 		}
 
-		[Obsolete]
-		public static bool Resize (SKBitmap dst, SKBitmap src, SKBitmapResizeMethod method)
+		public bool ScalePixels (SKPixmap destination, SKFilterQuality quality)
 		{
-			using (var srcPix = src.PeekPixels ())
-			using (var dstPix = dst.PeekPixels ()) {
-				return SKPixmap.Resize (dstPix, srcPix, method);// && dst.InstallPixels (dstPix); 
+			if (destination == null) {
+				throw new ArgumentNullException (nameof (destination));
+			}
+
+			using (var srcPix = PeekPixels ()) {
+				return srcPix.ScalePixels (destination, quality);
 			}
 		}
 
@@ -775,30 +814,6 @@ namespace SkiaSharp
 		private void Swap (SKBitmap other)
 		{
 			SkiaApi.sk_bitmap_swap (Handle, other.Handle);
-		}
-
-		private static SKStream WrapManagedStream (Stream stream)
-		{
-			if (stream == null) {
-				throw new ArgumentNullException (nameof (stream));
-			}
-
-			// we will need a seekable stream, so buffer it if need be
-			if (stream.CanSeek) {
-				return new SKManagedStream (stream, true);
-			} else {
-				return new SKFrontBufferedManagedStream (stream, SKCodec.MinBufferedBytesNeeded, true);
-			}
-		}
-
-		private static SKStream OpenStream (string path)
-		{
-			if (!SKFileStream.IsPathSupported (path)) {
-				// due to a bug (https://github.com/mono/SkiaSharp/issues/390)
-				return WrapManagedStream (File.OpenRead (path));
-			} else {
-				return new SKFileStream (path);
-			}
 		}
 
 		// internal proxy
