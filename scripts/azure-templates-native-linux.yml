@@ -30,7 +30,7 @@ jobs:
       # pre-build steps
       - ${{ parameters.preBuildSteps }}
       # build
-      - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY ${{ parameters.additionalArgs }}
+      - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY -c $CONFIGURATION ${{ parameters.additionalArgs }}
         displayName: Run the bootstrapper for ${{ parameters.target }}
         env:
           CC: clang-3.8
