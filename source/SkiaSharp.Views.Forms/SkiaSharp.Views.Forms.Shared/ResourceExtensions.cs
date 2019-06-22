@@ -26,135 +26,75 @@ namespace SkiaSharp.Views.Forms
 			resource = NormalizePath(resource);
 
 			if (File.Exists(resource))
-			{
 				return SKData.Create(resource);
-			}
-			else
-			{
+
 #if __ANDROID__
-				if ((await Application.Context.Assets.ListAsync(resource)).Length > 0)
+			try
+			{
+				using (var fd = Application.Context.Assets.OpenFd(resource))
+				using (var stream = fd?.CreateInputStream())
 				{
-					using (var fd = Application.Context.Assets.OpenFd(resource))
-					{
-						if (fd != null)
-						{
-							using (var stream = fd.CreateInputStream())
-							{
-								return SKData.Create(stream, fd.Length);
-							}
-						}
-					}
+					if (stream != null)
+						return SKData.Create(stream, fd.Length);
 				}
+			}
+			catch (Java.IO.FileNotFoundException)
+			{
+				// fall through
+			}
 
-				var id = ResourceManager.GetDrawableByName(resource);
-				if (id != 0)
+			var id = ResourceManager.GetDrawableByName(resource);
+			if (id != 0)
+			{
+				using (var fd = Application.Context.Resources.OpenRawResourceFd(id))
+				using (var stream = fd?.CreateInputStream())
 				{
-					using (var fd = Application.Context.Resources.OpenRawResourceFd(id))
-					{
-						if (fd != null)
-						{
-							using (var stream = fd.CreateInputStream())
-							{
-								return SKData.Create(stream, fd.Length);
-							}
-						}
-					}
+					if (stream != null)
+						return SKData.Create(stream, fd.Length);
 				}
+			}
 #elif __IOS__ || __MACOS__
-				resource = NSBundle.MainBundle.PathForResource(resource, null);
-				if (string.IsNullOrEmpty(resource))
-					return null;
-
+			resource = NSBundle.MainBundle.PathForResource(resource, null);
+			if (!string.IsNullOrEmpty(resource))
 				return SKData.Create(resource);
 #elif __TIZEN__
-				resource = ResourcePath.GetPath(resource);
-				if (string.IsNullOrEmpty(resource))
-					return null;
-
+			resource = ResourcePath.GetPath(resource);
+			if (!string.IsNullOrEmpty(resource))
 				return SKData.Create(resource);
 #elif WINDOWS_UWP
-				using (var stream = await Package.Current.InstalledLocation.OpenStreamForReadAsync(resource))
-				{
+			using (var stream = await Package.Current.InstalledLocation.OpenStreamForReadAsync(resource))
+			{
+				if (stream != null)
 					return SKData.Create(stream);
-				}
+			}
 #elif NETSTANDARD
 #else
 #error Missing platform logic
 #endif
 
-				return null;
-			}
+			return null;
 		}
 
 		public static async Task<SKImage> DecodeImageAsync(string resource)
 		{
 			using (var data = await LoadImageDataAsync(resource))
 			{
-				if (data == null)
-					return null;
-
-				return SKImage.FromEncodedData(data);
+				if (data != null)
+					return SKImage.FromEncodedData(data);
 			}
+
+			return null;
 		}
 
 		public static async Task<SKBitmap> DecodeBitmapAsync(string resource)
 		{
-			if (string.IsNullOrEmpty(resource))
-				throw new ArgumentNullException(nameof(resource));
-
-			resource = NormalizePath(resource);
-
-			if (File.Exists(resource))
+			using (var data = await LoadImageDataAsync(resource))
 			{
-				return SKBitmap.Decode(resource);
+				if (data != null)
+					return SKBitmap.Decode(data);
 			}
-			else
-			{
-#if __ANDROID__
-				if ((await Application.Context.Assets.ListAsync(resource)).Length > 0)
-				{
-					using (var stream = Application.Context.Assets.Open(resource))
-					{
-						if (stream != null)
-						{
-							return SKBitmap.Decode(stream);
-						}
-					}
-				}
 
-				var id = ResourceManager.GetDrawableByName(resource);
-				if (id != 0)
-				{
-					using (var stream = Application.Context.Resources.OpenRawResource(id))
-					{
-						return SKBitmap.Decode(stream);
-					}
-				}
-#elif __IOS__ || __MACOS__
-				resource = NSBundle.MainBundle.PathForResource(resource, null);
-				if (string.IsNullOrEmpty(resource))
-					return null;
-
-				return SKBitmap.Decode(resource);
-#elif __TIZEN__
-				resource = ResourcePath.GetPath(resource);
-				if (string.IsNullOrEmpty(resource))
-					return null;
-
-				return SKBitmap.Decode(resource);
-#elif WINDOWS_UWP
-				resource = resource.Replace('/', Path.DirectorySeparatorChar);
-				using (var stream = await Package.Current.InstalledLocation.OpenStreamForReadAsync(resource))
-				{
-					return SKBitmap.Decode(stream);
-				}
-#elif NETSTANDARD
-#else
-#error Missing platform logic
-#endif
-
-				return null;
-			}
+			return null;
 		}
 
 		private static string NormalizePath(string path) =>
