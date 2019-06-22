@@ -22,15 +22,6 @@
     <ClInclude Include="config.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\externals\harfbuzz\src\hb-ucdn\ucdn.h" />
-    <ClCompile Include="..\..\externals\harfbuzz\src\hb-ucdn\ucdn.c" />
-    <ClInclude Include="..\..\externals\harfbuzz\src\hb-ucdn\ucdn_db.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <!--HB_UCDN_sources-->
-    <ClCompile Include="..\..\externals\harfbuzz\src\hb-ucdn.cc" />
-  </ItemGroup>
-  <ItemGroup>
     <!--HB_BASE_sources-->
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-aat-fdsc-table.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-aat-layout-ankr-table.hh" />
@@ -47,6 +38,7 @@
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-aat-ltag-table.hh" />
     <ClCompile Include="..\..\externals\harfbuzz\src\hb-aat-map.cc" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-aat-map.hh" />
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-algs.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-array.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-atomic.hh" />
     <ClCompile Include="..\..\externals\harfbuzz\src\hb-blob.cc" />
@@ -61,10 +53,12 @@
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-cff1-interp-cs.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-cff2-interp-cs.hh" />
     <ClCompile Include="..\..\externals\harfbuzz\src\hb-common.cc" />
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-config.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-debug.hh" />
-    <ClInclude Include="..\..\externals\harfbuzz\src\hb-dsalgs.hh" />
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-dispatch.hh" />
     <ClCompile Include="..\..\externals\harfbuzz\src\hb-face.cc" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-face.hh" />
+    <ClCompile Include="..\..\externals\harfbuzz\src\hb-fallback-shape.cc" />
     <ClCompile Include="..\..\externals\harfbuzz\src\hb-font.cc" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-font.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-iter.hh" />
@@ -72,6 +66,7 @@
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-machinery.hh" />
     <ClCompile Include="..\..\externals\harfbuzz\src\hb-map.cc" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-map.hh" />
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-meta.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-mutex.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-null.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-object.hh" />
@@ -91,6 +86,7 @@
     <ClCompile Include="..\..\externals\harfbuzz\src\hb-ot-color.cc" />
     <ClCompile Include="..\..\externals\harfbuzz\src\hb-ot-face.cc" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-face.hh" />
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-face-table-list.hh" />
     <ClCompile Include="..\..\externals\harfbuzz\src\hb-ot-font.cc" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-gasp-table.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-glyf-table.hh" />
@@ -113,7 +109,7 @@
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-math-table.hh" />
     <ClCompile Include="..\..\externals\harfbuzz\src\hb-ot-math.cc" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-maxp-table.hh" />
-    <ClCompile Include="..\..\externals\harfbuzz\src\hb-ot-name-language.cc" />
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-name-language-static.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-name-language.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-name-table.hh" />
     <ClCompile Include="..\..\externals\harfbuzz\src\hb-ot-name.cc" />
@@ -157,7 +153,10 @@
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-var-hvar-table.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-var-mvar-table.hh" />
     <ClCompile Include="..\..\externals\harfbuzz\src\hb-ot-var.cc" />
-    <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-vorg-table.hh" />
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-vorg-table.hh" />	
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-pool.hh" />
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-sanitize.hh" />
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-serialize.hh" />	
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-set-digest.hh" />
     <ClCompile Include="..\..\externals\harfbuzz\src\hb-set.cc" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-set.hh" />
@@ -170,6 +169,8 @@
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-shaper.hh" />
     <ClCompile Include="..\..\externals\harfbuzz\src\hb-static.cc" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-string-array.hh" />
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-ucd-table.hh" />
+    <ClCompile Include="..\..\externals\harfbuzz\src\hb-ucd.cc" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-unicode-emoji-table.hh" />
     <ClCompile Include="..\..\externals\harfbuzz\src\hb-unicode.cc" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-unicode.hh" />
@@ -177,6 +178,13 @@
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-vector.hh" />
     <ClCompile Include="..\..\externals\harfbuzz\src\hb-warning.cc" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb.hh" />
+    <!--HB_BASE_RAGEL_GENERATED_sources-->
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-buffer-deserialize-json.hh" />
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-buffer-deserialize-text.hh" />
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-shape-complex-indic-machine.hh" />
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-shape-complex-khmer-machine.hh" />
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-shape-complex-myanmar-machine.hh" />
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-shape-complex-use-machine.hh" />
     <!--HB_BASE_headers-->
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-aat-layout.h" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-aat.h" />
@@ -200,11 +208,8 @@
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-shape-plan.h" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-shape.h" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-unicode.h" />
-    <ClInclude Include="..\..\externals\harfbuzz\src\hb.h" />
-    <!--HB_NODIST_headers-->
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-version.h" />
-    <!--HB_FALLBACK_sources-->
-    <ClCompile Include="..\..\externals\harfbuzz\src\hb-fallback-shape.cc" />
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb.h" />  
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -280,8 +285,8 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>HAVE_UCDN=1;HAVE_CONFIG_H;HB_EXTERN=__declspec (dllexport) extern;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;WIN32;_DEBUG;_WINDOWS;_USRDLL;HARFBUZZ_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\externals\harfbuzz\src\hb-ucdn;$(ProjectDir);$(GeneratedFilesDir);$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>HAVE_CONFIG_H;HB_EXTERN=__declspec (dllexport) extern;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;WIN32;_DEBUG;_WINDOWS;_USRDLL;HARFBUZZ_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(GeneratedFilesDir);$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4267;4244</DisableSpecificWarnings>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ObjectFileName>$(IntDir)</ObjectFileName>
@@ -296,8 +301,8 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>HAVE_UCDN=1;HAVE_CONFIG_H;HB_EXTERN=__declspec (dllexport) extern;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;_DEBUG;_WINDOWS;_USRDLL;HARFBUZZ_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\externals\harfbuzz\src\hb-ucdn;$(ProjectDir);$(GeneratedFilesDir);$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>HAVE_CONFIG_H;HB_EXTERN=__declspec (dllexport) extern;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;_DEBUG;_WINDOWS;_USRDLL;HARFBUZZ_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(GeneratedFilesDir);$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4267;4244</DisableSpecificWarnings>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -313,8 +318,8 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>HAVE_UCDN=1;HAVE_CONFIG_H;HB_EXTERN=__declspec (dllexport) extern;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;WIN32;NDEBUG;_WINDOWS;_USRDLL;HARFBUZZ_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\externals\harfbuzz\src\hb-ucdn;$(ProjectDir);$(GeneratedFilesDir);$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>HAVE_CONFIG_H;HB_EXTERN=__declspec (dllexport) extern;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;WIN32;NDEBUG;_WINDOWS;_USRDLL;HARFBUZZ_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(GeneratedFilesDir);$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4267;4244</DisableSpecificWarnings>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -332,8 +337,8 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>HAVE_UCDN=1;HAVE_CONFIG_H;HB_EXTERN=__declspec (dllexport) extern;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;NDEBUG;_WINDOWS;_USRDLL;HARFBUZZ_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\externals\harfbuzz\src\hb-ucdn;$(ProjectDir);$(GeneratedFilesDir);$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>HAVE_CONFIG_H;HB_EXTERN=__declspec (dllexport) extern;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;NDEBUG;_WINDOWS;_USRDLL;HARFBUZZ_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(GeneratedFilesDir);$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4267;4244</DisableSpecificWarnings>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
