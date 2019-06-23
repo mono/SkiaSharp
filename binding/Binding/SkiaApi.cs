@@ -1431,7 +1431,7 @@ namespace SkiaSharp
 		public extern static bool sk_bitmap_ready_to_draw (sk_bitmap_t b);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		public extern static bool sk_bitmap_install_pixels (sk_bitmap_t cbitmap, ref SKImageInfoNative cinfo, voidptr_t pixels, size_t rowBytes, SKDataReleaseDelegateProxyDelegate releaseProc, voidptr_t context);
+		public extern static bool sk_bitmap_install_pixels (sk_bitmap_t cbitmap, ref SKImageInfoNative cinfo, voidptr_t pixels, size_t rowBytes, SKBitmapReleaseDelegateProxyDelegate releaseProc, voidptr_t context);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		public extern static bool sk_bitmap_install_pixels_with_pixmap (sk_bitmap_t cbitmap, sk_pixmap_t cpixmap);
