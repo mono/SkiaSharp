@@ -928,7 +928,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_data_t sk_data_new_from_stream (sk_stream_t stream, size_t length);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_data_t sk_data_new_with_proc (voidptr_t ptr, size_t length, voidptr_t proc, voidptr_t ctx);
+		public extern static sk_data_t sk_data_new_with_proc (voidptr_t ptr, size_t length, SKDataReleaseDelegateProxyDelegate proc, voidptr_t ctx);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_data_unref (sk_data_t d);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1735,11 +1735,11 @@ namespace SkiaSharp
 
 		// GL interface
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static gr_glinterface_t gr_glinterface_assemble_interface (voidptr_t ctx, voidptr_t get);
+		public extern static gr_glinterface_t gr_glinterface_assemble_interface (voidptr_t ctx, GRGlGetProcDelegateProxyDelegate get);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static gr_glinterface_t gr_glinterface_assemble_gl_interface (voidptr_t ctx, voidptr_t get);
+		public extern static gr_glinterface_t gr_glinterface_assemble_gl_interface (voidptr_t ctx, GRGlGetProcDelegateProxyDelegate get);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static gr_glinterface_t gr_glinterface_assemble_gles_interface (voidptr_t ctx, voidptr_t get);
+		public extern static gr_glinterface_t gr_glinterface_assemble_gles_interface (voidptr_t ctx, GRGlGetProcDelegateProxyDelegate get);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static gr_glinterface_t gr_glinterface_create_native_interface ();
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
