@@ -14,27 +14,35 @@ namespace SkiaSharp
 		public static T Create<T> (Delegate managedDel, T nativeDel, out GCHandle gch, out IntPtr contextPtr)
 			where T : Delegate
 		{
+			if (managedDel == null) {
+				gch = default (GCHandle);
+				contextPtr = IntPtr.Zero;
+				return null;
+			}
+
 			gch = GCHandle.Alloc (managedDel);
-
-			contextPtr = managedDel != null
-				? GCHandle.ToIntPtr (gch)
-				: IntPtr.Zero;
-
-			return managedDel != null ? nativeDel : null;
+			contextPtr = GCHandle.ToIntPtr (gch);
+			return nativeDel;
 		}
 
 		public static void Create (Delegate managedDel, out GCHandle gch, out IntPtr contextPtr)
 		{
-			gch = GCHandle.Alloc (managedDel);
+			if (managedDel == null) {
+				gch = default (GCHandle);
+				contextPtr = IntPtr.Zero;
+				return;
+			}
 
-			contextPtr = managedDel != null
-				? GCHandle.ToIntPtr (gch)
-				: IntPtr.Zero;
+			gch = GCHandle.Alloc (managedDel);
+			contextPtr = GCHandle.ToIntPtr (gch);
 		}
 
 		public static T Get<T> (IntPtr contextPtr, out GCHandle gch)
 			where T : Delegate
 		{
+			if (contextPtr == IntPtr.Zero)
+				return null;
+
 			gch = GCHandle.FromIntPtr (contextPtr);
 			return (T)gch.Target;
 		}
