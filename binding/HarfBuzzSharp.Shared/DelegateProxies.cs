@@ -58,7 +58,7 @@ namespace HarfBuzzSharp
 			var multi = Get<GetMultiDelegateDelegate> (context, out var gch);
 			var del = (ReleaseDelegate)multi.Invoke (typeof (ReleaseDelegate));
 			try {
-				del.Invoke (null);
+				del?.Invoke (null);
 			} finally {
 				gch.Free ();
 			}
