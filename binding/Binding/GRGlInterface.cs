@@ -64,7 +64,7 @@ namespace SkiaSharp
 			var del = get != null && context != null
 				? new GRGlGetProcDelegate ((_, name) => get (context, name))
 				: get;
-			var proxy = DelegateProxies.Get (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
+			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
 			try {
 				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_interface (ctx, proxy));
 			} finally {
@@ -93,7 +93,7 @@ namespace SkiaSharp
 			var del = get != null && context != null
 				? new GRGlGetProcDelegate ((_, name) => get (context, name))
 				: get;
-			var proxy = DelegateProxies.Get (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
+			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
 			try {
 				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gl_interface (ctx, proxy));
 			} finally {
@@ -111,7 +111,7 @@ namespace SkiaSharp
 			var del = get != null && context != null
 				? new GRGlGetProcDelegate ((_, name) => get (context, name))
 				: get;
-			var proxy = DelegateProxies.Get (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
+			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
 			try {
 				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gles_interface (ctx, proxy));
 			} finally {

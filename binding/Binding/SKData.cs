@@ -154,7 +154,7 @@ namespace SkiaSharp
 			var del = releaseProc != null && context != null
 				? new SKDataReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
-			var proxy = DelegateProxies.Get (del, DelegateProxies.SKDataReleaseDelegateProxy, out _, out var ctx);
+			var proxy = DelegateProxies.Create (del, DelegateProxies.SKDataReleaseDelegateProxy, out _, out var ctx);
 			return GetObject<SKData> (SkiaApi.sk_data_new_with_proc (address, (IntPtr)length, proxy, ctx));
 		}
 

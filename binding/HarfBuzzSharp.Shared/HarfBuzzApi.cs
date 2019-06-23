@@ -39,7 +39,7 @@ namespace HarfBuzzSharp
 		// hb_blob_t
 
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static hb_blob_t hb_blob_create (IntPtr data, int length, MemoryMode mode, IntPtr user_data, IntPtr destroy);
+		public extern static hb_blob_t hb_blob_create (IntPtr data, int length, MemoryMode mode, IntPtr user_data, ReleaseDelegateProxyDelegate destroy);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_blob_destroy (hb_blob_t blob);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -62,7 +62,7 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static hb_face_t hb_face_create (hb_blob_t blob, int index);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern hb_face_t hb_face_create_for_tables (IntPtr reference_table_func, IntPtr user_data, IntPtr destroy);
+		public static extern hb_face_t hb_face_create_for_tables (GetTableDelegateProxyDelegate reference_table_func, IntPtr user_data, ReleaseDelegateProxyDelegate destroy);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern hb_face_t hb_face_get_empty ();
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]

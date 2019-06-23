@@ -34,13 +34,6 @@ namespace SkiaSharp
 		}
 	}
 
-	// public delegates
-	public delegate void SKBitmapReleaseDelegate (IntPtr address, object context);
-
-	// internal proxy delegates
-	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal delegate void SKBitmapReleaseDelegateInternal (IntPtr address, IntPtr context);
-
 	// TODO: keep in mind SKBitmap may be going away (according to Google)
 	// TODO: `ComputeIsOpaque` may be useful
 	// TODO: `GenerationID` may be useful
@@ -50,15 +43,6 @@ namespace SkiaSharp
 	{
 		private const string UnsupportedColorTypeMessage = "Setting the ColorTable is only supported for bitmaps with ColorTypes of Index8.";
 		private const string UnableToAllocatePixelsMessage = "Unable to allocate pixels for the bitmap.";
-
-		// so the GC doesn't collect the delegate
-		private static readonly SKBitmapReleaseDelegateInternal releaseDelegateInternal;
-		private static readonly IntPtr releaseDelegate;
-		static SKBitmap ()
-		{
-			releaseDelegateInternal = new SKBitmapReleaseDelegateInternal (SKBitmapReleaseInternal);
-			releaseDelegate = Marshal.GetFunctionPointerForDelegate (releaseDelegateInternal);
-		}
 
 		[Preserve]
 		internal SKBitmap (IntPtr handle, bool owns)
@@ -701,12 +685,11 @@ namespace SkiaSharp
 		public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKBitmapReleaseDelegate releaseProc, object context)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			if (releaseProc == null) {
-				return SkiaApi.sk_bitmap_install_pixels (Handle, ref cinfo, pixels, (IntPtr)rowBytes, IntPtr.Zero, IntPtr.Zero);
-			} else {
-				var ctx = new NativeDelegateContext (context, releaseProc);
-				return SkiaApi.sk_bitmap_install_pixels (Handle, ref cinfo, pixels, (IntPtr)rowBytes, releaseDelegate, ctx.NativeContext);
-			}
+			var del = releaseProc != null && context != null
+				? new SKBitmapReleaseDelegate ((addr, _) => releaseProc (addr, context))
+				: releaseProc;
+			var proxy = DelegateProxies.Create (del, DelegateProxies.SKDataReleaseDelegateProxy, out _, out var ctx);
+			return SkiaApi.sk_bitmap_install_pixels (Handle, ref cinfo, pixels, (IntPtr)rowBytes, proxy, ctx);
 		}
 
 		public bool InstallPixels (SKPixmap pixmap)
@@ -814,16 +797,6 @@ namespace SkiaSharp
 		private void Swap (SKBitmap other)
 		{
 			SkiaApi.sk_bitmap_swap (Handle, other.Handle);
-		}
-
-		// internal proxy
-
-		[MonoPInvokeCallback (typeof (SKBitmapReleaseDelegateInternal))]
-		private static void SKBitmapReleaseInternal (IntPtr address, IntPtr context)
-		{
-			using (var ctx = NativeDelegateContext.Unwrap (context)) {
-				ctx.GetDelegate<SKBitmapReleaseDelegate> () (address, ctx.ManagedContext);
-			}
 		}
 	}
 }
