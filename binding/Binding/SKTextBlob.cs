@@ -301,14 +301,14 @@ namespace SkiaSharp
 			if (glyphs.Count > Size)
 				throw new ArgumentOutOfRangeException (nameof (glyphs));
 
-			var glyphsSpan = GetGlyphsSpan ();
+			var glyphsSpan = GetGlyphSpan ();
 
 			for (var i = 0; i < Size; i++) {
 				glyphsSpan[i] = glyphs[i];
 			}
 		}
 
-		public Span<ushort> GetGlyphsSpan ()
+		public Span<ushort> GetGlyphSpan ()
 		{
 			unsafe {
 				return new Span<ushort> (internalBuffer.Glyphs, Size);
@@ -339,14 +339,14 @@ namespace SkiaSharp
 			if (clusters.Count > Size)
 				throw new ArgumentOutOfRangeException (nameof (clusters));
 
-			var clustersSpan = GetClustersSpan ();
+			var clustersSpan = GetClusterSpan ();
 
 			for (var i = 0; i < Size; i++) {
 				clustersSpan[i] = clusters[i];
 			}
 		}
 
-		public Span<uint> GetClustersSpan ()
+		public Span<uint> GetClusterSpan ()
 		{
 			unsafe {
 				return new Span<uint> (internalBuffer.Clusters, Size);
@@ -366,14 +366,14 @@ namespace SkiaSharp
 			if (positions.Count > Size)
 				throw new ArgumentOutOfRangeException (nameof (positions));
 
-			var positionsSpan = GetPositionsSpan ();
+			var positionsSpan = GetPositionSpan ();
 
 			for (var i = 0; i < TextSize; i++) {
 				positionsSpan[i] = positions[i];
 			}
 		}
 
-		public Span<float> GetPositionsSpan ()
+		public Span<float> GetPositionSpan ()
 		{
 			unsafe {
 				return new Span<float> (internalBuffer.Positions, Size);
@@ -393,14 +393,14 @@ namespace SkiaSharp
 			if (positions.Count > Size)
 				throw new ArgumentOutOfRangeException (nameof (positions));
 
-			var positionsSpan = GetPositionsSpan ();
+			var positionsSpan = GetPositionSpan ();
 
 			for (var i = 0; i < TextSize; i++) {
 				positionsSpan[i] = positions[i];
 			}
 		}
 
-		public Span<SKPoint> GetPositionsSpan ()
+		public Span<SKPoint> GetPositionSpan ()
 		{
 			unsafe {
 				return new Span<SKPoint> (internalBuffer.Positions, Size);
