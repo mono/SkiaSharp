@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace HarfBuzzSharp
 {
@@ -17,9 +18,32 @@ namespace HarfBuzzSharp
 			Handle = HarfBuzzApi.hb_font_create (face.Handle);
 		}
 
+		public Font (Font parent)
+			: this (IntPtr.Zero)
+		{
+			if (parent == null) {
+				throw new ArgumentNullException (nameof (parent));
+			}
+
+			if (parent.Handle == IntPtr.Zero) {
+				throw new ArgumentException (nameof (parent.Handle));
+			}
+
+			Handle = HarfBuzzApi.hb_font_create_sub_font (parent.Handle);
+		}
+
 		internal Font (IntPtr handle)
 			: base (handle)
 		{
+		}
+
+		public Font Parent {
+			get {
+				var parent = HarfBuzzApi.hb_font_get_parent (Handle);
+				if (parent == IntPtr.Zero)
+					return null;
+				return new Font (parent);
+			}
 		}
 
 		public FontExtents HorizontalFontExtents {
@@ -42,6 +66,24 @@ namespace HarfBuzzSharp
 
 		public string[] SupportedShapers =>
 			PtrToStringArray (HarfBuzzApi.hb_shape_list_shapers ()).ToArray ();
+
+		public void SetFontFunctions (FontFunctions fontFunctions, object fontData = null, ReleaseDelegate destroy = null)
+		{
+			if (fontFunctions == null) {
+				throw new ArgumentException (nameof (fontFunctions));
+			}
+
+			var del = destroy != null && fontData != null
+				? (_) => destroy (fontData)
+				: destroy;
+			var proxy = DelegateProxies.Create (del, DelegateProxies.ReleaseDelegateProxy, out _, out var ctx);
+
+			fontFunctions.Font = this;
+
+			fontFunctions.FontData = fontData;
+
+			HarfBuzzApi.hb_font_set_funcs (Handle, fontFunctions.Handle, ctx, proxy);
+		}
 
 		public void GetScale (out int xScale, out int yScale) =>
 			HarfBuzzApi.hb_font_get_scale (Handle, out xScale, out yScale);
@@ -210,6 +252,14 @@ namespace HarfBuzzSharp
 
 			return new GlyphExtents ();
 		}
+
+		public string GetGlyphName (uint glyph) =>
+			HarfBuzzApi.hb_font_get_glyph_name (Handle, glyph, out var name, out _)
+				? name.ToString ()
+				: glyph.ToString ();
+
+		public uint GetGlyphFromName (string name) =>
+			HarfBuzzApi.hb_font_get_glyph_from_name (Handle, name, name.Length, out var glyph) ? glyph : 0;
 
 		public void SetFunctionsOpenType () =>
 			HarfBuzzApi.hb_ot_font_set_funcs (Handle);
