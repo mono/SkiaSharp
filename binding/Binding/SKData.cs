@@ -6,13 +6,6 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	// public delegates
-	public delegate void SKDataReleaseDelegate (IntPtr address, object context);
-
-	// internal proxy delegates
-	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal delegate void SKDataReleaseDelegateInternal (IntPtr address, IntPtr context);
-
 	public class SKData : SKObject
 	{
 		// We pick a value that is the largest multiple of 4096 that is still smaller than the large object heap threshold (85K).
@@ -22,14 +15,8 @@ namespace SkiaSharp
 
 		private static readonly Lazy<SKData> empty;
 
-		// so the GC doesn't collect the delegate
-		private static readonly SKDataReleaseDelegateInternal releaseDelegateInternal;
-		private static readonly IntPtr releaseDelegate;
 		static SKData ()
 		{
-			releaseDelegateInternal = new SKDataReleaseDelegateInternal (ReleaseInternal);
-			releaseDelegate = Marshal.GetFunctionPointerForDelegate (releaseDelegateInternal);
-
 			empty = new Lazy<SKData> (() => GetObject<SKData> (SkiaApi.sk_data_new_empty ()));
 		}
 
@@ -172,12 +159,11 @@ namespace SkiaSharp
 
 		public static SKData Create (IntPtr address, int length, SKDataReleaseDelegate releaseProc, object context)
 		{
-			if (releaseProc == null) {
-				return GetObject<SKData> (SkiaApi.sk_data_new_with_proc (address, (IntPtr) length, IntPtr.Zero, IntPtr.Zero));
-			} else {
-				var ctx = new NativeDelegateContext (context, releaseProc);
-				return GetObject<SKData> (SkiaApi.sk_data_new_with_proc (address, (IntPtr) length, releaseDelegate, ctx.NativeContext));
-			}
+			var del = releaseProc != null && context != null
+				? new SKDataReleaseDelegate ((addr, _) => releaseProc (addr, context))
+				: releaseProc;
+			var proxy = DelegateProxies.Create (del, DelegateProxies.SKDataReleaseDelegateProxy, out _, out var ctx);
+			return GetObject<SKData> (SkiaApi.sk_data_new_with_proc (address, (IntPtr)length, proxy, ctx));
 		}
 
 		internal static SKData FromCString (string str)
@@ -233,16 +219,6 @@ namespace SkiaSharp
 				left -= copyCount;
 				ptr += copyCount;
 				target.Write (buffer, 0, copyCount);
-			}
-		}
-
-		// internal proxy
-
-		[MonoPInvokeCallback (typeof (SKDataReleaseDelegateInternal))]
-		private static void ReleaseInternal (IntPtr address, IntPtr context)
-		{
-			using (var ctx = NativeDelegateContext.Unwrap (context)) {
-				ctx.GetDelegate<SKDataReleaseDelegate> () (address, ctx.ManagedContext);
 			}
 		}
 

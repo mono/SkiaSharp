@@ -4,16 +4,6 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	// public delegates
-	public delegate void SKImageRasterReleaseDelegate (IntPtr pixels, object context);
-	public delegate void SKImageTextureReleaseDelegate (object context);
-
-	// internal proxy delegates
-	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal delegate void SKImageRasterReleaseDelegateInternal (IntPtr pixels, IntPtr context);
-	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal delegate void SKImageTextureReleaseDelegateInternal (IntPtr context);
-
 	// TODO: `MakeCrossContextFromEncoded`
 	// TODO: `MakeFromYUVTexturesCopy` and `MakeFromNV12TexturesCopy`
 	// TODO: `FromPicture` with bit depth and color space
@@ -24,24 +14,6 @@ namespace SkiaSharp
 
 	public class SKImage : SKObject
 	{
-		// so the GC doesn't collect the delegate
-		private static readonly SKImageRasterReleaseDelegateInternal rasterReleaseDelegateInternal;
-		private static readonly SKImageTextureReleaseDelegateInternal textureReleaseDelegateInternal;
-		private static readonly SKImageRasterReleaseDelegateInternal coTaskMemReleaseDelegateInternal;
-		private static readonly IntPtr rasterReleaseDelegate;
-		private static readonly IntPtr textureReleaseDelegate;
-		private static readonly IntPtr coTaskMemReleaseDelegate;
-		static SKImage ()
-		{
-			rasterReleaseDelegateInternal = new SKImageRasterReleaseDelegateInternal (RasterReleaseInternal);
-			textureReleaseDelegateInternal = new SKImageTextureReleaseDelegateInternal (TextureReleaseInternal);
-			coTaskMemReleaseDelegateInternal = new SKImageRasterReleaseDelegateInternal (CoTaskMemReleaseInternal);
-
-			rasterReleaseDelegate = Marshal.GetFunctionPointerForDelegate (rasterReleaseDelegateInternal);
-			textureReleaseDelegate = Marshal.GetFunctionPointerForDelegate (textureReleaseDelegateInternal);
-			coTaskMemReleaseDelegate = Marshal.GetFunctionPointerForDelegate (coTaskMemReleaseDelegateInternal);
-		}
-
 		protected override void Dispose (bool disposing)
 		{
 			if (Handle != IntPtr.Zero && OwnsHandle) {
@@ -64,7 +36,7 @@ namespace SkiaSharp
 			var pixels = Marshal.AllocCoTaskMem (info.BytesSize);
 			using (var pixmap = new SKPixmap (info, pixels)) {
 				// don't use the managed version as that is just extra overhead which isn't necessary
-				return GetObject<SKImage> (SkiaApi.sk_image_new_raster (pixmap.Handle, coTaskMemReleaseDelegate, IntPtr.Zero));
+				return GetObject<SKImage> (SkiaApi.sk_image_new_raster (pixmap.Handle, DelegateProxies.SKImageRasterReleaseDelegateProxyForCoTaskMem, IntPtr.Zero));
 			}
 		}
 
@@ -188,12 +160,11 @@ namespace SkiaSharp
 			if (pixmap == null)
 				throw new ArgumentNullException (nameof (pixmap));
 
-			if (releaseProc == null) {
-				return GetObject<SKImage> (SkiaApi.sk_image_new_raster (pixmap.Handle, IntPtr.Zero, IntPtr.Zero));
-			} else {
-				var ctx = new NativeDelegateContext (releaseContext, releaseProc);
-				return GetObject<SKImage> (SkiaApi.sk_image_new_raster (pixmap.Handle, rasterReleaseDelegate, ctx.NativeContext));
-			}
+			var del = releaseProc != null && releaseContext != null
+				? new SKImageRasterReleaseDelegate ((addr, _) => releaseProc (addr, releaseContext))
+				: releaseProc;
+			var proxy = DelegateProxies.Create (del, DelegateProxies.SKImageRasterReleaseDelegateProxy, out _, out var ctx);
+			return GetObject<SKImage> (SkiaApi.sk_image_new_raster (pixmap.Handle, proxy, ctx));
 		}
 
 		// create a new image from encoded data
@@ -410,12 +381,11 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (texture));
 
 			var cs = colorspace == null ? IntPtr.Zero : colorspace.Handle;
-			if (releaseProc == null) {
-				return GetObject<SKImage> (SkiaApi.sk_image_new_from_texture (context.Handle, texture.Handle, origin, colorType, alpha, cs, IntPtr.Zero, IntPtr.Zero));
-			} else {
-				var ctx = new NativeDelegateContext (releaseContext, releaseProc);
-				return GetObject<SKImage> (SkiaApi.sk_image_new_from_texture (context.Handle, texture.Handle, origin, colorType, alpha, cs, textureReleaseDelegate, ctx.NativeContext));
-			}
+			var del = releaseProc != null && releaseContext != null
+				? new SKImageTextureReleaseDelegate ((_) => releaseProc (releaseContext))
+				: releaseProc;
+			var proxy = DelegateProxies.Create (del, DelegateProxies.SKImageTextureReleaseDelegateProxy, out _, out var ctx);
+			return GetObject<SKImage> (SkiaApi.sk_image_new_from_texture (context.Handle, texture.Handle, origin, colorType, alpha, cs, proxy, ctx));
 		}
 
 		[Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
@@ -640,31 +610,6 @@ namespace SkiaSharp
 			if (filter == null)
 				throw new ArgumentNullException (nameof (filter));
 			return GetObject<SKImage> (SkiaApi.sk_image_make_with_filter (Handle, filter.Handle, ref subset, ref clipBounds, out outSubset, out outOffset));
-		}
-
-
-		// internal proxies
-
-		[MonoPInvokeCallback (typeof (SKImageRasterReleaseDelegateInternal))]
-		private static void RasterReleaseInternal (IntPtr pixels, IntPtr context)
-		{
-			using (var ctx = NativeDelegateContext.Unwrap (context)) {
-				ctx.GetDelegate<SKImageRasterReleaseDelegate> () (pixels, ctx.ManagedContext);
-			}
-		}
-
-		[MonoPInvokeCallback (typeof (SKImageRasterReleaseDelegateInternal))]
-		private static void CoTaskMemReleaseInternal (IntPtr pixels, IntPtr context)
-		{
-			Marshal.FreeCoTaskMem (pixels);
-		}
-
-		[MonoPInvokeCallback (typeof (SKImageTextureReleaseDelegateInternal))]
-		private static void TextureReleaseInternal (IntPtr context)
-		{
-			using (var ctx = NativeDelegateContext.Unwrap (context)) {
-				ctx.GetDelegate<SKImageTextureReleaseDelegate> () (ctx.ManagedContext);
-			}
 		}
 	}
 }

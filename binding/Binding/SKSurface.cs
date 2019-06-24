@@ -3,13 +3,6 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	// public delegates
-	public delegate void SKSurfaceReleaseDelegate (IntPtr address, object context);
-
-	// internal proxy delegates
-	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal delegate void SKSurfaceReleaseDelegateInternal (IntPtr address, IntPtr context);
-
 	public class SKSurface : SKObject
 	{
 		[Obsolete ("Use Create(SKImageInfo) instead.")]
@@ -20,15 +13,6 @@ namespace SkiaSharp
 		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes) => Create (new SKImageInfo (width, height, colorType, alphaType), pixels, rowBytes);
 		[Obsolete ("Use Create(SKImageInfo, IntPtr, int, SKSurfaceProperties) instead.")]
 		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes, SKSurfaceProps props) => Create (new SKImageInfo (width, height, colorType, alphaType), pixels, rowBytes, props);
-
-		// so the GC doesn't collect the delegate
-		private static readonly SKSurfaceReleaseDelegateInternal releaseDelegateInternal;
-		private static readonly IntPtr releaseDelegate;
-		static SKSurface ()
-		{
-			releaseDelegateInternal = new SKSurfaceReleaseDelegateInternal (SKSurfaceReleaseInternal);
-			releaseDelegate = Marshal.GetFunctionPointerForDelegate (releaseDelegateInternal);
-		}
 
 		[Preserve]
 		internal SKSurface (IntPtr h, bool owns)
@@ -87,7 +71,7 @@ namespace SkiaSharp
 			Create (info, pixels, rowBytes, null, null, null);
 
 		public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes, SKSurfaceReleaseDelegate releaseProc, object context) =>
-			Create (info, pixels, info.RowBytes, null, null, null);
+			Create (info, pixels, rowBytes, releaseProc, context, null);
 
 		public static SKSurface Create (SKImageInfo info, IntPtr pixels, SKSurfaceProperties props) =>
 			Create (info, pixels, info.RowBytes, null, null, props);
@@ -98,12 +82,11 @@ namespace SkiaSharp
 		public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes, SKSurfaceReleaseDelegate releaseProc, object context, SKSurfaceProperties props)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			if (releaseProc == null) {
-				return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster_direct (ref cinfo, pixels, (IntPtr)rowBytes, IntPtr.Zero, IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
-			} else {
-				var ctx = new NativeDelegateContext (context, releaseProc);
-				return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster_direct (ref cinfo, pixels, (IntPtr)rowBytes, releaseDelegate, ctx.NativeContext, props?.Handle ?? IntPtr.Zero));
-			}
+			var del = releaseProc != null && context != null
+				? new SKSurfaceReleaseDelegate ((addr, _) => releaseProc (addr, context))
+				: releaseProc;
+			var proxy = DelegateProxies.Create (del, DelegateProxies.SKSurfaceReleaseDelegateProxy, out _, out var ctx);
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster_direct (ref cinfo, pixels, (IntPtr)rowBytes, proxy, ctx, props?.Handle ?? IntPtr.Zero));
 		}
 
 		// GPU BACKEND RENDER TARGET surface
@@ -349,16 +332,6 @@ namespace SkiaSharp
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
 			return SkiaApi.sk_surface_read_pixels (Handle, ref cinfo, dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
-		}
-
-		// internal proxy
-
-		[MonoPInvokeCallback (typeof (SKSurfaceReleaseDelegateInternal))]
-		private static void SKSurfaceReleaseInternal (IntPtr address, IntPtr context)
-		{
-			using (var ctx = NativeDelegateContext.Unwrap (context)) {
-				ctx.GetDelegate<SKSurfaceReleaseDelegate> () (address, ctx.ManagedContext);
-			}
 		}
 	}
 }
