@@ -43,4 +43,7 @@ if ($IsMacOS -or $IsLinux) {
     & "$packMan" install --no-java-check --accept-license "$packages"
 }
 
+# make sure that Tizen Studio is in TIZEN_STUDIO_HOME
+Write-Host "##vso[task.setvariable variable=TIZEN_STUDIO_HOME;]$ts";
+
 exit $LASTEXITCODE
