@@ -14,8 +14,8 @@ variables:
   NATIVE_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) python git libfontconfig1-dev clang-3.8 make
   TIZEN_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) python git zip libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn
   MANAGED_LINUX_PACKAGES: $(BASE_LINUX_PACKAGES) dotnet-sdk-2.1 ttf-ancient-fonts
-  MONO_VERSION: 5_16_0
-  XCODE_VERSION: 10.1
+  MONO_VERSION: 5_18_1
+  XCODE_VERSION: 10.2.1
   CONFIGURATION: 'Release'
 
 resources:
@@ -58,37 +58,37 @@ jobs:
     parameters:
       name: native_android_macos
       displayName: Build Native Android (macOS)
-      vmImage: macos-10.13
+      vmImage: macos-10.14
       target: externals-android
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_ios_macos
       displayName: Build Native iOS (macOS)
-      vmImage: macos-10.13
+      vmImage: macos-10.14
       target: externals-ios
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_macos_macos
       displayName: Build Native macOS (macOS)
-      vmImage: macos-10.13
+      vmImage: macos-10.14
       target: externals-macos
   # - template: azure-templates-bootstrapper.yml
   #   parameters:
   #     name: native_tizen_macos
   #     displayName: Build Native Tizen (macOS)
-  #     vmImage: macos-10.13
+  #     vmImage: macos-10.14
   #     target: externals-tizen
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_tvos_macos
       displayName: Build Native tvOS (macOS)
-      vmImage: macos-10.13
+      vmImage: macos-10.14
       target: externals-tvos
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_watchos_macos
       displayName: Build Native watchOS (macOS)
-      vmImage: macos-10.13
+      vmImage: macos-10.14
       target: externals-watchos
 
  # NATIVE JOBS - LINUX
@@ -129,7 +129,7 @@ jobs:
     parameters:
       name: managed_macos
       displayName: Build Managed (macOS)
-      vmImage: macos-10.13
+      vmImage: macos-10.14
       target: libs-only
       dependsOn:
         - native_android_macos
@@ -290,7 +290,7 @@ jobs:
     parameters:
       name: tests_macos
       displayName: Tests (macOS)
-      vmImage: macos-10.13
+      vmImage: macos-10.14
       retryCount: 3
       target: tests-only
       dependsOn:
@@ -352,7 +352,7 @@ jobs:
     parameters:
       name: samples_macos
       displayName: Build Samples (macOS)
-      vmImage: macos-10.13
+      vmImage: macos-10.14
       target: samples
       dependsOn:
         - managed_macos
