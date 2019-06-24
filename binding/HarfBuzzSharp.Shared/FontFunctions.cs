@@ -10,12 +10,12 @@ namespace HarfBuzzSharp
 	internal delegate bool VariationGlyphProxyDelegate (IntPtr font, IntPtr fontData, uint unicode,
 		uint variationSelector, out uint glyph, IntPtr context);
 	internal delegate uint NominalGlyphsProxyDelegate (IntPtr font, IntPtr fontData, uint count,
-		IntPtr firstUnicode, uint unicodeStride, IntPtr firstGlyph, out uint glyphStride, IntPtr context);
+		IntPtr firstUnicode, uint unicodeStride, out IntPtr firstGlyph, out uint glyphStride, IntPtr context);
 	internal delegate int GlyphAdvanceProxyDelegate (IntPtr font, IntPtr fontData, uint glyph, IntPtr context);
 	internal delegate void GlyphAdvancesProxyDelegate (IntPtr font, IntPtr fontData, uint count,
-		IntPtr firstGlyph, uint glyphStride, IntPtr firstAdvance, out uint advanceStride, IntPtr context);
+		IntPtr firstGlyph, uint glyphStride, out IntPtr firstAdvance, out uint advanceStride, IntPtr context);
 	internal delegate bool GlyphOriginProxyDelegate (IntPtr font, IntPtr fontData, uint glyph, out int x,
-		out int y, uint userData);
+		out int y, IntPtr context);
 	internal delegate int GlyphKerningProxyDelegate (IntPtr font, IntPtr fontData, uint firstGlyph,
 		uint secondGlyph, IntPtr context);
 	internal delegate bool GlyphExtentsProxyDelegate (IntPtr font, IntPtr fontData, uint glyph,
@@ -32,28 +32,35 @@ namespace HarfBuzzSharp
 		private static readonly Lazy<FontFunctions> emptyFontFunctions =
 			new Lazy<FontFunctions> (() => new StaticFontFunctions (HarfBuzzApi.hb_font_funcs_get_empty ()));
 
+		private static readonly FontExtentsProxyDelegate FontExtentsProxy = FontExtentsProxyImplementation;
+		private static readonly NominalGlyphProxyDelegate NominalGlyphProxy = NominalGlyphProxyImplementation;
+		private static readonly VariationGlyphProxyDelegate VariationGlyphProxy = VariationGlyphProxyImplementation;
+		private static readonly NominalGlyphsProxyDelegate NominalGlyphsProxy = NominalGlyphsProxyImplementation;
+		private static readonly GlyphAdvanceProxyDelegate GlyphAdvanceProxy = GlyphAdvanceProxyImplementation;
+		private static readonly GlyphAdvancesProxyDelegate GlyphAdvancesProxy = GlyphAdvancesProxyImplementation;
+		private static readonly GlyphOriginProxyDelegate GlyphOriginProxy = GlyphOriginProxyImplementation;
+		private static readonly GlyphKerningProxyDelegate GlyphKerningProxy = GlyphKerningProxyImplementation;
+		private static readonly GlyphExtentsProxyDelegate GlyphExtentsProxy = GlyphExtentsProxyImplementation;
+		private static readonly GlyphContourPointProxyDelegate GlyphContourPointProxy =
+			GlyphContourPointProxyImplementation;
+		private static readonly GlyphNameProxyDelegate GlyphNameProxy = GlyphNameProxyImplementation;
+		private static readonly GlyphFromNameProxyDelegate GlyphFromNameProxy = GlyphFromNameProxyImplementation;
+
 		public delegate bool FontExtentsDelegate (Font font, object fontData, out FontExtents extents);
-
 		public delegate bool NominalGlyphDelegate (Font font, object fontData, uint unicode, out uint glyph);
-
-		public delegate bool VariationGlyphDelegate (Font font, object fontData, uint unicode, uint variationSelector, out uint glyph);
-
-		public delegate uint NominalGlyphsDelegate (Font font, object fontData, uint count, ReadOnlySpan<uint> codepoints, out ReadOnlySpan<uint> glyphs);
-
+		public delegate bool VariationGlyphDelegate (Font font, object fontData, uint unicode, uint variationSelector,
+			out uint glyph);
+		public delegate uint NominalGlyphsDelegate (Font font, object fontData, uint count,
+			ReadOnlySpan<uint> codepoints, out ReadOnlySpan<uint> glyphs);
 		public delegate int GlyphAdvanceDelegate (Font font, object fontData, uint glyph);
-
-		public delegate void GlyphAdvancesDelegate (Font font, object fontData, uint count, ReadOnlySpan<uint> glyphs, out ReadOnlySpan<int> advances);
-
+		public delegate void GlyphAdvancesDelegate (Font font, object fontData, uint count, ReadOnlySpan<uint> glyphs,
+			out ReadOnlySpan<int> advances);
 		public delegate bool GlyphOriginDelegate (Font font, object fontData, uint glyph, out int x, out int y);
-
 		public delegate int GlyphKerningDelegate (Font font, object fontData, uint firstGlyph, uint secondGlyph);
-
 		public delegate bool GlyphExtentsDelegate (Font font, object fontData, uint glyph, out GlyphExtents extents);
-
-		public delegate bool GlyphContourPointDelegate (Font font, object fontData, uint glyph, uint pointIndex, out int x, out int y);
-
+		public delegate bool GlyphContourPointDelegate (Font font, object fontData, uint glyph, uint pointIndex,
+			out int x, out int y);
 		public delegate bool GlyphNameDelegate (Font font, object fontData, uint glyph, out string name);
-
 		public delegate bool GlyphFromNameDelegate (Font font, object fontData, string name, out uint glyph);
 
 		public FontFunctions () : this (IntPtr.Zero)
@@ -75,388 +82,427 @@ namespace HarfBuzzSharp
 
 		public void MakeImmutable () => HarfBuzzApi.hb_font_funcs_make_immutable (Handle);
 
-		private static readonly GlyphFromNameProxyDelegate GlyphFromNameProxy = GlyphFromNameProxyDelegateImplementation;
-
-		private static readonly GlyphNameProxyDelegate GlyphNameProxy = GlyphNameProxyDelegateImplementation;
-
-		public void SetHorizontalFontExtentsDelegate (FontExtentsDelegate del, ReleaseDelegate destroy = null, object context = null)
+		[MonoPInvokeCallback (typeof (FontExtentsProxyDelegate))]
+		private static bool FontExtentsProxyImplementation (IntPtr font, IntPtr fontData, out FontExtents extents, IntPtr context)
 		{
-			if (del == null) {
-				throw new ArgumentException (nameof (del));
-			}
-
-			var wrappedFunction = new FontExtentsDelegate ((Font _, object __, out FontExtents e) =>
-				del.Invoke (Font, FontData, out e));
-
-			var destroyDelegate = destroy != null && context != null
-				? (_) => destroy (context)
-				: destroy;
-
-			var multi = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (FontExtentsDelegate))
-					return wrappedFunction;
-				if (type == typeof (ReleaseDelegate))
-					return destroyDelegate;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			DelegateProxies.Create (multi, out _, out var ctx);
+			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
+			var del = (FontExtentsDelegate)multi.Invoke (typeof (FontExtentsDelegate));
+			return del.Invoke (null, null, out extents);
 		}
 
-		public void SetVerticalFontExtentsDelegate (FontExtentsDelegate del, ReleaseDelegate destroy = null, object context = null)
+		public void SetHorizontalFontExtentsDelegate (FontExtentsDelegate del, object context = null, ReleaseDelegate destroy = null)
 		{
+			if (IsImmutable) {
+				throw new NotSupportedException ($"{nameof (FontFunctions)} is immutable and can't be changed.");
+			}
+
 			if (del == null) {
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedFunction = new FontExtentsDelegate ((Font _, object __, out FontExtents e) =>
+			var wrappedDelegate = new FontExtentsDelegate ((Font _, object __, out FontExtents e) =>
 				del.Invoke (Font, FontData, out e));
 
-			var destroyDelegate = destroy != null && context != null
-				? (_) => destroy (context)
-				: destroy;
+			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
 
-			var multi = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (FontExtentsDelegate))
-					return wrappedFunction;
-				if (type == typeof (ReleaseDelegate))
-					return destroyDelegate;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			DelegateProxies.Create (multi, out _, out var ctx);
+			HarfBuzzApi.hb_font_funcs_set_font_h_extents_func (Handle, FontExtentsProxy, ctx,
+				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
-		public void SetNominalGlyphDelegate (NominalGlyphDelegate del, ReleaseDelegate destroy = null, object context = null)
+		public void SetVerticalFontExtentsDelegate (FontExtentsDelegate del, object context = null,
+			ReleaseDelegate destroy = null)
 		{
+			if (IsImmutable) {
+				throw new NotSupportedException ($"{nameof (FontFunctions)} is immutable and can't be changed.");
+			}
+
 			if (del == null) {
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedFunction = new NominalGlyphDelegate ((Font _, object __, uint u, out uint g) =>
+			var wrappedDelegate = new FontExtentsDelegate ((Font _, object __, out FontExtents e) =>
+				del.Invoke (Font, FontData, out e));
+
+			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
+
+			HarfBuzzApi.hb_font_funcs_set_font_v_extents_func (Handle, FontExtentsProxy, ctx,
+				DelegateProxies.ReleaseDelegateProxyForMulti);
+		}
+
+		[MonoPInvokeCallback (typeof (NominalGlyphProxyDelegate))]
+		private static bool NominalGlyphProxyImplementation (IntPtr font, IntPtr fontData, uint unicode, out uint glyph, IntPtr context)
+		{
+			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
+			var del = (NominalGlyphDelegate)multi.Invoke (typeof (NominalGlyphDelegate));
+			return del.Invoke (null, null, unicode, out glyph);
+		}
+
+		public void SetNominalGlyphDelegate (NominalGlyphDelegate del, object context = null,
+			ReleaseDelegate destroy = null)
+		{
+			if (IsImmutable) {
+				throw new NotSupportedException ($"{nameof (FontFunctions)} is immutable and can't be changed.");
+			}
+
+			if (del == null) {
+				throw new ArgumentException (nameof (del));
+			}
+
+			var wrappedDelegate = new NominalGlyphDelegate ((Font _, object __, uint u, out uint g) =>
 				del.Invoke (Font, FontData, u, out g));
 
-			var destroyDelegate = destroy != null && context != null
-				? (_) => destroy (context)
-				: destroy;
+			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
 
-			var multi = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (NominalGlyphDelegate))
-					return wrappedFunction;
-				if (type == typeof (ReleaseDelegate))
-					return destroyDelegate;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			DelegateProxies.Create (multi, out _, out var ctx);
+			HarfBuzzApi.hb_font_funcs_set_nominal_glyph_func (Handle, NominalGlyphProxy, ctx,
+				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
-		public void SetNominalGlyphsDelegate (NominalGlyphsDelegate del, ReleaseDelegate destroy = null, object context = null)
+		[MonoPInvokeCallback (typeof (NominalGlyphsProxyDelegate))]
+		private static uint NominalGlyphsProxyImplementation (IntPtr font, IntPtr fontData, uint count,
+			IntPtr firstUnicode, uint unicodeStride, out IntPtr firstGlyph, out uint glyphStride, IntPtr context)
 		{
+			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
+			var del = (NominalGlyphsDelegate)multi.Invoke (typeof (NominalGlyphsDelegate));
+
+			unsafe {
+				var unicodes = new ReadOnlySpan<uint> ((void*)firstUnicode, (int)unicodeStride);
+				var glyphCount = del.Invoke (null, null, count, unicodes, out var glyphs);
+
+				fixed (uint* glyphsPtr = glyphs) {
+					firstGlyph = (IntPtr)glyphsPtr;
+					glyphStride = (uint)glyphs.Length;
+				}
+
+				return glyphCount;
+			}
+		}
+
+		public void SetNominalGlyphsDelegate (NominalGlyphsDelegate del, object context = null,
+			ReleaseDelegate destroy = null)
+		{
+			if (IsImmutable) {
+				throw new NotSupportedException ($"{nameof (FontFunctions)} is immutable and can't be changed.");
+			}
+
 			if (del == null) {
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedFunction = new NominalGlyphsDelegate ((Font _, object __, uint c, ReadOnlySpan<uint> u, out ReadOnlySpan<uint> g) =>
-				del.Invoke (Font, FontData, c, u, out g));
+			var wrappedDelegate = new NominalGlyphsDelegate (
+				(Font _, object __, uint c, ReadOnlySpan<uint> u, out ReadOnlySpan<uint> g) =>
+					del.Invoke (Font, FontData, c, u, out g));
 
-			var destroyDelegate = destroy != null && context != null
-				? (_) => destroy (context)
-				: destroy;
+			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
 
-			var multi = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (NominalGlyphsDelegate))
-					return wrappedFunction;
-				if (type == typeof (ReleaseDelegate))
-					return destroyDelegate;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			DelegateProxies.Create (multi, out _, out var ctx);
+			HarfBuzzApi.hb_font_funcs_set_nominal_glyphs_func (Handle, NominalGlyphsProxy, ctx,
+				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
-		public void SetVariationGlyphDelegate (VariationGlyphDelegate del, ReleaseDelegate destroy = null, object context = null)
+		[MonoPInvokeCallback (typeof (VariationGlyphProxyDelegate))]
+		private static bool VariationGlyphProxyImplementation (IntPtr font, IntPtr fontData, uint unicode,
+			uint variationSelector, out uint glyph, IntPtr context)
 		{
+			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
+			var del = (VariationGlyphDelegate)multi.Invoke (typeof (VariationGlyphDelegate));
+			return del.Invoke (null, null, unicode, variationSelector, out glyph);
+		}
+
+		public void SetVariationGlyphDelegate (VariationGlyphDelegate del, object context = null,
+			ReleaseDelegate destroy = null)
+		{
+			if (IsImmutable) {
+				throw new NotSupportedException ($"{nameof (FontFunctions)} is immutable and can't be changed.");
+			}
+
 			if (del == null) {
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedFunction = new VariationGlyphDelegate ((Font _, object __, uint u, uint v, out uint g) =>
+			var wrappedDelegate = new VariationGlyphDelegate ((Font _, object __, uint u, uint v, out uint g) =>
 				del.Invoke (Font, FontData, u, v, out g));
 
-			var destroyDelegate = destroy != null && context != null
-				? (_) => destroy (context)
-				: destroy;
+			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
 
-			var multi = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (VariationGlyphDelegate))
-					return wrappedFunction;
-				if (type == typeof (ReleaseDelegate))
-					return destroyDelegate;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			DelegateProxies.Create (multi, out _, out var ctx);
+			HarfBuzzApi.hb_font_funcs_set_variation_glyph_func (Handle, VariationGlyphProxy, ctx,
+				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
-		public void SetHorizontalGlyphAdvanceDelegate (GlyphAdvanceDelegate del, ReleaseDelegate destroy = null, object context = null)
+		[MonoPInvokeCallback (typeof (GlyphAdvanceProxyDelegate))]
+		private static int GlyphAdvanceProxyImplementation (IntPtr font, IntPtr fontData, uint glyph, IntPtr context)
 		{
+			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
+			var del = (GlyphAdvanceDelegate)multi.Invoke (typeof (GlyphAdvanceDelegate));
+			return del.Invoke (null, null, glyph);
+		}
+
+		public void SetHorizontalGlyphAdvanceDelegate (GlyphAdvanceDelegate del, object context = null,
+			ReleaseDelegate destroy = null)
+		{
+			if (IsImmutable) {
+				throw new NotSupportedException ($"{nameof (FontFunctions)} is immutable and can't be changed.");
+			}
+
 			if (del == null) {
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedFunction = new GlyphAdvanceDelegate ((_, __, g) =>
+			var wrappedDelegate = new GlyphAdvanceDelegate ((_, __, g) =>
 				del.Invoke (Font, FontData, g));
 
-			var destroyDelegate = destroy != null && context != null
-				? (_) => destroy (context)
-				: destroy;
+			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
 
-			var multi = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (GlyphAdvanceDelegate))
-					return wrappedFunction;
-				if (type == typeof (ReleaseDelegate))
-					return destroyDelegate;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			DelegateProxies.Create (multi, out _, out var ctx);
+			HarfBuzzApi.hb_font_funcs_set_glyph_h_advance_func (Handle, GlyphAdvanceProxy, ctx,
+				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
-		public void SetVerticalGlyphAdvanceDelegate (GlyphAdvanceDelegate del, ReleaseDelegate destroy = null, object context = null)
+		public void SetVerticalGlyphAdvanceDelegate (GlyphAdvanceDelegate del, object context = null,
+			ReleaseDelegate destroy = null)
 		{
+			if (IsImmutable) {
+				throw new NotSupportedException ($"{nameof (FontFunctions)} is immutable and can't be changed.");
+			}
+
 			if (del == null) {
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedFunction = new GlyphAdvanceDelegate ((_, __, g) =>
+			var wrappedDelegate = new GlyphAdvanceDelegate ((_, __, g) =>
 				del.Invoke (Font, FontData, g));
 
-			var destroyDelegate = destroy != null && context != null
-				? (_) => destroy (context)
-				: destroy;
+			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
 
-			var multi = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (GlyphAdvanceDelegate))
-					return wrappedFunction;
-				if (type == typeof (ReleaseDelegate))
-					return destroyDelegate;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			DelegateProxies.Create (multi, out _, out var ctx);
+			HarfBuzzApi.hb_font_funcs_set_glyph_h_advance_func (Handle, GlyphAdvanceProxy, ctx,
+				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
-		public void SetHorizontalGlyphAdvancesDelegate (GlyphAdvancesDelegate del, ReleaseDelegate destroy = null, object context = null)
+		[MonoPInvokeCallback (typeof (GlyphAdvancesProxyDelegate))]
+		private static void GlyphAdvancesProxyImplementation (IntPtr font, IntPtr fontData, uint count,
+			IntPtr firstGlyph, uint glyphStride, out IntPtr firstAdvance, out uint advanceStride, IntPtr context)
 		{
+			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
+			var del = (GlyphAdvancesDelegate)multi.Invoke (typeof (GlyphAdvancesDelegate));
+
+			unsafe {
+				var glyphs = new ReadOnlySpan<uint> ((void*)firstGlyph, (int)glyphStride);
+
+				del.Invoke (null, null, count, glyphs, out var advances);
+
+				fixed (int* advancesPtr = advances) {
+					firstAdvance = (IntPtr)advancesPtr;
+					advanceStride = (uint)advances.Length;
+				}
+			}
+		}
+
+		public void SetHorizontalGlyphAdvancesDelegate (GlyphAdvancesDelegate del, object context = null,
+			ReleaseDelegate destroy = null)
+		{
+			if (IsImmutable) {
+				throw new NotSupportedException ($"{nameof (FontFunctions)} is immutable and can't be changed.");
+			}
+
 			if (del == null) {
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedFunction = new GlyphAdvancesDelegate ((Font _, object __, uint c, ReadOnlySpan<uint> u, out ReadOnlySpan<int> a) =>
-				del.Invoke (Font, FontData, c, u, out a));
+			var wrappedDelegate = new GlyphAdvancesDelegate (
+				(Font _, object __, uint c, ReadOnlySpan<uint> u, out ReadOnlySpan<int> a) =>
+					del.Invoke (Font, FontData, c, u, out a));
 
-			var destroyDelegate = destroy != null && context != null
-				? (_) => destroy (context)
-				: destroy;
+			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
 
-			var multi = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (GlyphAdvancesDelegate))
-					return wrappedFunction;
-				if (type == typeof (ReleaseDelegate))
-					return destroyDelegate;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			DelegateProxies.Create (multi, out _, out var ctx);
+			HarfBuzzApi.hb_font_funcs_set_glyph_h_advances_func (Handle, GlyphAdvancesProxy, ctx,
+				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
-		public void SetVerticalGlyphAdvancesDelegate (GlyphAdvancesDelegate del, ReleaseDelegate destroy = null, object context = null)
+		public void SetVerticalGlyphAdvancesDelegate (GlyphAdvancesDelegate del, object context = null,
+			ReleaseDelegate destroy = null)
 		{
+			if (IsImmutable) {
+				throw new NotSupportedException ($"{nameof (FontFunctions)} is immutable and can't be changed.");
+			}
+
 			if (del == null) {
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedFunction = new GlyphAdvancesDelegate ((Font _, object __, uint c, ReadOnlySpan<uint> u, out ReadOnlySpan<int> a) =>
-				del.Invoke (Font, FontData, c, u, out a));
+			var wrappedDelegate = new GlyphAdvancesDelegate (
+				(Font _, object __, uint c, ReadOnlySpan<uint> u, out ReadOnlySpan<int> a) =>
+					del.Invoke (Font, FontData, c, u, out a));
 
-			var destroyDelegate = destroy != null && context != null
-				? (_) => destroy (context)
-				: destroy;
+			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
 
-			var multi = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (GlyphAdvancesDelegate))
-					return wrappedFunction;
-				if (type == typeof (ReleaseDelegate))
-					return destroyDelegate;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			DelegateProxies.Create (multi, out _, out var ctx);
+			HarfBuzzApi.hb_font_funcs_set_glyph_v_advances_func (Handle, GlyphAdvancesProxy, ctx,
+				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
-		public void SetHorizontalGlyphOriginDelegate (GlyphOriginDelegate del, ReleaseDelegate destroy = null, object context = null)
+		[MonoPInvokeCallback (typeof (GlyphOriginProxyDelegate))]
+		private static bool GlyphOriginProxyImplementation (IntPtr font, IntPtr fontData, uint glyph, out int x, out int y, IntPtr context)
 		{
+			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
+			var del = (GlyphOriginDelegate)multi.Invoke (typeof (GlyphOriginDelegate));
+			return del.Invoke (null, null, glyph, out x, out y);
+		}
+
+		public void SetHorizontalGlyphOriginDelegate (GlyphOriginDelegate del, object context = null,
+			ReleaseDelegate destroy = null)
+		{
+			if (IsImmutable) {
+				throw new NotSupportedException ($"{nameof (FontFunctions)} is immutable and can't be changed.");
+			}
+
 			if (del == null) {
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedFunction = new GlyphOriginDelegate ((Font _, object __, uint g, out int x, out int y) =>
+			var wrappedDelegate = new GlyphOriginDelegate ((Font _, object __, uint g, out int x, out int y) =>
 				del.Invoke (Font, FontData, g, out x, out y));
 
-			var destroyDelegate = destroy != null && context != null
-				? (_) => destroy (context)
-				: destroy;
+			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
 
-			var multi = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (GlyphOriginDelegate))
-					return wrappedFunction;
-				if (type == typeof (ReleaseDelegate))
-					return destroyDelegate;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			DelegateProxies.Create (multi, out _, out var ctx);
+			HarfBuzzApi.hb_font_funcs_set_glyph_h_origin_func (Handle, GlyphOriginProxy, ctx,
+				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
-		public void SetVerticalGlyphOriginDelegate (GlyphOriginDelegate del, ReleaseDelegate destroy = null, object context = null)
+		public void SetVerticalGlyphOriginDelegate (GlyphOriginDelegate del, object context = null,
+			ReleaseDelegate destroy = null)
 		{
+			if (IsImmutable) {
+				throw new NotSupportedException ($"{nameof (FontFunctions)} is immutable and can't be changed.");
+			}
+
 			if (del == null) {
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedFunction = new GlyphOriginDelegate ((Font _, object __, uint g, out int x, out int y) =>
+			var wrappedDelegate = new GlyphOriginDelegate ((Font _, object __, uint g, out int x, out int y) =>
 				del.Invoke (Font, FontData, g, out x, out y));
 
-			var destroyDelegate = destroy != null && context != null
-				? (_) => destroy (context)
-				: destroy;
+			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
 
-			var multi = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (GlyphOriginDelegate))
-					return wrappedFunction;
-				if (type == typeof (ReleaseDelegate))
-					return destroyDelegate;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			DelegateProxies.Create (multi, out _, out var ctx);
+			HarfBuzzApi.hb_font_funcs_set_glyph_v_origin_func (Handle, GlyphOriginProxy, ctx,
+				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
-		public void SetHorizontalGlyphKerningDelegate (GlyphKerningDelegate del, ReleaseDelegate destroy = null, object context = null)
+		[MonoPInvokeCallback (typeof (GlyphKerningProxyDelegate))]
+		private static int GlyphKerningProxyImplementation (IntPtr font, IntPtr fontData, uint firstGlyph, uint secondGlyph, IntPtr context)
 		{
+			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
+			var del = (GlyphKerningDelegate)multi.Invoke (typeof (GlyphKerningDelegate));
+			return del.Invoke (null, null, firstGlyph, secondGlyph);
+		}
+
+		public void SetHorizontalGlyphKerningDelegate (GlyphKerningDelegate del, object context = null,
+			ReleaseDelegate destroy = null)
+		{
+			if (IsImmutable) {
+				throw new NotSupportedException ($"{nameof (FontFunctions)} is immutable and can't be changed.");
+			}
+
 			if (del == null) {
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedFunction = new GlyphKerningDelegate ((_, __, f, s) =>
+			var wrappedDelegate = new GlyphKerningDelegate ((_, __, f, s) =>
 				del.Invoke (Font, FontData, f, s));
 
-			var destroyDelegate = destroy != null && context != null
-				? (_) => destroy (context)
-				: destroy;
+			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
 
-			var multi = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (GlyphKerningDelegate))
-					return wrappedFunction;
-				if (type == typeof (ReleaseDelegate))
-					return destroyDelegate;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			DelegateProxies.Create (multi, out _, out var ctx);
+			HarfBuzzApi.hb_font_funcs_set_glyph_h_kerning_func (Handle, GlyphKerningProxy, ctx,
+				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
-		public void SetGlyphExtentsDelegate (GlyphExtentsDelegate del, ReleaseDelegate destroy = null, object context = null)
+		[MonoPInvokeCallback (typeof (GlyphExtentsProxyDelegate))]
+		private static bool GlyphExtentsProxyImplementation (IntPtr font, IntPtr fontData, uint glyph, out GlyphExtents extents, IntPtr context)
 		{
+			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
+			var del = (GlyphExtentsDelegate)multi.Invoke (typeof (GlyphExtentsDelegate));
+			return del.Invoke (null, null, glyph, out extents);
+		}
+
+		public void SetGlyphExtentsDelegate (GlyphExtentsDelegate del, object context = null, ReleaseDelegate destroy = null)
+		{
+			if (IsImmutable) {
+				throw new NotSupportedException ($"{nameof (FontFunctions)} is immutable and can't be changed.");
+			}
+
 			if (del == null) {
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedFunction = new GlyphExtentsDelegate ((Font _, object __, uint g, out GlyphExtents e) =>
+			var wrappedDelegate = new GlyphExtentsDelegate ((Font _, object __, uint g, out GlyphExtents e) =>
 				del.Invoke (Font, FontData, g, out e));
 
-			var destroyDelegate = destroy != null && context != null
-				? (_) => destroy (context)
-				: destroy;
+			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
 
-			var multi = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (GlyphExtentsDelegate))
-					return wrappedFunction;
-				if (type == typeof (ReleaseDelegate))
-					return destroyDelegate;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			DelegateProxies.Create (multi, out _, out var ctx);
+			HarfBuzzApi.hb_font_funcs_set_glyph_extents_func (Handle, GlyphExtentsProxy, ctx,
+				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
-		public void SetGlyphContourPointDelegate (GlyphContourPointDelegate del, ReleaseDelegate destroy = null, object context = null)
+		[MonoPInvokeCallback (typeof (GlyphContourPointProxyDelegate))]
+		private static bool GlyphContourPointProxyImplementation (IntPtr font, IntPtr fontData, uint glyph, uint pointIndex, out int x, out int y, IntPtr context)
 		{
+			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
+			var del = (GlyphContourPointDelegate)multi.Invoke (typeof (GlyphContourPointDelegate));
+			return del.Invoke (null, null, glyph, pointIndex, out x, out y);
+		}
+
+		public void SetGlyphContourPointDelegate (GlyphContourPointDelegate del, object context = null,
+			ReleaseDelegate destroy = null)
+		{
+			if (IsImmutable) {
+				throw new NotSupportedException ($"{nameof (FontFunctions)} is immutable and can't be changed.");
+			}
+
 			if (del == null) {
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedFunction = new GlyphContourPointDelegate (
+			var wrappedDelegate = new GlyphContourPointDelegate (
 				(Font _, object __, uint g, uint i, out int x, out int y) =>
 					del.Invoke (Font, FontData, g, i, out x, out y));
 
-			var destroyDelegate = destroy != null && context != null
-				? (_) => destroy (context)
-				: destroy;
+			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
 
-			var multi = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (GlyphContourPointDelegate))
-					return wrappedFunction;
-				if (type == typeof (ReleaseDelegate))
-					return destroyDelegate;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			DelegateProxies.Create (multi, out _, out var ctx);
+			HarfBuzzApi.hb_font_funcs_set_glyph_contour_point_func (Handle, GlyphContourPointProxy, ctx,
+				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
 		[MonoPInvokeCallback (typeof (GlyphNameProxyDelegate))]
-		private static bool GlyphNameProxyDelegateImplementation (IntPtr font, IntPtr fontData, uint glyph, out StringBuilder name, out uint size, IntPtr context)
+		private static bool GlyphNameProxyImplementation (IntPtr font, IntPtr fontData, uint glyph,
+			out StringBuilder name, out uint size, IntPtr context)
 		{
 			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
 			var del = (GlyphNameDelegate)multi.Invoke (typeof (GlyphNameDelegate));
-			var sucess = del.Invoke (null, null, glyph, out var s);
+			var success = del.Invoke (null, null, glyph, out var s);
 
 			name = new StringBuilder (s);
 			size = (uint)name.Length;
 
-			return sucess;
+			return success;
 		}
 
-		public void SetGlyphNameDelegate (GlyphNameDelegate del, ReleaseDelegate destroy = null, object context = null)
+		public void SetGlyphNameDelegate (GlyphNameDelegate del, object context = null, ReleaseDelegate destroy = null)
 		{
+			if (IsImmutable) {
+				throw new NotSupportedException ($"{nameof (FontFunctions)} is immutable and can't be changed.");
+			}
+
 			if (del == null) {
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedFunction = new GlyphNameDelegate ((Font _, object __, uint g, out string n) =>
+			var wrappedDelegate = new GlyphNameDelegate ((Font _, object __, uint g, out string n) =>
 				del.Invoke (Font, FontData, g, out n));
 
-			var destroyDelegate = destroy != null && context != null
-				? (_) => destroy (context)
-				: destroy;
+			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
 
-			var multi = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (GlyphNameDelegate))
-					return wrappedFunction;
-				if (type == typeof (ReleaseDelegate))
-					return destroyDelegate;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			DelegateProxies.Create (multi, out _, out var ctx);
-
-			HarfBuzzApi.hb_font_funcs_set_glyph_name_func (Handle, GlyphNameProxy, ctx, DelegateProxies.ReleaseDelegateProxyForGetTable);
+			HarfBuzzApi.hb_font_funcs_set_glyph_name_func (Handle, GlyphNameProxy, ctx,
+				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
 		[MonoPInvokeCallback (typeof (GlyphFromNameProxyDelegate))]
-		private static bool GlyphFromNameProxyDelegateImplementation (IntPtr font, IntPtr fontData, StringBuilder name,
+		private static bool GlyphFromNameProxyImplementation (IntPtr font, IntPtr fontData, StringBuilder name,
 			int len, out uint glyph, IntPtr context)
 		{
 			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
@@ -464,31 +510,24 @@ namespace HarfBuzzSharp
 			return del.Invoke (null, null, name.ToString (), out glyph);
 		}
 
-		public void SetGlyphFromNameDelegate (GlyphFromNameDelegate del, ReleaseDelegate destroy = null, object context = null)
+		public void SetGlyphFromNameDelegate (GlyphFromNameDelegate del, object context = null,
+			ReleaseDelegate destroy = null)
 		{
+			if (IsImmutable) {
+				throw new NotSupportedException ($"{nameof (FontFunctions)} is immutable and can't be changed.");
+			}
+
 			if (del == null) {
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedFunction = new GlyphFromNameDelegate ((Font _, object __, string n, out uint g) =>
+			var wrappedDelegate = new GlyphFromNameDelegate ((Font _, object __, string n, out uint g) =>
 				del.Invoke (Font, FontData, n, out g));
 
-			var destroyDelegate = destroy != null && context != null
-				? (_) => destroy (context)
-				: destroy;
-
-			var multi = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (GlyphFromNameDelegate))
-					return wrappedFunction;
-				if (type == typeof (ReleaseDelegate))
-					return destroyDelegate;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			DelegateProxies.Create (multi, out _, out var ctx);
+			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_from_name_func (Handle, GlyphFromNameProxy, ctx,
-				DelegateProxies.ReleaseDelegateProxyForGetTable);
+				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
 		protected override void DisposeHandler ()
