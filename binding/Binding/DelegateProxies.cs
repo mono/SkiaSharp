@@ -40,13 +40,13 @@ namespace SkiaSharp
 	internal static partial class DelegateProxies
 	{
 		// references to the proxy implementations
-		public static SKBitmapReleaseDelegateProxyDelegate SKBitmapReleaseDelegateProxy { get; } = SKBitmapReleaseDelegateProxyImplementation;
-		public static SKDataReleaseDelegateProxyDelegate SKDataReleaseDelegateProxy { get; } = SKDataReleaseDelegateProxyImplementation;
-		public static SKImageRasterReleaseDelegateProxyDelegate SKImageRasterReleaseDelegateProxy { get; } = SKImageRasterReleaseDelegateProxyImplementation;
-		public static SKImageRasterReleaseDelegateProxyDelegate SKImageRasterReleaseDelegateProxyForCoTaskMem { get; } = SKImageRasterReleaseDelegateProxyImplementationForCoTaskMem;
-		public static SKImageTextureReleaseDelegateProxyDelegate SKImageTextureReleaseDelegateProxy { get; } = SKImageTextureReleaseDelegateProxyImplementation;
-		public static SKSurfaceReleaseDelegateProxyDelegate SKSurfaceReleaseDelegateProxy { get; } = SKSurfaceReleaseDelegateProxyImplementation;
-		public static GRGlGetProcDelegateProxyDelegate GRGlGetProcDelegateProxy { get; } = GRGlGetProcDelegateProxyImplementation;
+		public static readonly SKBitmapReleaseDelegateProxyDelegate SKBitmapReleaseDelegateProxy = SKBitmapReleaseDelegateProxyImplementation;
+		public static readonly SKDataReleaseDelegateProxyDelegate SKDataReleaseDelegateProxy = SKDataReleaseDelegateProxyImplementation;
+		public static readonly SKImageRasterReleaseDelegateProxyDelegate SKImageRasterReleaseDelegateProxy = SKImageRasterReleaseDelegateProxyImplementation;
+		public static readonly SKImageRasterReleaseDelegateProxyDelegate SKImageRasterReleaseDelegateProxyForCoTaskMem = SKImageRasterReleaseDelegateProxyImplementationForCoTaskMem;
+		public static readonly SKImageTextureReleaseDelegateProxyDelegate SKImageTextureReleaseDelegateProxy = SKImageTextureReleaseDelegateProxyImplementation;
+		public static readonly SKSurfaceReleaseDelegateProxyDelegate SKSurfaceReleaseDelegateProxy = SKSurfaceReleaseDelegateProxyImplementation;
+		public static readonly GRGlGetProcDelegateProxyDelegate GRGlGetProcDelegateProxy = GRGlGetProcDelegateProxyImplementation;
 
 		// internal proxy implementations
 

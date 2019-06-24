@@ -26,9 +26,9 @@ namespace HarfBuzzSharp
 	internal static partial class DelegateProxies
 	{
 		// references to the proxy implementations
-		public static ReleaseDelegateProxyDelegate ReleaseDelegateProxy { get; } = ReleaseDelegateProxyImplementation;
-		public static ReleaseDelegateProxyDelegate ReleaseDelegateProxyForGetTable { get; } = ReleaseDelegateProxyImplementationForGetTable;
-		public static GetTableDelegateProxyDelegate GetTableDelegateProxy { get; } = GetTableDelegateProxyImplementation;
+		public static readonly ReleaseDelegateProxyDelegate ReleaseDelegateProxy = ReleaseDelegateProxyImplementation;
+		public static readonly ReleaseDelegateProxyDelegate ReleaseDelegateProxyForGetTable = ReleaseDelegateProxyImplementationForGetTable;
+		public static readonly GetTableDelegateProxyDelegate GetTableDelegateProxy = GetTableDelegateProxyImplementation;
 
 		// internal proxy implementations
 
