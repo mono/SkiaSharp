@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
@@ -27,8 +28,31 @@ namespace HarfBuzzSharp
 	{
 		// references to the proxy implementations
 		public static readonly ReleaseDelegateProxyDelegate ReleaseDelegateProxy = ReleaseDelegateProxyImplementation;
-		public static readonly ReleaseDelegateProxyDelegate ReleaseDelegateProxyForGetTable = ReleaseDelegateProxyImplementationForGetTable;
+		public static readonly ReleaseDelegateProxyDelegate ReleaseDelegateProxyForMulti = ReleaseDelegateProxyImplementationForMulti;
 		public static readonly GetTableDelegateProxyDelegate GetTableDelegateProxy = GetTableDelegateProxyImplementation;
+
+		// helper methods
+
+		[MethodImpl (MethodImplOptions.AggressiveInlining)]
+		public static IntPtr CreateMulti<T> (T wrappedDelegate, object context, ReleaseDelegate destroy)
+			where T : Delegate
+		{
+			var destroyDelegate = destroy != null && context != null
+				? new ReleaseDelegate ((_) => destroy (context))
+				: destroy;
+
+			var del = new GetMultiDelegateDelegate ((type) => {
+				if (type == typeof (T))
+					return wrappedDelegate;
+				if (type == typeof (ReleaseDelegate))
+					return destroyDelegate;
+				throw new ArgumentOutOfRangeException (nameof (type));
+			});
+
+			Create (del, out _, out var ctx);
+
+			return ctx;
+		}
 
 		// internal proxy implementations
 
@@ -53,7 +77,7 @@ namespace HarfBuzzSharp
 		}
 
 		[MonoPInvokeCallback (typeof (ReleaseDelegateProxyDelegate))]
-		private static void ReleaseDelegateProxyImplementationForGetTable (IntPtr context)
+		private static void ReleaseDelegateProxyImplementationForMulti (IntPtr context)
 		{
 			var multi = Get<GetMultiDelegateDelegate> (context, out var gch);
 			var del = (ReleaseDelegate)multi.Invoke (typeof (ReleaseDelegate));
