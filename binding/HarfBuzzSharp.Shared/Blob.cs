@@ -3,14 +3,6 @@ using System.IO;
 
 namespace HarfBuzzSharp
 {
-	// public delegates
-	//
-	// bad choices.
-	// this should not have had the "blob" prefix
-	// it is a global dispose method, but we can't switch now
-	// it is a breaking change since it will become ambiguous
-	public delegate void BlobReleaseDelegate (object context);
-
 	public class Blob : NativeObject
 	{
 		private static readonly Lazy<Blob> emptyBlob = new Lazy<Blob> (() => new StaticBlob (HarfBuzzApi.hb_blob_get_empty ()));
@@ -90,12 +82,11 @@ namespace HarfBuzzSharp
 
 		private static IntPtr Create (IntPtr data, int length, MemoryMode mode, object context, ReleaseDelegate releaseProc)
 		{
-			if (releaseProc == null) {
-				return HarfBuzzApi.hb_blob_create (data, length, mode, IntPtr.Zero, IntPtr.Zero);
-			} else {
-				var ctx = new NativeDelegateContext (context, releaseProc);
-				return HarfBuzzApi.hb_blob_create (data, length, mode, ctx.NativeContext, DestroyFunction.NativePointer);
-			}
+			var del = releaseProc != null && context != null
+				? new ReleaseDelegate ((_) => releaseProc (context))
+				: releaseProc;
+			var proxy = DelegateProxies.Create (del, DelegateProxies.ReleaseDelegateProxy, out _, out var ctx);
+			return HarfBuzzApi.hb_blob_create (data, length, mode, ctx, proxy);
 		}
 
 		private class StaticBlob : Blob

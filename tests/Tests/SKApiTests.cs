@@ -69,66 +69,17 @@ namespace SkiaSharp.Tests
 			{
 				foreach (var param in method.GetParameters())
 				{
-					var paramType = param.ParameterType;
-
-					if (paramType == typeof(bool))
+					if (typeof(Delegate).IsAssignableFrom(param.ParameterType))
 					{
-						//check string
-						var marshal = param.GetCustomAttribute<MarshalAsAttribute>();
-						if (marshal == null)
-							throw new XunitException($"{method.Name}({paramType})");
-						if (marshal.Value != UnmanagedType.I1)
-							throw new XunitException($"{method.Name}({paramType})");
-					}
-					if (paramType == typeof(string))
-					{
-						//check string
-						var marshal = param.GetCustomAttribute<MarshalAsAttribute>();
-						if (marshal == null)
-							throw new XunitException($"{method.Name}({paramType})");
-						if (marshal.Value != UnmanagedType.LPStr)
-							throw new XunitException($"{method.Name}({paramType})");
-					}
-					else if (paramType == typeof(string[]))
-					{
-						// check array of strings
-						var marshal = param.GetCustomAttribute<MarshalAsAttribute>();
-						if (marshal == null)
-							throw new XunitException($"{method.Name}({paramType})");
-						if (marshal.Value != UnmanagedType.LPArray)
-							throw new XunitException($"{method.Name}({paramType})");
-						if (marshal.ArraySubType != UnmanagedType.LPStr)
-							throw new XunitException($"{method.Name}({paramType})");
+						var invokeMethod = param.ParameterType.GetMethod("Invoke");
+						foreach (var p in invokeMethod.GetParameters())
+						{
+							ValidateParameterType(param.ParameterType.Name, p);
+						}
 					}
 					else
 					{
-						if (param.ParameterType.IsByRef || param.ParameterType.IsArray)
-						{
-							paramType = param.ParameterType.GetElementType();
-						}
-
-						var paramTypeInfo = paramType.GetTypeInfo();
-
-						// the compiler will not alow invalid pointers, so we can skip those
-						if (!paramTypeInfo.IsPointer)
-						{
-							// make sure only structs
-							Assert.False(paramType.GetTypeInfo().IsClass, $"{method.Name}({paramType})");
-
-							// make sure our structs have a layout type
-							if (!paramType.GetTypeInfo().IsEnum && paramType.Namespace == "SkiaSharp")
-							{
-								// check blittable
-								try
-								{
-									GCHandle.Alloc(Activator.CreateInstance(paramType), GCHandleType.Pinned).Free();
-								}
-								catch
-								{
-									throw new XunitException($"not blittable : {method.Name}({paramType})");
-								}
-							}
-						}
+						ValidateParameterType(method.Name, param);
 					}
 				}
 
@@ -139,6 +90,71 @@ namespace SkiaSharp.Tests
 						throw new XunitException($"{method.Name}(return)");
 					if (marshal.Value != UnmanagedType.I1)
 						throw new XunitException($"{method.Name}(return)");
+				}
+			}
+
+			void ValidateParameterType(string name, ParameterInfo param)
+			{
+				var paramType = param.ParameterType;
+
+				if (paramType == typeof(bool))
+				{
+					//check bool
+					var marshal = param.GetCustomAttribute<MarshalAsAttribute>();
+					if (marshal == null)
+						throw new XunitException($"{name}({paramType})");
+					if (marshal.Value != UnmanagedType.I1)
+						throw new XunitException($"{name}({paramType})");
+				}
+				if (paramType == typeof(string))
+				{
+					//check string
+					var marshal = param.GetCustomAttribute<MarshalAsAttribute>();
+					if (marshal == null)
+						throw new XunitException($"{name}({paramType})");
+					if (marshal.Value != UnmanagedType.LPStr)
+						throw new XunitException($"{name}({paramType})");
+				}
+				else if (paramType == typeof(string[]))
+				{
+					// check array of strings
+					var marshal = param.GetCustomAttribute<MarshalAsAttribute>();
+					if (marshal == null)
+						throw new XunitException($"{name}({paramType})");
+					if (marshal.Value != UnmanagedType.LPArray)
+						throw new XunitException($"{name}({paramType})");
+					if (marshal.ArraySubType != UnmanagedType.LPStr)
+						throw new XunitException($"{name}({paramType})");
+				}
+				else
+				{
+					if (param.ParameterType.IsByRef || param.ParameterType.IsArray)
+					{
+						paramType = param.ParameterType.GetElementType();
+					}
+
+					var paramTypeInfo = paramType.GetTypeInfo();
+
+					// the compiler will not alow invalid pointers, so we can skip those
+					if (!paramTypeInfo.IsPointer)
+					{
+						// make sure only structs
+						Assert.False(paramType.GetTypeInfo().IsClass, $"{name}({paramType})");
+
+						// make sure our structs have a layout type
+						if (!paramType.GetTypeInfo().IsEnum && paramType.Namespace == "SkiaSharp")
+						{
+							// check blittable
+							try
+							{
+								GCHandle.Alloc(Activator.CreateInstance(paramType), GCHandleType.Pinned).Free();
+							}
+							catch
+							{
+								throw new XunitException($"not blittable : {name}({paramType})");
+							}
+						}
+					}
 				}
 			}
 		}

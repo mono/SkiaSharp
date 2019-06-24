@@ -5,24 +5,8 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	// public delegates
-	public delegate IntPtr GRGlGetProcDelegate (object context, string name);
-
-	// internal proxy delegates
-	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal delegate IntPtr GRGlGetProcDelegateInternal (IntPtr context, [MarshalAs(UnmanagedType.LPStr)] string name);
-
 	public class GRGlInterface : SKObject
 	{
-		// so the GC doesn't collect the delegate
-		private static readonly GRGlGetProcDelegateInternal getProcDelegateInternal;
-		private static readonly IntPtr getProcDelegate;
-		static GRGlInterface ()
-		{
-			getProcDelegateInternal = new GRGlGetProcDelegateInternal (GrGLGetProcInternal);
-			getProcDelegate = Marshal.GetFunctionPointerForDelegate (getProcDelegateInternal);
-		}
-
 		[Preserve]
 		internal GRGlInterface (IntPtr h, bool owns)
 			: base (h, owns)
@@ -77,8 +61,14 @@ namespace SkiaSharp
 			}
 
 			// try the native default
-			using (var ctx = new NativeDelegateContext (context, get)) {
-				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_interface (ctx.NativeContext, getProcDelegate));
+			var del = get != null && context != null
+				? new GRGlGetProcDelegate ((_, name) => get (context, name))
+				: get;
+			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
+			try {
+				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_interface (ctx, proxy));
+			} finally {
+				gch.Free ();
 			}
 		}
 
@@ -100,8 +90,14 @@ namespace SkiaSharp
 
 		public static GRGlInterface AssembleGlInterface (object context, GRGlGetProcDelegate get)
 		{
-			using (var ctx = new NativeDelegateContext (context, get)) {
-				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gl_interface (ctx.NativeContext, getProcDelegate));
+			var del = get != null && context != null
+				? new GRGlGetProcDelegate ((_, name) => get (context, name))
+				: get;
+			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
+			try {
+				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gl_interface (ctx, proxy));
+			} finally {
+				gch.Free ();
 			}
 		}
 
@@ -112,8 +108,14 @@ namespace SkiaSharp
 
 		public static GRGlInterface AssembleGlesInterface (object context, GRGlGetProcDelegate get)
 		{
-			using (var ctx = new NativeDelegateContext (context, get)) {
-				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gles_interface (ctx.NativeContext, getProcDelegate));
+			var del = get != null && context != null
+				? new GRGlGetProcDelegate ((_, name) => get (context, name))
+				: get;
+			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
+			try {
+				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gles_interface (ctx, proxy));
+			} finally {
+				gch.Free ();
 			}
 		}
 
@@ -134,15 +136,6 @@ namespace SkiaSharp
 			}
 
 			base.Dispose (disposing);
-		}
-
-		// internal proxy
-
-		[MonoPInvokeCallback (typeof (GRGlGetProcDelegateInternal))]
-		private static IntPtr GrGLGetProcInternal (IntPtr context, string name)
-		{
-			var ctx = NativeDelegateContext.Unwrap (context);
-			return ctx.GetDelegate<GRGlGetProcDelegate> () (ctx.ManagedContext, name);
 		}
 
 		private static class AngleLoader

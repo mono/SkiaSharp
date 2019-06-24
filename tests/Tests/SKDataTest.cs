@@ -37,6 +37,20 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void NoDelegateDataCanBeCreated()
+		{
+			var memory = Marshal.AllocCoTaskMem(10);
+
+			using (var data = SKData.Create(memory, 10))
+			{
+				Assert.Equal(memory, data.Data);
+				Assert.Equal(10, data.Size);
+			}
+
+			Marshal.FreeCoTaskMem(memory);
+		}
+
+		[SkippableFact]
 		public void ReleaseDataWasInvoked()
 		{
 			bool released = false;
