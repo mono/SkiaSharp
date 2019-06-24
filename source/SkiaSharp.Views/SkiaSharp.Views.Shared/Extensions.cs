@@ -187,6 +187,9 @@ namespace SkiaSharp.Views.Tizen
 				using (var tempBitmap = new System.Drawing.Bitmap(info.Width, info.Height, info.RowBytes, System.Drawing.Imaging.PixelFormat.Format32bppPArgb, pixmap.GetPixels()))
 				using (var gr = System.Drawing.Graphics.FromImage(tempBitmap))
 				{
+					// Clear graphic to prevent display artifacts with transparent bitmaps					
+					gr.Clear(System.Drawing.Color.Transparent);
+					
 					gr.DrawImageUnscaled(bitmap, 0, 0);
 				}
 			}
