@@ -387,6 +387,9 @@ Task ("nuget-only")
         setVersion (xdoc, $"{preview}");
         xdoc.Save ($"{outDir}/{id}.prerelease.nuspec");
 
+        // the placeholders
+        FileWriteText ($"{outDir}/_._", "");
+
         // the legal
         CopyFile ("./LICENSE.txt", $"{outDir}/LICENSE.txt");
         CopyFile ("./External-Dependency-Info.txt", $"{outDir}/THIRD-PARTY-NOTICES.txt");
