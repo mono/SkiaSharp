@@ -3,7 +3,6 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace HarfBuzzSharp
 {
@@ -47,28 +46,11 @@ namespace HarfBuzzSharp
 			}
 		}
 
-		public FontExtents HorizontalFontExtents {
-			get {
-				if (HarfBuzzApi.hb_font_get_h_extents (Handle, out var fontExtents)) {
-					return fontExtents;
-				}
-				return new FontExtents ();
-			}
-		}
-
-		public FontExtents VerticalFontExtents {
-			get {
-				if (HarfBuzzApi.hb_font_get_v_extents (Handle, out var fontExtents)) {
-					return fontExtents;
-				}
-				return new FontExtents ();
-			}
-		}
-
 		public string[] SupportedShapers =>
 			PtrToStringArray (HarfBuzzApi.hb_shape_list_shapers ()).ToArray ();
 
-		public void SetFontFunctions (FontFunctions fontFunctions, object fontData = null, ReleaseDelegate destroy = null)
+		public void SetFontFunctions (FontFunctions fontFunctions, object fontData = null,
+			ReleaseDelegate destroy = null)
 		{
 			if (fontFunctions == null) {
 				throw new ArgumentException (nameof (fontFunctions));
@@ -92,71 +74,27 @@ namespace HarfBuzzSharp
 		public void SetScale (int xScale, int yScale) =>
 			HarfBuzzApi.hb_font_set_scale (Handle, xScale, yScale);
 
-		public void GetHorizontalGlyphOrigin (int glyph, out int xOrigin, out int yOrigin) =>
-			GetHorizontalGlyphOrigin ((uint)glyph, out xOrigin, out yOrigin);
-
-		public void GetHorizontalGlyphOrigin (uint glyph, out int xOrigin, out int yOrigin) =>
-			HarfBuzzApi.hb_font_get_glyph_h_origin (Handle, glyph, out xOrigin, out yOrigin);
-
-		public void GetVerticalGlyphOrigin (int glyph, out int xOrigin, out int yOrigin) =>
-			GetVerticalGlyphOrigin ((uint)glyph, out xOrigin, out yOrigin);
-
-		public void GetVerticalGlyphOrigin (uint glyph, out int xOrigin, out int yOrigin) =>
-			HarfBuzzApi.hb_font_get_glyph_v_origin (Handle, glyph, out xOrigin, out yOrigin);
-
-		public int GetHorizontalGlyphAdvance (int glyph)
-		{
-			if (glyph < 0) {
-				throw new ArgumentOutOfRangeException (nameof (glyph), "Glyph must be non negative.");
-			}
-
-			return HarfBuzzApi.hb_font_get_glyph_h_advance (Handle, (uint)glyph);
-		}
-
 		public int GetHorizontalGlyphAdvance (uint glyph) =>
 			HarfBuzzApi.hb_font_get_glyph_h_advance (Handle, glyph);
-
-		public int GetVerticalGlyphAdvance (int glyph)
-		{
-			if (glyph < 0) {
-				throw new ArgumentOutOfRangeException (nameof (glyph), "Glyph must be non negative.");
-			}
-
-			return HarfBuzzApi.hb_font_get_glyph_v_advance (Handle, (uint)glyph);
-		}
 
 		public int GetVerticalGlyphAdvance (uint glyph) =>
 			HarfBuzzApi.hb_font_get_glyph_v_advance (Handle, glyph);
 
-		public unsafe int[] GetHorizontalGlyphAdvances (int[] glyphs)
-		{
-			fixed (int* firstGlyph = glyphs) {
-				return GetHorizontalGlyphAdvances (glyphs.Length, (IntPtr)firstGlyph);
-			}
-		}
-
-		public unsafe int[] GetHorizontalGlyphAdvances (ReadOnlySpan<int> glyphs)
-		{
-			fixed (int* firstGlyph = glyphs) {
-				return GetHorizontalGlyphAdvances (glyphs.Length, (IntPtr)firstGlyph);
-			}
-		}
-
 		public unsafe int[] GetHorizontalGlyphAdvances (uint[] glyphs)
 		{
 			fixed (uint* firstGlyph = glyphs) {
-				return GetHorizontalGlyphAdvances (glyphs.Length, (IntPtr)firstGlyph);
+				return GetHorizontalGlyphAdvances ((IntPtr)firstGlyph, glyphs.Length);
 			}
 		}
 
 		public unsafe int[] GetHorizontalGlyphAdvances (ReadOnlySpan<uint> glyphs)
 		{
 			fixed (uint* firstGlyph = glyphs) {
-				return GetHorizontalGlyphAdvances (glyphs.Length, (IntPtr)firstGlyph);
+				return GetHorizontalGlyphAdvances ((IntPtr)firstGlyph, glyphs.Length);
 			}
 		}
 
-		public unsafe int[] GetHorizontalGlyphAdvances (int count, IntPtr firstGlyph)
+		public unsafe int[] GetHorizontalGlyphAdvances (IntPtr firstGlyph, int count)
 		{
 			var advances = new int[count];
 
@@ -167,35 +105,21 @@ namespace HarfBuzzSharp
 			return advances;
 		}
 
-		public unsafe int[] GetVerticalGlyphAdvances (int[] glyphs)
-		{
-			fixed (int* firstGlyph = glyphs) {
-				return GetVerticalGlyphAdvances (glyphs.Length, (IntPtr)firstGlyph);
-			}
-		}
-
-		public unsafe int[] GetVerticalGlyphAdvances (ReadOnlySpan<int> glyphs)
-		{
-			fixed (int* firstGlyph = glyphs) {
-				return GetVerticalGlyphAdvances (glyphs.Length, (IntPtr)firstGlyph);
-			}
-		}
-
 		public unsafe int[] GetVerticalGlyphAdvances (uint[] glyphs)
 		{
 			fixed (uint* firstGlyph = glyphs) {
-				return GetVerticalGlyphAdvances (glyphs.Length, (IntPtr)firstGlyph);
+				return GetVerticalGlyphAdvances ((IntPtr)firstGlyph, glyphs.Length);
 			}
 		}
 
 		public unsafe int[] GetVerticalGlyphAdvances (ReadOnlySpan<uint> glyphs)
 		{
 			fixed (uint* firstGlyph = glyphs) {
-				return GetVerticalGlyphAdvances (glyphs.Length, (IntPtr)firstGlyph);
+				return GetVerticalGlyphAdvances ((IntPtr)firstGlyph, glyphs.Length);
 			}
 		}
 
-		public unsafe int[] GetVerticalGlyphAdvances (int count, IntPtr firstGlyph)
+		public unsafe int[] GetVerticalGlyphAdvances (IntPtr firstGlyph, int count)
 		{
 			var advances = new int[count];
 
@@ -206,61 +130,46 @@ namespace HarfBuzzSharp
 			return advances;
 		}
 
-		public uint GetGlyph (int unicode) => GetGlyph (unicode, 0);
+		public bool TryGetHorizontalFontExtents (out FontExtents extents) =>
+			HarfBuzzApi.hb_font_get_h_extents (Handle, out extents);
 
-		public uint GetGlyph (int unicode, int variationSelector = 0)
+		public bool TryGetVerticalFontExtents (out FontExtents extents) =>
+			HarfBuzzApi.hb_font_get_v_extents (Handle, out extents);
+
+		public bool TryGetHorizontalGlyphOrigin (uint glyph, out int xOrigin, out int yOrigin) =>
+			HarfBuzzApi.hb_font_get_glyph_h_origin (Handle, glyph, out xOrigin, out yOrigin);
+
+		public bool TryGetVerticalGlyphOrigin (uint glyph, out int xOrigin, out int yOrigin) =>
+			HarfBuzzApi.hb_font_get_glyph_v_origin (Handle, glyph, out xOrigin, out yOrigin);
+
+		public bool TryGetGlyph (int unicode, out uint glyph) => TryGetGlyph ((uint)unicode, 0, out glyph);
+
+		public bool TryGetGlyph (uint unicode, out uint glyph) => TryGetGlyph (unicode, 0, out glyph);
+
+		public bool TryGetGlyph (int unicode, uint variationSelector, out uint glyph) =>
+			TryGetGlyph ((uint)unicode, variationSelector, out glyph);
+
+		public bool TryGetGlyph (uint unicode, uint variationSelector, out uint glyph)
 		{
-			if (unicode < 0) {
-				throw new ArgumentOutOfRangeException (nameof (unicode), "Unicode must be non negative.");
-			}
-
-			if (variationSelector < 0) {
-				throw new ArgumentOutOfRangeException (nameof (variationSelector), "VariationSelector must be non negative.");
-			}
-
-			return GetGlyph ((uint)unicode, (uint)variationSelector);
+			return HarfBuzzApi.hb_font_get_glyph (Handle, unicode, variationSelector, out glyph);
 		}
 
-		public uint GetGlyph (uint unicode) => GetGlyph (unicode, 0);
-
-		public uint GetGlyph (uint unicode, uint variationSelector)
+		public bool TryGetGlyphExtents (uint glyph, out GlyphExtents extents)
 		{
-			if (HarfBuzzApi.hb_font_get_glyph (Handle, unicode, variationSelector, out var glyph)) {
-				return glyph;
-			}
-
-			return 0;
+			return HarfBuzzApi.hb_font_get_glyph_extents (Handle, glyph, out extents);
 		}
 
-		public GlyphExtents GetGlyphExtents (int glyph)
-		{
-			if (glyph < 0) {
-				throw new ArgumentOutOfRangeException (nameof (glyph), "Glyph must be non negative.");
-			}
-
-			if (HarfBuzzApi.hb_font_get_glyph_extents (Handle, (uint)glyph, out var extents)) {
-				return extents;
-			}
-
-			return new GlyphExtents ();
-		}
-
-		public GlyphExtents GetGlyphExtents (uint glyph)
-		{
-			if (HarfBuzzApi.hb_font_get_glyph_extents (Handle, glyph, out var extents)) {
-				return extents;
-			}
-
-			return new GlyphExtents ();
-		}
-
-		public string GetGlyphName (uint glyph)
+		public bool TryGetGlyphName (uint glyph, out string name)
 		{
 			var buffer = ArrayPool<char>.Shared.Rent (128);
 
 			unsafe {
 				fixed (char* first = buffer) {
-					HarfBuzzApi.hb_font_get_glyph_name (Handle, glyph, first, buffer.Length);
+					if (!HarfBuzzApi.hb_font_get_glyph_name (Handle, glyph, first, buffer.Length)) {
+						name = string.Empty;
+						ArrayPool<char>.Shared.Return (buffer);
+						return false;
+					}
 				}
 			}
 
@@ -274,11 +183,27 @@ namespace HarfBuzzSharp
 
 			ArrayPool<char>.Shared.Return (buffer);
 
-			return new string (buffer, 0, length);
+			name = new string (buffer, 0, length);
+
+			return true;
 		}
 
-		public uint GetGlyphFromName (string name) =>
-			HarfBuzzApi.hb_font_get_glyph_from_name (Handle, name, name.Length, out var glyph) ? glyph : 0;
+		public bool TryGetGlyphFromName (string name, out uint glyph)
+		{
+			return HarfBuzzApi.hb_font_get_glyph_from_name (Handle, name, name.Length, out glyph);
+		}
+
+		public bool TryGetGlyphContourPoint (uint glyph,
+			uint pointIndex, out int x, out int y)
+		{
+			return HarfBuzzApi.hb_font_get_glyph_contour_point (Handle, glyph, pointIndex, out x, out y);
+		}
+
+		public bool TryGetGlyphContourPointForOrigin (uint glyph,
+			uint pointIndex, Direction direction, out int x, out int y)
+		{
+			return HarfBuzzApi.hb_font_get_glyph_contour_point_for_origin (Handle, glyph, pointIndex, direction, out x, out y);
+		}
 
 		public void SetFunctionsOpenType () =>
 			HarfBuzzApi.hb_ot_font_set_funcs (Handle);
@@ -299,7 +224,7 @@ namespace HarfBuzzSharp
 				Handle,
 				buffer.Handle,
 				featuresPtr,
-				featuresPtr != IntPtr.Zero ? features.Count : 0,
+				features?.Count ?? 0,
 				shapersPtr);
 
 			if (featuresPtr != IntPtr.Zero) {

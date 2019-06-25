@@ -1,6 +1,4 @@
-﻿using System;
-
-using Xunit;
+﻿using Xunit;
 
 namespace HarfBuzzSharp.Tests
 {
@@ -22,29 +20,9 @@ namespace HarfBuzzSharp.Tests
 			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
-				var glyph = font.GetGlyph('A');
+				font.TryGetGlyph('A', out var glyph);
 
 				Assert.Equal(42u, glyph);
-			}
-		}
-
-		[SkippableFact]
-		public void ShouldThrowInvalidOperationExceptionOnGetHorizontalGlyphAdvance()
-		{
-			using (var face = new Face(Blob, 0))
-			using (var font = new Font(face))
-			{
-				Assert.Throws<ArgumentOutOfRangeException>(() => font.GetHorizontalGlyphAdvance(-1));
-			}
-		}
-
-		[SkippableFact]
-		public void ShouldThrowInvalidOperationExceptionOnGetGlyphExtents()
-		{
-			using (var face = new Face(Blob, 0))
-			using (var font = new Font(face))
-			{
-				Assert.Throws<ArgumentOutOfRangeException>(() => font.GetGlyphExtents(-1));
 			}
 		}
 
@@ -66,7 +44,7 @@ namespace HarfBuzzSharp.Tests
 			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
-				font.GetHorizontalGlyphOrigin(49, out var xOrigin, out var yOrigin);
+				font.TryGetHorizontalGlyphOrigin(49, out var xOrigin, out var yOrigin);
 				Assert.Equal(0, xOrigin);
 				Assert.Equal(0, yOrigin);
 			}
@@ -78,7 +56,7 @@ namespace HarfBuzzSharp.Tests
 			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
-				font.GetVerticalGlyphOrigin(49, out var xOrigin, out var yOrigin);
+				font.TryGetVerticalGlyphOrigin(49, out var xOrigin, out var yOrigin);
 				Assert.Equal(557, xOrigin);
 				Assert.Equal(1022, yOrigin);
 			}
@@ -110,7 +88,7 @@ namespace HarfBuzzSharp.Tests
 			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
-				var advances = font.GetHorizontalGlyphAdvances(new[] { 49, 50, 51 });
+				var advances = font.GetHorizontalGlyphAdvances(new[] { 49u, 50u, 51u });
 
 				Assert.Equal(1114, advances[0]);
 				Assert.Equal(514, advances[1]);
@@ -124,7 +102,7 @@ namespace HarfBuzzSharp.Tests
 			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
-				var advances = font.GetVerticalGlyphAdvances(new[] { 49, 50, 51 });
+				var advances = font.GetVerticalGlyphAdvances(new[] { 49u, 50u, 51u });
 
 				Assert.Equal(-2048, advances[0]);
 				Assert.Equal(-2048, advances[1]);
@@ -138,9 +116,21 @@ namespace HarfBuzzSharp.Tests
 			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
-				var name = font.GetGlyphName(49);
+				font.TryGetGlyphName(49, out var name);
 
 				Assert.Equal("H", name);
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldGetGlyphFromName()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				font.TryGetGlyphFromName("H", out var glyph);
+
+				Assert.Equal(49u, glyph);
 			}
 		}
 	}
