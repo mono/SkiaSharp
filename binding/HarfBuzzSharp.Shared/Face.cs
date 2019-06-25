@@ -44,19 +44,8 @@ namespace HarfBuzzSharp
 			if (getTable == null)
 				throw new ArgumentNullException (nameof (getTable));
 
-			var getTableDelegate = new GetTableDelegate ((_, t, __) => getTable.Invoke (this, t, context));
-			var destroyDelegate = destroy != null && context != null
-				? new ReleaseDelegate ((_) => destroy (context))
-				: destroy;
-			var del = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (GetTableDelegate))
-					return getTableDelegate;
-				if (type == typeof (ReleaseDelegate))
-					return destroyDelegate;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-			DelegateProxies.Create (del, out _, out var ctx);
-			Handle = HarfBuzzApi.hb_face_create_for_tables (DelegateProxies.GetTableDelegateProxy, ctx, DelegateProxies.ReleaseDelegateProxyForGetTable);
+			var ctx = DelegateProxies.CreateMulti<GetTableDelegate> ((_, t, __) => getTable.Invoke (this, t, context), context, destroy);
+			Handle = HarfBuzzApi.hb_face_create_for_tables (DelegateProxies.GetTableDelegateProxy, ctx, DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
 		internal Face (IntPtr handle)

@@ -13,11 +13,11 @@
 
         <!-- handle x86/x64 specifically -->
         <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and ( '$(PlatformTarget)' == 'x64' or '$(PlatformTarget)' == 'x86' ) ">$(PlatformTarget)</PreferredNativeSkiaSharp> 
-        <!-- handle Any CPU, considering Prefer32Bit -->
-        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$(Prefer32Bit)' == 'False' ">x64</PreferredNativeSkiaSharp>  
-        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$(Prefer32Bit)' == 'True' ">x86</PreferredNativeSkiaSharp> 
+        <!-- handle Any CPU, considering Prefer32Bit - but only on Windows as macOS and Linux ignore this flag -->
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$(OS)' != 'Unix' and '$(Prefer32Bit)' == 'False' ">x64</PreferredNativeSkiaSharp>  
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$(OS)' != 'Unix' and '$(Prefer32Bit)' == 'True' ">x86</PreferredNativeSkiaSharp> 
         <!-- fall back to x64 on 64-bit machines -->
-        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and $([System.Environment]::Is64BitOperatingSystem) ">x64</PreferredNativeSkiaSharp> 
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$([System.Environment]::Is64BitOperatingSystem)' == 'True' ">x64</PreferredNativeSkiaSharp> 
         <!-- fall back to x86 -->
         <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' ">x86</PreferredNativeSkiaSharp>
     </PropertyGroup>
