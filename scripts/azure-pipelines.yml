@@ -17,6 +17,9 @@ variables:
   MONO_VERSION: 5_18_1
   XCODE_VERSION: 10.2.1
   CONFIGURATION: 'Release'
+  VM_IMAGE_WINDOWS: vs2017-win2016
+  VM_IMAGE_MAC: macos-10.14
+  VM_IMAGE_LINUX: ubuntu-16.04
 
 resources:
   repositories:
@@ -32,25 +35,25 @@ jobs:
     parameters:
       name: native_android_windows
       displayName: Build Native Android (Windows)
-      vmImage: vs2017-win2016
+      vmImage: $(VM_IMAGE_WINDOWS)
       target: externals-android
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_tizen_windows
       displayName: Build Native Tizen (Windows)
-      vmImage: vs2017-win2016
+      vmImage: $(VM_IMAGE_WINDOWS)
       target: externals-tizen
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_uwp_windows
       displayName: Build Native UWP (Windows)
-      vmImage: vs2017-win2016
+      vmImage: $(VM_IMAGE_WINDOWS)
       target: externals-uwp
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_win32_windows
       displayName: Build Native Win32 (Windows)
-      vmImage: vs2017-win2016
+      vmImage: $(VM_IMAGE_WINDOWS)
       target: externals-windows
 
  # NATIVE JOBS - MAC
@@ -58,37 +61,37 @@ jobs:
     parameters:
       name: native_android_macos
       displayName: Build Native Android (macOS)
-      vmImage: macos-10.14
+      vmImage: $(VM_IMAGE_MAC)
       target: externals-android
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_ios_macos
       displayName: Build Native iOS (macOS)
-      vmImage: macos-10.14
+      vmImage: $(VM_IMAGE_MAC)
       target: externals-ios
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_macos_macos
       displayName: Build Native macOS (macOS)
-      vmImage: macos-10.14
+      vmImage: $(VM_IMAGE_MAC)
       target: externals-macos
   # - template: azure-templates-bootstrapper.yml
   #   parameters:
   #     name: native_tizen_macos
   #     displayName: Build Native Tizen (macOS)
-  #     vmImage: macos-10.14
+  #     vmImage: $(VM_IMAGE_MAC)
   #     target: externals-tizen
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_tvos_macos
       displayName: Build Native tvOS (macOS)
-      vmImage: macos-10.14
+      vmImage: $(VM_IMAGE_MAC)
       target: externals-tvos
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: native_watchos_macos
       displayName: Build Native watchOS (macOS)
-      vmImage: macos-10.14
+      vmImage: $(VM_IMAGE_MAC)
       target: externals-watchos
 
  # NATIVE JOBS - LINUX
@@ -109,7 +112,7 @@ jobs:
     parameters:
       name: native_tizen_linux
       displayName: Build Native Tizen (Linux)
-      vmImage: ubuntu-16.04
+      vmImage: $(VM_IMAGE_LINUX)
       packages: $(TIZEN_LINUX_PACKAGES)
       target: externals-tizen
 
@@ -118,7 +121,7 @@ jobs:
     parameters:
       name: managed_windows
       displayName: Build Managed (Windows)
-      vmImage: vs2017-win2016
+      vmImage: $(VM_IMAGE_WINDOWS)
       target: libs-only
       dependsOn:
         - native_android_windows
@@ -129,7 +132,7 @@ jobs:
     parameters:
       name: managed_macos
       displayName: Build Managed (macOS)
-      vmImage: macos-10.14
+      vmImage: $(VM_IMAGE_MAC)
       target: libs-only
       dependsOn:
         - native_android_macos
@@ -143,7 +146,7 @@ jobs:
     parameters:
       name: managed_linux
       displayName: Build Managed (Linux)
-      vmImage: ubuntu-16.04
+      vmImage: $(VM_IMAGE_LINUX)
       packages: $(MANAGED_LINUX_PACKAGES)
       target: libs-only
       dependsOn:
@@ -153,7 +156,7 @@ jobs:
     parameters:
       name: managed_nodependencies_linux
       displayName: Build Managed [No Dependencies] (Linux)
-      vmImage: ubuntu-16.04
+      vmImage: $(VM_IMAGE_LINUX)
       packages: $(MANAGED_LINUX_PACKAGES)
       target: libs-only
       dependsOn:
@@ -165,7 +168,7 @@ jobs:
     parameters:
       name: package_nodependencies_windows
       displayName: Package NuGets [No Dependencies]
-      vmImage: vs2017-win2016
+      vmImage: $(VM_IMAGE_WINDOWS)
       target: nuget-only
       dependsOn:
         - managed_nodependencies_linux
@@ -196,7 +199,7 @@ jobs:
     parameters:
       name: package_windows
       displayName: Package NuGets
-      vmImage: vs2017-win2016
+      vmImage: $(VM_IMAGE_WINDOWS)
       target: nuget-only
       dependsOn:
         - managed_linux
@@ -225,7 +228,7 @@ jobs:
       - package_nodependencies_windows
       - package_windows
     pool:
-      vmImage: ubuntu-16.04
+      vmImage: $(VM_IMAGE_LINUX)
     steps:
       - task: DownloadPipelineArtifact@0
         displayName: Download the nuget-nodependencies artifacts
@@ -274,7 +277,7 @@ jobs:
     parameters:
       name: tests_windows
       displayName: Tests (Windows)
-      vmImage: vs2017-win2016
+      vmImage: $(VM_IMAGE_WINDOWS)
       retryCount: 3
       target: tests-only
       dependsOn:
@@ -290,7 +293,7 @@ jobs:
     parameters:
       name: tests_macos
       displayName: Tests (macOS)
-      vmImage: macos-10.14
+      vmImage: $(VM_IMAGE_MAC)
       retryCount: 3
       target: tests-only
       dependsOn:
@@ -306,7 +309,7 @@ jobs:
     parameters:
       name: tests_linux
       displayName: Tests (Linux)
-      vmImage: ubuntu-16.04
+      vmImage: $(VM_IMAGE_LINUX)
       packages: $(MANAGED_LINUX_PACKAGES)
       retryCount: 3
       target: tests-only
@@ -323,7 +326,7 @@ jobs:
     parameters:
       name: tests_nodependencies_linux
       displayName: Tests [No Dependencies] (Linux)
-      vmImage: ubuntu-16.04
+      vmImage: $(VM_IMAGE_LINUX)
       packages: $(MANAGED_LINUX_PACKAGES)
       retryCount: 3
       target: tests
@@ -344,7 +347,7 @@ jobs:
     parameters:
       name: samples_windows
       displayName: Build Samples (Windows)
-      vmImage: vs2017-win2016
+      vmImage: $(VM_IMAGE_WINDOWS)
       target: samples
       dependsOn:
         - managed_windows
@@ -352,7 +355,7 @@ jobs:
     parameters:
       name: samples_macos
       displayName: Build Samples (macOS)
-      vmImage: macos-10.14
+      vmImage: $(VM_IMAGE_MAC)
       target: samples
       dependsOn:
         - managed_macos
@@ -379,7 +382,7 @@ jobs:
     parameters:
       name: samples_linux
       displayName: Build Samples (Linux)
-      vmImage: ubuntu-16.04
+      vmImage: $(VM_IMAGE_LINUX)
       packages: $(MANAGED_LINUX_PACKAGES)
       target: samples
       dependsOn:
