@@ -38,8 +38,4 @@ Write-Host "##vso[task.setvariable variable=JAVA_HOME;]$java_home"
 $javaBin = Join-Path "$java_home" "bin"
 Write-Host "##vso[task.setvariable variable=PATH;]$javaBin;$env:PATH";
 
-# log the Java version
-Write-Host "Using Java version:"
-& "java" -version
-
 exit $LASTEXITCODE
