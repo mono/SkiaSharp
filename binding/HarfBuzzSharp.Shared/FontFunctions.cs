@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 
 namespace HarfBuzzSharp
 {
@@ -22,9 +21,9 @@ namespace HarfBuzzSharp
 		out GlyphExtents extents, IntPtr context);
 	internal delegate bool GlyphContourPointProxyDelegate (IntPtr font, IntPtr fontData, uint glyph,
 		uint pointIndex, out int x, out int y, IntPtr context);
-	internal delegate bool GlyphNameProxyDelegate (IntPtr font, IntPtr fontData, uint glyph, out StringBuilder name,
-		out uint size, IntPtr context);
-	internal delegate bool GlyphFromNameProxyDelegate (IntPtr font, IntPtr fontData, StringBuilder name,
+	internal unsafe delegate bool GlyphNameProxyDelegate (IntPtr font, IntPtr fontData, uint glyph, char* name,
+		int size, IntPtr context);
+	internal delegate bool GlyphFromNameProxyDelegate (IntPtr font, IntPtr fontData, string name,
 		int len, out uint glyph, IntPtr context);
 
 	public class FontFunctions : NativeObject
@@ -43,7 +42,7 @@ namespace HarfBuzzSharp
 		private static readonly GlyphExtentsProxyDelegate GlyphExtentsProxy = GlyphExtentsProxyImplementation;
 		private static readonly GlyphContourPointProxyDelegate GlyphContourPointProxy =
 			GlyphContourPointProxyImplementation;
-		private static readonly GlyphNameProxyDelegate GlyphNameProxy = GlyphNameProxyImplementation;
+		private static readonly unsafe GlyphNameProxyDelegate GlyphNameProxy = GlyphNameProxyImplementation;
 		private static readonly GlyphFromNameProxyDelegate GlyphFromNameProxy = GlyphFromNameProxyImplementation;
 
 		public delegate bool FontExtentsDelegate (Font font, object fontData, out FontExtents extents);
@@ -60,7 +59,7 @@ namespace HarfBuzzSharp
 		public delegate bool GlyphExtentsDelegate (Font font, object fontData, uint glyph, out GlyphExtents extents);
 		public delegate bool GlyphContourPointDelegate (Font font, object fontData, uint glyph, uint pointIndex,
 			out int x, out int y);
-		public delegate bool GlyphNameDelegate (Font font, object fontData, uint glyph, out string name);
+		public unsafe delegate bool GlyphNameDelegate (Font font, object fontData, uint glyph, char* nameBuffer, int size);
 		public delegate bool GlyphFromNameDelegate (Font font, object fontData, string name, out uint glyph);
 
 		public FontFunctions () : this (IntPtr.Zero)
@@ -469,15 +468,12 @@ namespace HarfBuzzSharp
 		}
 
 		[MonoPInvokeCallback (typeof (GlyphNameProxyDelegate))]
-		private static bool GlyphNameProxyImplementation (IntPtr font, IntPtr fontData, uint glyph,
-			out StringBuilder name, out uint size, IntPtr context)
+		private static unsafe bool GlyphNameProxyImplementation (IntPtr font, IntPtr fontData, uint glyph,
+			char* nameBuffer, int size, IntPtr context)
 		{
 			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
 			var del = (GlyphNameDelegate)multi.Invoke (typeof (GlyphNameDelegate));
-			var success = del.Invoke (null, null, glyph, out var s);
-
-			name = new StringBuilder (s);
-			size = (uint)name.Length;
+			var success = del.Invoke (null, null, glyph, nameBuffer, size);
 
 			return success;
 		}
@@ -492,22 +488,24 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedDelegate = new GlyphNameDelegate ((Font _, object __, uint g, out string n) =>
-				del.Invoke (Font, FontData, g, out n));
+			unsafe {
+				var wrappedDelegate = new GlyphNameDelegate ((_, __, g, nb, s) =>
+					del.Invoke (Font, FontData, g, nb, s));
 
-			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
+				var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
 
-			HarfBuzzApi.hb_font_funcs_set_glyph_name_func (Handle, GlyphNameProxy, ctx,
-				DelegateProxies.ReleaseDelegateProxyForMulti);
+				HarfBuzzApi.hb_font_funcs_set_glyph_name_func (Handle, GlyphNameProxy, ctx,
+					DelegateProxies.ReleaseDelegateProxyForMulti);
+			}
 		}
 
 		[MonoPInvokeCallback (typeof (GlyphFromNameProxyDelegate))]
-		private static bool GlyphFromNameProxyImplementation (IntPtr font, IntPtr fontData, StringBuilder name,
+		private static bool GlyphFromNameProxyImplementation (IntPtr font, IntPtr fontData, string name,
 			int len, out uint glyph, IntPtr context)
 		{
 			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
 			var del = (GlyphFromNameDelegate)multi.Invoke (typeof (GlyphFromNameDelegate));
-			return del.Invoke (null, null, name.ToString (), out glyph);
+			return del.Invoke (null, null, name, out glyph);
 		}
 
 		public void SetGlyphFromNameDelegate (GlyphFromNameDelegate del, object context = null,

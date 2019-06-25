@@ -131,5 +131,17 @@ namespace HarfBuzzSharp.Tests
 				Assert.Equal(-2048, advances[2]);
 			}
 		}
+
+		[SkippableFact]
+		public void ShouldGetGlyphName()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				var name = font.GetGlyphName(49);
+
+				Assert.Equal("H", name);
+			}
+		}
 	}
 }

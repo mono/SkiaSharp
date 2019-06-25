@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -253,10 +254,28 @@ namespace HarfBuzzSharp
 			return new GlyphExtents ();
 		}
 
-		public string GetGlyphName (uint glyph) =>
-			HarfBuzzApi.hb_font_get_glyph_name (Handle, glyph, out var name, out _)
-				? name.ToString ()
-				: glyph.ToString ();
+		public string GetGlyphName (uint glyph)
+		{
+			var buffer = ArrayPool<char>.Shared.Rent (128);
+
+			unsafe {
+				fixed (char* first = buffer) {
+					HarfBuzzApi.hb_font_get_glyph_name (Handle, glyph, first, buffer.Length);
+				}
+			}
+
+			var length = 0;
+
+			foreach (var c in buffer) {
+				if (c == 0)
+					break;
+				length++;
+			}
+
+			ArrayPool<char>.Shared.Return (buffer);
+
+			return new string (buffer, 0, length);
+		}
 
 		public uint GetGlyphFromName (string name) =>
 			HarfBuzzApi.hb_font_get_glyph_from_name (Handle, name, name.Length, out var glyph) ? glyph : 0;

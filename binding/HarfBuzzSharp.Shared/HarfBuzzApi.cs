@@ -171,7 +171,7 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static hb_font_t hb_font_get_parent (hb_font_t font);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static hb_bool_t hb_font_get_glyph_name (hb_font_t font, hb_codepoint_t glyph, out StringBuilder name, out uint size);
+		public extern static unsafe hb_bool_t hb_font_get_glyph_name (hb_font_t font, hb_codepoint_t glyph, char* nameBuffer, int size);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static hb_bool_t hb_font_get_glyph_from_name (hb_font_t font, string name, int len, out hb_codepoint_t glyph);
 
