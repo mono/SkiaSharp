@@ -307,19 +307,19 @@ Task ("nuget-only")
         foreach (var file in files.ToArray ()) {
             // remove the files that aren't available
             var nuspecPlatform = file.Attribute ("platform");
-            if (nuspecPlatform != null) {
+            if (!string.IsNullOrEmpty (nuspecPlatform?.Value)) {
+                nuspecPlatform.Remove ();
                 if (!string.IsNullOrEmpty (platform)) {
                     // handle the platform builds
-                    if (!string.IsNullOrEmpty (nuspecPlatform.Value)) {
-                        if (!nuspecPlatform.Value.Split (',').Contains (platform)) {
-                            file.Remove ();
-                        }
+                    if (!nuspecPlatform.Value.Split (',').Contains (platform)) {
+                        file.Remove ();
                     }
                 }
-                nuspecPlatform.Remove ();
             }
-            // copy the src attribute and set it for the target
-            file.Add (new XAttribute ("target", file.Attribute ("src").Value));
+            // copy the src attribute and set it for the target if there is none already
+            if (string.IsNullOrEmpty (file.Attribute ("target")?.Value)) {
+                file.Add (new XAttribute ("target", file.Attribute ("src").Value));
+            }
         }
     });
 
@@ -386,6 +386,9 @@ Task ("nuget-only")
 
         setVersion (xdoc, $"{preview}");
         xdoc.Save ($"{outDir}/{id}.prerelease.nuspec");
+
+        // the placeholders
+        FileWriteText ($"{outDir}/_._", "");
 
         // the legal
         CopyFile ("./LICENSE.txt", $"{outDir}/LICENSE.txt");

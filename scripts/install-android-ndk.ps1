@@ -36,4 +36,7 @@ if ($IsMacOS -or $IsLinux) {
 Write-Host "Moving NDK..."
 Move-Item "${ndkTemp}\android-ndk-${Version}" "$ndk"
 
+# make sure that NDK is in ANDROID_NDK_HOME
+Write-Host "##vso[task.setvariable variable=ANDROID_NDK_HOME;]$ndk";
+
 exit $LASTEXITCODE
