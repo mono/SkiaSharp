@@ -52,12 +52,12 @@ namespace SkiaSharp
 
 		public static SKPathEffect CreateDiscrete(float segLength, float deviation, UInt32 seedAssist = 0)
 		{
-			return GetObject<SKPathEffect>(SkiaApi.sk_path_effect_create_discrete(segLength, deviation, seedAssist));
+			return GetObject<SKPathEffect>(SkiaApi.sk_path_effect_create_discrete(segLength, deviation, seedAssist, IntPtr.Zero));
 		}
 
 		public static SKPathEffect CreateCorner(float radius)
 		{
-			return GetObject<SKPathEffect>(SkiaApi.sk_path_effect_create_corner(radius));
+			return GetObject<SKPathEffect>(SkiaApi.sk_path_effect_create_corner(IntPtr.Zero, radius));
 		}
 
 		public static SKPathEffect Create1DPath(SKPath path, float advance, float phase, SKPath1DPathEffectStyle style)
@@ -69,7 +69,7 @@ namespace SkiaSharp
 
 		public static SKPathEffect Create2DLine(float width, SKMatrix matrix)
 		{
-			return GetObject<SKPathEffect>(SkiaApi.sk_path_effect_create_2d_line(width, ref matrix));
+			return GetObject<SKPathEffect>(SkiaApi.sk_path_effect_create_2d_line(IntPtr.Zero, width, ref matrix));
 		}
 
 		public static SKPathEffect Create2DPath(SKMatrix matrix, SKPath path)

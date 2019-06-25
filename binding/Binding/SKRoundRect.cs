@@ -101,7 +101,7 @@ namespace SkiaSharp
 
 		public void SetRect (SKRect rect, float xRadius, float yRadius)
 		{
-			SkiaApi.sk_rrect_set_rect_xy (Handle, ref rect, xRadius, yRadius);
+			SkiaApi.sk_rrect_set_rect_xy (Handle, ref rect, xRadius, yRadius, IntPtr.Zero);
 		}
 
 		public void SetOval (SKRect rect)

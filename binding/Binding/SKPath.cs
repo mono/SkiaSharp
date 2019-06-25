@@ -302,7 +302,7 @@ namespace SkiaSharp
 			SkiaApi.sk_path_add_oval (Handle, ref rect, direction);
 
 		public void AddArc (SKRect oval, float startAngle, float sweepAngle) =>
-			SkiaApi.sk_path_add_arc (Handle, ref oval, startAngle, sweepAngle);
+			SkiaApi.sk_path_add_arc (Handle, ref oval, startAngle, sweepAngle, IntPtr.Zero);
 
 		public bool GetBounds (out SKRect rect)
 		{

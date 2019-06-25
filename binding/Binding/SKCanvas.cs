@@ -304,7 +304,7 @@ namespace SkiaSharp
 		{
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
-			SkiaApi.sk_canvas_draw_circle (Handle, cx, cy, radius, paint.Handle);
+			SkiaApi.sk_canvas_draw_circle (Handle, paint.Handle, cx, cy, radius);
 		}
 
 		public void DrawCircle (SKPoint c, float radius, SKPaint paint)
@@ -339,7 +339,7 @@ namespace SkiaSharp
 		{
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
-			SkiaApi.sk_canvas_draw_point (Handle, x, y, paint.Handle);
+			SkiaApi.sk_canvas_draw_point (Handle, paint.Handle, x, y);
 		}
 
 		public void DrawPoint (SKPoint p, SKColor color)
@@ -609,7 +609,7 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
-			SkiaApi.sk_canvas_draw_text_on_path (Handle, hOffset, vOffset, text, text.Length, path.Handle, paint.Handle);
+			SkiaApi.sk_canvas_draw_text_on_path (Handle, text, text.Length, path.Handle, paint.Handle, IntPtr.Zero, hOffset, vOffset);
 		}
 
 		public void Flush ()

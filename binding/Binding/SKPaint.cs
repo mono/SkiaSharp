@@ -359,7 +359,7 @@ namespace SkiaSharp
 			if (buffer == IntPtr.Zero && length != IntPtr.Zero)
 				throw new ArgumentNullException (nameof (buffer));
 
-			return GetObject<SKPath> (SkiaApi.sk_paint_get_text_path (Handle, buffer, length, x, y));
+			return GetObject<SKPath> (SkiaApi.sk_paint_get_text_path (x, y, Handle, buffer, length));
 		}
 
 		public SKPath GetTextPath (string text, SKPoint[] points)
@@ -436,7 +436,7 @@ namespace SkiaSharp
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
 
-			return SkiaApi.sk_paint_get_fill_path (Handle, src.Handle, dst.Handle, IntPtr.Zero, resScale);
+			return SkiaApi.sk_paint_get_fill_path (Handle, src.Handle, dst.Handle, resScale, IntPtr.Zero);
 		}
 
 		public bool GetFillPath (SKPath src, SKPath dst, SKRect cullRect)
@@ -449,7 +449,7 @@ namespace SkiaSharp
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
 
-			return SkiaApi.sk_paint_get_fill_path (Handle, src.Handle, dst.Handle, ref cullRect, resScale);
+			return SkiaApi.sk_paint_get_fill_path (Handle, src.Handle, dst.Handle, resScale, ref cullRect);
 		}
 
 		// CountGlyphs
@@ -694,7 +694,7 @@ namespace SkiaSharp
 			unsafe {
 				var bounds = new[] { upperBounds, lowerBounds };
 
-				var n = SkiaApi.sk_paint_get_text_intercepts (Handle, text, length, x, y, bounds, (float*)IntPtr.Zero);
+				var n = SkiaApi.sk_paint_get_text_intercepts (Handle, text, length, bounds, (float*)IntPtr.Zero, IntPtr.Zero, x, y);
 
 				if (n <= 0) {
 					return new float[0];
@@ -702,7 +702,7 @@ namespace SkiaSharp
 
 				var intervals = new float[n];
 				fixed (float* ip = intervals) {
-					SkiaApi.sk_paint_get_text_intercepts (Handle, text, length, x, y, bounds, ip);
+					SkiaApi.sk_paint_get_text_intercepts (Handle, text, length, bounds, ip, IntPtr.Zero, x, y);
 				}
 				return intervals;
 			}
@@ -815,7 +815,7 @@ namespace SkiaSharp
 			unsafe {
 				var bounds = new[] { upperBounds, lowerBounds };
 
-				var n = SkiaApi.sk_paint_get_pos_text_h_intercepts (Handle, text, length, xpositions, y, bounds, (float*)IntPtr.Zero);
+				var n = SkiaApi.sk_paint_get_pos_text_h_intercepts (Handle, text, length, xpositions, bounds, (float*)IntPtr.Zero, y);
 
 				if (n <= 0) {
 					return new float[0];
@@ -823,7 +823,7 @@ namespace SkiaSharp
 
 				var intervals = new float[n];
 				fixed (float* ip = intervals) {
-					SkiaApi.sk_paint_get_pos_text_h_intercepts (Handle, text, length, xpositions, y, bounds, ip);
+					SkiaApi.sk_paint_get_pos_text_h_intercepts (Handle, text, length, xpositions, bounds, ip, y);
 				}
 				return intervals;
 			}

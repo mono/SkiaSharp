@@ -24,7 +24,7 @@ namespace SkiaSharp
 
 		public static SKColor UnPreMultiply (SKPMColor pmcolor)
 		{
-			return SkiaApi.sk_color_unpremultiply (pmcolor);
+			return SkiaApi.sk_color_unpremultiply ((uint)pmcolor);
 		}
 
 		public static SKPMColor[] PreMultiply (SKColor[] colors)
