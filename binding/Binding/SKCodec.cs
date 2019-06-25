@@ -45,7 +45,7 @@ namespace SkiaSharp
 
 		public SKSizeI GetScaledDimensions (float desiredScale)
 		{
-			SkiaApi.sk_codec_get_scaled_dimensions (Handle, desiredScale, out var dimensions);
+			SkiaApi.sk_codec_get_scaled_dimensions (Handle, out var dimensions, desiredScale);
 			return dimensions;
 		}
 

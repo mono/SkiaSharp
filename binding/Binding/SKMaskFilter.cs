@@ -84,7 +84,7 @@ namespace SkiaSharp
 
 		public static SKMaskFilter CreateGamma(float gamma)
 		{
-			return GetObject<SKMaskFilter>(SkiaApi.sk_maskfilter_new_gamma(gamma));
+			return GetObject<SKMaskFilter>(SkiaApi.sk_maskfilter_new_gamma(IntPtr.Zero, gamma));
 		}
 
 		public static SKMaskFilter CreateClip(byte min, byte max)

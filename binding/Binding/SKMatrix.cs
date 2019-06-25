@@ -467,13 +467,13 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 
 		public SKPoint MapPoint (float x, float y)
 		{
-			SkiaApi.sk_matrix_map_xy (ref this, x, y, out var result);
+			SkiaApi.sk_matrix_map_xy (ref this, out var result, x, y, IntPtr.Zero);
 			return result;
 		}
 
 		public SKPoint MapVector (float x, float y)
 		{
-			SkiaApi.sk_matrix_map_vector (ref this, x, y, out var result);
+			SkiaApi.sk_matrix_map_vector (ref this, out var result, x, y, IntPtr.Zero);
 			return result;
 		}
 
@@ -533,7 +533,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		
 		public void Translate (float x, float y, float z)
 		{
-			SkiaApi.sk_3dview_translate (Handle, x, y, z);
+			SkiaApi.sk_3dview_translate (Handle, x, y, z, IntPtr.Zero);
 		}
 		
 		public void TranslateX (float x)
@@ -800,32 +800,32 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 
 		public void SetTranslate (float dx, float dy, float dz)
 		{
-			SkiaApi.sk_matrix44_set_translate (Handle, dx, dy, dz);
+			SkiaApi.sk_matrix44_set_translate (Handle, dx, dy, dz, IntPtr.Zero);
 		}
 
 		public void PreTranslate (float dx, float dy, float dz)
 		{
-			SkiaApi.sk_matrix44_pre_translate (Handle, dx, dy, dz);
+			SkiaApi.sk_matrix44_pre_translate (Handle, dx, dy, dz, IntPtr.Zero);
 		}
 
 		public void PostTranslate (float dx, float dy, float dz)
 		{
-			SkiaApi.sk_matrix44_post_translate (Handle, dx, dy, dz);
+			SkiaApi.sk_matrix44_post_translate (Handle, dx, dy, dz, IntPtr.Zero);
 		}
 
 		public void SetScale (float sx, float sy, float sz)
 		{
-			SkiaApi.sk_matrix44_set_scale (Handle, sx, sy, sz);
+			SkiaApi.sk_matrix44_set_scale (Handle, sx, sy, sz, IntPtr.Zero);
 		}
 
 		public void PreScale (float sx, float sy, float sz)
 		{
-			SkiaApi.sk_matrix44_pre_scale (Handle, sx, sy, sz);
+			SkiaApi.sk_matrix44_pre_scale (Handle, sx, sy, sz, IntPtr.Zero);
 		}
 
 		public void PostScale (float sx, float sy, float sz)
 		{
-			SkiaApi.sk_matrix44_post_scale (Handle, sx, sy, sz);
+			SkiaApi.sk_matrix44_post_scale (Handle, sx, sy, sz, IntPtr.Zero);
 		}
 
 		public void SetRotationAboutDegrees (float x, float y, float z, float degrees)

@@ -185,12 +185,12 @@ namespace SkiaSharp
 
 		public static SKShader CreatePerlinNoiseTurbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed)
 		{
-			return GetObject<SKShader>(SkiaApi.sk_shader_new_perlin_noise_turbulence(baseFrequencyX, baseFrequencyY, numOctaves, seed, IntPtr.Zero));
+			return GetObject<SKShader>(SkiaApi.sk_shader_new_perlin_noise_turbulence(numOctaves, baseFrequencyX, baseFrequencyY, seed, IntPtr.Zero));
 		}
 
 		public static SKShader CreatePerlinNoiseTurbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, SKPointI tileSize)
 		{
-			return GetObject<SKShader>(SkiaApi.sk_shader_new_perlin_noise_turbulence(baseFrequencyX, baseFrequencyY, numOctaves, seed, ref tileSize));
+			return GetObject<SKShader>(SkiaApi.sk_shader_new_perlin_noise_turbulence(numOctaves, baseFrequencyX, baseFrequencyY, seed, ref tileSize));
 		}
 
 		public static SKShader CreateCompose (SKShader shaderA, SKShader shaderB)
