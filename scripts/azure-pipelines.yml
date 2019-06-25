@@ -212,11 +212,11 @@ jobs:
             $nupkgs | Foreach-Object { Write-Host $_.Name }
             $nupkgs | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
           displayName: Remove all unrelated files
-        - task: PublishPipelineArtifact@0
+        - task: PublishBuildArtifacts@1
           displayName: Publish the native-default artifacts
           inputs:
             artifactName: native-default
-            targetPath: 'output/native'
+            pathToPublish: 'output/native'
         - task: PublishPipelineArtifact@0
           displayName: Publish the nuget-default artifacts
           inputs:
