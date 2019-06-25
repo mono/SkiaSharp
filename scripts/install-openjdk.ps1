@@ -35,11 +35,8 @@ if ($IsMacOS) {
 Write-Host "##vso[task.setvariable variable=JAVA_HOME;]$java_home"
 
 # make sure that JAVA_HOME/bin is in the PATH
-$javaBin = Join-Path "$env:JAVA_HOME" "bin"
-if(-not $env:PATH.Contains($javaBin)) {
-    Write-Host "Adding $javaBin to PATH..."
-    Write-Host "##vso[task.setvariable variable=PATH;]$javaBin;$env:PATH";
-}
+$javaBin = Join-Path "$java_home" "bin"
+Write-Host "##vso[task.setvariable variable=PATH;]$javaBin;$env:PATH";
 
 # log the Java version
 Write-Host "Using Java version:"
