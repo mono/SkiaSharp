@@ -13,11 +13,11 @@
 
         <!-- handle x86/x64 specifically -->
         <PreferredNativeHarfBuzzSharp Condition=" '$(PreferredNativeHarfBuzzSharp)' == '' and ( '$(PlatformTarget)' == 'x64' or '$(PlatformTarget)' == 'x86' ) ">$(PlatformTarget)</PreferredNativeHarfBuzzSharp> 
-        <!-- handle Any CPU, considering Prefer32Bit -->
-        <PreferredNativeHarfBuzzSharp Condition=" '$(PreferredNativeHarfBuzzSharp)' == '' and '$(Prefer32Bit)' == 'False' ">x64</PreferredNativeHarfBuzzSharp>  
-        <PreferredNativeHarfBuzzSharp Condition=" '$(PreferredNativeHarfBuzzSharp)' == '' and '$(Prefer32Bit)' == 'True' ">x86</PreferredNativeHarfBuzzSharp> 
+        <!-- handle Any CPU, considering Prefer32Bit - but only on Windows as macOS and Linux ignore this flag -->
+        <PreferredNativeHarfBuzzSharp Condition=" '$(PreferredNativeHarfBuzzSharp)' == '' and '$(OS)' != 'Unix' and '$(Prefer32Bit)' == 'False' ">x64</PreferredNativeHarfBuzzSharp>  
+        <PreferredNativeHarfBuzzSharp Condition=" '$(PreferredNativeHarfBuzzSharp)' == '' and '$(OS)' != 'Unix' and '$(Prefer32Bit)' == 'True' ">x86</PreferredNativeHarfBuzzSharp> 
         <!-- fall back to x64 on 64-bit machines -->
-        <PreferredNativeHarfBuzzSharp Condition=" '$(PreferredNativeHarfBuzzSharp)' == '' and $([System.Environment]::Is64BitOperatingSystem) ">x64</PreferredNativeHarfBuzzSharp> 
+        <PreferredNativeHarfBuzzSharp Condition=" '$(PreferredNativeHarfBuzzSharp)' == '' and '$([System.Environment]::Is64BitOperatingSystem)' == 'True' ">x64</PreferredNativeHarfBuzzSharp> 
         <!-- fall back to x86 -->
         <PreferredNativeHarfBuzzSharp Condition=" '$(PreferredNativeHarfBuzzSharp)' == '' ">x86</PreferredNativeHarfBuzzSharp>
     </PropertyGroup>
