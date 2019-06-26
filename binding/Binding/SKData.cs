@@ -13,12 +13,7 @@ namespace SkiaSharp
 		// improvement in Copy performance.
 		private const int CopyBufferSize = 81920;
 
-		private static readonly Lazy<SKData> empty;
-
-		static SKData ()
-		{
-			empty = new Lazy<SKData> (() => GetObject<SKData> (SkiaApi.sk_data_new_empty ()));
-		}
+		private static readonly Lazy<SKData> empty = new Lazy<SKData> (() => GetObject<SKData> (SkiaApi.sk_data_new_empty ()));
 
 		protected override void Dispose (bool disposing)
 		{
