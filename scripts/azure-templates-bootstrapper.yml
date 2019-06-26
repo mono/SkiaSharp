@@ -71,15 +71,9 @@ jobs:
       - ${{ if endsWith(parameters.name, '_windows') }}:
         - powershell: .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} { .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY -c $env:CONFIGURATION ${{ parameters.additionalArgs }} }
           displayName: Run the bootstrapper for ${{ parameters.target }}
-          env:
-            ANDROID_NDK_HOME: $(USERPROFILE)/android-ndk
-            TIZEN_STUDIO_HOME: $(USERPROFILE)/tizen-studio
       - ${{ if not(endsWith(parameters.name, '_windows')) }}:
         - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY -c $CONFIGURATION ${{ parameters.additionalArgs }}
           displayName: Run the bootstrapper for ${{ parameters.target }}
-          env:
-            ANDROID_NDK_HOME: $(HOME)/android-ndk
-            TIZEN_STUDIO_HOME: $(HOME)/tizen-studio
       # post-build steps
       - ${{ parameters.postBuildSteps }}
       # publish artifacts

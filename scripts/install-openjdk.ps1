@@ -34,4 +34,8 @@ if ($IsMacOS) {
 }
 Write-Host "##vso[task.setvariable variable=JAVA_HOME;]$java_home"
 
+# make sure that JAVA_HOME/bin is in the PATH
+$javaBin = Join-Path "$java_home" "bin"
+Write-Host "##vso[task.setvariable variable=PATH;]$javaBin;$env:PATH";
+
 exit $LASTEXITCODE
