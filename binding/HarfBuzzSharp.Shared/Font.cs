@@ -48,10 +48,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (fontFunctions));
 			}
 
-			var del = destroy != null && fontData != null
-				? _ => destroy (fontData)
-				: destroy;
-			var proxy = DelegateProxies.Create (del, DelegateProxies.ReleaseDelegateProxy, out _, out var ctx);
+			var proxy = DelegateProxies.Create (destroy, DelegateProxies.ReleaseDelegateProxy, out _, out var ctx);
 
 			fontFunctions.Font = this;
 
