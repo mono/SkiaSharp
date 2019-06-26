@@ -22,13 +22,13 @@ namespace SkiaSharp
 
 		public IntPtr Clusters => (IntPtr)internalBuffer.Clusters;
 
-		public IntPtr Utf8Text => (IntPtr)internalBuffer.Utf8text;
+		public IntPtr Utf8Text => (IntPtr)internalBuffer.Utf8Text;
 
 		public Span<ushort> GetGlyphSpan () =>
 			new Span<ushort> (internalBuffer.Glyphs, Size);
 
 		public Span<byte> GetUtf8TextSpan () =>
-			new Span<byte> (internalBuffer.Utf8text, TextSize);
+			new Span<byte> (internalBuffer.Utf8Text, TextSize);
 
 		public Span<uint> GetClusterSpan () =>
 			new Span<uint> (internalBuffer.Clusters, Size);
@@ -95,7 +95,7 @@ namespace SkiaSharp
 	{
 		public void* Glyphs;
 		public void* Positions;
-		public void* Utf8text;
+		public void* Utf8Text;
 		public void* Clusters;
 	}
 }
