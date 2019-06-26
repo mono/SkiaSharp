@@ -94,14 +94,17 @@ namespace SkiaSharp
 
 		public int BytesSize => Info.BytesSize;
 
-		public IntPtr GetPixels ()
-		{
-			return SkiaApi.sk_pixmap_get_pixels (Handle);
-		}
+		public IntPtr GetPixels () =>
+			SkiaApi.sk_pixmap_get_pixels (Handle);
 
-		public IntPtr GetPixels (int x, int y)
+		public IntPtr GetPixels (int x, int y) =>
+			SkiaApi.sk_pixmap_get_pixels_with_xy (Handle, x, y);
+
+		public ReadOnlySpan<byte> GetPixelSpan ()
 		{
-			return SkiaApi.sk_pixmap_get_pixels_with_xy (Handle, x, y);
+			unsafe {
+				return new ReadOnlySpan<byte> ((void*)GetPixels (), BytesSize);
+			}
 		}
 
 		public SKColor GetPixelColor (int x, int y)
