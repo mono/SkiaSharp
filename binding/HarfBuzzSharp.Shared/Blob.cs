@@ -14,18 +14,19 @@ namespace HarfBuzzSharp
 		{
 		}
 
-		public Blob (IntPtr data, int length, MemoryMode mode, object userData, BlobReleaseDelegate releaseDelegate)
-			: this (Create (data, length, mode, userData, new ReleaseDelegate (releaseDelegate)))
+		[Obsolete ("Use Blob(IntPtr, int, MemoryMode, ReleaseDelegate releaseDelegate) instead.")]
+		public Blob (IntPtr data, uint length, MemoryMode mode, object userData, BlobReleaseDelegate releaseDelegate)
+			: this (data, (int)length, mode, () => releaseDelegate?.Invoke (userData))
 		{
 		}
 
 		public Blob (IntPtr data, int length, MemoryMode mode)
-			: this (data, length, mode, null, null)
+			: this (data, length, mode, null)
 		{
 		}
 
-		public Blob (IntPtr data, uint length, MemoryMode mode, object userData, BlobReleaseDelegate releaseDelegate)
-			: this (data, (int)length, mode, userData, releaseDelegate)
+		public Blob (IntPtr data, int length, MemoryMode mode, ReleaseDelegate releaseDelegate)
+			: this (Create (data, length, mode, new ReleaseDelegate (releaseDelegate)))
 		{
 		}
 
@@ -80,18 +81,15 @@ namespace HarfBuzzSharp
 
 				unsafe {
 					fixed (byte* dataPtr = data) {
-						return new Blob ((IntPtr)dataPtr, data.Length, MemoryMode.ReadOnly, null, _ => ms.Dispose ());
+						return new Blob ((IntPtr)dataPtr, data.Length, MemoryMode.ReadOnly, () => ms.Dispose ());
 					}
 				}
 			}
 		}
 
-		private static IntPtr Create (IntPtr data, int length, MemoryMode mode, object context, ReleaseDelegate releaseProc)
+		private static IntPtr Create (IntPtr data, int length, MemoryMode mode, ReleaseDelegate releaseProc)
 		{
-			var del = releaseProc != null && context != null
-				? new ReleaseDelegate ((_) => releaseProc (context))
-				: releaseProc;
-			var proxy = DelegateProxies.Create (del, DelegateProxies.ReleaseDelegateProxy, out _, out var ctx);
+			var proxy = DelegateProxies.Create (releaseProc, DelegateProxies.ReleaseDelegateProxy, out _, out var ctx);
 			return HarfBuzzApi.hb_blob_create (data, length, mode, ctx, proxy);
 		}
 

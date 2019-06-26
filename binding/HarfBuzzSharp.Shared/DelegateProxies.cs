@@ -6,14 +6,11 @@ namespace HarfBuzzSharp
 {
 	// public delegates
 
-	public delegate void ReleaseDelegate (object context);
+	public delegate void ReleaseDelegate ();
 
-	public delegate Blob GetTableDelegate (Face face, Tag tag, object context);
+	public delegate Blob GetTableDelegate (Face face, Tag tag);
 
-	// bad choices.
-	// this should not have had the "blob" prefix
-	// it is a global dispose method, but we can't switch now
-	// it is a breaking change since it will become ambiguous
+	[Obsolete ("Use ReleaseDelegate instead.")]
 	public delegate void BlobReleaseDelegate (object context);
 
 	// internal proxy delegates
@@ -34,18 +31,14 @@ namespace HarfBuzzSharp
 		// helper methods
 
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
-		public static IntPtr CreateMulti<T> (T wrappedDelegate, object context, ReleaseDelegate destroy)
+		public static IntPtr CreateMulti<T> (T wrappedDelegate, ReleaseDelegate destroy)
 			where T : Delegate
 		{
-			var destroyDelegate = destroy != null && context != null
-				? new ReleaseDelegate ((_) => destroy (context))
-				: destroy;
-
 			var del = new GetMultiDelegateDelegate ((type) => {
 				if (type == typeof (T))
 					return wrappedDelegate;
 				if (type == typeof (ReleaseDelegate))
-					return destroyDelegate;
+					return destroy;
 				throw new ArgumentOutOfRangeException (nameof (type));
 			});
 
@@ -69,7 +62,7 @@ namespace HarfBuzzSharp
 		{
 			var del = Get<ReleaseDelegate> (context, out var gch);
 			try {
-				del.Invoke (null);
+				del.Invoke ();
 			} finally {
 				gch.Free ();
 			}
@@ -79,7 +72,7 @@ namespace HarfBuzzSharp
 		private static IntPtr GetTableDelegateProxyImplementation (IntPtr face, Tag tag, IntPtr context)
 		{
 			var del = GetMulti<GetTableDelegate> (context, out var gch);
-			var blob = del.Invoke (null, tag, null);
+			var blob = del.Invoke (null, tag);
 			return blob?.Handle ?? IntPtr.Zero;
 		}
 
@@ -88,7 +81,7 @@ namespace HarfBuzzSharp
 		{
 			var del = GetMulti<ReleaseDelegate> (context, out var gch);
 			try {
-				del?.Invoke (null);
+				del?.Invoke ();
 			} finally {
 				gch.Free ();
 			}
