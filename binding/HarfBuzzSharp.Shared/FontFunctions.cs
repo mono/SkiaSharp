@@ -84,8 +84,8 @@ namespace HarfBuzzSharp
 		[MonoPInvokeCallback (typeof (FontExtentsProxyDelegate))]
 		private static bool FontExtentsProxyImplementation (IntPtr font, IntPtr fontData, out FontExtents extents, IntPtr context)
 		{
-			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
-			var del = (FontExtentsDelegate)multi.Invoke (typeof (FontExtentsDelegate));
+			var del = DelegateProxies.GetMulti<FontExtentsDelegate> (context, out _);
+
 			return del.Invoke (null, null, out extents);
 		}
 
@@ -131,8 +131,8 @@ namespace HarfBuzzSharp
 		[MonoPInvokeCallback (typeof (NominalGlyphProxyDelegate))]
 		private static bool NominalGlyphProxyImplementation (IntPtr font, IntPtr fontData, uint unicode, out uint glyph, IntPtr context)
 		{
-			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
-			var del = (NominalGlyphDelegate)multi.Invoke (typeof (NominalGlyphDelegate));
+			var del = DelegateProxies.GetMulti<NominalGlyphDelegate> (context, out _);
+
 			return del.Invoke (null, null, unicode, out glyph);
 		}
 
@@ -160,12 +160,13 @@ namespace HarfBuzzSharp
 		private static uint NominalGlyphsProxyImplementation (IntPtr font, IntPtr fontData, uint count,
 			IntPtr firstUnicode, uint unicodeStride, IntPtr firstGlyph, uint glyphStride, IntPtr context)
 		{
-			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
-			var del = (NominalGlyphsDelegate)multi.Invoke (typeof (NominalGlyphsDelegate));
+			var del = DelegateProxies.GetMulti<NominalGlyphsDelegate> (context, out _);
 
 			unsafe {
 				var glyphs = new Span<uint> ((void*)firstGlyph, (int)count);
+
 				var unicodes = new ReadOnlySpan<uint> ((void*)firstUnicode, (int)count);
+
 				var glyphCount = del.Invoke (null, null, count, unicodes, glyphs);
 
 				return glyphCount;
@@ -195,8 +196,8 @@ namespace HarfBuzzSharp
 		private static bool VariationGlyphProxyImplementation (IntPtr font, IntPtr fontData, uint unicode,
 			uint variationSelector, out uint glyph, IntPtr context)
 		{
-			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
-			var del = (VariationGlyphDelegate)multi.Invoke (typeof (VariationGlyphDelegate));
+			var del = DelegateProxies.GetMulti<VariationGlyphDelegate> (context, out _);
+
 			return del.Invoke (null, null, unicode, variationSelector, out glyph);
 		}
 
@@ -223,8 +224,8 @@ namespace HarfBuzzSharp
 		[MonoPInvokeCallback (typeof (GlyphAdvanceProxyDelegate))]
 		private static int GlyphAdvanceProxyImplementation (IntPtr font, IntPtr fontData, uint glyph, IntPtr context)
 		{
-			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
-			var del = (GlyphAdvanceDelegate)multi.Invoke (typeof (GlyphAdvanceDelegate));
+			var del = DelegateProxies.GetMulti<GlyphAdvanceDelegate> (context, out _);
+
 			return del.Invoke (null, null, glyph);
 		}
 
@@ -272,12 +273,13 @@ namespace HarfBuzzSharp
 		private static void GlyphAdvancesProxyImplementation (IntPtr font, IntPtr fontData, uint count,
 			IntPtr firstGlyph, uint glyphStride, IntPtr firstAdvance, uint advanceStride, IntPtr context)
 		{
-			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
-			var del = (GlyphAdvancesDelegate)multi.Invoke (typeof (GlyphAdvancesDelegate));
+			var del = DelegateProxies.GetMulti<GlyphAdvancesDelegate> (context, out _);
 
 			unsafe {
 				var advances = new Span<int> ((void*)firstAdvance, (int)count);
+
 				var glyphs = new ReadOnlySpan<uint> ((void*)firstGlyph, (int)count);
+
 				del.Invoke (null, null, count, glyphs, advances);
 			}
 		}
@@ -323,8 +325,7 @@ namespace HarfBuzzSharp
 		[MonoPInvokeCallback (typeof (GlyphOriginProxyDelegate))]
 		private static bool GlyphOriginProxyImplementation (IntPtr font, IntPtr fontData, uint glyph, out int x, out int y, IntPtr context)
 		{
-			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
-			var del = (GlyphOriginDelegate)multi.Invoke (typeof (GlyphOriginDelegate));
+			var del = DelegateProxies.GetMulti<GlyphOriginDelegate> (context, out _);
 			return del.Invoke (null, null, glyph, out x, out y);
 		}
 
@@ -371,8 +372,8 @@ namespace HarfBuzzSharp
 		[MonoPInvokeCallback (typeof (GlyphKerningProxyDelegate))]
 		private static int GlyphKerningProxyImplementation (IntPtr font, IntPtr fontData, uint firstGlyph, uint secondGlyph, IntPtr context)
 		{
-			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
-			var del = (GlyphKerningDelegate)multi.Invoke (typeof (GlyphKerningDelegate));
+			var del = DelegateProxies.GetMulti<GlyphKerningDelegate> (context, out _);
+
 			return del.Invoke (null, null, firstGlyph, secondGlyph);
 		}
 
@@ -399,8 +400,8 @@ namespace HarfBuzzSharp
 		[MonoPInvokeCallback (typeof (GlyphExtentsProxyDelegate))]
 		private static bool GlyphExtentsProxyImplementation (IntPtr font, IntPtr fontData, uint glyph, out GlyphExtents extents, IntPtr context)
 		{
-			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
-			var del = (GlyphExtentsDelegate)multi.Invoke (typeof (GlyphExtentsDelegate));
+			var del = DelegateProxies.GetMulti<GlyphExtentsDelegate> (context, out _);
+
 			return del.Invoke (null, null, glyph, out extents);
 		}
 
@@ -426,8 +427,8 @@ namespace HarfBuzzSharp
 		[MonoPInvokeCallback (typeof (GlyphContourPointProxyDelegate))]
 		private static bool GlyphContourPointProxyImplementation (IntPtr font, IntPtr fontData, uint glyph, uint pointIndex, out int x, out int y, IntPtr context)
 		{
-			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
-			var del = (GlyphContourPointDelegate)multi.Invoke (typeof (GlyphContourPointDelegate));
+			var del = DelegateProxies.GetMulti<GlyphContourPointDelegate> (context, out _);
+
 			return del.Invoke (null, null, glyph, pointIndex, out x, out y);
 		}
 
@@ -456,11 +457,9 @@ namespace HarfBuzzSharp
 		private static unsafe bool GlyphNameProxyImplementation (IntPtr font, IntPtr fontData, uint glyph,
 			char* nameBuffer, int size, IntPtr context)
 		{
-			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
-			var del = (GlyphNameDelegate)multi.Invoke (typeof (GlyphNameDelegate));
-			var success = del.Invoke (null, null, glyph, nameBuffer, size);
+			var del = DelegateProxies.GetMulti<GlyphNameDelegate> (context, out _);
 
-			return success;
+			return del.Invoke (null, null, glyph, nameBuffer, size);
 		}
 
 		public void SetGlyphNameDelegate (GlyphNameDelegate del, object context = null, ReleaseDelegate destroy = null)
@@ -488,8 +487,8 @@ namespace HarfBuzzSharp
 		private static bool GlyphFromNameProxyImplementation (IntPtr font, IntPtr fontData, string name,
 			int len, out uint glyph, IntPtr context)
 		{
-			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
-			var del = (GlyphFromNameDelegate)multi.Invoke (typeof (GlyphFromNameDelegate));
+			var del = DelegateProxies.GetMulti<GlyphFromNameDelegate> (context, out _);
+
 			return del.Invoke (null, null, name, out glyph);
 		}
 
