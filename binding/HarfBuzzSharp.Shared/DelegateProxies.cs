@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -54,6 +54,14 @@ namespace HarfBuzzSharp
 			return ctx;
 		}
 
+		[MethodImpl (MethodImplOptions.AggressiveInlining)]
+		public static T GetMulti<T> (IntPtr contextPtr, out GCHandle gch)
+			where T : Delegate
+		{
+			var multi = Get<GetMultiDelegateDelegate> (contextPtr, out gch);
+			return (T)multi.Invoke (typeof (T));
+		}
+
 		// internal proxy implementations
 
 		[MonoPInvokeCallback (typeof (ReleaseDelegateProxyDelegate))]
@@ -70,8 +78,7 @@ namespace HarfBuzzSharp
 		[MonoPInvokeCallback (typeof (GetTableDelegateProxyDelegate))]
 		private static IntPtr GetTableDelegateProxyImplementation (IntPtr face, Tag tag, IntPtr context)
 		{
-			var multi = Get<GetMultiDelegateDelegate> (context, out var gch);
-			var del = (GetTableDelegate)multi.Invoke (typeof (GetTableDelegate));
+			var del = GetMulti<GetTableDelegate> (context, out var gch);
 			var blob = del.Invoke (null, tag, null);
 			return blob?.Handle ?? IntPtr.Zero;
 		}
@@ -79,8 +86,7 @@ namespace HarfBuzzSharp
 		[MonoPInvokeCallback (typeof (ReleaseDelegateProxyDelegate))]
 		private static void ReleaseDelegateProxyImplementationForMulti (IntPtr context)
 		{
-			var multi = Get<GetMultiDelegateDelegate> (context, out var gch);
-			var del = (ReleaseDelegate)multi.Invoke (typeof (ReleaseDelegate));
+			var del = GetMulti<ReleaseDelegate> (context, out var gch);
 			try {
 				del?.Invoke (null);
 			} finally {
