@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Runtime.InteropServices;
 using Xunit;
 
@@ -88,7 +87,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
-		public void TestPositionedRunIsBothPointsAndFloats()
+		public unsafe void TestPositionedRunIsBothPointsAndFloats()
 		{
 			var font = new SKPaint();
 			font.TextEncoding = SKTextEncoding.GlyphId;
@@ -105,7 +104,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(positions, span.ToArray());
 
 			var floats = new float[6];
-			Marshal.Copy(run.Positions, floats, 0, 6);
+			Marshal.Copy((IntPtr)run.internalBuffer.Positions, floats, 0, 6);
 			Assert.Equal(positionsRaw, floats);
 		}
 	}

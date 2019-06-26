@@ -18,12 +18,6 @@ namespace SkiaSharp
 
 		public int TextSize { get; }
 
-		public IntPtr Glyphs => (IntPtr)internalBuffer.Glyphs;
-
-		public IntPtr Clusters => (IntPtr)internalBuffer.Clusters;
-
-		public IntPtr Text => (IntPtr)internalBuffer.Text;
-
 		public Span<ushort> GetGlyphSpan () =>
 			new Span<ushort> (internalBuffer.Glyphs, Size);
 
@@ -33,20 +27,11 @@ namespace SkiaSharp
 		public Span<uint> GetClusterSpan () =>
 			new Span<uint> (internalBuffer.Clusters, Size);
 
-		public void SetGlyphs (ushort[] glyphs) =>
-			glyphs.CopyTo (GetGlyphSpan ());
-
 		public void SetGlyphs (ReadOnlySpan<ushort> glyphs) =>
 			glyphs.CopyTo (GetGlyphSpan ());
 
-		public void SetText (byte[] text) =>
-			text.CopyTo (GetTextSpan ());
-
 		public void SetText (ReadOnlySpan<byte> text) =>
 			text.CopyTo (GetTextSpan ());
-
-		public void SetClusters (uint[] clusters) =>
-			clusters.CopyTo (GetClusterSpan ());
 
 		public void SetClusters (ReadOnlySpan<uint> clusters) =>
 			clusters.CopyTo (GetClusterSpan ());
@@ -59,13 +44,8 @@ namespace SkiaSharp
 		{
 		}
 
-		public IntPtr Positions => (IntPtr)internalBuffer.Positions;
-
 		public Span<float> GetPositionSpan () =>
 			new Span<float> (internalBuffer.Positions, Size);
-
-		public void SetPositions (float[] positions) =>
-			positions.CopyTo (GetPositionSpan ());
 
 		public void SetPositions (ReadOnlySpan<float> positions) =>
 			positions.CopyTo (GetPositionSpan ());
@@ -78,13 +58,8 @@ namespace SkiaSharp
 		{
 		}
 
-		public IntPtr Positions => (IntPtr)internalBuffer.Positions;
-
 		public Span<SKPoint> GetPositionSpan () =>
 			new Span<SKPoint> (internalBuffer.Positions, Size);
-
-		public void SetPositions (SKPoint[] positions) =>
-			positions.CopyTo (GetPositionSpan ());
 
 		public void SetPositions (ReadOnlySpan<SKPoint> positions) =>
 			positions.CopyTo (GetPositionSpan ());
