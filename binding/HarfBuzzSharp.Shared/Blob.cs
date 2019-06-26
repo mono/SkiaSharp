@@ -26,7 +26,7 @@ namespace HarfBuzzSharp
 		}
 
 		public Blob (IntPtr data, int length, MemoryMode mode, ReleaseDelegate releaseDelegate)
-			: this (Create (data, length, mode, new ReleaseDelegate (releaseDelegate)))
+			: this (Create (data, length, mode, releaseDelegate))
 		{
 		}
 
