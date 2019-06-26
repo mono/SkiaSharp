@@ -13,6 +13,8 @@ namespace HarfBuzzSharp
 	[Obsolete ("Use ReleaseDelegate instead.")]
 	public delegate void BlobReleaseDelegate (object context);
 
+	internal delegate object UserDataDelegate ();
+
 	// internal proxy delegates
 
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]

@@ -73,20 +73,27 @@ namespace HarfBuzzSharp
 
 		public static FontFunctions Empty => emptyFontFunctions.Value;
 
-		internal Font Font { get; set; }
-
-		internal object FontData { get; set; }
-
 		public bool IsImmutable => HarfBuzzApi.hb_font_funcs_is_immutable (Handle);
 
 		public void MakeImmutable () => HarfBuzzApi.hb_font_funcs_make_immutable (Handle);
+
+		private static T GetUserData<T> (IntPtr context)
+		{
+			var del = DelegateProxies.GetMulti<UserDataDelegate> (context, out _);
+
+			var userData = del.Invoke ();
+
+			return (T)userData;
+		}
 
 		[MonoPInvokeCallback (typeof (FontExtentsProxyDelegate))]
 		private static bool FontExtentsProxyImplementation (IntPtr font, IntPtr fontData, out FontExtents extents, IntPtr context)
 		{
 			var del = DelegateProxies.GetMulti<FontExtentsDelegate> (context, out _);
 
-			return del.Invoke (null, null, out extents);
+			var userData = GetUserData<FontUserData> (fontData);
+
+			return del.Invoke (userData.Font, userData.FontData, out extents);
 		}
 
 		public void SetHorizontalFontExtentsDelegate (FontExtentsDelegate del, ReleaseDelegate destroy = null)
@@ -99,10 +106,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedDelegate = new FontExtentsDelegate ((Font _, object __, out FontExtents e) =>
-				del.Invoke (Font, FontData, out e));
-
-			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, destroy);
+			var ctx = DelegateProxies.CreateMulti (del, destroy);
 
 			HarfBuzzApi.hb_font_funcs_set_font_h_extents_func (Handle, FontExtentsProxy, ctx,
 				DelegateProxies.ReleaseDelegateProxyForMulti);
@@ -119,10 +123,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedDelegate = new FontExtentsDelegate ((Font _, object __, out FontExtents e) =>
-				del.Invoke (Font, FontData, out e));
-
-			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, destroy);
+			var ctx = DelegateProxies.CreateMulti (del, destroy);
 
 			HarfBuzzApi.hb_font_funcs_set_font_v_extents_func (Handle, FontExtentsProxy, ctx,
 				DelegateProxies.ReleaseDelegateProxyForMulti);
@@ -133,7 +134,9 @@ namespace HarfBuzzSharp
 		{
 			var del = DelegateProxies.GetMulti<NominalGlyphDelegate> (context, out _);
 
-			return del.Invoke (null, null, unicode, out glyph);
+			var userData = GetUserData<FontUserData> (fontData);
+
+			return del.Invoke (userData.Font, userData.FontData, unicode, out glyph);
 		}
 
 		public void SetNominalGlyphDelegate (NominalGlyphDelegate del,
@@ -147,10 +150,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedDelegate = new NominalGlyphDelegate ((Font _, object __, uint u, out uint g) =>
-				del.Invoke (Font, FontData, u, out g));
-
-			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, destroy);
+			var ctx = DelegateProxies.CreateMulti (del, destroy);
 
 			HarfBuzzApi.hb_font_funcs_set_nominal_glyph_func (Handle, NominalGlyphProxy, ctx,
 				DelegateProxies.ReleaseDelegateProxyForMulti);
@@ -167,7 +167,9 @@ namespace HarfBuzzSharp
 
 				var unicodes = new ReadOnlySpan<uint> ((void*)firstUnicode, (int)count);
 
-				var glyphCount = del.Invoke (null, null, count, unicodes, glyphs);
+				var userData = GetUserData<FontUserData> (fontData);
+
+				var glyphCount = del.Invoke (userData.Font, userData.FontData, count, unicodes, glyphs);
 
 				return glyphCount;
 			}
@@ -184,9 +186,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedDelegate = new NominalGlyphsDelegate ((_, __, c, u, g) => del.Invoke (Font, FontData, c, u, g));
-
-			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, destroy);
+			var ctx = DelegateProxies.CreateMulti (del, destroy);
 
 			HarfBuzzApi.hb_font_funcs_set_nominal_glyphs_func (Handle, NominalGlyphsProxy, ctx,
 				DelegateProxies.ReleaseDelegateProxyForMulti);
@@ -198,7 +198,9 @@ namespace HarfBuzzSharp
 		{
 			var del = DelegateProxies.GetMulti<VariationGlyphDelegate> (context, out _);
 
-			return del.Invoke (null, null, unicode, variationSelector, out glyph);
+			var userData = GetUserData<FontUserData> (fontData);
+
+			return del.Invoke (userData.Font, userData.FontData, unicode, variationSelector, out glyph);
 		}
 
 		public void SetVariationGlyphDelegate (VariationGlyphDelegate del,
@@ -212,10 +214,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedDelegate = new VariationGlyphDelegate ((Font _, object __, uint u, uint v, out uint g) =>
-				del.Invoke (Font, FontData, u, v, out g));
-
-			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, destroy);
+			var ctx = DelegateProxies.CreateMulti (del, destroy);
 
 			HarfBuzzApi.hb_font_funcs_set_variation_glyph_func (Handle, VariationGlyphProxy, ctx,
 				DelegateProxies.ReleaseDelegateProxyForMulti);
@@ -226,7 +225,9 @@ namespace HarfBuzzSharp
 		{
 			var del = DelegateProxies.GetMulti<GlyphAdvanceDelegate> (context, out _);
 
-			return del.Invoke (null, null, glyph);
+			var userData = GetUserData<FontUserData> (fontData);
+
+			return del.Invoke (userData.Font, userData.FontData, glyph);
 		}
 
 		public void SetHorizontalGlyphAdvanceDelegate (GlyphAdvanceDelegate del,
@@ -240,10 +241,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedDelegate = new GlyphAdvanceDelegate ((_, __, g) =>
-				del.Invoke (Font, FontData, g));
-
-			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, destroy);
+			var ctx = DelegateProxies.CreateMulti (del, destroy);
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_h_advance_func (Handle, GlyphAdvanceProxy, ctx,
 				DelegateProxies.ReleaseDelegateProxyForMulti);
@@ -260,10 +258,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedDelegate = new GlyphAdvanceDelegate ((_, __, g) =>
-				del.Invoke (Font, FontData, g));
-
-			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, destroy);
+			var ctx = DelegateProxies.CreateMulti (del, destroy);
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_v_advance_func (Handle, GlyphAdvanceProxy, ctx,
 				DelegateProxies.ReleaseDelegateProxyForMulti);
@@ -280,7 +275,9 @@ namespace HarfBuzzSharp
 
 				var glyphs = new ReadOnlySpan<uint> ((void*)firstGlyph, (int)count);
 
-				del.Invoke (null, null, count, glyphs, advances);
+				var userData = GetUserData<FontUserData> (fontData);
+
+				del.Invoke (userData.Font, userData.FontData, count, glyphs, advances);
 			}
 		}
 
@@ -295,9 +292,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedDelegate = new GlyphAdvancesDelegate ((_, __, c, u, a) => del.Invoke (Font, FontData, c, u, a));
-
-			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, destroy);
+			var ctx = DelegateProxies.CreateMulti (del, destroy);
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_h_advances_func (Handle, GlyphAdvancesProxy, ctx,
 				DelegateProxies.ReleaseDelegateProxyForMulti);
@@ -314,9 +309,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedDelegate = new GlyphAdvancesDelegate ((_, __, c, u, a) => del.Invoke (Font, FontData, c, u, a));
-
-			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, destroy);
+			var ctx = DelegateProxies.CreateMulti (del, destroy);
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_v_advances_func (Handle, GlyphAdvancesProxy, ctx,
 				DelegateProxies.ReleaseDelegateProxyForMulti);
@@ -326,7 +319,10 @@ namespace HarfBuzzSharp
 		private static bool GlyphOriginProxyImplementation (IntPtr font, IntPtr fontData, uint glyph, out int x, out int y, IntPtr context)
 		{
 			var del = DelegateProxies.GetMulti<GlyphOriginDelegate> (context, out _);
-			return del.Invoke (null, null, glyph, out x, out y);
+
+			var userData = GetUserData<FontUserData> (fontData);
+
+			return del.Invoke (userData.Font, userData.FontData, glyph, out x, out y);
 		}
 
 		public void SetHorizontalGlyphOriginDelegate (GlyphOriginDelegate del,
@@ -340,10 +336,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedDelegate = new GlyphOriginDelegate ((Font _, object __, uint g, out int x, out int y) =>
-				del.Invoke (Font, FontData, g, out x, out y));
-
-			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, destroy);
+			var ctx = DelegateProxies.CreateMulti (del, destroy);
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_h_origin_func (Handle, GlyphOriginProxy, ctx,
 				DelegateProxies.ReleaseDelegateProxyForMulti);
@@ -360,10 +353,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedDelegate = new GlyphOriginDelegate ((Font _, object __, uint g, out int x, out int y) =>
-				del.Invoke (Font, FontData, g, out x, out y));
-
-			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, destroy);
+			var ctx = DelegateProxies.CreateMulti (del, destroy);
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_v_origin_func (Handle, GlyphOriginProxy, ctx,
 				DelegateProxies.ReleaseDelegateProxyForMulti);
@@ -374,7 +364,9 @@ namespace HarfBuzzSharp
 		{
 			var del = DelegateProxies.GetMulti<GlyphKerningDelegate> (context, out _);
 
-			return del.Invoke (null, null, firstGlyph, secondGlyph);
+			var userData = GetUserData<FontUserData> (fontData);
+
+			return del.Invoke (userData.Font, userData.FontData, firstGlyph, secondGlyph);
 		}
 
 		public void SetHorizontalGlyphKerningDelegate (GlyphKerningDelegate del,
@@ -388,10 +380,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedDelegate = new GlyphKerningDelegate ((_, __, f, s) =>
-				del.Invoke (Font, FontData, f, s));
-
-			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, destroy);
+			var ctx = DelegateProxies.CreateMulti (del, destroy);
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_h_kerning_func (Handle, GlyphKerningProxy, ctx,
 				DelegateProxies.ReleaseDelegateProxyForMulti);
@@ -402,7 +391,9 @@ namespace HarfBuzzSharp
 		{
 			var del = DelegateProxies.GetMulti<GlyphExtentsDelegate> (context, out _);
 
-			return del.Invoke (null, null, glyph, out extents);
+			var userData = GetUserData<FontUserData> (fontData);
+
+			return del.Invoke (userData.Font, userData.FontData, glyph, out extents);
 		}
 
 		public void SetGlyphExtentsDelegate (GlyphExtentsDelegate del, ReleaseDelegate destroy = null)
@@ -415,10 +406,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedDelegate = new GlyphExtentsDelegate ((Font _, object __, uint g, out GlyphExtents e) =>
-				del.Invoke (Font, FontData, g, out e));
-
-			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, destroy);
+			var ctx = DelegateProxies.CreateMulti (del, destroy);
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_extents_func (Handle, GlyphExtentsProxy, ctx,
 				DelegateProxies.ReleaseDelegateProxyForMulti);
@@ -429,7 +417,9 @@ namespace HarfBuzzSharp
 		{
 			var del = DelegateProxies.GetMulti<GlyphContourPointDelegate> (context, out _);
 
-			return del.Invoke (null, null, glyph, pointIndex, out x, out y);
+			var userData = GetUserData<FontUserData> (fontData);
+
+			return del.Invoke (userData.Font, userData.FontData, glyph, pointIndex, out x, out y);
 		}
 
 		public void SetGlyphContourPointDelegate (GlyphContourPointDelegate del,
@@ -443,11 +433,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedDelegate = new GlyphContourPointDelegate (
-				(Font _, object __, uint g, uint i, out int x, out int y) =>
-					del.Invoke (Font, FontData, g, i, out x, out y));
-
-			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, destroy);
+			var ctx = DelegateProxies.CreateMulti (del, destroy);
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_contour_point_func (Handle, GlyphContourPointProxy, ctx,
 				DelegateProxies.ReleaseDelegateProxyForMulti);
@@ -459,7 +445,9 @@ namespace HarfBuzzSharp
 		{
 			var del = DelegateProxies.GetMulti<GlyphNameDelegate> (context, out _);
 
-			return del.Invoke (null, null, glyph, nameBuffer, size);
+			var userData = GetUserData<FontUserData> (fontData);
+
+			return del.Invoke (userData.Font, userData.FontData, glyph, nameBuffer, size);
 		}
 
 		public void SetGlyphNameDelegate (GlyphNameDelegate del, ReleaseDelegate destroy = null)
@@ -472,15 +460,10 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (del));
 			}
 
-			unsafe {
-				var wrappedDelegate = new GlyphNameDelegate ((_, __, g, nb, s) =>
-					del.Invoke (Font, FontData, g, nb, s));
+			var ctx = DelegateProxies.CreateMulti (del, destroy);
 
-				var ctx = DelegateProxies.CreateMulti (wrappedDelegate, destroy);
-
-				HarfBuzzApi.hb_font_funcs_set_glyph_name_func (Handle, GlyphNameProxy, ctx,
-					DelegateProxies.ReleaseDelegateProxyForMulti);
-			}
+			HarfBuzzApi.hb_font_funcs_set_glyph_name_func (Handle, GlyphNameProxy, ctx,
+				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
 		[MonoPInvokeCallback (typeof (GlyphFromNameProxyDelegate))]
@@ -489,7 +472,9 @@ namespace HarfBuzzSharp
 		{
 			var del = DelegateProxies.GetMulti<GlyphFromNameDelegate> (context, out _);
 
-			return del.Invoke (null, null, name, out glyph);
+			var userData = GetUserData<FontUserData> (fontData);
+
+			return del.Invoke (userData.Font, userData.FontData, name, out glyph);
 		}
 
 		public void SetGlyphFromNameDelegate (GlyphFromNameDelegate del,
@@ -503,10 +488,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedDelegate = new GlyphFromNameDelegate ((Font _, object __, string n, out uint g) =>
-				del.Invoke (Font, FontData, n, out g));
-
-			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, destroy);
+			var ctx = DelegateProxies.CreateMulti (del, destroy);
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_from_name_func (Handle, GlyphFromNameProxy, ctx,
 				DelegateProxies.ReleaseDelegateProxyForMulti);
@@ -531,5 +513,18 @@ namespace HarfBuzzSharp
 				// do not dispose
 			}
 		}
+	}
+
+	internal class FontUserData
+	{
+		public FontUserData (Font font, object fontData)
+		{
+			Font = font;
+			FontData = fontData;
+		}
+
+		public Font Font { get; }
+
+		public object FontData { get; }
 	}
 }

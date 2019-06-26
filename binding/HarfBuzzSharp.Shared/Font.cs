@@ -48,13 +48,12 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (fontFunctions));
 			}
 
-			var proxy = DelegateProxies.Create (destroy, DelegateProxies.ReleaseDelegateProxy, out _, out var ctx);
+			var userData = new FontUserData (this, fontData);
 
-			fontFunctions.Font = this;
+			var ctx = DelegateProxies.CreateMulti (new UserDataDelegate (() => userData), destroy);
 
-			fontFunctions.FontData = fontData;
-
-			HarfBuzzApi.hb_font_set_funcs (Handle, fontFunctions.Handle, ctx, proxy);
+			HarfBuzzApi.hb_font_set_funcs (Handle, fontFunctions.Handle, ctx,
+				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
 		public void GetScale (out int xScale, out int yScale) =>
