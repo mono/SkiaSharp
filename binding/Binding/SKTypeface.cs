@@ -226,11 +226,14 @@ namespace SkiaSharp
 			return CountGlyphs (bytes, encoding);
 		}
 
-		public int CountGlyphs (byte [] str, SKEncoding encoding)
+		public int CountGlyphs (byte[] str, SKEncoding encoding) =>
+			CountGlyphs (new ReadOnlySpan<byte> (str), encoding);
+
+		public int CountGlyphs (ReadOnlySpan<byte> str, SKEncoding encoding)
 		{
 			if (str == null)
 				throw new ArgumentNullException (nameof (str));
-			
+
 			unsafe {
 				fixed (byte* p = str) {
 					return CountGlyphs ((IntPtr)p, str.Length, encoding);
@@ -259,7 +262,10 @@ namespace SkiaSharp
 			return GetGlyphs (bytes, encoding, out glyphs);
 		}
 
-		public int GetGlyphs (byte [] text, SKEncoding encoding, out ushort [] glyphs)
+		public int GetGlyphs (byte[] text, SKEncoding encoding, out ushort[] glyphs) =>
+			GetGlyphs (new ReadOnlySpan<byte> (text), encoding, out glyphs);
+
+		public int GetGlyphs (ReadOnlySpan<byte> text, SKEncoding encoding, out ushort[] glyphs)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
@@ -299,7 +305,10 @@ namespace SkiaSharp
 			return glyphs;
 		}
 
-		public ushort [] GetGlyphs (byte [] text, SKEncoding encoding)
+		public ushort[] GetGlyphs (byte[] text, SKEncoding encoding) =>
+			GetGlyphs (new ReadOnlySpan<byte> (text), encoding);
+
+		public ushort[] GetGlyphs (ReadOnlySpan<byte> text, SKEncoding encoding)
 		{
 			GetGlyphs (text, encoding, out var glyphs);
 			return glyphs;
@@ -311,14 +320,10 @@ namespace SkiaSharp
 			return glyphs;
 		}
 
-		public SKStreamAsset OpenStream()
-		{
-			return OpenStream (out var ttcIndex);
-		}
+		public SKStreamAsset OpenStream () =>
+			OpenStream (out _);
 
-		public SKStreamAsset OpenStream(out int ttcIndex)
-		{
-			return GetObject<SKStreamAssetImplementation>(SkiaApi.sk_typeface_open_stream(Handle, out ttcIndex));
-		}
+		public SKStreamAsset OpenStream (out int ttcIndex) =>
+			GetObject<SKStreamAssetImplementation> (SkiaApi.sk_typeface_open_stream (Handle, out ttcIndex));
 	}
 }

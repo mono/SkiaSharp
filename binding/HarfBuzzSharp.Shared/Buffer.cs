@@ -68,9 +68,9 @@ namespace HarfBuzzSharp
 			set => HarfBuzzApi.hb_buffer_set_unicode_funcs (Handle, value.Handle);
 		}
 
-		public unsafe GlyphInfo[] GlyphInfos => GetGlyphInfoReferences ().ToArray ();
+		public unsafe GlyphInfo[] GlyphInfos => GetGlyphInfoSpan ().ToArray ();
 
-		public unsafe GlyphPosition[] GlyphPositions => GetGlyphPositionReferences ().ToArray ();
+		public unsafe GlyphPosition[] GlyphPositions => GetGlyphPositionSpan ().ToArray ();
 
 		public void Add (int codepoint, int cluster)
 		{
@@ -284,13 +284,13 @@ namespace HarfBuzzSharp
 			HarfBuzzApi.hb_buffer_add_codepoints (Handle, text, textLength, itemOffset, itemLength);
 		}
 
-		public unsafe ReadOnlySpan<GlyphInfo> GetGlyphInfoReferences ()
+		public unsafe ReadOnlySpan<GlyphInfo> GetGlyphInfoSpan ()
 		{
 			var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_infos (Handle, out var length);
 			return new ReadOnlySpan<GlyphInfo> (infoPtrs, length);
 		}
 
-		public unsafe ReadOnlySpan<GlyphPosition> GetGlyphPositionReferences ()
+		public unsafe ReadOnlySpan<GlyphPosition> GetGlyphPositionSpan ()
 		{
 			var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_positions (Handle, out var length);
 			return new ReadOnlySpan<GlyphPosition> (infoPtrs, length);
