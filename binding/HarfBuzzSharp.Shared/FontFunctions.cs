@@ -1,28 +1,41 @@
 ﻿using System;
+using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
 {
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal delegate bool FontExtentsProxyDelegate (IntPtr font, IntPtr fontData, out FontExtents extents,
 		IntPtr context);
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal delegate bool NominalGlyphProxyDelegate (IntPtr font, IntPtr fontData, uint unicode,
 		out uint glyph, IntPtr context);
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal delegate bool VariationGlyphProxyDelegate (IntPtr font, IntPtr fontData, uint unicode,
 		uint variationSelector, out uint glyph, IntPtr context);
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal delegate uint NominalGlyphsProxyDelegate (IntPtr font, IntPtr fontData, uint count,
 		IntPtr firstUnicode, uint unicodeStride, IntPtr firstGlyph, uint glyphStride, IntPtr context);
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal delegate int GlyphAdvanceProxyDelegate (IntPtr font, IntPtr fontData, uint glyph, IntPtr context);
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal delegate void GlyphAdvancesProxyDelegate (IntPtr font, IntPtr fontData, uint count,
 		IntPtr firstGlyph, uint glyphStride, IntPtr firstAdvance, uint advanceStride, IntPtr context);
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal delegate bool GlyphOriginProxyDelegate (IntPtr font, IntPtr fontData, uint glyph, out int x,
 		out int y, IntPtr context);
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal delegate int GlyphKerningProxyDelegate (IntPtr font, IntPtr fontData, uint firstGlyph,
 		uint secondGlyph, IntPtr context);
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal delegate bool GlyphExtentsProxyDelegate (IntPtr font, IntPtr fontData, uint glyph,
 		out GlyphExtents extents, IntPtr context);
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal delegate bool GlyphContourPointProxyDelegate (IntPtr font, IntPtr fontData, uint glyph,
 		uint pointIndex, out int x, out int y, IntPtr context);
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate bool GlyphNameProxyDelegate (IntPtr font, IntPtr fontData, uint glyph, char* name,
 		int size, IntPtr context);
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal delegate bool GlyphFromNameProxyDelegate (IntPtr font, IntPtr fontData, string name,
 		int len, out uint glyph, IntPtr context);
 
