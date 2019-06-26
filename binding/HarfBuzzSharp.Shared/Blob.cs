@@ -44,16 +44,20 @@ namespace HarfBuzzSharp
 
 		public void MakeImmutable () => HarfBuzzApi.hb_blob_make_immutable (Handle);
 
-		public unsafe Stream AsStream ()
+		public Stream AsStream ()
 		{
-			var dataPtr = HarfBuzzApi.hb_blob_get_data (Handle, out var length);
-			return new UnmanagedMemoryStream (dataPtr, length);
+			unsafe {
+				var dataPtr = HarfBuzzApi.hb_blob_get_data (Handle, out var length);
+				return new UnmanagedMemoryStream (dataPtr, length);
+			}
 		}
 
-		public unsafe ReadOnlySpan<byte> AsSpan ()
+		public ReadOnlySpan<byte> AsSpan ()
 		{
-			var dataPtr = HarfBuzzApi.hb_blob_get_data (Handle, out var length);
-			return new ReadOnlySpan<byte> (dataPtr, length);
+			unsafe {
+				var dataPtr = HarfBuzzApi.hb_blob_get_data (Handle, out var length);
+				return new ReadOnlySpan<byte> (dataPtr, length);
+			}
 		}
 
 		public static Blob FromFile (string fileName)
@@ -66,7 +70,7 @@ namespace HarfBuzzSharp
 			return new Blob (blob);
 		}
 
-		public static unsafe Blob FromStream (Stream stream)
+		public static Blob FromStream (Stream stream)
 		{
 			// TODO: check to see if we can avoid the second copy (the ToArray)
 
@@ -74,8 +78,10 @@ namespace HarfBuzzSharp
 				stream.CopyTo (ms);
 				var data = ms.ToArray ();
 
-				fixed (byte* dataPtr = data) {
-					return new Blob ((IntPtr)dataPtr, data.Length, MemoryMode.ReadOnly, null, _ => ms.Dispose ());
+				unsafe {
+					fixed (byte* dataPtr = data) {
+						return new Blob ((IntPtr)dataPtr, data.Length, MemoryMode.ReadOnly, null, _ => ms.Dispose ());
+					}
 				}
 			}
 		}

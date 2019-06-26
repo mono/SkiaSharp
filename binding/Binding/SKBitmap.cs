@@ -368,15 +368,18 @@ namespace SkiaSharp
 			get { return (int)SkiaApi.sk_bitmap_get_byte_count (Handle); }
 		}
 
-		public IntPtr GetPixels ()
+		public IntPtr GetPixels () =>
+			GetPixels (out _);
+
+		public ReadOnlySpan<byte> GetPixelSpan ()
 		{
-			return GetPixels (out var length);
+			unsafe {
+				return new ReadOnlySpan<byte> ((void*)GetPixels (out var length), (int)length);
+			}
 		}
 
-		public IntPtr GetPixels (out IntPtr length)
-		{
-			return SkiaApi.sk_bitmap_get_pixels (Handle, out length);
-		}
+		public IntPtr GetPixels (out IntPtr length) =>
+			SkiaApi.sk_bitmap_get_pixels (Handle, out length);
 
 		public void SetPixels(IntPtr pixels)
 		{
@@ -394,15 +397,8 @@ namespace SkiaSharp
 		{
 			// no-op due to unsupperted action
 		}
-		
-		public byte[] Bytes {
-			get {
-				var pixelsPtr = GetPixels (out var length);
-				byte [] bytes = new byte [(int)length];
-				Marshal.Copy (pixelsPtr, bytes, 0, (int)length);
-				return bytes; 
-			}
-		}
+
+		public byte[] Bytes => GetPixelSpan ().ToArray ();
 
 		public SKColor[] Pixels {
 			get { 
