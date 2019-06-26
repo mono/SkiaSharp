@@ -227,7 +227,7 @@ namespace SkiaSharp
 		}
 
 		public int CountGlyphs (byte[] str, SKEncoding encoding) =>
-			CountGlyphs ((ReadOnlySpan<byte>)str, encoding);
+			CountGlyphs (new ReadOnlySpan<byte> (str), encoding);
 
 		public int CountGlyphs (ReadOnlySpan<byte> str, SKEncoding encoding)
 		{
@@ -263,7 +263,7 @@ namespace SkiaSharp
 		}
 
 		public int GetGlyphs (byte[] text, SKEncoding encoding, out ushort[] glyphs) =>
-			GetGlyphs ((ReadOnlySpan<byte>)text, encoding, out glyphs);
+			GetGlyphs (new ReadOnlySpan<byte> (text), encoding, out glyphs);
 
 		public int GetGlyphs (ReadOnlySpan<byte> text, SKEncoding encoding, out ushort[] glyphs)
 		{
@@ -306,7 +306,7 @@ namespace SkiaSharp
 		}
 
 		public ushort[] GetGlyphs (byte[] text, SKEncoding encoding) =>
-			GetGlyphs ((ReadOnlySpan<byte>)text, encoding);
+			GetGlyphs (new ReadOnlySpan<byte> (text), encoding);
 
 		public ushort[] GetGlyphs (ReadOnlySpan<byte> text, SKEncoding encoding)
 		{
