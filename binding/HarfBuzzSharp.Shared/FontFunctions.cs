@@ -167,9 +167,10 @@ namespace HarfBuzzSharp
 				var unicodes = new ReadOnlySpan<uint> ((void*)firstUnicode, (int)unicodeStride);
 				var glyphCount = del.Invoke (null, null, count, unicodes, out var glyphs);
 
+				glyphStride = 4;
+
 				fixed (uint* glyphsPtr = glyphs) {
 					firstGlyph = (IntPtr)glyphsPtr;
-					glyphStride = (uint)glyphs.Length;
 				}
 
 				return glyphCount;
@@ -286,9 +287,10 @@ namespace HarfBuzzSharp
 
 				del.Invoke (null, null, count, glyphs, out var advances);
 
+				advanceStride = 4;
+
 				fixed (int* advancesPtr = advances) {
 					firstAdvance = (IntPtr)advancesPtr;
-					advanceStride = (uint)advances.Length;
 				}
 			}
 		}

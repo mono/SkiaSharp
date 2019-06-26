@@ -12,6 +12,8 @@ using hb_position_t = System.Int32;
 using hb_script_t = System.UInt32;
 using hb_unicode_funcs_t = System.IntPtr;
 using hb_font_funcs_t = System.IntPtr;
+using hb_font_extents_t = HarfBuzzSharp.FontExtents;
+using hb_direction_t = HarfBuzzSharp.Direction;
 
 namespace HarfBuzzSharp
 {
@@ -176,46 +178,75 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static hb_font_t hb_font_create_sub_font (IntPtr parent);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void hb_font_destroy (hb_font_t font);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void hb_font_set_funcs (IntPtr font, hb_font_funcs_t klass, IntPtr font_data,
+			ReleaseDelegateProxyDelegate destroy);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static hb_font_t hb_font_get_parent (hb_font_t font);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_font_set_scale (hb_font_t font, int x_scale, int y_scale);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_font_get_scale (hb_font_t font, out int x_scale, out int y_scale);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_destroy (hb_font_t font);
+		public extern static bool hb_font_get_h_extents (hb_font_t font, out hb_font_extents_t extents);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static bool hb_font_get_h_extents (hb_font_t font, out FontExtents extents);
+		public extern static bool hb_font_get_v_extents (hb_font_t font, out hb_font_extents_t extents);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static bool hb_font_get_v_extents (hb_font_t font, out FontExtents extents);
+		public extern static hb_bool_t hb_font_get_nominal_glyph (hb_font_t font, hb_codepoint_t unicode, out hb_codepoint_t glyph);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static hb_bool_t hb_font_get_variation_glyph (hb_font_t font, hb_codepoint_t unicode,
+			hb_codepoint_t variation_selector, out hb_codepoint_t glyph);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static hb_position_t hb_font_get_glyph_h_advance (hb_font_t font, hb_codepoint_t glyph);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static hb_position_t hb_font_get_glyph_v_advance (hb_font_t font, hb_codepoint_t glyph);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void hb_font_get_glyph_h_advances (hb_font_t font, int count, IntPtr first_glyph,
+			uint glyph_stride, IntPtr first_advance, uint advance_stride);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void hb_font_get_glyph_v_advances (hb_font_t font, int count, IntPtr first_glyph,
+			uint glyph_stride, IntPtr first_advance, uint advance_stride);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static hb_bool_t hb_font_get_glyph_h_origin (hb_font_t font, hb_codepoint_t glyph,
+			out hb_position_t x, out hb_position_t y);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static hb_bool_t hb_font_get_glyph_v_origin (hb_font_t font, hb_codepoint_t glyph,
+			out hb_position_t x, out hb_position_t y);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static hb_position_t hb_font_get_glyph_h_kerning (hb_font_t font, hb_codepoint_t left_glyph,
+			hb_codepoint_t right_glyph);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static bool hb_font_get_glyph_extents (hb_font_t font, hb_codepoint_t glyph, out GlyphExtents extents);
-		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static bool hb_font_get_glyph (hb_font_t font, hb_codepoint_t unicode, hb_codepoint_t variation_selector, out hb_codepoint_t glyph);
-		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_get_glyph_h_advances (hb_font_t font, int count, IntPtr first_glyph, uint glyph_stride, IntPtr first_advance, uint advance_stride);
-		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_get_glyph_v_advances (hb_font_t font, int count, IntPtr first_glyph, uint glyph_stride, IntPtr first_advance, uint advance_stride);
-		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static hb_bool_t hb_font_get_glyph_h_origin (hb_font_t font, hb_codepoint_t glyph, out hb_position_t x, out hb_position_t y);
-		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static hb_bool_t hb_font_get_glyph_v_origin (hb_font_t font, hb_codepoint_t glyph, out hb_position_t x, out hb_position_t y);
-		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_set_funcs (IntPtr font, hb_font_funcs_t klass, IntPtr font_data, ReleaseDelegateProxyDelegate destroy);
-		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static hb_font_t hb_font_get_parent (hb_font_t font);
-		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static unsafe hb_bool_t hb_font_get_glyph_name (hb_font_t font, hb_codepoint_t glyph, char* nameBuffer, int size);
-		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static hb_bool_t hb_font_get_glyph_from_name (hb_font_t font, string name, int len, out hb_codepoint_t glyph);
-
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static hb_bool_t hb_font_get_glyph_contour_point (hb_font_t font, hb_codepoint_t glyph,
 			uint point_index, out hb_position_t x, out hb_position_t y);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static unsafe hb_bool_t hb_font_get_glyph_name (hb_font_t font, hb_codepoint_t glyph, char* nameBuffer, int size);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static hb_bool_t hb_font_get_glyph_from_name (hb_font_t font, string name, int len, out hb_codepoint_t glyph);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool hb_font_get_glyph (hb_font_t font, hb_codepoint_t unicode,
+			hb_codepoint_t variation_selector, out hb_codepoint_t glyph);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void hb_font_get_extents_for_direction (hb_font_t font, hb_direction_t direction,
+			out hb_font_extents_t extents);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void hb_font_get_glyph_advance_for_direction (hb_font_t font, hb_codepoint_t glyph,
+			hb_direction_t direction, out hb_position_t x, out hb_position_t y);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void hb_font_get_glyph_advances_for_direction (hb_font_t font, hb_direction_t direction,
+			int count, IntPtr first_glyph, uint glyph_stride, IntPtr first_advance, uint advance_stride);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static hb_bool_t hb_font_get_glyph_contour_point_for_origin (hb_font_t font, hb_codepoint_t glyph,
-			uint point_index, Direction direction, out hb_position_t x, out hb_position_t y);
+			uint point_index, hb_direction_t direction, out hb_position_t x, out hb_position_t y);
+		/* Generates gidDDD if glyph has no name. */
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static unsafe void hb_font_glyph_to_string (hb_font_t font, hb_codepoint_t glyph, char* s, int size);
+		/* Parses gidDDD and uniUUUU strings automatically. */
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static hb_bool_t hb_font_glyph_from_string (hb_font_t font, string s,
+			int len, /* -1 means nul-terminated */ out hb_codepoint_t glyph);
 
 		// hb_font_t (OT)
 

@@ -133,5 +133,29 @@ namespace HarfBuzzSharp.Tests
 				Assert.Equal(49u, glyph);
 			}
 		}
+
+		[SkippableFact]
+		public void ShouldGetGlyphFromString()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				font.GlyphFromString("H", out var glyph);
+
+				Assert.Equal(49u, glyph);
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldConvertGlyphToString()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				var s = font.GlyphToString(49);
+
+				Assert.Equal("H", s);
+			}
+		}
 	}
 }
