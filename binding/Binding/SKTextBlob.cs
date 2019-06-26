@@ -102,7 +102,7 @@ namespace SkiaSharp
 			run.SetGlyphs (glyphs);
 
 			if (hasText) {
-				run.SetUtf8Text (utf8Text);
+				run.SetText (utf8Text);
 				run.SetClusters (clusters);
 			}
 		}
@@ -158,7 +158,7 @@ namespace SkiaSharp
 			run.SetPositions (positions);
 
 			if (hasText) {
-				run.SetUtf8Text (utf8Text);
+				run.SetText (utf8Text);
 				run.SetClusters (clusters);
 			}
 		}
@@ -214,7 +214,7 @@ namespace SkiaSharp
 			run.SetPositions (positions);
 
 			if (hasText) {
-				run.SetUtf8Text (utf8Text);
+				run.SetText (utf8Text);
 				run.SetClusters (clusters);
 			}
 		}
