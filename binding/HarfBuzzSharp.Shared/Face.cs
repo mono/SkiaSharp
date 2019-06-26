@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
 {
@@ -29,22 +28,17 @@ namespace HarfBuzzSharp
 		}
 
 		public Face (GetTableDelegate getTable)
-			: this (getTable, null, null)
+			: this (getTable, null)
 		{
 		}
 
-		public Face (GetTableDelegate getTable, object context)
-			: this (getTable, context, null)
-		{
-		}
-
-		public Face (GetTableDelegate getTable, object context, ReleaseDelegate destroy)
+		public Face (GetTableDelegate getTable, ReleaseDelegate destroy)
 			: this (IntPtr.Zero)
 		{
 			if (getTable == null)
 				throw new ArgumentNullException (nameof (getTable));
 
-			var ctx = DelegateProxies.CreateMulti<GetTableDelegate> ((_, t, __) => getTable.Invoke (this, t, context), context, destroy);
+			var ctx = DelegateProxies.CreateMulti<GetTableDelegate> ((_, t) => getTable.Invoke (this, t), destroy);
 			Handle = HarfBuzzApi.hb_face_create_for_tables (DelegateProxies.GetTableDelegateProxy, ctx, DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
