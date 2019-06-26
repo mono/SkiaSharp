@@ -182,8 +182,8 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_font_set_funcs (IntPtr font, hb_font_funcs_t klass, IntPtr font_data,
 			ReleaseDelegateProxyDelegate destroy);
-		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static hb_font_t hb_font_get_parent (hb_font_t font);
+		//[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		//public extern static hb_font_t hb_font_get_parent (hb_font_t font);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_font_set_scale (hb_font_t font, int x_scale, int y_scale);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]

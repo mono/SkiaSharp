@@ -271,7 +271,7 @@ namespace HarfBuzzSharp
 
 			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
 
-			HarfBuzzApi.hb_font_funcs_set_glyph_h_advance_func (Handle, GlyphAdvanceProxy, ctx,
+			HarfBuzzApi.hb_font_funcs_set_glyph_v_advance_func (Handle, GlyphAdvanceProxy, ctx,
 				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 

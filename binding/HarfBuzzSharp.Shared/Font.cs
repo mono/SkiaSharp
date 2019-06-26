@@ -8,8 +8,6 @@ namespace HarfBuzzSharp
 {
 	public class Font : NativeObject
 	{
-		private Font _parent;
-
 		public Font (Face face)
 			: this (IntPtr.Zero)
 		{
@@ -31,27 +29,14 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (parent.Handle));
 			}
 
-			_parent = parent;
+			Parent = parent;
 
 			Handle = HarfBuzzApi.hb_font_create_sub_font (parent.Handle);
 		}
 
-		internal Font (IntPtr handle)
-			: base (handle)
-		{
-		}
+		internal Font (IntPtr handle) : base (handle) { }
 
-		public Font Parent {
-			get {
-				if (_parent != null) {
-					return _parent;
-				}
-
-				var parent = HarfBuzzApi.hb_font_get_parent (Handle);
-
-				return parent == IntPtr.Zero ? null : _parent;
-			}
-		}
+		public Font Parent { get; }
 
 		public string[] SupportedShapers =>
 			PtrToStringArray (HarfBuzzApi.hb_shape_list_shapers ()).ToArray ();
