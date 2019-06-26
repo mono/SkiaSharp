@@ -98,13 +98,6 @@ namespace HarfBuzzSharp
 		public int GetVerticalGlyphAdvance (uint glyph) =>
 			HarfBuzzApi.hb_font_get_glyph_v_advance (Handle, glyph);
 
-		public unsafe int[] GetHorizontalGlyphAdvances (uint[] glyphs)
-		{
-			fixed (uint* firstGlyph = glyphs) {
-				return GetHorizontalGlyphAdvances ((IntPtr)firstGlyph, glyphs.Length);
-			}
-		}
-
 		public unsafe int[] GetHorizontalGlyphAdvances (ReadOnlySpan<uint> glyphs)
 		{
 			fixed (uint* firstGlyph = glyphs) {
@@ -121,13 +114,6 @@ namespace HarfBuzzSharp
 			}
 
 			return advances;
-		}
-
-		public unsafe int[] GetVerticalGlyphAdvances (uint[] glyphs)
-		{
-			fixed (uint* firstGlyph = glyphs) {
-				return GetVerticalGlyphAdvances ((IntPtr)firstGlyph, glyphs.Length);
-			}
 		}
 
 		public unsafe int[] GetVerticalGlyphAdvances (ReadOnlySpan<uint> glyphs)
@@ -220,13 +206,6 @@ namespace HarfBuzzSharp
 
 		public void GetGlyphAdvanceForDirection (uint glyph, Direction direction, out int x, out int y) =>
 			HarfBuzzApi.hb_font_get_glyph_advance_for_direction (Handle, glyph, direction, out x, out y);
-
-		public unsafe int[] GetGlyphAdvancesForDirection (uint[] glyphs, Direction direction)
-		{
-			fixed (uint* firstGlyph = glyphs) {
-				return GetGlyphAdvancesForDirection ((IntPtr)firstGlyph, glyphs.Length, direction);
-			}
-		}
 
 		public unsafe int[] GetGlyphAdvancesForDirection (ReadOnlySpan<uint> glyphs, Direction direction)
 		{

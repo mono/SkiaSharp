@@ -140,7 +140,7 @@ namespace HarfBuzzSharp.Tests
 			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
-				font.GlyphFromString("H", out var glyph);
+				font.TryGetGlyphFromString("H", out var glyph);
 
 				Assert.Equal(49u, glyph);
 			}
@@ -155,6 +155,50 @@ namespace HarfBuzzSharp.Tests
 				var s = font.GlyphToString(49);
 
 				Assert.Equal("H", s);
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldGetGlyphContourPointForOrigin()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				Assert.False(font.TryGetGlyphContourPointForOrigin(49, 0, Direction.LeftToRight, out var x, out var y));
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldGetGlyphContourPoint()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				Assert.False(font.TryGetGlyphContourPoint(49, 0, out var x, out var y));
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldGetGlyphAdvanceForDirection()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				font.GetGlyphAdvanceForDirection(49, Direction.LeftToRight, out var x, out var y);
+
+				Assert.Equal(1114, x);
+			}
+		}
+
+		[SkippableFact]
+		public void ShouldGetHorizontalGlyphKerning()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				var kerning = font.GetHorizontalGlyphKerning(49, 50);
+
+				Assert.Equal(0, kerning);
 			}
 		}
 	}

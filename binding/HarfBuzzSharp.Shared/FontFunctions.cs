@@ -9,10 +9,10 @@ namespace HarfBuzzSharp
 	internal delegate bool VariationGlyphProxyDelegate (IntPtr font, IntPtr fontData, uint unicode,
 		uint variationSelector, out uint glyph, IntPtr context);
 	internal delegate uint NominalGlyphsProxyDelegate (IntPtr font, IntPtr fontData, uint count,
-		IntPtr firstUnicode, uint unicodeStride, out IntPtr firstGlyph, out uint glyphStride, IntPtr context);
+		IntPtr firstUnicode, uint unicodeStride, IntPtr firstGlyph, uint glyphStride, IntPtr context);
 	internal delegate int GlyphAdvanceProxyDelegate (IntPtr font, IntPtr fontData, uint glyph, IntPtr context);
 	internal delegate void GlyphAdvancesProxyDelegate (IntPtr font, IntPtr fontData, uint count,
-		IntPtr firstGlyph, uint glyphStride, out IntPtr firstAdvance, out uint advanceStride, IntPtr context);
+		IntPtr firstGlyph, uint glyphStride, IntPtr firstAdvance, uint advanceStride, IntPtr context);
 	internal delegate bool GlyphOriginProxyDelegate (IntPtr font, IntPtr fontData, uint glyph, out int x,
 		out int y, IntPtr context);
 	internal delegate int GlyphKerningProxyDelegate (IntPtr font, IntPtr fontData, uint firstGlyph,
@@ -50,10 +50,10 @@ namespace HarfBuzzSharp
 		public delegate bool VariationGlyphDelegate (Font font, object fontData, uint unicode, uint variationSelector,
 			out uint glyph);
 		public delegate uint NominalGlyphsDelegate (Font font, object fontData, uint count,
-			ReadOnlySpan<uint> codepoints, out ReadOnlySpan<uint> glyphs);
+			ReadOnlySpan<uint> codepoints, Span<uint> glyphs);
 		public delegate int GlyphAdvanceDelegate (Font font, object fontData, uint glyph);
 		public delegate void GlyphAdvancesDelegate (Font font, object fontData, uint count, ReadOnlySpan<uint> glyphs,
-			out ReadOnlySpan<int> advances);
+			Span<int> advances);
 		public delegate bool GlyphOriginDelegate (Font font, object fontData, uint glyph, out int x, out int y);
 		public delegate int GlyphKerningDelegate (Font font, object fontData, uint firstGlyph, uint secondGlyph);
 		public delegate bool GlyphExtentsDelegate (Font font, object fontData, uint glyph, out GlyphExtents extents);
@@ -158,20 +158,15 @@ namespace HarfBuzzSharp
 
 		[MonoPInvokeCallback (typeof (NominalGlyphsProxyDelegate))]
 		private static uint NominalGlyphsProxyImplementation (IntPtr font, IntPtr fontData, uint count,
-			IntPtr firstUnicode, uint unicodeStride, out IntPtr firstGlyph, out uint glyphStride, IntPtr context)
+			IntPtr firstUnicode, uint unicodeStride, IntPtr firstGlyph, uint glyphStride, IntPtr context)
 		{
 			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
 			var del = (NominalGlyphsDelegate)multi.Invoke (typeof (NominalGlyphsDelegate));
 
 			unsafe {
-				var unicodes = new ReadOnlySpan<uint> ((void*)firstUnicode, (int)unicodeStride);
-				var glyphCount = del.Invoke (null, null, count, unicodes, out var glyphs);
-
-				glyphStride = 4;
-
-				fixed (uint* glyphsPtr = glyphs) {
-					firstGlyph = (IntPtr)glyphsPtr;
-				}
+				var glyphs = new Span<uint> ((void*)firstGlyph, (int)count);
+				var unicodes = new ReadOnlySpan<uint> ((void*)firstUnicode, (int)count);
+				var glyphCount = del.Invoke (null, null, count, unicodes, glyphs);
 
 				return glyphCount;
 			}
@@ -188,9 +183,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedDelegate = new NominalGlyphsDelegate (
-				(Font _, object __, uint c, ReadOnlySpan<uint> u, out ReadOnlySpan<uint> g) =>
-					del.Invoke (Font, FontData, c, u, out g));
+			var wrappedDelegate = new NominalGlyphsDelegate ((_, __, c, u, g) => del.Invoke (Font, FontData, c, u, g));
 
 			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
 
@@ -277,21 +270,15 @@ namespace HarfBuzzSharp
 
 		[MonoPInvokeCallback (typeof (GlyphAdvancesProxyDelegate))]
 		private static void GlyphAdvancesProxyImplementation (IntPtr font, IntPtr fontData, uint count,
-			IntPtr firstGlyph, uint glyphStride, out IntPtr firstAdvance, out uint advanceStride, IntPtr context)
+			IntPtr firstGlyph, uint glyphStride, IntPtr firstAdvance, uint advanceStride, IntPtr context)
 		{
 			var multi = DelegateProxies.Get<GetMultiDelegateDelegate> (context, out _);
 			var del = (GlyphAdvancesDelegate)multi.Invoke (typeof (GlyphAdvancesDelegate));
 
 			unsafe {
-				var glyphs = new ReadOnlySpan<uint> ((void*)firstGlyph, (int)glyphStride);
-
-				del.Invoke (null, null, count, glyphs, out var advances);
-
-				advanceStride = 4;
-
-				fixed (int* advancesPtr = advances) {
-					firstAdvance = (IntPtr)advancesPtr;
-				}
+				var advances = new Span<int> ((void*)firstAdvance, (int)count);
+				var glyphs = new ReadOnlySpan<uint> ((void*)firstGlyph, (int)count);
+				del.Invoke (null, null, count, glyphs, advances);
 			}
 		}
 
@@ -306,9 +293,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedDelegate = new GlyphAdvancesDelegate (
-				(Font _, object __, uint c, ReadOnlySpan<uint> u, out ReadOnlySpan<int> a) =>
-					del.Invoke (Font, FontData, c, u, out a));
+			var wrappedDelegate = new GlyphAdvancesDelegate ((_, __, c, u, a) => del.Invoke (Font, FontData, c, u, a));
 
 			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
 
@@ -327,9 +312,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentException (nameof (del));
 			}
 
-			var wrappedDelegate = new GlyphAdvancesDelegate (
-				(Font _, object __, uint c, ReadOnlySpan<uint> u, out ReadOnlySpan<int> a) =>
-					del.Invoke (Font, FontData, c, u, out a));
+			var wrappedDelegate = new GlyphAdvancesDelegate ((_, __, c, u, a) => del.Invoke (Font, FontData, c, u, a));
 
 			var ctx = DelegateProxies.CreateMulti (wrappedDelegate, context, destroy);
 
