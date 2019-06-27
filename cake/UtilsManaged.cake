@@ -376,7 +376,7 @@ async Task<NuGetDiff> CreateNuGetDiffAsync ()
     await AddDep ("OpenTK.GLControl", "NET40");
     await AddDep ("Tizen.NET", "netstandard2.0");
     await AddDep ("Xamarin.Forms", "netstandard2.0");
-    await AddDep ("Xamarin.Forms", "MonoAndroid10");
+    await AddDep ("Xamarin.Forms", "MonoAndroid90");
     await AddDep ("Xamarin.Forms", "Xamarin.iOS10");
     await AddDep ("Xamarin.Forms", "Xamarin.Mac");
     await AddDep ("Xamarin.Forms", "tizen40");

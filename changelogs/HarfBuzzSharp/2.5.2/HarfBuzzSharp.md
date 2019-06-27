@@ -6,11 +6,18 @@
 
 #### Type Changed: HarfBuzzSharp.Blob
 
+Obsoleted constructors:
+
+```diff
+ [Obsolete ("Use Blob(IntPtr, int, MemoryMode, ReleaseDelegate releaseDelegate) instead.")]
+ public Blob (IntPtr data, uint length, MemoryMode mode, object userData, BlobReleaseDelegate releaseDelegate);
+```
+
 Added constructors:
 
 ```csharp
 public Blob (IntPtr data, int length, MemoryMode mode);
-public Blob (IntPtr data, int length, MemoryMode mode, object userData, BlobReleaseDelegate releaseDelegate);
+public Blob (IntPtr data, int length, MemoryMode mode, ReleaseDelegate releaseDelegate);
 ```
 
 Added properties:
@@ -114,8 +121,8 @@ public void DeserializeGlyphs (string data);
 public void DeserializeGlyphs (string data, Font font);
 public void DeserializeGlyphs (string data, Font font, SerializeFormat format);
 protected override void DisposeHandler ();
-public System.ReadOnlySpan<GlyphInfo> GetGlyphInfoReferences ();
-public System.ReadOnlySpan<GlyphPosition> GetGlyphPositionReferences ();
+public System.ReadOnlySpan<GlyphInfo> GetGlyphInfoSpan ();
+public System.ReadOnlySpan<GlyphPosition> GetGlyphPositionSpan ();
 public void NormalizeGlyphs ();
 public void Reset ();
 public void Reverse ();
@@ -136,8 +143,7 @@ Added constructors:
 ```csharp
 public Face (GetTableDelegate getTable);
 public Face (Blob blob, int index);
-public Face (GetTableDelegate getTable, object context);
-public Face (GetTableDelegate getTable, object context, ReleaseDelegate destroy);
+public Face (GetTableDelegate getTable, ReleaseDelegate destroy);
 ```
 
 Modified properties:
@@ -201,12 +207,17 @@ public static bool TryParse (string s, out Feature feature);
 
 #### Type Changed: HarfBuzzSharp.Font
 
+Added constructor:
+
+```csharp
+public Font (Font parent);
+```
+
 Added properties:
 
 ```csharp
-public FontExtents HorizontalFontExtents { get; }
+public Font Parent { get; }
 public string[] SupportedShapers { get; }
-public FontExtents VerticalFontExtents { get; }
 ```
 
 Removed method:
@@ -219,31 +230,42 @@ Added methods:
 
 ```csharp
 protected override void DisposeHandler ();
-public uint GetGlyph (int unicode);
-public uint GetGlyph (uint unicode);
-public uint GetGlyph (int unicode, int variationSelector);
-public uint GetGlyph (uint unicode, uint variationSelector);
-public GlyphExtents GetGlyphExtents (int glyph);
-public GlyphExtents GetGlyphExtents (uint glyph);
-public int GetHorizontalGlyphAdvance (int glyph);
+public FontExtents GetFontExtentsForDirection (Direction direction);
+public void GetGlyphAdvanceForDirection (uint glyph, Direction direction, out int x, out int y);
+public int[] GetGlyphAdvancesForDirection (System.ReadOnlySpan<uint> glyphs, Direction direction);
+public int[] GetGlyphAdvancesForDirection (IntPtr firstGlyph, int count, Direction direction);
 public int GetHorizontalGlyphAdvance (uint glyph);
-public int[] GetHorizontalGlyphAdvances (int[] glyphs);
-public int[] GetHorizontalGlyphAdvances (System.ReadOnlySpan<int> glyphs);
 public int[] GetHorizontalGlyphAdvances (System.ReadOnlySpan<uint> glyphs);
-public int[] GetHorizontalGlyphAdvances (uint[] glyphs);
-public int[] GetHorizontalGlyphAdvances (int count, IntPtr firstGlyph);
-public void GetHorizontalGlyphOrigin (int glyph, out int xOrigin, out int yOrigin);
-public void GetHorizontalGlyphOrigin (uint glyph, out int xOrigin, out int yOrigin);
-public int GetVerticalGlyphAdvance (int glyph);
+public int[] GetHorizontalGlyphAdvances (IntPtr firstGlyph, int count);
+public int GetHorizontalGlyphKerning (uint leftGlyph, uint rightGlyph);
 public int GetVerticalGlyphAdvance (uint glyph);
-public int[] GetVerticalGlyphAdvances (int[] glyphs);
-public int[] GetVerticalGlyphAdvances (System.ReadOnlySpan<int> glyphs);
 public int[] GetVerticalGlyphAdvances (System.ReadOnlySpan<uint> glyphs);
-public int[] GetVerticalGlyphAdvances (uint[] glyphs);
-public int[] GetVerticalGlyphAdvances (int count, IntPtr firstGlyph);
-public void GetVerticalGlyphOrigin (int glyph, out int xOrigin, out int yOrigin);
-public void GetVerticalGlyphOrigin (uint glyph, out int xOrigin, out int yOrigin);
+public int[] GetVerticalGlyphAdvances (IntPtr firstGlyph, int count);
+public string GlyphToString (uint glyph);
+public void SetFontFunctions (FontFunctions fontFunctions);
+public void SetFontFunctions (FontFunctions fontFunctions, object fontData);
+public void SetFontFunctions (FontFunctions fontFunctions, object fontData, ReleaseDelegate destroy);
 public void Shape (Buffer buffer, System.Collections.Generic.IReadOnlyList<Feature> features, System.Collections.Generic.IReadOnlyList<string> shapers);
+public bool TryGetGlyph (int unicode, out uint glyph);
+public bool TryGetGlyph (uint unicode, out uint glyph);
+public bool TryGetGlyph (int unicode, uint variationSelector, out uint glyph);
+public bool TryGetGlyph (uint unicode, uint variationSelector, out uint glyph);
+public bool TryGetGlyphContourPoint (uint glyph, uint pointIndex, out int x, out int y);
+public bool TryGetGlyphContourPointForOrigin (uint glyph, uint pointIndex, Direction direction, out int x, out int y);
+public bool TryGetGlyphExtents (uint glyph, out GlyphExtents extents);
+public bool TryGetGlyphFromName (string name, out uint glyph);
+public bool TryGetGlyphFromString (string s, out uint glyph);
+public bool TryGetGlyphName (uint glyph, out string name);
+public bool TryGetHorizontalFontExtents (out FontExtents extents);
+public bool TryGetHorizontalGlyphOrigin (uint glyph, out int xOrigin, out int yOrigin);
+public bool TryGetNominalGlyph (int unicode, out uint glyph);
+public bool TryGetNominalGlyph (uint unicode, out uint glyph);
+public bool TryGetVariationGlyph (int unicode, out uint glyph);
+public bool TryGetVariationGlyph (uint unicode, out uint glyph);
+public bool TryGetVariationGlyph (int unicode, uint variationSelector, out uint glyph);
+public bool TryGetVariationGlyph (uint unicode, uint variationSelector, out uint glyph);
+public bool TryGetVerticalFontExtents (out FontExtents extents);
+public bool TryGetVerticalGlyphOrigin (uint glyph, out int xOrigin, out int yOrigin);
 ```
 
 
@@ -313,6 +335,66 @@ public struct FontExtents {
 }
 ```
 
+#### New Type: HarfBuzzSharp.FontExtentsDelegate
+
+```csharp
+public sealed delegate FontExtentsDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public FontExtentsDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (Font font, object fontData, out FontExtents extents, System.AsyncCallback callback, object object);
+	public virtual bool EndInvoke (out FontExtents extents, System.IAsyncResult result);
+	public virtual bool Invoke (Font font, object fontData, out FontExtents extents);
+}
+```
+
+#### New Type: HarfBuzzSharp.FontFunctions
+
+```csharp
+public class FontFunctions : HarfBuzzSharp.NativeObject, System.IDisposable {
+	// constructors
+	public FontFunctions ();
+	// properties
+	public static FontFunctions Empty { get; }
+	public bool IsImmutable { get; }
+	// methods
+	protected override void DisposeHandler ();
+	public void MakeImmutable ();
+	public void SetGlyphContourPointDelegate (GlyphContourPointDelegate del);
+	public void SetGlyphContourPointDelegate (GlyphContourPointDelegate del, ReleaseDelegate destroy);
+	public void SetGlyphExtentsDelegate (GlyphExtentsDelegate del);
+	public void SetGlyphExtentsDelegate (GlyphExtentsDelegate del, ReleaseDelegate destroy);
+	public void SetGlyphFromNameDelegate (GlyphFromNameDelegate del);
+	public void SetGlyphFromNameDelegate (GlyphFromNameDelegate del, ReleaseDelegate destroy);
+	public void SetGlyphNameDelegate (GlyphNameDelegate del);
+	public void SetGlyphNameDelegate (GlyphNameDelegate del, ReleaseDelegate destroy);
+	public void SetHorizontalFontExtentsDelegate (FontExtentsDelegate del);
+	public void SetHorizontalFontExtentsDelegate (FontExtentsDelegate del, ReleaseDelegate destroy);
+	public void SetHorizontalGlyphAdvanceDelegate (GlyphAdvanceDelegate del);
+	public void SetHorizontalGlyphAdvanceDelegate (GlyphAdvanceDelegate del, ReleaseDelegate destroy);
+	public void SetHorizontalGlyphAdvancesDelegate (GlyphAdvancesDelegate del);
+	public void SetHorizontalGlyphAdvancesDelegate (GlyphAdvancesDelegate del, ReleaseDelegate destroy);
+	public void SetHorizontalGlyphKerningDelegate (GlyphKerningDelegate del);
+	public void SetHorizontalGlyphKerningDelegate (GlyphKerningDelegate del, ReleaseDelegate destroy);
+	public void SetHorizontalGlyphOriginDelegate (GlyphOriginDelegate del);
+	public void SetHorizontalGlyphOriginDelegate (GlyphOriginDelegate del, ReleaseDelegate destroy);
+	public void SetNominalGlyphDelegate (NominalGlyphDelegate del);
+	public void SetNominalGlyphDelegate (NominalGlyphDelegate del, ReleaseDelegate destroy);
+	public void SetNominalGlyphsDelegate (NominalGlyphsDelegate del);
+	public void SetNominalGlyphsDelegate (NominalGlyphsDelegate del, ReleaseDelegate destroy);
+	public void SetVariationGlyphDelegate (VariationGlyphDelegate del);
+	public void SetVariationGlyphDelegate (VariationGlyphDelegate del, ReleaseDelegate destroy);
+	public void SetVerticalFontExtentsDelegate (FontExtentsDelegate del);
+	public void SetVerticalFontExtentsDelegate (FontExtentsDelegate del, ReleaseDelegate destroy);
+	public void SetVerticalGlyphAdvanceDelegate (GlyphAdvanceDelegate del);
+	public void SetVerticalGlyphAdvanceDelegate (GlyphAdvanceDelegate del, ReleaseDelegate destroy);
+	public void SetVerticalGlyphAdvancesDelegate (GlyphAdvancesDelegate del);
+	public void SetVerticalGlyphAdvancesDelegate (GlyphAdvancesDelegate del, ReleaseDelegate destroy);
+	public void SetVerticalGlyphOriginDelegate (GlyphOriginDelegate del);
+	public void SetVerticalGlyphOriginDelegate (GlyphOriginDelegate del, ReleaseDelegate destroy);
+}
+```
+
 #### New Type: HarfBuzzSharp.GetTableDelegate
 
 ```csharp
@@ -320,9 +402,48 @@ public sealed delegate GetTableDelegate : System.MulticastDelegate, System.IClon
 	// constructors
 	public GetTableDelegate (object object, IntPtr method);
 	// methods
-	public virtual System.IAsyncResult BeginInvoke (Face face, Tag tag, object context, System.AsyncCallback callback, object object);
+	public virtual System.IAsyncResult BeginInvoke (Face face, Tag tag, System.AsyncCallback callback, object object);
 	public virtual Blob EndInvoke (System.IAsyncResult result);
-	public virtual Blob Invoke (Face face, Tag tag, object context);
+	public virtual Blob Invoke (Face face, Tag tag);
+}
+```
+
+#### New Type: HarfBuzzSharp.GlyphAdvanceDelegate
+
+```csharp
+public sealed delegate GlyphAdvanceDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public GlyphAdvanceDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (Font font, object fontData, uint glyph, System.AsyncCallback callback, object object);
+	public virtual int EndInvoke (System.IAsyncResult result);
+	public virtual int Invoke (Font font, object fontData, uint glyph);
+}
+```
+
+#### New Type: HarfBuzzSharp.GlyphAdvancesDelegate
+
+```csharp
+public sealed delegate GlyphAdvancesDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public GlyphAdvancesDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (Font font, object fontData, uint count, System.ReadOnlySpan<uint> glyphs, System.Span<int> advances, System.AsyncCallback callback, object object);
+	public virtual void EndInvoke (System.IAsyncResult result);
+	public virtual void Invoke (Font font, object fontData, uint count, System.ReadOnlySpan<uint> glyphs, System.Span<int> advances);
+}
+```
+
+#### New Type: HarfBuzzSharp.GlyphContourPointDelegate
+
+```csharp
+public sealed delegate GlyphContourPointDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public GlyphContourPointDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (Font font, object fontData, uint glyph, uint pointIndex, out int x, out int y, System.AsyncCallback callback, object object);
+	public virtual bool EndInvoke (out int x, out int y, System.IAsyncResult result);
+	public virtual bool Invoke (Font font, object fontData, uint glyph, uint pointIndex, out int x, out int y);
 }
 ```
 
@@ -338,6 +459,19 @@ public struct GlyphExtents {
 }
 ```
 
+#### New Type: HarfBuzzSharp.GlyphExtentsDelegate
+
+```csharp
+public sealed delegate GlyphExtentsDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public GlyphExtentsDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (Font font, object fontData, uint glyph, out GlyphExtents extents, System.AsyncCallback callback, object object);
+	public virtual bool EndInvoke (out GlyphExtents extents, System.IAsyncResult result);
+	public virtual bool Invoke (Font font, object fontData, uint glyph, out GlyphExtents extents);
+}
+```
+
 #### New Type: HarfBuzzSharp.GlyphFlags
 
 ```csharp
@@ -346,6 +480,58 @@ public struct GlyphExtents {
 public enum GlyphFlags {
 	Defined = 1,
 	UnsafeToBreak = 1,
+}
+```
+
+#### New Type: HarfBuzzSharp.GlyphFromNameDelegate
+
+```csharp
+public sealed delegate GlyphFromNameDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public GlyphFromNameDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (Font font, object fontData, string name, out uint glyph, System.AsyncCallback callback, object object);
+	public virtual bool EndInvoke (out uint glyph, System.IAsyncResult result);
+	public virtual bool Invoke (Font font, object fontData, string name, out uint glyph);
+}
+```
+
+#### New Type: HarfBuzzSharp.GlyphKerningDelegate
+
+```csharp
+public sealed delegate GlyphKerningDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public GlyphKerningDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (Font font, object fontData, uint firstGlyph, uint secondGlyph, System.AsyncCallback callback, object object);
+	public virtual int EndInvoke (System.IAsyncResult result);
+	public virtual int Invoke (Font font, object fontData, uint firstGlyph, uint secondGlyph);
+}
+```
+
+#### New Type: HarfBuzzSharp.GlyphNameDelegate
+
+```csharp
+public sealed delegate GlyphNameDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public GlyphNameDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (Font font, object fontData, uint glyph, out string name, System.AsyncCallback callback, object object);
+	public virtual bool EndInvoke (out string name, System.IAsyncResult result);
+	public virtual bool Invoke (Font font, object fontData, uint glyph, out string name);
+}
+```
+
+#### New Type: HarfBuzzSharp.GlyphOriginDelegate
+
+```csharp
+public sealed delegate GlyphOriginDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public GlyphOriginDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (Font font, object fontData, uint glyph, out int x, out int y, System.AsyncCallback callback, object object);
+	public virtual bool EndInvoke (out int x, out int y, System.IAsyncResult result);
+	public virtual bool Invoke (Font font, object fontData, uint glyph, out int x, out int y);
 }
 ```
 
@@ -366,6 +552,32 @@ public class Language : HarfBuzzSharp.NativeObject, System.IDisposable {
 }
 ```
 
+#### New Type: HarfBuzzSharp.NominalGlyphDelegate
+
+```csharp
+public sealed delegate NominalGlyphDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public NominalGlyphDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (Font font, object fontData, uint unicode, out uint glyph, System.AsyncCallback callback, object object);
+	public virtual bool EndInvoke (out uint glyph, System.IAsyncResult result);
+	public virtual bool Invoke (Font font, object fontData, uint unicode, out uint glyph);
+}
+```
+
+#### New Type: HarfBuzzSharp.NominalGlyphsDelegate
+
+```csharp
+public sealed delegate NominalGlyphsDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public NominalGlyphsDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (Font font, object fontData, uint count, System.ReadOnlySpan<uint> codepoints, System.Span<uint> glyphs, System.AsyncCallback callback, object object);
+	public virtual uint EndInvoke (System.IAsyncResult result);
+	public virtual uint Invoke (Font font, object fontData, uint count, System.ReadOnlySpan<uint> codepoints, System.Span<uint> glyphs);
+}
+```
+
 #### New Type: HarfBuzzSharp.ReleaseDelegate
 
 ```csharp
@@ -373,9 +585,9 @@ public sealed delegate ReleaseDelegate : System.MulticastDelegate, System.IClone
 	// constructors
 	public ReleaseDelegate (object object, IntPtr method);
 	// methods
-	public virtual System.IAsyncResult BeginInvoke (object context, System.AsyncCallback callback, object object);
+	public virtual System.IAsyncResult BeginInvoke (System.AsyncCallback callback, object object);
 	public virtual void EndInvoke (System.IAsyncResult result);
-	public virtual void Invoke (object context);
+	public virtual void Invoke ();
 }
 ```
 
@@ -718,6 +930,19 @@ public enum UnicodeGeneralCategory {
 	TitlecaseLetter = 8,
 	Unassigned = 2,
 	UppercaseLetter = 9,
+}
+```
+
+#### New Type: HarfBuzzSharp.VariationGlyphDelegate
+
+```csharp
+public sealed delegate VariationGlyphDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public VariationGlyphDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (Font font, object fontData, uint unicode, uint variationSelector, out uint glyph, System.AsyncCallback callback, object object);
+	public virtual bool EndInvoke (out uint glyph, System.IAsyncResult result);
+	public virtual bool Invoke (Font font, object fontData, uint unicode, uint variationSelector, out uint glyph);
 }
 ```
 
