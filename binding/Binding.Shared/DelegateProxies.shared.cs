@@ -8,6 +8,8 @@ namespace HarfBuzzSharp
 namespace SkiaSharp
 #endif
 {
+	// helper delegates
+
 	internal delegate Delegate GetMultiDelegateDelegate (Type index);
 
 	internal static partial class DelegateProxies

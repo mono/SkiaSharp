@@ -1,5 +1,4 @@
-﻿using System;
-using Xunit;
+﻿using Xunit;
 
 namespace HarfBuzzSharp.Tests
 {
@@ -24,8 +23,9 @@ namespace HarfBuzzSharp.Tests
 
 				font.SetFontFunctions(fontFuncs, "FontData");
 
-				font.TryGetGlyphContourPoint('H', 0, out var x, out var y);
+				var result = font.TryGetGlyphContourPoint('H', 0, out var x, out var y);
 
+				Assert.True(result);
 				Assert.Equal(expected, x);
 			}
 		}
@@ -48,8 +48,9 @@ namespace HarfBuzzSharp.Tests
 
 				font.SetFontFunctions(fontFuncs, "FontData");
 
-				font.TryGetHorizontalFontExtents(out var extents);
+				var result = font.TryGetHorizontalFontExtents(out var extents);
 
+				Assert.True(result);
 				Assert.Equal(expected, extents);
 			}
 		}
@@ -72,8 +73,9 @@ namespace HarfBuzzSharp.Tests
 
 				font.SetFontFunctions(fontFuncs, "FontData");
 
-				font.TryGetGlyphExtents('H', out var extents);
+				var result = font.TryGetGlyphExtents('H', out var extents);
 
+				Assert.True(result);
 				Assert.Equal(expected, extents);
 			}
 		}
@@ -94,8 +96,9 @@ namespace HarfBuzzSharp.Tests
 
 				font.SetFontFunctions(fontFuncs, "FontData");
 
-				font.TryGetGlyphFromName("H", out var glyph);
+				var result = font.TryGetGlyphFromName("H", out var glyph);
 
+				Assert.True(result);
 				Assert.Equal('H', glyph);
 			}
 		}
@@ -106,24 +109,19 @@ namespace HarfBuzzSharp.Tests
 			using (var font = new Font(Font))
 			using (var fontFuncs = new FontFunctions())
 			{
-				unsafe
+				fontFuncs.SetGlyphNameDelegate((Font f, object fd, uint g, out string n) =>
 				{
-					fontFuncs.SetGlyphNameDelegate((f, fd, g, nb, s) =>
-					{
-						var nameSpan = new Span<char>(nb, s);
-
-						nameSpan[0] = (char)g;
-
-						return true;
-					});
-				}
+					n = ((char)g).ToString();
+					return true;
+				});
 
 				fontFuncs.MakeImmutable();
 
 				font.SetFontFunctions(fontFuncs, "FontData");
 
-				font.TryGetGlyphName('H', out var name);
+				var result = font.TryGetGlyphName('H', out var name);
 
+				Assert.True(result);
 				Assert.Equal("H", name);
 			}
 		}
@@ -162,8 +160,9 @@ namespace HarfBuzzSharp.Tests
 
 				font.SetFontFunctions(fontFuncs, "FontData");
 
-				font.TryGetNominalGlyph(49, out var glyph);
+				var result = font.TryGetNominalGlyph(49, out var glyph);
 
+				Assert.True(result);
 				Assert.Equal(1337u, glyph);
 			}
 		}
@@ -184,8 +183,9 @@ namespace HarfBuzzSharp.Tests
 
 				font.SetFontFunctions(fontFuncs, "FontData");
 
-				font.TryGetNominalGlyph(49, out var glyph);
+				var result = font.TryGetNominalGlyph(49, out var glyph);
 
+				Assert.True(result);
 				Assert.Equal(1337u, glyph);
 			}
 		}
@@ -228,8 +228,9 @@ namespace HarfBuzzSharp.Tests
 
 				font.SetFontFunctions(fontFuncs, "FontData");
 
-				font.TryGetHorizontalGlyphOrigin(49, out var x, out var y);
+				var result = font.TryGetHorizontalGlyphOrigin(49, out var x, out var y);
 
+				Assert.True(result);
 				Assert.Equal(1337, x);
 			}
 		}
@@ -250,8 +251,9 @@ namespace HarfBuzzSharp.Tests
 
 				font.SetFontFunctions(fontFuncs, "FontData");
 
-				font.TryGetVariationGlyph(49, 0, out var glyph);
+				var result = font.TryGetVariationGlyph(49, 0, out var glyph);
 
+				Assert.True(result);
 				Assert.Equal(1337u, glyph);
 			}
 		}

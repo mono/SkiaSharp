@@ -8,52 +8,48 @@ namespace HarfBuzzSharp
 {
 	public class Font : NativeObject
 	{
+		private const int NameBufferLength = 128;
+
 		public Font (Face face)
-			: this (IntPtr.Zero)
+			: base (IntPtr.Zero)
 		{
-			if (face == null) {
+			if (face == null)
 				throw new ArgumentNullException (nameof (face));
-			}
 
 			Handle = HarfBuzzApi.hb_font_create (face.Handle);
 		}
 
 		public Font (Font parent)
-			: this (IntPtr.Zero)
+			: base (IntPtr.Zero)
 		{
-			if (parent == null) {
+			if (parent == null)
 				throw new ArgumentNullException (nameof (parent));
-			}
-
-			if (parent.Handle == IntPtr.Zero) {
+			if (parent.Handle == IntPtr.Zero)
 				throw new ArgumentException (nameof (parent.Handle));
-			}
 
 			Parent = parent;
-
 			Handle = HarfBuzzApi.hb_font_create_sub_font (parent.Handle);
 		}
-
-		internal Font (IntPtr handle) : base (handle) { }
 
 		public Font Parent { get; }
 
 		public string[] SupportedShapers =>
 			PtrToStringArray (HarfBuzzApi.hb_shape_list_shapers ()).ToArray ();
 
-		public void SetFontFunctions (FontFunctions fontFunctions, object fontData = null,
-			ReleaseDelegate destroy = null)
+		public void SetFontFunctions (FontFunctions fontFunctions) =>
+			SetFontFunctions (fontFunctions, null, null);
+
+		public void SetFontFunctions (FontFunctions fontFunctions, object fontData) =>
+			SetFontFunctions (fontFunctions, fontData, null);
+
+		public void SetFontFunctions (FontFunctions fontFunctions, object fontData, ReleaseDelegate destroy)
 		{
-			if (fontFunctions == null) {
+			if (fontFunctions == null)
 				throw new ArgumentException (nameof (fontFunctions));
-			}
 
-			var userData = new FontUserData (this, fontData);
-
-			var ctx = DelegateProxies.CreateMulti (new UserDataDelegate (() => userData), destroy);
-
-			HarfBuzzApi.hb_font_set_funcs (Handle, fontFunctions.Handle, ctx,
-				DelegateProxies.ReleaseDelegateProxyForMulti);
+			var container = new FontUserData (this, fontData);
+			var ctx = DelegateProxies.CreateFontData (container, destroy);
+			HarfBuzzApi.hb_font_set_funcs (Handle, fontFunctions.Handle, ctx, DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
 		public void GetScale (out int xScale, out int yScale) =>
@@ -80,12 +76,10 @@ namespace HarfBuzzSharp
 		public bool TryGetVariationGlyph (uint unicode, out uint glyph) =>
 			HarfBuzzApi.hb_font_get_variation_glyph (Handle, unicode, 0, out glyph);
 
-		public bool TryGetVariationGlyph (int unicode,
-			uint variationSelector, out uint glyph) =>
+		public bool TryGetVariationGlyph (int unicode, uint variationSelector, out uint glyph) =>
 			TryGetVariationGlyph ((uint)unicode, variationSelector, out glyph);
 
-		public bool TryGetVariationGlyph (uint unicode,
-			uint variationSelector, out uint glyph) =>
+		public bool TryGetVariationGlyph (uint unicode, uint variationSelector, out uint glyph) =>
 			HarfBuzzApi.hb_font_get_variation_glyph (Handle, unicode, variationSelector, out glyph);
 
 		public int GetHorizontalGlyphAdvance (uint glyph) =>
@@ -139,60 +133,43 @@ namespace HarfBuzzSharp
 		public int GetHorizontalGlyphKerning (uint leftGlyph, uint rightGlyph) =>
 			HarfBuzzApi.hb_font_get_glyph_h_kerning (Handle, leftGlyph, rightGlyph);
 
-		public bool TryGetGlyphExtents (uint glyph, out GlyphExtents extents)
-		{
-			return HarfBuzzApi.hb_font_get_glyph_extents (Handle, glyph, out extents);
-		}
+		public bool TryGetGlyphExtents (uint glyph, out GlyphExtents extents) =>
+			HarfBuzzApi.hb_font_get_glyph_extents (Handle, glyph, out extents);
 
-		public bool TryGetGlyphContourPoint (uint glyph,
-			uint pointIndex, out int x, out int y)
-		{
-			return HarfBuzzApi.hb_font_get_glyph_contour_point (Handle, glyph, pointIndex, out x, out y);
-		}
+		public bool TryGetGlyphContourPoint (uint glyph, uint pointIndex, out int x, out int y) =>
+			HarfBuzzApi.hb_font_get_glyph_contour_point (Handle, glyph, pointIndex, out x, out y);
 
-		public bool TryGetGlyphName (uint glyph, out string name)
+		public unsafe bool TryGetGlyphName (uint glyph, out string name)
 		{
-			var buffer = ArrayPool<char>.Shared.Rent (128);
-
-			unsafe {
+			var buffer = ArrayPool<char>.Shared.Rent (NameBufferLength);
+			try {
 				fixed (char* first = buffer) {
 					if (!HarfBuzzApi.hb_font_get_glyph_name (Handle, glyph, first, buffer.Length)) {
 						name = string.Empty;
-						ArrayPool<char>.Shared.Return (buffer);
 						return false;
 					}
+					name = new string (first);
+					return true;
 				}
+			} finally {
+				ArrayPool<char>.Shared.Return (buffer);
 			}
-
-			var length = 0;
-
-			foreach (var c in buffer) {
-				if (c == 0)
-					break;
-				length++;
-			}
-
-			ArrayPool<char>.Shared.Return (buffer);
-
-			name = new string (buffer, 0, length);
-
-			return true;
 		}
 
 		public bool TryGetGlyphFromName (string name, out uint glyph) =>
 			HarfBuzzApi.hb_font_get_glyph_from_name (Handle, name, name.Length, out glyph);
 
-		public bool TryGetGlyph (int unicode, out uint glyph) => TryGetGlyph ((uint)unicode, 0, out glyph);
+		public bool TryGetGlyph (int unicode, out uint glyph) =>
+			TryGetGlyph ((uint)unicode, 0, out glyph);
 
-		public bool TryGetGlyph (uint unicode, out uint glyph) => TryGetGlyph (unicode, 0, out glyph);
+		public bool TryGetGlyph (uint unicode, out uint glyph) =>
+			TryGetGlyph (unicode, 0, out glyph);
 
 		public bool TryGetGlyph (int unicode, uint variationSelector, out uint glyph) =>
 			TryGetGlyph ((uint)unicode, variationSelector, out glyph);
 
-		public bool TryGetGlyph (uint unicode, uint variationSelector, out uint glyph)
-		{
-			return HarfBuzzApi.hb_font_get_glyph (Handle, unicode, variationSelector, out glyph);
-		}
+		public bool TryGetGlyph (uint unicode, uint variationSelector, out uint glyph) =>
+			HarfBuzzApi.hb_font_get_glyph (Handle, unicode, variationSelector, out glyph);
 
 		public FontExtents GetFontExtentsForDirection (Direction direction)
 		{
@@ -221,33 +198,20 @@ namespace HarfBuzzSharp
 			return advances;
 		}
 
-		public bool TryGetGlyphContourPointForOrigin (uint glyph,
-			uint pointIndex, Direction direction, out int x, out int y)
-		{
-			return HarfBuzzApi.hb_font_get_glyph_contour_point_for_origin (Handle, glyph, pointIndex, direction, out x, out y);
-		}
+		public bool TryGetGlyphContourPointForOrigin (uint glyph, uint pointIndex, Direction direction, out int x, out int y) =>
+			HarfBuzzApi.hb_font_get_glyph_contour_point_for_origin (Handle, glyph, pointIndex, direction, out x, out y);
 
-		public string GlyphToString (uint glyph)
+		public unsafe string GlyphToString (uint glyph)
 		{
-			var buffer = ArrayPool<char>.Shared.Rent (128);
-
-			unsafe {
+			var buffer = ArrayPool<char>.Shared.Rent (NameBufferLength);
+			try {
 				fixed (char* first = buffer) {
 					HarfBuzzApi.hb_font_glyph_to_string (Handle, glyph, first, buffer.Length);
+					return new string (first);
 				}
+			} finally {
+				ArrayPool<char>.Shared.Return (buffer);
 			}
-
-			var length = 0;
-
-			foreach (var c in buffer) {
-				if (c == 0)
-					break;
-				length++;
-			}
-
-			ArrayPool<char>.Shared.Return (buffer);
-
-			return new string (buffer, 0, length);
 		}
 
 		public bool TryGetGlyphFromString (string s, out uint glyph) =>
@@ -261,9 +225,8 @@ namespace HarfBuzzSharp
 
 		public void Shape (Buffer buffer, IReadOnlyList<Feature> features, IReadOnlyList<string> shapers)
 		{
-			if (buffer == null) {
+			if (buffer == null)
 				throw new ArgumentNullException (nameof (buffer));
-			}
 
 			var featuresPtr = features == null || features.Count == 0 ? IntPtr.Zero : StructureArrayToPtr (features);
 			var shapersPtr = shapers == null || shapers.Count == 0 ? IntPtr.Zero : StructureArrayToPtr (shapers);
@@ -275,13 +238,10 @@ namespace HarfBuzzSharp
 				features?.Count ?? 0,
 				shapersPtr);
 
-			if (featuresPtr != IntPtr.Zero) {
+			if (featuresPtr != IntPtr.Zero)
 				Marshal.FreeCoTaskMem (featuresPtr);
-			}
-
-			if (shapersPtr != IntPtr.Zero) {
+			if (shapersPtr != IntPtr.Zero)
 				Marshal.FreeCoTaskMem (shapersPtr);
-			}
 		}
 
 		protected override void DisposeHandler ()
@@ -290,5 +250,18 @@ namespace HarfBuzzSharp
 				HarfBuzzApi.hb_font_destroy (Handle);
 			}
 		}
+	}
+
+	internal class FontUserData
+	{
+		public FontUserData (Font font, object fontData)
+		{
+			Font = font;
+			FontData = fontData;
+		}
+
+		public Font Font { get; }
+
+		public object FontData { get; }
 	}
 }

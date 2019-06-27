@@ -13,6 +13,8 @@ namespace HarfBuzzSharp
 	[Obsolete ("Use ReleaseDelegate instead.")]
 	public delegate void BlobReleaseDelegate (object context);
 
+	// helper delegates
+
 	internal delegate object UserDataDelegate ();
 
 	// internal proxy delegates
