@@ -44,7 +44,7 @@ namespace SkiaSharp {
             var fCreateNew = (<any>Module).addFunction((managedStreamPtr: number) => SurfaceManager._createNewInternal(managedStreamPtr), 'ii');
             var fDestroy = (<any>Module).addFunction((managedStreamPtr: number) => SurfaceManager._destroyInternal(managedStreamPtr), 'vi');
 
-            (<any>Module)._sk_managedstream_set_delegates(
+            return [
                 fRead,
                 fPeek,
                 fIsAtEnd,
@@ -57,9 +57,7 @@ namespace SkiaSharp {
                 fGetLength,
                 fCreateNew,
                 fDestroy
-            );
-
-            return true;
+            ];
         }
 
         static invalidateCanvas(pData: number, canvasId: string, width: number, height: number) {

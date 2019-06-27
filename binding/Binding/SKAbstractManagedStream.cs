@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Globalization;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using NativePointerDictionary = System.Collections.Concurrent.ConcurrentDictionary<System.IntPtr, SkiaSharp.SKAbstractManagedStream>;
@@ -56,36 +58,62 @@ namespace SkiaSharp
 		static SKAbstractManagedStream ()
 		{
 #if __WASM__
-			WebAssembly.Runtime.InvokeJS($"SkiaSharp.SurfaceManager.registerManagedStream();");
-#else
-			{
-				fRead = new read_delegate (ReadInternal);
-				fPeek = new peek_delegate (PeekInternal);
-				fIsAtEnd = new isAtEnd_delegate (IsAtEndInternal);
-				fHasPosition = new hasPosition_delegate (HasPositionInternal);
-				fHasLength = new hasLength_delegate (HasLengthInternal);
-				fRewind = new rewind_delegate (RewindInternal);
-				fGetPosition = new getPosition_delegate (GetPositionInternal);
-				fSeek = new seek_delegate (SeekInternal);
-				fMove = new move_delegate (MoveInternal);
-				fGetLength = new getLength_delegate (GetLengthInternal);
-				fCreateNew = new createNew_delegate (CreateNewInternal);
-				fDestroy = new destroy_delegate (DestroyInternal);
+			//
+			// Javascript returns the list of registered methods, then the
+			// sk_managedstream_set_delegates gets called through P/Invoke
+			// because it is not exported when building for AOT.
+			//
 
+			var ret = WebAssembly.Runtime.InvokeJS($"SkiaSharp.SurfaceManager.registerManagedStream();");
+			var funcs = ret.Split (new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+				.Select(f => (IntPtr)int.Parse(f, CultureInfo.InvariantCulture))
+				.ToArray();
+
+			if(funcs.Length == 12) {
 				SkiaApi.sk_managedstream_set_delegates (
-					Marshal.GetFunctionPointerForDelegate (fRead),
-					Marshal.GetFunctionPointerForDelegate (fPeek),
-					Marshal.GetFunctionPointerForDelegate (fIsAtEnd),
-					Marshal.GetFunctionPointerForDelegate (fHasPosition),
-					Marshal.GetFunctionPointerForDelegate (fHasLength),
-					Marshal.GetFunctionPointerForDelegate (fRewind),
-					Marshal.GetFunctionPointerForDelegate (fGetPosition),
-					Marshal.GetFunctionPointerForDelegate (fSeek),
-					Marshal.GetFunctionPointerForDelegate (fMove),
-					Marshal.GetFunctionPointerForDelegate (fGetLength),
-					Marshal.GetFunctionPointerForDelegate (fCreateNew),
-					Marshal.GetFunctionPointerForDelegate (fDestroy));
+				funcs[0],
+				funcs[1],
+				funcs[2],
+				funcs[3],
+				funcs[4],
+				funcs[5],
+				funcs[6],
+				funcs[7],
+				funcs[8],
+				funcs[9],
+				funcs[10],
+				funcs[11]);
+			} else {
+				throw new InvalidOperationException($"Mismatch for registerManagedStream returned values (got {funcs.Length}, expected 12)");
 			}
+
+#else
+			fRead = new read_delegate (ReadInternal);
+			fPeek = new peek_delegate (PeekInternal);
+			fIsAtEnd = new isAtEnd_delegate (IsAtEndInternal);
+			fHasPosition = new hasPosition_delegate (HasPositionInternal);
+			fHasLength = new hasLength_delegate (HasLengthInternal);
+			fRewind = new rewind_delegate (RewindInternal);
+			fGetPosition = new getPosition_delegate (GetPositionInternal);
+			fSeek = new seek_delegate (SeekInternal);
+			fMove = new move_delegate (MoveInternal);
+			fGetLength = new getLength_delegate (GetLengthInternal);
+			fCreateNew = new createNew_delegate (CreateNewInternal);
+			fDestroy = new destroy_delegate (DestroyInternal);
+
+			SkiaApi.sk_managedstream_set_delegates (
+				Marshal.GetFunctionPointerForDelegate (fRead),
+				Marshal.GetFunctionPointerForDelegate (fPeek),
+				Marshal.GetFunctionPointerForDelegate (fIsAtEnd),
+				Marshal.GetFunctionPointerForDelegate (fHasPosition),
+				Marshal.GetFunctionPointerForDelegate (fHasLength),
+				Marshal.GetFunctionPointerForDelegate (fRewind),
+				Marshal.GetFunctionPointerForDelegate (fGetPosition),
+				Marshal.GetFunctionPointerForDelegate (fSeek),
+				Marshal.GetFunctionPointerForDelegate (fMove),
+				Marshal.GetFunctionPointerForDelegate (fGetLength),
+				Marshal.GetFunctionPointerForDelegate (fCreateNew),
+				Marshal.GetFunctionPointerForDelegate (fDestroy));
 #endif
 		}
 

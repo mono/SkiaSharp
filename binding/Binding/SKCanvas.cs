@@ -547,7 +547,7 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			
-			SkiaApi.sk_canvas_draw_text_on_path (Handle, hOffset, vOffset, buffer, length, path.Handle, paint.Handle);
+			SkiaApi.sk_canvas_draw_text_on_path (Handle, buffer, length, path.Handle, paint.Handle, IntPtr.Zero, hOffset, vOffset);
 		}
 
 		public void DrawText (IntPtr buffer, int length, SKPoint p, SKPaint paint)

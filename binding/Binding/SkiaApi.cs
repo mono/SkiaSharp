@@ -129,8 +129,10 @@ namespace SkiaSharp
 		public extern static sk_colorspace_t sk_colorspace_new_rgb_with_coeffs_and_gamut (ref SKColorSpaceTransferFn coeffs, SKColorSpaceGamut gamut);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_colorspace_t sk_colorspace_new_rgb_with_gamma_named (SKNamedGamma gamma, sk_matrix44_t toXYZD50);
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_colorspace_t sk_colorspace_new_rgb_with_gamma_named_and_gamut (SKNamedGamma gamma, SKColorSpaceGamut gamut);
+
+		public static sk_colorspace_t sk_colorspace_new_rgb_with_gamma_named_and_gamut (SKNamedGamma gamma, SKColorSpaceGamut gamut)
+			=> throw new NotSupportedException("not support in current native skia build");
+
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		public extern static bool sk_colorspace_to_xyzd50 (sk_colorspace_t cColorSpace, sk_matrix44_t toXYZD50);
@@ -270,7 +272,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_canvas_draw_pos_text (sk_canvas_t t, voidptr_t text, int len, [In] SKPoint[] points, sk_paint_t paint);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static int sk_canvas_draw_text_on_path (sk_canvas_t t, float hOffset, float vOffset, voidptr_t text, int len, sk_path_t path, sk_paint_t paint);
+		public extern static int sk_canvas_draw_text_on_path (sk_canvas_t t, voidptr_t text, int len, sk_path_t path, sk_paint_t paint, nullptr_t nullPad, float hOffset, float vOffset);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_canvas_draw_text_blob (sk_canvas_t canvas, float x, float y, sk_textblob_t text, sk_paint_t paint);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

@@ -12,7 +12,7 @@ declare namespace SkiaSharp {
         static _getLengthInternal: any;
         static _createNewInternal: any;
         static _destroyInternal: any;
-        static registerManagedStream(): boolean;
+        static registerManagedStream(): any[];
         static invalidateCanvas(pData: number, canvasId: string, width: number, height: number): boolean;
     }
 }
