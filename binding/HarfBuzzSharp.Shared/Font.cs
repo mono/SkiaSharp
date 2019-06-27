@@ -44,8 +44,7 @@ namespace HarfBuzzSharp
 
 		public void SetFontFunctions (FontFunctions fontFunctions, object fontData, ReleaseDelegate destroy)
 		{
-			if (fontFunctions == null)
-				throw new ArgumentException (nameof (fontFunctions));
+			_ = fontFunctions ?? throw new ArgumentNullException (nameof (fontFunctions));
 
 			var container = new FontUserData (this, fontData);
 			var ctx = DelegateProxies.CreateFontData (container, destroy);

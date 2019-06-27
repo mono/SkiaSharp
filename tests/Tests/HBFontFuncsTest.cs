@@ -1,9 +1,20 @@
-﻿using Xunit;
+﻿using System;
+using Xunit;
 
 namespace HarfBuzzSharp.Tests
 {
 	public class HBFontFuncsTest : HBTest
 	{
+		[SkippableFact]
+		public void ImmutableFunctionsShouldNotChange()
+		{
+			using (var fontFuncs = new FontFunctions())
+			{
+				fontFuncs.MakeImmutable();
+				Assert.Throws<InvalidOperationException>(() => fontFuncs.SetHorizontalGlyphAdvanceDelegate((a, b, c) => 1337));
+			}
+		}
+
 		[SkippableFact]
 		public void ShouldSetGlyphContourPointDelegate()
 		{
