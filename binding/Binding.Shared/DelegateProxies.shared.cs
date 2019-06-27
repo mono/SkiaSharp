@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -8,6 +8,8 @@ namespace HarfBuzzSharp
 namespace SkiaSharp
 #endif
 {
+	// helper delegates
+
 	internal delegate Delegate GetMultiDelegateDelegate (Type index);
 
 	internal static partial class DelegateProxies
