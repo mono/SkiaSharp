@@ -30,10 +30,8 @@
         AppName="SkiaSharp Samples (Experimental)"
         AppAuthor="Microsoft">
         <banner:BannerControl.AboutContent>
-            This application uses CanvasKit for WebAssembly (Skia) and Skia# for .NET, running on WebAssembly with software rendering. It
-            is an experiment for the integration of Skia in an application running on top of  Mono for WebAssembly. 
-            It uses a temporary interfacing mechanism until Emscripten and Mono improve the support for dynamic
-            linking of WebAssembly modules.
+            This application uses CanvasKit for WebAssembly (Skia) and Skia# for .NET, running on WebAssembly with software rendering.
+            It uses a dynamic and static linking and .NET P/Invoke mechanism to package and use Skia# from C#.
         </banner:BannerControl.AboutContent>
 
         <Grid Background="Gray">
@@ -43,7 +41,7 @@
             </Grid.RowDefinitions>
             <Grid Grid.Row="1">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="{ThemeResource SplitViewCompactPaneThemeLength}" />
+                    <RowDefinition Height="auto" />
                     <RowDefinition />
                 </Grid.RowDefinitions>
                 <SplitView Name="splitView" DisplayMode="Inline" IsPaneOpen="true" OpenPaneLength="320" Grid.Row="1">

@@ -100,9 +100,11 @@ namespace SkiaSharpSample
 			{
 				listView.Height = double.NaN;
 			});
+
+			commandBar.Visibility = Visibility.Collapsed;
 #endif
 
-			}
+		}
 
 		protected override void OnNavigatedFrom(NavigationEventArgs e)
 		{
