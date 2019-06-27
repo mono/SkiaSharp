@@ -699,13 +699,17 @@ Task ("externals-download")
     if (string.IsNullOrEmpty (AZURE_BUILD_ID))
         throw new Exception ("Specify a build ID with --azureBuildId=<ID>");
 
-    var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, "native");
+    var artifactName = "native-default";
+    var artifactFilename = $"{artifactName}.zip";
+    var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, artifactName);
 
-    EnsureDirectoryExists ("./output");
-    CleanDirectories ("./output");
+    var outputPath = "./output";
+    EnsureDirectoryExists (outputPath);
+    CleanDirectories (outputPath);
 
-    DownloadFile(url, "./output/native.zip");
-    Unzip ($"./output/native.zip", $"./output");
+    DownloadFile (url, $"{outputPath}/{artifactFilename}");
+    Unzip ($"{outputPath}/{artifactFilename}", outputPath);
+    MoveDirectory ($"{outputPath}/{artifactName}", $"{outputPath}/native");
 });
 
 Task ("externals-angle-uwp")
