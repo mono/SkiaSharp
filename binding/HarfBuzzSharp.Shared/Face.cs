@@ -38,8 +38,11 @@ namespace HarfBuzzSharp
 			if (getTable == null)
 				throw new ArgumentNullException (nameof (getTable));
 
-			var ctx = DelegateProxies.CreateMulti<GetTableDelegate> ((_, t) => getTable.Invoke (this, t), destroy);
-			Handle = HarfBuzzApi.hb_face_create_for_tables (DelegateProxies.GetTableDelegateProxy, ctx, DelegateProxies.ReleaseDelegateProxyForMulti);
+			var actualUserData = new UserDataDelegate (() => this);
+			Handle = HarfBuzzApi.hb_face_create_for_tables (
+				DelegateProxies.GetTableDelegateProxy,
+				DelegateProxies.CreateMulti (getTable, actualUserData, destroy),
+				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
 		internal Face (IntPtr handle)

@@ -47,7 +47,8 @@ namespace HarfBuzzSharp
 			_ = fontFunctions ?? throw new ArgumentNullException (nameof (fontFunctions));
 
 			var container = new FontUserData (this, fontData);
-			var ctx = DelegateProxies.CreateFontData (container, destroy);
+			var actualFontData = new UserDataDelegate (() => container);
+			var ctx = DelegateProxies.CreateMulti (actualFontData, destroy);
 			HarfBuzzApi.hb_font_set_funcs (Handle, fontFunctions.Handle, ctx, DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 

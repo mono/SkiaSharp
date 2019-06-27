@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
@@ -93,12 +94,7 @@ namespace HarfBuzzSharp
 
 		// helper methods
 
-		public static IntPtr CreateFontData (FontUserData fontData, ReleaseDelegate destroy)
-		{
-			var proxy = new UserDataDelegate (() => fontData);
-			return CreateMulti (proxy, destroy);
-		}
-
+		[MethodImpl (MethodImplOptions.AggressiveInlining)]
 		public static T GetFontData<T> (IntPtr context)
 		{
 			var del = GetMulti<UserDataDelegate> (context, out _);
