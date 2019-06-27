@@ -16,6 +16,8 @@ namespace HarfBuzzSharp.Tests
 		{
 			using (var buffer = new Buffer())
 			{
+				buffer.Direction = Direction.LeftToRight;
+
 				Assert.Equal(ContentType.Invalid, buffer.ContentType);
 
 				buffer.AddUtf8(SimpleText);
