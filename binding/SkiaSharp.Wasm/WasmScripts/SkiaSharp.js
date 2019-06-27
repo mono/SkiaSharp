@@ -26,8 +26,20 @@ var SkiaSharp;
             var fGetLength = Module.addFunction((managedStreamPtr) => SurfaceManager._getLengthInternal(managedStreamPtr), 'ii');
             var fCreateNew = Module.addFunction((managedStreamPtr) => SurfaceManager._createNewInternal(managedStreamPtr), 'ii');
             var fDestroy = Module.addFunction((managedStreamPtr) => SurfaceManager._destroyInternal(managedStreamPtr), 'vi');
-            Module._sk_managedstream_set_delegates(fRead, fPeek, fIsAtEnd, fHasPosition, fHasLength, fRewind, fGetPosition, fSeek, fMove, fGetLength, fCreateNew, fDestroy);
-            return true;
+            return [
+                fRead,
+                fPeek,
+                fIsAtEnd,
+                fHasPosition,
+                fHasLength,
+                fRewind,
+                fGetPosition,
+                fSeek,
+                fMove,
+                fGetLength,
+                fCreateNew,
+                fDestroy
+            ];
         }
         static invalidateCanvas(pData, canvasId, width, height) {
             var c = document.getElementById(canvasId);

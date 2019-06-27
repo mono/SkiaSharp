@@ -7,10 +7,7 @@
     <DefineConstants>$(DefineConstants);__WASM__</DefineConstants>
     <NoWarn>NU1701</NoWarn>
     <MonoRuntimeDebuggerEnabled Condition="'$(Configuration)'=='Debug'">true</MonoRuntimeDebuggerEnabled>
-    <!--
-    Disable interpreter until libSkiaSharp.bc can be linked
     <WasmShellMonoRuntimeExecutionMode Condition="$([MSBuild]::IsOsPlatform('Linux'))">InterpreterAndAOT</WasmShellMonoRuntimeExecutionMode>
-    -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <TypeScriptToolsVersion>3.3</TypeScriptToolsVersion>
     <CompileTypeScriptDependsOn>_UnoSourceGenerator; $(CompileTypeScriptDependsOn)</CompileTypeScriptDependsOn>
@@ -35,7 +32,8 @@
   <ItemGroup>
     <WasmShellMonoEnvironment Include="MONO_GC_PARAMS" Value="soft-heap-limit=512m,nursery-size=64m,evacuation-threshold=66,major=marksweep" />
     <WasmShellMonoEnvironment Include="MONO_LOG_LEVEL" Value="debug" />
-    <WasmShellMonoEnvironment Include="MONO_LOG_MASK" Value="dll" />
+    <!--<WasmShellMonoEnvironment Include="MONO_LOG_MASK" Value="dll" />-->
+    <WasmShellMonoEnvironment Include="MONO_LOG_MASK" Value="gc" />
   </ItemGroup>
   <ItemGroup> 
     <EmbeddedResource Include="WasmCSS\Fonts.css" />
