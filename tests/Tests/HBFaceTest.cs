@@ -68,7 +68,7 @@ namespace HarfBuzzSharp.Tests
 		{
 			var tag = new Tag("kern");
 
-			using (var face = new Face((f, t, u) => Face.ReferenceTable(t)))
+			using (var face = new Face((f, t) => Face.ReferenceTable(t)))
 			{
 				var blob = face.ReferenceTable(tag);
 
@@ -86,19 +86,15 @@ namespace HarfBuzzSharp.Tests
 
 			Face face = null;
 			face = new Face(
-				(f, t, u) =>
+				(f, t) =>
 				{
-					Assert.Equal("User Data", u);
 					Assert.Equal(face, f);
 
 					didReference++;
 					return Face.ReferenceTable(t);
 				},
-				"User Data",
-				u =>
+				() =>
 				{
-					Assert.Equal("User Data", u);
-
 					didDestroy++;
 				});
 
