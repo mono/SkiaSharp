@@ -757,7 +757,6 @@ public struct Script, System.IEquatable<Script> {
 	public override int GetHashCode ();
 	public static Script Parse (string str);
 	public override string ToString ();
-	public static bool TryParse (string str, out Script script);
 	public static uint op_Implicit (Script script);
 	public static Script op_Implicit (uint tag);
 }
@@ -795,7 +794,6 @@ public enum SerializeFormat {
 ```csharp
 public struct Tag, System.IEquatable<Tag> {
 	// constructors
-	public Tag (string tag);
 	public Tag (char c1, char c2, char c3, char c4);
 	// fields
 	public static Tag Max;
@@ -805,6 +803,7 @@ public struct Tag, System.IEquatable<Tag> {
 	public virtual bool Equals (Tag other);
 	public override bool Equals (object obj);
 	public override int GetHashCode ();
+	public static Tag Parse (string tag);
 	public override string ToString ();
 	public static uint op_Implicit (Tag tag);
 	public static Tag op_Implicit (uint tag);
