@@ -9,33 +9,21 @@ namespace SkiaSharp
 			: base (h, owns)
 		{
 		}
-		
+
 		public static GRContext Create (GRBackend backend)
 		{
-			switch (backend) {
-				case GRBackend.Metal:
-					throw new NotSupportedException ();
-				case GRBackend.OpenGL:
-					return CreateGl ();
-				case GRBackend.Vulkan:
-					throw new NotSupportedException ();
-				default:
-					throw new ArgumentOutOfRangeException (nameof (backend));
-			}
+			if (backend != GRBackend.OpenGL)
+				throw new ArgumentOutOfRangeException (nameof (backend));
+
+			return CreateGl ();
 		}
 
 		public static GRContext Create (GRBackend backend, GRGlInterface backendContext)
 		{
-			switch (backend) {
-				case GRBackend.Metal:
-					throw new NotSupportedException ();
-				case GRBackend.OpenGL:
-					return CreateGl (backendContext);
-				case GRBackend.Vulkan:
-					throw new NotSupportedException ();
-				default:
-					throw new ArgumentOutOfRangeException (nameof (backend));
-			}
+			if (backend != GRBackend.OpenGL)
+				throw new ArgumentOutOfRangeException (nameof (backend));
+
+			return CreateGl (backendContext);
 		}
 
 		[Obsolete ("Use Create(GRBackend, GRGlInterface) instead.")]
@@ -55,16 +43,10 @@ namespace SkiaSharp
 
 		public static GRContext Create (GRBackend backend, GRVkBackendContext backendContext)
 		{
-			switch (backend) {
-				case GRBackend.Metal:
-					throw new NotSupportedException ();
-				case GRBackend.OpenGL:
-					throw new NotSupportedException ();
-				case GRBackend.Vulkan:
-					return CreateVulkan (backendContext);
-				default:
-					throw new ArgumentOutOfRangeException (nameof (backend));
-			}
+			if (backend != GRBackend.Vulkan)
+				throw new ArgumentOutOfRangeException (nameof (backend));
+
+			return CreateVulkan (backendContext);
 		}
 
 		public static GRContext CreateGl ()
