@@ -159,13 +159,14 @@ namespace HarfBuzzSharp
 	}
 
 	[Flags]
-	public enum Flags : uint
+	public enum BufferFlags : uint
 	{
 		Default = 0x00000000u,
-		Bot = 0x00000001u,
-		Eot = 0x00000002u,
+		BeginningOfText = 0x00000001u,
+		EndOfText = 0x00000002u,
 		PreserveDefaultIgnorables = 0x00000004u,
-		RemoveDefaultIgnorables = 0x00000008u
+		RemoveDefaultIgnorables = 0x00000008u,
+		DoNotInsertDottedCircle = 0x00000010u,
 	}
 
 	public enum ContentType

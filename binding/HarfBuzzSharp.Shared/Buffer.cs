@@ -33,7 +33,7 @@ namespace HarfBuzzSharp
 			set => HarfBuzzApi.hb_buffer_set_language (Handle, value.Handle);
 		}
 
-		public Flags Flags {
+		public BufferFlags Flags {
 			get => HarfBuzzApi.hb_buffer_get_flags (Handle);
 			set => HarfBuzzApi.hb_buffer_set_flags (Handle, value);
 		}

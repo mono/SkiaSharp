@@ -66,7 +66,7 @@ Added properties:
 ```csharp
 public ClusterLevel ClusterLevel { get; set; }
 public ContentType ContentType { get; set; }
-public Flags Flags { get; set; }
+public BufferFlags Flags { get; set; }
 public uint InvisibleGlyph { get; set; }
 public Language Language { get; set; }
 public uint ReplacementCodepoint { get; set; }
@@ -310,15 +310,16 @@ public enum ContentType {
 }
 ```
 
-#### New Type: HarfBuzzSharp.Flags
+#### New Type: HarfBuzzSharp.BufferFlags
 
 ```csharp
 [Serializable]
 [Flags]
-public enum Flags {
-	Bot = 1,
+public enum BufferFlags {
+	BeginningOfText = 1,
 	Default = 0,
-	Eot = 2,
+	DoNotInsertDottedCircle = 10,
+	EndOfText = 2,
 	PreserveDefaultIgnorables = 4,
 	RemoveDefaultIgnorables = 8,
 }
