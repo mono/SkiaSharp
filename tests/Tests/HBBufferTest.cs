@@ -16,6 +16,8 @@ namespace HarfBuzzSharp.Tests
 		{
 			using (var buffer = new Buffer())
 			{
+				buffer.Direction = Direction.LeftToRight;
+
 				Assert.Equal(ContentType.Invalid, buffer.ContentType);
 
 				buffer.AddUtf8(SimpleText);
@@ -107,6 +109,8 @@ namespace HarfBuzzSharp.Tests
 		{
 			using (var buffer = new Buffer())
 			{
+				buffer.Direction = Direction.LeftToRight;
+
 				buffer.AddUtf8(SimpleText);
 
 				Font.Shape(buffer);
@@ -223,13 +227,18 @@ namespace HarfBuzzSharp.Tests
 		{
 			using (var buffer = new Buffer())
 			{
+				buffer.Direction = Direction.LeftToRight;
+
 				buffer.AddUtf16("Â̶");
 
 				Font.Shape(buffer);
 
 				buffer.NormalizeGlyphs();
 
-				Assert.Equal(1027, buffer.GlyphPositions[1].YOffset);
+				Assert.Equal(0, buffer.GlyphPositions[0].XOffset);
+				Assert.Equal(0, buffer.GlyphPositions[0].YOffset);
+				Assert.Equal(-1135, buffer.GlyphPositions[1].XOffset);
+				Assert.Equal(0, buffer.GlyphPositions[1].YOffset);
 			}
 		}
 
