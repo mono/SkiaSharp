@@ -71,6 +71,11 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp",                          new Version (1, 57, 0) },
     { "SkiaSharp.NativeAssets.Linux",       new Version (1, 57, 0) },
     { "SkiaSharp.Views",                    new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Desktop.Common",     new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Gtk2",               new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Gtk3",               new Version (1, 57, 0) },
+    { "SkiaSharp.Views.WindowsForms",       new Version (1, 57, 0) },
+    { "SkiaSharp.Views.WPF",                new Version (1, 57, 0) },
     { "SkiaSharp.Views.Forms",              new Version (1, 57, 0) },
     { "HarfBuzzSharp",                      new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.Linux",   new Version (1, 0, 0) },
@@ -380,6 +385,7 @@ Task ("nuget-only")
         removePlatforms (xdoc);
 
         var outDir = $"./output/{dir}/nuget";
+        EnsureDirectoryExists (outDir);
 
         setVersion (xdoc, "");
         xdoc.Save ($"{outDir}/{id}.nuspec");

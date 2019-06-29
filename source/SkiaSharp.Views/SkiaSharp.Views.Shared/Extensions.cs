@@ -7,7 +7,7 @@ namespace SkiaSharp.Views.tvOS
 namespace SkiaSharp.Views.watchOS
 #elif __IOS__
 namespace SkiaSharp.Views.iOS
-#elif __DESKTOP__ || __WPF__ || __GTK__
+#elif __DESKTOP__
 namespace SkiaSharp.Views.Desktop
 #elif WINDOWS_UWP
 namespace SkiaSharp.Views.UWP
@@ -106,7 +106,7 @@ namespace SkiaSharp.Views.Tizen
 			return new System.Drawing.Size(size.Width, size.Height);
 		}
 
-#if __DESKTOP__ || __WPF__
+#if __DESKTOP__ && !NET_STANDARD
 
 		// System.Drawing.Bitmap
 
@@ -206,7 +206,7 @@ namespace SkiaSharp.Views.Tizen
 		}
 #endif
 
-#if __ANDROID__ || __DESKTOP__ || __WPF__
+#if __ANDROID__ || __DESKTOP__
 		// System.Drawing.Color
 
 		public static SKColor ToSKColor(this System.Drawing.Color color)
