@@ -91,7 +91,7 @@ Task ("externals-windows")
             $"target_os='win' target_cpu='{skiaArch}' " +
             $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true " +
             $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
-            $"skia_vulkan_sdk='{SUPPORT_VULKAN ? VULKAN_SDK_HOME : ""}' " +
+            $"skia_vulkan_sdk='{(SUPPORT_VULKAN ? VULKAN_SDK_HOME : "")}' " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '/MT', '/EHsc', '/Z7' ] " +
             $"extra_ldflags=[ '/DEBUG:FULL' ]");
 
@@ -584,7 +584,7 @@ Task ("externals-linux")
             $"target_os='linux' target_cpu='{arch}' " +
             $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
             $"skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
-            $"skia_vulkan_sdk='{SUPPORT_VULKAN ? VULKAN_SDK_HOME : ""}' " +
+            $"skia_vulkan_sdk='{(SUPPORT_VULKAN ? VULKAN_SDK_HOME : "")}' " +
             $"skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")} " +
             $"extra_cflags=[ '-DSKIA_C_DLL' ] " +
             $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc' ] " +
