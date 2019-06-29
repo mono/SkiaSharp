@@ -46,7 +46,7 @@ DirectoryPath NUGET_PACKAGES = EnvironmentVariable ("NUGET_PACKAGES") ?? PROFILE
 DirectoryPath ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? EnvironmentVariable ("ANDROID_HOME") ?? PROFILE_PATH.Combine ("android-sdk");
 DirectoryPath ANDROID_NDK_HOME = EnvironmentVariable ("ANDROID_NDK_HOME") ?? EnvironmentVariable ("ANDROID_NDK_ROOT") ?? PROFILE_PATH.Combine ("android-ndk");
 DirectoryPath TIZEN_STUDIO_HOME = EnvironmentVariable ("TIZEN_STUDIO_HOME") ?? PROFILE_PATH.Combine ("tizen-studio");
-DirectoryPath VULKAN_SDK_HOME = EnvironmentVariable ("VULKAN_SDK_HOME") ?? "";
+DirectoryPath VULKAN_SDK_HOME = EnvironmentVariable ("VULKAN_SDK_HOME") ?? EnvironmentVariable ("VULKAN_SDK") ?? "";
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/depot_tools"));
