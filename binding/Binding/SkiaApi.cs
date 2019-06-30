@@ -65,6 +65,7 @@ using sk_wstream_managedstream_t = System.IntPtr;
 using sk_wstream_t = System.IntPtr;
 using sk_xmlstreamwriter_t = System.IntPtr;
 using sk_xmlwriter_t = System.IntPtr;
+using System.Linq;
 
 namespace SkiaSharp
 {
@@ -131,7 +132,7 @@ namespace SkiaSharp
 		public extern static sk_colorspace_t sk_colorspace_new_rgb_with_gamma_named (SKNamedGamma gamma, sk_matrix44_t toXYZD50);
 
 		public static sk_colorspace_t sk_colorspace_new_rgb_with_gamma_named_and_gamut (SKNamedGamma gamma, SKColorSpaceGamut gamut)
-			=> throw new NotSupportedException("not support in current native skia build");
+			=> throw new NotSupportedException ("not support in current native skia build");
 
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
@@ -149,7 +150,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_colorspace_transfer_fn_invert (ref SKColorSpaceTransferFn transfer, out SKColorSpaceTransferFn inverted);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static float sk_colorspace_transfer_fn_transform(ref SKColorSpaceTransferFn transfer, float x);
+		public extern static float sk_colorspace_transfer_fn_transform (ref SKColorSpaceTransferFn transfer, float x);
 
 		// color type
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1017,10 +1018,61 @@ namespace SkiaSharp
 		public extern static sk_shader_t sk_shader_new_sweep_gradient (ref SKPoint center, [In] SKColor[] colors, float[] colorPos, int count, SKShaderTileMode mode, nullptr_t matrixZero, float startAngle, float endAngle);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_sweep_gradient (ref SKPoint center, [In] SKColor[] colors, float[] colorPos, int count, SKShaderTileMode mode, ref SKMatrix matrix, float startAngle, float endAngle);
+
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_shader_t sk_shader_new_two_point_conical_gradient (ref SKPoint start, float startRadius, ref SKPoint end, float endRadius, [In] SKColor[] colors, float[] colorPos, int count, SKShaderTileMode mode, ref SKMatrix matrix);
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_shader_t sk_shader_new_two_point_conical_gradient (ref SKPoint start, float startRadius, ref SKPoint end, float endRadius, [In] SKColor[] colors, float[] colorPos, int count, SKShaderTileMode mode, voidptr_t matrixZero);
+		public extern static sk_shader_t sk_shader_new_two_point_conical_gradient (ref sk_shader_new_two_point_conical_gradient_params parms);
+
+		public unsafe static sk_shader_t sk_shader_new_two_point_conical_gradient (ref SKPoint start, float startRadius, ref SKPoint end, float endRadius, [In] SKColor[] colors, float[] colorPos, int count, SKShaderTileMode mode, ref SKMatrix matrix)
+		{
+			var p = new sk_shader_new_two_point_conical_gradient_params ();
+
+			var intColors = colors.Select (c => (uint)c).ToArray (); ;
+
+			fixed (SKPoint* pStart = &start)
+			fixed (SKPoint* pEnd = &end)
+			fixed (float* pColorPos = colorPos)
+			fixed (uint* pColors = intColors)
+			fixed (SKMatrix* pMatrix = &matrix)
+			{
+				p.start = pStart;
+				p.startRadius = startRadius;
+				p.end = pEnd;
+				p.endRadius = endRadius;
+				p.colors = pColors;
+				p.colorPos = pColorPos;
+				p.count = count;
+				p.mode = mode;
+				p.matrix = pMatrix;
+
+				return sk_shader_new_two_point_conical_gradient (ref p);
+			}
+		}
+
+		public unsafe static sk_shader_t sk_shader_new_two_point_conical_gradient (ref SKPoint start, float startRadius, ref SKPoint end, float endRadius, [In] SKColor[] colors, float[] colorPos, int count, SKShaderTileMode mode, voidptr_t matrixZero)
+		{
+			var p = new sk_shader_new_two_point_conical_gradient_params ();
+
+			var intColors = colors.Select (c => (uint)c).ToArray (); ;
+
+			fixed (SKPoint* pStart = &start)
+			fixed (SKPoint* pEnd = &end)
+			fixed (float* pColorPos = colorPos)
+			fixed (uint* pColors = intColors)
+			{
+				p.start = pStart;
+				p.startRadius = startRadius;
+				p.end = pEnd;
+				p.endRadius = endRadius;
+				p.colors = pColors;
+				p.colorPos = pColorPos;
+				p.count = count;
+				p.mode = mode;
+				p.matrix = (SKMatrix*)null;
+
+				return sk_shader_new_two_point_conical_gradient (ref p);
+			}
+		}
+
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_linear_gradient ([In] SKPoint[] points, [In] SKColor[] colors, nullptr_t colorPosZero, int count, SKShaderTileMode mode, ref SKMatrix matrix);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1033,10 +1085,57 @@ namespace SkiaSharp
 		public extern static sk_shader_t sk_shader_new_sweep_gradient (ref SKPoint center, [In] SKColor[] colors, nullptr_t colorPosZero, int count, SKShaderTileMode mode, nullptr_t matrixZero, float startAngle, float endAngle);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_sweep_gradient (ref SKPoint center, [In] SKColor[] colors, nullptr_t colorPosZero, int count, SKShaderTileMode mode, ref SKMatrix matrixZero, float startAngle, float endAngle);
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_shader_t sk_shader_new_two_point_conical_gradient (ref SKPoint start, float startRadius, ref SKPoint end, float endRadius, [In] SKColor[] colors, nullptr_t colorPosZero, int count, SKShaderTileMode mode, ref SKMatrix matrix);
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_shader_t sk_shader_new_two_point_conical_gradient (ref SKPoint start, float startRadius, ref SKPoint end, float endRadius, [In] SKColor[] colors, nullptr_t colorPosZero, int count, SKShaderTileMode mode, nullptr_t matrixZero);
+
+		public unsafe static sk_shader_t sk_shader_new_two_point_conical_gradient (ref SKPoint start, float startRadius, ref SKPoint end, float endRadius, [In] SKColor[] colors, nullptr_t colorPosZero, int count, SKShaderTileMode mode, ref SKMatrix matrix)
+		{
+			var p = new sk_shader_new_two_point_conical_gradient_params ();
+
+			var intColors = colors.Select (c => (uint)c).ToArray ();
+
+			fixed (SKPoint* pStart = &start)
+			fixed (SKPoint* pEnd = &end)
+			fixed (SKMatrix* pMatrix = &matrix)
+			fixed (uint* pColors = intColors)
+			{
+				p.start = pStart;
+				p.startRadius = startRadius;
+				p.end = pEnd;
+				p.endRadius = endRadius;
+				p.colors = pColors;
+				p.colorPos = null;
+				p.count = count;
+				p.mode = mode;
+				p.matrix = pMatrix;
+
+				return sk_shader_new_two_point_conical_gradient (ref p);
+			}
+		}
+
+
+		public unsafe static sk_shader_t sk_shader_new_two_point_conical_gradient (ref SKPoint start, float startRadius, ref SKPoint end, float endRadius, [In] SKColor[] colors, nullptr_t colorPosZero, int count, SKShaderTileMode mode, nullptr_t matrixZero)
+		{
+			var p = new sk_shader_new_two_point_conical_gradient_params ();
+
+			var intColors = colors.Select (c => (uint)c).ToArray ();
+
+			fixed (SKPoint* pStart = &start)
+			fixed (SKPoint* pEnd = &end)
+			fixed (uint* pColors = intColors)
+			{
+				p.start = pStart;
+				p.startRadius = startRadius;
+				p.end = pEnd;
+				p.endRadius = endRadius;
+				p.colors = pColors;
+				p.colorPos = null;
+				p.count = count;
+				p.mode = mode;
+				p.matrix = (SKMatrix*)null;
+
+				return sk_shader_new_two_point_conical_gradient (ref p);
+			}
+		}
+
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_perlin_noise_fractal_noise (int numOctaves, float baseFrequencyX, float baseFrequencyY, float seed, nullptr_t tileSizeZero);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1930,6 +2029,19 @@ namespace SkiaSharp
 		public extern static void sk_textblob_builder_runbuffer_set_utf8_text (ref SKTextBlobBuilderRunBuffer buffer, byte* text, int count);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_textblob_builder_runbuffer_set_clusters (ref SKTextBlobBuilderRunBuffer buffer, UInt32* clusters, int count);
+	}
+
+	internal unsafe struct sk_shader_new_two_point_conical_gradient_params
+	{
+		public SKPoint* start;
+		public float startRadius;
+		public SKPoint* end;
+		public float endRadius;
+		public uint* colors;
+		public float* colorPos;
+		public int count;
+		public SKShaderTileMode mode;
+		public SKMatrix* matrix;
 	}
 
 #pragma warning restore IDE1006 // Naming Styles
