@@ -185,10 +185,10 @@ Task ("tests-only")
     if (changed) {
         xdoc.Save (netCoreTestProj);
     }
-    CleanDirectories ("./tests/packages/skiasharp*");
-    CleanDirectories ("./tests/packages/harfbuzzsharp*");
+    CleanDirectories ($"./{PACKAGE_CACHE_PATH}/skiasharp*");
+    CleanDirectories ($"./{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
     EnsureDirectoryExists ("./output/tests/netcore");
-    RunMSBuildRestoreLocal (netCoreTestProj, "./tests/packages");
+    RunMSBuild (netCoreTestProj, restoreOnly: true);
     RunNetCoreTests (netCoreTestProj);
     CopyFile ("./tests/SkiaSharp.NetCore.Tests/TestResults/TestResults.xml", "./output/tests/netcore/TestResult.xml");
 });
@@ -200,12 +200,6 @@ Task ("tests-only")
 Task ("samples")
     .Does (() =>
 {
-    // create the samples archive
-    CreateSamplesZip ("./samples/", "./output/");
-
-    // create the workbooks archive
-    Zip ("./workbooks", "./output/workbooks.zip");
-
     var isLinux = IsRunningOnLinux ();
     var isMac = IsRunningOnMac ();
     var isWin = IsRunningOnWindows ();
@@ -253,7 +247,17 @@ Task ("samples")
         }
     });
 
-    var solutions = GetFiles ("./samples/**/*.sln");
+    // create the workbooks archive
+    Zip ("./workbooks", "./output/workbooks.zip");
+
+    // create the samples archive
+    CreateSamplesDirectory ("./samples/", "./output/samples/");
+    Zip ("./output/samples/", "./output/samples.zip");
+
+    // build the newly migrated samples
+    CleanDirectories ($"./{PACKAGE_CACHE_PATH}/skiasharp*");
+    CleanDirectories ($"./{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
+    var solutions = GetFiles ("./output/samples/**/*.sln");
     foreach (var sln in solutions) {
         var name = sln.GetFilenameWithoutExtension ();
         var slnPlatform = name.GetExtension ();
