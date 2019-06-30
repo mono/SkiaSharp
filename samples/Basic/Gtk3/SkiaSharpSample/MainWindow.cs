@@ -45,16 +45,16 @@ namespace SkiaSharpSample
 			canvas.Scale(scale);
 
 			// make sure the canvas is blank
-			canvas.Clear(SKColors.Red);
+			canvas.Clear(SKColors.White);
 
 			// draw some text
 			var paint = new SKPaint
 			{
-				Color = SKColors.Blue,
+				Color = SKColors.Black,
 				IsAntialias = true,
 				Style = SKPaintStyle.Fill,
 				TextAlign = SKTextAlign.Center,
-				TextSize = 48
+				TextSize = 24
 			};
 			var coord = new SKPoint(scaledSize.Width / 2, (scaledSize.Height + paint.TextSize) / 2);
 			canvas.DrawText("SkiaSharp", coord, paint);

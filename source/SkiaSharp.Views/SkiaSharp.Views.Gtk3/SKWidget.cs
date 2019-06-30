@@ -20,11 +20,6 @@ namespace SkiaSharp.Views.Gtk
 		[Category("Appearance")]
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
-		protected override void OnSizeAllocated(Gdk.Rectangle allocation)
-		{
-			base.OnSizeAllocated(allocation);
-		}
-
 		protected override bool OnDrawn(Context cr)
 		{
 			// get the pixbuf
@@ -43,14 +38,14 @@ namespace SkiaSharp.Views.Gtk
 
 			pix.MarkDirty();
 
-			// // swap R and B
-			// if (imgInfo.ColorType == SKColorType.Bgra8888)
-			// {
-			// 	using (var pixmap = surface.PeekPixels())
-			// 	{
-			// 		SKSwizzle.SwapRedBlue(pixmap.GetPixels(), imgInfo.Width * imgInfo.Height);
-			// 	}
-			// }
+			// swap R and B
+			if (imgInfo.ColorType == SKColorType.Rgba8888)
+			{
+				using (var pixmap = surface.PeekPixels())
+				{
+					SKSwizzle.SwapRedBlue(pixmap.GetPixels(), imgInfo.Width * imgInfo.Height);
+				}
+			}
 
 			// write the pixbuf to the graphics
 			cr.SetSourceSurface(pix, 0, 0);
