@@ -1,35 +1,63 @@
 using System;
 using Gtk;
-using UI = Gtk.Builder.ObjectAttribute;
+using SkiaSharp;
+using SkiaSharp.Views.Desktop;
+using SkiaSharp.Views.Gtk;
 
 namespace SkiaSharpSample
 {
-    class MainWindow : Window
-    {
-        [UI] private Label _label1 = null;
-        [UI] private Button _button1 = null;
+	public class MainWindow : Window
+	{
+		private SKWidget skiaView;
 
-        private int _counter;
+		public MainWindow()
+			: this(new Builder("MainWindow.glade"))
+		{
+		}
 
-        public MainWindow() : this(new Builder("MainWindow.glade")) { }
+		private MainWindow(Builder builder)
+			: base(builder.GetObject("MainWindow").Handle)
+		{
+			builder.Autoconnect(this);
+			DeleteEvent += OnWindowDeleteEvent;
 
-        private MainWindow(Builder builder) : base(builder.GetObject("MainWindow").Handle)
-        {
-            builder.Autoconnect(this);
+			skiaView = new SKWidget();
+			skiaView.PaintSurface += OnPaintSurface;
+			skiaView.Show();
+			Child = skiaView;
+		}
 
-            DeleteEvent += Window_DeleteEvent;
-            _button1.Clicked += Button1_Clicked;
-        }
+		private void OnWindowDeleteEvent(object sender, DeleteEventArgs a)
+		{
+			Application.Quit();
+		}
 
-        private void Window_DeleteEvent(object sender, DeleteEventArgs a)
-        {
-            Application.Quit();
-        }
+		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
+		{
+			// the the canvas and properties
+			var canvas = e.Surface.Canvas;
 
-        private void Button1_Clicked(object sender, EventArgs a)
-        {
-            _counter++;
-            _label1.Text = "Hello World! This button has been clicked " + _counter + " time(s).";
-        }
-    }
+			// get the screen density for scaling
+			var scale = 1f;
+			var scaledSize = new SKSize(e.Info.Width / scale, e.Info.Height / scale);
+
+			// handle the device screen density
+			canvas.Scale(scale);
+
+			// make sure the canvas is blank
+			canvas.Clear(SKColors.Red);
+
+			// draw some text
+			var paint = new SKPaint
+			{
+				Color = SKColors.Blue,
+				IsAntialias = true,
+				Style = SKPaintStyle.Fill,
+				TextAlign = SKTextAlign.Center,
+				TextSize = 48
+			};
+			var coord = new SKPoint(scaledSize.Width / 2, (scaledSize.Height + paint.TextSize) / 2);
+			canvas.DrawText("SkiaSharp", coord, paint);
+		}
+	}
 }

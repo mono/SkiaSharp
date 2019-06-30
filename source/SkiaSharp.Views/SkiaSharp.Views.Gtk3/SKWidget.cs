@@ -8,7 +8,7 @@ namespace SkiaSharp.Views.Gtk
 	[ToolboxItem(true)]
 	public class SKWidget : global::Gtk.DrawingArea
 	{
-		private Gdk.Pixbuf pix;
+		private ImageSurface pix;
 		private SKSurface surface;
 
 		public SKWidget()
@@ -20,41 +20,41 @@ namespace SkiaSharp.Views.Gtk
 		[Category("Appearance")]
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
+		protected override void OnSizeAllocated(Gdk.Rectangle allocation)
+		{
+			base.OnSizeAllocated(allocation);
+		}
+
 		protected override bool OnDrawn(Context cr)
 		{
-			//var window = evnt.Window;
-			//var area = evnt.Area;
+			// get the pixbuf
+			var imgInfo = CreateDrawingObjects();
 
-			//// get the pixbuf
-			//var imgInfo = CreateDrawingObjects();
+			if (imgInfo.Width == 0 || imgInfo.Height == 0)
+				return true;
 
-			//if (imgInfo.Width == 0 || imgInfo.Height == 0)
-			//	return true;
+			// start drawing
+			using (new SKAutoCanvasRestore(surface.Canvas, true))
+			{
+				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, imgInfo));
+			}
 
-			//// start drawing
-			//using (new SKAutoCanvasRestore(surface.Canvas, true))
-			//{
-			//	OnPaintSurface(new SKPaintSurfaceEventArgs(surface, imgInfo));
-			//}
+			surface.Canvas.Flush();
 
-			//surface.Canvas.Flush();
+			pix.MarkDirty();
 
-			//// swap R and B
-			//if (imgInfo.ColorType == SKColorType.Bgra8888)
-			//{
-			//	using (var pixmap = surface.PeekPixels())
-			//	{
-			//		SKSwizzle.SwapRedBlue(pixmap.GetPixels(), imgInfo.Width * imgInfo.Height);
-			//	}
-			//}
+			// // swap R and B
+			// if (imgInfo.ColorType == SKColorType.Bgra8888)
+			// {
+			// 	using (var pixmap = surface.PeekPixels())
+			// 	{
+			// 		SKSwizzle.SwapRedBlue(pixmap.GetPixels(), imgInfo.Width * imgInfo.Height);
+			// 	}
+			// }
 
-			//// write the pixbuf to the graphics
-			//window.Clear();
-			//window.DrawPixbuf(null, pix, 0, 0, 0, 0, -1, -1, Gdk.RgbDither.None, 0, 0);
-
-			cr.SetSourceRGB(1, 0, 0);
-			cr.Rectangle(0, 0, Allocation.Width, Allocation.Height);
-			cr.Fill();
+			// write the pixbuf to the graphics
+			cr.SetSourceSurface(pix, 0, 0);
+			cr.Paint();
 
 			return true;
 		}
@@ -84,10 +84,10 @@ namespace SkiaSharp.Views.Gtk
 
 				if (imgInfo.Width != 0 && imgInfo.Height != 0)
 				{
-					pix = new Gdk.Pixbuf(Gdk.Colorspace.Rgb, true, 8, imgInfo.Width, imgInfo.Height);
+					pix = new ImageSurface(Format.Argb32, imgInfo.Width, imgInfo.Height);
 
 					// (re)create the SkiaSharp drawing objects
-					surface = SKSurface.Create(imgInfo, pix.Pixels, imgInfo.RowBytes);
+					surface = SKSurface.Create(imgInfo, pix.DataPtr, imgInfo.RowBytes);
 				}
 			}
 
