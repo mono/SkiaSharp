@@ -167,7 +167,7 @@ void CreateSamplesDirectory (DirectoryPath samplesDirPath, DirectoryPath outputD
 
                 // get the path of the project relative to the samples directory
                 var relProjectPath = (FilePath) m.Groups [1].Value;
-                var absProjectPath = GetFiles (file.GetDirectory ().CombineWithFilePath (relProjectPath).FullPath).First ();
+                var absProjectPath = GetFullPath (file, relProjectPath);
                 var relSamplesPath = samplesDirPath.GetRelativePath (absProjectPath);
                 if (!relSamplesPath.FullPath.StartsWith (".."))
                     continue;
@@ -206,11 +206,7 @@ void CreateSamplesDirectory (DirectoryPath samplesDirPath, DirectoryPath outputD
             foreach (var projItem in projItems) {
                 // get files in the include
                 var relFilePath = (FilePath) projItem.Attribute ("Include").Value;
-                var absFilePath = GetFiles (file.GetDirectory ().CombineWithFilePath (relFilePath).FullPath).FirstOrDefault ();
-
-                // ignore files that do not exist
-                if (absFilePath == null)
-                    continue;
+                var absFilePath = GetFullPath (file, relFilePath);
 
                 // ignore files in the samples directory
                 var relSamplesPath = samplesDirPath.GetRelativePath (absFilePath);
@@ -218,7 +214,7 @@ void CreateSamplesDirectory (DirectoryPath samplesDirPath, DirectoryPath outputD
                     continue;
 
                 // substitute <ProjectReference> with <PackageReference>
-                if (projItem.Name.LocalName == "ProjectReference") {
+                if (projItem.Name.LocalName == "ProjectReference" && FileExists (absFilePath)) {
                     var xReference = XDocument.Load (absFilePath.FullPath);
                     var packagingGroup = xReference.Root
                         .Elements ().Where (e => e.Name.LocalName == "PropertyGroup")
@@ -253,9 +249,7 @@ void CreateSamplesDirectory (DirectoryPath samplesDirPath, DirectoryPath outputD
                 var project = import.Attribute ("Project").Value;
 
                 // skip files inside the samples directory or do not exist
-                var absProject = GetFiles (file.GetDirectory ().CombineWithFilePath (project).FullPath).FirstOrDefault ();
-                if (absProject == null)
-                    continue;
+                var absProject = GetFullPath (file, project);
                 var relSamplesPath = samplesDirPath.GetRelativePath (absProject);
                 if (!relSamplesPath.FullPath.StartsWith (".."))
                     continue;
@@ -274,6 +268,13 @@ void CreateSamplesDirectory (DirectoryPath samplesDirPath, DirectoryPath outputD
             CopyFile (file, dest);
         }
     }
+}
+
+FilePath GetFullPath (FilePath root, FilePath path)
+{
+    path = path.FullPath.Replace ("*", "_");
+    path = root.GetDirectory ().CombineWithFilePath (path);
+    return (FilePath) System.IO.Path.GetFullPath (path.FullPath);
 }
 
 IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories (DirectoryPath rootDir)
