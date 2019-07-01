@@ -254,6 +254,8 @@ Task ("samples")
     CreateSamplesDirectory ("./samples/", "./output/samples/");
     Zip ("./output/samples/", "./output/samples.zip");
 
+    return;
+
     // build the newly migrated samples
     CleanDirectories ($"./{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"./{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
