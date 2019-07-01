@@ -2,39 +2,42 @@
 using System.Runtime.InteropServices;
 using System.Threading;
 
-using NativePointerDictionary = System.Collections.Concurrent.ConcurrentDictionary<System.IntPtr, SkiaSharp.SKDrawable>;
-
 namespace SkiaSharp
 {
 	public class SKDrawable : SKObject
 	{
-		private static readonly NativePointerDictionary managedDrawables = new NativePointerDictionary ();
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		internal delegate void DrawDelegate (IntPtr d, IntPtr context, IntPtr canvas);
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		internal delegate void GetBoundsDelegate (IntPtr d, IntPtr context, out SKRect rect);
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		internal delegate IntPtr NewPictureSnapshotDelegate (IntPtr d, IntPtr context);
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		internal delegate void DestroyDelegate (IntPtr d, IntPtr context);
 
-		// delegate declarations
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate void draw_delegate (IntPtr managedDrawablePtr, IntPtr canvasPtr);
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate void getBounds_delegate (IntPtr managedDrawablePtr, out SKRect rect);
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate IntPtr newPictureSnapshot_delegate (IntPtr managedDrawablePtr);
+		[StructLayout (LayoutKind.Sequential)]
+		internal struct Procs
+		{
+			public DrawDelegate fDraw;
+			public GetBoundsDelegate fGetBounds;
+			public NewPictureSnapshotDelegate fNewPictureSnapshot;
+			public DestroyDelegate fDestroy;
+		}
 
-		// delegate fields
-		private static readonly draw_delegate fDraw;
-		private static readonly getBounds_delegate fGetBounds;
-		private static readonly newPictureSnapshot_delegate fNewPictureSnapshot;
+		private static readonly Procs delegates;
 
 		private int fromNative;
 
 		static SKDrawable ()
 		{
-			fDraw = new draw_delegate (DrawInternal);
-			fGetBounds = new getBounds_delegate (GetBoundsInternal);
-			fNewPictureSnapshot = new newPictureSnapshot_delegate (NewPictureSnapshotInternal);
+			delegates = new Procs {
+				fDraw = DrawInternal,
+				fGetBounds = GetBoundsInternal,
+				fNewPictureSnapshot = NewPictureSnapshotInternal,
+				fDestroy = DestroyInternal,
+			};
 
-			SkiaApi.sk_manageddrawable_set_delegates (
-				Marshal.GetFunctionPointerForDelegate (fDraw),
-				Marshal.GetFunctionPointerForDelegate (fGetBounds),
-				Marshal.GetFunctionPointerForDelegate (fNewPictureSnapshot));
+			SkiaApi.sk_manageddrawable_set_procs (delegates);
 		}
 
 		protected SKDrawable ()
@@ -43,35 +46,21 @@ namespace SkiaSharp
 		}
 
 		protected SKDrawable (bool owns)
-			: base (SkiaApi.sk_manageddrawable_new (), owns)
+			: base (IntPtr.Zero, owns)
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKDrawable instance.");
-			}
-
-			managedDrawables.TryAdd (Handle, this);
+			DelegateProxies.Create (this, out _, out var ctx);
+			Handle = SkiaApi.sk_manageddrawable_new (ctx);
 		}
 
-		[Preserve]
 		internal SKDrawable (IntPtr x, bool owns)
 			: base (x, owns)
 		{
 		}
 
-		private void DisposeFromNative ()
-		{
-			Interlocked.Exchange (ref fromNative, 1);
-			Dispose ();
-		}
-
 		protected override void Dispose (bool disposing)
 		{
-			if (disposing) {
-				managedDrawables.TryRemove (Handle, out var managedDrawable);
-			}
-
 			if (Interlocked.CompareExchange (ref fromNative, 0, 0) == 0 && Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_manageddrawable_destroy (Handle);
+				SkiaApi.sk_manageddrawable_unref (Handle);
 			}
 
 			base.Dispose (disposing);
@@ -105,51 +94,45 @@ namespace SkiaSharp
 		{
 		}
 
-		protected virtual SKRect OnGetBounds () => new SKRect ();
+		protected virtual SKRect OnGetBounds () => SKRect.Empty;
 
 		protected virtual SKPicture OnSnapshot ()
 		{
-			var recorder = new SKPictureRecorder ();
-			var canvas = recorder.BeginRecording (Bounds);
-			Draw (canvas, 0, 0);
-			return recorder.EndRecording ();
-		}
-
-		// unmanaged <-> managed methods (static for iOS)
-
-		[MonoPInvokeCallback (typeof (draw_delegate))]
-		private static void DrawInternal (IntPtr managedDrawablePtr, IntPtr canvas)
-		{
-			AsManagedDrawable (managedDrawablePtr).OnDraw (GetObject<SKCanvas> (canvas));
-		}
-
-		[MonoPInvokeCallback (typeof (getBounds_delegate))]
-		private static void GetBoundsInternal (IntPtr managedDrawablePtr, out SKRect rect)
-		{
-			rect = AsManagedDrawable (managedDrawablePtr).OnGetBounds ();
-		}
-
-		[MonoPInvokeCallback (typeof (newPictureSnapshot_delegate))]
-		private static IntPtr NewPictureSnapshotInternal (IntPtr managedDrawablePtr)
-		{
-			return AsManagedDrawable (managedDrawablePtr).OnSnapshot ().Handle;
-		}
-
-		private static SKDrawable AsManagedDrawable (IntPtr ptr)
-		{
-			if (AsManagedDrawable (ptr, out var target)) {
-				return target;
+			using (var recorder = new SKPictureRecorder ()) {
+				var canvas = recorder.BeginRecording (Bounds);
+				Draw (canvas, 0, 0);
+				return recorder.EndRecording ();
 			}
-			throw new ObjectDisposedException ("SKDrawable: " + ptr);
 		}
 
-		private static bool AsManagedDrawable (IntPtr ptr, out SKDrawable target)
+		[MonoPInvokeCallback (typeof (DrawDelegate))]
+		private static void DrawInternal (IntPtr d, IntPtr context, IntPtr canvas)
 		{
-			if (managedDrawables.TryGetValue (ptr, out target)) {
-				return true;
-			}
-			target = null;
-			return false;
+			var drawable = DelegateProxies.Get<SKDrawable> (context, out _);
+			drawable.OnDraw (GetObject<SKCanvas> (canvas));
+		}
+
+		[MonoPInvokeCallback (typeof (GetBoundsDelegate))]
+		private static void GetBoundsInternal (IntPtr d, IntPtr context, out SKRect rect)
+		{
+			var drawable = DelegateProxies.Get<SKDrawable> (context, out _);
+			rect = drawable.OnGetBounds ();
+		}
+
+		[MonoPInvokeCallback (typeof (NewPictureSnapshotDelegate))]
+		private static IntPtr NewPictureSnapshotInternal (IntPtr d, IntPtr context)
+		{
+			var drawable = DelegateProxies.Get<SKDrawable> (context, out _);
+			return drawable.OnSnapshot ()?.Handle ?? IntPtr.Zero;
+		}
+
+		[MonoPInvokeCallback (typeof (DestroyDelegate))]
+		private static void DestroyInternal (IntPtr d, IntPtr context)
+		{
+			var drawable = DelegateProxies.Get<SKDrawable> (context, out var gch);
+			Interlocked.Exchange (ref drawable.fromNative, 1);
+			gch.Free ();
+			drawable.Dispose ();
 		}
 	}
 }

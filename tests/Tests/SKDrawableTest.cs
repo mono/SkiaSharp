@@ -58,6 +58,19 @@ namespace SkiaSharp.Tests
 				Assert.Equal(SKColors.Blue, bmp.GetPixel(50, 50));
 			}
 		}
+
+		[SkippableFact]
+		public void CanvasDrawsDrawable()
+		{
+			using (var drawable = new TestDrawable())
+			using (var bmp = new SKBitmap(100, 100))
+			using (var canvas = new SKCanvas(bmp))
+			{
+				canvas.DrawDrawable(drawable, 0, 0);
+
+				Assert.Equal(SKColors.Blue, bmp.GetPixel(50, 50));
+			}
+		}
 	}
 
 	class TestDrawable : SKDrawable

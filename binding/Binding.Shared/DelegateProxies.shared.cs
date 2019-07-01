@@ -15,13 +15,12 @@ namespace SkiaSharp
 	internal static partial class DelegateProxies
 	{
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
-		public static T Create<T> (Delegate managedDel, T nativeDel, out GCHandle gch, out IntPtr contextPtr)
-			where T : Delegate
+		public static T Create<T> (object managedDel, T nativeDel, out GCHandle gch, out IntPtr contextPtr)
 		{
 			if (managedDel == null) {
 				gch = default (GCHandle);
 				contextPtr = IntPtr.Zero;
-				return null;
+				return default (T);
 			}
 
 			gch = GCHandle.Alloc (managedDel);
@@ -30,7 +29,7 @@ namespace SkiaSharp
 		}
 
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
-		public static void Create (Delegate managedDel, out GCHandle gch, out IntPtr contextPtr)
+		public static void Create (object managedDel, out GCHandle gch, out IntPtr contextPtr)
 		{
 			if (managedDel == null) {
 				gch = default (GCHandle);
@@ -44,11 +43,10 @@ namespace SkiaSharp
 
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
 		public static T Get<T> (IntPtr contextPtr, out GCHandle gch)
-			where T : Delegate
 		{
 			if (contextPtr == IntPtr.Zero) {
 				gch = default (GCHandle);
-				return null;
+				return default (T);
 			}
 
 			gch = GCHandle.FromIntPtr (contextPtr);

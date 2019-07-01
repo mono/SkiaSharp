@@ -2,84 +2,79 @@
 using System.Runtime.InteropServices;
 using System.Threading;
 
-using NativePointerDictionary = System.Collections.Concurrent.ConcurrentDictionary<System.IntPtr, SkiaSharp.SKAbstractManagedStream>;
-
 namespace SkiaSharp
 {
 	public abstract class SKAbstractManagedStream : SKStreamAsset
 	{
-		private static readonly NativePointerDictionary managedStreams = new NativePointerDictionary ();
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		internal delegate IntPtr ReadDelegate (IntPtr s, IntPtr context, IntPtr buffer, IntPtr size);
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		internal delegate IntPtr PeekDelegate (IntPtr s, IntPtr context, IntPtr buffer, IntPtr size);
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal delegate bool IsAtEndDelegate (IntPtr s, IntPtr context);
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal delegate bool HasPositionDelegate (IntPtr s, IntPtr context);
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal delegate bool HasLengthDelegate (IntPtr s, IntPtr context);
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal delegate bool RewindDelegate (IntPtr s, IntPtr context);
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		internal delegate IntPtr GetPositionDelegate (IntPtr s, IntPtr context);
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal delegate bool SeekDelegate (IntPtr s, IntPtr context, IntPtr position);
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal delegate bool MoveDelegate (IntPtr s, IntPtr context, int offset);
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		internal delegate IntPtr GetLengthDelegate (IntPtr s, IntPtr context);
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		internal delegate IntPtr CreateNewDelegate (IntPtr s, IntPtr context);
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		internal delegate void DestroyDelegate (IntPtr s, IntPtr context);
 
-		// delegate declarations
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate IntPtr read_delegate (IntPtr managedStreamPtr, IntPtr buffer, IntPtr size);
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate IntPtr peek_delegate (IntPtr managedStreamPtr, IntPtr buffer, IntPtr size);
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate bool isAtEnd_delegate (IntPtr managedStreamPtr);
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate bool hasPosition_delegate (IntPtr managedStreamPtr);
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate bool hasLength_delegate (IntPtr managedStreamPtr);
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate bool rewind_delegate (IntPtr managedStreamPtr);
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate IntPtr getPosition_delegate (IntPtr managedStreamPtr);
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate bool seek_delegate (IntPtr managedStreamPtr, IntPtr position);
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate bool move_delegate (IntPtr managedStreamPtr, int offset);
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate IntPtr getLength_delegate (IntPtr managedStreamPtr);
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate IntPtr createNew_delegate (IntPtr managedStreamPtr);
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate void destroy_delegate (IntPtr managedStreamPtr);
+		[StructLayout (LayoutKind.Sequential)]
+		internal struct Procs
+		{
+			public ReadDelegate fRead;
+			public PeekDelegate fPeek;
+			public IsAtEndDelegate fIsAtEnd;
+			public HasPositionDelegate fHasPosition;
+			public HasLengthDelegate fHasLength;
+			public RewindDelegate fRewind;
+			public GetPositionDelegate fGetPosition;
+			public SeekDelegate fSeek;
+			public MoveDelegate fMove;
+			public GetLengthDelegate fGetLength;
+			public CreateNewDelegate fCreateNew;
+			public DestroyDelegate fDestroy;
+		}
 
-		// delegate fields
-		private static readonly read_delegate fRead;
-		private static readonly peek_delegate fPeek;
-		private static readonly isAtEnd_delegate fIsAtEnd;
-		private static readonly hasPosition_delegate fHasPosition;
-		private static readonly hasLength_delegate fHasLength;
-		private static readonly rewind_delegate fRewind;
-		private static readonly getPosition_delegate fGetPosition;
-		private static readonly seek_delegate fSeek;
-		private static readonly move_delegate fMove;
-		private static readonly getLength_delegate fGetLength;
-		private static readonly createNew_delegate fCreateNew;
-		private static readonly destroy_delegate fDestroy;
+		private static readonly Procs delegates;
 
 		private int fromNative;
 
 		static SKAbstractManagedStream ()
 		{
-			fRead = new read_delegate (ReadInternal);
-			fPeek = new peek_delegate (PeekInternal);
-			fIsAtEnd = new isAtEnd_delegate (IsAtEndInternal);
-			fHasPosition = new hasPosition_delegate (HasPositionInternal);
-			fHasLength = new hasLength_delegate (HasLengthInternal);
-			fRewind = new rewind_delegate (RewindInternal);
-			fGetPosition = new getPosition_delegate (GetPositionInternal);
-			fSeek = new seek_delegate (SeekInternal);
-			fMove = new move_delegate (MoveInternal);
-			fGetLength = new getLength_delegate (GetLengthInternal);
-			fCreateNew = new createNew_delegate (CreateNewInternal);
-			fDestroy = new destroy_delegate (DestroyInternal);
-
-			SkiaApi.sk_managedstream_set_delegates (
-				Marshal.GetFunctionPointerForDelegate (fRead),
-				Marshal.GetFunctionPointerForDelegate (fPeek),
-				Marshal.GetFunctionPointerForDelegate (fIsAtEnd),
-				Marshal.GetFunctionPointerForDelegate (fHasPosition),
-				Marshal.GetFunctionPointerForDelegate (fHasLength),
-				Marshal.GetFunctionPointerForDelegate (fRewind),
-				Marshal.GetFunctionPointerForDelegate (fGetPosition),
-				Marshal.GetFunctionPointerForDelegate (fSeek),
-				Marshal.GetFunctionPointerForDelegate (fMove),
-				Marshal.GetFunctionPointerForDelegate (fGetLength),
-				Marshal.GetFunctionPointerForDelegate (fCreateNew),
-				Marshal.GetFunctionPointerForDelegate (fDestroy));
+			delegates = new Procs {
+				fRead = ReadInternal,
+				fPeek = PeekInternal,
+				fIsAtEnd = IsAtEndInternal,
+				fHasPosition = HasPositionInternal,
+				fHasLength = HasLengthInternal,
+				fRewind = RewindInternal,
+				fGetPosition = GetPositionInternal,
+				fSeek = SeekInternal,
+				fMove = MoveInternal,
+				fGetLength = GetLengthInternal,
+				fCreateNew = CreateNewInternal,
+				fDestroy = DestroyInternal,
+			};
+			SkiaApi.sk_managedstream_set_procs (delegates);
 		}
 
 		protected SKAbstractManagedStream ()
@@ -88,27 +83,14 @@ namespace SkiaSharp
 		}
 
 		protected SKAbstractManagedStream (bool owns)
-			: base (SkiaApi.sk_managedstream_new (), owns)
+			: base (IntPtr.Zero, owns)
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKAbstractManagedStream instance.");
-			}
-
-			managedStreams.TryAdd (Handle, this);
-		}
-
-		private void DisposeFromNative ()
-		{
-			Interlocked.Exchange (ref fromNative, 1);
-			Dispose ();
+			DelegateProxies.Create (this, out _, out var ctx);
+			Handle = SkiaApi.sk_managedstream_new (ctx);
 		}
 
 		protected override void Dispose (bool disposing)
 		{
-			if (disposing) {
-				managedStreams.TryRemove (Handle, out var managedStream);
-			}
-
 			if (Interlocked.CompareExchange (ref fromNative, 0, 0) == 0 && Handle != IntPtr.Zero && OwnsHandle) {
 				SkiaApi.sk_managedstream_destroy (Handle);
 			}
@@ -138,97 +120,90 @@ namespace SkiaSharp
 
 		protected abstract IntPtr OnCreateNew ();
 
-		// unmanaged <-> managed methods (static for iOS)
-
-		[MonoPInvokeCallback (typeof (read_delegate))]
-		private static IntPtr ReadInternal (IntPtr managedStreamPtr, IntPtr buffer, IntPtr size)
+		[MonoPInvokeCallback (typeof (ReadDelegate))]
+		private static IntPtr ReadInternal (IntPtr s, IntPtr context, IntPtr buffer, IntPtr size)
 		{
-			return AsManagedStream (managedStreamPtr).OnRead (buffer, size);
+			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
+			return stream.OnRead (buffer, size);
 		}
 
-		[MonoPInvokeCallback(typeof(peek_delegate))]
-		private static IntPtr PeekInternal (IntPtr managedStreamPtr, IntPtr buffer, IntPtr size)
+		[MonoPInvokeCallback (typeof (PeekDelegate))]
+		private static IntPtr PeekInternal (IntPtr s, IntPtr context, IntPtr buffer, IntPtr size)
 		{
-			return AsManagedStream (managedStreamPtr).OnPeek (buffer, size);
+			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
+			return stream.OnPeek (buffer, size);
 		}
 
-		[MonoPInvokeCallback(typeof(isAtEnd_delegate))]
-		private static bool IsAtEndInternal (IntPtr managedStreamPtr)
+		[MonoPInvokeCallback (typeof (IsAtEndDelegate))]
+		private static bool IsAtEndInternal (IntPtr s, IntPtr context)
 		{
-			return AsManagedStream (managedStreamPtr).OnIsAtEnd ();
+			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
+			return stream.OnIsAtEnd ();
 		}
 
-		[MonoPInvokeCallback(typeof(hasPosition_delegate))]
-		private static bool HasPositionInternal (IntPtr managedStreamPtr)
+		[MonoPInvokeCallback (typeof (HasPositionDelegate))]
+		private static bool HasPositionInternal (IntPtr s, IntPtr context)
 		{
-			return AsManagedStream (managedStreamPtr).OnHasPosition ();
+			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
+			return stream.OnHasPosition ();
 		}
 
-		[MonoPInvokeCallback(typeof(hasLength_delegate))]
-		private static bool HasLengthInternal (IntPtr managedStreamPtr)
+		[MonoPInvokeCallback (typeof (HasLengthDelegate))]
+		private static bool HasLengthInternal (IntPtr s, IntPtr context)
 		{
-			return AsManagedStream (managedStreamPtr).OnHasLength ();
+			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
+			return stream.OnHasLength ();
 		}
 
-		[MonoPInvokeCallback(typeof(rewind_delegate))]
-		private static bool RewindInternal (IntPtr managedStreamPtr)
+		[MonoPInvokeCallback (typeof (RewindDelegate))]
+		private static bool RewindInternal (IntPtr s, IntPtr context)
 		{
-			return AsManagedStream (managedStreamPtr).OnRewind ();
+			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
+			return stream.OnRewind ();
 		}
 
-		[MonoPInvokeCallback(typeof(getPosition_delegate))]
-		private static IntPtr GetPositionInternal (IntPtr managedStreamPtr)
+		[MonoPInvokeCallback (typeof (GetPositionDelegate))]
+		private static IntPtr GetPositionInternal (IntPtr s, IntPtr context)
 		{
-			return AsManagedStream (managedStreamPtr).OnGetPosition ();
+			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
+			return stream.OnGetPosition ();
 		}
 
-		[MonoPInvokeCallback(typeof(seek_delegate))]
-		private static bool SeekInternal (IntPtr managedStreamPtr, IntPtr position)
+		[MonoPInvokeCallback (typeof (SeekDelegate))]
+		private static bool SeekInternal (IntPtr s, IntPtr context, IntPtr position)
 		{
-			return AsManagedStream (managedStreamPtr).OnSeek (position);
+			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
+			return stream.OnSeek (position);
 		}
 
-		[MonoPInvokeCallback(typeof(move_delegate))]
-		private static bool MoveInternal (IntPtr managedStreamPtr, int offset)
+		[MonoPInvokeCallback (typeof (MoveDelegate))]
+		private static bool MoveInternal (IntPtr s, IntPtr context, int offset)
 		{
-			return AsManagedStream (managedStreamPtr).OnMove (offset);
+			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
+			return stream.OnMove (offset);
 		}
 
-		[MonoPInvokeCallback(typeof(getLength_delegate))]
-		private static IntPtr GetLengthInternal (IntPtr managedStreamPtr)
+		[MonoPInvokeCallback (typeof (GetLengthDelegate))]
+		private static IntPtr GetLengthInternal (IntPtr s, IntPtr context)
 		{
-			return AsManagedStream (managedStreamPtr).OnGetLength ();
+			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
+			return stream.OnGetLength ();
 		}
 
-		[MonoPInvokeCallback(typeof(createNew_delegate))]
-		private static IntPtr CreateNewInternal (IntPtr managedStreamPtr)
+		[MonoPInvokeCallback (typeof (CreateNewDelegate))]
+		private static IntPtr CreateNewInternal (IntPtr s, IntPtr context)
 		{
-			return AsManagedStream (managedStreamPtr).OnCreateNew ();
+			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
+			return stream.OnCreateNew ();
 		}
 
-		[MonoPInvokeCallback(typeof(destroy_delegate))]
-		private static void DestroyInternal (IntPtr managedStreamPtr)
+		[MonoPInvokeCallback (typeof (DestroyDelegate))]
+		private static void DestroyInternal (IntPtr s, IntPtr context)
 		{
-			if (AsManagedStream (managedStreamPtr, out var managedStream)) {
-				managedStream.DisposeFromNative ();
-			}
-		}
-
-		private static SKAbstractManagedStream AsManagedStream (IntPtr ptr)
-		{
-			if (AsManagedStream (ptr, out var target)) {
-				return target;
-			}
-			throw new ObjectDisposedException ("SKAbstractManagedStream: " + ptr);
-		}
-
-		private static bool AsManagedStream (IntPtr ptr, out SKAbstractManagedStream target)
-		{
-			if (managedStreams.TryGetValue (ptr, out target)) {
-				return true;
-			}
-			target = null;
-			return false;
+			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out var gch);
+			Interlocked.Exchange (ref stream.fromNative, 1);
+			gch.Free ();
+			stream.Dispose ();
 		}
 	}
 }

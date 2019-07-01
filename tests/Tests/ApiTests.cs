@@ -140,8 +140,14 @@ namespace SkiaSharp.Tests
 							paramType.FullName != typeof(StringBuilder).FullName;
 						Assert.False(isClass, $"Parameter type '{paramType.FullName}'{del} is not a struct.");
 
+						// special cases where we know the type is not blittable, but can be passed to native code
+						var isSkippedType =
+							paramType.FullName != typeof(SKAbstractManagedStream.Procs).FullName &&
+							paramType.FullName != typeof(SKAbstractManagedWStream.Procs).FullName &&
+							paramType.FullName != typeof(SKDrawable.Procs).FullName;
+
 						// make sure our structs have a layout type
-						if (!paramType.GetTypeInfo().IsEnum && isLocalType)
+						if (!paramType.GetTypeInfo().IsEnum && isLocalType && isSkippedType)
 						{
 							// check blittable
 							try
