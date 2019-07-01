@@ -350,7 +350,7 @@ jobs:
       vmImage: $(VM_IMAGE_WINDOWS)
       target: samples
       dependsOn:
-        - managed_windows
+        - package
   - template: azure-templates-bootstrapper.yml
     parameters:
       name: samples_macos
@@ -358,7 +358,7 @@ jobs:
       vmImage: $(VM_IMAGE_MAC)
       target: samples
       dependsOn:
-        - managed_macos
+        - package
       preBuildSteps:
         - powershell: Write-Host "##vso[task.setvariable variable=CONFIGURATION]Debug"
           condition: eq(variables['Build.Reason'], 'PullRequest')
@@ -386,4 +386,4 @@ jobs:
       packages: $(MANAGED_LINUX_PACKAGES)
       target: samples
       dependsOn:
-        - managed_linux
+        - package
