@@ -247,14 +247,14 @@ Task ("samples")
         }
     });
 
-    // create the workbooks archive
-    Zip ("./workbooks", "./output/workbooks.zip");
-
     // create the samples archive
     CreateSamplesDirectory ("./samples/", "./output/samples/");
     Zip ("./output/samples/", "./output/samples.zip");
 
     return;
+
+    // create the workbooks archive
+    Zip ("./workbooks", "./output/workbooks.zip");
 
     // build the newly migrated samples
     CleanDirectories ($"./{PACKAGE_CACHE_PATH}/skiasharp*");
