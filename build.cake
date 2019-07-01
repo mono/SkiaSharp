@@ -186,8 +186,8 @@ Task ("tests-only")
     if (changed) {
         xdoc.Save (netCoreTestProj);
     }
-    CleanDirectories ($"./{PACKAGE_CACHE_PATH}/skiasharp*");
-    CleanDirectories ($"./{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
     EnsureDirectoryExists ("./output/tests/netcore");
     RunMSBuild (netCoreTestProj, restoreOnly: true);
     RunNetCoreTests (netCoreTestProj);
@@ -256,8 +256,8 @@ Task ("samples")
     Zip ("./output/samples/", "./output/samples.zip");
 
     // build the newly migrated samples
-    CleanDirectories ($"./{PACKAGE_CACHE_PATH}/skiasharp*");
-    CleanDirectories ($"./{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
     var solutions = GetFiles ("./output/samples/**/*.sln");
     foreach (var sln in solutions) {
         var name = sln.GetFilenameWithoutExtension ();
