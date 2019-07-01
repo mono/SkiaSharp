@@ -114,6 +114,7 @@ Task ("libs-only")
     } else if (IsRunningOnLinux ()) {
         platform = ".Linux";
     }
+    EnsureDirectoryExists ("./output/nugets/");
     RunMSBuild ($"./source/SkiaSharpSource{platform}.sln");
 
     // assemble the mdoc docs
