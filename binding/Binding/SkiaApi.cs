@@ -1774,6 +1774,9 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void gr_vkinterface_unref (gr_vkinterface_t grVkInterface);
 
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static bool gr_vkinterface_validate (gr_vkinterface_t grVkInterface, uint extensionFlags);
+
 		// Vulkan backend context
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static gr_vkbackendcontext_t gr_vkbackendcontext_assemble (

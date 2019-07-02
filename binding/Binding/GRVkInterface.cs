@@ -26,6 +26,11 @@ namespace SkiaSharp
 					extensionFlags));
 		}
 
+		public bool Validate (uint extensionFlags)
+		{
+			return SkiaApi.gr_vkinterface_validate (Handle, extensionFlags);
+		}
+
 		protected override void Dispose (bool disposing)
 		{
 			if (Handle != IntPtr.Zero && OwnsHandle) {
