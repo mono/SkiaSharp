@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 namespace SkiaSharp.Tests
 {
 	[Flags]
-	internal enum WindowStyles : uint
+	public enum WindowStyles : uint
 	{
 		WS_BORDER = 0x800000,
 		WS_CAPTION = 0xc00000,
