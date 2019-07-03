@@ -70,7 +70,7 @@ namespace SkiaSharp
 
 		public void DrawColor (SKColor color, SKBlendMode mode = SKBlendMode.Src)
 		{
-			SkiaApi.sk_canvas_draw_color (Handle, color, mode);
+			SkiaApi.sk_canvas_draw_color (Handle, (uint)color, mode);
 		}
 
 		public void DrawLine (SKPoint p0, SKPoint p1, SKPaint paint)
@@ -304,7 +304,7 @@ namespace SkiaSharp
 		{
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
-			SkiaApi.sk_canvas_draw_circle (Handle, cx, cy, radius, paint.Handle);
+			SkiaApi.sk_canvas_draw_circle (Handle, paint.Handle, cx, cy, radius);
 		}
 
 		public void DrawCircle (SKPoint c, float radius, SKPaint paint)
@@ -339,7 +339,7 @@ namespace SkiaSharp
 		{
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
-			SkiaApi.sk_canvas_draw_point (Handle, x, y, paint.Handle);
+			SkiaApi.sk_canvas_draw_point (Handle, paint.Handle, x, y);
 		}
 
 		public void DrawPoint (SKPoint p, SKColor color)
@@ -474,7 +474,7 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
-			SkiaApi.sk_canvas_draw_text_blob (Handle, text.Handle, x, y, paint.Handle);
+			SkiaApi.sk_canvas_draw_text_blob (Handle, x, y, text.Handle, paint.Handle);
 		}
 
 		public void DrawText (string text, SKPoint p, SKPaint paint)
@@ -505,7 +505,7 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
-			SkiaApi.sk_canvas_draw_text (Handle, text, text.Length, x, y, paint.Handle);
+			SkiaApi.sk_canvas_draw_text (Handle, x, y, text, text.Length, paint.Handle);
 		}
 
 		public void DrawPositionedText (string text, SKPoint [] points, SKPaint paint)
@@ -547,7 +547,7 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			
-			SkiaApi.sk_canvas_draw_text_on_path (Handle, buffer, length, path.Handle, hOffset, vOffset, paint.Handle);
+			SkiaApi.sk_canvas_draw_text_on_path (Handle, buffer, length, path.Handle, paint.Handle, IntPtr.Zero, hOffset, vOffset);
 		}
 
 		public void DrawText (IntPtr buffer, int length, SKPoint p, SKPaint paint)
@@ -562,7 +562,7 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			
-			SkiaApi.sk_canvas_draw_text (Handle, buffer, length, x, y, paint.Handle);
+			SkiaApi.sk_canvas_draw_text (Handle, x, y, buffer, length, paint.Handle);
 		}
 
 		public void DrawPositionedText (IntPtr buffer, int length, SKPoint[] points, SKPaint paint)
@@ -609,7 +609,7 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
-			SkiaApi.sk_canvas_draw_text_on_path (Handle, text, text.Length, path.Handle, hOffset, vOffset, paint.Handle);
+			SkiaApi.sk_canvas_draw_text_on_path (Handle, text, text.Length, path.Handle, paint.Handle, IntPtr.Zero, hOffset, vOffset);
 		}
 
 		public void Flush ()

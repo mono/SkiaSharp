@@ -45,7 +45,7 @@ namespace SkiaSharp
 
 		public SKSizeI GetScaledDimensions (float desiredScale)
 		{
-			SkiaApi.sk_codec_get_scaled_dimensions (Handle, desiredScale, out var dimensions);
+			SkiaApi.sk_codec_get_scaled_dimensions (Handle, out var dimensions, desiredScale);
 			return dimensions;
 		}
 
@@ -292,12 +292,15 @@ namespace SkiaSharp
 		public static SKCodec Create (SKStream stream) =>
 			Create (stream, out var result);
 
-		public static SKCodec Create (SKStream stream, out SKCodecResult result)
+		public unsafe static SKCodec Create (SKStream stream, out SKCodecResult result)
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			var codec = GetObject<SKCodec> (SkiaApi.sk_codec_new_from_stream (stream.Handle, out result));
+			int vresult = 0;
+
+			var codec = GetObject<SKCodec> (SkiaApi.sk_codec_new_from_stream_2 (stream.Handle, (IntPtr)(int)&vresult));
+			result = (SKCodecResult)vresult;
 			stream.RevokeOwnership ();
 			return codec;
 		}

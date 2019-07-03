@@ -19,12 +19,12 @@ namespace SkiaSharp
 
 		public static SKPMColor PreMultiply (SKColor color)
 		{
-			return SkiaApi.sk_color_premultiply (color);
+			return SkiaApi.sk_color_premultiply ((uint)color);
 		}
 
 		public static SKColor UnPreMultiply (SKPMColor pmcolor)
 		{
-			return SkiaApi.sk_color_unpremultiply (pmcolor);
+			return SkiaApi.sk_color_unpremultiply ((uint)pmcolor);
 		}
 
 		public static SKPMColor[] PreMultiply (SKColor[] colors)
@@ -97,7 +97,7 @@ namespace SkiaSharp
 
 		public static readonly SKColor Empty;
 
-		private uint color;
+		internal uint color;
 
 		public SKColor (uint value)
 		{

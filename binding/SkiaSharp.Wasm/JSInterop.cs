@@ -5,9 +5,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using Microsoft.Extensions.Logging;
 using SkiaSharp;
-using Uno.Extensions;
 
 namespace WebAssembly
 {
@@ -188,84 +186,4 @@ namespace SkiaSharp
 			}
 		}
 	} 
-	  
-	public static class TSInteropMarshaller
-	{
-		public const UnmanagedType LPUTF8Str = (UnmanagedType)48;
-		private static readonly ILogger _log = typeof (TSInteropMarshaller).Log ();
-
-		public static IntPtr InvokeJS<TParam> (
-			string methodName,
-			TParam paramStruct,
-			[System.Runtime.CompilerServices.CallerMemberName] string memberName = null
-		)
-		{
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"InvokeJS for {memberName}/{typeof (TParam)}");
-			}
-
-			var pParms = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (TParam)));
-
-			try {
-				Marshal.StructureToPtr (paramStruct, pParms, false);
-
-				return WebAssemblyRuntime.InvokeJSUnmarshalled (methodName, pParms);
-			} catch (Exception e) {
-				if (_log.IsEnabled (LogLevel.Error)) {
-					_log.LogError ($"Failed InvokeJS for {memberName}/{typeof (TParam)}: {e}");
-				}
-				throw;
-			} finally {
-				Marshal.DestroyStructure (pParms, typeof (TParam));
-				Marshal.FreeHGlobal (pParms);
-			}
-		}
-
-		public static IntPtr InvokeJS<TParam, TRet> (
-			string methodName,
-			TParam paramStruct,
-			out TRet returnValue,
-			[System.Runtime.CompilerServices.CallerMemberName] string memberName = null
-		)
-		{
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"InvokeJS for {memberName}/{typeof (TParam)}/{typeof (TRet)}");
-			}
-			 
-			var pParms = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (TParam)));
-			var pReturnValue = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (TRet)));
-
-			returnValue = default;
-
-			try {
-				Marshal.StructureToPtr (paramStruct, pParms, false);
-				Marshal.StructureToPtr (returnValue, pReturnValue, false);
-
-				var ret = WebAssemblyRuntime.InvokeJSUnmarshalled (methodName, pParms, pReturnValue);
-
-				returnValue = (TRet)Marshal.PtrToStructure (pReturnValue, typeof (TRet));
-
-				return ret;
-			} catch (Exception e) {
-				if (_log.IsEnabled (LogLevel.Error)) {
-					_log.LogError ($"Failed InvokeJS for {memberName}/{typeof (TParam)}: {e}");
-				}
-				throw;
-			} finally {
-				Marshal.DestroyStructure (pParms, typeof (TParam));
-				Marshal.FreeHGlobal (pParms);
-
-				Marshal.DestroyStructure (pReturnValue, typeof (TRet));
-				Marshal.FreeHGlobal (pReturnValue);
-			}
-		}
-	}
-
-	/// <summary>
-	/// Marks a struct as an interop message for the <see cref="TSBindingsGenerator"/> TypeScript generator.
-	/// </summary>
-	[AttributeUsage (AttributeTargets.Struct, AllowMultiple = false)]
-	public class TSInteropMessageAttribute : Attribute
-	{
-	}
 }

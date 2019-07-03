@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Globalization;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Microsoft.Extensions.Logging;
-using Uno.Extensions;
 using NativePointerDictionary = System.Collections.Concurrent.ConcurrentDictionary<System.IntPtr, SkiaSharp.SKAbstractManagedStream>;
 
 namespace SkiaSharp
@@ -58,7 +58,34 @@ namespace SkiaSharp
 		static SKAbstractManagedStream ()
 		{
 #if __WASM__
-			WebAssemblyRuntime.InvokeJS($"SkiaSharp.SurfaceManager.registerManagedStream();");
+			//
+			// Javascript returns the list of registered methods, then the
+			// sk_managedstream_set_delegates gets called through P/Invoke
+			// because it is not exported when building for AOT.
+			//
+
+			var ret = WebAssembly.Runtime.InvokeJS($"SkiaSharp.SurfaceManager.registerManagedStream();");
+			var funcs = ret.Split (new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+				.Select(f => (IntPtr)int.Parse(f, CultureInfo.InvariantCulture))
+				.ToArray();
+
+			if(funcs.Length == 12) {
+				SkiaApi.sk_managedstream_set_delegates (
+				funcs[0],
+				funcs[1],
+				funcs[2],
+				funcs[3],
+				funcs[4],
+				funcs[5],
+				funcs[6],
+				funcs[7],
+				funcs[8],
+				funcs[9],
+				funcs[10],
+				funcs[11]);
+			} else {
+				throw new InvalidOperationException($"Mismatch for registerManagedStream returned values (got {funcs.Length}, expected 12)");
+			}
 
 #else
 			fRead = new read_delegate (ReadInternal);
@@ -242,136 +269,74 @@ namespace SkiaSharp
 
 	public static class ManagedStreamHelper
 	{
-		private static readonly ILogger _log = typeof (TSInteropMarshaller).Log ();
-
 		public static int ReadInternal (int managedStreamPtr, int buffer, int size)
 		{
 			var ret = (int)SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnRead ((IntPtr)buffer, (IntPtr)size);
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] ReadInternal({buffer:X8}, {size}) = {ret}");
-			}
-
-
 			return ret;
 		}
 
 		public static int PeekInternal (int managedStreamPtr, int buffer, int size)
 		{
 			var ret = (int)SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnPeek ((IntPtr)buffer, (IntPtr)size);
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] PeekInternal({buffer:X8}, {size}) = {ret}");
-			}
-
 			return ret;
 		}
 
 		public static bool IsAtEndInternal (int managedStreamPtr)
 		{
 			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnIsAtEnd ();
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] IsAtEndInternal() = {ret}");
-			}
-
 			return ret;
 		}
 
 		public static bool HasPositionInternal (int managedStreamPtr)
 		{
 			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnHasPosition ();
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] HasPositionInternal() = {ret}");
-			}
-
 			return ret;
 		}
 
 		public static bool HasLengthInternal (int managedStreamPtr)
 		{
 			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnHasLength ();
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] HasLengthInternal() = {ret}");
-			}
-
 			return ret;
 		}
 
 		public static bool RewindInternal (int managedStreamPtr)
 		{
 			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnRewind ();
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] RewindInternal() = {ret}");
-			}
-
 			return ret;
 		}
 
 		public static int GetPositionInternal (int managedStreamPtr)
 		{
 			var ret = (int)SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnGetPosition ();
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] GetPositionInternal() = {ret}");
-			}
-
 			return ret;
 		}
 
 		public static bool SeekInternal (int managedStreamPtr, int position)
 		{
 			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnSeek ((IntPtr)position);
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] SeekInternal({position}) = {ret}");
-			}
-
 			return ret;
 		}
 
 		public static bool MoveInternal (int managedStreamPtr, int offset)
 		{
 			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnMove (offset);
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] MoveInternal({offset}) = {ret}");
-			}
-
 			return ret;
 		}
 
 		public static int GetLengthInternal (int managedStreamPtr)
 		{
 			var ret = (int)SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnGetLength ();
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] GetLengthInternal() = {ret}");
-			}
-
 			return ret;
 		}
 
 		public static int CreateNewInternal (int managedStreamPtr)
 		{
 			var ret = (int)SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnCreateNew ();
-
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] CreateNewInternal()");
-			}
-
 			return ret;
 		}
 
 		public static void DestroyInternal (int managedStreamPtr)
 		{
-			if (_log.IsEnabled (LogLevel.Debug)) {
-				_log.LogDebug ($"[{managedStreamPtr:X8}] DestroyInternal()");
-			}
-
 			if (SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr, out var managedStream)) {
 				managedStream.DisposeFromNative ();
 			}
