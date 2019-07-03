@@ -90,9 +90,11 @@ namespace SkiaSharpSample
 				.ToList();
 #else
 			listView.ItemsSource = samples;
+
+			commandBar.Visibility = Visibility.Collapsed;
 #endif
 
-			}
+		}
 
 		protected override void OnNavigatedFrom(NavigationEventArgs e)
 		{
