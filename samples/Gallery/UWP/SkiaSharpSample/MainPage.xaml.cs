@@ -91,17 +91,6 @@ namespace SkiaSharpSample
 				.ToList();
 #else
 			listView.ItemsSource = samples;
-
-
-			// Uno issue: https://github.com/nventive/Uno/issues/764
-			listView.Height = listView.ActualHeight - 1;
-
-			var _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
-			{
-				listView.Height = double.NaN;
-			});
-
-			commandBar.Visibility = Visibility.Collapsed;
 #endif
 
 		}
