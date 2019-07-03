@@ -157,7 +157,7 @@
     Generates the assembly versioning files.
     ===================================================================================================================
   -->
-  <UsingTask TaskName="_GenerateVersionFiles" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll" >  
+  <UsingTask TaskName="_GenerateVersionFiles" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
     <ParameterGroup>
       <VersionsFile ParameterType="System.String" />
       <OutFile ParameterType="System.String" />
@@ -165,7 +165,6 @@
       <GitSha ParameterType="System.String" />
     </ParameterGroup>
     <Task>
-      <!-- <Reference Include="" /> -->
       <Using Namespace="System.Text.RegularExpressions" />
       <Code Type="Fragment" Language="cs"><![CDATA[
         var versions = File.ReadAllText(VersionsFile);
