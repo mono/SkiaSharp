@@ -26,17 +26,7 @@ namespace HarfBuzzSharp
 		private uint start;
 		private uint end;
 
-		public Feature (Tag tag)
-			: this (tag, 1u, 0, uint.MaxValue)
-		{
-		}
-
-		public Feature (Tag tag, uint value)
-			: this (tag, value, 0, uint.MaxValue)
-		{
-		}
-
-		public Feature (Tag tag, uint value, uint start, uint end)
+		public Feature (Tag tag, uint value = 1u, uint start = 0, uint end = uint.MaxValue)
 		{
 			this.tag = tag;
 			this.val = value;

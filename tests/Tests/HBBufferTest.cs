@@ -216,6 +216,8 @@ namespace HarfBuzzSharp.Tests
 			using (var buffer = new Buffer())
 			using (var source = new Buffer())
 			{
+				buffer.ContentType = ContentType.Unicode;
+
 				source.AddUtf8("123");
 
 				buffer.Append(source, 0, source.Length);

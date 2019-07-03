@@ -6,7 +6,7 @@ namespace HarfBuzzSharp
 {
 	public class Language : NativeObject
 	{
-		public static Language Default => new Language (HarfBuzzApi.hb_language_get_default ());
+		public static Language Default = new Language (HarfBuzzApi.hb_language_get_default ());
 
 		internal Language (IntPtr handle)
 			: base (handle)
@@ -29,7 +29,17 @@ namespace HarfBuzzSharp
 
 		public override string ToString () => Name;
 
-		protected bool Equals (Language other) => string.Equals (Name, other.Name);
+		public override bool Equals (object obj)
+		{
+			switch (obj) {
+				case null:
+					return false;
+				case Language language:
+					return Handle == language.Handle;
+				default:
+					return false;
+			}
+		}
 
 		public override int GetHashCode () => Name != null ? Name.GetHashCode () : 0;
 	}

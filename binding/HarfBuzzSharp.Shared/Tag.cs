@@ -58,7 +58,7 @@ namespace HarfBuzzSharp
 		public static implicit operator Tag (uint tag) => new Tag (tag);
 
 		public override bool Equals (object obj) =>
-			obj is Tag tag ? value.Equals (tag.value) : false;
+			obj is Tag tag && value.Equals (tag.value);
 
 		public bool Equals (Tag other) => value == other.value;
 
