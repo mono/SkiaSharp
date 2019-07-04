@@ -34,6 +34,8 @@ namespace SkiaSharp.Views.UWP
 			OnVisibilityChanged(this);
 		}
 
+		private SKSize GetCanvasSize() => new SKSize(_pixelWidth, _pixelHeight);
+
 		private static bool GetIsInitialized() => true;
 
 		private void OnDpiChanged(DisplayInformation sender, object args = null)
