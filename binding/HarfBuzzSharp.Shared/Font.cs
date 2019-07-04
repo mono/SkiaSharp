@@ -79,45 +79,37 @@ namespace HarfBuzzSharp
 		public int GetVerticalGlyphAdvance (uint glyph) =>
 			HarfBuzzApi.hb_font_get_glyph_v_advance (Handle, glyph);
 
-		public int[] GetHorizontalGlyphAdvances (ReadOnlySpan<uint> glyphs)
+		public unsafe int[] GetHorizontalGlyphAdvances (ReadOnlySpan<uint> glyphs)
 		{
-			unsafe {
-				fixed (uint* firstGlyph = glyphs) {
-					return GetHorizontalGlyphAdvances ((IntPtr)firstGlyph, glyphs.Length);
-				}
+			fixed (uint* firstGlyph = glyphs) {
+				return GetHorizontalGlyphAdvances ((IntPtr)firstGlyph, glyphs.Length);
 			}
 		}
 
-		public int[] GetHorizontalGlyphAdvances (IntPtr firstGlyph, int count)
+		public unsafe int[] GetHorizontalGlyphAdvances (IntPtr firstGlyph, int count)
 		{
 			var advances = new int[count];
 
-			unsafe {
-				fixed (int* firstAdvance = advances) {
-					HarfBuzzApi.hb_font_get_glyph_h_advances (Handle, count, firstGlyph, 4, (IntPtr)firstAdvance, 4);
-				}
+			fixed (int* firstAdvance = advances) {
+				HarfBuzzApi.hb_font_get_glyph_h_advances (Handle, count, firstGlyph, 4, (IntPtr)firstAdvance, 4);
 			}
 
 			return advances;
 		}
 
-		public int[] GetVerticalGlyphAdvances (ReadOnlySpan<uint> glyphs)
+		public unsafe int[] GetVerticalGlyphAdvances (ReadOnlySpan<uint> glyphs)
 		{
-			unsafe {
-				fixed (uint* firstGlyph = glyphs) {
-					return GetVerticalGlyphAdvances ((IntPtr)firstGlyph, glyphs.Length);
-				}
+			fixed (uint* firstGlyph = glyphs) {
+				return GetVerticalGlyphAdvances ((IntPtr)firstGlyph, glyphs.Length);
 			}
 		}
 
-		public int[] GetVerticalGlyphAdvances (IntPtr firstGlyph, int count)
+		public unsafe int[] GetVerticalGlyphAdvances (IntPtr firstGlyph, int count)
 		{
 			var advances = new int[count];
 
-			unsafe {
-				fixed (int* firstAdvance = advances) {
-					HarfBuzzApi.hb_font_get_glyph_v_advances (Handle, count, firstGlyph, 4, (IntPtr)firstAdvance, 4);
-				}
+			fixed (int* firstAdvance = advances) {
+				HarfBuzzApi.hb_font_get_glyph_v_advances (Handle, count, firstGlyph, 4, (IntPtr)firstAdvance, 4);
 			}
 
 			return advances;
@@ -138,19 +130,17 @@ namespace HarfBuzzSharp
 		public bool TryGetGlyphContourPoint (uint glyph, uint pointIndex, out int x, out int y) =>
 			HarfBuzzApi.hb_font_get_glyph_contour_point (Handle, glyph, pointIndex, out x, out y);
 
-		public bool TryGetGlyphName (uint glyph, out string name)
+		public unsafe bool TryGetGlyphName (uint glyph, out string name)
 		{
 			var buffer = ArrayPool<char>.Shared.Rent (NameBufferLength);
 			try {
-				unsafe {
-					fixed (char* first = buffer) {
-						if (!HarfBuzzApi.hb_font_get_glyph_name (Handle, glyph, first, buffer.Length)) {
-							name = string.Empty;
-							return false;
-						}
-						name = new string (first);
-						return true;
+				fixed (char* first = buffer) {
+					if (!HarfBuzzApi.hb_font_get_glyph_name (Handle, glyph, first, buffer.Length)) {
+						name = string.Empty;
+						return false;
 					}
+					name = new string (first);
+					return true;
 				}
 			} finally {
 				ArrayPool<char>.Shared.Return (buffer);
@@ -175,23 +165,19 @@ namespace HarfBuzzSharp
 		public void GetGlyphAdvanceForDirection (uint glyph, Direction direction, out int x, out int y) =>
 			HarfBuzzApi.hb_font_get_glyph_advance_for_direction (Handle, glyph, direction, out x, out y);
 
-		public int[] GetGlyphAdvancesForDirection (ReadOnlySpan<uint> glyphs, Direction direction)
+		public unsafe int[] GetGlyphAdvancesForDirection (ReadOnlySpan<uint> glyphs, Direction direction)
 		{
-			unsafe {
-				fixed (uint* firstGlyph = glyphs) {
-					return GetGlyphAdvancesForDirection ((IntPtr)firstGlyph, glyphs.Length, direction);
-				}
+			fixed (uint* firstGlyph = glyphs) {
+				return GetGlyphAdvancesForDirection ((IntPtr)firstGlyph, glyphs.Length, direction);
 			}
 		}
 
-		public int[] GetGlyphAdvancesForDirection (IntPtr firstGlyph, int count, Direction direction)
+		public unsafe int[] GetGlyphAdvancesForDirection (IntPtr firstGlyph, int count, Direction direction)
 		{
 			var advances = new int[count];
 
-			unsafe {
-				fixed (int* firstAdvance = advances) {
-					HarfBuzzApi.hb_font_get_glyph_advances_for_direction (Handle, direction, count, firstGlyph, 4, (IntPtr)firstAdvance, 4);
-				}
+			fixed (int* firstAdvance = advances) {
+				HarfBuzzApi.hb_font_get_glyph_advances_for_direction (Handle, direction, count, firstGlyph, 4, (IntPtr)firstAdvance, 4);
 			}
 
 			return advances;

@@ -20,24 +20,24 @@ namespace HarfBuzzSharp
 	// internal proxy delegates
 
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	public delegate UnicodeCombiningClass hb_unicode_combining_class_func_t (IntPtr ufuncs, uint unicode, IntPtr context);
+	internal delegate UnicodeCombiningClass hb_unicode_combining_class_func_t (IntPtr ufuncs, uint unicode, IntPtr context);
 
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	public delegate UnicodeGeneralCategory hb_unicode_general_category_func_t (IntPtr ufuncs, uint unicode, IntPtr context);
+	internal delegate UnicodeGeneralCategory hb_unicode_general_category_func_t (IntPtr ufuncs, uint unicode, IntPtr context);
 
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	public delegate uint hb_unicode_mirroring_func_t (IntPtr ufuncs, uint unicode, IntPtr context);
+	internal delegate uint hb_unicode_mirroring_func_t (IntPtr ufuncs, uint unicode, IntPtr context);
 
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	public delegate uint hb_unicode_script_func_t (IntPtr ufuncs, uint unicode, IntPtr context);
-
-	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	[return: MarshalAs (UnmanagedType.I1)]
-	public delegate bool hb_unicode_compose_func_t (IntPtr ufuncs, uint a, uint b, out uint ab, IntPtr context);
+	internal delegate uint hb_unicode_script_func_t (IntPtr ufuncs, uint unicode, IntPtr context);
 
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
-	public delegate bool hb_unicode_decompose_func_t (IntPtr ufuncs, uint ab, out uint a, out uint b, IntPtr context);
+	internal delegate bool hb_unicode_compose_func_t (IntPtr ufuncs, uint a, uint b, out uint ab, IntPtr context);
+
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	[return: MarshalAs (UnmanagedType.I1)]
+	internal delegate bool hb_unicode_decompose_func_t (IntPtr ufuncs, uint ab, out uint a, out uint b, IntPtr context);
 
 	internal static partial class DelegateProxies
 	{

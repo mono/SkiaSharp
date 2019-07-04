@@ -122,7 +122,7 @@ namespace HarfBuzzSharp.Tests
 					return true;
 				});
 
-				unicodeFunctions.TryCompose(1, 2, out var composed);
+				Assert.True(unicodeFunctions.TryCompose(1, 2, out var composed));
 
 				Assert.Equal(1337u, composed);
 			}
@@ -140,7 +140,7 @@ namespace HarfBuzzSharp.Tests
 					return true;
 				});
 
-				unicodeFunctions.TryDecompose(0, out var first, out var second);
+				Assert.True(unicodeFunctions.TryDecompose(0, out var first, out var second));
 
 				Assert.Equal(1337u, first);
 				Assert.Equal(7331u, second);

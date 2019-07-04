@@ -96,9 +96,7 @@ namespace HarfBuzzSharp.Tests
 
 				Assert.Equal(2, buffer.Length);
 
-				var utf32 = new[] { char.ConvertToUtf32("C", 0) };
-
-				buffer.AddUtf32(utf32);
+				buffer.AddUtf32("C");
 
 				Assert.Equal(3, buffer.Length);
 			}
