@@ -35,6 +35,8 @@ namespace SkiaSharp.Views.UWP
 			SetWillNotDraw(false);
 		}
 
+		private SKSize GetCanvasSize() => new SKSize(info.Width, info.Height);
+
 		private void Initialize()
 		{
 			designMode = !Extensions.IsValidEnvironment;

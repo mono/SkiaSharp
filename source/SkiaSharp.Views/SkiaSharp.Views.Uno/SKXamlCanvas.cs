@@ -28,6 +28,8 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
+		public SKSize CanvasSize => GetCanvasSize();
+
 		public double Dpi { get; private set; } = 1;
 
 		public static bool IsInitialized => GetIsInitialized();

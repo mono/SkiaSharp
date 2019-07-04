@@ -33,6 +33,8 @@ namespace SkiaSharp.Views.UWP
 			Initialize();
 		}
 
+		private SKSize GetCanvasSize() => drawable?.Info.Size ?? SKSize.Empty;
+
 		private static bool GetIsInitialized() => true;
 
 		private void Initialize()
