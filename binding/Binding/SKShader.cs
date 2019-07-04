@@ -2,21 +2,12 @@
 
 namespace SkiaSharp
 {
-	public class SKShader : SKObject
+	public class SKShader : SKObject, ISKReferenceCounted
 	{
 		[Preserve]
 		internal SKShader (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
-		}
-
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_shader_unref (Handle);
-			}
-
-			base.Dispose (disposing);
 		}
 
 		public static SKShader CreateEmpty ()

@@ -71,6 +71,12 @@ namespace SkiaSharp.Tests
 				new[] { "Segoe UI Emoji", "Segoe UI Symbol" };
 		}
 
+		public static void CollectGarbage()
+		{
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
+		}
+
 		private static class MacPlatformDetector
 		{
 			internal static readonly Lazy<bool> IsMac = new Lazy<bool>(IsRunningOnMac);

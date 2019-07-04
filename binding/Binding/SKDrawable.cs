@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace SkiaSharp
 {
-	public class SKDrawable : SKObject
+	public class SKDrawable : SKObject, ISKReferenceCounted
 	{
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		internal delegate void DrawDelegate (IntPtr d, IntPtr context, IntPtr canvas);
@@ -50,20 +50,22 @@ namespace SkiaSharp
 		{
 			DelegateProxies.Create (this, out _, out var ctx);
 			Handle = SkiaApi.sk_manageddrawable_new (ctx);
+
+			if (Handle == IntPtr.Zero) {
+				throw new InvalidOperationException ("Unable to create a new SKDrawable instance.");
+			}
 		}
 
+		[Preserve]
 		internal SKDrawable (IntPtr x, bool owns)
 			: base (x, owns)
 		{
 		}
 
-		protected override void Dispose (bool disposing)
+		protected override void DisposeNative ()
 		{
-			if (Interlocked.CompareExchange (ref fromNative, 0, 0) == 0 && Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_manageddrawable_unref (Handle);
-			}
-
-			base.Dispose (disposing);
+			if (Interlocked.CompareExchange (ref fromNative, 0, 0) == 0)
+				SkiaApi.sk_drawable_unref (Handle);
 		}
 
 		public uint GenerationId => SkiaApi.sk_drawable_get_generation_id (Handle);

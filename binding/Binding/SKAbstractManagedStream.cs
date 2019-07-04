@@ -89,13 +89,10 @@ namespace SkiaSharp
 			Handle = SkiaApi.sk_managedstream_new (ctx);
 		}
 
-		protected override void Dispose (bool disposing)
+		protected override void DisposeNative ()
 		{
-			if (Interlocked.CompareExchange (ref fromNative, 0, 0) == 0 && Handle != IntPtr.Zero && OwnsHandle) {
+			if (Interlocked.CompareExchange (ref fromNative, 0, 0) == 0)
 				SkiaApi.sk_managedstream_destroy (Handle);
-			}
-
-			base.Dispose (disposing);
 		}
 
 		protected abstract IntPtr OnRead (IntPtr buffer, IntPtr size);

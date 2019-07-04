@@ -4,8 +4,24 @@ using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	public abstract class SKTest : BaseTest
+	public abstract class SKTest : BaseTest, IAssemblyFixture<GarbageCleanupFixture>
 	{
+		private static readonly Random random = new Random();
+
+		protected static Stream CreateTestStream(int length = 1024)
+		{
+			var bytes = new byte[length];
+			random.NextBytes(bytes);
+			return new MemoryStream(bytes);
+		}
+
+		protected static SKStreamAsset CreateTestSKStream(int length = 1024)
+		{
+			var bytes = new byte[length];
+			random.NextBytes(bytes);
+			return new SKMemoryStream(bytes);
+		}
+
 		protected static void SaveBitmap(SKBitmap bmp, string filename = "output.png")
 		{
 			using (var bitmap = new SKBitmap(bmp.Width, bmp.Height))

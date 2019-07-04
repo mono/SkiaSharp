@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public class SKTextBlob : SKObject
+	public class SKTextBlob : SKObject, ISKNonVirtualReferenceCounted
 	{
 		[Preserve]
 		internal SKTextBlob (IntPtr x, bool owns)
@@ -10,14 +10,7 @@ namespace SkiaSharp
 		{
 		}
 
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_textblob_unref (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
+		void ISKNonVirtualReferenceCounted.UnreferenceNative () => SkiaApi.sk_textblob_unref (Handle);
 
 		public SKRect Bounds {
 			get {
@@ -42,14 +35,8 @@ namespace SkiaSharp
 		{
 		}
 
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_textblob_builder_delete (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
+		protected override void DisposeNative () =>
+			SkiaApi.sk_textblob_builder_delete (Handle);
 
 		// Build
 

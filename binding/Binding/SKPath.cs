@@ -43,14 +43,8 @@ namespace SkiaSharp
 			}
 		}
 
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_path_delete (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
+		protected override void DisposeNative () =>
+			SkiaApi.sk_path_delete (Handle);
 
 		public SKPathFillType FillType {
 			get => SkiaApi.sk_path_get_filltype (Handle);
@@ -463,25 +457,18 @@ namespace SkiaSharp
 			return SkiaApi.sk_path_convert_conic_to_quads (ref p0, ref p1, ref p2, w, pts, pow2);
 		}
 
-		public class Iterator : SKNativeObject
+		public class Iterator : SKObject
 		{
 			private readonly SKPath path;
 
 			internal Iterator (SKPath path, bool forceClose)
-				: base (SkiaApi.sk_path_create_iter (path.Handle, forceClose ? 1 : 0))
+				: base (SkiaApi.sk_path_create_iter (path.Handle, forceClose ? 1 : 0), true)
 			{
 				this.path = path;
 			}
 
-			protected override void Dispose (bool disposing)
-			{
-				if (Handle != IntPtr.Zero) {
-					// safe to call from a background thread to release resources.
-					SkiaApi.sk_path_iter_destroy (Handle);
-				}
-
-				base.Dispose (disposing);
-			}
+			protected override void DisposeNative () =>
+				SkiaApi.sk_path_iter_destroy (Handle);
 
 			public SKPathVerb Next (SKPoint[] points, bool doConsumeDegenerates = true, bool exact = false)
 			{
@@ -500,25 +487,18 @@ namespace SkiaSharp
 				SkiaApi.sk_path_iter_is_closed_contour (Handle) != 0;
 		}
 
-		public class RawIterator : SKNativeObject
+		public class RawIterator : SKObject
 		{
 			private readonly SKPath path;
 
 			internal RawIterator (SKPath path)
-				: base (SkiaApi.sk_path_create_rawiter (path.Handle))
+				: base (SkiaApi.sk_path_create_rawiter (path.Handle), true)
 			{
 				this.path = path;
 			}
 
-			protected override void Dispose (bool disposing)
-			{
-				if (Handle != IntPtr.Zero) {
-					// safe to call from a background thread to release resources.
-					SkiaApi.sk_path_rawiter_destroy (Handle);
-				}
-
-				base.Dispose (disposing);
-			}
+			protected override void DisposeNative () =>
+				SkiaApi.sk_path_rawiter_destroy (Handle);
 
 			public SKPathVerb Next (SKPoint[] points)
 			{
@@ -535,10 +515,10 @@ namespace SkiaSharp
 				SkiaApi.sk_path_rawiter_peek (Handle);
 		}
 
-		public class OpBuilder : SKNativeObject
+		public class OpBuilder : SKObject
 		{
 			public OpBuilder ()
-				: base (SkiaApi.sk_opbuilder_new ())
+				: base (SkiaApi.sk_opbuilder_new (), true)
 			{
 			}
 
@@ -553,14 +533,8 @@ namespace SkiaSharp
 				return SkiaApi.sk_opbuilder_resolve (Handle, result.Handle);
 			}
 
-			protected override void Dispose (bool disposing)
-			{
-				if (Handle != IntPtr.Zero) {
-					SkiaApi.sk_opbuilder_destroy (Handle);
-				}
-
-				base.Dispose (disposing);
-			}
+			protected override void DisposeNative () =>
+				SkiaApi.sk_opbuilder_destroy (Handle);
 		}
 	}
 }

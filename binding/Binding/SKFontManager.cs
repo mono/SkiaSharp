@@ -5,21 +5,12 @@ using System.Linq;
 
 namespace SkiaSharp
 {
-	public class SKFontManager : SKObject
+	public class SKFontManager : SKObject, ISKReferenceCounted
 	{
 		[Preserve]
 		internal SKFontManager (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
-		}
-
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_fontmgr_unref (Handle);
-			}
-
-			base.Dispose (disposing);
 		}
 
 		public static SKFontManager Default => GetObject<SKFontManager> (SkiaApi.sk_fontmgr_ref_default ());
@@ -109,7 +100,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 
 			var typeface = GetObject<SKTypeface> (SkiaApi.sk_fontmgr_create_from_stream (Handle, stream.Handle, index));
-			stream.RevokeOwnership ();
+			stream.RevokeOwnership (typeface);
 			return typeface;
 		}
 

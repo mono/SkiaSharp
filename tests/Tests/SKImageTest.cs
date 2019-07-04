@@ -65,7 +65,8 @@ namespace SkiaSharp.Tests
 		{
 			bool released = false;
 
-			var onRelease = new SKImageRasterReleaseDelegate((addr, ctx) => {
+			var onRelease = new SKImageRasterReleaseDelegate((addr, ctx) =>
+			{
 				Marshal.FreeCoTaskMem(addr);
 				released = true;
 				Assert.Equal("RELEASING!", ctx);
@@ -80,7 +81,7 @@ namespace SkiaSharp.Tests
 				Assert.False(image.IsTextureBacked);
 				using (var raster = image.ToRasterImage())
 				{
-					Assert.Equal(image, raster);
+					Assert.Same(image, raster);
 				}
 				Assert.False(released, "The SKImageRasterReleaseDelegate was called too soon.");
 			}
@@ -289,6 +290,243 @@ namespace SkiaSharp.Tests
 
 			Assert.Equal(SKColors.Green, dstBmp.GetPixel(25, 25));
 			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
+		}
+
+		[SkippableFact]
+		public unsafe void DataInstanceIsCorrectlyDisposedWhenPassed()
+		{
+			var released = false;
+
+			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "baboon.jpg"));
+			fixed (byte* b = bytes)
+			{
+				var input = SKData.Create((IntPtr)b, bytes.Length, (_, __) => released = true);
+				Assert.Equal(1, input.GetReferenceCount());
+
+				var image = SKImage.FromEncodedData(input);
+				Assert.Equal(3, input.GetReferenceCount());
+				Assert.False(released, "Data was disposed too soon.");
+
+				image.Dispose();
+				Assert.Equal(1, input.GetReferenceCount());
+				Assert.False(released, "Data was disposed too soon.");
+
+				input.Dispose();
+				Assert.True(released, "Data was not disposed.");
+			}
+		}
+
+		[SkippableFact]
+		public unsafe void EncodedDataReturnsTheSameInstanceAsTheInput()
+		{
+			var released = false;
+
+			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "baboon.jpg"));
+			fixed (byte* b = bytes)
+			{
+				var input = SKData.Create((IntPtr)b, bytes.Length, (_, __) => released = true);
+				var image = SKImage.FromEncodedData(input);
+
+				var encoded = image.EncodedData;
+				Assert.Same(input, encoded);
+				Assert.Equal(3, input.GetReferenceCount());
+				Assert.False(released, "Data was disposed too soon.");
+
+				image.Dispose();
+				Assert.Equal(1, input.GetReferenceCount());
+				Assert.False(released, "Data was disposed too soon.");
+
+				input.Dispose();
+				Assert.True(released, "Data was not disposed.");
+			}
+		}
+
+		[SkippableFact]
+		public unsafe void EncodeReturnTheSameInstanceIfItWasUsedToConstruct()
+		{
+			var released = false;
+
+			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "baboon.jpg"));
+			fixed (byte* b = bytes)
+			{
+				var input = SKData.Create((IntPtr)b, bytes.Length, (_, __) => released = true);
+				var image = SKImage.FromEncodedData(input);
+
+				var result = image.Encode();
+				Assert.Same(input, result);
+				Assert.Equal(3, input.GetReferenceCount());
+				Assert.False(released, "Data was disposed too soon.");
+
+				image.Dispose();
+				Assert.Equal(1, input.GetReferenceCount());
+				Assert.False(released, "Data was disposed too soon.");
+
+				input.Dispose();
+				Assert.True(released, "Data was not disposed.");
+			}
+		}
+
+		[SkippableFact]
+		public unsafe void DataCanBeResurrectedFromImage()
+		{
+			var released = false;
+
+			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "baboon.jpg"));
+			var gch = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+
+			using (var image = DoWork(out var dataHandle))
+			{
+				Assert.Equal(2, dataHandle.GetReferenceCount(false));
+				Assert.False(released, "Data was disposed too soon.");
+
+				ResurrectData(image);
+			}
+
+			Assert.True(released, "Data was not disposed.");
+
+			gch.Free();
+
+			SKImage DoWork(out IntPtr handle)
+			{
+				var input = SKData.Create(gch.AddrOfPinnedObject(), bytes.Length, (_, __) => released = true);
+				handle = input.Handle;
+
+				var img = SKImage.FromEncodedData(input);
+				Assert.Equal(3, input.GetReferenceCount());
+				Assert.False(released, "Data was disposed too soon.");
+
+				var result = img.Encode();
+				Assert.Same(input, result);
+				Assert.Equal(3, input.GetReferenceCount());
+				Assert.False(released, "Data was disposed too soon.");
+
+				result.Dispose();
+				Assert.Equal(2, handle.GetReferenceCount(false));
+				Assert.False(released, "Data was disposed too soon.");
+
+				return img;
+			}
+
+			void ResurrectData(SKImage img)
+			{
+				var encoded = img.EncodedData;
+				Assert.NotNull(encoded);
+				Assert.Equal(3, encoded.GetReferenceCount());
+
+				var handle = encoded.Handle;
+
+				encoded.Dispose();
+				Assert.Equal(2, handle.GetReferenceCount(false));
+				Assert.False(released, "Data was disposed too soon.");
+
+			}
+		}
+
+		[SkippableFact]
+		public unsafe void DataOutLivesImageUntilFinalizersRun()
+		{
+			var released = false;
+
+			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "baboon.jpg"));
+			var gch = GCHandle.Alloc(bytes, GCHandleType.Pinned);
+
+			var dataHandle = DoWork();
+
+			Assert.Equal(1, dataHandle.GetReferenceCount(false));
+			Assert.False(released, "Data was disposed too soon.");
+
+			CollectGarbage();
+
+			Assert.Equal(0, dataHandle.GetReferenceCount(false));
+			Assert.True(released, "Data was not disposed.");
+
+			gch.Free();
+
+			IntPtr DoWork()
+			{
+				var input = SKData.Create(gch.AddrOfPinnedObject(), bytes.Length, (_, __) => released = true);
+				var handle = input.Handle;
+
+				var img = SKImage.FromEncodedData(input);
+				Assert.Equal(3, input.GetReferenceCount());
+				Assert.False(released, "Data was disposed too soon.");
+
+				img.Dispose();
+				Assert.Equal(1, handle.GetReferenceCount(false));
+				Assert.False(released, "Data was disposed too soon.");
+
+				return handle;
+			}
+		}
+
+		[SkippableFact]
+		public unsafe void EncodeAndEncodedDataDoNotAdjustCountsWhenUsedTogether()
+		{
+			var released = false;
+
+			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "baboon.jpg"));
+			fixed (byte* b = bytes)
+			{
+				var input = SKData.Create((IntPtr)b, bytes.Length, (_, __) => released = true);
+				var image = SKImage.FromEncodedData(input);
+
+				var encoded1 = image.EncodedData;
+				Assert.Same(input, encoded1);
+				Assert.Equal(3, input.GetReferenceCount());
+				Assert.False(released, "Data was disposed too soon.");
+
+				var result = image.Encode();
+				Assert.Same(input, result);
+				Assert.Equal(3, input.GetReferenceCount());
+				Assert.False(released, "Data was disposed too soon.");
+
+				var encoded2 = image.EncodedData;
+				Assert.Same(input, encoded2);
+				Assert.Equal(3, input.GetReferenceCount());
+				Assert.False(released, "Data was disposed too soon.");
+
+				image.Dispose();
+				Assert.Equal(1, input.GetReferenceCount());
+				Assert.False(released, "Data was disposed too soon.");
+
+				input.Dispose();
+				Assert.True(released, "Data was not disposed.");
+			}
+		}
+
+		[SkippableFact]
+		public void EncodingDoesNotKeepReference()
+		{
+			var bitmap = CreateTestBitmap();
+			var image = SKImage.FromBitmap(bitmap);
+
+			Assert.Null(image.EncodedData);
+
+			var result = image.Encode();
+			Assert.NotNull(result);
+			Assert.Equal(1, result.GetReferenceCount());
+		}
+
+		[SkippableFact]
+		public void DataCreatedByImageExpiresAfterFinalizers()
+		{
+			var bitmap = CreateTestBitmap();
+			var image = SKImage.FromBitmap(bitmap);
+
+			var handle = DoEncode();
+
+			CollectGarbage();
+
+			Assert.False(SKObject.GetInstance<SKData>(handle, out _));
+
+			IntPtr DoEncode()
+			{
+				var result = image.Encode();
+				Assert.NotNull(result);
+				Assert.Equal(1, result.GetReferenceCount());
+
+				return result.Handle;
+			}
 		}
 
 		[Obsolete]

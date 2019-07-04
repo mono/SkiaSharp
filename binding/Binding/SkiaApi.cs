@@ -33,6 +33,7 @@ using sk_maskfilter_t = System.IntPtr;
 using sk_matrix44_t = System.IntPtr;
 using sk_nodraw_canvas_t = System.IntPtr;
 using sk_nway_canvas_t = System.IntPtr;
+using sk_nvrefcnt_t = System.IntPtr;
 using sk_opbuilder_t = System.IntPtr;
 using sk_overdraw_canvas_t = System.IntPtr;
 using sk_paint_t = System.IntPtr;
@@ -44,6 +45,7 @@ using sk_picture_recorder_t = System.IntPtr;
 using sk_picture_t = System.IntPtr;
 using sk_pixmap_t = System.IntPtr;
 using sk_pmcolor_t = System.UInt32;
+using sk_refcnt_t = System.IntPtr;
 using sk_region_t = System.IntPtr;
 using sk_rrect_t = System.IntPtr;
 using sk_shader_t = System.IntPtr;
@@ -91,6 +93,31 @@ namespace SkiaSharp
 #else
 		private const string SKIA = "libSkiaSharp";
 #endif
+
+		// reference counting
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_refcnt_safe_ref (sk_refcnt_t refcnt);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_refcnt_safe_unref (sk_refcnt_t refcnt);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		public extern static bool sk_refcnt_unique (sk_refcnt_t refcnt);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_refcnt_get_ref_count(sk_refcnt_t refcnt);
+
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_nvrefcnt_safe_ref (sk_nvrefcnt_t refcnt);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_nvrefcnt_safe_unref (sk_nvrefcnt_t refcnt);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		public extern static bool sk_nvrefcnt_unique (sk_nvrefcnt_t refcnt);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static int sk_nvrefcnt_get_ref_count (sk_nvrefcnt_t refcnt);
+
+		// color type
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static SKColorType sk_colortype_get_default_8888 ();
 
 		// color space
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -148,10 +175,6 @@ namespace SkiaSharp
 		public extern static void sk_colorspace_transfer_fn_invert (ref SKColorSpaceTransferFn transfer, out SKColorSpaceTransferFn inverted);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static float sk_colorspace_transfer_fn_transform (ref SKColorSpaceTransferFn transfer, float x);
-
-		// color type
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static SKColorType sk_colortype_get_default_8888 ();
 
 		// surface
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -975,6 +998,8 @@ namespace SkiaSharp
 		public extern static sk_manageddrawable_t sk_manageddrawable_new (IntPtr context);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_manageddrawable_unref (sk_manageddrawable_t t);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_drawable_unref (sk_drawable_t t);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_manageddrawable_set_procs (SKDrawable.Procs procs);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1809,6 +1834,8 @@ namespace SkiaSharp
 		public extern static sk_region_t sk_region_new ();
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_region_t sk_region_new2 (sk_region_t r);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_region_delete (sk_region_t r);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		public extern static bool sk_region_contains (sk_region_t r, sk_region_t region);

@@ -5,24 +5,6 @@ namespace SkiaSharp.Tests
 	public class SKDrawableTest : SKTest
 	{
 		[SkippableFact]
-		public void CanCreateFromRecorder()
-		{
-			var cullRect = SKRect.Create(100, 100);
-
-			using (var recorder = new SKPictureRecorder())
-			using (var canvas = recorder.BeginRecording(cullRect))
-			{
-				canvas.DrawColor(SKColors.Blue);
-
-				using (var drawable = recorder.EndRecordingAsDrawable())
-				{
-					Assert.NotNull(drawable);
-					Assert.Equal(cullRect, drawable.Bounds);
-				}
-			}
-		}
-
-		[SkippableFact]
 		public void CanInstantiateDrawable()
 		{
 			using (var drawable = new TestDrawable())

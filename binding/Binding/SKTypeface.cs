@@ -13,23 +13,14 @@ namespace SkiaSharp
 		BoldItalic = 0x03
 	}
 
-	public class SKTypeface : SKObject
+	public class SKTypeface : SKObject, ISKReferenceCounted
 	{
 		[Preserve]
 		internal SKTypeface (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
-		
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_typeface_unref (Handle);
-			}
 
-			base.Dispose (disposing);
-		}
-		
 		public static SKTypeface Default => GetObject<SKTypeface> (SkiaApi.sk_typeface_ref_default ());
 
 		public static SKTypeface CreateDefault ()
@@ -118,7 +109,7 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 			var typeface = GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_stream (stream.Handle, index));
-			stream.RevokeOwnership ();
+			stream.RevokeOwnership (typeface);
 			return typeface;
 		}
 

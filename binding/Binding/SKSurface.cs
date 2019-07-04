@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	public class SKSurface : SKObject
+	public class SKSurface : SKObject, ISKReferenceCounted
 	{
 		[Obsolete ("Use Create(SKImageInfo) instead.")]
 		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType) => Create (new SKImageInfo (width, height, colorType, alphaType));
@@ -270,15 +270,6 @@ namespace SkiaSharp
 			GetObject<SKSurface> (SkiaApi.sk_surface_new_null (width, height));
 
 		//
-
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_surface_unref (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
 
 		public SKCanvas Canvas =>
 			GetObject<SKCanvas> (SkiaApi.sk_surface_get_canvas (Handle), false);

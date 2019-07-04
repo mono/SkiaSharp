@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -78,6 +76,25 @@ namespace SkiaSharp.Tests
 
 			Assert.Equal(0, stream.Length);
 			Assert.False(stream.IsValid);
+		}
+
+		[SkippableFact]
+		public void GarbageCollectionCollectsStreams()
+		{
+			var path = Path.Combine(PathToImages, "baboon.jpg");
+
+			var weak = DoWork();
+
+			CollectGarbage();
+
+			Assert.False(weak.IsAlive);
+			Assert.Null(weak.Target);
+
+			WeakReference DoWork()
+			{
+				var stream = new SKFileStream(path);
+				return new WeakReference(stream);
+			}
 		}
 	}
 }

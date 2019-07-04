@@ -204,14 +204,8 @@ namespace SkiaSharp
 		{
 		}
 
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_stream_asset_destroy (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
+		protected override void DisposeNative () =>
+			SkiaApi.sk_stream_asset_destroy (Handle);
 	}
 
 	public abstract class SKStreamMemory : SKStreamAsset
@@ -225,7 +219,7 @@ namespace SkiaSharp
 	public class SKFileStream : SKStreamAsset
 	{
 		[Preserve]
-		internal SKFileStream (IntPtr handle, bool owns)
+		public SKFileStream (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
@@ -238,14 +232,8 @@ namespace SkiaSharp
 			}
 		}
 
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_filestream_destroy (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
+		protected override void DisposeNative () =>
+			SkiaApi.sk_filestream_destroy (Handle);
 
 		public bool IsValid => SkiaApi.sk_filestream_is_valid (Handle);
 
@@ -308,14 +296,8 @@ namespace SkiaSharp
 			SetMemory (data);
 		}
 
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_memorystream_destroy (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
+		protected override void DisposeNative () =>
+			SkiaApi.sk_memorystream_destroy (Handle);
 
 		internal void SetMemory (IntPtr data, IntPtr length, bool copyData = false)
 		{
@@ -451,14 +433,8 @@ namespace SkiaSharp
 			}
 		}
 
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_filewstream_destroy (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
+		protected override void DisposeNative () =>
+			SkiaApi.sk_filewstream_destroy (Handle);
 
 		public bool IsValid => SkiaApi.sk_filewstream_is_valid (Handle);
 
@@ -500,7 +476,7 @@ namespace SkiaSharp
 
 		public SKStreamAsset DetachAsStream ()
 		{
-			return GetObject<SKStreamAssetImplementation> (SkiaApi.sk_dynamicmemorywstream_detach_as_stream (Handle));
+			return GetObject<SKStreamAsset, SKStreamAssetImplementation> (SkiaApi.sk_dynamicmemorywstream_detach_as_stream (Handle));
 		}
 
 		public SKData DetachAsData ()
@@ -520,13 +496,7 @@ namespace SkiaSharp
 			return SkiaApi.sk_dynamicmemorywstream_write_to_stream (Handle, dst.Handle);
 		}
 
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_dynamicmemorywstream_destroy (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
+		protected override void DisposeNative () =>
+			SkiaApi.sk_dynamicmemorywstream_destroy (Handle);
 	}
 }

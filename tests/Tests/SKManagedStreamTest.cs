@@ -9,6 +9,87 @@ namespace SkiaSharp.Tests
 	public class SKManagedStreamTest : SKTest
 	{
 		[SkippableFact]
+		public void DotNetStreamIsCollected()
+		{
+			var managed = CreateTestStream();
+			var stream = new SKManagedStream(managed, true);
+
+			Assert.Equal(0, managed.Position);
+
+			stream.Dispose();
+
+			Assert.Throws<ObjectDisposedException>(() => managed.Position);
+		}
+
+		[SkippableFact]
+		public void DotNetStreamIsNotCollected()
+		{
+			var managed = CreateTestStream();
+			var stream = new SKManagedStream(managed, false);
+
+			Assert.Equal(0, managed.Position);
+
+			stream.Dispose();
+
+			Assert.Equal(0, managed.Position);
+		}
+
+		[SkippableFact]
+		public unsafe void StreamLosesOwnershipToCodecAndCanBeForgotten()
+		{
+			var managed = new MemoryStream(File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png")));
+			var stream = new SKManagedStream(managed, true);
+			var handle = stream.Handle;
+
+			Assert.True(stream.OwnsHandle);
+			Assert.True(SKObject.GetInstance<SKManagedStream>(handle, out _));
+
+			var codec = SKCodec.Create(stream);
+			Assert.False(stream.OwnsHandle);
+
+			stream.Dispose();
+			Assert.False(SKObject.GetInstance<SKManagedStream>(handle, out _));
+
+			Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
+			Assert.NotEmpty(pixels);
+		}
+
+		[SkippableFact]
+		public unsafe void StreamThatHasLostOwnershipIsDisposed()
+		{
+			var managed = new MemoryStream(File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png")));
+			var stream = new SKManagedStream(managed, true);
+			var handle = stream.Handle;
+
+			Assert.True(stream.OwnsHandle);
+			Assert.True(SKObject.GetInstance<SKManagedStream>(handle, out _));
+
+			var codec = SKCodec.Create(stream);
+			Assert.False(stream.OwnsHandle);
+
+			codec.Dispose();
+			Assert.False(SKObject.GetInstance<SKManagedStream>(handle, out _));
+		}
+
+		[SkippableFact]
+		public void StreamIsCollectedEvenWhenNotPropertyDisposed()
+		{
+			var handle = DoWork();
+
+			CollectGarbage();
+
+			var exists = SKObject.GetInstance<SKManagedStream>(handle, out _);
+			Assert.False(exists);
+
+			IntPtr DoWork()
+			{
+				var managed = CreateTestStream();
+				var stream = new SKManagedStream(managed, true);
+				return stream.Handle;
+			}
+		}
+
+		[SkippableFact]
 		public void ManagedStreamReadsByteCorrectly()
 		{
 			var data = new byte[1024];
@@ -118,7 +199,8 @@ namespace SkiaSharp.Tests
 					document.EndPage();
 				}
 
-				GC.Collect();
+				CollectGarbage();
+
 				document.Close();
 			}
 		}

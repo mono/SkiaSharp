@@ -6,29 +6,22 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public class SKData : SKObject
+	public class SKData : SKObject, ISKNonVirtualReferenceCounted
 	{
 		// We pick a value that is the largest multiple of 4096 that is still smaller than the large object heap threshold (85K).
 		// The CopyTo/CopyToAsync buffer is short-lived and is likely to be collected at Gen0, and it offers a significant
 		// improvement in Copy performance.
 		private const int CopyBufferSize = 81920;
 
-		private static readonly Lazy<SKData> empty = new Lazy<SKData> (() => GetObject<SKData> (SkiaApi.sk_data_new_empty ()));
-
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_data_unref (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
+		private static readonly Lazy<SKData> empty = new Lazy<SKData> (() => new SKDataStatic (SkiaApi.sk_data_new_empty ()));
 
 		[Preserve]
 		internal SKData (IntPtr x, bool owns)
 			: base (x, owns)
 		{
 		}
+
+		void ISKNonVirtualReferenceCounted.UnreferenceNative () => SkiaApi.sk_data_unref (Handle);
 
 		public static SKData Empty => empty.Value;
 
@@ -237,6 +230,19 @@ namespace SkiaSharp
 					host?.Dispose ();
 				}
 				host = null;
+			}
+		}
+
+		private sealed class SKDataStatic : SKData
+		{
+			internal SKDataStatic (IntPtr x)
+				: base (x, false)
+			{
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				// do not dispose
 			}
 		}
 	}
