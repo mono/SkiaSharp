@@ -445,20 +445,72 @@ namespace SkiaSharp
 		public extern static float sk_paint_get_text_skew_x (sk_paint_t t);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_paint_set_text_skew_x (sk_paint_t t, float skew);
+
+		public static float sk_paint_measure_text (sk_paint_t t, voidptr_t text, size_t length, ref SKRect bounds)
+		{
+			var p = new sk_paint_measure_text_params ();
+
+			fixed (SKRect* pBounds = &bounds)
+			{
+				p.t = t;
+				p.text = text;
+				p.length = length;
+				p.bounds = pBounds;
+
+				return sk_paint_measure_text (ref p);
+			}
+		}
+
+		public static float sk_paint_measure_text (sk_paint_t t, voidptr_t text, size_t length, nullptr_t boundsZero)
+		{
+			var p = new sk_paint_measure_text_params ();
+
+			p.t = t;
+			p.text = text;
+			p.length = length;
+			p.bounds = (SKRect*)IntPtr.Zero;
+
+			return sk_paint_measure_text (ref p);
+		}
+
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static float sk_paint_measure_text (sk_paint_t t, voidptr_t text, size_t length, ref SKRect bounds);
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static float sk_paint_measure_text (sk_paint_t t, voidptr_t text, size_t length, nullptr_t boundsZero);
+		public extern static float sk_paint_measure_text (ref sk_paint_measure_text_params parms);
+
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static size_t sk_paint_break_text (sk_paint_t t, voidptr_t text, size_t length, float maxWidth, out float measuredWidth);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_path_t sk_paint_get_text_path (float x, float y, sk_paint_t t, voidptr_t text, size_t length);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_path_t sk_paint_get_pos_text_path (sk_paint_t t, voidptr_t text, size_t length, [In] SKPoint[] points);
+
+		public static float sk_paint_get_fontmetrics (sk_paint_t t, out SKFontMetrics fontMetrics, float scale)
+		{
+			var p = new sk_paint_get_fontmetrics_params ();
+
+			fixed(SKFontMetrics* pFontMetrics = &fontMetrics)
+			{
+				p.t = t;
+				p.scale = scale;
+				p.fontMetrics = pFontMetrics;
+
+				return sk_paint_get_fontmetrics (ref p);
+			}
+		}
+
+		public static float sk_paint_get_fontmetrics (sk_paint_t t, nullptr_t fontMetricsZero, float scale)
+		{
+			var p = new sk_paint_get_fontmetrics_params ();
+
+			p.t = t;
+			p.scale = scale;
+			p.fontMetrics = (SKFontMetrics*)IntPtr.Zero;
+
+			return sk_paint_get_fontmetrics (ref p);
+		}
+
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static float sk_paint_get_fontmetrics (sk_paint_t t, out SKFontMetrics fontMetrics, float scale);
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static float sk_paint_get_fontmetrics (sk_paint_t t, nullptr_t fontMetricsZero, float scale);
+		public extern static float sk_paint_get_fontmetrics (ref sk_paint_get_fontmetrics_params p);
+
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_path_effect_t sk_paint_get_path_effect (sk_paint_t cpaint);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1729,8 +1781,18 @@ namespace SkiaSharp
 		public extern static SKMatrix44TypeMask sk_matrix44_get_type (sk_matrix44_t matrix);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_matrix44_set_identity (sk_matrix44_t matrix);
+
+		public static float sk_matrix44_get (sk_matrix44_t matrix, int row, int col)
+		{
+			var p = new sk_matrix44_get_params ();
+			p.matrix = matrix;
+			p.row = row;
+			p.col = col;
+			return sk_matrix44_get (ref p);
+		}
+
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static float sk_matrix44_get (sk_matrix44_t matrix, int row, int col);
+		public extern static float sk_matrix44_get (ref sk_matrix44_get_params parms);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static IntPtr sk_matrix44_set (sk_matrix44_t matrix, int row, int col, float value);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -2042,6 +2104,28 @@ namespace SkiaSharp
 		public int count;
 		public SKShaderTileMode mode;
 		public SKMatrix* matrix;
+	}
+
+	internal unsafe struct sk_paint_measure_text_params
+	{
+		public sk_paint_t t;
+		public voidptr_t text;
+		public size_t length;
+		public SKRect* bounds;
+	}
+
+	internal unsafe struct sk_paint_get_fontmetrics_params
+	{
+		public sk_paint_t t;
+		public SKFontMetrics* fontMetrics;
+		public float scale;
+	}
+
+	internal unsafe struct sk_matrix44_get_params
+	{
+		public sk_matrix44_t matrix;
+		public int row;
+		public int col;
 	}
 
 #pragma warning restore IDE1006 // Naming Styles
