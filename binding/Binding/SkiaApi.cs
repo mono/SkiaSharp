@@ -1224,6 +1224,12 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static voidptr_t sk_stream_get_memory_base (sk_stream_t cstream);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_stream_t sk_stream_fork (sk_stream_t cstream);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_stream_t sk_stream_duplicate (sk_stream_t cstream);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_stream_destroy (sk_stream_t cstream);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_stream_filestream_t sk_filestream_new (byte[] utf8path);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_stream_memorystream_t sk_memorystream_new ();

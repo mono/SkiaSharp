@@ -33,7 +33,9 @@ namespace SkiaSharp
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		internal delegate IntPtr GetLengthDelegate (IntPtr s, IntPtr context);
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate IntPtr CreateNewDelegate (IntPtr s, IntPtr context);
+		internal delegate IntPtr DuplicateDelegate (IntPtr s, IntPtr context);
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		internal delegate IntPtr ForkDelegate (IntPtr s, IntPtr context);
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		internal delegate void DestroyDelegate (IntPtr s, IntPtr context);
 
@@ -50,7 +52,8 @@ namespace SkiaSharp
 			public SeekDelegate fSeek;
 			public MoveDelegate fMove;
 			public GetLengthDelegate fGetLength;
-			public CreateNewDelegate fCreateNew;
+			public DuplicateDelegate fDuplicate;
+			public ForkDelegate fFork;
 			public DestroyDelegate fDestroy;
 		}
 
@@ -71,7 +74,8 @@ namespace SkiaSharp
 				fSeek = SeekInternal,
 				fMove = MoveInternal,
 				fGetLength = GetLengthInternal,
-				fCreateNew = CreateNewInternal,
+				fDuplicate = DuplicateInternal,
+				fFork = ForkInternal,
 				fDestroy = DestroyInternal,
 			};
 			SkiaApi.sk_managedstream_set_procs (delegates);
@@ -85,7 +89,7 @@ namespace SkiaSharp
 		protected SKAbstractManagedStream (bool owns)
 			: base (IntPtr.Zero, owns)
 		{
-			DelegateProxies.Create (this, out _, out var ctx);
+			var ctx = DelegateProxies.CreateUserData (this, true);
 			Handle = SkiaApi.sk_managedstream_new (ctx);
 		}
 
@@ -117,87 +121,103 @@ namespace SkiaSharp
 
 		protected abstract IntPtr OnCreateNew ();
 
+		protected virtual IntPtr OnFork ()
+		{
+			var stream = OnCreateNew ();
+			SkiaApi.sk_stream_seek (stream, SkiaApi.sk_stream_get_position (Handle));
+			return stream;
+		}
+
+		protected virtual IntPtr OnDuplicate () => OnCreateNew ();
+
 		[MonoPInvokeCallback (typeof (ReadDelegate))]
 		private static IntPtr ReadInternal (IntPtr s, IntPtr context, IntPtr buffer, IntPtr size)
 		{
-			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
+			var stream = DelegateProxies.GetUserData<SKAbstractManagedStream> (context, out _);
 			return stream.OnRead (buffer, size);
 		}
 
 		[MonoPInvokeCallback (typeof (PeekDelegate))]
 		private static IntPtr PeekInternal (IntPtr s, IntPtr context, IntPtr buffer, IntPtr size)
 		{
-			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
+			var stream = DelegateProxies.GetUserData<SKAbstractManagedStream> (context, out _);
 			return stream.OnPeek (buffer, size);
 		}
 
 		[MonoPInvokeCallback (typeof (IsAtEndDelegate))]
 		private static bool IsAtEndInternal (IntPtr s, IntPtr context)
 		{
-			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
+			var stream = DelegateProxies.GetUserData<SKAbstractManagedStream> (context, out _);
 			return stream.OnIsAtEnd ();
 		}
 
 		[MonoPInvokeCallback (typeof (HasPositionDelegate))]
 		private static bool HasPositionInternal (IntPtr s, IntPtr context)
 		{
-			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
+			var stream = DelegateProxies.GetUserData<SKAbstractManagedStream> (context, out _);
 			return stream.OnHasPosition ();
 		}
 
 		[MonoPInvokeCallback (typeof (HasLengthDelegate))]
 		private static bool HasLengthInternal (IntPtr s, IntPtr context)
 		{
-			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
+			var stream = DelegateProxies.GetUserData<SKAbstractManagedStream> (context, out _);
 			return stream.OnHasLength ();
 		}
 
 		[MonoPInvokeCallback (typeof (RewindDelegate))]
 		private static bool RewindInternal (IntPtr s, IntPtr context)
 		{
-			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
+			var stream = DelegateProxies.GetUserData<SKAbstractManagedStream> (context, out _);
 			return stream.OnRewind ();
 		}
 
 		[MonoPInvokeCallback (typeof (GetPositionDelegate))]
 		private static IntPtr GetPositionInternal (IntPtr s, IntPtr context)
 		{
-			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
+			var stream = DelegateProxies.GetUserData<SKAbstractManagedStream> (context, out _);
 			return stream.OnGetPosition ();
 		}
 
 		[MonoPInvokeCallback (typeof (SeekDelegate))]
 		private static bool SeekInternal (IntPtr s, IntPtr context, IntPtr position)
 		{
-			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
+			var stream = DelegateProxies.GetUserData<SKAbstractManagedStream> (context, out _);
 			return stream.OnSeek (position);
 		}
 
 		[MonoPInvokeCallback (typeof (MoveDelegate))]
 		private static bool MoveInternal (IntPtr s, IntPtr context, int offset)
 		{
-			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
+			var stream = DelegateProxies.GetUserData<SKAbstractManagedStream> (context, out _);
 			return stream.OnMove (offset);
 		}
 
 		[MonoPInvokeCallback (typeof (GetLengthDelegate))]
 		private static IntPtr GetLengthInternal (IntPtr s, IntPtr context)
 		{
-			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
+			var stream = DelegateProxies.GetUserData<SKAbstractManagedStream> (context, out _);
 			return stream.OnGetLength ();
 		}
 
-		[MonoPInvokeCallback (typeof (CreateNewDelegate))]
-		private static IntPtr CreateNewInternal (IntPtr s, IntPtr context)
+		[MonoPInvokeCallback (typeof (DuplicateDelegate))]
+		private static IntPtr DuplicateInternal (IntPtr s, IntPtr context)
 		{
-			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out _);
-			return stream.OnCreateNew ();
+			var stream = DelegateProxies.GetUserData<SKAbstractManagedStream> (context, out _);
+			return stream.OnDuplicate ();
+		}
+
+		[MonoPInvokeCallback (typeof (ForkDelegate))]
+		private static IntPtr ForkInternal (IntPtr s, IntPtr context)
+		{
+			var stream = DelegateProxies.GetUserData<SKAbstractManagedStream> (context, out _);
+			return stream.OnFork ();
 		}
 
 		[MonoPInvokeCallback (typeof (DestroyDelegate))]
 		private static void DestroyInternal (IntPtr s, IntPtr context)
 		{
-			var stream = DelegateProxies.Get<SKAbstractManagedStream> (context, out var gch);
+			var stream = DelegateProxies.GetUserData<SKAbstractManagedStream> (context, out var gch);
 			Interlocked.Exchange (ref stream.fromNative, 1);
 			gch.Free ();
 			stream.Dispose ();

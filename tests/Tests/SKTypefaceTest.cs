@@ -1,6 +1,5 @@
 ﻿using System;
 using Xunit;
-using Xunit.Categories;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Linq;
@@ -191,8 +190,8 @@ namespace SkiaSharp.Tests
 			Assert.True(typeface.GetGlyphs(text).Length > 0);
 		}
 
+		[Trait(CategoryKey, MatchCharacterCategory)]
 		[SkippableFact]
-		[Feature(MatchCharacterFeature)]
 		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharacters()
 		{
 			const string text = "🚀";
@@ -220,7 +219,7 @@ namespace SkiaSharp.Tests
 				var data = SKData.Create((IntPtr)b, bytes.Length, (addr, ctx) => released = true);
 
 				var typeface = SKTypeface.FromData(data);
-				Assert.Equal("", typeface.FamilyName);
+				Assert.Equal("Distortable", typeface.FamilyName);
 
 				data.Dispose();
 				Assert.False(released, "The SKDataReleaseDelegate was called too soon.");

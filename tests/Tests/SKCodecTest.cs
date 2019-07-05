@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -36,6 +38,26 @@ namespace SkiaSharp.Tests
 				codec.Dispose();
 				Assert.True(released, "The SKDataReleaseDelegate was not called at all.");
 			}
+		}
+
+		[SkippableFact]
+		public unsafe void StreamLosesOwnershipToCodecButIsNotForgotten()
+		{
+			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
+			var stream = new SKMemoryStream(bytes);
+			var handle = stream.Handle;
+
+			Assert.True(stream.OwnsHandle);
+			Assert.True(SKObject.GetInstance<SKMemoryStream>(handle, out _));
+
+			var codec = SKCodec.Create(stream);
+			Assert.False(stream.OwnsHandle);
+
+			stream.Dispose();
+			Assert.True(SKObject.GetInstance<SKMemoryStream>(handle, out _));
+
+			Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
+			Assert.NotEmpty(pixels);
 		}
 
 		[SkippableFact]

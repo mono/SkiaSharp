@@ -1,14 +1,13 @@
 ﻿using System;
 using Xunit;
-using Xunit.Categories;
 using System.IO;
 
 namespace SkiaSharp.Tests
 {
 	public class SKFontManagerTest : SKTest
 	{
+		[Trait(CategoryKey, MatchCharacterCategory)]
 		[SkippableFact]
-		[Feature(MatchCharacterFeature)]
 		public void TestFontManagerMatchCharacter()
 		{
 			var fonts = SKFontManager.Default;

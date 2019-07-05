@@ -7,13 +7,15 @@ namespace SkiaSharp
 {
 	public class SKFontManager : SKObject, ISKReferenceCounted
 	{
+		private static readonly Lazy<SKFontManager> defaultManager = new Lazy<SKFontManager> (() => new SKFontManagerStatic (SkiaApi.sk_fontmgr_ref_default ()));
+
 		[Preserve]
 		internal SKFontManager (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
 
-		public static SKFontManager Default => GetObject<SKFontManager> (SkiaApi.sk_fontmgr_ref_default ());
+		public static SKFontManager Default => defaultManager.Value;
 
 		public int FontFamilyCount => SkiaApi.sk_fontmgr_count_families (Handle);
 
@@ -172,6 +174,19 @@ namespace SkiaSharp
 		public static SKFontManager CreateDefault ()
 		{
 			return GetObject<SKFontManager> (SkiaApi.sk_fontmgr_create_default ());
+		}
+
+		private sealed class SKFontManagerStatic : SKFontManager
+		{
+			internal SKFontManagerStatic (IntPtr x)
+				: base (x, false)
+			{
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				// do not dispose
+			}
 		}
 	}
 }

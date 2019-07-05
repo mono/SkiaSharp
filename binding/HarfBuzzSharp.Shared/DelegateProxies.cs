@@ -13,10 +13,6 @@ namespace HarfBuzzSharp
 	[Obsolete ("Use ReleaseDelegate instead.")]
 	public delegate void BlobReleaseDelegate (object context);
 
-	// helper delegates
-
-	internal delegate object UserDataDelegate ();
-
 	// internal proxy delegates
 
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -38,17 +34,7 @@ namespace HarfBuzzSharp
 		public static IntPtr CreateMulti<T> (T wrappedDelegate, ReleaseDelegate destroy)
 			where T : Delegate
 		{
-			var del = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (T))
-					return wrappedDelegate;
-				if (type == typeof (ReleaseDelegate))
-					return destroy;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			Create (del, out _, out var ctx);
-
-			return ctx;
+			return CreateMulti<T, ReleaseDelegate> (wrappedDelegate, destroy);
 		}
 
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
@@ -56,37 +42,7 @@ namespace HarfBuzzSharp
 			where T1 : Delegate
 			where T2 : Delegate
 		{
-			var del = new GetMultiDelegateDelegate ((type) => {
-				if (type == typeof (T1))
-					return wrappedDelegate1;
-				if (type == typeof (T2))
-					return wrappedDelegate2;
-				if (type == typeof (ReleaseDelegate))
-					return destroy;
-				throw new ArgumentOutOfRangeException (nameof (type));
-			});
-
-			Create (del, out _, out var ctx);
-
-			return ctx;
-		}
-
-		[MethodImpl (MethodImplOptions.AggressiveInlining)]
-		public static T GetMulti<T> (IntPtr contextPtr, out GCHandle gch)
-			where T : Delegate
-		{
-			var multi = Get<GetMultiDelegateDelegate> (contextPtr, out gch);
-			return (T)multi.Invoke (typeof (T));
-		}
-
-		[MethodImpl (MethodImplOptions.AggressiveInlining)]
-		public static void GetMulti<T1, T2> (IntPtr contextPtr, out T1 wrappedDelegate1, out T2 wrappedDelegate2, out GCHandle gch)
-			where T1 : Delegate
-			where T2 : Delegate
-		{
-			var multi = Get<GetMultiDelegateDelegate> (contextPtr, out gch);
-			wrappedDelegate1 = (T1)multi.Invoke (typeof (T1));
-			wrappedDelegate2 = (T2)multi.Invoke (typeof (T2));
+			return CreateMulti<T1, T2, ReleaseDelegate> (wrappedDelegate1, wrappedDelegate2, destroy);
 		}
 
 		// internal proxy implementations

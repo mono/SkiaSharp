@@ -6,6 +6,11 @@ namespace SkiaSharp.Tests
 {
 	public class GarbageCleanupFixture : IDisposable
 	{
+		private static readonly string[] StaticTypes = new[] {
+			"SkiaSharp.SKData+SKDataStatic",
+			"SkiaSharp.SKFontManager+SKFontManagerStatic",
+		};
+
 		public GarbageCleanupFixture()
 		{
 			Assert.Empty(SKObject.constructors);
@@ -33,12 +38,12 @@ namespace SkiaSharp.Tests
 		{
 			var skobject = Assert.IsAssignableFrom<SKObject>(instance);
 
-			if (skobject.GetType().FullName == "SkiaSharp.SKData+SKDataStatic")
+			if (StaticTypes.Contains(skobject.GetType().FullName))
 				return false;
 
-			// TODO: remove this once the tests are all fixed
-			if (skobject.GetType().Name.Contains("Stream"))
-				return false;
+			//// TODO: remove this once the tests are all fixed
+			//if (skobject.GetType().Name.Contains("Stream"))
+			//	return false;
 
 			return true;
 		}

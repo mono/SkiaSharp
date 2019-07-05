@@ -138,11 +138,17 @@ namespace SkiaSharp
 		{
 			return SkiaApi.sk_stream_move (Handle, offset);
 		}
-		
+
 		public IntPtr GetMemoryBase ()
 		{
 			return SkiaApi.sk_stream_get_memory_base (Handle);
 		}
+
+		public SKStream Fork () =>
+			GetObject<SKStream, SKStreamImplementation> (SkiaApi.sk_stream_fork (Handle));
+
+		public SKStream Duplicate () =>
+			GetObject<SKStream, SKStreamImplementation> (SkiaApi.sk_stream_duplicate (Handle));
 
 		public bool HasPosition {
 			get {
@@ -170,6 +176,18 @@ namespace SkiaSharp
 				return (int)SkiaApi.sk_stream_get_length (Handle);
 			}
 		}
+	}
+
+	internal class SKStreamImplementation : SKStream
+	{
+		[Preserve]
+		internal SKStreamImplementation (IntPtr handle, bool owns)
+			: base (handle, owns)
+		{
+		}
+
+		protected override void DisposeNative () =>
+			SkiaApi.sk_stream_destroy (Handle);
 	}
 
 	public abstract class SKStreamRewindable : SKStream

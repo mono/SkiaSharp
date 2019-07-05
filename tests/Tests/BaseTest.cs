@@ -6,8 +6,10 @@ namespace SkiaSharp.Tests
 {
 	public abstract class BaseTest
 	{
+		protected const string CategoryKey = "Category";
+
 		protected const string GpuCategory = "GPU";
-		protected const string MatchCharacterFeature = "MatchCharacter";
+		protected const string MatchCharacterCategory = "MatchCharacter";
 
 		protected static bool IsLinux;
 		protected static bool IsMac;

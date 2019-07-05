@@ -96,5 +96,39 @@ namespace SkiaSharp.Tests
 				return new WeakReference(stream);
 			}
 		}
+
+		[SkippableFact]
+		public void MemoryStreamCanBeDuplicated()
+		{
+			var stream = new SKMemoryStream(new byte[] { 1, 2, 3, 4, 5 });
+			Assert.Equal(1, stream.ReadByte());
+			Assert.Equal(2, stream.ReadByte());
+			Assert.Equal(3, stream.ReadByte());
+
+			var dupe = stream.Duplicate();
+			Assert.NotSame(stream, dupe);
+			Assert.IsType<SKStreamImplementation>(dupe);
+			Assert.Equal(1, dupe.ReadByte());
+			Assert.Equal(4, stream.ReadByte());
+			Assert.Equal(2, dupe.ReadByte());
+			Assert.Equal(5, stream.ReadByte());
+			Assert.Equal(3, dupe.ReadByte());
+		}
+
+		[SkippableFact]
+		public void MemoryStreamCanBeForked()
+		{
+			var stream = new SKMemoryStream(new byte[] { 1, 2, 3, 4, 5 });
+			Assert.Equal(1, stream.ReadByte());
+			Assert.Equal(2, stream.ReadByte());
+
+			var dupe = stream.Fork();
+			Assert.NotSame(stream, dupe);
+			Assert.IsType<SKStreamImplementation>(dupe);
+			Assert.Equal(3, dupe.ReadByte());
+			Assert.Equal(3, stream.ReadByte());
+			Assert.Equal(4, dupe.ReadByte());
+			Assert.Equal(4, stream.ReadByte());
+		}
 	}
 }
