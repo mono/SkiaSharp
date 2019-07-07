@@ -187,15 +187,6 @@ namespace SkiaSharp.Tests
 			protected override bool OnHasPosition () => fHasPosition;
 		}
 
-		[SkippableFact]
-		public void Testing123()
-		{
-			int bufferSize = 6;
-			using (var stream = new LengthOptionalStream(true, true))
-			using (var buffered = new SKFrontBufferedManagedStream(stream, bufferSize))
-				test_hasLength(buffered, stream);
-		}
-
 		[SkippableTheory]
 		[InlineData (6)]
 		[InlineData (15)]

@@ -237,7 +237,7 @@ namespace SkiaSharp
 	public class SKFileStream : SKStreamAsset
 	{
 		[Preserve]
-		public SKFileStream (IntPtr handle, bool owns)
+		internal SKFileStream (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
