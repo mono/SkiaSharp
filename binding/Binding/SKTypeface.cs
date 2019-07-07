@@ -99,9 +99,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 
 			if (stream is SKManagedStream managed) {
-				var native = new SKDynamicMemoryWStream ();
-				managed.CopyTo (native);
-				stream = native.DetachAsStream ();
+				stream = managed.ToMemoryStream ();
 				managed.Dispose ();
 			}
 

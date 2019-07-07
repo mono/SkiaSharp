@@ -44,6 +44,14 @@ namespace SkiaSharp
 			return total;
 		}
 
+		public SKStreamAsset ToMemoryStream ()
+		{
+			using (var native = new SKDynamicMemoryWStream ()) {
+				CopyTo (native);
+				return native.DetachAsStream ();
+			}
+		}
+
 		protected override void DisposeManaged ()
 		{
 			var childStream = child?.Target as SKManagedStream;

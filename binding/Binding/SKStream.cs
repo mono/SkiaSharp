@@ -144,10 +144,10 @@ namespace SkiaSharp
 			return SkiaApi.sk_stream_get_memory_base (Handle);
 		}
 
-		public SKStream Fork () =>
+		internal SKStream Fork () =>
 			GetObject<SKStream, SKStreamImplementation> (SkiaApi.sk_stream_fork (Handle));
 
-		public SKStream Duplicate () =>
+		internal SKStream Duplicate () =>
 			GetObject<SKStream, SKStreamImplementation> (SkiaApi.sk_stream_duplicate (Handle));
 
 		public bool HasPosition {
