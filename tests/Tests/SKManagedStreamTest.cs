@@ -202,7 +202,7 @@ namespace SkiaSharp.Tests
 
 				CollectGarbage();
 
-				Assert.True(SKObject.GetInstance<SKManagedStream>(handle, out _));
+				Assert.True(SKObject.GetInstance<SKDynamicMemoryWStream>(handle, out _));
 
 				document.Close();
 			}
@@ -225,12 +225,12 @@ namespace SkiaSharp.Tests
 			var handle = stream.Handle;
 
 			Assert.True(stream.OwnsHandle);
-			Assert.False(stream.IgnoreDispose);
+			Assert.False(stream.IgnorePublicDispose);
 			Assert.True(SKObject.GetInstance<SKManagedStream>(handle, out _));
 
 			var codec = SKCodec.Create(stream);
 			Assert.False(stream.OwnsHandle);
-			Assert.True(stream.IgnoreDispose);
+			Assert.True(stream.IgnorePublicDispose);
 
 			stream.Dispose();
 			Assert.True(SKObject.GetInstance<SKManagedStream>(handle, out var inst));
@@ -250,13 +250,13 @@ namespace SkiaSharp.Tests
 			var handle = stream.Handle;
 
 			Assert.True(stream.OwnsHandle);
-			Assert.False(stream.IgnoreDispose);
+			Assert.False(stream.IgnorePublicDispose);
 			Assert.True(SKObject.GetInstance<SKStream>(handle, out _));
 
 			Assert.Null(SKCodec.Create(stream));
 
 			Assert.False(stream.OwnsHandle);
-			Assert.True(stream.IgnoreDispose);
+			Assert.True(stream.IgnorePublicDispose);
 			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
 		}
 
@@ -284,7 +284,7 @@ namespace SkiaSharp.Tests
 
 				Assert.True(SKObject.GetInstance<SKManagedStream>(streamHandle, out var stream));
 				Assert.False(stream.OwnsHandle);
-				Assert.True(stream.IgnoreDispose);
+				Assert.True(stream.IgnorePublicDispose);
 			}
 
 			SKCodec CreateCodec(out IntPtr streamHandle)
@@ -293,7 +293,7 @@ namespace SkiaSharp.Tests
 				streamHandle = stream.Handle;
 
 				Assert.True(stream.OwnsHandle);
-				Assert.False(stream.IgnoreDispose);
+				Assert.False(stream.IgnorePublicDispose);
 				Assert.True(SKObject.GetInstance<SKManagedStream>(streamHandle, out _));
 
 				return SKCodec.Create(stream);
@@ -388,6 +388,45 @@ namespace SkiaSharp.Tests
 			var dupe2 = dupe1.Duplicate();
 			Assert.Equal(1, dupe2.ReadByte());
 			Assert.Equal(2, dupe2.ReadByte());
+
+			Assert.Throws<InvalidOperationException>(() => dupe1.Duplicate());
+
+			dupe1.Dispose();
+			dupe2.Dispose();
+
+			Assert.Throws<ObjectDisposedException>(() => dotnet.Position);
+		}
+
+		[SkippableFact]
+		public void DuplicateStreamIsCollected()
+		{
+			var handle = DoWork();
+
+			CollectGarbage();
+
+			Assert.False(SKObject.GetInstance<SKManagedStream>(handle, out _));
+
+			IntPtr DoWork()
+			{
+				var dotnet = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
+				var stream = new SKManagedStream(dotnet, true);
+				Assert.Equal(1, stream.ReadByte());
+				Assert.Equal(2, stream.ReadByte());
+
+				var dupe1 = stream.Duplicate();
+				Assert.Equal(1, dupe1.ReadByte());
+				Assert.Equal(2, dupe1.ReadByte());
+
+				Assert.Throws<InvalidOperationException>(() => stream.Duplicate());
+
+				stream.Dispose();
+
+				var dupe2 = dupe1.Duplicate();
+				Assert.Equal(1, dupe2.ReadByte());
+				Assert.Equal(2, dupe2.ReadByte());
+
+				return dupe2.Handle;
+			}
 		}
 
 		[SkippableFact]

@@ -76,6 +76,70 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void ObjectsWithTheSameHandleButDoNotOwnTheirHandlesAreCreatedAndCollectedCorrectly()
+		{
+			var handle = (IntPtr)566;
+
+			Construct();
+
+			CollectGarbage();
+
+			Assert.False(SKObject.GetInstance<LifecycleObject>(handle, out _));
+
+			void Construct()
+			{
+				var inst1 = new LifecycleObject(handle, false);
+				var inst2 = new LifecycleObject(handle, false);
+
+				Assert.NotSame(inst1, inst2);
+			}
+		}
+
+		[SkippableFact]
+		public void ObjectsWithTheSameHandleButDoNotOwnTheirHandlesAreCreatedAndDisposedCorrectly()
+		{
+			var handle = (IntPtr)567;
+
+			var inst = Construct();
+
+			CollectGarbage();
+
+			Assert.True(SKObject.GetInstance<LifecycleObject>(handle, out var obj));
+			Assert.Equal(2, obj.Value);
+			Assert.Same(inst, obj);
+
+			LifecycleObject Construct()
+			{
+				var inst1 = new LifecycleObject(handle, false) { Value = 1 };
+				var inst2 = new LifecycleObject(handle, false) { Value = 2 };
+
+				Assert.NotSame(inst1, inst2);
+
+				return inst2;
+			}
+		}
+
+		[SkippableFact]
+		public void ObjectsWithTheSameHandleAndOwnTheirHandlesThrowInDebugBuildsButNotRelease()
+		{
+			var handle = (IntPtr)568;
+
+			var inst1 = new LifecycleObject(handle, true) { Value = 1 };
+
+#if THROW_OBJECT_EXCEPTIONS
+			Assert.Throws<InvalidOperationException>(() => new LifecycleObject(handle, true) { Value = 2 });
+
+			GarbageCleanupFixture.ignoredExceptions.Add(handle);
+#else
+			var inst2 = new LifecycleObject(handle, true) { Value = 2 };
+			Assert.True(inst1.DestroyedNative);
+
+			inst1.Dispose();
+			inst2.Dispose();
+#endif
+		}
+
+		[SkippableFact]
 		public void DisposeInvalidatesObject()
 		{
 			var handle = (IntPtr)345;
@@ -129,6 +193,7 @@ namespace SkiaSharp.Tests
 		private class LifecycleObject : SKObject
 		{
 			public bool DestroyedNative = false;
+			public bool DestroyedManaged = false;
 
 			[Preserve]
 			public LifecycleObject(IntPtr handle, bool owns)
@@ -136,9 +201,16 @@ namespace SkiaSharp.Tests
 			{
 			}
 
+			public object Value { get; set; }
+
 			protected override void DisposeNative()
 			{
 				DestroyedNative = true;
+			}
+
+			protected override void DisposeManaged()
+			{
+				DestroyedManaged = true;
 			}
 		}
 

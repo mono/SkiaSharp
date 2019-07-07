@@ -10,6 +10,8 @@ namespace SkiaSharp
 		{
 		}
 
+		void ISKNonVirtualReferenceCounted.ReferenceNative () => SkiaApi.sk_textblob_ref (Handle);
+
 		void ISKNonVirtualReferenceCounted.UnreferenceNative () => SkiaApi.sk_textblob_unref (Handle);
 
 		public SKRect Bounds {

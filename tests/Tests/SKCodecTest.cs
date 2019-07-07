@@ -68,12 +68,12 @@ namespace SkiaSharp.Tests
 			var handle = stream.Handle;
 
 			Assert.True(stream.OwnsHandle);
-			Assert.False(stream.IgnoreDispose);
+			Assert.False(stream.IgnorePublicDispose);
 			Assert.True(SKObject.GetInstance<SKMemoryStream>(handle, out _));
 
 			var codec = SKCodec.Create(stream);
 			Assert.False(stream.OwnsHandle);
-			Assert.True(stream.IgnoreDispose);
+			Assert.True(stream.IgnorePublicDispose);
 
 			stream.Dispose();
 			Assert.True(SKObject.GetInstance<SKMemoryStream>(handle, out var inst));
@@ -93,13 +93,13 @@ namespace SkiaSharp.Tests
 			var handle = stream.Handle;
 
 			Assert.True(stream.OwnsHandle);
-			Assert.False(stream.IgnoreDispose);
+			Assert.False(stream.IgnorePublicDispose);
 			Assert.True(SKObject.GetInstance<SKStream>(handle, out _));
 
 			Assert.Null(SKCodec.Create(stream));
 
 			Assert.False(stream.OwnsHandle);
-			Assert.True(stream.IgnoreDispose);
+			Assert.True(stream.IgnorePublicDispose);
 			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
 		}
 
@@ -127,7 +127,7 @@ namespace SkiaSharp.Tests
 
 				Assert.True(SKObject.GetInstance<SKMemoryStream>(streamHandle, out var stream));
 				Assert.False(stream.OwnsHandle);
-				Assert.True(stream.IgnoreDispose);
+				Assert.True(stream.IgnorePublicDispose);
 			}
 
 			SKCodec CreateCodec(out IntPtr streamHandle)
@@ -136,7 +136,7 @@ namespace SkiaSharp.Tests
 				streamHandle = stream.Handle;
 
 				Assert.True(stream.OwnsHandle);
-				Assert.False(stream.IgnoreDispose);
+				Assert.False(stream.IgnorePublicDispose);
 				Assert.True(SKObject.GetInstance<SKMemoryStream>(streamHandle, out _));
 
 				return SKCodec.Create(stream);

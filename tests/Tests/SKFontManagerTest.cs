@@ -145,6 +145,37 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void StreamIsAccessableFromNativeType()
+		{
+			var paint = CreatePaint(out var typefaceHandle);
+
+			CollectGarbage();
+
+			Assert.False(SKObject.GetInstance<SKTypeface>(typefaceHandle, out _));
+
+			var tf = paint.Typeface;
+
+			Assert.Equal("Roboto2", tf.FamilyName);
+			Assert.True(tf.TryGetTableTags(out var tags));
+			Assert.NotEmpty(tags);
+
+			SKPaint CreatePaint(out IntPtr handle)
+			{
+				var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
+				var dotnet = new MemoryStream(bytes);
+				var stream = new SKManagedStream(dotnet, true);
+
+				var typeface = SKFontManager.Default.CreateTypeface(stream);
+				handle = typeface.Handle;
+
+				return new SKPaint
+				{
+					Typeface = typeface
+				};
+			}
+		}
+
+		[SkippableFact]
 		public void CanReadNonSeekableStream()
 		{
 			var fonts = SKFontManager.Default;

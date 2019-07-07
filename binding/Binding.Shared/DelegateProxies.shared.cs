@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 #if HARFBUZZ
 namespace HarfBuzzSharp
@@ -8,7 +9,7 @@ namespace HarfBuzzSharp
 namespace SkiaSharp
 #endif
 {
-#if DEBUG
+#if THROW_OBJECT_EXCEPTIONS
 	using GCHandle = GCHandleProxy;
 #endif
 
@@ -64,7 +65,7 @@ namespace SkiaSharp
 		// user data delegates
 
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
-		public static IntPtr CreateUserData (object userData, bool makeWeak = true)
+		public static IntPtr CreateUserData (object userData, bool makeWeak = false)
 		{
 			userData = makeWeak ? new WeakReference (userData) : userData;
 			var del = new UserDataDelegate (() => userData);
@@ -154,7 +155,7 @@ namespace SkiaSharp
 		}
 	}
 
-#if DEBUG
+#if THROW_OBJECT_EXCEPTIONS
 	// an internal, debug-only proxy that we can use to make sure we are not
 	// leaking GC handles by accident
 	internal struct GCHandleProxy

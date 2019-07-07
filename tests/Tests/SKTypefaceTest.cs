@@ -1,8 +1,6 @@
 ﻿using System;
-using Xunit;
 using System.IO;
-using System.Runtime.InteropServices;
-using System.Linq;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
@@ -237,12 +235,12 @@ namespace SkiaSharp.Tests
 			var handle = stream.Handle;
 
 			Assert.True(stream.OwnsHandle);
-			Assert.False(stream.IgnoreDispose);
+			Assert.False(stream.IgnorePublicDispose);
 			Assert.True(SKObject.GetInstance<SKMemoryStream>(handle, out _));
 
 			var typeface = SKTypeface.FromStream(stream);
 			Assert.False(stream.OwnsHandle);
-			Assert.True(stream.IgnoreDispose);
+			Assert.True(stream.IgnorePublicDispose);
 
 			stream.Dispose();
 			Assert.True(SKObject.GetInstance<SKMemoryStream>(handle, out var inst));
@@ -261,14 +259,110 @@ namespace SkiaSharp.Tests
 			var handle = stream.Handle;
 
 			Assert.True(stream.OwnsHandle);
-			Assert.False(stream.IgnoreDispose);
+			Assert.False(stream.IgnorePublicDispose);
 			Assert.True(SKObject.GetInstance<SKStream>(handle, out _));
 
 			Assert.Null(SKTypeface.FromStream(stream));
 
 			Assert.False(stream.OwnsHandle);
-			Assert.True(stream.IgnoreDispose);
+			Assert.True(stream.IgnorePublicDispose);
 			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
+		}
+
+		[SkippableFact]
+		public void ManagedStreamIsAccessableFromNativeType()
+		{
+			var paint = CreatePaint();
+
+			CollectGarbage();
+
+			var tf = paint.Typeface;
+
+			Assert.Equal("Roboto2", tf.FamilyName);
+			Assert.True(tf.TryGetTableTags(out var tags));
+			Assert.NotEmpty(tags);
+
+			SKPaint CreatePaint()
+			{
+				var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
+				var dotnet = new MemoryStream(bytes);
+				var stream = new SKManagedStream(dotnet, true);
+
+				var typeface = SKTypeface.FromStream(stream);
+
+				return new SKPaint
+				{
+					Typeface = typeface
+				};
+			}
+		}
+
+		[SkippableFact]
+		public void StreamIsAccessableFromNativeType()
+		{
+			var paint = CreatePaint(out var typefaceHandle);
+
+			CollectGarbage();
+
+			Assert.False(SKObject.GetInstance<SKTypeface>(typefaceHandle, out _));
+
+			var tf = paint.Typeface;
+
+			Assert.Equal("Roboto2", tf.FamilyName);
+			Assert.True(tf.TryGetTableTags(out var tags));
+			Assert.NotEmpty(tags);
+
+			SKPaint CreatePaint(out IntPtr handle)
+			{
+				var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
+				var dotnet = new MemoryStream(bytes);
+				var stream = new SKManagedStream(dotnet, true);
+
+				var typeface = SKTypeface.FromStream(stream);
+				handle = typeface.Handle;
+
+				return new SKPaint
+				{
+					Typeface = typeface
+				};
+			}
+		}
+
+		[SkippableFact]
+		public unsafe void ManagedStreamIsCollectedWhenTypefaceIsDisposed()
+		{
+			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
+			var dotnet = new MemoryStream(bytes);
+			var stream = new SKManagedStream(dotnet, true);
+			var handle = stream.Handle;
+
+			var typeface = SKTypeface.FromStream(stream);
+
+			typeface.Dispose();
+
+			Assert.False(SKObject.GetInstance<SKManagedStream>(handle, out _));
+			Assert.Throws<ObjectDisposedException>(() => dotnet.Position);
+		}
+
+		[SkippableFact]
+		public unsafe void ManagedStreamIsCollectedWhenCollected()
+		{
+			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
+			var dotnet = new MemoryStream(bytes);
+
+			var handle = DoWork();
+
+			CollectGarbage();
+
+			Assert.False(SKObject.GetInstance<SKManagedStream>(handle, out _));
+			Assert.Throws<ObjectDisposedException>(() => dotnet.Position);
+
+			IntPtr DoWork()
+			{
+				var stream = new SKManagedStream(dotnet, true);
+				var typeface = SKTypeface.FromStream(stream);
+				return stream.Handle;
+			}
 		}
 
 		[SkippableFact]
@@ -294,7 +388,7 @@ namespace SkiaSharp.Tests
 
 				Assert.True(SKObject.GetInstance<SKMemoryStream>(streamHandle, out var stream));
 				Assert.False(stream.OwnsHandle);
-				Assert.True(stream.IgnoreDispose);
+				Assert.True(stream.IgnorePublicDispose);
 			}
 
 			SKTypeface CreateTypeface(out IntPtr streamHandle)
@@ -303,7 +397,7 @@ namespace SkiaSharp.Tests
 				streamHandle = stream.Handle;
 
 				Assert.True(stream.OwnsHandle);
-				Assert.False(stream.IgnoreDispose);
+				Assert.False(stream.IgnorePublicDispose);
 				Assert.True(SKObject.GetInstance<SKMemoryStream>(streamHandle, out _));
 
 				return SKTypeface.FromStream(stream);

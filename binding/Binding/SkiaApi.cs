@@ -953,6 +953,8 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_data_t sk_data_new_with_proc (voidptr_t ptr, size_t length, SKDataReleaseDelegateProxyDelegate proc, voidptr_t ctx);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_data_ref (sk_data_t d);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_data_unref (sk_data_t d);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static size_t sk_data_get_size (sk_data_t d);
@@ -1873,6 +1875,8 @@ namespace SkiaSharp
 		public extern static void sk_region_get_bounds (sk_region_t r, out SKRectI rect);
 
 		// vertices
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static void sk_vertices_ref (sk_vertices_t cvertices);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_vertices_unref (sk_vertices_t cvertices);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]

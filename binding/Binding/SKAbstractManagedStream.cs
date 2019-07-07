@@ -218,9 +218,11 @@ namespace SkiaSharp
 		private static void DestroyInternal (IntPtr s, IntPtr context)
 		{
 			var stream = DelegateProxies.GetUserData<SKAbstractManagedStream> (context, out var gch);
-			Interlocked.Exchange (ref stream.fromNative, 1);
+			if (stream != null) {
+				Interlocked.Exchange (ref stream.fromNative, 1);
+				stream.Dispose ();
+			}
 			gch.Free ();
-			stream.Dispose ();
 		}
 	}
 }

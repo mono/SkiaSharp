@@ -11,11 +11,11 @@ namespace SkiaSharp.Tests
 {
 	public class ApiTest : BaseTest
 	{
-		private static IEnumerable<Type> InteropApiTypes => new Type[]
-			{
-				//typeof(SkiaSharp.SKNativeObject).Assembly.GetType("SkiaSharp.SkiaApi"),
-				//typeof(HarfBuzzSharp.NativeObject).Assembly.GetType("HarfBuzzSharp.HarfBuzzApi")
-			};
+		private static IEnumerable<Type> InteropApiTypes => new[]
+		{
+			typeof(SkiaSharp.SKNativeObject).Assembly.GetType("SkiaSharp.SkiaApi"),
+			typeof(HarfBuzzSharp.NativeObject).Assembly.GetType("HarfBuzzSharp.HarfBuzzApi")
+		};
 
 		private static IEnumerable<MethodInfo> InteropMembers =>
 			InteropApiTypes

@@ -11,15 +11,18 @@ namespace SkiaSharp
 		// We pick a value that is the largest multiple of 4096 that is still smaller than the large object heap threshold (85K).
 		// The CopyTo/CopyToAsync buffer is short-lived and is likely to be collected at Gen0, and it offers a significant
 		// improvement in Copy performance.
-		private const int CopyBufferSize = 81920;
+		internal const int CopyBufferSize = 81920;
 
-		private static readonly Lazy<SKData> empty = new Lazy<SKData> (() => new SKDataStatic (SkiaApi.sk_data_new_empty ()));
+		private static readonly Lazy<SKData> empty =
+			new Lazy<SKData> (() => new SKDataStatic (SkiaApi.sk_data_new_empty ()));
 
 		[Preserve]
 		internal SKData (IntPtr x, bool owns)
 			: base (x, owns)
 		{
 		}
+
+		void ISKNonVirtualReferenceCounted.ReferenceNative () => SkiaApi.sk_data_ref (Handle);
 
 		void ISKNonVirtualReferenceCounted.UnreferenceNative () => SkiaApi.sk_data_unref (Handle);
 
@@ -238,6 +241,7 @@ namespace SkiaSharp
 			internal SKDataStatic (IntPtr x)
 				: base (x, false)
 			{
+				IgnorePublicDispose = true;
 			}
 
 			protected override void Dispose (bool disposing)
@@ -247,4 +251,3 @@ namespace SkiaSharp
 		}
 	}
 }
-

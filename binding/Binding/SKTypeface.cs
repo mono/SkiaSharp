@@ -15,13 +15,16 @@ namespace SkiaSharp
 
 	public class SKTypeface : SKObject, ISKReferenceCounted
 	{
+		private static readonly Lazy<SKTypeface> defaultTypeface =
+			new Lazy<SKTypeface> (() => new SKTypefaceStatic (SkiaApi.sk_typeface_ref_default ()));
+
 		[Preserve]
 		internal SKTypeface (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
 
-		public static SKTypeface Default => GetObject<SKTypeface> (SkiaApi.sk_typeface_ref_default ());
+		public static SKTypeface Default => defaultTypeface.Value;
 
 		public static SKTypeface CreateDefault ()
 		{
@@ -87,20 +90,6 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			if (!stream.CanSeek)
-			{
-				var fontStream = new MemoryStream ();
-				stream.CopyTo (fontStream);
-				fontStream.Flush ();
-				fontStream.Position = 0;
-
-				stream.Dispose ();
-				stream = null;
-
-				stream = fontStream;
-				fontStream = null;
-			}
-
 			return FromStream (new SKManagedStream (stream, true), index);
 		}
 
@@ -108,6 +97,14 @@ namespace SkiaSharp
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
+
+			if (stream is SKManagedStream managed) {
+				var native = new SKDynamicMemoryWStream ();
+				managed.CopyTo (native);
+				stream = native.DetachAsStream ();
+				managed.Dispose ();
+			}
+
 			var typeface = GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_stream (stream.Handle, index));
 			stream.RevokeOwnership (typeface);
 			return typeface;
@@ -316,5 +313,19 @@ namespace SkiaSharp
 
 		public SKStreamAsset OpenStream (out int ttcIndex) =>
 			GetObject<SKStreamAssetImplementation> (SkiaApi.sk_typeface_open_stream (Handle, out ttcIndex));
+
+		private sealed class SKTypefaceStatic : SKTypeface
+		{
+			internal SKTypefaceStatic (IntPtr x)
+				: base (x, false)
+			{
+				IgnorePublicDispose = true;
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				// do not dispose
+			}
+		}
 	}
 }

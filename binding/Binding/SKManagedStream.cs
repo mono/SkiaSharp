@@ -28,6 +28,22 @@ namespace SkiaSharp
 			disposeStream = disposeManagedStream;
 		}
 
+		public int CopyTo (SKWStream destination)
+		{
+			if (destination == null)
+				throw new ArgumentNullException (nameof (destination));
+
+			var buffer = new byte[SKData.CopyBufferSize];
+			var total = 0;
+			int len;
+			while ((len = stream.Read (buffer, 0, buffer.Length)) > 0) {
+				destination.Write (buffer, len);
+				total += len;
+			}
+			destination.Flush ();
+			return total;
+		}
+
 		protected override void DisposeManaged ()
 		{
 			var childStream = child?.Target as SKManagedStream;

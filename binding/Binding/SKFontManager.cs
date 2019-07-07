@@ -7,7 +7,8 @@ namespace SkiaSharp
 {
 	public class SKFontManager : SKObject, ISKReferenceCounted
 	{
-		private static readonly Lazy<SKFontManager> defaultManager = new Lazy<SKFontManager> (() => new SKFontManagerStatic (SkiaApi.sk_fontmgr_ref_default ()));
+		private static readonly Lazy<SKFontManager> defaultManager =
+			new Lazy<SKFontManager> (() => new SKFontManagerStatic (SkiaApi.sk_fontmgr_ref_default ()));
 
 		[Preserve]
 		internal SKFontManager (IntPtr handle, bool owns)
@@ -80,19 +81,6 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			if (!stream.CanSeek) {
-				var fontStream = new MemoryStream ();
-				stream.CopyTo (fontStream);
-				fontStream.Flush ();
-				fontStream.Position = 0;
-
-				stream.Dispose ();
-				stream = null;
-
-				stream = fontStream;
-				fontStream = null;
-			}
-
 			return CreateTypeface (new SKManagedStream (stream, true), index);
 		}
 
@@ -100,6 +88,13 @@ namespace SkiaSharp
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
+
+			if (stream is SKManagedStream managed) {
+				var native = new SKDynamicMemoryWStream ();
+				managed.CopyTo (native);
+				stream = native.DetachAsStream ();
+				managed.Dispose ();
+			}
 
 			var typeface = GetObject<SKTypeface> (SkiaApi.sk_fontmgr_create_from_stream (Handle, stream.Handle, index));
 			stream.RevokeOwnership (typeface);
@@ -181,6 +176,7 @@ namespace SkiaSharp
 			internal SKFontManagerStatic (IntPtr x)
 				: base (x, false)
 			{
+				IgnorePublicDispose = true;
 			}
 
 			protected override void Dispose (bool disposing)

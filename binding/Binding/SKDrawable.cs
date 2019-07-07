@@ -86,8 +86,9 @@ namespace SkiaSharp
 			Draw (canvas, ref matrix);
 		}
 
+		// do not unref as this is a plain pointer return, not a reference counted pointer
 		public SKPicture Snapshot () =>
-			GetObject<SKPicture> (SkiaApi.sk_drawable_new_picture_snapshot (Handle));
+			GetObject<SKPicture> (SkiaApi.sk_drawable_new_picture_snapshot (Handle), unrefExisting: false);
 
 		public void NotifyDrawingChanged () =>
 			SkiaApi.sk_drawable_notify_drawing_changed (Handle);
