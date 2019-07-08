@@ -59,17 +59,17 @@ namespace SkiaSharp.Views.UWP
 
 		private void OnLoaded(object sender, RoutedEventArgs e)
 		{
-			// var display = DisplayInformation.GetForCurrentView();
-			// display.DpiChanged += OnDpiChanged;
+			var display = DisplayInformation.GetForCurrentView();
+			display.DpiChanged += OnDpiChanged;
 
-			//OnDpiChanged(display);
+			OnDpiChanged(display);
 			Invalidate();
 		}
 
 		private void OnUnloaded(object sender, RoutedEventArgs e)
 		{
-			// var display = DisplayInformation.GetForCurrentView();
-			// display.DpiChanged -= OnDpiChanged;
+			var display = DisplayInformation.GetForCurrentView();
+			display.DpiChanged -= OnDpiChanged;
 		}
 
 		private void DoInvalidate()
@@ -86,7 +86,7 @@ namespace SkiaSharp.Views.UWP
 			if (!IgnorePixelScaling)
 			{
 				var display = DisplayInformation.GetForCurrentView();
-				var scale = display.LogicalDpi / 100;
+				var scale = display.LogicalDpi / 96.0f;
 
 				info = new SKImageInfo((int)(w * scale), (int)(h * scale), SKColorType.Rgba8888, SKAlphaType.Premul);
 			}

@@ -53,17 +53,17 @@ namespace SkiaSharp.Views.UWP
 
 		private void OnLoaded(object sender, RoutedEventArgs e)
 		{
-			// var display = DisplayInformation.GetForCurrentView();
-			// display.DpiChanged += OnDpiChanged;
+			var display = DisplayInformation.GetForCurrentView();
+			display.DpiChanged += OnDpiChanged;
 
-			//OnDpiChanged(display);
+			OnDpiChanged(display);
 			Invalidate();
 		}
 
 		private void OnUnloaded(object sender, RoutedEventArgs e)
 		{
-			// var display = DisplayInformation.GetForCurrentView();
-			// display.DpiChanged -= OnDpiChanged;
+			var display = DisplayInformation.GetForCurrentView();
+			display.DpiChanged -= OnDpiChanged;
 		}
 
 		private void DoInvalidate()
