@@ -611,7 +611,7 @@ Task ("externals-linux")
         //     WorkingDirectory = "native-builds/libHarfBuzzSharp_linux",
         // });
         RunProcess ("make", new ProcessSettings {
-            Arguments = $"ARCH={arch} SONAME_VERSION={GetVersion ("HarfBuzz", "soname")}",
+            Arguments = $"ARCH={arch} SONAME_VERSION={GetVersion ("HarfBuzz", "soname")} CXXFLAGS='-static-libstdc++'",
             WorkingDirectory = "native-builds/libHarfBuzzSharp_linux",
         });
 
