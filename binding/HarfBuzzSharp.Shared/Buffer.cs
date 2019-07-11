@@ -87,6 +87,8 @@ namespace HarfBuzzSharp
 
 		public void AddUtf8 (string utf8text) => AddUtf8 (Encoding.UTF8.GetBytes (utf8text), 0, -1);
 
+		public void AddUtf8 (byte[] bytes) => AddUtf8 (new ReadOnlySpan<byte> (bytes));
+
 		public void AddUtf8 (ReadOnlySpan<byte> text) => AddUtf8 (text, 0, -1);
 
 		public unsafe void AddUtf8 (ReadOnlySpan<byte> text, int itemOffset, int itemLength)
