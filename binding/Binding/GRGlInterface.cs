@@ -5,15 +5,8 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	public delegate IntPtr GRGlGetProcDelegate (object context, string name);
-
-	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal delegate IntPtr GRGlGetProcDelegateProxyDelegate (IntPtr context, [MarshalAs (UnmanagedType.LPStr)] string name);
-
 	public class GRGlInterface : SKObject, ISKReferenceCounted
 	{
-		private static readonly GRGlGetProcDelegateProxyDelegate GetProcProxy = GetProcProxyImplementation;
-
 		[Preserve]
 		internal GRGlInterface (IntPtr h, bool owns)
 			: base (h, owns)
@@ -71,7 +64,7 @@ namespace SkiaSharp
 			var del = get != null && context != null
 				? new GRGlGetProcDelegate ((_, name) => get (context, name))
 				: get;
-			var proxy = DelegateProxies.Create (del, GetProcProxy, out var gch, out var ctx);
+			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
 			try {
 				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_interface (ctx, proxy));
 			} finally {
@@ -100,7 +93,7 @@ namespace SkiaSharp
 			var del = get != null && context != null
 				? new GRGlGetProcDelegate ((_, name) => get (context, name))
 				: get;
-			var proxy = DelegateProxies.Create (del, GetProcProxy, out var gch, out var ctx);
+			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
 			try {
 				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gl_interface (ctx, proxy));
 			} finally {
@@ -118,7 +111,7 @@ namespace SkiaSharp
 			var del = get != null && context != null
 				? new GRGlGetProcDelegate ((_, name) => get (context, name))
 				: get;
-			var proxy = DelegateProxies.Create (del, GetProcProxy, out var gch, out var ctx);
+			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
 			try {
 				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gles_interface (ctx, proxy));
 			} finally {
@@ -134,13 +127,6 @@ namespace SkiaSharp
 		public bool HasExtension (string extension)
 		{
 			return SkiaApi.gr_glinterface_has_extension (Handle, extension);
-		}
-
-		[MonoPInvokeCallback (typeof (GRGlGetProcDelegateProxyDelegate))]
-		private static IntPtr GetProcProxyImplementation (IntPtr context, string name)
-		{
-			var del = DelegateProxies.Get<GRGlGetProcDelegate> (context, out _);
-			return del.Invoke (null, name);
 		}
 
 		private static class AngleLoader

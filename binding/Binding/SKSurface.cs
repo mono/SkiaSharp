@@ -3,15 +3,8 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	public delegate void SKSurfaceReleaseDelegate (IntPtr address, object context);
-
-	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal delegate void SKSurfaceReleaseProxyDelegate (IntPtr address, IntPtr context);
-
 	public class SKSurface : SKObject, ISKReferenceCounted
 	{
-		private static readonly SKSurfaceReleaseProxyDelegate ReleaseDelegateProxy = ReleaseProxyImplementation;
-
 		[Obsolete ("Use Create(SKImageInfo) instead.")]
 		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType) => Create (new SKImageInfo (width, height, colorType, alphaType));
 		[Obsolete ("Use Create(SKImageInfo, SKSurfaceProperties) instead.")]
@@ -92,7 +85,7 @@ namespace SkiaSharp
 			var del = releaseProc != null && context != null
 				? new SKSurfaceReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
-			var proxy = DelegateProxies.Create (del, ReleaseDelegateProxy, out _, out var ctx);
+			var proxy = DelegateProxies.Create (del, DelegateProxies.SKSurfaceReleaseDelegateProxy, out _, out var ctx);
 			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster_direct (ref cinfo, pixels, (IntPtr)rowBytes, proxy, ctx, props?.Handle ?? IntPtr.Zero));
 		}
 
@@ -330,17 +323,6 @@ namespace SkiaSharp
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
 			return SkiaApi.sk_surface_read_pixels (Handle, ref cinfo, dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
-		}
-
-		[MonoPInvokeCallback (typeof (SKSurfaceReleaseProxyDelegate))]
-		private static void ReleaseProxyImplementation (IntPtr address, IntPtr context)
-		{
-			var del = DelegateProxies.Get<SKSurfaceReleaseDelegate> (context, out var gch);
-			try {
-				del.Invoke (address, null);
-			} finally {
-				gch.Free ();
-			}
 		}
 	}
 }

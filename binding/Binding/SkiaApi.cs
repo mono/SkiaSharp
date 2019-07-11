@@ -184,7 +184,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_surface_t sk_surface_new_raster (ref SKImageInfoNative info, size_t rowBytes, sk_surfaceprops_t props);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_surface_t sk_surface_new_raster_direct (ref SKImageInfoNative info, voidptr_t pixels, size_t rowBytes, SKSurfaceReleaseProxyDelegate releaseProc, voidptr_t context, sk_surfaceprops_t props);
+		public extern static sk_surface_t sk_surface_new_raster_direct (ref SKImageInfoNative info, voidptr_t pixels, size_t rowBytes, SKSurfaceReleaseDelegateProxyDelegate releaseProc, voidptr_t context, sk_surfaceprops_t props);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_canvas_t sk_surface_get_canvas (sk_surface_t t);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -561,7 +561,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_image_t sk_image_new_raster_data (ref SKImageInfoNative info, sk_data_t pixels, size_t rowBytes);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_image_t sk_image_new_raster (sk_pixmap_t pixmap, SKImageRasterReleaseProxyDelegate releaseProc, voidptr_t context);
+		public extern static sk_image_t sk_image_new_raster (sk_pixmap_t pixmap, SKImageRasterReleaseDelegateProxyDelegate releaseProc, voidptr_t context);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_image_t sk_image_new_from_bitmap (sk_bitmap_t cbitmap);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -569,7 +569,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_image_t sk_image_new_from_encoded (sk_data_t encoded, nullptr_t subsetZero);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_image_t sk_image_new_from_texture (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, sk_colorspace_t colorSpace, SKImageTextureReleaseProxyDelegate releaseProc, voidptr_t releaseContext);
+		public extern static sk_image_t sk_image_new_from_texture (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, sk_colorspace_t colorSpace, SKImageTextureReleaseDelegateProxyDelegate releaseProc, voidptr_t releaseContext);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_image_t sk_image_new_from_adopted_texture (gr_context_t context, gr_backendtexture_t texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, sk_colorspace_t colorSpace);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -951,7 +951,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_data_t sk_data_new_from_stream (sk_stream_t stream, size_t length);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static sk_data_t sk_data_new_with_proc (voidptr_t ptr, size_t length, SKDataReleaseProxyDelegate proc, voidptr_t ctx);
+		public extern static sk_data_t sk_data_new_with_proc (voidptr_t ptr, size_t length, SKDataReleaseDelegateProxyDelegate proc, voidptr_t ctx);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_data_ref (sk_data_t d);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1464,7 +1464,7 @@ namespace SkiaSharp
 		public extern static bool sk_bitmap_ready_to_draw (sk_bitmap_t b);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		public extern static bool sk_bitmap_install_pixels (sk_bitmap_t cbitmap, ref SKImageInfoNative cinfo, voidptr_t pixels, size_t rowBytes, SKBitmapReleaseProxyDelegate releaseProc, voidptr_t context);
+		public extern static bool sk_bitmap_install_pixels (sk_bitmap_t cbitmap, ref SKImageInfoNative cinfo, voidptr_t pixels, size_t rowBytes, SKBitmapReleaseDelegateProxyDelegate releaseProc, voidptr_t context);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		public extern static bool sk_bitmap_install_pixels_with_pixmap (sk_bitmap_t cbitmap, sk_pixmap_t cpixmap);
