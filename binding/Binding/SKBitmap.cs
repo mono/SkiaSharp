@@ -39,10 +39,17 @@ namespace SkiaSharp
 	// TODO: `GenerationID` may be useful
 	// TODO: `GetAddr` and `GetPixel` are confusing
 
+	public delegate void SKBitmapReleaseDelegate (IntPtr address, object context);
+
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal delegate void SKBitmapReleaseProxyDelegate (IntPtr address, IntPtr context);
+
 	public class SKBitmap : SKObject
 	{
 		private const string UnsupportedColorTypeMessage = "Setting the ColorTable is only supported for bitmaps with ColorTypes of Index8.";
 		private const string UnableToAllocatePixelsMessage = "Unable to allocate pixels for the bitmap.";
+
+		private static readonly SKBitmapReleaseProxyDelegate ReleaseDelegateProxy = ReleaseProxyImplementation;
 
 		[Preserve]
 		internal SKBitmap (IntPtr handle, bool owns)
@@ -678,7 +685,7 @@ namespace SkiaSharp
 			var del = releaseProc != null && context != null
 				? new SKBitmapReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
-			var proxy = DelegateProxies.Create (del, DelegateProxies.SKBitmapReleaseDelegateProxy, out _, out var ctx);
+			var proxy = DelegateProxies.Create (del, ReleaseDelegateProxy, out _, out var ctx);
 			return SkiaApi.sk_bitmap_install_pixels (Handle, ref cinfo, pixels, (IntPtr)rowBytes, proxy, ctx);
 		}
 
@@ -787,6 +794,17 @@ namespace SkiaSharp
 		private void Swap (SKBitmap other)
 		{
 			SkiaApi.sk_bitmap_swap (Handle, other.Handle);
+		}
+
+		[MonoPInvokeCallback (typeof (SKBitmapReleaseProxyDelegate))]
+		private static void ReleaseProxyImplementation (IntPtr address, IntPtr context)
+		{
+			var del = DelegateProxies.Get<SKBitmapReleaseDelegate> (context, out var gch);
+			try {
+				del.Invoke (address, null);
+			} finally {
+				gch.Free ();
+			}
 		}
 	}
 }

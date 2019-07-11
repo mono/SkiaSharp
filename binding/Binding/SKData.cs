@@ -2,10 +2,14 @@
 using System.Runtime.InteropServices;
 using System.IO;
 using System.Text;
-using System.ComponentModel;
 
 namespace SkiaSharp
 {
+	public delegate void SKDataReleaseDelegate (IntPtr address, object context);
+
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal delegate void SKDataReleaseProxyDelegate (IntPtr address, IntPtr context);
+
 	public class SKData : SKObject, ISKNonVirtualReferenceCounted
 	{
 		// We pick a value that is the largest multiple of 4096 that is still smaller than the large object heap threshold (85K).
@@ -15,6 +19,8 @@ namespace SkiaSharp
 
 		private static readonly Lazy<SKData> empty =
 			new Lazy<SKData> (() => new SKDataStatic (SkiaApi.sk_data_new_empty ()));
+
+		private static readonly SKDataReleaseProxyDelegate ReleaseDelegateProxy = ReleaseProxyImplementation;
 
 		[Preserve]
 		internal SKData (IntPtr x, bool owns)
@@ -153,7 +159,7 @@ namespace SkiaSharp
 			var del = releaseProc != null && context != null
 				? new SKDataReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
-			var proxy = DelegateProxies.Create (del, DelegateProxies.SKDataReleaseDelegateProxy, out _, out var ctx);
+			var proxy = DelegateProxies.Create (del, ReleaseDelegateProxy, out _, out var ctx);
 			return GetObject<SKData> (SkiaApi.sk_data_new_with_proc (address, (IntPtr)length, proxy, ctx));
 		}
 
@@ -247,6 +253,17 @@ namespace SkiaSharp
 			protected override void Dispose (bool disposing)
 			{
 				// do not dispose
+			}
+		}
+
+		[MonoPInvokeCallback (typeof (SKDataReleaseProxyDelegate))]
+		private static void ReleaseProxyImplementation (IntPtr address, IntPtr context)
+		{
+			var del = DelegateProxies.Get<SKDataReleaseDelegate> (context, out var gch);
+			try {
+				del.Invoke (address, null);
+			} finally {
+				gch.Free ();
 			}
 		}
 	}

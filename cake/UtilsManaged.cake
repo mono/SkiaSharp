@@ -72,7 +72,6 @@ void RunTests (FilePath testAssembly, bool is32)
         ReportName = "TestResult",
         XmlReport = true,
         UseX86 = is32,
-        Parallelism = ParallelismOption.Assemblies,
         OutputDirectory = dir,
         WorkingDirectory = dir,
         ArgumentCustomization = args => args.Append ("-verbose"),
