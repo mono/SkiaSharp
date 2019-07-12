@@ -263,26 +263,26 @@ stages:
   - stage: signing
     displayName: Sign NuGets
     dependsOn: package
+    condition: eq(variables['System.TeamProject'], 'devdiv')
     jobs:
-      - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
-        - job: signing                             # Sign NuGets
-          displayName: Sign NuGets
-          requiredArtifacts: package
-          pool:
-            name: VSEng-XamarinCustom
-            demands:
-              - corpnet
-          condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
-          steps:
-            - checkout: none
-            - template: sign-artifacts.yml@xamarin-templates
-              parameters:
-                targetFolder: '$(Build.ArtifactStagingDirectory)/signed'
-            - task: PublishBuildArtifacts@1
-              displayName: Publish the nuget-signed artifacts
-              inputs:
-                artifactName: nuget-signed
-                pathToPublish: '$(Build.ArtifactStagingDirectory)/signed'
+      - job: signing                              # Sign NuGets
+        displayName: Sign NuGets
+        requiredArtifacts: package
+        pool:
+          name: VSEng-XamarinCustom
+          demands:
+            - corpnet
+        condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
+        steps:
+          - checkout: none
+          - template: sign-artifacts.yml@xamarin-templates
+            parameters:
+              targetFolder: '$(Build.ArtifactStagingDirectory)/signed'
+          - task: PublishBuildArtifacts@1
+            displayName: Publish the nuget-signed artifacts
+            inputs:
+              artifactName: nuget-signed
+              pathToPublish: '$(Build.ArtifactStagingDirectory)/signed'
 
   - stage: tests
     displayName: Run Tests
