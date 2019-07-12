@@ -127,7 +127,7 @@ stages:
           displayName: Build Managed (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: libs-only
-          dependsOn:
+          requiredArtifacts:
             - native_android_windows
             - native_tizen_windows
             - native_uwp_windows
@@ -138,7 +138,7 @@ stages:
           displayName: Build Managed (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: libs-only
-          dependsOn:
+          requiredArtifacts:
             - native_android_macos
             - native_ios_macos
             - native_macos_macos
@@ -153,7 +153,7 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
           target: libs-only
-          dependsOn:
+          requiredArtifacts:
             - native_linux_linux
             - native_tizen_linux
       - template: azure-templates-bootstrapper.yml # Build Managed [No Dependencies] (Linux)
@@ -163,7 +163,7 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
           target: libs-only
-          dependsOn:
+          requiredArtifacts:
             - native_linux_nodependencies_linux
             - native_tizen_linux
 
@@ -177,7 +177,7 @@ stages:
           displayName: Package NuGets [No Dependencies]
           vmImage: $(VM_IMAGE_WINDOWS)
           target: nuget-only
-          dependsOn:
+          requiredArtifacts:
             - managed_nodependencies_linux
             - managed_macos
             - managed_windows
@@ -208,7 +208,7 @@ stages:
           displayName: Package NuGets
           vmImage: $(VM_IMAGE_WINDOWS)
           target: nuget-only
-          dependsOn:
+          requiredArtifacts:
             - managed_linux
             - managed_macos
             - managed_windows
@@ -267,7 +267,7 @@ stages:
       - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
         - job: signing                             # Sign NuGets
           displayName: Sign NuGets
-          dependsOn: package
+          requiredArtifacts: package
           pool:
             name: VSEng-XamarinCustom
             demands:
@@ -285,7 +285,7 @@ stages:
                 pathToPublish: '$(Build.ArtifactStagingDirectory)/signed'
 
   - stage: tests
-    displayName: Sign NuGets
+    displayName: Run Tests
     dependsOn: native
     jobs:
       - template: azure-templates-bootstrapper.yml # Tests (Windows)
@@ -296,7 +296,8 @@ stages:
           retryCount: 3
           target: tests
           additionalArgs: --skipExternals="all"
-          dependsOn:
+          shouldPublish: false
+          requiredArtifacts:
             - package_windows
           postBuildSteps:
             - task: PublishTestResults@2
@@ -313,7 +314,8 @@ stages:
           retryCount: 3
           target: tests
           additionalArgs: --skipExternals="all"
-          dependsOn:
+          shouldPublish: false
+          requiredArtifacts:
             - package_windows
           postBuildSteps:
             - task: PublishTestResults@2
@@ -331,7 +333,8 @@ stages:
           retryCount: 3
           target: tests
           additionalArgs: --skipExternals="all"
-          dependsOn:
+          shouldPublish: false
+          requiredArtifacts:
             - package_windows
           postBuildSteps:
             - task: PublishTestResults@2
@@ -349,7 +352,8 @@ stages:
           retryCount: 3
           target: tests
           additionalArgs: --skipExternals="all" --unsupportedTests="Feature=MatchCharacter"
-          dependsOn:
+          shouldPublish: false
+          requiredArtifacts:
             - native_linux_nodependencies_linux
             - native_tizen_linux
           postBuildSteps:
@@ -362,7 +366,7 @@ stages:
 
   - stage: samples
     displayName: Build Samples
-    dependsOn: native
+    dependsOn: package
     jobs:
       - template: azure-templates-bootstrapper.yml # Build Samples (Windows)
         parameters:
@@ -370,20 +374,17 @@ stages:
           displayName: Build Samples (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: samples
-          dependsOn:
-            - managed_windows
+          requiredArtifacts:
+            - package
       - template: azure-templates-bootstrapper.yml # Build Samples (macOS)
         parameters:
           name: samples_macos
           displayName: Build Samples (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: samples
-          dependsOn:
-            - managed_macos
+          requiredArtifacts:
+            - package
           preBuildSteps:
-            - powershell: Write-Host "##vso[task.setvariable variable=CONFIGURATION]Debug"
-              condition: eq(variables['Build.Reason'], 'PullRequest')
-              displayName: Request the samples be built in Debug configuration
             - task: InstallAppleCertificate@2
               inputs:
                 certSecureFile: 'SkiaSharp iOS Certificate.p12'
@@ -406,5 +407,5 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
           target: samples
-          dependsOn:
-            - managed_linux
+          requiredArtifacts:
+            - package

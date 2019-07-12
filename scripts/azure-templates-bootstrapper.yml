@@ -1,16 +1,17 @@
 parameters:
-  name: ''            # in the form type_platform_host
-  displayName: ''     # the human name
-  vmImage: ''         # the VM image
-  packages: ''        # any additional packages
-  target: ''          # the bootstrapper target
-  dependsOn: []       # the dependiencies
-  demands: []         # the demands
-  preBuildSteps: []   # any steps to run before the build
-  postBuildSteps: []  # any additional steps to run after the build
-  additionalArgs: ''  # any additional arguments to pass to the bootstrapper
-  retryCount: 1       # the number of times to retry the bootstrapper
-  condition:          # whether or not to run this template
+  name: ''                  # in the form type_platform_host
+  displayName: ''           # the human name
+  vmImage: ''               # the VM image
+  packages: ''              # any additional packages
+  target: ''                # the bootstrapper target
+  requiredArtifacts: []     # the artifacts that this build needs to download
+  demands: []               # the demands
+  preBuildSteps: []         # any steps to run before the build
+  postBuildSteps: []        # any additional steps to run after the build
+  additionalArgs: ''        # any additional arguments to pass to the bootstrapper
+  retryCount: 1             # the number of times to retry the bootstrapper
+  condition: succeeded()    # whether or not to run this template
+  shouldPublish: true       # whether or not to publish the artifacts
 
 jobs:
   - job: ${{ parameters.name }}
@@ -19,7 +20,6 @@ jobs:
     pool:
       vmImage: ${{ parameters.vmImage }}
       demands: ${{ parameters.demands }}
-    dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
     steps:
       - checkout: self
@@ -81,6 +81,7 @@ jobs:
       # publish artifacts
       - task: PublishPipelineArtifact@0
         displayName: Publish the ${{ parameters.name }} artifacts
+        condition: ${{ parameters.shouldPublish }}
         inputs:
           artifactName: ${{ parameters.name }}
           targetPath: 'output'
