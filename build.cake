@@ -124,6 +124,10 @@ Task ("libs-only")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("tests")
+    .IsDependentOn ("externals")
+    .IsDependentOn ("tests-only");
+
+Task ("tests-only")
     .Does (() =>
 {
     var RunDesktopTest = new Action<string> (arch => {
