@@ -298,7 +298,7 @@ stages:
           additionalArgs: --skipExternals="all"
           shouldPublish: false
           requiredArtifacts:
-            - package_windows
+            - native_win32_windows
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the test results
@@ -316,7 +316,7 @@ stages:
           additionalArgs: --skipExternals="all"
           shouldPublish: false
           requiredArtifacts:
-            - package_windows
+            - native_macos_macos
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the test results
@@ -335,7 +335,7 @@ stages:
           additionalArgs: --skipExternals="all"
           shouldPublish: false
           requiredArtifacts:
-            - package_windows
+            - native_linux_linux
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the test results
@@ -355,7 +355,6 @@ stages:
           shouldPublish: false
           requiredArtifacts:
             - native_linux_nodependencies_linux
-            - native_tizen_linux
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the test results
