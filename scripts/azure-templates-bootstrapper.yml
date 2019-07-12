@@ -10,6 +10,7 @@ parameters:
   postBuildSteps: []  # any additional steps to run after the build
   additionalArgs: ''  # any additional arguments to pass to the bootstrapper
   retryCount: 1       # the number of times to retry the bootstrapper
+  condition:          # whether or not to run this template
 
 jobs:
   - job: ${{ parameters.name }}
@@ -19,6 +20,7 @@ jobs:
       vmImage: ${{ parameters.vmImage }}
       demands: ${{ parameters.demands }}
     dependsOn: ${{ parameters.dependsOn }}
+    condition: ${{ parameters.condition }}
     steps:
       - checkout: self
         submodules: recursive

@@ -124,11 +124,6 @@ Task ("libs-only")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("tests")
-    .IsDependentOn ("libs")
-    .IsDependentOn ("nuget")
-    .IsDependentOn ("tests-only");
-
-Task ("tests-only")
     .Does (() =>
 {
     var RunDesktopTest = new Action<string> (arch => {
@@ -162,29 +157,8 @@ Task ("tests-only")
     }
 
     // .NET Core
-    var netCoreTestProj = "./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj";
-    var xdoc = XDocument.Load (netCoreTestProj);
-    var refs = xdoc.Root.Elements ("ItemGroup").Elements ("PackageReference");
-    bool changed = false;
-    foreach (var packageRef in refs) {
-        var include = packageRef.Attribute ("Include").Value;
-        var oldVersion = packageRef.Attribute ("Version").Value;
-        var version = GetVersion (include);
-        if (!string.IsNullOrEmpty (version)) {
-            if (version != oldVersion) {
-                packageRef.Attribute ("Version").Value = version;
-                changed = true;
-            }
-        }
-    }
-    if (changed) {
-        xdoc.Save (netCoreTestProj);
-    }
-    CleanDirectories ("./tests/packages/skiasharp*");
-    CleanDirectories ("./tests/packages/harfbuzzsharp*");
     EnsureDirectoryExists ("./output/tests/netcore");
-    RunMSBuildRestoreLocal (netCoreTestProj, "./tests/packages");
-    RunNetCoreTests (netCoreTestProj);
+    RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
     CopyFile ("./tests/SkiaSharp.NetCore.Tests/TestResults/TestResults.xml", "./output/tests/netcore/TestResult.xml");
 });
 
