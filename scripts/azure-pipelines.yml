@@ -365,7 +365,7 @@ stages:
 
   - stage: samples
     displayName: Build Samples
-    dependsOn: package
+    dependsOn: managed
     jobs:
       - template: azure-templates-bootstrapper.yml # Build Samples (Windows)
         parameters:
@@ -374,7 +374,7 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: samples
           requiredArtifacts:
-            - package
+            - managed_windows
       - template: azure-templates-bootstrapper.yml # Build Samples (macOS)
         parameters:
           name: samples_macos
@@ -382,7 +382,7 @@ stages:
           vmImage: $(VM_IMAGE_MAC)
           target: samples
           requiredArtifacts:
-            - package
+            - managed_macos
           preBuildSteps:
             - task: InstallAppleCertificate@2
               inputs:
@@ -407,4 +407,4 @@ stages:
           packages: $(MANAGED_LINUX_PACKAGES)
           target: samples
           requiredArtifacts:
-            - package
+            - managed_linux
