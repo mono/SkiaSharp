@@ -82,6 +82,7 @@ stages:
           displayName: Build Native Tizen (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: externals-tizen
+          condition: false
       - template: azure-templates-bootstrapper.yml # Build Native tvOS (macOS)
         parameters:
           name: native_tvos_macos
@@ -141,7 +142,8 @@ stages:
             - native_android_macos
             - native_ios_macos
             - native_macos_macos
-            - native_tizen_macos
+            # - native_tizen_macos
+            - native_tizen_linux
             - native_tvos_macos
             - native_watchos_macos
       - template: azure-templates-bootstrapper.yml # Build Managed (Linux)
