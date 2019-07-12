@@ -153,11 +153,7 @@ Task ("tests-only")
     } else if (IsRunningOnMac ()) {
         RunDesktopTest ("AnyCPU");
     } else if (IsRunningOnLinux ()) {
-        // TODO: Disable x64 for the time being due to a bug in mono sn:
-        //       https://github.com/mono/mono/issues/8218
-
-        RunDesktopTest ("AnyCPU");
-        // RunDesktopTest ("x64");
+        RunDesktopTest ("x64");
     }
 
     // .NET Core
