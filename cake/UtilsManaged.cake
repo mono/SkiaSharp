@@ -89,7 +89,6 @@ void RunNetCoreTests (FilePath testAssembly)
     var dir = testAssembly.GetDirectory ();
     var settings = new DotNetCoreTestSettings {
         Configuration = CONFIGURATION,
-        NoRestore = true,
         TestAdapterPath = ".",
         Logger = "xunit",
         WorkingDirectory = dir,
