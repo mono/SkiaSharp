@@ -32,17 +32,8 @@ namespace HarfBuzzSharp
 
 		public override string ToString () => Name;
 
-		public override bool Equals (object obj)
-		{
-			switch (obj) {
-				case null:
-					return false;
-				case Language language:
-					return Handle == language.Handle;
-				default:
-					return false;
-			}
-		}
+		public override bool Equals (object obj) =>
+			obj is Language language && Handle == language.Handle;
 
 		public override int GetHashCode () => Name != null ? Name.GetHashCode () : 0;
 

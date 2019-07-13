@@ -6,6 +6,7 @@ using hb_blob_t = System.IntPtr;
 using hb_bool_t = System.Boolean;
 using hb_buffer_t = System.IntPtr;
 using hb_codepoint_t = System.UInt32;
+using hb_destroy_func_t = HarfBuzzSharp.ReleaseDelegateProxyDelegate;
 using hb_direction_t = HarfBuzzSharp.Direction;
 using hb_face_t = System.IntPtr;
 using hb_font_extents_t = HarfBuzzSharp.FontExtents;
@@ -14,7 +15,6 @@ using hb_font_t = System.IntPtr;
 using hb_position_t = System.Int32;
 using hb_script_t = System.UInt32;
 using hb_unicode_funcs_t = System.IntPtr;
-using hb_destroy_func_t = HarfBuzzSharp.ReleaseDelegateProxyDelegate;
 
 namespace HarfBuzzSharp
 {
@@ -293,14 +293,11 @@ namespace HarfBuzzSharp
 		public static extern void hb_buffer_reverse_clusters (hb_buffer_t buffer);
 
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern int hb_buffer_serialize_glyphs (hb_buffer_t buffer, int start, int end, IntPtr buf,
-			int buf_size, out int buf_consumed, hb_font_t font, SerializeFormat format, SerializeFlag flags);
+		public static extern int hb_buffer_serialize_glyphs (hb_buffer_t buffer, int start, int end, IntPtr buf, int buf_size, out int buf_consumed, hb_font_t font, SerializeFormat format, SerializeFlag flags);
 
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		public static extern hb_bool_t hb_buffer_deserialize_glyphs (IntPtr buffer,
-			[MarshalAs (UnmanagedType.LPStr)] string buf, int buf_len, out IntPtr end_ptr, hb_font_t font,
-			SerializeFormat format);
+		public static extern hb_bool_t hb_buffer_deserialize_glyphs (IntPtr buffer, [MarshalAs (UnmanagedType.LPStr)] string buf, int buf_len, out IntPtr end_ptr, hb_font_t font, SerializeFormat format);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void hb_buffer_set_unicode_funcs (hb_buffer_t buffer, hb_unicode_funcs_t unicode_funcs);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]

@@ -213,11 +213,11 @@ namespace HarfBuzzSharp
 			if (buffer == null)
 				throw new ArgumentNullException (nameof (buffer));
 
-            if(buffer.Direction == Direction.Invalid)
-                throw new InvalidOperationException("Buffer's Direction must be valid.");
+			if (buffer.Direction == Direction.Invalid)
+				throw new InvalidOperationException ("Buffer's Direction must be valid.");
 
-            if (buffer.ContentType != ContentType.Unicode) {
-	            throw new InvalidOperationException ("Buffer's ContentType must of type Unicode.");
+			if (buffer.ContentType != ContentType.Unicode) {
+				throw new InvalidOperationException ("Buffer's ContentType must of type Unicode.");
 			}
 
 			var featuresPtr = features == null || features.Count == 0 ? IntPtr.Zero : StructureArrayToPtr (features);
