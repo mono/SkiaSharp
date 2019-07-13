@@ -18,17 +18,25 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
     <PackageReference Include="XunitXml.TestLogger" Version="2.1.26" />
     <PackageReference Include="xunit.categories" Version="2.0.4" />
-    <PackageReference Include="SkiaSharp" Version="1.68.1" />
-    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="1.68.1" />
-    <PackageReference Include="HarfBuzzSharp" Version="2.5.3" />
-    <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="2.5.3" />
-    <PackageReference Include="SkiaSharp.HarfBuzz" Version="1.68.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\binding\HarfBuzzSharp.NetStandard\HarfBuzzSharp.NetStandard.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp.NetStandard\SkiaSharp.NetStandard.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Tests\**\*.cs" Link="%(RecursiveDir)%(FileName)%(Extension)" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\Content\**\*" Link="%(RecursiveDir)%(FileName)%(Extension)" CopyToOutputDirectory="Always" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\output\native\windows\x64\libSkiaSharp.dll" CopyToOutputDirectory="Always" Condition=" '$(IsWindows)' == 'true' " />
+    <Content Include="..\..\output\native\windows\x64\libHarfBuzzSharp.dll" CopyToOutputDirectory="Always" Condition=" '$(IsWindows)' == 'true' " />
+    <Content Include="..\..\output\native\osx\libSkiaSharp.dylib" CopyToOutputDirectory="Always" Condition=" '$(IsMacOS)' == 'true' " />
+    <Content Include="..\..\output\native\osx\libHarfBuzzSharp.dylib" CopyToOutputDirectory="Always" Condition=" '$(IsMacOS)' == 'true' " />
+    <Content Include="..\..\output\native\linux\x64\libSkiaSharp.so" CopyToOutputDirectory="Always" Condition=" '$(IsLinux)' == 'true' " />
+    <Content Include="..\..\output\native\linux\x64\libHarfBuzzSharp.so" CopyToOutputDirectory="Always" Condition=" '$(IsLinux)' == 'true' " />
   </ItemGroup>
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
 </Project>
