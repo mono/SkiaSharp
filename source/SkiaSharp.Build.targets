@@ -44,10 +44,6 @@
     <PackageReference Include="mdoc" Version="5.7.4.3" PrivateAssets="All" />
   </ItemGroup>
 
-  <Target Name="PrepareForBuild" BeforeTargets="Build" DependsOnTargets="_CheckSkiaSharpBuildPropsImported;_GenerateAssemblyVersionInfo" />
-
-  <Target Name="RunPostBuildTasks" AfterTargets="Build" DependsOnTargets="_SignAssembly;MDocGenerateDocs;_CopyToOutputDirectory" />
-
   <!--
     ===================================================================================================================
     _GenerateAssemblyVersionInfo
@@ -55,7 +51,7 @@
     Generate the assembly versioning attributes from the VERSIONS.txt file.
     ===================================================================================================================
   -->
-  <Target Name="_GenerateAssemblyVersionInfo" Condition=" '$(SkipGenerateAssemblyVersionInfo)' != 'true' ">
+  <Target Name="_GenerateAssemblyVersionInfo" BeforeTargets="CoreCompile" Condition=" '$(SkipGenerateAssemblyVersionInfo)' != 'true' ">
     <PropertyGroup>
       <_VersionSourceFile>$(IntermediateOutputPath)\$(AssemblyName).Version.cs</_VersionSourceFile>
       <_VersionTxtFile>$(MSBuildThisFileDirectory)..\VERSIONS.txt</_VersionTxtFile>
@@ -88,7 +84,7 @@
     Sign the assembly using sn.
     ===================================================================================================================
   -->
-  <Target Name="_SignAssembly" Condition=" '$(IsWindows)' != 'true' and '$(SignAssembly)' == 'true' ">
+  <Target Name="_SignAssembly" AfterTargets="CoreCompile" Condition=" '$(IsWindows)' != 'true' and '$(SignAssembly)' == 'true' ">
     <Exec Command="sn -q -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
   </Target>
 
@@ -99,7 +95,7 @@
     Make sure that SkiaSharp.Build.props was added.
     ===================================================================================================================
   -->
-  <Target Name="_CheckSkiaSharpBuildPropsImported">
+  <Target Name="_CheckSkiaSharpBuildPropsImported" BeforeTargets="BeforeBuild">
     <Error Text="SkiaSharp.Build.props was not imported." Condition=" '$(SkiaSharpBuildPropsImported)' != 'true' " />
   </Target>
 
@@ -110,7 +106,7 @@
     Copy the project output into the root output folder.
     ===================================================================================================================
   -->
-  <Target Name="_CopyToOutputDirectory" Condition=" '$(SkipCopyToOutputDirectory)' != 'true' ">
+  <Target Name="_CopyToOutputDirectory" AfterTargets="Build" Condition=" '$(SkipCopyToOutputDirectory)' != 'true' ">
     <ItemGroup Condition=" '$(PackagingLocation)' == '' ">
       <_CopyItems Include="$(TargetPath)" Dest="nuget\lib\$(PackagingPlatform)\$(TargetFileName)" />
       <_CopyItems Include="$(TargetDir)$(TargetName).xml" Dest="nuget\lib\$(PackagingPlatform)\$(TargetName).xml" Condition=" Exists('$(TargetDir)$(TargetName).xml') " />
@@ -139,7 +135,7 @@
     This runs during the build phase.
     ===================================================================================================================
   -->
-  <Target Name="MDocGenerateDocs" Condition=" '$(SkipMDocGenerateDocs)' != 'true' ">
+  <Target Name="MDocGenerateDocs" AfterTargets="CoreCompile" Condition=" '$(SkipMDocGenerateDocs)' != 'true' ">
     <PropertyGroup>
       <MDocVersion Condition=" '%(Identity)' == 'mdoc' ">@(PackageReference -> '%(Version)')</MDocVersion>
       <MDocPackagePath Condition=" '%(Name)' == 'mdoc' ">@(PackageDefinitions -> '%(ResolvedPath)')</MDocPackagePath>
