@@ -31,6 +31,14 @@ namespace HarfBuzzSharp
 		// helper methods
 
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
+		public static T GetUserData<T> (IntPtr context)
+		{
+			var del = GetMulti<UserDataDelegate> (context, out _);
+			var userData = del.Invoke ();
+			return (T)userData;
+		}
+
+		[MethodImpl (MethodImplOptions.AggressiveInlining)]
 		public static IntPtr CreateMulti<T> (T wrappedDelegate, ReleaseDelegate destroy)
 			where T : Delegate
 		{

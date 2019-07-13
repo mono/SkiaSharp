@@ -110,8 +110,14 @@
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
   </ItemGroup>
-  <Import Project="..\..\output\SkiaSharp\nuget\build\net45\SkiaSharp.targets" Condition="Exists('..\..\output\SkiaSharp\nuget\build\net45\SkiaSharp.targets')" />
-  <Import Project="..\..\output\HarfBuzzSharp\nuget\build\net45\HarfBuzzSharp.targets" Condition="Exists('..\..\output\HarfBuzzSharp\nuget\build\net45\HarfBuzzSharp.targets')" />
+  <ItemGroup>
+    <Content Include="..\..\output\native\windows\$(Platform)\libSkiaSharp.dll" CopyToOutputDirectory="Always" Condition=" '$(IsWindows)' == 'true' " />
+    <Content Include="..\..\output\native\windows\$(Platform)\libHarfBuzzSharp.dll" CopyToOutputDirectory="Always" Condition=" '$(IsWindows)' == 'true' " />
+    <Content Include="..\..\output\native\osx\libSkiaSharp.dylib" CopyToOutputDirectory="Always" Condition=" '$(IsMacOS)' == 'true' " />
+    <Content Include="..\..\output\native\osx\libHarfBuzzSharp.dylib" CopyToOutputDirectory="Always" Condition=" '$(IsMacOS)' == 'true' " />
+    <Content Include="..\..\output\native\linux\$(Platform)\libSkiaSharp.so" CopyToOutputDirectory="Always" Condition=" '$(IsLinux)' == 'true' " />
+    <Content Include="..\..\output\native\linux\$(Platform)\libHarfBuzzSharp.so" CopyToOutputDirectory="Always" Condition=" '$(IsLinux)' == 'true' " />
+  </ItemGroup>
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

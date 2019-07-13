@@ -239,7 +239,7 @@ namespace HarfBuzzSharp.Tests
 
 				font.SetFontFunctions(fontFuncs, "FontData");
 
-				var result = font.TryGetHorizontalGlyphOrigin(49, out var x, out var y);
+				var result = font.TryGetHorizontalGlyphOrigin(49, out var x, out _);
 
 				Assert.True(result);
 				Assert.Equal(1337, x);
