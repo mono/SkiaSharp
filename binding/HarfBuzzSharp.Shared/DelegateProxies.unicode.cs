@@ -51,48 +51,42 @@ namespace HarfBuzzSharp
 		[MonoPInvokeCallback (typeof (hb_unicode_combining_class_func_t))]
 		private static UnicodeCombiningClass CombiningClassProxyImplementation (IntPtr ufuncs, uint unicode, IntPtr context)
 		{
-			var del = GetMulti<CombiningClassDelegate> (context, out _);
-			var userData = GetUserData<UnicodeFunctions> (context);
-			return del.Invoke (userData, unicode);
+			GetMultiUserData<CombiningClassDelegate, UnicodeFunctions> (context, out var del, out var functions, out _);
+			return del.Invoke (functions, unicode);
 		}
 
 		[MonoPInvokeCallback (typeof (hb_unicode_general_category_func_t))]
 		private static UnicodeGeneralCategory GeneralCategoryProxyImplementation (IntPtr ufuncs, uint unicode, IntPtr context)
 		{
-			var del = GetMulti<GeneralCategoryDelegate> (context, out _);
-			var functions = GetUserData<UnicodeFunctions> (context);
+			GetMultiUserData<GeneralCategoryDelegate, UnicodeFunctions> (context, out var del, out var functions, out _);
 			return del.Invoke (functions, unicode);
 		}
 
 		[MonoPInvokeCallback (typeof (hb_unicode_mirroring_func_t))]
 		private static uint MirroringProxyImplementation (IntPtr ufuncs, uint unicode, IntPtr context)
 		{
-			var del = GetMulti<MirroringDelegate> (context, out _);
-			var functions = GetUserData<UnicodeFunctions> (context);
+			GetMultiUserData<MirroringDelegate, UnicodeFunctions> (context, out var del, out var functions, out _);
 			return del.Invoke (functions, unicode);
 		}
 
 		[MonoPInvokeCallback (typeof (hb_unicode_script_func_t))]
 		private static uint ScriptProxyImplementation (IntPtr ufuncs, uint unicode, IntPtr context)
 		{
-			var del = GetMulti<ScriptDelegate> (context, out _);
-			var functions = GetUserData<UnicodeFunctions> (context);
+			GetMultiUserData<ScriptDelegate, UnicodeFunctions> (context, out var del, out var functions, out _);
 			return del.Invoke (functions, unicode);
 		}
 
 		[MonoPInvokeCallback (typeof (hb_unicode_compose_func_t))]
 		private static bool ComposeProxyImplementation (IntPtr ufuncs, uint a, uint b, out uint ab, IntPtr context)
 		{
-			var del = GetMulti<ComposeDelegate> (context, out _);
-			var functions = GetUserData<UnicodeFunctions> (context);
+			GetMultiUserData<ComposeDelegate, UnicodeFunctions> (context, out var del, out var functions, out _);
 			return del.Invoke (functions, a, b, out ab);
 		}
 
 		[MonoPInvokeCallback (typeof (hb_unicode_decompose_func_t))]
 		private static bool DecomposeProxyImplementation (IntPtr ufuncs, uint ab, out uint a, out uint b, IntPtr context)
 		{
-			var del = GetMulti<DecomposeDelegate> (context, out _);
-			var functions = GetUserData<UnicodeFunctions> (context);
+			GetMultiUserData<DecomposeDelegate, UnicodeFunctions> (context, out var del, out var functions, out _);
 			return del.Invoke (functions, ab, out a, out b);
 		}
 	}

@@ -97,7 +97,7 @@ namespace HarfBuzzSharp
 		private static bool FontExtentsProxyImplementation (IntPtr font, IntPtr fontData, out FontExtents extents, IntPtr context)
 		{
 			var del = GetMulti<FontExtentsDelegate> (context, out _);
-			var userData = GetUserData<FontUserData> (fontData);
+			var userData = GetMultiUserData<FontUserData> (fontData, out _);
 			return del.Invoke (userData.Font, userData.FontData, out extents);
 		}
 
@@ -105,7 +105,7 @@ namespace HarfBuzzSharp
 		private static bool NominalGlyphProxyImplementation (IntPtr font, IntPtr fontData, uint unicode, out uint glyph, IntPtr context)
 		{
 			var del = GetMulti<NominalGlyphDelegate> (context, out _);
-			var userData = GetUserData<FontUserData> (fontData);
+			var userData = GetMultiUserData<FontUserData> (fontData, out _);
 			return del.Invoke (userData.Font, userData.FontData, unicode, out glyph);
 		}
 
@@ -115,7 +115,7 @@ namespace HarfBuzzSharp
 			var del = GetMulti<NominalGlyphsDelegate> (context, out _);
 			var unicodes = new ReadOnlySpan<uint> (firstUnicode, (int)count);
 			var glyphs = new Span<uint> (firstGlyph, (int)count);
-			var userData = GetUserData<FontUserData> (fontData);
+			var userData = GetMultiUserData<FontUserData> (fontData, out _);
 			return del.Invoke (userData.Font, userData.FontData, count, unicodes, glyphs);
 		}
 
@@ -123,7 +123,7 @@ namespace HarfBuzzSharp
 		private static bool VariationGlyphProxyImplementation (IntPtr font, IntPtr fontData, uint unicode, uint variationSelector, out uint glyph, IntPtr context)
 		{
 			var del = GetMulti<VariationGlyphDelegate> (context, out _);
-			var userData = GetUserData<FontUserData> (fontData);
+			var userData = GetMultiUserData<FontUserData> (fontData, out _);
 			return del.Invoke (userData.Font, userData.FontData, unicode, variationSelector, out glyph);
 		}
 
@@ -131,7 +131,7 @@ namespace HarfBuzzSharp
 		private static int GlyphAdvanceProxyImplementation (IntPtr font, IntPtr fontData, uint glyph, IntPtr context)
 		{
 			var del = GetMulti<GlyphAdvanceDelegate> (context, out _);
-			var userData = GetUserData<FontUserData> (fontData);
+			var userData = GetMultiUserData<FontUserData> (fontData, out _);
 			return del.Invoke (userData.Font, userData.FontData, glyph);
 		}
 
@@ -141,7 +141,7 @@ namespace HarfBuzzSharp
 			var del = GetMulti<GlyphAdvancesDelegate> (context, out _);
 			var glyphs = new ReadOnlySpan<uint> (firstGlyph, (int)count);
 			var advances = new Span<int> (firstAdvance, (int)count);
-			var userData = GetUserData<FontUserData> (fontData);
+			var userData = GetMultiUserData<FontUserData> (fontData, out _);
 			del.Invoke (userData.Font, userData.FontData, count, glyphs, advances);
 		}
 
@@ -149,7 +149,7 @@ namespace HarfBuzzSharp
 		private static bool GlyphOriginProxyImplementation (IntPtr font, IntPtr fontData, uint glyph, out int x, out int y, IntPtr context)
 		{
 			var del = GetMulti<GlyphOriginDelegate> (context, out _);
-			var userData = GetUserData<FontUserData> (fontData);
+			var userData = GetMultiUserData<FontUserData> (fontData, out _);
 			return del.Invoke (userData.Font, userData.FontData, glyph, out x, out y);
 		}
 
@@ -157,7 +157,7 @@ namespace HarfBuzzSharp
 		private static int GlyphKerningProxyImplementation (IntPtr font, IntPtr fontData, uint firstGlyph, uint secondGlyph, IntPtr context)
 		{
 			var del = GetMulti<GlyphKerningDelegate> (context, out _);
-			var userData = GetUserData<FontUserData> (fontData);
+			var userData = GetMultiUserData<FontUserData> (fontData, out _);
 			return del.Invoke (userData.Font, userData.FontData, firstGlyph, secondGlyph);
 		}
 
@@ -165,7 +165,7 @@ namespace HarfBuzzSharp
 		private static bool GlyphExtentsProxyImplementation (IntPtr font, IntPtr fontData, uint glyph, out GlyphExtents extents, IntPtr context)
 		{
 			var del = GetMulti<GlyphExtentsDelegate> (context, out _);
-			var userData = GetUserData<FontUserData> (fontData);
+			var userData = GetMultiUserData<FontUserData> (fontData, out _);
 			return del.Invoke (userData.Font, userData.FontData, glyph, out extents);
 		}
 
@@ -173,7 +173,7 @@ namespace HarfBuzzSharp
 		private static bool GlyphContourPointProxyImplementation (IntPtr font, IntPtr fontData, uint glyph, uint pointIndex, out int x, out int y, IntPtr context)
 		{
 			var del = GetMulti<GlyphContourPointDelegate> (context, out _);
-			var userData = GetUserData<FontUserData> (fontData);
+			var userData = GetMultiUserData<FontUserData> (fontData, out _);
 			return del.Invoke (userData.Font, userData.FontData, glyph, pointIndex, out x, out y);
 		}
 
@@ -181,7 +181,7 @@ namespace HarfBuzzSharp
 		private static bool GlyphNameProxyImplementation (IntPtr font, IntPtr fontData, uint glyph, char* nameBuffer, int size, IntPtr context)
 		{
 			var del = GetMulti<GlyphNameDelegate> (context, out _);
-			var userData = GetUserData<FontUserData> (fontData);
+			var userData = GetMultiUserData<FontUserData> (fontData, out _);
 			var result = del.Invoke (userData.Font, userData.FontData, glyph, out var realName);
 
 			var nameSpan = realName.AsSpan ();
@@ -195,7 +195,7 @@ namespace HarfBuzzSharp
 		private static bool GlyphFromNameProxyImplementation (IntPtr font, IntPtr fontData, char* name, int len, out uint glyph, IntPtr context)
 		{
 			var del = GetMulti<GlyphFromNameDelegate> (context, out _);
-			var userData = GetUserData<FontUserData> (fontData);
+			var userData = GetMultiUserData<FontUserData> (fontData, out _);
 
 			var actualName = len < 0
 				? new string (name)
