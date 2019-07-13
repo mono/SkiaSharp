@@ -13,8 +13,6 @@ namespace HarfBuzzSharp
 	[Obsolete ("Use ReleaseDelegate instead.")]
 	public delegate void BlobReleaseDelegate (object context);
 
-	// helper delegates
-
 	internal delegate object UserDataDelegate ();
 
 	// internal proxy delegates
@@ -33,6 +31,14 @@ namespace HarfBuzzSharp
 		public static readonly GetTableDelegateProxyDelegate GetTableDelegateProxy = GetTableDelegateProxyImplementation;
 
 		// helper methods
+
+		[MethodImpl (MethodImplOptions.AggressiveInlining)]
+		public static T GetUserData<T> (IntPtr context)
+		{
+			var del = GetMulti<UserDataDelegate> (context, out _);
+			var userData = del.Invoke ();
+			return (T)userData;
+		}
 
 		[MethodImpl (MethodImplOptions.AggressiveInlining)]
 		public static IntPtr CreateMulti<T> (T wrappedDelegate, ReleaseDelegate destroy)

@@ -6,6 +6,7 @@ using hb_blob_t = System.IntPtr;
 using hb_bool_t = System.Boolean;
 using hb_buffer_t = System.IntPtr;
 using hb_codepoint_t = System.UInt32;
+using hb_destroy_func_t = HarfBuzzSharp.ReleaseDelegateProxyDelegate;
 using hb_direction_t = HarfBuzzSharp.Direction;
 using hb_face_t = System.IntPtr;
 using hb_font_extents_t = HarfBuzzSharp.FontExtents;
@@ -66,7 +67,7 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static hb_face_t hb_face_create (hb_blob_t blob, int index);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern hb_face_t hb_face_create_for_tables (GetTableDelegateProxyDelegate reference_table_func, IntPtr user_data, ReleaseDelegateProxyDelegate destroy);
+		public static extern hb_face_t hb_face_create_for_tables (GetTableDelegateProxyDelegate reference_table_func, IntPtr user_data, hb_destroy_func_t destroy);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern hb_face_t hb_face_get_empty ();
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -107,48 +108,48 @@ namespace HarfBuzzSharp
 		[return: MarshalAs (UnmanagedType.I1)]
 		public extern static hb_bool_t hb_font_funcs_is_immutable (hb_font_funcs_t ffuncs);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_funcs_set_font_h_extents_func (IntPtr ffuncs, FontExtentsProxyDelegate func, IntPtr user_data, ReleaseDelegateProxyDelegate destroy);
+		public extern static void hb_font_funcs_set_font_h_extents_func (hb_font_funcs_t ffuncs, FontExtentsProxyDelegate func, IntPtr user_data, hb_destroy_func_t destroy);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_funcs_set_font_v_extents_func (IntPtr ffuncs, FontExtentsProxyDelegate func, IntPtr user_data, ReleaseDelegateProxyDelegate destroy);
+		public extern static void hb_font_funcs_set_font_v_extents_func (hb_font_funcs_t ffuncs, FontExtentsProxyDelegate func, IntPtr user_data, hb_destroy_func_t destroy);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_funcs_set_nominal_glyph_func (IntPtr ffuncs, NominalGlyphProxyDelegate func, IntPtr user_data, ReleaseDelegateProxyDelegate destroy);
+		public extern static void hb_font_funcs_set_nominal_glyph_func (hb_font_funcs_t ffuncs, NominalGlyphProxyDelegate func, IntPtr user_data, hb_destroy_func_t destroy);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_funcs_set_nominal_glyphs_func (IntPtr ffuncs, NominalGlyphsProxyDelegate func, IntPtr user_data, ReleaseDelegateProxyDelegate destroy);
+		public extern static void hb_font_funcs_set_nominal_glyphs_func (hb_font_funcs_t ffuncs, NominalGlyphsProxyDelegate func, IntPtr user_data, hb_destroy_func_t destroy);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_funcs_set_variation_glyph_func (IntPtr ffuncs, VariationGlyphProxyDelegate func, IntPtr user_data, ReleaseDelegateProxyDelegate destroy);
+		public extern static void hb_font_funcs_set_variation_glyph_func (hb_font_funcs_t ffuncs, VariationGlyphProxyDelegate func, IntPtr user_data, hb_destroy_func_t destroy);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_funcs_set_glyph_h_advance_func (IntPtr ffuncs, GlyphAdvanceProxyDelegate func, IntPtr user_data, ReleaseDelegateProxyDelegate destroy);
+		public extern static void hb_font_funcs_set_glyph_h_advance_func (hb_font_funcs_t ffuncs, GlyphAdvanceProxyDelegate func, IntPtr user_data, hb_destroy_func_t destroy);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_funcs_set_glyph_v_advance_func (IntPtr ffuncs, GlyphAdvanceProxyDelegate func, IntPtr user_data, ReleaseDelegateProxyDelegate destroy);
+		public extern static void hb_font_funcs_set_glyph_v_advance_func (hb_font_funcs_t ffuncs, GlyphAdvanceProxyDelegate func, IntPtr user_data, hb_destroy_func_t destroy);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_funcs_set_glyph_h_advances_func (IntPtr ffuncs, GlyphAdvancesProxyDelegate func, IntPtr user_data, ReleaseDelegateProxyDelegate destroy);
+		public extern static void hb_font_funcs_set_glyph_h_advances_func (hb_font_funcs_t ffuncs, GlyphAdvancesProxyDelegate func, IntPtr user_data, hb_destroy_func_t destroy);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_funcs_set_glyph_v_advances_func (IntPtr ffuncs, GlyphAdvancesProxyDelegate func, IntPtr user_data, ReleaseDelegateProxyDelegate destroy);
+		public extern static void hb_font_funcs_set_glyph_v_advances_func (hb_font_funcs_t ffuncs, GlyphAdvancesProxyDelegate func, IntPtr user_data, hb_destroy_func_t destroy);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_funcs_set_glyph_h_origin_func (IntPtr ffuncs, GlyphOriginProxyDelegate func, IntPtr user_data, ReleaseDelegateProxyDelegate destroy);
+		public extern static void hb_font_funcs_set_glyph_h_origin_func (hb_font_funcs_t ffuncs, GlyphOriginProxyDelegate func, IntPtr user_data, hb_destroy_func_t destroy);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_funcs_set_glyph_v_origin_func (IntPtr ffuncs, GlyphOriginProxyDelegate func, IntPtr user_data, ReleaseDelegateProxyDelegate destroy);
+		public extern static void hb_font_funcs_set_glyph_v_origin_func (hb_font_funcs_t ffuncs, GlyphOriginProxyDelegate func, IntPtr user_data, hb_destroy_func_t destroy);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_funcs_set_glyph_h_kerning_func (IntPtr ffuncs, GlyphKerningProxyDelegate func, IntPtr user_data, ReleaseDelegateProxyDelegate destroy);
+		public extern static void hb_font_funcs_set_glyph_h_kerning_func (hb_font_funcs_t ffuncs, GlyphKerningProxyDelegate func, IntPtr user_data, hb_destroy_func_t destroy);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_funcs_set_glyph_extents_func (IntPtr ffuncs, GlyphExtentsProxyDelegate func, IntPtr user_data, ReleaseDelegateProxyDelegate destroy);
+		public extern static void hb_font_funcs_set_glyph_extents_func (hb_font_funcs_t ffuncs, GlyphExtentsProxyDelegate func, IntPtr user_data, hb_destroy_func_t destroy);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_funcs_set_glyph_contour_point_func (IntPtr ffuncs, GlyphContourPointProxyDelegate func, IntPtr user_data, ReleaseDelegateProxyDelegate destroy);
+		public extern static void hb_font_funcs_set_glyph_contour_point_func (hb_font_funcs_t ffuncs, GlyphContourPointProxyDelegate func, IntPtr user_data, hb_destroy_func_t destroy);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_funcs_set_glyph_name_func (IntPtr ffuncs, GlyphNameProxyDelegate func, IntPtr user_data, ReleaseDelegateProxyDelegate destroy);
+		public extern static void hb_font_funcs_set_glyph_name_func (hb_font_funcs_t ffuncs, GlyphNameProxyDelegate func, IntPtr user_data, hb_destroy_func_t destroy);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_funcs_set_glyph_from_name_func (IntPtr ffuncs, GlyphFromNameProxyDelegate func, IntPtr user_data, ReleaseDelegateProxyDelegate destroy);
+		public extern static void hb_font_funcs_set_glyph_from_name_func (hb_font_funcs_t ffuncs, GlyphFromNameProxyDelegate func, IntPtr user_data, hb_destroy_func_t destroy);
 
 		// hb_font_t
 
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static hb_font_t hb_font_create (hb_face_t face);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static hb_font_t hb_font_create_sub_font (IntPtr parent);
+		public extern static hb_font_t hb_font_create_sub_font (hb_font_t parent);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_font_destroy (hb_font_t font);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_set_funcs (IntPtr font, hb_font_funcs_t klass, IntPtr font_data, ReleaseDelegateProxyDelegate destroy);
+		public extern static void hb_font_set_funcs (hb_font_t font, hb_font_funcs_t klass, IntPtr font_data, hb_destroy_func_t destroy);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_font_set_scale (hb_font_t font, int x_scale, int y_scale);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -255,33 +256,33 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern hb_script_t hb_buffer_get_script (hb_buffer_t buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_buffer_set_direction (hb_buffer_t buffer, Direction direction);
+		public extern static void hb_buffer_set_direction (hb_buffer_t buffer, hb_direction_t direction);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static Direction hb_buffer_get_direction (hb_buffer_t buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern void hb_buffer_set_language (IntPtr buffer, IntPtr language);
+		public static extern void hb_buffer_set_language (hb_buffer_t buffer, IntPtr language);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern IntPtr hb_buffer_get_language (IntPtr buffer);
+		public static extern IntPtr hb_buffer_get_language (hb_buffer_t buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern void hb_buffer_set_content_type (IntPtr buffer, ContentType content_type);
+		public static extern void hb_buffer_set_content_type (hb_buffer_t buffer, ContentType content_type);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern ContentType hb_buffer_get_content_type (IntPtr buffer);
+		public static extern ContentType hb_buffer_get_content_type (hb_buffer_t buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern void hb_buffer_set_replacement_codepoint (IntPtr buffer, hb_codepoint_t replacement);
+		public static extern void hb_buffer_set_replacement_codepoint (hb_buffer_t buffer, hb_codepoint_t replacement);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern hb_codepoint_t hb_buffer_get_replacement_codepoint (IntPtr buffer);
+		public static extern hb_codepoint_t hb_buffer_get_replacement_codepoint (hb_buffer_t buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void hb_buffer_set_invisible_glyph (hb_buffer_t buffer, hb_codepoint_t invisible);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern hb_codepoint_t hb_buffer_get_invisible_glyph (hb_buffer_t buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern void hb_buffer_set_flags (IntPtr buffer, Flags flags);
+		public static extern void hb_buffer_set_flags (hb_buffer_t buffer, Flags flags);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern Flags hb_buffer_get_flags (IntPtr buffer);
+		public static extern Flags hb_buffer_get_flags (hb_buffer_t buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern void hb_buffer_set_cluster_level (IntPtr buffer, ClusterLevel cluster_level);
+		public static extern void hb_buffer_set_cluster_level (hb_buffer_t buffer, ClusterLevel cluster_level);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern ClusterLevel hb_buffer_get_cluster_level (IntPtr buffer);
+		public static extern ClusterLevel hb_buffer_get_cluster_level (hb_buffer_t buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void hb_buffer_normalize_glyphs (hb_buffer_t buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -292,11 +293,11 @@ namespace HarfBuzzSharp
 		public static extern void hb_buffer_reverse_clusters (hb_buffer_t buffer);
 
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern int hb_buffer_serialize_glyphs (IntPtr buffer, int start, int end, IntPtr buf, int buf_size, out int buf_consumed, IntPtr font, SerializeFormat format, SerializeFlag flags);
+		public static extern int hb_buffer_serialize_glyphs (hb_buffer_t buffer, int start, int end, IntPtr buf, int buf_size, out int buf_consumed, hb_font_t font, SerializeFormat format, SerializeFlag flags);
 
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		public static extern hb_bool_t hb_buffer_deserialize_glyphs (IntPtr buffer, [MarshalAs (UnmanagedType.LPStr)] string buf, int buf_len, out IntPtr end_ptr, IntPtr font, SerializeFormat format);
+		public static extern hb_bool_t hb_buffer_deserialize_glyphs (IntPtr buffer, [MarshalAs (UnmanagedType.LPStr)] string buf, int buf_len, out IntPtr end_ptr, hb_font_t font, SerializeFormat format);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void hb_buffer_set_unicode_funcs (hb_buffer_t buffer, hb_unicode_funcs_t unicode_funcs);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -333,7 +334,7 @@ namespace HarfBuzzSharp
 		// hb_script
 
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern Direction hb_script_get_horizontal_direction (hb_script_t script);
+		public static extern hb_direction_t hb_script_get_horizontal_direction (hb_script_t script);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern hb_script_t hb_script_from_string ([MarshalAs (UnmanagedType.LPStr)] string str, int len);
 
@@ -343,6 +344,8 @@ namespace HarfBuzzSharp
 		public static extern hb_unicode_funcs_t hb_unicode_funcs_get_default ();
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern hb_unicode_funcs_t hb_unicode_funcs_get_empty ();
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern hb_unicode_funcs_t hb_unicode_funcs_create (hb_unicode_funcs_t parent);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void hb_unicode_funcs_destroy (hb_unicode_funcs_t ufuncs);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
@@ -355,7 +358,28 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern UnicodeGeneralCategory hb_unicode_general_category (hb_unicode_funcs_t ufuncs, hb_codepoint_t unicode);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern hb_codepoint_t hb_unicode_mirroring (hb_unicode_funcs_t ufuncs, hb_codepoint_t unicode);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern hb_script_t hb_unicode_script (hb_unicode_funcs_t ufuncs, hb_codepoint_t unicode);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		public static extern hb_bool_t hb_unicode_compose (hb_unicode_funcs_t ufuncs, hb_codepoint_t a, hb_codepoint_t b, out hb_codepoint_t ab);
+
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		public static extern hb_bool_t hb_unicode_decompose (hb_unicode_funcs_t ufuncs, hb_codepoint_t ab, out hb_codepoint_t a, out hb_codepoint_t b);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern void hb_unicode_funcs_set_combining_class_func (hb_unicode_funcs_t ufuncs, hb_unicode_combining_class_func_t func, IntPtr user_data, hb_destroy_func_t destroy);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern void hb_unicode_funcs_set_general_category_func (hb_unicode_funcs_t ufuncs, hb_unicode_general_category_func_t func, IntPtr user_data, hb_destroy_func_t destroy);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern void hb_unicode_funcs_set_mirroring_func (hb_unicode_funcs_t ufuncs, hb_unicode_mirroring_func_t func, IntPtr user_data, hb_destroy_func_t destroy);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern void hb_unicode_funcs_set_script_func (hb_unicode_funcs_t ufuncs, hb_unicode_script_func_t func, IntPtr user_data, hb_destroy_func_t destroy);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern void hb_unicode_funcs_set_compose_func (hb_unicode_funcs_t ufuncs, hb_unicode_compose_func_t func, IntPtr user_data, hb_destroy_func_t destroy);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public static extern void hb_unicode_funcs_set_decompose_func (hb_unicode_funcs_t ufuncs, hb_unicode_decompose_func_t func, IntPtr user_data, hb_destroy_func_t destroy);
 	}
 }
 #pragma warning restore IDE1006 // Naming Styles
