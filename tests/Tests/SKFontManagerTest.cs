@@ -67,8 +67,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void TestMatchTypeface()
 		{
-			if (IsMac)
-				throw new SkipException("macOS does not support matching typefaces.");
+			VerifySupportsMatchingTypefaces();
 
 			var fonts = SKFontManager.Default;
 
@@ -86,10 +85,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void TestMatchTypefaceFromStream()
 		{
-			if (IsMac)
-				throw new SkipException("macOS does not support matching typefaces.");
-			if (IsLinux)
-				throw new SkipException("Linux does not support matching typefaces from a typeface that was loaded from a stream.");
+			VerifySupportsMatchingTypefaces();
+			VerifySupportsMatchingTypefacesFromStreams();
 
 			var fonts = SKFontManager.Default;
 
@@ -147,6 +144,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void StreamIsAccessableFromNativeType()
 		{
+			VerifyImmediateFinalizers();
+
 			var paint = CreatePaint(out var typefaceHandle);
 
 			CollectGarbage();

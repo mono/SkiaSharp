@@ -13,7 +13,7 @@ namespace SkiaSharp
 		internal static readonly ConcurrentBag<Exception> exceptions = new ConcurrentBag<Exception> ();
 #endif
 
-		internal static readonly Dictionary<Type, ConstructorInfo> constructors = new Dictionary<Type, ConstructorInfo> ();
+		internal static readonly ConcurrentDictionary<Type, ConstructorInfo> constructors = new ConcurrentDictionary<Type, ConstructorInfo> ();
 		internal static readonly ConcurrentDictionary<IntPtr, WeakReference> instances = new ConcurrentDictionary<IntPtr, WeakReference> ();
 
 		internal readonly ConcurrentDictionary<IntPtr, SKObject> ownedObjects = new ConcurrentDictionary<IntPtr, SKObject> ();
@@ -81,15 +81,16 @@ namespace SkiaSharp
 			}
 
 			var type = typeof (TSkiaImplementation);
-			if (!constructors.TryGetValue (type, out var constructor)) {
-				constructor = type.GetTypeInfo ().DeclaredConstructors.FirstOrDefault (c => {
+			var constructor = constructors.GetOrAdd (type, t => {
+				var ctor = type.GetTypeInfo ().DeclaredConstructors.FirstOrDefault (c => {
 					var parameters = c.GetParameters ();
-					return parameters.Length == 2 &&
+					return
+						parameters.Length == 2 &&
 						parameters[0].ParameterType == typeof (IntPtr) &&
 						parameters[1].ParameterType == typeof (bool);
 				});
-				constructors[type] = constructor ?? throw new MissingMethodException ($"No constructor found for {type.FullName}.ctor(System.IntPtr, System.Boolean)");
-			}
+				return ctor ?? throw new MissingMethodException ($"No constructor found for {type.FullName}.ctor(System.IntPtr, System.Boolean)");
+			});
 
 			var obj = (TSkiaObject)constructor.Invoke (new object[] { handle, owns });
 			if (refNew && obj is ISKReferenceCounted toRef)

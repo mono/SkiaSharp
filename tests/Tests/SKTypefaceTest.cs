@@ -207,6 +207,9 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public unsafe void ReleaseDataWasInvokedOnlyAfterTheTypefaceWasFinished()
 		{
+			if (IsMac)
+				throw new SkipException("macOS does not release the data when the typeface is disposed.");
+
 			var path = Path.Combine(PathToFonts, "Distortable.ttf");
 			var bytes = File.ReadAllBytes(path);
 
@@ -300,6 +303,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void StreamIsAccessableFromNativeType()
 		{
+			VerifyImmediateFinalizers();
+
 			var paint = CreatePaint(out var typefaceHandle);
 
 			CollectGarbage();
@@ -368,6 +373,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public unsafe void StreamLosesOwnershipAndCanBeGarbageCollected()
 		{
+			VerifyImmediateFinalizers();
+
 			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
 
 			DoWork(out var typefaceH, out var streamH);

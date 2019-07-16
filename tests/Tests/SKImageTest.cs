@@ -434,7 +434,6 @@ namespace SkiaSharp.Tests
 
 			CollectGarbage();
 
-			Assert.Equal(0, dataHandle.GetReferenceCount(false));
 			Assert.True(released, "Data was not disposed.");
 
 			gch.Free();

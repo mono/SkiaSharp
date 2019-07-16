@@ -16,6 +16,8 @@ namespace SkiaSharp.Tests
 		protected static bool IsUnix;
 		protected static bool IsWindows;
 
+		protected static bool IsRuntimeMono;
+
 		protected static readonly string[] UnicodeFontFamilies;
 		protected static readonly string DefaultFontFamily;
 		protected static readonly string PathToAssembly;
@@ -64,6 +66,8 @@ namespace SkiaSharp.Tests
 			IsLinux = IsUnix && !IsMac;
 			IsWindows = !IsUnix;
 #endif
+
+			IsRuntimeMono = Type.GetType("Mono.Runtime") != null;
 
 			// set the test fields
 			DefaultFontFamily = IsLinux ? "DejaVu Sans" : "Arial";

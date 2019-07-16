@@ -31,6 +31,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ImageInfoColorSpaceIsReferencedCorrectly()
 		{
+			VerifyImmediateFinalizers();
+
 			var img = DoWork(out var colorspaceHandle);
 
 			CollectGarbage();
@@ -87,6 +89,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void ColorSpaceIsNotDisposedPrematurely()
 		{
+			VerifyImmediateFinalizers();
+
 			var img = DoWork(out var colorSpaceHandle, out var weakColorspace);
 
 			CheckBeforeCollection(colorSpaceHandle);
