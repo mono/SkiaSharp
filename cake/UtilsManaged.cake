@@ -8,6 +8,8 @@ void RunMSBuild (
     bool restore = true,
     bool restoreOnly = false)
 {
+    EnsureDirectoryExists ("./output/nugets/");
+
     MSBuild (solution, c => {
         c.Configuration = CONFIGURATION;
         c.Verbosity = VERBOSITY;
