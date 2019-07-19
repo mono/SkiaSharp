@@ -20,8 +20,7 @@ namespace HarfBuzzSharp.Tests
 			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
-				font.TryGetGlyph('A', out var glyph);
-
+				Assert.True(font.TryGetGlyph('A', out var glyph));
 				Assert.Equal(42u, glyph);
 			}
 		}
@@ -56,7 +55,7 @@ namespace HarfBuzzSharp.Tests
 			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
-				font.TryGetVerticalGlyphOrigin(49, out var xOrigin, out var yOrigin);
+				Assert.True(font.TryGetVerticalGlyphOrigin(49, out var xOrigin, out var yOrigin));
 				Assert.Equal(557, xOrigin);
 				Assert.Equal(1022, yOrigin);
 			}
@@ -140,8 +139,7 @@ namespace HarfBuzzSharp.Tests
 			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
-				font.TryGetGlyphFromString("H", out var glyph);
-
+				Assert.True(font.TryGetGlyphFromString("H", out var glyph));
 				Assert.Equal(49u, glyph);
 			}
 		}
@@ -164,7 +162,7 @@ namespace HarfBuzzSharp.Tests
 			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
-				Assert.False(font.TryGetGlyphContourPointForOrigin(49, 0, Direction.LeftToRight, out var x, out var y));
+				Assert.False(font.TryGetGlyphContourPointForOrigin(49, 0, Direction.LeftToRight, out _, out _));
 			}
 		}
 
@@ -174,7 +172,7 @@ namespace HarfBuzzSharp.Tests
 			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
-				Assert.False(font.TryGetGlyphContourPoint(49, 0, out var x, out var y));
+				Assert.False(font.TryGetGlyphContourPoint(49, 0, out _, out _));
 			}
 		}
 
@@ -184,7 +182,7 @@ namespace HarfBuzzSharp.Tests
 			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
-				font.GetGlyphAdvanceForDirection(49, Direction.LeftToRight, out var x, out var y);
+				font.GetGlyphAdvanceForDirection(49, Direction.LeftToRight, out var x, out _);
 
 				Assert.Equal(1114, x);
 			}

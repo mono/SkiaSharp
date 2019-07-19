@@ -130,8 +130,7 @@ Task ("libs-only")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("tests")
-    .IsDependentOn ("libs")
-    .IsDependentOn ("nuget")
+    .IsDependentOn ("externals")
     .IsDependentOn ("tests-only");
 
 Task ("tests-only")
@@ -160,37 +159,12 @@ Task ("tests-only")
     } else if (IsRunningOnMac ()) {
         RunDesktopTest ("AnyCPU");
     } else if (IsRunningOnLinux ()) {
-        // TODO: Disable x64 for the time being due to a bug in mono sn:
-        //       https://github.com/mono/mono/issues/8218
-
-        RunDesktopTest ("AnyCPU");
-        // RunDesktopTest ("x64");
+        RunDesktopTest ("x64");
     }
 
     // .NET Core
-    var netCoreTestProj = "./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj";
-    var xdoc = XDocument.Load (netCoreTestProj);
-    var refs = xdoc.Root.Elements ("ItemGroup").Elements ("PackageReference");
-    bool changed = false;
-    foreach (var packageRef in refs) {
-        var include = packageRef.Attribute ("Include").Value;
-        var oldVersion = packageRef.Attribute ("Version").Value;
-        var version = GetVersion (include);
-        if (!string.IsNullOrEmpty (version)) {
-            if (version != oldVersion) {
-                packageRef.Attribute ("Version").Value = version;
-                changed = true;
-            }
-        }
-    }
-    if (changed) {
-        xdoc.Save (netCoreTestProj);
-    }
-    CleanDirectories ($"./{PACKAGE_CACHE_PATH}/skiasharp*");
-    CleanDirectories ($"./{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
     EnsureDirectoryExists ("./output/tests/netcore");
-    RunMSBuild (netCoreTestProj, restoreOnly: true);
-    RunNetCoreTests (netCoreTestProj);
+    RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
     CopyFile ("./tests/SkiaSharp.NetCore.Tests/TestResults/TestResults.xml", "./output/tests/netcore/TestResult.xml");
 });
 

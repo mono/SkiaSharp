@@ -84,12 +84,18 @@ void RunTests (FilePath testAssembly, bool is32)
 void RunNetCoreTests (FilePath testAssembly)
 {
     var dir = testAssembly.GetDirectory ();
+    var buildSettings = new DotNetCoreBuildSettings {
+        Configuration = CONFIGURATION,
+        WorkingDirectory = dir,
+    };
+    DotNetCoreBuild(testAssembly.GetFilename().ToString(), buildSettings);
     var settings = new DotNetCoreTestSettings {
         Configuration = CONFIGURATION,
-        NoRestore = true,
+        NoBuild = true,
         TestAdapterPath = ".",
         Logger = "xunit",
         WorkingDirectory = dir,
+        Verbosity = DotNetCoreVerbosity.Normal,
     };
     var traits = CreateTraitsDictionary(UNSUPPORTED_TESTS);
     var filter = string.Join("&", traits.Select(t => $"{t.Name}!={t.Value}"));

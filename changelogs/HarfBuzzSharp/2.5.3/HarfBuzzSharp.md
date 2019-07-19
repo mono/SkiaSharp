@@ -83,36 +83,26 @@ protected override void Dispose (bool disposing);
 Added methods:
 
 ```csharp
-public void Add (int codepoint, int cluster);
 public void Add (uint codepoint, uint cluster);
-public void AddCodepoints (int[] text);
-public void AddCodepoints (System.ReadOnlySpan<int> text);
 public void AddCodepoints (System.ReadOnlySpan<uint> text);
-public void AddCodepoints (uint[] text);
 public void AddCodepoints (IntPtr text, int textLength);
-public void AddCodepoints (int[] text, int itemOffset, int itemLength);
-public void AddCodepoints (System.ReadOnlySpan<int> text, int itemOffset, int itemLength);
 public void AddCodepoints (System.ReadOnlySpan<uint> text, int itemOffset, int itemLength);
-public void AddCodepoints (uint[] text, int itemOffset, int itemLength);
 public void AddCodepoints (IntPtr text, int textLength, int itemOffset, int itemLength);
-public void AddUtf16 (byte[] text);
+public void AddUtf16 (System.ReadOnlySpan<byte> text);
 public void AddUtf16 (System.ReadOnlySpan<char> text);
 public void AddUtf16 (string text);
 public void AddUtf16 (IntPtr text, int textLength);
 public void AddUtf16 (System.ReadOnlySpan<char> text, int itemOffset, int itemLength);
 public void AddUtf16 (string text, int itemOffset, int itemLength);
 public void AddUtf16 (IntPtr text, int textLength, int itemOffset, int itemLength);
-public void AddUtf32 (byte[] text);
-public void AddUtf32 (System.ReadOnlySpan<int> text);
+public void AddUtf32 (System.ReadOnlySpan<byte> text);
 public void AddUtf32 (System.ReadOnlySpan<uint> text);
 public void AddUtf32 (string text);
 public void AddUtf32 (IntPtr text, int textLength);
-public void AddUtf32 (System.ReadOnlySpan<int> text, int itemOffset, int itemLength);
 public void AddUtf32 (System.ReadOnlySpan<uint> text, int itemOffset, int itemLength);
 public void AddUtf32 (IntPtr text, int textLength, int itemOffset, int itemLength);
 public void AddUtf8 (System.ReadOnlySpan<byte> text);
 public void AddUtf8 (IntPtr text, int textLength);
-public void AddUtf8 (byte[] bytes, int itemOffset, int itemLength);
 public void AddUtf8 (System.ReadOnlySpan<byte> text, int itemOffset, int itemLength);
 public void AddUtf8 (IntPtr text, int textLength, int itemOffset, int itemLength);
 public void Append (Buffer buffer);
@@ -181,11 +171,9 @@ public Blob ReferenceTable (Tag table);
 
 #### Type Changed: HarfBuzzSharp.Feature
 
-Added constructors:
+Added constructor:
 
 ```csharp
-public Feature (Tag tag);
-public Feature (Tag tag, uint value);
 public Feature (Tag tag, uint value, uint start, uint end);
 ```
 
@@ -246,9 +234,7 @@ public void SetFontFunctions (FontFunctions fontFunctions);
 public void SetFontFunctions (FontFunctions fontFunctions, object fontData);
 public void SetFontFunctions (FontFunctions fontFunctions, object fontData, ReleaseDelegate destroy);
 public void Shape (Buffer buffer, System.Collections.Generic.IReadOnlyList<Feature> features, System.Collections.Generic.IReadOnlyList<string> shapers);
-public bool TryGetGlyph (int unicode, out uint glyph);
 public bool TryGetGlyph (uint unicode, out uint glyph);
-public bool TryGetGlyph (int unicode, uint variationSelector, out uint glyph);
 public bool TryGetGlyph (uint unicode, uint variationSelector, out uint glyph);
 public bool TryGetGlyphContourPoint (uint glyph, uint pointIndex, out int x, out int y);
 public bool TryGetGlyphContourPointForOrigin (uint glyph, uint pointIndex, Direction direction, out int x, out int y);
@@ -258,11 +244,8 @@ public bool TryGetGlyphFromString (string s, out uint glyph);
 public bool TryGetGlyphName (uint glyph, out string name);
 public bool TryGetHorizontalFontExtents (out FontExtents extents);
 public bool TryGetHorizontalGlyphOrigin (uint glyph, out int xOrigin, out int yOrigin);
-public bool TryGetNominalGlyph (int unicode, out uint glyph);
 public bool TryGetNominalGlyph (uint unicode, out uint glyph);
-public bool TryGetVariationGlyph (int unicode, out uint glyph);
 public bool TryGetVariationGlyph (uint unicode, out uint glyph);
-public bool TryGetVariationGlyph (int unicode, uint variationSelector, out uint glyph);
 public bool TryGetVariationGlyph (uint unicode, uint variationSelector, out uint glyph);
 public bool TryGetVerticalFontExtents (out FontExtents extents);
 public bool TryGetVerticalGlyphOrigin (uint glyph, out int xOrigin, out int yOrigin);
@@ -299,6 +282,32 @@ public enum ClusterLevel {
 }
 ```
 
+#### New Type: HarfBuzzSharp.CombiningClassDelegate
+
+```csharp
+public sealed delegate CombiningClassDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public CombiningClassDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (UnicodeFunctions ufuncs, uint unicode, System.AsyncCallback callback, object object);
+	public virtual UnicodeCombiningClass EndInvoke (System.IAsyncResult result);
+	public virtual UnicodeCombiningClass Invoke (UnicodeFunctions ufuncs, uint unicode);
+}
+```
+
+#### New Type: HarfBuzzSharp.ComposeDelegate
+
+```csharp
+public sealed delegate ComposeDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public ComposeDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (UnicodeFunctions ufuncs, uint a, uint b, out uint ab, System.AsyncCallback callback, object object);
+	public virtual bool EndInvoke (out uint ab, System.IAsyncResult result);
+	public virtual bool Invoke (UnicodeFunctions ufuncs, uint a, uint b, out uint ab);
+}
+```
+
 #### New Type: HarfBuzzSharp.ContentType
 
 ```csharp
@@ -307,6 +316,19 @@ public enum ContentType {
 	Glyphs = 2,
 	Invalid = 0,
 	Unicode = 1,
+}
+```
+
+#### New Type: HarfBuzzSharp.DecomposeDelegate
+
+```csharp
+public sealed delegate DecomposeDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public DecomposeDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (UnicodeFunctions ufuncs, uint ab, out uint a, out uint b, System.AsyncCallback callback, object object);
+	public virtual bool EndInvoke (out uint a, out uint b, System.IAsyncResult result);
+	public virtual bool Invoke (UnicodeFunctions ufuncs, uint ab, out uint a, out uint b);
 }
 ```
 
@@ -360,38 +382,35 @@ public class FontFunctions : HarfBuzzSharp.NativeObject, System.IDisposable {
 	// methods
 	protected override void DisposeHandler ();
 	public void MakeImmutable ();
-	public void SetGlyphContourPointDelegate (GlyphContourPointDelegate del);
 	public void SetGlyphContourPointDelegate (GlyphContourPointDelegate del, ReleaseDelegate destroy);
-	public void SetGlyphExtentsDelegate (GlyphExtentsDelegate del);
 	public void SetGlyphExtentsDelegate (GlyphExtentsDelegate del, ReleaseDelegate destroy);
-	public void SetGlyphFromNameDelegate (GlyphFromNameDelegate del);
 	public void SetGlyphFromNameDelegate (GlyphFromNameDelegate del, ReleaseDelegate destroy);
-	public void SetGlyphNameDelegate (GlyphNameDelegate del);
 	public void SetGlyphNameDelegate (GlyphNameDelegate del, ReleaseDelegate destroy);
-	public void SetHorizontalFontExtentsDelegate (FontExtentsDelegate del);
 	public void SetHorizontalFontExtentsDelegate (FontExtentsDelegate del, ReleaseDelegate destroy);
-	public void SetHorizontalGlyphAdvanceDelegate (GlyphAdvanceDelegate del);
 	public void SetHorizontalGlyphAdvanceDelegate (GlyphAdvanceDelegate del, ReleaseDelegate destroy);
-	public void SetHorizontalGlyphAdvancesDelegate (GlyphAdvancesDelegate del);
 	public void SetHorizontalGlyphAdvancesDelegate (GlyphAdvancesDelegate del, ReleaseDelegate destroy);
-	public void SetHorizontalGlyphKerningDelegate (GlyphKerningDelegate del);
 	public void SetHorizontalGlyphKerningDelegate (GlyphKerningDelegate del, ReleaseDelegate destroy);
-	public void SetHorizontalGlyphOriginDelegate (GlyphOriginDelegate del);
 	public void SetHorizontalGlyphOriginDelegate (GlyphOriginDelegate del, ReleaseDelegate destroy);
-	public void SetNominalGlyphDelegate (NominalGlyphDelegate del);
 	public void SetNominalGlyphDelegate (NominalGlyphDelegate del, ReleaseDelegate destroy);
-	public void SetNominalGlyphsDelegate (NominalGlyphsDelegate del);
 	public void SetNominalGlyphsDelegate (NominalGlyphsDelegate del, ReleaseDelegate destroy);
-	public void SetVariationGlyphDelegate (VariationGlyphDelegate del);
 	public void SetVariationGlyphDelegate (VariationGlyphDelegate del, ReleaseDelegate destroy);
-	public void SetVerticalFontExtentsDelegate (FontExtentsDelegate del);
 	public void SetVerticalFontExtentsDelegate (FontExtentsDelegate del, ReleaseDelegate destroy);
-	public void SetVerticalGlyphAdvanceDelegate (GlyphAdvanceDelegate del);
 	public void SetVerticalGlyphAdvanceDelegate (GlyphAdvanceDelegate del, ReleaseDelegate destroy);
-	public void SetVerticalGlyphAdvancesDelegate (GlyphAdvancesDelegate del);
 	public void SetVerticalGlyphAdvancesDelegate (GlyphAdvancesDelegate del, ReleaseDelegate destroy);
-	public void SetVerticalGlyphOriginDelegate (GlyphOriginDelegate del);
 	public void SetVerticalGlyphOriginDelegate (GlyphOriginDelegate del, ReleaseDelegate destroy);
+}
+```
+
+#### New Type: HarfBuzzSharp.GeneralCategoryDelegate
+
+```csharp
+public sealed delegate GeneralCategoryDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public GeneralCategoryDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (UnicodeFunctions ufuncs, uint unicode, System.AsyncCallback callback, object object);
+	public virtual UnicodeGeneralCategory EndInvoke (System.IAsyncResult result);
+	public virtual UnicodeGeneralCategory Invoke (UnicodeFunctions ufuncs, uint unicode);
 }
 ```
 
@@ -546,9 +565,22 @@ public class Language : HarfBuzzSharp.NativeObject, System.IDisposable {
 	public static Language Default { get; }
 	public string Name { get; }
 	// methods
-	protected bool Equals (Language other);
+	public override bool Equals (object obj);
 	public override int GetHashCode ();
 	public override string ToString ();
+}
+```
+
+#### New Type: HarfBuzzSharp.MirroringDelegate
+
+```csharp
+public sealed delegate MirroringDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public MirroringDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (UnicodeFunctions ufuncs, uint unicode, System.AsyncCallback callback, object object);
+	public virtual uint EndInvoke (System.IAsyncResult result);
+	public virtual uint Invoke (UnicodeFunctions ufuncs, uint unicode);
 }
 ```
 
@@ -762,6 +794,19 @@ public struct Script, System.IEquatable<Script> {
 }
 ```
 
+#### New Type: HarfBuzzSharp.ScriptDelegate
+
+```csharp
+public sealed delegate ScriptDelegate : System.MulticastDelegate, System.ICloneable, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public ScriptDelegate (object object, IntPtr method);
+	// methods
+	public virtual System.IAsyncResult BeginInvoke (UnicodeFunctions ufuncs, uint unicode, System.AsyncCallback callback, object object);
+	public virtual Script EndInvoke (System.IAsyncResult result);
+	public virtual Script Invoke (UnicodeFunctions ufuncs, uint unicode);
+}
+```
+
 #### New Type: HarfBuzzSharp.SerializeFlag
 
 ```csharp
@@ -879,19 +924,28 @@ public enum UnicodeCombiningClass {
 
 ```csharp
 public class UnicodeFunctions : HarfBuzzSharp.NativeObject, System.IDisposable {
+	// constructors
+	public UnicodeFunctions (UnicodeFunctions parent);
 	// properties
 	public static UnicodeFunctions Default { get; }
 	public static UnicodeFunctions Empty { get; }
 	public bool IsImmutable { get; }
+	public UnicodeFunctions Parent { get; }
 	// methods
 	protected override void DisposeHandler ();
-	public UnicodeCombiningClass GetCombiningClass (int unicode);
 	public UnicodeCombiningClass GetCombiningClass (uint unicode);
-	public UnicodeGeneralCategory GetGeneralCategory (int unicode);
 	public UnicodeGeneralCategory GetGeneralCategory (uint unicode);
-	public Script GetScript (int unicode);
+	public uint GetMirroring (uint unicode);
 	public Script GetScript (uint unicode);
 	public void MakeImmutable ();
+	public void SetCombiningClassDelegate (CombiningClassDelegate del, ReleaseDelegate destroy);
+	public void SetComposeDelegate (ComposeDelegate del, ReleaseDelegate destroy);
+	public void SetDecomposeDelegate (DecomposeDelegate del, ReleaseDelegate destroy);
+	public void SetGeneralCategoryDelegate (GeneralCategoryDelegate del, ReleaseDelegate destroy);
+	public void SetMirroringDelegate (MirroringDelegate del, ReleaseDelegate destroy);
+	public void SetScriptDelegate (ScriptDelegate del, ReleaseDelegate destroy);
+	public bool TryCompose (uint a, uint b, out uint ab);
+	public bool TryDecompose (uint ab, out uint a, out uint b);
 }
 ```
 
