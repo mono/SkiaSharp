@@ -152,6 +152,9 @@ Task ("tests-only")
         CopyFileToDirectory ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/TestResult.xml", $"./output/tests/{platform}/{arch}");
     });
 
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
+
     // Full .NET Framework
     if (IsRunningOnWindows ()) {
         RunDesktopTest ("x86");
@@ -164,6 +167,7 @@ Task ("tests-only")
 
     // .NET Core
     EnsureDirectoryExists ("./output/tests/netcore");
+    RunMSBuild ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.sln");
     RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
     CopyFile ("./tests/SkiaSharp.NetCore.Tests/TestResults/TestResults.xml", "./output/tests/netcore/TestResult.xml");
 });
@@ -230,8 +234,8 @@ Task ("samples")
     Zip ("./output/samples/", "./output/samples.zip");
 
     // build the newly migrated samples
-    CleanDirectories ($"./{PACKAGE_CACHE_PATH}/skiasharp*");
-    CleanDirectories ($"./{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
     var solutions = GetFiles ("./output/samples/**/*.sln");
     foreach (var sln in solutions) {
         var name = sln.GetFilenameWithoutExtension ();
@@ -260,7 +264,7 @@ Task ("samples")
             }
         }
     }
-    CleanDirectory ("./samples/");
+    CleanDirectory ("./output/samples/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

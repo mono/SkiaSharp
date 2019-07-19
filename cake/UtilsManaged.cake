@@ -84,11 +84,6 @@ void RunTests (FilePath testAssembly, bool is32)
 void RunNetCoreTests (FilePath testAssembly)
 {
     var dir = testAssembly.GetDirectory ();
-    var buildSettings = new DotNetCoreBuildSettings {
-        Configuration = CONFIGURATION,
-        WorkingDirectory = dir,
-    };
-    DotNetCoreBuild(testAssembly.GetFilename().ToString(), buildSettings);
     var settings = new DotNetCoreTestSettings {
         Configuration = CONFIGURATION,
         NoBuild = true,
