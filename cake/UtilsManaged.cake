@@ -367,6 +367,9 @@ async Task<NuGetDiff> CreateNuGetDiffAsync ()
     await AddDep ("Xamarin.Forms", "Xamarin.Mac");
     await AddDep ("Xamarin.Forms", "tizen40");
     await AddDep ("Xamarin.Forms", "uap10.0");
+    await AddDep ("GtkSharp", "netstandard2.0");
+    await AddDep ("GLibSharp", "netstandard2.0");
+    await AddDep ("AtkSharp", "netstandard2.0");
 
     return comparer;
 }

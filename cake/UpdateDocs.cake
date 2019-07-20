@@ -186,16 +186,20 @@ Task ("docs-update-frameworks")
 
             foreach (var (path, platform) in GetPlatformDirectories ($"{packagePath}/lib")) {
                 string moniker;
-                if (platform == null)
+                if (id.StartsWith ("SkiaSharp.Views") && !id.StartsWith ("SkiaSharp.Views.Forms"))
+                    moniker = $"skiasharp-views-{version}";
+                else if (platform == null)
                     moniker = $"{id.ToLower ().Replace (".", "-")}-{version}";
                 else
                     moniker = $"{id.ToLower ().Replace (".", "-")}-{platform}-{version}";
 
                 // add the node to the frameworks.xml
-                xFrameworks.Add (
-                    new XElement ("Framework",
-                        new XAttribute ("Name", moniker),
-                        new XAttribute ("Source", moniker)));
+                if (xFrameworks.Elements ("Framework")?.Any (e => e.Attribute ("Name").Value == moniker) != true) {
+                    xFrameworks.Add (
+                        new XElement ("Framework",
+                            new XAttribute ("Name", moniker),
+                            new XAttribute ("Source", moniker)));
+                }
 
                 // copy the assemblies for the tool
                 var o = $"{docsTempPath}/{moniker}";

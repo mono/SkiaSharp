@@ -171,9 +171,11 @@ public Blob ReferenceTable (Tag table);
 
 #### Type Changed: HarfBuzzSharp.Feature
 
-Added constructor:
+Added constructors:
 
 ```csharp
+public Feature (Tag tag);
+public Feature (Tag tag, uint value);
 public Feature (Tag tag, uint value, uint start, uint end);
 ```
 
