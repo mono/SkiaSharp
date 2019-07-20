@@ -8,7 +8,7 @@ namespace SkiaSharpSample
 {
 	public class MainWindow : Window
 	{
-		private SKWidget skiaView;
+		private SKDrawingArea skiaView;
 
 		public MainWindow()
 			: this(new Builder("MainWindow.glade"))
@@ -21,7 +21,7 @@ namespace SkiaSharpSample
 			builder.Autoconnect(this);
 			DeleteEvent += OnWindowDeleteEvent;
 
-			skiaView = new SKWidget();
+			skiaView = new SKDrawingArea();
 			skiaView.PaintSurface += OnPaintSurface;
 			skiaView.Show();
 			Child = skiaView;

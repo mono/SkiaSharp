@@ -6,12 +6,12 @@ using SkiaSharp.Views.Desktop;
 namespace SkiaSharp.Views.Gtk
 {
 	[ToolboxItem(true)]
-	public class SKWidget : global::Gtk.DrawingArea
+	public class SKDrawingArea : global::Gtk.DrawingArea
 	{
 		private ImageSurface pix;
 		private SKSurface surface;
 
-		public SKWidget()
+		public SKDrawingArea()
 		{
 		}
 
