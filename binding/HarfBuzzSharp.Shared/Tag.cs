@@ -25,13 +25,21 @@ namespace HarfBuzzSharp
 			value = (uint)(((byte)c1 << 24) | ((byte)c2 << 16) | ((byte)c3 << 8) | (byte)c4);
 		}
 
-		public Tag (string tag)
+		public static Tag Parse (string tag)
 		{
-			if (tag?.Length != 4) {
-				throw new ArgumentException (nameof (tag));
-			}
+			if (string.IsNullOrEmpty(tag))
+				return None;
 
-			value = (uint)(((byte)tag[0] << 24) | ((byte)tag[1] << 16) | ((byte)tag[2] << 8) | (byte)tag[3]);
+			var realTag = new char[4];
+
+			var len = Math.Min (4, tag.Length);
+			var i = 0;
+			for (; i < len; i++)
+				realTag[i] = tag[i];
+			for (; i < 4; i++)
+				realTag[i] = ' ';
+
+			return new Tag (realTag[0], realTag[1], realTag[2], realTag[3]);
 		}
 
 		public override string ToString ()

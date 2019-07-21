@@ -276,9 +276,9 @@ namespace HarfBuzzSharp
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern hb_codepoint_t hb_buffer_get_invisible_glyph (hb_buffer_t buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern void hb_buffer_set_flags (hb_buffer_t buffer, Flags flags);
+		public static extern void hb_buffer_set_flags (hb_buffer_t buffer, BufferFlags flags);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public static extern Flags hb_buffer_get_flags (hb_buffer_t buffer);
+		public static extern BufferFlags hb_buffer_get_flags (hb_buffer_t buffer);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public static extern void hb_buffer_set_cluster_level (hb_buffer_t buffer, ClusterLevel cluster_level);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
