@@ -11,7 +11,7 @@ namespace HarfBuzzSharp.Tests
 		{
 			var feature = Feature.Parse("Kern");
 
-			Assert.Equal(new Tag("Kern"), feature.Tag);
+			Assert.Equal(Tag.Parse("Kern"), feature.Tag);
 		}
 
 		[SkippableFact]

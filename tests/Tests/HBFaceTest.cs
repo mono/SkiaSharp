@@ -57,7 +57,7 @@ namespace HarfBuzzSharp.Tests
 		public void ShouldReferenceTable()
 		{
 			using (var face = new Face(Blob, 0))
-			using (var tableBlob = face.ReferenceTable(new Tag("post")))
+			using (var tableBlob = face.ReferenceTable(Tag.Parse("post")))
 			{
 				Assert.Equal(13378, tableBlob.Length);
 			}
@@ -66,7 +66,7 @@ namespace HarfBuzzSharp.Tests
 		[SkippableFact]
 		public void ShouldCreateWithTableFunc()
 		{
-			var tag = new Tag("kern");
+			var tag = Tag.Parse("kern");
 
 			using (var face = new Face((f, t) => Face.ReferenceTable(t)))
 			{
@@ -82,7 +82,7 @@ namespace HarfBuzzSharp.Tests
 			var didReference = 0;
 			var didDestroy = 0;
 
-			var tag = new Tag("kern");
+			var tag = Tag.Parse("kern");
 
 			Face face = null;
 			face = new Face(
