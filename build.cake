@@ -230,6 +230,8 @@ Task ("samples")
 
     // create the samples archive
     CreateSamplesDirectory ("./samples/", "./output/samples/");
+    DeleteFiles ("./output/samples/README.md");
+    MoveFile ("./output/samples/README.zip.md", "./output/samples/README.md");
     Zip ("./output/samples/", "./output/samples.zip");
 
     // build the newly migrated samples
