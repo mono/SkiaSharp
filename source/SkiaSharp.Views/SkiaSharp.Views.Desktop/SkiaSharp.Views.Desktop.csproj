@@ -10,17 +10,9 @@
     <DefineConstants>$(DefineConstants);__DESKTOP__</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="OpenTK" Version="1.1.2349.61993" />
-    <PackageReference Include="OpenTK.GLControl" Version="1.1.2349.61993" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System.Windows.Forms" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp.Desktop\SkiaSharp.Desktop.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="..\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <ProjectReference Include="..\SkiaSharp.Views.Desktop.Common\SkiaSharp.Views.Desktop.Common.csproj" />
+    <ProjectReference Include="..\SkiaSharp.Views.WindowsForms\SkiaSharp.Views.WindowsForms.csproj" />
   </ItemGroup>
   <Import Project="..\..\SkiaSharp.Build.targets" />
 </Project>

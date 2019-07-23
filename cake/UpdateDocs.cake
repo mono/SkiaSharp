@@ -186,7 +186,9 @@ Task ("docs-update-frameworks")
 
             foreach (var (path, platform) in GetPlatformDirectories ($"{packagePath}/lib")) {
                 string moniker;
-                if (platform == null)
+                if (id.StartsWith ("SkiaSharp.Views") && !id.StartsWith ("SkiaSharp.Views.Forms"))
+                    moniker = $"skiasharp-views-{version}";
+                else if (platform == null)
                     moniker = $"{id.ToLower ().Replace (".", "-")}-{version}";
                 else
                     moniker = $"{id.ToLower ().Replace (".", "-")}-{platform}-{version}";

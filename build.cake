@@ -71,6 +71,11 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp",                          new Version (1, 57, 0) },
     { "SkiaSharp.NativeAssets.Linux",       new Version (1, 57, 0) },
     { "SkiaSharp.Views",                    new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Desktop.Common",     new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Gtk2",               new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Gtk3",               new Version (1, 57, 0) },
+    { "SkiaSharp.Views.WindowsForms",       new Version (1, 57, 0) },
+    { "SkiaSharp.Views.WPF",                new Version (1, 57, 0) },
     { "SkiaSharp.Views.Forms",              new Version (1, 57, 0) },
     { "HarfBuzzSharp",                      new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.Linux",   new Version (1, 0, 0) },
@@ -146,6 +151,9 @@ Task ("tests-only")
         CopyFileToDirectory ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/TestResult.xml", $"./output/tests/{platform}/{arch}");
     });
 
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
+
     // Full .NET Framework
     if (IsRunningOnWindows ()) {
         RunDesktopTest ("x86");
@@ -158,6 +166,7 @@ Task ("tests-only")
 
     // .NET Core
     EnsureDirectoryExists ("./output/tests/netcore");
+    RunMSBuild ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.sln");
     RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
     CopyFile ("./tests/SkiaSharp.NetCore.Tests/TestResults/TestResults.xml", "./output/tests/netcore/TestResult.xml");
 });
@@ -169,12 +178,6 @@ Task ("tests-only")
 Task ("samples")
     .Does (() =>
 {
-    // create the samples archive
-    CreateSamplesZip ("./samples/", "./output/");
-
-    // create the workbooks archive
-    Zip ("./workbooks", "./output/workbooks.zip");
-
     var isLinux = IsRunningOnLinux ();
     var isMac = IsRunningOnMac ();
     var isWin = IsRunningOnWindows ();
@@ -222,7 +225,19 @@ Task ("samples")
         }
     });
 
-    var solutions = GetFiles ("./samples/**/*.sln");
+    // create the workbooks archive
+    Zip ("./workbooks", "./output/workbooks.zip");
+
+    // create the samples archive
+    CreateSamplesDirectory ("./samples/", "./output/samples/");
+    DeleteFiles ("./output/samples/README.md");
+    MoveFile ("./output/samples/README.zip.md", "./output/samples/README.md");
+    Zip ("./output/samples/", "./output/samples.zip");
+
+    // build the newly migrated samples
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
+    var solutions = GetFiles ("./output/samples/**/*.sln");
     foreach (var sln in solutions) {
         var name = sln.GetFilenameWithoutExtension ();
         var slnPlatform = name.GetExtension ();
@@ -250,6 +265,7 @@ Task ("samples")
             }
         }
     }
+    CleanDirectory ("./output/samples/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -354,6 +370,7 @@ Task ("nuget-only")
         removePlatforms (xdoc);
 
         var outDir = $"./output/{dir}/nuget";
+        EnsureDirectoryExists (outDir);
 
         setVersion (xdoc, "");
         xdoc.Save ($"{outDir}/{id}.nuspec");
