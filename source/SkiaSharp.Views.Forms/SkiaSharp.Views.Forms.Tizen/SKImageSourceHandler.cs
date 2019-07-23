@@ -13,7 +13,7 @@ using NativeImage = Xamarin.Forms.Platform.Tizen.Native.Image;
 
 namespace SkiaSharp.Views.Forms
 {
-	public abstract class SKImageSourceHandler : IImageSourceHandler
+	public abstract partial class SKImageSourceHandler : IImageSourceHandler
 	{
 		private StreamImageSourceHandler handler = new StreamImageSourceHandler();
 

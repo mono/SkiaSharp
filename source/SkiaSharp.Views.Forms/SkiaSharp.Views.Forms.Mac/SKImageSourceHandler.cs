@@ -13,7 +13,7 @@ using SkiaSharp.Views.Mac;
 
 namespace SkiaSharp.Views.Forms
 {
-	public sealed class SKImageSourceHandler : IImageSourceHandler
+	public sealed partial class SKImageSourceHandler : IImageSourceHandler
 	{
 		public Task<NSImage> LoadImageAsync(ImageSource imagesource, CancellationToken cancelationToken = default(CancellationToken), float scale = 1f)
 		{

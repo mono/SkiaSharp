@@ -1,9 +1,8 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using SkiaSharp.Views.WPF;
 using Xamarin.Forms;
-using Xamarin.Forms.Platform.UWP;
-
-using SkiaSharp.Views.UWP;
+using Xamarin.Forms.Platform.WPF;
 
 [assembly: ExportImageSourceHandler(typeof(SkiaSharp.Views.Forms.SKImageImageSource), typeof(SkiaSharp.Views.Forms.SKImageSourceHandler))]
 [assembly: ExportImageSourceHandler(typeof(SkiaSharp.Views.Forms.SKBitmapImageSource), typeof(SkiaSharp.Views.Forms.SKImageSourceHandler))]
@@ -14,33 +13,18 @@ namespace SkiaSharp.Views.Forms
 {
 	public sealed partial class SKImageSourceHandler : IImageSourceHandler
 	{
-		public Task<Windows.UI.Xaml.Media.ImageSource> LoadImageAsync(ImageSource imagesource, CancellationToken cancelationToken = default(CancellationToken))
+		public Task<System.Windows.Media.ImageSource> LoadImageAsync(ImageSource imagesource, CancellationToken cancelationToken = default(CancellationToken))
 		{
-			Windows.UI.Xaml.Media.ImageSource image = null;
+			System.Windows.Media.ImageSource image = null;
 
-			var imageImageSource = imagesource as SKImageImageSource;
-			if (imageImageSource != null)
-			{
+			if (imagesource is SKImageImageSource imageImageSource)
 				image = imageImageSource.Image?.ToWriteableBitmap();
-			}
-
-			var bitmapImageSource = imagesource as SKBitmapImageSource;
-			if (bitmapImageSource != null)
-			{
+			else if (imagesource is SKBitmapImageSource bitmapImageSource)
 				image = bitmapImageSource.Bitmap?.ToWriteableBitmap();
-			}
-
-			var pixmapImageSource = imagesource as SKPixmapImageSource;
-			if (pixmapImageSource != null)
-			{
+			else if (imagesource is SKPixmapImageSource pixmapImageSource)
 				image = pixmapImageSource.Pixmap?.ToWriteableBitmap();
-			}
-
-			var pictureImageSource = imagesource as SKPictureImageSource;
-			if (pictureImageSource != null)
-			{
+			else if (imagesource is SKPictureImageSource pictureImageSource)
 				image = pictureImageSource.Picture?.ToWriteableBitmap(pictureImageSource.Dimensions);
-			}
 
 			return Task.FromResult(image);
 		}
