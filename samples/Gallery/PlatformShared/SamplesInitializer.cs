@@ -45,7 +45,7 @@ namespace SkiaSharpSample
 			}
 #elif __DESKTOP__
 			var root = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-			var path = Path.Combine(root, "Media", fontName);
+			var path = Path.Combine(root, "Assets", "Media", fontName);
 #elif __TIZEN__
 			var path = ResourcePath.GetPath(fontName);
 #endif
