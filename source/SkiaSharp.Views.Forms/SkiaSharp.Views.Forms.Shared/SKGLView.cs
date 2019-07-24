@@ -4,7 +4,7 @@ using Xamarin.Forms;
 namespace SkiaSharp.Views.Forms
 {
 	[RenderWith(typeof(SKGLViewRenderer))]
-	public class SKGLView : View, ISKGLViewController
+	public partial class SKGLView : View, ISKGLViewController
 	{
 		public static readonly BindableProperty HasRenderLoopProperty =
 			BindableProperty.Create(nameof(HasRenderLoop), typeof(bool), typeof(SKGLView), false);

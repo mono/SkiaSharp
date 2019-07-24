@@ -129,7 +129,7 @@ var DecompressArchive = new Action<FilePath, DirectoryPath> ((archive, outputDir
     }
 });
 
-void CreateSamplesDirectory (DirectoryPath samplesDirPath, DirectoryPath outputDirPath)
+void CreateSamplesDirectory (DirectoryPath samplesDirPath, DirectoryPath outputDirPath, string versionSuffix = "")
 {
     samplesDirPath = MakeAbsolute (samplesDirPath);
     outputDirPath = MakeAbsolute (outputDirPath);
@@ -227,9 +227,10 @@ void CreateSamplesDirectory (DirectoryPath samplesDirPath, DirectoryPath outputD
                     if (!string.IsNullOrWhiteSpace (version)) {
                         Debug ($"Substituting project reference {relFilePath} for project {rel}.");
                         var name = projItem.Name.Namespace + "PackageReference";
+                        var suffix = string.IsNullOrEmpty (versionSuffix) ? "" : $"-{versionSuffix}";
                         projItem.AddAfterSelf (new XElement (name, new object[] {
                             new XAttribute("Include", packagingGroup),
-                            new XAttribute("Version", version),
+                            new XAttribute("Version", version + suffix),
                         }));
                     } else {
                         Warning ($"Unable to find version information for package '{packagingGroup}'.");
@@ -271,6 +272,9 @@ void CreateSamplesDirectory (DirectoryPath samplesDirPath, DirectoryPath outputD
             CopyFile (file, dest);
         }
     }
+
+    DeleteFiles ($"{outputDirPath}/README.md");
+    MoveFile ($"{outputDirPath}/README.zip.md", $"{outputDirPath}/README.md");
 }
 
 FilePath GetFullPath (FilePath root, FilePath path)

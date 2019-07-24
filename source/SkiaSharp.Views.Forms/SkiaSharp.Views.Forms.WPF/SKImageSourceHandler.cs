@@ -11,7 +11,7 @@ using Xamarin.Forms.Platform.WPF;
 
 namespace SkiaSharp.Views.Forms
 {
-	public sealed partial class SKImageSourceHandler : IImageSourceHandler
+	public sealed class SKImageSourceHandler : IImageSourceHandler
 	{
 		public Task<System.Windows.Media.ImageSource> LoadImageAsync(ImageSource imagesource, CancellationToken cancelationToken = default(CancellationToken))
 		{

@@ -12,7 +12,7 @@ using SkiaSharp.Views.UWP;
 
 namespace SkiaSharp.Views.Forms
 {
-	public sealed partial class SKImageSourceHandler : IImageSourceHandler
+	public sealed class SKImageSourceHandler : IImageSourceHandler
 	{
 		public Task<Windows.UI.Xaml.Media.ImageSource> LoadImageAsync(ImageSource imagesource, CancellationToken cancelationToken = default(CancellationToken))
 		{

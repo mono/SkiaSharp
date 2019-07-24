@@ -14,7 +14,7 @@ using SkiaSharp.Views.Android;
 
 namespace SkiaSharp.Views.Forms
 {
-	public sealed partial class SKImageSourceHandler : IImageSourceHandler
+	public sealed class SKImageSourceHandler : IImageSourceHandler
 	{
 		public Task<Bitmap> LoadImageAsync(ImageSource imagesource, Context context, CancellationToken cancelationToken = default(CancellationToken))
 		{
