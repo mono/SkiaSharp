@@ -272,6 +272,9 @@ Task ("samples")
         }
     }
     CleanDirectory ("./output/samples/");
+    DeleteDirectory ("./output/samples/");
+    CleanDirectory ("./output/samples-preview/");
+    DeleteDirectory ("./output/samples-preview/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

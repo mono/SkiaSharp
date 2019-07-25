@@ -176,6 +176,7 @@ stages:
           displayName: Package NuGets [No Dependencies]
           vmImage: $(VM_IMAGE_WINDOWS)
           target: nuget-only
+          shouldPublish: false
           requiredArtifacts:
             - managed_nodependencies_linux
             - managed_macos
@@ -207,6 +208,7 @@ stages:
           displayName: Package NuGets
           vmImage: $(VM_IMAGE_WINDOWS)
           target: nuget-only
+          shouldPublish: false
           requiredArtifacts:
             - managed_linux
             - managed_macos
@@ -253,11 +255,6 @@ stages:
               pathToPublish: 'output/nugets'
           - bash: ./scripts/validate-linux-nugets.sh
             displayName: Validate the Linux NuGet packages
-          - task: PublishPipelineArtifact@0
-            displayName: Publish the package artifacts
-            inputs:
-              artifactName: package
-              targetPath: 'output'
 
   - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
     - stage: signing
@@ -372,16 +369,18 @@ stages:
           displayName: Build Samples (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: samples
+          shouldPublish: false
           requiredArtifacts:
-            - package
+            - nuget
       - template: azure-templates-bootstrapper.yml # Build Samples (macOS)
         parameters:
           name: samples_macos
           displayName: Build Samples (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: samples
+          shouldPublish: false
           requiredArtifacts:
-            - package
+            - nuget
           preBuildSteps:
             - task: InstallAppleCertificate@2
               inputs:
@@ -405,5 +404,12 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
           target: samples
+          shouldPublish: false
           requiredArtifacts:
-            - package
+            - nuget
+          postBuildSteps:
+            - task: PublishBuildArtifacts@1
+              displayName: Publish the samples artifacts
+              inputs:
+                artifactName: samples
+                pathToPublish: 'output'
