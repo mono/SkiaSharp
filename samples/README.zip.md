@@ -32,7 +32,7 @@ Currently there are samples for all the supported platforms, and variations of f
  - watchOS
  - Windows.Forms
  - WPF
- - Xamarin.Forms (Android, macOS, Tizen, UWP, iOS)
+ - Xamarin.Forms (Android, macOS, Tizen, UWP, iOS, WPF)
 
 ## Gallery Samples
 
@@ -43,4 +43,4 @@ For more complex samples that demonstrates specific features, there is a nice ga
  - UWP
  - Windows.Forms
  - WPF
- - Xamarin.Forms (Android, macOS, Tizen, UWP, iOS)
+ - Xamarin.Forms (Android, macOS, Tizen, UWP, iOS, WPF)
