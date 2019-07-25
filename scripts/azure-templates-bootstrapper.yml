@@ -42,13 +42,8 @@ jobs:
       - ${{ if contains(parameters.name, '_tizen_') }}:
         - powershell: .\scripts\install-openjdk.ps1
           displayName: Install the OpenJDK
-        - powershell: echo $env:JAVA_HOME
-        - powershell: echo $env:PATH
-        - powershell: |
-            & "$env:JAVA_HOME/bin/java.exe" --version
         - powershell: .\scripts\install-tizen.ps1
           displayName: Install the Tizen SDK
-        - powershell: echo $env:TIZEN_STUDIO_HOME
       # install extra bits for the native builds
       - ${{ if startsWith(parameters.name, 'native_') }}:
         # switch to Python 2.7
