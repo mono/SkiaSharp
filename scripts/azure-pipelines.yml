@@ -249,8 +249,9 @@ stages:
               artifactName: nuget-default
               downloadPath: 'download-temp'
           - powershell: |
-              New-Item '.\output\nugets' -Type Directory -Force
-              Get-ChildItem '.\download-temp\*\' | Copy-Item -Destination '.\output\nugets' -Recurse -Force
+              New-Item '.\output\nugets' -Type Directory -Force | Out-Null
+              Get-ChildItem '.\download-temp\nuget-nodependencies\' | Copy-Item -Destination '.\output\nugets' -Recurse -Force
+              Get-ChildItem '.\download-temp\nuget-default\' | Copy-Item -Destination '.\output\nugets' -Recurse -Force
               Remove-Item '.\download-temp\' -Recurse -Force
             displayName: Move the nuget-* artifacts to the output directory
           - task: PublishBuildArtifacts@1
