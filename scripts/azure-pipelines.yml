@@ -192,16 +192,16 @@ stages:
                 $nupkgs | Foreach-Object { Write-Host $_.Name }
                 $nupkgs | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
               displayName: Remove all unrelated files
-            - task: PublishPipelineArtifact@0
+            - task: PublishBuildArtifacts@1
               displayName: Publish the native-nodependencies artifacts
               inputs:
                 artifactName: native-nodependencies
-                targetPath: 'output/native'
-            - task: PublishPipelineArtifact@0
+                pathToPublish: 'output/native'
+            - task: PublishBuildArtifacts@1
               displayName: Publish the nuget-nodependencies artifacts
               inputs:
                 artifactName: nuget-nodependencies
-                targetPath: 'output/nugets'
+                pathToPublish: 'output/nugets'
       - template: azure-templates-bootstrapper.yml # Package NuGets
         parameters:
           name: package_windows
@@ -225,11 +225,11 @@ stages:
               inputs:
                 artifactName: native-default
                 pathToPublish: 'output/native'
-            - task: PublishPipelineArtifact@0
+            - task: PublishBuildArtifacts@1
               displayName: Publish the nuget-default artifacts
               inputs:
                 artifactName: nuget-default
-                targetPath: 'output/nugets'
+                pathToPublish: 'output/nugets'
       - job: package                               # Combine Packaged NuGets
         displayName: Combine Packaged NuGets
         dependsOn:
@@ -238,16 +238,16 @@ stages:
         pool:
           vmImage: $(VM_IMAGE_LINUX)
         steps:
-          - task: DownloadPipelineArtifact@0
+          - task: DownloadBuildArtifacts@0
             displayName: Download the nuget-nodependencies artifacts
             inputs:
               artifactName: nuget-nodependencies
-              targetPath: 'output/nugets'
-          - task: DownloadPipelineArtifact@0
+              downloadPath: 'output/nugets'
+          - task: DownloadBuildArtifacts@0
             displayName: Download the nuget-default artifacts
             inputs:
               artifactName: nuget-default
-              targetPath: 'output/nugets'
+              downloadPath: 'output/nugets'
           - task: PublishBuildArtifacts@1
             displayName: Publish the nuget artifacts
             inputs:

@@ -66,11 +66,11 @@ jobs:
           displayName: Switch to the latest Xcode
       # download artifacts
       - ${{ each dep in parameters.requiredArtifacts }}:
-        - task: DownloadPipelineArtifact@0
+        - task: DownloadBuildArtifacts@0
           displayName: Download the ${{ dep }} artifacts
           inputs:
             artifactName: ${{ dep }}
-            targetPath: 'output'
+            downloadPath: 'output'
       # pre-build steps
       - ${{ parameters.preBuildSteps }}
       # build
@@ -83,9 +83,9 @@ jobs:
       # post-build steps
       - ${{ parameters.postBuildSteps }}
       # publish artifacts
-      - task: PublishPipelineArtifact@0
+      - task: PublishBuildArtifacts@1
         displayName: Publish the ${{ parameters.name }} artifacts
         condition: ${{ parameters.shouldPublish }}
         inputs:
           artifactName: ${{ parameters.name }}
-          targetPath: 'output'
+          pathToPublish: 'output'
