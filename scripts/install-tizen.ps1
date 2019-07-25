@@ -21,9 +21,6 @@ $url = "http://download.tizen.org/sdk/Installer/tizen-studio_${Version}/web-cli_
 $install = Join-Path "$tsTemp" "tizen-install.$ext"
 $packages = "MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment"
 
-Write-Host "Checking the version of Java installed..."
-java -version
-
 # download
 Write-Host "Downloading SDK to '$install'..."
 New-Item -ItemType Directory -Force -Path "$tsTemp" | Out-Null
