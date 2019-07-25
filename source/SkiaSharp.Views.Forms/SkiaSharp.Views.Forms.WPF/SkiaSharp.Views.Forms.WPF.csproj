@@ -9,7 +9,7 @@
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
     <SignAssembly>false</SignAssembly>
     <PackagingGroup>SkiaSharp.Views.Forms.WPF</PackagingGroup>
-    <PackagingPlatform>net461</PackagingPlatform>
+    <PackagingPlatform>net45</PackagingPlatform>
     <DefineConstants>$(DefineConstants);__DESKTOP__;__WPF__;</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
@@ -28,6 +28,9 @@
     <ProjectReference Include="..\..\..\binding\SkiaSharp.Desktop\SkiaSharp.Desktop.csproj" />
     <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.WPF\SkiaSharp.Views.WPF.csproj" />
     <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.WindowsForms\SkiaSharp.Views.WindowsForms.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="nuget\build\net45\SkiaSharp.Views.Forms.WPF.props" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\SkiaSharp.Views.Forms.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
