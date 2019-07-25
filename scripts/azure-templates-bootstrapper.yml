@@ -42,6 +42,7 @@ jobs:
       - ${{ if contains(parameters.name, '_tizen_') }}:
         - powershell: .\scripts\install-openjdk.ps1
           displayName: Install the OpenJDK
+        - powershell: java --version
         - powershell: .\scripts\install-tizen.ps1
           displayName: Install the Tizen SDK
       # install extra bits for the native builds
