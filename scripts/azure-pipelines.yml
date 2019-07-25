@@ -242,12 +242,17 @@ stages:
             displayName: Download the nuget-nodependencies artifacts
             inputs:
               artifactName: nuget-nodependencies
-              downloadPath: 'output/nugets'
+              downloadPath: 'download-temp'
           - task: DownloadBuildArtifacts@0
             displayName: Download the nuget-default artifacts
             inputs:
               artifactName: nuget-default
-              downloadPath: 'output/nugets'
+              downloadPath: 'download-temp'
+          - powershell: |
+              New-Item '.\output\nugets' -Type Directory -Force
+              Get-ChildItem '.\download-temp\*\' | Copy-Item -Destination '.\output\nugets' -Recurse -Force
+              Remove-Item '.\download-temp\' -Recurse -Force
+            displayName: Move the nuget-* artifacts to the output directory
           - task: PublishBuildArtifacts@1
             displayName: Publish the nuget artifacts
             inputs:
