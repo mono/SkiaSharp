@@ -380,6 +380,11 @@ stages:
           shouldPublish: false
           requiredArtifacts:
             - nuget
+          preBuildSteps:
+            - powershell: |
+                New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
+                Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
+              displayName: Copy the *.nupkgs into the correct folder for the samples
       - template: azure-templates-bootstrapper.yml # Build Samples (macOS)
         parameters:
           name: samples_macos
@@ -405,6 +410,10 @@ stages:
             - task: InstallAppleProvisioningProfile@1
               inputs:
                 provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
+            - powershell: |
+                New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
+                Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
+              displayName: Copy the *.nupkgs into the correct folder for the samples
       - template: azure-templates-bootstrapper.yml # Build Samples (Linux)
         parameters:
           name: samples_linux
@@ -415,6 +424,11 @@ stages:
           shouldPublish: false
           requiredArtifacts:
             - nuget
+          preBuildSteps:
+            - powershell: |
+                New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
+                Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
+              displayName: Copy the *.nupkgs into the correct folder for the samples
           postBuildSteps:
             - task: PublishBuildArtifacts@1
               displayName: Publish the samples artifacts
