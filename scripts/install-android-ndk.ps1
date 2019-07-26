@@ -1,5 +1,6 @@
 Param(
-    [string] $Version = "r15c"
+    [string] $Version = "r15c",
+    [string] $InstallDestination = $null
 )
 
 $ErrorActionPreference = 'Stop'
@@ -14,7 +15,13 @@ if ($IsMacOS) {
 }
 
 $url = "https://dl.google.com/android/repository/android-ndk-${Version}-${platform}.zip"
+
 $ndk = "$HOME/android-ndk"
+if ($InstallDestination) {
+    $ndk = $InstallDestination
+}
+Write-Host "Install destination is '$ts'..."
+
 $ndkTemp = "$HOME/android-ndk-temp"
 $install = "$ndkTemp/android-ndk.zip"
 

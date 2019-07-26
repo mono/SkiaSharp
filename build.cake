@@ -77,6 +77,7 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.Views.WindowsForms",       new Version (1, 57, 0) },
     { "SkiaSharp.Views.WPF",                new Version (1, 57, 0) },
     { "SkiaSharp.Views.Forms",              new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Forms.WPF",          new Version (1, 57, 0) },
     { "HarfBuzzSharp",                      new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.Linux",   new Version (1, 0, 0) },
     { "SkiaSharp.HarfBuzz",                 new Version (1, 57, 0) },
@@ -230,9 +231,14 @@ Task ("samples")
 
     // create the samples archive
     CreateSamplesDirectory ("./samples/", "./output/samples/");
-    DeleteFiles ("./output/samples/README.md");
-    MoveFile ("./output/samples/README.zip.md", "./output/samples/README.md");
     Zip ("./output/samples/", "./output/samples.zip");
+
+    // create the preview samples archive
+    var suffix = string.IsNullOrEmpty (BUILD_NUMBER)
+        ? $"{PREVIEW_LABEL}"
+        : $"{PREVIEW_LABEL}.{BUILD_NUMBER}";
+    CreateSamplesDirectory ("./samples/", "./output/samples-preview/", suffix);
+    Zip ("./output/samples-preview/", "./output/samples-preview.zip");
 
     // build the newly migrated samples
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
@@ -266,6 +272,9 @@ Task ("samples")
         }
     }
     CleanDirectory ("./output/samples/");
+    DeleteDirectory ("./output/samples/");
+    CleanDirectory ("./output/samples-preview/");
+    DeleteDirectory ("./output/samples-preview/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -562,7 +571,7 @@ var envVarsWhitelist = new [] {
     "processor_identifier", "node_name", "node_labels", "branch_name",
     "os", "build_url", "build_number", "number_of_processors",
     "node_label", "build_id", "git_sha", "git_branch_name",
-    "feature_name", "msbuild_exe", "python_exe",
+    "feature_name", "msbuild_exe", "python_exe", "preview_label",
     "home", "userprofile", "nuget_packages",
     "android_sdk_root", "android_ndk_root",
     "android_home", "android_ndk_home", "tizen_studio_home"

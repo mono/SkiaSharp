@@ -44,6 +44,7 @@ stages:
           displayName: Build Native Tizen (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-tizen
+          condition: false # TODO: TIZEN INSTALL BUGS
       - template: azure-templates-bootstrapper.yml # Build Native UWP (Windows)
         parameters:
           name: native_uwp_windows
@@ -81,7 +82,7 @@ stages:
           displayName: Build Native Tizen (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: externals-tizen
-          condition: false
+          condition: false # TODO: TIZEN INSTALL BUGS
       - template: azure-templates-bootstrapper.yml # Build Native tvOS (macOS)
         parameters:
           name: native_tvos_macos
@@ -128,7 +129,8 @@ stages:
           target: libs-only
           requiredArtifacts:
             - native_android_windows
-            - native_tizen_windows
+            # - native_tizen_windows
+            - native_tizen_linux
             - native_uwp_windows
             - native_win32_windows
       - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
@@ -176,6 +178,7 @@ stages:
           displayName: Package NuGets [No Dependencies]
           vmImage: $(VM_IMAGE_WINDOWS)
           target: nuget-only
+          shouldPublish: false
           requiredArtifacts:
             - managed_nodependencies_linux
             - managed_macos
@@ -191,22 +194,23 @@ stages:
                 $nupkgs | Foreach-Object { Write-Host $_.Name }
                 $nupkgs | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
               displayName: Remove all unrelated files
-            - task: PublishPipelineArtifact@0
+            - task: PublishBuildArtifacts@1
               displayName: Publish the native-nodependencies artifacts
               inputs:
                 artifactName: native-nodependencies
-                targetPath: 'output/native'
-            - task: PublishPipelineArtifact@0
+                pathToPublish: 'output/native'
+            - task: PublishBuildArtifacts@1
               displayName: Publish the nuget-nodependencies artifacts
               inputs:
                 artifactName: nuget-nodependencies
-                targetPath: 'output/nugets'
+                pathToPublish: 'output/nugets'
       - template: azure-templates-bootstrapper.yml # Package NuGets
         parameters:
           name: package_windows
           displayName: Package NuGets
           vmImage: $(VM_IMAGE_WINDOWS)
           target: nuget-only
+          shouldPublish: false
           requiredArtifacts:
             - managed_linux
             - managed_macos
@@ -223,11 +227,11 @@ stages:
               inputs:
                 artifactName: native-default
                 pathToPublish: 'output/native'
-            - task: PublishPipelineArtifact@0
+            - task: PublishBuildArtifacts@1
               displayName: Publish the nuget-default artifacts
               inputs:
                 artifactName: nuget-default
-                targetPath: 'output/nugets'
+                pathToPublish: 'output/nugets'
       - job: package                               # Combine Packaged NuGets
         displayName: Combine Packaged NuGets
         dependsOn:
@@ -236,16 +240,22 @@ stages:
         pool:
           vmImage: $(VM_IMAGE_LINUX)
         steps:
-          - task: DownloadPipelineArtifact@0
+          - task: DownloadBuildArtifacts@0
             displayName: Download the nuget-nodependencies artifacts
             inputs:
               artifactName: nuget-nodependencies
-              targetPath: 'output/nugets'
-          - task: DownloadPipelineArtifact@0
+              downloadPath: 'download-temp'
+          - task: DownloadBuildArtifacts@0
             displayName: Download the nuget-default artifacts
             inputs:
               artifactName: nuget-default
-              targetPath: 'output/nugets'
+              downloadPath: 'download-temp'
+          - powershell: |
+              New-Item '.\output\nugets' -Type Directory -Force | Out-Null
+              Get-ChildItem '.\download-temp\nuget-nodependencies\' | Copy-Item -Destination '.\output\nugets' -Recurse -Force
+              Get-ChildItem '.\download-temp\nuget-default\' | Copy-Item -Destination '.\output\nugets' -Recurse -Force
+              Remove-Item '.\download-temp\' -Recurse -Force
+            displayName: Move the nuget-* artifacts to the output directory
           - task: PublishBuildArtifacts@1
             displayName: Publish the nuget artifacts
             inputs:
@@ -253,11 +263,6 @@ stages:
               pathToPublish: 'output/nugets'
           - bash: ./scripts/validate-linux-nugets.sh
             displayName: Validate the Linux NuGet packages
-          - task: PublishPipelineArtifact@0
-            displayName: Publish the package artifacts
-            inputs:
-              artifactName: package
-              targetPath: 'output'
 
   - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
     - stage: signing
@@ -372,16 +377,23 @@ stages:
           displayName: Build Samples (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: samples
+          shouldPublish: false
           requiredArtifacts:
-            - package
+            - nuget
+          preBuildSteps:
+            - powershell: |
+                New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
+                Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
+              displayName: Copy the *.nupkgs into the correct folder for the samples
       - template: azure-templates-bootstrapper.yml # Build Samples (macOS)
         parameters:
           name: samples_macos
           displayName: Build Samples (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: samples
+          shouldPublish: false
           requiredArtifacts:
-            - package
+            - nuget
           preBuildSteps:
             - task: InstallAppleCertificate@2
               inputs:
@@ -398,6 +410,10 @@ stages:
             - task: InstallAppleProvisioningProfile@1
               inputs:
                 provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
+            - powershell: |
+                New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
+                Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
+              displayName: Copy the *.nupkgs into the correct folder for the samples
       - template: azure-templates-bootstrapper.yml # Build Samples (Linux)
         parameters:
           name: samples_linux
@@ -405,5 +421,17 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
           target: samples
+          shouldPublish: false
           requiredArtifacts:
-            - package
+            - nuget
+          preBuildSteps:
+            - powershell: |
+                New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
+                Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
+              displayName: Copy the *.nupkgs into the correct folder for the samples
+          postBuildSteps:
+            - task: PublishBuildArtifacts@1
+              displayName: Publish the samples artifacts
+              inputs:
+                artifactName: samples
+                pathToPublish: 'output'
