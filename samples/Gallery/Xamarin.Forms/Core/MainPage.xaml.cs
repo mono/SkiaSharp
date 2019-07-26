@@ -29,7 +29,7 @@ namespace SkiaSharpSample
 			{
 				var hamburger = new ToolbarItem
 				{
-					Icon = "hamburger.png",
+					IconImageSource = "hamburger.png",
 					Order = ToolbarItemOrder.Secondary
 				};
 				hamburger.Clicked += delegate { IsPresented = !IsPresented; };

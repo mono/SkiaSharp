@@ -3,7 +3,7 @@ using Xamarin.Forms;
 
 namespace SkiaSharp.Views.Forms
 {
-	public sealed class SKImageImageSource : ImageSource
+	public sealed partial class SKImageImageSource : ImageSource
 	{
 		public static readonly BindableProperty ImageProperty = BindableProperty.Create(nameof(Image), typeof(SKImage), typeof(SKImageImageSource), default(SKImage));
 
@@ -39,7 +39,7 @@ namespace SkiaSharp.Views.Forms
 		}
 	}
 
-	public sealed class SKBitmapImageSource : ImageSource
+	public sealed partial class SKBitmapImageSource : ImageSource
 	{
 		public static readonly BindableProperty BitmapProperty = BindableProperty.Create(nameof(Bitmap), typeof(SKBitmap), typeof(SKBitmapImageSource), default(SKBitmap));
 
@@ -75,7 +75,7 @@ namespace SkiaSharp.Views.Forms
 		}
 	}
 
-	public sealed class SKPixmapImageSource : ImageSource
+	public sealed partial class SKPixmapImageSource : ImageSource
 	{
 		public static readonly BindableProperty PixmapProperty = BindableProperty.Create(nameof(Pixmap), typeof(SKPixmap), typeof(SKPixmapImageSource), default(SKPixmap));
 
@@ -111,7 +111,7 @@ namespace SkiaSharp.Views.Forms
 		}
 	}
 
-	public sealed class SKPictureImageSource : ImageSource
+	public sealed partial class SKPictureImageSource : ImageSource
 	{
 		public static readonly BindableProperty PictureProperty = BindableProperty.Create(nameof(Picture), typeof(SKPicture), typeof(SKPictureImageSource), default(SKPicture));
 

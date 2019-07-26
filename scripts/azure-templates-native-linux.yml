@@ -41,8 +41,8 @@ jobs:
       # post-build steps
       - ${{ parameters.postBuildSteps }}
       # publish artifacts
-      - task: PublishPipelineArtifact@0
+      - task: PublishBuildArtifacts@1
         displayName: Publish the ${{ parameters.name }} artifacts
         inputs:
           artifactName: ${{ parameters.name }}
-          targetPath: 'output'
+          pathToPublish: 'output'

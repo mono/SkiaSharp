@@ -1,5 +1,6 @@
 Param(
-    [string] $Version = "3.2"
+    [string] $Version = "3.3",
+    [string] $InstallDestination = $null
 )
 
 $ErrorActionPreference = 'Stop'
@@ -15,9 +16,15 @@ if ($IsMacOS) {
     $ext = "exe"
 }
 
-$ts = Join-Path "$HOME" "tizen-studio"
-$tsTemp = Join-Path "$HOME" "tizen-temp"
 $url = "http://download.tizen.org/sdk/Installer/tizen-studio_${Version}/web-cli_Tizen_Studio_${Version}_${platform}.${ext}"
+
+$ts = Join-Path "$HOME" "tizen-studio"
+if ($InstallDestination) {
+    $ts = $InstallDestination
+}
+Write-Host "Install destination is '$ts'..."
+
+$tsTemp = Join-Path "$HOME" "tizen-temp"
 $install = Join-Path "$tsTemp" "tizen-install.$ext"
 $packages = "MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment"
 

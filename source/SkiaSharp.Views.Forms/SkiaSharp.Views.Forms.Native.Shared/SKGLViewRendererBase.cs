@@ -26,6 +26,11 @@ using Xamarin.Forms.Platform.Tizen;
 using SKNativeView = SkiaSharp.Views.Tizen.SKGLSurfaceView;
 using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.Tizen.SKPaintGLSurfaceEventArgs;
 using TForms = Xamarin.Forms.Platform.Tizen.Forms;
+#elif __WPF__
+using System.Windows;
+using Xamarin.Forms.Platform.WPF;
+using SKNativeView = SkiaSharp.Views.Forms.SKHostedGLControl;
+using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.Desktop.SKPaintGLSurfaceEventArgs;
 #endif
 
 namespace SkiaSharp.Views.Forms
@@ -189,6 +194,8 @@ namespace SkiaSharp.Views.Forms
 #elif WINDOWS_UWP
 			x = x * Control.ContentsScale;
 			y = y * Control.ContentsScale;
+#elif __WPF__
+			// WPF does not scale for GL as it is using Windows.Forms
 #else
 #error Missing platform logic
 #endif

@@ -1,3 +1,7 @@
+Param(
+    [string] $InstallDestination = $null
+)
+
 $ErrorActionPreference = 'Stop'
 
 if ($IsMacOS) {
@@ -9,6 +13,11 @@ if ($IsMacOS) {
 }
 
 $jdk = Join-Path "$HOME" "openjdk"
+if ($InstallDestination) {
+    $jdk = $InstallDestination
+}
+Write-Host "Install destination is '$ts'..."
+
 $jdkTemp = Join-Path "$HOME" "openjdk-temp"
 $archive = Join-Path "$jdkTemp" "openjdk.tar.gz"
 

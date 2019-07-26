@@ -5,7 +5,7 @@
 #addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.0.0&loaddependencies=true
 #addin nuget:?package=Xamarin.Nuget.Validator&version=1.1.1
 
-#tool nuget:?package=mdoc&version=5.7.4.8
+#tool nuget:?package=mdoc&version=5.7.4.9
 #tool nuget:?package=xunit.runner.console&version=2.4.0
 #tool nuget:?package=vswhere&version=2.5.2
 
@@ -71,7 +71,13 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp",                          new Version (1, 57, 0) },
     { "SkiaSharp.NativeAssets.Linux",       new Version (1, 57, 0) },
     { "SkiaSharp.Views",                    new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Desktop.Common",     new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Gtk2",               new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Gtk3",               new Version (1, 57, 0) },
+    { "SkiaSharp.Views.WindowsForms",       new Version (1, 57, 0) },
+    { "SkiaSharp.Views.WPF",                new Version (1, 57, 0) },
     { "SkiaSharp.Views.Forms",              new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Forms.WPF",          new Version (1, 57, 0) },
     { "HarfBuzzSharp",                      new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.Linux",   new Version (1, 0, 0) },
     { "SkiaSharp.HarfBuzz",                 new Version (1, 57, 0) },
@@ -146,6 +152,9 @@ Task ("tests-only")
         CopyFileToDirectory ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/TestResult.xml", $"./output/tests/{platform}/{arch}");
     });
 
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
+
     // Full .NET Framework
     if (IsRunningOnWindows ()) {
         RunDesktopTest ("x86");
@@ -158,6 +167,7 @@ Task ("tests-only")
 
     // .NET Core
     EnsureDirectoryExists ("./output/tests/netcore");
+    RunMSBuild ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.sln");
     RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
     CopyFile ("./tests/SkiaSharp.NetCore.Tests/TestResults/TestResults.xml", "./output/tests/netcore/TestResult.xml");
 });
@@ -169,12 +179,6 @@ Task ("tests-only")
 Task ("samples")
     .Does (() =>
 {
-    // create the samples archive
-    CreateSamplesZip ("./samples/", "./output/");
-
-    // create the workbooks archive
-    Zip ("./workbooks", "./output/workbooks.zip");
-
     var isLinux = IsRunningOnLinux ();
     var isMac = IsRunningOnMac ();
     var isWin = IsRunningOnWindows ();
@@ -222,7 +226,24 @@ Task ("samples")
         }
     });
 
-    var solutions = GetFiles ("./samples/**/*.sln");
+    // create the workbooks archive
+    Zip ("./workbooks", "./output/workbooks.zip");
+
+    // create the samples archive
+    CreateSamplesDirectory ("./samples/", "./output/samples/");
+    Zip ("./output/samples/", "./output/samples.zip");
+
+    // create the preview samples archive
+    var suffix = string.IsNullOrEmpty (BUILD_NUMBER)
+        ? $"{PREVIEW_LABEL}"
+        : $"{PREVIEW_LABEL}.{BUILD_NUMBER}";
+    CreateSamplesDirectory ("./samples/", "./output/samples-preview/", suffix);
+    Zip ("./output/samples-preview/", "./output/samples-preview.zip");
+
+    // build the newly migrated samples
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
+    var solutions = GetFiles ("./output/samples/**/*.sln");
     foreach (var sln in solutions) {
         var name = sln.GetFilenameWithoutExtension ();
         var slnPlatform = name.GetExtension ();
@@ -250,6 +271,10 @@ Task ("samples")
             }
         }
     }
+    CleanDirectory ("./output/samples/");
+    DeleteDirectory ("./output/samples/");
+    CleanDirectory ("./output/samples-preview/");
+    DeleteDirectory ("./output/samples-preview/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -354,6 +379,7 @@ Task ("nuget-only")
         removePlatforms (xdoc);
 
         var outDir = $"./output/{dir}/nuget";
+        EnsureDirectoryExists (outDir);
 
         setVersion (xdoc, "");
         xdoc.Save ($"{outDir}/{id}.nuspec");
@@ -545,7 +571,7 @@ var envVarsWhitelist = new [] {
     "processor_identifier", "node_name", "node_labels", "branch_name",
     "os", "build_url", "build_number", "number_of_processors",
     "node_label", "build_id", "git_sha", "git_branch_name",
-    "feature_name", "msbuild_exe", "python_exe",
+    "feature_name", "msbuild_exe", "python_exe", "preview_label",
     "home", "userprofile", "nuget_packages",
     "android_sdk_root", "android_ndk_root",
     "android_home", "android_ndk_home", "tizen_studio_home"
