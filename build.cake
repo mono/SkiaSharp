@@ -148,8 +148,11 @@ Task ("tests-only")
 
         EnsureDirectoryExists ($"./output/tests/{platform}/{arch}");
         RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", platform: arch == "AnyCPU" ? "Any CPU" : arch);
-        RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Tests.dll", arch == "x86");
-        CopyFileToDirectory ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/TestResult.xml", $"./output/tests/{platform}/{arch}");
+        try {
+            RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Tests.dll", arch == "x86");
+        } finally {
+            CopyFileToDirectory ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/TestResult.xml", $"./output/tests/{platform}/{arch}");
+        }
     });
 
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
@@ -168,8 +171,11 @@ Task ("tests-only")
     // .NET Core
     EnsureDirectoryExists ("./output/tests/netcore");
     RunMSBuild ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.sln");
-    RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
-    CopyFile ("./tests/SkiaSharp.NetCore.Tests/TestResults/TestResults.xml", "./output/tests/netcore/TestResult.xml");
+    try {
+        RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
+    } finally {
+        CopyFile ("./tests/SkiaSharp.NetCore.Tests/TestResults/TestResults.xml", "./output/tests/netcore/TestResult.xml");
+    }
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
