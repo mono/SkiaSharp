@@ -112,7 +112,7 @@ namespace SkiaSharp
 		private static void DrawInternal (IntPtr d, IntPtr context, IntPtr canvas)
 		{
 			var drawable = DelegateProxies.GetUserData<SKDrawable> (context, out _);
-			drawable.OnDraw (GetObject<SKCanvas> (canvas));
+			drawable.OnDraw (GetObject<SKCanvas> (canvas, false));
 		}
 
 		[MonoPInvokeCallback (typeof (GetBoundsDelegate))]
