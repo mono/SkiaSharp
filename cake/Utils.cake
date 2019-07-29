@@ -65,7 +65,7 @@ bool ShouldBuildExternal (string platform)
 {
     platform = platform?.ToLower() ?? "";
 
-    if (SKIP_EXTERNALS.Contains ("all"))
+    if (SKIP_EXTERNALS.Contains ("all") || SKIP_EXTERNALS.Contains ("true"))
         return false;
 
     switch (platform) {

@@ -106,10 +106,6 @@ namespace SkiaSharp
 		public extern static int sk_refcnt_get_ref_count(sk_refcnt_t refcnt);
 
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_nvrefcnt_safe_ref (sk_nvrefcnt_t refcnt);
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_nvrefcnt_safe_unref (sk_nvrefcnt_t refcnt);
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		public extern static bool sk_nvrefcnt_unique (sk_nvrefcnt_t refcnt);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
