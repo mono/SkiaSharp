@@ -68,7 +68,7 @@ void RunTests (FilePath testAssembly, bool is32)
 {
     var dir = testAssembly.GetDirectory ();
     var settings = new XUnit2Settings {
-        ReportName = "TestResult",
+        ReportName = "TestResults",
         XmlReport = true,
         UseX86 = is32,
         OutputDirectory = dir,

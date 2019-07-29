@@ -309,7 +309,7 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'output/tests/**/*.xml'
+                testResultsFiles: 'tests/**/TestResults.xml'
       - template: azure-templates-bootstrapper.yml # Tests (macOS)
         parameters:
           name: tests_macos
@@ -327,7 +327,7 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'output/tests/**/*.xml'
+                testResultsFiles: 'tests/**/TestResults.xml'
       - template: azure-templates-bootstrapper.yml # Tests (Linux)
         parameters:
           name: tests_linux
@@ -346,7 +346,7 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'output/tests/**/*.xml'
+                testResultsFiles: 'tests/**/TestResults.xml'
       - template: azure-templates-bootstrapper.yml # Tests [No Dependencies] (Linux)
         parameters:
           name: tests_nodependencies_linux
@@ -365,7 +365,7 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'output/tests/**/*.xml'
+                testResultsFiles: 'tests/**/TestResults.xml'
 
   - stage: samples
     displayName: Build Samples
