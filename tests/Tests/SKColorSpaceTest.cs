@@ -113,6 +113,8 @@ namespace SkiaSharp.Tests
 
 			Assert.Equal(1, colorSpaceHandle.GetReferenceCount(true));
 
+			GC.KeepAlive(img);
+
 			void CheckBeforeCollection(IntPtr csh)
 			{
 				Assert.NotNull(weakColorspace.Target);
