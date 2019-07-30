@@ -12,10 +12,10 @@ namespace SkiaSharp.Tests
 	public class ApiTest : BaseTest
 	{
 		private static IEnumerable<Type> InteropApiTypes => new[]
-			{
-				typeof(SkiaSharp.SKNativeObject).Assembly.GetType("SkiaSharp.SkiaApi"),
-				typeof(HarfBuzzSharp.NativeObject).Assembly.GetType("HarfBuzzSharp.HarfBuzzApi")
-			};
+		{
+			typeof(SkiaSharp.SKNativeObject).Assembly.GetType("SkiaSharp.SkiaApi"),
+			typeof(HarfBuzzSharp.NativeObject).Assembly.GetType("HarfBuzzSharp.HarfBuzzApi")
+		};
 
 		private static IEnumerable<MethodInfo> InteropMembers =>
 			InteropApiTypes
@@ -140,8 +140,14 @@ namespace SkiaSharp.Tests
 							paramType.FullName != typeof(StringBuilder).FullName;
 						Assert.False(isClass, $"Parameter type '{paramType.FullName}'{del} is not a struct.");
 
+						// special cases where we know the type is not blittable, but can be passed to native code
+						var isSkippedType =
+							paramType.FullName != typeof(SKAbstractManagedStream.Procs).FullName &&
+							paramType.FullName != typeof(SKAbstractManagedWStream.Procs).FullName &&
+							paramType.FullName != typeof(SKDrawable.Procs).FullName;
+
 						// make sure our structs have a layout type
-						if (!paramType.GetTypeInfo().IsEnum && isLocalType)
+						if (!paramType.GetTypeInfo().IsEnum && isLocalType && isSkippedType)
 						{
 							// check blittable
 							try
@@ -155,46 +161,6 @@ namespace SkiaSharp.Tests
 						}
 					}
 				}
-			}
-		}
-
-		[SkippableFact]
-		public void ExceptionsThrownInTheConstructorFailGracefully()
-		{
-			BrokenObject broken = null;
-			try
-			{
-				broken = new BrokenObject();
-			}
-			catch (Exception)
-			{
-			}
-			finally
-			{
-				broken?.Dispose();
-				broken = null;
-			}
-
-			// try and trigger the finalizer
-			GC.Collect();
-			GC.WaitForPendingFinalizers();
-		}
-
-		private class BrokenObject : SKObject
-		{
-			public BrokenObject()
-				: base(broken_native_method(), true)
-			{
-			}
-
-			private static IntPtr broken_native_method()
-			{
-				throw new Exception("BREAK!");
-			}
-
-			protected override void Dispose(bool disposing)
-			{
-				base.Dispose(disposing);
 			}
 		}
 	}

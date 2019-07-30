@@ -101,14 +101,8 @@ namespace SkiaSharp
 		{
 		}
 
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_bitmap_destructor (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
+		protected override void DisposeNative () =>
+			SkiaApi.sk_bitmap_destructor (Handle);
 
 		public bool TryAllocPixels (SKImageInfo info)
 		{

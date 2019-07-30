@@ -33,15 +33,9 @@ namespace SkiaSharp
 				throw new InvalidOperationException ("Unable to create a new SKPathMeasure instance.");
 			}
 		}
-		
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_pathmeasure_destroy (Handle);
-			}
 
-			base.Dispose (disposing);
-		}
+		protected override void DisposeNative () =>
+			SkiaApi.sk_pathmeasure_destroy (Handle);
 
 		public float Length {
 			get {

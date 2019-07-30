@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public class GRContext : SKObject
+	public class GRContext : SKObject, ISKReferenceCounted
 	{
 		[Preserve]
 		internal GRContext (IntPtr h, bool owns)
@@ -120,15 +120,6 @@ namespace SkiaSharp
 		public int GetRecommendedSampleCount (GRPixelConfig config, float dpi)
 		{
 			return GetMaxSurfaceSampleCount (config.ToColorType ());
-		}
-
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.gr_context_unref (Handle);
-			}
-
-			base.Dispose (disposing);
 		}
 	}
 }

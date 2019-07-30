@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -13,6 +15,134 @@ namespace SkiaSharp.Tests
 		public void MinBufferedBytesNeededHasAValue ()
 		{
 			Assert.True (SKCodec.MinBufferedBytesNeeded > 0);
+		}
+
+		[SkippableFact]
+		public unsafe void ReleaseDataWasInvokedOnlyAfterTheCodecWasFinished()
+		{
+			var path = Path.Combine(PathToImages, "color-wheel.png");
+			var bytes = File.ReadAllBytes(path);
+
+			var released = false;
+
+			fixed (byte* b = bytes)
+			{
+				var data = SKData.Create((IntPtr)b, bytes.Length, (addr, ctx) => released = true);
+
+				var codec = SKCodec.Create(data);
+				Assert.NotEqual(SKImageInfo.Empty, codec.Info);
+
+				data.Dispose();
+				Assert.False(released, "The SKDataReleaseDelegate was called too soon.");
+
+				codec.Dispose();
+				Assert.True(released, "The SKDataReleaseDelegate was not called at all.");
+			}
+		}
+
+		[SkippableFact]
+		public unsafe void StreamLosesOwnershipToCodecButIsNotForgotten()
+		{
+			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
+			var stream = new SKMemoryStream(bytes);
+			var handle = stream.Handle;
+
+			Assert.True(stream.OwnsHandle);
+			Assert.True(SKObject.GetInstance<SKMemoryStream>(handle, out _));
+
+			var codec = SKCodec.Create(stream);
+			Assert.False(stream.OwnsHandle);
+
+			stream.Dispose();
+			Assert.True(SKObject.GetInstance<SKMemoryStream>(handle, out _));
+
+			Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
+			Assert.NotEmpty(pixels);
+		}
+
+		[SkippableFact]
+		public unsafe void StreamLosesOwnershipAndCanBeDisposedButIsNotActually()
+		{
+			var path = Path.Combine(PathToImages, "color-wheel.png");
+			var stream = new SKMemoryStream(File.ReadAllBytes(path));
+			var handle = stream.Handle;
+
+			Assert.True(stream.OwnsHandle);
+			Assert.False(stream.IgnorePublicDispose);
+			Assert.True(SKObject.GetInstance<SKMemoryStream>(handle, out _));
+
+			var codec = SKCodec.Create(stream);
+			Assert.False(stream.OwnsHandle);
+			Assert.True(stream.IgnorePublicDispose);
+
+			stream.Dispose();
+			Assert.True(SKObject.GetInstance<SKMemoryStream>(handle, out var inst));
+			Assert.Same(stream, inst);
+
+			Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
+			Assert.NotEmpty(pixels);
+
+			codec.Dispose();
+			Assert.False(SKObject.GetInstance<SKMemoryStream>(handle, out _));
+		}
+
+		[SkippableFact]
+		public unsafe void InvalidStreamIsDisposedImmediately()
+		{
+			var stream = CreateTestSKStream();
+			var handle = stream.Handle;
+
+			Assert.True(stream.OwnsHandle);
+			Assert.False(stream.IgnorePublicDispose);
+			Assert.True(SKObject.GetInstance<SKStream>(handle, out _));
+
+			Assert.Null(SKCodec.Create(stream));
+
+			Assert.False(stream.OwnsHandle);
+			Assert.True(stream.IgnorePublicDispose);
+			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
+		}
+
+		[SkippableFact]
+		public unsafe void StreamLosesOwnershipAndCanBeGarbageCollected()
+		{
+			VerifyImmediateFinalizers();
+
+			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
+
+			DoWork(out var codecH, out var streamH);
+
+			CollectGarbage();
+
+			Assert.False(SKObject.GetInstance<SKMemoryStream>(streamH, out _));
+			Assert.False(SKObject.GetInstance<SKCodec>(codecH, out _));
+
+			void DoWork(out IntPtr codecHandle, out IntPtr streamHandle)
+			{
+				var codec = CreateCodec(out streamHandle);
+				codecHandle = codec.Handle;
+
+				CollectGarbage();
+
+				Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
+				Assert.NotEmpty(pixels);
+
+				Assert.True(SKObject.GetInstance<SKMemoryStream>(streamHandle, out var stream));
+				Assert.False(stream.OwnsHandle);
+				Assert.True(stream.IgnorePublicDispose);
+			}
+
+			SKCodec CreateCodec(out IntPtr streamHandle)
+			{
+				var stream = new SKMemoryStream(bytes);
+				streamHandle = stream.Handle;
+
+				Assert.True(stream.OwnsHandle);
+				Assert.False(stream.IgnorePublicDispose);
+				Assert.True(SKObject.GetInstance<SKMemoryStream>(streamHandle, out _));
+
+				return SKCodec.Create(stream);
+			}
 		}
 
 		[SkippableFact]

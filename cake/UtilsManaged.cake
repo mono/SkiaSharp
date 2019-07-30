@@ -68,10 +68,9 @@ void RunTests (FilePath testAssembly, bool is32)
 {
     var dir = testAssembly.GetDirectory ();
     var settings = new XUnit2Settings {
-        ReportName = "TestResult",
+        ReportName = "TestResults",
         XmlReport = true,
         UseX86 = is32,
-        Parallelism = ParallelismOption.Assemblies,
         OutputDirectory = dir,
         WorkingDirectory = dir,
         ArgumentCustomization = args => args.Append ("-verbose"),
@@ -86,6 +85,11 @@ void RunTests (FilePath testAssembly, bool is32)
 void RunNetCoreTests (FilePath testAssembly)
 {
     var dir = testAssembly.GetDirectory ();
+    var buildSettings = new DotNetCoreBuildSettings {
+        Configuration = CONFIGURATION,
+        WorkingDirectory = dir,
+    };
+    DotNetCoreBuild(testAssembly.GetFilename().ToString(), buildSettings);
     var settings = new DotNetCoreTestSettings {
         Configuration = CONFIGURATION,
         NoBuild = true,

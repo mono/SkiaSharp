@@ -176,21 +176,12 @@ namespace SkiaSharp
 			SkiaApi.sk_colorspace_transfer_fn_transform (ref this, x);
 	}
 
-	public class SKColorSpace : SKObject
+	public class SKColorSpace : SKObject, ISKReferenceCounted
 	{
 		[Preserve]
 		internal SKColorSpace (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
-		}
-
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_colorspace_unref (Handle);
-			}
-
-			base.Dispose (disposing);
 		}
 
 		public bool GammaIsCloseToSrgb => SkiaApi.sk_colorspace_gamma_close_to_srgb (Handle);

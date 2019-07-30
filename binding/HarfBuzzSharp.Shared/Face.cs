@@ -38,10 +38,9 @@ namespace HarfBuzzSharp
 			if (getTable == null)
 				throw new ArgumentNullException (nameof (getTable));
 
-			var actualUserData = new UserDataDelegate (() => this);
 			Handle = HarfBuzzApi.hb_face_create_for_tables (
 				DelegateProxies.GetTableDelegateProxy,
-				DelegateProxies.CreateMulti (getTable, actualUserData, destroy),
+				DelegateProxies.CreateMultiUserData (getTable, destroy, this),
 				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 

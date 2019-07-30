@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	public class GRGlInterface : SKObject
+	public class GRGlInterface : SKObject, ISKReferenceCounted
 	{
 		[Preserve]
 		internal GRGlInterface (IntPtr h, bool owns)
@@ -127,15 +127,6 @@ namespace SkiaSharp
 		public bool HasExtension (string extension)
 		{
 			return SkiaApi.gr_glinterface_has_extension (Handle, extension);
-		}
-
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.gr_glinterface_unref (Handle);
-			}
-
-			base.Dispose (disposing);
 		}
 
 		private static class AngleLoader

@@ -10,6 +10,16 @@ namespace SkiaSharp.Tests
 		private readonly static byte[] OddData = new byte[] { 1, 3, 5, 7, 9 };
 
 		[SkippableFact]
+		public void EmptyDataIsNotDisposed()
+		{
+			var empty = SKData.Empty;
+			Assert.True(SKObject.GetInstance<SKData>(empty.Handle, out _));
+
+			empty.Dispose();
+			Assert.True(SKObject.GetInstance<SKData>(empty.Handle, out _));
+		}
+
+		[SkippableFact]
 		public void ValidDataProperties()
 		{
 			var data = SKData.CreateCopy(OddData);

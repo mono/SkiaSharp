@@ -78,10 +78,10 @@ jobs:
       - ${{ parameters.preBuildSteps }}
       # build
       - ${{ if endsWith(parameters.name, '_windows') }}:
-        - powershell: .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} { .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY -c $env:CONFIGURATION ${{ parameters.additionalArgs }} }
+        - powershell: .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} { .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY -c ${{ coalesce(variables.CONFIGURATION, 'Release') }} ${{ parameters.additionalArgs }} }
           displayName: Run the bootstrapper for ${{ parameters.target }}
       - ${{ if not(endsWith(parameters.name, '_windows')) }}:
-        - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY -c $CONFIGURATION ${{ parameters.additionalArgs }}
+        - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY -c ${{ coalesce(variables.CONFIGURATION, 'Release') }} ${{ parameters.additionalArgs }}
           displayName: Run the bootstrapper for ${{ parameters.target }}
       # post-build steps
       - ${{ parameters.postBuildSteps }}

@@ -22,10 +22,141 @@ namespace SkiaSharp.Tests
 			var colorspace = SKColorSpace.CreateSrgb();
 
 			var info = new SKImageInfo(100, 100, SKImageInfo.PlatformColorType, SKAlphaType.Premul, colorspace);
-			Assert.Equal(colorspace, info.ColorSpace);
+			Assert.Same(colorspace, info.ColorSpace);
 
 			var image = SKImage.Create(info);
-			Assert.Equal(colorspace, image.PeekPixels().ColorSpace);
+			Assert.Same(colorspace, image.PeekPixels().ColorSpace);
+		}
+
+		[SkippableFact]
+		public void ImageInfoColorSpaceIsReferencedCorrectly()
+		{
+			VerifyImmediateFinalizers();
+
+			var img = DoWork(out var colorspaceHandle);
+
+			CollectGarbage();
+
+			Assert.Equal(1, colorspaceHandle.GetReferenceCount(true));
+
+			Check();
+
+			CollectGarbage();
+
+			Assert.Equal(1, colorspaceHandle.GetReferenceCount(true));
+
+			void Check()
+			{
+				var peek = img.PeekPixels();
+				Assert.Equal(2, colorspaceHandle.GetReferenceCount(true));
+
+				// get the info and color space
+				var info1 = peek.Info;
+				var cs1 = info1.ColorSpace;
+				Assert.Equal(3, colorspaceHandle.GetReferenceCount(true));
+				Assert.NotNull(cs1);
+
+				// get the info and color space again and make sure we are all using the same things
+				var info2 = peek.Info;
+				var cs2 = info2.ColorSpace;
+				Assert.Equal(3, colorspaceHandle.GetReferenceCount(true));
+				Assert.NotNull(cs2);
+
+				Assert.Same(cs1, cs2);
+			}
+
+			SKImage DoWork(out IntPtr handle)
+			{
+				var colorspace = SKColorSpace.CreateRgb(
+					new SKColorSpaceTransferFn { A = 0.6f, B = 0.5f, C = 0.4f, D = 0.3f, E = 0.2f, F = 0.1f },
+					SKMatrix44.CreateIdentity());
+
+				Assert.NotNull(colorspace);
+
+				handle = colorspace.Handle;
+				Assert.Equal(1, handle.GetReferenceCount(true));
+
+				var info = new SKImageInfo(100, 100, SKImageInfo.PlatformColorType, SKAlphaType.Premul, colorspace);
+				Assert.Equal(1, handle.GetReferenceCount(true));
+
+				var image = SKImage.Create(info);
+				Assert.Equal(2, handle.GetReferenceCount(true));
+
+				return image;
+			}
+		}
+
+		[SkippableFact]
+		public void ColorSpaceIsNotDisposedPrematurely()
+		{
+			VerifyImmediateFinalizers();
+
+			var img = DoWork(out var colorSpaceHandle, out var weakColorspace);
+
+			CheckBeforeCollection(colorSpaceHandle);
+
+			CheckExistingImage(3, img, colorSpaceHandle);
+
+			CollectGarbage();
+
+			Assert.Null(weakColorspace.Target);
+			Assert.Equal(1, colorSpaceHandle.GetReferenceCount(true));
+
+			CheckExistingImage(2, img, colorSpaceHandle);
+
+			CollectGarbage();
+
+			Assert.Null(weakColorspace.Target);
+			Assert.Equal(1, colorSpaceHandle.GetReferenceCount(true));
+
+			CollectGarbage();
+
+			Assert.Equal(1, colorSpaceHandle.GetReferenceCount(true));
+
+			GC.KeepAlive(img);
+
+			void CheckBeforeCollection(IntPtr csh)
+			{
+				Assert.NotNull(weakColorspace.Target);
+				Assert.Equal(2, csh.GetReferenceCount(true));
+			}
+
+			void CheckExistingImage(int expected, SKImage image, IntPtr csh)
+			{
+				var peek = image.PeekPixels();
+				Assert.Equal(expected, csh.GetReferenceCount(true));
+
+				var info = peek.Info;
+				Assert.Equal(3, csh.GetReferenceCount(true));
+
+				var cs = info.ColorSpace;
+				Assert.Equal(3, csh.GetReferenceCount(true));
+				Assert.NotNull(cs);
+			}
+
+			SKImage DoWork(out IntPtr handle, out WeakReference weak)
+			{
+				var colorspace = SKColorSpace.CreateRgb(
+					new SKColorSpaceTransferFn { A = 0.1f, B = 0.2f, C = 0.3f, D = 0.4f, E = 0.5f, F = 0.6f },
+					SKMatrix44.CreateIdentity());
+
+				Assert.NotNull(colorspace);
+
+				handle = colorspace.Handle;
+				weak = new WeakReference(colorspace);
+
+				Assert.Equal(1, handle.GetReferenceCount(true));
+
+				var info = new SKImageInfo(100, 100, SKImageInfo.PlatformColorType, SKAlphaType.Premul, colorspace);
+
+				Assert.Equal(1, handle.GetReferenceCount(true));
+
+				var image = SKImage.Create(info);
+
+				Assert.Equal(2, handle.GetReferenceCount(true));
+
+				return image;
+			}
 		}
 
 		[SkippableFact]

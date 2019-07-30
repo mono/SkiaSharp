@@ -4,18 +4,9 @@ using System.Runtime.InteropServices;
 namespace SkiaSharp
 {
 	[Obsolete ("The Index8 color type and color table is no longer supported.")]
-	public class SKColorTable : SKObject
+	public class SKColorTable : SKObject, ISKReferenceCounted
 	{
 		public const int MaxLength = 256;
-
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_colortable_unref (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
 
 		[Preserve]
 		internal SKColorTable (IntPtr x, bool owns)

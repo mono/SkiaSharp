@@ -12,17 +12,8 @@ namespace SkiaSharp
 	// TODO: `ToTextureImage`
 	// TODO: `MakeColorSpace`
 
-	public class SKImage : SKObject
+	public class SKImage : SKObject, ISKReferenceCounted
 	{
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_image_unref (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
-
 		[Preserve]
 		internal SKImage (IntPtr x, bool owns)
 			: base (x, owns)
@@ -470,10 +461,8 @@ namespace SkiaSharp
 			return GetObject<SKImage> (SkiaApi.sk_image_new_from_picture (picture.Handle, ref dimensions, ref matrix, p));
 		}
 
-		public SKData Encode ()
-		{
-			return GetObject<SKData> (SkiaApi.sk_image_encode (Handle));
-		}
+		public SKData Encode () =>
+			GetObject<SKData> (SkiaApi.sk_image_encode (Handle));
 
 		[Obsolete]
 		public SKData Encode (SKPixelSerializer serializer)

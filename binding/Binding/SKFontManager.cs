@@ -5,24 +5,18 @@ using System.Linq;
 
 namespace SkiaSharp
 {
-	public class SKFontManager : SKObject
+	public class SKFontManager : SKObject, ISKReferenceCounted
 	{
+		private static readonly Lazy<SKFontManager> defaultManager =
+			new Lazy<SKFontManager> (() => new SKFontManagerStatic (SkiaApi.sk_fontmgr_ref_default ()));
+
 		[Preserve]
 		internal SKFontManager (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
 
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_fontmgr_unref (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
-
-		public static SKFontManager Default => GetObject<SKFontManager> (SkiaApi.sk_fontmgr_ref_default ());
+		public static SKFontManager Default => defaultManager.Value;
 
 		public int FontFamilyCount => SkiaApi.sk_fontmgr_count_families (Handle);
 
@@ -87,19 +81,6 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			if (!stream.CanSeek) {
-				var fontStream = new MemoryStream ();
-				stream.CopyTo (fontStream);
-				fontStream.Flush ();
-				fontStream.Position = 0;
-
-				stream.Dispose ();
-				stream = null;
-
-				stream = fontStream;
-				fontStream = null;
-			}
-
 			return CreateTypeface (new SKManagedStream (stream, true), index);
 		}
 
@@ -108,8 +89,13 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
+			if (stream is SKManagedStream managed) {
+				stream = managed.ToMemoryStream ();
+				managed.Dispose ();
+			}
+
 			var typeface = GetObject<SKTypeface> (SkiaApi.sk_fontmgr_create_from_stream (Handle, stream.Handle, index));
-			stream.RevokeOwnership ();
+			stream.RevokeOwnership (typeface);
 			return typeface;
 		}
 
@@ -181,6 +167,20 @@ namespace SkiaSharp
 		public static SKFontManager CreateDefault ()
 		{
 			return GetObject<SKFontManager> (SkiaApi.sk_fontmgr_create_default ());
+		}
+
+		private sealed class SKFontManagerStatic : SKFontManager
+		{
+			internal SKFontManagerStatic (IntPtr x)
+				: base (x, false)
+			{
+				IgnorePublicDispose = true;
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				// do not dispose
+			}
 		}
 	}
 }

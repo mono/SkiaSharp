@@ -15,7 +15,7 @@ variables:
   MANAGED_LINUX_PACKAGES: ttf-ancient-fonts
   MONO_VERSION: 5_18_1
   XCODE_VERSION: 10.2.1
-  CONFIGURATION: 'Release'
+  # CONFIGURATION: 'Release'
   VM_IMAGE_WINDOWS: vs2017-win2016
   VM_IMAGE_MAC: macos-10.14
   VM_IMAGE_LINUX: ubuntu-16.04
@@ -309,7 +309,7 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'output/tests/**/*.xml'
+                testResultsFiles: 'tests/**/TestResults.xml'
       - template: azure-templates-bootstrapper.yml # Tests (macOS)
         parameters:
           name: tests_macos
@@ -327,7 +327,7 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'output/tests/**/*.xml'
+                testResultsFiles: 'tests/**/TestResults.xml'
       - template: azure-templates-bootstrapper.yml # Tests (Linux)
         parameters:
           name: tests_linux
@@ -346,7 +346,7 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'output/tests/**/*.xml'
+                testResultsFiles: 'tests/**/TestResults.xml'
       - template: azure-templates-bootstrapper.yml # Tests [No Dependencies] (Linux)
         parameters:
           name: tests_nodependencies_linux
@@ -355,7 +355,7 @@ stages:
           packages: $(MANAGED_LINUX_PACKAGES)
           retryCount: 3
           target: tests
-          additionalArgs: --skipExternals="all" --unsupportedTests="Feature=MatchCharacter"
+          additionalArgs: --skipExternals="all" --unsupportedTests="Category=MatchCharacter"
           shouldPublish: false
           requiredArtifacts:
             - native_linux_nodependencies_linux
@@ -365,7 +365,7 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'output/tests/**/*.xml'
+                testResultsFiles: 'tests/**/TestResults.xml'
 
   - stage: samples
     displayName: Build Samples

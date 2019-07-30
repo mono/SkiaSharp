@@ -17,12 +17,17 @@
     <PackageReference Include="xunit" Version="2.4.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
     <PackageReference Include="XunitXml.TestLogger" Version="2.1.26" />
-    <PackageReference Include="xunit.categories" Version="2.0.4" />
+    <PackageReference Include="xunit.assemblyfixture" Version="2.0.3" />
+    <PackageReference Include="xunit.skippablefact" Version="1.3.12" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\binding\HarfBuzzSharp.NetStandard\HarfBuzzSharp.NetStandard.csproj" />
     <ProjectReference Include="..\..\binding\SkiaSharp.NetStandard\SkiaSharp.NetStandard.csproj" />
     <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- HACK: xunit.assemblyfixture does not support netstandard or netcoreapp yet -->
+    <Reference Include="$(NuGetPackageRoot)\xunit.assemblyfixture\2.0.3\lib\net45\xunit.assemblyfixture.dll" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Tests\**\*.cs" Link="%(RecursiveDir)%(FileName)%(Extension)" />
