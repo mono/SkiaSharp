@@ -226,6 +226,56 @@ namespace SkiaSharp.Tests
 			Assert.True(colorspace.GammaIsCloseToSrgb);
 		}
 
+		[SkippableFact]
+		public void ColorSpaceCorrectlyReferencesSrgbSingleton()
+		{
+			var handle1 = SkiaApi.sk_colorspace_new_srgb();
+
+			var colorspace1 = SKColorSpace.CreateSrgb();
+
+			Assert.Equal(colorspace1.Handle, handle1);
+
+			var colorspace2 = SKColorSpace.CreateSrgb();
+
+			Assert.Same(colorspace1, colorspace2);
+			Assert.Equal(handle1, colorspace2.Handle);
+
+			colorspace2.Dispose();
+			Assert.False(colorspace2.IsDisposed());
+			Assert.False(colorspace1.IsDisposed());
+
+			SkiaApi.sk_refcnt_safe_unref(handle1);
+		}
+
+		[SkippableFact]
+		public void SameColorSpaceCreatedDifferentWaysAreTheSameObject()
+		{
+			var colorspace1 = SKColorSpace.CreateSrgbLinear();
+			Assert.Equal(2, colorspace1.GetReferenceCount());
+
+			var colorspace2 = SKColorSpace.CreateRgb(SKNamedGamma.Linear, SKColorSpaceGamut.Srgb);
+			Assert.Equal(2, colorspace2.GetReferenceCount());
+
+			Assert.Same(colorspace1, colorspace2);
+
+			var colorspace3 = SKColorSpace.CreateRgb(
+				new SKColorSpaceTransferFn { A = 0.6f, B = 0.5f, C = 0.4f, D = 0.3f, E = 0.2f, F = 0.1f },
+				SKMatrix44.CreateIdentity());
+			Assert.NotSame(colorspace1, colorspace3);
+
+			colorspace3.Dispose();
+			Assert.True(colorspace3.IsDisposed());
+			Assert.Equal(2, colorspace1.GetReferenceCount());
+
+			colorspace2.Dispose();
+			Assert.False(colorspace2.IsDisposed());
+			Assert.Equal(2, colorspace1.GetReferenceCount());
+
+			colorspace1.Dispose();
+			Assert.False(colorspace1.IsDisposed());
+			Assert.Equal(2, colorspace1.GetReferenceCount());
+		}
+
 		private static void AssertMatrix(float[] expected, SKMatrix44 actual)
 		{
 			var actualArray = actual

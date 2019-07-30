@@ -178,6 +178,9 @@ namespace SkiaSharp
 
 	public class SKColorSpace : SKObject, ISKReferenceCounted
 	{
+		private static readonly SKColorSpace srgb = new SKColorSpaceStatic (SkiaApi.sk_colorspace_new_srgb ());
+		private static readonly SKColorSpace srgbLinear = new SKColorSpaceStatic (SkiaApi.sk_colorspace_new_srgb_linear ());
+
 		[Preserve]
 		internal SKColorSpace (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -208,11 +211,9 @@ namespace SkiaSharp
 			return SkiaApi.sk_colorspace_equals (left.Handle, right.Handle);
 		}
 
-		public static SKColorSpace CreateSrgb () =>
-			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_srgb ());
+		public static SKColorSpace CreateSrgb () => srgb;
 
-		public static SKColorSpace CreateSrgbLinear () =>
-			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_srgb_linear ());
+		public static SKColorSpace CreateSrgbLinear () => srgbLinear;
 
 		public static SKColorSpace CreateIcc (IntPtr input, long length)
 		{
@@ -299,5 +300,19 @@ namespace SkiaSharp
 
 		public SKMatrix44 FromXyzD50 () =>
 			GetObject<SKMatrix44> (SkiaApi.sk_colorspace_as_from_xyzd50 (Handle), false);
+
+		private sealed class SKColorSpaceStatic : SKColorSpace
+		{
+			internal SKColorSpaceStatic (IntPtr x)
+				: base (x, false)
+			{
+				IgnorePublicDispose = true;
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				// do not dispose
+			}
+		}
 	}
 }
