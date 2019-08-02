@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace SkiaSharp
 {
@@ -13,10 +14,21 @@ namespace SkiaSharp
 		internal static readonly ConcurrentBag<Exception> exceptions = new ConcurrentBag<Exception> ();
 #endif
 
-		internal static readonly ConcurrentDictionary<Type, ConstructorInfo> constructors = new ConcurrentDictionary<Type, ConstructorInfo> ();
-		internal static readonly ConcurrentDictionary<IntPtr, WeakReference> instances = new ConcurrentDictionary<IntPtr, WeakReference> ();
+		internal static readonly ConcurrentDictionary<Type, ConstructorInfo> constructors;
+		internal static readonly ConcurrentDictionary<IntPtr, WeakReference> instances;
 
 		internal readonly ConcurrentDictionary<IntPtr, SKObject> ownedObjects = new ConcurrentDictionary<IntPtr, SKObject> ();
+
+		static SKObject ()
+		{
+			constructors = new ConcurrentDictionary<Type, ConstructorInfo> ();
+			instances = new ConcurrentDictionary<IntPtr, WeakReference> ();
+
+			SKColorSpace.EnsureStaticInstanceAreInitialized ();
+			SKData.EnsureStaticInstanceAreInitialized ();
+			SKFontManager.EnsureStaticInstanceAreInitialized ();
+			SKTypeface.EnsureStaticInstanceAreInitialized ();
+		}
 
 		[Preserve]
 		internal SKObject (IntPtr handle, bool owns)
@@ -108,7 +120,7 @@ namespace SkiaSharp
 
 			WeakReference Update (IntPtr key, WeakReference oldValue)
 			{
-				if (oldValue.Target is SKObject obj) {
+				if (oldValue.Target is SKObject obj && !obj.IsDisposed) {
 #if THROW_OBJECT_EXCEPTIONS
 					if (obj.OwnsHandle)
 						throw new InvalidOperationException (
@@ -128,14 +140,28 @@ namespace SkiaSharp
 			if (handle == IntPtr.Zero)
 				return;
 
-			var removed = instances.TryRemove (handle, out _);
+			var nonExistent = new WeakReference (null);
+			var weak = instances.AddOrUpdate (handle, nonExistent, (ptr, old) => {
+				if (old.Target is SKObject obj && !obj.IsDisposed)
+					return old;
+				return new WeakReference (null);
+			});
 
 #if THROW_OBJECT_EXCEPTIONS
-			if (!removed) {
-				var ex = new InvalidOperationException (
+			InvalidOperationException ex = null;
+			if (weak == nonExistent) {
+				// the dummy instance was added instead of being removed
+				ex = new InvalidOperationException (
 					$"A managed object did not exist for the specified native object. " +
 					$"H: {handle.ToString ("x")} Type: {instance.GetType ()}");
-				ex.Data.Add ("Handle", handle);
+			}
+			if (weak.Target is SKObject o && o != instance && !instance.IsDisposed) {
+				// there was a new living object there, but we are still alive
+				ex = new InvalidOperationException (
+					$"Trying to remove a different object with the same native handle. " +
+					$"H: {handle.ToString ("x")} Type: ({o.GetType ()}, {instance.GetType ()})");
+			}
+			if (ex != null) {
 				if (instance.fromFinalizer)
 					exceptions.Add (ex);
 				else
@@ -148,18 +174,26 @@ namespace SkiaSharp
 			where TSkiaObject : SKObject
 		{
 			if (instances.TryGetValue (handle, out var weak)) {
+				if (weak.Target is TSkiaObject match) {
+					if (!match.IsDisposed) {
+						instance = match;
+						return true;
+					}
 #if THROW_OBJECT_EXCEPTIONS
-				if (weak.Target is object existing && !(weak.Target is TSkiaObject))
+				} else if (weak.Target is SKObject obj) {
+					if (!obj.IsDisposed) {
+						throw new InvalidOperationException (
+							$"A managed object exists for the handle, but is not the expected type. " +
+							$"H: {handle.ToString ("x")} Type: ({obj.GetType ()}, {typeof (TSkiaObject)})");
+					}
+				} else if (weak.Target is object o) {
 					throw new InvalidOperationException (
-						$"A managed object exists for the handle, but is not the expected type. " +
-						$"H: {handle.ToString ("x")} Type: ({existing.GetType ()}, {typeof (TSkiaObject)})");
+						$"An unknown object exists for the handle when trying to fetch an instance. " +
+						$"H: {handle.ToString ("x")} Type: ({o.GetType ()}, {typeof (TSkiaObject)})");
 #endif
-
-				if (weak.Target is TSkiaObject obj && obj.Handle != IntPtr.Zero) {
-					instance = obj;
-					return true;
 				}
 			}
+
 			instance = null;
 			return false;
 		}
@@ -225,7 +259,7 @@ namespace SkiaSharp
 		internal bool fromFinalizer = false;
 #endif
 
-		private bool isDisposed = false;
+		private int isDisposed = 0;
 
 		internal SKNativeObject (IntPtr handle)
 			: this (handle, true)
@@ -253,6 +287,8 @@ namespace SkiaSharp
 
 		protected internal bool IgnorePublicDispose { get; protected set; }
 
+		protected internal bool IsDisposed => isDisposed == 1;
+
 		protected virtual void DisposeManaged ()
 		{
 			// dispose of any managed resources
@@ -265,9 +301,8 @@ namespace SkiaSharp
 
 		protected virtual void Dispose (bool disposing)
 		{
-			if (isDisposed)
+			if (Interlocked.CompareExchange (ref isDisposed, 1, 0) != 0)
 				return;
-			isDisposed = true;
 
 			if (disposing) {
 				DisposeManaged ();

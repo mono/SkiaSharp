@@ -7,10 +7,6 @@ namespace SkiaSharp.Tests
 {
 	public class GarbageCleanupFixture : IDisposable
 	{
-#if THROW_OBJECT_EXCEPTIONS
-		internal static readonly ConcurrentBag<IntPtr> ignoredExceptions = new ConcurrentBag<IntPtr>();
-#endif
-
 		private static readonly string[] StaticTypes = new[] {
 			"SkiaSharp.SKData+SKDataStatic",
 			"SkiaSharp.SKFontManager+SKFontManagerStatic",
@@ -21,7 +17,11 @@ namespace SkiaSharp.Tests
 		public GarbageCleanupFixture()
 		{
 			Assert.Empty(SKObject.constructors);
-			Assert.Empty(SKObject.instances);
+			var aliveObjects = SKObject.instances.Values
+				.Select(o => o.Target)
+				.Where(IsExpectedToBeDead)
+				.ToList();
+			Assert.Empty(aliveObjects);
 		}
 
 		public void Dispose()
@@ -38,21 +38,9 @@ namespace SkiaSharp.Tests
 
 #if THROW_OBJECT_EXCEPTIONS
 			// make sure all the exceptions are accounted for
-			var ignored = ignoredExceptions
-				.ToList();
 			var exceptions = SKObject.exceptions
 				.ToList();
-			var keep = exceptions
-				.Where(ex => !ignored.Contains((IntPtr)ex.Data["Handle"]))
-				.ToList();
-			Assert.Empty(keep);
-			foreach (var ignore in ignored)
-			{
-				var e = exceptions
-					.Where(ex => ex.Data["Handle"] is IntPtr)
-					.ToList();
-				Assert.NotEmpty(e);
-			}
+			Assert.Empty(exceptions);
 
 			// make sure all the GCHandles are freed
 			var gcHandles = GCHandleProxy.allocatedHandles.Values
@@ -64,6 +52,9 @@ namespace SkiaSharp.Tests
 
 		private bool IsExpectedToBeDead(object instance)
 		{
+			if (instance == null)
+				return false;
+
 			var skobject = Assert.IsAssignableFrom<SKObject>(instance);
 
 			if (StaticTypes.Contains(skobject.GetType().FullName))

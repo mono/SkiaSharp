@@ -178,8 +178,20 @@ namespace SkiaSharp
 
 	public class SKColorSpace : SKObject, ISKReferenceCounted
 	{
-		private static readonly SKColorSpace srgb = new SKColorSpaceStatic (SkiaApi.sk_colorspace_new_srgb ());
-		private static readonly SKColorSpace srgbLinear = new SKColorSpaceStatic (SkiaApi.sk_colorspace_new_srgb_linear ());
+		private static readonly SKColorSpace srgb;
+		private static readonly SKColorSpace srgbLinear;
+
+		static SKColorSpace ()
+		{
+			srgb = new SKColorSpaceStatic (SkiaApi.sk_colorspace_new_srgb ());
+			srgbLinear = new SKColorSpaceStatic (SkiaApi.sk_colorspace_new_srgb_linear ());
+		}
+
+		internal static void EnsureStaticInstanceAreInitialized ()
+		{
+			// IMPORTANT: do not remove to ensure that the static instances
+			//            are initialized before any access is made to them
+		}
 
 		[Preserve]
 		internal SKColorSpace (IntPtr handle, bool owns)

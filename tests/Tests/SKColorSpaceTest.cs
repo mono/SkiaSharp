@@ -17,6 +17,21 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void StaticSrgbIsReturnedAsTheStaticInstance()
+		{
+			var handle = SkiaApi.sk_colorspace_new_srgb();
+			try
+			{
+				var cs = SKObject.GetObject<SKColorSpace>(handle, unrefExisting: false);
+				Assert.Equal("SKColorSpaceStatic", cs.GetType().Name);
+			}
+			finally
+			{
+				SkiaApi.sk_refcnt_safe_unref(handle);
+			}
+		}
+
+		[SkippableFact]
 		public void ImageInfoHasColorSpace()
 		{
 			var colorspace = SKColorSpace.CreateSrgb();
@@ -241,8 +256,8 @@ namespace SkiaSharp.Tests
 			Assert.Equal(handle1, colorspace2.Handle);
 
 			colorspace2.Dispose();
-			Assert.False(colorspace2.IsDisposed());
-			Assert.False(colorspace1.IsDisposed());
+			Assert.False(colorspace2.IsDisposed);
+			Assert.False(colorspace1.IsDisposed);
 
 			SkiaApi.sk_refcnt_safe_unref(handle1);
 		}
@@ -264,15 +279,15 @@ namespace SkiaSharp.Tests
 			Assert.NotSame(colorspace1, colorspace3);
 
 			colorspace3.Dispose();
-			Assert.True(colorspace3.IsDisposed());
+			Assert.True(colorspace3.IsDisposed);
 			Assert.Equal(2, colorspace1.GetReferenceCount());
 
 			colorspace2.Dispose();
-			Assert.False(colorspace2.IsDisposed());
+			Assert.False(colorspace2.IsDisposed);
 			Assert.Equal(2, colorspace1.GetReferenceCount());
 
 			colorspace1.Dispose();
-			Assert.False(colorspace1.IsDisposed());
+			Assert.False(colorspace1.IsDisposed);
 			Assert.Equal(2, colorspace1.GetReferenceCount());
 		}
 
