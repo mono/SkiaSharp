@@ -17,6 +17,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentNullException (nameof (face));
 
 			Handle = HarfBuzzApi.hb_font_create (face.Handle);
+			OpenTypeMetrics = new OpenTypeMetrics (Handle);
 		}
 
 		public Font (Font parent)
@@ -29,9 +30,12 @@ namespace HarfBuzzSharp
 
 			Parent = parent;
 			Handle = HarfBuzzApi.hb_font_create_sub_font (parent.Handle);
+			OpenTypeMetrics = new OpenTypeMetrics (Handle);
 		}
 
 		public Font Parent { get; }
+
+		public OpenTypeMetrics OpenTypeMetrics { get; }
 
 		public string[] SupportedShapers =>
 			PtrToStringArray (HarfBuzzApi.hb_shape_list_shapers ()).ToArray ();

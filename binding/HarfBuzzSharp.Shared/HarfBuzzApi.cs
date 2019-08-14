@@ -218,6 +218,15 @@ namespace HarfBuzzSharp
 
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_ot_font_set_funcs (hb_font_t font);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static hb_bool_t hb_ot_metrics_get_position (hb_font_t font, OpenTypeMetricTag metrics_tag, out hb_position_t position     /* OUT.  May be NULL. */);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static float hb_ot_metrics_get_variation (hb_font_t font, OpenTypeMetricTag metrics_tag);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static hb_position_t hb_ot_metrics_get_x_variation (hb_font_t font, OpenTypeMetricTag metrics_tag);
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		public extern static hb_position_t hb_ot_metrics_get_y_variation (hb_font_t font, OpenTypeMetricTag metrics_tag);
+
 
 		// hb_buffer_t
 

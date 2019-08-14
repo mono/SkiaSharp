@@ -199,5 +199,23 @@ namespace HarfBuzzSharp.Tests
 				Assert.Equal(0, kerning);
 			}
 		}
+
+		[Theory]
+		[InlineData(OpenTypeMetricTag.UnderlineOffset, -60)]
+		[InlineData(OpenTypeMetricTag.UnderlineSize, 9)]
+		[InlineData(OpenTypeMetricTag.StrikeoutOffset, 1049)]
+		[InlineData(OpenTypeMetricTag.StrikeoutSize, 209)]
+		public void ShouldGetOpenTypeMetrics(OpenTypeMetricTag tag, int expected)
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				var result = font.OpenTypeMetrics.TryGetPosition(tag, out var position);
+
+				Assert.True (result);
+
+				Assert.Equal(expected, position);
+			}
+		}
 	}
 }

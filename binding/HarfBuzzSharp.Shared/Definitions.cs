@@ -376,4 +376,63 @@ namespace HarfBuzzSharp
 		ParagraphSeparator,   // Zp
 		SpaceSeparator        // Zs
 	}
+
+	public enum OpenTypeMetricTag : uint
+	{
+		HorizontalAscender = (((byte)'h' << 24) | ((byte)'a' << 16) | ((byte)'s' << 8) | (byte)'c'),
+		HorizontalDescender = (((byte)'h' << 24) | ((byte)'d' << 16) | ((byte)'s' << 8) | (byte)'c'),
+		HorizontalLineGap = (((byte)'h' << 24) | ((byte)'l' << 16) | ((byte)'g' << 8) | (byte)'p'),
+		HorizontalClippingAscent = (((byte)'h' << 24) | ((byte)'c' << 16) | ((byte)'l' << 8) | (byte)'a'),
+		HorizontalClippingDescent = (((byte)'h' << 24) | ((byte)'c' << 16) | ((byte)'l' << 8) | (byte)'d'),
+
+		VerticalAscender = (((byte)'v' << 24) | ((byte)'a' << 16) | ((byte)'s' << 8) | (byte)'c'),
+		VerticalDescender = (((byte)'v' << 24) | ((byte)'d' << 16) | ((byte)'s' << 8) | (byte)'c'),
+		VerticalLineGap = (((byte)'v' << 24) | ((byte)'l' << 16) | ((byte)'g' << 8) | (byte)'p'),
+
+		HorizontalCaretRise = (((byte)'h' << 24) | ((byte)'c' << 16) | ((byte)'r' << 8) | (byte)'s'),
+		HorizontalCaretRun = (((byte)'h' << 24) | ((byte)'c' << 16) | ((byte)'r' << 8) | (byte)'n'),
+		HorizontalCaretOffset = (((byte)'h' << 24) | ((byte)'c' << 16) | ((byte)'o' << 8) | (byte)'f'),
+
+		VerticalCaretRise = (((byte)'v' << 24) | ((byte)'c' << 16) | ((byte)'r' << 8) | (byte)'s'),
+		VerticalCaretRun = (((byte)'v' << 24) | ((byte)'c' << 16) | ((byte)'r' << 8) | (byte)'n'),
+		VerticalCaretOffset = (((byte)'v' << 24) | ((byte)'c' << 16) | ((byte)'o' << 8) | (byte)'f'),
+
+		XHeight = (((byte)'x' << 24) | ((byte)'h' << 16) | ((byte)'g' << 8) | (byte)'t'),
+
+		CapHeight = (((byte)'c' << 24) | ((byte)'p' << 16) | ((byte)'h' << 8) | (byte)'t'),
+
+		SubScriptEmXSize = (((byte)'s' << 24) | ((byte)'b' << 16) | ((byte)'x' << 8) | (byte)'s'),
+		SubScriptEmYSize = (((byte)'s' << 24) | ((byte)'b' << 16) | ((byte)'y' << 8) | (byte)'s'),
+		SubScriptEmXOffset = (((byte)'s' << 24) | ((byte)'b' << 16) | ((byte)'x' << 8) | (byte)'o'),
+		SubScriptEmYOffset = (((byte)'s' << 24) | ((byte)'b' << 16) | ((byte)'y' << 8) | (byte)'o'),
+
+		SuperScriptEmXSize = (((byte)'s' << 24) | ((byte)'p' << 16) | ((byte)'x' << 8) | (byte)'s'),
+		SuperScriptEmYSize = (((byte)'s' << 24) | ((byte)'p' << 16) | ((byte)'y' << 8) | (byte)'s'),
+		SuperScriptEmXOffset = (((byte)'s' << 24) | ((byte)'p' << 16) | ((byte)'x' << 8) | (byte)'o'),
+		SuperScriptEmYOffset = (((byte)'s' << 24) | ((byte)'p' << 16) | ((byte)'y' << 8) | (byte)'o'),
+
+		StrikeoutSize = (((byte)'s' << 24) | ((byte)'t' << 16) | ((byte)'r' << 8) | 's'),
+		StrikeoutOffset = (((byte)'s' << 24) | ((byte)'t' << 16) | ((byte)'r' << 8) | 'o'),
+
+		UnderlineSize = (((byte)'u' << 24) | ((byte)'n' << 16) | ((byte)'d' << 8) | 's'),
+		UnderlineOffset = (((byte)'u' << 24) | ((byte)'n' << 16) | ((byte)'d' << 8) | 'o')
+	}
+
+	public readonly struct OpenTypeMetrics
+	{
+		private readonly IntPtr font;
+
+		public OpenTypeMetrics (IntPtr font)
+		{
+			this.font = font;
+		}
+
+		public bool TryGetPosition (OpenTypeMetricTag metricTag, out int position) => HarfBuzzApi.hb_ot_metrics_get_position (font, metricTag, out position);
+
+		public float GetVariation (OpenTypeMetricTag metricTag) => HarfBuzzApi.hb_ot_metrics_get_variation (font, metricTag);
+
+		public int GetXVariation (OpenTypeMetricTag metricTag) => HarfBuzzApi.hb_ot_metrics_get_x_variation (font, metricTag);
+
+		public int GetYVariation (OpenTypeMetricTag metricTag) => HarfBuzzApi.hb_ot_metrics_get_y_variation (font, metricTag);
+	}
 }
