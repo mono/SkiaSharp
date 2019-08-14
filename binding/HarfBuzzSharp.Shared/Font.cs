@@ -153,10 +153,15 @@ namespace HarfBuzzSharp
 		public bool TryGetGlyphFromName (string name, out uint glyph) =>
 			HarfBuzzApi.hb_font_get_glyph_from_name (Handle, name, name.Length, out glyph);
 
-		public bool TryGetGlyph (uint unicode, out uint glyph) =>
+		public bool TryGetGlyph (uint unicode, out uint glyph) => TryGetGlyph ((int)unicode, 0, out glyph);
+
+		public bool TryGetGlyph (int unicode, out uint glyph) =>
 			TryGetGlyph (unicode, 0, out glyph);
 
 		public bool TryGetGlyph (uint unicode, uint variationSelector, out uint glyph) =>
+			TryGetGlyph ((int)unicode, variationSelector, out glyph);
+
+		public bool TryGetGlyph (int unicode, uint variationSelector, out uint glyph) =>
 			HarfBuzzApi.hb_font_get_glyph (Handle, unicode, variationSelector, out glyph);
 
 		public FontExtents GetFontExtentsForDirection (Direction direction)

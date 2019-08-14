@@ -1,4 +1,6 @@
-﻿using Xunit;
+﻿using System;
+using System.Text;
+using Xunit;
 
 namespace HarfBuzzSharp.Tests
 {
@@ -201,18 +203,18 @@ namespace HarfBuzzSharp.Tests
 		}
 
 		[Theory]
-		[InlineData(OpenTypeMetricTag.UnderlineOffset, -60)]
-		[InlineData(OpenTypeMetricTag.UnderlineSize, 9)]
-		[InlineData(OpenTypeMetricTag.StrikeoutOffset, 1049)]
-		[InlineData(OpenTypeMetricTag.StrikeoutSize, 209)]
-		public void ShouldGetOpenTypeMetrics(OpenTypeMetricTag tag, int expected)
+		[InlineData(OpenTypeMetricsTag.UnderlineOffset, -60)]
+		[InlineData(OpenTypeMetricsTag.UnderlineSize, 9)]
+		[InlineData(OpenTypeMetricsTag.StrikeoutOffset, 1049)]
+		[InlineData(OpenTypeMetricsTag.StrikeoutSize, 209)]
+		public void ShouldGetOpenTypeMetrics(OpenTypeMetricsTag tag, int expected)
 		{
 			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
 				var result = font.OpenTypeMetrics.TryGetPosition(tag, out var position);
 
-				Assert.True (result);
+				Assert.True(result);
 
 				Assert.Equal(expected, position);
 			}

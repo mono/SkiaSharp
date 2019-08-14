@@ -34,6 +34,8 @@ LOCAL_SRC_FILES        := ../../../externals/harfbuzz/src/hb-aat-layout.cc      
                           ../../../externals/harfbuzz/src/hb-ot-layout.cc                           \
                           ../../../externals/harfbuzz/src/hb-ot-map.cc                              \
                           ../../../externals/harfbuzz/src/hb-ot-math.cc                             \
+                          ../../../externals/harfbuzz/src/hb-ot-meta.cc                             \
+                          ../../../externals/harfbuzz/src/hb-ot-metrics.cc                          \
                           ../../../externals/harfbuzz/src/hb-ot-name.cc                             \
                           ../../../externals/harfbuzz/src/hb-ot-shape-complex-arabic.cc             \
                           ../../../externals/harfbuzz/src/hb-ot-shape-complex-default.cc            \

@@ -168,6 +168,15 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		public void AddUtf32 (ReadOnlySpan<int> text) => AddUtf32 (text, 0, -1);
+
+		public unsafe void AddUtf32 (ReadOnlySpan<int> text, int itemOffset, int itemLength)
+		{
+			fixed (int* integers = text) {
+				AddUtf32 ((IntPtr)integers, text.Length, itemOffset, itemLength);
+			}
+		}
+
 		public void AddUtf32 (IntPtr text, int textLength) =>
 			AddUtf32 (text, textLength, 0, -1);
 
@@ -188,6 +197,15 @@ namespace HarfBuzzSharp
 		public unsafe void AddCodepoints (ReadOnlySpan<uint> text, int itemOffset, int itemLength)
 		{
 			fixed (uint* codepoints = text) {
+				AddCodepoints ((IntPtr)codepoints, text.Length, itemOffset, itemLength);
+			}
+		}
+
+		public void AddCodepoints (ReadOnlySpan<int> text) => AddCodepoints (text, 0, -1);
+
+		public unsafe void AddCodepoints (ReadOnlySpan<int> text, int itemOffset, int itemLength)
+		{
+			fixed (int* codepoints = text) {
 				AddCodepoints ((IntPtr)codepoints, text.Length, itemOffset, itemLength);
 			}
 		}
