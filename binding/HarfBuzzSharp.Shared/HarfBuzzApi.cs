@@ -196,7 +196,7 @@ namespace HarfBuzzSharp
 		public extern static hb_bool_t hb_font_get_glyph_from_name (hb_font_t font, [MarshalAs (UnmanagedType.LPStr)]string name, int len, out hb_codepoint_t glyph);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		public extern static hb_bool_t hb_font_get_glyph (hb_font_t font, int unicode, hb_codepoint_t variation_selector, out hb_codepoint_t glyph);
+		public extern static hb_bool_t hb_font_get_glyph (hb_font_t font, hb_codepoint_t unicode, hb_codepoint_t variation_selector, out hb_codepoint_t glyph);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void hb_font_get_extents_for_direction (hb_font_t font, hb_direction_t direction, out hb_font_extents_t extents);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
