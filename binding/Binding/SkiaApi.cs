@@ -727,10 +727,46 @@ namespace SkiaSharp
 		public extern static sk_path_t sk_path_clone (sk_path_t t);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_transform (sk_path_t t, ref SKMatrix matrix);
+
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_path_arc_to (sk_path_t t, float rx, float ry, float xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, float x, float y);
+		private extern static void sk_path_arc_to (ref sk_path_arc_to_params p);
+
+		public unsafe static void sk_path_arc_to (sk_path_t t, float rx, float ry, float xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, float x, float y)
+		{
+			var p = new sk_path_arc_to_params ();
+
+			p.t = t;
+			p.rx = rx;
+			p.ry = ry;
+			p.xAxisRotate = xAxisRotate;
+			p.largeArc = largeArc;
+			p.sweep = sweep;
+			p.x = x;
+			p.y = y;
+				
+			sk_path_arc_to (ref p);
+		}
+
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_path_rarc_to (sk_path_t t, float rx, float ry, float xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, float x, float y);
+		public extern static void sk_path_rarc_to (ref sk_path_rarc_to_params p);
+
+		public unsafe static void sk_path_rarc_to (sk_path_t t, float rx, float ry, float xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, float x, float y)
+		{
+			var p = new sk_path_rarc_to_params ();
+
+			p.t = t;
+			p.rx = rx;
+			p.ry = ry;
+			p.xAxisRotate = xAxisRotate;
+			p.largeArc = largeArc;
+			p.sweep = sweep;
+			p.x = x;
+			p.y = y;
+
+			sk_path_rarc_to (ref p);
+		}
+
+
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_arc_to_with_oval (sk_path_t t, ref SKRect oval, float startAngle, float sweepAngle, [MarshalAs (UnmanagedType.I1)] bool forceMoveTo);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -2127,6 +2163,31 @@ namespace SkiaSharp
 		public int row;
 		public int col;
 	}
+
+	internal unsafe struct sk_path_arc_to_params
+	{
+		public sk_path_t t;
+		public float rx;
+		public float ry;
+		public float xAxisRotate;
+		public SKPathArcSize largeArc;
+		public SKPathDirection sweep;
+		public float x;
+		public float y;
+	}
+
+	internal unsafe struct sk_path_rarc_to_params
+	{
+		public sk_path_t t;
+		public float rx;
+		public float ry;
+		public float xAxisRotate;
+		public SKPathArcSize largeArc;
+		public SKPathDirection sweep;
+		public float x;
+		public float y;
+	}
+
 
 #pragma warning restore IDE1006 // Naming Styles
 }
