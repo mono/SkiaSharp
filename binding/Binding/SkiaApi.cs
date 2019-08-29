@@ -774,7 +774,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static void sk_path_add_rounded_rect (sk_path_t t, ref SKRect rect, float rx, float ry, SKPathDirection dir);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void sk_path_add_circle (sk_path_t t, float x, float y, float radius, SKPathDirection dir);
+		public extern static int sk_path_add_circle (sk_path_t t, float x, float y, float radius, SKPathDirection dir);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static int sk_path_count_verbs (sk_path_t path);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
