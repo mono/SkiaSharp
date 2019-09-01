@@ -56,6 +56,12 @@ jobs:
         - ${{ if contains(parameters.name, '_android_') }}:
           - powershell: .\scripts\install-android-ndk.ps1
             displayName: Install the Android NDK
+      # install extra bits for the manged builds
+      - ${{ if not(startsWith(parameters.name, 'native_')) }}:
+        - task: UseDotNet@2
+          inputs:
+            packageType: 'sdk'
+            useGlobalJson: true
       # switch to the correct mono version on mac
       - ${{ if endsWith(parameters.name, '_macos') }}:
         - bash: sudo $AGENT_HOMEDIRECTORY/scripts/select-xamarin-sdk.sh $(MONO_VERSION)
