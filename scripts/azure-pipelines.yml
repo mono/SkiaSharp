@@ -13,12 +13,14 @@ variables:
   NATIVE_LINUX_PACKAGES: curl mono-complete msbuild python git libfontconfig1-dev clang-3.8 make
   TIZEN_LINUX_PACKAGES: libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn
   MANAGED_LINUX_PACKAGES: ttf-ancient-fonts
-  MONO_VERSION: 5_18_1
-  XCODE_VERSION: 10.2.1
+  MONO_VERSION: '6_0_0'
+  XCODE_VERSION: '10.3'
+  DOTNET_VERSION: '3.0.100-preview8-013656'
   # CONFIGURATION: 'Release'
-  VM_IMAGE_WINDOWS: vs2017-win2016
-  VM_IMAGE_MAC: macos-10.14
-  VM_IMAGE_LINUX: ubuntu-16.04
+  VM_IMAGE_WINDOWS_NATIVE: 'Hosted VS2017'
+  VM_IMAGE_WINDOWS_MANAGED: 'Hosted VS2017'
+  VM_IMAGE_MAC: 'Hosted macOS'
+  VM_IMAGE_LINUX: 'Hosted Ubuntu 1604'
 
 resources:
   repositories:
@@ -36,26 +38,26 @@ stages:
         parameters:
           name: native_android_windows
           displayName: Build Native Android (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-android
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (Windows)
         parameters:
           name: native_tizen_windows
           displayName: Build Native Tizen (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-tizen
           condition: false # TODO: TIZEN INSTALL BUGS
       - template: azure-templates-bootstrapper.yml # Build Native UWP (Windows)
         parameters:
           name: native_uwp_windows
           displayName: Build Native UWP (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-uwp
       - template: azure-templates-bootstrapper.yml # Build Native Win32 (Windows)
         parameters:
           name: native_win32_windows
           displayName: Build Native Win32 (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-windows
       # NATIVE JOBS - MAC
       - template: azure-templates-bootstrapper.yml # Build Native Android (macOS)
@@ -125,7 +127,7 @@ stages:
         parameters:
           name: managed_windows
           displayName: Build Managed (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_MANAGED)
           target: libs-only
           requiredArtifacts:
             - native_android_windows
@@ -176,7 +178,7 @@ stages:
         parameters:
           name: package_nodependencies_windows
           displayName: Package NuGets [No Dependencies]
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_MANAGED)
           target: nuget-only
           shouldPublish: false
           requiredArtifacts:
@@ -208,7 +210,7 @@ stages:
         parameters:
           name: package_windows
           displayName: Package NuGets
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_MANAGED)
           target: nuget-only
           shouldPublish: false
           requiredArtifacts:
@@ -296,7 +298,7 @@ stages:
         parameters:
           name: tests_windows
           displayName: Tests (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_MANAGED)
           retryCount: 3
           target: tests
           additionalArgs: --skipExternals="all"
@@ -375,7 +377,7 @@ stages:
         parameters:
           name: samples_windows
           displayName: Build Samples (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_MANAGED)
           target: samples
           shouldPublish: false
           requiredArtifacts:
