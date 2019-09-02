@@ -24,7 +24,7 @@ jobs:
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
     steps:
-      - bash: cat $(Agent.HomeDirectory)/scripts/select-xamarin-sdk.sh $(MONO_VERSION)
+      - bash: cat $(Agent.HomeDirectory)/scripts/select-xamarin-sdk.sh
       - checkout: self
         submodules: recursive
       - powershell: |
