@@ -62,6 +62,8 @@ jobs:
           inputs:
             packageType: 'sdk'
             version: $(DOTNET_VERSION)
+            performMultiLevelLookup: true
+          displayName: Install the correct version of .NET Core
       # switch to the correct mono version on mac
       - ${{ if endsWith(parameters.name, '_macos') }}:
         - bash: sudo $(Agent.HomeDirectory)/scripts/select-xamarin-sdk.sh $(MONO_VERSION)
