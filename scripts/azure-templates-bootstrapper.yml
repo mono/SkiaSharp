@@ -61,7 +61,7 @@ jobs:
         - task: UseDotNet@2
           inputs:
             packageType: 'sdk'
-            useGlobalJson: true
+            version: '2.2.108'
       # switch to the correct mono version on mac
       - ${{ if endsWith(parameters.name, '_macos') }}:
         - bash: sudo $AGENT_HOMEDIRECTORY/scripts/select-xamarin-sdk.sh $(MONO_VERSION)
