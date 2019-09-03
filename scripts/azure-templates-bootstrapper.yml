@@ -20,6 +20,7 @@ jobs:
     displayName: ${{ parameters.displayName }}
     pool:
       vmImage: ${{ parameters.vmImage }}
+    condition: ${{ parameters.condition }}
     steps:
       - checkout: self
       - pwsh: ./scripts/download-externals.ps1 -BuildNumber $(DOWNLOAD_EXTERNALS) -Artifact ${{ parameters.name }}
