@@ -20,11 +20,11 @@ Invoke-WebRequest -Uri $url -OutFile $dest
 # extract it
 if (Test-Path -Path $destTemp) {
     Remove-Item -Path $destTemp/** -Force -Recurse
-    [System.IO.Compression.ZipFile]::ExtractToDirectory($dest, $outputTemp)
 }
+[System.IO.Compression.ZipFile]::ExtractToDirectory($dest, $outputTemp)
 
 # create the output folder
 New-Item -Type Directory -Path $output -Force | Out-Null
 
 # move the items into the output folder
-Get-ChildItem $destTemp| Copy-Item -Destination $output -Force -Recurse
+Get-ChildItem $destTemp | Copy-Item -Destination $output -Force -Recurse
