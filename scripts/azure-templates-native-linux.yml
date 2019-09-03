@@ -13,7 +13,7 @@ jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     pool:
-      vmImage: ${{ parameters.vmImage }}
+      vmImage: $(VM_IMAGE_LINUX)
     steps:
       - checkout: self
       - pwsh: ./scripts/download-externals.ps1 -BuildNumber $(DOWNLOAD_EXTERNALS) -Artifact ${{ parameters.name }}
