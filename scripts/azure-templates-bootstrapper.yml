@@ -15,6 +15,23 @@ parameters:
   shouldPublish: true       # whether or not to publish the artifacts
 
 jobs:
+- ${{ if and(ne('$(DOWNLOAD_EXTERNALS)', ''), startsWith(parameters.name, 'native_')) }}:
+  - job: ${{ parameters.name }}
+    displayName: ${{ parameters.displayName }}
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    steps:
+      - checkout: self
+      - pwsh: ./scripts/download-externals.ps1 -BuildNumber $(DOWNLOAD_EXTERNALS) -Artifact ${{ parameters.name }}
+        displayName: Download the pre-built ${{ parameters.name }} artifacts
+      - task: PublishBuildArtifacts@1
+        displayName: Publish the ${{ parameters.name }} artifacts
+        condition: ${{ parameters.shouldPublish }}
+        inputs:
+          artifactName: ${{ parameters.name }}
+          pathToPublish: 'output'
+
+- ${{ if or(eq('$(DOWNLOAD_EXTERNALS)', ''), not(startsWith(parameters.name, 'native_'))) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
