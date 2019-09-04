@@ -41,6 +41,8 @@ jobs:
       demands: ${{ parameters.demands }}
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
+    env:
+      JavaSdkDirectory: $(JAVA_HOME)
     steps:
       - checkout: self
         submodules: recursive
