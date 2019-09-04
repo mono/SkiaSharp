@@ -143,7 +143,7 @@ stages:
             - pwsh: |
                 $uri = 'https://go.microsoft.com/fwlink/p/?LinkId=619296'
                 ./scripts/download-file.ps1 -Uri $uri -OutFile sdksetup.exe
-                sdksetup.exe /norestart /quiet
+                .\sdksetup.exe /norestart /quiet
               displayName: Install the Windows 10 SDK 10.0.10240
       - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
         parameters:
