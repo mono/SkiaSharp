@@ -41,8 +41,6 @@ jobs:
       demands: ${{ parameters.demands }}
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
-    env:
-      JavaSdkDirectory: $(JAVA_HOME)
     steps:
       - checkout: self
         submodules: recursive
@@ -107,9 +105,13 @@ jobs:
       # build
       - ${{ if endsWith(parameters.name, '_windows') }}:
         - powershell: .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} { .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY -c ${{ coalesce(variables.CONFIGURATION, 'Release') }} ${{ parameters.additionalArgs }} }
+          env:
+            JavaSdkDirectory: $(JAVA_HOME)
           displayName: Run the bootstrapper for ${{ parameters.target }}
       - ${{ if not(endsWith(parameters.name, '_windows')) }}:
         - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY -c ${{ coalesce(variables.CONFIGURATION, 'Release') }} ${{ parameters.additionalArgs }}
+          env:
+            JavaSdkDirectory: $(JAVA_HOME)
           displayName: Run the bootstrapper for ${{ parameters.target }}
       # post-build steps
       - ${{ parameters.postBuildSteps }}
