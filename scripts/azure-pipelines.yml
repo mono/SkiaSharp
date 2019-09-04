@@ -141,7 +141,11 @@ stages:
             - native_win32_windows
           preBuildSteps:
             - pwsh: |
-                Invoke-WebRequest -Uri https://go.microsoft.com/fwlink/p/?LinkId=619296 -OutFile sdksetup.exe
+                $url = 'https://go.microsoft.com/fwlink/p/?LinkId=619296'
+                $response = [System.Net.HttpWebRequest]::Create($url).GetResponse()
+                $url = $response.ResponseUri.AbsoluteUri
+                $response.Close()
+                Invoke-WebRequest -Uri $url -OutFile sdksetup.exe
                 sdksetup.exe /norestart /quiet
               displayName: Install the Windows 10 SDK 10.0.10240
       - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
