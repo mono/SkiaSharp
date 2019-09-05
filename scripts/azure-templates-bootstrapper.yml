@@ -35,7 +35,7 @@ jobs:
 - ${{ if or(eq('$(DOWNLOAD_EXTERNALS)', ''), not(startsWith(parameters.name, 'native_'))) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
-    timeoutInMinutes: 120
+    timeoutInMinutes: 20
     pool:
       vmImage: ${{ parameters.vmImage }}
       demands: ${{ parameters.demands }}
@@ -55,10 +55,11 @@ jobs:
         - bash: |
             sudo apt remove -y mono-complete msbuild
             sudo apt autoremove -y
+            sudo rm /etc/mono/config
             sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
             echo "deb https://download.mono-project.com/repo/ubuntu stable-xenial/snapshots/$(MONO_VERSION_LINUX) main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
             sudo apt update
-            DEBIAN_FRONTEND=noninteractive sudo apt install -y ${{ parameters.packages }}
+            sudo apt install -y ${{ parameters.packages }}
           displayName: Install any package dependencies
       # install tizen
       - ${{ if contains(parameters.name, '_tizen_') }}:
