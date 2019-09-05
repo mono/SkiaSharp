@@ -107,11 +107,15 @@ jobs:
         - powershell: .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} { .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY -c ${{ coalesce(variables.CONFIGURATION, 'Release') }} ${{ parameters.additionalArgs }} }
           env:
             JavaSdkDirectory: $(JAVA_HOME)
+            # Workaround for https://github.com/onovotny/MSBuildSdkExtras/issues/181
+            AndroidUseIntermediateDesignerFile: False
           displayName: Run the bootstrapper for ${{ parameters.target }}
       - ${{ if not(endsWith(parameters.name, '_windows')) }}:
         - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY -c ${{ coalesce(variables.CONFIGURATION, 'Release') }} ${{ parameters.additionalArgs }}
           env:
             JavaSdkDirectory: $(JAVA_HOME)
+            # Workaround for https://github.com/onovotny/MSBuildSdkExtras/issues/181
+            AndroidUseIntermediateDesignerFile: False
           displayName: Run the bootstrapper for ${{ parameters.target }}
       # post-build steps
       - ${{ parameters.postBuildSteps }}
