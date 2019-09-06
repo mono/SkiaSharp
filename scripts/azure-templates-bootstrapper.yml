@@ -118,7 +118,7 @@ jobs:
       - ${{ if not(endsWith(parameters.name, '_windows')) }}:
         - bash: |
             mono --version
-            msbuild --version
+            msbuild /version
         - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY -c ${{ coalesce(variables.CONFIGURATION, 'Release') }} ${{ parameters.additionalArgs }}
           env:
             JavaSdkDirectory: $(JAVA_HOME)
