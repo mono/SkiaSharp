@@ -117,6 +117,9 @@ jobs:
         - bash: |
             mono --version
             msbuild /version
+            dotnet --version
+            dotnet --list-sdks
+            dotnet --list-runtimes
         - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY -c ${{ coalesce(variables.CONFIGURATION, 'Release') }} ${{ parameters.additionalArgs }}
           env:
             JavaSdkDirectory: $(JAVA_HOME)
