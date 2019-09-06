@@ -41,6 +41,9 @@ namespace SkiaSharp.Views.Forms
 			if (onTouchAction == null || scalePixels == null)
 				return;
 
+			if (!(sender is View view))
+				return;
+
 			var evt = e.Event;
 			var pointer = evt.ActionIndex;
 
@@ -52,6 +55,7 @@ namespace SkiaSharp.Views.Forms
 				case MotionEventActions.Down:
 				case MotionEventActions.PointerDown:
 					{
+						view.Parent.RequestDisallowInterceptTouchEvent(true);
 						var args = new SKTouchEventArgs(id, SKTouchAction.Pressed, coords, true);
 						onTouchAction(args);
 						e.Handled = args.Handled;
@@ -76,6 +80,7 @@ namespace SkiaSharp.Views.Forms
 				case MotionEventActions.Up:
 				case MotionEventActions.PointerUp:
 					{
+						view.Parent.RequestDisallowInterceptTouchEvent(false);
 						var args = new SKTouchEventArgs(id, SKTouchAction.Released, coords, false);
 						onTouchAction(args);
 						e.Handled = args.Handled;
@@ -84,6 +89,7 @@ namespace SkiaSharp.Views.Forms
 
 				case MotionEventActions.Cancel:
 					{
+						view.Parent.RequestDisallowInterceptTouchEvent(false);
 						var args = new SKTouchEventArgs(id, SKTouchAction.Cancelled, coords, false);
 						onTouchAction(args);
 						e.Handled = args.Handled;
