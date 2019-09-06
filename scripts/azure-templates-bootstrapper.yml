@@ -35,7 +35,7 @@ jobs:
 - ${{ if or(eq('$(DOWNLOAD_EXTERNALS)', ''), not(startsWith(parameters.name, 'native_'))) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
-    timeoutInMinutes: 20
+    timeoutInMinutes: 120
     pool:
       vmImage: ${{ parameters.vmImage }}
       demands: ${{ parameters.demands }}
@@ -89,7 +89,7 @@ jobs:
           displayName: Install the correct version of .NET Core
       # switch to the correct mono version on mac
       - ${{ if endsWith(parameters.name, '_macos') }}:
-        - bash: sudo $(Agent.HomeDirectory)/scripts/select-xamarin-sdk.sh $(MONO_VERSION)
+        - bash: sudo $(Agent.HomeDirectory)/scripts/select-xamarin-sdk.sh $(MONO_VERSION_MACOS)
           displayName: Switch to the latest Xamarin SDK
         - bash: echo '##vso[task.setvariable variable=MD_APPLE_SDK_ROOT;]'/Applications/Xcode_$(XCODE_VERSION).app;sudo xcode-select --switch /Applications/Xcode_$(XCODE_VERSION).app/Contents/Developer
           displayName: Switch to the latest Xcode
