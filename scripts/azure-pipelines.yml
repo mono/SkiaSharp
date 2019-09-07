@@ -18,13 +18,9 @@ variables:
   XCODE_VERSION: 10.3
   DOTNET_VERSION: 2.2.108
   # CONFIGURATION: 'Release'
-  VM_IMAGE_WINDOWS_NATIVE: 'vs2017-win2016'
-  VM_IMAGE_WINDOWS_MANAGED: 'vs2017-win2016'
-  VM_IMAGE_MAC: 'macOS-10.14'
-  VM_IMAGE_LINUX: 'ubuntu-16.04'
-  DOWNLOAD_EXTERNALS: '6228'
-  # Workaround for https://github.com/onovotny/MSBuildSdkExtras/issues/181
-  AndroidUseIntermediateDesignerFile: False
+  VM_IMAGE_WINDOWS: vs2017-win2016
+  VM_IMAGE_MAC: macos-10.14
+  VM_IMAGE_LINUX: ubuntu-16.04
 
   # To speed up builds
   # DOWNLOAD_EXTERNALS: '6228'
@@ -45,26 +41,26 @@ stages:
         parameters:
           name: native_android_windows
           displayName: Build Native Android (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
+          vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-android
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (Windows)
         parameters:
           name: native_tizen_windows
           displayName: Build Native Tizen (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
+          vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-tizen
           condition: false # TODO: TIZEN INSTALL BUGS
       - template: azure-templates-bootstrapper.yml # Build Native UWP (Windows)
         parameters:
           name: native_uwp_windows
           displayName: Build Native UWP (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
+          vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-uwp
       - template: azure-templates-bootstrapper.yml # Build Native Win32 (Windows)
         parameters:
           name: native_win32_windows
           displayName: Build Native Win32 (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
+          vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-windows
       # NATIVE JOBS - MAC
       - template: azure-templates-bootstrapper.yml # Build Native Android (macOS)
@@ -134,7 +130,7 @@ stages:
         parameters:
           name: managed_windows
           displayName: Build Managed (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS_MANAGED)
+          vmImage: $(VM_IMAGE_WINDOWS)
           target: libs-only
           requiredArtifacts:
             - native_android_windows
@@ -185,7 +181,7 @@ stages:
         parameters:
           name: package_nodependencies_windows
           displayName: Package NuGets [No Dependencies]
-          vmImage: $(VM_IMAGE_WINDOWS_MANAGED)
+          vmImage: $(VM_IMAGE_WINDOWS)
           target: nuget-only
           shouldPublish: false
           requiredArtifacts:
@@ -217,7 +213,7 @@ stages:
         parameters:
           name: package_windows
           displayName: Package NuGets
-          vmImage: $(VM_IMAGE_WINDOWS_MANAGED)
+          vmImage: $(VM_IMAGE_WINDOWS)
           target: nuget-only
           shouldPublish: false
           requiredArtifacts:
@@ -305,7 +301,7 @@ stages:
         parameters:
           name: tests_windows
           displayName: Tests (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS_MANAGED)
+          vmImage: $(VM_IMAGE_WINDOWS)
           retryCount: 3
           target: tests
           additionalArgs: --skipExternals="all"
@@ -384,7 +380,7 @@ stages:
         parameters:
           name: samples_windows
           displayName: Build Samples (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS_MANAGED)
+          vmImage: $(VM_IMAGE_WINDOWS)
           target: samples
           shouldPublish: false
           requiredArtifacts:
