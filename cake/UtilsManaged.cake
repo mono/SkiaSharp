@@ -71,6 +71,7 @@ void RunTests (FilePath testAssembly, bool is32)
         ReportName = "TestResults",
         XmlReport = true,
         UseX86 = is32,
+        NoAppDomain = true,
         OutputDirectory = dir,
         WorkingDirectory = dir,
         ArgumentCustomization = args => args.Append ("-verbose"),
