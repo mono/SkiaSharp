@@ -24,7 +24,7 @@ using NuGet.Versioning;
 #load "cake/Utils.cake"
 
 var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")));
-var VERBOSITY = (Verbosity) Enum.Parse (typeof(Verbosity), Argument ("v", Argument ("verbosity", Argument ("Verbosity", "Normal"))), true);
+var VERBOSITY = Argument ("v", Argument ("verbosity", Argument ("Verbosity", Verbosity.Normal)));
 var SKIP_EXTERNALS = Argument ("skipexternals", Argument ("SkipExternals", "")).ToLower ().Split (',');
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAll", Argument ("PackAllPlatforms", TARGET.ToLower() == "ci" || TARGET.ToLower() == "nuget-only")));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);

@@ -266,9 +266,11 @@ namespace SkiaSharp.Tests
 		public void SameColorSpaceCreatedDifferentWaysAreTheSameObject()
 		{
 			var colorspace1 = SKColorSpace.CreateSrgbLinear();
+			Assert.Equal("SkiaSharp.SKColorSpace+SKColorSpaceStatic", colorspace1.GetType().FullName);
 			Assert.Equal(2, colorspace1.GetReferenceCount());
 
 			var colorspace2 = SKColorSpace.CreateRgb(SKNamedGamma.Linear, SKColorSpaceGamut.Srgb);
+			Assert.Equal("SkiaSharp.SKColorSpace+SKColorSpaceStatic", colorspace2.GetType().FullName);
 			Assert.Equal(2, colorspace2.GetReferenceCount());
 
 			Assert.Same(colorspace1, colorspace2);
