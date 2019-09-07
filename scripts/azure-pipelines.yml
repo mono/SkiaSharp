@@ -314,6 +314,7 @@ stages:
               inputs:
                 testResultsFormat: xUnit
                 testResultsFiles: 'tests/**/TestResults.xml'
+                testRunTitle: 'Windows Tests'
       - template: azure-templates-bootstrapper.yml # Tests (macOS)
         parameters:
           name: tests_macos
@@ -332,6 +333,7 @@ stages:
               inputs:
                 testResultsFormat: xUnit
                 testResultsFiles: 'tests/**/TestResults.xml'
+                testRunTitle: 'macOS Tests'
       - template: azure-templates-bootstrapper.yml # Tests (Linux)
         parameters:
           name: tests_linux
@@ -351,6 +353,7 @@ stages:
               inputs:
                 testResultsFormat: xUnit
                 testResultsFiles: 'tests/**/TestResults.xml'
+                testRunTitle: 'Linux Tests'
       - template: azure-templates-bootstrapper.yml # Tests [No Dependencies] (Linux)
         parameters:
           name: tests_nodependencies_linux
@@ -370,6 +373,7 @@ stages:
               inputs:
                 testResultsFormat: xUnit
                 testResultsFiles: 'tests/**/TestResults.xml'
+                testRunTitle: 'Linux [No Dependencies] Tests'
 
   - stage: samples
     displayName: Build Samples
