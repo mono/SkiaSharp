@@ -9,7 +9,7 @@ parameters:
   retryCount: 1       # the number of times to retry the bootstrapper
 
 jobs:
-- ${{ if and(ne('$(DOWNLOAD_EXTERNALS)', ''), startsWith(parameters.name, 'native_')) }}:
+- ${{ if and(ne(variables.DOWNLOAD_EXTERNALS, ''), startsWith(parameters.name, 'native_')) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     pool:
@@ -25,7 +25,7 @@ jobs:
           artifactName: ${{ parameters.name }}
           pathToPublish: 'output'
 
-- ${{ if or(eq('$(DOWNLOAD_EXTERNALS)', ''), not(startsWith(parameters.name, 'native_'))) }}:
+- ${{ if or(eq(variables.DOWNLOAD_EXTERNALS, ''), not(startsWith(parameters.name, 'native_'))) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
