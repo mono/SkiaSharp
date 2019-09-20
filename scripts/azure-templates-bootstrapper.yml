@@ -24,6 +24,12 @@ jobs:
     condition: ${{ parameters.condition }}
     steps:
       - checkout: self
+      - ${{ if parameters.downloadExternals }}:
+         - pwsh: echo "plain if"
+      - ${{ if ne(parameters.downloadExternals, '') }}:
+         - pwsh: echo "not blank"
+      - ${{ if eq(parameters.downloadExternals, '') }}:
+         - pwsh: echo "blank"
       - pwsh: ./scripts/download-externals.ps1 -BuildNumber ${{ parameters.downloadExternals }} -Artifact ${{ parameters.name }}
         displayName: Download the pre-built ${{ parameters.name }} artifacts
       - task: PublishBuildArtifacts@1
