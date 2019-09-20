@@ -16,7 +16,6 @@ parameters:
   downloadExternals: ''       # the build number to use to download externals
 
 jobs:
-- ${{ if ne(parameters.downloadExternals, '') }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     pool:
@@ -24,110 +23,12 @@ jobs:
     condition: ${{ parameters.condition }}
     steps:
       - checkout: self
-      - ${{ if parameters.downloadExternals }}:
-         - pwsh: echo "plain if"
       - ${{ if ne(parameters.downloadExternals, '') }}:
-         - pwsh: echo "not blank"
+         - pwsh: echo "not blank --${{ parameters.downloadExternals }}--"
       - ${{ if eq(parameters.downloadExternals, '') }}:
-         - pwsh: echo "blank"
+         - pwsh: echo "blank --${{ parameters.downloadExternals }}--"
       - pwsh: ./scripts/download-externals.ps1 -BuildNumber ${{ parameters.downloadExternals }} -Artifact ${{ parameters.name }}
         displayName: Download the pre-built ${{ parameters.name }} artifacts
-      - task: PublishBuildArtifacts@1
-        displayName: Publish the ${{ parameters.name }} artifacts
-        condition: ${{ parameters.shouldPublish }}
-        inputs:
-          artifactName: ${{ parameters.name }}
-          pathToPublish: 'output'
-
-- ${{ if eq(parameters.downloadExternals, '') }}:
-  - job: ${{ parameters.name }}
-    displayName: ${{ parameters.displayName }}
-    timeoutInMinutes: 120
-    pool:
-      vmImage: ${{ parameters.vmImage }}
-      demands: ${{ parameters.demands }}
-    dependsOn: ${{ parameters.dependsOn }}
-    condition: ${{ parameters.condition }}
-    steps:
-      - checkout: self
-        submodules: recursive
-      - powershell: |
-          if ($env:GIT_BRANCH_NAME.StartsWith($env:FEATURE_NAME_PREFIX)) {
-            $feature = $env:GIT_BRANCH_NAME.Substring($env:FEATURE_NAME_PREFIX.Length)
-            Write-Host "##vso[task.setvariable variable=FEATURE_NAME]$feature"
-          }
-        displayName: Determine the feature name, if any
-      # install any packages on linux
-      - ${{ if endsWith(parameters.name, '_linux') }}:
-        - bash: |
-            sudo apt remove -y mono-complete msbuild
-            sudo apt autoremove -y
-            sudo rm /etc/mono/config
-            sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-            echo "deb https://download.mono-project.com/repo/ubuntu $(MONO_VERSION_LINUX) main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
-            sudo apt update
-            sudo apt install -y ${{ parameters.packages }}
-          displayName: Install any package dependencies
-      # install tizen
-      - ${{ if contains(parameters.name, '_tizen_') }}:
-        - powershell: .\scripts\install-openjdk.ps1
-          displayName: Install the OpenJDK
-        - powershell: .\scripts\install-tizen.ps1
-          displayName: Install the Tizen SDK
-      # install extra bits for the native builds
-      - ${{ if startsWith(parameters.name, 'native_') }}:
-        # switch to Python 2.7
-        - task: UsePythonVersion@0
-          displayName: Switch to Python to 2.7
-          inputs:
-            versionSpec: '2.7'
-            architecture: 'x64'
-        # install android ndk
-        - ${{ if contains(parameters.name, '_android_') }}:
-          - powershell: .\scripts\install-android-ndk.ps1
-            displayName: Install the Android NDK
-      # install extra bits for the manged builds
-      - ${{ if not(startsWith(parameters.name, 'native_')) }}:
-        - task: UseDotNet@2
-          inputs:
-            packageType: 'sdk'
-            version: $(DOTNET_VERSION)
-            performMultiLevelLookup: true
-          displayName: Install the correct version of .NET Core
-      # switch to the correct mono version on mac
-      - ${{ if endsWith(parameters.name, '_macos') }}:
-        - bash: sudo $(Agent.HomeDirectory)/scripts/select-xamarin-sdk.sh $(MONO_VERSION_MACOS)
-          displayName: Switch to the latest Xamarin SDK
-        - bash: echo '##vso[task.setvariable variable=MD_APPLE_SDK_ROOT;]'/Applications/Xcode_$(XCODE_VERSION).app;sudo xcode-select --switch /Applications/Xcode_$(XCODE_VERSION).app/Contents/Developer
-          displayName: Switch to the latest Xcode
-      # download artifacts
-      - ${{ each dep in parameters.requiredArtifacts }}:
-        - task: DownloadBuildArtifacts@0
-          displayName: Download the ${{ dep }} artifacts
-          inputs:
-            artifactName: ${{ dep }}
-            downloadPath: 'download-temp'
-        - powershell: |
-            New-Item '.\output\' -Type Directory -Force | Out-Null
-            Get-ChildItem '.\download-temp\${{ dep }}\' | Copy-Item -Destination '.\output\' -Recurse -Force
-            Remove-Item '.\download-temp\${{ dep }}\' -Recurse -Force
-          displayName: Move the ${{ dep }} artifacts to the output directory
-      # pre-build steps
-      - ${{ parameters.preBuildSteps }}
-      # build
-      - ${{ if endsWith(parameters.name, '_windows') }}:
-        - powershell: .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} { .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY -c ${{ coalesce(variables.CONFIGURATION, 'Release') }} ${{ parameters.additionalArgs }} }
-          env:
-            JavaSdkDirectory: $(JAVA_HOME)
-          displayName: Run the bootstrapper for ${{ parameters.target }}
-      - ${{ if not(endsWith(parameters.name, '_windows')) }}:
-        - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY -c ${{ coalesce(variables.CONFIGURATION, 'Release') }} ${{ parameters.additionalArgs }}
-          env:
-            JavaSdkDirectory: $(JAVA_HOME)
-          displayName: Run the bootstrapper for ${{ parameters.target }}
-      # post-build steps
-      - ${{ parameters.postBuildSteps }}
-      # publish artifacts
       - task: PublishBuildArtifacts@1
         displayName: Publish the ${{ parameters.name }} artifacts
         condition: ${{ parameters.shouldPublish }}
