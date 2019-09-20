@@ -15,7 +15,7 @@ parameters:
   shouldPublish: true       # whether or not to publish the artifacts
 
 jobs:
-- ${{ if and(ne('$(DOWNLOAD_EXTERNALS)', ''), startsWith(parameters.name, 'native_')) }}:
+- ${{ if and(not('$(DOWNLOAD_EXTERNALS)'), startsWith(parameters.name, 'native_')) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     pool:
@@ -32,7 +32,7 @@ jobs:
           artifactName: ${{ parameters.name }}
           pathToPublish: 'output'
 
-- ${{ if or(eq('$(DOWNLOAD_EXTERNALS)', ''), not(startsWith(parameters.name, 'native_'))) }}:
+- ${{ if or('$(DOWNLOAD_EXTERNALS)', not(startsWith(parameters.name, 'native_'))) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
