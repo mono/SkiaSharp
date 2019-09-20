@@ -1,32 +1,31 @@
 parameters:
-  name: ''                    # in the form type_platform_host
-  displayName: ''             # the human name
-  packages: ''                # any additional packages
-  target: ''                  # the bootstrapper target
-  preBuildSteps: []           # any steps to run before the build
-  postBuildSteps: []          # any additional steps to run after the build
-  additionalArgs: ''          # any additional arguments to pass to the bootstrapper
-  retryCount: 1               # the number of times to retry the bootstrapper
-  downloadExternals: ''       # the build number to use to download externals
+  name: ''            # in the form type_platform_host
+  displayName: ''     # the human name
+  packages: ''        # any additional packages
+  target: ''          # the bootstrapper target
+  preBuildSteps: []   # any steps to run before the build
+  postBuildSteps: []  # any additional steps to run after the build
+  additionalArgs: ''  # any additional arguments to pass to the bootstrapper
+  retryCount: 1       # the number of times to retry the bootstrapper
 
 jobs:
-- ${{ if ne(parameters.downloadExternals, '') }}:
-  - job: ${{ parameters.name }}
-    displayName: ${{ parameters.displayName }}
-    pool:
-      vmImage: $(VM_IMAGE_LINUX)
-    steps:
-      - checkout: self
-      - pwsh: ./scripts/download-externals.ps1 -BuildNumber ${{ parameters.downloadExternals }} -Artifact ${{ parameters.name }}
-        displayName: Download the pre-built ${{ parameters.name }} artifacts
-      - task: PublishBuildArtifacts@1
-        displayName: Publish the ${{ parameters.name }} artifacts
-        condition: ${{ parameters.shouldPublish }}
-        inputs:
-          artifactName: ${{ parameters.name }}
-          pathToPublish: 'output'
+# - ${{ if and(ne('$(DOWNLOAD_EXTERNALS)', ''), startsWith(parameters.name, 'native_')) }}:
+#   - job: ${{ parameters.name }}
+#     displayName: ${{ parameters.displayName }}
+#     pool:
+#       vmImage: $(VM_IMAGE_LINUX)
+#     steps:
+#       - checkout: self
+#       - pwsh: ./scripts/download-externals.ps1 -BuildNumber $(DOWNLOAD_EXTERNALS) -Artifact ${{ parameters.name }}
+#         displayName: Download the pre-built ${{ parameters.name }} artifacts
+#       - task: PublishBuildArtifacts@1
+#         displayName: Publish the ${{ parameters.name }} artifacts
+#         condition: ${{ parameters.shouldPublish }}
+#         inputs:
+#           artifactName: ${{ parameters.name }}
+#           pathToPublish: 'output'
 
-- ${{ if eq(parameters.downloadExternals, '') }}:
+# - ${{ if or(eq('$(DOWNLOAD_EXTERNALS)', ''), not(startsWith(parameters.name, 'native_'))) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
