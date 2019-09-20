@@ -1,22 +1,23 @@
 parameters:
-  name: ''            # in the form type_platform_host
-  displayName: ''     # the human name
-  packages: ''        # any additional packages
-  target: ''          # the bootstrapper target
-  preBuildSteps: []   # any steps to run before the build
-  postBuildSteps: []  # any additional steps to run after the build
-  additionalArgs: ''  # any additional arguments to pass to the bootstrapper
-  retryCount: 1       # the number of times to retry the bootstrapper
+  name: ''                    # in the form type_platform_host
+  displayName: ''             # the human name
+  packages: ''                # any additional packages
+  target: ''                  # the bootstrapper target
+  preBuildSteps: []           # any steps to run before the build
+  postBuildSteps: []          # any additional steps to run after the build
+  additionalArgs: ''          # any additional arguments to pass to the bootstrapper
+  retryCount: 1               # the number of times to retry the bootstrapper
+  downloadExternals: ''       # the build number to use to download externals
 
 jobs:
-- ${{ if and(ne('$(DOWNLOAD_EXTERNALS)', '-1'), startsWith(parameters.name, 'native_')) }}:
+- ${{ if ne(parameters.downloadExternals, '') }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     pool:
       vmImage: $(VM_IMAGE_LINUX)
     steps:
       - checkout: self
-      - pwsh: ./scripts/download-externals.ps1 -BuildNumber $(DOWNLOAD_EXTERNALS) -Artifact ${{ parameters.name }}
+      - pwsh: ./scripts/download-externals.ps1 -BuildNumber ${{ parameters.downloadExternals }} -Artifact ${{ parameters.name }}
         displayName: Download the pre-built ${{ parameters.name }} artifacts
       - task: PublishBuildArtifacts@1
         displayName: Publish the ${{ parameters.name }} artifacts
@@ -25,7 +26,7 @@ jobs:
           artifactName: ${{ parameters.name }}
           pathToPublish: 'output'
 
-- ${{ if or(eq('$(DOWNLOAD_EXTERNALS)', '-1'), not(startsWith(parameters.name, 'native_'))) }}:
+- ${{ if eq(parameters.downloadExternals, '') }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
