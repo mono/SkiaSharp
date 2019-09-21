@@ -1,6 +1,7 @@
 parameters:
   name: ''            # in the form type_platform_host
   displayName: ''     # the human name
+  vmImage: ''         # the VM image
   packages: ''        # any additional packages
   target: ''          # the bootstrapper target
   preBuildSteps: []   # any steps to run before the build
@@ -45,7 +46,7 @@ jobs:
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
     pool:
-      name: $(VM_IMAGE_LINUX)
+      name: ${{ parameters.vmImage }}
     container: ubuntu:14.04
     steps:
       - checkout: self
