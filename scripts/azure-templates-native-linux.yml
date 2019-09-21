@@ -9,23 +9,38 @@ parameters:
   retryCount: 1       # the number of times to retry the bootstrapper
 
 jobs:
-# - ${{ if and(ne('$(DOWNLOAD_EXTERNALS)', ''), startsWith(parameters.name, 'native_')) }}:
-#   - job: ${{ parameters.name }}
-#     displayName: ${{ parameters.displayName }}
-#     pool:
-#       vmImage: $(VM_IMAGE_LINUX)
-#     steps:
-#       - checkout: self
-#       - pwsh: ./scripts/download-externals.ps1 -BuildNumber $(DOWNLOAD_EXTERNALS) -Artifact ${{ parameters.name }}
-#         displayName: Download the pre-built ${{ parameters.name }} artifacts
-#       - task: PublishBuildArtifacts@1
-#         displayName: Publish the ${{ parameters.name }} artifacts
-#         condition: ${{ parameters.shouldPublish }}
-#         inputs:
-#           artifactName: ${{ parameters.name }}
-#           pathToPublish: 'output'
+- ${{ if startsWith(parameters.name, 'native_') }}:
+  - job: ${{ parameters.name }}
+    displayName: ${{ parameters.displayName }}
+    pool:
+      vmImage: ${{ parameters.vmImage }}
+    condition: ${{ parameters.condition }}
+    steps:
+      - checkout: none
+      - task: DownloadBuildArtifacts@0
+        displayName: Download the pre-built ${{ parameters.name }} artifacts
+        inputs:
+          buildType: 'specific'
+          project: '$(System.TeamProjectId)'
+          pipeline: '$(System.DefinitionId)'
+          buildVersionToDownload: 'specific'
+          buildId: '$(DOWNLOAD_EXTERNALS)'
+          downloadType: 'single'
+          artifactName: ${{ parameters.name }}
+          downloadPath: 'download-temp'
+      - powershell: |
+          New-Item '.\output\' -Type Directory -Force | Out-Null
+          Get-ChildItem '.\download-temp\${{ parameters.name }}\' | Copy-Item -Destination '.\output\' -Recurse -Force
+          Remove-Item '.\download-temp\${{ parameters.name }}\' -Recurse -Force
+        displayName: Move the ${{ parameters.name }} artifacts to the output directory
+      - task: PublishBuildArtifacts@1
+        displayName: Publish the ${{ parameters.name }} artifacts
+        condition: ${{ parameters.shouldPublish }}
+        inputs:
+          artifactName: ${{ parameters.name }}
+          pathToPublish: 'output'
 
-# - ${{ if or(eq('$(DOWNLOAD_EXTERNALS)', ''), not(startsWith(parameters.name, 'native_'))) }}:
+- ${{ if not(startsWith(parameters.name, 'native_')) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
