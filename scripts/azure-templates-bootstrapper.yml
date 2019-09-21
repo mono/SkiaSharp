@@ -6,7 +6,6 @@ parameters:
   target: ''                # the bootstrapper target
   dependsOn: []             # the dependiencies
   requiredArtifacts: []     # the artifacts that this build needs to download
-  demands: []               # the demands
   preBuildSteps: []         # any steps to run before the build
   postBuildSteps: []        # any additional steps to run after the build
   additionalArgs: ''        # any additional arguments to pass to the bootstrapper
@@ -19,7 +18,7 @@ jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     pool:
-      vmImage: ${{ parameters.vmImage }}
+      name: ${{ parameters.vmImage }}
     condition: ${{ parameters.condition }}
     steps:
       - checkout: none
@@ -51,8 +50,7 @@ jobs:
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
     pool:
-      vmImage: ${{ parameters.vmImage }}
-      demands: ${{ parameters.demands }}
+      name: ${{ parameters.vmImage }}
     dependsOn: ${{ parameters.dependsOn }}
     condition: ${{ parameters.condition }}
     steps:

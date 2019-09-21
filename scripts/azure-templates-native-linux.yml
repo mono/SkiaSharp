@@ -13,7 +13,7 @@ jobs:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     pool:
-      vmImage: ${{ parameters.vmImage }}
+      name: ${{ parameters.vmImage }}
     condition: ${{ parameters.condition }}
     steps:
       - checkout: none
@@ -45,7 +45,7 @@ jobs:
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
     pool:
-      vmImage: $(VM_IMAGE_LINUX)
+      name: $(VM_IMAGE_LINUX)
     container: ubuntu:14.04
     steps:
       - checkout: self
