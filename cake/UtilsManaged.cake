@@ -105,6 +105,7 @@ void RunNetCoreTests (FilePath testAssembly)
     if (!string.IsNullOrEmpty(filter)) {
         settings.Filter = filter;
     }
+    settings.Filter = "FullyQualifiedName=SkiaSharp.Tests.SKDocumentTest.StreamIsNotCollectedPrematurely";
     DotNetCoreTest(testAssembly.GetFilename().ToString(), settings);
 }
 
