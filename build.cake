@@ -137,15 +137,6 @@ Task ("tests-only")
     .Does (() =>
 {
     var RunDesktopTest = new Action<string> (arch => {
-        var platform = "";
-        if (IsRunningOnWindows ()) {
-            platform = "windows";
-        } else if (IsRunningOnMac ()) {
-            platform = "mac";
-        } else if (IsRunningOnLinux ()) {
-            platform = "linux";
-        }
-
         RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", platform: arch == "AnyCPU" ? "Any CPU" : arch);
         RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Tests.dll", arch == "x86");
     });
