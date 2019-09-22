@@ -31,7 +31,7 @@ var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
 var AZURE_BUILD_ID = Argument ("azureBuildId", "");
 var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
 var ADDITIONAL_GN_ARGS = Argument ("additionalGnArgs", "");
-var CONFIGURATION = "Debug"; //Argument ("c", Argument ("configuration", Argument ("Configuration", "Release")));
+var CONFIGURATION = Argument ("c", Argument ("configuration", Argument ("Configuration", "Release")));
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
