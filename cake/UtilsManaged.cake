@@ -72,7 +72,7 @@ void RunTests (FilePath testAssembly, bool is32)
         XmlReport = true,
         UseX86 = is32,
         NoAppDomain = true,
-        Parallelism = ParallelismOption.None,
+        Parallelism = ParallelismOption.All,
         OutputDirectory = dir,
         WorkingDirectory = dir,
         ArgumentCustomization = args => args.Append ("-verbose"),
