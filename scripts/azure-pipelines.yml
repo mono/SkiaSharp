@@ -26,8 +26,8 @@ variables:
   VM_IMAGE_MAC: Hosted macOS
   VM_IMAGE_LINUX: Hosted Ubuntu 1604
 
-  # # To speed up builds when debugging DevOps
-  # DOWNLOAD_EXTERNALS: '3070578'
+  # To speed up builds when debugging DevOps
+  DOWNLOAD_EXTERNALS: '3073335'
 
 resources:
   repositories:
@@ -316,12 +316,19 @@ stages:
             - native_win32_windows
           postBuildSteps:
             - task: PublishTestResults@2
-              displayName: Publish the test results
+              displayName: Publish the .NET Framework test results
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/**/TestResults.xml'
-                testRunTitle: 'Windows Tests'
+                testResultsFiles: 'tests/windows/**/TestResults.xml'
+                testRunTitle: 'Windows .NET Framework Tests'
+            - task: PublishTestResults@2
+              displayName: Publish the .NET Core test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/netcore/**/TestResults.xml'
+                testRunTitle: 'Windows .NET Core Tests'
       - template: azure-templates-bootstrapper.yml # Tests (macOS)
         parameters:
           name: tests_macos
@@ -335,12 +342,19 @@ stages:
             - native_macos_macos
           postBuildSteps:
             - task: PublishTestResults@2
-              displayName: Publish the test results
+              displayName: Publish the Mono test results
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/**/TestResults.xml'
-                testRunTitle: 'macOS Tests'
+                testResultsFiles: 'tests/mac/**/TestResults.xml'
+                testRunTitle: 'macOS Mono Tests'
+            - task: PublishTestResults@2
+              displayName: Publish the .NET Core test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/netcore/**/TestResults.xml'
+                testRunTitle: 'macOS .NET Core Tests'
       - template: azure-templates-bootstrapper.yml # Tests (Linux)
         parameters:
           name: tests_linux
@@ -355,12 +369,19 @@ stages:
             - native_linux_linux
           postBuildSteps:
             - task: PublishTestResults@2
-              displayName: Publish the test results
+              displayName: Publish the Mono test results
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/**/TestResults.xml'
-                testRunTitle: 'Linux Tests'
+                testResultsFiles: 'tests/linux/**/TestResults.xml'
+                testRunTitle: 'Linux Mono Tests'
+            - task: PublishTestResults@2
+              displayName: Publish the .NET Core test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/netcore/**/TestResults.xml'
+                testRunTitle: 'Linux .NET Core Tests'
       - template: azure-templates-bootstrapper.yml # Tests [No Dependencies] (Linux)
         parameters:
           name: tests_nodependencies_linux
@@ -375,12 +396,19 @@ stages:
             - native_linux_nodependencies_linux
           postBuildSteps:
             - task: PublishTestResults@2
-              displayName: Publish the test results
+              displayName: Publish the Mono test results
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/**/TestResults.xml'
-                testRunTitle: 'Linux [No Dependencies] Tests'
+                testResultsFiles: 'tests/linux/**/TestResults.xml'
+                testRunTitle: 'Linux [No Dependencies] Mono Tests'
+            - task: PublishTestResults@2
+              displayName: Publish the .NET Core test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/netcore/**/TestResults.xml'
+                testRunTitle: 'Linux [No Dependencies] .NET Core Tests'
 
   - stage: samples
     displayName: Build Samples
