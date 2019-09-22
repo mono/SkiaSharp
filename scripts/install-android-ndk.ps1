@@ -20,7 +20,7 @@ $ndk = "$HOME/android-ndk"
 if ($InstallDestination) {
     $ndk = $InstallDestination
 }
-Write-Host "Install destination is '$ts'..."
+Write-Host "Install destination is '$ndk'..."
 
 $ndkTemp = "$HOME/android-ndk-temp"
 $install = "$ndkTemp/android-ndk.zip"
