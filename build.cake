@@ -146,7 +146,6 @@ Task ("tests-only")
             platform = "linux";
         }
 
-        EnsureDirectoryExists ($"./output/tests/{platform}/{arch}");
         RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", platform: arch == "AnyCPU" ? "Any CPU" : arch);
         RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Tests.dll", arch == "x86");
     });
@@ -165,7 +164,6 @@ Task ("tests-only")
     }
 
     // .NET Core
-    EnsureDirectoryExists ("./output/tests/netcore");
     RunMSBuild ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.sln");
     RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
 });

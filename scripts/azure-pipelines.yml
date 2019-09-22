@@ -320,14 +320,14 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/windows/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
                 testRunTitle: 'Windows .NET Framework Tests'
             - task: PublishTestResults@2
               displayName: Publish the .NET Core test results
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/netcore/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
                 testRunTitle: 'Windows .NET Core Tests'
       - template: azure-templates-bootstrapper.yml # Tests (macOS)
         parameters:
@@ -346,14 +346,14 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/mac/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
                 testRunTitle: 'macOS Mono Tests'
             - task: PublishTestResults@2
               displayName: Publish the .NET Core test results
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/netcore/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
                 testRunTitle: 'macOS .NET Core Tests'
       - template: azure-templates-bootstrapper.yml # Tests (Linux)
         parameters:
@@ -373,14 +373,14 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/linux/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
                 testRunTitle: 'Linux Mono Tests'
             - task: PublishTestResults@2
               displayName: Publish the .NET Core test results
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/netcore/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
                 testRunTitle: 'Linux .NET Core Tests'
       - template: azure-templates-bootstrapper.yml # Tests [No Dependencies] (Linux)
         parameters:
@@ -400,14 +400,14 @@ stages:
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/linux/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
                 testRunTitle: 'Linux [No Dependencies] Mono Tests'
             - task: PublishTestResults@2
               displayName: Publish the .NET Core test results
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/netcore/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
                 testRunTitle: 'Linux [No Dependencies] .NET Core Tests'
 
   - stage: samples
