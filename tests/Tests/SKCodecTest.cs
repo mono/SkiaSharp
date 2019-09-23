@@ -180,7 +180,7 @@ namespace SkiaSharp.Tests
 					if (index > 0) {
 						decodeInfo = info.WithAlphaType (frameInfos [index].AlphaType);
 					}
-					bm.TryAllocPixels (decodeInfo);
+					Assert.True (bm.TryAllocPixels (decodeInfo));
 					if (cachedIndex != -1) {
 						Assert.True (cachedFrames [cachedIndex].CopyTo (bm));
 					}
