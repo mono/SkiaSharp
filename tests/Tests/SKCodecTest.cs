@@ -199,8 +199,8 @@ namespace SkiaSharp.Tests
 					var uncachedFrame = new SKBitmap ();
 					decode (uncachedFrame, frameInfos [i].RequiredFrame, i);
 
-					var cachedBytes = cachedFrame.Bytes;
-					var uncachedBytes = uncachedFrame.Bytes;
+					var cachedBytes = cachedFrame.GetPixelSpan ().ToArray ();
+					var uncachedBytes = uncachedFrame.GetPixelSpan ().ToArray ();
 					Assert.Equal (cachedBytes, uncachedBytes);
 				}
 			}
