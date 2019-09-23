@@ -1,57 +1,33 @@
 parameters:
-  name: ''                  # in the form type_platform_host
-  displayName: ''           # the human name
-  vmImage: ''               # the VM image
-  packages: ''              # any additional packages
-  target: ''                # the bootstrapper target
-  dependsOn: []             # the dependiencies
-  requiredArtifacts: []     # the artifacts that this build needs to download
-  demands: []               # the demands
-  preBuildSteps: []         # any steps to run before the build
-  postBuildSteps: []        # any additional steps to run after the build
-  additionalArgs: ''        # any additional arguments to pass to the bootstrapper
-  retryCount: 1             # the number of times to retry the bootstrapper
-  condition: succeeded()    # whether or not to run this template
-  shouldPublish: true       # whether or not to publish the artifacts
-  carrots: '$(CONFIGURATION)'
+  name: ''                                      # in the form type_platform_host
+  displayName: ''                               # the human name
+  vmImage: ''                                   # the VM image
+  packages: ''                                  # any additional packages
+  target: ''                                    # the bootstrapper target
+  dependsOn: []                                 # the dependiencies
+  requiredArtifacts: []                         # the artifacts that this build needs to download
+  demands: []                                   # the demands
+  preBuildSteps: []                             # any steps to run before the build
+  postBuildSteps: []                            # any additional steps to run after the build
+  additionalArgs: ''                            # any additional arguments to pass to the bootstrapper
+  retryCount: 1                                 # the number of times to retry the bootstrapper
+  condition: succeeded()                        # whether or not to run this template
+  shouldPublish: true                           # whether or not to publish the artifacts
+  configuration: '$(CONFIGURATION)'             # the build configuration
+  buildExternals: '$(DOWNLOAD_EXTERNALS)'       # the build number to download externals from
+  verbosity: '$(VERBOSITY)'                     # the level of verbosity to use when building
 
 jobs:
-- ${{ if startsWith(parameters.name, 'native_') }}:
-  - job: ${{ parameters.name }}
-    displayName: ${{ parameters.displayName }}
-    pool:
-      name: ${{ parameters.vmImage }}
-    condition: ${{ parameters.condition }}
-    steps:
-      - checkout: none
-      - pwsh: echo "-c $(CONFIGURATION)"
-      - pwsh: echo "-c ${{ coalesce(variables.CONFIGURATION, 'Release') }}"
-      - pwsh: echo "-c ${{ coalesce(variables['CONFIGURATION'], 'Release') }}"
-      - pwsh: echo "-c ${{ coalesce(parameters.carrots, 'Release') }}"
-      - task: DownloadBuildArtifacts@0
-        displayName: Download the pre-built ${{ parameters.name }} artifacts
-        inputs:
-          buildType: 'specific'
-          project: '$(System.TeamProjectId)'
-          pipeline: '$(System.DefinitionId)'
-          buildVersionToDownload: 'specific'
-          buildId: '$(DOWNLOAD_EXTERNALS)'
-          downloadType: 'single'
-          artifactName: ${{ parameters.name }}
-          downloadPath: 'download-temp'
-      - powershell: |
-          New-Item '.\output\' -Type Directory -Force | Out-Null
-          Get-ChildItem '.\download-temp\${{ parameters.name }}\' | Copy-Item -Destination '.\output\' -Recurse -Force
-          Remove-Item '.\download-temp\${{ parameters.name }}\' -Recurse -Force
-        displayName: Move the ${{ parameters.name }} artifacts to the output directory
-      - task: PublishBuildArtifacts@1
-        displayName: Publish the ${{ parameters.name }} artifacts
-        condition: ${{ parameters.shouldPublish }}
-        inputs:
-          artifactName: ${{ parameters.name }}
-          pathToPublish: 'output'
+- ${{ if and(parameters.buildExternals, startsWith(parameters.name, 'native_')) }}:
+  - template: azure-templates-download.yml
+    parameters:
+      name: ${{ parameters.name }}
+      displayName: ${{ parameters.displayName }}
+      vmImage: ${{ parameters.vmImage }}
+      condition: ${{ parameters.condition }}
+      buildExternals: ${{ parameters.buildExternals }}
 
-- ${{ if not(startsWith(parameters.name, 'native_')) }}:
+- ${{ if or(not(parameters.buildExternals), not(startsWith(parameters.name, 'native_'))) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
@@ -128,12 +104,12 @@ jobs:
       - ${{ parameters.preBuildSteps }}
       # build
       - ${{ if endsWith(parameters.name, '_windows') }}:
-        - powershell: .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} { .\bootstrapper.ps1 -t ${{ parameters.target }} -v $env:VERBOSITY -c ${{ coalesce(variables.CONFIGURATION, 'Release') }} ${{ parameters.additionalArgs }} }
+        - powershell: .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} { .\bootstrapper.ps1 -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} }
           env:
             JavaSdkDirectory: $(JAVA_HOME)
           displayName: Run the bootstrapper for ${{ parameters.target }}
       - ${{ if not(endsWith(parameters.name, '_windows')) }}:
-        - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY -c ${{ coalesce(variables.CONFIGURATION, 'Release') }} ${{ parameters.additionalArgs }}
+        - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
           env:
             JavaSdkDirectory: $(JAVA_HOME)
           displayName: Run the bootstrapper for ${{ parameters.target }}
