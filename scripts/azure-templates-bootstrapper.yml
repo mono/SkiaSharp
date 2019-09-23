@@ -24,7 +24,6 @@ jobs:
     condition: ${{ parameters.condition }}
     steps:
       - checkout: none
-      - pwsh: echo "-c ${{ coalesce($(CONFIGURATION), 'Release') }}"
       - pwsh: echo "-c ${{ coalesce(variables.CONFIGURATION, 'Release') }}"
       - pwsh: echo "-c ${{ coalesce(variables['CONFIGURATION'], 'Release') }}"
       - pwsh: echo "-c ${{ coalesce(parameters.carrots, 'Release') }}"
