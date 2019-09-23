@@ -184,7 +184,12 @@ namespace SkiaSharp
 			return GetObject<SKData> (SkiaApi.sk_data_new_subset (Handle, (IntPtr) offset, (IntPtr) length));
 		}
 
-		public byte[] ToArray () => AsSpan ().ToArray ();
+		public byte[] ToArray ()
+		{
+			var array = AsSpan ().ToArray ();
+			GC.KeepAlive (this);
+			return array;
+		}
 
 		public bool IsEmpty => Size == 0;
 

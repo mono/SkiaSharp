@@ -69,9 +69,21 @@ namespace HarfBuzzSharp
 			set => HarfBuzzApi.hb_buffer_set_unicode_funcs (Handle, value.Handle);
 		}
 
-		public GlyphInfo[] GlyphInfos => GetGlyphInfoSpan ().ToArray ();
+		public GlyphInfo[] GlyphInfos {
+			get {
+				var array = GetGlyphInfoSpan ().ToArray ();
+				GC.KeepAlive (this);
+				return array;
+			}
+		}
 
-		public GlyphPosition[] GlyphPositions => GetGlyphPositionSpan ().ToArray ();
+		public GlyphPosition[] GlyphPositions {
+			get {
+				var array = GetGlyphPositionSpan ().ToArray ();
+				GC.KeepAlive (this);
+				return array;
+			}
+		}
 
 		public void Add (uint codepoint, uint cluster)
 		{
