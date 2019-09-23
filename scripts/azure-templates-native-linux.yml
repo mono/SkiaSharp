@@ -1,19 +1,32 @@
 parameters:
-  name: ''            # in the form type_platform_host
-  displayName: ''     # the human name
-  packages: ''        # any additional packages
-  target: ''          # the bootstrapper target
-  preBuildSteps: []   # any steps to run before the build
-  postBuildSteps: []  # any additional steps to run after the build
-  additionalArgs: ''  # any additional arguments to pass to the bootstrapper
-  retryCount: 1       # the number of times to retry the bootstrapper
+  name: ''                                      # in the form type_platform_host
+  displayName: ''                               # the human name
+  vmImage: ''                                   # the VM image
+  packages: ''                                  # any additional packages
+  target: ''                                    # the bootstrapper target
+  preBuildSteps: []                             # any steps to run before the build
+  postBuildSteps: []                            # any additional steps to run after the build
+  additionalArgs: ''                            # any additional arguments to pass to the bootstrapper
+  retryCount: 1                                 # the number of times to retry the bootstrapper
+  configuration: '$(CONFIGURATION)'             # the build configuration
+  buildExternals: '$(DOWNLOAD_EXTERNALS)'       # the build number to download externals from
+  verbosity: '$(VERBOSITY)'                     # the level of verbosity to use when building
 
 jobs:
+# - ${{ if and(parameters.buildExternals, startsWith(parameters.name, 'native_')) }}:
+#   - template: azure-templates-download.yml
+#     parameters:
+#       name: ${{ parameters.name }}
+#       displayName: ${{ parameters.displayName }}
+#       vmImage: ${{ parameters.vmImage }}
+#       buildExternals: ${{ parameters.buildExternals }}
+
+# - ${{ if or(not(parameters.buildExternals), not(startsWith(parameters.name, 'native_'))) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
     pool:
-      vmImage: $(VM_IMAGE_LINUX)
+      name: ${{ parameters.vmImage }}
     container: ubuntu:14.04
     steps:
       - checkout: self
@@ -30,7 +43,7 @@ jobs:
       # pre-build steps
       - ${{ parameters.preBuildSteps }}
       # build
-      - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v $VERBOSITY -c ${{ coalesce(variables.CONFIGURATION, 'Release') }} ${{ parameters.additionalArgs }}
+      - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
         displayName: Run the bootstrapper for ${{ parameters.target }}
         env:
           CC: clang-3.8

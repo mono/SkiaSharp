@@ -180,7 +180,7 @@ namespace SkiaSharp.Tests
 					if (index > 0) {
 						decodeInfo = info.WithAlphaType (frameInfos [index].AlphaType);
 					}
-					bm.TryAllocPixels (decodeInfo);
+					Assert.True (bm.TryAllocPixels (decodeInfo));
 					if (cachedIndex != -1) {
 						Assert.True (cachedFrames [cachedIndex].CopyTo (bm));
 					}
@@ -199,7 +199,9 @@ namespace SkiaSharp.Tests
 					var uncachedFrame = new SKBitmap ();
 					decode (uncachedFrame, frameInfos [i].RequiredFrame, i);
 
-					Assert.Equal (cachedFrame.Bytes, uncachedFrame.Bytes);
+					var cachedBytes = cachedFrame.Bytes;
+					var uncachedBytes = uncachedFrame.Bytes;
+					Assert.Equal (cachedBytes, uncachedBytes);
 				}
 			}
 		}

@@ -392,7 +392,13 @@ namespace SkiaSharp
 			// no-op due to unsupperted action
 		}
 
-		public byte[] Bytes => GetPixelSpan ().ToArray ();
+		public byte[] Bytes {
+			get {
+				var array = GetPixelSpan ().ToArray ();
+				GC.KeepAlive (this);
+				return array;
+			}
+		}
 
 		public SKColor[] Pixels {
 			get { 

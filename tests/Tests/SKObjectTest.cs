@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -131,9 +133,8 @@ namespace SkiaSharp.Tests
 			var inst1 = new LifecycleObject(handle, true) { Value = 1 };
 
 #if THROW_OBJECT_EXCEPTIONS
-			Assert.Throws<InvalidOperationException>(() => new LifecycleObject(handle, true) { Value = 2 });
-
-			GarbageCleanupFixture.ignoredExceptions.Add(handle);
+			var ex = Assert.Throws<InvalidOperationException>(() => new LifecycleObject(handle, true) { Value = 2 });
+			Assert.Contains("H: " + handle.ToString("x") + " ", ex.Message);
 #else
 			var inst2 = new LifecycleObject(handle, true) { Value = 2 };
 			Assert.True(inst1.DestroyedNative);
@@ -228,6 +229,80 @@ namespace SkiaSharp.Tests
 			private static IntPtr broken_native_method()
 			{
 				throw new Exception("BREAK!");
+			}
+		}
+
+		[SkippableTheory]
+		[InlineData(1)]
+		[InlineData(1000)]
+		public async Task EnsureMultithreadingDoesNotThrow(int iterations)
+		{
+			var imagePath = Path.Combine(PathToImages, "baboon.jpg");
+
+			var tasks = new Task[iterations];
+
+			for (var i = 0; i < iterations; i++)
+			{
+				var task = new Task(() =>
+				{
+					using (var stream = File.OpenRead(imagePath))
+					using (var data = SKData.Create(stream))
+					using (var codec = SKCodec.Create(data))
+					{
+						var info = new SKImageInfo(codec.Info.Width, codec.Info.Height);
+						using (var image = SKBitmap.Decode(codec, info))
+						{
+							var img = new byte[image.Height, image.Width];
+						}
+					}
+				});
+
+				tasks[i] = task;
+				task.Start();
+			}
+
+			await Task.WhenAll(tasks);
+		}
+
+		[SkippableFact]
+		public void EnsureConcurrencyResultsInCorrectDeregistration()
+		{
+			var handle = (IntPtr)446;
+
+			var obj = new ImmediateRecreationObject(handle, true);
+			Assert.Null(obj.NewInstance);
+			Assert.Equal(obj, SKObject.instances[handle]?.Target);
+
+			obj.Dispose();
+			Assert.True(SKObject.GetInstance<ImmediateRecreationObject>(handle, out _));
+
+			var newObj = obj.NewInstance;
+
+			Assert.NotEqual(obj, SKObject.instances[handle]?.Target);
+			Assert.Equal(newObj, SKObject.instances[handle]?.Target);
+
+			newObj.Dispose();
+			Assert.False(SKObject.GetInstance<ImmediateRecreationObject>(handle, out _));
+		}
+
+		private class ImmediateRecreationObject : SKObject
+		{
+			public ImmediateRecreationObject(IntPtr handle, bool shouldRecreate)
+				: base(handle, true)
+			{
+				ShouldRecreate = shouldRecreate;
+			}
+
+			public bool ShouldRecreate { get; }
+
+			public ImmediateRecreationObject NewInstance { get; private set; }
+
+			protected override void DisposeNative()
+			{
+				base.DisposeNative();
+
+				if (ShouldRecreate)
+					NewInstance = new ImmediateRecreationObject(Handle, false);
 			}
 		}
 	}
