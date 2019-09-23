@@ -392,7 +392,14 @@ namespace SkiaSharp
 			// no-op due to unsupperted action
 		}
 
-		public byte[] Bytes => GetPixelSpan ().ToArray ();
+		public byte[] Bytes {
+			get {
+				var pixelsPtr = GetPixels (out var length);
+				byte [] bytes = new byte [(int)length];
+				Marshal.Copy (pixelsPtr, bytes, 0, (int)length);
+				return bytes;
+			}
+		}
 
 		public SKColor[] Pixels {
 			get { 
