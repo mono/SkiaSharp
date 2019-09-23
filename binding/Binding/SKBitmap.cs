@@ -394,10 +394,9 @@ namespace SkiaSharp
 
 		public byte[] Bytes {
 			get {
-				var pixelsPtr = GetPixels (out var length);
-				byte [] bytes = new byte [(int)length];
-				Marshal.Copy (pixelsPtr, bytes, 0, (int)length);
-				return bytes;
+				var array = GetPixelSpan ().ToArray ();
+				GC.KeepAlive (this);
+				return array;
 			}
 		}
 
