@@ -48,14 +48,12 @@ stages:
           displayName: Build Native Android (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-android
-          buildExternals: $(DOWNLOAD_EXTERNALS)
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (Windows)
         parameters:
           name: native_tizen_windows
           displayName: Build Native Tizen (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-tizen
-          buildExternals: $(DOWNLOAD_EXTERNALS)
           condition: false # TODO: TIZEN INSTALL BUGS
       - template: azure-templates-bootstrapper.yml # Build Native UWP (Windows)
         parameters:
@@ -63,14 +61,12 @@ stages:
           displayName: Build Native UWP (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-uwp
-          buildExternals: $(DOWNLOAD_EXTERNALS)
       - template: azure-templates-bootstrapper.yml # Build Native Win32 (Windows)
         parameters:
           name: native_win32_windows
           displayName: Build Native Win32 (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-windows
-          buildExternals: $(DOWNLOAD_EXTERNALS)
       # NATIVE JOBS - MAC
       - template: azure-templates-bootstrapper.yml # Build Native Android (macOS)
         parameters:
@@ -78,28 +74,24 @@ stages:
           displayName: Build Native Android (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: externals-android
-          buildExternals: $(DOWNLOAD_EXTERNALS)
       - template: azure-templates-bootstrapper.yml # Build Native iOS (macOS)
         parameters:
           name: native_ios_macos
           displayName: Build Native iOS (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: externals-ios
-          buildExternals: $(DOWNLOAD_EXTERNALS)
       - template: azure-templates-bootstrapper.yml # Build Native macOS (macOS)
         parameters:
           name: native_macos_macos
           displayName: Build Native macOS (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: externals-macos
-          buildExternals: $(DOWNLOAD_EXTERNALS)
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (macOS)
         parameters:
           name: native_tizen_macos
           displayName: Build Native Tizen (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: externals-tizen
-          buildExternals: $(DOWNLOAD_EXTERNALS)
           condition: false # TODO: TIZEN INSTALL BUGS
       - template: azure-templates-bootstrapper.yml # Build Native tvOS (macOS)
         parameters:
@@ -107,14 +99,12 @@ stages:
           displayName: Build Native tvOS (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: externals-tvos
-          buildExternals: $(DOWNLOAD_EXTERNALS)
       - template: azure-templates-bootstrapper.yml # Build Native watchOS (macOS)
         parameters:
           name: native_watchos_macos
           displayName: Build Native watchOS (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: externals-watchos
-          buildExternals: $(DOWNLOAD_EXTERNALS)
       # NATIVE JOBS - LINUX
       - template: azure-templates-native-linux.yml # Build Native Linux (Linux)
         parameters:
@@ -123,7 +113,6 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(NATIVE_LINUX_PACKAGES)
           target: externals-linux
-          buildExternals: $(DOWNLOAD_EXTERNALS)
       - template: azure-templates-native-linux.yml # Build Native Linux [No Dependencies] (Linux)
         parameters:
           name: native_linux_nodependencies_linux
@@ -131,7 +120,6 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(NATIVE_LINUX_PACKAGES)
           target: externals-linux
-          buildExternals: $(DOWNLOAD_EXTERNALS)
           additionalArgs: --additionalGnArgs="skia_use_fontconfig=false"
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (Linux)
         parameters:
@@ -140,7 +128,6 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(TIZEN_LINUX_PACKAGES)
           target: externals-tizen
-          buildExternals: $(DOWNLOAD_EXTERNALS)
 
   - stage: managed
     displayName: Build Managed
