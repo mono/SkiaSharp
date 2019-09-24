@@ -11,7 +11,10 @@ variables:
   VERBOSITY: normal
   GIT_SHA: $(Build.SourceVersion)
   GIT_BRANCH_NAME: $(Build.SourceBranchName)
-  BUILD_NUMBER: $[counter('$(Build.SourceBranchName)_counter', 1)]
+  - ${{ if eq(variables['Build.SourceBranchName'], 'master') }}:
+    BUILD_NUMBER: $[counter('master_counter', 1)]
+  - ${{ if ne(variables['Build.SourceBranchName'], 'master') }}:
+    BUILD_NUMBER: $[counter('$(Build.SourceBranchName)_counter', 1)]
   FEATURE_NAME: ''
   PREVIEW_LABEL: 'rc'
   NATIVE_LINUX_PACKAGES: curl mono-complete msbuild python git libfontconfig1-dev clang-3.8 make
@@ -27,8 +30,8 @@ variables:
   VM_IMAGE_LINUX: Hosted Ubuntu 1604
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 
-  # # To speed up builds when debugging DevOps
-  # DOWNLOAD_EXTERNALS: ''
+  # To speed up builds when debugging DevOps
+  DOWNLOAD_EXTERNALS: '3077731'
 
 resources:
   repositories:

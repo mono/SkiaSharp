@@ -13,15 +13,15 @@ parameters:
   verbosity: '$(VERBOSITY)'                     # the level of verbosity to use when building
 
 jobs:
-# - ${{ if and(parameters.buildExternals, startsWith(parameters.name, 'native_')) }}:
-#   - template: azure-templates-download.yml
-#     parameters:
-#       name: ${{ parameters.name }}
-#       displayName: ${{ parameters.displayName }}
-#       vmImage: ${{ parameters.vmImage }}
-#       buildExternals: ${{ parameters.buildExternals }}
+- ${{ if and(parameters.buildExternals, startsWith(parameters.name, 'native_')) }}:
+  - template: azure-templates-download.yml
+    parameters:
+      name: ${{ parameters.name }}
+      displayName: ${{ parameters.displayName }}
+      vmImage: ${{ parameters.vmImage }}
+      buildExternals: ${{ parameters.buildExternals }}
 
-# - ${{ if or(not(parameters.buildExternals), not(startsWith(parameters.name, 'native_'))) }}:
+- ${{ if or(not(parameters.buildExternals), not(startsWith(parameters.name, 'native_'))) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
