@@ -11,7 +11,7 @@ variables:
   VERBOSITY: normal
   GIT_SHA: $(Build.SourceVersion)
   GIT_BRANCH_NAME: $(Build.SourceBranchName)
-  BUILD_NUMBER: $[counter(variables['Build.SourceBranchName'], 150)]
+  BUILD_NUMBER: $[counter('dogs', 150)]
   FEATURE_NAME: ''
   PREVIEW_LABEL: 'rc'
   NATIVE_LINUX_PACKAGES: curl mono-complete msbuild python git libfontconfig1-dev clang-3.8 make
