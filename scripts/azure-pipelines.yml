@@ -11,6 +11,8 @@ variables:
   VERBOSITY: normal
   GIT_SHA: $(Build.SourceVersion)
   GIT_BRANCH_NAME: $(Build.SourceBranchName)
+  TEST1: '$(Build.SourceBranchName)_counter'
+  TEST2: format('{0}_counter', variables['Build.SourceBranchName'])
   BUILD_NUMBER: $[counter(format('{0}_counter', variables['Build.SourceBranchName']), 1)]
   FEATURE_NAME: ''
   PREVIEW_LABEL: 'rc'
