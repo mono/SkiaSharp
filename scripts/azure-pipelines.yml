@@ -11,9 +11,9 @@ variables:
   VERBOSITY: normal
   GIT_SHA: $(Build.SourceVersion)
   GIT_BRANCH_NAME: $(Build.SourceBranchName)
-  - ${{ if eq(variables['Build.SourceBranchName'], 'master') }}:
+  ${{ if eq(variables['Build.SourceBranchName'], 'master') }}:
     BUILD_NUMBER: $[counter('master_counter', 1)]
-  - ${{ if ne(variables['Build.SourceBranchName'], 'master') }}:
+  ${{ if ne(variables['Build.SourceBranchName'], 'master') }}:
     BUILD_NUMBER: $[counter('$(Build.SourceBranchName)_counter', 1)]
   FEATURE_NAME: ''
   PREVIEW_LABEL: 'rc'
