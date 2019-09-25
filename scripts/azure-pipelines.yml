@@ -9,9 +9,9 @@ variables:
   GIT_BRANCH_NAME: $(Build.SourceBranchName)
   ${{ if eq(variables['Build.SourceBranchName'], 'master') }}:
     BUILD_NUMBER: $[counter('master_counter', 150)]
-  ${{ if eq(variables['Build.SourceBranchName'], 'dev/test-vars') }}:
+  ${{ if eq(variables['Build.SourceBranchName'], 'test-vars') }}:
     BUILD_NUMBER: $[counter('test1_counter', 200)]
-  ${{ if eq(variables['Build.SourceBranchName'], 'dev/test-vars2') }}:
+  ${{ if eq(variables['Build.SourceBranchName'], 'test-vars2') }}:
     BUILD_NUMBER: $[counter('test2_counter', 300)]
   # ${{ if ne(variables['Build.SourceBranchName'], 'master') }}:
   #   BUILD_NUMBER: $[counter('$(Build.SourceBranchName)_counter', 700)]
