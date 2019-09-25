@@ -34,7 +34,7 @@ variables:
   DOWNLOAD_EXTERNALS: '3077731'
 
   major: $(Build.SourceBranch)
-  minor: $[counter(variables['Build.SourceBranch'], 200)]
+  minor: $[counter('$(Build.SourceBranch)', 200)]
 
 resources:
   repositories:
