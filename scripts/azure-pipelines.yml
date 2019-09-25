@@ -33,7 +33,7 @@ variables:
   # To speed up builds when debugging DevOps
   DOWNLOAD_EXTERNALS: '3077731'
 
-  major: variables['Build.SourceBranchName']
+  major: $(Build.SourceBranchName)
   minor: $[counter(variables['major'], 100)]
 
 resources:
