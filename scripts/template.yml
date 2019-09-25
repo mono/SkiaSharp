@@ -5,6 +5,8 @@ parameters:
 steps:
   - powershell: |
       echo "the branch = $(Build.SourceBranch)"
+      echo "before = $(empty)"
+      echo "argh = ${{ coalesce(variables['empty'], 'dogs') }}"
       echo "init = ${{ coalesce(variables['Build.SourceBranch'], 'dogs') }}"
       echo "first = ${{ coalesce(parameters.branch1, 'dogs') }}"
       echo "second = ${{ coalesce(parameters.branch2, 'dogs') }}"

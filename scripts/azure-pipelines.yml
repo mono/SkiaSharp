@@ -48,6 +48,7 @@ steps:
   - checkout: none
   - powershell: |
       echo "the branch = $(Build.SourceBranch)"
+      echo "argh = ${{ coalesce(variables['empty'], 'dogs') }}"
       echo "first = ${{ coalesce(variables['Build.SourceBranch'], 'dogs') }}"
       echo "minor = $(minor)"
   - template: template.yml
