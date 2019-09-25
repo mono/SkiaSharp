@@ -46,10 +46,11 @@ resources:
 
 steps:
   - checkout: none
-  - powershell: echo "the branch = $(Build.SourceBranch)"
-  - powershell: echo "first = ${{ coalesce(variables['empty'], 'dogs') }}"
-  - powershell: echo "second = ${{ coalesce(variables.empty, 'dogs') }}"
-  - powershell: echo "minor = $(minor)"
+  - powershell: |
+      echo "the branch = $(Build.SourceBranch)"
+      echo "first = ${{ coalesce(variables['empty'], 'dogs') }}"
+      echo "second = ${{ coalesce(variables.empty, 'dogs') }}"
+      echo "minor = $(minor)"
 
 # stages:
 #   - stage: native
