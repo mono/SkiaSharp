@@ -33,6 +33,7 @@ variables:
   # To speed up builds when debugging DevOps
   DOWNLOAD_EXTERNALS: '3077731'
 
+  empty: '123'
   major: $(Build.SourceBranch)
   minor: $[counter(format('{0}_counter', variables['Build.SourceBranch']), 200)]
 
@@ -46,7 +47,8 @@ resources:
 steps:
   - checkout: none
   - powershell: echo "the branch = $(Build.SourceBranch)"
-  - powershell: echo "major = $(major)"
+  - powershell: echo "first = ${{ coalesce(variables['empty'], 'dogs') }}"
+  - powershell: echo "second = ${{ coalesce(variables.empty, 'dogs') }}"
   - powershell: echo "minor = $(minor)"
 
 # stages:
