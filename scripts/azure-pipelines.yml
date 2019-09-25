@@ -11,7 +11,7 @@ variables:
     BUILD_NUMBER: $[counter('master_counter', 150)]
   ${{ if eq(variables['Build.SourceBranch'], 'refs/pull/962/merge') }}:
     BUILD_NUMBER: $[counter('test1_counter', 200)]
-  ${{ if eq(variables['Build.SourceBranch'], 'refs/pull/963/merge') }}:
+  ${{ if eq(variables['Build.SourceBranch'], 'refs/pull/965/merge') }}:
     BUILD_NUMBER: $[counter('test2_counter', 300)]
   # ${{ if ne(variables['Build.SourceBranchName'], 'master') }}:
   #   BUILD_NUMBER: $[counter('$(Build.SourceBranchName)_counter', 700)]
@@ -34,7 +34,7 @@ variables:
   DOWNLOAD_EXTERNALS: '3077731'
 
   major: $(Build.SourceBranch)
-  minor: $[counter('$(Build.SourceBranch)', 200)]
+  minor: $[counter(variables['Build.SourceBranch'], 200)]
 
 resources:
   repositories:
