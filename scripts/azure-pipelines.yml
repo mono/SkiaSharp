@@ -13,8 +13,8 @@ variables:
     BUILD_NUMBER: $[counter('test1_counter', 200)]
   ${{ if eq(variables['Build.SourceBranchName'], 'dev/test-vars2') }}:
     BUILD_NUMBER: $[counter('test2_counter', 300)]
-  ${{ if ne(variables['Build.SourceBranchName'], 'master') }}:
-    BUILD_NUMBER: $[counter('$(Build.SourceBranchName)_counter', 700)]
+  # ${{ if ne(variables['Build.SourceBranchName'], 'master') }}:
+  #   BUILD_NUMBER: $[counter('$(Build.SourceBranchName)_counter', 700)]
   FEATURE_NAME: ''
   PREVIEW_LABEL: 'rc'
   NATIVE_LINUX_PACKAGES: curl mono-complete msbuild python git libfontconfig1-dev clang-3.8 make
