@@ -2,6 +2,5 @@
 steps:
   - powershell: |
       echo "the branch = $(Build.SourceBranch)"
-      echo "first = ${{ coalesce(variables['empty'], 'dogs') }}"
-      echo "second = ${{ coalesce(variables.empty, 'dogs') }}"
+      echo "first = ${{ coalesce(variables['Build.SourceBranch'], 'dogs') }}"
       echo "minor = $(minor)"
