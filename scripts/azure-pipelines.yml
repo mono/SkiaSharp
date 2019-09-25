@@ -33,6 +33,9 @@ variables:
   # To speed up builds when debugging DevOps
   DOWNLOAD_EXTERNALS: '3077731'
 
+  major: 1
+  minor: $[counter(variables['major'], 100)]
+
 resources:
   repositories:
     - repository: xamarin-templates
@@ -51,6 +54,8 @@ stages:
           displayName: Build Native Android (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-android
+          preBuildSteps:
+           - pwsh: echo $(minor)
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (Windows)
         parameters:
           name: native_tizen_windows
