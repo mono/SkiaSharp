@@ -1,0 +1,9 @@
+parameters:
+  buildExternals: $(DOWNLOAD_EXTERNALS)
+
+steps:
+- ${{ if ne(parameters.buildExternals, '') }}:
+  - powershell: echo hello!
+- ${{ if eq(parameters.buildExternals, '') }}:
+  - powershell: fail!
+- template: az-temp2.yml
