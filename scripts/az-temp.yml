@@ -7,3 +7,5 @@ steps:
 - ${{ if eq(parameters.buildExternals, '') }}:
   - powershell: echo "fail!"
 - template: az-temp2.yml
+  parameters:
+    buildExternals: ${{ parameters.buildExternals }}
