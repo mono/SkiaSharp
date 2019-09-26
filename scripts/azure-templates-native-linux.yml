@@ -8,20 +8,19 @@ parameters:
   postBuildSteps: []                            # any additional steps to run after the build
   additionalArgs: ''                            # any additional arguments to pass to the bootstrapper
   retryCount: 1                                 # the number of times to retry the bootstrapper
-  configuration: '$(CONFIGURATION)'             # the build configuration
-  buildExternals: '$(DOWNLOAD_EXTERNALS)'       # the build number to download externals from
-  verbosity: '$(VERBOSITY)'                     # the level of verbosity to use when building
+  configuration: $(CONFIGURATION)               # the build configuration
+  buildExternals: $(DOWNLOAD_EXTERNALS)         # the build number to download externals from
+  verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
 
 jobs:
-# - ${{ if and(parameters.buildExternals, startsWith(parameters.name, 'native_')) }}:
+# - ${{ if and(ne(parameters.buildExternals, ''), startsWith(parameters.name, 'native_')) }}:
 #   - template: azure-templates-download.yml
 #     parameters:
 #       name: ${{ parameters.name }}
 #       displayName: ${{ parameters.displayName }}
 #       vmImage: ${{ parameters.vmImage }}
-#       buildExternals: ${{ parameters.buildExternals }}
 
-# - ${{ if or(not(parameters.buildExternals), not(startsWith(parameters.name, 'native_'))) }}:
+# - ${{ if or(eq(parameters.buildExternals, ''), not(startsWith(parameters.name, 'native_'))) }}:
   - job: ${{ parameters.name }}
     displayName: ${{ parameters.displayName }}
     timeoutInMinutes: 120
