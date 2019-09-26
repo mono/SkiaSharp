@@ -8,9 +8,9 @@ parameters:
   postBuildSteps: []                            # any additional steps to run after the build
   additionalArgs: ''                            # any additional arguments to pass to the bootstrapper
   retryCount: 1                                 # the number of times to retry the bootstrapper
-  configuration: '$(CONFIGURATION)'             # the build configuration
-  buildExternals: '$(DOWNLOAD_EXTERNALS)'       # the build number to download externals from
-  verbosity: '$(VERBOSITY)'                     # the level of verbosity to use when building
+  configuration: $(CONFIGURATION)               # the build configuration
+  buildExternals: $(DOWNLOAD_EXTERNALS)         # the build number to download externals from
+  verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
 
 jobs:
 - ${{ if and(ne(parameters.buildExternals, ''), startsWith(parameters.name, 'native_')) }}:

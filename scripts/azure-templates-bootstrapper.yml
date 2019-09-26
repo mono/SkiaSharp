@@ -13,9 +13,9 @@ parameters:
   retryCount: 1                                 # the number of times to retry the bootstrapper
   condition: succeeded()                        # whether or not to run this template
   shouldPublish: true                           # whether or not to publish the artifacts
-  configuration: '$(CONFIGURATION)'             # the build configuration
-  buildExternals: '$(DOWNLOAD_EXTERNALS)'       # the build number to download externals from
-  verbosity: '$(VERBOSITY)'                     # the level of verbosity to use when building
+  configuration: $(CONFIGURATION)               # the build configuration
+  buildExternals: $(DOWNLOAD_EXTERNALS)         # the build number to download externals from
+  verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
 
 jobs:
 - ${{ if and(ne(parameters.buildExternals, ''), startsWith(parameters.name, 'native_')) }}:
