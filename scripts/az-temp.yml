@@ -3,9 +3,9 @@ parameters:
 
 steps:
 - ${{ if ne(parameters.buildExternals, '') }}:
-  - powershell: echo "hello!"
+  - powershell: echo "hello 11!${{ parameters.buildExternals }}!"
 - ${{ if eq(parameters.buildExternals, '') }}:
-  - powershell: echo "fail!"
+  - powershell: echo "fail 11!${{ parameters.buildExternals }}!"
 - template: az-temp2.yml
-  parameters:
-    buildExternals: ${{ parameters.buildExternals }}
+  # parameters:
+  #   buildExternals: ${{ parameters.buildExternals }}
