@@ -3,6 +3,6 @@ parameters:
 
 steps:
 - ${{ if ne(parameters['buildExternals'], '') }}:
-  - pwsh: echo "value = '${{ parameters['buildExternals'] }}' (something)"
+  - powershell: echo "value = '${{ parameters['buildExternals'] }}' (something)"
 - ${{ if eq(parameters['buildExternals'], '') }}:
-  - pwsh: echo "value = '${{ parameters['buildExternals'] }}' (empty)"
+  - powershell: echo "value = '${{ parameters['buildExternals'] }}' (empty)"
