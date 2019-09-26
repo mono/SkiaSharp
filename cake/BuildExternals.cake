@@ -469,9 +469,10 @@ Task ("externals-watchos")
         StripSign ($"output/native/watchos/{arch}/libSkiaSharp.framework");
     });
 
+    buildArch ("watchsimulator", "x86_64", "x64");
     buildArch ("watchsimulator", "i386", "x86");
     buildArch ("watchos", "armv7k", "arm");
-    buildArch ("watchos", "arm64_32", "arm");
+    buildArch ("watchos", "arm64_32", "arm64");
 
     // create the fat framework
     CopyDirectory ("output/native/watchos/armv7k/libSkiaSharp.framework/", "output/native/watchos/libSkiaSharp.framework/");
@@ -501,6 +502,7 @@ Task ("externals-watchos")
         StripSign ($"output/native/watchos/{arch}/libHarfBuzzSharp.a");
     });
 
+    buildHarfBuzzArch ("watchsimulator", "x86_64");
     buildHarfBuzzArch ("watchsimulator", "i386");
     buildHarfBuzzArch ("watchos", "armv7k");
     buildHarfBuzzArch ("watchos", "arm64_32");
