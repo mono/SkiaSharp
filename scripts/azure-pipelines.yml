@@ -35,6 +35,12 @@ resources:
 
 steps:
   - checkout: none
+  - ${{ if ne(variables['DOWNLOAD_EXTERNALS'], '') }}:
+    - powershell: echo "hello!${{ variables['DOWNLOAD_EXTERNALS'] }}!"
+      displayName: ECHO ${{ variables['DOWNLOAD_EXTERNALS'] }}
+  - ${{ if eq(variables['DOWNLOAD_EXTERNALS'], '') }}:
+    - powershell: echo "fail!${{ variables['DOWNLOAD_EXTERNALS'] }}!"
+      displayName: ECHO ${{ variables['DOWNLOAD_EXTERNALS'] }}
   - template: az-temp.yml
 
 # stages:
