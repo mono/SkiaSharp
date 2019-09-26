@@ -5,5 +5,5 @@ steps:
 - ${{ if ne(parameters.buildExternals, '') }}:
   - powershell: echo hello!
 - ${{ if eq(parameters.buildExternals, '') }}:
-  - powershell: fail!
+  - powershell: echo fail!
 - template: az-temp2.yml
