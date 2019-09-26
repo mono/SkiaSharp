@@ -35,12 +35,6 @@ resources:
 
 steps:
   - checkout: none
-  - ${{ if ne(variables.buildExternals, '') }}:
-    - powershell: echo "hello!${{ variables.buildExternals }}!"
-      displayName: ECHO ${{ variables.buildExternals }}
-  - ${{ if eq(variables.buildExternals, '') }}:
-    - powershell: echo "fail!${{ variables.buildExternals }}!
-      displayName: ECHO ${{ variables.buildExternals }}
   - template: az-temp.yml
 
 # stages:
