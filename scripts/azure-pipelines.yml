@@ -3,439 +3,461 @@ trigger:
   - refs/tags/*
 
 variables:
-  DOWNLOAD_EXTERNALS: ''
+  FEATURE_NAME_PREFIX: 'feature/'
+  VERBOSITY: normal
+  GIT_SHA: $(Build.SourceVersion)
+  GIT_BRANCH_NAME: $(Build.SourceBranchName)
+  BUILD_NUMBER: $[counter(format('{0}_counter', variables['Build.SourceBranchName']), 1)]
+  FEATURE_NAME: ''
+  PREVIEW_LABEL: 'rc'
+  NATIVE_LINUX_PACKAGES: curl mono-complete msbuild python git libfontconfig1-dev clang-3.8 make
+  TIZEN_LINUX_PACKAGES: mono-complete msbuild libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn
+  MANAGED_LINUX_PACKAGES: mono-complete msbuild ttf-ancient-fonts
+  MONO_VERSION_MACOS: 5_18_3
+  MONO_VERSION_LINUX: stable-xenial/snapshots/5.20.1.34
+  XCODE_VERSION: 10.3
+  DOTNET_VERSION: 2.2.108
+  CONFIGURATION: 'Release'
+  VM_IMAGE_WINDOWS: Hosted VS2017
+  VM_IMAGE_MAC: Hosted macOS
+  VM_IMAGE_LINUX: Hosted Ubuntu 1604
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 
-steps:
-  - checkout: none
-  - template: az-temp.yml
-    parameters:
-      buildExternals: $(DOWNLOAD_EXTERNALS)
+  # # To speed up builds when debugging DevOps
+  # DOWNLOAD_EXTERNALS: ''
 
-# stages:
-#   - stage: native
-#     displayName: Build Native
-#     jobs:
-#       # NATIVE JOBS - WINDOWS
-#       - template: azure-templates-bootstrapper.yml # Build Native Android (Windows)
-#         parameters:
-#           name: native_android_windows
-#           displayName: Build Native Android (Windows)
-#           vmImage: $(VM_IMAGE_WINDOWS)
-#           target: externals-android
-#       - template: azure-templates-bootstrapper.yml # Build Native Tizen (Windows)
-#         parameters:
-#           name: native_tizen_windows
-#           displayName: Build Native Tizen (Windows)
-#           vmImage: $(VM_IMAGE_WINDOWS)
-#           target: externals-tizen
-#           condition: false # TODO: TIZEN INSTALL BUGS
-#       - template: azure-templates-bootstrapper.yml # Build Native UWP (Windows)
-#         parameters:
-#           name: native_uwp_windows
-#           displayName: Build Native UWP (Windows)
-#           vmImage: $(VM_IMAGE_WINDOWS)
-#           target: externals-uwp
-#       - template: azure-templates-bootstrapper.yml # Build Native Win32 (Windows)
-#         parameters:
-#           name: native_win32_windows
-#           displayName: Build Native Win32 (Windows)
-#           vmImage: $(VM_IMAGE_WINDOWS)
-#           target: externals-windows
-#       # NATIVE JOBS - MAC
-#       - template: azure-templates-bootstrapper.yml # Build Native Android (macOS)
-#         parameters:
-#           name: native_android_macos
-#           displayName: Build Native Android (macOS)
-#           vmImage: $(VM_IMAGE_MAC)
-#           target: externals-android
-#       - template: azure-templates-bootstrapper.yml # Build Native iOS (macOS)
-#         parameters:
-#           name: native_ios_macos
-#           displayName: Build Native iOS (macOS)
-#           vmImage: $(VM_IMAGE_MAC)
-#           target: externals-ios
-#       - template: azure-templates-bootstrapper.yml # Build Native macOS (macOS)
-#         parameters:
-#           name: native_macos_macos
-#           displayName: Build Native macOS (macOS)
-#           vmImage: $(VM_IMAGE_MAC)
-#           target: externals-macos
-#       - template: azure-templates-bootstrapper.yml # Build Native Tizen (macOS)
-#         parameters:
-#           name: native_tizen_macos
-#           displayName: Build Native Tizen (macOS)
-#           vmImage: $(VM_IMAGE_MAC)
-#           target: externals-tizen
-#           condition: false # TODO: TIZEN INSTALL BUGS
-#       - template: azure-templates-bootstrapper.yml # Build Native tvOS (macOS)
-#         parameters:
-#           name: native_tvos_macos
-#           displayName: Build Native tvOS (macOS)
-#           vmImage: $(VM_IMAGE_MAC)
-#           target: externals-tvos
-#       - template: azure-templates-bootstrapper.yml # Build Native watchOS (macOS)
-#         parameters:
-#           name: native_watchos_macos
-#           displayName: Build Native watchOS (macOS)
-#           vmImage: $(VM_IMAGE_MAC)
-#           target: externals-watchos
-#       # NATIVE JOBS - LINUX
-#       - template: azure-templates-native-linux.yml # Build Native Linux (Linux)
-#         parameters:
-#           name: native_linux_linux
-#           displayName: Build Native Linux (Linux)
-#           vmImage: $(VM_IMAGE_LINUX)
-#           packages: $(NATIVE_LINUX_PACKAGES)
-#           target: externals-linux
-#       - template: azure-templates-native-linux.yml # Build Native Linux [No Dependencies] (Linux)
-#         parameters:
-#           name: native_linux_nodependencies_linux
-#           displayName: Build Native Linux [No Dependencies] (Linux)
-#           vmImage: $(VM_IMAGE_LINUX)
-#           packages: $(NATIVE_LINUX_PACKAGES)
-#           target: externals-linux
-#           additionalArgs: --additionalGnArgs="skia_use_fontconfig=false"
-#       - template: azure-templates-bootstrapper.yml # Build Native Tizen (Linux)
-#         parameters:
-#           name: native_tizen_linux
-#           displayName: Build Native Tizen (Linux)
-#           vmImage: $(VM_IMAGE_LINUX)
-#           packages: $(TIZEN_LINUX_PACKAGES)
-#           target: externals-tizen
+resources:
+  repositories:
+    - repository: xamarin-templates
+      type: github
+      name: xamarin/yaml-templates
+      endpoint: xamarin
 
-#   - stage: managed
-#     displayName: Build Managed
-#     dependsOn: native
-#     jobs:
-#       - template: azure-templates-bootstrapper.yml # Build Managed (Windows)
-#         parameters:
-#           name: managed_windows
-#           displayName: Build Managed (Windows)
-#           vmImage: $(VM_IMAGE_WINDOWS)
-#           target: libs-only
-#           requiredArtifacts:
-#             - native_android_windows
-#             # - native_tizen_windows
-#             - native_tizen_linux
-#             - native_uwp_windows
-#             - native_win32_windows
-#       - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
-#         parameters:
-#           name: managed_macos
-#           displayName: Build Managed (macOS)
-#           vmImage: $(VM_IMAGE_MAC)
-#           target: libs-only
-#           requiredArtifacts:
-#             - native_android_macos
-#             - native_ios_macos
-#             - native_macos_macos
-#             # - native_tizen_macos
-#             - native_tizen_linux
-#             - native_tvos_macos
-#             - native_watchos_macos
-#       - template: azure-templates-bootstrapper.yml # Build Managed (Linux)
-#         parameters:
-#           name: managed_linux
-#           displayName: Build Managed (Linux)
-#           vmImage: $(VM_IMAGE_LINUX)
-#           packages: $(MANAGED_LINUX_PACKAGES)
-#           target: libs-only
-#           requiredArtifacts:
-#             - native_linux_linux
-#             - native_tizen_linux
-#       - template: azure-templates-bootstrapper.yml # Build Managed [No Dependencies] (Linux)
-#         parameters:
-#           name: managed_nodependencies_linux
-#           displayName: Build Managed [No Dependencies] (Linux)
-#           vmImage: $(VM_IMAGE_LINUX)
-#           packages: $(MANAGED_LINUX_PACKAGES)
-#           target: libs-only
-#           requiredArtifacts:
-#             - native_linux_nodependencies_linux
-#             - native_tizen_linux
+stages:
+  - stage: native
+    displayName: Build Native
+    jobs:
+      # NATIVE JOBS - WINDOWS
+      - template: azure-templates-bootstrapper.yml # Build Native Android (Windows)
+        parameters:
+          name: native_android_windows
+          displayName: Build Native Android (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-android
+      - template: azure-templates-bootstrapper.yml # Build Native Tizen (Windows)
+        parameters:
+          name: native_tizen_windows
+          displayName: Build Native Tizen (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-tizen
+          condition: false # TODO: TIZEN INSTALL BUGS
+      - template: azure-templates-bootstrapper.yml # Build Native UWP (Windows)
+        parameters:
+          name: native_uwp_windows
+          displayName: Build Native UWP (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-uwp
+      - template: azure-templates-bootstrapper.yml # Build Native Win32 (Windows)
+        parameters:
+          name: native_win32_windows
+          displayName: Build Native Win32 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-windows
+      # NATIVE JOBS - MAC
+      - template: azure-templates-bootstrapper.yml # Build Native Android (macOS)
+        parameters:
+          name: native_android_macos
+          displayName: Build Native Android (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-android
+      - template: azure-templates-bootstrapper.yml # Build Native iOS (macOS)
+        parameters:
+          name: native_ios_macos
+          displayName: Build Native iOS (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-ios
+      - template: azure-templates-bootstrapper.yml # Build Native macOS (macOS)
+        parameters:
+          name: native_macos_macos
+          displayName: Build Native macOS (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-macos
+      - template: azure-templates-bootstrapper.yml # Build Native Tizen (macOS)
+        parameters:
+          name: native_tizen_macos
+          displayName: Build Native Tizen (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-tizen
+          condition: false # TODO: TIZEN INSTALL BUGS
+      - template: azure-templates-bootstrapper.yml # Build Native tvOS (macOS)
+        parameters:
+          name: native_tvos_macos
+          displayName: Build Native tvOS (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-tvos
+      - template: azure-templates-bootstrapper.yml # Build Native watchOS (macOS)
+        parameters:
+          name: native_watchos_macos
+          displayName: Build Native watchOS (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-watchos
+      # NATIVE JOBS - LINUX
+      - template: azure-templates-native-linux.yml # Build Native Linux (Linux)
+        parameters:
+          name: native_linux_linux
+          displayName: Build Native Linux (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
+          packages: $(NATIVE_LINUX_PACKAGES)
+          target: externals-linux
+      - template: azure-templates-native-linux.yml # Build Native Linux [No Dependencies] (Linux)
+        parameters:
+          name: native_linux_nodependencies_linux
+          displayName: Build Native Linux [No Dependencies] (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
+          packages: $(NATIVE_LINUX_PACKAGES)
+          target: externals-linux
+          additionalArgs: --additionalGnArgs="skia_use_fontconfig=false"
+      - template: azure-templates-bootstrapper.yml # Build Native Tizen (Linux)
+        parameters:
+          name: native_tizen_linux
+          displayName: Build Native Tizen (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
+          packages: $(TIZEN_LINUX_PACKAGES)
+          target: externals-tizen
 
-#   - stage: package
-#     displayName: Package NuGets
-#     dependsOn: managed
-#     jobs:
-#       - template: azure-templates-bootstrapper.yml # Package NuGets [No Dependencies]
-#         parameters:
-#           name: package_nodependencies_windows
-#           displayName: Package NuGets [No Dependencies]
-#           vmImage: $(VM_IMAGE_WINDOWS)
-#           target: nuget-only
-#           shouldPublish: false
-#           requiredArtifacts:
-#             - managed_nodependencies_linux
-#             - managed_macos
-#             - managed_windows
-#           postBuildSteps:
-#             - powershell: |
-#                 $platforms = (Get-ChildItem -Path ./output/native/*) | Where-Object { $_.Name -NotMatch "linux" }
-#                 Write-Host "Removing the following platforms:"
-#                 $platforms | Foreach-Object { Write-Host $_.Name }
-#                 $platforms | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
-#                 $nupkgs = (Get-ChildItem -Path ./output/nugets/*) | Where-Object { $_.Name -NotMatch "NoDependencies" }
-#                 Write-Host "Removing the following packages:"
-#                 $nupkgs | Foreach-Object { Write-Host $_.Name }
-#                 $nupkgs | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
-#               displayName: Remove all unrelated files
-#             - task: PublishBuildArtifacts@1
-#               displayName: Publish the native-nodependencies artifacts
-#               inputs:
-#                 artifactName: native-nodependencies
-#                 pathToPublish: 'output/native'
-#             - task: PublishBuildArtifacts@1
-#               displayName: Publish the nuget-nodependencies artifacts
-#               inputs:
-#                 artifactName: nuget-nodependencies
-#                 pathToPublish: 'output/nugets'
-#       - template: azure-templates-bootstrapper.yml # Package NuGets
-#         parameters:
-#           name: package_windows
-#           displayName: Package NuGets
-#           vmImage: $(VM_IMAGE_WINDOWS)
-#           target: nuget-only
-#           shouldPublish: false
-#           requiredArtifacts:
-#             - managed_linux
-#             - managed_macos
-#             - managed_windows
-#           postBuildSteps:
-#             - powershell: |
-#                 $nupkgs = (Get-ChildItem -Path ./output/nugets/*) | Where-Object { $_.Name -Match "NoDependencies" }
-#                 Write-Host "Removing the following packages:"
-#                 $nupkgs | Foreach-Object { Write-Host $_.Name }
-#                 $nupkgs | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
-#               displayName: Remove all unrelated files
-#             - task: PublishBuildArtifacts@1
-#               displayName: Publish the native-default artifacts
-#               inputs:
-#                 artifactName: native-default
-#                 pathToPublish: 'output/native'
-#             - task: PublishBuildArtifacts@1
-#               displayName: Publish the nuget-default artifacts
-#               inputs:
-#                 artifactName: nuget-default
-#                 pathToPublish: 'output/nugets'
-#       - job: package                               # Combine Packaged NuGets
-#         displayName: Combine Packaged NuGets
-#         dependsOn:
-#           - package_nodependencies_windows
-#           - package_windows
-#         pool:
-#           name: $(VM_IMAGE_LINUX)
-#         steps:
-#           - task: DownloadBuildArtifacts@0
-#             displayName: Download the nuget-nodependencies artifacts
-#             inputs:
-#               artifactName: nuget-nodependencies
-#               downloadPath: 'download-temp'
-#           - task: DownloadBuildArtifacts@0
-#             displayName: Download the nuget-default artifacts
-#             inputs:
-#               artifactName: nuget-default
-#               downloadPath: 'download-temp'
-#           - powershell: |
-#               New-Item '.\output\nugets' -Type Directory -Force | Out-Null
-#               Get-ChildItem '.\download-temp\nuget-nodependencies\' | Copy-Item -Destination '.\output\nugets' -Recurse -Force
-#               Get-ChildItem '.\download-temp\nuget-default\' | Copy-Item -Destination '.\output\nugets' -Recurse -Force
-#               Remove-Item '.\download-temp\' -Recurse -Force
-#             displayName: Move the nuget-* artifacts to the output directory
-#           - task: PublishBuildArtifacts@1
-#             displayName: Publish the nuget artifacts
-#             inputs:
-#               artifactName: nuget
-#               pathToPublish: 'output/nugets'
-#           - bash: ./scripts/validate-linux-nugets.sh
-#             displayName: Validate the Linux NuGet packages
+  - stage: managed
+    displayName: Build Managed
+    dependsOn: native
+    jobs:
+      - template: azure-templates-bootstrapper.yml # Build Managed (Windows)
+        parameters:
+          name: managed_windows
+          displayName: Build Managed (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: libs-only
+          requiredArtifacts:
+            - native_android_windows
+            # - native_tizen_windows
+            - native_tizen_linux
+            - native_uwp_windows
+            - native_win32_windows
+      - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
+        parameters:
+          name: managed_macos
+          displayName: Build Managed (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: libs-only
+          requiredArtifacts:
+            - native_android_macos
+            - native_ios_macos
+            - native_macos_macos
+            # - native_tizen_macos
+            - native_tizen_linux
+            - native_tvos_macos
+            - native_watchos_macos
+      - template: azure-templates-bootstrapper.yml # Build Managed (Linux)
+        parameters:
+          name: managed_linux
+          displayName: Build Managed (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
+          packages: $(MANAGED_LINUX_PACKAGES)
+          target: libs-only
+          requiredArtifacts:
+            - native_linux_linux
+            - native_tizen_linux
+      - template: azure-templates-bootstrapper.yml # Build Managed [No Dependencies] (Linux)
+        parameters:
+          name: managed_nodependencies_linux
+          displayName: Build Managed [No Dependencies] (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
+          packages: $(MANAGED_LINUX_PACKAGES)
+          target: libs-only
+          requiredArtifacts:
+            - native_linux_nodependencies_linux
+            - native_tizen_linux
 
-#   - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
-#     - stage: signing
-#       displayName: Sign NuGets
-#       dependsOn: package
-#       condition: eq(variables['System.TeamProject'], 'devdiv')
-#       jobs:
-#         - template: sign-artifacts/jobs/v1.yml@xamarin-templates
-#           parameters:
-#             additionalConditions: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+  - stage: package
+    displayName: Package NuGets
+    dependsOn: managed
+    jobs:
+      - template: azure-templates-bootstrapper.yml # Package NuGets [No Dependencies]
+        parameters:
+          name: package_nodependencies_windows
+          displayName: Package NuGets [No Dependencies]
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: nuget-only
+          shouldPublish: false
+          requiredArtifacts:
+            - managed_nodependencies_linux
+            - managed_macos
+            - managed_windows
+          postBuildSteps:
+            - powershell: |
+                $platforms = (Get-ChildItem -Path ./output/native/*) | Where-Object { $_.Name -NotMatch "linux" }
+                Write-Host "Removing the following platforms:"
+                $platforms | Foreach-Object { Write-Host $_.Name }
+                $platforms | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
+                $nupkgs = (Get-ChildItem -Path ./output/nugets/*) | Where-Object { $_.Name -NotMatch "NoDependencies" }
+                Write-Host "Removing the following packages:"
+                $nupkgs | Foreach-Object { Write-Host $_.Name }
+                $nupkgs | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
+              displayName: Remove all unrelated files
+            - task: PublishBuildArtifacts@1
+              displayName: Publish the native-nodependencies artifacts
+              inputs:
+                artifactName: native-nodependencies
+                pathToPublish: 'output/native'
+            - task: PublishBuildArtifacts@1
+              displayName: Publish the nuget-nodependencies artifacts
+              inputs:
+                artifactName: nuget-nodependencies
+                pathToPublish: 'output/nugets'
+      - template: azure-templates-bootstrapper.yml # Package NuGets
+        parameters:
+          name: package_windows
+          displayName: Package NuGets
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: nuget-only
+          shouldPublish: false
+          requiredArtifacts:
+            - managed_linux
+            - managed_macos
+            - managed_windows
+          postBuildSteps:
+            - powershell: |
+                $nupkgs = (Get-ChildItem -Path ./output/nugets/*) | Where-Object { $_.Name -Match "NoDependencies" }
+                Write-Host "Removing the following packages:"
+                $nupkgs | Foreach-Object { Write-Host $_.Name }
+                $nupkgs | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
+              displayName: Remove all unrelated files
+            - task: PublishBuildArtifacts@1
+              displayName: Publish the native-default artifacts
+              inputs:
+                artifactName: native-default
+                pathToPublish: 'output/native'
+            - task: PublishBuildArtifacts@1
+              displayName: Publish the nuget-default artifacts
+              inputs:
+                artifactName: nuget-default
+                pathToPublish: 'output/nugets'
+      - job: package                               # Combine Packaged NuGets
+        displayName: Combine Packaged NuGets
+        dependsOn:
+          - package_nodependencies_windows
+          - package_windows
+        pool:
+          name: $(VM_IMAGE_LINUX)
+        steps:
+          - task: DownloadBuildArtifacts@0
+            displayName: Download the nuget-nodependencies artifacts
+            inputs:
+              artifactName: nuget-nodependencies
+              downloadPath: 'download-temp'
+          - task: DownloadBuildArtifacts@0
+            displayName: Download the nuget-default artifacts
+            inputs:
+              artifactName: nuget-default
+              downloadPath: 'download-temp'
+          - powershell: |
+              New-Item '.\output\nugets' -Type Directory -Force | Out-Null
+              Get-ChildItem '.\download-temp\nuget-nodependencies\' | Copy-Item -Destination '.\output\nugets' -Recurse -Force
+              Get-ChildItem '.\download-temp\nuget-default\' | Copy-Item -Destination '.\output\nugets' -Recurse -Force
+              Remove-Item '.\download-temp\' -Recurse -Force
+            displayName: Move the nuget-* artifacts to the output directory
+          - task: PublishBuildArtifacts@1
+            displayName: Publish the nuget artifacts
+            inputs:
+              artifactName: nuget
+              pathToPublish: 'output/nugets'
+          - bash: ./scripts/validate-linux-nugets.sh
+            displayName: Validate the Linux NuGet packages
 
-#   - stage: tests
-#     displayName: Run Tests
-#     dependsOn: native
-#     jobs:
-#       - template: azure-templates-bootstrapper.yml # Tests (Windows)
-#         parameters:
-#           name: tests_windows
-#           displayName: Tests (Windows)
-#           vmImage: $(VM_IMAGE_WINDOWS)
-#           retryCount: 3
-#           target: tests
-#           additionalArgs: --skipExternals="all"
-#           shouldPublish: false
-#           requiredArtifacts:
-#             - native_win32_windows
-#           postBuildSteps:
-#             - task: PublishTestResults@2
-#               displayName: Publish the .NET Framework test results
-#               condition: always()
-#               inputs:
-#                 testResultsFormat: xUnit
-#                 testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
-#                 testRunTitle: 'Windows .NET Framework Tests'
-#             - task: PublishTestResults@2
-#               displayName: Publish the .NET Core test results
-#               condition: always()
-#               inputs:
-#                 testResultsFormat: xUnit
-#                 testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
-#                 testRunTitle: 'Windows .NET Core Tests'
-#       - template: azure-templates-bootstrapper.yml # Tests (macOS)
-#         parameters:
-#           name: tests_macos
-#           displayName: Tests (macOS)
-#           vmImage: $(VM_IMAGE_MAC)
-#           retryCount: 3
-#           target: tests
-#           additionalArgs: --skipExternals="all"
-#           shouldPublish: false
-#           requiredArtifacts:
-#             - native_macos_macos
-#           postBuildSteps:
-#             - task: PublishTestResults@2
-#               displayName: Publish the Mono test results
-#               condition: always()
-#               inputs:
-#                 testResultsFormat: xUnit
-#                 testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
-#                 testRunTitle: 'macOS Mono Tests'
-#             - task: PublishTestResults@2
-#               displayName: Publish the .NET Core test results
-#               condition: always()
-#               inputs:
-#                 testResultsFormat: xUnit
-#                 testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
-#                 testRunTitle: 'macOS .NET Core Tests'
-#       - template: azure-templates-bootstrapper.yml # Tests (Linux)
-#         parameters:
-#           name: tests_linux
-#           displayName: Tests (Linux)
-#           vmImage: $(VM_IMAGE_LINUX)
-#           packages: $(MANAGED_LINUX_PACKAGES)
-#           retryCount: 3
-#           target: tests
-#           additionalArgs: --skipExternals="all"
-#           shouldPublish: false
-#           requiredArtifacts:
-#             - native_linux_linux
-#           postBuildSteps:
-#             - task: PublishTestResults@2
-#               displayName: Publish the Mono test results
-#               condition: always()
-#               inputs:
-#                 testResultsFormat: xUnit
-#                 testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
-#                 testRunTitle: 'Linux Mono Tests'
-#             - task: PublishTestResults@2
-#               displayName: Publish the .NET Core test results
-#               condition: always()
-#               inputs:
-#                 testResultsFormat: xUnit
-#                 testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
-#                 testRunTitle: 'Linux .NET Core Tests'
-#       - template: azure-templates-bootstrapper.yml # Tests [No Dependencies] (Linux)
-#         parameters:
-#           name: tests_nodependencies_linux
-#           displayName: Tests [No Dependencies] (Linux)
-#           vmImage: $(VM_IMAGE_LINUX)
-#           packages: $(MANAGED_LINUX_PACKAGES)
-#           retryCount: 3
-#           target: tests
-#           additionalArgs: --skipExternals="all" --unsupportedTests="Category=MatchCharacter"
-#           shouldPublish: false
-#           requiredArtifacts:
-#             - native_linux_nodependencies_linux
-#           postBuildSteps:
-#             - task: PublishTestResults@2
-#               displayName: Publish the Mono test results
-#               condition: always()
-#               inputs:
-#                 testResultsFormat: xUnit
-#                 testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
-#                 testRunTitle: 'Linux [No Dependencies] Mono Tests'
-#             - task: PublishTestResults@2
-#               displayName: Publish the .NET Core test results
-#               condition: always()
-#               inputs:
-#                 testResultsFormat: xUnit
-#                 testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
-#                 testRunTitle: 'Linux [No Dependencies] .NET Core Tests'
+  - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+    - stage: signing
+      displayName: Sign NuGets
+      dependsOn: package
+      condition: eq(variables['System.TeamProject'], 'devdiv')
+      jobs:
+        - template: sign-artifacts/jobs/v1.yml@xamarin-templates
+          parameters:
+            additionalConditions: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
-#   - stage: samples
-#     displayName: Build Samples
-#     dependsOn: package
-#     jobs:
-#       - template: azure-templates-bootstrapper.yml # Build Samples (Windows)
-#         parameters:
-#           name: samples_windows
-#           displayName: Build Samples (Windows)
-#           vmImage: $(VM_IMAGE_WINDOWS)
-#           target: samples
-#           shouldPublish: false
-#           requiredArtifacts:
-#             - nuget
-#           preBuildSteps:
-#             - powershell: |
-#                 New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
-#                 Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
-#               displayName: Copy the *.nupkgs into the correct folder for the samples
-#       - template: azure-templates-bootstrapper.yml # Build Samples (macOS)
-#         parameters:
-#           name: samples_macos
-#           displayName: Build Samples (macOS)
-#           vmImage: $(VM_IMAGE_MAC)
-#           target: samples
-#           shouldPublish: false
-#           requiredArtifacts:
-#             - nuget
-#           preBuildSteps:
-#             - task: InstallAppleCertificate@2
-#               inputs:
-#                 certSecureFile: 'SkiaSharp iOS Certificate.p12'
-#             - task: InstallAppleCertificate@2
-#               inputs:
-#                 certSecureFile: 'SkiaSharp Mac Certificate.p12'
-#             - task: InstallAppleProvisioningProfile@1
-#               inputs:
-#                 provProfileSecureFile: 'SkiaSharp iOS Provisioning.mobileprovision'
-#             - task: InstallAppleProvisioningProfile@1
-#               inputs:
-#                 provProfileSecureFile: 'SkiaSharp Mac Provisioning.provisionprofile'
-#             - task: InstallAppleProvisioningProfile@1
-#               inputs:
-#                 provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
-#             - powershell: |
-#                 New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
-#                 Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
-#               displayName: Copy the *.nupkgs into the correct folder for the samples
-#       - template: azure-templates-bootstrapper.yml # Build Samples (Linux)
-#         parameters:
-#           name: samples_linux
-#           displayName: Build Samples (Linux)
-#           vmImage: $(VM_IMAGE_LINUX)
-#           packages: $(MANAGED_LINUX_PACKAGES)
-#           target: samples
-#           shouldPublish: false
-#           requiredArtifacts:
-#             - nuget
-#           preBuildSteps:
-#             - powershell: |
-#                 New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
-#                 Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
-#               displayName: Copy the *.nupkgs into the correct folder for the samples
-#           postBuildSteps:
-#             - task: PublishBuildArtifacts@1
-#               displayName: Publish the samples artifacts
-#               inputs:
-#                 artifactName: samples
-#                 pathToPublish: 'output'
+  - stage: tests
+    displayName: Run Tests
+    dependsOn: native
+    jobs:
+      - template: azure-templates-bootstrapper.yml # Tests (Windows)
+        parameters:
+          name: tests_windows
+          displayName: Tests (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          retryCount: 3
+          target: tests
+          additionalArgs: --skipExternals="all"
+          shouldPublish: false
+          requiredArtifacts:
+            - native_win32_windows
+          postBuildSteps:
+            - task: PublishTestResults@2
+              displayName: Publish the .NET Framework test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
+                testRunTitle: 'Windows .NET Framework Tests'
+            - task: PublishTestResults@2
+              displayName: Publish the .NET Core test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
+                testRunTitle: 'Windows .NET Core Tests'
+      - template: azure-templates-bootstrapper.yml # Tests (macOS)
+        parameters:
+          name: tests_macos
+          displayName: Tests (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          retryCount: 3
+          target: tests
+          additionalArgs: --skipExternals="all"
+          shouldPublish: false
+          requiredArtifacts:
+            - native_macos_macos
+          postBuildSteps:
+            - task: PublishTestResults@2
+              displayName: Publish the Mono test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
+                testRunTitle: 'macOS Mono Tests'
+            - task: PublishTestResults@2
+              displayName: Publish the .NET Core test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
+                testRunTitle: 'macOS .NET Core Tests'
+      - template: azure-templates-bootstrapper.yml # Tests (Linux)
+        parameters:
+          name: tests_linux
+          displayName: Tests (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
+          packages: $(MANAGED_LINUX_PACKAGES)
+          retryCount: 3
+          target: tests
+          additionalArgs: --skipExternals="all"
+          shouldPublish: false
+          requiredArtifacts:
+            - native_linux_linux
+          postBuildSteps:
+            - task: PublishTestResults@2
+              displayName: Publish the Mono test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
+                testRunTitle: 'Linux Mono Tests'
+            - task: PublishTestResults@2
+              displayName: Publish the .NET Core test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
+                testRunTitle: 'Linux .NET Core Tests'
+      - template: azure-templates-bootstrapper.yml # Tests [No Dependencies] (Linux)
+        parameters:
+          name: tests_nodependencies_linux
+          displayName: Tests [No Dependencies] (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
+          packages: $(MANAGED_LINUX_PACKAGES)
+          retryCount: 3
+          target: tests
+          additionalArgs: --skipExternals="all" --unsupportedTests="Category=MatchCharacter"
+          shouldPublish: false
+          requiredArtifacts:
+            - native_linux_nodependencies_linux
+          postBuildSteps:
+            - task: PublishTestResults@2
+              displayName: Publish the Mono test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
+                testRunTitle: 'Linux [No Dependencies] Mono Tests'
+            - task: PublishTestResults@2
+              displayName: Publish the .NET Core test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
+                testRunTitle: 'Linux [No Dependencies] .NET Core Tests'
+
+  - stage: samples
+    displayName: Build Samples
+    dependsOn: package
+    jobs:
+      - template: azure-templates-bootstrapper.yml # Build Samples (Windows)
+        parameters:
+          name: samples_windows
+          displayName: Build Samples (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: samples
+          shouldPublish: false
+          requiredArtifacts:
+            - nuget
+          preBuildSteps:
+            - powershell: |
+                New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
+                Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
+              displayName: Copy the *.nupkgs into the correct folder for the samples
+      - template: azure-templates-bootstrapper.yml # Build Samples (macOS)
+        parameters:
+          name: samples_macos
+          displayName: Build Samples (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: samples
+          shouldPublish: false
+          requiredArtifacts:
+            - nuget
+          preBuildSteps:
+            - task: InstallAppleCertificate@2
+              inputs:
+                certSecureFile: 'SkiaSharp iOS Certificate.p12'
+            - task: InstallAppleCertificate@2
+              inputs:
+                certSecureFile: 'SkiaSharp Mac Certificate.p12'
+            - task: InstallAppleProvisioningProfile@1
+              inputs:
+                provProfileSecureFile: 'SkiaSharp iOS Provisioning.mobileprovision'
+            - task: InstallAppleProvisioningProfile@1
+              inputs:
+                provProfileSecureFile: 'SkiaSharp Mac Provisioning.provisionprofile'
+            - task: InstallAppleProvisioningProfile@1
+              inputs:
+                provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
+            - powershell: |
+                New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
+                Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
+              displayName: Copy the *.nupkgs into the correct folder for the samples
+      - template: azure-templates-bootstrapper.yml # Build Samples (Linux)
+        parameters:
+          name: samples_linux
+          displayName: Build Samples (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
+          packages: $(MANAGED_LINUX_PACKAGES)
+          target: samples
+          shouldPublish: false
+          requiredArtifacts:
+            - nuget
+          preBuildSteps:
+            - powershell: |
+                New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
+                Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
+              displayName: Copy the *.nupkgs into the correct folder for the samples
+          postBuildSteps:
+            - task: PublishBuildArtifacts@1
+              displayName: Publish the samples artifacts
+              inputs:
+                artifactName: samples
+                pathToPublish: 'output'
