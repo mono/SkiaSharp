@@ -4,5 +4,7 @@ parameters:
 steps:
 - ${{ if ne(parameters.buildExternals, '') }}:
   - powershell: echo "hello 22!${{ parameters.buildExternals }}!"
+    displayName: ECHO 22 ${{ parameters.buildExternals }}
 - ${{ if eq(parameters.buildExternals, '') }}:
   - powershell: echo "fail 22!${{ parameters.buildExternals }}!"
+    displayName: ECHO 22 ${{ parameters.buildExternals }}
