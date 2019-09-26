@@ -25,7 +25,7 @@ jobs:
       displayName: ${{ parameters.displayName }}
       vmImage: ${{ parameters.vmImage }}
       condition: ${{ parameters.condition }}
-      buildExternals: ${{ parameters.buildExternals }}
+      # buildExternals: ${{ parameters.buildExternals }}
 
 - ${{ if or(eq(parameters.buildExternals, ''), not(startsWith(parameters.name, 'native_'))) }}:
   - job: ${{ parameters.name }}
