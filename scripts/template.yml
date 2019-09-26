@@ -12,7 +12,6 @@ steps:
       echo "first = ${{ coalesce(parameters.branch1, 'dogs') }}"
       echo "second = ${{ coalesce(parameters.branch2, 'dogs') }}"
       echo "minor = $(minor)"
-      echo "download = $(download)"
   - ${{ if ne(parameters.download, '') }}:
     - powershell: |
         echo helloooooo!
