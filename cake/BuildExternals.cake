@@ -471,13 +471,15 @@ Task ("externals-watchos")
 
     buildArch ("watchsimulator", "i386", "x86");
     buildArch ("watchos", "armv7k", "arm");
+    buildArch ("watchos", "arm64_32", "arm");
 
     // create the fat framework
     CopyDirectory ("output/native/watchos/armv7k/libSkiaSharp.framework/", "output/native/watchos/libSkiaSharp.framework/");
     DeleteFile ("output/native/watchos/libSkiaSharp.framework/libSkiaSharp");
     RunLipo ("output/native/watchos/", "libSkiaSharp.framework/libSkiaSharp", new [] {
         (FilePath) "i386/libSkiaSharp.framework/libSkiaSharp",
-        (FilePath) "armv7k/libSkiaSharp.framework/libSkiaSharp"
+        (FilePath) "armv7k/libSkiaSharp.framework/libSkiaSharp",
+        (FilePath) "arm64_32/libSkiaSharp.framework/libSkiaSharp"
     });
 
     // HarfBuzzSharp
@@ -501,11 +503,13 @@ Task ("externals-watchos")
 
     buildHarfBuzzArch ("watchsimulator", "i386");
     buildHarfBuzzArch ("watchos", "armv7k");
+    buildHarfBuzzArch ("watchos", "arm64_32");
 
     // create the fat framework
     RunLipo ("output/native/watchos/", "libHarfBuzzSharp.a", new [] {
         (FilePath) "i386/libHarfBuzzSharp.a",
-        (FilePath) "armv7k/libHarfBuzzSharp.a"
+        (FilePath) "armv7k/libHarfBuzzSharp.a",
+        (FilePath) "arm64_32/libHarfBuzzSharp.a"
     });
 });
 
