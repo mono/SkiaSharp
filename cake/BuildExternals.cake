@@ -469,6 +469,7 @@ Task ("externals-watchos")
         StripSign ($"output/native/watchos/{arch}/libSkiaSharp.framework");
     });
 
+    buildArch ("watchsimulator", "x86_64", "x64");
     buildArch ("watchsimulator", "i386", "x86");
     buildArch ("watchos", "armv7k", "arm");
     buildArch ("watchos", "arm64_32", "arm64");
