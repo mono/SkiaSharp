@@ -15,8 +15,18 @@ namespace SkiaSharp
 
 	public class SKTypeface : SKObject, ISKReferenceCounted
 	{
-		private static readonly Lazy<SKTypeface> defaultTypeface =
-			new Lazy<SKTypeface> (() => new SKTypefaceStatic (SkiaApi.sk_typeface_ref_default ()));
+		private static readonly Lazy<SKTypeface> defaultTypeface;
+
+		static SKTypeface ()
+		{
+			defaultTypeface = new Lazy<SKTypeface> (() => new SKTypefaceStatic (SkiaApi.sk_typeface_ref_default ()));
+		}
+
+		internal static void EnsureStaticInstanceAreInitialized ()
+		{
+			// IMPORTANT: do not remove to ensure that the static instances
+			//            are initialized before any access is made to them
+		}
 
 		[Preserve]
 		internal SKTypeface (IntPtr handle, bool owns)

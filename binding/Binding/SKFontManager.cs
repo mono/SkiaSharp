@@ -7,8 +7,18 @@ namespace SkiaSharp
 {
 	public class SKFontManager : SKObject, ISKReferenceCounted
 	{
-		private static readonly Lazy<SKFontManager> defaultManager =
-			new Lazy<SKFontManager> (() => new SKFontManagerStatic (SkiaApi.sk_fontmgr_ref_default ()));
+		private static readonly Lazy<SKFontManager> defaultManager;
+
+		static SKFontManager()
+		{
+			defaultManager = new Lazy<SKFontManager> (() => new SKFontManagerStatic (SkiaApi.sk_fontmgr_ref_default ()));
+		}
+
+		internal static void EnsureStaticInstanceAreInitialized ()
+		{
+			// IMPORTANT: do not remove to ensure that the static instances
+			//            are initialized before any access is made to them
+		}
 
 		[Preserve]
 		internal SKFontManager (IntPtr handle, bool owns)
