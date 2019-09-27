@@ -67,7 +67,8 @@ namespace HarfBuzzSharp
 		public bool TryGetVerticalFontExtents (out FontExtents extents) =>
 			HarfBuzzApi.hb_font_get_v_extents (Handle, out extents);
 
-		public bool TryGetNominalGlyph (int unicode, out uint glyph) => TryGetNominalGlyph ((uint)unicode, out glyph);
+		public bool TryGetNominalGlyph (int unicode, out uint glyph) =>
+			TryGetNominalGlyph ((uint)unicode, out glyph);
 
 		public bool TryGetNominalGlyph (uint unicode, out uint glyph) =>
 			HarfBuzzApi.hb_font_get_nominal_glyph (Handle, unicode, out glyph);
@@ -164,16 +165,14 @@ namespace HarfBuzzSharp
 		public bool TryGetGlyph (int unicode, out uint glyph) =>
 			TryGetGlyph ((uint)unicode, 0, out glyph);
 
-		public bool TryGetGlyph (uint unicode, out uint glyph)
-			=> TryGetGlyph (unicode, 0, out glyph);
+		public bool TryGetGlyph (uint unicode, out uint glyph) =>
+			TryGetGlyph (unicode, 0, out glyph);
 
 		public bool TryGetGlyph (int unicode, uint variationSelector, out uint glyph) =>
 			TryGetGlyph ((uint)unicode, variationSelector, out glyph);
 
 		public bool TryGetGlyph (uint unicode, uint variationSelector, out uint glyph) =>
 			HarfBuzzApi.hb_font_get_glyph(Handle, unicode, variationSelector, out glyph);
-			
-
 
 		public FontExtents GetFontExtentsForDirection (Direction direction)
 		{
