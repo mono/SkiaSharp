@@ -172,7 +172,7 @@ namespace HarfBuzzSharp
 			TryGetGlyph ((uint)unicode, variationSelector, out glyph);
 
 		public bool TryGetGlyph (uint unicode, uint variationSelector, out uint glyph) =>
-			HarfBuzzApi.hb_font_get_glyph(Handle, unicode, variationSelector, out glyph);
+			HarfBuzzApi.hb_font_get_glyph (Handle, unicode, variationSelector, out glyph);
 
 		public FontExtents GetFontExtentsForDirection (Direction direction)
 		{
