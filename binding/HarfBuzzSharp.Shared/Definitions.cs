@@ -418,12 +418,16 @@ namespace HarfBuzzSharp
 			this.font = font;
 		}
 
-		public bool TryGetPosition (OpenTypeMetricsTag metricsTag, out int position) => HarfBuzzApi.hb_ot_metrics_get_position (font, metricsTag, out position);
+		public bool TryGetPosition (OpenTypeMetricsTag metricsTag, out int position) =>
+			HarfBuzzApi.hb_ot_metrics_get_position (font, metricsTag, out position);
 
-		public float GetVariation (OpenTypeMetricsTag metricsTag) => HarfBuzzApi.hb_ot_metrics_get_variation (font, metricsTag);
+		public float GetVariation (OpenTypeMetricsTag metricsTag) =>
+			HarfBuzzApi.hb_ot_metrics_get_variation (font, metricsTag);
 
-		public int GetXVariation (OpenTypeMetricsTag metricsTag) => HarfBuzzApi.hb_ot_metrics_get_x_variation (font, metricsTag);
+		public int GetXVariation (OpenTypeMetricsTag metricsTag) =>
+			HarfBuzzApi.hb_ot_metrics_get_x_variation (font, metricsTag);
 
-		public int GetYVariation (OpenTypeMetricsTag metricsTag) => HarfBuzzApi.hb_ot_metrics_get_y_variation (font, metricsTag);
+		public int GetYVariation (OpenTypeMetricsTag metricsTag) =>
+			HarfBuzzApi.hb_ot_metrics_get_y_variation (font, metricsTag);
 	}
 }
