@@ -13,8 +13,18 @@ namespace SkiaSharp
 		// improvement in Copy performance.
 		internal const int CopyBufferSize = 81920;
 
-		private static readonly Lazy<SKData> empty =
-			new Lazy<SKData> (() => new SKDataStatic (SkiaApi.sk_data_new_empty ()));
+		private static readonly Lazy<SKData> empty;
+
+		static SKData()
+		{
+			empty = new Lazy<SKData> (() => new SKDataStatic (SkiaApi.sk_data_new_empty ()));
+		}
+
+		internal static void EnsureStaticInstanceAreInitialized ()
+		{
+			// IMPORTANT: do not remove to ensure that the static instances
+			//            are initialized before any access is made to them
+		}
 
 		[Preserve]
 		internal SKData (IntPtr x, bool owns)
@@ -174,7 +184,12 @@ namespace SkiaSharp
 			return GetObject<SKData> (SkiaApi.sk_data_new_subset (Handle, (IntPtr) offset, (IntPtr) length));
 		}
 
-		public byte[] ToArray () => AsSpan ().ToArray ();
+		public byte[] ToArray ()
+		{
+			var array = AsSpan ().ToArray ();
+			GC.KeepAlive (this);
+			return array;
+		}
 
 		public bool IsEmpty => Size == 0;
 

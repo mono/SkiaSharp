@@ -6,7 +6,7 @@
 #addin nuget:?package=Xamarin.Nuget.Validator&version=1.1.1
 
 #tool nuget:?package=mdoc&version=5.7.4.9
-#tool nuget:?package=xunit.runner.console&version=2.4.0
+#tool nuget:?package=xunit.runner.console&version=2.4.1
 #tool nuget:?package=vswhere&version=2.5.2
 
 using System.Linq;
@@ -24,7 +24,7 @@ using NuGet.Versioning;
 #load "cake/Utils.cake"
 
 var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")));
-var VERBOSITY = (Verbosity) Enum.Parse (typeof(Verbosity), Argument ("v", Argument ("verbosity", Argument ("Verbosity", "Normal"))), true);
+var VERBOSITY = Argument ("v", Argument ("verbosity", Argument ("Verbosity", Verbosity.Normal)));
 var SKIP_EXTERNALS = Argument ("skipexternals", Argument ("SkipExternals", "")).ToLower ().Split (',');
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAll", Argument ("PackAllPlatforms", TARGET.ToLower() == "ci" || TARGET.ToLower() == "nuget-only")));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
@@ -137,16 +137,6 @@ Task ("tests-only")
     .Does (() =>
 {
     var RunDesktopTest = new Action<string> (arch => {
-        var platform = "";
-        if (IsRunningOnWindows ()) {
-            platform = "windows";
-        } else if (IsRunningOnMac ()) {
-            platform = "mac";
-        } else if (IsRunningOnLinux ()) {
-            platform = "linux";
-        }
-
-        EnsureDirectoryExists ($"./output/tests/{platform}/{arch}");
         RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", platform: arch == "AnyCPU" ? "Any CPU" : arch);
         RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Tests.dll", arch == "x86");
     });
@@ -165,7 +155,6 @@ Task ("tests-only")
     }
 
     // .NET Core
-    EnsureDirectoryExists ("./output/tests/netcore");
     RunMSBuild ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.sln");
     RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
 });
