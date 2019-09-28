@@ -379,34 +379,43 @@ namespace HarfBuzzSharp
 
 	public enum OpenTypeMetricsTag : uint
 	{
-		CapHeight = 1668311156,
-		HorizontalAscender = 1751216995,
-		HorizontalClippingAscent = 1751346273,
-		HorizontalClippingDescent = 1751346276,
-		HorizontalCaretOffset = 1751347046,
-		HorizontalCaretRun = 1751347822,
-		HorizontalCaretRise = 1751347827,
-		HorizontalDescender = 1751413603,
-		HorizontalLineGap = 1751934832,
-		SubScriptEmXOffset = 1935833199,
-		SubScriptEmXSize = 1935833203,
-		SubScriptEmYOffset = 1935833455,
-		SubScriptEmYSize = 1935833459,
-		SuperScriptEmXOffset = 1936750703,
-		SuperScriptEmXSize = 1936750707,
-		SuperScriptEmYOffset = 1936750959,
-		SuperScriptEmYSize = 1936750963,
-		StrikeoutOffset = 1937011311,
-		StrikeoutSize = 1937011315,
-		UnderlineOffset = 1970168943,
-		UnderlineSize = 1970168947,
-		VerticalAscender = 1986098019,
-		VerticalCaretOffset = 1986228070,
-		VerticalCaretRun = 1986228846,
-		VerticalCaretRise = 1986228851,
-		VerticalDescender = 1986294627,
-		VerticalLineGap = 1986815856,
-		XHeight = 2020108148,
+		HorizontalAscender = (((byte)'h' << 24) | ((byte)'a' << 16) | ((byte)'s' << 8) | (byte)'c'),
+		HorizontalDescender = (((byte)'h' << 24) | ((byte)'d' << 16) | ((byte)'s' << 8) | (byte)'c'),
+		HorizontalLineGap = (((byte)'h' << 24) | ((byte)'l' << 16) | ((byte)'g' << 8) | (byte)'p'),
+		HorizontalClippingAscent = (((byte)'h' << 24) | ((byte)'c' << 16) | ((byte)'l' << 8) | (byte)'a'),
+		HorizontalClippingDescent = (((byte)'h' << 24) | ((byte)'c' << 16) | ((byte)'l' << 8) | (byte)'d'),
+
+		VerticalAscender = (((byte)'v' << 24) | ((byte)'a' << 16) | ((byte)'s' << 8) | (byte)'c'),
+		VerticalDescender = (((byte)'v' << 24) | ((byte)'d' << 16) | ((byte)'s' << 8) | (byte)'c'),
+		VerticalLineGap = (((byte)'v' << 24) | ((byte)'l' << 16) | ((byte)'g' << 8) | (byte)'p'),
+
+		HorizontalCaretRise = (((byte)'h' << 24) | ((byte)'c' << 16) | ((byte)'r' << 8) | (byte)'s'),
+		HorizontalCaretRun = (((byte)'h' << 24) | ((byte)'c' << 16) | ((byte)'r' << 8) | (byte)'n'),
+		HorizontalCaretOffset = (((byte)'h' << 24) | ((byte)'c' << 16) | ((byte)'o' << 8) | (byte)'f'),
+
+		VerticalCaretRise = (((byte)'v' << 24) | ((byte)'c' << 16) | ((byte)'r' << 8) | (byte)'s'),
+		VerticalCaretRun = (((byte)'v' << 24) | ((byte)'c' << 16) | ((byte)'r' << 8) | (byte)'n'),
+		VerticalCaretOffset = (((byte)'v' << 24) | ((byte)'c' << 16) | ((byte)'o' << 8) | (byte)'f'),
+
+		XHeight = (((byte)'x' << 24) | ((byte)'h' << 16) | ((byte)'g' << 8) | (byte)'t'),
+
+		CapHeight = (((byte)'c' << 24) | ((byte)'p' << 16) | ((byte)'h' << 8) | (byte)'t'),
+
+		SubScriptEmXSize = (((byte)'s' << 24) | ((byte)'b' << 16) | ((byte)'x' << 8) | (byte)'s'),
+		SubScriptEmYSize = (((byte)'s' << 24) | ((byte)'b' << 16) | ((byte)'y' << 8) | (byte)'s'),
+		SubScriptEmXOffset = (((byte)'s' << 24) | ((byte)'b' << 16) | ((byte)'x' << 8) | (byte)'o'),
+		SubScriptEmYOffset = (((byte)'s' << 24) | ((byte)'b' << 16) | ((byte)'y' << 8) | (byte)'o'),
+
+		SuperScriptEmXSize = (((byte)'s' << 24) | ((byte)'p' << 16) | ((byte)'x' << 8) | (byte)'s'),
+		SuperScriptEmYSize = (((byte)'s' << 24) | ((byte)'p' << 16) | ((byte)'y' << 8) | (byte)'s'),
+		SuperScriptEmXOffset = (((byte)'s' << 24) | ((byte)'p' << 16) | ((byte)'x' << 8) | (byte)'o'),
+		SuperScriptEmYOffset = (((byte)'s' << 24) | ((byte)'p' << 16) | ((byte)'y' << 8) | (byte)'o'),
+
+		StrikeoutSize = (((byte)'s' << 24) | ((byte)'t' << 16) | ((byte)'r' << 8) | (byte)'s'),
+		StrikeoutOffset = (((byte)'s' << 24) | ((byte)'t' << 16) | ((byte)'r' << 8) | (byte)'o'),
+
+		UnderlineSize = (((byte)'u' << 24) | ((byte)'n' << 16) | ((byte)'d' << 8) | (byte)'s'),
+		UnderlineOffset = (((byte)'u' << 24) | ((byte)'n' << 16) | ((byte)'d' << 8) | (byte)'o'),
 	}
 
 	public readonly struct OpenTypeMetrics
