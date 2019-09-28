@@ -17,6 +17,7 @@ namespace HarfBuzzSharp
 				throw new ArgumentNullException (nameof (face));
 
 			Handle = HarfBuzzApi.hb_font_create (face.Handle);
+			OpenTypeMetrics = new OpenTypeMetrics (Handle);
 		}
 
 		public Font (Font parent)
@@ -29,9 +30,12 @@ namespace HarfBuzzSharp
 
 			Parent = parent;
 			Handle = HarfBuzzApi.hb_font_create_sub_font (parent.Handle);
+			OpenTypeMetrics = new OpenTypeMetrics (Handle);
 		}
 
 		public Font Parent { get; }
+
+		public OpenTypeMetrics OpenTypeMetrics { get; }
 
 		public string[] SupportedShapers =>
 			PtrToStringArray (HarfBuzzApi.hb_shape_list_shapers ()).ToArray ();
@@ -63,11 +67,20 @@ namespace HarfBuzzSharp
 		public bool TryGetVerticalFontExtents (out FontExtents extents) =>
 			HarfBuzzApi.hb_font_get_v_extents (Handle, out extents);
 
+		public bool TryGetNominalGlyph (int unicode, out uint glyph) =>
+			TryGetNominalGlyph ((uint)unicode, out glyph);
+
 		public bool TryGetNominalGlyph (uint unicode, out uint glyph) =>
 			HarfBuzzApi.hb_font_get_nominal_glyph (Handle, unicode, out glyph);
 
+		public bool TryGetVariationGlyph (int unicode, out uint glyph) =>
+			TryGetVariationGlyph (unicode, 0, out glyph);
+
 		public bool TryGetVariationGlyph (uint unicode, out uint glyph) =>
 			HarfBuzzApi.hb_font_get_variation_glyph (Handle, unicode, 0, out glyph);
+
+		public bool TryGetVariationGlyph (int unicode, uint variationSelector, out uint glyph) =>
+			TryGetVariationGlyph ((uint)unicode, variationSelector, out glyph);
 
 		public bool TryGetVariationGlyph (uint unicode, uint variationSelector, out uint glyph) =>
 			HarfBuzzApi.hb_font_get_variation_glyph (Handle, unicode, variationSelector, out glyph);
@@ -149,8 +162,14 @@ namespace HarfBuzzSharp
 		public bool TryGetGlyphFromName (string name, out uint glyph) =>
 			HarfBuzzApi.hb_font_get_glyph_from_name (Handle, name, name.Length, out glyph);
 
+		public bool TryGetGlyph (int unicode, out uint glyph) =>
+			TryGetGlyph ((uint)unicode, 0, out glyph);
+
 		public bool TryGetGlyph (uint unicode, out uint glyph) =>
 			TryGetGlyph (unicode, 0, out glyph);
+
+		public bool TryGetGlyph (int unicode, uint variationSelector, out uint glyph) =>
+			TryGetGlyph ((uint)unicode, variationSelector, out glyph);
 
 		public bool TryGetGlyph (uint unicode, uint variationSelector, out uint glyph) =>
 			HarfBuzzApi.hb_font_get_glyph (Handle, unicode, variationSelector, out glyph);
