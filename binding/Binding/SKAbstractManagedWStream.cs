@@ -2,44 +2,43 @@
 using System.Runtime.InteropServices;
 using System.Threading;
 
-using NativePointerDictionary = System.Collections.Concurrent.ConcurrentDictionary<System.IntPtr, SkiaSharp.SKAbstractManagedWStream>;
-
 namespace SkiaSharp
 {
 	public abstract class SKAbstractManagedWStream : SKWStream
 	{
-		private static readonly NativePointerDictionary managedStreams = new NativePointerDictionary ();
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal delegate bool WriteDelegate (IntPtr s, IntPtr context, IntPtr buffer, IntPtr size);
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		internal delegate void FlushDelegate (IntPtr s, IntPtr context);
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		internal delegate IntPtr BytesWrittenDelegate (IntPtr s, IntPtr context);
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		internal delegate void DestroyDelegate (IntPtr s, IntPtr context);
 
-		// delegate declarations
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate bool write_delegate (IntPtr managedStreamPtr, IntPtr buffer, IntPtr size);
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate void flush_delegate (IntPtr managedStreamPtr);
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate IntPtr bytesWritten_delegate(IntPtr managedStreamPtr);
-		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		internal delegate void destroy_delegate (IntPtr managedStreamPtr);
+		[StructLayout (LayoutKind.Sequential)]
+		internal struct Procs
+		{
+			public WriteDelegate fWrite;
+			public FlushDelegate fFlush;
+			public BytesWrittenDelegate fBytesWritten;
+			public DestroyDelegate fDestroy;
+		}
 
-		// delegate fields
-		private static readonly write_delegate fWrite;
-		private static readonly flush_delegate fFlush;
-		private static readonly bytesWritten_delegate fBytesWritten;
-		private static readonly destroy_delegate fDestroy;
+		private static readonly Procs delegates;
 
 		private int fromNative;
 
 		static SKAbstractManagedWStream ()
 		{
-			fWrite = new write_delegate (WriteInternal);
-			fFlush = new flush_delegate (FlushInternal);
-			fBytesWritten = new bytesWritten_delegate (BytesWrittenInternal);
-			fDestroy = new destroy_delegate (DestroyInternal);
+			delegates = new Procs {
+				fWrite = WriteInternal,
+				fFlush = FlushInternal,
+				fBytesWritten = BytesWrittenInternal,
+				fDestroy = DestroyInternal,
+			};
 
-			SkiaApi.sk_managedwstream_set_delegates (
-				Marshal.GetFunctionPointerForDelegate (fWrite), 
-				Marshal.GetFunctionPointerForDelegate (fFlush),
-				Marshal.GetFunctionPointerForDelegate (fBytesWritten),
-				Marshal.GetFunctionPointerForDelegate (fDestroy));
+			SkiaApi.sk_managedwstream_set_procs (delegates);
 		}
 
 		protected SKAbstractManagedWStream ()
@@ -48,32 +47,16 @@ namespace SkiaSharp
 		}
 
 		protected SKAbstractManagedWStream (bool owns)
-			: base (SkiaApi.sk_managedwstream_new (), owns)
+			: base (IntPtr.Zero, owns)
 		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to create a new SKAbstractManagedWStream instance.");
-			}
-
-			managedStreams.TryAdd (Handle, this);
+			var ctx = DelegateProxies.CreateUserData (this, true);
+			Handle = SkiaApi.sk_managedwstream_new (ctx);
 		}
 
-		private void DisposeFromNative ()
+		protected override void DisposeNative ()
 		{
-			Interlocked.Exchange (ref fromNative, 1);
-			Dispose ();
-		}
-
-		protected override void Dispose (bool disposing)
-		{
-			if (disposing) {
-				managedStreams.TryRemove (Handle, out var managedStream);
-			}
-
-			if (Interlocked.CompareExchange (ref fromNative, 0, 0) == 0 && Handle != IntPtr.Zero && OwnsHandle) {
+			if (Interlocked.CompareExchange (ref fromNative, 0, 0) == 0)
 				SkiaApi.sk_managedwstream_destroy (Handle);
-			}
-
-			base.Dispose (disposing);
 		}
 
 		protected abstract bool OnWrite (IntPtr buffer, IntPtr size);
@@ -82,49 +65,36 @@ namespace SkiaSharp
 
 		protected abstract IntPtr OnBytesWritten ();
 
-		// unmanaged <-> managed methods (static for iOS)
-
-		[MonoPInvokeCallback (typeof (write_delegate))]
-		private static bool WriteInternal (IntPtr managedStreamPtr, IntPtr buffer, IntPtr size)
+		[MonoPInvokeCallback (typeof (WriteDelegate))]
+		private static bool WriteInternal (IntPtr s, IntPtr context, IntPtr buffer, IntPtr size)
 		{
-			return AsManagedStream (managedStreamPtr).OnWrite (buffer, size);
+			var stream = DelegateProxies.GetUserData<SKAbstractManagedWStream> (context, out _);
+			return stream.OnWrite (buffer, size);
 		}
 
-		[MonoPInvokeCallback (typeof (flush_delegate))]
-		private static void FlushInternal (IntPtr managedStreamPtr)
+		[MonoPInvokeCallback (typeof (FlushDelegate))]
+		private static void FlushInternal (IntPtr s, IntPtr context)
 		{
-			AsManagedStream (managedStreamPtr).OnFlush ();
+			var stream = DelegateProxies.GetUserData<SKAbstractManagedWStream> (context, out _);
+			stream.OnFlush ();
 		}
 
-		[MonoPInvokeCallback (typeof (bytesWritten_delegate))]
-		private static IntPtr BytesWrittenInternal (IntPtr managedStreamPtr)
+		[MonoPInvokeCallback (typeof (BytesWrittenDelegate))]
+		private static IntPtr BytesWrittenInternal (IntPtr s, IntPtr context)
 		{
-			return AsManagedStream (managedStreamPtr).OnBytesWritten ();
+			var stream = DelegateProxies.GetUserData<SKAbstractManagedWStream> (context, out _);
+			return stream.OnBytesWritten ();
 		}
 
-		[MonoPInvokeCallback (typeof (destroy_delegate))]
-		private static void DestroyInternal (IntPtr managedStreamPtr)
+		[MonoPInvokeCallback (typeof (DestroyDelegate))]
+		private static void DestroyInternal (IntPtr s, IntPtr context)
 		{
-			if (AsManagedStream (managedStreamPtr, out var managedStream)) {
-				managedStream.DisposeFromNative ();
+			var stream = DelegateProxies.GetUserData<SKAbstractManagedWStream> (context, out var gch);
+			if (stream != null) {
+				Interlocked.Exchange (ref stream.fromNative, 1);
+				stream.Dispose ();
 			}
-		}
-
-		private static SKAbstractManagedWStream AsManagedStream (IntPtr ptr)
-		{
-			if (AsManagedStream (ptr, out var target)) {
-				return target;
-			}
-			throw new ObjectDisposedException ("SKAbstractManagedWStream: " + ptr);
-		}
-
-		private static bool AsManagedStream (IntPtr ptr, out SKAbstractManagedWStream target)
-		{
-			if (managedStreams.TryGetValue (ptr, out target)) {
-				return true;
-			}
-			target = null;
-			return false;
+			gch.Free ();
 		}
 	}
 }

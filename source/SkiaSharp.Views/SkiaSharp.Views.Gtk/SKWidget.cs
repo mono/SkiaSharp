@@ -8,7 +8,6 @@ namespace SkiaSharp.Views.Gtk
 	public class SKWidget : global::Gtk.DrawingArea
 	{
 		private Gdk.Pixbuf pix;
-		private SKImageInfo imgInfo;
 		private SKSurface surface;
 
 		public SKWidget()
@@ -26,7 +25,10 @@ namespace SkiaSharp.Views.Gtk
 			var area = evnt.Area;
 
 			// get the pixbuf
-			CreateDrawingObjects();
+			var imgInfo = CreateDrawingObjects();
+
+			if (imgInfo.Width == 0 || imgInfo.Height == 0)
+				return true;
 
 			// start drawing
 			using (new SKAutoCanvasRestore(surface.Canvas, true))
@@ -87,34 +89,35 @@ namespace SkiaSharp.Views.Gtk
 			}
 		}
 
-		private void CreateDrawingObjects()
+		private SKImageInfo CreateDrawingObjects()
 		{
 			var alloc = Allocation;
-			var w = alloc.Width;
-			var h = alloc.Height;
-			if (pix == null || pix.Width != w || pix.Height != h)
+			var imgInfo = new SKImageInfo(alloc.Width, alloc.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
+
+			if (pix == null || pix.Width != imgInfo.Width || pix.Height != imgInfo.Height)
 			{
 				FreeDrawingObjects();
 
-				pix = new Gdk.Pixbuf(Gdk.Colorspace.Rgb, true, 8, w, h);
+				if (imgInfo.Width != 0 && imgInfo.Height != 0)
+				{
+					pix = new Gdk.Pixbuf(Gdk.Colorspace.Rgb, true, 8, imgInfo.Width, imgInfo.Height);
 
-				// (Re)create the Skia Drawing objects
-				imgInfo = new SKImageInfo(pix.Width, pix.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
-				surface = SKSurface.Create(imgInfo, pix.Pixels, imgInfo.RowBytes);
+					// (re)create the SkiaSharp drawing objects
+					surface = SKSurface.Create(imgInfo, pix.Pixels, imgInfo.RowBytes);
+				}
 			}
+
+			return imgInfo;
 		}
 
 		private void FreeDrawingObjects()
 		{
-			if (pix != null)
-			{
-				pix.Dispose();
-				pix = null;
+			pix?.Dispose();
+			pix = null;
 
-				// Skia objects should only exist if the Pixbuf is set as well
-				surface?.Dispose();
-				surface = null;
-			}
+			// SkiaSharp objects should only exist if the Pixbuf is set as well
+			surface?.Dispose();
+			surface = null;
 		}
 	}
 }

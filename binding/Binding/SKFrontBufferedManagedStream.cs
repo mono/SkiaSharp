@@ -46,18 +46,14 @@ namespace SkiaSharp
 			frontBuffer = new byte[bufferSize];
 		}
 
-		protected override void Dispose (bool disposing)
+		protected override void DisposeManaged ()
 		{
-			if (disposing)
-			{
-				if (disposeStream && stream != null)
-				{
-					stream.Dispose ();
-					stream = null;
-				}
+			if (disposeStream && stream != null) {
+				stream.Dispose ();
+				stream = null;
 			}
 
-			base.Dispose (disposing);
+			base.DisposeManaged ();
 		}
 
 		protected internal override IntPtr OnRead (IntPtr buffer, IntPtr size)

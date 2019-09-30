@@ -47,6 +47,9 @@ namespace SkiaSharp.Views.Mac
 			// create the skia context
 			using (var surface = drawable.CreateSurface(Bounds, IgnorePixelScaling ? 1 : ContentsScale, out var info))
 			{
+				if (info.Width == 0 || info.Height == 0)
+					return;
+
 				// draw on the image using SKiaSharp
 				OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));
 #pragma warning disable CS0618 // Type or member is obsolete

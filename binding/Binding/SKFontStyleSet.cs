@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace SkiaSharp
 {
-	public class SKFontStyleSet : SKObject, IEnumerable<SKFontStyle>, IReadOnlyCollection<SKFontStyle>, IReadOnlyList<SKFontStyle>
+	public class SKFontStyleSet : SKObject, ISKReferenceCounted, IEnumerable<SKFontStyle>, IReadOnlyCollection<SKFontStyle>, IReadOnlyList<SKFontStyle>
 	{
 		[Preserve]
 		internal SKFontStyleSet (IntPtr handle, bool owns)
@@ -15,15 +15,6 @@ namespace SkiaSharp
 		public SKFontStyleSet ()
 			: this (SkiaApi.sk_fontstyleset_create_empty (), true)
 		{
-		}
-
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_fontstyleset_unref (Handle);
-			}
-
-			base.Dispose (disposing);
 		}
 
 		public int Count => SkiaApi.sk_fontstyleset_get_count (Handle);

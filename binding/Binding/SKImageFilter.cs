@@ -7,7 +7,7 @@ namespace SkiaSharp
 	// TODO: `cropRectIsSet`, `getCropRect`
 	// TODO: `computeFastBounds`, `canComputeFastBounds`
 
-	public class SKImageFilter : SKObject
+	public class SKImageFilter : SKObject, ISKReferenceCounted
 	{
 		[Preserve]
 		internal SKImageFilter(IntPtr handle, bool owns)
@@ -15,16 +15,6 @@ namespace SkiaSharp
 		{
 		}
 
-		protected override void Dispose(bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle)
-			{
-				SkiaApi.sk_imagefilter_unref(Handle);
-			}
-
-			base.Dispose(disposing);
-		}
-		
 		public static SKImageFilter CreateMatrix(SKMatrix matrix, SKFilterQuality quality, SKImageFilter input = null)
 		{
 			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_matrix(ref matrix, quality, input == null ? IntPtr.Zero : input.Handle));
@@ -238,15 +228,10 @@ namespace SkiaSharp
 				: this(SkiaApi.sk_imagefilter_croprect_new_with_rect(ref rect, flags), true)
 			{
 			}
-			
-			protected override void Dispose(bool disposing)
-			{
-				if (Handle != IntPtr.Zero && OwnsHandle)
-				{
-					SkiaApi.sk_imagefilter_croprect_destructor(Handle);
-				}
-			}
-			
+
+			protected override void DisposeNative () =>
+				SkiaApi.sk_imagefilter_croprect_destructor (Handle);
+
 			public SKRect Rect
 			{
 				get

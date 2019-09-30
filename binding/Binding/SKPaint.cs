@@ -18,14 +18,8 @@ namespace SkiaSharp
 			}
 		}
 
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_paint_delete (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
+		protected override void DisposeNative () =>
+			SkiaApi.sk_paint_delete (Handle);
 
 		public void Reset ()
 		{
@@ -123,22 +117,22 @@ namespace SkiaSharp
 		}
 
 		public SKShader Shader {
-			get => GetObject<SKShader> (SkiaApi.sk_paint_get_shader (Handle), false);
+			get => GetObject<SKShader> (SkiaApi.sk_paint_get_shader (Handle));
 			set => SkiaApi.sk_paint_set_shader (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
 		public SKMaskFilter MaskFilter {
-			get => GetObject<SKMaskFilter> (SkiaApi.sk_paint_get_maskfilter (Handle), false);
+			get => GetObject<SKMaskFilter> (SkiaApi.sk_paint_get_maskfilter (Handle));
 			set => SkiaApi.sk_paint_set_maskfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
 		public SKColorFilter ColorFilter {
-			get => GetObject<SKColorFilter> (SkiaApi.sk_paint_get_colorfilter (Handle), false);
+			get => GetObject<SKColorFilter> (SkiaApi.sk_paint_get_colorfilter (Handle));
 			set => SkiaApi.sk_paint_set_colorfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
 		public SKImageFilter ImageFilter {
-			get => GetObject<SKImageFilter> (SkiaApi.sk_paint_get_imagefilter (Handle), false);
+			get => GetObject<SKImageFilter> (SkiaApi.sk_paint_get_imagefilter (Handle));
 			set => SkiaApi.sk_paint_set_imagefilter (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
@@ -153,7 +147,7 @@ namespace SkiaSharp
 		}
 
 		public SKTypeface Typeface {
-			get => GetObject<SKTypeface> (SkiaApi.sk_paint_get_typeface (Handle), false);
+			get => GetObject<SKTypeface> (SkiaApi.sk_paint_get_typeface (Handle));
 			set => SkiaApi.sk_paint_set_typeface (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 
@@ -183,7 +177,7 @@ namespace SkiaSharp
 		}
 
 		public SKPathEffect PathEffect {
-			get => GetObject<SKPathEffect> (SkiaApi.sk_paint_get_path_effect (Handle), false);
+			get => GetObject<SKPathEffect> (SkiaApi.sk_paint_get_path_effect (Handle));
 			set => SkiaApi.sk_paint_set_path_effect (Handle, value == null ? IntPtr.Zero : value.Handle);
 		}
 

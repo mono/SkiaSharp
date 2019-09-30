@@ -57,14 +57,8 @@ namespace SkiaSharp
 			return new SKString (str);
 		}
 
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_string_destructor (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
+		protected override void DisposeNative () =>
+			SkiaApi.sk_string_destructor (Handle);
 	}
 }
 

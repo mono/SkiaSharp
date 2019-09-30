@@ -19,23 +19,27 @@ namespace HarfBuzzSharp
 	[StructLayout (LayoutKind.Sequential)]
 	public struct Feature
 	{
+		private const int MaxFeatureStringSize = 128;
+
 		private Tag tag;
 		private uint val;
 		private uint start;
 		private uint end;
 
 		public Feature (Tag tag)
+			: this (tag, 1u, 0, uint.MaxValue)
 		{
-			this.tag = tag;
-			this.val = 1u;
-			this.start = 0;
-			this.end = uint.MaxValue;
 		}
 
-		public Feature (Tag tag, bool isEnabled, uint start, uint end)
+		public Feature (Tag tag, uint value)
+			: this (tag, value, 0, uint.MaxValue)
+		{
+		}
+
+		public Feature (Tag tag, uint value, uint start, uint end)
 		{
 			this.tag = tag;
-			this.val = isEnabled ? 1u : 0u;
+			this.val = value;
 			this.start = start;
 			this.end = end;
 		}
@@ -45,15 +49,9 @@ namespace HarfBuzzSharp
 			set => tag = value;
 		}
 
-		[Obsolete ("Use IsEnabled instead.")]
 		public uint Value {
 			get => val;
 			set => val = value;
-		}
-
-		public bool IsEnabled {
-			get => val == 1u;
-			set => val = value ? 1u : 0u;
 		}
 
 		public uint Start {
@@ -68,20 +66,16 @@ namespace HarfBuzzSharp
 
 		public override string ToString ()
 		{
-			const int AllocatedSize = 128;
-			var buffer = new StringBuilder (AllocatedSize);
-			HarfBuzzApi.hb_feature_to_string (ref this, buffer, AllocatedSize);
+			var buffer = new StringBuilder (MaxFeatureStringSize);
+			HarfBuzzApi.hb_feature_to_string (ref this, buffer, MaxFeatureStringSize);
 			return buffer.ToString ();
 		}
 
-		public static Feature FromString (string s)
-		{
-			if (HarfBuzzApi.hb_feature_from_string (s, -1, out var feature)) {
-				return feature;
-			}
+		public static bool TryParse (string s, out Feature feature) =>
+			HarfBuzzApi.hb_feature_from_string (s, -1, out feature);
 
-			return new Feature (Tag.None);
-		}
+		public static Feature Parse (string s) =>
+			TryParse (s, out var feature) ? feature : throw new FormatException ("Unrecognized feature string format.");
 	}
 
 	[StructLayout (LayoutKind.Sequential)]
@@ -165,13 +159,14 @@ namespace HarfBuzzSharp
 	}
 
 	[Flags]
-	public enum Flags : uint
+	public enum BufferFlags : uint
 	{
 		Default = 0x00000000u,
-		Bot = 0x00000001u,
-		Eot = 0x00000002u,
+		BeginningOfText = 0x00000001u,
+		EndOfText = 0x00000002u,
 		PreserveDefaultIgnorables = 0x00000004u,
-		RemoveDefaultIgnorables = 0x00000008u
+		RemoveDefaultIgnorables = 0x00000008u,
+		DoNotInsertDottedCircle = 0x00000010u,
 	}
 
 	public enum ContentType
@@ -380,5 +375,68 @@ namespace HarfBuzzSharp
 		LineSeparator,        // Zl
 		ParagraphSeparator,   // Zp
 		SpaceSeparator        // Zs
+	}
+
+	public enum OpenTypeMetricsTag : uint
+	{
+		HorizontalAscender = (((byte)'h' << 24) | ((byte)'a' << 16) | ((byte)'s' << 8) | (byte)'c'),
+		HorizontalDescender = (((byte)'h' << 24) | ((byte)'d' << 16) | ((byte)'s' << 8) | (byte)'c'),
+		HorizontalLineGap = (((byte)'h' << 24) | ((byte)'l' << 16) | ((byte)'g' << 8) | (byte)'p'),
+		HorizontalClippingAscent = (((byte)'h' << 24) | ((byte)'c' << 16) | ((byte)'l' << 8) | (byte)'a'),
+		HorizontalClippingDescent = (((byte)'h' << 24) | ((byte)'c' << 16) | ((byte)'l' << 8) | (byte)'d'),
+
+		VerticalAscender = (((byte)'v' << 24) | ((byte)'a' << 16) | ((byte)'s' << 8) | (byte)'c'),
+		VerticalDescender = (((byte)'v' << 24) | ((byte)'d' << 16) | ((byte)'s' << 8) | (byte)'c'),
+		VerticalLineGap = (((byte)'v' << 24) | ((byte)'l' << 16) | ((byte)'g' << 8) | (byte)'p'),
+
+		HorizontalCaretRise = (((byte)'h' << 24) | ((byte)'c' << 16) | ((byte)'r' << 8) | (byte)'s'),
+		HorizontalCaretRun = (((byte)'h' << 24) | ((byte)'c' << 16) | ((byte)'r' << 8) | (byte)'n'),
+		HorizontalCaretOffset = (((byte)'h' << 24) | ((byte)'c' << 16) | ((byte)'o' << 8) | (byte)'f'),
+
+		VerticalCaretRise = (((byte)'v' << 24) | ((byte)'c' << 16) | ((byte)'r' << 8) | (byte)'s'),
+		VerticalCaretRun = (((byte)'v' << 24) | ((byte)'c' << 16) | ((byte)'r' << 8) | (byte)'n'),
+		VerticalCaretOffset = (((byte)'v' << 24) | ((byte)'c' << 16) | ((byte)'o' << 8) | (byte)'f'),
+
+		XHeight = (((byte)'x' << 24) | ((byte)'h' << 16) | ((byte)'g' << 8) | (byte)'t'),
+
+		CapHeight = (((byte)'c' << 24) | ((byte)'p' << 16) | ((byte)'h' << 8) | (byte)'t'),
+
+		SubScriptEmXSize = (((byte)'s' << 24) | ((byte)'b' << 16) | ((byte)'x' << 8) | (byte)'s'),
+		SubScriptEmYSize = (((byte)'s' << 24) | ((byte)'b' << 16) | ((byte)'y' << 8) | (byte)'s'),
+		SubScriptEmXOffset = (((byte)'s' << 24) | ((byte)'b' << 16) | ((byte)'x' << 8) | (byte)'o'),
+		SubScriptEmYOffset = (((byte)'s' << 24) | ((byte)'b' << 16) | ((byte)'y' << 8) | (byte)'o'),
+
+		SuperScriptEmXSize = (((byte)'s' << 24) | ((byte)'p' << 16) | ((byte)'x' << 8) | (byte)'s'),
+		SuperScriptEmYSize = (((byte)'s' << 24) | ((byte)'p' << 16) | ((byte)'y' << 8) | (byte)'s'),
+		SuperScriptEmXOffset = (((byte)'s' << 24) | ((byte)'p' << 16) | ((byte)'x' << 8) | (byte)'o'),
+		SuperScriptEmYOffset = (((byte)'s' << 24) | ((byte)'p' << 16) | ((byte)'y' << 8) | (byte)'o'),
+
+		StrikeoutSize = (((byte)'s' << 24) | ((byte)'t' << 16) | ((byte)'r' << 8) | (byte)'s'),
+		StrikeoutOffset = (((byte)'s' << 24) | ((byte)'t' << 16) | ((byte)'r' << 8) | (byte)'o'),
+
+		UnderlineSize = (((byte)'u' << 24) | ((byte)'n' << 16) | ((byte)'d' << 8) | (byte)'s'),
+		UnderlineOffset = (((byte)'u' << 24) | ((byte)'n' << 16) | ((byte)'d' << 8) | (byte)'o'),
+	}
+
+	public readonly struct OpenTypeMetrics
+	{
+		private readonly IntPtr font;
+
+		public OpenTypeMetrics (IntPtr font)
+		{
+			this.font = font;
+		}
+
+		public bool TryGetPosition (OpenTypeMetricsTag metricsTag, out int position) =>
+			HarfBuzzApi.hb_ot_metrics_get_position (font, metricsTag, out position);
+
+		public float GetVariation (OpenTypeMetricsTag metricsTag) =>
+			HarfBuzzApi.hb_ot_metrics_get_variation (font, metricsTag);
+
+		public int GetXVariation (OpenTypeMetricsTag metricsTag) =>
+			HarfBuzzApi.hb_ot_metrics_get_x_variation (font, metricsTag);
+
+		public int GetYVariation (OpenTypeMetricsTag metricsTag) =>
+			HarfBuzzApi.hb_ot_metrics_get_y_variation (font, metricsTag);
 	}
 }

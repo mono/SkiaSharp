@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests
 {
 	public class GRGlInterfaceTest : SKTest
 	{
-		[Trait(Category, GpuCategory)]
+		[Trait(CategoryKey, GpuCategory)]
 		[SkippableFact]
 		public void CreateDefaultInterfaceIsValid()
 		{
@@ -21,7 +21,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Trait(Category, GpuCategory)]
+		[Trait(CategoryKey, GpuCategory)]
 		[SkippableFact]
 		public void AssembleInterfaceIsValid()
 		{

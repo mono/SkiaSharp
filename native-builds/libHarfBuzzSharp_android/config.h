@@ -20,19 +20,19 @@
 /* #undef HAVE_DIRECTWRITE */
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
-#define HAVE_DLFCN_H 1
+/* #undef HAVE_DLFCN_H */
 
 /* Define to 1 if you have the <dwrite.h> header file. */
 /* #undef HAVE_DWRITE_H */
 
 /* Have simple TrueType Layout backend */
-#define HAVE_FALLBACK 1
+/* #undef HAVE_FALLBACK */
 
 /* Have fontconfig library */
-#define HAVE_FONTCONFIG 1
+/* #undef HAVE_FONTCONFIG */
 
 /* Have FreeType 2 library */
-#define HAVE_FREETYPE 1
+/* #undef HAVE_FREETYPE */
 
 /* Define to 1 if you have the `FT_Get_Var_Blend_Coordinates' function. */
 /* #undef HAVE_FT_GET_VAR_BLEND_COORDINATES */
@@ -115,9 +115,6 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1
 
-/* Have UCDN Unicode functions */
-#define HAVE_UCDN 1
-
 /* Have Uniscribe library */
 /* #undef HAVE_UNISCRIBE */
 
@@ -141,7 +138,7 @@
 #define PACKAGE_NAME "HarfBuzz"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "HarfBuzz 2.3.1"
+#define PACKAGE_STRING "HarfBuzz 2.6.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "harfbuzz"
@@ -150,7 +147,7 @@
 #define PACKAGE_URL "http://harfbuzz.org/"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.3.1"
+#define PACKAGE_VERSION "2.6.1"
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */

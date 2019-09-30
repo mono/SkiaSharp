@@ -1,10 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace HarfBuzzSharp
 {
 	public class Face : NativeObject
 	{
+		private static readonly Lazy<Face> emptyFace = new Lazy<Face> (() => new StaticFace (HarfBuzzApi.hb_face_get_empty ()));
+
+		public static Face Empty => emptyFace.Value;
+
 		public Face (Blob blob, uint index)
 			: this (blob, (int)index)
 		{
@@ -22,6 +25,23 @@ namespace HarfBuzzSharp
 			}
 
 			Handle = HarfBuzzApi.hb_face_create (blob.Handle, index);
+		}
+
+		public Face (GetTableDelegate getTable)
+			: this (getTable, null)
+		{
+		}
+
+		public Face (GetTableDelegate getTable, ReleaseDelegate destroy)
+			: this (IntPtr.Zero)
+		{
+			if (getTable == null)
+				throw new ArgumentNullException (nameof (getTable));
+
+			Handle = HarfBuzzApi.hb_face_create_for_tables (
+				DelegateProxies.GetTableDelegateProxy,
+				DelegateProxies.CreateMultiUserData (getTable, destroy, this),
+				DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
 		internal Face (IntPtr handle)
@@ -67,6 +87,19 @@ namespace HarfBuzzSharp
 		{
 			if (Handle != IntPtr.Zero) {
 				HarfBuzzApi.hb_face_destroy (Handle);
+			}
+		}
+
+		private class StaticFace : Face
+		{
+			public StaticFace (IntPtr handle)
+				: base (handle)
+			{
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				// do not dispose
 			}
 		}
 	}

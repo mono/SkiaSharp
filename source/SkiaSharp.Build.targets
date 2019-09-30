@@ -41,14 +41,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="mdoc" Version="5.7.4.3" PrivateAssets="All" />
+    <PackageReference Include="mdoc" Version="5.7.4.9" PrivateAssets="All" />
   </ItemGroup>
 
   <!--
     ===================================================================================================================
     _GenerateAssemblyVersionInfo
 
-    Generate the assembly versioning attributes.
+    Generate the assembly versioning attributes from the VERSIONS.txt file.
     ===================================================================================================================
   -->
   <Target Name="_GenerateAssemblyVersionInfo" BeforeTargets="CoreCompile" Condition=" '$(SkipGenerateAssemblyVersionInfo)' != 'true' ">
@@ -56,10 +56,21 @@
       <_VersionSourceFile>$(IntermediateOutputPath)\$(AssemblyName).Version.cs</_VersionSourceFile>
       <_VersionTxtFile>$(MSBuildThisFileDirectory)..\VERSIONS.txt</_VersionTxtFile>
     </PropertyGroup>
-    <_GenerateVersionFiles VersionsFile="$(_VersionTxtFile)"
-                           OutFile="$(_VersionSourceFile)"
-                           PackagingGroup="$(PackagingGroup)"
-                           GitSha="$(AssemblyVersionGitSha)" />
+    <PropertyGroup>
+      <_VersionTxtContents>$([System.IO.File]::ReadAllText($(_VersionTxtFile)))</_VersionTxtContents>
+      <_VersionGitSha Condition=" '$(AssemblyVersionGitSha)' != '' ">-$(AssemblyVersionGitSha)</_VersionGitSha>
+      <_VersionPackagingGroup>$(PackagingGroup.Split('.')[0])</_VersionPackagingGroup>
+      <_VersionAssemblyPattern>^$(_VersionPackagingGroup)\s*assembly\s*(.*)$</_VersionAssemblyPattern>
+      <_VersionFilePattern>^$(_VersionPackagingGroup)\s*file\s*(.*)$</_VersionFilePattern>
+      <_VersionAssemblyMatch>$([System.Text.RegularExpressions.Regex]::Match($(_VersionTxtContents), $(_VersionAssemblyPattern), System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value.Trim())</_VersionAssemblyMatch>
+      <_VersionFileMatch>$([System.Text.RegularExpressions.Regex]::Match($(_VersionTxtContents), $(_VersionFilePattern), System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value.Trim())</_VersionFileMatch>
+      <_VersionGeneratedContents>
+[assembly: System.Reflection.AssemblyVersion("$(_VersionAssemblyMatch)")]
+[assembly: System.Reflection.AssemblyFileVersion("$(_VersionFileMatch)")]
+[assembly: System.Reflection.AssemblyInformationalVersion("$(_VersionFileMatch)$(_VersionGitSha)")]
+      </_VersionGeneratedContents>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(_VersionSourceFile)" Lines="$(_VersionGeneratedContents)" Overwrite="true" />
     <ItemGroup>
       <FileWrites Include="$(_VersionSourceFile)" />
       <Compile Include="$(_VersionSourceFile)" />
@@ -149,47 +160,5 @@
       <FileWrites Include="$(MDocIntermediateOutputPath)\*" />
     </ItemGroup>
   </Target>
-
-  <!--
-    ===================================================================================================================
-    _GenerateVersionFiles
-
-    Generates the assembly versioning files.
-    ===================================================================================================================
-  -->
-  <UsingTask TaskName="_GenerateVersionFiles" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll" >  
-    <ParameterGroup>
-      <VersionsFile ParameterType="System.String" />
-      <OutFile ParameterType="System.String" />
-      <PackagingGroup ParameterType="System.String" />
-      <GitSha ParameterType="System.String" />
-    </ParameterGroup>
-    <Task>
-      <!-- <Reference Include="" /> -->
-      <Using Namespace="System.Text.RegularExpressions" />
-      <Code Type="Fragment" Language="cs"><![CDATA[
-        var versions = File.ReadAllText(VersionsFile);
-
-        var group = PackagingGroup;
-        if (PackagingGroup.Contains('.')) {
-          group = PackagingGroup.Split('.')[0];
-        }
-
-        if (!string.IsNullOrEmpty(GitSha)) {
-          GitSha = "-" + GitSha;
-        }
-
-        var assemblyMatch = Regex.Match(versions, @"^" + group + @"\s*assembly\s*(.*)$", RegexOptions.IgnoreCase | RegexOptions.Multiline);
-        var fileMatch = Regex.Match(versions, @"^" + group + @"\s*file\s*(.*)$", RegexOptions.IgnoreCase | RegexOptions.Multiline);
-
-        var contents = "using System.Reflection;\n\n";
-        contents += "[assembly: AssemblyVersion(\"" + assemblyMatch.Groups[1].Value.Trim() + "\")]\n";
-        contents += "[assembly: AssemblyFileVersion(\"" + fileMatch.Groups[1].Value.Trim() + "\")]\n";
-        contents += "[assembly: AssemblyInformationalVersion(\"" + fileMatch.Groups[1].Value.Trim() + GitSha + "\")]\n";
-
-        File.WriteAllText(OutFile, contents);
-      ]]></Code>
-    </Task>
-  </UsingTask>
 
 </Project>

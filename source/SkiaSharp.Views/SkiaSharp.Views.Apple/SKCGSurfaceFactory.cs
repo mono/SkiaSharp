@@ -18,7 +18,6 @@ namespace SkiaSharp.Views.Mac
 		private const CGBitmapFlags BitmapFlags = CGBitmapFlags.ByteOrder32Big | CGBitmapFlags.PremultipliedLast;
 
 		private IntPtr bitmapData;
-		private int lastLength;
 
 		public SKImageInfo Info { get; private set; }
 
@@ -29,30 +28,31 @@ namespace SkiaSharp.Views.Mac
 			contentsBounds.Height *= scale;
 
 			// get context details
-			info = new SKImageInfo((int)contentsBounds.Width, (int)contentsBounds.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
-			Info = info;
+			Info = info = CreateInfo((int)contentsBounds.Width, (int)contentsBounds.Height);
+
+			// if there are no pixels, clean up and return
+			if (info.Width == 0 || info.Height == 0)
+			{
+				Dispose();
+				return null;
+			}
 
 			// allocate a memory block for the drawing process
-			var newLength = info.BytesSize;
-			if (lastLength != newLength)
-			{
-				lastLength = newLength;
-				if (bitmapData != IntPtr.Zero)
-					bitmapData = Marshal.ReAllocCoTaskMem(bitmapData, newLength);
-				else
-					bitmapData = Marshal.AllocCoTaskMem(newLength);
-			}
+			if (bitmapData == IntPtr.Zero)
+				bitmapData = Marshal.AllocCoTaskMem(info.BytesSize);
 
 			return SKSurface.Create(info, bitmapData, info.RowBytes);
 		}
 
 		public void DrawSurface(CGContext ctx, CGRect viewBounds, SKImageInfo info, SKSurface surface)
 		{
+			if (info.Width == 0 || info.Height == 0)
+				return;
+
 			surface.Canvas.Flush();
-			surface.Dispose();
 
 			// draw the image onto the context
-			using (var dataProvider = new CGDataProvider(bitmapData, lastLength))
+			using (var dataProvider = new CGDataProvider(bitmapData, info.BytesSize))
 			using (var colorSpace = CGColorSpace.CreateDeviceRGB())
 			using (var image = new CGImage(info.Width, info.Height, BitsPerByte, info.BytesPerPixel * BitsPerByte, info.RowBytes, colorSpace, BitmapFlags, dataProvider, null, false, CGColorRenderingIntent.Default))
 			{
@@ -82,6 +82,10 @@ namespace SkiaSharp.Views.Mac
 				Marshal.FreeCoTaskMem(bitmapData);
 				bitmapData = IntPtr.Zero;
 			}
+			Info = CreateInfo(0, 0);
 		}
+
+		private SKImageInfo CreateInfo(int width, int height) =>
+			new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
 	}
 }

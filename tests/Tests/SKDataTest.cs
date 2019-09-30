@@ -10,6 +10,16 @@ namespace SkiaSharp.Tests
 		private readonly static byte[] OddData = new byte[] { 1, 3, 5, 7, 9 };
 
 		[SkippableFact]
+		public void EmptyDataIsNotDisposed()
+		{
+			var empty = SKData.Empty;
+			Assert.True(SKObject.GetInstance<SKData>(empty.Handle, out _));
+
+			empty.Dispose();
+			Assert.True(SKObject.GetInstance<SKData>(empty.Handle, out _));
+		}
+
+		[SkippableFact]
 		public void ValidDataProperties()
 		{
 			var data = SKData.CreateCopy(OddData);
@@ -34,6 +44,20 @@ namespace SkiaSharp.Tests
 
 			Assert.NotNull(data);
 			Assert.True(data.Size > 0);
+		}
+
+		[SkippableFact]
+		public void NoDelegateDataCanBeCreated()
+		{
+			var memory = Marshal.AllocCoTaskMem(10);
+
+			using (var data = SKData.Create(memory, 10))
+			{
+				Assert.Equal(memory, data.Data);
+				Assert.Equal(10, data.Size);
+			}
+
+			Marshal.FreeCoTaskMem(memory);
 		}
 
 		[SkippableFact]

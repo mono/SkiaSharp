@@ -6,37 +6,24 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	// public delegates
-	public delegate void SKDataReleaseDelegate (IntPtr address, object context);
-
-	// internal proxy delegates
-	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal delegate void SKDataReleaseDelegateInternal (IntPtr address, IntPtr context);
-
-	public class SKData : SKObject
+	public class SKData : SKObject, ISKNonVirtualReferenceCounted
 	{
-		private const int CopyBufferSize = 8192;
+		// We pick a value that is the largest multiple of 4096 that is still smaller than the large object heap threshold (85K).
+		// The CopyTo/CopyToAsync buffer is short-lived and is likely to be collected at Gen0, and it offers a significant
+		// improvement in Copy performance.
+		internal const int CopyBufferSize = 81920;
 
-		private static Lazy<SKData> empty;
+		private static readonly Lazy<SKData> empty;
 
-		// so the GC doesn't collect the delegate
-		private static readonly SKDataReleaseDelegateInternal releaseDelegateInternal;
-		private static readonly IntPtr releaseDelegate;
-		static SKData ()
+		static SKData()
 		{
-			releaseDelegateInternal = new SKDataReleaseDelegateInternal (ReleaseInternal);
-			releaseDelegate = Marshal.GetFunctionPointerForDelegate (releaseDelegateInternal);
-
-			empty = new Lazy<SKData> (() => GetObject<SKData> (SkiaApi.sk_data_new_empty ()));
+			empty = new Lazy<SKData> (() => new SKDataStatic (SkiaApi.sk_data_new_empty ()));
 		}
 
-		protected override void Dispose (bool disposing)
+		internal static void EnsureStaticInstanceAreInitialized ()
 		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_data_unref (Handle);
-			}
-
-			base.Dispose (disposing);
+			// IMPORTANT: do not remove to ensure that the static instances
+			//            are initialized before any access is made to them
 		}
 
 		[Preserve]
@@ -44,6 +31,10 @@ namespace SkiaSharp
 			: base (x, owns)
 		{
 		}
+
+		void ISKNonVirtualReferenceCounted.ReferenceNative () => SkiaApi.sk_data_ref (Handle);
+
+		void ISKNonVirtualReferenceCounted.UnreferenceNative () => SkiaApi.sk_data_unref (Handle);
 
 		public static SKData Empty => empty.Value;
 
@@ -54,14 +45,19 @@ namespace SkiaSharp
 			return GetObject<SKData> (SkiaApi.sk_data_new_with_copy (bytes, (IntPtr) length));
 		}
 
-		public static SKData CreateCopy (byte[] bytes)
-		{
-			return CreateCopy (bytes, (ulong) bytes.Length);
-		}
+		public static SKData CreateCopy (byte[] bytes) =>
+			CreateCopy (bytes, (ulong)bytes.Length);
 
-		public static SKData CreateCopy (byte[] bytes, ulong length)
+		public static SKData CreateCopy (byte[] bytes, ulong length) =>
+			GetObject<SKData> (SkiaApi.sk_data_new_with_copy (bytes, (IntPtr)length));
+
+		public static SKData CreateCopy (ReadOnlySpan<byte> bytes)
 		{
-			return GetObject<SKData> (SkiaApi.sk_data_new_with_copy (bytes, (IntPtr) length));
+			unsafe {
+				fixed (byte* b = bytes) {
+					return CreateCopy ((IntPtr)b, (ulong)bytes.Length);
+				}
+			}
 		}
 
 		public static SKData Create (int size)
@@ -164,12 +160,11 @@ namespace SkiaSharp
 
 		public static SKData Create (IntPtr address, int length, SKDataReleaseDelegate releaseProc, object context)
 		{
-			if (releaseProc == null) {
-				return GetObject<SKData> (SkiaApi.sk_data_new_with_proc (address, (IntPtr) length, IntPtr.Zero, IntPtr.Zero));
-			} else {
-				var ctx = new NativeDelegateContext (context, releaseProc);
-				return GetObject<SKData> (SkiaApi.sk_data_new_with_proc (address, (IntPtr) length, releaseDelegate, ctx.NativeContext));
-			}
+			var del = releaseProc != null && context != null
+				? new SKDataReleaseDelegate ((addr, _) => releaseProc (addr, context))
+				: releaseProc;
+			var proxy = DelegateProxies.Create (del, DelegateProxies.SKDataReleaseDelegateProxy, out _, out var ctx);
+			return GetObject<SKData> (SkiaApi.sk_data_new_with_proc (address, (IntPtr)length, proxy, ctx));
 		}
 
 		internal static SKData FromCString (string str)
@@ -189,16 +184,11 @@ namespace SkiaSharp
 			return GetObject<SKData> (SkiaApi.sk_data_new_subset (Handle, (IntPtr) offset, (IntPtr) length));
 		}
 
-		public byte [] ToArray ()
+		public byte[] ToArray ()
 		{
-			var size = (int)Size;
-			var bytes = new byte [size];
-
-			if (size > 0) {
-				Marshal.Copy (Data, bytes, 0, size);
-			}
-
-			return bytes;
+			var array = AsSpan ().ToArray ();
+			GC.KeepAlive (this);
+			return array;
 		}
 
 		public bool IsEmpty => Size == 0;
@@ -207,14 +197,17 @@ namespace SkiaSharp
 
 		public IntPtr Data => SkiaApi.sk_data_get_data (Handle);
 
-		public Stream AsStream ()
-		{
-			return new SKDataStream (this, false);
-		}
+		public Stream AsStream () =>
+			new SKDataStream (this, false);
 
-		public Stream AsStream (bool streamDisposesData)
+		public Stream AsStream (bool streamDisposesData) =>
+			new SKDataStream (this, streamDisposesData);
+
+		public ReadOnlySpan<byte> AsSpan ()
 		{
-			return new SKDataStream (this, streamDisposesData);
+			unsafe {
+				return new ReadOnlySpan<byte> ((void*)Data, (int)Size);
+			}
 		}
 
 		public void SaveTo (Stream target)
@@ -232,16 +225,6 @@ namespace SkiaSharp
 				left -= copyCount;
 				ptr += copyCount;
 				target.Write (buffer, 0, copyCount);
-			}
-		}
-
-		// internal proxy
-
-		[MonoPInvokeCallback (typeof (SKDataReleaseDelegateInternal))]
-		private static void ReleaseInternal (IntPtr address, IntPtr context)
-		{
-			using (var ctx = NativeDelegateContext.Unwrap (context)) {
-				ctx.GetDelegate<SKDataReleaseDelegate> () (address, ctx.ManagedContext);
 			}
 		}
 
@@ -267,6 +250,19 @@ namespace SkiaSharp
 				host = null;
 			}
 		}
+
+		private sealed class SKDataStatic : SKData
+		{
+			internal SKDataStatic (IntPtr x)
+				: base (x, false)
+			{
+				IgnorePublicDispose = true;
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				// do not dispose
+			}
+		}
 	}
 }
-
