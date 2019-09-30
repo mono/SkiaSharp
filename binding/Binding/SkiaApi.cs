@@ -1027,6 +1027,8 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_bitmap (sk_bitmap_t src, SKShaderTileMode tmx, SKShaderTileMode tmy, nullptr_t matrixZero);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		public extern static sk_shader_t sk_shader_new_picture (sk_picture_t src, SKShaderTileMode tmx, SKShaderTileMode tmy, ref SKMatrix matrix, ref SKRect tile);
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_linear_gradient ([In] SKPoint[] points, [In] SKColor[] colors, float[] colorPos, int count, SKShaderTileMode mode, ref SKMatrix matrix);
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		public extern static sk_shader_t sk_shader_new_linear_gradient ([In] SKPoint[] points, [In] SKColor[] colors, float[] colorPos, int count, SKShaderTileMode mode, nullptr_t matrixZero);
