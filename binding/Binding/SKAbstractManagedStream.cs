@@ -42,6 +42,25 @@ namespace SkiaSharp
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 		internal delegate void DestroyDelegate (IntPtr s, IntPtr context);
 
+#if __WASM__
+		[StructLayout (LayoutKind.Sequential)]
+		internal struct Procs
+		{
+			public IntPtr fRead;
+			public IntPtr fPeek;
+			public IntPtr fIsAtEnd;
+			public IntPtr fHasPosition;
+			public IntPtr fHasLength;
+			public IntPtr fRewind;
+			public IntPtr fGetPosition;
+			public IntPtr fSeek;
+			public IntPtr fMove;
+			public IntPtr fGetLength;
+			public IntPtr fDuplicate;
+			public IntPtr fFork;
+			public IntPtr fDestroy;
+		}
+#else
 		[StructLayout (LayoutKind.Sequential)]
 		internal struct Procs
 		{
@@ -59,6 +78,7 @@ namespace SkiaSharp
 			public ForkDelegate fFork;
 			public DestroyDelegate fDestroy;
 		}
+#endif
 
 		private static readonly Procs delegates;
 
@@ -66,6 +86,38 @@ namespace SkiaSharp
 
 		static SKAbstractManagedStream ()
 		{
+#if __WASM__
+			//
+			// Javascript returns the list of registered methods, then the
+			// sk_managedstream_set_delegates gets called through P/Invoke
+			// because it is not exported when building for AOT.
+			//
+
+			var ret = WebAssembly.Runtime.InvokeJS ($"SkiaSharp.SurfaceManager.registerManagedStream();");
+			var funcs = ret.Split (new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+				.Select (f => (IntPtr)int.Parse (f, CultureInfo.InvariantCulture))
+				.ToArray ();
+
+			if (funcs.Length == 13) {
+				delegates = new Procs {
+					fRead = funcs[0],
+					fPeek = funcs[1],
+					fIsAtEnd = funcs[2],
+					fHasPosition = funcs[3],
+					fHasLength = funcs[4],
+					fRewind = funcs[5],
+					fGetPosition = funcs[6],
+					fSeek = funcs[7],
+					fMove = funcs[8],
+					fGetLength = funcs[9],
+					fDuplicate = funcs[10],
+					fFork = funcs[11],
+					fDestroy = funcs[12],
+				};
+			} else {
+				throw new InvalidOperationException ($"Mismatch for registerManagedStream returned values (got {funcs.Length}, expected 12)");
+			}
+#else
 			delegates = new Procs {
 				fRead = ReadInternal,
 				fPeek = PeekInternal,
@@ -81,6 +133,8 @@ namespace SkiaSharp
 				fFork = ForkInternal,
 				fDestroy = DestroyInternal,
 			};
+#endif
+
 			SkiaApi.sk_managedstream_set_procs (delegates);
 		}
 
@@ -226,82 +280,6 @@ namespace SkiaSharp
 				stream.Dispose ();
 			}
 			gch.Free ();
-		}
-	}
-
-	public static class ManagedStreamHelper
-	{
-		public static int ReadInternal (int managedStreamPtr, int buffer, int size)
-		{
-			var ret = (int)SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnRead ((IntPtr)buffer, (IntPtr)size);
-			return ret;
-		}
-
-		public static int PeekInternal (int managedStreamPtr, int buffer, int size)
-		{
-			var ret = (int)SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnPeek ((IntPtr)buffer, (IntPtr)size);
-			return ret;
-		}
-
-		public static bool IsAtEndInternal (int managedStreamPtr)
-		{
-			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnIsAtEnd ();
-			return ret;
-		}
-
-		public static bool HasPositionInternal (int managedStreamPtr)
-		{
-			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnHasPosition ();
-			return ret;
-		}
-
-		public static bool HasLengthInternal (int managedStreamPtr)
-		{
-			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnHasLength ();
-			return ret;
-		}
-
-		public static bool RewindInternal (int managedStreamPtr)
-		{
-			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnRewind ();
-			return ret;
-		}
-
-		public static int GetPositionInternal (int managedStreamPtr)
-		{
-			var ret = (int)SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnGetPosition ();
-			return ret;
-		}
-
-		public static bool SeekInternal (int managedStreamPtr, int position)
-		{
-			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnSeek ((IntPtr)position);
-			return ret;
-		}
-
-		public static bool MoveInternal (int managedStreamPtr, int offset)
-		{
-			var ret = SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnMove (offset);
-			return ret;
-		}
-
-		public static int GetLengthInternal (int managedStreamPtr)
-		{
-			var ret = (int)SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnGetLength ();
-			return ret;
-		}
-
-		public static int CreateNewInternal (int managedStreamPtr)
-		{
-			var ret = (int)SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr).OnCreateNew ();
-			return ret;
-		}
-
-		public static void DestroyInternal (int managedStreamPtr)
-		{
-			if (SKAbstractManagedStream.AsManagedStream ((IntPtr)managedStreamPtr, out var managedStream)) {
-				managedStream.DisposeFromNative ();
-			}
 		}
 	}
 }

@@ -21,7 +21,10 @@ namespace SkiaSharpSample
 				.ToArray();
 
 			SkiaSharpVersion = GetAssemblyVersion<SkiaSharp.SKSurface>();
+
+#if !HAS_UNO
 			HarfBuzzSharpVersion = GetAssemblyVersion<HarfBuzzSharp.Blob>();
+#endif
 		}
 
 		public static string SkiaSharpVersion { get; }
@@ -71,7 +74,7 @@ namespace SkiaSharpSample
 			var apiAssembly = typeof(T).Assembly;
 			var attributes = apiAssembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute));
 			var attribute = (AssemblyInformationalVersionAttribute)attributes.FirstOrDefault();
-			return attribute.InformationalVersion;
+			return attribute?.InformationalVersion ?? "0.0.0.0";
 		}
 	}
 }

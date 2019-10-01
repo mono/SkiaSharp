@@ -58,7 +58,6 @@ namespace SkiaSharp
 
 		public int SaveLayer (SKPaint paint)
 		{
-			Console.WriteLine ($"SaveLayer2");
 			return SkiaApi.sk_canvas_save_layer (Handle, IntPtr.Zero, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 

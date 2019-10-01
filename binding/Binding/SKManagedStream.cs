@@ -100,7 +100,7 @@ namespace SkiaSharp
 			return (IntPtr)result;
 		}
 
-		protected internal override IntPtr OnRead (IntPtr buffer, IntPtr size)
+		protected override IntPtr OnRead (IntPtr buffer, IntPtr size)
 		{
 			VerifyOriginal ();
 
