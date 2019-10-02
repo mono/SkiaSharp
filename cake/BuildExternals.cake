@@ -113,8 +113,8 @@ Task ("externals-windows")
         // copy libHarfBuzzSharp to output
         var outDir = $"output/native/windows/{dir}";
         EnsureDirectoryExists (outDir);
-        CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_windows/bin/{arch}/Release/libHarfBuzzSharp.dll", outDir);
-        CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_windows/bin/{arch}/Release/libHarfBuzzSharp.pdb", outDir);
+        CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_windows/bin/{arch}/{CONFIGURATION}/libHarfBuzzSharp.dll", outDir);
+        CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_windows/bin/{arch}/{CONFIGURATION}/libHarfBuzzSharp.pdb", outDir);
     });
 
     buildHarfBuzzArch ("Win32", "x86");
@@ -163,8 +163,8 @@ Task ("externals-uwp")
         // copy libHarfBuzzSharp to output
         var outDir = $"output/native/uwp/{dir}";
         EnsureDirectoryExists (outDir);
-        CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_uwp/bin/{arch}/Release/libHarfBuzzSharp.dll", outDir);
-        CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_uwp/bin/{arch}/Release/libHarfBuzzSharp.pdb", outDir);
+        CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_uwp/bin/{arch}/{CONFIGURATION}/libHarfBuzzSharp.dll", outDir);
+        CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_uwp/bin/{arch}/{CONFIGURATION}/libHarfBuzzSharp.pdb", outDir);
     });
 
     buildHarfBuzzArch ("Win32", "x86");
@@ -180,8 +180,8 @@ Task ("externals-uwp")
         // copy SkiaSharp.Views.Interop.UWP to native
         var outDir = $"./output/native/uwp/{dir}";
         EnsureDirectoryExists (outDir);
-        CopyFileToDirectory ($"source/SkiaSharp.Views.Interop.UWP/bin/{arch}/Release/SkiaSharp.Views.Interop.UWP.dll", outDir);
-        CopyFileToDirectory ($"source/SkiaSharp.Views.Interop.UWP/bin/{arch}/Release/SkiaSharp.Views.Interop.UWP.pdb", outDir);
+        CopyFileToDirectory ($"source/SkiaSharp.Views.Interop.UWP/bin/{arch}/{CONFIGURATION}/SkiaSharp.Views.Interop.UWP.dll", outDir);
+        CopyFileToDirectory ($"source/SkiaSharp.Views.Interop.UWP/bin/{arch}/{CONFIGURATION}/SkiaSharp.Views.Interop.UWP.pdb", outDir);
     });
 
     buildInteropArch ("Win32", "x86");
@@ -228,12 +228,12 @@ Task ("externals-osx")
             Target = "libSkiaSharp",
             Sdk = "macosx",
             Arch = arch,
-            Configuration = "Release",
+            Configuration = CONFIGURATION,
         });
 
         // copy libSkiaSharp to output
         EnsureDirectoryExists ($"output/native/osx/{arch}");
-        CopyDirectory ("native-builds/libSkiaSharp_osx/build/Release/", $"output/native/osx/{arch}");
+        CopyDirectory ($"native-builds/libSkiaSharp_osx/build/{CONFIGURATION}/", $"output/native/osx/{arch}");
 
         StripSign ($"output/native/osx/{arch}/libSkiaSharp.dylib");
     });
@@ -254,12 +254,12 @@ Task ("externals-osx")
             Target = "libHarfBuzzSharp",
             Sdk = "macosx",
             Arch = arch,
-            Configuration = "Release",
+            Configuration = CONFIGURATION,
         });
 
         // copy libHarfBuzzSharp to output
         EnsureDirectoryExists ($"output/native/osx/{arch}");
-        CopyFileToDirectory ("native-builds/libHarfBuzzSharp_osx/build/Release/libHarfBuzzSharp.dylib", $"output/native/osx/{arch}");
+        CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_osx/build/{CONFIGURATION}/libHarfBuzzSharp.dylib", $"output/native/osx/{arch}");
 
         StripSign ($"output/native/osx/{arch}/libHarfBuzzSharp.dylib");
     });
@@ -298,12 +298,12 @@ Task ("externals-ios")
             Target = "libSkiaSharp",
             Sdk = sdk,
             Arch = arch,
-            Configuration = "Release",
+            Configuration = CONFIGURATION,
         });
 
         // copy libSkiaSharp to output
         EnsureDirectoryExists ($"output/native/ios/{arch}");
-        CopyDirectory ($"native-builds/libSkiaSharp_ios/build/Release-{sdk}", $"output/native/ios/{arch}");
+        CopyDirectory ($"native-builds/libSkiaSharp_ios/build/{CONFIGURATION}-{sdk}", $"output/native/ios/{arch}");
 
         StripSign ($"output/native/ios/{arch}/libSkiaSharp.framework");
     });
@@ -332,12 +332,12 @@ Task ("externals-ios")
             Target = "libHarfBuzzSharp",
             Sdk = sdk,
             Arch = arch,
-            Configuration = "Release",
+            Configuration = CONFIGURATION,
         });
 
         // copy libHarfBuzzSharp_ios to output
         EnsureDirectoryExists ($"output/native/ios/{arch}");
-        CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_ios/build/Release-{sdk}/libHarfBuzzSharp.a", $"output/native/ios/{arch}");
+        CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_ios/build/{CONFIGURATION}-{sdk}/libHarfBuzzSharp.a", $"output/native/ios/{arch}");
 
         StripSign ($"output/native/ios/{arch}/libHarfBuzzSharp.a");
     });
@@ -382,12 +382,12 @@ Task ("externals-tvos")
             Target = "libSkiaSharp",
             Sdk = sdk,
             Arch = arch,
-            Configuration = "Release",
+            Configuration = CONFIGURATION,
         });
 
         // copy libSkiaSharp to output
         EnsureDirectoryExists ($"output/native/tvos/{arch}");
-        CopyDirectory ($"native-builds/libSkiaSharp_tvos/build/Release-{sdk}", $"output/native/tvos/{arch}");
+        CopyDirectory ($"native-builds/libSkiaSharp_tvos/build/{CONFIGURATION}-{sdk}", $"output/native/tvos/{arch}");
 
         StripSign ($"output/native/tvos/{arch}/libSkiaSharp.framework");
     });
@@ -412,12 +412,12 @@ Task ("externals-tvos")
             Target = "libHarfBuzzSharp",
             Sdk = sdk,
             Arch = arch,
-            Configuration = "Release",
+            Configuration = CONFIGURATION,
         });
 
         // copy libHarfBuzzSharp to output
         EnsureDirectoryExists ($"output/native/tvos/{arch}");
-        CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_tvos/build/Release-{sdk}/libHarfBuzzSharp.a", $"output/native/tvos/{arch}");
+        CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_tvos/build/{CONFIGURATION}-{sdk}/libHarfBuzzSharp.a", $"output/native/tvos/{arch}");
 
         StripSign ($"output/native/tvos/{arch}/libHarfBuzzSharp.a");
     });
@@ -459,25 +459,27 @@ Task ("externals-watchos")
             Target = "libSkiaSharp",
             Sdk = sdk,
             Arch = arch,
-            Configuration = "Release",
+            Configuration = CONFIGURATION,
         });
 
         // copy libSkiaSharp to output
         EnsureDirectoryExists ($"output/native/watchos/{arch}");
-        CopyDirectory ($"native-builds/libSkiaSharp_watchos/build/Release-{sdk}", $"output/native/watchos/{arch}");
+        CopyDirectory ($"native-builds/libSkiaSharp_watchos/build/{CONFIGURATION}-{sdk}", $"output/native/watchos/{arch}");
 
         StripSign ($"output/native/watchos/{arch}/libSkiaSharp.framework");
     });
 
     buildArch ("watchsimulator", "i386", "x86");
     buildArch ("watchos", "armv7k", "arm");
+    buildArch ("watchos", "arm64_32", "arm64");
 
     // create the fat framework
     CopyDirectory ("output/native/watchos/armv7k/libSkiaSharp.framework/", "output/native/watchos/libSkiaSharp.framework/");
     DeleteFile ("output/native/watchos/libSkiaSharp.framework/libSkiaSharp");
     RunLipo ("output/native/watchos/", "libSkiaSharp.framework/libSkiaSharp", new [] {
         (FilePath) "i386/libSkiaSharp.framework/libSkiaSharp",
-        (FilePath) "armv7k/libSkiaSharp.framework/libSkiaSharp"
+        (FilePath) "armv7k/libSkiaSharp.framework/libSkiaSharp",
+        (FilePath) "arm64_32/libSkiaSharp.framework/libSkiaSharp"
     });
 
     // HarfBuzzSharp
@@ -489,23 +491,25 @@ Task ("externals-watchos")
             Target = "libHarfBuzzSharp",
             Sdk = sdk,
             Arch = arch,
-            Configuration = "Release",
+            Configuration = CONFIGURATION,
         });
 
         // copy libHarfBuzzSharp to output
         EnsureDirectoryExists ($"output/native/watchos/{arch}");
-        CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_watchos/build/Release-{sdk}/libHarfBuzzSharp.a", $"output/native/watchos/{arch}");
+        CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_watchos/build/{CONFIGURATION}-{sdk}/libHarfBuzzSharp.a", $"output/native/watchos/{arch}");
 
         StripSign ($"output/native/watchos/{arch}/libHarfBuzzSharp.a");
     });
 
     buildHarfBuzzArch ("watchsimulator", "i386");
     buildHarfBuzzArch ("watchos", "armv7k");
+    buildHarfBuzzArch ("watchos", "arm64_32");
 
     // create the fat framework
     RunLipo ("output/native/watchos/", "libHarfBuzzSharp.a", new [] {
         (FilePath) "i386/libHarfBuzzSharp.a",
-        (FilePath) "armv7k/libHarfBuzzSharp.a"
+        (FilePath) "armv7k/libHarfBuzzSharp.a",
+        (FilePath) "arm64_32/libHarfBuzzSharp.a"
     });
 });
 
@@ -611,7 +615,7 @@ Task ("externals-linux")
         //     WorkingDirectory = "native-builds/libHarfBuzzSharp_linux",
         // });
         RunProcess ("make", new ProcessSettings {
-            Arguments = $"ARCH={arch} SONAME_VERSION={GetVersion ("HarfBuzz", "soname")}",
+            Arguments = $"ARCH={arch} SONAME_VERSION={GetVersion ("HarfBuzz", "soname")} LDFLAGS=-static-libstdc++",
             WorkingDirectory = "native-builds/libHarfBuzzSharp_linux",
         });
 
@@ -658,13 +662,13 @@ Task ("externals-tizen")
 
         // build libSkiaSharp
         RunProcess (tizen, new ProcessSettings {
-            Arguments = $"build-native -a {skiaArch} -c llvm -C Release" ,
+            Arguments = $"build-native -a {skiaArch} -c llvm -C {CONFIGURATION}" ,
             WorkingDirectory = ROOT_PATH.Combine ("native-builds/libSkiaSharp_tizen").FullPath,
         });
 
         // copy libSkiaSharp to output
         var outDir = $"output/native/tizen/{arch}";
-        var libSkiaSharp = "native-builds/libSkiaSharp_tizen/Release/libskiasharp.so";
+        var libSkiaSharp = $"native-builds/libSkiaSharp_tizen/{CONFIGURATION}/libskiasharp.so";
         EnsureDirectoryExists (outDir);
         CopyFile (libSkiaSharp, $"{outDir}/libSkiaSharp.so");
     });
@@ -672,13 +676,13 @@ Task ("externals-tizen")
     var buildHarfBuzzArch = new Action<string, string> ((arch, skiaArch) => {
         // build libHarfBuzzSharp
         RunProcess(tizen, new ProcessSettings {
-            Arguments = $"build-native -a {skiaArch} -c llvm -C Release",
+            Arguments = $"build-native -a {skiaArch} -c llvm -C {CONFIGURATION}",
             WorkingDirectory = ROOT_PATH.Combine ("native-builds/libHarfBuzzSharp_tizen").FullPath
         });
 
         // copy libHarfBuzzSharp to output
         var outDir = $"output/native/tizen/{arch}";
-        var so = "native-builds/libHarfBuzzSharp_tizen/Release/libharfbuzzsharp.so";
+        var so = $"native-builds/libHarfBuzzSharp_tizen/{CONFIGURATION}/libharfbuzzsharp.so";
         EnsureDirectoryExists ($"output/native/tizen/{arch}");
         CopyFile (so, $"{outDir}/libHarfBuzzSharp.so");
     });
@@ -699,13 +703,17 @@ Task ("externals-download")
     if (string.IsNullOrEmpty (AZURE_BUILD_ID))
         throw new Exception ("Specify a build ID with --azureBuildId=<ID>");
 
-    var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, "native");
+    var artifactName = "native-default";
+    var artifactFilename = $"{artifactName}.zip";
+    var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, artifactName);
 
-    EnsureDirectoryExists ("./output");
-    CleanDirectories ("./output");
+    var outputPath = "./output";
+    EnsureDirectoryExists (outputPath);
+    CleanDirectories (outputPath);
 
-    DownloadFile(url, "./output/native.zip");
-    Unzip ($"./output/native.zip", $"./output");
+    DownloadFile (url, $"{outputPath}/{artifactFilename}");
+    Unzip ($"{outputPath}/{artifactFilename}", outputPath);
+    MoveDirectory ($"{outputPath}/{artifactName}", $"{outputPath}/native");
 });
 
 Task ("externals-angle-uwp")

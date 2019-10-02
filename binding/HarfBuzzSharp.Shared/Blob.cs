@@ -3,14 +3,6 @@ using System.IO;
 
 namespace HarfBuzzSharp
 {
-	// public delegates
-	//
-	// bad choices.
-	// this should not have had the "blob" prefix
-	// it is a global dispose method, but we can't switch now
-	// it is a breaking change since it will become ambiguous
-	public delegate void BlobReleaseDelegate (object context);
-
 	public class Blob : NativeObject
 	{
 		private static readonly Lazy<Blob> emptyBlob = new Lazy<Blob> (() => new StaticBlob (HarfBuzzApi.hb_blob_get_empty ()));
@@ -22,18 +14,19 @@ namespace HarfBuzzSharp
 		{
 		}
 
-		public Blob (IntPtr data, int length, MemoryMode mode, object userData, BlobReleaseDelegate releaseDelegate)
-			: this (Create (data, length, mode, userData, new ReleaseDelegate (releaseDelegate)))
+		[Obsolete ("Use Blob(IntPtr, int, MemoryMode, ReleaseDelegate releaseDelegate) instead.")]
+		public Blob (IntPtr data, uint length, MemoryMode mode, object userData, BlobReleaseDelegate releaseDelegate)
+			: this (data, (int)length, mode, () => releaseDelegate?.Invoke (userData))
 		{
 		}
 
 		public Blob (IntPtr data, int length, MemoryMode mode)
-			: this (data, length, mode, null, null)
+			: this (data, length, mode, null)
 		{
 		}
 
-		public Blob (IntPtr data, uint length, MemoryMode mode, object userData, BlobReleaseDelegate releaseDelegate)
-			: this (data, (int)length, mode, userData, releaseDelegate)
+		public Blob (IntPtr data, int length, MemoryMode mode, ReleaseDelegate releaseDelegate)
+			: this (Create (data, length, mode, releaseDelegate))
 		{
 		}
 
@@ -83,19 +76,15 @@ namespace HarfBuzzSharp
 				var data = ms.ToArray ();
 
 				fixed (byte* dataPtr = data) {
-					return new Blob ((IntPtr)dataPtr, data.Length, MemoryMode.ReadOnly, null, _ => ms.Dispose ());
+					return new Blob ((IntPtr)dataPtr, data.Length, MemoryMode.ReadOnly, () => ms.Dispose ());
 				}
 			}
 		}
 
-		private static IntPtr Create (IntPtr data, int length, MemoryMode mode, object context, ReleaseDelegate releaseProc)
+		private static IntPtr Create (IntPtr data, int length, MemoryMode mode, ReleaseDelegate releaseProc)
 		{
-			if (releaseProc == null) {
-				return HarfBuzzApi.hb_blob_create (data, length, mode, IntPtr.Zero, IntPtr.Zero);
-			} else {
-				var ctx = new NativeDelegateContext (context, releaseProc);
-				return HarfBuzzApi.hb_blob_create (data, length, mode, ctx.NativeContext, DestroyFunction.NativePointer);
-			}
+			var proxy = DelegateProxies.Create (releaseProc, DelegateProxies.ReleaseDelegateProxy, out _, out var ctx);
+			return HarfBuzzApi.hb_blob_create (data, length, mode, ctx, proxy);
 		}
 
 		private class StaticBlob : Blob

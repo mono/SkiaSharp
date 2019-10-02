@@ -26,6 +26,11 @@ using Xamarin.Forms.Platform.Tizen;
 using SKNativeView = SkiaSharp.Views.Tizen.SKCanvasView;
 using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Tizen.SKPaintSurfaceEventArgs;
 using TForms = Xamarin.Forms.Platform.Tizen.Forms;
+#elif __WPF__
+using System.Windows;
+using Xamarin.Forms.Platform.WPF;
+using SKNativeView = SkiaSharp.Views.WPF.SKElement;
+using SKNativePaintSurfaceEventArgs = SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs;
 #endif
 
 namespace SkiaSharp.Views.Forms
@@ -182,7 +187,7 @@ namespace SkiaSharp.Views.Forms
 #elif __TIZEN__
 				x = Tizen.ScalingInfo.FromPixel(x);
 				y = Tizen.ScalingInfo.FromPixel(y);
-#elif __IOS__ || __MACOS__ || WINDOWS_UWP
+#elif __IOS__ || __MACOS__ || WINDOWS_UWP || __WPF__
 				// Tizen and Android are the reverse of the other platforms
 #else
 #error Missing platform logic
@@ -201,6 +206,10 @@ namespace SkiaSharp.Views.Forms
 #elif WINDOWS_UWP
 				x = x * Control.Dpi;
 				y = y * Control.Dpi;
+#elif __WPF__
+				var m = PresentationSource.FromVisual(Control).CompositionTarget.TransformToDevice;
+				x = x * m.M11;
+				y = y * m.M22;
 #else
 #error Missing platform logic
 #endif
@@ -224,6 +233,8 @@ namespace SkiaSharp.Views.Forms
 			Control.SetNeedsDisplay();
 #elif __MACOS__
 			Control.NeedsDisplay = true;
+#elif __WPF__
+			Control.InvalidateVisual();
 #else
 			Control.Invalidate();
 #endif

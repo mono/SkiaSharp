@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using Xunit;
-using Xunit.Categories;
 
 namespace SkiaSharp.Tests
 {
@@ -251,8 +250,8 @@ namespace SkiaSharp.Tests
 			Assert.Equal(text.Length, paint.GetGlyphs(text).Length);
 		}
 
+		[Trait(CategoryKey, MatchCharacterCategory)]
 		[SkippableFact]
-		[Feature(MatchCharacterFeature)]
 		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharacters()
 		{
 			const string text = "🚀";
@@ -282,8 +281,8 @@ namespace SkiaSharp.Tests
 			Assert.True(paint.ContainsGlyphs(text));
 		}
 
+		[Trait(CategoryKey, MatchCharacterCategory)]
 		[SkippableFact]
-		[Feature(MatchCharacterFeature)]
 		public void ContainsUnicodeTextIsCorrect()
 		{
 			const string text = "🚀";

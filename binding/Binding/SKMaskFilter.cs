@@ -16,7 +16,7 @@ namespace SkiaSharp
 	// TODO: `getFormat`
 	// TODO: `computeFastBounds`
 
-	public class SKMaskFilter : SKObject
+	public class SKMaskFilter : SKObject, ISKReferenceCounted
 	{
 		private const float BlurSigmaScale = 0.57735f;
 		public const int TableMaxLength = 256;
@@ -26,16 +26,7 @@ namespace SkiaSharp
 			: base (handle, owns)
 		{
 		}
-		
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_maskfilter_unref (Handle);
-			}
 
-			base.Dispose (disposing);
-		}
-		
 		public static float ConvertRadiusToSigma(float radius)
 		{
 			return radius > 0 ? BlurSigmaScale * radius + 0.5f : 0.0f;

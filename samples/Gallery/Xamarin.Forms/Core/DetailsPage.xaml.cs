@@ -18,7 +18,7 @@ namespace SkiaSharpSample
 				ToolbarItems.Clear();
 				var item = new ToolbarItem
 				{
-					Icon = "more.png"
+					IconImageSource = "more.png"
 				};
 				item.Clicked += OnMore;
 				ToolbarItems.Add(item);

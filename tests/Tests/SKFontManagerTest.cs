@@ -1,14 +1,13 @@
 ﻿using System;
 using Xunit;
-using Xunit.Categories;
 using System.IO;
 
 namespace SkiaSharp.Tests
 {
 	public class SKFontManagerTest : SKTest
 	{
+		[Trait(CategoryKey, MatchCharacterCategory)]
 		[SkippableFact]
-		[Feature(MatchCharacterFeature)]
 		public void TestFontManagerMatchCharacter()
 		{
 			var fonts = SKFontManager.Default;
@@ -68,8 +67,7 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void TestMatchTypeface()
 		{
-			if (IsMac)
-				throw new SkipException("macOS does not support matching typefaces.");
+			VerifySupportsMatchingTypefaces();
 
 			var fonts = SKFontManager.Default;
 
@@ -87,10 +85,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void TestMatchTypefaceFromStream()
 		{
-			if (IsMac)
-				throw new SkipException("macOS does not support matching typefaces.");
-			if (IsLinux)
-				throw new SkipException("Linux does not support matching typefaces from a typeface that was loaded from a stream.");
+			VerifySupportsMatchingTypefaces();
+			VerifySupportsMatchingTypefacesFromStreams();
 
 			var fonts = SKFontManager.Default;
 
@@ -142,6 +138,39 @@ namespace SkiaSharp.Tests
 			using (var typeface = fonts.CreateTypeface(data))
 			{
 				Assert.NotNull(typeface);
+			}
+		}
+
+		[SkippableFact]
+		public void StreamIsAccessableFromNativeType()
+		{
+			VerifyImmediateFinalizers();
+
+			var paint = CreatePaint(out var typefaceHandle);
+
+			CollectGarbage();
+
+			Assert.False(SKObject.GetInstance<SKTypeface>(typefaceHandle, out _));
+
+			var tf = paint.Typeface;
+
+			Assert.Equal("Roboto2", tf.FamilyName);
+			Assert.True(tf.TryGetTableTags(out var tags));
+			Assert.NotEmpty(tags);
+
+			SKPaint CreatePaint(out IntPtr handle)
+			{
+				var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
+				var dotnet = new MemoryStream(bytes);
+				var stream = new SKManagedStream(dotnet, true);
+
+				var typeface = SKFontManager.Default.CreateTypeface(stream);
+				handle = typeface.Handle;
+
+				return new SKPaint
+				{
+					Typeface = typeface
+				};
 			}
 		}
 

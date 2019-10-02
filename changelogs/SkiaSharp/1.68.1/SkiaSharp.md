@@ -4,6 +4,15 @@
 
 ### Namespace SkiaSharp
 
+#### Type Changed: SkiaSharp.SKBitmap
+
+Added method:
+
+```csharp
+public System.ReadOnlySpan<byte> GetPixelSpan ();
+```
+
+
 #### Type Changed: SkiaSharp.SKCanvas
 
 Added methods:
@@ -97,6 +106,27 @@ public float Transform (float x);
 ```
 
 
+#### Type Changed: SkiaSharp.SKData
+
+Added methods:
+
+```csharp
+public System.ReadOnlySpan<byte> AsSpan ();
+public static SKData CreateCopy (System.ReadOnlySpan<byte> bytes);
+```
+
+
+#### Type Changed: SkiaSharp.SKImage
+
+Added methods:
+
+```csharp
+public static SKImage FromEncodedData (System.ReadOnlySpan<byte> data);
+public static SKImage FromPixelCopy (SKImageInfo info, System.ReadOnlySpan<byte> pixels);
+public static SKImage FromPixelCopy (SKImageInfo info, System.ReadOnlySpan<byte> pixels, int rowBytes);
+```
+
+
 #### Type Changed: SkiaSharp.SKMatrix
 
 Added constructor:
@@ -138,6 +168,15 @@ public SKDrawable EndRecordingAsDrawable ();
 ```
 
 
+#### Type Changed: SkiaSharp.SKPixmap
+
+Added method:
+
+```csharp
+public System.ReadOnlySpan<byte> GetPixelSpan ();
+```
+
+
 #### Type Changed: SkiaSharp.SKRegion
 
 Added constructors:
@@ -155,6 +194,65 @@ public bool Op (SKPath path, SKRegionOperation op);
 ```
 
 
+#### Type Changed: SkiaSharp.SKSwizzle
+
+Added methods:
+
+```csharp
+public static void SwapRedBlue (System.ReadOnlySpan<byte> pixels, int count);
+public static void SwapRedBlue (System.ReadOnlySpan<byte> dest, System.ReadOnlySpan<byte> src, int count);
+```
+
+
+#### Type Changed: SkiaSharp.SKTextBlobBuilder
+
+Modified methods:
+
+```diff
+-public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, byte[] utf8Text, uint[] clusters)
++public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, byte[] text, uint[] clusters)
+-public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, byte[] utf8Text, uint[] clusters, SKRect bounds)
++public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, byte[] text, uint[] clusters, SKRect bounds)
+-public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, byte[] utf8Text, uint[] clusters)
++public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, byte[] text, uint[] clusters)
+-public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, byte[] utf8Text, uint[] clusters, SKRect bounds)
++public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, byte[] text, uint[] clusters, SKRect bounds)
+-public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, byte[] utf8Text, uint[] clusters)
++public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, byte[] text, uint[] clusters)
+-public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, byte[] utf8Text, uint[] clusters, SKRect bounds)
++public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, byte[] text, uint[] clusters, SKRect bounds)
+```
+
+Added methods:
+
+```csharp
+public void AddHorizontalRun (SKPaint font, float y, System.ReadOnlySpan<ushort> glyphs, System.ReadOnlySpan<float> positions);
+public void AddHorizontalRun (SKPaint font, float y, System.ReadOnlySpan<ushort> glyphs, System.ReadOnlySpan<float> positions, SKRect? bounds);
+public void AddHorizontalRun (SKPaint font, float y, System.ReadOnlySpan<ushort> glyphs, System.ReadOnlySpan<float> positions, System.ReadOnlySpan<byte> text, System.ReadOnlySpan<uint> clusters);
+public void AddHorizontalRun (SKPaint font, float y, System.ReadOnlySpan<ushort> glyphs, System.ReadOnlySpan<float> positions, System.ReadOnlySpan<byte> text, System.ReadOnlySpan<uint> clusters, SKRect? bounds);
+public void AddPositionedRun (SKPaint font, System.ReadOnlySpan<ushort> glyphs, System.ReadOnlySpan<SKPoint> positions);
+public void AddPositionedRun (SKPaint font, System.ReadOnlySpan<ushort> glyphs, System.ReadOnlySpan<SKPoint> positions, SKRect? bounds);
+public void AddPositionedRun (SKPaint font, System.ReadOnlySpan<ushort> glyphs, System.ReadOnlySpan<SKPoint> positions, System.ReadOnlySpan<byte> text, System.ReadOnlySpan<uint> clusters);
+public void AddPositionedRun (SKPaint font, System.ReadOnlySpan<ushort> glyphs, System.ReadOnlySpan<SKPoint> positions, System.ReadOnlySpan<byte> text, System.ReadOnlySpan<uint> clusters, SKRect? bounds);
+public void AddRun (SKPaint font, float x, float y, System.ReadOnlySpan<ushort> glyphs);
+public void AddRun (SKPaint font, float x, float y, System.ReadOnlySpan<ushort> glyphs, SKRect? bounds);
+public void AddRun (SKPaint font, float x, float y, System.ReadOnlySpan<ushort> glyphs, System.ReadOnlySpan<byte> text, System.ReadOnlySpan<uint> clusters);
+public void AddRun (SKPaint font, float x, float y, System.ReadOnlySpan<ushort> glyphs, System.ReadOnlySpan<byte> text, System.ReadOnlySpan<uint> clusters, SKRect? bounds);
+public SKHorizontalRunBuffer AllocateHorizontalRun (SKPaint font, int count, float y);
+public SKHorizontalRunBuffer AllocateHorizontalRun (SKPaint font, int count, float y, int textByteCount);
+public SKHorizontalRunBuffer AllocateHorizontalRun (SKPaint font, int count, float y, SKRect? bounds);
+public SKHorizontalRunBuffer AllocateHorizontalRun (SKPaint font, int count, float y, int textByteCount, SKRect? bounds);
+public SKPositionedRunBuffer AllocatePositionedRun (SKPaint font, int count);
+public SKPositionedRunBuffer AllocatePositionedRun (SKPaint font, int count, int textByteCount);
+public SKPositionedRunBuffer AllocatePositionedRun (SKPaint font, int count, SKRect? bounds);
+public SKPositionedRunBuffer AllocatePositionedRun (SKPaint font, int count, int textByteCount, SKRect? bounds);
+public SKRunBuffer AllocateRun (SKPaint font, int count, float x, float y);
+public SKRunBuffer AllocateRun (SKPaint font, int count, float x, float y, int textByteCount);
+public SKRunBuffer AllocateRun (SKPaint font, int count, float x, float y, SKRect? bounds);
+public SKRunBuffer AllocateRun (SKPaint font, int count, float x, float y, int textByteCount, SKRect? bounds);
+```
+
+
 #### Type Changed: SkiaSharp.SKTypeface
 
 Added property:
@@ -166,6 +264,9 @@ public int TableCount { get; }
 Added methods:
 
 ```csharp
+public int CountGlyphs (System.ReadOnlySpan<byte> str, SKEncoding encoding);
+public ushort[] GetGlyphs (System.ReadOnlySpan<byte> text, SKEncoding encoding);
+public int GetGlyphs (System.ReadOnlySpan<byte> text, SKEncoding encoding, out ushort[] glyphs);
 public int GetTableSize (uint tag);
 public bool TryGetTableData (uint tag, int offset, int length, IntPtr tableData);
 public bool TryGetTableTags (out uint[] tags);
@@ -205,6 +306,16 @@ public class SKDrawable : SkiaSharp.SKObject, System.IDisposable {
 }
 ```
 
+#### New Type: SkiaSharp.SKHorizontalRunBuffer
+
+```csharp
+public sealed class SKHorizontalRunBuffer : SkiaSharp.SKRunBuffer {
+	// methods
+	public System.Span<float> GetPositionSpan ();
+	public void SetPositions (System.ReadOnlySpan<float> positions);
+}
+```
+
 #### New Type: SkiaSharp.SKNamedGamma
 
 ```csharp
@@ -214,6 +325,33 @@ public enum SKNamedGamma {
 	NonStandard = 3,
 	Srgb = 1,
 	TwoDotTwoCurve = 2,
+}
+```
+
+#### New Type: SkiaSharp.SKPositionedRunBuffer
+
+```csharp
+public sealed class SKPositionedRunBuffer : SkiaSharp.SKRunBuffer {
+	// methods
+	public System.Span<SKPoint> GetPositionSpan ();
+	public void SetPositions (System.ReadOnlySpan<SKPoint> positions);
+}
+```
+
+#### New Type: SkiaSharp.SKRunBuffer
+
+```csharp
+public class SKRunBuffer {
+	// properties
+	public int Size { get; }
+	public int TextSize { get; }
+	// methods
+	public System.Span<uint> GetClusterSpan ();
+	public System.Span<ushort> GetGlyphSpan ();
+	public System.Span<byte> GetTextSpan ();
+	public void SetClusters (System.ReadOnlySpan<uint> clusters);
+	public void SetGlyphs (System.ReadOnlySpan<ushort> glyphs);
+	public void SetText (System.ReadOnlySpan<byte> text);
 }
 ```
 

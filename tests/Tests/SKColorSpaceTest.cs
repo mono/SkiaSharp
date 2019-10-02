@@ -17,15 +17,161 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void StaticSrgbIsReturnedAsTheStaticInstance()
+		{
+			var handle = SkiaApi.sk_colorspace_new_srgb();
+			try
+			{
+				var cs = SKObject.GetObject<SKColorSpace>(handle, unrefExisting: false);
+				Assert.Equal("SKColorSpaceStatic", cs.GetType().Name);
+			}
+			finally
+			{
+				SkiaApi.sk_refcnt_safe_unref(handle);
+			}
+		}
+
+		[SkippableFact]
 		public void ImageInfoHasColorSpace()
 		{
 			var colorspace = SKColorSpace.CreateSrgb();
 
 			var info = new SKImageInfo(100, 100, SKImageInfo.PlatformColorType, SKAlphaType.Premul, colorspace);
-			Assert.Equal(colorspace, info.ColorSpace);
+			Assert.Same(colorspace, info.ColorSpace);
 
 			var image = SKImage.Create(info);
-			Assert.Equal(colorspace, image.PeekPixels().ColorSpace);
+			Assert.Same(colorspace, image.PeekPixels().ColorSpace);
+		}
+
+		[SkippableFact]
+		public void ImageInfoColorSpaceIsReferencedCorrectly()
+		{
+			VerifyImmediateFinalizers();
+
+			var img = DoWork(out var colorspaceHandle);
+
+			CollectGarbage();
+
+			Assert.Equal(1, colorspaceHandle.GetReferenceCount(true));
+
+			Check();
+
+			CollectGarbage();
+
+			Assert.Equal(1, colorspaceHandle.GetReferenceCount(true));
+
+			void Check()
+			{
+				var peek = img.PeekPixels();
+				Assert.Equal(2, colorspaceHandle.GetReferenceCount(true));
+
+				// get the info and color space
+				var info1 = peek.Info;
+				var cs1 = info1.ColorSpace;
+				Assert.Equal(3, colorspaceHandle.GetReferenceCount(true));
+				Assert.NotNull(cs1);
+
+				// get the info and color space again and make sure we are all using the same things
+				var info2 = peek.Info;
+				var cs2 = info2.ColorSpace;
+				Assert.Equal(3, colorspaceHandle.GetReferenceCount(true));
+				Assert.NotNull(cs2);
+
+				Assert.Same(cs1, cs2);
+			}
+
+			SKImage DoWork(out IntPtr handle)
+			{
+				var colorspace = SKColorSpace.CreateRgb(
+					new SKColorSpaceTransferFn { A = 0.6f, B = 0.5f, C = 0.4f, D = 0.3f, E = 0.2f, F = 0.1f },
+					SKMatrix44.CreateIdentity());
+
+				Assert.NotNull(colorspace);
+
+				handle = colorspace.Handle;
+				Assert.Equal(1, handle.GetReferenceCount(true));
+
+				var info = new SKImageInfo(100, 100, SKImageInfo.PlatformColorType, SKAlphaType.Premul, colorspace);
+				Assert.Equal(1, handle.GetReferenceCount(true));
+
+				var image = SKImage.Create(info);
+				Assert.Equal(2, handle.GetReferenceCount(true));
+
+				return image;
+			}
+		}
+
+		[SkippableFact]
+		public void ColorSpaceIsNotDisposedPrematurely()
+		{
+			VerifyImmediateFinalizers();
+
+			var img = DoWork(out var colorSpaceHandle, out var weakColorspace);
+
+			CheckBeforeCollection(colorSpaceHandle);
+
+			CheckExistingImage(3, img, colorSpaceHandle);
+
+			CollectGarbage();
+
+			Assert.Null(weakColorspace.Target);
+			Assert.Equal(1, colorSpaceHandle.GetReferenceCount(true));
+
+			CheckExistingImage(2, img, colorSpaceHandle);
+
+			CollectGarbage();
+
+			Assert.Null(weakColorspace.Target);
+			Assert.Equal(1, colorSpaceHandle.GetReferenceCount(true));
+
+			CollectGarbage();
+
+			Assert.Equal(1, colorSpaceHandle.GetReferenceCount(true));
+
+			GC.KeepAlive(img);
+
+			void CheckBeforeCollection(IntPtr csh)
+			{
+				Assert.NotNull(weakColorspace.Target);
+				Assert.Equal(2, csh.GetReferenceCount(true));
+			}
+
+			void CheckExistingImage(int expected, SKImage image, IntPtr csh)
+			{
+				var peek = image.PeekPixels();
+				Assert.Equal(expected, csh.GetReferenceCount(true));
+
+				var info = peek.Info;
+				Assert.Equal(3, csh.GetReferenceCount(true));
+
+				var cs = info.ColorSpace;
+				Assert.Equal(3, csh.GetReferenceCount(true));
+				Assert.NotNull(cs);
+			}
+
+			SKImage DoWork(out IntPtr handle, out WeakReference weak)
+			{
+				var colorspace = SKColorSpace.CreateRgb(
+					new SKColorSpaceTransferFn { A = 0.1f, B = 0.2f, C = 0.3f, D = 0.4f, E = 0.5f, F = 0.6f },
+					SKMatrix44.CreateIdentity());
+
+				Assert.NotNull(colorspace);
+
+				handle = colorspace.Handle;
+				weak = new WeakReference(colorspace);
+
+				Assert.Equal(1, handle.GetReferenceCount(true));
+
+				var info = new SKImageInfo(100, 100, SKImageInfo.PlatformColorType, SKAlphaType.Premul, colorspace);
+
+				Assert.Equal(1, handle.GetReferenceCount(true));
+
+				var image = SKImage.Create(info);
+
+				Assert.Equal(2, handle.GetReferenceCount(true));
+
+				return image;
+			}
 		}
 
 		[SkippableFact]
@@ -93,6 +239,58 @@ namespace SkiaSharp.Tests
 			var colorspace = SKColorSpace.CreateSrgb();
 
 			Assert.True(colorspace.GammaIsCloseToSrgb);
+		}
+
+		[SkippableFact]
+		public void ColorSpaceCorrectlyReferencesSrgbSingleton()
+		{
+			var handle1 = SkiaApi.sk_colorspace_new_srgb();
+
+			var colorspace1 = SKColorSpace.CreateSrgb();
+
+			Assert.Equal(colorspace1.Handle, handle1);
+
+			var colorspace2 = SKColorSpace.CreateSrgb();
+
+			Assert.Same(colorspace1, colorspace2);
+			Assert.Equal(handle1, colorspace2.Handle);
+
+			colorspace2.Dispose();
+			Assert.False(colorspace2.IsDisposed);
+			Assert.False(colorspace1.IsDisposed);
+
+			SkiaApi.sk_refcnt_safe_unref(handle1);
+		}
+
+		[SkippableFact]
+		public void SameColorSpaceCreatedDifferentWaysAreTheSameObject()
+		{
+			var colorspace1 = SKColorSpace.CreateSrgbLinear();
+			Assert.Equal("SkiaSharp.SKColorSpace+SKColorSpaceStatic", colorspace1.GetType().FullName);
+			Assert.Equal(2, colorspace1.GetReferenceCount());
+
+			var colorspace2 = SKColorSpace.CreateRgb(SKNamedGamma.Linear, SKColorSpaceGamut.Srgb);
+			Assert.Equal("SkiaSharp.SKColorSpace+SKColorSpaceStatic", colorspace2.GetType().FullName);
+			Assert.Equal(2, colorspace2.GetReferenceCount());
+
+			Assert.Same(colorspace1, colorspace2);
+
+			var colorspace3 = SKColorSpace.CreateRgb(
+				new SKColorSpaceTransferFn { A = 0.6f, B = 0.5f, C = 0.4f, D = 0.3f, E = 0.2f, F = 0.1f },
+				SKMatrix44.CreateIdentity());
+			Assert.NotSame(colorspace1, colorspace3);
+
+			colorspace3.Dispose();
+			Assert.True(colorspace3.IsDisposed);
+			Assert.Equal(2, colorspace1.GetReferenceCount());
+
+			colorspace2.Dispose();
+			Assert.False(colorspace2.IsDisposed);
+			Assert.Equal(2, colorspace1.GetReferenceCount());
+
+			colorspace1.Dispose();
+			Assert.False(colorspace1.IsDisposed);
+			Assert.Equal(2, colorspace1.GetReferenceCount());
 		}
 
 		private static void AssertMatrix(float[] expected, SKMatrix44 actual)

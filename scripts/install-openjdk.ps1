@@ -1,3 +1,7 @@
+Param(
+    [string] $InstallDestination = $null
+)
+
 $ErrorActionPreference = 'Stop'
 
 if ($IsMacOS) {
@@ -9,6 +13,11 @@ if ($IsMacOS) {
 }
 
 $jdk = Join-Path "$HOME" "openjdk"
+if ($InstallDestination) {
+    $jdk = $InstallDestination
+}
+Write-Host "Install destination is '$jdk'..."
+
 $jdkTemp = Join-Path "$HOME" "openjdk-temp"
 $archive = Join-Path "$jdkTemp" "openjdk.tar.gz"
 
@@ -33,5 +42,9 @@ if ($IsMacOS) {
     $java_home = Join-Path "$jdk" "jdk-10.0.2"
 }
 Write-Host "##vso[task.setvariable variable=JAVA_HOME;]$java_home"
+
+# make sure that JAVA_HOME/bin is in the PATH
+$javaBin = Join-Path "$java_home" "bin"
+Write-Host "##vso[task.setvariable variable=PATH;]$javaBin;$env:PATH";
 
 exit $LASTEXITCODE

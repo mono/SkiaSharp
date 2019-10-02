@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Xunit;
-using Xunit.Categories;
 
 namespace SkiaSharp.Tests
 {
 	public class GRGlInterfaceTest : SKTest
 	{
-		[Category(GpuCategory)]
+		[Trait(CategoryKey, GpuCategory)]
 		[SkippableFact]
 		public void CreateDefaultInterfaceIsValid()
 		{
@@ -22,7 +21,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[Category(GpuCategory)]
+		[Trait(CategoryKey, GpuCategory)]
 		[SkippableFact]
 		public void AssembleInterfaceIsValid()
 		{

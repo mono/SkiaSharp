@@ -32,6 +32,9 @@ namespace SkiaSharp
 			SetPath (path);
 		}
 
+		protected override void DisposeNative () =>
+			SkiaApi.sk_region_delete (Handle);
+
 		public SKRectI Bounds {
 			get {
 				SkiaApi.sk_region_get_bounds (Handle, out var rect);

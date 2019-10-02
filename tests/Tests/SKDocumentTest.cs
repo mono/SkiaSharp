@@ -166,5 +166,45 @@ namespace SkiaSharp.Tests
 				}
 			}
 		}
+
+
+		[SkippableFact]
+		public void StreamIsNotCollectedPrematurely()
+		{
+			VerifyImmediateFinalizers();
+
+			DoWork(out var handle);
+
+			CollectGarbage();
+
+			Assert.False(SKObject.GetInstance<SKDynamicMemoryWStream>(handle, out _));
+
+			void DoWork(out IntPtr streamHandle)
+			{
+				using (var document = CreateDocument(out streamHandle))
+				{
+					using (var pageCanvas = document.BeginPage(792, 842))
+					{
+						document.EndPage();
+					}
+
+					CollectGarbage();
+
+					Assert.True(SKObject.GetInstance<SKDynamicMemoryWStream>(handle, out _));
+
+					document.Close();
+				}
+
+				Assert.True(SKObject.GetInstance<SKDynamicMemoryWStream>(handle, out _));
+			}
+
+			SKDocument CreateDocument(out IntPtr streamHandle)
+			{
+				var stream = new SKDynamicMemoryWStream();
+				streamHandle = stream.Handle;
+
+				return SKDocument.CreatePdf(stream, new SKDocumentPdfMetadata());
+			}
+		}
 	}
 }

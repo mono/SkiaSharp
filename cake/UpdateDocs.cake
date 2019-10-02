@@ -186,16 +186,20 @@ Task ("docs-update-frameworks")
 
             foreach (var (path, platform) in GetPlatformDirectories ($"{packagePath}/lib")) {
                 string moniker;
-                if (platform == null)
+                if (id.StartsWith ("SkiaSharp.Views") && !id.StartsWith ("SkiaSharp.Views.Forms"))
+                    moniker = $"skiasharp-views-{version}";
+                else if (platform == null)
                     moniker = $"{id.ToLower ().Replace (".", "-")}-{version}";
                 else
                     moniker = $"{id.ToLower ().Replace (".", "-")}-{platform}-{version}";
 
                 // add the node to the frameworks.xml
-                xFrameworks.Add (
-                    new XElement ("Framework",
-                        new XAttribute ("Name", moniker),
-                        new XAttribute ("Source", moniker)));
+                if (xFrameworks.Elements ("Framework")?.Any (e => e.Attribute ("Name").Value == moniker) != true) {
+                    xFrameworks.Add (
+                        new XElement ("Framework",
+                            new XAttribute ("Name", moniker),
+                            new XAttribute ("Source", moniker)));
+                }
 
                 // copy the assemblies for the tool
                 var o = $"{docsTempPath}/{moniker}";
@@ -312,6 +316,16 @@ Task ("docs-format-docs")
                 .Where (e => e.Attribute ("MemberName")?.Value == "CreatePdf")
                 .Where (e => e.Elements ("MemberSignature").All (s => s.Attribute ("Value")?.Value != "M:SkiaSharp.SKDocument.CreatePdf(SkiaSharp.SKWStream,SkiaSharp.SKDocumentPdfMetadata,System.Single)"))
                 .SelectMany (e => e.Elements ("Attributes").Elements ("Attribute").Elements ("AttributeName"))
+                .Where (e => e.Value.Contains ("System.Obsolete"))
+                .Remove ();
+        }
+
+        // remove the no-longer-obsolete SK3dView attributes
+        if (xdoc.Root.Name == "Type" && xdoc.Root.Attribute ("Name")?.Value == "SK3dView") {
+            xdoc.Root
+                .Element ("Attributes")
+                .Elements ("Attribute")
+                .SelectMany (e => e.Elements ("AttributeName"))
                 .Where (e => e.Value.Contains ("System.Obsolete"))
                 .Remove ();
         }

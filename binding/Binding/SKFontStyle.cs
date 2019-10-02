@@ -25,14 +25,8 @@ namespace SkiaSharp
 		{
 		}
 
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_fontstyle_delete (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
+		protected override void DisposeNative () =>
+			SkiaApi.sk_fontstyle_delete (Handle);
 
 		public int Weight => SkiaApi.sk_fontstyle_get_weight (Handle);
 

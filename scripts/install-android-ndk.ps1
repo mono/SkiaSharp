@@ -1,5 +1,6 @@
 Param(
-    [string] $Version = "r15c"
+    [string] $Version = "r15c",
+    [string] $InstallDestination = $null
 )
 
 $ErrorActionPreference = 'Stop'
@@ -14,7 +15,13 @@ if ($IsMacOS) {
 }
 
 $url = "https://dl.google.com/android/repository/android-ndk-${Version}-${platform}.zip"
+
 $ndk = "$HOME/android-ndk"
+if ($InstallDestination) {
+    $ndk = $InstallDestination
+}
+Write-Host "Install destination is '$ndk'..."
+
 $ndkTemp = "$HOME/android-ndk-temp"
 $install = "$ndkTemp/android-ndk.zip"
 
@@ -35,5 +42,8 @@ if ($IsMacOS -or $IsLinux) {
 # move / rename
 Write-Host "Moving NDK..."
 Move-Item "${ndkTemp}\android-ndk-${Version}" "$ndk"
+
+# make sure that NDK is in ANDROID_NDK_HOME
+Write-Host "##vso[task.setvariable variable=ANDROID_NDK_HOME;]$ndk";
 
 exit $LASTEXITCODE

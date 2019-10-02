@@ -3,23 +3,17 @@ using System.IO;
 
 namespace SkiaSharp
 {
-	public class SKDocument : SKObject
+	public class SKDocument : SKObject, ISKReferenceCounted
 	{
 		public const float DefaultRasterDpi = 72.0f;
+
+		// keep the stream alive for as long as the document exists
+		private SKWStream underlyingStream;
 
 		[Preserve]
 		internal SKDocument (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
-		}
-
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_document_unref (Handle);
-			}
-
-			base.Dispose (disposing);
 		}
 
 		public void Abort () =>
@@ -74,7 +68,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (stream));
 			}
 
-			return GetObject<SKDocument> (SkiaApi.sk_document_create_xps_from_stream (stream.Handle, dpi));
+			return Referenced (GetObject<SKDocument> (SkiaApi.sk_document_create_xps_from_stream (stream.Handle, dpi)), stream);
 		}
 
 		// CreatePdf
@@ -179,7 +173,7 @@ namespace SkiaSharp
 						cmetadata.Modified = &modified;
 					}
 
-					return GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream_with_metadata (stream.Handle, ref cmetadata));
+					return Referenced (GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream_with_metadata (stream.Handle, ref cmetadata)), stream);
 				}
 			}
 		}
@@ -192,6 +186,14 @@ namespace SkiaSharp
 				else
 					stream.Dispose ();
 			}
+
+			return doc;
+		}
+
+		private static SKDocument Referenced (SKDocument doc, SKWStream stream)
+		{
+			if (stream != null && doc != null)
+				doc.underlyingStream = stream;
 
 			return doc;
 		}

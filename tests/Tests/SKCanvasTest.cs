@@ -3,13 +3,12 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Xunit;
-using Xunit.Categories;
 
 namespace SkiaSharp.Tests
 {
 	public class SKCanvasTest : SKTest
 	{
-		[Category(GpuCategory)]
+		[Trait(CategoryKey, GpuCategory)]
 		[SkippableFact]
 		public void CanvasCanRestoreOnGpu()
 		{

@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\SkiaSharp.Build.props" />
+  <PropertyGroup>
+    <TargetFramework>net461</TargetFramework>
+    <OutputTypeEx>library</OutputTypeEx>
+    <ExtrasEnableWpfProjectSetup>true</ExtrasEnableWpfProjectSetup>
+    <RootNamespace>SkiaSharp.Views.Forms</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.Forms</AssemblyName>
+    <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
+    <SignAssembly>false</SignAssembly>
+    <PackagingGroup>SkiaSharp.Views.Forms.WPF</PackagingGroup>
+    <PackagingPlatform>net45</PackagingPlatform>
+    <DefineConstants>$(DefineConstants);__DESKTOP__;__WPF__;</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="WindowsFormsIntegration" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Xamarin.Forms" Version="4.0.0.540366" />
+    <PackageReference Include="Xamarin.Forms.Platform.WPF" Version="4.0.0.540366" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp.Desktop\SkiaSharp.Desktop.csproj" />
+    <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.WPF\SkiaSharp.Views.WPF.csproj" />
+    <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.WindowsForms\SkiaSharp.Views.WindowsForms.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="nuget\build\net45\SkiaSharp.Views.Forms.WPF.props" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\SkiaSharp.Views.Forms.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SkiaSharp.Views.Forms.Native.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+  <Import Project="..\..\SkiaSharp.Build.targets" />
+</Project>

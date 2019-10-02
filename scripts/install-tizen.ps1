@@ -1,5 +1,6 @@
 Param(
-    [string] $Version = "3.2"
+    [string] $Version = "3.3",
+    [string] $InstallDestination = $null
 )
 
 $ErrorActionPreference = 'Stop'
@@ -15,24 +16,17 @@ if ($IsMacOS) {
     $ext = "exe"
 }
 
-$ts = Join-Path "$HOME" "tizen-studio"
-$tsTemp = Join-Path "$HOME" "tizen-temp"
 $url = "http://download.tizen.org/sdk/Installer/tizen-studio_${Version}/web-cli_Tizen_Studio_${Version}_${platform}.${ext}"
+
+$ts = Join-Path "$HOME" "tizen-studio"
+if ($InstallDestination) {
+    $ts = $InstallDestination
+}
+Write-Host "Install destination is '$ts'..."
+
+$tsTemp = Join-Path "$HOME" "tizen-temp"
 $install = Join-Path "$tsTemp" "tizen-install.$ext"
 $packages = "MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment"
-
-# make sure that JAVA_HOME/bin is in the PATH
-if ($env:JAVA_HOME) {
-    $javaBin = Join-Path "$env:JAVA_HOME" "bin"
-    if(-not $env:PATH.Contains($javaBin)) {
-        Write-Host "Adding $javaBin to PATH..."
-        $env:PATH = $javaBin + [System.IO.Path]::PathSeparator + $env:PATH
-    }
-}
-
-# log the Java version
-Write-Host "Using Java version:"
-& "java" -version
 
 # download
 Write-Host "Downloading SDK to '$install'..."
@@ -55,5 +49,8 @@ if ($IsMacOS -or $IsLinux) {
 } else {
     & "$packMan" install --no-java-check --accept-license "$packages"
 }
+
+# make sure that Tizen Studio is in TIZEN_STUDIO_HOME
+Write-Host "##vso[task.setvariable variable=TIZEN_STUDIO_HOME;]$ts";
 
 exit $LASTEXITCODE

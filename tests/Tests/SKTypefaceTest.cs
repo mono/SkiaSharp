@@ -1,9 +1,6 @@
 ﻿using System;
-using Xunit;
-using Xunit.Categories;
 using System.IO;
-using System.Runtime.InteropServices;
-using System.Linq;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
@@ -191,8 +188,8 @@ namespace SkiaSharp.Tests
 			Assert.True(typeface.GetGlyphs(text).Length > 0);
 		}
 
+		[Trait(CategoryKey, MatchCharacterCategory)]
 		[SkippableFact]
-		[Feature(MatchCharacterFeature)]
 		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharacters()
 		{
 			const string text = "🚀";
@@ -205,6 +202,213 @@ namespace SkiaSharp.Tests
 			Assert.True(typeface.CountGlyphs(text, SKEncoding.Utf32) > 0);
 			Assert.True(typeface.GetGlyphs(text).Length > 0);
 			Assert.True(typeface.GetGlyphs(text, SKEncoding.Utf32).Length > 0);
+		}
+
+		[SkippableFact]
+		public unsafe void ReleaseDataWasInvokedOnlyAfterTheTypefaceWasFinished()
+		{
+			if (IsMac)
+				throw new SkipException("macOS does not release the data when the typeface is disposed.");
+
+			var path = Path.Combine(PathToFonts, "Distortable.ttf");
+			var bytes = File.ReadAllBytes(path);
+
+			var released = false;
+
+			fixed (byte* b = bytes)
+			{
+				var data = SKData.Create((IntPtr)b, bytes.Length, (addr, ctx) => released = true);
+
+				var typeface = SKTypeface.FromData(data);
+				Assert.Equal("Distortable", typeface.FamilyName);
+
+				data.Dispose();
+				Assert.False(released, "The SKDataReleaseDelegate was called too soon.");
+
+				typeface.Dispose();
+				Assert.True(released, "The SKDataReleaseDelegate was not called at all.");
+			}
+		}
+
+		[SkippableFact]
+		public unsafe void StreamLosesOwnershipAndCanBeDisposedButIsNotActually()
+		{
+			var path = Path.Combine(PathToFonts, "Distortable.ttf");
+			var stream = new SKMemoryStream(File.ReadAllBytes(path));
+			var handle = stream.Handle;
+
+			Assert.True(stream.OwnsHandle);
+			Assert.False(stream.IgnorePublicDispose);
+			Assert.True(SKObject.GetInstance<SKMemoryStream>(handle, out _));
+
+			var typeface = SKTypeface.FromStream(stream);
+			Assert.False(stream.OwnsHandle);
+			Assert.True(stream.IgnorePublicDispose);
+
+			stream.Dispose();
+			Assert.True(SKObject.GetInstance<SKMemoryStream>(handle, out var inst));
+			Assert.Same(stream, inst);
+
+			Assert.NotEmpty(typeface.GetTableTags());
+
+			typeface.Dispose();
+			Assert.False(SKObject.GetInstance<SKMemoryStream>(handle, out _));
+		}
+
+		[SkippableFact]
+		public unsafe void InvalidStreamIsDisposedImmediately()
+		{
+			var stream = CreateTestSKStream();
+			var handle = stream.Handle;
+
+			Assert.True(stream.OwnsHandle);
+			Assert.False(stream.IgnorePublicDispose);
+			Assert.True(SKObject.GetInstance<SKStream>(handle, out _));
+
+			Assert.Null(SKTypeface.FromStream(stream));
+
+			Assert.False(stream.OwnsHandle);
+			Assert.True(stream.IgnorePublicDispose);
+			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
+		}
+
+		[SkippableFact]
+		public void ManagedStreamIsAccessableFromNativeType()
+		{
+			var paint = CreatePaint();
+
+			CollectGarbage();
+
+			var tf = paint.Typeface;
+
+			Assert.Equal("Roboto2", tf.FamilyName);
+			Assert.True(tf.TryGetTableTags(out var tags));
+			Assert.NotEmpty(tags);
+
+			SKPaint CreatePaint()
+			{
+				var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
+				var dotnet = new MemoryStream(bytes);
+				var stream = new SKManagedStream(dotnet, true);
+
+				var typeface = SKTypeface.FromStream(stream);
+
+				return new SKPaint
+				{
+					Typeface = typeface
+				};
+			}
+		}
+
+		[SkippableFact]
+		public void StreamIsAccessableFromNativeType()
+		{
+			VerifyImmediateFinalizers();
+
+			var paint = CreatePaint(out var typefaceHandle);
+
+			CollectGarbage();
+
+			Assert.False(SKObject.GetInstance<SKTypeface>(typefaceHandle, out _));
+
+			var tf = paint.Typeface;
+
+			Assert.Equal("Roboto2", tf.FamilyName);
+			Assert.True(tf.TryGetTableTags(out var tags));
+			Assert.NotEmpty(tags);
+
+			SKPaint CreatePaint(out IntPtr handle)
+			{
+				var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
+				var dotnet = new MemoryStream(bytes);
+				var stream = new SKManagedStream(dotnet, true);
+
+				var typeface = SKTypeface.FromStream(stream);
+				handle = typeface.Handle;
+
+				return new SKPaint
+				{
+					Typeface = typeface
+				};
+			}
+		}
+
+		[SkippableFact]
+		public unsafe void ManagedStreamIsCollectedWhenTypefaceIsDisposed()
+		{
+			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
+			var dotnet = new MemoryStream(bytes);
+			var stream = new SKManagedStream(dotnet, true);
+			var handle = stream.Handle;
+
+			var typeface = SKTypeface.FromStream(stream);
+
+			typeface.Dispose();
+
+			Assert.False(SKObject.GetInstance<SKManagedStream>(handle, out _));
+			Assert.Throws<ObjectDisposedException>(() => dotnet.Position);
+		}
+
+		[SkippableFact]
+		public unsafe void ManagedStreamIsCollectedWhenCollected()
+		{
+			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
+			var dotnet = new MemoryStream(bytes);
+
+			var handle = DoWork();
+
+			CollectGarbage();
+
+			Assert.False(SKObject.GetInstance<SKManagedStream>(handle, out _));
+			Assert.Throws<ObjectDisposedException>(() => dotnet.Position);
+
+			IntPtr DoWork()
+			{
+				var stream = new SKManagedStream(dotnet, true);
+				var typeface = SKTypeface.FromStream(stream);
+				return stream.Handle;
+			}
+		}
+
+		[SkippableFact]
+		public unsafe void StreamLosesOwnershipAndCanBeGarbageCollected()
+		{
+			VerifyImmediateFinalizers();
+
+			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
+
+			DoWork(out var typefaceH, out var streamH);
+
+			CollectGarbage();
+
+			Assert.False(SKObject.GetInstance<SKMemoryStream>(streamH, out _));
+			Assert.False(SKObject.GetInstance<SKTypeface>(typefaceH, out _));
+
+			void DoWork(out IntPtr typefaceHandle, out IntPtr streamHandle)
+			{
+				var typeface = CreateTypeface(out streamHandle);
+				typefaceHandle = typeface.Handle;
+
+				CollectGarbage();
+
+				Assert.NotEmpty(typeface.GetTableTags());
+
+				Assert.True(SKObject.GetInstance<SKMemoryStream>(streamHandle, out var stream));
+				Assert.False(stream.OwnsHandle);
+				Assert.True(stream.IgnorePublicDispose);
+			}
+
+			SKTypeface CreateTypeface(out IntPtr streamHandle)
+			{
+				var stream = new SKMemoryStream(bytes);
+				streamHandle = stream.Handle;
+
+				Assert.True(stream.OwnsHandle);
+				Assert.False(stream.IgnorePublicDispose);
+				Assert.True(SKObject.GetInstance<SKMemoryStream>(streamHandle, out _));
+
+				return SKTypeface.FromStream(stream);
+			}
 		}
 	}
 }

@@ -1,12 +1,25 @@
 
 var MSBuildNS = (XNamespace) "http://schemas.microsoft.com/developer/msbuild/2003";
 
-void RunMSBuild (FilePath solution, string platform = "Any CPU", string platformTarget = null, bool restore = true)
+void RunMSBuild (
+    FilePath solution,
+    string platform = "Any CPU",
+    string platformTarget = null,
+    bool restore = true,
+    bool restoreOnly = false)
 {
+    EnsureDirectoryExists ("./output/nugets/");
+
     MSBuild (solution, c => {
         c.Configuration = CONFIGURATION;
         c.Verbosity = VERBOSITY;
-        c.Restore = restore;
+
+        if (restoreOnly) {
+            c.Targets.Clear();
+            c.Targets.Add("Restore");
+        } else {
+            c.Restore = restore;
+        }
 
         if (!string.IsNullOrEmpty (platformTarget)) {
             platform = null;
@@ -20,29 +33,15 @@ void RunMSBuild (FilePath solution, string platform = "Any CPU", string platform
             c.Properties ["Platform"] = new [] { "\"" + platform + "\"" };
         }
 
-        if (!string.IsNullOrEmpty (MSBuildToolPath)) {
-            c.ToolPath = MSBuildToolPath;
-        }
-    });
-}
-
-void RunMSBuildRestoreLocal (FilePath solution, DirectoryPath packagesDir)
-{
-    var dir = solution.GetDirectory ();
-    MSBuild (solution, c => {
-        c.Configuration = CONFIGURATION;
-        c.Verbosity = VERBOSITY;
-        c.Targets.Clear();
-        c.Targets.Add("Restore");
         c.Properties ["RestoreNoCache"] = new [] { "true" };
-        c.Properties ["RestorePackagesPath"] = new [] { packagesDir.FullPath };
-        c.PlatformTarget = PlatformTarget.MSIL;
-        c.MSBuildPlatform = MSBuildPlatform.x86;
+        c.Properties ["RestorePackagesPath"] = new [] { PACKAGE_CACHE_PATH.FullPath };
+        // c.Properties ["RestoreSources"] = NuGetSources;
+        var sep = IsRunningOnWindows () ? ";" : "%3B";
+        c.ArgumentCustomization = args => args.Append ($"/p:RestoreSources=\"{string.Join (sep, NuGetSources)}\"");
+
         if (!string.IsNullOrEmpty (MSBuildToolPath)) {
             c.ToolPath = MSBuildToolPath;
         }
-        // c.Properties ["RestoreSources"] = NuGetSources;
-        c.ArgumentCustomization = args => args.Append ($"/p:RestoreSources=\"{string.Join (IsRunningOnWindows () ? ";" : "%3B", NuGetSources)}\"");
     });
 }
 
@@ -69,10 +68,11 @@ void RunTests (FilePath testAssembly, bool is32)
 {
     var dir = testAssembly.GetDirectory ();
     var settings = new XUnit2Settings {
-        ReportName = "TestResult",
+        ReportName = "TestResults",
         XmlReport = true,
         UseX86 = is32,
-        Parallelism = ParallelismOption.Assemblies,
+        NoAppDomain = true,
+        Parallelism = ParallelismOption.All,
         OutputDirectory = dir,
         WorkingDirectory = dir,
         ArgumentCustomization = args => args.Append ("-verbose"),
@@ -87,12 +87,18 @@ void RunTests (FilePath testAssembly, bool is32)
 void RunNetCoreTests (FilePath testAssembly)
 {
     var dir = testAssembly.GetDirectory ();
+    var buildSettings = new DotNetCoreBuildSettings {
+        Configuration = CONFIGURATION,
+        WorkingDirectory = dir,
+    };
+    DotNetCoreBuild(testAssembly.GetFilename().ToString(), buildSettings);
     var settings = new DotNetCoreTestSettings {
         Configuration = CONFIGURATION,
-        NoRestore = true,
+        NoBuild = true,
         TestAdapterPath = ".",
         Logger = "xunit",
         WorkingDirectory = dir,
+        Verbosity = DotNetCoreVerbosity.Normal,
     };
     var traits = CreateTraitsDictionary(UNSUPPORTED_TESTS);
     var filter = string.Join("&", traits.Select(t => $"{t.Name}!={t.Value}"));
@@ -129,170 +135,160 @@ var DecompressArchive = new Action<FilePath, DirectoryPath> ((archive, outputDir
     }
 });
 
-var CreateSamplesZip = new Action<DirectoryPath, DirectoryPath> ((samplesDirPath, outputDirPath) => {
-    var platformExtensions = new [] {
-        ".android",
-        ".desktop",
-        ".gtk",
-        ".ios",
-        ".mac",
-        ".macos",
-        ".netstandard",
-        ".osx",
-        ".portable",
-        ".shared",
-        ".tizen",
-        ".tvos",
-        ".uwp",
-        ".watchos",
-        ".wpf",
-    };
-    var workingDir = outputDirPath.Combine ("samples");
+void CreateSamplesDirectory (DirectoryPath samplesDirPath, DirectoryPath outputDirPath, string versionSuffix = "")
+{
+    samplesDirPath = MakeAbsolute (samplesDirPath);
+    outputDirPath = MakeAbsolute (outputDirPath);
 
-    // copy the current samples directory
-    EnsureDirectoryExists (workingDir);
-    CleanDirectory (workingDir);
-    CopyDirectory (samplesDirPath, workingDir);
-
-    // remove any binaries from the samples directory
-    var settings = new DeleteDirectorySettings {
-        Force = true,
-        Recursive = true
-    };
-    DeleteDirectories (GetDirectories ($"{workingDir}/*/*/*/bin"), settings);
-    DeleteDirectories (GetDirectories ($"{workingDir}/*/*/*/obj"), settings);
-    DeleteDirectories (GetDirectories ($"{workingDir}/*/*/*/AppPackages"), settings);
-    DeleteDirectories (GetDirectories ($"{workingDir}/*/*/.vs"), settings);
-
-    // make sure the paths are in the correct format for comparison
-    var dpc = System.IO.Path.DirectorySeparatorChar;
-    var toNativePath = new Func<string, string> (inPath => inPath.Replace ('\\', dpc).Replace ('/', dpc));
-    var samplesDir = System.IO.Path.GetFullPath (toNativePath (MakeAbsolute (workingDir).FullPath));
-    var samplesUri = new Uri (samplesDir);
-
-    // the regex to math the project entries in the solution
     var solutionProjectRegex = new Regex(@",\s*""(.*?\.\w{2}proj)"", ""(\{.*?\})""");
 
-    foreach (var file in GetFiles ($"{workingDir}/**/*")) {
-        var abs = System.IO.Path.GetFullPath (toNativePath (file.FullPath));
-        var absDir = System.IO.Path.GetDirectoryName (abs);
-        var ext = System.IO.Path.GetExtension (abs).ToLower ();
-        var rel = samplesUri.MakeRelativeUri (new Uri (abs)).ToString ();
+    EnsureDirectoryExists (outputDirPath);
+    CleanDirectory (outputDirPath);
 
-        if (ext == ".sln") {
-            var modified = false;
-            var lines = FileReadLines (abs).ToList ();
+    var ignoreBinObj = new GlobberSettings {
+        Predicate = fileSystemInfo => {
+            var segments = fileSystemInfo.Path.Segments;
+            var keep = segments.All (s =>
+                !s.Equals ("bin", StringComparison.OrdinalIgnoreCase) &&
+                !s.Equals ("obj", StringComparison.OrdinalIgnoreCase) &&
+                !s.Equals ("AppPackages", StringComparison.OrdinalIgnoreCase) &&
+                !s.Equals (".vs", StringComparison.OrdinalIgnoreCase));
+            return keep;
+        }
+    };
+
+    var files = GetFiles ($"{samplesDirPath}/**/*", ignoreBinObj);
+    foreach (var file in files) {
+        var rel = samplesDirPath.GetRelativePath (file);
+        var dest = outputDirPath.CombineWithFilePath (rel);
+        var ext = file.GetExtension () ?? "";
+
+        if (ext.Equals (".sln", StringComparison.OrdinalIgnoreCase)) {
+            var lines = FileReadLines (file.FullPath).ToList ();
             var guids = new List<string> ();
 
             // remove projects that aren't samples
             for (var i = 0; i < lines.Count; i++) {
                 var line = lines [i];
                 var m = solutionProjectRegex.Match (line);
-                if (m.Success) {
-                    var relProjectPath = toNativePath (m.Groups[1].Value);
-                    var projectPath = System.IO.Path.GetFullPath (System.IO.Path.Combine (absDir, relProjectPath));
-                    if (!projectPath.StartsWith (samplesDir, StringComparison.OrdinalIgnoreCase)) {
-                        // skip the next line as it is the "EndProject" line
-                        guids.Add (m.Groups[2].Value. ToLower ());
-                        lines.RemoveAt (i);
-                        i--;
-                        lines.RemoveAt (i);
-                        i--;
-                        modified = true;
-                    }
-                }
+                if (!m.Success)
+                    continue;
+
+                // get the path of the project relative to the samples directory
+                var relProjectPath = (FilePath) m.Groups [1].Value;
+                var absProjectPath = GetFullPath (file, relProjectPath);
+                var relSamplesPath = samplesDirPath.GetRelativePath (absProjectPath);
+                if (!relSamplesPath.FullPath.StartsWith (".."))
+                    continue;
+
+                Debug ($"Removing the project '{relProjectPath}' for solution '{rel}'.");
+
+                // skip the next line as it is the "EndProject" line
+                guids.Add (m.Groups [2].Value.ToLower ());
+                lines.RemoveAt (i--);
+                lines.RemoveAt (i--);
             }
 
-            // remove all the other references
+            // remove all the other references to this guid
             if (guids.Count > 0) {
                 for (var i = 0; i < lines.Count; i++) {
                     var line = lines [i];
                     foreach (var guid in guids) {
                         if (line.ToLower ().Contains (guid)) {
-                            lines.RemoveAt (i);
-                            i--;
+                            lines.RemoveAt (i--);
                         }
                     }
                 }
             }
 
-            // save the modified solution
-            if (modified) {
-                FileWriteLines (abs, lines.ToArray ());
-            }
-        } else if (ext == ".csproj") {
-            var modified = false;
-            var xdoc = XDocument.Load (abs);
+            // save the solution
+            EnsureDirectoryExists (dest.GetDirectory ());
+            FileWriteLines (dest, lines.ToArray ());
+        } else if (ext.Equals (".csproj", StringComparison.OrdinalIgnoreCase)) {
+            var xdoc = XDocument.Load (file.FullPath);
 
-            // get all <ProjectReference> elements
-            var projItems1 = xdoc
-                .Root
-                .Elements (MSBuildNS + "ItemGroup")
-                .Elements ();
-            var projItems2 = xdoc
-                .Root
-                .Elements ("ItemGroup")
-                .Elements ();
-            var projItems = projItems1.Union (projItems2).ToArray ();
-            // swap out the project references for package references
+            // process all the files and project references
+            var projItems = xdoc.Root
+                .Elements ().Where (e => e.Name.LocalName == "ItemGroup")
+                .Elements ().Where (e => !string.IsNullOrWhiteSpace (e.Attribute ("Include")?.Value))
+                .ToArray ();
             foreach (var projItem in projItems) {
-                var include = projItem.Attribute ("Include")?.Value;
-                if (!string.IsNullOrWhiteSpace (include)) {
-                    var absInclude = System.IO.Path.GetFullPath (System.IO.Path.Combine (absDir, toNativePath (include)));
-                    if (!absInclude.StartsWith (samplesDir, StringComparison.OrdinalIgnoreCase)) {
-                        // not inside the samples directory, so needs to be removed
-                        if (projItem.Name.LocalName == "ProjectReference") {
-                            // get the desired package ID for this project reference
-                            // we assume "Desired.Package.Id.<platform>.csproj" or we assume "Desired.Package.Id.csproj"
-                            var binding = System.IO.Path.GetFileNameWithoutExtension (absInclude);
-                            if (platformExtensions.Contains (System.IO.Path.GetExtension (binding).ToLower ()))
-                                binding = System.IO.Path.GetFileNameWithoutExtension (binding);
-                            // check to see if we have a specific version
-                            var bindingVersion = GetVersion (binding);
-                            if (!string.IsNullOrWhiteSpace (bindingVersion)) {
-                                // add a <PackageReference>
-                                var name = projItem.Name.Namespace + "PackageReference";
-                                projItem.AddAfterSelf (new XElement (name, new object[] {
-                                        new XAttribute("Include", binding),
-                                        new XAttribute("Version", bindingVersion),
-                                    }));
-                            }
-                        }
-                        // remove the element
-                        projItem.Remove ();
-                        modified = true;
+                // get files in the include
+                var relFilePath = (FilePath) projItem.Attribute ("Include").Value;
+                var absFilePath = GetFullPath (file, relFilePath);
+
+                // ignore files in the samples directory
+                var relSamplesPath = samplesDirPath.GetRelativePath (absFilePath);
+                if (!relSamplesPath.FullPath.StartsWith (".."))
+                    continue;
+
+                // substitute <ProjectReference> with <PackageReference>
+                if (projItem.Name.LocalName == "ProjectReference" && FileExists (absFilePath)) {
+                    var xReference = XDocument.Load (absFilePath.FullPath);
+                    var packagingGroup = xReference.Root
+                        .Elements ().Where (e => e.Name.LocalName == "PropertyGroup")
+                        .Elements ().Where (e => e.Name.LocalName == "PackagingGroup")
+                        .FirstOrDefault ()?.Value;
+                    var version = GetVersion (packagingGroup);
+                    if (!string.IsNullOrWhiteSpace (version)) {
+                        Debug ($"Substituting project reference {relFilePath} for project {rel}.");
+                        var name = projItem.Name.Namespace + "PackageReference";
+                        var suffix = string.IsNullOrEmpty (versionSuffix) ? "" : $"-{versionSuffix}";
+                        projItem.AddAfterSelf (new XElement (name, new object[] {
+                            new XAttribute("Include", packagingGroup),
+                            new XAttribute("Version", version + suffix),
+                        }));
+                    } else {
+                        Warning ($"Unable to find version information for package '{packagingGroup}'.");
                     }
+                } else {
+                    Debug ($"Removing the file '{relFilePath}' for project '{rel}'.");
                 }
+
+                // remove the element as it will be outside the sample directory
+                projItem.Remove ();
             }
 
-            // get all the <Import> elements
-            var imports1 = xdoc.Root.Elements (MSBuildNS + "Import");
-            var imports2 = xdoc.Root.Elements ("Import");
-            var imports = imports1.Union (imports2).ToArray ();
-            // remove them
+            // process all the imports
+            var imports = xdoc.Root
+                .Elements ().Where (e =>
+                    e.Name.LocalName == "Import" &&
+                    !string.IsNullOrWhiteSpace (e.Attribute ("Project")?.Value))
+                .ToArray ();
             foreach (var import in imports) {
-                var project = import.Attribute ("Project")?.Value;
-                if (!string.IsNullOrWhiteSpace (project)) {
-                    var absProject = System.IO.Path.GetFullPath (System.IO.Path.Combine (absDir, toNativePath (project)));
-                    if (!absProject.StartsWith (samplesDir, StringComparison.OrdinalIgnoreCase)) {
-                        // not inside the samples directory, so needs to be removed
-                        import.Remove ();
-                        modified = true;
-                    }
-                }
+                var project = import.Attribute ("Project").Value;
+
+                // skip files inside the samples directory or do not exist
+                var absProject = GetFullPath (file, project);
+                var relSamplesPath = samplesDirPath.GetRelativePath (absProject);
+                if (!relSamplesPath.FullPath.StartsWith (".."))
+                    continue;
+
+                Debug ($"Removing import '{project}' for project '{rel}'.");
+
+                // not inside the samples directory, so needs to be removed
+                import.Remove ();
             }
 
-            // save the modified project
-            if (modified) {
-                xdoc.Save (abs);
-            }
+            // save the project
+            EnsureDirectoryExists (dest.GetDirectory ());
+            xdoc.Save (dest.FullPath);
+        } else {
+            EnsureDirectoryExists (dest.GetDirectory ());
+            CopyFile (file, dest);
         }
     }
 
-    // finally create the zip
-    Zip (workingDir, outputDirPath.CombineWithFilePath ("samples.zip"));
-    CleanDirectory (workingDir);
-});
+    DeleteFiles ($"{outputDirPath}/README.md");
+    MoveFile ($"{outputDirPath}/README.zip.md", $"{outputDirPath}/README.md");
+}
+
+FilePath GetFullPath (FilePath root, FilePath path)
+{
+    path = path.FullPath.Replace ("*", "_");
+    path = root.GetDirectory ().CombineWithFilePath (path);
+    return (FilePath) System.IO.Path.GetFullPath (path.FullPath);
+}
 
 IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories (DirectoryPath rootDir)
 {
@@ -376,11 +372,14 @@ async Task<NuGetDiff> CreateNuGetDiffAsync ()
     await AddDep ("OpenTK.GLControl", "NET40");
     await AddDep ("Tizen.NET", "netstandard2.0");
     await AddDep ("Xamarin.Forms", "netstandard2.0");
-    await AddDep ("Xamarin.Forms", "MonoAndroid10");
+    await AddDep ("Xamarin.Forms", "MonoAndroid90");
     await AddDep ("Xamarin.Forms", "Xamarin.iOS10");
     await AddDep ("Xamarin.Forms", "Xamarin.Mac");
     await AddDep ("Xamarin.Forms", "tizen40");
     await AddDep ("Xamarin.Forms", "uap10.0");
+    await AddDep ("GtkSharp", "netstandard2.0");
+    await AddDep ("GLibSharp", "netstandard2.0");
+    await AddDep ("AtkSharp", "netstandard2.0");
 
     return comparer;
 }

@@ -6,13 +6,17 @@ namespace SkiaSharp.Tests
 {
 	public abstract class BaseTest
 	{
+		protected const string CategoryKey = "Category";
+
 		protected const string GpuCategory = "GPU";
-		protected const string MatchCharacterFeature = "MatchCharacter";
+		protected const string MatchCharacterCategory = "MatchCharacter";
 
 		protected static bool IsLinux;
 		protected static bool IsMac;
 		protected static bool IsUnix;
 		protected static bool IsWindows;
+
+		protected static bool IsRuntimeMono;
 
 		protected static readonly string[] UnicodeFontFamilies;
 		protected static readonly string DefaultFontFamily;
@@ -63,12 +67,20 @@ namespace SkiaSharp.Tests
 			IsWindows = !IsUnix;
 #endif
 
+			IsRuntimeMono = Type.GetType("Mono.Runtime") != null;
+
 			// set the test fields
 			DefaultFontFamily = IsLinux ? "DejaVu Sans" : "Arial";
 			UnicodeFontFamilies =
 				IsLinux ? new[] { "Symbola" } :
 				IsMac ? new[] { "Apple Color Emoji" } :
 				new[] { "Segoe UI Emoji", "Segoe UI Symbol" };
+		}
+
+		public static void CollectGarbage()
+		{
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
 		}
 
 		private static class MacPlatformDetector

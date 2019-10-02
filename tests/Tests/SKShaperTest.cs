@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using HarfBuzzSharp;
@@ -40,7 +39,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 		{
 			var clusters = new uint[] { 4, 2, 0 };
 			var codepoints = new uint[] { 629, 668, 891 };
-			var points = new SKPoint[] { new SKPoint(100, 200), new SKPoint(128.375f, 200), new SKPoint(142.125f, 200) };
+			var points = new SKPoint[] { new SKPoint(100, 200), new SKPoint(128.25f, 200), new SKPoint(142, 200) };
 
 			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
 			using (var shaper = new SKShaper(tf))
@@ -59,7 +58,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 		{
 			var clusters = new uint[] { 4, 2, 0 };
 			var codepoints = new uint[] { 629, 668, 891 };
-			var points = new SKPoint[] { new SKPoint(0, 0), new SKPoint(28.375f, 0), new SKPoint(42.125f, 0) };
+			var points = new SKPoint[] { new SKPoint(0, 0), new SKPoint(28.25f, 0), new SKPoint(42, 0) };
 
 			using (var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "content-font.ttf")))
 			using (var shaper = new SKShaper(tf))
@@ -81,7 +80,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 			var clusters = new uint[] { 4, 2, 0 };
 			var codepoints = new uint[] { 629, 668, 891 };
 
-			using (var face = new Face(GetFaceBlob, skiaTypeface, ctx => ((SKTypeface)ctx).Dispose()))
+			using (var face = new Face(GetFaceBlob, () => skiaTypeface.Dispose()))
 			using (var font = new Font(face))
 			using (var buffer = new HarfBuzzSharp.Buffer())
 			{
@@ -94,12 +93,12 @@ namespace SkiaSharp.HarfBuzz.Tests
 				Assert.Equal(codepoints, buffer.GlyphInfos.Select(i => i.Codepoint));
 			}
 
-			Blob GetFaceBlob(Face face, Tag tag, object context)
+			Blob GetFaceBlob(Face face, Tag tag)
 			{
 				var size = skiaTypeface.GetTableSize(tag);
 				var data = Marshal.AllocCoTaskMem(size);
 				skiaTypeface.TryGetTableData(tag, 0, size, data);
-				return new Blob(data, size, MemoryMode.Writeable, data, ctx => Marshal.FreeCoTaskMem((IntPtr)ctx));
+				return new Blob(data, size, MemoryMode.Writeable, () => Marshal.FreeCoTaskMem(data));
 			}
 		}
 	}

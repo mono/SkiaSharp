@@ -4,8 +4,24 @@ using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	public abstract class SKTest : BaseTest
+	public abstract class SKTest : BaseTest, IAssemblyFixture<GarbageCleanupFixture>
 	{
+		private static readonly Random random = new Random();
+
+		protected static Stream CreateTestStream(int length = 1024)
+		{
+			var bytes = new byte[length];
+			random.NextBytes(bytes);
+			return new MemoryStream(bytes);
+		}
+
+		protected static SKStreamAsset CreateTestSKStream(int length = 1024)
+		{
+			var bytes = new byte[length];
+			random.NextBytes(bytes);
+			return new SKMemoryStream(bytes);
+		}
+
 		protected static void SaveBitmap(SKBitmap bmp, string filename = "output.png")
 		{
 			using (var bitmap = new SKBitmap(bmp.Width, bmp.Height))
@@ -99,8 +115,32 @@ namespace SkiaSharp.Tests
 			}
 			catch (Exception ex)
 			{
-				throw new SkipException("Unable to create GL context: " + ex.Message);
+				throw new SkipException($"Unable to create GL context: {ex.Message}");
 			}
+		}
+
+		protected static void VerifyImmediateFinalizers()
+		{
+			if (IsRuntimeMono)
+				throw new SkipException("Mono does not guarantee finalizers are invoked immediately.");
+		}
+
+		protected static void VerifySupportsExceptionsInDelegates()
+		{
+			if (!IsWindows)
+				throw new SkipException("Exceptions cannot be thrown in native delegates on non-Windows platforms.");
+		}
+
+		protected static void VerifySupportsMatchingTypefaces()
+		{
+			if (IsMac)
+				throw new SkipException("macOS does not support matching typefaces.");
+		}
+
+		protected static void VerifySupportsMatchingTypefacesFromStreams()
+		{
+			if (IsLinux)
+				throw new SkipException("Linux does not support matching typefaces from a typeface that was loaded from a stream.");
 		}
 	}
 }

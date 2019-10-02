@@ -5,8 +5,8 @@
 #addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.0.0&loaddependencies=true
 #addin nuget:?package=Xamarin.Nuget.Validator&version=1.1.1
 
-#tool nuget:?package=mdoc&version=5.7.4.8
-#tool nuget:?package=xunit.runner.console&version=2.4.0
+#tool nuget:?package=mdoc&version=5.7.4.9
+#tool nuget:?package=xunit.runner.console&version=2.4.1
 #tool nuget:?package=vswhere&version=2.5.2
 
 using System.Linq;
@@ -24,7 +24,7 @@ using NuGet.Versioning;
 #load "cake/Utils.cake"
 
 var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")));
-var VERBOSITY = (Verbosity) Enum.Parse (typeof(Verbosity), Argument ("v", Argument ("verbosity", Argument ("Verbosity", "Normal"))), true);
+var VERBOSITY = Argument ("v", Argument ("verbosity", Argument ("Verbosity", Verbosity.Normal)));
 var SKIP_EXTERNALS = Argument ("skipexternals", Argument ("SkipExternals", "")).ToLower ().Split (',');
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAll", Argument ("PackAllPlatforms", TARGET.ToLower() == "ci" || TARGET.ToLower() == "nuget-only")));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
@@ -71,7 +71,13 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp",                          new Version (1, 57, 0) },
     { "SkiaSharp.NativeAssets.Linux",       new Version (1, 57, 0) },
     { "SkiaSharp.Views",                    new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Desktop.Common",     new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Gtk2",               new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Gtk3",               new Version (1, 57, 0) },
+    { "SkiaSharp.Views.WindowsForms",       new Version (1, 57, 0) },
+    { "SkiaSharp.Views.WPF",                new Version (1, 57, 0) },
     { "SkiaSharp.Views.Forms",              new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Forms.WPF",          new Version (1, 57, 0) },
     { "HarfBuzzSharp",                      new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.Linux",   new Version (1, 0, 0) },
     { "SkiaSharp.HarfBuzz",                 new Version (1, 57, 0) },
@@ -124,28 +130,19 @@ Task ("libs-only")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("tests")
-    .IsDependentOn ("libs")
-    .IsDependentOn ("nuget")
+    .IsDependentOn ("externals")
     .IsDependentOn ("tests-only");
 
 Task ("tests-only")
     .Does (() =>
 {
     var RunDesktopTest = new Action<string> (arch => {
-        var platform = "";
-        if (IsRunningOnWindows ()) {
-            platform = "windows";
-        } else if (IsRunningOnMac ()) {
-            platform = "mac";
-        } else if (IsRunningOnLinux ()) {
-            platform = "linux";
-        }
-
-        EnsureDirectoryExists ($"./output/tests/{platform}/{arch}");
         RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", platform: arch == "AnyCPU" ? "Any CPU" : arch);
         RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Tests.dll", arch == "x86");
-        CopyFileToDirectory ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/TestResult.xml", $"./output/tests/{platform}/{arch}");
     });
+
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
     // Full .NET Framework
     if (IsRunningOnWindows ()) {
@@ -154,38 +151,12 @@ Task ("tests-only")
     } else if (IsRunningOnMac ()) {
         RunDesktopTest ("AnyCPU");
     } else if (IsRunningOnLinux ()) {
-        // TODO: Disable x64 for the time being due to a bug in mono sn:
-        //       https://github.com/mono/mono/issues/8218
-
-        RunDesktopTest ("AnyCPU");
-        // RunDesktopTest ("x64");
+        RunDesktopTest ("x64");
     }
 
     // .NET Core
-    var netCoreTestProj = "./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj";
-    var xdoc = XDocument.Load (netCoreTestProj);
-    var refs = xdoc.Root.Elements ("ItemGroup").Elements ("PackageReference");
-    bool changed = false;
-    foreach (var packageRef in refs) {
-        var include = packageRef.Attribute ("Include").Value;
-        var oldVersion = packageRef.Attribute ("Version").Value;
-        var version = GetVersion (include);
-        if (!string.IsNullOrEmpty (version)) {
-            if (version != oldVersion) {
-                packageRef.Attribute ("Version").Value = version;
-                changed = true;
-            }
-        }
-    }
-    if (changed) {
-        xdoc.Save (netCoreTestProj);
-    }
-    CleanDirectories ("./tests/packages/skiasharp*");
-    CleanDirectories ("./tests/packages/harfbuzzsharp*");
-    EnsureDirectoryExists ("./output/tests/netcore");
-    RunMSBuildRestoreLocal (netCoreTestProj, "./tests/packages");
-    RunNetCoreTests (netCoreTestProj);
-    CopyFile ("./tests/SkiaSharp.NetCore.Tests/TestResults/TestResults.xml", "./output/tests/netcore/TestResult.xml");
+    RunMSBuild ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.sln");
+    RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -195,12 +166,6 @@ Task ("tests-only")
 Task ("samples")
     .Does (() =>
 {
-    // create the samples archive
-    CreateSamplesZip ("./samples/", "./output/");
-
-    // create the workbooks archive
-    Zip ("./workbooks", "./output/workbooks.zip");
-
     var isLinux = IsRunningOnLinux ();
     var isMac = IsRunningOnMac ();
     var isWin = IsRunningOnWindows ();
@@ -248,7 +213,24 @@ Task ("samples")
         }
     });
 
-    var solutions = GetFiles ("./samples/**/*.sln");
+    // create the workbooks archive
+    Zip ("./workbooks", "./output/workbooks.zip");
+
+    // create the samples archive
+    CreateSamplesDirectory ("./samples/", "./output/samples/");
+    Zip ("./output/samples/", "./output/samples.zip");
+
+    // create the preview samples archive
+    var suffix = string.IsNullOrEmpty (BUILD_NUMBER)
+        ? $"{PREVIEW_LABEL}"
+        : $"{PREVIEW_LABEL}.{BUILD_NUMBER}";
+    CreateSamplesDirectory ("./samples/", "./output/samples-preview/", suffix);
+    Zip ("./output/samples-preview/", "./output/samples-preview.zip");
+
+    // build the newly migrated samples
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
+    CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
+    var solutions = GetFiles ("./output/samples/**/*.sln");
     foreach (var sln in solutions) {
         var name = sln.GetFilenameWithoutExtension ();
         var slnPlatform = name.GetExtension ();
@@ -276,6 +258,10 @@ Task ("samples")
             }
         }
     }
+    CleanDirectory ("./output/samples/");
+    DeleteDirectory ("./output/samples/");
+    CleanDirectory ("./output/samples-preview/");
+    DeleteDirectory ("./output/samples-preview/");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -307,19 +293,19 @@ Task ("nuget-only")
         foreach (var file in files.ToArray ()) {
             // remove the files that aren't available
             var nuspecPlatform = file.Attribute ("platform");
-            if (nuspecPlatform != null) {
+            if (!string.IsNullOrEmpty (nuspecPlatform?.Value)) {
+                nuspecPlatform.Remove ();
                 if (!string.IsNullOrEmpty (platform)) {
                     // handle the platform builds
-                    if (!string.IsNullOrEmpty (nuspecPlatform.Value)) {
-                        if (!nuspecPlatform.Value.Split (',').Contains (platform)) {
-                            file.Remove ();
-                        }
+                    if (!nuspecPlatform.Value.Split (',').Contains (platform)) {
+                        file.Remove ();
                     }
                 }
-                nuspecPlatform.Remove ();
             }
-            // copy the src attribute and set it for the target
-            file.Add (new XAttribute ("target", file.Attribute ("src").Value));
+            // copy the src attribute and set it for the target if there is none already
+            if (string.IsNullOrEmpty (file.Attribute ("target")?.Value)) {
+                file.Add (new XAttribute ("target", file.Attribute ("src").Value));
+            }
         }
     });
 
@@ -380,12 +366,16 @@ Task ("nuget-only")
         removePlatforms (xdoc);
 
         var outDir = $"./output/{dir}/nuget";
+        EnsureDirectoryExists (outDir);
 
         setVersion (xdoc, "");
         xdoc.Save ($"{outDir}/{id}.nuspec");
 
         setVersion (xdoc, $"{preview}");
         xdoc.Save ($"{outDir}/{id}.prerelease.nuspec");
+
+        // the placeholders
+        FileWriteText ($"{outDir}/_._", "");
 
         // the legal
         CopyFile ("./LICENSE.txt", $"{outDir}/LICENSE.txt");
@@ -568,7 +558,7 @@ var envVarsWhitelist = new [] {
     "processor_identifier", "node_name", "node_labels", "branch_name",
     "os", "build_url", "build_number", "number_of_processors",
     "node_label", "build_id", "git_sha", "git_branch_name",
-    "feature_name", "msbuild_exe", "python_exe",
+    "feature_name", "msbuild_exe", "python_exe", "preview_label",
     "home", "userprofile", "nuget_packages",
     "android_sdk_root", "android_ndk_root",
     "android_home", "android_ndk_home", "tizen_studio_home"

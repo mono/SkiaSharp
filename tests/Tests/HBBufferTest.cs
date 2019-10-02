@@ -10,12 +10,14 @@ namespace HarfBuzzSharp.Tests
 		private const string SimpleText = "1234";
 
 		private const string SerializedSimpleText = "gid25=0+772|gid26=1+772|gid27=2+772|gid28=3+772";
-		
+
 		[SkippableFact]
 		public void ShouldHaveCorrectContentType()
 		{
 			using (var buffer = new Buffer())
 			{
+				buffer.Direction = Direction.LeftToRight;
+
 				Assert.Equal(ContentType.Invalid, buffer.ContentType);
 
 				buffer.AddUtf8(SimpleText);
@@ -67,11 +69,11 @@ namespace HarfBuzzSharp.Tests
 
 				Assert.Equal(1, buffer.Length);
 
-				buffer.AddUtf8("B");
+				buffer.AddUtf16("B");
 
 				Assert.Equal(2, buffer.Length);
 
-				buffer.AddUtf8("C");
+				buffer.AddUtf32("C");
 
 				Assert.Equal(3, buffer.Length);
 			}
@@ -82,9 +84,9 @@ namespace HarfBuzzSharp.Tests
 		{
 			using (var buffer = new Buffer())
 			{
-				var utf8 = Encoding.UTF8.GetBytes("A").AsSpan();
+				var bytes = Encoding.UTF8.GetBytes("A").AsSpan();
 
-				buffer.AddUtf8(utf8);
+				buffer.AddUtf8(bytes);
 
 				Assert.Equal(1, buffer.Length);
 
@@ -94,7 +96,9 @@ namespace HarfBuzzSharp.Tests
 
 				Assert.Equal(2, buffer.Length);
 
-				var utf32 = new[] { char.ConvertToUtf32("C", 0) };
+				bytes = Encoding.UTF32.GetBytes("C");
+
+				var utf32 = new int[] { bytes[0] };
 
 				buffer.AddUtf32(utf32);
 
@@ -107,6 +111,8 @@ namespace HarfBuzzSharp.Tests
 		{
 			using (var buffer = new Buffer())
 			{
+				buffer.Direction = Direction.LeftToRight;
+
 				buffer.AddUtf8(SimpleText);
 
 				Font.Shape(buffer);
@@ -212,6 +218,8 @@ namespace HarfBuzzSharp.Tests
 			using (var buffer = new Buffer())
 			using (var source = new Buffer())
 			{
+				buffer.ContentType = ContentType.Unicode;
+
 				source.AddUtf8("123");
 
 				buffer.Append(source, 0, source.Length);
@@ -223,13 +231,18 @@ namespace HarfBuzzSharp.Tests
 		{
 			using (var buffer = new Buffer())
 			{
+				buffer.Direction = Direction.LeftToRight;
+
 				buffer.AddUtf16("Â̶");
 
 				Font.Shape(buffer);
 
 				buffer.NormalizeGlyphs();
 
-				Assert.Equal(1027, buffer.GlyphPositions[1].YOffset);
+				Assert.Equal(0, buffer.GlyphPositions[0].XOffset);
+				Assert.Equal(0, buffer.GlyphPositions[0].YOffset);
+				Assert.Equal(-1135, buffer.GlyphPositions[1].XOffset);
+				Assert.Equal(0, buffer.GlyphPositions[1].YOffset);
 			}
 		}
 
