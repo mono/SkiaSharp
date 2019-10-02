@@ -52,7 +52,7 @@ namespace SkiaSharpSample.UITests
 		protected void TakeScreenshot(string testName)
 		{
 			var finalName = testName.Replace("\"", "_").Replace(" ", "_").ToLower();
-			var f = App.Screenshot(testName);
+			var f = App.Screenshot(finalName);
 			TestContext.AddTestAttachment(f.FullName, finalName);
 		}
 	}
