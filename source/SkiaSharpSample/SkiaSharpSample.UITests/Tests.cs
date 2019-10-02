@@ -45,7 +45,7 @@ namespace SkiaSharpSample.UITests
 			App.WaitForElement(testSelector);
 			App.Tap(testSelector);
 
-			TakeScreenshot(testName.Replace("\"", "_"));
+			TakeScreenshot(testName);
 		}
 	}
 }
