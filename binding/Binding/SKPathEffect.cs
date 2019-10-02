@@ -15,7 +15,7 @@ namespace SkiaSharp
 		Inverted,
 	}
 
-	public class SKPathEffect : SKObject
+	public class SKPathEffect : SKObject, ISKReferenceCounted
 	{
 		[Preserve]
 		internal SKPathEffect (IntPtr handle, bool owns)
@@ -23,15 +23,6 @@ namespace SkiaSharp
 		{
 		}
 
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_path_effect_unref (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
-		
 		public static SKPathEffect CreateCompose(SKPathEffect outer, SKPathEffect inner)
 		{
 			if (outer == null)

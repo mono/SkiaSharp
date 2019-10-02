@@ -31,14 +31,8 @@ namespace SkiaSharp
 		{
 		}
 
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_surfaceprops_delete (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
+		protected override void DisposeNative () =>
+			SkiaApi.sk_surfaceprops_delete (Handle);
 
 		public SKSurfacePropsFlags Flags =>
 			(SKSurfacePropsFlags)SkiaApi.sk_surfaceprops_get_flags (Handle);

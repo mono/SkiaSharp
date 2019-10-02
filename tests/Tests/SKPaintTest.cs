@@ -250,24 +250,43 @@ namespace SkiaSharp.Tests
 			Assert.Equal(text.Length, paint.GetGlyphs(text).Length);
 		}
 
+		[Trait(CategoryKey, MatchCharacterCategory)]
 		[SkippableFact]
 		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharacters()
 		{
 			const string text = "🚀";
 			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
 
+			var typeface = SKFontManager.Default.MatchCharacter(emojiChar);
+			Assert.NotNull(typeface);
+
 			var paint = new SKPaint();
 			paint.TextEncoding = SKTextEncoding.Utf32;
-			paint.Typeface = SKFontManager.Default.MatchCharacter(emojiChar);
+			paint.Typeface = typeface;
 
 			Assert.Equal(1, paint.CountGlyphs(text));
 			Assert.Single(paint.GetGlyphs(text));
+			Assert.NotEqual(0, paint.GetGlyphs(text)[0]);
 		}
 
 		[SkippableFact]
 		public void ContainsTextIsCorrect()
 		{
+			const string text = "A";
+
+			var paint = new SKPaint();
+			paint.TextEncoding = SKTextEncoding.Utf32;
+			paint.Typeface = SKTypeface.Default;
+
+			Assert.True(paint.ContainsGlyphs(text));
+		}
+
+		[Trait(CategoryKey, MatchCharacterCategory)]
+		[SkippableFact]
+		public void ContainsUnicodeTextIsCorrect()
+		{
 			const string text = "🚀";
+			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
 
 			var paint = new SKPaint();
 			paint.TextEncoding = SKTextEncoding.Utf32;
@@ -278,8 +297,9 @@ namespace SkiaSharp.Tests
 			Assert.False(paint.ContainsGlyphs(text));
 
 			// find a font with the character
-			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
-			paint.Typeface = SKFontManager.Default.MatchCharacter(emojiChar);
+			var typeface = SKFontManager.Default.MatchCharacter(emojiChar);
+			Assert.NotNull(typeface);
+			paint.Typeface = typeface;
 
 			Assert.True(paint.ContainsGlyphs(text));
 		}
@@ -324,10 +344,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(width8, width16);
 			Assert.Equal(width8, width32);
 
-			Assert.NotEqual(0, bounds8.Left);
-			Assert.NotEqual(0, bounds8.Top);
-			Assert.NotEqual(0, bounds8.Width);
-			Assert.NotEqual(0, bounds8.Height);
+			Assert.NotEqual(SKRect.Empty, bounds8);
 			Assert.Equal(bounds8, bounds16);
 			Assert.Equal(bounds8, bounds32);
 		}

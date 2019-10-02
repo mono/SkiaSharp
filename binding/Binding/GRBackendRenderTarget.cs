@@ -43,14 +43,8 @@ namespace SkiaSharp
 			}
 		}
 
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.gr_backendrendertarget_delete (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
+		protected override void DisposeNative () =>
+			SkiaApi.gr_backendrendertarget_delete (Handle);
 
 		public bool IsValid => SkiaApi.gr_backendrendertarget_is_valid (Handle);
 		public int Width => SkiaApi.gr_backendrendertarget_get_width (Handle);

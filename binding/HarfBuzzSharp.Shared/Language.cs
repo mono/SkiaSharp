@@ -6,7 +6,10 @@ namespace HarfBuzzSharp
 {
 	public class Language : NativeObject
 	{
-		public static Language Default => new Language (HarfBuzzApi.hb_language_get_default ());
+		private static readonly Lazy<Language> defaultLanguage =
+			new Lazy<Language> (() => new StaticLanguage (HarfBuzzApi.hb_language_get_default ()));
+
+		public static Language Default => defaultLanguage.Value;
 
 		internal Language (IntPtr handle)
 			: base (handle)
@@ -29,8 +32,22 @@ namespace HarfBuzzSharp
 
 		public override string ToString () => Name;
 
-		protected bool Equals (Language other) => string.Equals (Name, other.Name);
+		public override bool Equals (object obj) =>
+			obj is Language language && Handle == language.Handle;
 
 		public override int GetHashCode () => Name != null ? Name.GetHashCode () : 0;
+
+		private class StaticLanguage : Language
+		{
+			public StaticLanguage (IntPtr handle)
+				: base (handle)
+			{
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				// do not dispose
+			}
+		}
 	}
 }

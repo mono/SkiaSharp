@@ -29,14 +29,8 @@ namespace SkiaSharp
 			Handle = SkiaApi.sk_canvas_new_from_bitmap (bitmap.Handle);
 		}
 
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_canvas_destroy (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
+		protected override void DisposeNative () =>
+			SkiaApi.sk_canvas_destroy (Handle);
 
 		public bool QuickReject (SKRect rect)
 		{
@@ -64,7 +58,6 @@ namespace SkiaSharp
 
 		public int SaveLayer (SKPaint paint)
 		{
-			Console.WriteLine ($"SaveLayer2");
 			return SkiaApi.sk_canvas_save_layer (Handle, IntPtr.Zero, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 

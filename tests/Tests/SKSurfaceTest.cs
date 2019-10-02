@@ -253,7 +253,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Obsolete]
-		[Trait(Category, GpuCategory)]
+		[Trait(CategoryKey, GpuCategory)]
 		[SkippableFact]
 		public void CanConvertFromPointerToDescToTextureWithNewInfo()
 		{
@@ -296,7 +296,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Obsolete]
-		[Trait(Category, GpuCategory)]
+		[Trait(CategoryKey, GpuCategory)]
 		[SkippableFact]
 		public void CanConvertFromPointerToDescToTexture()
 		{
@@ -337,7 +337,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(GRPixelConfig.Rgba8888.ToGlSizedFormat(), newInfo.Format);
 		}
 
-		[Trait(Category, GpuCategory)]
+		[Trait(CategoryKey, GpuCategory)]
 		[SkippableFact]
 		public void GpuBackendSurfaceIsCreated()
 		{
@@ -352,9 +352,9 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Trait(Category, GpuCategory)]
-		[SkippableFact]
 		[Obsolete]
+		[Trait(CategoryKey, GpuCategory)]
+		[SkippableFact]
 		public void GpuTextureSurfaceIsCreatedWithDesc()
 		{
 			DrawGpuTextureWithDesc((surface, desc) =>
@@ -368,9 +368,9 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Trait(Category, GpuCategory)]
-		[SkippableFact]
 		[Obsolete]
+		[Trait(CategoryKey, GpuCategory)]
+		[SkippableFact]
 		public void GpuTextureSurfaceCanBeReadWithDesc()
 		{
 			DrawGpuTextureWithDesc((surface, desc) =>
@@ -387,6 +387,7 @@ namespace SkiaSharp.Tests
 					using (var raster = image.ToRasterImage())
 					{
 						Assert.False(raster.IsTextureBacked);
+						Assert.NotSame(image, raster);
 
 						using (var bmp = SKBitmap.FromImage(raster))
 						{
@@ -397,9 +398,9 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Trait(Category, GpuCategory)]
-		[SkippableFact]
 		[Obsolete]
+		[Trait(CategoryKey, GpuCategory)]
+		[SkippableFact]
 		public void GpuTextureSurfaceIsCreatedWithOldDesc()
 		{
 			DrawGpuTextureWithOldDesc((surface, desc) =>
@@ -413,9 +414,9 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Trait(Category, GpuCategory)]
-		[SkippableFact]
 		[Obsolete]
+		[Trait(CategoryKey, GpuCategory)]
+		[SkippableFact]
 		public void GpuTextureSurfaceCanBeReadWithOldDesc()
 		{
 			DrawGpuTextureWithOldDesc((surface, desc) =>
@@ -442,7 +443,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Trait(Category, GpuCategory)]
+		[Trait(CategoryKey, GpuCategory)]
 		[SkippableFact]
 		public void GpuTextureSurfaceIsCreated()
 		{
@@ -457,7 +458,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[Trait(Category, GpuCategory)]
+		[Trait(CategoryKey, GpuCategory)]
 		[SkippableFact]
 		public void GpuTextureSurfaceCanBeRead()
 		{

@@ -12,37 +12,40 @@ namespace SkiaSharp {
         static _seekInternal: any;
         static _moveInternal: any;
         static _getLengthInternal: any;
-        static _createNewInternal: any;
+        static _duplicateInternal: any;
+        static _forkInternal: any;
         static _destroyInternal: any;
 
 
         static registerManagedStream() {
 
-            SurfaceManager._readInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.ManagedStreamHelper:ReadInternal");
-            SurfaceManager._peekInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.ManagedStreamHelper:PeekInternal");
-            SurfaceManager._isAtEndInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.ManagedStreamHelper:IsAtEndInternal");
-            SurfaceManager._hasPositionInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.ManagedStreamHelper:HasPositionInternal");
-            SurfaceManager._hasLengthInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.ManagedStreamHelper:HasLengthInternal");
-            SurfaceManager._rewindInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.ManagedStreamHelper:RewindInternal");
-            SurfaceManager._getPositionInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.ManagedStreamHelper:GetPositionInternal");
-            SurfaceManager._seekInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.ManagedStreamHelper:SeekInternal");
-            SurfaceManager._moveInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.ManagedStreamHelper:MoveInternal");
-            SurfaceManager._getLengthInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.ManagedStreamHelper:GetLengthInternal");
-            SurfaceManager._createNewInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.ManagedStreamHelper:CreateNewInternal");
-            SurfaceManager._destroyInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.ManagedStreamHelper:DestroyInternal");
+            SurfaceManager._readInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.SKAbstractManagedStream:ReadInternal");
+            SurfaceManager._peekInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.SKAbstractManagedStream:PeekInternal");
+            SurfaceManager._isAtEndInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.SKAbstractManagedStream:IsAtEndInternal");
+            SurfaceManager._hasPositionInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.SKAbstractManagedStream:HasPositionInternal");
+            SurfaceManager._hasLengthInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.SKAbstractManagedStream:HasLengthInternal");
+            SurfaceManager._rewindInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.SKAbstractManagedStream:RewindInternal");
+            SurfaceManager._getPositionInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.SKAbstractManagedStream:GetPositionInternal");
+            SurfaceManager._seekInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.SKAbstractManagedStream:SeekInternal");
+            SurfaceManager._moveInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.SKAbstractManagedStream:MoveInternal");
+            SurfaceManager._getLengthInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.SKAbstractManagedStream:GetLengthInternal");
+            SurfaceManager._duplicateInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.SKAbstractManagedStream:DuplicateInternal");
+            SurfaceManager._forkInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.SKAbstractManagedStream:ForkInternal");
+            SurfaceManager._destroyInternal = (<any>Module).mono_bind_static_method("[SkiaSharp] SkiaSharp.SKAbstractManagedStream:DestroyInternal");
 
-            var fRead = (<any>Module).addFunction((managedStreamPtr: number, buffer: number, size: number) => SurfaceManager._readInternal(managedStreamPtr, buffer, size), 'iiii');
-            var fPeek = (<any>Module).addFunction((managedStreamPtr: number, buffer: number, size: number) => SurfaceManager._peekInternal(managedStreamPtr, buffer, size), 'iiii');
-            var fIsAtEnd = (<any>Module).addFunction((managedStreamPtr: number) => SurfaceManager._isAtEndInternal(managedStreamPtr), 'ii');
-            var fHasPosition = (<any>Module).addFunction((managedStreamPtr: number) => SurfaceManager._hasPositionInternal(managedStreamPtr), 'ii');
-            var fHasLength = (<any>Module).addFunction((managedStreamPtr: number) => SurfaceManager._hasLengthInternal(managedStreamPtr), 'ii');
-            var fRewind = (<any>Module).addFunction((managedStreamPtr: number) => SurfaceManager._rewindInternal(managedStreamPtr), 'ii');
-            var fGetPosition = (<any>Module).addFunction((managedStreamPtr: number) => SurfaceManager._getPositionInternal(managedStreamPtr), 'ii');
-            var fSeek = (<any>Module).addFunction((managedStreamPtr: number, position: any) => SurfaceManager._seekInternal(managedStreamPtr, position), 'ii');
-            var fMove = (<any>Module).addFunction((managedStreamPtr: number, offset: any) => SurfaceManager._moveInternal(managedStreamPtr, offset), 'ii');
-            var fGetLength = (<any>Module).addFunction((managedStreamPtr: number) => SurfaceManager._getLengthInternal(managedStreamPtr), 'ii');
-            var fCreateNew = (<any>Module).addFunction((managedStreamPtr: number) => SurfaceManager._createNewInternal(managedStreamPtr), 'ii');
-            var fDestroy = (<any>Module).addFunction((managedStreamPtr: number) => SurfaceManager._destroyInternal(managedStreamPtr), 'vi');
+            var fRead = (<any>Module).addFunction((managedStreamPtr: number, context: number, buffer: number, size: number) => SurfaceManager._readInternal(managedStreamPtr, context, buffer, size), 'iiiii');
+            var fPeek = (<any>Module).addFunction((managedStreamPtr: number, context: number, buffer: number, size: number) => SurfaceManager._peekInternal(managedStreamPtr, context, buffer, size), 'iiiii');
+            var fIsAtEnd = (<any>Module).addFunction((managedStreamPtr: number, context: number) => SurfaceManager._isAtEndInternal(managedStreamPtr, context), 'iii');
+            var fHasPosition = (<any>Module).addFunction((managedStreamPtr: number, context: number) => SurfaceManager._hasPositionInternal(managedStreamPtr, context), 'iii');
+            var fHasLength = (<any>Module).addFunction((managedStreamPtr: number, context: number) => SurfaceManager._hasLengthInternal(managedStreamPtr, context), 'iii');
+            var fRewind = (<any>Module).addFunction((managedStreamPtr: number, context: number) => SurfaceManager._rewindInternal(managedStreamPtr, context), 'iii');
+            var fGetPosition = (<any>Module).addFunction((managedStreamPtr: number, context: number) => SurfaceManager._getPositionInternal(managedStreamPtr, context), 'iii');
+            var fSeek = (<any>Module).addFunction((managedStreamPtr: number, context: number, position: any) => SurfaceManager._seekInternal(managedStreamPtr, context, position), 'iiii');
+            var fMove = (<any>Module).addFunction((managedStreamPtr: number, context: number, offset: any) => SurfaceManager._moveInternal(managedStreamPtr, context, offset), 'iiii');
+            var fGetLength = (<any>Module).addFunction((managedStreamPtr: number, context: number) => SurfaceManager._getLengthInternal(managedStreamPtr, context), 'iii');
+            var fDuplicate = (<any>Module).addFunction((managedStreamPtr: number, context:number) => SurfaceManager._duplicateInternal(managedStreamPtr, context), 'iii');
+            var fForkNew = (<any>Module).addFunction((managedStreamPtr: number, context: number) => SurfaceManager._forkInternal(managedStreamPtr, context), 'iii');
+            var fDestroy = (<any>Module).addFunction((managedStreamPtr: number, context: number) => SurfaceManager._destroyInternal(managedStreamPtr, context), 'vii');
 
             return [
                 fRead,
@@ -55,7 +58,8 @@ namespace SkiaSharp {
                 fSeek,
                 fMove,
                 fGetLength,
-                fCreateNew,
+                fDuplicate,
+                fForkNew,
                 fDestroy
             ];
         }

@@ -14,14 +14,8 @@ namespace SkiaSharp
 		{
 		}
 
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_codec_destroy (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
+		protected override void DisposeNative () =>
+			SkiaApi.sk_codec_destroy (Handle);
 
 		public static int MinBufferedBytesNeeded =>
 			(int)SkiaApi.sk_codec_min_buffered_bytes_needed ();
@@ -297,11 +291,8 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			int vresult = 0;
-
-			var codec = GetObject<SKCodec> (SkiaApi.sk_codec_new_from_stream_2 (stream.Handle, (IntPtr)(int)&vresult));
-			result = (SKCodecResult)vresult;
-			stream.RevokeOwnership ();
+			var codec = GetObject<SKCodec> (SkiaApi.sk_codec_new_from_stream (stream.Handle, out result));
+			stream.RevokeOwnership (codec);
 			return codec;
 		}
 

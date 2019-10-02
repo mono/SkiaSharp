@@ -265,8 +265,8 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
 		[Obsolete]
+		[SkippableFact]
 		public void BitmapResizesObsolete()
 		{
 			var srcInfo = new SKImageInfo(200, 200);
@@ -387,8 +387,8 @@ namespace SkiaSharp.Tests
 			mask.FreeImage();
 		}
 
-		[SkippableFact(Skip = "This test takes a long time (~3mins), so ignore this most of the time.")]
 		[Obsolete]
+		[SkippableFact(Skip = "This test takes a long time (~3mins), so ignore this most of the time.")]
 		public static void ImageScalingMultipleThreadsTest()
 		{
 			const int numThreads = 100;

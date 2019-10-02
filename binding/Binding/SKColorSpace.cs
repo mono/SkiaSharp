@@ -176,21 +176,27 @@ namespace SkiaSharp
 			SkiaApi.sk_colorspace_transfer_fn_transform (ref this, x);
 	}
 
-	public class SKColorSpace : SKObject
+	public class SKColorSpace : SKObject, ISKReferenceCounted
 	{
+		private static readonly SKColorSpace srgb;
+		private static readonly SKColorSpace srgbLinear;
+
+		static SKColorSpace ()
+		{
+			srgb = new SKColorSpaceStatic (SkiaApi.sk_colorspace_new_srgb ());
+			srgbLinear = new SKColorSpaceStatic (SkiaApi.sk_colorspace_new_srgb_linear ());
+		}
+
+		internal static void EnsureStaticInstanceAreInitialized ()
+		{
+			// IMPORTANT: do not remove to ensure that the static instances
+			//            are initialized before any access is made to them
+		}
+
 		[Preserve]
 		internal SKColorSpace (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
-		}
-
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_colorspace_unref (Handle);
-			}
-
-			base.Dispose (disposing);
 		}
 
 		public bool GammaIsCloseToSrgb => SkiaApi.sk_colorspace_gamma_close_to_srgb (Handle);
@@ -217,11 +223,9 @@ namespace SkiaSharp
 			return SkiaApi.sk_colorspace_equals (left.Handle, right.Handle);
 		}
 
-		public static SKColorSpace CreateSrgb () =>
-			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_srgb ());
+		public static SKColorSpace CreateSrgb () => srgb;
 
-		public static SKColorSpace CreateSrgbLinear () =>
-			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_srgb_linear ());
+		public static SKColorSpace CreateSrgbLinear () => srgbLinear;
 
 		public static SKColorSpace CreateIcc (IntPtr input, long length)
 		{
@@ -308,5 +312,19 @@ namespace SkiaSharp
 
 		public SKMatrix44 FromXyzD50 () =>
 			GetObject<SKMatrix44> (SkiaApi.sk_colorspace_as_from_xyzd50 (Handle), false);
+
+		private sealed class SKColorSpaceStatic : SKColorSpace
+		{
+			internal SKColorSpaceStatic (IntPtr x)
+				: base (x, false)
+			{
+				IgnorePublicDispose = true;
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				// do not dispose
+			}
+		}
 	}
 }

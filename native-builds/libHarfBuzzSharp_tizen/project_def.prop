@@ -4,7 +4,6 @@ profile = mobile-4.0
 APPNAME = HarfBuzzSharp
 
 USER_INC_DIRS = .                                    \
-                ../../externals/harfbuzz/src/hb-ucdn \
                 ../../externals/harfbuzz/src         \
                 ../../externals/harfbuzz
 
@@ -12,15 +11,14 @@ USER_DEFS = HAVE_CONFIG_H NDEBUG
 
 USER_CPP_DEFS = $(USER_DEFS)
 
-USER_SRCS = ../../externals/harfbuzz/src/hb-ucdn/ucdn.c                              \
-            ../../externals/harfbuzz/src/hb-ucdn.cc                                  \
-            ../../externals/harfbuzz/src/hb-aat-layout.cc                            \
+USER_SRCS = ../../externals/harfbuzz/src/hb-aat-layout.cc                            \
             ../../externals/harfbuzz/src/hb-aat-map.cc                               \
             ../../externals/harfbuzz/src/hb-blob.cc                                  \
             ../../externals/harfbuzz/src/hb-buffer-serialize.cc                      \
             ../../externals/harfbuzz/src/hb-buffer.cc                                \
             ../../externals/harfbuzz/src/hb-common.cc                                \
             ../../externals/harfbuzz/src/hb-face.cc                                  \
+            ../../externals/harfbuzz/src/hb-fallback-shape.cc                        \
             ../../externals/harfbuzz/src/hb-font.cc                                  \
             ../../externals/harfbuzz/src/hb-map.cc                                   \
             ../../externals/harfbuzz/src/hb-ot-cff1-table.cc                         \
@@ -31,7 +29,8 @@ USER_SRCS = ../../externals/harfbuzz/src/hb-ucdn/ucdn.c                         
             ../../externals/harfbuzz/src/hb-ot-layout.cc                             \
             ../../externals/harfbuzz/src/hb-ot-map.cc                                \
             ../../externals/harfbuzz/src/hb-ot-math.cc                               \
-            ../../externals/harfbuzz/src/hb-ot-name-language.cc                      \
+            ../../externals/harfbuzz/src/hb-ot-meta.cc                               \
+            ../../externals/harfbuzz/src/hb-ot-metrics.cc                            \
             ../../externals/harfbuzz/src/hb-ot-name.cc                               \
             ../../externals/harfbuzz/src/hb-ot-shape-complex-arabic.cc               \
             ../../externals/harfbuzz/src/hb-ot-shape-complex-default.cc              \
@@ -55,7 +54,12 @@ USER_SRCS = ../../externals/harfbuzz/src/hb-ucdn/ucdn.c                         
             ../../externals/harfbuzz/src/hb-shape.cc                                 \
             ../../externals/harfbuzz/src/hb-shaper.cc                                \
             ../../externals/harfbuzz/src/hb-static.cc                                \
+            ../../externals/harfbuzz/src/hb-subset-cff-common.cc                     \
+            ../../externals/harfbuzz/src/hb-subset-cff1.cc                           \
+            ../../externals/harfbuzz/src/hb-subset-cff2.cc                           \
+            ../../externals/harfbuzz/src/hb-subset-input.cc                          \
+            ../../externals/harfbuzz/src/hb-subset-plan.cc                           \
+            ../../externals/harfbuzz/src/hb-subset.cc                                \
+            ../../externals/harfbuzz/src/hb-ucd.cc                                   \
             ../../externals/harfbuzz/src/hb-unicode.cc                               \
-            ../../externals/harfbuzz/src/hb-warning.cc                               \
-            ../../externals/harfbuzz/src/hb-ft.cc                                    \
-            ../../externals/harfbuzz/src/hb-fallback-shape.cc
+            ../../externals/harfbuzz/src/hb-warning.cc

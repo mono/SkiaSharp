@@ -1,45 +1,32 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
 {
-	// public delegates
-	public delegate void BlobReleaseDelegate (object context);
-
-	// internal proxy delegates
-	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal delegate void hb_destroy_func_t (IntPtr context);
-
 	public class Blob : NativeObject
 	{
-		// so the GC doesn't collect the delegate
-		private static readonly hb_destroy_func_t destroy_funcInternal;
-		private static readonly IntPtr destroy_func;
+		private static readonly Lazy<Blob> emptyBlob = new Lazy<Blob> (() => new StaticBlob (HarfBuzzApi.hb_blob_get_empty ()));
 
-		static Blob ()
-		{
-			destroy_funcInternal = new hb_destroy_func_t (DestroyInternal);
-			destroy_func = Marshal.GetFunctionPointerForDelegate (destroy_funcInternal);
-		}
+		public static Blob Empty => emptyBlob.Value;
 
 		internal Blob (IntPtr handle)
 			: base (handle)
 		{
 		}
 
-		public Blob (IntPtr data, int length, MemoryMode mode, object userData, BlobReleaseDelegate releaseDelegate)
-			: this (Create (data, length, mode, userData, releaseDelegate))
+		[Obsolete ("Use Blob(IntPtr, int, MemoryMode, ReleaseDelegate releaseDelegate) instead.")]
+		public Blob (IntPtr data, uint length, MemoryMode mode, object userData, BlobReleaseDelegate releaseDelegate)
+			: this (data, (int)length, mode, () => releaseDelegate?.Invoke (userData))
 		{
 		}
 
 		public Blob (IntPtr data, int length, MemoryMode mode)
-			: this (data, length, mode, null, null)
+			: this (data, length, mode, null)
 		{
 		}
 
-		public Blob (IntPtr data, uint length, MemoryMode mode, object userData, BlobReleaseDelegate releaseDelegate)
-			: this (data, (int)length, mode, userData, releaseDelegate)
+		public Blob (IntPtr data, int length, MemoryMode mode, ReleaseDelegate releaseDelegate)
+			: this (Create (data, length, mode, releaseDelegate))
 		{
 		}
 
@@ -89,28 +76,27 @@ namespace HarfBuzzSharp
 				var data = ms.ToArray ();
 
 				fixed (byte* dataPtr = data) {
-					return new Blob ((IntPtr)dataPtr, data.Length, MemoryMode.ReadOnly, null, _ => ms.Dispose ());
+					return new Blob ((IntPtr)dataPtr, data.Length, MemoryMode.ReadOnly, () => ms.Dispose ());
 				}
 			}
 		}
 
-		private static IntPtr Create (IntPtr data, int length, MemoryMode mode, object context, BlobReleaseDelegate releaseProc)
+		private static IntPtr Create (IntPtr data, int length, MemoryMode mode, ReleaseDelegate releaseProc)
 		{
-			if (releaseProc == null) {
-				return HarfBuzzApi.hb_blob_create (data, length, mode, IntPtr.Zero, IntPtr.Zero);
-			} else {
-				var ctx = new NativeDelegateContext (context, releaseProc);
-				return HarfBuzzApi.hb_blob_create (data, length, mode, ctx.NativeContext, destroy_func);
-			}
+			var proxy = DelegateProxies.Create (releaseProc, DelegateProxies.ReleaseDelegateProxy, out _, out var ctx);
+			return HarfBuzzApi.hb_blob_create (data, length, mode, ctx, proxy);
 		}
 
-		// internal proxy
-
-		[MonoPInvokeCallback (typeof (hb_destroy_func_t))]
-		private static void DestroyInternal (IntPtr context)
+		private class StaticBlob : Blob
 		{
-			using (var ctx = NativeDelegateContext.Unwrap (context)) {
-				ctx.GetDelegate<BlobReleaseDelegate> () (ctx.ManagedContext);
+			public StaticBlob (IntPtr handle)
+				: base (handle)
+			{
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				// do not dispose
 			}
 		}
 	}

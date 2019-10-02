@@ -1,0 +1,54 @@
+parameters:
+  pool: ''
+
+jobs:
+- job: Windows
+
+  pool:
+    vmImage: 'vs2017-win2016'
+
+  variables:
+    NUGET_PACKAGES: $(build.sourcesdirectory)/.nuget
+
+  steps:
+  - checkout: self
+    clean: true
+  
+  - task: GitVersion@4
+    inputs:
+      updateAssemblyInfo: false
+
+  - task: NuGetToolInstaller@0
+    inputs:
+      versionSpec: 4.9.1
+      checkLatest: false
+
+  - task: MSBuild@1
+    inputs:
+      solution: $(build.sourcesdirectory)/source/SkiaSharp.Views/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.csproj
+      msbuildLocationMethod: version
+      msbuildVersion: latest
+      msbuildArchitecture: x86
+      msbuildArguments:  /r /p:Configuration=Release /detailedsummary "/p:PackageOutputPath=$(build.artifactstagingdirectory)\nuget" "/p:PackageVersion=$(GITVERSION.FullSemVer)" "/p:InformationalVersion=$(GITVERSION.InformationalVersion)" /detailedsummary
+      clean: false
+      maximumCpuCount: true
+      restoreNugetPackages: false
+      logProjectEvents: false
+      createLogFile: false
+
+  - task: CopyFiles@2
+    displayName: 'Publish Nuget Packages'
+    inputs:
+      SourceFolder: $(build.sourcesdirectory)/source
+      Contents: '**/Uno.SkiaSharp.*.nupkg'
+      TargetFolder: $(build.artifactstagingdirectory)/skiasharp-wasm
+      CleanTargetFolder: false
+      OverWrite: false
+      flattenFolders: false
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: $(build.artifactstagingdirectory)
+      ArtifactName: skiasharp-drop
+      ArtifactType: Container
+

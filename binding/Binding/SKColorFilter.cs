@@ -4,7 +4,7 @@ namespace SkiaSharp
 {
 	// TODO: `FilterColor` may be useful
 
-	public class SKColorFilter : SKObject
+	public class SKColorFilter : SKObject, ISKReferenceCounted
 	{
 		public const int ColorMatrixSize = 20;
 		public const int TableMaxLength = 256;
@@ -13,16 +13,6 @@ namespace SkiaSharp
 		internal SKColorFilter(IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
-		}
-		
-		protected override void Dispose(bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle)
-			{
-				SkiaApi.sk_colorfilter_unref(Handle);
-			}
-
-			base.Dispose(disposing);
 		}
 
 		public static SKColorFilter CreateBlendMode(SKColor c, SKBlendMode mode)

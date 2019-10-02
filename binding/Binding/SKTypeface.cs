@@ -13,24 +13,28 @@ namespace SkiaSharp
 		BoldItalic = 0x03
 	}
 
-	public class SKTypeface : SKObject
+	public class SKTypeface : SKObject, ISKReferenceCounted
 	{
+		private static readonly Lazy<SKTypeface> defaultTypeface;
+
+		static SKTypeface ()
+		{
+			defaultTypeface = new Lazy<SKTypeface> (() => new SKTypefaceStatic (SkiaApi.sk_typeface_ref_default ()));
+		}
+
+		internal static void EnsureStaticInstanceAreInitialized ()
+		{
+			// IMPORTANT: do not remove to ensure that the static instances
+			//            are initialized before any access is made to them
+		}
+
 		[Preserve]
 		internal SKTypeface (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
-		
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_typeface_unref (Handle);
-			}
 
-			base.Dispose (disposing);
-		}
-		
-		public static SKTypeface Default => GetObject<SKTypeface> (SkiaApi.sk_typeface_ref_default ());
+		public static SKTypeface Default => defaultTypeface.Value;
 
 		public static SKTypeface CreateDefault ()
 		{
@@ -96,20 +100,6 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 
-			if (!stream.CanSeek)
-			{
-				var fontStream = new MemoryStream ();
-				stream.CopyTo (fontStream);
-				fontStream.Flush ();
-				fontStream.Position = 0;
-
-				stream.Dispose ();
-				stream = null;
-
-				stream = fontStream;
-				fontStream = null;
-			}
-
 			return FromStream (new SKManagedStream (stream, true), index);
 		}
 
@@ -117,8 +107,14 @@ namespace SkiaSharp
 		{
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
+
+			if (stream is SKManagedStream managed) {
+				stream = managed.ToMemoryStream ();
+				managed.Dispose ();
+			}
+
 			var typeface = GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_stream (stream.Handle, index));
-			stream.RevokeOwnership ();
+			stream.RevokeOwnership (typeface);
 			return typeface;
 		}
 
@@ -159,38 +155,60 @@ namespace SkiaSharp
 
 		public int UnitsPerEm => SkiaApi.sk_typeface_get_units_per_em(Handle);
 
-		public UInt32[] GetTableTags()
+		public int TableCount => SkiaApi.sk_typeface_count_tables (Handle);
+
+		public UInt32[] GetTableTags ()
 		{
-			int tableCount = SkiaApi.sk_typeface_count_tables(Handle);
-			UInt32[] result = new UInt32[tableCount];
-			int r = SkiaApi.sk_typeface_get_table_tags(Handle, result);
-			if (r == 0) {
-				throw new Exception("Unable to read the tables for the file.");
+			if (!TryGetTableTags (out var result)) {
+				throw new Exception ("Unable to read the tables for the file.");
 			}
 			return result;
 		}
 
-		public byte[] GetTableData(UInt32 tag)
+		public bool TryGetTableTags (out UInt32[] tags)
 		{
-			IntPtr dataSize = SkiaApi.sk_typeface_get_table_size(Handle, tag);
-			byte[] result = new byte[(int)dataSize];
-			IntPtr r = SkiaApi.sk_typeface_get_table_data(Handle, tag, IntPtr.Zero, dataSize, result);
-			if (r == IntPtr.Zero) {
-				throw new Exception("Unable to read the data table.");
-			}
-			return result;
-		}
-
-		public bool TryGetTableData(UInt32 tag, out byte[] tableData)
-		{
-			IntPtr dataSize = SkiaApi.sk_typeface_get_table_size(Handle, tag);
-			tableData = new byte[(int)dataSize];
-			IntPtr r = SkiaApi.sk_typeface_get_table_data(Handle, tag, IntPtr.Zero, dataSize, tableData);
-			if (r == IntPtr.Zero) {
-				tableData = null;
+			var buffer = new UInt32[TableCount];
+			if (SkiaApi.sk_typeface_get_table_tags (Handle, buffer) == 0) {
+				tags = null;
 				return false;
 			}
+			tags = buffer;
 			return true;
+		}
+
+		public int GetTableSize (UInt32 tag) =>
+			(int)SkiaApi.sk_typeface_get_table_size (Handle, tag);
+
+		public byte[] GetTableData (UInt32 tag)
+		{
+			if (!TryGetTableData (tag, out var result)) {
+				throw new Exception ("Unable to read the data table.");
+			}
+			return result;
+		}
+
+		public bool TryGetTableData (UInt32 tag, out byte[] tableData)
+		{
+			var length = GetTableSize (tag);
+			var buffer = new byte[length];
+			unsafe {
+				fixed (byte* b = buffer) {
+					if (!TryGetTableData (tag, 0, length, (IntPtr)b)) {
+						tableData = null;
+						return false;
+					}
+				}
+			}
+			tableData = buffer;
+			return true;
+		}
+
+		public bool TryGetTableData (UInt32 tag, int offset, int length, IntPtr tableData)
+		{
+			unsafe {
+				var actual = SkiaApi.sk_typeface_get_table_data (Handle, tag, (IntPtr)offset, (IntPtr)length, (byte*)tableData);
+				return actual != IntPtr.Zero;
+			}
 		}
 
 		public int CountGlyphs (string str) => CountGlyphs (str, SKEncoding.Utf16);
@@ -204,11 +222,14 @@ namespace SkiaSharp
 			return CountGlyphs (bytes, encoding);
 		}
 
-		public int CountGlyphs (byte [] str, SKEncoding encoding)
+		public int CountGlyphs (byte[] str, SKEncoding encoding) =>
+			CountGlyphs (new ReadOnlySpan<byte> (str), encoding);
+
+		public int CountGlyphs (ReadOnlySpan<byte> str, SKEncoding encoding)
 		{
 			if (str == null)
 				throw new ArgumentNullException (nameof (str));
-			
+
 			unsafe {
 				fixed (byte* p = str) {
 					return CountGlyphs ((IntPtr)p, str.Length, encoding);
@@ -237,7 +258,10 @@ namespace SkiaSharp
 			return GetGlyphs (bytes, encoding, out glyphs);
 		}
 
-		public int GetGlyphs (byte [] text, SKEncoding encoding, out ushort [] glyphs)
+		public int GetGlyphs (byte[] text, SKEncoding encoding, out ushort[] glyphs) =>
+			GetGlyphs (new ReadOnlySpan<byte> (text), encoding, out glyphs);
+
+		public int GetGlyphs (ReadOnlySpan<byte> text, SKEncoding encoding, out ushort[] glyphs)
 		{
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
@@ -277,7 +301,10 @@ namespace SkiaSharp
 			return glyphs;
 		}
 
-		public ushort [] GetGlyphs (byte [] text, SKEncoding encoding)
+		public ushort[] GetGlyphs (byte[] text, SKEncoding encoding) =>
+			GetGlyphs (new ReadOnlySpan<byte> (text), encoding);
+
+		public ushort[] GetGlyphs (ReadOnlySpan<byte> text, SKEncoding encoding)
 		{
 			GetGlyphs (text, encoding, out var glyphs);
 			return glyphs;
@@ -289,14 +316,24 @@ namespace SkiaSharp
 			return glyphs;
 		}
 
-		public SKStreamAsset OpenStream()
-		{
-			return OpenStream (out var ttcIndex);
-		}
+		public SKStreamAsset OpenStream () =>
+			OpenStream (out _);
 
-		public SKStreamAsset OpenStream(out int ttcIndex)
+		public SKStreamAsset OpenStream (out int ttcIndex) =>
+			GetObject<SKStreamAssetImplementation> (SkiaApi.sk_typeface_open_stream (Handle, out ttcIndex));
+
+		private sealed class SKTypefaceStatic : SKTypeface
 		{
-			return GetObject<SKStreamAssetImplementation>(SkiaApi.sk_typeface_open_stream(Handle, out ttcIndex));
+			internal SKTypefaceStatic (IntPtr x)
+				: base (x, false)
+			{
+				IgnorePublicDispose = true;
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				// do not dispose
+			}
 		}
 	}
 }

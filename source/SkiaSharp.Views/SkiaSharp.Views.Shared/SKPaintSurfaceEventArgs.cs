@@ -10,7 +10,7 @@ namespace SkiaSharp.Views.tvOS
 namespace SkiaSharp.Views.watchOS
 #elif __IOS__
 namespace SkiaSharp.Views.iOS
-#elif __DESKTOP__ || __WPF__ || __GTK__
+#elif __DESKTOP__
 namespace SkiaSharp.Views.Desktop
 #elif WINDOWS_UWP
 namespace SkiaSharp.Views.UWP

@@ -18,6 +18,7 @@ using SkiaSharp;
 using SkiaSharp.Views.UWP;
 using Windows.UI.Xaml.Data;
 using Uno.Foundation;
+using Uno.Extensions;
 
 namespace SkiaSharpSample
 {
@@ -91,6 +92,9 @@ namespace SkiaSharpSample
 				.ToList();
 #else
 			listView.ItemsSource = samples;
+
+			var tests = samples.Select(s => $"[TestCase(\"{s.Title}\")]").JoinBy("\n");
+			Console.WriteLine(tests);
 
 			commandBar.Visibility = Visibility.Collapsed;
 #endif

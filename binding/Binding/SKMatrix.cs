@@ -485,20 +485,14 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 
 	public class SK3dView : SKObject
 	{
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_3dview_destroy (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
-
 		[Preserve]
 		internal SK3dView (IntPtr x, bool owns)
 			: base (x, owns)
 		{
 		}
+
+		protected override void DisposeNative () =>
+			SkiaApi.sk_3dview_destroy (Handle);
 
 		public SK3dView ()
 			: this (SkiaApi.sk_3dview_new (), true)
@@ -597,20 +591,14 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 
 	public class SKMatrix44 : SKObject
 	{
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_matrix44_destroy (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
-
 		[Preserve]
 		internal SKMatrix44 (IntPtr x, bool owns)
 			: base (x, owns)
 		{
 		}
+
+		protected override void DisposeNative () =>
+			SkiaApi.sk_matrix44_destroy (Handle);
 
 		public SKMatrix44 ()
 			: this (SkiaApi.sk_matrix44_new(), true)

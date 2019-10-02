@@ -19,6 +19,8 @@ namespace SkiaSharpSample.Wasm
 
 		static int Main(string[] args)
 		{
+			Uno.UI.FeatureConfiguration.UIElement.AssignDOMXamlName = true;
+
 			WebAssemblyRuntime.InvokeJS("Uno.UI.Demo.Analytics.reportPageView('main');");
 
 			ConfigureFilters(LogExtensionPoint.AmbientLoggerFactory);

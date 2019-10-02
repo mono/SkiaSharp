@@ -1,59 +1,6 @@
-parameters:
-  pool: ''
-
 jobs:
-- job: Windows
-
-  pool:
-    vmImage: 'vs2017-win2016'
-
-  variables:
-    NUGET_PACKAGES: $(build.sourcesdirectory)/.nuget
-
-  steps:
-  - checkout: self
-    clean: true
-  
-  - task: GitVersion@4
-    inputs:
-      updateAssemblyInfo: false
-
-  - task: NuGetToolInstaller@0
-    inputs:
-      versionSpec: 4.9.1
-      checkLatest: false
-
-  - task: MSBuild@1
-    inputs:
-      solution: $(build.sourcesdirectory)/source/SkiaSharp.Views/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.csproj
-      msbuildLocationMethod: version
-      msbuildVersion: latest
-      msbuildArchitecture: x86
-      msbuildArguments:  /r /p:Configuration=Release /detailedsummary "/p:PackageOutputPath=$(build.artifactstagingdirectory)\nuget" "/p:PackageVersion=$(GITVERSION.FullSemVer)" "/p:InformationalVersion=$(GITVERSION.InformationalVersion)" /detailedsummary
-      clean: false
-      maximumCpuCount: true
-      restoreNugetPackages: false
-      logProjectEvents: false
-      createLogFile: false
-
-  - task: CopyFiles@2
-    displayName: 'Publish Nuget Packages'
-    inputs:
-      SourceFolder: $(build.sourcesdirectory)/source
-      Contents: '**/Uno.SkiaSharp.*.nupkg'
-      TargetFolder: $(build.artifactstagingdirectory)/skiasharp-wasm
-      CleanTargetFolder: false
-      OverWrite: false
-      flattenFolders: false
-
-  - task: PublishBuildArtifacts@1
-    inputs:
-      PathtoPublish: $(build.artifactstagingdirectory)
-      ArtifactName: skiasharp-drop
-      ArtifactType: Container
-
 - job: Linux
-  container: nv-bionic-wasm
+  container: nventive/wasm-build:1.4.1
 
   pool:
     vmImage: 'ubuntu-16.04'
@@ -73,8 +20,16 @@ jobs:
     displayName: 'Setup Enscripten'
 
   - bash: |
-      source /emsdk/emsdk_env.sh
-      msbuild /r /p:Configuration=Release $(build.sourcesdirectory)/source/SkiaSharpSample/SkiaSharpSample.Wasm/SkiaSharpSample.Wasm.csproj
+      chmod +x scripts/wasm-uitest-run.sh
+      scripts/wasm-uitest-run.sh
+
+    env:
+      GIT_TARGETBRANCH: "$(System.PullRequest.TargetBranch)"
+      GIT_SOURCEBRANCH: "$(Build.SourceBranch)"
+      BUILD_SOURCESDIRECTORY: "$(build.sourcesdirectory)"
+      BUILD_ARTIFACTSTAGINGDIRECTORY: "$(build.artifactstagingdirectory)"
+
+    displayName: 'Running build'
 
   - task: CopyFiles@2
     displayName: 'Publish Wasm Binaries'
@@ -85,10 +40,16 @@ jobs:
       CleanTargetFolder: false
       OverWrite: false
       flattenFolders: false
+      
+  - task: PublishTestResults@2
+    condition: always()
+    inputs:
+      testRunTitle: 'WebAssembly Test Run'
+      testResultsFormat: 'NUnit'
+      testResultsFiles: '$(build.sourcesdirectory)/scripts/TestResult.xml'
 
   - task: PublishBuildArtifacts@1
-    # https://developercommunity.visualstudio.com/content/problem/284991/public-vsts-previouw-cant-set-build-number-of-pr-b.html
-    condition: eq(variables['System.PullRequest.IsFork'], 'False')
+    condition: always()
     inputs:
       PathtoPublish: $(build.artifactstagingdirectory)
       ArtifactName: skiasharp-aot-drop

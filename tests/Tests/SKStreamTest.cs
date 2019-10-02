@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -78,6 +76,61 @@ namespace SkiaSharp.Tests
 
 			Assert.Equal(0, stream.Length);
 			Assert.False(stream.IsValid);
+		}
+
+		[SkippableFact]
+		public void GarbageCollectionCollectsStreams()
+		{
+			VerifyImmediateFinalizers();
+
+			var path = Path.Combine(PathToImages, "baboon.jpg");
+
+			var weak = DoWork();
+
+			CollectGarbage();
+
+			Assert.False(weak.IsAlive);
+			Assert.Null(weak.Target);
+
+			WeakReference DoWork()
+			{
+				var stream = new SKFileStream(path);
+				return new WeakReference(stream);
+			}
+		}
+
+		[SkippableFact]
+		public void MemoryStreamCanBeDuplicated()
+		{
+			var stream = new SKMemoryStream(new byte[] { 1, 2, 3, 4, 5 });
+			Assert.Equal(1, stream.ReadByte());
+			Assert.Equal(2, stream.ReadByte());
+			Assert.Equal(3, stream.ReadByte());
+
+			var dupe = stream.Duplicate();
+			Assert.NotSame(stream, dupe);
+			Assert.IsType<SKStreamImplementation>(dupe);
+			Assert.Equal(1, dupe.ReadByte());
+			Assert.Equal(4, stream.ReadByte());
+			Assert.Equal(2, dupe.ReadByte());
+			Assert.Equal(5, stream.ReadByte());
+			Assert.Equal(3, dupe.ReadByte());
+		}
+
+		[SkippableFact]
+		public void MemoryStreamCanBeForked()
+		{
+			var stream = new SKMemoryStream(new byte[] { 1, 2, 3, 4, 5 });
+			Assert.Equal(1, stream.ReadByte());
+			Assert.Equal(2, stream.ReadByte());
+
+			var dupe = stream.Fork();
+			Assert.NotSame(stream, dupe);
+			Assert.IsType<SKStreamImplementation>(dupe);
+			Assert.Equal(3, dupe.ReadByte());
+			Assert.Equal(3, stream.ReadByte());
+			Assert.Equal(4, dupe.ReadByte());
+			Assert.Equal(4, stream.ReadByte());
 		}
 	}
 }

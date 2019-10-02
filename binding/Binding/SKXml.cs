@@ -28,13 +28,7 @@ namespace SkiaSharp
 			Handle = SkiaApi.sk_xmlstreamwriter_new (stream.Handle);
 		}
 
-		protected override void Dispose (bool disposing)
-		{
-			if (Handle != IntPtr.Zero && OwnsHandle) {
-				SkiaApi.sk_xmlstreamwriter_delete (Handle);
-			}
-
-			base.Dispose (disposing);
-		}
+		protected override void DisposeNative () =>
+			SkiaApi.sk_xmlstreamwriter_delete (Handle);
 	}
 }

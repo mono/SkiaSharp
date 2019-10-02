@@ -1,8 +1,9 @@
 Param(
-    [string] $version = "2.4"
+    [string] $Version = "3.3",
+    [string] $InstallDestination = $null
 )
 
-$errorActionPreference = 'Stop'
+$ErrorActionPreference = 'Stop'
 
 if ($IsMacOS) {
     $platform = "macos-64"
@@ -15,19 +16,25 @@ if ($IsMacOS) {
     $ext = "exe"
 }
 
-$ts = "$HOME/tizen-studio"
-$tsTemp = "$HOME/tizen-temp"
-$url = "http://download.tizen.org/sdk/Installer/tizen-studio_${version}/web-cli_Tizen_Studio_${version}_${platform}.${ext}"
-$install = "$tsTemp/tizen-install.$ext"
+$url = "http://download.tizen.org/sdk/Installer/tizen-studio_${Version}/web-cli_Tizen_Studio_${Version}_${platform}.${ext}"
+
+$ts = Join-Path "$HOME" "tizen-studio"
+if ($InstallDestination) {
+    $ts = $InstallDestination
+}
+Write-Host "Install destination is '$ts'..."
+
+$tsTemp = Join-Path "$HOME" "tizen-temp"
+$install = Join-Path "$tsTemp" "tizen-install.$ext"
 $packages = "MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment"
 
 # download
-Write-Host "Downloading SDK..."
+Write-Host "Downloading SDK to '$install'..."
 New-Item -ItemType Directory -Force -Path "$tsTemp" | Out-Null
 (New-Object System.Net.WebClient).DownloadFile("$url", "$install")
 
 # install
-Write-Host "Installing SDK..."
+Write-Host "Installing SDK to '$ts'..."
 if ($IsMacOS -or $IsLinux) {
     & "bash" "$install" --accept-license --no-java-check "$ts"
 } else {
@@ -35,11 +42,15 @@ if ($IsMacOS -or $IsLinux) {
 }
 
 # install packages
-Write-Host "Installing Additional Packages..."
+Write-Host "Installing Additional Packages: '$packages'..."
+$packMan = Join-Path (Join-Path "$ts" "package-manager") "package-manager-cli.${ext}"
 if ($IsMacOS -or $IsLinux) {
-    & "bash" "${ts}/package-manager/package-manager-cli.${ext}" install --no-java-check --accept-license "$packages"
+    & "bash" "$packMan" install --no-java-check --accept-license "$packages"
 } else {
-    & "${ts}/package-manager/package-manager-cli.${ext}" install --no-java-check --accept-license "$packages"
+    & "$packMan" install --no-java-check --accept-license "$packages"
 }
+
+# make sure that Tizen Studio is in TIZEN_STUDIO_HOME
+Write-Host "##vso[task.setvariable variable=TIZEN_STUDIO_HOME;]$ts";
 
 exit $LASTEXITCODE
