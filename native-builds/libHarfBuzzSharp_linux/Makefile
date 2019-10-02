@@ -55,6 +55,8 @@ src = \
 	${src_root}/hb-ot-layout.cc                           \
 	${src_root}/hb-ot-map.cc                              \
 	${src_root}/hb-ot-math.cc                             \
+	${src_root}/hb-ot-meta.cc                             \
+	${src_root}/hb-ot-metrics.cc                          \
 	${src_root}/hb-ot-name.cc                             \
 	${src_root}/hb-ot-shape-complex-arabic.cc             \
 	${src_root}/hb-ot-shape-complex-default.cc            \

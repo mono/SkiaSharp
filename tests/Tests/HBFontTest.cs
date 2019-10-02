@@ -1,4 +1,6 @@
-﻿using Xunit;
+﻿using System;
+using System.Text;
+using Xunit;
 
 namespace HarfBuzzSharp.Tests
 {
@@ -197,6 +199,24 @@ namespace HarfBuzzSharp.Tests
 				var kerning = font.GetHorizontalGlyphKerning(49, 50);
 
 				Assert.Equal(0, kerning);
+			}
+		}
+
+		[Theory]
+		[InlineData(OpenTypeMetricsTag.UnderlineOffset, -60)]
+		[InlineData(OpenTypeMetricsTag.UnderlineSize, 9)]
+		[InlineData(OpenTypeMetricsTag.StrikeoutOffset, 1049)]
+		[InlineData(OpenTypeMetricsTag.StrikeoutSize, 209)]
+		public void ShouldGetOpenTypeMetrics(OpenTypeMetricsTag tag, int expected)
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				var result = font.OpenTypeMetrics.TryGetPosition(tag, out var position);
+
+				Assert.True(result);
+
+				Assert.Equal(expected, position);
 			}
 		}
 	}
