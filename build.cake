@@ -1,13 +1,13 @@
-#addin nuget:?package=Cake.Xamarin&version=3.0.0
-#addin nuget:?package=Cake.XCode&version=4.0.0
-#addin nuget:?package=Cake.FileHelpers&version=3.1.0
-#addin nuget:?package=SharpCompress&version=0.22.0
-#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.0.0&loaddependencies=true
+#addin nuget:?package=Cake.Xamarin&version=3.0.2
+#addin nuget:?package=Cake.XCode&version=4.2.0
+#addin nuget:?package=Cake.FileHelpers&version=3.2.1
+#addin nuget:?package=SharpCompress&version=0.24.0
+#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.0.2-preview.14&prerelease&loaddependencies=true
 #addin nuget:?package=Xamarin.Nuget.Validator&version=1.1.1
 
-#tool nuget:?package=mdoc&version=5.7.4.9
+#tool nuget:?package=mdoc&version=5.7.4.10
 #tool nuget:?package=xunit.runner.console&version=2.4.1
-#tool nuget:?package=vswhere&version=2.5.2
+#tool nuget:?package=vswhere&version=2.7.1
 
 using System.Linq;
 using System.Net.Http;

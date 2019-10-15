@@ -84,8 +84,10 @@ Added methods:
 
 ```csharp
 public void Add (uint codepoint, uint cluster);
+public void AddCodepoints (System.ReadOnlySpan<int> text);
 public void AddCodepoints (System.ReadOnlySpan<uint> text);
 public void AddCodepoints (IntPtr text, int textLength);
+public void AddCodepoints (System.ReadOnlySpan<int> text, int itemOffset, int itemLength);
 public void AddCodepoints (System.ReadOnlySpan<uint> text, int itemOffset, int itemLength);
 public void AddCodepoints (IntPtr text, int textLength, int itemOffset, int itemLength);
 public void AddUtf16 (System.ReadOnlySpan<byte> text);
@@ -96,9 +98,11 @@ public void AddUtf16 (System.ReadOnlySpan<char> text, int itemOffset, int itemLe
 public void AddUtf16 (string text, int itemOffset, int itemLength);
 public void AddUtf16 (IntPtr text, int textLength, int itemOffset, int itemLength);
 public void AddUtf32 (System.ReadOnlySpan<byte> text);
+public void AddUtf32 (System.ReadOnlySpan<int> text);
 public void AddUtf32 (System.ReadOnlySpan<uint> text);
 public void AddUtf32 (string text);
 public void AddUtf32 (IntPtr text, int textLength);
+public void AddUtf32 (System.ReadOnlySpan<int> text, int itemOffset, int itemLength);
 public void AddUtf32 (System.ReadOnlySpan<uint> text, int itemOffset, int itemLength);
 public void AddUtf32 (IntPtr text, int textLength, int itemOffset, int itemLength);
 public void AddUtf8 (System.ReadOnlySpan<byte> text);
@@ -206,6 +210,7 @@ public Font (Font parent);
 Added properties:
 
 ```csharp
+public OpenTypeMetrics OpenTypeMetrics { get; }
 public Font Parent { get; }
 public string[] SupportedShapers { get; }
 ```
@@ -236,7 +241,9 @@ public void SetFontFunctions (FontFunctions fontFunctions);
 public void SetFontFunctions (FontFunctions fontFunctions, object fontData);
 public void SetFontFunctions (FontFunctions fontFunctions, object fontData, ReleaseDelegate destroy);
 public void Shape (Buffer buffer, System.Collections.Generic.IReadOnlyList<Feature> features, System.Collections.Generic.IReadOnlyList<string> shapers);
+public bool TryGetGlyph (int unicode, out uint glyph);
 public bool TryGetGlyph (uint unicode, out uint glyph);
+public bool TryGetGlyph (int unicode, uint variationSelector, out uint glyph);
 public bool TryGetGlyph (uint unicode, uint variationSelector, out uint glyph);
 public bool TryGetGlyphContourPoint (uint glyph, uint pointIndex, out int x, out int y);
 public bool TryGetGlyphContourPointForOrigin (uint glyph, uint pointIndex, Direction direction, out int x, out int y);
@@ -246,8 +253,11 @@ public bool TryGetGlyphFromString (string s, out uint glyph);
 public bool TryGetGlyphName (uint glyph, out string name);
 public bool TryGetHorizontalFontExtents (out FontExtents extents);
 public bool TryGetHorizontalGlyphOrigin (uint glyph, out int xOrigin, out int yOrigin);
+public bool TryGetNominalGlyph (int unicode, out uint glyph);
 public bool TryGetNominalGlyph (uint unicode, out uint glyph);
+public bool TryGetVariationGlyph (int unicode, out uint glyph);
 public bool TryGetVariationGlyph (uint unicode, out uint glyph);
+public bool TryGetVariationGlyph (int unicode, uint variationSelector, out uint glyph);
 public bool TryGetVariationGlyph (uint unicode, uint variationSelector, out uint glyph);
 public bool TryGetVerticalFontExtents (out FontExtents extents);
 public bool TryGetVerticalGlyphOrigin (uint glyph, out int xOrigin, out int yOrigin);
@@ -610,6 +620,56 @@ public sealed delegate NominalGlyphsDelegate : System.MulticastDelegate, System.
 	public virtual System.IAsyncResult BeginInvoke (Font font, object fontData, uint count, System.ReadOnlySpan<uint> codepoints, System.Span<uint> glyphs, System.AsyncCallback callback, object object);
 	public virtual uint EndInvoke (System.IAsyncResult result);
 	public virtual uint Invoke (Font font, object fontData, uint count, System.ReadOnlySpan<uint> codepoints, System.Span<uint> glyphs);
+}
+```
+
+#### New Type: HarfBuzzSharp.OpenTypeMetrics
+
+```csharp
+public struct OpenTypeMetrics {
+	// constructors
+	public OpenTypeMetrics (IntPtr font);
+	// methods
+	public float GetVariation (OpenTypeMetricsTag metricsTag);
+	public int GetXVariation (OpenTypeMetricsTag metricsTag);
+	public int GetYVariation (OpenTypeMetricsTag metricsTag);
+	public bool TryGetPosition (OpenTypeMetricsTag metricsTag, out int position);
+}
+```
+
+#### New Type: HarfBuzzSharp.OpenTypeMetricsTag
+
+```csharp
+[Serializable]
+public enum OpenTypeMetricsTag {
+	CapHeight = 1668311156,
+	HorizontalAscender = 1751216995,
+	HorizontalCaretOffset = 1751347046,
+	HorizontalCaretRise = 1751347827,
+	HorizontalCaretRun = 1751347822,
+	HorizontalClippingAscent = 1751346273,
+	HorizontalClippingDescent = 1751346276,
+	HorizontalDescender = 1751413603,
+	HorizontalLineGap = 1751934832,
+	StrikeoutOffset = 1937011311,
+	StrikeoutSize = 1937011315,
+	SubScriptEmXOffset = 1935833199,
+	SubScriptEmXSize = 1935833203,
+	SubScriptEmYOffset = 1935833455,
+	SubScriptEmYSize = 1935833459,
+	SuperScriptEmXOffset = 1936750703,
+	SuperScriptEmXSize = 1936750707,
+	SuperScriptEmYOffset = 1936750959,
+	SuperScriptEmYSize = 1936750963,
+	UnderlineOffset = 1970168943,
+	UnderlineSize = 1970168947,
+	VerticalAscender = 1986098019,
+	VerticalCaretOffset = 1986228070,
+	VerticalCaretRise = 1986228851,
+	VerticalCaretRun = 1986228846,
+	VerticalDescender = 1986294627,
+	VerticalLineGap = 1986815856,
+	XHeight = 2020108148,
 }
 ```
 

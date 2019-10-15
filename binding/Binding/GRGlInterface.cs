@@ -12,7 +12,10 @@ namespace SkiaSharp
 			: base (h, owns)
 		{
 		}
-		
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		public static GRGlInterface CreateDefaultInterface ()
 		{
 			// first try ANGLE, then fall back to the OpenGL-based

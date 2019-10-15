@@ -29,6 +29,9 @@ namespace SkiaSharp
 			Handle = SkiaApi.sk_canvas_new_from_bitmap (bitmap.Handle);
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		protected override void DisposeNative () =>
 			SkiaApi.sk_canvas_destroy (Handle);
 
