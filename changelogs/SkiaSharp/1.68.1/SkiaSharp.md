@@ -584,6 +584,7 @@ public class SKDrawable : SkiaSharp.SKObject, System.IDisposable {
 	public SKRect Bounds { get; }
 	public uint GenerationId { get; }
 	// methods
+	protected override void Dispose (bool disposing);
 	protected override void DisposeNative ();
 	public void Draw (SKCanvas canvas, ref SKMatrix matrix);
 	public void Draw (SKCanvas canvas, float x, float y);
