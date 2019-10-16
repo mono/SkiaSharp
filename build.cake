@@ -1,3 +1,5 @@
+throw TEST
+
 #addin nuget:?package=Cake.Xamarin&version=3.0.0
 #addin nuget:?package=Cake.XCode&version=4.0.0
 #addin nuget:?package=Cake.FileHelpers&version=3.1.0
