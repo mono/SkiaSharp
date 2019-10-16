@@ -27,6 +27,9 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		public static float ConvertRadiusToSigma(float radius)
 		{
 			return radius > 0 ? BlurSigmaScale * radius + 0.5f : 0.0f;

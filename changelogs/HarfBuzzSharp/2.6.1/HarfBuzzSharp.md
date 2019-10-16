@@ -29,12 +29,6 @@ public bool IsImmutable { get; }
 public int Length { get; }
 ```
 
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
 Added methods:
 
 ```csharp
@@ -72,12 +66,6 @@ public Language Language { get; set; }
 public uint ReplacementCodepoint { get; set; }
 public Script Script { get; set; }
 public UnicodeFunctions UnicodeFunctions { get; set; }
-```
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
 ```
 
 Added methods:
@@ -158,12 +146,6 @@ public bool IsImmutable { get; }
 public Tag[] Tables { get; }
 ```
 
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
 Added methods:
 
 ```csharp
@@ -213,12 +195,6 @@ Added properties:
 public OpenTypeMetrics OpenTypeMetrics { get; }
 public Font Parent { get; }
 public string[] SupportedShapers { get; }
-```
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
 ```
 
 Added methods:
@@ -393,6 +369,7 @@ public class FontFunctions : HarfBuzzSharp.NativeObject, System.IDisposable {
 	public static FontFunctions Empty { get; }
 	public bool IsImmutable { get; }
 	// methods
+	protected override void Dispose (bool disposing);
 	protected override void DisposeHandler ();
 	public void MakeImmutable ();
 	public void SetGlyphContourPointDelegate (GlyphContourPointDelegate del, ReleaseDelegate destroy);
@@ -994,6 +971,7 @@ public class UnicodeFunctions : HarfBuzzSharp.NativeObject, System.IDisposable {
 	public bool IsImmutable { get; }
 	public UnicodeFunctions Parent { get; }
 	// methods
+	protected override void Dispose (bool disposing);
 	protected override void DisposeHandler ();
 	public UnicodeCombiningClass GetCombiningClass (uint unicode);
 	public UnicodeGeneralCategory GetGeneralCategory (uint unicode);

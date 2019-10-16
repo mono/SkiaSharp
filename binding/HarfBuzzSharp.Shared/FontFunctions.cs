@@ -182,6 +182,9 @@ namespace HarfBuzzSharp
 				Handle, DelegateProxies.GlyphFromNameProxy, ctx, DelegateProxies.ReleaseDelegateProxyForMulti);
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		protected override void DisposeHandler ()
 		{
 			if (Handle != IntPtr.Zero) {

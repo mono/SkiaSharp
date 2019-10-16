@@ -10,6 +10,9 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		public uint UniqueId => SkiaApi.sk_picture_get_unique_id (Handle);
 
 		public SKRect CullRect {

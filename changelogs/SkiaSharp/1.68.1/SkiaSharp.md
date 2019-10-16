@@ -24,12 +24,6 @@ protected override void DisposeNative ();
 
 #### Type Changed: SkiaSharp.SK3dView
 
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
 Added method:
 
 ```csharp
@@ -88,15 +82,6 @@ protected override void DisposeNative ();
 ```
 
 
-#### Type Changed: SkiaSharp.SKColorFilter
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
-
 #### Type Changed: SkiaSharp.SKColorSpace
 
 Added properties:
@@ -105,12 +90,6 @@ Added properties:
 public bool IsNumericalTransferFunction { get; }
 public SKNamedGamma NamedGamma { get; }
 public SKColorSpaceType Type { get; }
-```
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
 ```
 
 Obsoleted methods:
@@ -185,22 +164,7 @@ public float Transform (float x);
 ```
 
 
-#### Type Changed: SkiaSharp.SKColorTable
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
-
 #### Type Changed: SkiaSharp.SKData
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
 
 Added methods:
 
@@ -210,22 +174,7 @@ public static SKData CreateCopy (System.ReadOnlySpan<byte> bytes);
 ```
 
 
-#### Type Changed: SkiaSharp.SKDocument
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
-
 #### Type Changed: SkiaSharp.SKDynamicMemoryWStream
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
 
 Added method:
 
@@ -236,12 +185,6 @@ protected override void DisposeNative ();
 
 #### Type Changed: SkiaSharp.SKFileStream
 
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
 Added method:
 
 ```csharp
@@ -251,36 +194,15 @@ protected override void DisposeNative ();
 
 #### Type Changed: SkiaSharp.SKFileWStream
 
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
 Added method:
 
 ```csharp
 protected override void DisposeNative ();
-```
-
-
-#### Type Changed: SkiaSharp.SKFontManager
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
 ```
 
 
 #### Type Changed: SkiaSharp.SKFontStyle
 
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
 Added method:
 
 ```csharp
@@ -288,22 +210,7 @@ protected override void DisposeNative ();
 ```
 
 
-#### Type Changed: SkiaSharp.SKFontStyleSet
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
-
 #### Type Changed: SkiaSharp.SKFrontBufferedManagedStream
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
 
 Added method:
 
@@ -313,12 +220,6 @@ protected override void DisposeManaged ();
 
 
 #### Type Changed: SkiaSharp.SKImage
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
 
 Added methods:
 
@@ -331,19 +232,7 @@ public static SKImage FromPixelCopy (SKImageInfo info, System.ReadOnlySpan<byte>
 
 #### Type Changed: SkiaSharp.SKImageFilter
 
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
 #### Type Changed: SkiaSharp.SKImageFilter.CropRect
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
 
 Added method:
 
@@ -354,12 +243,6 @@ protected override void DisposeNative ();
 
 
 #### Type Changed: SkiaSharp.SKManagedStream
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
 
 Added methods:
 
@@ -374,25 +257,10 @@ public SKStreamAsset ToMemoryStream ();
 
 #### Type Changed: SkiaSharp.SKManagedWStream
 
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
 Added method:
 
 ```csharp
 protected override void DisposeManaged ();
-```
-
-
-#### Type Changed: SkiaSharp.SKMaskFilter
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
 ```
 
 
@@ -407,12 +275,6 @@ public SKMatrix (float scaleX, float skewX, float transX, float skewY, float sca
 
 #### Type Changed: SkiaSharp.SKMatrix44
 
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
 Added method:
 
 ```csharp
@@ -421,12 +283,6 @@ protected override void DisposeNative ();
 
 
 #### Type Changed: SkiaSharp.SKMemoryStream
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
 
 Added method:
 
@@ -462,12 +318,6 @@ Removed property:
 protected bool OwnsHandle { get; }
 ```
 
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
 Added methods:
 
 ```csharp
@@ -477,12 +327,6 @@ protected override void DisposeNative ();
 
 
 #### Type Changed: SkiaSharp.SKPaint
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
 
 Added methods:
 
@@ -508,12 +352,6 @@ public void Reset ();
 
 #### Type Changed: SkiaSharp.SKPath
 
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
 Added method:
 
 ```csharp
@@ -527,12 +365,6 @@ Modified base type:
 ```diff
 -SkiaSharp.SKNativeObject
 +SkiaSharp.SKObject
-```
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
 ```
 
 Added method:
@@ -551,12 +383,6 @@ Modified base type:
 +SkiaSharp.SKObject
 ```
 
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
 Added method:
 
 ```csharp
@@ -573,37 +399,16 @@ Modified base type:
 +SkiaSharp.SKObject
 ```
 
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
 Added method:
 
 ```csharp
 protected override void DisposeNative ();
 ```
 
-
-
-#### Type Changed: SkiaSharp.SKPathEffect
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
 
 
 #### Type Changed: SkiaSharp.SKPathMeasure
 
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
 Added method:
 
 ```csharp
@@ -611,22 +416,7 @@ protected override void DisposeNative ();
 ```
 
 
-#### Type Changed: SkiaSharp.SKPicture
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
-
 #### Type Changed: SkiaSharp.SKPictureRecorder
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
 
 Added methods:
 
@@ -637,12 +427,6 @@ public SKDrawable EndRecordingAsDrawable ();
 
 
 #### Type Changed: SkiaSharp.SKPixmap
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
 
 Added methods:
 
@@ -664,6 +448,7 @@ public SKRegion (SKRectI rect);
 Added methods:
 
 ```csharp
+protected override void Dispose (bool disposing);
 protected override void DisposeNative ();
 public bool Intersects (SKPath path);
 public bool Op (SKPath path, SKRegionOperation op);
@@ -672,12 +457,6 @@ public bool Op (SKPath path, SKRegionOperation op);
 
 #### Type Changed: SkiaSharp.SKRoundRect
 
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
 Added method:
 
 ```csharp
@@ -685,31 +464,7 @@ protected override void DisposeNative ();
 ```
 
 
-#### Type Changed: SkiaSharp.SKShader
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
-
-#### Type Changed: SkiaSharp.SKSurface
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
-
 #### Type Changed: SkiaSharp.SKSurfaceProperties
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
 
 Added method:
 
@@ -728,22 +483,7 @@ public static void SwapRedBlue (System.ReadOnlySpan<byte> dest, System.ReadOnlyS
 ```
 
 
-#### Type Changed: SkiaSharp.SKTextBlob
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
-
 #### Type Changed: SkiaSharp.SKTextBlobBuilder
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
 
 Modified methods:
 
@@ -801,12 +541,6 @@ Added property:
 public int TableCount { get; }
 ```
 
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
 Added methods:
 
 ```csharp
@@ -819,22 +553,7 @@ public bool TryGetTableTags (out uint[] tags);
 ```
 
 
-#### Type Changed: SkiaSharp.SKVertices
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
-
-
 #### Type Changed: SkiaSharp.SKXmlStreamWriter
-
-Removed method:
-
-```csharp
-protected override void Dispose (bool disposing);
-```
 
 Added method:
 
