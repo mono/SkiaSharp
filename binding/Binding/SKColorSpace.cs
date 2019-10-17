@@ -199,6 +199,9 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		public bool GammaIsCloseToSrgb => SkiaApi.sk_colorspace_gamma_close_to_srgb (Handle);
 
 		public bool GammaIsLinear => SkiaApi.sk_colorspace_gamma_is_linear (Handle);

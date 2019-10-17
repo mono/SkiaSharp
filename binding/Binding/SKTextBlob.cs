@@ -10,6 +10,9 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		void ISKNonVirtualReferenceCounted.ReferenceNative () => SkiaApi.sk_textblob_ref (Handle);
 
 		void ISKNonVirtualReferenceCounted.UnreferenceNative () => SkiaApi.sk_textblob_unref (Handle);
@@ -36,6 +39,9 @@ namespace SkiaSharp
 			: this (SkiaApi.sk_textblob_builder_new (), true)
 		{
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_textblob_builder_delete (Handle);

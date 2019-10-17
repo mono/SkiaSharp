@@ -23,6 +23,9 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		public static SKPathEffect CreateCompose(SKPathEffect outer, SKPathEffect inner)
 		{
 			if (outer == null)

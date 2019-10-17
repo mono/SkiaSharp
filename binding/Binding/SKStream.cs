@@ -186,6 +186,9 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		protected override void DisposeNative () =>
 			SkiaApi.sk_stream_destroy (Handle);
 	}
@@ -222,6 +225,9 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		protected override void DisposeNative () =>
 			SkiaApi.sk_stream_asset_destroy (Handle);
 	}
@@ -249,6 +255,9 @@ namespace SkiaSharp
 				throw new InvalidOperationException ("Unable to create a new SKFileStream instance.");
 			}
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_filestream_destroy (Handle);
@@ -313,6 +322,9 @@ namespace SkiaSharp
 		{
 			SetMemory (data);
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_memorystream_destroy (Handle);
@@ -451,6 +463,9 @@ namespace SkiaSharp
 			}
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		protected override void DisposeNative () =>
 			SkiaApi.sk_filewstream_destroy (Handle);
 
@@ -513,6 +528,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (dst));
 			return SkiaApi.sk_dynamicmemorywstream_write_to_stream (Handle, dst.Handle);
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_dynamicmemorywstream_destroy (Handle);
