@@ -61,7 +61,7 @@ Task ("docs-download-output")
 Task ("docs-api-diff")
     .Does (async () =>
 {
-    var baseDir = "./output/api-diff";
+    var baseDir = "./output/nugets/api-diff";
     CleanDirectories (baseDir);
 
     var comparer = await CreateNuGetDiffAsync ();
@@ -145,6 +145,9 @@ Task ("docs-api-diff-past")
         }
         Information ($"Diff complete of '{id}'.");
     }
+
+    // clean up after working
+    CleanDirectories (baseDir);
 });
 
 Task ("docs-update-frameworks")
