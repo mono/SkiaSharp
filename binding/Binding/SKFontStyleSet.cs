@@ -17,6 +17,9 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		public int Count => SkiaApi.sk_fontstyleset_get_count (Handle);
 
 		public SKFontStyle this[int index] => GetStyle (index);

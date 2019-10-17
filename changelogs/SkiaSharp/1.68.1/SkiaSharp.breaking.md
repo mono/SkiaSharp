@@ -16,6 +16,48 @@ Modified methods:
 ```
 
 
+#### Type Changed: SkiaSharp.SKObject
+
+Removed property:
+
+```csharp
+protected bool OwnsHandle { get; }
+```
+
+
+#### Type Changed: SkiaSharp.SKPath
+
+#### Type Changed: SkiaSharp.SKPath.Iterator
+
+Modified base type:
+
+```diff
+-SkiaSharp.SKNativeObject
++SkiaSharp.SKObject
+```
+
+
+#### Type Changed: SkiaSharp.SKPath.OpBuilder
+
+Modified base type:
+
+```diff
+-SkiaSharp.SKNativeObject
++SkiaSharp.SKObject
+```
+
+
+#### Type Changed: SkiaSharp.SKPath.RawIterator
+
+Modified base type:
+
+```diff
+-SkiaSharp.SKNativeObject
++SkiaSharp.SKObject
+```
+
+
+
 #### Type Changed: SkiaSharp.SKTextBlobBuilder
 
 Modified methods:

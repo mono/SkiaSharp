@@ -32,6 +32,9 @@ namespace SkiaSharp
 			SetPath (path);
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		protected override void DisposeNative () =>
 			SkiaApi.sk_region_delete (Handle);
 

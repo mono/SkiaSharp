@@ -16,6 +16,9 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		public void Abort () =>
 			SkiaApi.sk_document_abort (Handle);
 

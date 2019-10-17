@@ -47,6 +47,9 @@ namespace SkiaSharp
 			}
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		public int Count => SkiaApi.sk_colortable_count (Handle);
 
 		public SKPMColor[] Colors

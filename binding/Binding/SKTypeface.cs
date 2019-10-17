@@ -34,6 +34,9 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		public static SKTypeface Default => defaultTypeface.Value;
 
 		public static SKTypeface CreateDefault ()
