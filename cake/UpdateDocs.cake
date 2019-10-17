@@ -98,9 +98,6 @@ Task ("docs-api-diff")
 
         Information ($"Diff complete of '{id}'.");
     }
-
-    // clean up after working
-    CleanDirectories (baseDir);
 });
 
 Task ("docs-api-diff-past")
@@ -148,9 +145,6 @@ Task ("docs-api-diff-past")
         }
         Information ($"Diff complete of '{id}'.");
     }
-
-    // clean up after working
-    CleanDirectories (baseDir);
 });
 
 Task ("docs-update-frameworks")

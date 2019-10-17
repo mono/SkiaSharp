@@ -495,6 +495,8 @@ Task ("Nothing");
 Task ("CI")
     .IsDependentOn ("externals")
     .IsDependentOn ("libs")
+    .IsDependentOn ("nuget")
+    .IsDependentOn ("docs-api-diff")
     .IsDependentOn ("nuget-validation")
     .IsDependentOn ("tests")
     .IsDependentOn ("samples");
