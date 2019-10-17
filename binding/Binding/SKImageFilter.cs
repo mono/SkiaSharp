@@ -15,6 +15,9 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		public static SKImageFilter CreateMatrix(SKMatrix matrix, SKFilterQuality quality, SKImageFilter input = null)
 		{
 			return GetObject<SKImageFilter>(SkiaApi.sk_imagefilter_new_matrix(ref matrix, quality, input == null ? IntPtr.Zero : input.Handle));
@@ -228,6 +231,9 @@ namespace SkiaSharp
 				: this(SkiaApi.sk_imagefilter_croprect_new_with_rect(ref rect, flags), true)
 			{
 			}
+
+			protected override void Dispose (bool disposing) =>
+				base.Dispose (disposing);
 
 			protected override void DisposeNative () =>
 				SkiaApi.sk_imagefilter_croprect_destructor (Handle);

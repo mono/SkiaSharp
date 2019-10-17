@@ -491,9 +491,6 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		{
 		}
 
-		protected override void DisposeNative () =>
-			SkiaApi.sk_3dview_destroy (Handle);
-
 		public SK3dView ()
 			: this (SkiaApi.sk_3dview_new (), true)
 		{
@@ -501,7 +498,13 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 				throw new InvalidOperationException ("Unable to create a new SK3dView instance.");
 			}
 		}
-		
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
+		protected override void DisposeNative () =>
+			SkiaApi.sk_3dview_destroy (Handle);
+
 		public SKMatrix Matrix {
 			get {
 				SKMatrix matrix = SKMatrix.MakeIdentity ();
@@ -596,6 +599,9 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			: base (x, owns)
 		{
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_matrix44_destroy (Handle);

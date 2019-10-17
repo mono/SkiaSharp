@@ -15,6 +15,9 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		public static SKColorFilter CreateBlendMode(SKColor c, SKBlendMode mode)
 		{
 			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_mode(c, mode));

@@ -20,6 +20,9 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		// RASTER surface
 
 		[Obsolete ("Use Create(SKImageInfo, SKSurfaceProperties) instead.")]
