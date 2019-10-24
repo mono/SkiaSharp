@@ -20,6 +20,9 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		// create brand new image
 
 		public static SKImage Create (SKImageInfo info)

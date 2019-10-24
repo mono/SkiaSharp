@@ -53,6 +53,9 @@ namespace SkiaSharp
 			Handle = SkiaApi.sk_managedwstream_new (ctx);
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		protected override void DisposeNative ()
 		{
 			if (Interlocked.CompareExchange (ref fromNative, 0, 0) == 0)

@@ -10,6 +10,9 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		public static SKShader CreateEmpty ()
 		{
 			return GetObject<SKShader> (SkiaApi.sk_shader_new_empty ());

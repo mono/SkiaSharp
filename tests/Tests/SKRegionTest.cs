@@ -83,5 +83,39 @@ namespace SkiaSharp.Tests
 
 			Assert.True(region.Intersects(rect));
 		}
+
+		[SkippableFact]
+		public void ContainsReturnsFalseIfItDoesNotContain()
+		{
+			var region = new SKRegion(new SKRectI(30, 30, 40, 40));
+			var region2 = new SKRegion(new SKRectI(25, 25, 50, 50));
+
+			Assert.False(region.Contains(region2));
+		}
+
+		[SkippableFact]
+		public void ContainsReturnsTrueIfItDoesContain()
+		{
+			var region = new SKRegion(new SKRectI(25, 25, 50, 50));
+			var region2 = new SKRegion(new SKRectI(30, 30, 40, 40));
+
+			Assert.True(region.Contains(region2));
+		}
+
+		[SkippableFact]
+		public void ContainsReturnsFalseIfItDoesNotContainPoint()
+		{
+			var region = new SKRegion(new SKRectI(30, 30, 40, 40));
+
+			Assert.False(region.Contains(60, 60));
+		}
+
+		[SkippableFact]
+		public void ContainsReturnsTrueIfItDoesContainPoint()
+		{
+			var region = new SKRegion(new SKRectI(25, 25, 50, 50));
+
+			Assert.True(region.Contains(40, 40));
+		}
 	}
 }

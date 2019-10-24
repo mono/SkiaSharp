@@ -9,7 +9,10 @@ namespace SkiaSharp
 			: base (h, owns)
 		{
 		}
-		
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		public static GRContext Create (GRBackend backend)
 		{
 			switch (backend) {

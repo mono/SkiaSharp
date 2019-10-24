@@ -43,6 +43,9 @@ namespace SkiaSharp
 			}
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		protected override void DisposeNative () =>
 			SkiaApi.sk_path_delete (Handle);
 
@@ -467,6 +470,9 @@ namespace SkiaSharp
 				this.path = path;
 			}
 
+			protected override void Dispose (bool disposing) =>
+				base.Dispose (disposing);
+
 			protected override void DisposeNative () =>
 				SkiaApi.sk_path_iter_destroy (Handle);
 
@@ -496,6 +502,9 @@ namespace SkiaSharp
 			{
 				this.path = path;
 			}
+
+			protected override void Dispose (bool disposing) =>
+				base.Dispose (disposing);
 
 			protected override void DisposeNative () =>
 				SkiaApi.sk_path_rawiter_destroy (Handle);
@@ -532,6 +541,9 @@ namespace SkiaSharp
 
 				return SkiaApi.sk_opbuilder_resolve (Handle, result.Handle);
 			}
+
+			protected override void Dispose (bool disposing) =>
+				base.Dispose (disposing);
 
 			protected override void DisposeNative () =>
 				SkiaApi.sk_opbuilder_destroy (Handle);

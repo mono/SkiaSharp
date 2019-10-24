@@ -30,6 +30,9 @@ namespace HarfBuzzSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		protected override void DisposeHandler ()
 		{
 			if (Handle != IntPtr.Zero) {

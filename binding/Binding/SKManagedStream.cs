@@ -52,6 +52,9 @@ namespace SkiaSharp
 			}
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		protected override void DisposeManaged ()
 		{
 			var childStream = child?.Target as SKManagedStream;

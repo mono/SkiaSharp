@@ -26,6 +26,9 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		public static SKFontManager Default => defaultManager.Value;
 
 		public int FontFamilyCount => SkiaApi.sk_fontmgr_count_families (Handle);
