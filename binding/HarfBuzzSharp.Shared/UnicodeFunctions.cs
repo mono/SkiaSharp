@@ -36,17 +36,45 @@ namespace HarfBuzzSharp
 
 		public void MakeImmutable () => HarfBuzzApi.hb_unicode_funcs_make_immutable (Handle);
 
+		public UnicodeCombiningClass GetCombiningClass (int unicode) => GetCombiningClass ((uint)unicode);
+
 		public UnicodeCombiningClass GetCombiningClass (uint unicode) =>
 			HarfBuzzApi.hb_unicode_combining_class (Handle, unicode);
+
+		public UnicodeGeneralCategory GetGeneralCategory (int unicode) => GetGeneralCategory ((uint)unicode);
 
 		public UnicodeGeneralCategory GetGeneralCategory (uint unicode) =>
 			HarfBuzzApi.hb_unicode_general_category (Handle, unicode);
 
+		public int GetMirroring (int unicode) => (int)GetMirroring ((uint)unicode);
+
 		public uint GetMirroring (uint unicode) => HarfBuzzApi.hb_unicode_mirroring (Handle, unicode);
+
+		public Script GetScript (int unicode) => GetScript ((uint)unicode);
 
 		public Script GetScript (uint unicode) => HarfBuzzApi.hb_unicode_script (Handle, unicode);
 
+		public bool TryCompose (int a, int b, out int ab)
+		{
+			var result = TryCompose ((uint)a, (uint)b, out var composed);
+
+			ab = (int)composed;
+
+			return result;
+		}
+
 		public bool TryCompose (uint a, uint b, out uint ab) => HarfBuzzApi.hb_unicode_compose (Handle, a, b, out ab);
+
+		public bool TryDecompose (int ab, out int a, out int b)
+		{
+			var result = TryDecompose ((uint)ab, out var decomposedA, out var decomposedB);
+
+			a = (int)decomposedA;
+
+			b = (int)decomposedB;
+
+			return result;
+		}
 
 		public bool TryDecompose (uint ab, out uint a, out uint b) => HarfBuzzApi.hb_unicode_decompose (Handle, ab, out a, out b);
 

@@ -85,6 +85,8 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		public void Add (int codepoint, int cluster) => Add ((uint)codepoint, (uint)cluster);
+
 		public void Add (uint codepoint, uint cluster)
 		{
 			if (Length != 0 && ContentType != ContentType.Unicode)
