@@ -47,6 +47,7 @@ src = \
 	${src_root}/hb-fallback-shape.cc                      \
 	${src_root}/hb-font.cc                                \
 	${src_root}/hb-map.cc                                 \
+	${src_root}/hb-number.cc                              \
 	${src_root}/hb-ot-cff1-table.cc                       \
 	${src_root}/hb-ot-cff2-table.cc                       \
 	${src_root}/hb-ot-color.cc                            \

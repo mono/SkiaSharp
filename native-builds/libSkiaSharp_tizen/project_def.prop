@@ -9,30 +9,11 @@ USER_LINK_OPTS = -Wl,--gc-sections
 
 APPNAME = SkiaSharp
 
-USER_INC_DIRS = ../../externals/skia/src/c           \
-                ../../externals/skia/src/core        \
-                ../../externals/skia/src/xml         \
-                ../../externals/skia/include/c       \
-                ../../externals/skia/include/core    \
-                ../../externals/skia/include/codec   \
-                ../../externals/skia/include/effects \
-                ../../externals/skia/include/encode  \
-                ../../externals/skia/include/pathops \
-                ../../externals/skia/include/gpu     \
-                ../../externals/skia/include/config  \
-                ../../externals/skia/include/xml     \
-                ../../externals/skia/include/svg     \
-                ../../externals/skia/include/utils   \
-                ../../externals/skia/include/ports   \
-                ../../externals/skia/include/private \
-                ../../externals/skia/include/images  \
-                ../../externals/skia/include/xml     \
-                ../../externals/skia/include/xamarin
+USER_INC_DIRS = ../../externals/skia
 
-USER_DEFS = SK_INTERNAL SK_GAMMA_APPLY_TO_A8                                   \
-            SK_ALLOW_STATIC_GLOBAL_INITIALIZERS=0 SK_SUPPORT_GPU=1             \
-            SK_BUILD_FOR_UNIX SKIA_C_DLL SKIA_IMPLEMENTATION=1                 \
-            NDEBUG SK_BUILD_FOR_TIZEN
+USER_DEFS = NDEBUG SK_R32_SHIFT=16 SK_GAMMA_APPLY_TO_A8 SKIA_IMPLEMENTATION=1       \
+            SKIA_C_DLL SK_GL SK_SUPPORT_PDF SK_HAS_JPEG_LIBRARY SK_HAS_PNG_LIBRARY  \
+            SK_CODEC_DECODES_RAW SK_HAS_WEBP_LIBRARY SK_XML SK_BUILD_FOR_TIZEN
 
 USER_CPP_DEFS = $(USER_DEFS)
 
@@ -40,7 +21,7 @@ USER_C_OPTS = -fPIC -g -fno-exceptions -fstrict-aliasing -Wall -Wextra          
               -Winit-self -Wpointer-arith -Wsign-compare -Wno-unused-parameter       \
               -Werror -Os -ffunction-sections -fdata-sections -fno-rtti
 
-USER_CPP_OPTS = $(USER_C_OPTS) -std=c++11 -fno-threadsafe-statics -Wnon-virtual-dtor
+USER_CPP_OPTS = $(USER_C_OPTS) -std=c++14 -fno-threadsafe-statics -Wnon-virtual-dtor
 
 USER_SRCS = ../../externals/skia/src/xamarin/sk_xamarin.cpp                 \
             ../../externals/skia/src/xamarin/SkiaKeeper.c                   \

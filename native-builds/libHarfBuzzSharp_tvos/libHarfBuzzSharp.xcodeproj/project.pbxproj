@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		342ED4322364D3C4005BA5D3 /* hb-number.cc in Sources */ = {isa = PBXBuildFile; fileRef = 342ED4302364D3C3005BA5D3 /* hb-number.cc */; };
 		3460E11422BD90090022F04C /* hb-subset-input.cc in Sources */ = {isa = PBXBuildFile; fileRef = 3460E10D22BD90080022F04C /* hb-subset-input.cc */; };
 		3460E11522BD90090022F04C /* hb-subset-plan.cc in Sources */ = {isa = PBXBuildFile; fileRef = 3460E10E22BD90080022F04C /* hb-subset-plan.cc */; };
 		3460E11622BD90090022F04C /* hb-subset-cff-common.cc in Sources */ = {isa = PBXBuildFile; fileRef = 3460E10F22BD90090022F04C /* hb-subset-cff-common.cc */; };
@@ -75,6 +76,9 @@
 
 /* Begin PBXFileReference section */
 		341E97BC1EB3CE10008E2876 /* libHarfBuzzSharp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libHarfBuzzSharp.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		342ED42F2364D3C3005BA5D3 /* hb-number.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = "hb-number.hh"; path = "../../externals/harfbuzz/src/hb-number.hh"; sourceTree = "<group>"; };
+		342ED4302364D3C3005BA5D3 /* hb-number.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "hb-number.cc"; path = "../../externals/harfbuzz/src/hb-number.cc"; sourceTree = "<group>"; };
+		342ED4312364D3C3005BA5D3 /* hb-number-parser.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = "hb-number-parser.hh"; path = "../../externals/harfbuzz/src/hb-number-parser.hh"; sourceTree = "<group>"; };
 		3460E10D22BD90080022F04C /* hb-subset-input.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "hb-subset-input.cc"; path = "../../externals/harfbuzz/src/hb-subset-input.cc"; sourceTree = "<group>"; };
 		3460E10E22BD90080022F04C /* hb-subset-plan.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "hb-subset-plan.cc"; path = "../../externals/harfbuzz/src/hb-subset-plan.cc"; sourceTree = "<group>"; };
 		3460E10F22BD90090022F04C /* hb-subset-cff-common.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "hb-subset-cff-common.cc"; path = "../../externals/harfbuzz/src/hb-subset-cff-common.cc"; sourceTree = "<group>"; };
@@ -175,6 +179,9 @@
 				34F64BC421FA5F50008FBDBD /* hb-fallback-shape.cc */,
 				34F64BCD21FA5F51008FBDBD /* hb-font.cc */,
 				34F64BA821FA5F4F008FBDBD /* hb-map.cc */,
+				342ED4312364D3C3005BA5D3 /* hb-number-parser.hh */,
+				342ED4302364D3C3005BA5D3 /* hb-number.cc */,
+				342ED42F2364D3C3005BA5D3 /* hb-number.hh */,
 				34F64BA121FA5F4F008FBDBD /* hb-ot-cff1-table.cc */,
 				34F64BB421FA5F4F008FBDBD /* hb-ot-cff2-table.cc */,
 				34F64BA421FA5F4F008FBDBD /* hb-ot-color.cc */,
@@ -302,6 +309,7 @@
 				34F64BEE21FA5F51008FBDBD /* hb-aat-layout.cc in Sources */,
 				34F64BEF21FA5F51008FBDBD /* hb-ot-face.cc in Sources */,
 				34F64BED21FA5F51008FBDBD /* hb-ot-layout.cc in Sources */,
+				342ED4322364D3C4005BA5D3 /* hb-number.cc in Sources */,
 				34F64BD521FA5F51008FBDBD /* hb-map.cc in Sources */,
 				34F64BE021FA5F51008FBDBD /* hb-ot-shape-fallback.cc in Sources */,
 				34F64BE321FA5F51008FBDBD /* hb-ot-shape-complex-arabic.cc in Sources */,
@@ -345,6 +353,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				BITCODE_GENERATION_MODE = bitcode;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
@@ -374,7 +383,6 @@
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_BITCODE = YES;
-				BITCODE_GENERATION_MODE = bitcode;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -403,6 +411,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				BITCODE_GENERATION_MODE = bitcode;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
@@ -432,7 +441,6 @@
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_BITCODE = YES;
-				BITCODE_GENERATION_MODE = bitcode;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;

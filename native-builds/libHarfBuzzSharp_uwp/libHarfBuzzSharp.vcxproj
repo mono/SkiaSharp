@@ -5,6 +5,10 @@
       <Configuration>Debug</Configuration>
       <Platform>ARM</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
@@ -17,6 +21,10 @@
       <Configuration>Release</Configuration>
       <Platform>ARM</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
@@ -26,10 +34,10 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-   <ItemGroup>
+  <ItemGroup>
     <ClInclude Include="config.h" />
   </ItemGroup>
-   <ItemGroup>
+  <ItemGroup>
     <!--HB_BASE_sources-->
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-aat-fdsc-table.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-aat-layout-ankr-table.hh" />
@@ -77,6 +85,8 @@
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-meta.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-mutex.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-null.hh" />
+    <ClCompile Include="..\..\externals\harfbuzz\src\hb-number.cc" />
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-number.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-object.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-open-file.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-open-type.hh" />
@@ -117,9 +127,9 @@
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-math-table.hh" />
     <ClCompile Include="..\..\externals\harfbuzz\src\hb-ot-math.cc" />
     <ClCompile Include="..\..\externals\harfbuzz\src\hb-ot-meta.cc" />
-    <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-meta-table.hh" />	
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-meta-table.hh" />
     <ClCompile Include="..\..\externals\harfbuzz\src\hb-ot-metrics.cc" />
-    <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-metrics.hh" />	
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-metrics.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-maxp-table.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-name-language-static.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-name-language.hh" />
@@ -165,10 +175,10 @@
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-var-hvar-table.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-var-mvar-table.hh" />
     <ClCompile Include="..\..\externals\harfbuzz\src\hb-ot-var.cc" />
-    <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-vorg-table.hh" />	
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-vorg-table.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-pool.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-sanitize.hh" />
-    <ClInclude Include="..\..\externals\harfbuzz\src\hb-serialize.hh" />	
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-serialize.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-set-digest.hh" />
     <ClCompile Include="..\..\externals\harfbuzz\src\hb-set.cc" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-set.hh" />
@@ -193,6 +203,7 @@
     <!--HB_BASE_RAGEL_GENERATED_sources-->
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-buffer-deserialize-json.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-buffer-deserialize-text.hh" />
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb-number-parser.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-shape-complex-indic-machine.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-shape-complex-khmer-machine.hh" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-ot-shape-complex-myanmar-machine.hh" />
@@ -223,7 +234,7 @@
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-shape.h" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-unicode.h" />
     <ClInclude Include="..\..\externals\harfbuzz\src\hb-version.h" />
-    <ClInclude Include="..\..\externals\harfbuzz\src\hb.h" />  
+    <ClInclude Include="..\..\externals\harfbuzz\src\hb.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{25b54d3d-b0f8-4e7e-8928-ffaf116fcce9}</ProjectGuid>
@@ -233,8 +244,8 @@
     <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
     <AppContainerApplication>true</AppContainerApplication>
     <ApplicationType>Windows Store</ApplicationType>
-    <WindowsTargetPlatformVersion>10.0.10240.0</WindowsTargetPlatformVersion>
-    <WindowsTargetPlatformMinVersion>10.0.10240.0</WindowsTargetPlatformMinVersion>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.16299.0</WindowsTargetPlatformMinVersion>
     <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -244,6 +255,11 @@
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
@@ -260,6 +276,12 @@
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -285,7 +307,13 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -308,7 +336,15 @@
     <GenerateManifest>false</GenerateManifest>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <GenerateManifest>false</GenerateManifest>
+    <IgnoreImportLibrary>false</IgnoreImportLibrary>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+    <GenerateManifest>false</GenerateManifest>
+    <IgnoreImportLibrary>false</IgnoreImportLibrary>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <GenerateManifest>false</GenerateManifest>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
@@ -369,7 +405,37 @@
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAsWinRT>false</CompileAsWinRT>
+      <PrecompiledHeaderFile />
+      <PreprocessorDefinitions>HAVE_CONFIG_H;HB_EXTERN=__declspec (dllexport) extern;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;_ARM_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE=1;%(ClCompile.PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(GeneratedFilesDir);$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4146;4267;4244</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|arm'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <CompileAsWinRT>false</CompileAsWinRT>
+      <PrecompiledHeaderFile />
+      <PreprocessorDefinitions>HAVE_CONFIG_H;HB_EXTERN=__declspec (dllexport) extern;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS;_ARM_WINAPI_PARTITION_DESKTOP_SDK_AVAILABLE=1;%(ClCompile.PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(GeneratedFilesDir);$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4146;4267;4244</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <CompileAsWinRT>false</CompileAsWinRT>

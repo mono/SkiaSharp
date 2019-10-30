@@ -1,4 +1,13 @@
 
+const string COMMON_GN_ARGS =
+    "skia_use_system_expat=false " +
+    "skia_use_system_libjpeg_turbo=false " +
+    "skia_use_system_libpng=false " +
+    "skia_use_system_libwebp=false " +
+    "skia_use_icu=false " +
+    "skia_use_piex=true " +
+    "skia_use_sfntly=false ";
+
 void GnNinja (DirectoryPath outDir, string target, string skiaArgs)
 {
     var exe = IsRunningOnWindows () ? ".exe" : "";
@@ -61,7 +70,6 @@ void RunLipo (DirectoryPath directory, FilePath output, FilePath[] inputs)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("externals-init")
-    .IsDependentOn ("externals-angle-uwp")
     .Does (() =>
 {
     RunProcess (PythonToolPath, new ProcessSettings {
@@ -89,8 +97,8 @@ Task ("externals-windows")
         GnNinja ($"win/{arch}", "SkiaSharp",
             $"is_official_build=true skia_enable_tools=false " +
             $"target_os='win' target_cpu='{skiaArch}' " +
-            $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true " +
-            $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
+            COMMON_GN_ARGS +
+            $"skia_use_system_zlib=false skia_use_dng_sdk=true skia_enable_fontmgr_win_gdi=false " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '/MT', '/EHsc', '/Z7' ] " +
             $"extra_ldflags=[ '/DEBUG:FULL' ]");
 
@@ -124,6 +132,7 @@ Task ("externals-windows")
 // this builds the native C and C++ externals for Windows UWP
 Task ("externals-uwp")
     .IsDependentOn ("externals-init")
+    .IsDependentOn ("externals-angle-uwp")
     .IsDependeeOf (ShouldBuildExternal ("uwp") ? "externals-native" : "externals-native-skip")
     .WithCriteria (ShouldBuildExternal ("uwp"))
     .WithCriteria (IsRunningOnWindows ())
@@ -136,8 +145,8 @@ Task ("externals-uwp")
         GnNinja ($"winrt/{arch}", "SkiaSharp",
             $"is_official_build=true skia_enable_tools=false " +
             $"target_os='winrt' target_cpu='{skiaArch}' " +
-            $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
-            $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
+            COMMON_GN_ARGS +
+            $"skia_use_system_zlib=false skia_enable_fontmgr_win_gdi=false " +
             $"extra_cflags=[  " +
             $"  '-DSKIA_C_DLL', '/MD', '/EHsc', '/Z7', " +
             $"  '-DWINAPI_FAMILY=WINAPI_FAMILY_APP', '-DSK_BUILD_FOR_WINRT', '-DSK_HAS_DWRITE_1_H', '-DSK_HAS_DWRITE_2_H', '-DNO_GETENV' ] " +
@@ -153,6 +162,7 @@ Task ("externals-uwp")
     buildArch ("x64", "x64", "x64");
     buildArch ("Win32", "x86", "x86");
     buildArch ("ARM", "arm", "ARM");
+    buildArch ("ARM64", "arm64", "ARM64");
 
     // libHarfBuzzSharp
 
@@ -170,6 +180,7 @@ Task ("externals-uwp")
     buildHarfBuzzArch ("Win32", "x86");
     buildHarfBuzzArch ("x64", "x64");
     buildHarfBuzzArch ("ARM", "arm");
+    buildHarfBuzzArch ("ARM64", "arm64");
 
     // SkiaSharp.Views.Interop.UWP
 
@@ -217,8 +228,8 @@ Task ("externals-osx")
         GnNinja ($"mac/{arch}", "skia",
             $"is_official_build=true skia_enable_tools=false " +
             $"target_os='mac' target_cpu='{skiaArch}' " +
-            $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
-            $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
+            COMMON_GN_ARGS +
+            $"skia_use_system_zlib=false " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-mmacosx-version-min=10.7', '-stdlib=libc++' ] " +
             $"extra_ldflags=[ '-Wl,macosx_version_min=10.7', '-stdlib=libc++' ]");
 
@@ -287,8 +298,8 @@ Task ("externals-ios")
         GnNinja ($"ios/{arch}", "skia",
             $"is_official_build=true skia_enable_tools=false " +
             $"target_os='ios' target_cpu='{skiaArch}' " +
-            $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
-            $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
+            COMMON_GN_ARGS +
+            $"skia_use_system_zlib=false " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-mios-version-min=8.0' ] " +
             $"extra_ldflags=[ '-Wl,ios_version_min=8.0' ]");
 
@@ -371,8 +382,8 @@ Task ("externals-tvos")
         GnNinja ($"tvos/{arch}", "skia",
             $"is_official_build=true skia_enable_tools=false " +
             $"target_os='tvos' target_cpu='{skiaArch}' " +
-            $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
-            $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
+            COMMON_GN_ARGS +
+            $"skia_use_system_zlib=false " +
             $"extra_cflags=[ '-DSK_BUILD_FOR_TVOS', '-DSKIA_C_DLL', '-mtvos-version-min=9.0' ] " +
             $"extra_ldflags=[ '-Wl,tvos_version_min=9.0' ]");
 
@@ -447,9 +458,8 @@ Task ("externals-watchos")
         GnNinja ($"watchos/{arch}", "skia",
             $"is_official_build=true skia_enable_tools=false " +
             $"target_os='watchos' target_cpu='{skiaArch}' " +
-            $"skia_enable_gpu=false " +
-            $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
-            $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
+            COMMON_GN_ARGS +
+            $"skia_enable_gpu=false skia_use_system_zlib=false " +
             $"extra_cflags=[ '-DSK_BUILD_FOR_WATCHOS', '-DSKIA_C_DLL', '-mwatchos-version-min=2.0' ] " +
             $"extra_ldflags=[ '-Wl,watchos_version_min=2.0' ]");
 
@@ -531,11 +541,11 @@ Task ("externals-android")
         GnNinja ($"android/{arch}", "SkiaSharp",
             $"is_official_build=true skia_enable_tools=false " +
             $"target_os='android' target_cpu='{skiaArch}' " +
-            $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
-            $"skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
+            COMMON_GN_ARGS +
+            $"skia_use_system_freetype2=false skia_use_system_zlib=false " +
             $"extra_cflags=[ '-DSKIA_C_DLL' ] " +
             $"ndk='{ANDROID_NDK_HOME}' " +
-            $"ndk_api={(skiaArch == "x64" || skiaArch == "arm64" ? 21 : 9)}");
+            $"ndk_api={(skiaArch == "x64" || skiaArch == "arm64" ? 21 : 16)}");
 
         var outDir = $"output/native/android/{arch}";
         EnsureDirectoryExists (outDir);
@@ -592,8 +602,8 @@ Task ("externals-linux")
         GnNinja ($"linux/{arch}", "SkiaSharp",
             $"is_official_build=true skia_enable_tools=false " +
             $"target_os='linux' target_cpu='{arch}' " +
-            $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
-            $"skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
+            COMMON_GN_ARGS + 
+            $"skia_use_system_freetype2=false skia_use_system_zlib=false " +
             $"skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")} " +
             $"extra_cflags=[ '-DSKIA_C_DLL' ] " +
             $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={ROOT_PATH.CombineWithFilePath("native-builds/libSkiaSharp_linux/libSkiaSharp.map")}' ] " +
@@ -646,16 +656,8 @@ Task ("externals-tizen")
         GnNinja ($"tizen/{arch}", "skia",
             $"is_official_build=true skia_enable_tools=false " +
             $"target_os='tizen' target_cpu='{skiaArch}' " +
-            $"skia_enable_gpu=true " +
-            $"skia_use_icu=false " +
-            $"skia_use_sfntly=false " +
-            $"skia_use_piex=true " +
-            $"skia_use_system_expat=false " +
-            $"skia_use_system_freetype2=true " +
-            $"skia_use_system_libjpeg_turbo=false " +
-            $"skia_use_system_libpng=false " +
-            $"skia_use_system_libwebp=false " +
-            $"skia_use_system_zlib=true " +
+            COMMON_GN_ARGS +
+            $"skia_enable_gpu=true skia_use_system_freetype2=true skia_use_system_zlib=true " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_BUILD_FOR_TIZEN' ] " +
             $"ncli='{TIZEN_STUDIO_HOME}' " +
             $"ncli_version='4.0'");

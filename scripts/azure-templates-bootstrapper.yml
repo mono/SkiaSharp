@@ -38,7 +38,7 @@ jobs:
     steps:
       - checkout: self
         submodules: recursive
-      - powershell: |
+      - pwsh: |
           if ($env:GIT_BRANCH_NAME.StartsWith($env:FEATURE_NAME_PREFIX)) {
             $feature = $env:GIT_BRANCH_NAME.Substring($env:FEATURE_NAME_PREFIX.Length)
             Write-Host "##vso[task.setvariable variable=FEATURE_NAME]$feature"
@@ -57,9 +57,9 @@ jobs:
           displayName: Install any package dependencies
       # install tizen
       - ${{ if contains(parameters.name, '_tizen_') }}:
-        - powershell: .\scripts\install-openjdk.ps1
+        - pwsh: .\scripts\install-openjdk.ps1
           displayName: Install the OpenJDK
-        - powershell: .\scripts\install-tizen.ps1
+        - pwsh: .\scripts\install-tizen.ps1
           displayName: Install the Tizen SDK
       # install extra bits for the native builds
       - ${{ if startsWith(parameters.name, 'native_') }}:
@@ -71,7 +71,7 @@ jobs:
             architecture: 'x64'
         # install android ndk
         - ${{ if contains(parameters.name, '_android_') }}:
-          - powershell: .\scripts\install-android-ndk.ps1
+          - pwsh: .\scripts\install-android-ndk.ps1
             displayName: Install the Android NDK
       # install extra bits for the manged builds
       - ${{ if not(startsWith(parameters.name, 'native_')) }}:
@@ -94,16 +94,22 @@ jobs:
           inputs:
             artifactName: ${{ dep }}
             downloadPath: 'download-temp'
-        - powershell: |
+        - pwsh: |
             New-Item '.\output\' -Type Directory -Force | Out-Null
             Get-ChildItem '.\download-temp\${{ dep }}\' | Copy-Item -Destination '.\output\' -Recurse -Force
             Remove-Item '.\download-temp\${{ dep }}\' -Recurse -Force
           displayName: Move the ${{ dep }} artifacts to the output directory
       # pre-build steps
       - ${{ parameters.preBuildSteps }}
+      - pwsh: |
+          python --version
+          cd externals/skia
+          python tools/git-sync-deps -v -d
       # build
       - ${{ if endsWith(parameters.name, '_windows') }}:
-        - powershell: .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} { .\bootstrapper.ps1 -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} }
+        - pwsh: .\scripts\install-vs.ps1
+          displayName: Install the Visual Studio dependencies
+        - pwsh: .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} { .\bootstrapper.ps1 -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} }
           env:
             JavaSdkDirectory: $(JAVA_HOME)
           displayName: Run the bootstrapper for ${{ parameters.target }}

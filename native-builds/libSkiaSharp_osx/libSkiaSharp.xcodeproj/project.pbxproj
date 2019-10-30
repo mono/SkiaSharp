@@ -160,7 +160,7 @@
 		21C9514D1C03D27A003A1E1D /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0820;
+				LastUpgradeCheck = 1100;
 				ORGANIZATIONNAME = Xamarin;
 				TargetAttributes = {
 					21C951541C03D27A003A1E1D = {
@@ -170,10 +170,11 @@
 			};
 			buildConfigurationList = 21C951501C03D27A003A1E1D /* Build configuration list for PBXProject "libSkiaSharp" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = 21C9514C1C03D27A003A1E1D;
 			productRefGroup = 21C951561C03D27A003A1E1D /* Products */;
@@ -206,35 +207,45 @@
 		21C9515C1C03D27A003A1E1D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = c11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					SK_INTERNAL,
-					SK_GAMMA_SRGB,
+					"SK_ASSUME_GL=1",
 					SK_GAMMA_APPLY_TO_A8,
-					"SK_ALLOW_STATIC_GLOBAL_INITIALIZERS=1",
-					"SK_SUPPORT_GPU=1",
-					"SK_SUPPORT_OPENCL=0",
-					"SK_FORCE_DISTANCE_FIELD_TEXT=0",
-					SK_BUILD_FOR_MAC,
-					"SK_DEVELOPER=1",
-					SKIA_C_DLL,
 					"SKIA_IMPLEMENTATION=1",
+					SKIA_C_DLL,
+					SK_GL,
+					SK_SUPPORT_PDF,
+					SK_HAS_JPEG_LIBRARY,
+					SK_HAS_PNG_LIBRARY,
+					SK_CODEC_DECODES_RAW,
+					SK_HAS_WEBP_LIBRARY,
+					SK_XML,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -243,25 +254,34 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
 			};
 			name = Debug;
 		};
 		21C9515D1C03D27A003A1E1D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -271,17 +291,18 @@
 				GCC_C_LANGUAGE_STANDARD = c11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					SK_INTERNAL,
-					SK_GAMMA_SRGB,
-					SK_GAMMA_APPLY_TO_A8,
-					"SK_ALLOW_STATIC_GLOBAL_INITIALIZERS=1",
-					"SK_SUPPORT_GPU=1",
-					"SK_SUPPORT_OPENCL=0",
-					"SK_FORCE_DISTANCE_FIELD_TEXT=0",
-					SK_BUILD_FOR_MAC,
 					NDEBUG,
-					SKIA_C_DLL,
+					"SK_ASSUME_GL=1",
+					SK_GAMMA_APPLY_TO_A8,
 					"SKIA_IMPLEMENTATION=1",
+					SKIA_C_DLL,
+					SK_GL,
+					SK_SUPPORT_PDF,
+					SK_HAS_JPEG_LIBRARY,
+					SK_HAS_PNG_LIBRARY,
+					SK_CODEC_DECODES_RAW,
+					SK_HAS_WEBP_LIBRARY,
+					SK_XML,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -290,7 +311,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				MTL_ENABLE_DEBUG_INFO = NO;
 			};
 			name = Release;
@@ -298,29 +318,12 @@
 		21C9515F1C03D27A003A1E1D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXECUTABLE_PREFIX = "";
 				GCC_ENABLE_CPP_RTTI = NO;
-				HEADER_SEARCH_PATHS = (
-					../../externals/skia/src/c,
-					../../externals/skia/src/core,
-					../../externals/skia/src/xml,
-					../../externals/skia/include/private,
-					../../externals/skia/include/c,
-					../../externals/skia/include/core,
-					../../externals/skia/include/codec,
-					../../externals/skia/include/effects,
-					../../externals/skia/include/encode,
-					../../externals/skia/include/pathops,
-					../../externals/skia/include/gpu,
-					../../externals/skia/include/utils,
-					../../externals/skia/include/ports,
-					../../externals/skia/include/config,
-					../../externals/skia/include/xml,
-					../../externals/skia/include/svg,
-					../../externals/skia/include/xamarin,
-				);
+				HEADER_SEARCH_PATHS = ../../externals/skia;
 				INSTALL_PATH = "@rpath";
 				LIBRARY_SEARCH_PATHS = "../../externals/skia/out/mac/$(ARCHS)";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
@@ -332,29 +335,12 @@
 		21C951601C03D27A003A1E1D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				EXECUTABLE_PREFIX = "";
 				GCC_ENABLE_CPP_RTTI = NO;
-				HEADER_SEARCH_PATHS = (
-					../../externals/skia/src/c,
-					../../externals/skia/src/core,
-					../../externals/skia/src/xml,
-					../../externals/skia/include/private,
-					../../externals/skia/include/c,
-					../../externals/skia/include/core,
-					../../externals/skia/include/codec,
-					../../externals/skia/include/effects,
-					../../externals/skia/include/encode,
-					../../externals/skia/include/pathops,
-					../../externals/skia/include/gpu,
-					../../externals/skia/include/utils,
-					../../externals/skia/include/ports,
-					../../externals/skia/include/config,
-					../../externals/skia/include/xml,
-					../../externals/skia/include/svg,
-					../../externals/skia/include/xamarin,
-				);
+				HEADER_SEARCH_PATHS = ../../externals/skia;
 				INSTALL_PATH = "@rpath";
 				LIBRARY_SEARCH_PATHS = "../../externals/skia/out/mac/$(ARCHS)";
 				MACOSX_DEPLOYMENT_TARGET = 10.7;

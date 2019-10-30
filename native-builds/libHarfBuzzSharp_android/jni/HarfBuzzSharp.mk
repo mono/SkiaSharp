@@ -26,6 +26,7 @@ LOCAL_SRC_FILES        := ../../../externals/harfbuzz/src/hb-aat-layout.cc      
                           ../../../externals/harfbuzz/src/hb-fallback-shape.cc                      \
                           ../../../externals/harfbuzz/src/hb-font.cc                                \
                           ../../../externals/harfbuzz/src/hb-map.cc                                 \
+                          ../../../externals/harfbuzz/src/hb-number.cc                              \
                           ../../../externals/harfbuzz/src/hb-ot-cff1-table.cc                       \
                           ../../../externals/harfbuzz/src/hb-ot-cff2-table.cc                       \
                           ../../../externals/harfbuzz/src/hb-ot-color.cc                            \

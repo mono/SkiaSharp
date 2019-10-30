@@ -13,7 +13,7 @@ void RunMSBuild (
     MSBuild (solution, c => {
         c.Configuration = CONFIGURATION;
         c.Verbosity = VERBOSITY;
-        c.ToolVersion = MSBuildToolVersion.VS2017;
+        c.ToolVersion = MSBuildToolVersion.VS2019;
 
         if (restoreOnly) {
             c.Targets.Clear();
