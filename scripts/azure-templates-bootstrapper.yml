@@ -101,14 +101,8 @@ jobs:
           displayName: Move the ${{ dep }} artifacts to the output directory
       # pre-build steps
       - ${{ parameters.preBuildSteps }}
-      - pwsh: |
-          python --version
-          cd externals/skia
-          python tools/git-sync-deps -v -d
       # build
       - ${{ if endsWith(parameters.name, '_windows') }}:
-        - pwsh: .\scripts\install-vs.ps1
-          displayName: Install the Visual Studio dependencies
         - pwsh: .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} { .\bootstrapper.ps1 -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} }
           env:
             JavaSdkDirectory: $(JAVA_HOME)
