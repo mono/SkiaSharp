@@ -50,18 +50,48 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-tizen
           condition: false # TODO: TIZEN INSTALL BUGS
-      - template: azure-templates-bootstrapper.yml # Build Native UWP (Windows)
+      - template: azure-templates-bootstrapper.yml # Build Native UWP|x86 (Windows)
         parameters:
-          name: native_uwp_windows
-          displayName: Build Native UWP (Windows)
+          name: native_uwp_x86_windows
+          displayName: Build Native UWP|x86 (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-uwp
-      - template: azure-templates-bootstrapper.yml # Build Native Win32 (Windows)
+          additionalArgs: --buildarch=x86
+      - template: azure-templates-bootstrapper.yml # Build Native UWP|x64 (Windows)
         parameters:
-          name: native_win32_windows
-          displayName: Build Native Win32 (Windows)
+          name: native_uwp_x64_windows
+          displayName: Build Native UWP|x64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-uwp
+          additionalArgs: --buildarch=x64
+      - template: azure-templates-bootstrapper.yml # Build Native UWP|arm (Windows)
+        parameters:
+          name: native_uwp_arm_windows
+          displayName: Build Native UWP|arm (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-uwp
+          additionalArgs: --buildarch=arm
+      - template: azure-templates-bootstrapper.yml # Build Native UWP|arm64 (Windows)
+        parameters:
+          name: native_uwp_arm64_windows
+          displayName: Build Native UWP|arm64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-uwp
+          additionalArgs: --buildarch=arm64
+      - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Windows)
+        parameters:
+          name: native_win32_x86_windows
+          displayName: Build Native Win32|x86 (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-windows
+          additionalArgs: --buildarch=x86
+      - template: azure-templates-bootstrapper.yml # Build Native Win32|x64 (Windows)
+        parameters:
+          name: native_win32_x64_windows
+          displayName: Build Native Win32|x64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-windows
+          additionalArgs: --buildarch=x64
       # NATIVE JOBS - MAC
       - template: azure-templates-bootstrapper.yml # Build Native Android (macOS)
         parameters:
@@ -136,8 +166,12 @@ stages:
             - native_android_windows
             # - native_tizen_windows
             - native_tizen_linux
-            - native_uwp_windows
-            - native_win32_windows
+            - native_uwp_x86_windows
+            - native_uwp_x64_windows
+            - native_uwp_arm_windows
+            - native_uwp_arm64_windows
+            - native_win32_x86_windows
+            - native_win32_x64_windows
       - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
         parameters:
           name: managed_macos
@@ -183,6 +217,7 @@ stages:
           displayName: Package NuGets [No Dependencies]
           vmImage: $(VM_IMAGE_WINDOWS)
           target: nuget-only
+          additionalArgs: --packall=true
           shouldPublish: false
           requiredArtifacts:
             - managed_nodependencies_linux
@@ -215,6 +250,7 @@ stages:
           displayName: Package NuGets
           vmImage: $(VM_IMAGE_WINDOWS)
           target: nuget-only
+          additionalArgs: --packall=true
           shouldPublish: false
           requiredArtifacts:
             - managed_linux
