@@ -88,7 +88,7 @@ bool ShouldBuildArch (string arch)
 {
     arch = arch?.ToLower() ?? "";
 
-    if (BUILD_ARCH.Contains ("all"))
+    if (BUILD_ARCH.Length == 0 || BUILD_ARCH.Contains ("all"))
         return true;
 
     switch (arch) {

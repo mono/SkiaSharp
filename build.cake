@@ -25,8 +25,10 @@ using NuGet.Versioning;
 
 var TARGET = Argument ("t", Argument ("target", "Default"));
 var VERBOSITY = Argument ("v", Argument ("verbosity", Verbosity.Normal));
-var BUILD_ARCH = Argument ("buildarch", EnvironmentVariable ("BUILD_ARCH") ?? "").ToLower ().Split (',');
-var SKIP_EXTERNALS = Argument ("skipexternals", "").ToLower ().Split (',');
+var BUILD_ARCH = Argument ("buildarch", EnvironmentVariable ("BUILD_ARCH") ?? "")
+    .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+var SKIP_EXTERNALS = Argument ("skipexternals", "")
+    .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAllPlatforms", false));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
 var AZURE_BUILD_ID = Argument ("azureBuildId", "");
@@ -520,8 +522,8 @@ Information ("");
 Information ("Arguments:");
 Information ("  Target:                           {0}", TARGET);
 Information ("  Verbosity:                        {0}", VERBOSITY);
-Information ("  Skip externals:                   {0}", SKIP_EXTERNALS);
-Information ("  Build architectures:              {0}", BUILD_ARCH);
+Information ("  Skip externals:                   {0}", string.Join (", ", SKIP_EXTERNALS));
+Information ("  Build architectures:              {0}", string.Join (", ", BUILD_ARCH));
 Information ("  Print all environment variables:  {0}", PRINT_ALL_ENV_VARS);
 Information ("  Pack all platforms:               {0}", PACK_ALL_PLATFORMS);
 Information ("  Azure build ID:                   {0}", AZURE_BUILD_ID);
