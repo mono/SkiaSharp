@@ -51,18 +51,48 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-tizen
           condition: false # TODO: TIZEN INSTALL BUGS
-      - template: azure-templates-bootstrapper.yml # Build Native UWP (Windows)
+      - template: azure-templates-bootstrapper.yml # Build Native UWP|x86 (Windows)
         parameters:
-          name: native_uwp_windows
-          displayName: Build Native UWP (Windows)
+          name: native_uwp_x86_windows
+          displayName: Build Native UWP|x86 (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-uwp
-      - template: azure-templates-bootstrapper.yml # Build Native Win32 (Windows)
+          additionalArgs: --buildarch=x86
+      - template: azure-templates-bootstrapper.yml # Build Native UWP|x64 (Windows)
         parameters:
-          name: native_win32_windows
-          displayName: Build Native Win32 (Windows)
+          name: native_uwp_x64_windows
+          displayName: Build Native UWP|x64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-uwp
+          additionalArgs: --buildarch=x64
+      - template: azure-templates-bootstrapper.yml # Build Native UWP|arm (Windows)
+        parameters:
+          name: native_uwp_arm_windows
+          displayName: Build Native UWP|arm (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-uwp
+          additionalArgs: --buildarch=arm
+      - template: azure-templates-bootstrapper.yml # Build Native UWP|arm64 (Windows)
+        parameters:
+          name: native_uwp_arm64_windows
+          displayName: Build Native UWP|arm64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-uwp
+          additionalArgs: --buildarch=arm64
+      - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Windows)
+        parameters:
+          name: native_win32_x86_windows
+          displayName: Build Native Win32|x86 (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-windows
+          additionalArgs: --buildarch=x86
+      - template: azure-templates-bootstrapper.yml # Build Native Win32|x64 (Windows)
+        parameters:
+          name: native_win32_x64_windows
+          displayName: Build Native Win32|x64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-windows
+          additionalArgs: --buildarch=x64
       # NATIVE JOBS - MAC
       - template: azure-templates-bootstrapper.yml # Build Native Android (macOS)
         parameters:
@@ -139,8 +169,12 @@ stages:
             - native_android_windows
             # - native_tizen_windows
             - native_tizen_linux
-            - native_uwp_windows
-            - native_win32_windows
+            - native_uwp_x86_windows
+            - native_uwp_x64_windows
+            - native_uwp_arm_windows
+            - native_uwp_arm64_windows
+            - native_win32_x86_windows
+            - native_win32_x64_windows
       - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
         parameters:
           name: managed_macos
@@ -186,13 +220,14 @@ stages:
           displayName: Package NuGets [No Dependencies]
           vmImage: $(VM_IMAGE_WINDOWS)
           target: nuget-only
+          additionalArgs: --packall=true
           shouldPublish: false
           requiredArtifacts:
             - managed_nodependencies_linux
             - managed_macos
             - managed_windows
           postBuildSteps:
-            - powershell: |
+            - pwsh: |
                 $platforms = (Get-ChildItem -Path ./output/native/*) | Where-Object { $_.Name -NotMatch "linux" }
                 Write-Host "Removing the following platforms:"
                 $platforms | Foreach-Object { Write-Host $_.Name }
@@ -218,13 +253,14 @@ stages:
           displayName: Package NuGets
           vmImage: $(VM_IMAGE_WINDOWS)
           target: nuget-only
+          additionalArgs: --packall=true
           shouldPublish: false
           requiredArtifacts:
             - managed_linux
             - managed_macos
             - managed_windows
           postBuildSteps:
-            - powershell: |
+            - pwsh: |
                 $nupkgs = (Get-ChildItem -Path ./output/nugets/*) | Where-Object { $_.Name -Match "NoDependencies" }
                 Write-Host "Removing the following packages:"
                 $nupkgs | Foreach-Object { Write-Host $_.Name }
@@ -258,7 +294,7 @@ stages:
             inputs:
               artifactName: nuget-default
               downloadPath: 'download-temp'
-          - powershell: |
+          - pwsh: |
               New-Item '.\output\nugets' -Type Directory -Force | Out-Null
               Get-ChildItem '.\download-temp\nuget-nodependencies\' | Copy-Item -Destination '.\output\nugets' -Recurse -Force
               Get-ChildItem '.\download-temp\nuget-default\' | Copy-Item -Destination '.\output\nugets' -Recurse -Force
@@ -296,7 +332,8 @@ stages:
           additionalArgs: --skipExternals="all"
           shouldPublish: false
           requiredArtifacts:
-            - native_win32_windows
+            - native_win32_x86_windows
+            - native_win32_x64_windows
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the .NET Framework test results
@@ -407,7 +444,7 @@ stages:
           requiredArtifacts:
             - nuget
           preBuildSteps:
-            - powershell: |
+            - pwsh: |
                 New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
                 Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
               displayName: Copy the *.nupkgs into the correct folder for the samples
@@ -436,7 +473,7 @@ stages:
             - task: InstallAppleProvisioningProfile@1
               inputs:
                 provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
-            - powershell: |
+            - pwsh: |
                 New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
                 Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
               displayName: Copy the *.nupkgs into the correct folder for the samples
@@ -451,7 +488,7 @@ stages:
           requiredArtifacts:
             - nuget
           preBuildSteps:
-            - powershell: |
+            - pwsh: |
                 New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
                 Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
               displayName: Copy the *.nupkgs into the correct folder for the samples

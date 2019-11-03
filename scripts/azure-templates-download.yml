@@ -24,7 +24,7 @@ jobs:
           downloadType: 'single'
           artifactName: ${{ parameters.name }}
           downloadPath: 'download-temp'
-      - powershell: |
+      - pwsh: |
           New-Item '.\output\' -Type Directory -Force | Out-Null
           Get-ChildItem '.\download-temp\${{ parameters.name }}\' | Copy-Item -Destination '.\output\' -Recurse -Force
           Remove-Item '.\download-temp\${{ parameters.name }}\' -Recurse -Force
