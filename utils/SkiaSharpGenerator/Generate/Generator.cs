@@ -13,7 +13,7 @@ namespace SkiaSharpGenerator
 		private readonly Dictionary<string, TypeMapping> mappings = new Dictionary<string, TypeMapping>();
 		private readonly Dictionary<string, bool> skiaTypes = new Dictionary<string, bool>();
 
-		private CppCompilation? compilation;
+		private CppCompilation compilation = new CppCompilation();
 		private Config config = new Config();
 
 		public Generator(string skiaRoot, string configFile, TextWriter outputWriter)
@@ -47,32 +47,7 @@ namespace SkiaSharpGenerator
 
 			ParseSkiaHeaders();
 
-			// load all the classes/structs
-			var typedefs = compilation.Classes;
-			foreach (var klass in typedefs)
-			{
-				var type = klass.GetDisplayName();
-				var map = new TypeMapping { CsType = Utils.CleanName(type) };
-				mappings[type] = map;
-			}
-
-			// load all the enums
-			var enums = compilation.Enums;
-			foreach (var enm in enums)
-			{
-				var type = enm.GetDisplayName();
-				var map = new TypeMapping { CsType = Utils.CleanName(type) };
-				mappings[type] = map;
-			}
-
-			// load the mapping file
-			foreach (var mapping in config.Mappings.Types)
-			{
-				var map = mapping.Value;
-				if (string.IsNullOrEmpty(map.CsType))
-					map.CsType = Utils.CleanName(mapping.Key);
-				mappings[mapping.Key] = map;
-			}
+			UpdatingMappings();
 
 			WriteApi(OutputWriter);
 
@@ -104,7 +79,7 @@ namespace SkiaSharpGenerator
 
 			compilation = CppParser.ParseFiles(headers, options);
 
-			if (compilation.HasErrors)
+			if (compilation == null || compilation.HasErrors)
 			{
 				Log?.LogError("Parsing headers failed.");
 				throw new Exception("Parsing headers failed.");
@@ -163,6 +138,38 @@ namespace SkiaSharpGenerator
 			foreach (var mapping in standardMappings)
 			{
 				var map = new TypeMapping { CsType = mapping.Value };
+				mappings[mapping.Key] = map;
+			}
+		}
+
+		private void UpdatingMappings()
+		{
+			Log?.LogVerbose("Parsing skia headers...");
+
+			// load all the classes/structs
+			var typedefs = compilation.Classes;
+			foreach (var klass in typedefs)
+			{
+				var type = klass.GetDisplayName();
+				var map = new TypeMapping { CsType = Utils.CleanName(type) };
+				mappings[type] = map;
+			}
+
+			// load all the enums
+			var enums = compilation.Enums;
+			foreach (var enm in enums)
+			{
+				var type = enm.GetDisplayName();
+				var map = new TypeMapping { CsType = Utils.CleanName(type) };
+				mappings[type] = map;
+			}
+
+			// load the mapping file
+			foreach (var mapping in config.Mappings.Types)
+			{
+				var map = mapping.Value;
+				if (string.IsNullOrEmpty(map.CsType))
+					map.CsType = Utils.CleanName(mapping.Key);
 				mappings[mapping.Key] = map;
 			}
 		}
@@ -352,6 +359,8 @@ namespace SkiaSharpGenerator
 					if (map.IsInternal)
 						visibility = "internal";
 					writer.WriteLine($"\t// {type}");
+					if (map.IsFlags)
+						writer.WriteLine($"\t[Flags]");
 					writer.WriteLine($"\t{visibility} enum {name} {{");
 					foreach (var field in enm.Items)
 					{
