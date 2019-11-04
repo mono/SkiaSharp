@@ -162,11 +162,21 @@ namespace SkiaSharp
 			SkiaApi.sk_rrect_offset (Handle, dx, dy);
 		}
 
-		public SKRoundRect Transform (SKMatrix matrix)
+		public bool TryTransform (SKMatrix matrix, out SKRoundRect transformed)
 		{
 			var destHandle = SkiaApi.sk_rrect_new ();
 			if (SkiaApi.sk_rrect_transform (Handle, ref matrix, destHandle)) {
-				return new SKRoundRect (destHandle, true);
+				transformed = new SKRoundRect (destHandle, true);
+				return true;
+			}
+			transformed = null;
+			return false;
+		}
+
+		public SKRoundRect Transform (SKMatrix matrix)
+		{
+			if (TryTransform (matrix, out var transformed)) {
+				return transformed;
 			}
 			return null;
 		}
