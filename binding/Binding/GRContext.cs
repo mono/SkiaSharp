@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public class GRContext : SKObject, ISKReferenceCounted
+	public unsafe class GRContext : SKObject, ISKReferenceCounted
 	{
 		[Preserve]
 		internal GRContext (IntPtr h, bool owns)
@@ -79,8 +79,11 @@ namespace SkiaSharp
 
 		public void GetResourceCacheLimits (out int maxResources, out long maxResourceBytes)
 		{
-			SkiaApi.gr_context_get_resource_cache_limits (Handle, out maxResources, out var maxResourceBytesPtr);
-			maxResourceBytes = (long)maxResourceBytesPtr;
+			IntPtr maxResBytes;
+			fixed (int* maxRes = &maxResources) {
+				SkiaApi.gr_context_get_resource_cache_limits (Handle, maxRes, &maxResBytes);
+			}
+			maxResourceBytes = (long)maxResBytes;
 		}
 
 		public void SetResourceCacheLimits (int maxResources, long maxResourceBytes)
@@ -90,8 +93,11 @@ namespace SkiaSharp
 
 		public void GetResourceCacheUsage (out int maxResources, out long maxResourceBytes)
 		{
-			SkiaApi.gr_context_get_resource_cache_usage (Handle, out maxResources, out var maxResourceBytesPtr);
-			maxResourceBytes = (long)maxResourceBytesPtr;
+			IntPtr maxResBytes;
+			fixed (int* maxRes = &maxResources) {
+				SkiaApi.gr_context_get_resource_cache_usage (Handle, maxRes, &maxResBytes);
+			}
+			maxResourceBytes = (long)maxResBytes;
 		}
 		
 		public void ResetContext (GRGlBackendState state)

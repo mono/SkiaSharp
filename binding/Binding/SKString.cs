@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	internal class SKString : SKObject
+	internal unsafe class SKString : SKObject
 	{
 		[Preserve]
 		internal SKString (IntPtr handle, bool owns)
@@ -20,13 +20,20 @@ namespace SkiaSharp
 		}
 		
 		public SKString (byte [] src, long length)
-			: base (SkiaApi.sk_string_new_with_copy (src, (IntPtr)length), true)
+			: base (CreateCopy (src, length), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to copy the SKString instance.");
 			}
 		}
 		
+		private static IntPtr CreateCopy (byte [] src, long length)
+		{
+			fixed (byte* s = src) {
+				return SkiaApi.sk_string_new_with_copy (s, (IntPtr)length);
+			}
+		}
+
 		public SKString (byte [] src)
 			: this (src, src.Length)
 		{

@@ -4,7 +4,7 @@ namespace SkiaSharp
 {
 	// TODO: `FilterColor` may be useful
 
-	public class SKColorFilter : SKObject, ISKReferenceCounted
+	public unsafe class SKColorFilter : SKObject, ISKReferenceCounted
 	{
 		public const int ColorMatrixSize = 20;
 		public const int TableMaxLength = 256;
@@ -43,7 +43,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException(nameof(matrix));
 			if (matrix.Length != 20)
 				throw new ArgumentException("Matrix must have a length of 20.", nameof(matrix));
-			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_color_matrix(matrix));
+			fixed (float* m = matrix) {
+				return GetObject<SKColorFilter> (SkiaApi.sk_colorfilter_new_color_matrix (m));
+			}
 		}
 
 		public static SKColorFilter CreateLumaColor()
@@ -57,7 +59,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException(nameof(table));
 			if (table.Length != TableMaxLength)
 				throw new ArgumentException($"Table must have a length of {TableMaxLength}.", nameof(table));
-			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_table(table));
+			fixed (byte* t = table) {
+				return GetObject<SKColorFilter> (SkiaApi.sk_colorfilter_new_table (t));
+			}
 		}
 
 		public static SKColorFilter CreateTable(byte[] tableA, byte[] tableR, byte[] tableG, byte[] tableB)
@@ -71,12 +75,17 @@ namespace SkiaSharp
 			if (tableB != null && tableB.Length != TableMaxLength)
 				throw new ArgumentException($"Table B must have a length of {TableMaxLength}.", nameof(tableB));
 
-			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_table_argb(tableA, tableR, tableG, tableB));
+			fixed (byte* a = tableA)
+			fixed (byte* r = tableR)
+			fixed (byte* g = tableG)
+			fixed (byte* b = tableB) {
+				return GetObject<SKColorFilter> (SkiaApi.sk_colorfilter_new_table_argb (a, r, g, b));
+			}
 		}
 
 		public static SKColorFilter CreateHighContrast(SKHighContrastConfig config)
 		{
-			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_high_contrast(ref config));
+			return GetObject<SKColorFilter>(SkiaApi.sk_colorfilter_new_high_contrast(&config));
 		}
 
 		public static SKColorFilter CreateHighContrast(bool grayscale, SKHighContrastConfigInvertStyle invertStyle, float contrast)

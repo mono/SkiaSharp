@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public static class SKSwizzle
+	public static unsafe class SKSwizzle
 	{
 		public static void SwapRedBlue (IntPtr pixels, int count) =>
 			SwapRedBlue (pixels, pixels, count);
@@ -16,7 +16,7 @@ namespace SkiaSharp
 				throw new ArgumentException (nameof (src));
 			}
 
-			SkiaApi.sk_swizzle_swap_rb (dest, src, count);
+			SkiaApi.sk_swizzle_swap_rb ((uint*)dest, (uint*)src, count);
 		}
 
 		public static void SwapRedBlue (ReadOnlySpan<byte> pixels, int count) =>
@@ -31,12 +31,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (src));
 			}
 
-			unsafe {
-				fixed (byte* d = dest) {
-					fixed (byte* s = src) {
-						SkiaApi.sk_swizzle_swap_rb ((IntPtr)d, (IntPtr)s, count);
-					}
-				}
+			fixed (byte* d = dest)
+			fixed (byte* s = src) {
+				SkiaApi.sk_swizzle_swap_rb ((uint*)d, (uint*)s, count);
 			}
 		}
 	}

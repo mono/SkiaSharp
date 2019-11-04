@@ -1,0 +1,366 @@
+// configuration for the libSkiaSharp binary
+{
+  "dllName": "SKIA",
+  "namespace": "SkiaSharp",
+  "className": "SkiaApi",
+  "includeDirs": [
+  ],
+  "headers": {
+    "include/c": [ "sk_*", "gr_*" ],
+    "include/xamarin": [ "sk_*" ]
+  },
+  "mappings": {
+    "types": {
+      // colors are actually uint, but we map them to structs
+      "sk_color_t": {
+        "cs": "SKColor"
+      },
+      "sk_pmcolor_t": {
+        "cs": "SKPMColor"
+      },
+      // type aliases
+      "sk_vector_t": {
+        "cs": "SKPoint"
+      },
+      "sk_font_table_tag_t": {
+        "cs": "UInt32"
+      },
+      // the rest
+      "gr_pixelconfig_t": {
+        "cs": "GRPixelConfig"
+      },
+      "gr_surfaceorigin_t": {
+        "cs": "GRSurfaceOrigin"
+      },
+      "gr_backend_t": {
+        "members": {
+          "OPENGL_GR_BACKEND": "OpenGL"
+        }
+      },
+      "gr_gl_framebufferinfo_t": {
+        "cs": "GRGlFramebufferInfo",
+        "members": {
+          "fFBOID": "FramebufferObjectId"
+        }
+      },
+      "gr_gl_textureinfo_t": {
+        "cs": "GRGlTextureInfo",
+        "members": {
+          "fID": "Id"
+        }
+      },
+      "sk_jpegencoder_options_t": {
+        "cs": "SKJpegEncoderOptions"
+      },
+      "sk_colorspace_transfer_fn_t": {
+        "cs": "SKColorSpaceTransferFn"
+      },
+      "sk_colorspaceprimaries_t": {
+        "cs": "SKColorSpacePrimaries"
+      },
+      "sk_jpegencoder_alphaoption_t": {
+        "cs": "SKJpegEncoderAlphaOption"
+      },
+      "sk_jpegencoder_downsample_t": {
+        "cs": "SKJpegEncoderDownsample"
+      },
+      "sk_colorspace_render_target_gamma_t": {
+        "cs": "SKColorSpaceRenderTargetGamma"
+      },
+      "sk_colorspace_type_t": {
+        "cs": "SKColorSpaceType"
+      },
+      "sk_gamma_named_t": {
+        "cs": "SKNamedGamma"
+      },
+      "sk_colorspace_gamut_t": {
+        "cs": "SKColorSpaceGamut"
+      },
+      "sk_matrix_convolution_tilemode_t": {
+        "cs": "SKMatrixConvolutionTileMode"
+      },
+      "sk_path_effect_1d_style_t": {
+        "cs": "SKPath1DPathEffectStyle"
+      },
+      "sk_path_effect_trim_mode_t": {
+        "cs": "SKTrimPathEffectMode"
+      },
+      "sk_highcontrastconfig_t": {
+        "cs": "SKHighContrastConfig"
+      },
+      "sk_vertices_vertex_mode_t": {
+        "cs": "SKVertexMode"
+      },
+      "sk_webpencoder_compression_t": {
+        "cs": "SKWebpEncoderCompression"
+      },
+      "sk_webpencoder_options_t": {
+        "cs": "SKWebpEncoderOptions"
+      },
+      "sk_alphatype_t": {
+        "cs": "SKAlphaType"
+      },
+      "sk_colortype_t": {
+        "cs": "SKColorType"
+      },
+      "sk_shader_tilemode_t": {
+        "cs": "SKShaderTileMode"
+      },
+      "sk_codec_frameinfo_t": {
+        "cs": "SKCodecFrameInfo",
+        "members": {
+          // TODO: spelling error
+          "fFullyReceived": "FullyRecieved"
+        }
+      },
+      "sk_codecanimation_disposalmethod_t": {
+        "cs": "SKCodecAnimationDisposalMethod",
+        "members": {
+          "RESTORE_BG_COLOR_SK_CODEC_ANIMATION_DISPOSAL_METHOD": "RestoreBackgroundColor"
+        }
+      },
+      "sk_paint_hinting_t": {
+        "members": {
+          "SLIGHT_HINTING_SK_PAINT_HINTING": "Slight",
+          "NORMAL_HINTING_SK_PAINT_HINTING": "Normal",
+          "FULL_HINTING_SK_PAINT_HINTING": "Full"
+        }
+      },
+      "sk_ipoint_t": {
+        "cs": "SKPointI"
+      },
+      "sk_encodedorigin_t": {
+        "cs": "SKEncodedOrigin"
+      },
+      "sk_irect_t": {
+        "cs": "SKRectI"
+      },
+      "sk_blurstyle_t": {
+        "cs": "SKBlurStyle"
+      },
+      "sk_blendmode_t": {
+        "cs": "SKBlendMode",
+        "members": {
+          "SRCOVER_SK_BLENDMODE": "SrcOver",
+          "DSTOVER_SK_BLENDMODE": "DstOver",
+          "SRCIN_SK_BLENDMODE": "SrcIn",
+          "DSTIN_SK_BLENDMODE": "DstIn",
+          "SRCOUT_SK_BLENDMODE": "SrcOut",
+          "DSTOUT_SK_BLENDMODE": "DstOut",
+          "SRCATOP_SK_BLENDMODE": "SrcATop",
+          "DSTATOP_SK_BLENDMODE": "DstATop",
+          "SOFTLIGHT_SK_BLENDMODE": "SoftLight",
+          "HARDLIGHT_SK_BLENDMODE": "HardLight",
+          "COLORDODGE_SK_BLENDMODE": "ColorDodge",
+          "COLORBURN_SK_BLENDMODE": "ColorBurn"
+        }
+      },
+      "sk_region_op_t": {
+        "cs": "SKRegionOperation",
+        "members": {
+          "XOR_SK_REGION_OP": "XOR"
+        }
+      },
+      "sk_bitmap_allocflags_t": {
+        "cs": "SKBitmapAllocFlags",
+        "flags": true
+      },
+      "sk_clipop_t": {
+        "cs": "SKClipOperation"
+      },
+      "sk_pathop_t": {
+        "cs": "SKPathOp"
+      },
+      "sk_lattice_recttype_t": {
+        "cs": "SKLatticeRectType"
+      },
+      "sk_rrect_type_t": {
+        "cs": "SKRoundRectType"
+      },
+      "sk_rrect_corner_t": {
+        "cs": "SKRoundRectCorner"
+      },
+      "sk_codec_zero_initialized_t": {
+        "cs": "SKZeroInitialized"
+      },
+      "sk_highcontrastconfig_invertstyle_t": {
+        "cs": "SKHighContrastConfigInvertStyle"
+      },
+      "sk_size_t": {
+        "members": {
+          "w": "Width",
+          "h": "Height"
+        }
+      },
+      "sk_isize_t": {
+        "cs": "SKSizeI",
+        "members": {
+          "w": "Width",
+          "h": "Height"
+        }
+      },
+      "sk_path_filltype_t": {
+        "cs": "SKPathFillType",
+        "members": {
+          "EVENODD_SK_PATH_FILLTYPE": "EvenOdd",
+          "INVERSE_EVENODD_SK_PATH_FILLTYPE": "InverseEvenOdd"
+        }
+      },
+      "sk_path_direction_t": {
+        "members": {
+          "CW_SK_PATH_DIRECTION": "Clockwise",
+          "CCW_SK_PATH_DIRECTION": "CounterClockwise"
+        }
+      },
+      "sk_pixelgeometry_t": {
+        "cs": "SKPixelGeometry",
+        "members": {
+          "RGB_H_SK_PIXELGEOMETRY": "RgbHorizontal",
+          "BGR_H_SK_PIXELGEOMETRY": "BgrHorizontal",
+          "RGB_V_SK_PIXELGEOMETRY": "RgbVertical",
+          "BGR_V_SK_PIXELGEOMETRY": "BgrVertical"
+        }
+      },
+      "sk_mask_format_t": {
+        "members": {
+          "BW_SK_MASK_FORMAT": "BW"
+        }
+      },
+      "sk_fontmetrics_t": {
+        "cs": "SKFontMetrics",
+        "properties": false
+      },
+      "sk_pngencoder_options_t": {
+        "cs": "SKPngEncoderOptions",
+        "properties": false
+      },
+      "sk_mask_t": {
+        "properties": false
+      },
+      "sk_matrix44_type_mask_t": {
+        "flags": true
+      },
+      "sk_path_segment_mask_t": {
+        "flags": true
+      },
+      "sk_crop_rect_flags_t": {
+        "flags": true
+      },
+      "sk_surfaceprops_flags_t": {
+        "cs": "SKSurfacePropsFlags",
+        "flags": true
+      },
+      "sk_pngencoder_filterflags_t": {
+        "cs": "SKPngEncoderFilterFlags",
+        "flags": true,
+        "members": {
+          "ALL_SK_PNGENCODER_FILTER_FLAGS": "AllFilters",
+          "ZERO_SK_PNGENCODER_FILTER_FLAGS": "NoFilters"
+        }
+      },
+      "sk_pathmeasure_matrixflags_t": {
+        "cs": "SKPathMeasureMatrixFlags",
+        "flags": true,
+        "members": {
+          "GET_POS_AND_TAN_SK_PATHMEASURE_MATRIXFLAGS": "GetPositionAndTangent"
+        }
+      },
+      // internal types
+      "sk_time_datetime_t": {
+        "cs": "SKTimeDateTimeInternal",
+        "internal": true
+      },
+      "sk_textblob_builder_runbuffer_t": {
+        "cs": "SKRunBufferInternal",
+        "internal": true
+      },
+      "sk_managedstream_procs_t": {
+        "cs": "SKManagedStreamDelegates",
+        "internal": true
+      },
+      "sk_managedwstream_procs_t": {
+        "cs": "SKManagedWStreamDelegates",
+        "internal": true
+      },
+      "sk_manageddrawable_procs_t": {
+        "cs": "SKManagedDrawableDelegates",
+        "internal": true
+      },
+      "sk_imageinfo_t": {
+        "cs": "SKImageInfoNative",
+        "internal": true
+      },
+      "sk_codec_options_t": {
+        "cs": "SKCodecOptionsInternal",
+        "internal": true
+      },
+      "sk_document_pdf_metadata_t": {
+        "cs": "SKDocumentPdfMetadataInternal",
+        "internal": true
+      },
+      "sk_lattice_t": {
+        "cs": "SKLatticeInternal",
+        "internal": true
+      }
+    },
+    "functions": {
+      // delegates
+      "gr_gl_get_proc": {
+        "cs": "GRGlGetProcProxyDelegate",
+        "parameters": {
+          "-1": "IntPtr",
+          "1": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      },
+      "sk_managedwstream_write_proc": {
+        "cs": "SKManagedWStreamWriteProxyDelegate"
+      },
+      "sk_managedwstream_flush_proc": {
+        "cs": "SKManagedWStreamFlushProxyDelegate"
+      },
+      "sk_managedwstream_bytesWritten_proc": {
+        "cs": "SKManagedWStreamBytesWrittenProxyDelegate"
+      },
+      "sk_managedwstream_destroy_proc": {
+        "cs": "SKManagedWStreamDestroyProxyDelegate"
+      },
+      // functions
+      "gr_glinterface_has_extension": {
+        "parameters": {
+          "1": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      },
+      "sk_fontmgr_match_family": {
+        "parameters": {
+          "1": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      },
+      "sk_fontmgr_match_family_style": {
+        "parameters": {
+          "1": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      },
+      "sk_fontmgr_match_family_style_character": {
+        "parameters": {
+          "1": "[MarshalAs (UnmanagedType.LPStr)] String",
+          "3": "[MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[]"
+        }
+      },
+      "sk_typeface_create_from_name_with_font_style": {
+        "parameters": {
+          "0": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      },
+      "sk_path_parse_svg_string": {
+        "parameters": {
+          "1": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      },
+      "sk_wstream_write_text": {
+        "parameters": {
+          "1": "[MarshalAs (UnmanagedType.LPStr)] String"
+        }
+      }
+    }
+  }
+}

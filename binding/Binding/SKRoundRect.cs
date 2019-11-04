@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public class SKRoundRect : SKObject
+	public unsafe class SKRoundRect : SKObject
 	{
 		[Preserve]
 		internal SKRoundRect (IntPtr handle, bool owns)
@@ -50,7 +50,8 @@ namespace SkiaSharp
 
 		public SKRect Rect {
 			get {
-				SkiaApi.sk_rrect_get_rect (Handle, out var rect);
+				SKRect rect;
+				SkiaApi.sk_rrect_get_rect (Handle, &rect);
 				return rect;
 			}
 		}
@@ -93,22 +94,22 @@ namespace SkiaSharp
 
 		public void SetRect (SKRect rect)
 		{
-			SkiaApi.sk_rrect_set_rect (Handle, ref rect);
+			SkiaApi.sk_rrect_set_rect (Handle, &rect);
 		}
 
 		public void SetRect (SKRect rect, float xRadius, float yRadius)
 		{
-			SkiaApi.sk_rrect_set_rect_xy (Handle, ref rect, xRadius, yRadius);
+			SkiaApi.sk_rrect_set_rect_xy (Handle, &rect, xRadius, yRadius);
 		}
 
 		public void SetOval (SKRect rect)
 		{
-			SkiaApi.sk_rrect_set_oval (Handle, ref rect);
+			SkiaApi.sk_rrect_set_oval (Handle, &rect);
 		}
 
 		public void SetNinePatch (SKRect rect, float leftRadius, float topRadius, float rightRadius, float bottomRadius)
 		{
-			SkiaApi.sk_rrect_set_nine_patch (Handle, ref rect, leftRadius, topRadius, rightRadius, bottomRadius);
+			SkiaApi.sk_rrect_set_nine_patch (Handle, &rect, leftRadius, topRadius, rightRadius, bottomRadius);
 		}
 
 		public void SetRectRadii (SKRect rect, SKPoint[] radii)
@@ -118,17 +119,20 @@ namespace SkiaSharp
 			if (radii.Length != 4)
 				throw new ArgumentException ("Radii must have a length of 4.", nameof (radii));
 
-			SkiaApi.sk_rrect_set_rect_radii (Handle, ref rect, radii);
+			fixed (SKPoint* r = radii) {
+				SkiaApi.sk_rrect_set_rect_radii (Handle, &rect, r);
+			}
 		}
 
 		public bool Contains (SKRect rect)
 		{
-			return SkiaApi.sk_rrect_contains (Handle, ref rect);
+			return SkiaApi.sk_rrect_contains (Handle, &rect);
 		}
 
 		public SKPoint GetRadii (SKRoundRectCorner corner)
 		{
-			SkiaApi.sk_rrect_get_radii (Handle, corner, out var radii);
+			SKPoint radii;
+			SkiaApi.sk_rrect_get_radii (Handle, corner, &radii);
 			return radii;
 		}
 
@@ -165,7 +169,7 @@ namespace SkiaSharp
 		public SKRoundRect Transform (SKMatrix matrix)
 		{
 			var destHandle = SkiaApi.sk_rrect_new ();
-			if (SkiaApi.sk_rrect_transform (Handle, ref matrix, destHandle)) {
+			if (SkiaApi.sk_rrect_transform (Handle, &matrix, destHandle)) {
 				return new SKRoundRect (destHandle, true);
 			}
 			return null;

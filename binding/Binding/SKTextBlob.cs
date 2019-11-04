@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public class SKTextBlob : SKObject, ISKNonVirtualReferenceCounted
+	public unsafe class SKTextBlob : SKObject, ISKNonVirtualReferenceCounted
 	{
 		[Preserve]
 		internal SKTextBlob (IntPtr x, bool owns)
@@ -19,7 +19,8 @@ namespace SkiaSharp
 
 		public SKRect Bounds {
 			get {
-				SkiaApi.sk_textblob_get_bounds (Handle, out var bounds);
+				SKRect bounds;
+				SkiaApi.sk_textblob_get_bounds (Handle, &bounds);
 				return bounds;
 			}
 		}
@@ -27,7 +28,7 @@ namespace SkiaSharp
 		public uint UniqueId => SkiaApi.sk_textblob_get_unique_id (Handle);
 	}
 
-	public class SKTextBlobBuilder : SKObject
+	public unsafe class SKTextBlobBuilder : SKObject
 	{
 		[Preserve]
 		internal SKTextBlobBuilder (IntPtr x, bool owns)
@@ -258,16 +259,14 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (font));
 
 			using (var lang = new SKString ()) {
-				unsafe {
-					SKRunBufferInternal runbuffer;
-					if (bounds is SKRect b) {
-						SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.Handle, count, x, y, textByteCount, lang.Handle, &b, out runbuffer);
-					} else {
-						SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.Handle, count, x, y, textByteCount, lang.Handle, (SKRect*)IntPtr.Zero, out runbuffer);
-					}
-
-					return new SKRunBuffer (runbuffer, count, textByteCount);
+				SKRunBufferInternal runbuffer;
+				if (bounds is SKRect b) {
+					SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.Handle, count, x, y, textByteCount, lang.Handle, &b, &runbuffer);
+				} else {
+					SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.Handle, count, x, y, textByteCount, lang.Handle, null, &runbuffer);
 				}
+
+				return new SKRunBuffer (runbuffer, count, textByteCount);
 			}
 		}
 
@@ -288,16 +287,14 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (font));
 
 			using (var lang = new SKString ()) {
-				unsafe {
-					SKRunBufferInternal runbuffer;
-					if (bounds is SKRect b) {
-						SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.Handle, count, y, textByteCount, lang.Handle, &b, out runbuffer);
-					} else {
-						SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.Handle, count, y, textByteCount, lang.Handle, (SKRect*)IntPtr.Zero, out runbuffer);
-					}
-
-					return new SKHorizontalRunBuffer (runbuffer, count, textByteCount);
+				SKRunBufferInternal runbuffer;
+				if (bounds is SKRect b) {
+					SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.Handle, count, y, textByteCount, lang.Handle, &b, &runbuffer);
+				} else {
+					SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.Handle, count, y, textByteCount, lang.Handle, null, &runbuffer);
 				}
+
+				return new SKHorizontalRunBuffer (runbuffer, count, textByteCount);
 			}
 		}
 
@@ -318,16 +315,14 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (font));
 
 			using (var lang = new SKString ()) {
-				unsafe {
-					SKRunBufferInternal runbuffer;
-					if (bounds is SKRect b) {
-						SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.Handle, count, textByteCount, lang.Handle, &b, out runbuffer);
-					} else {
-						SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.Handle, count, textByteCount, lang.Handle, (SKRect*)IntPtr.Zero, out runbuffer);
-					}
-
-					return new SKPositionedRunBuffer (runbuffer, count, textByteCount);
+				SKRunBufferInternal runbuffer;
+				if (bounds is SKRect b) {
+					SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.Handle, count, textByteCount, lang.Handle, &b, &runbuffer);
+				} else {
+					SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.Handle, count, textByteCount, lang.Handle, null, &runbuffer);
 				}
+
+				return new SKPositionedRunBuffer (runbuffer, count, textByteCount);
 			}
 		}
 	}

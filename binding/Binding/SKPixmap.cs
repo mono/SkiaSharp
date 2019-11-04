@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public class SKPixmap : SKObject
+	public unsafe class SKPixmap : SKObject
 	{
 		private const string UnableToCreateInstanceMessage = "Unable to create a new SKPixmap instance.";
 
@@ -35,7 +35,7 @@ namespace SkiaSharp
 			: this (IntPtr.Zero, true)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			Handle = SkiaApi.sk_pixmap_new_with_params (ref cinfo, addr, (IntPtr)rowBytes);
+			Handle = SkiaApi.sk_pixmap_new_with_params (&cinfo, (void*)addr, (IntPtr)rowBytes);
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException (UnableToCreateInstanceMessage);
 			}
@@ -61,12 +61,13 @@ namespace SkiaSharp
 		public void Reset (SKImageInfo info, IntPtr addr, int rowBytes)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			SkiaApi.sk_pixmap_reset_with_params (Handle, ref cinfo, addr, (IntPtr)rowBytes);
+			SkiaApi.sk_pixmap_reset_with_params (Handle, &cinfo, (void*)addr, (IntPtr)rowBytes);
 		}
 
 		public SKImageInfo Info {
 			get {
-				SkiaApi.sk_pixmap_get_info (Handle, out var cinfo);
+				SKImageInfoNative cinfo;
+				SkiaApi.sk_pixmap_get_info (Handle, &cinfo);
 				return SKImageInfoNative.ToManaged (ref cinfo);
 			}
 		}
@@ -92,16 +93,14 @@ namespace SkiaSharp
 		public int BytesSize => Info.BytesSize;
 
 		public IntPtr GetPixels () =>
-			SkiaApi.sk_pixmap_get_pixels (Handle);
+			(IntPtr)SkiaApi.sk_pixmap_get_pixels (Handle);
 
 		public IntPtr GetPixels (int x, int y) =>
-			SkiaApi.sk_pixmap_get_pixels_with_xy (Handle, x, y);
+			(IntPtr)SkiaApi.sk_pixmap_get_pixels_with_xy (Handle, x, y);
 
 		public ReadOnlySpan<byte> GetPixelSpan ()
 		{
-			unsafe {
-				return new ReadOnlySpan<byte> ((void*)GetPixels (), BytesSize);
-			}
+			return new ReadOnlySpan<byte> ((void*)GetPixels (), BytesSize);
 		}
 
 		public SKColor GetPixelColor (int x, int y)
@@ -134,7 +133,7 @@ namespace SkiaSharp
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY, SKTransferFunctionBehavior behavior)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
-			return SkiaApi.sk_pixmap_read_pixels (Handle, ref cinfo, dstPixels, (IntPtr)dstRowBytes, srcX, srcY, behavior);
+			return SkiaApi.sk_pixmap_read_pixels (Handle, &cinfo, (void*)dstPixels, (IntPtr)dstRowBytes, srcX, srcY, behavior);
 		}
 
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)
@@ -276,7 +275,7 @@ namespace SkiaSharp
 			if (result == null)
 				throw new ArgumentNullException (nameof (result));
 
-			return SkiaApi.sk_pixmap_extract_subset (Handle, result.Handle, ref subset);
+			return SkiaApi.sk_pixmap_extract_subset (Handle, result.Handle, &subset);
 		}
 
 		public bool Erase (SKColor color)
@@ -286,7 +285,7 @@ namespace SkiaSharp
 
 		public bool Erase (SKColor color, SKRectI subset)
 		{
-			return SkiaApi.sk_pixmap_erase_color (Handle, color, ref subset);
+			return SkiaApi.sk_pixmap_erase_color (Handle, color, &subset);
 		}
 
 		public SKPixmap WithColorType (SKColorType newColorType)

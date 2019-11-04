@@ -3,50 +3,41 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	[StructLayout(LayoutKind.Sequential)]
-	internal struct SKImageInfoNative
+	internal partial struct SKImageInfoNative
 	{
-		public IntPtr fColorSpace;
-		public int fWidth;
-		public int fHeight;
-		public SKColorType fColorType;
-		public SKAlphaType fAlphaType;
-
 		public static void UpdateNative (ref SKImageInfo managed, ref SKImageInfoNative native)
 		{
-			native.fColorSpace = managed.ColorSpace == null ? IntPtr.Zero : managed.ColorSpace.Handle;
-			native.fWidth = managed.Width;
-			native.fHeight = managed.Height;
-			native.fColorType = managed.ColorType;
-			native.fAlphaType = managed.AlphaType;
+			native.colorspace = managed.ColorSpace == null ? IntPtr.Zero : managed.ColorSpace.Handle;
+			native.width = managed.Width;
+			native.height = managed.Height;
+			native.colorType = managed.ColorType;
+			native.alphaType = managed.AlphaType;
 		}
 
 		public static SKImageInfoNative FromManaged (ref SKImageInfo managed)
 		{
-			return new SKImageInfoNative
-			{
-				fColorSpace = managed.ColorSpace == null ? IntPtr.Zero : managed.ColorSpace.Handle,
-				fWidth = managed.Width,
-				fHeight = managed.Height,
-				fColorType = managed.ColorType,
-				fAlphaType = managed.AlphaType,
+			return new SKImageInfoNative {
+				colorspace = managed.ColorSpace == null ? IntPtr.Zero : managed.ColorSpace.Handle,
+				width = managed.Width,
+				height = managed.Height,
+				colorType = managed.ColorType,
+				alphaType = managed.AlphaType,
 			};
 		}
 
 		public static SKImageInfo ToManaged (ref SKImageInfoNative native)
 		{
-			return new SKImageInfo
-			{
-				ColorSpace = SKObject.GetObject<SKColorSpace> (native.fColorSpace),
-				Width = native.fWidth,
-				Height = native.fHeight,
-				ColorType = native.fColorType,
-				AlphaType = native.fAlphaType,
+			return new SKImageInfo {
+				ColorSpace = SKObject.GetObject<SKColorSpace> (native.colorspace),
+				Width = native.width,
+				Height = native.height,
+				ColorType = native.colorType,
+				AlphaType = native.alphaType,
 			};
 		}
 	}
 
-	public struct SKImageInfo
+	public unsafe struct SKImageInfo
 	{
 		public static readonly SKImageInfo Empty;
 		public static readonly SKColorType PlatformColorType;
@@ -58,7 +49,13 @@ namespace SkiaSharp
 		static SKImageInfo ()
 		{
 			PlatformColorType = SkiaApi.sk_colortype_get_default_8888 ();
-			SkiaApi.sk_color_get_bit_shift (out PlatformColorAlphaShift, out PlatformColorRedShift, out PlatformColorGreenShift, out PlatformColorBlueShift);
+
+			fixed (int* a = &PlatformColorAlphaShift)
+			fixed (int* r = &PlatformColorRedShift)
+			fixed (int* g = &PlatformColorGreenShift)
+			fixed (int* b = &PlatformColorBlueShift) {
+				SkiaApi.sk_color_get_bit_shift (a, r, g, b);
+			}
 		}
 
 		public int Width { get; set; }
