@@ -10,7 +10,8 @@ namespace SkiaSharpGenerator
 {
 	public class Generator
 	{
-		private readonly Dictionary<string, TypeMapping> mappings = new Dictionary<string, TypeMapping>();
+		private readonly Dictionary<string, TypeMapping> typeMappings = new Dictionary<string, TypeMapping>();
+		private readonly Dictionary<string, FunctionMapping> functionMappings = new Dictionary<string, FunctionMapping>();
 		private readonly Dictionary<string, bool> skiaTypes = new Dictionary<string, bool>();
 
 		private CppCompilation compilation = new CppCompilation();
@@ -138,39 +139,34 @@ namespace SkiaSharpGenerator
 			foreach (var mapping in standardMappings)
 			{
 				var map = new TypeMapping { CsType = mapping.Value };
-				mappings[mapping.Key] = map;
+				typeMappings[mapping.Key] = map;
 			}
 		}
 
 		private void UpdatingMappings()
 		{
-			Log?.LogVerbose("Parsing skia headers...");
-
 			// load all the classes/structs
 			var typedefs = compilation.Classes;
 			foreach (var klass in typedefs)
 			{
-				var type = klass.GetDisplayName();
-				var map = new TypeMapping { CsType = Utils.CleanName(type) };
-				mappings[type] = map;
+				typeMappings[klass.GetDisplayName()] = new TypeMapping();
 			}
 
 			// load all the enums
 			var enums = compilation.Enums;
 			foreach (var enm in enums)
 			{
-				var type = enm.GetDisplayName();
-				var map = new TypeMapping { CsType = Utils.CleanName(type) };
-				mappings[type] = map;
+				typeMappings[enm.GetDisplayName()] = new TypeMapping();
 			}
 
 			// load the mapping file
 			foreach (var mapping in config.Mappings.Types)
 			{
-				var map = mapping.Value;
-				if (string.IsNullOrEmpty(map.CsType))
-					map.CsType = Utils.CleanName(mapping.Key);
-				mappings[mapping.Key] = map;
+				typeMappings[mapping.Key] = mapping.Value;
+			}
+			foreach (var mapping in config.Mappings.Functions)
+			{
+				functionMappings[mapping.Key] = mapping.Value;
 			}
 		}
 
@@ -198,8 +194,6 @@ namespace SkiaSharpGenerator
 			writer.WriteLine($"{{");
 			WriteClasses(writer);
 			writer.WriteLine();
-			WriteTypedefs(writer);
-			writer.WriteLine();
 			writer.WriteLine($"\tinternal unsafe partial class {config.ClassName}");
 			writer.WriteLine($"\t{{");
 			WriteFunctions(writer);
@@ -226,37 +220,48 @@ namespace SkiaSharpGenerator
 			{
 				if (!(((CppPointerType)del.ElementType).ElementType is CppFunctionType function))
 				{
-					Log?.LogWarning($"Unknown delegate {del}");
+					Log?.LogWarning($"Unknown delegate type {del}");
 
 					writer.WriteLine($"// TODO: {del}");
 					continue;
 				}
 
+				Log?.LogVerbose($"    {del.GetDisplayName()}");
+
 				var name = del.GetDisplayName();
-				var i = 0;
-				var parameters = function.Parameters.Select(p =>
-				{
-					var n = string.IsNullOrEmpty(p.Name) ? $"param{i++}" : p.Name;
-					var t = GetType(p.Type);
-					var cppT = GetCppType(p.Type);
-					if (cppT == "bool")
-						t = $"[MarshalAs (UnmanagedType.I1)] bool";
-					return (Type: t, Name: n);
-				});
-				var paramList = string.Join(", ", parameters.Select(p => $"{p.Type} {p.Name}"));
-				var returnType = GetType(function.ReturnType);
+				functionMappings.TryGetValue(name, out var map);
+				name = map?.CsType ?? Utils.CleanName(name);
 
 				writer.WriteLine();
 				writer.WriteLine($"\t// {del}");
 				writer.WriteLine($"\t[UnmanagedFunctionPointer (CallingConvention.Cdecl)]");
-				if (GetCppType(function.ReturnType) == "bool")
+
+				var paramsList = new List<string>();
+				for (var i = 0; i < function.Parameters.Count; i++)
+				{
+					var p = function.Parameters[i];
+					var n = string.IsNullOrEmpty(p.Name) ? $"param{i}" : p.Name;
+					var t = GetType(p.Type);
+					var cppT = GetCppType(p.Type);
+					if (cppT == "bool")
+						t = $"[MarshalAs (UnmanagedType.I1)] bool";
+					if (map != null && map.Parameters.TryGetValue(i.ToString(), out var newT))
+						t = newT;
+					paramsList.Add($"{t} {n}");
+				}
+
+				var returnType = GetType(function.ReturnType);
+				if (map != null && map.Parameters.TryGetValue("-1", out var newR))
+				{
+					returnType = newR;
+				}
+				else if (GetCppType(function.ReturnType) == "bool")
 				{
 					returnType = "bool";
 					writer.WriteLine($"\t[return: MarshalAs (UnmanagedType.I1)]");
 				}
-				writer.WriteLine($"\tinternal unsafe delegate {returnType} {del.GetDisplayName()}({paramList});");
 
-				Log?.LogVerbose($"    {del.GetDisplayName()}");
+				writer.WriteLine($"\tinternal unsafe delegate {returnType} {name}({string.Join(", ", paramsList)});");
 			}
 
 			writer.WriteLine();
@@ -269,68 +274,63 @@ namespace SkiaSharpGenerator
 
 			writer.WriteLine($"\t#region Structs");
 
-			var typedefs = compilation.Classes
+			var classes = compilation.Classes
 				.Where(c => c.SizeOf != 0)
 				.OrderBy(c => c.GetDisplayName())
 				.ToList();
-			foreach (var klass in typedefs)
+			foreach (var klass in classes)
 			{
-				writer.WriteLine();
+				Log?.LogVerbose($"    {klass.GetDisplayName()}");
+
 				var name = klass.GetDisplayName();
+				typeMappings.TryGetValue(name, out var map);
+				name = map?.CsType ?? Utils.CleanName(name);
+
+				writer.WriteLine();
+				writer.WriteLine($"\t// {klass.GetDisplayName()}");
+				writer.WriteLine($"\t[StructLayout (LayoutKind.Sequential)]");
 				var visibility = "public";
-				if (mappings.TryGetValue(name, out var map))
+				if (map?.IsInternal == true)
+					visibility = "internal";
+				writer.WriteLine($"\t{visibility} unsafe partial struct {name} {{");
+				foreach (var field in klass.Fields)
 				{
-					name = map.CsType;
-					if (map.IsInternal)
-						visibility = "internal";
-					writer.WriteLine($"\t// {klass.GetDisplayName()}");
-					writer.WriteLine($"\t[StructLayout (LayoutKind.Sequential)]");
-					writer.WriteLine($"\t{visibility} unsafe partial struct {name} {{");
-					foreach (var field in klass.Fields)
+					var type = GetType(field.Type);
+					var cppT = GetCppType(field.Type);
+
+					writer.WriteLine($"\t\t// {field}");
+
+					var vis = "private";
+					if (map?.IsInternal == true)
+						vis = "public";
+					writer.WriteLine($"\t\t{vis} {type} {field.Name};");
+
+					if (map == null || (map.GenerateProperties && !map.IsInternal))
 					{
-						var type = GetType(field.Type);
-						var cppT = GetCppType(field.Type);
+						var propertyName = field.Name;
+						if (map != null && map.Members.TryGetValue(propertyName, out var fieldMap))
+							propertyName = fieldMap;
+						else
+							propertyName = Utils.CleanName(propertyName);
 
-						writer.WriteLine($"\t\t// {field}");
-
-						var vis = "private";
-						if (map.IsInternal)
-							vis = "public";
-						writer.WriteLine($"\t\t{vis} {type} {field.Name};");
-
-						if (map.GenerateProperties && !map.IsInternal)
+						if (cppT == "bool")
 						{
-							var propertyName = field.Name;
-							if (map.Members.TryGetValue(propertyName, out var fieldMap))
-								propertyName = fieldMap;
-							else
-								propertyName = Utils.CleanName(propertyName, true);
-
-							if (cppT == "bool")
-							{
-								writer.WriteLine($"\t\tpublic bool {propertyName} {{");
-								writer.WriteLine($"\t\t\tget => {field.Name} > 0;");
-								writer.WriteLine($"\t\t\tset => {field.Name} = value ? (byte)1 : (byte)0;");
-								writer.WriteLine($"\t\t}}");
-							}
-							else
-							{
-								writer.WriteLine($"\t\tpublic {type} {propertyName} {{");
-								writer.WriteLine($"\t\t\tget => {field.Name};");
-								writer.WriteLine($"\t\t\tset => {field.Name} = value;");
-								writer.WriteLine($"\t\t}}");
-							}
-							writer.WriteLine();
+							writer.WriteLine($"\t\tpublic bool {propertyName} {{");
+							writer.WriteLine($"\t\t\tget => {field.Name} > 0;");
+							writer.WriteLine($"\t\t\tset => {field.Name} = value ? (byte)1 : (byte)0;");
+							writer.WriteLine($"\t\t}}");
 						}
+						else
+						{
+							writer.WriteLine($"\t\tpublic {type} {propertyName} {{");
+							writer.WriteLine($"\t\t\tget => {field.Name};");
+							writer.WriteLine($"\t\t\tset => {field.Name} = value;");
+							writer.WriteLine($"\t\t}}");
+						}
+						writer.WriteLine();
 					}
 				}
-				else
-				{
-					Log?.LogWarning($"Unknown struct type '{klass.GetDisplayName()}'.");
-				}
 				writer.WriteLine($"\t}}");
-
-				Log?.LogVerbose($"    {klass.GetDisplayName()}");
 			}
 
 			writer.WriteLine();
@@ -348,39 +348,33 @@ namespace SkiaSharpGenerator
 				.ToList();
 			foreach (var enm in enums)
 			{
-				var type = enm.GetDisplayName();
+				Log?.LogVerbose($"    {enm.GetDisplayName()}");
+
+				var name = enm.GetDisplayName();
+				typeMappings.TryGetValue(name, out var map);
+				name = map?.CsType ?? Utils.CleanName(name);
+
+				var visibility = "public";
+				if (map?.IsInternal == true)
+					visibility = "internal";
 
 				writer.WriteLine();
-				var name = enm.GetDisplayName();
-				var visibility = "public";
-				if (mappings.TryGetValue(name, out var map))
+				writer.WriteLine($"\t// {enm.GetDisplayName()}");
+				if (map?.IsFlags == true)
+					writer.WriteLine($"\t[Flags]");
+				writer.WriteLine($"\t{visibility} enum {name} {{");
+				foreach (var field in enm.Items)
 				{
-					name = map.CsType;
-					if (map.IsInternal)
-						visibility = "internal";
-					writer.WriteLine($"\t// {type}");
-					if (map.IsFlags)
-						writer.WriteLine($"\t[Flags]");
-					writer.WriteLine($"\t{visibility} enum {name} {{");
-					foreach (var field in enm.Items)
-					{
-						var fieldName = field.Name;
-						if (map.Members.TryGetValue(fieldName, out var fieldMap))
-							fieldName = fieldMap;
-						else
-							fieldName = Utils.CleanName(fieldName, true);
+					var fieldName = field.Name;
+					if (map != null && map.Members.TryGetValue(fieldName, out var fieldMap))
+						fieldName = fieldMap;
+					else
+						fieldName = Utils.CleanName(fieldName, isEnumMember: true);
 
-						writer.WriteLine($"\t\t// {field.Name} = {field.ValueExpression?.ToString() ?? field.Value.ToString()}");
-						writer.WriteLine($"\t\t{fieldName} = {field.Value},");
-					}
-				}
-				else
-				{
-					Log?.LogWarning($"Unknown enum type '{enm.GetDisplayName()}'.");
+					writer.WriteLine($"\t\t// {field.Name} = {field.ValueExpression?.ToString() ?? field.Value.ToString()}");
+					writer.WriteLine($"\t\t{fieldName} = {field.Value},");
 				}
 				writer.WriteLine($"\t}}");
-
-				Log?.LogVerbose($"    {enm.GetDisplayName()}");
 			}
 
 			writer.WriteLine();
@@ -394,10 +388,10 @@ namespace SkiaSharpGenerator
 			writer.WriteLine($"\t#region Class declarations");
 			writer.WriteLine();
 
-			var typedefs = compilation.Classes
+			var classes = compilation.Classes
 				.OrderBy(c => c.GetDisplayName())
 				.ToList();
-			foreach (var klass in typedefs)
+			foreach (var klass in classes)
 			{
 				var type = klass.GetDisplayName();
 				skiaTypes.Add(type, klass.SizeOf != 0);
@@ -406,31 +400,6 @@ namespace SkiaSharpGenerator
 					writer.WriteLine($"\tusing {klass.GetDisplayName()} = IntPtr;");
 
 				Log?.LogVerbose($"    {klass.GetDisplayName()}");
-			}
-
-			writer.WriteLine();
-			writer.WriteLine($"\t#endregion");
-		}
-
-		private void WriteTypedefs(TextWriter writer)
-		{
-			Log?.LogVerbose("  Writing type aliases...");
-
-			writer.WriteLine($"\t#region Type aliases");
-			writer.WriteLine();
-
-			var typedefs = compilation.Typedefs
-				.Where(t => t.ElementType.TypeKind != CppTypeKind.Pointer)
-				.OrderBy(t => t.GetDisplayName());
-			foreach (var typedef in typedefs)
-			{
-				var cppType = typedef.ElementType is CppTypedef td
-					? td.GetDisplayName()
-					: typedef.GetCanonicalType().GetDisplayName();
-				var type = mappings[cppType].CsType;
-				writer.WriteLine($"\tusing {typedef.GetDisplayName()} = {type};");
-
-				Log?.LogVerbose($"    {typedef.GetDisplayName()}");
 			}
 
 			writer.WriteLine();
@@ -449,13 +418,14 @@ namespace SkiaSharpGenerator
 				writer.WriteLine($"\t\t#region {Path.GetFileName(group.Key)}");
 				foreach (var function in group)
 				{
+					Log?.LogVerbose($"    {function.Name}");
+
 					writer.WriteLine();
 					writer.WriteLine($"\t\t// {function}");
 					writer.WriteLine($"\t\t[DllImport ({config.DllName}, CallingConvention = CallingConvention.Cdecl)]");
 
-					var returnType = GetType(function.ReturnType);
 					var name = function.Name;
-					config.Mappings.Functions.TryGetValue(name, out var funcMap);
+					functionMappings.TryGetValue(name, out var funcMap);
 
 					var paramsList = new List<string>();
 					for (var i = 0; i < function.Parameters.Count; i++)
@@ -471,15 +441,17 @@ namespace SkiaSharpGenerator
 						paramsList.Add($"{t} {n}");
 					}
 
-					if (GetCppType(function.ReturnType) == "bool")
+					var returnType = GetType(function.ReturnType);
+					if (funcMap != null && funcMap.Parameters.TryGetValue("-1", out var newR))
+					{
+						returnType = newR;
+					}
+					else if (GetCppType(function.ReturnType) == "bool")
 					{
 						returnType = "bool";
 						writer.WriteLine($"\t\t[return: MarshalAs (UnmanagedType.I1)]");
 					}
 					writer.WriteLine($"\t\tinternal static extern {returnType} {name} ({string.Join(", ", paramsList)});");
-
-					Log?.LogVerbose($"    {function.Name}");
-
 				}
 				writer.WriteLine();
 				writer.WriteLine($"\t\t#endregion");
@@ -500,18 +472,22 @@ namespace SkiaSharpGenerator
 			{
 				if (!isStruct)
 					return noPointers + pointers.Substring(1);
-				if (mappings.TryGetValue(noPointers, out var map))
-					return map.CsType + pointers;
-				return typeName;
+				if (typeMappings.TryGetValue(noPointers, out var map))
+					return (map.CsType ?? Utils.CleanName(noPointers)) + pointers;
 			}
 			else
 			{
-				if (mappings.TryGetValue(typeName, out var map))
-					return map.CsType;
-				if (mappings.TryGetValue(noPointers, out map))
-					return map.CsType + pointers;
-				return typeName;
+				if (typeMappings.TryGetValue(typeName, out var map))
+					return map.CsType ?? Utils.CleanName(typeName);
+				if (typeMappings.TryGetValue(noPointers, out map))
+					return (map.CsType ?? Utils.CleanName(noPointers)) + pointers;
+				if (functionMappings.TryGetValue(typeName, out var funcMap))
+					return funcMap.CsType ?? Utils.CleanName(typeName);
+				if (functionMappings.TryGetValue(noPointers, out funcMap))
+					return (funcMap.CsType ?? Utils.CleanName(noPointers)) + pointers;
 			}
+
+			return Utils.CleanName(typeName);
 		}
 
 		private static string GetCppType(CppType type)
