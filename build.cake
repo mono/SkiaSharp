@@ -1,13 +1,13 @@
-#addin nuget:?package=Cake.Xamarin&version=3.0.0
-#addin nuget:?package=Cake.XCode&version=4.0.0
-#addin nuget:?package=Cake.FileHelpers&version=3.1.0
-#addin nuget:?package=SharpCompress&version=0.22.0
-#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.0.0&loaddependencies=true
+#addin nuget:?package=Cake.Xamarin&version=3.0.2
+#addin nuget:?package=Cake.XCode&version=4.2.0
+#addin nuget:?package=Cake.FileHelpers&version=3.2.1
+#addin nuget:?package=SharpCompress&version=0.24.0
+#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.1.0-preview.1&prerelease&loaddependencies=true
 #addin nuget:?package=Xamarin.Nuget.Validator&version=1.1.1
 
-#tool nuget:?package=mdoc&version=5.7.4.9
+#tool nuget:?package=mdoc&version=5.7.4.10
 #tool nuget:?package=xunit.runner.console&version=2.4.1
-#tool nuget:?package=vswhere&version=2.5.2
+#tool nuget:?package=vswhere&version=2.7.1
 
 using System.Linq;
 using System.Net.Http;
@@ -23,15 +23,18 @@ using NuGet.Versioning;
 
 #load "cake/Utils.cake"
 
-var TARGET = Argument ("t", Argument ("target", Argument ("Target", "Default")));
-var VERBOSITY = Argument ("v", Argument ("verbosity", Argument ("Verbosity", Verbosity.Normal)));
-var SKIP_EXTERNALS = Argument ("skipexternals", Argument ("SkipExternals", "")).ToLower ().Split (',');
-var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAll", Argument ("PackAllPlatforms", TARGET.ToLower() == "ci" || TARGET.ToLower() == "nuget-only")));
+var TARGET = Argument ("t", Argument ("target", "Default"));
+var VERBOSITY = Argument ("v", Argument ("verbosity", Verbosity.Normal));
+var BUILD_ARCH = Argument ("buildarch", EnvironmentVariable ("BUILD_ARCH") ?? "")
+    .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+var SKIP_EXTERNALS = Argument ("skipexternals", "")
+    .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAllPlatforms", false));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
 var AZURE_BUILD_ID = Argument ("azureBuildId", "");
 var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
 var ADDITIONAL_GN_ARGS = Argument ("additionalGnArgs", "");
-var CONFIGURATION = Argument ("c", Argument ("configuration", Argument ("Configuration", "Release")));
+var CONFIGURATION = Argument ("c", Argument ("configuration", "Release"));
 
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
@@ -495,6 +498,8 @@ Task ("Nothing");
 Task ("CI")
     .IsDependentOn ("externals")
     .IsDependentOn ("libs")
+    .IsDependentOn ("nuget")
+    .IsDependentOn ("docs-api-diff")
     .IsDependentOn ("nuget-validation")
     .IsDependentOn ("tests")
     .IsDependentOn ("samples");
@@ -517,7 +522,8 @@ Information ("");
 Information ("Arguments:");
 Information ("  Target:                           {0}", TARGET);
 Information ("  Verbosity:                        {0}", VERBOSITY);
-Information ("  Skip externals:                   {0}", SKIP_EXTERNALS);
+Information ("  Skip externals:                   {0}", string.Join (", ", SKIP_EXTERNALS));
+Information ("  Build architectures:              {0}", string.Join (", ", BUILD_ARCH));
 Information ("  Print all environment variables:  {0}", PRINT_ALL_ENV_VARS);
 Information ("  Pack all platforms:               {0}", PACK_ALL_PLATFORMS);
 Information ("  Azure build ID:                   {0}", AZURE_BUILD_ID);
@@ -559,7 +565,7 @@ var envVarsWhitelist = new [] {
     "os", "build_url", "build_number", "number_of_processors",
     "node_label", "build_id", "git_sha", "git_branch_name",
     "feature_name", "msbuild_exe", "python_exe", "preview_label",
-    "home", "userprofile", "nuget_packages",
+    "home", "userprofile", "nuget_packages", "build_arch",
     "android_sdk_root", "android_ndk_root",
     "android_home", "android_ndk_home", "tizen_studio_home"
 };

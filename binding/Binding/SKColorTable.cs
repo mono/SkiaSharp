@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 namespace SkiaSharp
 {
 	[Obsolete ("The Index8 color type and color table is no longer supported.")]
-	public class SKColorTable : SKObject, ISKReferenceCounted
+	public unsafe class SKColorTable : SKObject, ISKReferenceCounted
 	{
 		public const int MaxLength = 256;
 
@@ -40,12 +40,22 @@ namespace SkiaSharp
 		}
 
 		public SKColorTable (SKPMColor[] colors, int count)
-			: this (SkiaApi.sk_colortable_new (colors, count), true)
+			: this (CreateNew (colors, count), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKColorTable instance.");
 			}
 		}
+
+		private static IntPtr CreateNew (SKPMColor[] colors, int count)
+		{
+			fixed (SKPMColor* c = colors) {
+				return SkiaApi.sk_colortable_new (c, count);
+			}
+		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		public int Count => SkiaApi.sk_colortable_count (Handle);
 
@@ -85,8 +95,9 @@ namespace SkiaSharp
 
 		public IntPtr ReadColors ()
 		{
-			SkiaApi.sk_colortable_read_colors (Handle, out var colors);
-			return colors;
+			SKPMColor* colors;
+			SkiaApi.sk_colortable_read_colors (Handle, &colors);
+			return (IntPtr)colors;
 		}
 	}
 }

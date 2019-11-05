@@ -1,9 +1,47 @@
-﻿using Xunit;
+﻿using System;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
 	public class SKShaderTest : SKTest
 	{
+		[SkippableTheory]
+		[InlineData(null)]
+		[InlineData(new[] { 0f, 0.3f, 1f })]
+		public void CanDrawWithCreateLinearGradientShader(float[] colorPositions)
+		{
+			var size = 160;
+			var colors = new[] { SKColors.Blue, SKColors.Yellow, SKColors.Green };
+
+			using (var bitmap = new SKBitmap(new SKImageInfo(size, size)))
+			using (var canvas = new SKCanvas(bitmap))
+			using (var p = new SKPaint())
+			{
+				p.Shader = SKShader.CreateLinearGradient(new SKPoint(10, 10), new SKPoint(150, 10), colors, colorPositions, SKShaderTileMode.Clamp);
+
+				canvas.DrawRect(SKRect.Create(size, size), p);
+			}
+		}
+
+		[SkippableFact]
+		public void LinearGradientWithIncorrectColorPositionsThrows()
+		{
+			var size = 160;
+			var colors = new[] { SKColors.Blue, SKColors.Yellow, SKColors.Green };
+
+			using (var bitmap = new SKBitmap(new SKImageInfo(size, size)))
+			using (var canvas = new SKCanvas(bitmap))
+			using (var p = new SKPaint())
+			{
+				Assert.Throws<ArgumentException>(() => SKShader.CreateLinearGradient(
+					new SKPoint(10, 10),
+					new SKPoint(150, 10),
+					colors,
+					new float[] { 0f, 0.1f, 0.2f, 0.3f, 0.4f, 1f },
+					SKShaderTileMode.Clamp));
+			}
+		}
+
 		[SkippableFact]
 		public void CanDrawWithCreateSweepGradientShader()
 		{

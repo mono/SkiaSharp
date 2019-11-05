@@ -12,13 +12,16 @@ namespace SkiaSharp
 	// TODO: `ToTextureImage`
 	// TODO: `MakeColorSpace`
 
-	public class SKImage : SKObject, ISKReferenceCounted
+	public unsafe class SKImage : SKObject, ISKReferenceCounted
 	{
 		[Preserve]
 		internal SKImage (IntPtr x, bool owns)
 			: base (x, owns)
 		{
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		// create brand new image
 
@@ -27,7 +30,7 @@ namespace SkiaSharp
 			var pixels = Marshal.AllocCoTaskMem (info.BytesSize);
 			using (var pixmap = new SKPixmap (info, pixels)) {
 				// don't use the managed version as that is just extra overhead which isn't necessary
-				return GetObject<SKImage> (SkiaApi.sk_image_new_raster (pixmap.Handle, DelegateProxies.SKImageRasterReleaseDelegateProxyForCoTaskMem, IntPtr.Zero));
+				return GetObject<SKImage> (SkiaApi.sk_image_new_raster (pixmap.Handle, DelegateProxies.SKImageRasterReleaseDelegateProxyForCoTaskMem, null));
 			}
 		}
 
@@ -78,7 +81,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (pixels));
 
 			var nInfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject<SKImage> (SkiaApi.sk_image_new_raster_copy (ref nInfo, pixels, (IntPtr)rowBytes));
+			return GetObject<SKImage> (SkiaApi.sk_image_new_raster_copy (&nInfo, (void*)pixels, (IntPtr)rowBytes));
 		}
 
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use FromPixelCopy(SKImageInfo, IntPtr, int) instead.")]
@@ -111,7 +114,7 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject<SKImage> (SkiaApi.sk_image_new_raster_data (ref cinfo, data.Handle, (IntPtr)rowBytes));
+			return GetObject<SKImage> (SkiaApi.sk_image_new_raster_data (&cinfo, data.Handle, (IntPtr)rowBytes));
 		}
 
 		public static SKImage FromPixels (SKImageInfo info, SKData data, int rowBytes)
@@ -119,7 +122,7 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject<SKImage> (SkiaApi.sk_image_new_raster_data (ref cinfo, data.Handle, (IntPtr)rowBytes));
+			return GetObject<SKImage> (SkiaApi.sk_image_new_raster_data (&cinfo, data.Handle, (IntPtr)rowBytes));
 		}
 
 		public static SKImage FromPixels (SKImageInfo info, IntPtr pixels)
@@ -155,7 +158,7 @@ namespace SkiaSharp
 				? new SKImageRasterReleaseDelegate ((addr, _) => releaseProc (addr, releaseContext))
 				: releaseProc;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.SKImageRasterReleaseDelegateProxy, out _, out var ctx);
-			return GetObject<SKImage> (SkiaApi.sk_image_new_raster (pixmap.Handle, proxy, ctx));
+			return GetObject<SKImage> (SkiaApi.sk_image_new_raster (pixmap.Handle, proxy, (void*)ctx));
 		}
 
 		// create a new image from encoded data
@@ -165,7 +168,7 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 
-			var handle = SkiaApi.sk_image_new_from_encoded (data.Handle, ref subset);
+			var handle = SkiaApi.sk_image_new_from_encoded (data.Handle, &subset);
 			return GetObject<SKImage> (handle);
 		}
 
@@ -174,7 +177,7 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 
-			var handle = SkiaApi.sk_image_new_from_encoded (data.Handle, IntPtr.Zero);
+			var handle = SkiaApi.sk_image_new_from_encoded (data.Handle, null);
 			return GetObject<SKImage> (handle);
 		}
 
@@ -185,11 +188,9 @@ namespace SkiaSharp
 			if (data.Length == 0)
 				throw new ArgumentException ("The data buffer was empty.");
 
-			unsafe {
-				fixed (byte* b = data) {
-					using (var skdata = SKData.Create ((IntPtr)b, data.Length)) {
-						return FromEncodedData (skdata);
-					}
+			fixed (byte* b = data) {
+				using (var skdata = SKData.Create ((IntPtr)b, data.Length)) {
+					return FromEncodedData (skdata);
 				}
 			}
 		}
@@ -201,11 +202,9 @@ namespace SkiaSharp
 			if (data.Length == 0)
 				throw new ArgumentException ("The data buffer was empty.");
 
-			unsafe {
-				fixed (byte* b = data) {
-					using (var skdata = SKData.Create ((IntPtr)b, data.Length)) {
-						return FromEncodedData (skdata);
-					}
+			fixed (byte* b = data) {
+				using (var skdata = SKData.Create ((IntPtr)b, data.Length)) {
+					return FromEncodedData (skdata);
 				}
 			}
 		}
@@ -376,7 +375,7 @@ namespace SkiaSharp
 				? new SKImageTextureReleaseDelegate ((_) => releaseProc (releaseContext))
 				: releaseProc;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.SKImageTextureReleaseDelegateProxy, out _, out var ctx);
-			return GetObject<SKImage> (SkiaApi.sk_image_new_from_texture (context.Handle, texture.Handle, origin, colorType, alpha, cs, proxy, ctx));
+			return GetObject<SKImage> (SkiaApi.sk_image_new_from_texture (context.Handle, texture.Handle, origin, colorType, alpha, cs, proxy, (void*)ctx));
 		}
 
 		[Obsolete ("Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.")]
@@ -449,7 +448,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (picture));
 
 			var p = (paint == null ? IntPtr.Zero : paint.Handle);
-			return GetObject<SKImage> (SkiaApi.sk_image_new_from_picture (picture.Handle, ref dimensions, IntPtr.Zero, p));
+			return GetObject<SKImage> (SkiaApi.sk_image_new_from_picture (picture.Handle, &dimensions, null, p));
 		}
 
 		public static SKImage FromPicture (SKPicture picture, SKSizeI dimensions, SKMatrix matrix, SKPaint paint)
@@ -458,7 +457,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (picture));
 
 			var p = (paint == null ? IntPtr.Zero : paint.Handle);
-			return GetObject<SKImage> (SkiaApi.sk_image_new_from_picture (picture.Handle, ref dimensions, ref matrix, p));
+			return GetObject<SKImage> (SkiaApi.sk_image_new_from_picture (picture.Handle, &dimensions, &matrix, p));
 		}
 
 		public SKData Encode () =>
@@ -520,12 +519,12 @@ namespace SkiaSharp
 
 		public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY)
 		{
-			return GetObject<SKShader> (SkiaApi.sk_image_make_shader (Handle, tileX, tileY, IntPtr.Zero));
+			return GetObject<SKShader> (SkiaApi.sk_image_make_shader (Handle, tileX, tileY, null));
 		}
 
 		public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKMatrix localMatrix)
 		{
-			return GetObject<SKShader> (SkiaApi.sk_image_make_shader (Handle, tileX, tileY, ref localMatrix));
+			return GetObject<SKShader> (SkiaApi.sk_image_make_shader (Handle, tileX, tileY, &localMatrix));
 		}
 
 		public bool PeekPixels (SKPixmap pixmap)
@@ -557,7 +556,7 @@ namespace SkiaSharp
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY, SKImageCachingHint cachingHint)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
-			return SkiaApi.sk_image_read_pixels (Handle, ref cinfo, dstPixels, (IntPtr)dstRowBytes, srcX, srcY, cachingHint);
+			return SkiaApi.sk_image_read_pixels (Handle, &cinfo, (void*)dstPixels, (IntPtr)dstRowBytes, srcX, srcY, cachingHint);
 		}
 
 		public bool ReadPixels (SKPixmap pixmap, int srcX, int srcY)
@@ -586,7 +585,7 @@ namespace SkiaSharp
 
 		public SKImage Subset (SKRectI subset)
 		{
-			return GetObject<SKImage> (SkiaApi.sk_image_make_subset (Handle, ref subset));
+			return GetObject<SKImage> (SkiaApi.sk_image_make_subset (Handle, &subset));
 		}
 
 		public SKImage ToRasterImage ()
@@ -596,9 +595,20 @@ namespace SkiaSharp
 
 		public SKImage ApplyImageFilter (SKImageFilter filter, SKRectI subset, SKRectI clipBounds, out SKRectI outSubset, out SKPoint outOffset)
 		{
+			var image = ApplyImageFilter (filter, subset, clipBounds, out outSubset, out SKPointI outOffsetActual);
+			outOffset = outOffsetActual;
+			return image;
+		}
+
+		public SKImage ApplyImageFilter (SKImageFilter filter, SKRectI subset, SKRectI clipBounds, out SKRectI outSubset, out SKPointI outOffset)
+		{
 			if (filter == null)
 				throw new ArgumentNullException (nameof (filter));
-			return GetObject<SKImage> (SkiaApi.sk_image_make_with_filter (Handle, filter.Handle, ref subset, ref clipBounds, out outSubset, out outOffset));
+
+			fixed (SKRectI* os = &outSubset)
+			fixed (SKPointI* oo = &outOffset) {
+				return GetObject<SKImage> (SkiaApi.sk_image_make_with_filter (Handle, filter.Handle, &subset, &clipBounds, os, oo));
+			}
 		}
 	}
 }

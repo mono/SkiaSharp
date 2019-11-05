@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public class SKPictureRecorder : SKObject
+	public unsafe class SKPictureRecorder : SKObject
 	{
 		[Preserve]
 		internal SKPictureRecorder (IntPtr handle, bool owns)
@@ -18,12 +18,15 @@ namespace SkiaSharp
 			}
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		protected override void DisposeNative () =>
 			SkiaApi.sk_picture_recorder_delete (Handle);
 
 		public SKCanvas BeginRecording (SKRect cullRect)
 		{
-			return GetObject<SKCanvas> (SkiaApi.sk_picture_recorder_begin_recording (Handle, ref cullRect), false);
+			return GetObject<SKCanvas> (SkiaApi.sk_picture_recorder_begin_recording (Handle, &cullRect), false);
 		}
 
 		public SKPicture EndRecording ()

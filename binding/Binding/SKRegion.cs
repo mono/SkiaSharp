@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public class SKRegion : SKObject
+	public unsafe class SKRegion : SKObject
 	{
 		[Preserve]
 		internal SKRegion(IntPtr handle,  bool owns)
@@ -32,12 +32,16 @@ namespace SkiaSharp
 			SetPath (path);
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		protected override void DisposeNative () =>
 			SkiaApi.sk_region_delete (Handle);
 
 		public SKRectI Bounds {
 			get {
-				SkiaApi.sk_region_get_bounds (Handle, out var rect);
+				SKRectI rect;
+				SkiaApi.sk_region_get_bounds (Handle, &rect);
 				return rect;
 			}
 		}
@@ -72,7 +76,7 @@ namespace SkiaSharp
 		}
 
 		public bool Intersects(SKRectI rect) =>
-			SkiaApi.sk_region_intersects_rect(Handle, ref rect);
+			SkiaApi.sk_region_intersects_rect(Handle, &rect);
 
 		public bool SetRegion(SKRegion region)
 		{
@@ -82,7 +86,7 @@ namespace SkiaSharp
 		}
 
 		public bool SetRect(SKRectI rect) =>
-			SkiaApi.sk_region_set_rect (Handle, ref rect);
+			SkiaApi.sk_region_set_rect (Handle, &rect);
 
 		public bool SetPath(SKPath path, SKRegion clip)
 		{

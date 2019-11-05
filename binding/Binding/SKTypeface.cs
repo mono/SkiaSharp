@@ -13,7 +13,7 @@ namespace SkiaSharp
 		BoldItalic = 0x03
 	}
 
-	public class SKTypeface : SKObject, ISKReferenceCounted
+	public unsafe class SKTypeface : SKObject, ISKReferenceCounted
 	{
 		private static readonly Lazy<SKTypeface> defaultTypeface;
 
@@ -33,6 +33,9 @@ namespace SkiaSharp
 			: base (handle, owns)
 		{
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		public static SKTypeface Default => defaultTypeface.Value;
 
@@ -92,7 +95,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (path));
 
 			var utf8path = StringUtilities.GetEncodedText (path, SKEncoding.Utf8);
-			return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_file(utf8path, index));
+			fixed (byte* u = utf8path) {
+				return GetObject<SKTypeface> (SkiaApi.sk_typeface_create_from_file (u, index));
+			}
 		}
 
 		public static SKTypeface FromStream (Stream stream, int index = 0)
@@ -168,9 +173,11 @@ namespace SkiaSharp
 		public bool TryGetTableTags (out UInt32[] tags)
 		{
 			var buffer = new UInt32[TableCount];
-			if (SkiaApi.sk_typeface_get_table_tags (Handle, buffer) == 0) {
-				tags = null;
-				return false;
+			fixed (UInt32* b = buffer) {
+				if (SkiaApi.sk_typeface_get_table_tags (Handle, b) == 0) {
+					tags = null;
+					return false;
+				}
 			}
 			tags = buffer;
 			return true;
@@ -191,12 +198,10 @@ namespace SkiaSharp
 		{
 			var length = GetTableSize (tag);
 			var buffer = new byte[length];
-			unsafe {
-				fixed (byte* b = buffer) {
-					if (!TryGetTableData (tag, 0, length, (IntPtr)b)) {
-						tableData = null;
-						return false;
-					}
+			fixed (byte* b = buffer) {
+				if (!TryGetTableData (tag, 0, length, (IntPtr)b)) {
+					tableData = null;
+					return false;
 				}
 			}
 			tableData = buffer;
@@ -205,10 +210,8 @@ namespace SkiaSharp
 
 		public bool TryGetTableData (UInt32 tag, int offset, int length, IntPtr tableData)
 		{
-			unsafe {
-				var actual = SkiaApi.sk_typeface_get_table_data (Handle, tag, (IntPtr)offset, (IntPtr)length, (byte*)tableData);
-				return actual != IntPtr.Zero;
-			}
+			var actual = SkiaApi.sk_typeface_get_table_data (Handle, tag, (IntPtr)offset, (IntPtr)length, (byte*)tableData);
+			return actual != IntPtr.Zero;
 		}
 
 		public int CountGlyphs (string str) => CountGlyphs (str, SKEncoding.Utf16);
@@ -230,10 +233,8 @@ namespace SkiaSharp
 			if (str == null)
 				throw new ArgumentNullException (nameof (str));
 
-			unsafe {
-				fixed (byte* p = str) {
-					return CountGlyphs ((IntPtr)p, str.Length, encoding);
-				}
+			fixed (byte* p = str) {
+				return CountGlyphs ((IntPtr)p, str.Length, encoding);
 			}
 		}
 
@@ -242,9 +243,7 @@ namespace SkiaSharp
 			if (str == IntPtr.Zero && strLen != 0)
 				throw new ArgumentNullException (nameof (str));
 
-			unsafe {
-				return SkiaApi.sk_typeface_chars_to_glyphs (Handle, str, encoding, (ushort*)IntPtr.Zero, strLen);
-			}
+			return SkiaApi.sk_typeface_chars_to_glyphs (Handle, (byte*)str, encoding, null, strLen);
 		}
 
 		public int GetGlyphs (string text, out ushort [] glyphs) => GetGlyphs (text, SKEncoding.Utf16, out glyphs);
@@ -266,10 +265,8 @@ namespace SkiaSharp
 			if (text == null)
 				throw new ArgumentNullException (nameof (text));
 
-			unsafe {
-				fixed (byte* p = text) {
-					return GetGlyphs ((IntPtr)p, text.Length, encoding, out glyphs);
-				}
+			fixed (byte* p = text) {
+				return GetGlyphs ((IntPtr)p, text.Length, encoding, out glyphs);
 			}
 		}
 
@@ -278,18 +275,16 @@ namespace SkiaSharp
 			if (text == IntPtr.Zero && length != 0)
 				throw new ArgumentNullException (nameof (text));
 
-			unsafe {
-				var n = SkiaApi.sk_typeface_chars_to_glyphs (Handle, text, encoding, (ushort*)IntPtr.Zero, length);
+			var n = SkiaApi.sk_typeface_chars_to_glyphs (Handle, (void*)text, encoding, null, length);
 
-				if (n <= 0) {
-					glyphs = new ushort[0];
-					return 0;
-				}
+			if (n <= 0) {
+				glyphs = new ushort[0];
+				return 0;
+			}
 
-				glyphs = new ushort[n];
-				fixed (ushort* gp = glyphs) {
-					return SkiaApi.sk_typeface_chars_to_glyphs (Handle, text, encoding, gp, n);
-				}
+			glyphs = new ushort[n];
+			fixed (ushort* gp = glyphs) {
+				return SkiaApi.sk_typeface_chars_to_glyphs (Handle, (void*)text, encoding, gp, n);
 			}
 		}
 
@@ -319,8 +314,12 @@ namespace SkiaSharp
 		public SKStreamAsset OpenStream () =>
 			OpenStream (out _);
 
-		public SKStreamAsset OpenStream (out int ttcIndex) =>
-			GetObject<SKStreamAssetImplementation> (SkiaApi.sk_typeface_open_stream (Handle, out ttcIndex));
+		public SKStreamAsset OpenStream (out int ttcIndex)
+		{
+			fixed (int* ttc = &ttcIndex) {
+				return GetObject<SKStreamAssetImplementation> (SkiaApi.sk_typeface_open_stream (Handle, ttc));
+			}
+		}
 
 		private sealed class SKTypefaceStatic : SKTypeface
 		{

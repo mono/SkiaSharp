@@ -16,7 +16,7 @@ namespace SkiaSharp
 	// TODO: `getFormat`
 	// TODO: `computeFastBounds`
 
-	public class SKMaskFilter : SKObject, ISKReferenceCounted
+	public unsafe class SKMaskFilter : SKObject, ISKReferenceCounted
 	{
 		private const float BlurSigmaScale = 0.57735f;
 		public const int TableMaxLength = 256;
@@ -26,6 +26,9 @@ namespace SkiaSharp
 			: base (handle, owns)
 		{
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		public static float ConvertRadiusToSigma(float radius)
 		{
@@ -61,7 +64,7 @@ namespace SkiaSharp
 
 		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder, bool respectCTM)
 		{
-			return GetObject<SKMaskFilter> (SkiaApi.sk_maskfilter_new_blur_with_flags (blurStyle, sigma, ref occluder, respectCTM));
+			return GetObject<SKMaskFilter> (SkiaApi.sk_maskfilter_new_blur_with_flags (blurStyle, sigma, &occluder, respectCTM));
 		}
 
 		public static SKMaskFilter CreateTable(byte[] table)
@@ -70,7 +73,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException(nameof(table));
 			if (table.Length != TableMaxLength)
 				throw new ArgumentException("Table must have a length of {SKColorTable.MaxLength}.", nameof(table));
-			return GetObject<SKMaskFilter>(SkiaApi.sk_maskfilter_new_table(table));
+			fixed (byte* t = table) {
+				return GetObject<SKMaskFilter> (SkiaApi.sk_maskfilter_new_table (t));
+			}
 		}
 
 		public static SKMaskFilter CreateGamma(float gamma)
