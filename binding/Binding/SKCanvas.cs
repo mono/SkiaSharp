@@ -13,7 +13,7 @@ namespace SkiaSharp
 	// TODO: add `DrawDrawable` variants if/when we bind `SKDrawable`
 	// TODO: add `IsClipEmpty` and `IsClipRect`
 
-	public class SKCanvas : SKObject
+	public unsafe class SKCanvas : SKObject
 	{
 		[Preserve]
 		internal SKCanvas (IntPtr handle, bool owns)
@@ -35,9 +35,12 @@ namespace SkiaSharp
 		protected override void DisposeNative () =>
 			SkiaApi.sk_canvas_destroy (Handle);
 
+		public void Discard () =>
+			SkiaApi.sk_canvas_discard (Handle);
+
 		public bool QuickReject (SKRect rect)
 		{
-			return SkiaApi.sk_canvas_quick_reject (Handle, ref rect);
+			return SkiaApi.sk_canvas_quick_reject (Handle, &rect);
 		}
 
 		public bool QuickReject (SKPath path)
@@ -56,12 +59,12 @@ namespace SkiaSharp
 
 		public int SaveLayer (SKRect limit, SKPaint paint)
 		{
-			return SkiaApi.sk_canvas_save_layer (Handle, ref limit, paint == null ? IntPtr.Zero : paint.Handle);
+			return SkiaApi.sk_canvas_save_layer (Handle, &limit, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
 		public int SaveLayer (SKPaint paint)
 		{
-			return SkiaApi.sk_canvas_save_layer (Handle, IntPtr.Zero, paint == null ? IntPtr.Zero : paint.Handle);
+			return SkiaApi.sk_canvas_save_layer (Handle, null, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
 		public void DrawColor (SKColor color, SKBlendMode mode = SKBlendMode.Src)
@@ -169,12 +172,14 @@ namespace SkiaSharp
 
 		public void Concat (ref SKMatrix m)
 		{
-			SkiaApi.sk_canvas_concat (Handle, ref m);
+			fixed (SKMatrix* ptr = &m) {
+				SkiaApi.sk_canvas_concat (Handle, ptr);
+			}
 		}
 
 		public void ClipRect (SKRect rect, SKClipOperation operation = SKClipOperation.Intersect, bool antialias = false)
 		{
-			SkiaApi.sk_canvas_clip_rect_with_operation (Handle, ref rect, operation, antialias);
+			SkiaApi.sk_canvas_clip_rect_with_operation (Handle, &rect, operation, antialias);
 		}
 
 		public void ClipRoundRect (SKRoundRect rect, SKClipOperation operation = SKClipOperation.Intersect, bool antialias = false)
@@ -217,12 +222,16 @@ namespace SkiaSharp
 
 		public bool GetLocalClipBounds (out SKRect bounds)
 		{
-			return SkiaApi.sk_canvas_get_local_clip_bounds (Handle, out bounds);
+			fixed (SKRect* b = &bounds) {
+				return SkiaApi.sk_canvas_get_local_clip_bounds (Handle, b);
+			}
 		}
 
 		public bool GetDeviceClipBounds (out SKRectI bounds)
 		{
-			return SkiaApi.sk_canvas_get_device_clip_bounds (Handle, out bounds);
+			fixed (SKRectI* b = &bounds) {
+				return SkiaApi.sk_canvas_get_device_clip_bounds (Handle, b);
+			}
 		}
 
 		public void DrawPaint (SKPaint paint)
@@ -250,7 +259,7 @@ namespace SkiaSharp
 		{
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
-			SkiaApi.sk_canvas_draw_rect (Handle, ref rect, paint.Handle);
+			SkiaApi.sk_canvas_draw_rect (Handle, &rect, paint.Handle);
 		}
 
 		public void DrawRoundRect (SKRoundRect rect, SKPaint paint)
@@ -271,7 +280,7 @@ namespace SkiaSharp
 		{
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
-			SkiaApi.sk_canvas_draw_round_rect (Handle, ref rect, rx, ry, paint.Handle);
+			SkiaApi.sk_canvas_draw_round_rect (Handle, &rect, rx, ry, paint.Handle);
 		}
 
 		public void DrawRoundRect (SKRect rect, SKSize r, SKPaint paint)
@@ -293,7 +302,7 @@ namespace SkiaSharp
 		{
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
-			SkiaApi.sk_canvas_draw_oval (Handle, ref rect, paint.Handle);
+			SkiaApi.sk_canvas_draw_oval (Handle, &rect, paint.Handle);
 		}
 
 		public void DrawCircle (float cx, float cy, float radius, SKPaint paint)
@@ -323,7 +332,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (paint));
 			if (points == null)
 				throw new ArgumentNullException (nameof (points));
-			SkiaApi.sk_canvas_draw_points (Handle, mode, (IntPtr)points.Length, points, paint.Handle);
+			fixed (SKPoint* p = points) {
+				SkiaApi.sk_canvas_draw_points (Handle, mode, (IntPtr)points.Length, p, paint.Handle);
+			}
 		}
 
 		public void DrawPoint (SKPoint p, SKPaint paint)
@@ -366,14 +377,14 @@ namespace SkiaSharp
 		{
 			if (image == null)
 				throw new ArgumentNullException (nameof (image));
-			SkiaApi.sk_canvas_draw_image_rect (Handle, image.Handle, IntPtr.Zero, ref dest, paint == null ? IntPtr.Zero : paint.Handle);
+			SkiaApi.sk_canvas_draw_image_rect (Handle, image.Handle, null, &dest, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
 		public void DrawImage (SKImage image, SKRect source, SKRect dest, SKPaint paint = null)
 		{
 			if (image == null)
 				throw new ArgumentNullException (nameof (image));
-			SkiaApi.sk_canvas_draw_image_rect (Handle, image.Handle, ref source, ref dest, paint == null ? IntPtr.Zero : paint.Handle);
+			SkiaApi.sk_canvas_draw_image_rect (Handle, image.Handle, &source, &dest, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
 		public void DrawPicture (SKPicture picture, float x, float y, SKPaint paint = null)
@@ -391,21 +402,25 @@ namespace SkiaSharp
 		{
 			if (picture == null)
 				throw new ArgumentNullException (nameof (picture));
-			SkiaApi.sk_canvas_draw_picture (Handle, picture.Handle, ref matrix, paint == null ? IntPtr.Zero : paint.Handle);
+			fixed (SKMatrix* m = &matrix) {
+				SkiaApi.sk_canvas_draw_picture (Handle, picture.Handle, m, paint == null ? IntPtr.Zero : paint.Handle);
+			}
 		}
 
 		public void DrawPicture (SKPicture picture, SKPaint paint = null)
 		{
 			if (picture == null)
 				throw new ArgumentNullException (nameof (picture));
-			SkiaApi.sk_canvas_draw_picture (Handle, picture.Handle, IntPtr.Zero, paint == null ? IntPtr.Zero : paint.Handle);
+			SkiaApi.sk_canvas_draw_picture (Handle, picture.Handle, null, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
 		public void DrawDrawable (SKDrawable drawable, ref SKMatrix matrix)
 		{
 			if (drawable == null)
 				throw new ArgumentNullException (nameof (drawable));
-			SkiaApi.sk_canvas_draw_drawable (Handle, drawable.Handle, ref matrix);
+			fixed (SKMatrix* m = &matrix) {
+				SkiaApi.sk_canvas_draw_drawable (Handle, drawable.Handle, m);
+			}
 		}
 
 		public void DrawDrawable (SKDrawable drawable, float x, float y)
@@ -440,14 +455,14 @@ namespace SkiaSharp
 		{
 			if (bitmap == null)
 				throw new ArgumentNullException (nameof (bitmap));
-			SkiaApi.sk_canvas_draw_bitmap_rect (Handle, bitmap.Handle, IntPtr.Zero, ref dest, paint == null ? IntPtr.Zero : paint.Handle);
+			SkiaApi.sk_canvas_draw_bitmap_rect (Handle, bitmap.Handle, null, &dest, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
 		public void DrawBitmap (SKBitmap bitmap, SKRect source, SKRect dest, SKPaint paint = null)
 		{
 			if (bitmap == null)
 				throw new ArgumentNullException (nameof (bitmap));
-			SkiaApi.sk_canvas_draw_bitmap_rect (Handle, bitmap.Handle, ref source, ref dest, paint == null ? IntPtr.Zero : paint.Handle);
+			SkiaApi.sk_canvas_draw_bitmap_rect (Handle, bitmap.Handle, &source, &dest, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
 		public void DrawSurface (SKSurface surface, SKPoint p, SKPaint paint = null)
@@ -501,7 +516,9 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
-			SkiaApi.sk_canvas_draw_text (Handle, text, text.Length, x, y, paint.Handle);
+			fixed (byte* t = text) {
+				SkiaApi.sk_canvas_draw_text (Handle, t, (IntPtr)text.Length, x, y, paint.Handle);
+			}
 		}
 
 		public void DrawPositionedText (string text, SKPoint [] points, SKPaint paint)
@@ -526,7 +543,10 @@ namespace SkiaSharp
 			if (points == null)
 				throw new ArgumentNullException (nameof (points));
 
-			SkiaApi.sk_canvas_draw_pos_text (Handle, text, text.Length, points, paint.Handle);
+			fixed (byte* t = text)
+			fixed (SKPoint* p = points) {
+				SkiaApi.sk_canvas_draw_pos_text (Handle, t, (IntPtr)text.Length, p, paint.Handle);
+			}
 		}
 
 		public void DrawTextOnPath (IntPtr buffer, int length, SKPath path, SKPoint offset, SKPaint paint)
@@ -543,7 +563,7 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			
-			SkiaApi.sk_canvas_draw_text_on_path (Handle, buffer, length, path.Handle, hOffset, vOffset, paint.Handle);
+			SkiaApi.sk_canvas_draw_text_on_path (Handle, (void*)buffer, (IntPtr)length, path.Handle, hOffset, vOffset, paint.Handle);
 		}
 
 		public void DrawText (IntPtr buffer, int length, SKPoint p, SKPaint paint)
@@ -558,7 +578,7 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			
-			SkiaApi.sk_canvas_draw_text (Handle, buffer, length, x, y, paint.Handle);
+			SkiaApi.sk_canvas_draw_text (Handle, (void*)buffer, (IntPtr)length, x, y, paint.Handle);
 		}
 
 		public void DrawPositionedText (IntPtr buffer, int length, SKPoint[] points, SKPaint paint)
@@ -569,8 +589,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (paint));
 			if (points == null)
 				throw new ArgumentNullException (nameof (points));
-			
-			SkiaApi.sk_canvas_draw_pos_text (Handle, buffer, length, points, paint.Handle);
+
+			fixed (SKPoint* p = points) {
+				SkiaApi.sk_canvas_draw_pos_text (Handle, (void*)buffer, (IntPtr)length, p, paint.Handle);
+			}
 		}
 
 		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKPaint paint)
@@ -605,7 +627,9 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 
-			SkiaApi.sk_canvas_draw_text_on_path (Handle, text, text.Length, path.Handle, hOffset, vOffset, paint.Handle);
+			fixed (byte* t = text) {
+				SkiaApi.sk_canvas_draw_text_on_path (Handle, t, (IntPtr)text.Length, path.Handle, hOffset, vOffset, paint.Handle);
+			}
 		}
 
 		public void Flush ()
@@ -615,12 +639,15 @@ namespace SkiaSharp
 
 		public void DrawAnnotation (SKRect rect, string key, SKData value)
 		{
-			SkiaApi.sk_canvas_draw_annotation (Handle, ref rect, StringUtilities.GetEncodedText (key, SKTextEncoding.Utf8), value == null ? IntPtr.Zero : value.Handle);
+			var bytes = StringUtilities.GetEncodedText (key, SKTextEncoding.Utf8);
+			fixed (byte* b = bytes) {
+				SkiaApi.sk_canvas_draw_annotation (base.Handle, &rect, b, value == null ? IntPtr.Zero : value.Handle);
+			}
 		}
 
 		public void DrawUrlAnnotation (SKRect rect, SKData value)
 		{
-			SkiaApi.sk_canvas_draw_url_annotation (Handle, ref rect, value == null ? IntPtr.Zero : value.Handle);
+			SkiaApi.sk_canvas_draw_url_annotation (Handle, &rect, value == null ? IntPtr.Zero : value.Handle);
 		}
 
 		public SKData DrawUrlAnnotation (SKRect rect, string value)
@@ -632,7 +659,7 @@ namespace SkiaSharp
 
 		public void DrawNamedDestinationAnnotation (SKPoint point, SKData value)
 		{
-			SkiaApi.sk_canvas_draw_named_destination_annotation (Handle, ref point, value == null ? IntPtr.Zero : value.Handle);
+			SkiaApi.sk_canvas_draw_named_destination_annotation (Handle, &point, value == null ? IntPtr.Zero : value.Handle);
 		}
 
 		public SKData DrawNamedDestinationAnnotation (SKPoint point, string value)
@@ -644,7 +671,7 @@ namespace SkiaSharp
 
 		public void DrawLinkDestinationAnnotation (SKRect rect, SKData value)
 		{
-			SkiaApi.sk_canvas_draw_link_destination_annotation (Handle, ref rect, value == null ? IntPtr.Zero : value.Handle);
+			SkiaApi.sk_canvas_draw_link_destination_annotation (Handle, &rect, value == null ? IntPtr.Zero : value.Handle);
 		}
 
 		public SKData DrawLinkDestinationAnnotation (SKRect rect, string value)
@@ -662,7 +689,7 @@ namespace SkiaSharp
 			if (!SKRect.Create (bitmap.Info.Size).Contains (center))
 				throw new ArgumentException ("Center rectangle must be contained inside the bitmap bounds.", nameof (center));
 
-			SkiaApi.sk_canvas_draw_bitmap_nine (Handle, bitmap.Handle, ref center, ref dst, paint == null ? IntPtr.Zero : paint.Handle);
+			SkiaApi.sk_canvas_draw_bitmap_nine (Handle, bitmap.Handle, &center, &dst, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
 		public void DrawImageNinePatch (SKImage image, SKRectI center, SKRect dst, SKPaint paint = null)
@@ -673,7 +700,7 @@ namespace SkiaSharp
 			if (!SKRect.Create (image.Width, image.Height).Contains (center))
 				throw new ArgumentException ("Center rectangle must be contained inside the image bounds.", nameof (center));
 
-			SkiaApi.sk_canvas_draw_image_nine (Handle, image.Handle, ref center, ref dst, paint == null ? IntPtr.Zero : paint.Handle);
+			SkiaApi.sk_canvas_draw_image_nine (Handle, image.Handle, &center, &dst, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
 		public void DrawBitmapLattice (SKBitmap bitmap, int[] xDivs, int[] yDivs, SKRect dst, SKPaint paint = null)
@@ -703,26 +730,24 @@ namespace SkiaSharp
 			if (lattice.YDivs == null)
 				throw new ArgumentNullException (nameof (lattice.YDivs));
 
-			unsafe {
-				fixed (int* x = lattice.XDivs)
-				fixed (int* y = lattice.YDivs)
-				fixed (SKLatticeRectType* r = lattice.RectTypes)
-				fixed (SKColor* c = lattice.Colors) {
-					var nativeLattice = new SKLatticeInternal {
-						fBounds = null,
-						fRectTypes = r,
-						fXCount = lattice.XDivs.Length,
-						fXDivs = x,
-						fYCount = lattice.YDivs.Length,
-						fYDivs = y,
-						fColors = c,
-					};
-					if (lattice.Bounds != null) {
-						var bounds = lattice.Bounds.Value;
-						nativeLattice.fBounds = &bounds;
-					}
-					SkiaApi.sk_canvas_draw_bitmap_lattice (Handle, bitmap.Handle, ref nativeLattice, ref dst, paint == null ? IntPtr.Zero : paint.Handle);
+			fixed (int* x = lattice.XDivs)
+			fixed (int* y = lattice.YDivs)
+			fixed (SKLatticeRectType* r = lattice.RectTypes)
+			fixed (SKColor* c = lattice.Colors) {
+				var nativeLattice = new SKLatticeInternal {
+					fBounds = null,
+					fRectTypes = r,
+					fXCount = lattice.XDivs.Length,
+					fXDivs = x,
+					fYCount = lattice.YDivs.Length,
+					fYDivs = y,
+					fColors = c,
+				};
+				if (lattice.Bounds != null) {
+					var bounds = lattice.Bounds.Value;
+					nativeLattice.fBounds = &bounds;
 				}
+				SkiaApi.sk_canvas_draw_bitmap_lattice (Handle, bitmap.Handle, &nativeLattice, &dst, paint == null ? IntPtr.Zero : paint.Handle);
 			}
 		}
 
@@ -735,26 +760,24 @@ namespace SkiaSharp
 			if (lattice.YDivs == null)
 				throw new ArgumentNullException (nameof (lattice.YDivs));
 			
-			unsafe {
-				fixed (int* x = lattice.XDivs)
-				fixed (int* y = lattice.YDivs)
-				fixed (SKLatticeRectType* r = lattice.RectTypes)
-				fixed (SKColor* c = lattice.Colors) {
-					var nativeLattice = new SKLatticeInternal {
-						fBounds = null,
-						fRectTypes = r,
-						fXCount = lattice.XDivs.Length,
-						fXDivs = x,
-						fYCount = lattice.YDivs.Length,
-						fYDivs = y,
-						fColors = c,
-					};
-					if (lattice.Bounds != null) {
-						var bounds = lattice.Bounds.Value;
-						nativeLattice.fBounds = &bounds;
-					}
-					SkiaApi.sk_canvas_draw_image_lattice (Handle, image.Handle, ref nativeLattice, ref dst, paint == null ? IntPtr.Zero : paint.Handle);
+			fixed (int* x = lattice.XDivs)
+			fixed (int* y = lattice.YDivs)
+			fixed (SKLatticeRectType* r = lattice.RectTypes)
+			fixed (SKColor* c = lattice.Colors) {
+				var nativeLattice = new SKLatticeInternal {
+					fBounds = null,
+					fRectTypes = r,
+					fXCount = lattice.XDivs.Length,
+					fXDivs = x,
+					fYCount = lattice.YDivs.Length,
+					fYDivs = y,
+					fColors = c,
+				};
+				if (lattice.Bounds != null) {
+					var bounds = lattice.Bounds.Value;
+					nativeLattice.fBounds = &bounds;
 				}
+				SkiaApi.sk_canvas_draw_image_lattice (Handle, image.Handle, &nativeLattice, &dst, paint == null ? IntPtr.Zero : paint.Handle);
 			}
 		}
 
@@ -765,13 +788,13 @@ namespace SkiaSharp
 
 		public void SetMatrix (SKMatrix matrix)
 		{
-			SkiaApi.sk_canvas_set_matrix (Handle, ref matrix);
+			SkiaApi.sk_canvas_set_matrix (Handle, &matrix);
 		}
 
 		public SKMatrix TotalMatrix {
 			get {
 				SKMatrix matrix = new SKMatrix();
-				SkiaApi.sk_canvas_get_total_matrix (Handle, ref matrix);
+				SkiaApi.sk_canvas_get_total_matrix (Handle, &matrix);
 				return matrix;
 			}
 		}

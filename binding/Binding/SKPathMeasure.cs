@@ -2,15 +2,7 @@
 
 namespace SkiaSharp
 {
-	[Flags]
-	public enum SKPathMeasureMatrixFlags
-	{
-		GetPosition = 0x01,
-		GetTangent = 0x02,
-		GetPositionAndTangent = GetPosition | GetTangent,
-	}
-
-	public class SKPathMeasure : SKObject
+	public unsafe class SKPathMeasure : SKObject
 	{
 		[Preserve]
 		internal SKPathMeasure (IntPtr handle, bool owns)
@@ -59,22 +51,31 @@ namespace SkiaSharp
 
 		public bool GetPositionAndTangent (float distance, out SKPoint position, out SKPoint tangent)
 		{
-			return SkiaApi.sk_pathmeasure_get_pos_tan (Handle, distance, out position, out tangent);
+			fixed (SKPoint* p = &position)
+			fixed (SKPoint* t = &tangent) {
+				return SkiaApi.sk_pathmeasure_get_pos_tan (Handle, distance, p, t);
+			}
 		}
 
 		public bool GetPosition (float distance, out SKPoint position)
 		{
-			return SkiaApi.sk_pathmeasure_get_pos_tan (Handle, distance, out position, IntPtr.Zero);
+			fixed (SKPoint* p = &position) {
+				return SkiaApi.sk_pathmeasure_get_pos_tan (Handle, distance, p, null);
+			}
 		}
 
 		public bool GetTangent (float distance, out SKPoint tangent)
 		{
-			return SkiaApi.sk_pathmeasure_get_pos_tan (Handle, distance, IntPtr.Zero, out tangent);
+			fixed (SKPoint* t = &tangent) {
+				return SkiaApi.sk_pathmeasure_get_pos_tan (Handle, distance, null, t);
+			}
 		}
 
 		public bool GetMatrix (float distance, out SKMatrix matrix, SKPathMeasureMatrixFlags flags)
 		{
-			return SkiaApi.sk_pathmeasure_get_matrix (Handle, distance, out matrix, flags);
+			fixed (SKMatrix* m = &matrix) {
+				return SkiaApi.sk_pathmeasure_get_matrix (Handle, distance, m, flags);
+			}
 		}
 
 		public bool GetSegment (float start, float stop, SKPath dst, bool startWithMoveTo)

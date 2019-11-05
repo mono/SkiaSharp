@@ -83,3 +83,36 @@ bool ShouldBuildExternal (string platform)
 
     return true;
 }
+
+bool ShouldBuildArch (string arch)
+{
+    arch = arch?.ToLower() ?? "";
+
+    if (BUILD_ARCH.Length == 0 || BUILD_ARCH.Contains ("all"))
+        return true;
+
+    switch (arch) {
+        case "win32":
+        case "i386":
+            arch = "x86";
+            break;
+        case "x86_64":
+            arch = "x64";
+            break;
+        case "armeabi-v7a":
+        case "armel":
+        case "armv7":
+        case "armv7k":
+            arch = "arm";
+            break;
+        case "arm64_32":
+        case "arm64-v8a":
+            arch = "arm64";
+            break;
+    }
+
+    if (BUILD_ARCH.Contains (arch))
+        return true;
+
+    return false;
+}

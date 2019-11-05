@@ -3,7 +3,7 @@ using System.IO;
 
 namespace SkiaSharp
 {
-	public class SKDocument : SKObject, ISKReferenceCounted
+	public unsafe class SKDocument : SKObject, ISKReferenceCounted
 	{
 		public const float DefaultRasterDpi = 72.0f;
 
@@ -23,10 +23,10 @@ namespace SkiaSharp
 			SkiaApi.sk_document_abort (Handle);
 
 		public SKCanvas BeginPage (float width, float height) =>
-			GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, IntPtr.Zero), false);
+			GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, null), false);
 
 		public SKCanvas BeginPage (float width, float height, SKRect content) =>
-			GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, ref content), false);
+			GetObject<SKCanvas> (SkiaApi.sk_document_begin_page (Handle, width, height, &content), false);
 
 		public void EndPage () =>
 			SkiaApi.sk_document_end_page (Handle);
@@ -153,31 +153,28 @@ namespace SkiaSharp
 			using (var keywords = SKString.Create (metadata.Keywords))
 			using (var creator = SKString.Create (metadata.Creator))
 			using (var producer = SKString.Create (metadata.Producer)) {
-
 				var cmetadata = new SKDocumentPdfMetadataInternal {
-					Title = title?.Handle ?? IntPtr.Zero,
-					Author = author?.Handle ?? IntPtr.Zero,
-					Subject = subject?.Handle ?? IntPtr.Zero,
-					Keywords = keywords?.Handle ?? IntPtr.Zero,
-					Creator = creator?.Handle ?? IntPtr.Zero,
-					Producer = producer?.Handle ?? IntPtr.Zero,
-					RasterDPI = metadata.RasterDpi,
-					PDFA = metadata.PdfA ? (byte)1 : (byte)0,
-					EncodingQuality = metadata.EncodingQuality,
+					fTitle = title?.Handle ?? IntPtr.Zero,
+					fAuthor = author?.Handle ?? IntPtr.Zero,
+					fSubject = subject?.Handle ?? IntPtr.Zero,
+					fKeywords = keywords?.Handle ?? IntPtr.Zero,
+					fCreator = creator?.Handle ?? IntPtr.Zero,
+					fProducer = producer?.Handle ?? IntPtr.Zero,
+					fRasterDPI = metadata.RasterDpi,
+					fPDFA = metadata.PdfA ? (byte)1 : (byte)0,
+					fEncodingQuality = metadata.EncodingQuality,
 				};
 
-				unsafe {
-					if (metadata.Creation != null) {
-						var creation = SKTimeDateTimeInternal.Create (metadata.Creation.Value);
-						cmetadata.Creation = &creation;
-					}
-					if (metadata.Modified != null) {
-						var modified = SKTimeDateTimeInternal.Create (metadata.Modified.Value);
-						cmetadata.Modified = &modified;
-					}
-
-					return Referenced (GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream_with_metadata (stream.Handle, ref cmetadata)), stream);
+				if (metadata.Creation != null) {
+					var creation = SKTimeDateTimeInternal.Create (metadata.Creation.Value);
+					cmetadata.fCreation = &creation;
 				}
+				if (metadata.Modified != null) {
+					var modified = SKTimeDateTimeInternal.Create (metadata.Modified.Value);
+					cmetadata.fModified = &modified;
+				}
+
+				return Referenced (GetObject<SKDocument> (SkiaApi.sk_document_create_pdf_from_stream_with_metadata (stream.Handle, &cmetadata)), stream);
 			}
 		}
 

@@ -5,31 +5,6 @@ using GRBackendObject = System.IntPtr;
 
 namespace SkiaSharp
 {
-	public enum GRSurfaceOrigin
-	{
-		TopLeft,
-		BottomLeft,
-	}
-
-	public enum GRPixelConfig
-	{
-		Unknown,
-		Alpha8,
-		Gray8,
-		Rgb565,
-		Rgba4444,
-		Rgba8888,
-		Rgb888,
-		Bgra8888,
-		Srgba8888,
-		Sbgra8888,
-		Rgba1010102,
-		RgbaFloat,
-		RgFloat,
-		AlphaHalf,
-		RgbaHalf,
-	}
-
 	[Obsolete ("Use GRBackendRenderTarget instead.")]
 	public struct GRBackendRenderTargetDesc
 	{
@@ -42,13 +17,6 @@ namespace SkiaSharp
 		public GRBackendObject RenderTargetHandle { get; set; }
 		public SKSizeI Size => new SKSizeI (Width, Height);
 		public SKRectI Rect => new SKRectI (0, 0, Width, Height);
-	}
-
-	public enum GRBackend
-	{
-		Metal,
-		OpenGL,
-		Vulkan,
 	}
 
 	[Flags]
@@ -77,59 +45,28 @@ namespace SkiaSharp
 		All = 0xffffffff,
 	}
 
-	[StructLayout (LayoutKind.Sequential)]
-	public struct GRGlFramebufferInfo
+	public partial struct GRGlFramebufferInfo
 	{
-		private uint fboId;
-		private uint format;
-
 		public GRGlFramebufferInfo (uint fboId)
 		{
-			this.fboId = fboId;
-			this.format = 0;
+			this.fFBOID = fboId;
+			this.fFormat = 0;
 		}
 
 		public GRGlFramebufferInfo (uint fboId, uint format)
 		{
-			this.fboId = fboId;
-			this.format = format;
-		}
-
-		public uint FramebufferObjectId {
-			get => fboId;
-			set => fboId = value;
-		}
-		public uint Format {
-			get => format;
-			set => format = value;
+			this.fFBOID = fboId;
+			this.fFormat = format;
 		}
 	}
 
-	[StructLayout (LayoutKind.Sequential)]
-	public struct GRGlTextureInfo
+	public partial struct GRGlTextureInfo
 	{
-		private uint fTarget;
-		private uint fID;
-		private uint fFormat;
-
 		public GRGlTextureInfo (uint target, uint id, uint format)
 		{
-			fTarget = target;
-			fID = id;
-			fFormat = format;
-		}
-
-		public uint Target {
-			get { return fTarget; }
-			set { fTarget = value; }
-		}
-		public uint Id {
-			get { return fID; }
-			set { fID = value; }
-		}
-		public uint Format {
-			get { return fFormat; }
-			set { fFormat = value; }
+			this.fTarget = target;
+			this.fID = id;
+			this.fFormat = format;
 		}
 	};
 

@@ -104,7 +104,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(positions, span.ToArray());
 
 			var floats = new float[6];
-			Marshal.Copy((IntPtr)run.internalBuffer.Positions, floats, 0, 6);
+			Marshal.Copy((IntPtr)run.internalBuffer.pos, floats, 0, 6);
 			Assert.Equal(positionsRaw, floats);
 		}
 	}

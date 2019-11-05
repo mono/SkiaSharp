@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	public class GRBackendTexture : SKObject
+	public unsafe class GRBackendTexture : SKObject
 	{
 		[Preserve]
 		internal GRBackendTexture (IntPtr handle, bool owns)
@@ -41,7 +41,7 @@ namespace SkiaSharp
 
 		private void CreateGl (int width, int height, bool mipmapped, GRGlTextureInfo glInfo)
 		{
-			Handle = SkiaApi.gr_backendtexture_new_gl (width, height, mipmapped, ref glInfo);
+			Handle = SkiaApi.gr_backendtexture_new_gl (width, height, mipmapped, &glInfo);
 
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new GRBackendTexture instance.");
@@ -70,7 +70,9 @@ namespace SkiaSharp
 		}
 		public bool GetGlTextureInfo (out GRGlTextureInfo glInfo)
 		{
-			return SkiaApi.gr_backendtexture_get_gl_textureinfo (Handle, out glInfo);
+			fixed (GRGlTextureInfo* g = &glInfo) {
+				return SkiaApi.gr_backendtexture_get_gl_textureinfo (Handle, g);
+			}
 		}
 
 		[StructLayout (LayoutKind.Sequential)]

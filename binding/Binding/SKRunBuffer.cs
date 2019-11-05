@@ -19,13 +19,13 @@ namespace SkiaSharp
 		public int TextSize { get; }
 
 		public Span<ushort> GetGlyphSpan () =>
-			new Span<ushort> (internalBuffer.Glyphs, Size);
+			new Span<ushort> (internalBuffer.glyphs, Size);
 
 		public Span<byte> GetTextSpan () =>
-			new Span<byte> (internalBuffer.Text, TextSize);
+			new Span<byte> (internalBuffer.utf8text, TextSize);
 
 		public Span<uint> GetClusterSpan () =>
-			new Span<uint> (internalBuffer.Clusters, Size);
+			new Span<uint> (internalBuffer.clusters, Size);
 
 		public void SetGlyphs (ReadOnlySpan<ushort> glyphs) =>
 			glyphs.CopyTo (GetGlyphSpan ());
@@ -45,7 +45,7 @@ namespace SkiaSharp
 		}
 
 		public Span<float> GetPositionSpan () =>
-			new Span<float> (internalBuffer.Positions, Size);
+			new Span<float> (internalBuffer.pos, Size);
 
 		public void SetPositions (ReadOnlySpan<float> positions) =>
 			positions.CopyTo (GetPositionSpan ());
@@ -59,18 +59,9 @@ namespace SkiaSharp
 		}
 
 		public Span<SKPoint> GetPositionSpan () =>
-			new Span<SKPoint> (internalBuffer.Positions, Size);
+			new Span<SKPoint> (internalBuffer.pos, Size);
 
 		public void SetPositions (ReadOnlySpan<SKPoint> positions) =>
 			positions.CopyTo (GetPositionSpan ());
-	}
-
-	[StructLayout (LayoutKind.Sequential)]
-	internal unsafe struct SKRunBufferInternal
-	{
-		public void* Glyphs;
-		public void* Positions;
-		public void* Text;
-		public void* Clusters;
 	}
 }

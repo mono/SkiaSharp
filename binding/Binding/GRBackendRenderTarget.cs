@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public class GRBackendRenderTarget : SKObject
+	public unsafe class GRBackendRenderTarget : SKObject
 	{
 		[Preserve]
 		internal GRBackendRenderTarget (IntPtr handle, bool owns)
@@ -36,7 +36,7 @@ namespace SkiaSharp
 
 		private void CreateGl (int width, int height, int sampleCount, int stencilBits, GRGlFramebufferInfo glInfo)
 		{
-			Handle = SkiaApi.gr_backendrendertarget_new_gl (width, height, sampleCount, stencilBits, ref glInfo);
+			Handle = SkiaApi.gr_backendrendertarget_new_gl (width, height, sampleCount, stencilBits, &glInfo);
 
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new GRBackendRenderTarget instance.");
@@ -66,7 +66,9 @@ namespace SkiaSharp
 		}
 		public bool GetGlFramebufferInfo (out GRGlFramebufferInfo glInfo)
 		{
-			return SkiaApi.gr_backendrendertarget_get_gl_framebufferinfo (Handle, out glInfo);
+			fixed (GRGlFramebufferInfo* g = &glInfo) {
+				return SkiaApi.gr_backendrendertarget_get_gl_framebufferinfo (Handle, g);
+			}
 		}
 	}
 }
