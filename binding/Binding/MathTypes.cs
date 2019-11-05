@@ -3,27 +3,14 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	[StructLayout (LayoutKind.Sequential)]
-	public struct SKPoint
+	public partial struct SKPoint
 	{
 		public static readonly SKPoint Empty;
-
-		private float x, y;
 
 		public SKPoint (float x, float y)
 		{
 			this.x = x;
 			this.y = y;
-		}
-
-		public float X {
-			get => x;
-			set => x = value;
-		}
-
-		public float Y {
-			get => y;
-			set => y = value;
 		}
 
 		public bool IsEmpty => this == Empty;
@@ -115,12 +102,9 @@ namespace SkiaSharp
 			(left.x != right.x) || (left.y != right.y);
 	}
 
-	[StructLayout (LayoutKind.Sequential)]
-	public struct SKPointI
+	public partial struct SKPointI
 	{
 		public static readonly SKPointI Empty;
-
-		private int x, y;
 
 		public SKPointI (SKSizeI sz)
 		{
@@ -132,16 +116,6 @@ namespace SkiaSharp
 		{
 			this.x = x;
 			this.y = y;
-		}
-
-		public int X {
-			get => x;
-			set => x = value;
-		}
-
-		public int Y {
-			get => y;
-			set => y = value;
 		}
 
 		public bool IsEmpty => this == Empty;
@@ -259,33 +233,15 @@ namespace SkiaSharp
 			new SKPoint (p.X, p.Y);
 	}
 
-	[StructLayout (LayoutKind.Sequential)]
-	public struct SKPoint3
+	public partial struct SKPoint3
 	{
 		public static readonly SKPoint3 Empty;
-
-		private float x, y, z;
 
 		public SKPoint3 (float x, float y, float z)
 		{
 			this.x = x;
 			this.y = y;
 			this.z = z;
-		}
-
-		public float X {
-			get => x;
-			set => x = value;
-		}
-
-		public float Y {
-			get => y;
-			set => y = value;
-		}
-
-		public float Z {
-			get => z;
-			set => z = value;
 		}
 
 		public bool IsEmpty => this == Empty;
@@ -313,46 +269,33 @@ namespace SkiaSharp
 			!(left == right);
 	}
 
-	[StructLayout (LayoutKind.Sequential)]
-	public struct SKSize
+	public partial struct SKSize
 	{
 		public static readonly SKSize Empty;
 
-		private float width, height;
-
 		public SKSize (float width, float height)
 		{
-			this.width = width;
-			this.height = height;
+			this.w = width;
+			this.h = height;
 		}
 
 		public SKSize (SKPoint pt)
 		{
-			this.width = pt.X;
-			this.height = pt.Y;
+			this.w = pt.X;
+			this.h = pt.Y;
 		}
 
 		public bool IsEmpty => this == Empty;
 
-		public float Width {
-			get => width;
-			set => width = value;
-		}
-
-		public float Height {
-			get => height;
-			set => height = value;
-		}
-
 		public SKPoint ToPoint () =>
-			new SKPoint (width, height);
+			new SKPoint (w, h);
 
 		public SKSizeI ToSizeI ()
 		{
 			int w, h;
 			checked {
-				w = (int)width;
-				h = (int)height;
+				w = (int)this.w;
+				h = (int)this.h;
 			}
 
 			return new SKSizeI (w, h);
@@ -361,10 +304,10 @@ namespace SkiaSharp
 		public override bool Equals (object obj) =>
 			obj is SKSize s && this == s;
 
-		public override int GetHashCode () => (int)width ^ (int)height;
+		public override int GetHashCode () => (int)w ^ (int)h;
 
 		public override string ToString () =>
-			$"{{Width={width}, Height={height}}}";
+			$"{{Width={w}, Height={h}}}";
 
 		public static SKSize Add (SKSize sz1, SKSize sz2) => sz1 + sz2;
 
@@ -387,46 +330,33 @@ namespace SkiaSharp
 			new SKSize (size.Width, size.Height);
 	}
 
-	[StructLayout (LayoutKind.Sequential)]
-	public struct SKSizeI
+	public partial struct SKSizeI
 	{
 		public static readonly SKSizeI Empty;
 
-		private int width, height;
-
 		public SKSizeI (int width, int height)
 		{
-			this.width = width;
-			this.height = height;
+			this.w = width;
+			this.h = height;
 		}
 
 		public SKSizeI (SKPointI pt)
 		{
-			this.width = pt.X;
-			this.height = pt.Y;
-		}
-
-		public int Width {
-			get => width;
-			set => width = value;
-		}
-
-		public int Height {
-			get => height;
-			set => height = value;
+			this.w = pt.X;
+			this.h = pt.Y;
 		}
 
 		public bool IsEmpty => this == Empty;
 
-		public SKPointI ToPointI () => new SKPointI (width, height);
+		public SKPointI ToPointI () => new SKPointI (w, h);
 
 		public override bool Equals (object obj) =>
 			obj is SKSizeI s && this == s;
 
-		public override int GetHashCode () => width ^ height;
+		public override int GetHashCode () => w ^ h;
 
 		public override string ToString () =>
-			$"{{Width={width}, Height={height}}}";
+			$"{{Width={w}, Height={h}}}";
 
 		public static SKSizeI Add (SKSizeI sz1, SKSizeI sz2) => sz1 + sz2;
 
@@ -447,12 +377,9 @@ namespace SkiaSharp
 			new SKPointI (size.Width, size.Height);
 	}
 
-	[StructLayout (LayoutKind.Sequential)]
-	public struct SKRect
+	public partial struct SKRect
 	{
 		public static readonly SKRect Empty;
-
-		private float left, top, right, bottom;
 
 		public SKRect (float left, float top, float right, float bottom)
 		{
@@ -460,26 +387,6 @@ namespace SkiaSharp
 			this.right = right;
 			this.top = top;
 			this.bottom = bottom;
-		}
-
-		public float Left {
-			get => left;
-			set => left = value;
-		}
-
-		public float Top {
-			get => top;
-			set => top = value;
-		}
-
-		public float Right {
-			get => right;
-			set => right = value;
-		}
-
-		public float Bottom {
-			get => bottom;
-			set => bottom = value;
 		}
 
 		public float MidX => left + (Width / 2f);
@@ -656,12 +563,9 @@ namespace SkiaSharp
 			new SKRect (x, y, x + width, y + height);
 	}
 
-	[StructLayout (LayoutKind.Sequential)]
-	public struct SKRectI
+	public partial struct SKRectI
 	{
 		public static readonly SKRectI Empty;
-
-		private int left, top, right, bottom;
 
 		public SKRectI (int left, int top, int right, int bottom)
 		{
@@ -669,26 +573,6 @@ namespace SkiaSharp
 			this.right = right;
 			this.top = top;
 			this.bottom = bottom;
-		}
-
-		public int Left {
-			get => left;
-			set => left = value;
-		}
-
-		public int Top {
-			get => top;
-			set => top = value;
-		}
-
-		public int Right {
-			get => right;
-			set => right = value;
-		}
-
-		public int Bottom {
-			get => bottom;
-			set => bottom = value;
 		}
 
 		public int MidX => left + (Width / 2);

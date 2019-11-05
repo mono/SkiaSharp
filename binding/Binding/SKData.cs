@@ -6,7 +6,7 @@ using System.ComponentModel;
 
 namespace SkiaSharp
 {
-	public class SKData : SKObject, ISKNonVirtualReferenceCounted
+	public unsafe class SKData : SKObject, ISKNonVirtualReferenceCounted
 	{
 		// We pick a value that is the largest multiple of 4096 that is still smaller than the large object heap threshold (85K).
 		// The CopyTo/CopyToAsync buffer is short-lived and is likely to be collected at Gen0, and it offers a significant
@@ -45,21 +45,23 @@ namespace SkiaSharp
 		{
 			if (SizeOf <IntPtr> () == 4 && length > UInt32.MaxValue)
 				throw new ArgumentOutOfRangeException (nameof (length), "The length exceeds the size of pointers.");
-			return GetObject<SKData> (SkiaApi.sk_data_new_with_copy (bytes, (IntPtr) length));
+			return GetObject<SKData> (SkiaApi.sk_data_new_with_copy ((void*)bytes, (IntPtr) length));
 		}
 
 		public static SKData CreateCopy (byte[] bytes) =>
 			CreateCopy (bytes, (ulong)bytes.Length);
 
-		public static SKData CreateCopy (byte[] bytes, ulong length) =>
-			GetObject<SKData> (SkiaApi.sk_data_new_with_copy (bytes, (IntPtr)length));
+		public static SKData CreateCopy (byte[] bytes, ulong length)
+		{
+			fixed (byte* b = bytes) {
+				return GetObject<SKData> (SkiaApi.sk_data_new_with_copy (b, (IntPtr)length));
+			}
+		}
 
 		public static SKData CreateCopy (ReadOnlySpan<byte> bytes)
 		{
-			unsafe {
-				fixed (byte* b = bytes) {
-					return CreateCopy ((IntPtr)b, (ulong)bytes.Length);
-				}
+			fixed (byte* b = bytes) {
+				return CreateCopy ((IntPtr)b, (ulong)bytes.Length);
 			}
 		}
 
@@ -82,7 +84,9 @@ namespace SkiaSharp
 				throw new ArgumentException ("The filename cannot be empty.", nameof (filename));
 
 			var utf8path = StringUtilities.GetEncodedText (filename, SKEncoding.Utf8);
-			return GetObject<SKData> (SkiaApi.sk_data_new_from_file(utf8path));
+			fixed (byte* u = utf8path) {
+				return GetObject<SKData> (SkiaApi.sk_data_new_from_file (u));
+			}
 		}
 
 		public static SKData Create (Stream stream)
@@ -167,7 +171,7 @@ namespace SkiaSharp
 				? new SKDataReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.SKDataReleaseDelegateProxy, out _, out var ctx);
-			return GetObject<SKData> (SkiaApi.sk_data_new_with_proc (address, (IntPtr)length, proxy, ctx));
+			return GetObject<SKData> (SkiaApi.sk_data_new_with_proc ((void*)address, (IntPtr)length, proxy, (void*)ctx));
 		}
 
 		internal static SKData FromCString (string str)
@@ -198,7 +202,7 @@ namespace SkiaSharp
 
 		public long Size => (long)SkiaApi.sk_data_get_size (Handle);
 
-		public IntPtr Data => SkiaApi.sk_data_get_data (Handle);
+		public IntPtr Data => (IntPtr)SkiaApi.sk_data_get_data (Handle);
 
 		public Stream AsStream () =>
 			new SKDataStream (this, false);
@@ -208,9 +212,7 @@ namespace SkiaSharp
 
 		public ReadOnlySpan<byte> AsSpan ()
 		{
-			unsafe {
-				return new ReadOnlySpan<byte> ((void*)Data, (int)Size);
-			}
+			return new ReadOnlySpan<byte> ((void*)Data, (int)Size);
 		}
 
 		public void SaveTo (Stream target)

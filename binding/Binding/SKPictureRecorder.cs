@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public class SKPictureRecorder : SKObject
+	public unsafe class SKPictureRecorder : SKObject
 	{
 		[Preserve]
 		internal SKPictureRecorder (IntPtr handle, bool owns)
@@ -26,7 +26,7 @@ namespace SkiaSharp
 
 		public SKCanvas BeginRecording (SKRect cullRect)
 		{
-			return GetObject<SKCanvas> (SkiaApi.sk_picture_recorder_begin_recording (Handle, ref cullRect), false);
+			return GetObject<SKCanvas> (SkiaApi.sk_picture_recorder_begin_recording (Handle, &cullRect), false);
 		}
 
 		public SKPicture EndRecording ()

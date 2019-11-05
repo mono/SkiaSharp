@@ -124,6 +124,39 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void RawIteratorReturnsCorrectPointsAndVerb()
+		{
+			using (var path = new SKPath())
+			{
+				path.MoveTo(20, 20);
+				path.QuadTo(20, 50, 80, 50);
+				path.QuadTo(20, 50, 20, 80);
+
+				using (var iter = path.CreateRawIterator())
+				{
+					var points = new SKPoint[4];
+
+					var verb = iter.Next(points);
+					Assert.Equal(SKPathVerb.Move, verb);
+					Assert.Equal(new[] { new SKPoint(20, 20), SKPoint.Empty, SKPoint.Empty, SKPoint.Empty }, points);
+
+					verb = iter.Next(points);
+					Assert.Equal(SKPathVerb.Quad, verb);
+					Assert.Equal(new[] { new SKPoint(20, 20), new SKPoint(20, 50), new SKPoint(80, 50), SKPoint.Empty }, points);
+
+					verb = iter.Next(points);
+					Assert.Equal(SKPathVerb.Quad, verb);
+					Assert.Equal(new[] { new SKPoint(80, 50), new SKPoint(20, 50), new SKPoint(20, 80), SKPoint.Empty }, points);
+
+					verb = iter.Next(points);
+					Assert.Equal(SKPathVerb.Done, verb);
+					// note: when the iteration is Done, it doesn't touch the points
+					Assert.Equal(new[] { new SKPoint(80, 50), new SKPoint(20, 50), new SKPoint(20, 80), SKPoint.Empty }, points);
+				}
+			}
+		}
+
+		[SkippableFact]
 		public void PathConsistentAfterClose()
 		{
 			// based on test_path_close_issue1474

@@ -37,12 +37,34 @@ stages:
     displayName: Build Native
     jobs:
       # NATIVE JOBS - WINDOWS
-      - template: azure-templates-bootstrapper.yml # Build Native Android (Windows)
+      - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (Windows)
         parameters:
-          name: native_android_windows
-          displayName: Build Native Android (Windows)
+          name: native_android_x86_windows
+          displayName: Build Native Android|x86 (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-android
+          additionalArgs: --buildarch=x86
+      - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (Windows)
+        parameters:
+          name: native_android_x64_windows
+          displayName: Build Native Android|x64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-android
+          additionalArgs: --buildarch=x64
+      - template: azure-templates-bootstrapper.yml # Build Native Android|arm (Windows)
+        parameters:
+          name: native_android_arm_windows
+          displayName: Build Native Android|arm (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-android
+          additionalArgs: --buildarch=arm
+      - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (Windows)
+        parameters:
+          name: native_android_arm64_windows
+          displayName: Build Native Android|arm64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-android
+          additionalArgs: --buildarch=arm64
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (Windows)
         parameters:
           name: native_tizen_windows
@@ -93,12 +115,34 @@ stages:
           target: externals-windows
           additionalArgs: --buildarch=x64
       # NATIVE JOBS - MAC
-      - template: azure-templates-bootstrapper.yml # Build Native Android (macOS)
+      - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (macOS)
         parameters:
-          name: native_android_macos
-          displayName: Build Native Android (macOS)
+          name: native_android_x86_macos
+          displayName: Build Native Android|x86 (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: externals-android
+          additionalArgs: --buildarch=x86
+      - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (macOS)
+        parameters:
+          name: native_android_x64_macos
+          displayName: Build Native Android|x64 (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-android
+          additionalArgs: --buildarch=x64
+      - template: azure-templates-bootstrapper.yml # Build Native Android|arm (macOS)
+        parameters:
+          name: native_android_arm_macos
+          displayName: Build Native Android|arm (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-android
+          additionalArgs: --buildarch=arm
+      - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (macOS)
+        parameters:
+          name: native_android_arm64_macos
+          displayName: Build Native Android|arm64 (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-android
+          additionalArgs: --buildarch=arm64
       - template: azure-templates-bootstrapper.yml # Build Native iOS (macOS)
         parameters:
           name: native_ios_macos
@@ -163,7 +207,10 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: libs-only
           requiredArtifacts:
-            - native_android_windows
+            - native_android_x86_windows
+            - native_android_x64_windows
+            - native_android_arm_windows
+            - native_android_arm64_windows
             # - native_tizen_windows
             - native_tizen_linux
             - native_uwp_x86_windows
@@ -179,7 +226,10 @@ stages:
           vmImage: $(VM_IMAGE_MAC)
           target: libs-only
           requiredArtifacts:
-            - native_android_macos
+            - native_android_x86_macos
+            - native_android_x64_macos
+            - native_android_arm_macos
+            - native_android_arm64_macos
             - native_ios_macos
             - native_macos_macos
             # - native_tizen_macos

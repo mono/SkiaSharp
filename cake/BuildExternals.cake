@@ -563,6 +563,11 @@ Task ("externals-android")
     // SkiaSharp
 
     var buildArch = new Action<string, string> ((arch, skiaArch) => {
+        if (!ShouldBuildArch (arch)) {
+            Warning ($"Skipping architecture: {arch}.");
+            return;
+        }
+
         // generate native skia build files
         GnNinja ($"android/{arch}", "SkiaSharp",
             $"is_official_build=true skia_enable_tools=false " +
@@ -585,17 +590,28 @@ Task ("externals-android")
 
     // HarfBuzzSharp
 
-    // build libHarfBuzzSharp
-    RunProcess (ndkbuild, new ProcessSettings {
-        Arguments = "",
-        WorkingDirectory = ROOT_PATH.Combine ("native-builds/libHarfBuzzSharp_android").FullPath,
+    var buildHarfBuzzArch = new Action<string> ((arch) => {
+        if (!ShouldBuildArch (arch)) {
+            Warning ($"Skipping architecture: {arch}.");
+            return;
+        }
+
+        // build libHarfBuzzSharp
+        RunProcess (ndkbuild, new ProcessSettings {
+            Arguments = $"APP_ABI={arch}",
+            WorkingDirectory = ROOT_PATH.Combine ("native-builds/libHarfBuzzSharp_android").FullPath,
+        });
+
+        // copy libSkiaSharp to output
+        var outDir = $"output/native/android/{arch}";
+        EnsureDirectoryExists (outDir);
+        CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_android/libs/{arch}/libHarfBuzzSharp.so", outDir);
     });
 
-    // copy libSkiaSharp to output
-    foreach (var folder in new [] { "x86", "x86_64", "armeabi-v7a", "arm64-v8a" }) {
-        EnsureDirectoryExists ($"output/native/android/{folder}");
-        CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_android/libs/{folder}/libHarfBuzzSharp.so", $"output/native/android/{folder}");
-    }
+    buildHarfBuzzArch ("x86");
+    buildHarfBuzzArch ("x86_64");
+    buildHarfBuzzArch ("armeabi-v7a");
+    buildHarfBuzzArch ("arm64-v8a");
 });
 
 // this builds the native C and C++ externals for Linux
