@@ -36,11 +36,9 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
 }
 
 Task ("docs-download-output")
+    .IsDependentOn ("download-last-successful-build")
     .Does (() =>
 {
-    if (string.IsNullOrEmpty (AZURE_BUILD_ID))
-        throw new Exception ("Specify a build ID with --azureBuildId=<ID>");
-
     var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, "nuget");
 
     EnsureDirectoryExists ("./output");

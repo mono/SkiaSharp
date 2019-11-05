@@ -748,11 +748,9 @@ Task ("externals-tizen")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("externals-download")
+    .IsDependentOn ("download-last-successful-build")
     .Does (() =>
 {
-    if (string.IsNullOrEmpty (AZURE_BUILD_ID))
-        throw new Exception ("Specify a build ID with --azureBuildId=<ID>");
-
     var artifactName = "native-default";
     var artifactFilename = $"{artifactName}.zip";
     var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, artifactName);
