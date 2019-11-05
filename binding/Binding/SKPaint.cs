@@ -189,18 +189,16 @@ namespace SkiaSharp
 
 		public SKFontMetrics FontMetrics {
 			get {
-				SKFontMetrics metrics;
-				SkiaApi.sk_paint_get_fontmetrics (Handle, &metrics, 0);
+				GetFontMetrics (out var metrics);
 				return metrics;
 			}
 		}
 
 		public float GetFontMetrics (out SKFontMetrics metrics, float scale = 0f)
 		{
-			SKFontMetrics m;
-			var result = SkiaApi.sk_paint_get_fontmetrics (Handle, &m, scale);
-			metrics = m;
-			return result;
+			fixed (SKFontMetrics* m = &metrics) {
+				return SkiaApi.sk_paint_get_fontmetrics (Handle, m, scale);
+			}
 		}
 
 		public SKPaint Clone () =>
