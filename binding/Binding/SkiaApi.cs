@@ -1,4 +1,4 @@
-namespace SkiaSharp
+﻿namespace SkiaSharp
 {
 	internal partial class SkiaApi
 	{
