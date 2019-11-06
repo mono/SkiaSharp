@@ -173,6 +173,7 @@ namespace SkiaSharp
 				transformed = new SKRoundRect (destHandle, true);
 				return true;
 			}
+			SkiaApi.sk_rrect_delete (destHandle);
 			transformed = null;
 			return false;
 		}
