@@ -39,7 +39,7 @@ namespace SkiaSharp
 	// TODO: `GenerationID` may be useful
 	// TODO: `GetAddr` and `GetPixel` are confusing
 
-	public class SKBitmap : SKObject
+	public unsafe class SKBitmap : SKObject
 	{
 		private const string UnsupportedColorTypeMessage = "Setting the ColorTable is only supported for bitmaps with ColorTypes of Index8.";
 		private const string UnableToAllocatePixelsMessage = "Unable to allocate pixels for the bitmap.";
@@ -101,6 +101,9 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		protected override void DisposeNative () =>
 			SkiaApi.sk_bitmap_destructor (Handle);
 
@@ -112,13 +115,13 @@ namespace SkiaSharp
 		public bool TryAllocPixels (SKImageInfo info, int rowBytes)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return SkiaApi.sk_bitmap_try_alloc_pixels (Handle, ref cinfo, (IntPtr)rowBytes);
+			return SkiaApi.sk_bitmap_try_alloc_pixels (Handle, &cinfo, (IntPtr)rowBytes);
 		}
 		
 		public bool TryAllocPixels (SKImageInfo info, SKBitmapAllocFlags flags)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return SkiaApi.sk_bitmap_try_alloc_pixels_with_flags (Handle, ref cinfo, flags);
+			return SkiaApi.sk_bitmap_try_alloc_pixels_with_flags (Handle, &cinfo, (uint)flags);
 		}
 
 		public void Reset ()
@@ -138,13 +141,13 @@ namespace SkiaSharp
 
 		public void Erase (SKColor color, SKRectI rect)
 		{
-			SkiaApi.sk_bitmap_erase_rect (Handle, color, ref rect);
+			SkiaApi.sk_bitmap_erase_rect (Handle, color, &rect);
 		}
 
 		public byte GetAddr8(int x, int y) => SkiaApi.sk_bitmap_get_addr_8 (Handle, x, y);
 		public UInt16 GetAddr16(int x, int y) => SkiaApi.sk_bitmap_get_addr_16 (Handle, x, y);
 		public UInt32 GetAddr32(int x, int y) => SkiaApi.sk_bitmap_get_addr_32 (Handle, x, y);
-		public IntPtr GetAddr(int x, int y) => SkiaApi.sk_bitmap_get_addr (Handle, x, y);
+		public IntPtr GetAddr(int x, int y) => (IntPtr)SkiaApi.sk_bitmap_get_addr (Handle, x, y);
 
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use GetPixel(int, int) instead.")]
 		public SKPMColor GetIndex8Color (int x, int y)
@@ -295,7 +298,7 @@ namespace SkiaSharp
 			if (destination == null) {
 				throw new ArgumentNullException (nameof (destination));
 			}
-			return SkiaApi.sk_bitmap_extract_subset (Handle, destination.Handle, ref subset);
+			return SkiaApi.sk_bitmap_extract_subset (Handle, destination.Handle, &subset);
 		}
 
 		public bool ExtractAlpha(SKBitmap destination)
@@ -318,14 +321,17 @@ namespace SkiaSharp
 			if (destination == null) {
 				throw new ArgumentNullException (nameof (destination));
 			}
-			return SkiaApi.sk_bitmap_extract_alpha (Handle, destination.Handle, paint == null ? IntPtr.Zero : paint.Handle, out offset);
+			fixed (SKPointI* o = &offset) {
+				return SkiaApi.sk_bitmap_extract_alpha (Handle, destination.Handle, paint == null ? IntPtr.Zero : paint.Handle, o);
+			}
 		}
 
 		public bool ReadyToDraw => SkiaApi.sk_bitmap_ready_to_draw (Handle); 
 
 		public SKImageInfo Info {
 			get {
-				SkiaApi.sk_bitmap_get_info (Handle, out var cinfo);
+				SKImageInfoNative cinfo;
+				SkiaApi.sk_bitmap_get_info (Handle, &cinfo);
 				return SKImageInfoNative.ToManaged (ref cinfo);
 			}
 		}
@@ -367,17 +373,19 @@ namespace SkiaSharp
 
 		public ReadOnlySpan<byte> GetPixelSpan ()
 		{
-			unsafe {
-				return new ReadOnlySpan<byte> ((void*)GetPixels (out var length), (int)length);
+			return new ReadOnlySpan<byte> ((void*)GetPixels (out var length), (int)length);
+		}
+
+		public IntPtr GetPixels (out IntPtr length)
+		{
+			fixed (IntPtr* l = &length) {
+				return (IntPtr)SkiaApi.sk_bitmap_get_pixels (Handle, l);
 			}
 		}
 
-		public IntPtr GetPixels (out IntPtr length) =>
-			SkiaApi.sk_bitmap_get_pixels (Handle, out length);
-
 		public void SetPixels(IntPtr pixels)
 		{
-			SkiaApi.sk_bitmap_set_pixels (Handle, pixels);
+			SkiaApi.sk_bitmap_set_pixels (Handle, (void*)pixels);
 		}
 
 		[Obsolete ("The Index8 color type and color table is no longer supported. Use SetPixels(IntPtr) instead.")]
@@ -404,11 +412,15 @@ namespace SkiaSharp
 			get { 
 				var info = Info;
 				var pixels = new SKColor [info.Width * info.Height];
-				SkiaApi.sk_bitmap_get_pixel_colors (Handle, pixels);
+				fixed (SKColor* p = pixels) {
+					SkiaApi.sk_bitmap_get_pixel_colors (Handle, p);
+				}
 				return pixels;
 			}
 			set {
-				SkiaApi.sk_bitmap_set_pixel_colors (Handle, value);
+				fixed (SKColor* v = value) {
+					SkiaApi.sk_bitmap_set_pixel_colors (Handle, v);
+				}
 			}
 		}
 
@@ -482,12 +494,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (buffer));
 			}
 
-			unsafe {
-				fixed (byte* b = buffer) {
-					using (var skdata = SKData.Create ((IntPtr)b, buffer.Length))
-					using (var codec = SKCodec.Create (skdata)) {
-						return codec?.Info ?? SKImageInfo.Empty;
-					}
+			fixed (byte* b = buffer) {
+				using (var skdata = SKData.Create ((IntPtr)b, buffer.Length))
+				using (var codec = SKCodec.Create (skdata)) {
+					return codec?.Info ?? SKImageInfo.Empty;
 				}
 			}
 		}
@@ -641,12 +651,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (buffer));
 			}
 
-			unsafe {
-				fixed (byte* b = buffer) {
-					using (var skdata = SKData.Create ((IntPtr)b, buffer.Length))
-					using (var codec = SKCodec.Create (skdata)) {
-						return Decode (codec, bitmapInfo);
-					}
+			fixed (byte* b = buffer) {
+				using (var skdata = SKData.Create ((IntPtr)b, buffer.Length))
+				using (var codec = SKCodec.Create (skdata)) {
+					return Decode (codec, bitmapInfo);
 				}
 			}
 		}
@@ -685,7 +693,7 @@ namespace SkiaSharp
 				? new SKBitmapReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.SKBitmapReleaseDelegateProxy, out _, out var ctx);
-			return SkiaApi.sk_bitmap_install_pixels (Handle, ref cinfo, pixels, (IntPtr)rowBytes, proxy, ctx);
+			return SkiaApi.sk_bitmap_install_pixels (Handle, &cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx);
 		}
 
 		public bool InstallPixels (SKPixmap pixmap)
@@ -695,7 +703,7 @@ namespace SkiaSharp
 
 		public bool InstallMaskPixels(SKMask mask)
 		{
-			return SkiaApi.sk_bitmap_install_mask_pixels(Handle, ref mask);
+			return SkiaApi.sk_bitmap_install_mask_pixels(Handle, &mask);
 		}
 
 		public void NotifyPixelsChanged()

@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace SkiaSharp
 {
-	public class SKFontManager : SKObject, ISKReferenceCounted
+	public unsafe class SKFontManager : SKObject, ISKReferenceCounted
 	{
 		private static readonly Lazy<SKFontManager> defaultManager;
 
@@ -25,6 +25,9 @@ namespace SkiaSharp
 			: base (handle, owns)
 		{
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		public static SKFontManager Default => defaultManager.Value;
 
@@ -83,7 +86,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (path));
 
 			var utf8path = StringUtilities.GetEncodedText (path, SKEncoding.Utf8);
-			return GetObject<SKTypeface> (SkiaApi.sk_fontmgr_create_from_file(Handle, utf8path, index));
+			fixed (byte* u = utf8path) {
+				return GetObject<SKTypeface> (SkiaApi.sk_fontmgr_create_from_file (Handle, u, index));
+			}
 		}
 
 		public SKTypeface CreateTypeface (Stream stream, int index = 0)

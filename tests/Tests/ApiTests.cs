@@ -142,9 +142,9 @@ namespace SkiaSharp.Tests
 
 						// special cases where we know the type is not blittable, but can be passed to native code
 						var isSkippedType =
-							paramType.FullName != typeof(SKAbstractManagedStream.Procs).FullName &&
-							paramType.FullName != typeof(SKAbstractManagedWStream.Procs).FullName &&
-							paramType.FullName != typeof(SKDrawable.Procs).FullName;
+							paramType.FullName != typeof(SKManagedStreamDelegates).FullName &&
+							paramType.FullName != typeof(SKManagedWStreamDelegates).FullName &&
+							paramType.FullName != typeof(SKManagedDrawableDelegates).FullName;
 
 						// make sure our structs have a layout type
 						if (!paramType.GetTypeInfo().IsEnum && isLocalType && isSkippedType)

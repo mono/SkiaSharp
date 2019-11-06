@@ -36,11 +36,9 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
 }
 
 Task ("docs-download-output")
+    .IsDependentOn ("download-last-successful-build")
     .Does (() =>
 {
-    if (string.IsNullOrEmpty (AZURE_BUILD_ID))
-        throw new Exception ("Specify a build ID with --azureBuildId=<ID>");
-
     var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, "nuget");
 
     EnsureDirectoryExists ("./output");
@@ -61,7 +59,7 @@ Task ("docs-download-output")
 Task ("docs-api-diff")
     .Does (async () =>
 {
-    var baseDir = "./output/api-diff";
+    var baseDir = "./output/nugets/api-diff";
     CleanDirectories (baseDir);
 
     var comparer = await CreateNuGetDiffAsync ();
@@ -98,9 +96,6 @@ Task ("docs-api-diff")
 
         Information ($"Diff complete of '{id}'.");
     }
-
-    // clean up after working
-    CleanDirectories (baseDir);
 });
 
 Task ("docs-api-diff-past")
@@ -186,7 +181,12 @@ Task ("docs-update-frameworks")
 
             foreach (var (path, platform) in GetPlatformDirectories ($"{packagePath}/lib")) {
                 string moniker;
-                if (id.StartsWith ("SkiaSharp.Views") && !id.StartsWith ("SkiaSharp.Views.Forms"))
+                if (id.StartsWith ("SkiaSharp.Views.Forms"))
+                    if (id != "SkiaSharp.Views.Forms")
+                        continue;
+                    else
+                        moniker = $"skiasharp-views-forms-{version}";
+                else if (id.StartsWith ("SkiaSharp.Views"))
                     moniker = $"skiasharp-views-{version}";
                 else if (platform == null)
                     moniker = $"{id.ToLower ().Replace (".", "-")}-{version}";

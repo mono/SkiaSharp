@@ -50,6 +50,9 @@ jobs:
       - bash: |
           find output/native/linux -type f -name "*.so" -print0 | xargs -0 ldd -v
         displayName: List the dependencies for the native binaries
+      - bash: |
+          find output/native/linux -type f -name "*.so" -print0 | xargs -0 readelf -Ws | grep GLOBAL
+        displayName: List the exported symbols for the native binaries
       # post-build steps
       - ${{ parameters.postBuildSteps }}
       # publish artifacts

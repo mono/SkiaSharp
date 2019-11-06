@@ -36,6 +36,9 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		public override IntPtr Handle {
 			get => base.Handle;
 			protected set {

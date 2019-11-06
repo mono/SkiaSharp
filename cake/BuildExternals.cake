@@ -61,7 +61,6 @@ void RunLipo (DirectoryPath directory, FilePath output, FilePath[] inputs)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("externals-init")
-    .IsDependentOn ("externals-angle-uwp")
     .Does (() =>
 {
     RunProcess (PythonToolPath, new ProcessSettings {
@@ -85,6 +84,11 @@ Task ("externals-windows")
     // libSkiaSharp
 
     var buildArch = new Action<string, string, string> ((arch, skiaArch, dir) => {
+        if (!ShouldBuildArch (arch)) {
+            Warning ($"Skipping architecture: {arch}.");
+            return;
+        }
+
         // generate native skia build files
         GnNinja ($"win/{arch}", "SkiaSharp",
             $"is_official_build=true skia_enable_tools=false " +
@@ -107,6 +111,11 @@ Task ("externals-windows")
     // libHarfBuzzSharp
 
     var buildHarfBuzzArch = new Action<string, string> ((arch, dir) => {
+        if (!ShouldBuildArch (arch)) {
+            Warning ($"Skipping architecture: {arch}.");
+            return;
+        }
+
         // build libHarfBuzzSharp
         RunMSBuild ("native-builds/libHarfBuzzSharp_windows/libHarfBuzzSharp.sln", platformTarget: arch);
 
@@ -124,6 +133,7 @@ Task ("externals-windows")
 // this builds the native C and C++ externals for Windows UWP
 Task ("externals-uwp")
     .IsDependentOn ("externals-init")
+    .IsDependentOn ("externals-angle-uwp")
     .IsDependeeOf (ShouldBuildExternal ("uwp") ? "externals-native" : "externals-native-skip")
     .WithCriteria (ShouldBuildExternal ("uwp"))
     .WithCriteria (IsRunningOnWindows ())
@@ -132,6 +142,11 @@ Task ("externals-uwp")
     // libSkiaSharp
 
     var buildArch = new Action<string, string, string> ((arch, skiaArch, dir) => {
+        if (!ShouldBuildArch (arch)) {
+            Warning ($"Skipping architecture: {arch}.");
+            return;
+        }
+
         // generate native skia build files
         GnNinja ($"winrt/{arch}", "SkiaSharp",
             $"is_official_build=true skia_enable_tools=false " +
@@ -157,6 +172,11 @@ Task ("externals-uwp")
     // libHarfBuzzSharp
 
     var buildHarfBuzzArch = new Action<string, string> ((arch, dir) => {
+        if (!ShouldBuildArch (arch)) {
+            Warning ($"Skipping architecture: {arch}.");
+            return;
+        }
+
         // build libHarfBuzzSharp
         RunMSBuild ("native-builds/libHarfBuzzSharp_uwp/libHarfBuzzSharp.sln", platformTarget: arch);
 
@@ -174,6 +194,11 @@ Task ("externals-uwp")
     // SkiaSharp.Views.Interop.UWP
 
     var buildInteropArch = new Action<string, string> ((arch, dir) => {
+        if (!ShouldBuildArch (arch)) {
+            Warning ($"Skipping architecture: {arch}.");
+            return;
+        }
+
         // build SkiaSharp.Views.Interop.UWP
         RunMSBuild ("source/SkiaSharp.Views.Interop.UWP.sln", platformTarget: arch);
 
@@ -527,6 +552,11 @@ Task ("externals-android")
     // SkiaSharp
 
     var buildArch = new Action<string, string> ((arch, skiaArch) => {
+        if (!ShouldBuildArch (arch)) {
+            Warning ($"Skipping architecture: {arch}.");
+            return;
+        }
+
         // generate native skia build files
         GnNinja ($"android/{arch}", "SkiaSharp",
             $"is_official_build=true skia_enable_tools=false " +
@@ -549,17 +579,28 @@ Task ("externals-android")
 
     // HarfBuzzSharp
 
-    // build libHarfBuzzSharp
-    RunProcess (ndkbuild, new ProcessSettings {
-        Arguments = "",
-        WorkingDirectory = ROOT_PATH.Combine ("native-builds/libHarfBuzzSharp_android").FullPath,
+    var buildHarfBuzzArch = new Action<string> ((arch) => {
+        if (!ShouldBuildArch (arch)) {
+            Warning ($"Skipping architecture: {arch}.");
+            return;
+        }
+
+        // build libHarfBuzzSharp
+        RunProcess (ndkbuild, new ProcessSettings {
+            Arguments = $"APP_ABI={arch}",
+            WorkingDirectory = ROOT_PATH.Combine ("native-builds/libHarfBuzzSharp_android").FullPath,
+        });
+
+        // copy libSkiaSharp to output
+        var outDir = $"output/native/android/{arch}";
+        EnsureDirectoryExists (outDir);
+        CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_android/libs/{arch}/libHarfBuzzSharp.so", outDir);
     });
 
-    // copy libSkiaSharp to output
-    foreach (var folder in new [] { "x86", "x86_64", "armeabi-v7a", "arm64-v8a" }) {
-        EnsureDirectoryExists ($"output/native/android/{folder}");
-        CopyFileToDirectory ($"native-builds/libHarfBuzzSharp_android/libs/{folder}/libHarfBuzzSharp.so", $"output/native/android/{folder}");
-    }
+    buildHarfBuzzArch ("x86");
+    buildHarfBuzzArch ("x86_64");
+    buildHarfBuzzArch ("armeabi-v7a");
+    buildHarfBuzzArch ("arm64-v8a");
 });
 
 // this builds the native C and C++ externals for Linux
@@ -570,8 +611,6 @@ Task ("externals-linux")
     .WithCriteria (IsRunningOnLinux ())
     .Does (() =>
 {
-    var arches = EnvironmentVariable ("BUILD_ARCH") ?? (Environment.Is64BitOperatingSystem ? "x64" : "x86");  // x64, x86, ARM
-    var BUILD_ARCH = arches.Split (',').Select (a => a.Trim ()).ToArray ();
     var SUPPORT_GPU = (EnvironmentVariable ("SUPPORT_GPU") ?? "1") == "1"; // 1 == true, 0 == false
 
     var CC = EnvironmentVariable ("CC");
@@ -585,6 +624,8 @@ Task ("externals-linux")
     if (!string.IsNullOrEmpty (AR))
         CUSTOM_COMPILERS += $"ar='{AR}' ";
 
+    // libSkiaSharp
+
     var buildArch = new Action<string> ((arch) => {
         var soname = GetVersion ("libSkiaSharp", "soname");
 
@@ -596,7 +637,7 @@ Task ("externals-linux")
             $"skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
             $"skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")} " +
             $"extra_cflags=[ '-DSKIA_C_DLL' ] " +
-            $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc' ] " +
+            $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={ROOT_PATH.CombineWithFilePath("native-builds/libSkiaSharp_linux/libSkiaSharp.map")}' ] " +
             $"{CUSTOM_COMPILERS} " +
             $"linux_soname_version='{soname}'");
 
@@ -607,6 +648,10 @@ Task ("externals-linux")
         CopyFileToDirectory (libSkiaSharp, outDir);
         CopyFile (libSkiaSharp, $"{outDir}/libSkiaSharp.so");
     });
+
+    buildArch ("x64");
+
+    // libHarfBuzzSharp
 
     var buildHarfBuzzArch = new Action<string> ((arch) => {
         // build libHarfBuzzSharp
@@ -626,10 +671,7 @@ Task ("externals-linux")
         CopyFile (so, $"output/native/linux/{arch}/libHarfBuzzSharp.so");
     });
 
-    foreach (var arch in BUILD_ARCH) {
-        buildArch (arch);
-        buildHarfBuzzArch (arch);
-    }
+    buildHarfBuzzArch ("x64");
 });
 
 Task ("externals-tizen")
@@ -640,6 +682,8 @@ Task ("externals-tizen")
 {
     var bat = IsRunningOnWindows () ? ".bat" : "";
     var tizen = TIZEN_STUDIO_HOME.CombineWithFilePath ($"tools/ide/bin/tizen{bat}").FullPath;
+
+    // libSkiaSharp
 
     var buildArch = new Action<string, string> ((arch, skiaArch) => {
         // generate native skia build files
@@ -673,6 +717,11 @@ Task ("externals-tizen")
         CopyFile (libSkiaSharp, $"{outDir}/libSkiaSharp.so");
     });
 
+    buildArch ("armel", "arm");
+    buildArch ("i386", "x86");
+
+    // libHarfBuzzSharp
+
     var buildHarfBuzzArch = new Action<string, string> ((arch, skiaArch) => {
         // build libHarfBuzzSharp
         RunProcess(tizen, new ProcessSettings {
@@ -687,8 +736,6 @@ Task ("externals-tizen")
         CopyFile (so, $"{outDir}/libHarfBuzzSharp.so");
     });
 
-    buildArch ("armel", "arm");
-    buildArch ("i386", "x86");
     buildHarfBuzzArch ("armel", "arm");
     buildHarfBuzzArch ("i386", "x86");
 });
@@ -698,11 +745,9 @@ Task ("externals-tizen")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("externals-download")
+    .IsDependentOn ("download-last-successful-build")
     .Does (() =>
 {
-    if (string.IsNullOrEmpty (AZURE_BUILD_ID))
-        throw new Exception ("Specify a build ID with --azureBuildId=<ID>");
-
     var artifactName = "native-default";
     var artifactFilename = $"{artifactName}.zip";
     var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, artifactName);

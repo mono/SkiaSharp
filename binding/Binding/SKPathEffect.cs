@@ -2,26 +2,16 @@
 
 namespace SkiaSharp
 {
-	public enum SKPath1DPathEffectStyle
-	{
-		Translate,
-		Rotate,
-		Morph,
-	}
-
-	public enum SKTrimPathEffectMode
-	{
-		Normal,
-		Inverted,
-	}
-
-	public class SKPathEffect : SKObject, ISKReferenceCounted
+	public unsafe class SKPathEffect : SKObject, ISKReferenceCounted
 	{
 		[Preserve]
 		internal SKPathEffect (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		public static SKPathEffect CreateCompose(SKPathEffect outer, SKPathEffect inner)
 		{
@@ -60,14 +50,14 @@ namespace SkiaSharp
 
 		public static SKPathEffect Create2DLine(float width, SKMatrix matrix)
 		{
-			return GetObject<SKPathEffect>(SkiaApi.sk_path_effect_create_2d_line(width, ref matrix));
+			return GetObject<SKPathEffect>(SkiaApi.sk_path_effect_create_2d_line(width, &matrix));
 		}
 
 		public static SKPathEffect Create2DPath(SKMatrix matrix, SKPath path)
 		{
 			if (path == null)
 				throw new ArgumentNullException(nameof(path));
-			return GetObject<SKPathEffect>(SkiaApi.sk_path_effect_create_2d_path(ref matrix, path.Handle));
+			return GetObject<SKPathEffect>(SkiaApi.sk_path_effect_create_2d_path(&matrix, path.Handle));
 		}
 
 		public static SKPathEffect CreateDash(float[] intervals, float phase)
@@ -76,7 +66,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException(nameof(intervals));
 			if (intervals.Length % 2 != 0)
 				throw new ArgumentException("The intervals must have an even number of entries.", nameof(intervals));
-			return GetObject<SKPathEffect>(SkiaApi.sk_path_effect_create_dash(intervals, intervals.Length, phase));
+			fixed (float* i = intervals) {
+				return GetObject<SKPathEffect> (SkiaApi.sk_path_effect_create_dash (i, intervals.Length, phase));
+			}
 		}
 
 		public static SKPathEffect CreateTrim(float start, float stop)

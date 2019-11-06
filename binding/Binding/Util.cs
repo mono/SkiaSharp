@@ -15,7 +15,7 @@ namespace SkiaSharp
 		}
 	}
 
-	public static class StringUtilities
+	public unsafe static class StringUtilities
 	{
 		private static int GetUnicodeStringLength(SKTextEncoding encoding)
 		{
@@ -75,6 +75,9 @@ namespace SkiaSharp
 					throw new ArgumentOutOfRangeException(nameof(encoding), $"Encoding {encoding} is not supported.");
 			}
 		}
+
+		internal static string GetString(void* data, int dataLength, SKTextEncoding encoding) =>
+			GetString((IntPtr)data, dataLength, encoding);
 
 		public static string GetString(IntPtr data, int dataLength, SKTextEncoding encoding)
 		{

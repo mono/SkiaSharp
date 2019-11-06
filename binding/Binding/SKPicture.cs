@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public class SKPicture : SKObject, ISKReferenceCounted
+	public unsafe class SKPicture : SKObject, ISKReferenceCounted
 	{
 		[Preserve]
 		internal SKPicture (IntPtr h, bool owns)
@@ -10,11 +10,15 @@ namespace SkiaSharp
 		{
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		public uint UniqueId => SkiaApi.sk_picture_get_unique_id (Handle);
 
 		public SKRect CullRect {
 			get {
-				SkiaApi.sk_picture_get_cull_rect (Handle, out var rect);
+				SKRect rect;
+				SkiaApi.sk_picture_get_cull_rect (Handle, &rect);
 				return rect;
 			}
 		}

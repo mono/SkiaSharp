@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace SkiaSharp
 {
-	public struct SKPMColor
+	public unsafe struct SKPMColor
 	{
 		private uint color;
 
@@ -30,14 +30,20 @@ namespace SkiaSharp
 		public static SKPMColor[] PreMultiply (SKColor[] colors)
 		{
 			var pmcolors = new SKPMColor [colors.Length];
-			SkiaApi.sk_color_premultiply_array (colors, colors.Length, pmcolors);
+			fixed (SKColor* c = colors)
+			fixed (SKPMColor* pm = pmcolors) {
+				SkiaApi.sk_color_premultiply_array (c, colors.Length, pm);
+			}
 			return pmcolors;
 		}
 
 		public static SKColor[] UnPreMultiply (SKPMColor[] pmcolors)
 		{
 			var colors = new SKColor [pmcolors.Length];
-			SkiaApi.sk_color_unpremultiply_array (pmcolors, pmcolors.Length, colors);
+			fixed (SKColor* c = colors)
+			fixed (SKPMColor* pm = pmcolors) {
+				SkiaApi.sk_color_unpremultiply_array (pm, pmcolors.Length, c);
+			}
 			return colors;
 		}
 
