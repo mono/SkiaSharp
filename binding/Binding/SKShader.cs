@@ -41,7 +41,7 @@ namespace SkiaSharp
 		{
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
-			return GetObject<SKShader> (SkiaApi.sk_shader_new_picture (src.Handle, tmx, tmy, ref localMatrix, ref tile));
+			return GetObject<SKShader> (SkiaApi.sk_shader_new_picture (src.Handle, tmx, tmy, &localMatrix, &tile));
 		}
 
 		public static SKShader CreateColorFilter (SKShader shader, SKColorFilter filter)
