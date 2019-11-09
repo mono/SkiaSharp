@@ -141,12 +141,18 @@ namespace SkiaSharp.Views.Android
 		{
 		}
 
+		protected override void OnDetachedFromWindow()
+		{
+			FreeBitmap();
+
+			base.OnDetachedFromWindow();
+		}
+
 		protected override void Dispose(bool disposing)
 		{
 			if (disposing)
-			{
 				FreeBitmap();
-			}
+
 			base.Dispose(disposing);
 		}
 
@@ -156,9 +162,7 @@ namespace SkiaSharp.Views.Android
 			{
 				// free and recycle the bitmap data
 				if (bitmap.Handle != IntPtr.Zero && !bitmap.IsRecycled)
-				{
 					bitmap.Recycle();
-				}
 				bitmap.Dispose();
 				bitmap = null;
 			}
