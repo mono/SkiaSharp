@@ -98,10 +98,13 @@ Task ("externals-windows")
             return;
         }
 
+        var clang = string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "" : $"clang_win='{LLVM_HOME}' ";
+
         // generate native skia build files
         GnNinja ($"win/{arch}", "SkiaSharp",
             $"is_official_build=true skia_enable_tools=false " +
             $"target_os='win' target_cpu='{skiaArch}' " +
+            clang +
             COMMON_GN_ARGS +
             $"skia_use_system_zlib=false skia_use_dng_sdk=true skia_enable_fontmgr_win_gdi=false " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '/MT', '/EHsc', '/Z7' ] " +

@@ -80,5 +80,40 @@ namespace SkiaSharp.Tests
 				}
 			}
 		}
+
+		[SkippableFact]
+		public void CanDrawWithCreatePictureShader()
+		{
+			var breakSize = new SKSize(50, 10);
+			var breakRect = SKRect.Create(breakSize);
+			var indentHalf = 2;
+			var tile = SKRect.Create(0, 0, breakSize.Width * 2 + indentHalf * 4, breakSize.Height * 2 + indentHalf * 4);
+
+			using (var bitmap = new SKBitmap(new SKImageInfo((int)(breakSize.Width * 5 + indentHalf * 2 * 5), (int)(breakSize.Height * 5 + indentHalf * 2 * 5))))
+			using (var canvas = new SKCanvas(bitmap))
+			using (var pictureRecorder = new SKPictureRecorder())
+			using (var pictureCanvas = pictureRecorder.BeginRecording(tile))
+			using (var pictureBreak = new SKPaint { Color = SKColors.DarkRed, Style = SKPaintStyle.Fill })
+			using (var p = new SKPaint())
+			{
+				pictureCanvas.Translate(indentHalf, indentHalf);
+				pictureCanvas.DrawRect(breakRect, pictureBreak);
+				pictureCanvas.Translate(breakSize.Width + indentHalf * 2, 0);
+				pictureCanvas.DrawRect(breakRect, pictureBreak);
+				pictureCanvas.Translate(-(breakSize.Width * 1.5F + indentHalf * 3), breakSize.Height + indentHalf * 2);
+				pictureCanvas.DrawRect(breakRect, pictureBreak);
+				pictureCanvas.Translate(breakSize.Width + indentHalf * 2, 0);
+				pictureCanvas.DrawRect(breakRect, pictureBreak);
+				pictureCanvas.Translate(breakSize.Width + indentHalf * 2, 0);
+				pictureCanvas.DrawRect(breakRect, pictureBreak);
+
+				using (var picture = pictureRecorder.EndRecording())
+				{
+					p.Shader = SKShader.CreatePicture(picture, SKShaderTileMode.Repeat, SKShaderTileMode.Repeat, SKMatrix.MakeIdentity(), tile);
+					var r = SKRect.Create(bitmap.Width, bitmap.Height);
+					canvas.DrawRect(r, p);
+				}
+			}
+		}
 	}
 }

@@ -50,6 +50,7 @@ DirectoryPath NUGET_PACKAGES = EnvironmentVariable ("NUGET_PACKAGES") ?? PROFILE
 DirectoryPath ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? EnvironmentVariable ("ANDROID_HOME") ?? PROFILE_PATH.Combine ("android-sdk");
 DirectoryPath ANDROID_NDK_HOME = EnvironmentVariable ("ANDROID_NDK_HOME") ?? EnvironmentVariable ("ANDROID_NDK_ROOT") ?? PROFILE_PATH.Combine ("android-ndk");
 DirectoryPath TIZEN_STUDIO_HOME = EnvironmentVariable ("TIZEN_STUDIO_HOME") ?? PROFILE_PATH.Combine ("tizen-studio");
+DirectoryPath LLVM_HOME = EnvironmentVariable ("LLVM_HOME") ?? "C:/Program Files/LLVM";
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/depot_tools"));
@@ -572,6 +573,7 @@ Information ("SDK Paths:");
 Information ("  Android SDK:   {0}", ANDROID_SDK_ROOT);
 Information ("  Android NDK:   {0}", ANDROID_NDK_HOME);
 Information ("  Tizen Studio:  {0}", TIZEN_STUDIO_HOME);
+Information ("  LLVM/Clang:    {0}", LLVM_HOME);
 Information ("");
 
 Information ("Environment Variables (whitelisted):");
@@ -582,7 +584,7 @@ var envVarsWhitelist = new [] {
     "node_label", "build_id", "git_sha", "git_branch_name",
     "feature_name", "msbuild_exe", "python_exe", "preview_label",
     "home", "userprofile", "nuget_packages", "build_arch",
-    "android_sdk_root", "android_ndk_root",
+    "android_sdk_root", "android_ndk_root", "llvm_home",
     "android_home", "android_ndk_home", "tizen_studio_home"
 };
 var envVars = EnvironmentVariables ();
