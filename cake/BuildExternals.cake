@@ -102,6 +102,7 @@ Task ("externals-windows")
         GnNinja ($"win/{arch}", "SkiaSharp",
             $"is_official_build=true skia_enable_tools=false " +
             $"target_os='win' target_cpu='{skiaArch}' " +
+            $"clang_win='C:/Program Files (x86)/Microsoft Visual Studio/2019/Enterprise/VC/Tools/Llvm' " +
             COMMON_GN_ARGS +
             $"skia_use_system_zlib=false skia_use_dng_sdk=true skia_enable_fontmgr_win_gdi=false " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '/MT', '/EHsc', '/Z7' ] " +
