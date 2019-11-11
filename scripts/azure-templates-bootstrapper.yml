@@ -73,6 +73,10 @@ jobs:
         - ${{ if contains(parameters.name, '_android_') }}:
           - pwsh: .\scripts\install-android-ndk.ps1
             displayName: Install the Android NDK
+        # install llvm
+        - ${{ if endsWith(parameters.name, '_windows') }}:
+          - pwsh: .\scripts\install-llvm.ps1
+            displayName: Install LLVM
       # install extra bits for the manged builds
       - ${{ if not(startsWith(parameters.name, 'native_')) }}:
         - task: UseDotNet@2
@@ -106,6 +110,7 @@ jobs:
         - pwsh: .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} { .\bootstrapper.ps1 -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} }
           env:
             JavaSdkDirectory: $(JAVA_HOME)
+            LLVM_HOME: $(LLVM_HOME)
           displayName: Run the bootstrapper for ${{ parameters.target }}
       - ${{ if not(endsWith(parameters.name, '_windows')) }}:
         - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
