@@ -2,7 +2,7 @@
 
 namespace SkiaSharp
 {
-	public class SKSvgCanvas
+	public unsafe class SKSvgCanvas
 	{
 		private SKSvgCanvas ()
 		{
@@ -14,7 +14,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (writer));
 			}
 
-			return SKObject.GetObject<SKCanvas> (SkiaApi.sk_svgcanvas_create (ref bounds, writer.Handle));
+			return SKObject.GetObject<SKCanvas> (SkiaApi.sk_svgcanvas_create (&bounds, writer.Handle));
 		}
 	}
 }

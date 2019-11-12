@@ -2,24 +2,7 @@
 
 namespace SkiaSharp
 {
-	public enum SKPathVerb
-	{
-		Move,
-		Line,
-		Quad,
-		Conic,
-		Cubic,
-		Close,
-		Done
-	}
-
-	public enum SKPathAddMode
-	{
-		Append,
-		Extend
-	}
-
-	public class SKPath : SKObject
+	public unsafe class SKPath : SKObject
 	{
 		[Preserve]
 		internal SKPath (IntPtr handle, bool owns)
@@ -43,6 +26,9 @@ namespace SkiaSharp
 			}
 		}
 
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		protected override void DisposeNative () =>
 			SkiaApi.sk_path_delete (Handle);
 
@@ -62,15 +48,15 @@ namespace SkiaSharp
 
 		public bool IsEmpty => VerbCount == 0;
 
-		public bool IsOval => SkiaApi.sk_path_is_oval (Handle, IntPtr.Zero);
+		public bool IsOval => SkiaApi.sk_path_is_oval (Handle, null);
 
 		public bool IsRoundRect => SkiaApi.sk_path_is_rrect (Handle, IntPtr.Zero);
 
-		public bool IsLine => SkiaApi.sk_path_is_line (Handle, IntPtr.Zero);
+		public bool IsLine => SkiaApi.sk_path_is_line (Handle, null);
 
-		public bool IsRect => SkiaApi.sk_path_is_rect (Handle, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+		public bool IsRect => SkiaApi.sk_path_is_rect (Handle, null, null, null);
 
-		public SKPathSegmentMask SegmentMasks => SkiaApi.sk_path_get_segment_masks (Handle);
+		public SKPathSegmentMask SegmentMasks => (SKPathSegmentMask)SkiaApi.sk_path_get_segment_masks (Handle);
 
 		public int VerbCount => SkiaApi.sk_path_count_verbs (Handle);
 
@@ -82,14 +68,16 @@ namespace SkiaSharp
 
 		public SKPoint LastPoint {
 			get {
-				SkiaApi.sk_path_get_last_point (Handle, out var point);
+				SKPoint point;
+				SkiaApi.sk_path_get_last_point (Handle, &point);
 				return point;
 			}
 		}
 
 		public SKRect Bounds {
 			get {
-				SkiaApi.sk_path_get_bounds (Handle, out var rect);
+				SKRect rect;
+				SkiaApi.sk_path_get_bounds (Handle, &rect);
 				return rect;
 			}
 		}
@@ -106,7 +94,8 @@ namespace SkiaSharp
 
 		public SKRect GetOvalBounds ()
 		{
-			if (SkiaApi.sk_path_is_oval (Handle, out var bounds)) {
+			SKRect bounds;
+			if (SkiaApi.sk_path_is_oval (Handle, &bounds)) {
 				return bounds;
 			} else {
 				return SKRect.Empty;
@@ -128,11 +117,13 @@ namespace SkiaSharp
 		public SKPoint[] GetLine ()
 		{
 			var temp = new SKPoint[2];
-			var result = SkiaApi.sk_path_is_line (Handle, temp);
-			if (result) {
-				return temp;
-			} else {
-				return null;
+			fixed (SKPoint* t = temp) {
+				var result = SkiaApi.sk_path_is_line (Handle, t);
+				if (result) {
+					return temp;
+				} else {
+					return null;
+				}
 			}
 		}
 
@@ -141,11 +132,16 @@ namespace SkiaSharp
 
 		public SKRect GetRect (out bool isClosed, out SKPathDirection direction)
 		{
-			var result = SkiaApi.sk_path_is_rect (Handle, out var rect, out isClosed, out direction);
-			if (result) {
-				return rect;
-			} else {
-				return SKRect.Empty;
+			byte c;
+			fixed (SKPathDirection* d = &direction) {
+				SKRect rect;
+				var result = SkiaApi.sk_path_is_rect (Handle, &rect, &c, d);
+				isClosed = c > 0;
+				if (result) {
+					return rect;
+				} else {
+					return SKRect.Empty;
+				}
 			}
 		}
 
@@ -154,7 +150,8 @@ namespace SkiaSharp
 			if (index < 0 || index >= PointCount)
 				throw new ArgumentOutOfRangeException (nameof (index));
 
-			SkiaApi.sk_path_get_point (Handle, index, out var point);
+			SKPoint point;
+			SkiaApi.sk_path_get_point (Handle, index, &point);
 			return point;
 		}
 
@@ -165,8 +162,12 @@ namespace SkiaSharp
 			return points;
 		}
 
-		public int GetPoints (SKPoint[] points, int max) =>
-			SkiaApi.sk_path_get_points (Handle, points, max);
+		public int GetPoints (SKPoint[] points, int max)
+		{
+			fixed (SKPoint* p = points) {
+				return SkiaApi.sk_path_get_points (Handle, p, max);
+			}
+		}
 
 		public bool Contains (float x, float y) =>
 			SkiaApi.sk_path_contains (Handle, x, y);
@@ -244,7 +245,7 @@ namespace SkiaSharp
 			SkiaApi.sk_path_arc_to (Handle, rx, ry, xAxisRotate, largeArc, sweep, x, y);
 
 		public void ArcTo (SKRect oval, float startAngle, float sweepAngle, bool forceMoveTo) =>
-			SkiaApi.sk_path_arc_to_with_oval (Handle, ref oval, startAngle, sweepAngle, forceMoveTo);
+			SkiaApi.sk_path_arc_to_with_oval (Handle, &oval, startAngle, sweepAngle, forceMoveTo);
 
 		public void ArcTo (SKPoint point1, SKPoint point2, float radius) =>
 			SkiaApi.sk_path_arc_to_with_points (Handle, point1.X, point1.Y, point2.X, point2.Y, radius);
@@ -268,14 +269,14 @@ namespace SkiaSharp
 			SkiaApi.sk_path_reset (Handle);
 
 		public void AddRect (SKRect rect, SKPathDirection direction = SKPathDirection.Clockwise) =>
-			SkiaApi.sk_path_add_rect (Handle, ref rect, direction);
+			SkiaApi.sk_path_add_rect (Handle, &rect, direction);
 
 		public void AddRect (SKRect rect, SKPathDirection direction, uint startIndex)
 		{
 			if (startIndex > 3)
 				throw new ArgumentOutOfRangeException (nameof (startIndex), "Starting index must be in the range of 0..3 (inclusive).");
 
-			SkiaApi.sk_path_add_rect_start (Handle, ref rect, direction, startIndex);
+			SkiaApi.sk_path_add_rect_start (Handle, &rect, direction, startIndex);
 		}
 
 		public void AddRoundRect (SKRoundRect rect, SKPathDirection direction = SKPathDirection.Clockwise)
@@ -293,10 +294,10 @@ namespace SkiaSharp
 		}
 
 		public void AddOval (SKRect rect, SKPathDirection direction = SKPathDirection.Clockwise) =>
-			SkiaApi.sk_path_add_oval (Handle, ref rect, direction);
+			SkiaApi.sk_path_add_oval (Handle, &rect, direction);
 
 		public void AddArc (SKRect oval, float startAngle, float sweepAngle) =>
-			SkiaApi.sk_path_add_arc (Handle, ref oval, startAngle, sweepAngle);
+			SkiaApi.sk_path_add_arc (Handle, &oval, startAngle, sweepAngle);
 
 		public bool GetBounds (out SKRect rect)
 		{
@@ -304,19 +305,22 @@ namespace SkiaSharp
 			if (isEmpty) {
 				rect = SKRect.Empty;
 			} else {
-				SkiaApi.sk_path_get_bounds (Handle, out rect);
+				fixed (SKRect* r = &rect) {
+					SkiaApi.sk_path_get_bounds (Handle, r);
+				}
 			}
 			return !isEmpty;
 		}
 
 		public SKRect ComputeTightBounds ()
 		{
-			SkiaApi.sk_path_compute_tight_bounds (Handle, out var rect);
+			SKRect rect;
+			SkiaApi.sk_path_compute_tight_bounds (Handle, &rect);
 			return rect;
 		}
 
 		public void Transform (SKMatrix matrix) =>
-			SkiaApi.sk_path_transform (Handle, ref matrix);
+			SkiaApi.sk_path_transform (Handle, &matrix);
 
 		public void AddPath (SKPath other, float dx, float dy, SKPathAddMode mode = SKPathAddMode.Append)
 		{
@@ -331,7 +335,9 @@ namespace SkiaSharp
 			if (other == null)
 				throw new ArgumentNullException (nameof (other));
 
-			SkiaApi.sk_path_add_path_matrix (Handle, other.Handle, ref matrix, mode);
+			fixed (SKMatrix* m = &matrix) {
+				SkiaApi.sk_path_add_path_matrix (Handle, other.Handle, m, mode);
+			}
 		}
 
 		public void AddPath (SKPath other, SKPathAddMode mode = SKPathAddMode.Append)
@@ -351,7 +357,7 @@ namespace SkiaSharp
 		}
 
 		public void AddRoundRect (SKRect rect, float rx, float ry, SKPathDirection dir = SKPathDirection.Clockwise) =>
-			SkiaApi.sk_path_add_rounded_rect (Handle, ref rect, rx, ry, dir);
+			SkiaApi.sk_path_add_rounded_rect (Handle, &rect, rx, ry, dir);
 
 		[Obsolete ("Use AddRoundRect instead.")]
 		public void AddRoundedRect (SKRect rect, float rx, float ry, SKPathDirection dir = SKPathDirection.Clockwise) =>
@@ -364,7 +370,9 @@ namespace SkiaSharp
 		{
 			if (points == null)
 				throw new ArgumentNullException (nameof (points));
-			SkiaApi.sk_path_add_poly (Handle, points, points.Length, close);
+			fixed (SKPoint* p = points) {
+				SkiaApi.sk_path_add_poly (Handle, p, points.Length, close);
+			}
 		}
 
 		public Iterator CreateIterator (bool forceClose) =>
@@ -413,8 +421,12 @@ namespace SkiaSharp
 			}
 		}
 
-		public bool GetTightBounds (out SKRect result) =>
-			SkiaApi.sk_pathop_tight_bounds (Handle, out result);
+		public bool GetTightBounds (out SKRect result)
+		{
+			fixed (SKRect* r = &result) {
+				return SkiaApi.sk_pathop_tight_bounds (Handle, r);
+			}
+		}
 
 		public string ToSvgPathData ()
 		{
@@ -453,8 +465,9 @@ namespace SkiaSharp
 		{
 			if (pts == null)
 				throw new ArgumentNullException (nameof (pts));
-
-			return SkiaApi.sk_path_convert_conic_to_quads (ref p0, ref p1, ref p2, w, pts, pow2);
+			fixed (SKPoint* ptsptr = pts) {
+				return SkiaApi.sk_path_convert_conic_to_quads (&p0, &p1, &p2, w, ptsptr, pow2);
+			}
 		}
 
 		public class Iterator : SKObject
@@ -467,6 +480,9 @@ namespace SkiaSharp
 				this.path = path;
 			}
 
+			protected override void Dispose (bool disposing) =>
+				base.Dispose (disposing);
+
 			protected override void DisposeNative () =>
 				SkiaApi.sk_path_iter_destroy (Handle);
 
@@ -476,7 +492,9 @@ namespace SkiaSharp
 					throw new ArgumentNullException (nameof (points));
 				if (points.Length != 4)
 					throw new ArgumentException ("Must be an array of four elements.", nameof (points));
-				return SkiaApi.sk_path_iter_next (Handle, points, doConsumeDegenerates ? 1 : 0, exact ? 1 : 0);
+				fixed (SKPoint* p = points) {
+					return SkiaApi.sk_path_iter_next (Handle, p, doConsumeDegenerates ? 1 : 0, exact ? 1 : 0);
+				}
 			}
 
 			public float ConicWeight () =>
@@ -497,6 +515,9 @@ namespace SkiaSharp
 				this.path = path;
 			}
 
+			protected override void Dispose (bool disposing) =>
+				base.Dispose (disposing);
+
 			protected override void DisposeNative () =>
 				SkiaApi.sk_path_rawiter_destroy (Handle);
 
@@ -506,7 +527,9 @@ namespace SkiaSharp
 					throw new ArgumentNullException (nameof (points));
 				if (points.Length != 4)
 					throw new ArgumentException ("Must be an array of four elements.", nameof (points));
-				return SkiaApi.sk_path_rawiter_next (Handle, points);
+				fixed (SKPoint* p = points) {
+					return SkiaApi.sk_path_rawiter_next (Handle, p);
+				}
 			}
 
 			public float ConicWeight () =>
@@ -532,6 +555,9 @@ namespace SkiaSharp
 
 				return SkiaApi.sk_opbuilder_resolve (Handle, result.Handle);
 			}
+
+			protected override void Dispose (bool disposing) =>
+				base.Dispose (disposing);
 
 			protected override void DisposeNative () =>
 				SkiaApi.sk_opbuilder_destroy (Handle);

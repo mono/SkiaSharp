@@ -13,6 +13,7 @@ void RunMSBuild (
     MSBuild (solution, c => {
         c.Configuration = CONFIGURATION;
         c.Verbosity = VERBOSITY;
+        c.ToolVersion = MSBuildToolVersion.VS2017;
 
         if (restoreOnly) {
             c.Targets.Clear();
@@ -71,6 +72,8 @@ void RunTests (FilePath testAssembly, bool is32)
         ReportName = "TestResults",
         XmlReport = true,
         UseX86 = is32,
+        NoAppDomain = true,
+        Parallelism = ParallelismOption.All,
         OutputDirectory = dir,
         WorkingDirectory = dir,
         ArgumentCustomization = args => args.Append ("-verbose"),
@@ -361,12 +364,7 @@ async Task<NuGetDiff> CreateNuGetDiffAsync ()
     comparer.SearchPaths.AddRange (GetReferenceSearchPaths ());
     comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
 
-    var AddDep = new Func<string, string, Task> (async (id, platform) => {
-        var version = GetVersion (id, "release");
-        var root = await comparer.ExtractCachedPackageAsync(id, version);
-        comparer.SearchPaths.Add(System.IO.Path.Combine(root, "lib", platform));
-    });
-
+    await AddDep ("OpenTK.GLControl", "NET40", "reference");
     await AddDep ("OpenTK.GLControl", "NET40");
     await AddDep ("Tizen.NET", "netstandard2.0");
     await AddDep ("Xamarin.Forms", "netstandard2.0");
@@ -375,9 +373,17 @@ async Task<NuGetDiff> CreateNuGetDiffAsync ()
     await AddDep ("Xamarin.Forms", "Xamarin.Mac");
     await AddDep ("Xamarin.Forms", "tizen40");
     await AddDep ("Xamarin.Forms", "uap10.0");
+    await AddDep ("Xamarin.Forms.Platform.WPF", "net45");
     await AddDep ("GtkSharp", "netstandard2.0");
     await AddDep ("GLibSharp", "netstandard2.0");
     await AddDep ("AtkSharp", "netstandard2.0");
 
     return comparer;
+
+    async Task AddDep(string id, string platform, string type = "release")
+    {
+        var version = GetVersion (id, type);
+        var root = await comparer.ExtractCachedPackageAsync(id, version);
+        comparer.SearchPaths.Add(System.IO.Path.Combine(root, "lib", platform));
+    }
 }

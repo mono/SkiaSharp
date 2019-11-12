@@ -3,12 +3,8 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	[StructLayout(LayoutKind.Sequential)]
-	public struct SKMatrix {
-		private float scaleX, skewX, transX;
-		private float skewY, scaleY, transY;
-		private float persp0, persp1, persp2;
-
+	public unsafe partial struct SKMatrix
+	{
 		private class Indices {
 			public const int ScaleX = 0;
 			public const int SkewX = 1;
@@ -22,51 +18,6 @@ namespace SkiaSharp
 
 			public const int Count = 9;
 		};
-
-		public float ScaleX {
-			get { return scaleX; }
-			set { scaleX = value; }
-		}
-
-		public float SkewX {
-			get { return skewX; }
-			set { skewX = value; }
-		}
-
-		public float TransX {
-			get { return transX; }
-			set { transX = value; }
-		}
-
-		public float SkewY {
-			get { return skewY; }
-			set { skewY = value; }
-		}
-
-		public float ScaleY {
-			get { return scaleY; }
-			set { scaleY = value; }
-		}
-
-		public float TransY {
-			get { return transY; }
-			set { transY = value; }
-		}
-
-		public float Persp0 {
-			get { return persp0; }
-			set { persp0 = value; }
-		}
-
-		public float Persp1 {
-			get { return persp1; }
-			set { persp1 = value; }
-		}
-
-		public float Persp2 {
-			get { return persp2; }
-			set { persp2 = value; }
-		}
 
 		public SKMatrix (
 			float scaleX, float skewX, float transX,
@@ -362,42 +313,65 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 
 		public bool TryInvert (out SKMatrix inverse)
 		{
-			return SkiaApi.sk_matrix_try_invert (ref this, out inverse);
+			fixed (SKMatrix* i = &inverse)
+			fixed (SKMatrix* t = &this) {
+				return SkiaApi.sk_matrix_try_invert (t, i);
+			}
 		}
 
 		public static void Concat (ref SKMatrix target, SKMatrix first, SKMatrix second)
 		{
-			SkiaApi.sk_matrix_concat (ref target, ref first, ref second);
+			fixed (SKMatrix* t = &target) {
+				SkiaApi.sk_matrix_concat (t, &first, &second);
+			}
 		}
 
 		public static void Concat (ref SKMatrix target, ref SKMatrix first, ref SKMatrix second)
 		{
-			SkiaApi.sk_matrix_concat (ref target, ref first, ref second);
+			fixed (SKMatrix* t = &target)
+			fixed (SKMatrix* f = &first)
+			fixed (SKMatrix* s = &second) {
+				SkiaApi.sk_matrix_concat (t, f, s);
+			}
 		}
 
 		public static void PreConcat (ref SKMatrix target, SKMatrix matrix)
 		{
-			SkiaApi.sk_matrix_pre_concat (ref target, ref matrix);
+			fixed (SKMatrix* t = &target) {
+				SkiaApi.sk_matrix_pre_concat (t, &matrix);
+			}
 		}
 
 		public static void PreConcat (ref SKMatrix target, ref SKMatrix matrix)
 		{
-			SkiaApi.sk_matrix_pre_concat (ref target, ref matrix);
+			fixed (SKMatrix* t = &target)
+			fixed (SKMatrix* m = &matrix) {
+				SkiaApi.sk_matrix_pre_concat (t, m);
+			}
 		}
 
 		public static void PostConcat (ref SKMatrix target, SKMatrix matrix)
 		{
-			SkiaApi.sk_matrix_post_concat (ref target, ref matrix);
+			fixed (SKMatrix* t = &target) {
+				SkiaApi.sk_matrix_post_concat (t, &matrix);
+			}
 		}
 
 		public static void PostConcat (ref SKMatrix target, ref SKMatrix matrix)
 		{
-			SkiaApi.sk_matrix_post_concat (ref target, ref matrix);
+			fixed (SKMatrix* t = &target)
+			fixed (SKMatrix* m = &matrix) {
+				SkiaApi.sk_matrix_post_concat (t, m);
+			}
 		}
 
 		public static void MapRect (ref SKMatrix matrix, out SKRect dest, ref SKRect source)
 		{
-			SkiaApi.sk_matrix_map_rect (ref matrix, out dest, ref source);
+			fixed (SKMatrix* m = &matrix)
+			fixed (SKRect* d = &dest)
+			fixed (SKRect* s = &source) {
+				SkiaApi.sk_matrix_map_rect (m, d, s);
+			}
 		}
 
 		public SKRect MapRect (SKRect source)
@@ -415,11 +389,10 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			if (result.Length != points.Length)
 				throw new ArgumentException ("Buffers must be the same size.");
 
-			unsafe {
-				fixed (SKPoint* rp = result)
-				fixed (SKPoint* pp = points) {
-					SkiaApi.sk_matrix_map_points (ref this, (IntPtr)rp, (IntPtr)pp, result.Length);
-				}
+			fixed (SKMatrix* t = &this)
+			fixed (SKPoint* rp = result)
+			fixed (SKPoint* pp = points) {
+				SkiaApi.sk_matrix_map_points (t, rp, pp, result.Length);
 			}
 		}
 
@@ -442,11 +415,10 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			if (result.Length != vectors.Length)
 				throw new ArgumentException ("Buffers must be the same size.");
 
-			unsafe {
-				fixed (SKPoint* rp = result)
-				fixed (SKPoint* pp = vectors) {
-					SkiaApi.sk_matrix_map_vectors (ref this, (IntPtr)rp, (IntPtr)pp, result.Length);
-				}
+			fixed (SKMatrix* t = &this)
+			fixed (SKPoint* rp = result)
+			fixed (SKPoint* pp = vectors) {
+				SkiaApi.sk_matrix_map_vectors (t, rp, pp, result.Length);
 			}
 		}
 
@@ -467,32 +439,37 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 
 		public SKPoint MapPoint (float x, float y)
 		{
-			SkiaApi.sk_matrix_map_xy (ref this, x, y, out var result);
+			SKPoint result;
+			fixed (SKMatrix* t = &this) {
+				SkiaApi.sk_matrix_map_xy (t, x, y, &result);
+			}
 			return result;
 		}
 
 		public SKPoint MapVector (float x, float y)
 		{
-			SkiaApi.sk_matrix_map_vector (ref this, x, y, out var result);
+			SKPoint result;
+			fixed (SKMatrix* t = &this) {
+				SkiaApi.sk_matrix_map_vector (t, x, y, &result);
+			}
 			return result;
 		}
 
 		public float MapRadius (float radius)
 		{
-			return SkiaApi.sk_matrix_map_radius (ref this, radius);
+			fixed (SKMatrix* t = &this) {
+				return SkiaApi.sk_matrix_map_radius (t, radius);
+			}
 		}
 	}
 
-	public class SK3dView : SKObject
+	public unsafe class SK3dView : SKObject
 	{
 		[Preserve]
 		internal SK3dView (IntPtr x, bool owns)
 			: base (x, owns)
 		{
 		}
-
-		protected override void DisposeNative () =>
-			SkiaApi.sk_3dview_destroy (Handle);
 
 		public SK3dView ()
 			: this (SkiaApi.sk_3dview_new (), true)
@@ -501,7 +478,13 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 				throw new InvalidOperationException ("Unable to create a new SK3dView instance.");
 			}
 		}
-		
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
+		protected override void DisposeNative () =>
+			SkiaApi.sk_3dview_destroy (Handle);
+
 		public SKMatrix Matrix {
 			get {
 				SKMatrix matrix = SKMatrix.MakeIdentity ();
@@ -512,7 +495,9 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		
 		public void GetMatrix (ref SKMatrix matrix)
 		{
-			SkiaApi.sk_3dview_get_matrix (Handle, ref matrix);
+			fixed (SKMatrix* m = &matrix) {
+				SkiaApi.sk_3dview_get_matrix (Handle, m);
+			}
 		}
 		
 		public void Save ()
@@ -589,13 +574,16 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		}
 	}
 
-	public class SKMatrix44 : SKObject
+	public unsafe class SKMatrix44 : SKObject
 	{
 		[Preserve]
 		internal SKMatrix44 (IntPtr x, bool owns)
 			: base (x, owns)
 		{
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_matrix44_destroy (Handle);
@@ -637,10 +625,17 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		}
 
 		public SKMatrix44 (SKMatrix src)
-			: this (SkiaApi.sk_matrix44_new_matrix (ref src), true)
+			: this (CreateNew (ref src), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKMatrix44 instance.");
+			}
+		}
+
+		private static IntPtr CreateNew (ref SKMatrix src)
+		{
+			fixed (SKMatrix* s = &src) {
+				return SkiaApi.sk_matrix44_new_matrix (s);
 			}
 		}
 
@@ -707,7 +702,8 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 
 		public SKMatrix Matrix {
 			get {
-				SkiaApi.sk_matrix44_to_matrix (Handle, out var matrix);
+				SKMatrix matrix;
+				SkiaApi.sk_matrix44_to_matrix (Handle, &matrix);
 				return matrix;
 			}
 		}
@@ -743,7 +739,9 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			if (dst.Length != 16) {
 				throw new ArgumentException ("The destination array must be 16 entries.", nameof (dst));
 			}
-			SkiaApi.sk_matrix44_as_col_major (Handle, dst);
+			fixed (float* d = dst) {
+				SkiaApi.sk_matrix44_as_col_major (Handle, d);
+			}
 		}
 
 		public float [] ToRowMajor ()
@@ -761,7 +759,9 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			if (dst.Length != 16) {
 				throw new ArgumentException ("The destination array must be 16 entries.", nameof (dst));
 			}
-			SkiaApi.sk_matrix44_as_row_major (Handle, dst);
+			fixed (float* d = dst) {
+				SkiaApi.sk_matrix44_as_row_major (Handle, d);
+			}
 		}
 
 		public void SetColumnMajor (float [] src)
@@ -772,7 +772,9 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			if (src.Length != 16) {
 				throw new ArgumentException ("The source array must be 16 entries.", nameof (src));
 			}
-			SkiaApi.sk_matrix44_set_col_major (Handle, src);
+			fixed (float* s = src) {
+				SkiaApi.sk_matrix44_set_col_major (Handle, s);
+			}
 		}
 
 		public void SetRowMajor (float [] src)
@@ -783,7 +785,9 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			if (src.Length != 16) {
 				throw new ArgumentException ("The source array must be 16 entries.", nameof (src));
 			}
-			SkiaApi.sk_matrix44_set_row_major (Handle, src);
+			fixed (float* s = src) {
+				SkiaApi.sk_matrix44_set_row_major (Handle, s);
+			}
 		}
 
 		public void SetTranslate (float dx, float dy, float dz)
@@ -916,7 +920,10 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 				throw new ArgumentException ("The destination vector array must be 4 entries.", nameof (dstVector4));
 			}
 
-			SkiaApi.sk_matrix44_map_scalars (Handle, srcVector4, dstVector4);
+			fixed (float* s = srcVector4)
+			fixed (float* d = dstVector4) {
+				SkiaApi.sk_matrix44_map_scalars (Handle, s, d);
+			}
 		}
 
 		public SKPoint MapPoint (SKPoint src)
@@ -983,7 +990,10 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 				throw new ArgumentException ("The source vector array must have the same number of pairs as the destination vector array has quads.", nameof (dst4));
 			}
 
-			SkiaApi.sk_matrix44_map2 (Handle, src2, src2.Length / 2, dst4);
+			fixed (float* s = src2)
+			fixed (float* d = dst4) {
+				SkiaApi.sk_matrix44_map2 (Handle, s, src2.Length / 2, d);
+			}
 		}
 
 		public bool Preserves2DAxisAlignment (float epsilon)

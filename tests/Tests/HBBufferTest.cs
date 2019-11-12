@@ -10,7 +10,7 @@ namespace HarfBuzzSharp.Tests
 		private const string SimpleText = "1234";
 
 		private const string SerializedSimpleText = "gid25=0+772|gid26=1+772|gid27=2+772|gid28=3+772";
-		
+
 		[SkippableFact]
 		public void ShouldHaveCorrectContentType()
 		{
@@ -61,6 +61,23 @@ namespace HarfBuzzSharp.Tests
 		}
 
 		[SkippableFact]
+		public void ShouldAdd()
+		{
+			using (var buffer = new Buffer())
+			{
+				buffer.ContentType = ContentType.Unicode;
+
+				buffer.Add(55, 1337);
+
+				Assert.Equal(1, buffer.Length);
+
+				Assert.Equal(55u, buffer.GlyphInfos[0].Codepoint);
+
+				Assert.Equal(1337u, buffer.GlyphInfos[0].Cluster);
+			}
+		}
+
+		[SkippableFact]
 		public void ShouldAddUtfByString()
 		{
 			using (var buffer = new Buffer())
@@ -69,11 +86,11 @@ namespace HarfBuzzSharp.Tests
 
 				Assert.Equal(1, buffer.Length);
 
-				buffer.AddUtf8("B");
+				buffer.AddUtf16("B");
 
 				Assert.Equal(2, buffer.Length);
 
-				buffer.AddUtf8("C");
+				buffer.AddUtf32("C");
 
 				Assert.Equal(3, buffer.Length);
 			}
@@ -84,9 +101,9 @@ namespace HarfBuzzSharp.Tests
 		{
 			using (var buffer = new Buffer())
 			{
-				var utf8 = Encoding.UTF8.GetBytes("A").AsSpan();
+				var bytes = Encoding.UTF8.GetBytes("A").AsSpan();
 
-				buffer.AddUtf8(utf8);
+				buffer.AddUtf8(bytes);
 
 				Assert.Equal(1, buffer.Length);
 
@@ -96,7 +113,11 @@ namespace HarfBuzzSharp.Tests
 
 				Assert.Equal(2, buffer.Length);
 
-				buffer.AddUtf32("C");
+				bytes = Encoding.UTF32.GetBytes("C");
+
+				var utf32 = new int[] { bytes[0] };
+
+				buffer.AddUtf32(utf32);
 
 				Assert.Equal(3, buffer.Length);
 			}

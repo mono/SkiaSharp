@@ -1,24 +1,30 @@
 trigger:
   - master
-  - development
+  - refs/tags/*
 
 variables:
   FEATURE_NAME_PREFIX: 'feature/'
   VERBOSITY: normal
   GIT_SHA: $(Build.SourceVersion)
   GIT_BRANCH_NAME: $(Build.SourceBranchName)
-  BUILD_NUMBER: $[counter('$(Build.SourceBranchName)_counter', 1)]
+  BUILD_NUMBER: $[counter(variables['Build.SourceBranch'], 150)]
   FEATURE_NAME: ''
   PREVIEW_LABEL: 'rc'
   NATIVE_LINUX_PACKAGES: curl mono-complete msbuild python git libfontconfig1-dev clang-3.8 make
-  TIZEN_LINUX_PACKAGES: libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn
-  MANAGED_LINUX_PACKAGES: ttf-ancient-fonts
-  MONO_VERSION: 5_18_1
-  XCODE_VERSION: 10.2.1
-  # CONFIGURATION: 'Release'
-  VM_IMAGE_WINDOWS: vs2017-win2016
-  VM_IMAGE_MAC: macos-10.14
-  VM_IMAGE_LINUX: ubuntu-16.04
+  TIZEN_LINUX_PACKAGES: mono-complete msbuild libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn
+  MANAGED_LINUX_PACKAGES: mono-complete msbuild ttf-ancient-fonts
+  MONO_VERSION_MACOS: 5_18_3
+  MONO_VERSION_LINUX: stable-xenial/snapshots/5.20.1.34
+  XCODE_VERSION: 10.3
+  DOTNET_VERSION: 2.2.108
+  CONFIGURATION: 'Release'
+  VM_IMAGE_WINDOWS: Hosted VS2017
+  VM_IMAGE_MAC: Hosted macOS
+  VM_IMAGE_LINUX: Hosted Ubuntu 1604
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+  # # To speed up builds when debugging DevOps
+  # DOWNLOAD_EXTERNALS: ''
 
 resources:
   repositories:
@@ -32,12 +38,34 @@ stages:
     displayName: Build Native
     jobs:
       # NATIVE JOBS - WINDOWS
-      - template: azure-templates-bootstrapper.yml # Build Native Android (Windows)
+      - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (Windows)
         parameters:
-          name: native_android_windows
-          displayName: Build Native Android (Windows)
+          name: native_android_x86_windows
+          displayName: Build Native Android|x86 (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-android
+          additionalArgs: --buildarch=x86
+      - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (Windows)
+        parameters:
+          name: native_android_x64_windows
+          displayName: Build Native Android|x64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-android
+          additionalArgs: --buildarch=x64
+      - template: azure-templates-bootstrapper.yml # Build Native Android|arm (Windows)
+        parameters:
+          name: native_android_arm_windows
+          displayName: Build Native Android|arm (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-android
+          additionalArgs: --buildarch=arm
+      - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (Windows)
+        parameters:
+          name: native_android_arm64_windows
+          displayName: Build Native Android|arm64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-android
+          additionalArgs: --buildarch=arm64
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (Windows)
         parameters:
           name: native_tizen_windows
@@ -45,25 +73,77 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-tizen
           condition: false # TODO: TIZEN INSTALL BUGS
-      - template: azure-templates-bootstrapper.yml # Build Native UWP (Windows)
+      - template: azure-templates-bootstrapper.yml # Build Native UWP|x86 (Windows)
         parameters:
-          name: native_uwp_windows
-          displayName: Build Native UWP (Windows)
+          name: native_uwp_x86_windows
+          displayName: Build Native UWP|x86 (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-uwp
-      - template: azure-templates-bootstrapper.yml # Build Native Win32 (Windows)
+          additionalArgs: --buildarch=x86
+      - template: azure-templates-bootstrapper.yml # Build Native UWP|x64 (Windows)
         parameters:
-          name: native_win32_windows
-          displayName: Build Native Win32 (Windows)
+          name: native_uwp_x64_windows
+          displayName: Build Native UWP|x64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-uwp
+          additionalArgs: --buildarch=x64
+      - template: azure-templates-bootstrapper.yml # Build Native UWP|arm (Windows)
+        parameters:
+          name: native_uwp_arm_windows
+          displayName: Build Native UWP|arm (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-uwp
+          additionalArgs: --buildarch=arm
+      - template: azure-templates-bootstrapper.yml # Build Native UWP|arm64 (Windows)
+        parameters:
+          name: native_uwp_arm64_windows
+          displayName: Build Native UWP|arm64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-uwp
+          additionalArgs: --buildarch=arm64
+      - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Windows)
+        parameters:
+          name: native_win32_x86_windows
+          displayName: Build Native Win32|x86 (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-windows
-      # NATIVE JOBS - MAC
-      - template: azure-templates-bootstrapper.yml # Build Native Android (macOS)
+          additionalArgs: --buildarch=x86
+      - template: azure-templates-bootstrapper.yml # Build Native Win32|x64 (Windows)
         parameters:
-          name: native_android_macos
-          displayName: Build Native Android (macOS)
+          name: native_win32_x64_windows
+          displayName: Build Native Win32|x64 (Windows)
+          vmImage: $(VM_IMAGE_WINDOWS)
+          target: externals-windows
+          additionalArgs: --buildarch=x64
+      # NATIVE JOBS - MAC
+      - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (macOS)
+        parameters:
+          name: native_android_x86_macos
+          displayName: Build Native Android|x86 (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: externals-android
+          additionalArgs: --buildarch=x86
+      - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (macOS)
+        parameters:
+          name: native_android_x64_macos
+          displayName: Build Native Android|x64 (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-android
+          additionalArgs: --buildarch=x64
+      - template: azure-templates-bootstrapper.yml # Build Native Android|arm (macOS)
+        parameters:
+          name: native_android_arm_macos
+          displayName: Build Native Android|arm (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-android
+          additionalArgs: --buildarch=arm
+      - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (macOS)
+        parameters:
+          name: native_android_arm64_macos
+          displayName: Build Native Android|arm64 (macOS)
+          vmImage: $(VM_IMAGE_MAC)
+          target: externals-android
+          additionalArgs: --buildarch=arm64
       - template: azure-templates-bootstrapper.yml # Build Native iOS (macOS)
         parameters:
           name: native_ios_macos
@@ -100,12 +180,14 @@ stages:
         parameters:
           name: native_linux_linux
           displayName: Build Native Linux (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
           packages: $(NATIVE_LINUX_PACKAGES)
           target: externals-linux
       - template: azure-templates-native-linux.yml # Build Native Linux [No Dependencies] (Linux)
         parameters:
           name: native_linux_nodependencies_linux
           displayName: Build Native Linux [No Dependencies] (Linux)
+          vmImage: $(VM_IMAGE_LINUX)
           packages: $(NATIVE_LINUX_PACKAGES)
           target: externals-linux
           additionalArgs: --additionalGnArgs="skia_use_fontconfig=false"
@@ -128,11 +210,18 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: libs-only
           requiredArtifacts:
-            - native_android_windows
+            - native_android_x86_windows
+            - native_android_x64_windows
+            - native_android_arm_windows
+            - native_android_arm64_windows
             # - native_tizen_windows
             - native_tizen_linux
-            - native_uwp_windows
-            - native_win32_windows
+            - native_uwp_x86_windows
+            - native_uwp_x64_windows
+            - native_uwp_arm_windows
+            - native_uwp_arm64_windows
+            - native_win32_x86_windows
+            - native_win32_x64_windows
       - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
         parameters:
           name: managed_macos
@@ -140,7 +229,10 @@ stages:
           vmImage: $(VM_IMAGE_MAC)
           target: libs-only
           requiredArtifacts:
-            - native_android_macos
+            - native_android_x86_macos
+            - native_android_x64_macos
+            - native_android_arm_macos
+            - native_android_arm64_macos
             - native_ios_macos
             - native_macos_macos
             # - native_tizen_macos
@@ -178,13 +270,14 @@ stages:
           displayName: Package NuGets [No Dependencies]
           vmImage: $(VM_IMAGE_WINDOWS)
           target: nuget-only
+          additionalArgs: --packall=true
           shouldPublish: false
           requiredArtifacts:
             - managed_nodependencies_linux
             - managed_macos
             - managed_windows
           postBuildSteps:
-            - powershell: |
+            - pwsh: |
                 $platforms = (Get-ChildItem -Path ./output/native/*) | Where-Object { $_.Name -NotMatch "linux" }
                 Write-Host "Removing the following platforms:"
                 $platforms | Foreach-Object { Write-Host $_.Name }
@@ -210,13 +303,14 @@ stages:
           displayName: Package NuGets
           vmImage: $(VM_IMAGE_WINDOWS)
           target: nuget-only
+          additionalArgs: --packall=true
           shouldPublish: false
           requiredArtifacts:
             - managed_linux
             - managed_macos
             - managed_windows
           postBuildSteps:
-            - powershell: |
+            - pwsh: |
                 $nupkgs = (Get-ChildItem -Path ./output/nugets/*) | Where-Object { $_.Name -Match "NoDependencies" }
                 Write-Host "Removing the following packages:"
                 $nupkgs | Foreach-Object { Write-Host $_.Name }
@@ -238,7 +332,7 @@ stages:
           - package_nodependencies_windows
           - package_windows
         pool:
-          vmImage: $(VM_IMAGE_LINUX)
+          name: $(VM_IMAGE_LINUX)
         steps:
           - task: DownloadBuildArtifacts@0
             displayName: Download the nuget-nodependencies artifacts
@@ -250,7 +344,7 @@ stages:
             inputs:
               artifactName: nuget-default
               downloadPath: 'download-temp'
-          - powershell: |
+          - pwsh: |
               New-Item '.\output\nugets' -Type Directory -Force | Out-Null
               Get-ChildItem '.\download-temp\nuget-nodependencies\' | Copy-Item -Destination '.\output\nugets' -Recurse -Force
               Get-ChildItem '.\download-temp\nuget-default\' | Copy-Item -Destination '.\output\nugets' -Recurse -Force
@@ -270,23 +364,9 @@ stages:
       dependsOn: package
       condition: eq(variables['System.TeamProject'], 'devdiv')
       jobs:
-        - job: signing                             # Sign NuGets
-          displayName: Sign NuGets
-          pool:
-            name: VSEng-XamarinCustom
-            demands:
-              - corpnet
-          condition: and(succeeded(), or(startsWith(variables['Build.SourceBranch'], 'refs/tags/'), eq(variables['Build.SourceBranch'], 'refs/heads/master')))
-          steps:
-            - checkout: none
-            - template: sign-artifacts.yml@xamarin-templates
-              parameters:
-                targetFolder: '$(Build.ArtifactStagingDirectory)/signed'
-            - task: PublishBuildArtifacts@1
-              displayName: Publish the nuget-signed artifacts
-              inputs:
-                artifactName: nuget-signed
-                pathToPublish: '$(Build.ArtifactStagingDirectory)/signed'
+        - template: sign-artifacts/jobs/v1.yml@xamarin-templates
+          parameters:
+            additionalConditions: eq(variables['Build.SourceBranch'], 'refs/heads/master')
 
   - stage: tests
     displayName: Run Tests
@@ -302,14 +382,23 @@ stages:
           additionalArgs: --skipExternals="all"
           shouldPublish: false
           requiredArtifacts:
-            - native_win32_windows
+            - native_win32_x86_windows
+            - native_win32_x64_windows
           postBuildSteps:
             - task: PublishTestResults@2
-              displayName: Publish the test results
+              displayName: Publish the .NET Framework test results
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
+                testRunTitle: 'Windows .NET Framework Tests'
+            - task: PublishTestResults@2
+              displayName: Publish the .NET Core test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
+                testRunTitle: 'Windows .NET Core Tests'
       - template: azure-templates-bootstrapper.yml # Tests (macOS)
         parameters:
           name: tests_macos
@@ -323,11 +412,19 @@ stages:
             - native_macos_macos
           postBuildSteps:
             - task: PublishTestResults@2
-              displayName: Publish the test results
+              displayName: Publish the Mono test results
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
+                testRunTitle: 'macOS Mono Tests'
+            - task: PublishTestResults@2
+              displayName: Publish the .NET Core test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
+                testRunTitle: 'macOS .NET Core Tests'
       - template: azure-templates-bootstrapper.yml # Tests (Linux)
         parameters:
           name: tests_linux
@@ -342,11 +439,19 @@ stages:
             - native_linux_linux
           postBuildSteps:
             - task: PublishTestResults@2
-              displayName: Publish the test results
+              displayName: Publish the Mono test results
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
+                testRunTitle: 'Linux Mono Tests'
+            - task: PublishTestResults@2
+              displayName: Publish the .NET Core test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
+                testRunTitle: 'Linux .NET Core Tests'
       - template: azure-templates-bootstrapper.yml # Tests [No Dependencies] (Linux)
         parameters:
           name: tests_nodependencies_linux
@@ -361,11 +466,19 @@ stages:
             - native_linux_nodependencies_linux
           postBuildSteps:
             - task: PublishTestResults@2
-              displayName: Publish the test results
+              displayName: Publish the Mono test results
               condition: always()
               inputs:
                 testResultsFormat: xUnit
-                testResultsFiles: 'tests/**/TestResults.xml'
+                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
+                testRunTitle: 'Linux [No Dependencies] Mono Tests'
+            - task: PublishTestResults@2
+              displayName: Publish the .NET Core test results
+              condition: always()
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
+                testRunTitle: 'Linux [No Dependencies] .NET Core Tests'
 
   - stage: samples
     displayName: Build Samples
@@ -381,7 +494,7 @@ stages:
           requiredArtifacts:
             - nuget
           preBuildSteps:
-            - powershell: |
+            - pwsh: |
                 New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
                 Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
               displayName: Copy the *.nupkgs into the correct folder for the samples
@@ -410,7 +523,7 @@ stages:
             - task: InstallAppleProvisioningProfile@1
               inputs:
                 provProfileSecureFile: 'SkiaSharp tvOS Provisioning.mobileprovision'
-            - powershell: |
+            - pwsh: |
                 New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
                 Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
               displayName: Copy the *.nupkgs into the correct folder for the samples
@@ -425,7 +538,7 @@ stages:
           requiredArtifacts:
             - nuget
           preBuildSteps:
-            - powershell: |
+            - pwsh: |
                 New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
                 Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
               displayName: Copy the *.nupkgs into the correct folder for the samples

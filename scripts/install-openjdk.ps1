@@ -16,7 +16,7 @@ $jdk = Join-Path "$HOME" "openjdk"
 if ($InstallDestination) {
     $jdk = $InstallDestination
 }
-Write-Host "Install destination is '$ts'..."
+Write-Host "Install destination is '$jdk'..."
 
 $jdkTemp = Join-Path "$HOME" "openjdk-temp"
 $archive = Join-Path "$jdkTemp" "openjdk.tar.gz"

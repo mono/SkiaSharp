@@ -3,18 +3,8 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	[StructLayout (LayoutKind.Sequential)]
-	public struct SKColorSpacePrimaries
+	public unsafe partial struct SKColorSpacePrimaries
 	{
-		private float fRX;
-		private float fRY;
-		private float fGX;
-		private float fGY;
-		private float fBX;
-		private float fBY;
-		private float fWX;
-		private float fWY;
-
 		public SKColorSpacePrimaries (float[] values)
 		{
 			if (values == null)
@@ -44,46 +34,15 @@ namespace SkiaSharp
 			fWY = wy;
 		}
 
-		public float RX {
-			get => fRX;
-			set => fRX = value;
-		}
-		public float RY {
-			get => fRY;
-			set => fRY = value;
-		}
-		public float GX {
-			get => fGX;
-			set => fGX = value;
-		}
-		public float GY {
-			get => fGY;
-			set => fGY = value;
-		}
-		public float BX {
-			get => fBX;
-			set => fBX = value;
-		}
-		public float BY {
-			get => fBY;
-			set => fBY = value;
-		}
-		public float WX {
-			get => fWX;
-			set => fWX = value;
-		}
-		public float WY {
-			get => fWY;
-			set => fWY = value;
-		}
-
 		public float[] Values => new[] { fRX, fRY, fGX, fGY, fBX, fBY, fWX, fWY };
 
 		public bool ToXyzD50 (SKMatrix44 toXyzD50)
 		{
 			if (toXyzD50 == null)
 				throw new ArgumentNullException (nameof (toXyzD50));
-			return SkiaApi.sk_colorspaceprimaries_to_xyzd50 (ref this, toXyzD50.Handle);
+			fixed (SKColorSpacePrimaries* t = &this) {
+				return SkiaApi.sk_colorspaceprimaries_to_xyzd50 (t, toXyzD50.Handle);
+			}
 		}
 
 		public SKMatrix44 ToXyzD50 ()
@@ -97,17 +56,8 @@ namespace SkiaSharp
 		}
 	}
 
-	[StructLayout (LayoutKind.Sequential)]
-	public struct SKColorSpaceTransferFn
+	public unsafe partial struct SKColorSpaceTransferFn
 	{
-		private float fG;
-		private float fA;
-		private float fB;
-		private float fC;
-		private float fD;
-		private float fE;
-		private float fF;
-
 		public SKColorSpaceTransferFn (float[] values)
 		{
 			if (values == null)
@@ -135,54 +85,50 @@ namespace SkiaSharp
 			fF = f;
 		}
 
-		public float G {
-			get => fG;
-			set => fG = value;
-		}
-		public float A {
-			get => fA;
-			set => fA = value;
-		}
-		public float B {
-			get => fB;
-			set => fB = value;
-		}
-		public float C {
-			get => fC;
-			set => fC = value;
-		}
-		public float D {
-			get => fD;
-			set => fD = value;
-		}
-		public float E {
-			get => fE;
-			set => fE = value;
-		}
-		public float F {
-			get => fF;
-			set => fF = value;
-		}
-
 		public float[] Values => new[] { fG, fA, fB, fC, fD, fE, fF };
 
 		public SKColorSpaceTransferFn Invert ()
 		{
-			SkiaApi.sk_colorspace_transfer_fn_invert (ref this, out var inverted);
+			SKColorSpaceTransferFn inverted;
+			fixed (SKColorSpaceTransferFn* t = &this) {
+				SkiaApi.sk_colorspace_transfer_fn_invert (t, &inverted);
+			}
 			return inverted;
 		}
 
-		public float Transform (float x) =>
-			SkiaApi.sk_colorspace_transfer_fn_transform (ref this, x);
+		public float Transform (float x)
+		{
+			fixed (SKColorSpaceTransferFn* t = &this) {
+				return SkiaApi.sk_colorspace_transfer_fn_transform (t, x);
+			}
+		}
 	}
 
-	public class SKColorSpace : SKObject, ISKReferenceCounted
+	public unsafe class SKColorSpace : SKObject, ISKReferenceCounted
 	{
+		private static readonly SKColorSpace srgb;
+		private static readonly SKColorSpace srgbLinear;
+
+		static SKColorSpace ()
+		{
+			srgb = new SKColorSpaceStatic (SkiaApi.sk_colorspace_new_srgb ());
+			srgbLinear = new SKColorSpaceStatic (SkiaApi.sk_colorspace_new_srgb_linear ());
+		}
+
+		internal static void EnsureStaticInstanceAreInitialized ()
+		{
+			// IMPORTANT: do not remove to ensure that the static instances
+			//            are initialized before any access is made to them
+		}
+
 		[Preserve]
 		internal SKColorSpace (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		public bool GammaIsCloseToSrgb => SkiaApi.sk_colorspace_gamma_close_to_srgb (Handle);
 
@@ -208,18 +154,16 @@ namespace SkiaSharp
 			return SkiaApi.sk_colorspace_equals (left.Handle, right.Handle);
 		}
 
-		public static SKColorSpace CreateSrgb () =>
-			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_srgb ());
+		public static SKColorSpace CreateSrgb () => srgb;
 
-		public static SKColorSpace CreateSrgbLinear () =>
-			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_srgb_linear ());
+		public static SKColorSpace CreateSrgbLinear () => srgbLinear;
 
 		public static SKColorSpace CreateIcc (IntPtr input, long length)
 		{
 			if (input == IntPtr.Zero)
 				throw new ArgumentNullException (nameof (input));
 
-			return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_icc (input, (IntPtr)length));
+			return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_icc ((void*)input, (IntPtr)length));
 		}
 
 		public static SKColorSpace CreateIcc (byte[] input, long length)
@@ -227,7 +171,9 @@ namespace SkiaSharp
 			if (input == null)
 				throw new ArgumentNullException (nameof (input));
 
-			return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_icc (input, (IntPtr)length));
+			fixed (byte* i = input) {
+				return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_icc (i, (IntPtr)length));
+			}
 		}
 
 		public static SKColorSpace CreateIcc (byte[] input)
@@ -235,7 +181,9 @@ namespace SkiaSharp
 			if (input == null)
 				throw new ArgumentNullException (nameof (input));
 
-			return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_icc (input, (IntPtr)input.Length));
+			fixed (byte* i = input) {
+				return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_icc (i, (IntPtr)input.Length));
+			}
 		}
 
 		[Obsolete ("Use CreateRgb (SKColorSpaceRenderTargetGamma, SKMatrix44) instead.")]
@@ -268,11 +216,11 @@ namespace SkiaSharp
 		{
 			if (toXyzD50 == null)
 				throw new ArgumentNullException (nameof (toXyzD50));
-			return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_coeffs (ref coeffs, toXyzD50.Handle));
+			return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_coeffs (&coeffs, toXyzD50.Handle));
 		}
 
 		public static SKColorSpace CreateRgb (SKColorSpaceTransferFn coeffs, SKColorSpaceGamut gamut) =>
-			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_coeffs_and_gamut (ref coeffs, gamut));
+			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_coeffs_and_gamut (&coeffs, gamut));
 
 		public static SKColorSpace CreateRgb (SKNamedGamma gamma, SKMatrix44 toXyzD50)
 		{
@@ -291,13 +239,31 @@ namespace SkiaSharp
 			return SkiaApi.sk_colorspace_to_xyzd50 (Handle, toXyzD50.Handle);
 		}
 
-		public bool GetNumericalTransferFunction (out SKColorSpaceTransferFn fn) =>
-			SkiaApi.sk_colorspace_is_numerical_transfer_fn (Handle, out fn);
+		public bool GetNumericalTransferFunction (out SKColorSpaceTransferFn fn)
+		{
+			fixed (SKColorSpaceTransferFn* f = &fn) {
+				return SkiaApi.sk_colorspace_is_numerical_transfer_fn (Handle, f);
+			}
+		}
 
 		public SKMatrix44 ToXyzD50 () =>
 			GetObject<SKMatrix44> (SkiaApi.sk_colorspace_as_to_xyzd50 (Handle), false);
 
 		public SKMatrix44 FromXyzD50 () =>
 			GetObject<SKMatrix44> (SkiaApi.sk_colorspace_as_from_xyzd50 (Handle), false);
+
+		private sealed class SKColorSpaceStatic : SKColorSpace
+		{
+			internal SKColorSpaceStatic (IntPtr x)
+				: base (x, false)
+			{
+				IgnorePublicDispose = true;
+			}
+
+			protected override void Dispose (bool disposing)
+			{
+				// do not dispose
+			}
+		}
 	}
 }

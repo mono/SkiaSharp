@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	public class SKSurface : SKObject, ISKReferenceCounted
+	public unsafe class SKSurface : SKObject, ISKReferenceCounted
 	{
 		[Obsolete ("Use Create(SKImageInfo) instead.")]
 		public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType) => Create (new SKImageInfo (width, height, colorType, alphaType));
@@ -19,6 +19,9 @@ namespace SkiaSharp
 			: base (h, owns)
 		{
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
 
 		// RASTER surface
 
@@ -38,7 +41,7 @@ namespace SkiaSharp
 		public static SKSurface Create (SKImageInfo info, int rowBytes, SKSurfaceProperties props)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster (ref cinfo, (IntPtr)rowBytes, props?.Handle ?? IntPtr.Zero));
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster (&cinfo, (IntPtr)rowBytes, props?.Handle ?? IntPtr.Zero));
 		}
 
 		// convenience RASTER DIRECT to use a SKPixmap instead of SKImageInfo and IntPtr
@@ -86,7 +89,7 @@ namespace SkiaSharp
 				? new SKSurfaceReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.SKSurfaceReleaseDelegateProxy, out _, out var ctx);
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster_direct (ref cinfo, pixels, (IntPtr)rowBytes, proxy, ctx, props?.Handle ?? IntPtr.Zero));
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_raster_direct (&cinfo, (void*)pixels, (IntPtr)rowBytes, proxy, (void*)ctx, props?.Handle ?? IntPtr.Zero));
 		}
 
 		// GPU BACKEND RENDER TARGET surface
@@ -261,7 +264,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (context));
 
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject<SKSurface> (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, ref cinfo, sampleCount, origin, props?.Handle ?? IntPtr.Zero, shouldCreateWithMips));
+			return GetObject<SKSurface> (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, &cinfo, sampleCount, origin, props?.Handle ?? IntPtr.Zero, shouldCreateWithMips));
 		}
 
 		// NULL surface
@@ -322,7 +325,7 @@ namespace SkiaSharp
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
-			return SkiaApi.sk_surface_read_pixels (Handle, ref cinfo, dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
+			return SkiaApi.sk_surface_read_pixels (Handle, &cinfo, (void*)dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
 		}
 	}
 }

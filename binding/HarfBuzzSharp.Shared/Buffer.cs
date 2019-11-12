@@ -69,9 +69,23 @@ namespace HarfBuzzSharp
 			set => HarfBuzzApi.hb_buffer_set_unicode_funcs (Handle, value.Handle);
 		}
 
-		public GlyphInfo[] GlyphInfos => GetGlyphInfoSpan ().ToArray ();
+		public GlyphInfo[] GlyphInfos {
+			get {
+				var array = GetGlyphInfoSpan ().ToArray ();
+				GC.KeepAlive (this);
+				return array;
+			}
+		}
 
-		public GlyphPosition[] GlyphPositions => GetGlyphPositionSpan ().ToArray ();
+		public GlyphPosition[] GlyphPositions {
+			get {
+				var array = GetGlyphPositionSpan ().ToArray ();
+				GC.KeepAlive (this);
+				return array;
+			}
+		}
+
+		public void Add (int codepoint, int cluster) => Add ((uint)codepoint, (uint)cluster);
 
 		public void Add (uint codepoint, uint cluster)
 		{
@@ -168,6 +182,15 @@ namespace HarfBuzzSharp
 			}
 		}
 
+		public void AddUtf32 (ReadOnlySpan<int> text) => AddUtf32 (text, 0, -1);
+
+		public unsafe void AddUtf32 (ReadOnlySpan<int> text, int itemOffset, int itemLength)
+		{
+			fixed (int* integers = text) {
+				AddUtf32 ((IntPtr)integers, text.Length, itemOffset, itemLength);
+			}
+		}
+
 		public void AddUtf32 (IntPtr text, int textLength) =>
 			AddUtf32 (text, textLength, 0, -1);
 
@@ -188,6 +211,15 @@ namespace HarfBuzzSharp
 		public unsafe void AddCodepoints (ReadOnlySpan<uint> text, int itemOffset, int itemLength)
 		{
 			fixed (uint* codepoints = text) {
+				AddCodepoints ((IntPtr)codepoints, text.Length, itemOffset, itemLength);
+			}
+		}
+
+		public void AddCodepoints (ReadOnlySpan<int> text) => AddCodepoints (text, 0, -1);
+
+		public unsafe void AddCodepoints (ReadOnlySpan<int> text, int itemOffset, int itemLength)
+		{
+			fixed (int* codepoints = text) {
 				AddCodepoints ((IntPtr)codepoints, text.Length, itemOffset, itemLength);
 			}
 		}
@@ -321,6 +353,10 @@ namespace HarfBuzzSharp
 
 			HarfBuzzApi.hb_buffer_deserialize_glyphs (Handle, data, -1, out _, font?.Handle ?? IntPtr.Zero, format);
 		}
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		protected override void DisposeHandler ()
 		{
 			if (Handle != IntPtr.Zero) {

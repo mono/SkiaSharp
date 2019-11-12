@@ -5,14 +5,17 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-	public class GRGlInterface : SKObject, ISKReferenceCounted
+	public unsafe class GRGlInterface : SKObject, ISKReferenceCounted
 	{
 		[Preserve]
 		internal GRGlInterface (IntPtr h, bool owns)
 			: base (h, owns)
 		{
 		}
-		
+
+		protected override void Dispose (bool disposing) =>
+			base.Dispose (disposing);
+
 		public static GRGlInterface CreateDefaultInterface ()
 		{
 			// first try ANGLE, then fall back to the OpenGL-based
@@ -66,7 +69,7 @@ namespace SkiaSharp
 				: get;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
 			try {
-				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_interface (ctx, proxy));
+				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_interface ((void*)ctx, proxy));
 			} finally {
 				gch.Free ();
 			}
@@ -95,7 +98,7 @@ namespace SkiaSharp
 				: get;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
 			try {
-				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gl_interface (ctx, proxy));
+				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gl_interface ((void*)ctx, proxy));
 			} finally {
 				gch.Free ();
 			}
@@ -113,7 +116,7 @@ namespace SkiaSharp
 				: get;
 			var proxy = DelegateProxies.Create (del, DelegateProxies.GRGlGetProcDelegateProxy, out var gch, out var ctx);
 			try {
-				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gles_interface (ctx, proxy));
+				return GetObject<GRGlInterface> (SkiaApi.gr_glinterface_assemble_gles_interface ((void*)ctx, proxy));
 			} finally {
 				gch.Free ();
 			}
