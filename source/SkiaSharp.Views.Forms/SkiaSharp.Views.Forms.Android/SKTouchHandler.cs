@@ -55,9 +55,13 @@ namespace SkiaSharp.Views.Forms
 				case MotionEventActions.Down:
 				case MotionEventActions.PointerDown:
 					{
-						view.Parent.RequestDisallowInterceptTouchEvent(true);
 						var args = new SKTouchEventArgs(id, SKTouchAction.Pressed, coords, true);
 						onTouchAction(args);
+
+						// if we are taking control, prevent the parents from scrolling
+						if (args.Handled)
+							view.Parent?.RequestDisallowInterceptTouchEvent(true);
+
 						e.Handled = args.Handled;
 						break;
 					}
@@ -80,18 +84,25 @@ namespace SkiaSharp.Views.Forms
 				case MotionEventActions.Up:
 				case MotionEventActions.PointerUp:
 					{
-						view.Parent.RequestDisallowInterceptTouchEvent(false);
 						var args = new SKTouchEventArgs(id, SKTouchAction.Released, coords, false);
 						onTouchAction(args);
+
+						// if the last pointer is up, then restore
+						if (evt.ActionMasked == MotionEventActions.Up)
+							view.Parent?.RequestDisallowInterceptTouchEvent(false);
+
 						e.Handled = args.Handled;
 						break;
 					}
 
 				case MotionEventActions.Cancel:
 					{
-						view.Parent.RequestDisallowInterceptTouchEvent(false);
 						var args = new SKTouchEventArgs(id, SKTouchAction.Cancelled, coords, false);
 						onTouchAction(args);
+
+						// if the gesture was cancelled, then restore
+						view.Parent?.RequestDisallowInterceptTouchEvent(false);
+
 						e.Handled = args.Handled;
 						break;
 					}
