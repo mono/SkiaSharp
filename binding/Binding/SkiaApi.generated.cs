@@ -9,6 +9,8 @@ namespace SkiaSharp
 	using gr_backendtexture_t = IntPtr;
 	using gr_context_t = IntPtr;
 	using gr_glinterface_t = IntPtr;
+	using gr_vkbackendcontext_t = IntPtr;
+	using gr_vkinterface_t = IntPtr;
 	using sk_3dview_t = IntPtr;
 	using sk_bitmap_t = IntPtr;
 	using sk_canvas_t = IntPtr;
@@ -67,6 +69,12 @@ namespace SkiaSharp
 	using sk_wstream_t = IntPtr;
 	using sk_xmlstreamwriter_t = IntPtr;
 	using sk_xmlwriter_t = IntPtr;
+	using vk_device_t = IntPtr;
+	using vk_getdeviceprocaddr_t = IntPtr;
+	using vk_getinstanceprocaddr_t = IntPtr;
+	using vk_instance_t = IntPtr;
+	using vk_physical_device_t = IntPtr;
+	using vk_queue_t = IntPtr;
 
 	#endregion
 
@@ -112,6 +120,10 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_gl (Int32 width, Int32 height, Int32 samples, Int32 stencils, GRGlFramebufferInfo* glInfo);
 
+		// gr_backendrendertarget_t* gr_backendrendertarget_new_vulkan(int width, int height, int samples, const gr_vk_imageinfo_t* vkImageInfo)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_backendrendertarget_t gr_backendrendertarget_new_vulkan (Int32 width, Int32 height, Int32 samples, GRVkImageInfo* vkImageInfo);
+
 		// void gr_backendtexture_delete(gr_backendtexture_t* texture)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_backendtexture_delete (gr_backendtexture_t texture);
@@ -147,6 +159,10 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_backendtexture_t gr_backendtexture_new_gl (Int32 width, Int32 height, [MarshalAs (UnmanagedType.I1)] bool mipmapped, GRGlTextureInfo* glInfo);
 
+		// gr_backendtexture_t* gr_backendtexture_new_vulkan(int width, int height, const gr_vk_imageinfo_t* vkInfo)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_backendtexture_t gr_backendtexture_new_vulkan (Int32 width, Int32 height, GRVkImageInfo* vkInfo);
+
 		// void gr_context_abandon_context(gr_context_t* context)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void gr_context_abandon_context (gr_context_t context);
@@ -174,6 +190,10 @@ namespace SkiaSharp
 		// gr_context_t* gr_context_make_gl(const gr_glinterface_t* glInterface)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern gr_context_t gr_context_make_gl (gr_glinterface_t glInterface);
+
+		// gr_context_t* gr_context_make_vulkan(const gr_vkbackendcontext_t* vkBackendContext)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_context_t gr_context_make_vulkan (gr_vkbackendcontext_t vkBackendContext);
 
 		// void gr_context_release_resources_and_abandon_context(gr_context_t* context)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -220,6 +240,27 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool gr_glinterface_validate (gr_glinterface_t glInterface);
+
+		// gr_vkbackendcontext_t* gr_vkbackendcontext_assemble(vk_instance_t* vkInstance, vk_physical_device_t* vkPhysicalDevice, vk_device_t* vkDevice, vk_queue_t* vkQueue, uint32_t graphicsQueueIndex, uint32_t minAPIVersion, uint32_t extensions, uint32_t features, gr_vkinterface_t* grVkInterface)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_vkbackendcontext_t gr_vkbackendcontext_assemble (vk_instance_t vkInstance, vk_physical_device_t vkPhysicalDevice, vk_device_t vkDevice, vk_queue_t vkQueue, UInt32 graphicsQueueIndex, UInt32 minAPIVersion, UInt32 extensions, UInt32 features, gr_vkinterface_t grVkInterface);
+
+		// void gr_vkbackendcontext_unref(gr_vkbackendcontext_t* grVkBackendContext)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_vkbackendcontext_unref (gr_vkbackendcontext_t grVkBackendContext);
+
+		// gr_vkinterface_t* gr_vkinterface_make(vk_getinstanceprocaddr_t* vkGetInstanceProcAddr, vk_getdeviceprocaddr_t* vkGetDeviceProcAddr, vk_instance_t* vkInstance, vk_device_t* vkDevice, uint32_t extensionFlags)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_vkinterface_t gr_vkinterface_make (vk_getinstanceprocaddr_t vkGetInstanceProcAddr, vk_getdeviceprocaddr_t vkGetDeviceProcAddr, vk_instance_t vkInstance, vk_device_t vkDevice, UInt32 extensionFlags);
+
+		// void gr_vkinterface_unref(gr_vkinterface_t* grVkInterface)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_vkinterface_unref (gr_vkinterface_t grVkInterface);
+
+		// bool gr_vkinterface_validate(const gr_vkinterface_t* grVkInterface, uint32_t extensionsFlags)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool gr_vkinterface_validate (gr_vkinterface_t grVkInterface, UInt32 extensionsFlags);
 
 		#endregion
 
@@ -3578,6 +3619,88 @@ namespace SkiaSharp
 		public UInt32 Format {
 			get => fFormat;
 			set => fFormat = value;
+		}
+
+	}
+
+	// gr_vk_alloc_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct GRVkAlloc {
+		// public uint64_t fMemory
+		private UInt64 fMemory;
+		public UInt64 Memory {
+			get => fMemory;
+			set => fMemory = value;
+		}
+
+		// public uint64_t fOffset
+		private UInt64 fOffset;
+		public UInt64 Offset {
+			get => fOffset;
+			set => fOffset = value;
+		}
+
+		// public uint64_t fSize
+		private UInt64 fSize;
+		public UInt64 Size {
+			get => fSize;
+			set => fSize = value;
+		}
+
+		// public uint32_t fFlags
+		private UInt32 fFlags;
+		public UInt32 Flags {
+			get => fFlags;
+			set => fFlags = value;
+		}
+
+		// public bool _private_fUsesSystemHeap
+		private Byte fUsesSystemHeap;
+	}
+
+	// gr_vk_imageinfo_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct GRVkImageInfo {
+		// public uint64_t fImage
+		private UInt64 fImage;
+		public UInt64 Image {
+			get => fImage;
+			set => fImage = value;
+		}
+
+		// public gr_vk_alloc_t fAlloc
+		private GRVkAlloc fAlloc;
+		public GRVkAlloc Alloc {
+			get => fAlloc;
+			set => fAlloc = value;
+		}
+
+		// public uint32_t fImageTiling
+		private UInt32 fImageTiling;
+		public UInt32 ImageTiling {
+			get => fImageTiling;
+			set => fImageTiling = value;
+		}
+
+		// public uint32_t fImageLayout
+		private UInt32 fImageLayout;
+		public UInt32 ImageLayout {
+			get => fImageLayout;
+			set => fImageLayout = value;
+		}
+
+		// public uint32_t fFormat
+		private UInt32 fFormat;
+		public UInt32 Format {
+			get => fFormat;
+			set => fFormat = value;
+		}
+
+		// public uint32_t fLevelCount
+		private UInt32 fLevelCount;
+		public UInt32 LevelCount {
+			get => fLevelCount;
+			set => fLevelCount = value;
 		}
 
 	}

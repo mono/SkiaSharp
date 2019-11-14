@@ -37,6 +37,18 @@ var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
 var ADDITIONAL_GN_ARGS = Argument ("additionalGnArgs", "");
 var CONFIGURATION = Argument ("c", Argument ("configuration", "Release"));
 
+// specific features
+var SUPPORT_GPU_VAR = Argument ("supportGpu", EnvironmentVariable ("SUPPORT_GPU") ?? "true");
+var SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR.ToLower () == "true";
+var SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? "false");
+var SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower () == "true";
+
+// Linux controls
+var CC = EnvironmentVariable ("CC");
+var CXX = EnvironmentVariable ("CXX");
+var AR = EnvironmentVariable ("AR");
+
+// paths
 var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
 var CakeToolPath = Context.Tools.Resolve ("Cake.exe");
@@ -51,6 +63,7 @@ DirectoryPath ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? Env
 DirectoryPath ANDROID_NDK_HOME = EnvironmentVariable ("ANDROID_NDK_HOME") ?? EnvironmentVariable ("ANDROID_NDK_ROOT") ?? PROFILE_PATH.Combine ("android-ndk");
 DirectoryPath TIZEN_STUDIO_HOME = EnvironmentVariable ("TIZEN_STUDIO_HOME") ?? PROFILE_PATH.Combine ("tizen-studio");
 DirectoryPath LLVM_HOME = EnvironmentVariable ("LLVM_HOME") ?? "C:/Program Files/LLVM";
+DirectoryPath VULKAN_SDK_HOME = EnvironmentVariable ("VULKAN_SDK_HOME") ?? EnvironmentVariable ("VULKAN_SDK") ?? "";
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/depot_tools"));
@@ -60,6 +73,7 @@ DirectoryPath HARFBUZZ_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/harfbuzz
 DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/SkiaSharpAPI"));
 DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/package_cache"));
 
+// versioning values
 var PREVIEW_LABEL = EnvironmentVariable ("PREVIEW_LABEL") ?? "preview";
 var FEATURE_NAME = EnvironmentVariable ("FEATURE_NAME") ?? "";
 var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? "0";
@@ -549,6 +563,11 @@ Information ("  Configuration:                    {0}", CONFIGURATION);
 Information ("  Additional GN Arguments:          {0}", ADDITIONAL_GN_ARGS);
 Information ("");
 
+Information ("Build Features:");
+Information ("  Support GPU:      {0}", SUPPORT_GPU);
+Information ("  Support Vulkan:   {0}", SUPPORT_VULKAN);
+Information ("");
+
 Information ("Tool Paths:");
 Information ("  Cake.exe:   {0}", CakeToolPath);
 Information ("  mdoc:       {0}", MDocPath);
@@ -574,6 +593,7 @@ Information ("  Android SDK:   {0}", ANDROID_SDK_ROOT);
 Information ("  Android NDK:   {0}", ANDROID_NDK_HOME);
 Information ("  Tizen Studio:  {0}", TIZEN_STUDIO_HOME);
 Information ("  LLVM/Clang:    {0}", LLVM_HOME);
+Information ("  Vulkan SDK:    {0}", VULKAN_SDK_HOME);
 Information ("");
 
 Information ("Environment Variables (whitelisted):");
@@ -585,6 +605,7 @@ var envVarsWhitelist = new [] {
     "feature_name", "msbuild_exe", "python_exe", "preview_label",
     "home", "userprofile", "nuget_packages", "build_arch",
     "android_sdk_root", "android_ndk_root", "llvm_home",
+    "vulkan_sdk", "vulkan_sdk_home", "cc", "cxx", "ar",
     "android_home", "android_ndk_home", "tizen_studio_home"
 };
 var envVars = EnvironmentVariables ();

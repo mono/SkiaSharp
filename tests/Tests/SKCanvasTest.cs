@@ -16,7 +16,7 @@ namespace SkiaSharp.Tests
 			{
 				ctx.MakeCurrent();
 
-				using (var grContext = GRContext.Create(GRBackend.OpenGL))
+				using (var grContext = GRContext.CreateGl())
 				using (var surface = SKSurface.Create(grContext, true, new SKImageInfo(100, 100)))
 				{
 					var canvas = surface.Canvas;

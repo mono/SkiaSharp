@@ -89,13 +89,12 @@ Task ("externals-windows")
             return;
         }
 
-        var clang = string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "" : $"clang_win='{LLVM_HOME}' ";
-
         // generate native skia build files
         GnNinja ($"win/{arch}", "SkiaSharp",
             $"is_official_build=true skia_enable_tools=false " +
             $"target_os='win' target_cpu='{skiaArch}' " +
-            clang +
+            $"clang_win='{LLVM_HOME}' " +
+            $"skia_vulkan_sdk='{(SUPPORT_VULKAN ? VULKAN_SDK_HOME : "")}' " +
             $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true " +
             $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '/MT', '/EHsc', '/Z7' ] " +
@@ -614,11 +613,6 @@ Task ("externals-linux")
     .WithCriteria (IsRunningOnLinux ())
     .Does (() =>
 {
-    var SUPPORT_GPU = (EnvironmentVariable ("SUPPORT_GPU") ?? "1") == "1"; // 1 == true, 0 == false
-
-    var CC = EnvironmentVariable ("CC");
-    var CXX = EnvironmentVariable ("CXX");
-    var AR = EnvironmentVariable ("AR");
     var CUSTOM_COMPILERS = "";
     if (!string.IsNullOrEmpty (CC))
         CUSTOM_COMPILERS += $"cc='{CC}' ";
@@ -638,6 +632,7 @@ Task ("externals-linux")
             $"target_os='linux' target_cpu='{arch}' " +
             $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
             $"skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
+            $"skia_vulkan_sdk='{(SUPPORT_VULKAN ? VULKAN_SDK_HOME : "")}' " +
             $"skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")} " +
             $"extra_cflags=[ '-DSKIA_C_DLL' ] " +
             $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={ROOT_PATH.CombineWithFilePath("native-builds/libSkiaSharp_linux/libSkiaSharp.map")}' ] " +
