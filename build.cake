@@ -10,6 +10,7 @@
 #tool nuget:?package=xunit.runner.console&version=2.4.1
 #tool nuget:?package=vswhere&version=2.7.1
 
+
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.InteropServices;
