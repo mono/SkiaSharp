@@ -66,6 +66,7 @@ public System.ReadOnlySpan<byte> GetPixelSpan ();
 Added methods:
 
 ```csharp
+public void Discard ();
 protected override void DisposeNative ();
 public void DrawDrawable (SKDrawable drawable, ref SKMatrix matrix);
 public void DrawDrawable (SKDrawable drawable, SKPoint p);
@@ -183,6 +184,15 @@ protected override void DisposeNative ();
 ```
 
 
+#### Type Changed: SkiaSharp.SKEncodedImageFormat
+
+Added value:
+
+```csharp
+Heif = 11,
+```
+
+
 #### Type Changed: SkiaSharp.SKFileStream
 
 Added method:
@@ -224,6 +234,7 @@ protected override void DisposeManaged ();
 Added methods:
 
 ```csharp
+public SKImage ApplyImageFilter (SKImageFilter filter, SKRectI subset, SKRectI clipBounds, out SKRectI outSubset, out SKPointI outOffset);
 public static SKImage FromEncodedData (System.ReadOnlySpan<byte> data);
 public static SKImage FromPixelCopy (SKImageInfo info, System.ReadOnlySpan<byte> pixels);
 public static SKImage FromPixelCopy (SKImageInfo info, System.ReadOnlySpan<byte> pixels, int rowBytes);
@@ -457,10 +468,36 @@ public bool Op (SKPath path, SKRegionOperation op);
 
 #### Type Changed: SkiaSharp.SKRoundRect
 
-Added method:
+Added methods:
 
 ```csharp
 protected override void DisposeNative ();
+public bool TryTransform (SKMatrix matrix, out SKRoundRect transformed);
+```
+
+
+#### Type Changed: SkiaSharp.SKShader
+
+Added methods:
+
+```csharp
+public static SKShader CreateLinearGradient (SKPoint start, SKPoint end, SKColor[] colors, SKShaderTileMode mode);
+public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy);
+public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKRect tile);
+public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix, SKRect tile);
+public static SKShader CreateRadialGradient (SKPoint center, float radius, SKColor[] colors, SKShaderTileMode mode);
+public static SKShader CreateSweepGradient (SKPoint center, SKColor[] colors);
+public static SKShader CreateSweepGradient (SKPoint center, SKColor[] colors, SKShaderTileMode tileMode, float startAngle, float endAngle);
+public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, SKColor[] colors, SKShaderTileMode mode);
+```
+
+
+#### Type Changed: SkiaSharp.SKStream
+
+Added method:
+
+```csharp
+public bool Move (int offset);
 ```
 
 
