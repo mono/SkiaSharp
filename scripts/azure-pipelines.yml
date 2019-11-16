@@ -72,7 +72,6 @@ stages:
           displayName: Build Native Tizen (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-tizen
-          condition: false # TODO: TIZEN INSTALL BUGS
       - template: azure-templates-bootstrapper.yml # Build Native UWP|x86 (Windows)
         parameters:
           name: native_uwp_x86_windows
@@ -162,7 +161,6 @@ stages:
           displayName: Build Native Tizen (macOS)
           vmImage: $(VM_IMAGE_MAC)
           target: externals-tizen
-          condition: false # TODO: TIZEN INSTALL BUGS
       - template: azure-templates-bootstrapper.yml # Build Native tvOS (macOS)
         parameters:
           name: native_tvos_macos
@@ -214,8 +212,7 @@ stages:
             - native_android_x64_windows
             - native_android_arm_windows
             - native_android_arm64_windows
-            # - native_tizen_windows
-            - native_tizen_linux
+            - native_tizen_windows
             - native_uwp_x86_windows
             - native_uwp_x64_windows
             - native_uwp_arm_windows
@@ -235,8 +232,7 @@ stages:
             - native_android_arm64_macos
             - native_ios_macos
             - native_macos_macos
-            # - native_tizen_macos
-            - native_tizen_linux
+            - native_tizen_macos
             - native_tvos_macos
             - native_watchos_macos
       - template: azure-templates-bootstrapper.yml # Build Managed (Linux)
