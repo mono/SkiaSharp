@@ -1,3 +1,7 @@
+# Tizen has issues on DevOps:
+#  - https://developer.tizen.org/forums/sdk-ide/cli-installer-v3.3-failing-on-azure-devops
+#  - https://developercommunity.visualstudio.com/content/problem/661596/the-updated-path-doesnt-kick-in.html
+
 Param(
     [string] $Version = "3.5",
     [string] $InstallDestination = $null
@@ -52,9 +56,7 @@ Write-Host "Installing Additional Packages: '$packages'..."
 $packMan = Join-Path (Join-Path "$ts" "package-manager") "package-manager-cli.${ext}"
 if ($IsMacOS -or $IsLinux) {
     & "bash" "$packMan" install --no-java-check --accept-license "$packages"
-    & "bash" "$packMan" install --no-java-check --accept-license "$packages"
 } else {
-    & "$packMan" install --no-java-check --accept-license "$packages"
     & "$packMan" install --no-java-check --accept-license "$packages"
 }
 
