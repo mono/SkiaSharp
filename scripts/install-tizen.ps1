@@ -33,9 +33,10 @@ Write-Host "Downloading SDK to '$install'..."
 New-Item -ItemType Directory -Force -Path "$tsTemp" | Out-Null
 (New-Object System.Net.WebClient).DownloadFile("$url", "$install")
 
-Write-Host "JAVA_HOME is '$env:JAVA_HOME'..."
-Write-Host "PATH contains JAVA_HOME: '$($env:PATH.Contains("$env:JAVA_HOME"))'..."
-
+# validation
+Write-Host "Validating Java install..."
+Write-Host "JAVA_HOME is: $env:JAVA_HOME"
+Write-Host "PATH contains JAVA_HOME: $($env:PATH.Contains("$env:JAVA_HOME"))"
 & "java" -version
 
 # install
