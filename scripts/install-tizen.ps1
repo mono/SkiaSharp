@@ -33,6 +33,11 @@ Write-Host "Downloading SDK to '$install'..."
 New-Item -ItemType Directory -Force -Path "$tsTemp" | Out-Null
 (New-Object System.Net.WebClient).DownloadFile("$url", "$install")
 
+Write-Host "JAVA_HOME is '$env:JAVA_HOME'..."
+Write-Host "PATH contains JAVA_HOME: '$($env:PATH.Contains("$env:JAVA_HOME"))'..."
+
+& "java" -version
+
 # install
 Write-Host "Installing SDK to '$ts'..."
 if ($IsMacOS -or $IsLinux) {
@@ -43,21 +48,13 @@ if ($IsMacOS -or $IsLinux) {
 
 # install packages
 Write-Host "Installing Additional Packages: '$packages'..."
-Write-Host "JAVA_HOME is '$env:JAVA_HOME'..."
-Write-Host "PATH contains JAVA_HOME: '$($env:PATH.Contains("$env:JAVA_HOME"))'..."
 $packMan = Join-Path (Join-Path "$ts" "package-manager") "package-manager-cli.${ext}"
-try {
-    if ($IsMacOS -or $IsLinux) {
-        & "bash" "$packMan" install --no-java-check --accept-license "$packages"
-    } else {
-        & "$packMan" install --no-java-check --accept-license "$packages"
-    }
-} catch {
-    if ($IsMacOS -or $IsLinux) {
-        & "bash" "$packMan" install --no-java-check --accept-license "$packages"
-    } else {
-        & "$packMan" install --no-java-check --accept-license "$packages"
-    }
+if ($IsMacOS -or $IsLinux) {
+    & "bash" "$packMan" install --no-java-check --accept-license "$packages"
+    & "bash" "$packMan" install --no-java-check --accept-license "$packages"
+} else {
+    & "$packMan" install --no-java-check --accept-license "$packages"
+    & "$packMan" install --no-java-check --accept-license "$packages"
 }
 
 # make sure that Tizen Studio is in TIZEN_STUDIO_HOME
