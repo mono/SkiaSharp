@@ -65,11 +65,12 @@ Please visit https://go.microsoft.com/fwlink/?linkid=868517 to view the release 
   </metadata>
   <files>
 
-    <file src="ref/netstandard1.3/SkiaSharp.Views.Forms.dll" />
-    <file src="ref/netstandard1.3/SkiaSharp.Views.Forms.xml" />
-    
+    <!-- the reference assembly must be in ref https://github.com/mono/SkiaSharp/issues/1011 -->
+    <file src="lib/netstandard1.3/SkiaSharp.Views.Forms.dll" target="ref/netstandard1.3/SkiaSharp.Views.Forms.dll" />
+    <file src="lib/netstandard1.3/SkiaSharp.Views.Forms.xml" target="ref/netstandard1.3/SkiaSharp.Views.Forms.xml" />
+
     <!-- workaround for https://github.com/xamarin/xamarin-android/issues/3920 -->
-    <file platform="macos,windows" src="ref/MonoAndroid/SkiaSharp.Views.Forms.dll" />
+    <file platform="macos,windows" src="lib/MonoAndroid/SkiaSharp.Views.Forms.dll" target="ref/MonoAndroid/SkiaSharp.Views.Forms.dll" />
 
     <!-- SkiaSharp.Views.Forms.dll -->
     <file platform="macos,windows" src="lib/MonoAndroid/SkiaSharp.Views.Forms.dll" />
