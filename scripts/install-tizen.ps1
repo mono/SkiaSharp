@@ -1,5 +1,9 @@
+# Tizen has issues on DevOps:
+#  - https://developer.tizen.org/forums/sdk-ide/cli-installer-v3.3-failing-on-azure-devops
+#  - https://developercommunity.visualstudio.com/content/problem/661596/the-updated-path-doesnt-kick-in.html
+
 Param(
-    [string] $Version = "3.3",
+    [string] $Version = "3.5",
     [string] $InstallDestination = $null
 )
 
@@ -32,6 +36,12 @@ $packages = "MOBILE-4.0,MOBILE-4.0-NativeAppDevelopment"
 Write-Host "Downloading SDK to '$install'..."
 New-Item -ItemType Directory -Force -Path "$tsTemp" | Out-Null
 (New-Object System.Net.WebClient).DownloadFile("$url", "$install")
+
+# validation
+Write-Host "Validating Java install..."
+Write-Host "JAVA_HOME is: $env:JAVA_HOME"
+Write-Host "PATH contains JAVA_HOME: $($env:PATH.Contains("$env:JAVA_HOME"))"
+& "java" -version
 
 # install
 Write-Host "Installing SDK to '$ts'..."
