@@ -179,7 +179,10 @@ Task ("docs-update-frameworks")
                 ? $"./output/{id}/nuget"
                 : await comparer.ExtractCachedPackageAsync (id, version);
 
-            foreach (var (path, platform) in GetPlatformDirectories ($"{packagePath}/lib")) {
+            var dirs =
+                GetPlatformDirectories ($"{packagePath}/lib").Union(
+                GetPlatformDirectories ($"{packagePath}/ref"));
+            foreach (var (path, platform) in dirs) {
                 string moniker;
                 if (id.StartsWith ("SkiaSharp.Views.Forms"))
                     if (id != "SkiaSharp.Views.Forms")
