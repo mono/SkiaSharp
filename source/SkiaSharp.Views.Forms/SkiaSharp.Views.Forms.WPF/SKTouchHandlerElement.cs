@@ -83,11 +83,8 @@ namespace SkiaSharp.Views.Forms
 		{
 			e.Handled = CommonHandler(sender, SKTouchAction.Released, e);
 
-			if (e.Handled)
-			{
-				var view = sender as FrameworkElement;
-				view.ReleaseMouseCapture();
-			}
+			var view = sender as FrameworkElement;
+			view.ReleaseMouseCapture();
 		}
 
 		// processing

@@ -44,6 +44,10 @@ jobs:
             Write-Host "##vso[task.setvariable variable=FEATURE_NAME]$feature"
           }
         displayName: Determine the feature name, if any
+      - pwsh: |
+          Write-Host "##vso[task.setvariable variable=PREVIEW_LABEL]pr"
+        displayName: Use a special preview label for PRs
+        condition: eq(variables['Build.Reason'], 'PullRequest')
       # install any packages on linux
       - ${{ if endsWith(parameters.name, '_linux') }}:
         - bash: |
