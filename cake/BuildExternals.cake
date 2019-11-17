@@ -1,13 +1,13 @@
 
 void GnNinja (DirectoryPath outDir, string target, string skiaArgs)
 {
-    var exe = IsRunningOnWindows () ? ".exe" : "";
-    var quote = IsRunningOnWindows () ? "\"" : "'";
-    var innerQuote = IsRunningOnWindows () ? "\\\"" : "\"";
-
     if (!string.IsNullOrEmpty(ADDITIONAL_GN_ARGS)) {
         skiaArgs += " " + ADDITIONAL_GN_ARGS;
     }
+
+    var exe = IsRunningOnWindows () ? ".exe" : "";
+    var quote = IsRunningOnWindows () ? "\"" : "'";
+    var innerQuote = IsRunningOnWindows () ? "\\\"" : "\"";
 
     // generate native skia build files
     RunProcess (SKIA_PATH.CombineWithFilePath($"bin/gn{exe}"), new ProcessSettings {
