@@ -40,9 +40,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void TestIsNotFixedPitch()
 		{
-			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Roboto.woff2")))
+			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf")))
 			{
-				Assert.Equal("Roboto", typeface.FamilyName);
 				Assert.False(typeface.IsFixedPitch);
 			}
 		}
@@ -52,7 +51,6 @@ namespace SkiaSharp.Tests
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "CourierNew.ttf")))
 			{
-				Assert.Equal("Courier New", typeface.FamilyName);
 				Assert.True(typeface.IsFixedPitch);
 			}
 		}
