@@ -17,7 +17,8 @@
         <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$(OS)' != 'Unix' and '$(Prefer32Bit)' == 'False' ">x64</PreferredNativeSkiaSharp>  
         <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$(OS)' != 'Unix' and '$(Prefer32Bit)' == 'True' ">x86</PreferredNativeSkiaSharp> 
         <!-- fall back to x64 on 64-bit machines -->
-        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$([System.Environment]::Is64BitOperatingSystem)' == 'True' ">x64</PreferredNativeSkiaSharp> 
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$(MSBuildRuntimeType)' != 'Core' and '$([System.Environment]::Is64BitOperatingSystem)' == 'True' ">x64</PreferredNativeSkiaSharp> 
+        <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' and '$(MSBuildRuntimeType)' == 'Core' and '$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)' == 'X64' ">x64</PreferredNativeSkiaSharp> 
         <!-- fall back to x86 -->
         <PreferredNativeSkiaSharp Condition=" '$(PreferredNativeSkiaSharp)' == '' ">x86</PreferredNativeSkiaSharp>
     </PropertyGroup>
