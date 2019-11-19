@@ -27,6 +27,10 @@
     <UseSGen>true</UseSGen>
     <UseRefCounting>true</UseRefCounting>
     <Profiling>true</Profiling>
+    <HttpClientHandler>NSUrlSessionHandler</HttpClientHandler>
+    <AOTMode>None</AOTMode>
+    <CodeSigningKey>Mac Developer</CodeSigningKey>
+    <PackageSigningKey>3rd Party Mac Developer Installer</PackageSigningKey>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType></DebugType>
@@ -42,6 +46,10 @@
     <UseSGen>true</UseSGen>
     <UseRefCounting>true</UseRefCounting>
     <LinkMode>Full</LinkMode>
+    <CodeSigningKey>Mac Developer</CodeSigningKey>
+    <PackageSigningKey>3rd Party Mac Developer Installer</PackageSigningKey>
+    <HttpClientHandler>NSUrlSessionHandler</HttpClientHandler>
+    <AOTMode>None</AOTMode>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -101,7 +109,12 @@
       <Link>Resources\content-font.ttf</Link>
     </BundleResource>
   </ItemGroup>
-  <Import Project="..\..\Shared\Shared.projitems" Label="Shared" />
-  <Import Project="..\..\PlatformShared\PlatformShared.projitems" Label="Shared" />
+  <ItemGroup>
+    <Compile Include="..\..\PlatformShared\*.cs" Link="PlatformShared\%(Filename)%(Extension)" />
+    <Compile Include="..\..\Shared\Samples\*.cs" Link="Shared\Samples\%(Filename)%(Extension)" />
+    <Compile Include="..\..\Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Shared\Media\*" Link="Media\%(Filename)%(Extension)" />
+    <EmbeddedResource Remove="..\..\Shared\Media\content-font.ttf" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Mac\Xamarin.Mac.CSharp.targets" />
 </Project>

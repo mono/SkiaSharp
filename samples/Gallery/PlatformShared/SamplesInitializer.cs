@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using Xamarin.Essentials;
 #if WINDOWS_UWP
 using Windows.ApplicationModel;
 using Windows.Storage;
@@ -23,6 +24,11 @@ using Tizen.Applications;
 using Xamarin.Forms.Platform.Tizen;
 #endif
 
+namespace Xamarin.Essentials
+{
+	// dummy placeholder
+}
+
 namespace SkiaSharpSample
 {
 	public static class SamplesInitializer
@@ -37,7 +43,7 @@ namespace SkiaSharpSample
 #elif __IOS__ || __TVOS__ || __MACOS__
 			var path = NSBundle.MainBundle.PathForResource(Path.GetFileNameWithoutExtension(fontName), Path.GetExtension(fontName));
 #elif __ANDROID__
-			var path = Path.Combine(Application.Context.CacheDir.AbsolutePath, fontName);
+			var path = Path.Combine(FileSystem.CacheDirectory, fontName);
 			using (var asset = Application.Context.Assets.Open(Path.Combine("Media", fontName)))
 			using (var dest = File.Open(path, FileMode.Create))
 			{
@@ -50,17 +56,12 @@ namespace SkiaSharpSample
 			var path = ResourcePath.GetPath(fontName);
 #endif
 
-#if WINDOWS_UWP
-			var localStorage = ApplicationData.Current.LocalFolder.Path;
-#elif __IOS__ || __TVOS__
-			var documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-			var localStorage = Path.Combine(documents, "..", "Library");
-#elif __MACOS__ || __ANDROID__
+#if WINDOWS_UWP || __IOS__ || __TVOS__ || __ANDROID__ || __TIZEN__
+			var localStorage = FileSystem.AppDataDirectory;
+#elif __MACOS__
 			var localStorage = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
 #elif __DESKTOP__
 			var localStorage = System.Windows.Forms.Application.LocalUserAppDataPath;
-#elif __TIZEN__
-			var localStorage = Application.Current.DirectoryInfo.Data;
 #endif
 
 			SamplesManager.ContentFontPath = path;
@@ -74,9 +75,9 @@ namespace SkiaSharpSample
 
 		private static async void OnOpenSampleFile(string path)
 		{
-#if WINDOWS_UWP
-			var file = await StorageFile.GetFileFromPathAsync(path);
-			await Launcher.LaunchFileAsync(file);
+#if WINDOWS_UWP || __TVOS__ || __IOS__ || __ANDROID__ || __TIZEN__
+			var title = "Share " + Path.GetExtension(path).ToUpperInvariant();
+			await Share.RequestAsync(new ShareFileRequest(title, new ShareFile(path)));
 #elif __MACOS__
 			if (!NSWorkspace.SharedWorkspace.OpenFile(path))
 			{
@@ -86,53 +87,8 @@ namespace SkiaSharpSample
 				alert.InformativeText = "Unable to open file.";
 				alert.RunSheetModal(NSApplication.SharedApplication.MainWindow);
 			}
-#elif __TVOS__
-#elif __IOS__
-			// the external / shared location
-			var external = Path.Combine(Path.GetTempPath(), "SkiaSharpSample");
-			if (!Directory.Exists(external))
-			{
-				Directory.CreateDirectory(external);
-			}
-			// copy file to external
-			var newPath = Path.Combine(external, Path.GetFileName(path));
-			File.Copy(path, newPath);
-			// open the file
-			var vc = Xamarin.Forms.Platform.iOS.Platform.GetRenderer(Xamarin.Forms.Application.Current.MainPage) as UIViewController;
-			var resourceToOpen = NSUrl.FromFilename(newPath);
-			var controller = UIDocumentInteractionController.FromUrl(resourceToOpen);
-			if (!controller.PresentOpenInMenu(vc.View.Bounds, vc.View, true))
-			{
-				new UIAlertView("SkiaSharp", "Unable to open file.", (IUIAlertViewDelegate)null, "OK").Show();
-			}
-#elif __ANDROID__
-			// the external / shared location
-			var external = Path.Combine(Android.OS.Environment.ExternalStorageDirectory.AbsolutePath, "SkiaSharpSample");
-			if (!Directory.Exists(external))
-			{
-				Directory.CreateDirectory(external);
-			}
-			// copy file to external
-			var newPath = Path.Combine(external, Path.GetFileName(path));
-			File.Copy(path, newPath);
-			// open the file
-			var uri = Android.Net.Uri.FromFile(new Java.IO.File(newPath));
-			var intent = new Intent(Intent.ActionView, uri);
-			intent.AddFlags(ActivityFlags.NewTask);
-			Application.Context.StartActivity(intent);
 #elif __DESKTOP__
 			Process.Start(path);
-#elif __TIZEN__
-			var appControl = new AppControl
-			{
-				Operation = AppControlOperations.View,
-				Uri = "file://" + path
-			};
-			var matchedApplications = AppControl.GetMatchedApplicationIds(appControl);
-			if (matchedApplications.Any())
-			{
-				AppControl.SendLaunchRequest(appControl);
-			}
 #endif
 		}
 	}

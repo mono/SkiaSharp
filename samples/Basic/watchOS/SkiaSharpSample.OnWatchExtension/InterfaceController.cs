@@ -31,7 +31,7 @@ namespace SkiaSharpSample.OnWatchExtension
 
 				using (var path = new SKPath())
 				{
-					path.AddRoundedRect(new SKRect(5, 5, bitmap.Width - 5, bitmap.Height - 5), 5, 5);
+					path.AddRoundRect(new SKRect(5, 5, bitmap.Width - 5, bitmap.Height - 5), 5, 5);
 					canvas.ClipPath(path);
 				}
 
