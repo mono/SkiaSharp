@@ -217,5 +217,16 @@ namespace SkiaSharp.Tests
 				Assert.Equal(16, SKImageInfo.PlatformColorBlueShift);
 			}
 		}
+
+		[SkippableFact]
+		public void MakeSureColorsAreNotBroken()
+		{
+			var color = new SKColor(100, 0, 0, 100);
+
+			var paint = new SKPaint();
+			paint.Color = color;
+
+			Assert.Equal(color, paint.Color);
+		}
 	}
 }
