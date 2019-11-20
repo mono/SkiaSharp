@@ -19,12 +19,12 @@ namespace SkiaSharp
 
 		public static SKPMColor PreMultiply (SKColor color)
 		{
-			return SkiaApi.sk_color_premultiply (color);
+			return SkiaApi.sk_color_premultiply ((uint)color);
 		}
 
 		public static SKColor UnPreMultiply (SKPMColor pmcolor)
 		{
-			return SkiaApi.sk_color_unpremultiply (pmcolor);
+			return SkiaApi.sk_color_unpremultiply ((uint)pmcolor);
 		}
 
 		public static SKPMColor[] PreMultiply (SKColor[] colors)
@@ -32,7 +32,7 @@ namespace SkiaSharp
 			var pmcolors = new SKPMColor [colors.Length];
 			fixed (SKColor* c = colors)
 			fixed (SKPMColor* pm = pmcolors) {
-				SkiaApi.sk_color_premultiply_array (c, colors.Length, pm);
+				SkiaApi.sk_color_premultiply_array ((uint*)c, colors.Length, (uint*)pm);
 			}
 			return pmcolors;
 		}
@@ -42,7 +42,7 @@ namespace SkiaSharp
 			var colors = new SKColor [pmcolors.Length];
 			fixed (SKColor* c = colors)
 			fixed (SKPMColor* pm = pmcolors) {
-				SkiaApi.sk_color_unpremultiply_array (pm, pmcolors.Length, c);
+				SkiaApi.sk_color_unpremultiply_array ((uint*)pm, pmcolors.Length, (uint*)c);
 			}
 			return colors;
 		}

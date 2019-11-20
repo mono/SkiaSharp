@@ -69,7 +69,7 @@ namespace SkiaSharp
 
 		public void DrawColor (SKColor color, SKBlendMode mode = SKBlendMode.Src)
 		{
-			SkiaApi.sk_canvas_draw_color (Handle, color, mode);
+			SkiaApi.sk_canvas_draw_color (Handle, (uint)color, mode);
 		}
 
 		public void DrawLine (SKPoint p0, SKPoint p1, SKPaint paint)
@@ -741,7 +741,7 @@ namespace SkiaSharp
 					fXDivs = x,
 					fYCount = lattice.YDivs.Length,
 					fYDivs = y,
-					fColors = c,
+					fColors = (uint*)c,
 				};
 				if (lattice.Bounds != null) {
 					var bounds = lattice.Bounds.Value;
@@ -771,7 +771,7 @@ namespace SkiaSharp
 					fXDivs = x,
 					fYCount = lattice.YDivs.Length,
 					fYDivs = y,
-					fColors = c,
+					fColors = (uint*)c,
 				};
 				if (lattice.Bounds != null) {
 					var bounds = lattice.Bounds.Value;
