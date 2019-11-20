@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using CoreGraphics;
+using Foundation;
 
 #if __TVOS__
 namespace SkiaSharp.Views.tvOS
@@ -17,7 +18,8 @@ namespace SkiaSharp.Views.Mac
 		private const int BitsPerByte = 8; // 1 byte = 8 bits
 		private const CGBitmapFlags BitmapFlags = CGBitmapFlags.ByteOrder32Big | CGBitmapFlags.PremultipliedLast;
 
-		private IntPtr bitmapData;
+		private NSMutableData bitmapData;
+		private CGDataProvider dataProvider;
 
 		public SKImageInfo Info { get; private set; }
 
@@ -37,11 +39,23 @@ namespace SkiaSharp.Views.Mac
 				return null;
 			}
 
-			// allocate a memory block for the drawing process
-			if (bitmapData == IntPtr.Zero)
-				bitmapData = Marshal.AllocCoTaskMem(info.BytesSize);
+			// if the memory size has changed, then reset the underlying memory
+			if (bitmapData?.Length != (nuint)info.BytesSize)
+				FreeBitmap();
 
-			return SKSurface.Create(info, bitmapData, info.RowBytes);
+			// allocate a memory block for the drawing process
+			if (bitmapData == null)
+			{
+				bitmapData = NSMutableData.FromLength(info.BytesSize);
+				dataProvider = new CGDataProvider(bitmapData.MutableBytes, info.BytesSize, Dummy);
+
+				void Dummy(IntPtr data)
+				{
+					// do nothing as we manage the memory separately
+				}
+			}
+
+			return SKSurface.Create(info, bitmapData.MutableBytes, info.RowBytes);
 		}
 
 		public void DrawSurface(CGContext ctx, CGRect viewBounds, SKImageInfo info, SKSurface surface)
@@ -52,7 +66,6 @@ namespace SkiaSharp.Views.Mac
 			surface.Canvas.Flush();
 
 			// draw the image onto the context
-			using (var dataProvider = new CGDataProvider(bitmapData, info.BytesSize))
 			using (var colorSpace = CGColorSpace.CreateDeviceRGB())
 			using (var image = new CGImage(info.Width, info.Height, BitsPerByte, info.BytesPerPixel * BitsPerByte, info.RowBytes, colorSpace, BitmapFlags, dataProvider, null, false, CGColorRenderingIntent.Default))
 			{
@@ -77,12 +90,16 @@ namespace SkiaSharp.Views.Mac
 		public void Dispose()
 		{
 			// make sure we free the image data
-			if (bitmapData != IntPtr.Zero)
-			{
-				Marshal.FreeCoTaskMem(bitmapData);
-				bitmapData = IntPtr.Zero;
-			}
+			FreeBitmap();
 			Info = CreateInfo(0, 0);
+		}
+
+		private void FreeBitmap()
+		{
+			dataProvider?.Dispose();
+			dataProvider = null;
+			bitmapData?.Dispose();
+			bitmapData = null;
 		}
 
 		private SKImageInfo CreateInfo(int width, int height) =>
