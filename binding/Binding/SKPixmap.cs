@@ -285,7 +285,7 @@ namespace SkiaSharp
 
 		public bool Erase (SKColor color, SKRectI subset)
 		{
-			return SkiaApi.sk_pixmap_erase_color (Handle, color, &subset);
+			return SkiaApi.sk_pixmap_erase_color (Handle, (uint)color, &subset);
 		}
 
 		public SKPixmap WithColorType (SKColorType newColorType)
