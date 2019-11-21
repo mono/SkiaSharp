@@ -41,14 +41,11 @@ jobs:
       - pwsh: |
           if ($env:GIT_BRANCH_NAME.StartsWith($env:FEATURE_NAME_PREFIX)) {
             $feature = $env:GIT_BRANCH_NAME.Substring($env:FEATURE_NAME_PREFIX.Length)
-            Write-Host "Feature name: $feature"
             Write-Host "##vso[task.setvariable variable=FEATURE_NAME]$feature"
           }
         displayName: Determine the feature name, if any
       - pwsh: |
-          $pr = "pr." + $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
-          Write-Host "Preview label: $pr"
-          Write-Host "##vso[task.setvariable variable=PREVIEW_LABEL]$pr"
+          Write-Host "##vso[task.setvariable variable=PREVIEW_LABEL]pr"
         displayName: Use a special preview label for PRs
         condition: eq(variables['Build.Reason'], 'PullRequest')
       # install any packages on linux
