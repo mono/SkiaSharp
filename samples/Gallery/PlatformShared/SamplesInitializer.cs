@@ -6,6 +6,7 @@ using Xamarin.Essentials;
 using Windows.ApplicationModel;
 using Windows.Storage;
 using Windows.System;
+using Launcher = Xamarin.Essentials.Launcher;
 #elif __MACOS__
 using AppKit;
 using Foundation;
@@ -76,8 +77,8 @@ namespace SkiaSharpSample
 		private static async void OnOpenSampleFile(string path)
 		{
 #if WINDOWS_UWP || __TVOS__ || __IOS__ || __ANDROID__ || __TIZEN__
-			var title = "Share " + Path.GetExtension(path).ToUpperInvariant();
-			await Share.RequestAsync(new ShareFileRequest(title, new ShareFile(path)));
+			var title = "Open " + Path.GetExtension(path).ToUpperInvariant();
+			await Launcher.OpenAsync(new OpenFileRequest(title, new ReadOnlyFile(path)));
 #elif __MACOS__
 			if (!NSWorkspace.SharedWorkspace.OpenFile(path))
 			{
