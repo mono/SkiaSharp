@@ -572,9 +572,12 @@ protected override void DisposeNative ();
 
 #### Type Changed: SkiaSharp.SKTypeface
 
-Added property:
+Added properties:
 
 ```csharp
+public bool IsBold { get; }
+public bool IsFixedPitch { get; }
+public bool IsItalic { get; }
 public int TableCount { get; }
 ```
 
