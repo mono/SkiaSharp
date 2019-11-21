@@ -172,8 +172,6 @@ Task ("tests-only")
 Task ("samples")
     .Does (() =>
 {
-    EnsureDirectoryExists ("./output/");
-
     var isLinux = IsRunningOnLinux ();
     var isMac = IsRunningOnMac ();
     var isWin = IsRunningOnWindows ();
