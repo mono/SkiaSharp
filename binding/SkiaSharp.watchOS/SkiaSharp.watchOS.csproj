@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="MSBuild.Sdk.Extras/2.0.54">
   <Import Project="..\..\source\SkiaSharp.Build.props" />
   <PropertyGroup>
     <TargetFramework>xamarinwatchos1.0</TargetFramework>
@@ -19,12 +19,6 @@
     <DebugType>pdbonly</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.65" PrivateAssets="All" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="netstandard" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <ObjcBindingApiDefinition Include="ApiDefinition.cs" />
     <ObjcBindingCoreSource Include="StructsAndEnums.cs" />
@@ -35,5 +29,4 @@
     <Compile Include="..\Binding\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
-  <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />
 </Project>

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Tizen.NET.Sdk/1.0.8">
   <Import Project="..\..\SkiaSharp.Build.props" />
   <PropertyGroup>
     <TargetFramework>tizen40</TargetFramework>
@@ -11,12 +11,10 @@
     <PackagingGroup>SkiaSharp.Views.Forms</PackagingGroup>
     <PackagingPlatform>tizen40</PackagingPlatform>
     <DefineConstants>$(DefineConstants);__TIZEN__;</DefineConstants>
+    <TizenNetPackageVersion>4.0.0</TizenNetPackageVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.65" PrivateAssets="All" />
-    <PackageReference Include="Tizen.NET" Version="4.0.0" />
     <PackageReference Include="Xamarin.Forms" Version="4.0.0.540366" />
-    <PackageReference Include="Tizen.NET.Sdk" Version="1.0.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp.Tizen\SkiaSharp.Tizen.csproj" />
@@ -27,5 +25,4 @@
     <Compile Include="..\SkiaSharp.Views.Forms.Native.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <Import Project="..\..\SkiaSharp.Build.targets" />
-  <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />
 </Project>

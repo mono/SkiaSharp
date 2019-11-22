@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="MSBuild.Sdk.Extras/2.0.54">
   <Import Project="..\..\source\SkiaSharp.Build.props" />
   <PropertyGroup>
     <TargetFramework>monoandroid9.0</TargetFramework>
@@ -17,7 +17,6 @@
     <DebugType>pdbonly</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.65" PrivateAssets="All" />
     <PackageReference Include="System.Memory" Version="4.5.3" />
   </ItemGroup>
   <ItemGroup>
@@ -31,5 +30,4 @@
     <Compile Include="..\Binding\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
   <Import Project="..\..\source\SkiaSharp.Build.targets" />
-  <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />
 </Project>
