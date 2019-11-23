@@ -1,22 +1,13 @@
 <Project Sdk="MSBuild.Sdk.Extras/2.0.54">
-  <Import Project="..\..\source\SkiaSharp.Build.props" />
   <PropertyGroup>
     <TargetFramework>xamarinmac2.0</TargetFramework>
-    <OutputTypeEx>library</OutputTypeEx>
     <RootNamespace>HarfBuzzSharp</RootNamespace>
     <AssemblyName>HarfBuzzSharp</AssemblyName>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
     <PackagingPlatform>Xamarin.Mac20</PackagingPlatform>
     <DefineConstants>$(DefineConstants);HARFBUZZ;__MACOS__</DefineConstants>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <IsBindingProject>true</IsBindingProject>
     <EnableDefaultItems>false</EnableDefaultItems>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DebugType>full</DebugType>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DebugType>pdbonly</DebugType>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -28,5 +19,4 @@
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\HarfBuzzSharp.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
-  <Import Project="..\..\source\SkiaSharp.Build.targets" />
 </Project>

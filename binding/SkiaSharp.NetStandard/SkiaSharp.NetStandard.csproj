@@ -1,20 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\source\SkiaSharp.Build.props" />
   <PropertyGroup>
     <TargetFramework>netstandard1.3</TargetFramework>
-    <OutputTypeEx>library</OutputTypeEx>
     <RootNamespace>SkiaSharp</RootNamespace>
     <AssemblyName>SkiaSharp</AssemblyName>
     <PackagingGroup>SkiaSharp</PackagingGroup>
     <PackagingPlatform>netstandard1.3</PackagingPlatform>
     <DefineConstants>$(DefineConstants);NET_STANDARD</DefineConstants>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DebugType>full</DebugType>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DebugType>pdbonly</DebugType>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.IO.UnmanagedMemoryStream" Version="4.3.0" />
@@ -30,5 +21,4 @@
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\Binding\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
-  <Import Project="..\..\source\SkiaSharp.Build.targets" />
 </Project>
