@@ -142,9 +142,15 @@ Task ("tests")
 Task ("tests-only")
     .Does (() =>
 {
+    var failedTests = 0;
+
     var RunDesktopTest = new Action<string> (arch => {
         RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", platform: arch == "AnyCPU" ? "Any CPU" : arch);
-        RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Tests.dll", arch == "x86");
+        try {
+            RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Tests.dll", arch == "x86");
+        } catch {
+            failedTests++;
+        }
     });
 
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
@@ -162,7 +168,14 @@ Task ("tests-only")
 
     // .NET Core
     RunMSBuild ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.sln");
-    RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
+    try {
+        RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
+    } catch {
+        failedTests++;
+    }
+
+    if (failedTests > 0)
+        throw new Exception ($"There were {failedTests} failed tests.");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
