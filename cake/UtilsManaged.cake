@@ -35,11 +35,8 @@ void RunMSBuild (
             c.Properties ["Platform"] = new [] { "\"" + platform + "\"" };
         }
 
-        c.Properties ["RestoreNoCache"] = new [] { "true" };
         c.Properties ["RestorePackagesPath"] = new [] { PACKAGE_CACHE_PATH.FullPath };
-        // c.Properties ["RestoreSources"] = NuGetSources;
-        var sep = IsRunningOnWindows () ? ";" : "%3B";
-        c.ArgumentCustomization = args => args.Append ($"/p:RestoreSources=\"{string.Join (sep, NuGetSources)}\"");
+        c.Properties ["RestoreSources"] = NuGetSources;
 
         if (!string.IsNullOrEmpty (MSBuildToolPath)) {
             c.ToolPath = MSBuildToolPath;
