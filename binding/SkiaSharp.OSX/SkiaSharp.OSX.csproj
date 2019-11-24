@@ -4,10 +4,8 @@
     <RootNamespace>SkiaSharp</RootNamespace>
     <AssemblyName>SkiaSharp</AssemblyName>
     <PackagingGroup>SkiaSharp</PackagingGroup>
-    <PackagingPlatform>Xamarin.Mac20</PackagingPlatform>
     <DefineConstants>$(DefineConstants);__MACOS__</DefineConstants>
-    <IsBindingProject>true</IsBindingProject>
-    <EnableDefaultItems>false</EnableDefaultItems>
+    <IsBindingProject Condition=" '$(IsMacOS)' == 'true' ">true</IsBindingProject>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />

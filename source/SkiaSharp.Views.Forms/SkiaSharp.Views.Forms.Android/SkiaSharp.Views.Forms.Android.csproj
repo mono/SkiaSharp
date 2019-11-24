@@ -1,5 +1,4 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras/2.0.54">
-  <Import Project="..\..\SkiaSharp.Build.props" />
   <PropertyGroup>
     <TargetFramework>monoandroid9.0</TargetFramework>
     <RootNamespace>SkiaSharp.Views.Forms</RootNamespace>
@@ -7,7 +6,6 @@
     <SignAssembly>false</SignAssembly>
     <PackagingGroup>SkiaSharp.Views.Forms</PackagingGroup>
     <PackagingPlatform>MonoAndroid</PackagingPlatform>
-    <DefineConstants>$(DefineConstants);</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Xamarin.Forms" Version="4.0.0.540366" />
@@ -20,5 +18,4 @@
     <Compile Include="..\SkiaSharp.Views.Forms.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\SkiaSharp.Views.Forms.Native.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
-  <Import Project="..\..\SkiaSharp.Build.targets" />
 </Project>

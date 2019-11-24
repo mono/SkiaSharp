@@ -4,10 +4,8 @@
     <RootNamespace>HarfBuzzSharp</RootNamespace>
     <AssemblyName>HarfBuzzSharp</AssemblyName>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
-    <PackagingPlatform>Xamarin.TVOS</PackagingPlatform>
     <DefineConstants>$(DefineConstants);HARFBUZZ</DefineConstants>
-    <IsBindingProject>true</IsBindingProject>
-    <EnableDefaultItems>false</EnableDefaultItems>
+    <IsBindingProject Condition=" '$(IsMacOS)' == 'true' ">true</IsBindingProject>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />

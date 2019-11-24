@@ -1,12 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net45</TargetFramework>
+    <TargetFrameworks>netstandard1.3;netstandard2.0;net45</TargetFrameworks>
     <RootNamespace>HarfBuzzSharp</RootNamespace>
     <AssemblyName>HarfBuzzSharp</AssemblyName>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
-    <PackagingPlatform>net45</PackagingPlatform>
-    <DefineConstants>$(DefineConstants);__DESKTOP__;HARFBUZZ</DefineConstants>
+    <DefineConstants>$(DefineConstants);HARFBUZZ</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('netstandard'))">
+    <DefineConstants>$(DefineConstants);NET_STANDARD</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <DefineConstants>$(DefineConstants);__DESKTOP__</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
+    <PackageReference Include="System.IO.UnmanagedMemoryStream" Version="4.3.0" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.5.3" />
   </ItemGroup>
@@ -15,7 +23,9 @@
     <None Include="..\..\output\native\windows\x86\libHarfBuzzSharp.dll" Link="nuget\runtimes\win-x86\native\libHarfBuzzSharp.dll" Condition=" '$(IsWindows)' == 'true' " />
     <None Include="..\..\output\native\osx\libHarfBuzzSharp.dylib" Link="nuget\runtimes\osx\native\libHarfBuzzSharp.dylib" Condition=" '$(IsMacOS)' == 'true' " />
     <None Include="..\..\output\native\linux\x64\libHarfBuzzSharp.so" Link="nuget\runtimes\linux-x64\native\libHarfBuzzSharp.so" Condition=" '$(IsLinux)' == 'true' " />
-    <None Include="nuget\build\net45\HarfBuzzSharp.targets" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <None Include="nuget\build\net45\HarfBuzzSharp.targets" Link="nuget\build\$(TargetFramework)\HarfBuzzSharp.targets" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />

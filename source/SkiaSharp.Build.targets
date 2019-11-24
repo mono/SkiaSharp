@@ -39,6 +39,10 @@
     <MSBuildWarningsAsMessages>MSB9004</MSBuildWarningsAsMessages>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <PackagingPlatform Condition=" '$(PackagingPlatform)' == '' ">$(TargetFramework)</PackagingPlatform>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="mdoc" Version="5.7.4.10" PrivateAssets="All" />
   </ItemGroup>
@@ -69,7 +73,8 @@
 [assembly: System.Reflection.AssemblyInformationalVersion("$(_VersionFileMatch)$(_VersionGitSha)")]
       </_VersionGeneratedContents>
     </PropertyGroup>
-    <WriteLinesToFile File="$(_VersionSourceFile)" Lines="$(_VersionGeneratedContents)" Overwrite="true" />
+    <WriteLinesToFile Condition=" !Exists('$(_VersionSourceFile)') or '$([System.IO.File]::ReadAllText($(_VersionSourceFile)).Trim())' != '$(_VersionGeneratedContents.Trim())' "
+                      File="$(_VersionSourceFile)" Lines="$(_VersionGeneratedContents)" Overwrite="true" />
     <ItemGroup>
       <FileWrites Include="$(_VersionSourceFile)" />
       <Compile Include="$(_VersionSourceFile)" />
@@ -105,7 +110,7 @@
     Copy the project output into the root output folder.
     ===================================================================================================================
   -->
-  <Target Name="_CopyToOutputDirectory" AfterTargets="Build" Condition=" '$(SkipCopyToOutputDirectory)' != 'true' ">
+  <Target Name="_CopyToOutputDirectoryDep">
     <ItemGroup Condition=" '$(PackagingLocation)' == '' ">
       <_CopyItems Include="$(TargetPath)" Dest="nuget\lib\$(PackagingPlatform)\$(TargetFileName)" />
       <_CopyItems Include="$(TargetDir)$(TargetName).xml" Dest="nuget\lib\$(PackagingPlatform)\$(TargetName).xml" Condition=" Exists('$(TargetDir)$(TargetName).xml') " />
@@ -119,6 +124,10 @@
     <ItemGroup>
       <_CopyItems Include="@(_NoneWithTargetPath)" Dest="%(_NoneWithTargetPath.TargetPath)" />
     </ItemGroup>
+  </Target>
+  <Target Name="_CopyToOutputDirectory" Condition=" '$(SkipCopyToOutputDirectory)' != 'true' and '$(TargetPath)' != '' "
+          AfterTargets="Build" DependsOnTargets="_CopyToOutputDirectoryDep"
+          Inputs="@(_CopyItems)" Outputs="@(_CopyItems -> '$(MSBuildThisFileDirectory)..\output\$(PackagingGroup)\%(Dest)')">
     <Copy Condition=" '@(_CopyItems)' != '' "
           SourceFiles="@(_CopyItems)"
           DestinationFiles="@(_CopyItems -> '$(MSBuildThisFileDirectory)..\output\$(PackagingGroup)\%(Dest)')"
@@ -134,7 +143,7 @@
     This runs during the build phase.
     ===================================================================================================================
   -->
-  <Target Name="MDocGenerateDocs" AfterTargets="CoreCompile" Condition=" '$(SkipMDocGenerateDocs)' != 'true' ">
+  <Target Name="_MDocGenerateDocsDep">
     <PropertyGroup>
       <MDocVersion Condition=" '%(Identity)' == 'mdoc' ">@(PackageReference -> '%(Version)')</MDocVersion>
       <MDocPackagePath Condition=" '%(Name)' == 'mdoc' ">@(PackageDefinitions -> '%(ResolvedPath)')</MDocPackagePath>
@@ -145,6 +154,13 @@
       <MDocIntermediateOutputPath>$(IntermediateOutputPath)mdoc\</MDocIntermediateOutputPath>
       <_ShouldGenerateDocs Condition=" '$(MDocDocumentationDirectory)' != '' and Exists('$(MDocDocumentationDirectory)\index.xml') ">true</_ShouldGenerateDocs>
     </PropertyGroup>
+    <ItemGroup>
+      <_MDocInputs Include="$(MDocDocumentationDirectory)\**\*" />
+    </ItemGroup>
+  </Target>
+  <Target Name="MDocGenerateDocs" Condition=" '$(SkipMDocGenerateDocs)' != 'true' "
+          AfterTargets="CoreCompile" DependsOnTargets="_MDocGenerateDocsDep"
+          Inputs="@(_MDocInputs)" Outputs="$(MDocOutputPath)">
     <MakeDir Directories="$(MDocIntermediateOutputPath)" />
     <Exec Condition=" '$(_ShouldGenerateDocs)' == 'true' "
           WorkingDirectory="$(MDocIntermediateOutputPath)"

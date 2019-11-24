@@ -14,6 +14,7 @@ void RunMSBuild (
         c.Configuration = CONFIGURATION;
         c.Verbosity = VERBOSITY;
         c.ToolVersion = MSBuildToolVersion.VS2019;
+        c.MaxCpuCount = 0;
 
         if (restoreOnly) {
             c.Targets.Clear();

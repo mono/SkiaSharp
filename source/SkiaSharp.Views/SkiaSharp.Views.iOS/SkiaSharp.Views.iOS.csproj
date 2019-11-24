@@ -1,12 +1,10 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras/2.0.54">
-  <Import Project="..\..\SkiaSharp.Build.props" />
   <PropertyGroup>
     <TargetFramework>xamarinios1.0</TargetFramework>
     <RootNamespace>SkiaSharp.Views.iOS</RootNamespace>
     <AssemblyName>SkiaSharp.Views.iOS</AssemblyName>
     <PackagingGroup>SkiaSharp.Views</PackagingGroup>
     <PackagingPlatform>Xamarin.iOS</PackagingPlatform>
-    <DefineConstants>$(DefineConstants);</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp.iOS\SkiaSharp.iOS.csproj" />
@@ -16,5 +14,4 @@
     <Compile Include="..\SkiaSharp.Views.Apple\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
-  <Import Project="..\..\SkiaSharp.Build.targets" />
 </Project>

@@ -1,14 +1,9 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\source\SkiaSharp.Build.props" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <DefineConstants>$(DefineConstants);NET_STANDARD</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DebugType>portable</DebugType>
     <RootNamespace>SkiaSharp.Tests</RootNamespace>
     <AssemblyName>SkiaSharp.Tests</AssemblyName>
-    <PackageId>SkiaSharp.NetCore.Tests</PackageId>
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
     <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
     <SkipCopyToOutputDirectory>true</SkipCopyToOutputDirectory>
@@ -21,8 +16,8 @@
     <PackageReference Include="xunit.skippablefact" Version="1.3.12" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\binding\HarfBuzzSharp.NetStandard\HarfBuzzSharp.NetStandard.csproj" />
-    <ProjectReference Include="..\..\binding\SkiaSharp.NetStandard\SkiaSharp.NetStandard.csproj" />
+    <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
   </ItemGroup>
   <ItemGroup>
@@ -43,5 +38,4 @@
     <Content Include="..\..\output\native\linux\x64\libSkiaSharp.so" CopyToOutputDirectory="Always" Condition=" '$(IsLinux)' == 'true' " />
     <Content Include="..\..\output\native\linux\x64\libHarfBuzzSharp.so" CopyToOutputDirectory="Always" Condition=" '$(IsLinux)' == 'true' " />
   </ItemGroup>
-  <Import Project="..\..\source\SkiaSharp.Build.targets" />
 </Project>

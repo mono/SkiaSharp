@@ -6,7 +6,6 @@
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
     <TizenCreateTpkOnBuild>false</TizenCreateTpkOnBuild>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
-    <PackagingPlatform>tizen40</PackagingPlatform>
     <DefineConstants>$(DefineConstants);HARFBUZZ;__TIZEN__;</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
@@ -15,6 +14,7 @@
   <ItemGroup>
     <None Include="..\..\output\native\tizen\armel\libHarfBuzzSharp.so" Link="nuget\runtimes\tizen-armel\native\libHarfBuzzSharp.so" />
     <None Include="..\..\output\native\tizen\i386\libHarfBuzzSharp.so" Link="nuget\runtimes\tizen-x86\native\libHarfBuzzSharp.so" />
+    <None Include="nuget\build\tizen40\HarfBuzzSharp.targets" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />

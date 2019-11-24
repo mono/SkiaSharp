@@ -1,19 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\SkiaSharp.Build.props" />
   <PropertyGroup>
-    <TargetFramework>netstandard1.3</TargetFramework>
+    <TargetFrameworks>netstandard1.3;netstandard2.0</TargetFrameworks>
     <AssemblyName>SkiaSharp.Views.Forms</AssemblyName>
     <RootNamespace>SkiaSharp.Views.Forms</RootNamespace>
     <SignAssembly>false</SignAssembly>
     <PackagingGroup>SkiaSharp.Views.Forms</PackagingGroup>
-    <PackagingPlatform>netstandard1.3</PackagingPlatform>
     <DefineConstants>$(DefineConstants);NET_STANDARD</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Xamarin.Forms" Version="4.0.0.540366" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\binding\SkiaSharp.NetStandard\SkiaSharp.NetStandard.csproj" />
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="nuget\build\net45\SkiaSharp.Views.Forms.targets" />
@@ -21,5 +19,4 @@
   <ItemGroup>
     <Compile Include="..\SkiaSharp.Views.Forms.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
-  <Import Project="..\..\SkiaSharp.Build.targets" />
 </Project>

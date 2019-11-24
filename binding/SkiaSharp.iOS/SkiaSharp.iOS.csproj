@@ -4,10 +4,7 @@
     <RootNamespace>SkiaSharp</RootNamespace>
     <AssemblyName>SkiaSharp</AssemblyName>
     <PackagingGroup>SkiaSharp</PackagingGroup>
-    <PackagingPlatform>Xamarin.iOS</PackagingPlatform>
-    <DefineConstants>$(DefineConstants);</DefineConstants>
-    <IsBindingProject>true</IsBindingProject>
-    <EnableDefaultItems>false</EnableDefaultItems>
+    <IsBindingProject Condition=" '$(IsMacOS)' == 'true' ">true</IsBindingProject>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />

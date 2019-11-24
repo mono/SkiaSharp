@@ -1,12 +1,10 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras/2.0.54">
-  <Import Project="..\..\SkiaSharp.Build.props" />
   <PropertyGroup>
     <TargetFramework>monoandroid9.0</TargetFramework>
     <RootNamespace>SkiaSharp.Views.Android</RootNamespace>
     <AssemblyName>SkiaSharp.Views.Android</AssemblyName>
     <PackagingGroup>SkiaSharp.Views</PackagingGroup>
     <PackagingPlatform>MonoAndroid</PackagingPlatform>
-    <DefineConstants>$(DefineConstants);</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp.Android\SkiaSharp.Android.csproj" />
@@ -14,5 +12,4 @@
   <ItemGroup>
     <Compile Include="..\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
-  <Import Project="..\..\SkiaSharp.Build.targets" />
 </Project>
