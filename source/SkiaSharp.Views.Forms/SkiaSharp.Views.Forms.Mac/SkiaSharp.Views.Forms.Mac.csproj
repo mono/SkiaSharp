@@ -8,6 +8,9 @@
     <PackagingPlatform>Xamarin.Mac20</PackagingPlatform>
     <DefineConstants>$(DefineConstants);__MACOS__</DefineConstants>
   </PropertyGroup>
+  <ItemGroup Condition=" '$(IsWindows)' == 'true' ">
+    <Reference Include="netstandard" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Xamarin.Forms" Version="4.0.0.540366" />
   </ItemGroup>

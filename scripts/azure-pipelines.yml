@@ -205,7 +205,8 @@ stages:
           name: managed_windows
           displayName: Build Managed (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
-          target: libs-only
+          target: libs
+          additionalArgs: --exclusive
           requiredArtifacts:
             - native_android_x86_windows
             - native_android_x64_windows
@@ -230,7 +231,8 @@ stages:
           name: managed_macos
           displayName: Build Managed (macOS)
           vmImage: $(VM_IMAGE_MAC)
-          target: libs-only
+          target: libs
+          additionalArgs: --exclusive
           requiredArtifacts:
             - native_android_x86_macos
             - native_android_x64_macos
@@ -248,7 +250,8 @@ stages:
           displayName: Build Managed (Linux)
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
-          target: libs-only
+          target: libs
+          additionalArgs: --exclusive
           requiredArtifacts:
             - native_linux_linux
             - native_tizen_linux
@@ -258,7 +261,8 @@ stages:
           displayName: Build Managed [No Dependencies] (Linux)
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
-          target: libs-only
+          target: libs
+          additionalArgs: --exclusive
           requiredArtifacts:
             - native_linux_nodependencies_linux
             - native_tizen_linux
@@ -272,8 +276,8 @@ stages:
           name: package_nodependencies_windows
           displayName: Package NuGets [No Dependencies]
           vmImage: $(VM_IMAGE_WINDOWS)
-          target: nuget-only
-          additionalArgs: --packall=true
+          target: nuget
+          additionalArgs: --exclusive --packall=true
           shouldPublish: false
           requiredArtifacts:
             - managed_nodependencies_linux
@@ -305,8 +309,8 @@ stages:
           name: package_windows
           displayName: Package NuGets
           vmImage: $(VM_IMAGE_WINDOWS)
-          target: nuget-only
-          additionalArgs: --packall=true
+          target: nuget
+          additionalArgs: --exclusive --packall=true
           shouldPublish: false
           requiredArtifacts:
             - managed_linux

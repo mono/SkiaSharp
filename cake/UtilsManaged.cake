@@ -10,10 +10,16 @@ void RunMSBuild (
 {
     EnsureDirectoryExists ("./output/nugets/");
 
+    // some of the platforms are having issues with the first run with /restore /t:build
+    if (!IsRunningOnWindows () && restore && !restoreOnly) {
+        RunMSBuild (solution, platform, platformTarget, restore, true);
+        RunMSBuild (solution, platform, platformTarget, false, false);
+        return;
+    }
+
     MSBuild (solution, c => {
         c.Configuration = CONFIGURATION;
         c.Verbosity = VERBOSITY;
-        c.ToolVersion = MSBuildToolVersion.VS2019;
         c.MaxCpuCount = 0;
 
         if (restoreOnly) {
@@ -44,7 +50,7 @@ void RunMSBuild (
     });
 }
 
-var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath) =>
+void PackageNuGet (FilePath nuspecPath, DirectoryPath outputPath)
 {
     EnsureDirectoryExists (outputPath);
 
@@ -53,15 +59,15 @@ var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath)
         BasePath = nuspecPath.GetDirectory (),
         ToolPath = NuGetToolPath,
     });
-});
+}
 
-var RunProcess = new Action<FilePath, ProcessSettings> ((process, settings) =>
+void RunProcess (FilePath process, ProcessSettings settings)
 {
     var result = StartProcess (process, settings);
     if (result != 0) {
         throw new Exception ($"Process '{process}' failed with error: {result}");
     }
-});
+}
 
 void RunTests (FilePath testAssembly, bool is32)
 {
@@ -120,7 +126,8 @@ IEnumerable<(string Name, string Value)> CreateTraitsDictionary (string args)
     }
 }
 
-var DecompressArchive = new Action<FilePath, DirectoryPath> ((archive, outputDir) => {
+void DecompressArchive (FilePath archive, DirectoryPath outputDir)
+{
     using (var stream = System.IO.File.OpenRead (archive.FullPath))
     using (var reader = ReaderFactory.Open (stream)) {
         while (reader.MoveToNextEntry ()) {
@@ -132,7 +139,7 @@ var DecompressArchive = new Action<FilePath, DirectoryPath> ((archive, outputDir
             }
         }
     }
-});
+}
 
 void CreateSamplesDirectory (DirectoryPath samplesDirPath, DirectoryPath outputDirPath, string versionSuffix = "")
 {

@@ -748,7 +748,7 @@ Task ("externals-tizen")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("externals-download")
-    .IsDependentOn ("download-last-successful-build")
+    .IsDependentOn ("determine-last-successful-build")
     .Does (() =>
 {
     var artifactName = "native-default";

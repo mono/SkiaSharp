@@ -19,10 +19,14 @@
     <PackageReference Include="System.Memory" Version="4.5.3" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\output\native\windows\x64\libHarfBuzzSharp.dll" Link="nuget\runtimes\win-x64\native\libHarfBuzzSharp.dll" Condition=" '$(IsWindows)' == 'true' " />
-    <None Include="..\..\output\native\windows\x86\libHarfBuzzSharp.dll" Link="nuget\runtimes\win-x86\native\libHarfBuzzSharp.dll" Condition=" '$(IsWindows)' == 'true' " />
-    <None Include="..\..\output\native\osx\libHarfBuzzSharp.dylib" Link="nuget\runtimes\osx\native\libHarfBuzzSharp.dylib" Condition=" '$(IsMacOS)' == 'true' " />
-    <None Include="..\..\output\native\linux\x64\libHarfBuzzSharp.so" Link="nuget\runtimes\linux-x64\native\libHarfBuzzSharp.so" Condition=" '$(IsLinux)' == 'true' " />
+    <None Include="..\..\output\native\windows\x64\libHarfBuzzSharp.dll" Link="nuget\runtimes\win-x64\native\libHarfBuzzSharp.dll"
+          Condition=" Exists('..\..\output\native\windows\x64\libHarfBuzzSharp.dll') or '$(IsWindows)' == 'true' " />
+    <None Include="..\..\output\native\windows\x86\libHarfBuzzSharp.dll" Link="nuget\runtimes\win-x86\native\libHarfBuzzSharp.dll"
+          Condition=" Exists('..\..\output\native\windows\x86\libHarfBuzzSharp.dll') or '$(IsWindows)' == 'true' " />
+    <None Include="..\..\output\native\osx\libHarfBuzzSharp.dylib" Link="nuget\runtimes\osx\native\libHarfBuzzSharp.dylib"
+          Condition=" Exists('..\..\output\native\osx\libHarfBuzzSharp.dylib') or '$(IsMacOS)' == 'true' " />
+    <None Include="..\..\output\native\linux\x64\libHarfBuzzSharp.so" Link="nuget\runtimes\linux-x64\native\libHarfBuzzSharp.so"
+          Condition=" Exists('..\..\output\native\linux\x64\libHarfBuzzSharp.so') or '$(IsLinux)' == 'true' " />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <None Include="nuget\build\net45\HarfBuzzSharp.targets" Link="nuget\build\$(TargetFramework)\HarfBuzzSharp.targets" />
