@@ -316,7 +316,7 @@ Task ("samples")
 // NUGET - building the package for NuGet.org
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Task ("nuget-pack")
+Task ("nuget")
     .Description ("Pack all NuGets (build all required dependencies).")
     .IsDependentOn ("libs")
     .Does (() =>
