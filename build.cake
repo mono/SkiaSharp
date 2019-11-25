@@ -434,13 +434,7 @@ Task ("nuget-pack")
     foreach (var nuspec in GetFiles ("./output/*/nuget/*.nuspec")) {
         PackageNuGet (nuspec, "./output/nugets/");
     }
-});
 
-Task ("nuget")
-    .Description ("Pack and validate all NuGets.")
-    .IsDependentOn ("nuget-pack")
-    .Does(() =>
-{
     // setup validation options
     var options = new Xamarin.Nuget.Validator.NugetValidatorOptions {
         Copyright = "© Microsoft Corporation. All rights reserved.",
