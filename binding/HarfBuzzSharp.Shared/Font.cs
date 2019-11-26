@@ -8,7 +8,7 @@ namespace HarfBuzzSharp
 {
 	public class Font : NativeObject
 	{
-		private const int NameBufferLength = 128;
+		internal const int NameBufferLength = 128;
 
 		public Font (Face face)
 			: base (IntPtr.Zero)

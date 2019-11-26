@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Text;
 using Xunit;
 
@@ -149,6 +150,24 @@ namespace HarfBuzzSharp.Tests
 		[SkippableFact]
 		public void ShouldConvertGlyphToString()
 		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				var s = font.GlyphToString(49);
+
+				Assert.Equal("H", s);
+			}
+		}
+
+		[SkippableFact]
+		public void GlyphToStringIsCorrectWithDelegate()
+		{
+			// get an array and fill it with things
+			var buffer = ArrayPool<char>.Shared.Rent(Font.NameBufferLength);
+			for (int i = 0; i < buffer.Length; i++)
+				buffer[i] = (char)i;
+			ArrayPool<char>.Shared.Return(buffer);
+
 			using (var face = new Face(Blob, 0))
 			using (var font = new Font(face))
 			{
