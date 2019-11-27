@@ -38,23 +38,7 @@ jobs:
     steps:
       - checkout: self
         submodules: recursive
-      - pwsh: |
-          if ($env:GIT_BRANCH_NAME.StartsWith($env:FEATURE_NAME_PREFIX)) {
-            $feature = $env:GIT_BRANCH_NAME.Substring($env:FEATURE_NAME_PREFIX.Length)
-            Write-Host "Feature name: $feature"
-            Write-Host "##vso[task.setvariable variable=FEATURE_NAME]$feature"
-          }
-        displayName: Determine the feature name, if any
-      - pwsh: |
-          Write-Host "##vso[build.updatebuildnumber]$env:SKIASHARP_VERSION-build.$env:BUILD_NUMBER"
-        displayName: Update the build number with a more readable one
-      - pwsh: |
-          $pr = "pr." + $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
-          Write-Host "Preview label: $pr"
-          Write-Host "##vso[task.setvariable variable=PREVIEW_LABEL]$pr"
-          Write-Host "##vso[build.updatebuildnumber]$env:SKIASHARP_VERSION-$pr.$env:BUILD_NUMBER"
-        displayName: Use a special preview label for PRs
-        condition: eq(variables['Build.Reason'], 'PullRequest')
+      - template: azure-templates-variables.yml
       # install any packages on linux
       - ${{ if endsWith(parameters.name, '_linux') }}:
         - bash: |

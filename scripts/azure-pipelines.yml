@@ -35,8 +35,21 @@ resources:
       endpoint: xamarin
 
 stages:
+  - stage: prepare
+    displayName: Prepare Build
+    jobs:
+      - job: prepare                               # Prepare Build
+        displayName: Prepare Build
+        pool:
+          name: $(VM_IMAGE_LINUX)
+        steps:
+          - template: azure-templates-variables.yml
+            parameters:
+              updateBuild: true
+
   - stage: native
     displayName: Build Native
+    dependsOn: prepare
     jobs:
       # NATIVE JOBS - WINDOWS
       - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (Windows)

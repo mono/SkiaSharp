@@ -13,6 +13,7 @@ jobs:
     condition: ${{ parameters.condition }}
     steps:
       - checkout: none
+      - template: azure-templates-variables.yml
       - task: DownloadBuildArtifacts@0
         displayName: Download the pre-built ${{ parameters.name }} artifacts
         inputs:
