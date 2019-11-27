@@ -135,5 +135,5 @@ jobs:
         inputs:
           artifactName: ${{ parameters.name }}
           pathToPublish: 'output'
-      - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+      - ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), endsWith(parameters.name, '_windows')) }}:
         - template: azure-templates-checks.yml
