@@ -195,7 +195,7 @@ stages:
           name: native_linux_linux
           displayName: Build Native Linux (Linux)
           vmImage: $(VM_IMAGE_LINUX)
-          docker: scripts/Docker/ubuntu14/amd64
+          docker: scripts/Docker/ubuntu16/amd64
           target: externals-linux
           postBuildSteps:
             - bash: |
@@ -209,7 +209,7 @@ stages:
           name: native_linux_nodependencies_linux
           displayName: Build Native Linux [No Dependencies] (Linux)
           vmImage: $(VM_IMAGE_LINUX)
-          docker: scripts/Docker/ubuntu14/amd64
+          docker: scripts/Docker/ubuntu16/amd64
           target: externals-linux
           additionalArgs: --additionalGnArgs="skia_use_fontconfig=false"
           postBuildSteps:
