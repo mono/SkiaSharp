@@ -1,0 +1,65 @@
+steps:
+  - task: ComponentGovernanceComponentDetection@0
+    displayName: Run component detection
+    condition: always()
+    inputs:
+      scanType: 'Register'
+      verbosity: 'Verbose'
+      alertWarningLevel: 'High'
+  - task: CredScan@2
+    displayName: Analyze source for credentials
+    condition: always()
+    inputs:
+      toolMajorVersion: 'V2'
+  - task: PoliCheck@1
+    displayName: Run PoliCheck
+    inputs:
+      inputType: 'Basic'
+      targetType: 'F'
+  - task: SdtReport@1
+    displayName: Create security analysis report
+    condition: always()
+    inputs:
+      AllTools: false
+      APIScan: false
+      BinSkim: false
+      CodesignValidation: false
+      CredScan: true
+      FortifySCA: false
+      FxCop: false
+      ModernCop: false
+      MSRD: false
+      PoliCheck: true
+      RoslynAnalyzers: false
+      SDLNativeRules: false
+      Semmle: false
+      TSLint: false
+      ToolLogsNotFoundAction: 'Standard'
+  - task: PublishSecurityAnalysisLogs@3
+    displayName: Publish security analysis logs
+    condition: always()
+  - task: TSAUpload@1
+    displayName: Publish TSA logs
+    condition: always()
+    inputs:
+      tsaVersion: 'TsaV2'
+      codebase: 'NewOrUpdate'
+      tsaEnvironment: 'PROD'
+      codeBaseName: 'SkiaSharp_master'
+      notificationAlias: 'xamacomd@microsoft.com'
+      notifyAlwaysV2: false
+      instanceUrlForTsaV2: 'DEVDIV'
+      projectNameDEVDIV: 'DevDiv'
+      areaPath: 'DevDiv\Xamarin Tools and SDKs\Components'
+      iterationPath: 'DevDiv\OneVS'
+      uploadAPIScan: false
+      uploadBinSkim: false
+      uploadCredScan: true
+      uploadFortifySCA: false
+      uploadFxCop: false
+      uploadModernCop: false
+      uploadPoliCheck: true
+      uploadPREfast: false
+      uploadRoslyn: false
+      uploadTSLint: false
+      uploadAsync: true
