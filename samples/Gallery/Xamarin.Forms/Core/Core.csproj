@@ -16,6 +16,11 @@
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.csproj" />
   </ItemGroup>
 
-  <Import Project="..\..\Shared\Shared.projitems" Label="Shared" />
+  <ItemGroup>
+    <Compile Include="..\..\Shared\Samples\*.cs" Link="Shared\Samples\%(Filename)%(Extension)" />
+    <Compile Include="..\..\Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Shared\Media\*" Link="Media\%(Filename)%(Extension)" />
+    <EmbeddedResource Remove="..\..\Shared\Media\content-font.ttf" />
+  </ItemGroup>
 
 </Project>

@@ -169,10 +169,12 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Media\" />
+    <Compile Include="..\..\PlatformShared\*.cs" Link="PlatformShared\%(Filename)%(Extension)" />
+    <Compile Include="..\..\Shared\Samples\*.cs" Link="Shared\Samples\%(Filename)%(Extension)" />
+    <Compile Include="..\..\Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\Shared\Media\*" Link="Media\%(Filename)%(Extension)" />
+    <EmbeddedResource Remove="..\..\Shared\Media\content-font.ttf" />
   </ItemGroup>
-  <Import Project="..\..\PlatformShared\PlatformShared.projitems" Label="Shared" />
-  <Import Project="..\..\Shared\Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\net45\SkiaSharp.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\net45\SkiaSharp.targets')" />
   <Import Project="..\..\..\..\output\HarfBuzzSharp\nuget\build\net45\HarfBuzzSharp.targets" Condition="Exists('..\..\..\..\output\HarfBuzzSharp\nuget\build\net45\HarfBuzzSharp.targets')" />

@@ -146,6 +146,12 @@ namespace SkiaSharp
 
 		public SKFontStyleSlant FontSlant => SkiaApi.sk_typeface_get_font_slant (Handle);
 
+		public bool IsBold => FontStyle.Weight >= (int)SKFontStyleWeight.SemiBold;
+
+		public bool IsItalic => FontStyle.Slant != SKFontStyleSlant.Upright;
+
+		public bool IsFixedPitch => SkiaApi.sk_typeface_is_fixed_pitch (Handle);
+
 		[Obsolete ("Use FontWeight and FontSlant instead.")]
 		public SKTypefaceStyle Style {
 			get {

@@ -48,7 +48,7 @@ namespace SkiaSharp
 			fixed (SKPoint* t = texs)
 			fixed (SKColor* c = colors)
 			fixed (UInt16* i = indices) {
-				return GetObject<SKVertices> (SkiaApi.sk_vertices_make_copy (vmode, vertexCount, p, t, c, indexCount, i));
+				return GetObject<SKVertices> (SkiaApi.sk_vertices_make_copy (vmode, vertexCount, p, t, (uint*)c, indexCount, i));
 			}
 		}
 	}

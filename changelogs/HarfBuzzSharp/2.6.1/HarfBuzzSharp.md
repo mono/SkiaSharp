@@ -71,6 +71,7 @@ public UnicodeFunctions UnicodeFunctions { get; set; }
 Added methods:
 
 ```csharp
+public void Add (int codepoint, int cluster);
 public void Add (uint codepoint, uint cluster);
 public void AddCodepoints (System.ReadOnlySpan<int> text);
 public void AddCodepoints (System.ReadOnlySpan<uint> text);
@@ -828,6 +829,7 @@ public struct Script, System.IEquatable<Script> {
 	public override int GetHashCode ();
 	public static Script Parse (string str);
 	public override string ToString ();
+	public static bool TryParse (string str, out Script script);
 	public static uint op_Implicit (Script script);
 	public static Script op_Implicit (uint tag);
 }
@@ -973,9 +975,13 @@ public class UnicodeFunctions : HarfBuzzSharp.NativeObject, System.IDisposable {
 	// methods
 	protected override void Dispose (bool disposing);
 	protected override void DisposeHandler ();
+	public UnicodeCombiningClass GetCombiningClass (int unicode);
 	public UnicodeCombiningClass GetCombiningClass (uint unicode);
+	public UnicodeGeneralCategory GetGeneralCategory (int unicode);
 	public UnicodeGeneralCategory GetGeneralCategory (uint unicode);
+	public int GetMirroring (int unicode);
 	public uint GetMirroring (uint unicode);
+	public Script GetScript (int unicode);
 	public Script GetScript (uint unicode);
 	public void MakeImmutable ();
 	public void SetCombiningClassDelegate (CombiningClassDelegate del, ReleaseDelegate destroy);
@@ -984,7 +990,9 @@ public class UnicodeFunctions : HarfBuzzSharp.NativeObject, System.IDisposable {
 	public void SetGeneralCategoryDelegate (GeneralCategoryDelegate del, ReleaseDelegate destroy);
 	public void SetMirroringDelegate (MirroringDelegate del, ReleaseDelegate destroy);
 	public void SetScriptDelegate (ScriptDelegate del, ReleaseDelegate destroy);
+	public bool TryCompose (int a, int b, out int ab);
 	public bool TryCompose (uint a, uint b, out uint ab);
+	public bool TryDecompose (int ab, out int a, out int b);
 	public bool TryDecompose (uint ab, out uint a, out uint b);
 }
 ```

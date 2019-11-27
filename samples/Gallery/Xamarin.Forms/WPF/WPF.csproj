@@ -140,7 +140,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <Import Project="..\..\PlatformShared\PlatformShared.projitems" Label="Shared" />
+  <ItemGroup>
+    <Compile Include="..\..\PlatformShared\*.cs" Link="PlatformShared\%(Filename)%(Extension)" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\net45\SkiaSharp.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\net45\SkiaSharp.targets')" />
   <Import Project="..\..\..\..\output\HarfBuzzSharp\nuget\build\net45\HarfBuzzSharp.targets" Condition="Exists('..\..\..\..\output\HarfBuzzSharp\nuget\build\net45\HarfBuzzSharp.targets')" />
