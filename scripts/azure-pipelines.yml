@@ -579,14 +579,14 @@ stages:
 
   - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
     - stage: checks
-      displayName: Run Checks
+      displayName: Run Code Checks
       dependsOn: prepare
       jobs:
-        - template: azure-templates-bootstrapper.yml # Run Checks
+        - template: azure-templates-bootstrapper.yml # Run Code Checks
           parameters:
             name: checks
-            displayName: Run Checks
-            condition: and(always(), eq('refs/heads/master', variables['Build.SourceBranch']))
+            displayName: Run Code Checks
+            # condition: and(always(), eq('refs/heads/master', variables['Build.SourceBranch']))
             vmImage: $(VM_IMAGE_WINDOWS)
             target: externals-init
             shouldPublish: false
