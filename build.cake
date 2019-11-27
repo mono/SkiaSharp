@@ -74,21 +74,22 @@ var AZURE_BUILD_SUCCESS = "https://dev.azure.com/xamarin/6fd3d886-57a5-4e31-8db7
 var AZURE_BUILD_URL = "https://dev.azure.com/xamarin/6fd3d886-57a5-4e31-8db7-52a1b47c07a8/_apis/build/builds/{0}/artifacts?artifactName={1}&%24format=zip&api-version=5.1";
 
 var TRACKED_NUGETS = new Dictionary<string, Version> {
-    { "SkiaSharp",                               new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.Linux",            new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.NanoServer",       new Version (1, 57, 0) },
-    { "SkiaSharp.Views",                         new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Desktop.Common",          new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Gtk2",                    new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Gtk3",                    new Version (1, 57, 0) },
-    { "SkiaSharp.Views.WindowsForms",            new Version (1, 57, 0) },
-    { "SkiaSharp.Views.WPF",                     new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Forms",                   new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Forms.WPF",               new Version (1, 57, 0) },
-    { "HarfBuzzSharp",                           new Version (1, 0, 0) },
-    { "HarfBuzzSharp.NativeAssets.NanoServer",   new Version (1, 0, 0) },
-    { "HarfBuzzSharp.NativeAssets.Linux",        new Version (1, 0, 0) },
-    { "SkiaSharp.HarfBuzz",                      new Version (1, 57, 0) },
+    { "SkiaSharp",                                     new Version (1, 57, 0) },
+    { "SkiaSharp.NativeAssets.Linux",                  new Version (1, 57, 0) },
+    { "SkiaSharp.NativeAssets.Linux.NoDependencies",   new Version (1, 57, 0) },
+    { "SkiaSharp.NativeAssets.NanoServer",             new Version (1, 57, 0) },
+    { "SkiaSharp.Views",                               new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Desktop.Common",                new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Gtk2",                          new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Gtk3",                          new Version (1, 57, 0) },
+    { "SkiaSharp.Views.WindowsForms",                  new Version (1, 57, 0) },
+    { "SkiaSharp.Views.WPF",                           new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Forms",                         new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Forms.WPF",                     new Version (1, 57, 0) },
+    { "HarfBuzzSharp",                                 new Version (1, 0, 0) },
+    { "HarfBuzzSharp.NativeAssets.NanoServer",         new Version (1, 0, 0) },
+    { "HarfBuzzSharp.NativeAssets.Linux",              new Version (1, 0, 0) },
+    { "SkiaSharp.HarfBuzz",                            new Version (1, 57, 0) },
 };
 
 #load "cake/UtilsManaged.cake"
