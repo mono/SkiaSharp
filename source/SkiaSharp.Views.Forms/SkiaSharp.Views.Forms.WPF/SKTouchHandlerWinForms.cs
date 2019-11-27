@@ -83,11 +83,8 @@ namespace SkiaSharp.Views.Forms
 		{
 			var handled = CommonHandler(sender, SKTouchAction.Released, e);
 
-			if (handled)
-			{
-				var view = sender as Control;
-				view.Capture = false;
-			}
+			var view = sender as Control;
+			view.Capture = false;
 		}
 
 		// processing
