@@ -46,9 +46,13 @@ jobs:
           }
         displayName: Determine the feature name, if any
       - pwsh: |
+          Write-Host "##vso[build.updatebuildnumber]$env:SKIASHARP_VERSION-build.$env:BUILD_NUMBER"
+        displayName: Update the build number with a more readable one
+      - pwsh: |
           $pr = "pr." + $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
           Write-Host "Preview label: $pr"
           Write-Host "##vso[task.setvariable variable=PREVIEW_LABEL]$pr"
+          Write-Host "##vso[build.updatebuildnumber]$env:SKIASHARP_VERSION-$pr.$env:BUILD_NUMBER"
         displayName: Use a special preview label for PRs
         condition: eq(variables['Build.Reason'], 'PullRequest')
       # install any packages on linux
