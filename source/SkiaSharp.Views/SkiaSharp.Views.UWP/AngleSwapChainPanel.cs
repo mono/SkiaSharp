@@ -135,7 +135,7 @@ namespace SkiaSharp.Views.UWP
 			if (d is AngleSwapChainPanel panel && e.NewValue is Visibility visibility)
 			{
 				panel.isVisible = visibility == Visibility.Visible;
-				panel.UpdateRenderLoop(panel.isVisible);
+				panel.UpdateRenderLoop(panel.isVisible && panel.EnableRenderLoop);
 				panel.Invalidate();
 			}
 		}

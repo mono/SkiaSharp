@@ -50,7 +50,7 @@ DirectoryPath NUGET_PACKAGES = EnvironmentVariable ("NUGET_PACKAGES") ?? PROFILE
 DirectoryPath ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? EnvironmentVariable ("ANDROID_HOME") ?? PROFILE_PATH.Combine ("android-sdk");
 DirectoryPath ANDROID_NDK_HOME = EnvironmentVariable ("ANDROID_NDK_HOME") ?? EnvironmentVariable ("ANDROID_NDK_ROOT") ?? PROFILE_PATH.Combine ("android-ndk");
 DirectoryPath TIZEN_STUDIO_HOME = EnvironmentVariable ("TIZEN_STUDIO_HOME") ?? PROFILE_PATH.Combine ("tizen-studio");
-DirectoryPath LLVM_HOME = EnvironmentVariable ("LLVM_HOME") ?? "C:/Program Files/LLVM";
+DirectoryPath LLVM_HOME = EnvironmentVariable ("LLVM_HOME") ?? (IsRunningOnWindows () ? "C:/Program Files/LLVM" : null);
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/depot_tools"));
@@ -174,6 +174,8 @@ Task ("tests-only")
 Task ("samples")
     .Does (() =>
 {
+    EnsureDirectoryExists ("./output/");
+
     var isLinux = IsRunningOnLinux ();
     var isMac = IsRunningOnMac ();
     var isWin = IsRunningOnWindows ();

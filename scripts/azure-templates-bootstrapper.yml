@@ -16,6 +16,7 @@ parameters:
   configuration: $(CONFIGURATION)               # the build configuration
   buildExternals: $(DOWNLOAD_EXTERNALS)         # the build number to download externals from
   verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
+  docker: ''                                    # the Docker image to build and use
 
 jobs:
 # - ${{ if and(ne(parameters.buildExternals, ''), startsWith(parameters.name, 'native_')) }}:
@@ -38,27 +39,14 @@ jobs:
     steps:
       - checkout: self
         submodules: recursive
-      - pwsh: |
-          if ($env:GIT_BRANCH_NAME.StartsWith($env:FEATURE_NAME_PREFIX)) {
-            $feature = $env:GIT_BRANCH_NAME.Substring($env:FEATURE_NAME_PREFIX.Length)
-            Write-Host "##vso[task.setvariable variable=FEATURE_NAME]$feature"
-          }
-        displayName: Determine the feature name, if any
-      - pwsh: |
-          Write-Host "##vso[task.setvariable variable=PREVIEW_LABEL]pr"
-        displayName: Use a special preview label for PRs
-        condition: eq(variables['Build.Reason'], 'PullRequest')
+      - template: azure-templates-variables.yml
       # install any packages on linux
       - ${{ if endsWith(parameters.name, '_linux') }}:
         - bash: |
-            sudo apt remove -y mono-complete msbuild
-            sudo apt autoremove -y
-            sudo rm /etc/mono/config
-            sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-            echo "deb https://download.mono-project.com/repo/ubuntu $(MONO_VERSION_LINUX) main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
             sudo apt update
             sudo apt install -y ${{ parameters.packages }}
-          displayName: Install any package dependencies
+          displayName: Install additional package dependencies
+          condition: ne('${{ parameters.packages }}', '')
       # install tizen
       - ${{ if contains(parameters.name, '_tizen_') }}:
         - pwsh: .\scripts\install-openjdk.ps1
@@ -83,6 +71,16 @@ jobs:
             displayName: Install LLVM
       # install extra bits for the manged builds
       - ${{ if not(startsWith(parameters.name, 'native_')) }}:
+        - ${{ if endsWith(parameters.name, '_linux') }}:
+          - bash: |
+              sudo apt remove -y mono-complete msbuild
+              sudo apt autoremove -y
+              sudo rm /etc/mono/config
+              sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+              echo "deb https://download.mono-project.com/repo/ubuntu $(MONO_VERSION_LINUX) main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
+              sudo apt update
+              sudo apt install -y mono-complete msbuild
+            displayName: Install Mono and MSBuild
         - task: UseDotNet@2
           inputs:
             packageType: 'sdk'
@@ -110,17 +108,24 @@ jobs:
       # pre-build steps
       - ${{ parameters.preBuildSteps }}
       # build
-      - ${{ if endsWith(parameters.name, '_windows') }}:
-        - pwsh: .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} { .\bootstrapper.ps1 -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} }
-          env:
-            JavaSdkDirectory: $(JAVA_HOME)
-            LLVM_HOME: $(LLVM_HOME)
-          displayName: Run the bootstrapper for ${{ parameters.target }}
-      - ${{ if not(endsWith(parameters.name, '_windows')) }}:
-        - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
-          env:
-            JavaSdkDirectory: $(JAVA_HOME)
-          displayName: Run the bootstrapper for ${{ parameters.target }}
+      - ${{ if eq(parameters.docker, '') }}:
+        - ${{ if endsWith(parameters.name, '_windows') }}:
+          - pwsh: .\scripts\retry-command.ps1 -RetryCount ${{ parameters.retryCount }} { .\bootstrapper.ps1 -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} }
+            env:
+              JavaSdkDirectory: $(JAVA_HOME)
+              LLVM_HOME: $(LLVM_HOME)
+            displayName: Run the bootstrapper for ${{ parameters.target }}
+        - ${{ if not(endsWith(parameters.name, '_windows')) }}:
+          - bash: ./scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+            env:
+              JavaSdkDirectory: $(JAVA_HOME)
+            displayName: Run the bootstrapper for ${{ parameters.target }}
+      - ${{ if ne(parameters.docker, '') }}:
+        - bash: docker build --tag skiasharp .
+          workingDirectory: ${{ parameters.docker }}
+          displayName: Build the Docker image for ${{ parameters.docker }}
+        - bash: docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash scripts/retry-command.sh ${{ parameters.retryCount }} ./bootstrapper.sh -t ${{ parameters.target }} -v ${{ parameters.verbosity }} -c ${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
+          displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
       # post-build steps
       - ${{ parameters.postBuildSteps }}
       # publish artifacts

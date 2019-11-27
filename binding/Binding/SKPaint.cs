@@ -96,7 +96,7 @@ namespace SkiaSharp
 
 		public SKColor Color {
 			get => SkiaApi.sk_paint_get_color (Handle);
-			set => SkiaApi.sk_paint_set_color (Handle, value);
+			set => SkiaApi.sk_paint_set_color (Handle, (uint)value);
 		}
 
 		public float StrokeWidth {

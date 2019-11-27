@@ -17,7 +17,8 @@
         <PreferredNativeHarfBuzzSharp Condition=" '$(PreferredNativeHarfBuzzSharp)' == '' and '$(OS)' != 'Unix' and '$(Prefer32Bit)' == 'False' ">x64</PreferredNativeHarfBuzzSharp>  
         <PreferredNativeHarfBuzzSharp Condition=" '$(PreferredNativeHarfBuzzSharp)' == '' and '$(OS)' != 'Unix' and '$(Prefer32Bit)' == 'True' ">x86</PreferredNativeHarfBuzzSharp> 
         <!-- fall back to x64 on 64-bit machines -->
-        <PreferredNativeHarfBuzzSharp Condition=" '$(PreferredNativeHarfBuzzSharp)' == '' and '$([System.Environment]::Is64BitOperatingSystem)' == 'True' ">x64</PreferredNativeHarfBuzzSharp> 
+        <PreferredNativeHarfBuzzSharp Condition=" '$(PreferredNativeHarfBuzzSharp)' == '' and '$(MSBuildRuntimeType)' != 'Core' and '$([System.Environment]::Is64BitOperatingSystem)' == 'True' ">x64</PreferredNativeHarfBuzzSharp> 
+        <PreferredNativeHarfBuzzSharp Condition=" '$(PreferredNativeHarfBuzzSharp)' == '' and '$(MSBuildRuntimeType)' == 'Core' and '$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture)' == 'X64' ">x64</PreferredNativeHarfBuzzSharp> 
         <!-- fall back to x86 -->
         <PreferredNativeHarfBuzzSharp Condition=" '$(PreferredNativeHarfBuzzSharp)' == '' ">x86</PreferredNativeHarfBuzzSharp>
     </PropertyGroup>

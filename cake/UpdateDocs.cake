@@ -35,7 +35,7 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
     }
 }
 
-Task ("docs-download-output")
+Task ("docs-download-build-artifact")
     .IsDependentOn ("download-last-successful-build")
     .Does (() =>
 {
@@ -45,6 +45,11 @@ Task ("docs-download-output")
     CleanDirectories ("./output");
 
     DownloadFile(url, "./output/nuget.zip");
+});
+
+Task ("docs-expand-build-artifact")
+    .Does (() =>
+{
     Unzip ("./output/nuget.zip", "./output");
     MoveDirectory ("./output/nuget", "./output/nugets");
 
@@ -55,6 +60,10 @@ Task ("docs-download-output")
         Unzip ($"./output/nugets/{name}", $"./output/{id}/nuget");
     }
 });
+
+Task ("docs-download-output")
+    .IsDependentOn ("docs-download-build-artifact")
+    .IsDependentOn ("docs-expand-build-artifact");
 
 Task ("docs-api-diff")
     .Does (async () =>
@@ -179,7 +188,10 @@ Task ("docs-update-frameworks")
                 ? $"./output/{id}/nuget"
                 : await comparer.ExtractCachedPackageAsync (id, version);
 
-            foreach (var (path, platform) in GetPlatformDirectories ($"{packagePath}/lib")) {
+            var dirs =
+                GetPlatformDirectories ($"{packagePath}/lib").Union(
+                GetPlatformDirectories ($"{packagePath}/ref"));
+            foreach (var (path, platform) in dirs) {
                 string moniker;
                 if (id.StartsWith ("SkiaSharp.Views.Forms"))
                     if (id != "SkiaSharp.Views.Forms")

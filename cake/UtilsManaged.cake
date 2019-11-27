@@ -377,6 +377,7 @@ async Task<NuGetDiff> CreateNuGetDiffAsync ()
     await AddDep ("GtkSharp", "netstandard2.0");
     await AddDep ("GLibSharp", "netstandard2.0");
     await AddDep ("AtkSharp", "netstandard2.0");
+    await AddDep ("System.Memory", "netstandard2.0");
 
     return comparer;
 
