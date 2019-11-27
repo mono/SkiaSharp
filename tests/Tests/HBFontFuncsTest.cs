@@ -142,10 +142,10 @@ namespace HarfBuzzSharp.Tests
 		public void TryGetGlyphNameIsCorrectWithDelegate()
 		{
 			// get an array and fill it with things
-			var buffer = ArrayPool<char>.Shared.Rent(Font.NameBufferLength);
+			var buffer = ArrayPool<byte>.Shared.Rent(Font.NameBufferLength);
 			for (int i = 0; i < buffer.Length; i++)
-				buffer[i] = (char)i;
-			ArrayPool<char>.Shared.Return(buffer);
+				buffer[i] = (byte)i;
+			ArrayPool<byte>.Shared.Return(buffer);
 
 			using (var font = new Font(Font))
 			using (var fontFuncs = new FontFunctions())
