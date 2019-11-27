@@ -3,13 +3,14 @@ trigger:
   - refs/tags/*
 
 variables:
+  SKIASHARP_VERSION: 1.68.2
   FEATURE_NAME_PREFIX: 'feature/'
   VERBOSITY: normal
   GIT_SHA: $(Build.SourceVersion)
   GIT_BRANCH_NAME: $(Build.SourceBranchName)
-  BUILD_NUMBER: $[counter(variables['Build.SourceBranch'], 1)]
+  BUILD_NUMBER: $[counter(format('{0}_{1}', variables['SKIASHARP_VERSION'], variables['Build.SourceBranch']), 1)]
   FEATURE_NAME: ''
-  PREVIEW_LABEL: 'rc'
+  PREVIEW_LABEL: 'preview'
   NATIVE_LINUX_PACKAGES: curl mono-complete msbuild python git libfontconfig1-dev clang-3.8 make
   TIZEN_LINUX_PACKAGES: mono-complete msbuild libxcb-xfixes0 libxcb-render-util0 libwebkitgtk-1.0-0 libxcb-image0 acl libsdl1.2debian libv4l-0 libxcb-randr0 libxcb-shape0 libxcb-icccm4 libsm6 gettext rpm2cpio cpio bridge-utils openvpn
   MANAGED_LINUX_PACKAGES: mono-complete msbuild ttf-ancient-fonts
