@@ -43,6 +43,7 @@ stages:
         pool:
           name: $(VM_IMAGE_LINUX)
         steps:
+          - checkout: none
           - template: azure-templates-variables.yml
             parameters:
               updateBuild: true
