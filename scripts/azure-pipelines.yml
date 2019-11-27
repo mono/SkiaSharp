@@ -584,7 +584,7 @@ stages:
       jobs:
         - template: azure-templates-bootstrapper.yml # Run Code Checks
           parameters:
-            name: checks
+            name: checks_windows
             displayName: Run Code Checks
             # condition: and(always(), eq('refs/heads/master', variables['Build.SourceBranch']))
             vmImage: $(VM_IMAGE_WINDOWS)
