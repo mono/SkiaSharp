@@ -580,6 +580,7 @@ stages:
   - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
     - stage: checks
       displayName: Run Checks
+      dependsOn: prepare
       jobs:
         - template: azure-templates-bootstrapper.yml # Run Checks
           parameters:
