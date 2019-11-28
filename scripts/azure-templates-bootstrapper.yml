@@ -135,3 +135,11 @@ jobs:
         inputs:
           artifactName: ${{ parameters.name }}
           pathToPublish: 'output'
+      - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+        - task: ComponentGovernanceComponentDetection@0
+          displayName: Run component detection
+          condition: always()
+          inputs:
+            scanType: 'Register'
+            verbosity: 'Verbose'
+            alertWarningLevel: 'High'
