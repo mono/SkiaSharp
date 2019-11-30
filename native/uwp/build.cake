@@ -1,6 +1,6 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath ANGLE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/angle"));
-DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
+DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/uwp"));
 
 #load "../../cake/native-shared.cake"
 #load "../../cake/msbuild.cake"
@@ -29,7 +29,7 @@ Task("libSkiaSharp")
             $"  '-DWINAPI_FAMILY=WINAPI_FAMILY_APP', '-DSK_BUILD_FOR_WINRT', '-DSK_HAS_DWRITE_1_H', '-DSK_HAS_DWRITE_2_H', '-DNO_GETENV' ] " +
             $"extra_ldflags=[ '/DEBUG:FULL', '/APPCONTAINER', 'WindowsApp.lib' ]");
 
-        var outDir = OUTPUT_PATH.Combine($"uwp/{dir}");
+        var outDir = OUTPUT_PATH.Combine(dir);
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"out/uwp/{arch}/libSkiaSharp.dll"), outDir);
         CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"out/uwp/{arch}/libSkiaSharp.pdb"), outDir);
@@ -51,7 +51,7 @@ Task("libHarfBuzzSharp")
 
         RunMSBuild("libHarfBuzzSharp/libHarfBuzzSharp.sln", platformTarget: arch);
 
-        var outDir = OUTPUT_PATH.Combine($"uwp/{dir}");
+        var outDir = OUTPUT_PATH.Combine(dir);
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory($"libHarfBuzzSharp/bin/{arch}/{CONFIGURATION}/libHarfBuzzSharp.dll", outDir);
         CopyFileToDirectory($"libHarfBuzzSharp/bin/{arch}/{CONFIGURATION}/libHarfBuzzSharp.pdb", outDir);
@@ -73,7 +73,7 @@ Task("SkiaSharp.Views.Interop.UWP")
 
         RunMSBuild("SkiaSharp.Views.Interop.UWP/SkiaSharp.Views.Interop.UWP.sln", platformTarget: arch);
 
-        var outDir = OUTPUT_PATH.Combine($"uwp/{dir}");
+        var outDir = OUTPUT_PATH.Combine(dir);
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory($"SkiaSharp.Views.Interop.UWP/bin/{arch}/{CONFIGURATION}/SkiaSharp.Views.Interop.UWP.dll", outDir);
         CopyFileToDirectory($"SkiaSharp.Views.Interop.UWP/bin/{arch}/{CONFIGURATION}/SkiaSharp.Views.Interop.UWP.pdb", outDir);
@@ -98,7 +98,7 @@ Task("ANGLE")
     }
 
     foreach (var arch in new[] { ("arm", "ARM"), ("x86", "Win32"), ("x64", "X64") }) {
-        var outDir = OUTPUT_PATH.Combine($"uwp/{arch.Item1}");
+        var outDir = OUTPUT_PATH.Combine(arch.Item1);
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"uwp/bin/UAP/{arch.Item2}/libEGL.dll"), outDir);
         CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($"uwp/bin/UAP/{arch.Item2}/libGLESv2.dll"), outDir);

@@ -1,5 +1,5 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
-DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
+DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/android"));
 
 #load "../../cake/native-shared.cake"
 
@@ -28,7 +28,7 @@ Task("libSkiaSharp")
             $"ndk='{ANDROID_NDK_HOME}' " +
             $"ndk_api={(skiaArch == "x64" || skiaArch == "arm64" ? 21 : 9)}");
 
-        var outDir = OUTPUT_PATH.Combine($"android/{dir}");
+        var outDir = OUTPUT_PATH.Combine(dir);
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"out/android/{arch}/libSkiaSharp.so"), outDir);
     }
@@ -55,7 +55,7 @@ Task("libHarfBuzzSharp")
             WorkingDirectory = "libHarfBuzzSharp",
         });
 
-        var outDir = OUTPUT_PATH.Combine($"android/{dir}");
+        var outDir = OUTPUT_PATH.Combine(dir);
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory($"libHarfBuzzSharp/libs/{arch}/libHarfBuzzSharp.so", outDir);
     }
