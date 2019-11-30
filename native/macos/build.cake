@@ -48,13 +48,13 @@ Task("libHarfBuzzSharp")
     .WithCriteria(IsRunningOnMac())
     .Does(() =>
 {
-    Build("x86_64", "x64");
+    Build("x86_64");
 
     RunLipo(OUTPUT_PATH, "libHarfBuzzSharp.dylib", new [] {
        (FilePath) "x86_64/libHarfBuzzSharp.dylib"
     });
 
-    void Build(string arch, string dir)
+    void Build(string arch)
     {
         if (Skip(arch)) return;
 
@@ -66,7 +66,7 @@ Task("libHarfBuzzSharp")
             Configuration = CONFIGURATION,
         });
 
-        var outDir = OUTPUT_PATH.Combine(dir);
+        var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
         CopyDirectory($"libHarfBuzzSharp/build/{CONFIGURATION}/", outDir);
 

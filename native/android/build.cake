@@ -10,10 +10,10 @@ Task("libSkiaSharp")
     .WithCriteria(IsRunningOnMac() || IsRunningOnWindows())
     .Does(() =>
 {
-    Build("x86", "x86", "x86");
-    Build("x86_64", "x64", "x86_64");
-    Build("armeabi-v7a", "arm", "armeabi-v7a");
-    Build("arm64-v8a", "arm64", "arm64-v8a");
+    Build("x86", "x86");
+    Build("x86_64", "x64");
+    Build("armeabi-v7a", "arm");
+    Build("arm64-v8a", "arm64");
 
     void Build(string arch, string skiaArch, string dir)
     {
@@ -28,7 +28,7 @@ Task("libSkiaSharp")
             $"ndk='{ANDROID_NDK_HOME}' " +
             $"ndk_api={(skiaArch == "x64" || skiaArch == "arm64" ? 21 : 9)}");
 
-        var outDir = OUTPUT_PATH.Combine(dir);
+        var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"out/android/{arch}/libSkiaSharp.so"), outDir);
     }
@@ -41,12 +41,12 @@ Task("libHarfBuzzSharp")
     var cmd = IsRunningOnWindows() ? ".cmd" : "";
     var ndkbuild = ANDROID_NDK_HOME.CombineWithFilePath($"ndk-build{cmd}").FullPath;
 
-    Build("x86", "x86");
-    Build("x86_64", "x64");
-    Build("armeabi-v7a", "arm");
-    Build("arm64-v8a", "arm64");
+    Build("x86");
+    Build("x86_64");
+    Build("armeabi-v7a");
+    Build("arm64-v8a");
 
-    void Build(string arch, string dir)
+    void Build(string arch)
     {
         if (Skip(arch)) return;
 
@@ -55,7 +55,7 @@ Task("libHarfBuzzSharp")
             WorkingDirectory = "libHarfBuzzSharp",
         });
 
-        var outDir = OUTPUT_PATH.Combine(dir);
+        var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
         CopyFileToDirectory($"libHarfBuzzSharp/libs/{arch}/libHarfBuzzSharp.so", outDir);
     }
