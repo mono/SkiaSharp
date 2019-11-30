@@ -1,3 +1,5 @@
+#addin nuget:?package=Cake.XCode&version=4.2.0
+
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/osx"));
 
@@ -8,7 +10,7 @@ Task("libSkiaSharp")
     .WithCriteria(IsRunningOnMac())
     .Does(() =>
 {
-    Build("x86_64", "x64", "x86_64");
+    Build("x86_64", "x64");
 
     RunLipo(OUTPUT_PATH, "libSkiaSharp.dylib", new [] {
        (FilePath) "x86_64/libSkiaSharp.dylib"

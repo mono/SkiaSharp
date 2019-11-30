@@ -1,3 +1,5 @@
+#addin nuget:?package=Cake.XCode&version=4.2.0
+
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/ios"));
 
@@ -14,7 +16,7 @@ Task("libSkiaSharp")
     Build("iphoneos", "arm64", "arm64");
 
     CopyDirectory(OUTPUT_PATH.Combine("armv7/libSkiaSharp.framework"), OUTPUT_PATH.Combine("libSkiaSharp.framework"));
-    DeleteFile(OUTPUT_PATH.Combine("libSkiaSharp.framework/libSkiaSharp"));
+    DeleteFile(OUTPUT_PATH.CombineWithFilePath("libSkiaSharp.framework/libSkiaSharp"));
     RunLipo(OUTPUT_PATH, "libSkiaSharp.framework/libSkiaSharp", new [] {
        (FilePath) "i386/libSkiaSharp.framework/libSkiaSharp",
        (FilePath) "x86_64/libSkiaSharp.framework/libSkiaSharp",
@@ -66,7 +68,7 @@ Task("libHarfBuzzSharp")
        (FilePath) "arm64/libHarfBuzzSharp.a"
     });
 
-    void Build(string arch, string dir)
+    void Build(string sdk, string arch, string dir)
     {
         if (Skip(arch)) return;
 
