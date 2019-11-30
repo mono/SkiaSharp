@@ -7,7 +7,7 @@ LDFLAGS +=
 noop = 
 space = ${noop} ${noop}
 
-src_root = ../../externals/harfbuzz/src
+src_root = ../../../externals/harfbuzz/src
 obj_root = obj
 bin_root = bin
 objarch_root = ${obj_root}/${ARCH}
