@@ -3,10 +3,11 @@ include $(CLEAR_VARS)
 
 cmd-strip = $(PRIVATE_STRIP) --strip-all $(call host-path,$1)
 
+src_root = ../../../../externals/harfbuzz/src
+
 LOCAL_MODULE           := HarfBuzzSharp
 
-LOCAL_C_INCLUDES       := .                                    \
-                          ../../../../externals/harfbuzz/src
+LOCAL_C_INCLUDES       := . $(src_root)
 
 LOCAL_LDFLAGS          := -s -Wl,--gc-sections
 
@@ -16,57 +17,57 @@ LOCAL_CFLAGS           := -DHAVE_CONFIG_H -DNDEBUG                              
 
 LOCAL_CPPFLAGS         := -std=c++11
 
-LOCAL_SRC_FILES        := ../../../../externals/harfbuzz/src/hb-aat-layout.cc                          \
-                          ../../../../externals/harfbuzz/src/hb-aat-map.cc                             \
-                          ../../../../externals/harfbuzz/src/hb-blob.cc                                \
-                          ../../../../externals/harfbuzz/src/hb-buffer-serialize.cc                    \
-                          ../../../../externals/harfbuzz/src/hb-buffer.cc                              \
-                          ../../../../externals/harfbuzz/src/hb-common.cc                              \
-                          ../../../../externals/harfbuzz/src/hb-face.cc                                \
-                          ../../../../externals/harfbuzz/src/hb-fallback-shape.cc                      \
-                          ../../../../externals/harfbuzz/src/hb-font.cc                                \
-                          ../../../../externals/harfbuzz/src/hb-map.cc                                 \
-                          ../../../../externals/harfbuzz/src/hb-ot-cff1-table.cc                       \
-                          ../../../../externals/harfbuzz/src/hb-ot-cff2-table.cc                       \
-                          ../../../../externals/harfbuzz/src/hb-ot-color.cc                            \
-                          ../../../../externals/harfbuzz/src/hb-ot-face.cc                             \
-                          ../../../../externals/harfbuzz/src/hb-ot-font.cc                             \
-                          ../../../../externals/harfbuzz/src/hb-ot-layout.cc                           \
-                          ../../../../externals/harfbuzz/src/hb-ot-map.cc                              \
-                          ../../../../externals/harfbuzz/src/hb-ot-math.cc                             \
-                          ../../../../externals/harfbuzz/src/hb-ot-meta.cc                             \
-                          ../../../../externals/harfbuzz/src/hb-ot-metrics.cc                          \
-                          ../../../../externals/harfbuzz/src/hb-ot-name.cc                             \
-                          ../../../../externals/harfbuzz/src/hb-ot-shape-complex-arabic.cc             \
-                          ../../../../externals/harfbuzz/src/hb-ot-shape-complex-default.cc            \
-                          ../../../../externals/harfbuzz/src/hb-ot-shape-complex-hangul.cc             \
-                          ../../../../externals/harfbuzz/src/hb-ot-shape-complex-hebrew.cc             \
-                          ../../../../externals/harfbuzz/src/hb-ot-shape-complex-indic-table.cc        \
-                          ../../../../externals/harfbuzz/src/hb-ot-shape-complex-indic.cc              \
-                          ../../../../externals/harfbuzz/src/hb-ot-shape-complex-khmer.cc              \
-                          ../../../../externals/harfbuzz/src/hb-ot-shape-complex-myanmar.cc            \
-                          ../../../../externals/harfbuzz/src/hb-ot-shape-complex-thai.cc               \
-                          ../../../../externals/harfbuzz/src/hb-ot-shape-complex-use-table.cc          \
-                          ../../../../externals/harfbuzz/src/hb-ot-shape-complex-use.cc                \
-                          ../../../../externals/harfbuzz/src/hb-ot-shape-complex-vowel-constraints.cc  \
-                          ../../../../externals/harfbuzz/src/hb-ot-shape-fallback.cc                   \
-                          ../../../../externals/harfbuzz/src/hb-ot-shape-normalize.cc                  \
-                          ../../../../externals/harfbuzz/src/hb-ot-shape.cc                            \
-                          ../../../../externals/harfbuzz/src/hb-ot-tag.cc                              \
-                          ../../../../externals/harfbuzz/src/hb-ot-var.cc                              \
-                          ../../../../externals/harfbuzz/src/hb-set.cc                                 \
-                          ../../../../externals/harfbuzz/src/hb-shape-plan.cc                          \
-                          ../../../../externals/harfbuzz/src/hb-shape.cc                               \
-                          ../../../../externals/harfbuzz/src/hb-shaper.cc                              \
-                          ../../../../externals/harfbuzz/src/hb-static.cc                              \
-                          ../../../../externals/harfbuzz/src/hb-subset-cff-common.cc                   \
-                          ../../../../externals/harfbuzz/src/hb-subset-cff1.cc                         \
-                          ../../../../externals/harfbuzz/src/hb-subset-cff2.cc                         \
-                          ../../../../externals/harfbuzz/src/hb-subset-input.cc                        \
-                          ../../../../externals/harfbuzz/src/hb-subset-plan.cc                         \
-                          ../../../../externals/harfbuzz/src/hb-subset.cc                              \
-                          ../../../../externals/harfbuzz/src/hb-ucd.cc                                 \
-                          ../../../../externals/harfbuzz/src/hb-unicode.cc                             \
-                          ../../../../externals/harfbuzz/src/hb-warning.cc
+LOCAL_SRC_FILES        := $(src_root)/hb-aat-layout.cc                          \
+                          $(src_root)/hb-aat-map.cc                             \
+                          $(src_root)/hb-blob.cc                                \
+                          $(src_root)/hb-buffer-serialize.cc                    \
+                          $(src_root)/hb-buffer.cc                              \
+                          $(src_root)/hb-common.cc                              \
+                          $(src_root)/hb-face.cc                                \
+                          $(src_root)/hb-fallback-shape.cc                      \
+                          $(src_root)/hb-font.cc                                \
+                          $(src_root)/hb-map.cc                                 \
+                          $(src_root)/hb-ot-cff1-table.cc                       \
+                          $(src_root)/hb-ot-cff2-table.cc                       \
+                          $(src_root)/hb-ot-color.cc                            \
+                          $(src_root)/hb-ot-face.cc                             \
+                          $(src_root)/hb-ot-font.cc                             \
+                          $(src_root)/hb-ot-layout.cc                           \
+                          $(src_root)/hb-ot-map.cc                              \
+                          $(src_root)/hb-ot-math.cc                             \
+                          $(src_root)/hb-ot-meta.cc                             \
+                          $(src_root)/hb-ot-metrics.cc                          \
+                          $(src_root)/hb-ot-name.cc                             \
+                          $(src_root)/hb-ot-shape-complex-arabic.cc             \
+                          $(src_root)/hb-ot-shape-complex-default.cc            \
+                          $(src_root)/hb-ot-shape-complex-hangul.cc             \
+                          $(src_root)/hb-ot-shape-complex-hebrew.cc             \
+                          $(src_root)/hb-ot-shape-complex-indic-table.cc        \
+                          $(src_root)/hb-ot-shape-complex-indic.cc              \
+                          $(src_root)/hb-ot-shape-complex-khmer.cc              \
+                          $(src_root)/hb-ot-shape-complex-myanmar.cc            \
+                          $(src_root)/hb-ot-shape-complex-thai.cc               \
+                          $(src_root)/hb-ot-shape-complex-use-table.cc          \
+                          $(src_root)/hb-ot-shape-complex-use.cc                \
+                          $(src_root)/hb-ot-shape-complex-vowel-constraints.cc  \
+                          $(src_root)/hb-ot-shape-fallback.cc                   \
+                          $(src_root)/hb-ot-shape-normalize.cc                  \
+                          $(src_root)/hb-ot-shape.cc                            \
+                          $(src_root)/hb-ot-tag.cc                              \
+                          $(src_root)/hb-ot-var.cc                              \
+                          $(src_root)/hb-set.cc                                 \
+                          $(src_root)/hb-shape-plan.cc                          \
+                          $(src_root)/hb-shape.cc                               \
+                          $(src_root)/hb-shaper.cc                              \
+                          $(src_root)/hb-static.cc                              \
+                          $(src_root)/hb-subset-cff-common.cc                   \
+                          $(src_root)/hb-subset-cff1.cc                         \
+                          $(src_root)/hb-subset-cff2.cc                         \
+                          $(src_root)/hb-subset-input.cc                        \
+                          $(src_root)/hb-subset-plan.cc                         \
+                          $(src_root)/hb-subset.cc                              \
+                          $(src_root)/hb-ucd.cc                                 \
+                          $(src_root)/hb-unicode.cc                             \
+                          $(src_root)/hb-warning.cc
 
 include $(BUILD_SHARED_LIBRARY)
