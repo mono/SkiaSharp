@@ -15,7 +15,7 @@ Task("libSkiaSharp")
     Build("armeabi-v7a", "arm");
     Build("arm64-v8a", "arm64");
 
-    void Build(string arch, string skiaArch, string dir)
+    void Build(string arch, string skiaArch)
     {
         if (Skip(arch)) return;
 
