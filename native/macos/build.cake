@@ -14,7 +14,7 @@ Task("libSkiaSharp")
        (FilePath) "x86_64/libSkiaSharp.dylib"
     });
 
-    void Build(string arch, string skiaArch, string dir)
+    void Build(string arch, string skiaArch)
     {
         if (Skip(arch)) return;
 
@@ -34,7 +34,7 @@ Task("libSkiaSharp")
             Configuration = CONFIGURATION,
         });
 
-        var outDir = OUTPUT_PATH.Combine(dir);
+        var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
         CopyDirectory($"libSkiaSharp/build/{CONFIGURATION}/", outDir);
 
@@ -57,7 +57,7 @@ Task("libHarfBuzzSharp")
         if (Skip(arch)) return;
 
         XCodeBuild(new XCodeBuildSettings {
-            Project = "native/libHarfBuzzSharp_osx/libHarfBuzzSharp.xcodeproj",
+            Project = "libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj",
             Target = "libHarfBuzzSharp",
             Sdk = "macosx",
             Arch = arch,
