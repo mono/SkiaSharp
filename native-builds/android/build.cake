@@ -61,7 +61,7 @@ Task("libHarfBuzzSharp")
     }
 });
 
-Task("Build")
+Task("Default")
     .IsDependentOn("libSkiaSharp")
     .IsDependentOn("libHarfBuzzSharp");
 

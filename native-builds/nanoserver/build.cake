@@ -29,7 +29,7 @@ Task("libHarfBuzzSharp")
     CopyFileToDirectory(srcDir.CombineWithFilePath("libHarfBuzzSharp.pdb"), outDir);
 });
 
-Task("Build")
+Task("Default")
     .IsDependentOn("libSkiaSharp")
     .IsDependentOn("libHarfBuzzSharp")
     .Does(() =>

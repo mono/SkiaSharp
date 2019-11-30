@@ -105,7 +105,7 @@ Task("ANGLE")
     }
 });
 
-Task("Build")
+Task("Default")
     .IsDependentOn("libSkiaSharp")
     .IsDependentOn("libHarfBuzzSharp")
     .IsDependentOn("SkiaSharp.Views.Interop.UWP")

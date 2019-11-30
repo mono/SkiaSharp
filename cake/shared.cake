@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
-var TARGET = Argument("t", Argument("target", "Build"));
+var TARGET = Argument("t", Argument("target", "Default"));
 var VERBOSITY = Argument("v", Argument("verbosity", Verbosity.Normal));
 var CONFIGURATION = Argument("c", Argument("configuration", "Release"));
 
