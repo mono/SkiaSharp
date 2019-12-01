@@ -1,3 +1,5 @@
+DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/package_cache"));
+
 void RunMSBuild(
     FilePath solution,
     string platform = "Any CPU",
@@ -6,7 +8,6 @@ void RunMSBuild(
     bool restoreOnly = false)
 {
     var nugets = MakeAbsolute(ROOT_PATH.Combine("output/nugets"));
-    var packages = MakeAbsolute(ROOT_PATH.Combine("externals/package_cache"));
 
     EnsureDirectoryExists(nugets);
 
@@ -36,7 +37,7 @@ void RunMSBuild(
             c.Properties ["Platform"] = new [] { $"\"{platform}\"" };
         }
 
-        c.Properties ["RestorePackagesPath"] = new [] { packages.FullPath };
+        c.Properties ["RestorePackagesPath"] = new [] { PACKAGE_CACHE_PATH.FullPath };
         c.Properties ["RestoreSources"] = new [] { nugets.FullPath, "https://api.nuget.org/v3/index.json" };
     });
 }
