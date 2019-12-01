@@ -5,6 +5,7 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
 string SUPPORT_GPU_VAR = Argument("supportGpu", EnvironmentVariable("SUPPORT_GPU") ?? "true").ToLower();
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
+string ADDITIONAL_GN_ARGS = Argument("gn", EnvironmentVariable("ADDITIONAL_GN_ARGS") ?? "");
 
 string CC = Argument("cc", EnvironmentVariable("CC"));
 string CXX = Argument("ccx", EnvironmentVariable("CXX"));
@@ -43,7 +44,8 @@ Task("libSkiaSharp")
             $"extra_cflags=[ '-DSKIA_C_DLL' ] " +
             $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
             compilers +
-            $"linux_soname_version='{soname}'");
+            $"linux_soname_version='{soname}' " +
+            ADDITIONAL_GN_ARGS);
 
         var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
         EnsureDirectoryExists(outDir);
