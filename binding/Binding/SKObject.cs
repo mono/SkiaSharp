@@ -143,22 +143,20 @@ namespace SkiaSharp
 			if (handle == IntPtr.Zero)
 				return;
 
-			var nonExistent = new WeakReference (null);
-			var weak = instances.AddOrUpdate (handle, nonExistent, (ptr, old) => {
-				if (old.Target is SKObject obj && !obj.IsDisposed)
-					return old;
-				return new WeakReference (null);
-			});
+			var existed = instances.TryRemove (handle, out var weak);
+			if (existed && weak.Target is SKObject obj && !obj.IsDisposed) {
+				// Existing object is not disposed, so re-register it
+				RegisterHandle (handle, obj);
+			}
 
 #if THROW_OBJECT_EXCEPTIONS
 			InvalidOperationException ex = null;
-			if (weak == nonExistent) {
-				// the dummy instance was added instead of being removed
+			if (!existed) {
+				// there was no object for the handle
 				ex = new InvalidOperationException (
 					$"A managed object did not exist for the specified native object. " +
 					$"H: {handle.ToString ("x")} Type: {instance.GetType ()}");
-			}
-			if (weak.Target is SKObject o && o != instance && !instance.IsDisposed) {
+			} else if (weak.Target is SKObject o && o != instance && !instance.IsDisposed) {
 				// there was a new living object there, but we are still alive
 				ex = new InvalidOperationException (
 					$"Trying to remove a different object with the same native handle. " +
