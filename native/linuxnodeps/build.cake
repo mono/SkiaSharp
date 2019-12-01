@@ -9,12 +9,13 @@ Task("libSkiaSharp")
 {
     RunCake("../linux/build.cake", "libSkiaSharp", new Dictionary<string, string> {
         { "variant", "linuxnodeps" },
+        { "gn", "skia_use_fontconfig=false" },
     });
 
     RunProcess("ldd", OUTPUT_PATH.CombineWithFilePath($"x64/libSkiaSharp.so").FullPath, out var stdout);
 
     if (stdout.Any(o => o.Contains("fontconfig")))
-        throw new Exception("Output contained a dependency on fontconfig.");
+        throw new Exception("libSkiaSharp.so contained a dependency on fontconfig.");
 });
 
 Task("libHarfBuzzSharp")
@@ -28,7 +29,7 @@ Task("libHarfBuzzSharp")
     RunProcess("ldd", OUTPUT_PATH.CombineWithFilePath($"x64/libHarfBuzzSharp.so").FullPath, out var stdout);
 
     if (stdout.Any(o => o.Contains("fontconfig")))
-        throw new Exception("Output contained a dependency on fontconfig.");
+        throw new Exception("libHarfBuzzSharp.so contained a dependency on fontconfig.");
 });
 
 Task("Default")
