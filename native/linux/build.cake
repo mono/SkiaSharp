@@ -3,12 +3,14 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
 #load "../../cake/native-shared.cake"
 
-var SUPPORT_GPU_VAR = Argument("supportGpu", EnvironmentVariable("SUPPORT_GPU") ?? "true").ToLower();
-var SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
+string SUPPORT_GPU_VAR = Argument("supportGpu", EnvironmentVariable("SUPPORT_GPU") ?? "true").ToLower();
+bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
 
-var CC = Argument("cc", EnvironmentVariable("CC"));
-var CXX = Argument("ccx", EnvironmentVariable("CXX"));
-var AR = Argument("ar", EnvironmentVariable("AR"));
+string CC = Argument("cc", EnvironmentVariable("CC"));
+string CXX = Argument("ccx", EnvironmentVariable("CXX"));
+string AR = Argument("ar", EnvironmentVariable("AR"));
+
+string VARIANT = Argument("variant", EnvironmentVariable("LINUX_VARIANT") ?? "linux");
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
@@ -32,7 +34,7 @@ Task("libSkiaSharp")
         var soname = GetVersion("libSkiaSharp", "soname");
         var map = MakeAbsolute((FilePath)"libSkiaSharp/libSkiaSharp.map");
 
-        GnNinja($"linux/{arch}", "SkiaSharp",
+        GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
             $"is_official_build=true skia_enable_tools=false " +
             $"target_os='linux' target_cpu='{arch}' " +
             $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
@@ -43,9 +45,9 @@ Task("libSkiaSharp")
             compilers +
             $"linux_soname_version='{soname}'");
 
-        var outDir = OUTPUT_PATH.Combine($"linux/{dir}");
+        var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
         EnsureDirectoryExists(outDir);
-        var so = SKIA_PATH.CombineWithFilePath($"out/linux/{arch}/libSkiaSharp.so.{soname}");
+        var so = SKIA_PATH.CombineWithFilePath($"out/{VARIANT}/{arch}/libSkiaSharp.so.{soname}");
         CopyFileToDirectory(so, outDir);
         CopyFile(so, outDir.CombineWithFilePath("libSkiaSharp.so"));
     }
@@ -64,13 +66,13 @@ Task("libHarfBuzzSharp")
         var soname = GetVersion("HarfBuzz", "soname");
 
         RunProcess("make", new ProcessSettings {
-            Arguments = $"ARCH={arch} SONAME_VERSION={soname} LDFLAGS=-static-libstdc++",
+            Arguments = $"ARCH={arch} SONAME_VERSION={soname} VARIANT={VARIANT} LDFLAGS=-static-libstdc++",
             WorkingDirectory = "libHarfBuzzSharp",
         });
 
-        var outDir = OUTPUT_PATH.Combine($"linux/{dir}");
+        var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
         EnsureDirectoryExists(outDir);
-        var so = $"libHarfBuzzSharp/bin/{arch}/libHarfBuzzSharp.so.{soname}";
+        var so = $"libHarfBuzzSharp/bin/{VARIANT}/{arch}/libHarfBuzzSharp.so.{soname}";
         CopyFileToDirectory(so, outDir);
         CopyFile(so, outDir.CombineWithFilePath("libHarfBuzzSharp.so"));
     }
