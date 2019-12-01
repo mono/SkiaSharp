@@ -38,7 +38,7 @@ Task("libSkiaSharp")
             $"skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
             $"skia_enable_gpu={(SUPPORT_GPU ? "true" : "false")} " +
             $"extra_cflags=[ '-DSKIA_C_DLL' ] " +
-            $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={ROOT_PATH.CombineWithFilePath("native-builds/linux/libSkiaSharp/libSkiaSharp.map")}' ] " +
+            $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={ROOT_PATH.CombineWithFilePath("native/linux/libSkiaSharp/libSkiaSharp.map")}' ] " +
             compilers +
             $"linux_soname_version='{soname}'");
 
