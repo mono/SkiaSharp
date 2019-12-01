@@ -1,9 +1,8 @@
-#addin nuget:?package=Cake.XCode&version=4.2.0
-
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/watchos"));
 
 #load "../../cake/native-shared.cake"
+#load "../../cake/xcode.cake"
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
@@ -14,11 +13,12 @@ Task("libSkiaSharp")
     Build("watchos", "armv7k", "arm");
     Build("watchos", "arm64_32", "arm64");
 
-    CopyDirectory(OUTPUT_PATH.Combine("armv7/libSkiaSharp.framework"), OUTPUT_PATH.Combine("libSkiaSharp.framework"));
+    CopyDirectory(OUTPUT_PATH.Combine("armv7k/libSkiaSharp.framework"), OUTPUT_PATH.Combine("libSkiaSharp.framework"));
     DeleteFile(OUTPUT_PATH.CombineWithFilePath("libSkiaSharp.framework/libSkiaSharp"));
     RunLipo(OUTPUT_PATH, "libSkiaSharp.framework/libSkiaSharp", new [] {
-       (FilePath) "x86_64/libSkiaSharp.framework/libSkiaSharp",
-       (FilePath) "arm64/libSkiaSharp.framework/libSkiaSharp"
+       (FilePath) "i386/libSkiaSharp.framework/libSkiaSharp",
+       (FilePath) "armv7k/libSkiaSharp.framework/libSkiaSharp",
+       (FilePath) "arm64_32/libSkiaSharp.framework/libSkiaSharp"
     });
 
     void Build(string sdk, string arch, string skiaArch)
@@ -34,17 +34,11 @@ Task("libSkiaSharp")
             $"extra_cflags=[ '-DSK_BUILD_FOR_WATCHOS', '-DSKIA_C_DLL', '-mwatchos-version-min=2.0' ] " +
             $"extra_ldflags=[ '-Wl,watchos_version_min=2.0' ]");
 
-        XCodeBuild(new XCodeBuildSettings {
-            Project = "libSkiaSharp/libSkiaSharp.xcodeproj",
-            Target = "libSkiaSharp",
-            Sdk = sdk,
-            Arch = arch,
-            Configuration = CONFIGURATION,
-        });
+        RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, arch);
 
         var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
-        CopyDirectory($"libSkiaSharp/build/{CONFIGURATION}-{sdk}/", outDir);
+        CopyDirectory($"libSkiaSharp/bin/{CONFIGURATION}/{arch}/{CONFIGURATION}-{sdk}", outDir);
 
         StripSign(outDir.CombineWithFilePath("libSkiaSharp.framework"));
     }
@@ -54,30 +48,25 @@ Task("libHarfBuzzSharp")
     .WithCriteria(IsRunningOnMac())
     .Does(() =>
 {
-    Build("watchsimulator", "i386", "x86");
-    Build("watchos", "armv7k", "arm");
-    Build("watchos", "arm64_32", "arm64");
+    Build("watchsimulator", "i386");
+    Build("watchos", "armv7k");
+    Build("watchos", "arm64_32");
 
     RunLipo(OUTPUT_PATH, "libHarfBuzzSharp.a", new [] {
-       (FilePath) "x86_64/libHarfBuzzSharp.a",
-       (FilePath) "arm64/libHarfBuzzSharp.a"
+       (FilePath) "i386/libHarfBuzzSharp.a",
+       (FilePath) "armv7k/libHarfBuzzSharp.a",
+       (FilePath) "arm64_32/libHarfBuzzSharp.a"
     });
 
     void Build(string sdk, string arch)
     {
         if (Skip(arch)) return;
 
-        XCodeBuild(new XCodeBuildSettings {
-            Project = "libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj",
-            Target = "libHarfBuzzSharp",
-            Sdk = sdk,
-            Arch = arch,
-            Configuration = CONFIGURATION,
-        });
+        RunXCodeBuild("libHarfBuzzSharp/libHarfBuzzSharp.xcodeproj", "libHarfBuzzSharp", sdk, arch);
 
         var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
-        CopyDirectory($"libHarfBuzzSharp/build/{CONFIGURATION}-{sdk}/", outDir);
+        CopyDirectory($"libHarfBuzzSharp/bin/{CONFIGURATION}/{arch}/{CONFIGURATION}-{sdk}", outDir);
 
         StripSign(outDir.CombineWithFilePath("libHarfBuzzSharp.a"));
     }

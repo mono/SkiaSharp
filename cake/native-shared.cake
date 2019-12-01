@@ -29,9 +29,11 @@ Task("git-sync-deps")
 
 void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
 {
+    var isCore = Context.Environment.Runtime.IsCoreClr;
+
     var exe = IsRunningOnWindows() ? ".exe" : "";
-    var quote = IsRunningOnWindows() ? "\"" : "'";
-    var innerQuote = IsRunningOnWindows() ? "\\\"" : "\"";
+    var quote = IsRunningOnWindows() || isCore ? "\"" : "'";
+    var innerQuote = IsRunningOnWindows() || isCore ? "\\\"" : "\"";
 
     // generate native skia build files
     RunProcess(SKIA_PATH.CombineWithFilePath($"bin/gn{exe}"), new ProcessSettings {
@@ -112,7 +114,7 @@ bool Skip(string arch)
     if (BUILD_ARCH.Contains(arch))
         return false;
 
-    Warning($"Skipping architecture: {arch}.");
+    Warning($"Skipping architecture: {arch}");
 
     return true;
 }
