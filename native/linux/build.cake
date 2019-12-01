@@ -5,13 +5,12 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
 string SUPPORT_GPU_VAR = Argument("supportGpu", EnvironmentVariable("SUPPORT_GPU") ?? "true").ToLower();
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
-string ADDITIONAL_GN_ARGS = Argument("gn", EnvironmentVariable("ADDITIONAL_GN_ARGS") ?? "");
 
 string CC = Argument("cc", EnvironmentVariable("CC"));
 string CXX = Argument("ccx", EnvironmentVariable("CXX"));
 string AR = Argument("ar", EnvironmentVariable("AR"));
 
-string VARIANT = Argument("variant", EnvironmentVariable("LINUX_VARIANT") ?? "linux");
+string VARIANT = BUILD_VARIANT ?? "linux";
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")

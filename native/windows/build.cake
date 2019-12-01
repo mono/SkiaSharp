@@ -2,11 +2,11 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
 DirectoryPath LLVM_HOME = Argument("llvm", EnvironmentVariable("LLVM_HOME") ?? "C:/Program Files/LLVM");
-string VARIANT = Argument("variant", EnvironmentVariable("WINDOWS_VARIANT") ?? "windows");
-string ADDITIONAL_GN_ARGS = Argument("gn", EnvironmentVariable("ADDITIONAL_GN_ARGS") ?? "");
 
 #load "../../cake/native-shared.cake"
 #load "../../cake/msbuild.cake"
+
+string VARIANT = BUILD_VARIANT ?? "windows";
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")

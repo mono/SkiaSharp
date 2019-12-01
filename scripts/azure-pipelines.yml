@@ -129,13 +129,13 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-windows
           additionalArgs: --buildarch=x64
-      - template: azure-templates-bootstrapper.yml # Build Native Win32|x64 [NanoServer] (Windows)
+      - template: azure-templates-bootstrapper.yml # Build Native NanoServer|x64 (Windows)
         parameters:
           name: native_win32_x64_nanoserver_windows
-          displayName: Build Native Win32|x64 [NanoServer] (Windows)
+          displayName: Build Native NanoServer|x64 (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
-          target: externals-windows
-          additionalArgs: --buildarch=x64 --additionalGnArgs="extra_cflags+=[''''-DSK_BUILD_FOR_NANOSERVER'''']"
+          target: externals-nanoserver
+          additionalArgs: --buildarch=x64
       # NATIVE JOBS - MAC
       - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (macOS)
         parameters:
@@ -204,28 +204,15 @@ stages:
           vmImage: $(VM_IMAGE_LINUX)
           docker: scripts/Docker/ubuntu16/amd64
           target: externals-linux
-          postBuildSteps:
-            - bash: |
-                find output/native/linux -type f -name "*.so" -print0 | xargs -0 ldd -v
-              displayName: List the dependencies for the native binaries
-            - bash: |
-                find output/native/linux -type f -name "*.so" -print0 | xargs -0 readelf -Ws | grep GLOBAL
-              displayName: List the exported symbols for the native binaries
+          additionalArgs: --buildarch=x64
       - template: azure-templates-bootstrapper.yml # Build Native Linux [No Dependencies] (Linux)
         parameters:
           name: native_linux_nodependencies_linux
           displayName: Build Native Linux [No Dependencies] (Linux)
           vmImage: $(VM_IMAGE_LINUX)
           docker: scripts/Docker/ubuntu16/amd64
-          target: externals-linux
-          additionalArgs: --additionalGnArgs="skia_use_fontconfig=false"
-          postBuildSteps:
-            - bash: |
-                find output/native/linux -type f -name "*.so" -print0 | xargs -0 ldd -v
-              displayName: List the dependencies for the native binaries
-            - bash: |
-                find output/native/linux -type f -name "*.so" -print0 | xargs -0 readelf -Ws | grep GLOBAL
-              displayName: List the exported symbols for the native binaries
+          target: externals-linuxnodeps
+          additionalArgs: --buildarch=x64
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (Linux)
         parameters:
           name: native_tizen_linux
@@ -243,7 +230,8 @@ stages:
           name: managed_windows
           displayName: Build Managed (Windows)
           vmImage: $(VM_IMAGE_WINDOWS)
-          target: libs-only
+          target: libs
+          additionalArgs: --exclusive
           requiredArtifacts:
             - native_android_x86_windows
             - native_android_x64_windows
@@ -257,31 +245,14 @@ stages:
             - native_uwp_arm64_windows
             - native_win32_x86_windows
             - native_win32_x64_windows
-      - template: azure-templates-bootstrapper.yml # Build Managed [NanoServer] (Windows)
-        parameters:
-          name: managed_nanoserver_windows
-          displayName: Build Managed [NanoServer] (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS)
-          target: libs-only
-          requiredArtifacts:
-            - native_android_x86_windows
-            - native_android_x64_windows
-            - native_android_arm_windows
-            - native_android_arm64_windows
-            # - native_tizen_windows
-            - native_tizen_linux
-            - native_uwp_x86_windows
-            - native_uwp_x64_windows
-            - native_uwp_arm_windows
-            - native_uwp_arm64_windows
-            - native_win32_x86_windows
             - native_win32_x64_nanoserver_windows
       - template: azure-templates-bootstrapper.yml # Build Managed (macOS)
         parameters:
           name: managed_macos
           displayName: Build Managed (macOS)
           vmImage: $(VM_IMAGE_MAC)
-          target: libs-only
+          target: libs
+          additionalArgs: --exclusive
           requiredArtifacts:
             - native_android_x86_macos
             - native_android_x64_macos
@@ -299,18 +270,10 @@ stages:
           displayName: Build Managed (Linux)
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
-          target: libs-only
+          target: libs
+          additionalArgs: --exclusive
           requiredArtifacts:
             - native_linux_linux
-            - native_tizen_linux
-      - template: azure-templates-bootstrapper.yml # Build Managed [No Dependencies] (Linux)
-        parameters:
-          name: managed_nodependencies_linux
-          displayName: Build Managed [No Dependencies] (Linux)
-          vmImage: $(VM_IMAGE_LINUX)
-          packages: $(MANAGED_LINUX_PACKAGES)
-          target: libs-only
-          requiredArtifacts:
             - native_linux_nodependencies_linux
             - native_tizen_linux
 
@@ -318,91 +281,19 @@ stages:
     displayName: Package NuGets
     dependsOn: managed
     jobs:
-      - template: azure-templates-bootstrapper.yml # Package NuGets [NanoServer]
-        parameters:
-          name: package_nanoserver_windows
-          displayName: Package NuGets [NanoServer]
-          vmImage: $(VM_IMAGE_WINDOWS)
-          target: nuget-only
-          additionalArgs: --packall=true
-          shouldPublish: false
-          requiredArtifacts:
-            - managed_linux
-            - managed_macos
-            - managed_nanoserver_windows
-          postBuildSteps:
-            - pwsh: |
-                $platforms = (Get-ChildItem -Path ./output/native/*) | Where-Object { $_.Name -NotMatch "windows" }
-                Write-Host "Removing the following platforms:"
-                $platforms | Foreach-Object { Write-Host $_.Name }
-                $platforms | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
-                $nupkgs = (Get-ChildItem -Path ./output/nugets/*) | Where-Object { $_.Name -NotMatch "NanoServer" }
-                Write-Host "Removing the following packages:"
-                $nupkgs | Foreach-Object { Write-Host $_.Name }
-                $nupkgs | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
-              displayName: Remove all unrelated files
-            - task: PublishBuildArtifacts@1
-              displayName: Publish the native-nanoserver artifacts
-              inputs:
-                artifactName: native-nanoserver
-                pathToPublish: 'output/native'
-            - task: PublishBuildArtifacts@1
-              displayName: Publish the nuget-nanoserver artifacts
-              inputs:
-                artifactName: nuget-nanoserver
-                pathToPublish: 'output/nugets'
-      - template: azure-templates-bootstrapper.yml # Package NuGets [No Dependencies]
-        parameters:
-          name: package_nodependencies_windows
-          displayName: Package NuGets [No Dependencies]
-          vmImage: $(VM_IMAGE_WINDOWS)
-          target: nuget-only
-          additionalArgs: --packall=true
-          shouldPublish: false
-          requiredArtifacts:
-            - managed_nodependencies_linux
-            - managed_macos
-            - managed_windows
-          postBuildSteps:
-            - pwsh: |
-                $platforms = (Get-ChildItem -Path ./output/native/*) | Where-Object { $_.Name -NotMatch "linux" }
-                Write-Host "Removing the following platforms:"
-                $platforms | Foreach-Object { Write-Host $_.Name }
-                $platforms | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
-                $nupkgs = (Get-ChildItem -Path ./output/nugets/*) | Where-Object { $_.Name -NotMatch "NoDependencies" }
-                Write-Host "Removing the following packages:"
-                $nupkgs | Foreach-Object { Write-Host $_.Name }
-                $nupkgs | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
-              displayName: Remove all unrelated files
-            - task: PublishBuildArtifacts@1
-              displayName: Publish the native-nodependencies artifacts
-              inputs:
-                artifactName: native-nodependencies
-                pathToPublish: 'output/native'
-            - task: PublishBuildArtifacts@1
-              displayName: Publish the nuget-nodependencies artifacts
-              inputs:
-                artifactName: nuget-nodependencies
-                pathToPublish: 'output/nugets'
       - template: azure-templates-bootstrapper.yml # Package NuGets
         parameters:
           name: package_windows
           displayName: Package NuGets
           vmImage: $(VM_IMAGE_WINDOWS)
-          target: nuget-only
-          additionalArgs: --packall=true
+          target: nuget
+          additionalArgs: --packall=true --exclusive
           shouldPublish: false
           requiredArtifacts:
             - managed_linux
             - managed_macos
             - managed_windows
           postBuildSteps:
-            - pwsh: |
-                $nupkgs = (Get-ChildItem -Path ./output/nugets/*) | Where-Object { ($_.Name -Match "NoDependencies") -or ($_.Name -Match "NanoServer") }
-                Write-Host "Removing the following packages:"
-                $nupkgs | Foreach-Object { Write-Host $_.Name }
-                $nupkgs | ForEach-Object { Remove-Item -Path $_ -Recurse -Force }
-              displayName: Remove all unrelated files
             - task: PublishBuildArtifacts@1
               displayName: Publish the native-default artifacts
               inputs:
@@ -413,44 +304,6 @@ stages:
               inputs:
                 artifactName: nuget-default
                 pathToPublish: 'output/nugets'
-      - job: package                               # Combine Packaged NuGets
-        displayName: Combine Packaged NuGets
-        dependsOn:
-          - package_nodependencies_windows
-          - package_nanoserver_windows
-          - package_windows
-        pool:
-          name: $(VM_IMAGE_LINUX)
-        steps:
-          - task: DownloadBuildArtifacts@0
-            displayName: Download the nuget-nodependencies artifacts
-            inputs:
-              artifactName: nuget-nodependencies
-              downloadPath: 'download-temp'
-          - task: DownloadBuildArtifacts@0
-            displayName: Download the nuget-nanoserver artifacts
-            inputs:
-              artifactName: nuget-nanoserver
-              downloadPath: 'download-temp'
-          - task: DownloadBuildArtifacts@0
-            displayName: Download the nuget-default artifacts
-            inputs:
-              artifactName: nuget-default
-              downloadPath: 'download-temp'
-          - pwsh: |
-              New-Item '.\output\nugets' -Type Directory -Force | Out-Null
-              Get-ChildItem '.\download-temp\nuget-nodependencies\' | Copy-Item -Destination '.\output\nugets' -Recurse -Force
-              Get-ChildItem '.\download-temp\nuget-nanoserver\' | Copy-Item -Destination '.\output\nugets' -Recurse -Force
-              Get-ChildItem '.\download-temp\nuget-default\' | Copy-Item -Destination '.\output\nugets' -Recurse -Force
-              Remove-Item '.\download-temp\' -Recurse -Force
-            displayName: Move the nuget-* artifacts to the output directory
-          - task: PublishBuildArtifacts@1
-            displayName: Publish the nuget artifacts
-            inputs:
-              artifactName: nuget
-              pathToPublish: 'output/nugets'
-          - bash: ./scripts/validate-linux-nugets.sh
-            displayName: Validate the Linux NuGet packages
 
   - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
     - stage: signing
@@ -546,33 +399,8 @@ stages:
                 testResultsFormat: xUnit
                 testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
                 testRunTitle: 'Linux .NET Core Tests'
-      - template: azure-templates-bootstrapper.yml # Tests [No Dependencies] (Linux)
-        parameters:
-          name: tests_nodependencies_linux
-          displayName: Tests [No Dependencies] (Linux)
-          vmImage: $(VM_IMAGE_LINUX)
-          packages: $(MANAGED_LINUX_PACKAGES)
-          retryCount: 3
-          target: tests
-          additionalArgs: --skipExternals="all" --unsupportedTests="Category=MatchCharacter"
-          shouldPublish: false
-          requiredArtifacts:
-            - native_linux_nodependencies_linux
-          postBuildSteps:
-            - task: PublishTestResults@2
-              displayName: Publish the Mono test results
-              condition: always()
-              inputs:
-                testResultsFormat: xUnit
-                testResultsFiles: 'tests/SkiaSharp.Desktop.Tests/**/TestResults.xml'
-                testRunTitle: 'Linux [No Dependencies] Mono Tests'
-            - task: PublishTestResults@2
-              displayName: Publish the .NET Core test results
-              condition: always()
-              inputs:
-                testResultsFormat: xUnit
-                testResultsFiles: 'tests/SkiaSharp.NetCore.Tests/**/TestResults.xml'
-                testRunTitle: 'Linux [No Dependencies] .NET Core Tests'
+      # TODO: add tests for linux no dependencies
+      # TODO: add tests for windows nano server
 
   - stage: samples
     displayName: Build Samples

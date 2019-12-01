@@ -3,6 +3,9 @@
 var BUILD_ARCH = Argument("arch", Argument("buildarch", EnvironmentVariable("BUILD_ARCH") ?? ""))
     .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
+var BUILD_VARIANT = Argument("variant", EnvironmentVariable("BUILD_VARIANT"));
+var ADDITIONAL_GN_ARGS = Argument("gn", EnvironmentVariable("ADDITIONAL_GN_ARGS"));
+
 var PYTHON_EXE = Argument("python", EnvironmentVariable("PYTHON_EXE") ?? "python");
 
 if (!string.IsNullOrEmpty(PYTHON_EXE) && FileExists(PYTHON_EXE)) {
