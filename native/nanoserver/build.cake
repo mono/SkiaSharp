@@ -7,18 +7,20 @@ Task("libSkiaSharp")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
 {
-    RunCake("../win32/build.cake", "libSkiaSharp", new Dictionary<string, string> {
+    RunCake("../windows/build.cake", "libSkiaSharp", new Dictionary<string, string> {
         { "variant", "nanoserver" },
         { "gn", "extra_cflags+=[ '-DSK_BUILD_FOR_NANOSERVER' ]" },
         { "arch", "x64" },
     });
+
+    RunProcess("nano-api-scan", OUTPUT_PATH.CombineWithFilePath("nanoserver/x64/libSkiaSharp.dll").FullPath);
 });
 
 Task("libHarfBuzzSharp")
     .WithCriteria(IsRunningOnWindows())
     .Does(() =>
 {
-    RunCake("../win32/build.cake", "libHarfBuzzSharp", new Dictionary<string, string> {
+    RunCake("../windows/build.cake", "libHarfBuzzSharp", new Dictionary<string, string> {
         { "arch", "x64" },
     });
 
@@ -27,17 +29,12 @@ Task("libHarfBuzzSharp")
     var srcDir = OUTPUT_PATH.Combine($"windows/x64");
     CopyFileToDirectory(srcDir.CombineWithFilePath("libHarfBuzzSharp.dll"), outDir);
     CopyFileToDirectory(srcDir.CombineWithFilePath("libHarfBuzzSharp.pdb"), outDir);
+
+    RunProcess("nano-api-scan", OUTPUT_PATH.CombineWithFilePath("nanoserver/x64/libHarfBuzzSharp.dll").FullPath);
 });
 
 Task("Default")
     .IsDependentOn("libSkiaSharp")
-    .IsDependentOn("libHarfBuzzSharp")
-    .Does(() =>
-{
-    var outDir = OUTPUT_PATH.Combine($"nanoserver/x64");
-    foreach (var dll in GetFiles($"{outDir}/*.dll")) {
-        RunProcess("nano-api-scan", dll.FullPath);
-    }
-});
+    .IsDependentOn("libHarfBuzzSharp");
 
 RunTarget(TARGET);

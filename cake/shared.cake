@@ -39,6 +39,14 @@ void RunProcess(FilePath process, string args)
     }
 }
 
+void RunProcess(FilePath process, string args, out IEnumerable<string> stdout)
+{
+    var result = StartProcess(process, new ProcessSettings { Arguments = args }, out stdout);
+    if (result != 0) {
+        throw new Exception($"Process '{process}' failed with error: {result}");
+    }
+}
+
 void RunProcess(FilePath process, ProcessSettings settings)
 {
     var result = StartProcess(process, settings);
