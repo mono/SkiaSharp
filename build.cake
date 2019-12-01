@@ -22,29 +22,21 @@ using Mono.ApiTools;
 using NuGet.Packaging;
 using NuGet.Versioning;
 
-#load "cake/Utils.cake"
+DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 
-var TARGET = Argument ("t", Argument ("target", "Default"));
-var VERBOSITY = Argument ("v", Argument ("verbosity", Verbosity.Normal));
-var BUILD_ARCH = Argument ("buildarch", EnvironmentVariable ("BUILD_ARCH") ?? "")
-    .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+#load "cake/shared.cake"
+
 var SKIP_EXTERNALS = Argument ("skipexternals", "")
     .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAllPlatforms", false));
+var BUILD_ALL_PLATFORMS = Argument ("buildall", Argument ("BuildAllPlatforms", false));
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
 var AZURE_BUILD_ID = Argument ("azureBuildId", "");
 var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
-var ADDITIONAL_GN_ARGS = Argument ("additionalGnArgs", "");
-var CONFIGURATION = Argument ("c", Argument ("configuration", "Release"));
 
-var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
 var CakeToolPath = Context.Tools.Resolve ("Cake.exe");
 var MDocPath = Context.Tools.Resolve ("mdoc.exe");
-var MSBuildToolPath = GetMSBuildToolPath (EnvironmentVariable ("MSBUILD_EXE"));
-var PythonToolPath = EnvironmentVariable ("PYTHON_EXE") ?? "python";
-
-DirectoryPath PROFILE_PATH = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
 
 DirectoryPath NUGET_PACKAGES = EnvironmentVariable ("NUGET_PACKAGES") ?? PROFILE_PATH.Combine (".nuget/packages");
 DirectoryPath ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? EnvironmentVariable ("ANDROID_HOME") ?? PROFILE_PATH.Combine ("android-sdk");
@@ -52,23 +44,15 @@ DirectoryPath ANDROID_NDK_HOME = EnvironmentVariable ("ANDROID_NDK_HOME") ?? Env
 DirectoryPath TIZEN_STUDIO_HOME = EnvironmentVariable ("TIZEN_STUDIO_HOME") ?? PROFILE_PATH.Combine ("tizen-studio");
 DirectoryPath LLVM_HOME = EnvironmentVariable ("LLVM_HOME") ?? (IsRunningOnWindows () ? "C:/Program Files/LLVM" : null);
 
-DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/depot_tools"));
 DirectoryPath SKIA_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia"));
 DirectoryPath ANGLE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/angle"));
 DirectoryPath HARFBUZZ_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/harfbuzz"));
 DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/SkiaSharpAPI"));
-DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/package_cache"));
 
 var PREVIEW_LABEL = EnvironmentVariable ("PREVIEW_LABEL") ?? "preview";
 var FEATURE_NAME = EnvironmentVariable ("FEATURE_NAME") ?? "";
 var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? "0";
-
-if (!string.IsNullOrEmpty (PythonToolPath) && FileExists (PythonToolPath)) {
-    var dir = MakeAbsolute ((FilePath) PythonToolPath).GetDirectory ();
-    var oldPath = EnvironmentVariable ("PATH");
-    System.Environment.SetEnvironmentVariable ("PATH", dir.FullPath + System.IO.Path.PathSeparator + oldPath);
-}
 
 var AZURE_BUILD_SUCCESS = "https://dev.azure.com/xamarin/6fd3d886-57a5-4e31-8db7-52a1b47c07a8/_apis/build/builds?statusFilter=completed&resultFilter=succeeded&definitions=4&branchName=refs/heads/master&$top=1&api-version=5.1";
 var AZURE_BUILD_URL = "https://dev.azure.com/xamarin/6fd3d886-57a5-4e31-8db7-52a1b47c07a8/_apis/build/builds/{0}/artifacts?artifactName={1}&%24format=zip&api-version=5.1";
@@ -91,9 +75,27 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.HarfBuzz",                            new Version (1, 57, 0) },
 };
 
+#load "cake/msbuild.cake"
 #load "cake/UtilsManaged.cake"
-#load "cake/BuildExternals.cake"
+#load "cake/externals.cake"
 #load "cake/UpdateDocs.cake"
+
+Task ("determine-last-successful-build")
+    .WithCriteria (string.IsNullOrEmpty (AZURE_BUILD_ID))
+    .Does (() =>
+{
+    Warning ("A build ID (--azureBuildId=<ID>) was not specified, using the last successful build.");
+
+    var successUrl = string.Format(AZURE_BUILD_SUCCESS);
+    var json = ParseJson (FileReadText (DownloadFile (successUrl)));
+
+    AZURE_BUILD_ID = (string)json ["value"] [0] ["id"];
+
+    Information ($"Using last successful build ID {AZURE_BUILD_ID}");
+});
+
+Task ("__________________________________")
+    .Description ("__________________________________________________");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // EXTERNALS - the native C and C++ libraries
@@ -101,6 +103,7 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
 
 // this builds all the externals
 Task ("externals")
+    .Description ("Build all external dependencies.")
     .IsDependentOn ("externals-native");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -108,20 +111,20 @@ Task ("externals")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("libs")
+    .Description ("Build all managed assemblies.")
     .IsDependentOn ("externals")
-    .IsDependentOn ("libs-only");
-
-Task ("libs-only")
     .Does (() =>
 {
     // build the managed libraries
     var platform = "";
-    if (IsRunningOnWindows ()) {
-        platform = ".Windows";
-    } else if (IsRunningOnMac ()) {
-        platform = ".Mac";
-    } else if (IsRunningOnLinux ()) {
-        platform = ".Linux";
+    if (!BUILD_ALL_PLATFORMS) {
+        if (IsRunningOnWindows ()) {
+            platform = ".Windows";
+        } else if (IsRunningOnMac ()) {
+            platform = ".Mac";
+        } else if (IsRunningOnLinux ()) {
+            platform = ".Linux";
+        }
     }
     RunMSBuild ($"./source/SkiaSharpSource{platform}.sln");
 
@@ -138,10 +141,8 @@ Task ("libs-only")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("tests")
+    .Description ("Run all tests.")
     .IsDependentOn ("externals")
-    .IsDependentOn ("tests-only");
-
-Task ("tests-only")
     .Does (() =>
 {
     var RunDesktopTest = new Action<string> (arch => {
@@ -171,11 +172,32 @@ Task ("tests-only")
 // SAMPLES - the demo apps showing off the work
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Task ("samples")
+Task ("samples-generate")
+    .Description ("Generate and zip the samples directory structure.")
     .Does (() =>
 {
     EnsureDirectoryExists ("./output/");
 
+    // create the workbooks archive
+    Zip ("./workbooks", "./output/workbooks.zip");
+
+    // create the samples archive
+    CreateSamplesDirectory ("./samples/", "./output/samples/");
+    Zip ("./output/samples/", "./output/samples.zip");
+
+    // create the preview samples archive
+    var suffix = string.IsNullOrEmpty (BUILD_NUMBER)
+        ? $"{PREVIEW_LABEL}"
+        : $"{PREVIEW_LABEL}.{BUILD_NUMBER}";
+    CreateSamplesDirectory ("./samples/", "./output/samples-preview/", suffix);
+    Zip ("./output/samples-preview/", "./output/samples-preview.zip");
+});
+
+Task ("samples")
+    .Description ("Build all samples.")
+    .IsDependentOn ("samples-generate")
+    .Does(() =>
+{
     var isLinux = IsRunningOnLinux ();
     var isMac = IsRunningOnMac ();
     var isWin = IsRunningOnWindows ();
@@ -200,7 +222,8 @@ Task ("samples")
         { "xamarin.forms.windows", "x86" },
     };
 
-    var buildSample = new Action<FilePath> (sln => {
+    void BuildSample (FilePath sln)
+    {
         var platform = sln.GetDirectory ().GetDirectoryName ().ToLower ();
         var name = sln.GetFilenameWithoutExtension ();
         var slnPlatform = name.GetExtension ();
@@ -221,25 +244,12 @@ Task ("samples")
 
             RunMSBuild (sln, platform: buildPlatform);
         }
-    });
-
-    // create the workbooks archive
-    Zip ("./workbooks", "./output/workbooks.zip");
-
-    // create the samples archive
-    CreateSamplesDirectory ("./samples/", "./output/samples/");
-    Zip ("./output/samples/", "./output/samples.zip");
-
-    // create the preview samples archive
-    var suffix = string.IsNullOrEmpty (BUILD_NUMBER)
-        ? $"{PREVIEW_LABEL}"
-        : $"{PREVIEW_LABEL}.{BUILD_NUMBER}";
-    CreateSamplesDirectory ("./samples/", "./output/samples-preview/", suffix);
-    Zip ("./output/samples-preview/", "./output/samples-preview.zip");
+    };
 
     // build the newly migrated samples
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
+
     var solutions = GetFiles ("./output/samples/**/*.sln");
     foreach (var sln in solutions) {
         var name = sln.GetFilenameWithoutExtension ();
@@ -250,7 +260,7 @@ Task ("samples")
             var variants = GetFiles (sln.GetDirectory ().CombineWithFilePath (name) + ".*.sln");
             if (!variants.Any ()) {
                 // there is no platform variant
-                buildSample (sln);
+                BuildSample (sln);
             } else {
                 // skip as there is a platform variant
             }
@@ -262,12 +272,13 @@ Task ("samples")
                 (isMac && slnPlatform == ".mac") ||
                 (isWin && slnPlatform == ".windows");
             if (shouldBuild) {
-                buildSample (sln);
+                BuildSample (sln);
             } else {
                 // skip this as this is not the correct platform
             }
         }
     }
+
     CleanDirectory ("./output/samples/");
     DeleteDirectory ("./output/samples/");
     CleanDirectory ("./output/samples-preview/");
@@ -279,10 +290,8 @@ Task ("samples")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("nuget")
+    .Description ("Pack all NuGets (build all required dependencies).")
     .IsDependentOn ("libs")
-    .IsDependentOn ("nuget-only");
-
-Task ("nuget-only")
     .Does (() =>
 {
     var platform = "";
@@ -396,12 +405,7 @@ Task ("nuget-only")
     foreach (var nuspec in GetFiles ("./output/*/nuget/*.nuspec")) {
         PackageNuGet (nuspec, "./output/nugets/");
     }
-});
 
-Task ("nuget-validation")
-    .IsDependentOn ("nuget")
-    .Does(() =>
-{
     // setup validation options
     var options = new Xamarin.Nuget.Validator.NugetValidatorOptions {
         Copyright = "© Microsoft Corporation. All rights reserved.",
@@ -413,7 +417,7 @@ Task ("nuget-validation")
         ValidPackageNamespace = new [] { "SkiaSharp", "HarfBuzzSharp" },
     };
 
-    var nupkgFiles = GetFiles ("./output/*.nupkg");
+    var nupkgFiles = GetFiles ("./output/**/*.nupkg");
 
     Information ("Found ({0}) Nuget's to validate", nupkgFiles.Count ());
 
@@ -436,21 +440,8 @@ Task ("nuget-validation")
 // DOCS - creating the xml, markdown and other documentation
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Task ("download-last-successful-build")
-    .WithCriteria (string.IsNullOrEmpty (AZURE_BUILD_ID))
-    .Does (() =>
-{
-    Warning ("A build ID (--azureBuildId=<ID>) was not specified, using the last successful build.");
-
-    var successUrl = string.Format(AZURE_BUILD_SUCCESS);
-    var json = ParseJson (FileReadText (DownloadFile (successUrl)));
-
-    AZURE_BUILD_ID = (string)json ["value"] [0] ["id"];
-
-    Information ($"Using last successful build ID {AZURE_BUILD_ID}");
-});
-
 Task ("update-docs")
+    .Description ("Regenerate all docs.")
     .IsDependentOn ("docs-api-diff")
     .IsDependentOn ("docs-update-frameworks")
     .IsDependentOn ("docs-format-docs");
@@ -460,9 +451,12 @@ Task ("update-docs")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Task ("clean")
+    .Description ("Clean up.")
     .IsDependentOn ("clean-externals")
     .IsDependentOn ("clean-managed");
+
 Task ("clean-managed")
+    .Description ("Clean up (managed only).")
     .Does (() =>
 {
     CleanDirectories ("./binding/*/bin");
@@ -499,40 +493,21 @@ Task ("clean-managed")
 // DEFAULT - target for common development
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+Task ("----------------------------------")
+    .Description ("--------------------------------------------------");
+
 Task ("Default")
+    .Description ("Build all managed assemblies and external dependencies.")
     .IsDependentOn ("externals")
     .IsDependentOn ("libs");
 
 Task ("Everything")
+    .Description ("Build, pack and test everything.")
     .IsDependentOn ("externals")
     .IsDependentOn ("libs")
     .IsDependentOn ("nuget")
     .IsDependentOn ("tests")
     .IsDependentOn ("samples");
-
-Task ("Nothing");
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// CI - the master target to build everything
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-Task ("CI")
-    .IsDependentOn ("externals")
-    .IsDependentOn ("libs")
-    .IsDependentOn ("nuget")
-    .IsDependentOn ("docs-api-diff")
-    .IsDependentOn ("nuget-validation")
-    .IsDependentOn ("tests")
-    .IsDependentOn ("samples");
-
-Task ("Mac-CI")
-    .IsDependentOn ("CI");
-
-Task ("Windows-CI")
-    .IsDependentOn ("CI");
-
-Task ("Linux-CI")
-    .IsDependentOn ("CI");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // BUILD NOW
@@ -544,21 +519,17 @@ Information ("Arguments:");
 Information ("  Target:                           {0}", TARGET);
 Information ("  Verbosity:                        {0}", VERBOSITY);
 Information ("  Skip externals:                   {0}", string.Join (", ", SKIP_EXTERNALS));
-Information ("  Build architectures:              {0}", string.Join (", ", BUILD_ARCH));
 Information ("  Print all environment variables:  {0}", PRINT_ALL_ENV_VARS);
 Information ("  Pack all platforms:               {0}", PACK_ALL_PLATFORMS);
 Information ("  Azure build ID:                   {0}", AZURE_BUILD_ID);
 Information ("  Unsupported Tests:                {0}", UNSUPPORTED_TESTS);
 Information ("  Configuration:                    {0}", CONFIGURATION);
-Information ("  Additional GN Arguments:          {0}", ADDITIONAL_GN_ARGS);
 Information ("");
 
 Information ("Tool Paths:");
 Information ("  Cake.exe:   {0}", CakeToolPath);
 Information ("  mdoc:       {0}", MDocPath);
-Information ("  msbuild:    {0}", MSBuildToolPath);
 Information ("  nuget.exe:  {0}", NuGetToolPath);
-Information ("  python:     {0}", PythonToolPath);
 Information ("");
 
 Information ("Build Paths:");

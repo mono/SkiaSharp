@@ -1,6 +1,5 @@
 var NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/nugets"));
-
-var NuGetSources = new [] { NUGETS_PATH.FullPath, "https://api.nuget.org/v3/index.json" };
+DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/package_cache"));
 
 void RunMSBuild(
     FilePath solution,
@@ -38,6 +37,6 @@ void RunMSBuild(
         }
 
         c.Properties ["RestorePackagesPath"] = new [] { PACKAGE_CACHE_PATH.FullPath };
-        c.Properties ["RestoreSources"] = NuGetSources;
+        c.Properties ["RestoreSources"] = new [] { NUGETS_PATH.FullPath, "https://api.nuget.org/v3/index.json" };
     });
 }

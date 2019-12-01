@@ -1,9 +1,15 @@
 #load "shared.cake"
 
 var BUILD_ARCH = Argument("arch", Argument("buildarch", EnvironmentVariable("BUILD_ARCH") ?? ""))
-    .ToLower().Split(new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+    .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
 var PYTHON_EXE = Argument("python", EnvironmentVariable("PYTHON_EXE") ?? "python");
+
+if (!string.IsNullOrEmpty(PYTHON_EXE) && FileExists(PYTHON_EXE)) {
+    var dir = MakeAbsolute((FilePath)PYTHON_EXE).GetDirectory();
+    var oldPath = EnvironmentVariable("PATH");
+    System.Environment.SetEnvironmentVariable("PATH", dir.FullPath + System.IO.Path.PathSeparator + oldPath);
+}
 
 DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/depot_tools"));
 DirectoryPath SKIA_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia"));

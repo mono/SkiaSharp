@@ -53,7 +53,7 @@ Task("libHarfBuzzSharp")
     .Does(() =>
 {
     var cmd = IsRunningOnWindows() ? ".cmd" : "";
-    var ndkbuild = tizen_NDK_HOME.CombineWithFilePath($"ndk-build{cmd}").FullPath;
+    var ndkbuild = TIZEN_STUDIO_HOME.CombineWithFilePath($"ndk-build{cmd}").FullPath;
 
     Build("armel");
     Build("i386");
@@ -63,7 +63,7 @@ Task("libHarfBuzzSharp")
         if (Skip(arch)) return;
 
         RunProcess(tizen, new ProcessSettings {
-            Arguments = $"build-native -a {skiaArch} -c llvm -C {CONFIGURATION}",
+            Arguments = $"build-native -a {arch} -c llvm -C {CONFIGURATION}",
             WorkingDirectory = ROOT_PATH.Combine("native/libHarfBuzzSharp_tizen").FullPath
         });
 
