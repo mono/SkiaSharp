@@ -41,7 +41,11 @@ void RunProcess(FilePath process, string args)
 
 void RunProcess(FilePath process, string args, out IEnumerable<string> stdout)
 {
-    var result = StartProcess(process, new ProcessSettings { Arguments = args }, out stdout);
+    var settings = new ProcessSettings {
+        RedirectStandardOutput = true,
+        Arguments = args,
+    };
+    var result = StartProcess(process, settings, out stdout);
     if (result != 0) {
         throw new Exception($"Process '{process}' failed with error: {result}");
     }
