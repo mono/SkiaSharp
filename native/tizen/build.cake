@@ -53,8 +53,8 @@ Task("libHarfBuzzSharp")
     var cmd = IsRunningOnWindows() ? ".cmd" : "";
     var ndkbuild = TIZEN_STUDIO_HOME.CombineWithFilePath($"ndk-build{cmd}").FullPath;
 
-    Build("armel");
-    Build("i386");
+    Build("arm");
+    Build("x86");
 
     void Build(string arch)
     {
