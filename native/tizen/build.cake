@@ -43,7 +43,7 @@ Task("libSkiaSharp")
 
         var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
-        CopyFileToDirectory($"libSkiaSharp/{CONFIGURATION}/libSkiaSharp.so", outDir);
+        CopyFile($"libSkiaSharp/{CONFIGURATION}/libskiasharp.so", outDir.CombineWithFilePath("libSkiaSharp.so"));
     }
 });
 
@@ -67,7 +67,7 @@ Task("libHarfBuzzSharp")
 
         var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
-        CopyFileToDirectory($"libHarfBuzzSharp/{CONFIGURATION}/libHarfBuzzSharp.so", outDir);
+        CopyFile($"libHarfBuzzSharp/{CONFIGURATION}/libharfbuzzsharp.so", outDir.CombineWithFilePath("libHarfBuzzSharp.so"));
     }
 });
 
