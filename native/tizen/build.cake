@@ -38,12 +38,12 @@ Task("libSkiaSharp")
 
         RunProcess(tizen, new ProcessSettings {
             Arguments = $"build-native -a {skiaArch} -c llvm -C {CONFIGURATION}" ,
-            WorkingDirectory = ROOT_PATH.Combine("native/libSkiaSharp_tizen").FullPath,
+            WorkingDirectory = MakeAbsolute((DirectoryPath)"libSkiaSharp").FullPath,
         });
 
         var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
-        CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"libSkiaSharp/{CONFIGURATION}/libskiasharp.so"), outDir);
+        CopyFileToDirectory($"libSkiaSharp/{CONFIGURATION}/libSkiaSharp.so", outDir);
     }
 });
 
@@ -62,12 +62,12 @@ Task("libHarfBuzzSharp")
 
         RunProcess(tizen, new ProcessSettings {
             Arguments = $"build-native -a {arch} -c llvm -C {CONFIGURATION}",
-            WorkingDirectory = ROOT_PATH.Combine("native/libHarfBuzzSharp_tizen").FullPath
+            WorkingDirectory = MakeAbsolute((DirectoryPath)"libHarfBuzzSharp").FullPath,
         });
 
         var outDir = OUTPUT_PATH.Combine(arch);
         EnsureDirectoryExists(outDir);
-        CopyFileToDirectory(SKIA_PATH.CombineWithFilePath($"libHarfBuzzSharp/{CONFIGURATION}/libHarfBuzzSharp.so"), outDir);
+        CopyFileToDirectory($"libHarfBuzzSharp/{CONFIGURATION}/libHarfBuzzSharp.so", outDir);
     }
 });
 
