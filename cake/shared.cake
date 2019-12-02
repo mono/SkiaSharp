@@ -17,7 +17,7 @@ void RunCake(FilePath cake, string target = null, Dictionary<string, string> arg
     var args = new Dictionary<string, string>();
 
     foreach (var arg in CAKE_ARGUMENTS) {
-        args[args.Key] = arg.Value;
+        args[arg.Key] = arg.Value;
     }
 
     args.Remove("t");
