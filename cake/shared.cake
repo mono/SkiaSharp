@@ -14,7 +14,11 @@ DirectoryPath PROFILE_PATH = EnvironmentVariable("USERPROFILE") ?? EnvironmentVa
 
 void RunCake(FilePath cake, string target = null, Dictionary<string, string> arguments = null)
 {
-    var args = new Dictionary<string, string>(CAKE_ARGUMENTS);
+    var args = new Dictionary<string, string>();
+
+    foreach (var arg in CAKE_ARGUMENTS) {
+        args[args.Key] = arg.Value;
+    }
 
     args.Remove("t");
     args["target"] = target;
