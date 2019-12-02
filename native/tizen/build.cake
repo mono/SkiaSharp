@@ -10,7 +10,6 @@ var tizen = TIZEN_STUDIO_HOME.CombineWithFilePath($"tools/ide/bin/tizen{bat}").F
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
-    .WithCriteria(IsRunningOnMac() || IsRunningOnWindows())
     .Does(() =>
 {
     Build("armel", "arm");
@@ -49,7 +48,6 @@ Task("libSkiaSharp")
 });
 
 Task("libHarfBuzzSharp")
-    .WithCriteria(IsRunningOnMac() || IsRunningOnWindows())
     .Does(() =>
 {
     var cmd = IsRunningOnWindows() ? ".cmd" : "";

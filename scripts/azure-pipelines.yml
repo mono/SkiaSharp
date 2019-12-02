@@ -136,6 +136,8 @@ stages:
           vmImage: $(VM_IMAGE_WINDOWS)
           target: externals-nanoserver
           additionalArgs: --buildarch=x64
+          preBuildSteps:
+            - pwsh: dotnet tool install -g nano-api-scan
       # NATIVE JOBS - MAC
       - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (macOS)
         parameters:
