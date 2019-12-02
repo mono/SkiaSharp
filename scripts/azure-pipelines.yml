@@ -484,7 +484,7 @@ stages:
             displayName: Run Code Checks
             # condition: and(always(), eq('refs/heads/master', variables['Build.SourceBranch']))
             vmImage: $(VM_IMAGE_WINDOWS)
-            target: externals-init
+            target: git-sync-deps
             shouldPublish: false
             postBuildSteps:
               - task: CredScan@2
