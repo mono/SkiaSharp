@@ -4,7 +4,7 @@
 
 var externalsTask = Task("externals-native");
 
-foreach(var cake in GetFiles("native/*/build.cake"))
+foreach (var cake in GetFiles("native/*/build.cake"))
 {
     var native = cake.GetDirectory().GetDirectoryName();
     var should = ShouldBuildExternal(native);
