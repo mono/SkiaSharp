@@ -57,18 +57,12 @@ Task("clean-externals")
 
     // all
     CleanDirectories("output/native");
-    // ios
-    CleanDirectories("native-builds/libSkiaSharp_ios/build");
-    CleanDirectories("native-builds/libHarfBuzzSharp_ios/build");
-    // tvos
-    CleanDirectories("native-builds/libSkiaSharp_tvos/build");
-    CleanDirectories("native-builds/libHarfBuzzSharp_tvos/build");
-    // watchos
-    CleanDirectories("native-builds/libSkiaSharp_watchos/build");
-    CleanDirectories("native-builds/libHarfBuzzSharp_watchos/build");
-    // osx
-    CleanDirectories("native-builds/libSkiaSharp_osx/build");
-    CleanDirectories("native-builds/libHarfBuzzSharp_osx/build");
+
+    // intermediate
+    CleanDirectories("native/*/*/bin");
+    CleanDirectories("native/*/*/obj");
+    CleanDirectories("native/*/*/libs");
+    CleanDirectories("native/*/tools");
 });
 
 bool ShouldBuildExternal(string platform)
