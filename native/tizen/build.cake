@@ -12,16 +12,16 @@ Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
     .Does(() =>
 {
-    Build("armel", "arm");
-    Build("i386", "x86");
+    Build("arm");
+    Build("x86");
 
-    void Build(string arch, string skiaArch)
+    void Build(string arch)
     {
         if (Skip(arch)) return;
 
         GnNinja($"tizen/{arch}", "skia",
             $"is_official_build=true skia_enable_tools=false " +
-            $"target_os='tizen' target_cpu='{skiaArch}' " +
+            $"target_os='tizen' target_cpu='{arch}' " +
             $"skia_enable_gpu=true " +
             $"skia_use_icu=false " +
             $"skia_use_sfntly=false " +
@@ -37,7 +37,7 @@ Task("libSkiaSharp")
             $"ncli_version='4.0'");
 
         RunProcess(tizen, new ProcessSettings {
-            Arguments = $"build-native -a {skiaArch} -c llvm -C {CONFIGURATION}" ,
+            Arguments = $"build-native -a {arch} -c llvm -C {CONFIGURATION}" ,
             WorkingDirectory = MakeAbsolute((DirectoryPath)"libSkiaSharp").FullPath,
         });
 
