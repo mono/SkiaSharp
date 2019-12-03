@@ -28,7 +28,7 @@ Task("externals-download")
     .IsDependentOn("determine-last-successful-build")
     .Does(() =>
 {
-    var artifactName = "native-default";
+    var artifactName = "native";
     var artifactFilename = $"{artifactName}.zip";
     var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, artifactName);
 

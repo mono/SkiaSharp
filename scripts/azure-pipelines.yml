@@ -297,14 +297,14 @@ stages:
             - managed_windows
           postBuildSteps:
             - task: PublishBuildArtifacts@1
-              displayName: Publish the native-default artifacts
+              displayName: Publish the native artifacts
               inputs:
-                artifactName: native-default
+                artifactName: native
                 pathToPublish: 'output/native'
             - task: PublishBuildArtifacts@1
-              displayName: Publish the nuget-default artifacts
+              displayName: Publish the nuget artifacts
               inputs:
-                artifactName: nuget-default
+                artifactName: nuget
                 pathToPublish: 'output/nugets'
 
   - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
@@ -333,6 +333,7 @@ stages:
           requiredArtifacts:
             - native_win32_x86_windows
             - native_win32_x64_windows
+            - native_win32_x64_nanoserver_windows
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the .NET Framework test results
@@ -386,6 +387,7 @@ stages:
           shouldPublish: false
           requiredArtifacts:
             - native_linux_linux
+            - native_linux_nodependencies_linux
           postBuildSteps:
             - task: PublishTestResults@2
               displayName: Publish the Mono test results
