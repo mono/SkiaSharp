@@ -138,6 +138,7 @@ stages:
           additionalArgs: --buildarch=x64
           preBuildSteps:
             - pwsh: dotnet tool install -g nano-api-scan
+              displayName: Install nano-api-scan
       # NATIVE JOBS - MAC
       - template: azure-templates-bootstrapper.yml # Build Native Android|x86 (macOS)
         parameters:
@@ -468,9 +469,6 @@ stages:
                 New-Item '.\output\nugets\' -Type Directory -Force | Out-Null
                 Get-ChildItem '.\output\*.nupkg' | Move-Item -Destination '.\output\nugets\'
               displayName: Copy the *.nupkgs into the correct folder for the samples
-            - pwsh: |
-                dir output
-                dir output/nugets
           postBuildSteps:
             - task: PublishBuildArtifacts@1
               displayName: Publish the samples artifacts
