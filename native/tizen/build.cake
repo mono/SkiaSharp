@@ -12,16 +12,16 @@ Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
     .Does(() =>
 {
-    Build("arm");
-    Build("x86");
+    Build("armel", "arm");
+    Build("i386", "x86");
 
-    void Build(string arch)
+    void Build(string arch, string skiaArch)
     {
         if (Skip(arch)) return;
 
         GnNinja($"tizen/{arch}", "skia",
             $"is_official_build=true skia_enable_tools=false " +
-            $"target_os='tizen' target_cpu='{arch}' " +
+            $"target_os='tizen' target_cpu='{skiaArch}' " +
             $"skia_enable_gpu=true " +
             $"skia_use_icu=false " +
             $"skia_use_sfntly=false " +
@@ -37,7 +37,7 @@ Task("libSkiaSharp")
             $"ncli_version='4.0'");
 
         RunProcess(tizen, new ProcessSettings {
-            Arguments = $"build-native -a {arch} -c llvm -C {CONFIGURATION}" ,
+            Arguments = $"build-native -a {skiaArch} -c llvm -C {CONFIGURATION}" ,
             WorkingDirectory = MakeAbsolute((DirectoryPath)"libSkiaSharp").FullPath,
         });
 
@@ -53,15 +53,15 @@ Task("libHarfBuzzSharp")
     var cmd = IsRunningOnWindows() ? ".cmd" : "";
     var ndkbuild = TIZEN_STUDIO_HOME.CombineWithFilePath($"ndk-build{cmd}").FullPath;
 
-    Build("arm");
-    Build("x86");
+    Build("armel", "arm");
+    Build("i386", "x86");
 
-    void Build(string arch)
+    void Build(string arch, string cliArch)
     {
         if (Skip(arch)) return;
 
         RunProcess(tizen, new ProcessSettings {
-            Arguments = $"build-native -a {arch} -c llvm -C {CONFIGURATION}",
+            Arguments = $"build-native -a {cliArch} -c llvm -C {CONFIGURATION}",
             WorkingDirectory = MakeAbsolute((DirectoryPath)"libHarfBuzzSharp").FullPath,
         });
 
