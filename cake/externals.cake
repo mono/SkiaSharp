@@ -4,7 +4,7 @@
 
 var externalsTask = Task("externals-native");
 
-foreach (var cake in GetFiles("native/*/build.cake"))
+foreach(var cake in GetFiles("native/*/build.cake"))
 {
     var native = cake.GetDirectory().GetDirectoryName();
     var should = ShouldBuildExternal(native);
@@ -71,11 +71,11 @@ Task("clean-externals")
     CleanDirectories("native-builds/libHarfBuzzSharp_osx/build");
 });
 
-bool ShouldBuildExternal (string platform)
+bool ShouldBuildExternal(string platform)
 {
     platform = platform?.ToLower() ?? "";
 
-    if (SKIP_EXTERNALS.Contains ("all") || SKIP_EXTERNALS.Contains ("true"))
+    if (SKIP_EXTERNALS.Contains("all") || SKIP_EXTERNALS.Contains("true"))
         return false;
 
     switch (platform) {
@@ -88,7 +88,7 @@ bool ShouldBuildExternal (string platform)
             break;
     }
 
-    if (SKIP_EXTERNALS.Contains (platform))
+    if (SKIP_EXTERNALS.Contains(platform))
         return false;
 
     return true;
