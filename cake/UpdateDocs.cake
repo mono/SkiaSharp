@@ -36,7 +36,7 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
 }
 
 Task ("docs-download-build-artifact")
-    .IsDependentOn ("download-last-successful-build")
+    .IsDependentOn ("determine-last-successful-build")
     .Does (() =>
 {
     var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, "nuget");
