@@ -1,4 +1,5 @@
 DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/package_cache"));
+DirectoryPath OUTPUT_NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/nugets"));
 
 void RunMSBuild(
     FilePath solution,
@@ -7,10 +8,9 @@ void RunMSBuild(
     bool restore = true,
     bool restoreOnly = false)
 {
-    var nugets = MakeAbsolute(ROOT_PATH.Combine("output/nugets"));
-    var nugetSources = new [] { nugets.FullPath, "https://api.nuget.org/v3/index.json" };
+    var nugetSources = new [] { OUTPUT_NUGETS_PATH.FullPath, "https://api.nuget.org/v3/index.json" };
 
-    EnsureDirectoryExists(nugets);
+    EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
 
     MSBuild(solution, c => {
         c.Configuration = CONFIGURATION;
@@ -40,8 +40,8 @@ void RunMSBuild(
 
         c.Properties ["RestoreNoCache"] = new [] { "true" };
         c.Properties ["RestorePackagesPath"] = new [] { PACKAGE_CACHE_PATH.FullPath };
-        // c.Properties ["RestoreSources"] = nugetSources;
-        var sep = IsRunningOnWindows () ? ";" : "%3B";
-        c.ArgumentCustomization = args => args.Append ($"/p:RestoreSources=\"{string.Join (sep, nugetSources)}\"");
+        // c.Properties ["RestoreSources"] = OUTPUT_NUGETS_PATH.FullPath;
+        var sep = IsRunningOnWindows() ? ";" : "%3B";
+        c.ArgumentCustomization = args => args.Append($"/p:RestoreSources=\"{string.Join(sep, OUTPUT_NUGETS_PATH)}\"");
     });
 }

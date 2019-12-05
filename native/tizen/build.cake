@@ -3,7 +3,7 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/tizen"
 
 #load "../../cake/native-shared.cake"
 
-DirectoryPath TIZEN_STUDIO_HOME = EnvironmentVariable ("TIZEN_STUDIO_HOME") ?? PROFILE_PATH.Combine ("tizen-studio");
+DirectoryPath TIZEN_STUDIO_HOME = EnvironmentVariable("TIZEN_STUDIO_HOME") ?? PROFILE_PATH.Combine("tizen-studio");
 
 var bat = IsRunningOnWindows() ? ".bat" : "";
 var tizen = TIZEN_STUDIO_HOME.CombineWithFilePath($"tools/ide/bin/tizen{bat}").FullPath;

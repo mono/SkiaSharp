@@ -1,12 +1,26 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:3.0 AS build-env
+################################################################################
+# Build Environment
+################################################################################
+FROM mcr.microsoft.com/dotnet/core/sdk:2.2 AS build-env
 WORKDIR /app
-RUN mkdir packages
-RUN dir
-COPY . ./
-RUN dotnet restore -s "packages" -s "https://api.nuget.org/v3/index.json"
-RUN dotnet publish -c Release -o out
 
-FROM mcr.microsoft.com/dotnet/core/runtime:3.0
+# set up the contents
+RUN mkdir packages
+COPY . ./
+
+# build and publish
+RUN dotnet restore -s "packages" -s "https://api.nuget.org/v3/index.json"
+RUN dotnet publish -c Release -o /app/out
+
+
+################################################################################
+# Run Environment
+################################################################################
+FROM mcr.microsoft.com/dotnet/core/runtime:2.2
 WORKDIR /app
+
+# copy from the build environment
 COPY --from=build-env /app/out .
+
+# run
 ENTRYPOINT [ "dotnet", "SkiaSharpSample.dll" ]

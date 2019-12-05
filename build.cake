@@ -70,6 +70,7 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
 #load "cake/UtilsManaged.cake"
 #load "cake/externals.cake"
 #load "cake/UpdateDocs.cake"
+#load "cake/samples.cake"
 
 Task ("determine-last-successful-build")
     .WithCriteria (string.IsNullOrEmpty (AZURE_BUILD_ID))
@@ -235,12 +236,29 @@ Task ("samples")
 
             RunMSBuild (sln, platform: buildPlatform);
         }
-    };
+    }
 
     // build the newly migrated samples
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
+    // copy all the packages next to the Dockerfile files
+    var dockerfiles = GetFiles ("./output/samples/**/Dockerfile");
+    foreach (var dockerfile in dockerfiles) {
+        CopyDirectory (OUTPUT_NUGETS_PATH, dockerfile.GetDirectory ().Combine ("packages"));
+    }
+
+    // build the run.ps1 (typically for Dockerfiles)
+    var runs = GetFiles ("./output/samples/**/run.ps1");
+    foreach (var run in runs) {
+        RunProcess ("pwsh", new ProcessSettings {
+            Arguments = run.FullPath,
+            WorkingDirectory = run.GetDirectory (),
+        });
+    }
+
+
+    // build solutions locally
     var solutions = GetFiles ("./output/samples/**/*.sln");
     foreach (var sln in solutions) {
         var name = sln.GetFilenameWithoutExtension ();
@@ -392,9 +410,9 @@ Task ("nuget")
         CopyFile ("./External-Dependency-Info.txt", $"{outDir}/THIRD-PARTY-NOTICES.txt");
     }
 
-    DeleteFiles ("output/nugets/*.nupkg");
+    DeleteFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg");
     foreach (var nuspec in GetFiles ("./output/*/nuget/*.nuspec")) {
-        PackageNuGet (nuspec, "./output/nugets/");
+        PackageNuGet (nuspec, OUTPUT_NUGETS_PATH);
     }
 
     // setup validation options
