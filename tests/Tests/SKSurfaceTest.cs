@@ -27,7 +27,7 @@ namespace SkiaSharp.Tests
 
 				var info = new SKImageInfo(100, 100);
 
-				using (var grContext = GRContext.Create(GRBackend.OpenGL))
+				using (var grContext = GRContext.CreateGl())
 				using (var surface = SKSurface.Create(grContext, true, info))
 				{
 					Assert.NotNull(surface);
@@ -60,7 +60,7 @@ namespace SkiaSharp.Tests
 				};
 
 				// create the surface
-				using (var grContext = GRContext.Create(GRBackend.OpenGL))
+				using (var grContext = GRContext.CreateGl())
 				using (var surface = SKSurface.CreateAsRenderTarget(grContext, textureDesc))
 				{
 					Assert.NotNull(surface);
@@ -109,7 +109,7 @@ namespace SkiaSharp.Tests
 				};
 
 				// create the surface
-				using (var grContext = GRContext.Create(GRBackend.OpenGL))
+				using (var grContext = GRContext.CreateGl())
 				using (var surface = SKSurface.CreateAsRenderTarget(grContext, textureDesc))
 				{
 					Assert.NotNull(surface);
@@ -134,7 +134,7 @@ namespace SkiaSharp.Tests
 				var texture = new GRBackendTexture(100, 100, false, textureInfo);
 
 				// create the surface
-				using (var grContext = GRContext.Create(GRBackend.OpenGL))
+				using (var grContext = GRContext.CreateGl())
 				using (var surface = SKSurface.CreateAsRenderTarget(grContext, texture, SKColorType.Rgba8888))
 				{
 					Assert.NotNull(surface);

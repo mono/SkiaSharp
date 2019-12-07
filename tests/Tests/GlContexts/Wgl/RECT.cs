@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 namespace SkiaSharp.Tests
 {
 	[StructLayout(LayoutKind.Sequential)]
-	internal struct RECT
+	public struct RECT
 	{
 		public int left;
 		public int top;
