@@ -1,2 +1,2 @@
-docker build -t skiasharp/console .
+docker build --tag skiasharp/console .
 docker run --rm skiasharp/console

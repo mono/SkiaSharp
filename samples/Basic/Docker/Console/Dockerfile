@@ -9,7 +9,6 @@ RUN mkdir packages
 COPY . ./
 
 # build and publish
-RUN dotnet restore -s "packages" -s "https://api.nuget.org/v3/index.json"
 RUN dotnet publish -c Release -o /app/out
 
 

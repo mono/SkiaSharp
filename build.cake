@@ -257,7 +257,6 @@ Task ("samples")
         });
     }
 
-
     // build solutions locally
     var solutions = GetFiles ("./output/samples/**/*.sln");
     foreach (var sln in solutions) {
