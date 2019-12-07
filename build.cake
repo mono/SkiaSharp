@@ -242,20 +242,22 @@ Task ("samples")
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
-    // copy all the packages next to the Dockerfile files
-    var dockerfiles = GetFiles ("./output/samples/**/Dockerfile");
-    foreach (var dockerfile in dockerfiles) {
-        CopyDirectory (OUTPUT_NUGETS_PATH, dockerfile.GetDirectory ().Combine ("packages"));
-    }
+    // TODO: Docker seems to be having issues on the old DevOps agents
 
-    // build the run.ps1 (typically for Dockerfiles)
-    var runs = GetFiles ("./output/samples/**/run.ps1");
-    foreach (var run in runs) {
-        RunProcess ("pwsh", new ProcessSettings {
-            Arguments = run.FullPath,
-            WorkingDirectory = run.GetDirectory (),
-        });
-    }
+    // // copy all the packages next to the Dockerfile files
+    // var dockerfiles = GetFiles ("./output/samples/**/Dockerfile");
+    // foreach (var dockerfile in dockerfiles) {
+    //     CopyDirectory (OUTPUT_NUGETS_PATH, dockerfile.GetDirectory ().Combine ("packages"));
+    // }
+
+    // // build the run.ps1 (typically for Dockerfiles)
+    // var runs = GetFiles ("./output/samples/**/run.ps1");
+    // foreach (var run in runs) {
+    //     RunProcess ("pwsh", new ProcessSettings {
+    //         Arguments = run.FullPath,
+    //         WorkingDirectory = run.GetDirectory (),
+    //     });
+    // }
 
     // build solutions locally
     var solutions = GetFiles ("./output/samples/**/*.sln");
