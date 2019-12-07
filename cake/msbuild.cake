@@ -42,6 +42,6 @@ void RunMSBuild(
         c.Properties ["RestorePackagesPath"] = new [] { PACKAGE_CACHE_PATH.FullPath };
         // c.Properties ["RestoreSources"] = OUTPUT_NUGETS_PATH.FullPath;
         var sep = IsRunningOnWindows() ? ";" : "%3B";
-        c.ArgumentCustomization = args => args.Append($"/p:RestoreSources=\"{string.Join(sep, OUTPUT_NUGETS_PATH)}\"");
+        c.ArgumentCustomization = args => args.Append($"/p:RestoreSources=\"{string.Join(sep, nugetSources)}\"");
     });
 }
