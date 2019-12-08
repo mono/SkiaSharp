@@ -1,7 +1,7 @@
 
 var MSBuildNS = (XNamespace) "http://schemas.microsoft.com/developer/msbuild/2003";
 
-var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath) =>
+void PackageNuGet (FilePath nuspecPath, DirectoryPath outputPath)
 {
     EnsureDirectoryExists (outputPath);
 
