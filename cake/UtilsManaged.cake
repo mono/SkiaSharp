@@ -1,56 +1,7 @@
 
 var MSBuildNS = (XNamespace) "http://schemas.microsoft.com/developer/msbuild/2003";
 
-void RunMSBuild (
-    FilePath solution,
-    string platform = "Any CPU",
-    string platformTarget = null,
-    bool restore = true,
-    bool restoreOnly = false)
-{
-    EnsureDirectoryExists ("./output/nugets/");
-
-    // some of the platforms are having issues with the first run with /restore /t:build
-    if (!IsRunningOnWindows () && restore && !restoreOnly) {
-        RunMSBuild (solution, platform, platformTarget, restore, true);
-        RunMSBuild (solution, platform, platformTarget, false, false);
-        return;
-    }
-
-    MSBuild (solution, c => {
-        c.Configuration = CONFIGURATION;
-        c.Verbosity = VERBOSITY;
-        c.MaxCpuCount = 0;
-
-        if (restoreOnly) {
-            c.Targets.Clear();
-            c.Targets.Add("Restore");
-        } else {
-            c.Restore = restore;
-        }
-
-        if (!string.IsNullOrEmpty (platformTarget)) {
-            platform = null;
-            c.PlatformTarget = (PlatformTarget)Enum.Parse(typeof(PlatformTarget), platformTarget);
-        } else {
-            c.PlatformTarget = PlatformTarget.MSIL;
-            c.MSBuildPlatform = MSBuildPlatform.x86;
-        }
-
-        if (!string.IsNullOrEmpty (platform)) {
-            c.Properties ["Platform"] = new [] { "\"" + platform + "\"" };
-        }
-
-        c.Properties ["RestorePackagesPath"] = new [] { PACKAGE_CACHE_PATH.FullPath };
-        c.Properties ["RestoreSources"] = NuGetSources;
-
-        if (!string.IsNullOrEmpty (MSBuildToolPath)) {
-            c.ToolPath = MSBuildToolPath;
-        }
-    });
-}
-
-void PackageNuGet (FilePath nuspecPath, DirectoryPath outputPath)
+var PackageNuGet = new Action<FilePath, DirectoryPath> ((nuspecPath, outputPath) =>
 {
     EnsureDirectoryExists (outputPath);
 
@@ -59,14 +10,6 @@ void PackageNuGet (FilePath nuspecPath, DirectoryPath outputPath)
         BasePath = nuspecPath.GetDirectory (),
         ToolPath = NuGetToolPath,
     });
-}
-
-void RunProcess (FilePath process, ProcessSettings settings)
-{
-    var result = StartProcess (process, settings);
-    if (result != 0) {
-        throw new Exception ($"Process '{process}' failed with error: {result}");
-    }
 }
 
 void RunTests (FilePath testAssembly, bool is32)

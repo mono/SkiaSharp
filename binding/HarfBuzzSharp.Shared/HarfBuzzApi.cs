@@ -190,7 +190,7 @@ namespace HarfBuzzSharp
 		public extern static hb_bool_t hb_font_get_glyph_contour_point (hb_font_t font, hb_codepoint_t glyph, uint point_index, out hb_position_t x, out hb_position_t y);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		public extern static hb_bool_t hb_font_get_glyph_name (hb_font_t font, hb_codepoint_t glyph, char* nameBuffer, int size);
+		public extern static hb_bool_t hb_font_get_glyph_name (hb_font_t font, hb_codepoint_t glyph, byte* nameBuffer, int size);
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		public extern static hb_bool_t hb_font_get_glyph_from_name (hb_font_t font, [MarshalAs (UnmanagedType.LPStr)]string name, int len, out hb_codepoint_t glyph);
@@ -208,7 +208,7 @@ namespace HarfBuzzSharp
 		public extern static hb_bool_t hb_font_get_glyph_contour_point_for_origin (hb_font_t font, hb_codepoint_t glyph, uint point_index, hb_direction_t direction, out hb_position_t x, out hb_position_t y);
 		/* Generates gidDDD if glyph has no name. */
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		public extern static void hb_font_glyph_to_string (hb_font_t font, hb_codepoint_t glyph, char* s, int size);
+		public extern static void hb_font_glyph_to_string (hb_font_t font, hb_codepoint_t glyph, byte* s, int size);
 		/* Parses gidDDD and uniUUUU strings automatically. */
 		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]

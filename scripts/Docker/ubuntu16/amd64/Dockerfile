@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM amd64/ubuntu:16.04
 
 RUN apt-get update \
     && apt-get install -y apt-transport-https curl wget \

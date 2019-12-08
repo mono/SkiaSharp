@@ -27,6 +27,10 @@
           Condition=" Exists('..\..\output\native\osx\libHarfBuzzSharp.dylib') or '$(IsMacOS)' == 'true' " />
     <None Include="..\..\output\native\linux\x64\libHarfBuzzSharp.so" Link="nuget\runtimes\linux-x64\native\libHarfBuzzSharp.so"
           Condition=" Exists('..\..\output\native\linux\x64\libHarfBuzzSharp.so') or '$(IsLinux)' == 'true' " />
+    <None Include="..\..\output\native\nanoserver\x64\libHarfBuzzSharp.dll" Link="nuget\runtimes\nanoserver-x64\native\libHarfBuzzSharp.dll"
+          Condition=" Exists('..\..\output\native\nanoserver\x64\libHarfBuzzSharp.dll') or '$(IsWindows)' == 'true' " />
+    <None Include="..\..\output\native\linuxnodeps\x64\libHarfBuzzSharp.so" Link="nuget\runtimes\linuxnodeps-x64\native\libHarfBuzzSharp.so"
+          Condition=" Exists('..\..\output\native\linuxnodeps\x64\libHarfBuzzSharp.so') or '$(IsLinux)' == 'true' " />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
     <None Include="nuget\build\net45\HarfBuzzSharp.targets" Link="nuget\build\$(TargetFramework)\HarfBuzzSharp.targets" />

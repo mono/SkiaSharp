@@ -300,14 +300,20 @@ namespace SkiaSharpGenerator
 
 					writer.WriteLine($"\t\t// {field}");
 
+					var fieldName = field.Name;
+					var isPrivate = fieldName.StartsWith("_private_", StringComparison.OrdinalIgnoreCase);
+					if (isPrivate) {
+						fieldName = fieldName.Substring(9);
+					}
+
 					var vis = "private";
 					if (map?.IsInternal == true)
 						vis = "public";
-					writer.WriteLine($"\t\t{vis} {type} {field.Name};");
+					writer.WriteLine($"\t\t{vis} {type} {fieldName};");
 
-					if (map == null || (map.GenerateProperties && !map.IsInternal))
+					if (!isPrivate && (map == null || (map.GenerateProperties && !map.IsInternal)))
 					{
-						var propertyName = field.Name;
+						var propertyName = fieldName;
 						if (map != null && map.Members.TryGetValue(propertyName, out var fieldMap))
 							propertyName = fieldMap;
 						else
@@ -316,15 +322,15 @@ namespace SkiaSharpGenerator
 						if (cppT == "bool")
 						{
 							writer.WriteLine($"\t\tpublic bool {propertyName} {{");
-							writer.WriteLine($"\t\t\tget => {field.Name} > 0;");
-							writer.WriteLine($"\t\t\tset => {field.Name} = value ? (byte)1 : (byte)0;");
+							writer.WriteLine($"\t\t\tget => {fieldName} > 0;");
+							writer.WriteLine($"\t\t\tset => {fieldName} = value ? (byte)1 : (byte)0;");
 							writer.WriteLine($"\t\t}}");
 						}
 						else
 						{
 							writer.WriteLine($"\t\tpublic {type} {propertyName} {{");
-							writer.WriteLine($"\t\t\tget => {field.Name};");
-							writer.WriteLine($"\t\t\tset => {field.Name} = value;");
+							writer.WriteLine($"\t\t\tget => {fieldName};");
+							writer.WriteLine($"\t\t\tset => {fieldName} = value;");
 							writer.WriteLine($"\t\t}}");
 						}
 						writer.WriteLine();

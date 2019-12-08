@@ -22,12 +22,11 @@ using Mono.ApiTools;
 using NuGet.Packaging;
 using NuGet.Versioning;
 
-#load "cake/Utils.cake"
+DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
 
-var TARGET = Argument ("t", Argument ("target", "Default"));
-var VERBOSITY = Argument ("v", Argument ("verbosity", Verbosity.Normal));
-var BUILD_ARCH = Argument ("buildarch", EnvironmentVariable ("BUILD_ARCH") ?? "")
-    .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+#load "cake/shared.cake"
+#load "cake/native-shared.cake"
+
 var SKIP_EXTERNALS = Argument ("skipexternals", "")
     .ToLower ().Split (new [] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 var PACK_ALL_PLATFORMS = Argument ("packall", Argument ("PackAllPlatforms", false));
@@ -35,63 +34,41 @@ var BUILD_ALL_PLATFORMS = Argument ("buildall", Argument ("BuildAllPlatforms", f
 var PRINT_ALL_ENV_VARS = Argument ("printAllEnvVars", false);
 var AZURE_BUILD_ID = Argument ("azureBuildId", "");
 var UNSUPPORTED_TESTS = Argument ("unsupportedTests", "");
-var ADDITIONAL_GN_ARGS = Argument ("additionalGnArgs", "");
-var CONFIGURATION = Argument ("c", Argument ("configuration", "Release"));
 
-var NuGetSources = new [] { MakeAbsolute (Directory ("./output/nugets")).FullPath, "https://api.nuget.org/v3/index.json" };
 var NuGetToolPath = Context.Tools.Resolve ("nuget.exe");
 var CakeToolPath = Context.Tools.Resolve ("Cake.exe");
 var MDocPath = Context.Tools.Resolve ("mdoc.exe");
-var MSBuildToolPath = GetMSBuildToolPath (EnvironmentVariable ("MSBUILD_EXE"));
-var PythonToolPath = EnvironmentVariable ("PYTHON_EXE") ?? "python";
 
-DirectoryPath PROFILE_PATH = EnvironmentVariable ("USERPROFILE") ?? EnvironmentVariable ("HOME");
-
-DirectoryPath NUGET_PACKAGES = EnvironmentVariable ("NUGET_PACKAGES") ?? PROFILE_PATH.Combine (".nuget/packages");
-DirectoryPath ANDROID_SDK_ROOT = EnvironmentVariable ("ANDROID_SDK_ROOT") ?? EnvironmentVariable ("ANDROID_HOME") ?? PROFILE_PATH.Combine ("android-sdk");
-DirectoryPath ANDROID_NDK_HOME = EnvironmentVariable ("ANDROID_NDK_HOME") ?? EnvironmentVariable ("ANDROID_NDK_ROOT") ?? PROFILE_PATH.Combine ("android-ndk");
-DirectoryPath TIZEN_STUDIO_HOME = EnvironmentVariable ("TIZEN_STUDIO_HOME") ?? PROFILE_PATH.Combine ("tizen-studio");
-DirectoryPath LLVM_HOME = EnvironmentVariable ("LLVM_HOME") ?? "C:/Program Files/LLVM";
-
-DirectoryPath ROOT_PATH = MakeAbsolute(Directory("."));
-DirectoryPath DEPOT_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/depot_tools"));
-DirectoryPath SKIA_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/skia"));
-DirectoryPath ANGLE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/angle"));
-DirectoryPath HARFBUZZ_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/harfbuzz"));
 DirectoryPath DOCS_PATH = MakeAbsolute(ROOT_PATH.Combine("docs/SkiaSharpAPI"));
-DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/package_cache"));
 
 var PREVIEW_LABEL = EnvironmentVariable ("PREVIEW_LABEL") ?? "preview";
 var FEATURE_NAME = EnvironmentVariable ("FEATURE_NAME") ?? "";
 var BUILD_NUMBER = EnvironmentVariable ("BUILD_NUMBER") ?? "0";
 
-if (!string.IsNullOrEmpty (PythonToolPath) && FileExists (PythonToolPath)) {
-    var dir = MakeAbsolute ((FilePath) PythonToolPath).GetDirectory ();
-    var oldPath = EnvironmentVariable ("PATH");
-    System.Environment.SetEnvironmentVariable ("PATH", dir.FullPath + System.IO.Path.PathSeparator + oldPath);
-}
-
 var AZURE_BUILD_SUCCESS = "https://dev.azure.com/xamarin/6fd3d886-57a5-4e31-8db7-52a1b47c07a8/_apis/build/builds?statusFilter=completed&resultFilter=succeeded&definitions=4&branchName=refs/heads/master&$top=1&api-version=5.1";
 var AZURE_BUILD_URL = "https://dev.azure.com/xamarin/6fd3d886-57a5-4e31-8db7-52a1b47c07a8/_apis/build/builds/{0}/artifacts?artifactName={1}&%24format=zip&api-version=5.1";
 
 var TRACKED_NUGETS = new Dictionary<string, Version> {
-    { "SkiaSharp",                          new Version (1, 57, 0) },
-    { "SkiaSharp.NativeAssets.Linux",       new Version (1, 57, 0) },
-    { "SkiaSharp.Views",                    new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Desktop.Common",     new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Gtk2",               new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Gtk3",               new Version (1, 57, 0) },
-    { "SkiaSharp.Views.WindowsForms",       new Version (1, 57, 0) },
-    { "SkiaSharp.Views.WPF",                new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Forms",              new Version (1, 57, 0) },
-    { "SkiaSharp.Views.Forms.WPF",          new Version (1, 57, 0) },
-    { "HarfBuzzSharp",                      new Version (1, 0, 0) },
-    { "HarfBuzzSharp.NativeAssets.Linux",   new Version (1, 0, 0) },
-    { "SkiaSharp.HarfBuzz",                 new Version (1, 57, 0) },
+    { "SkiaSharp",                                     new Version (1, 57, 0) },
+    { "SkiaSharp.NativeAssets.Linux",                  new Version (1, 57, 0) },
+    { "SkiaSharp.NativeAssets.Linux.NoDependencies",   new Version (1, 57, 0) },
+    { "SkiaSharp.NativeAssets.NanoServer",             new Version (1, 57, 0) },
+    { "SkiaSharp.Views",                               new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Desktop.Common",                new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Gtk2",                          new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Gtk3",                          new Version (1, 57, 0) },
+    { "SkiaSharp.Views.WindowsForms",                  new Version (1, 57, 0) },
+    { "SkiaSharp.Views.WPF",                           new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Forms",                         new Version (1, 57, 0) },
+    { "SkiaSharp.Views.Forms.WPF",                     new Version (1, 57, 0) },
+    { "HarfBuzzSharp",                                 new Version (1, 0, 0) },
+    { "HarfBuzzSharp.NativeAssets.Linux",              new Version (1, 0, 0) },
+    { "SkiaSharp.HarfBuzz",                            new Version (1, 57, 0) },
 };
 
+#load "cake/msbuild.cake"
 #load "cake/UtilsManaged.cake"
-#load "cake/BuildExternals.cake"
+#load "cake/externals.cake"
 #load "cake/UpdateDocs.cake"
 
 Task ("determine-last-successful-build")
@@ -483,6 +460,7 @@ Task ("clean")
     .Description ("Clean up.")
     .IsDependentOn ("clean-externals")
     .IsDependentOn ("clean-managed");
+
 Task ("clean-managed")
     .Description ("Clean up (managed only).")
     .Does (() =>
@@ -540,84 +518,5 @@ Task ("Everything")
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // BUILD NOW
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-Information ("");
-
-Information ("Arguments:");
-Information ("  Target:                           {0}", TARGET);
-Information ("  Verbosity:                        {0}", VERBOSITY);
-Information ("  Skip externals:                   {0}", string.Join (", ", SKIP_EXTERNALS));
-Information ("  Build architectures:              {0}", string.Join (", ", BUILD_ARCH));
-Information ("  Print all environment variables:  {0}", PRINT_ALL_ENV_VARS);
-Information ("  Pack all platforms:               {0}", PACK_ALL_PLATFORMS);
-Information ("  Build all platforms:              {0}", BUILD_ALL_PLATFORMS);
-Information ("  Azure build ID:                   {0}", AZURE_BUILD_ID);
-Information ("  Unsupported Tests:                {0}", UNSUPPORTED_TESTS);
-Information ("  Configuration:                    {0}", CONFIGURATION);
-Information ("  Additional GN Arguments:          {0}", ADDITIONAL_GN_ARGS);
-Information ("");
-
-Information ("Tool Paths:");
-Information ("  Cake.exe:   {0}", CakeToolPath);
-Information ("  mdoc:       {0}", MDocPath);
-Information ("  msbuild:    {0}", MSBuildToolPath);
-Information ("  nuget.exe:  {0}", NuGetToolPath);
-Information ("  python:     {0}", PythonToolPath);
-Information ("");
-
-Information ("Build Paths:");
-Information ("  ~:              {0}", PROFILE_PATH);
-Information ("  NuGet Cache:    {0}", NUGET_PACKAGES);
-Information ("  root:           {0}", ROOT_PATH);
-Information ("  docs:           {0}", DOCS_PATH);
-Information ("  package_cache:  {0}", PACKAGE_CACHE_PATH);
-Information ("  ANGLE:          {0}", ANGLE_PATH);
-Information ("  depot_tools:    {0}", DEPOT_PATH);
-Information ("  harfbuzz:       {0}", HARFBUZZ_PATH);
-Information ("  skia:           {0}", SKIA_PATH);
-Information ("");
-
-Information ("SDK Paths:");
-Information ("  Android SDK:   {0}", ANDROID_SDK_ROOT);
-Information ("  Android NDK:   {0}", ANDROID_NDK_HOME);
-Information ("  Tizen Studio:  {0}", TIZEN_STUDIO_HOME);
-Information ("  LLVM/Clang:    {0}", LLVM_HOME);
-Information ("");
-
-Information ("Environment Variables (whitelisted):");
-var envVarsWhitelist = new [] {
-    "path", "psmodulepath", "pwd", "shell", "processor_architecture",
-    "processor_identifier", "node_name", "node_labels", "branch_name",
-    "os", "build_url", "build_number", "number_of_processors",
-    "node_label", "build_id", "git_sha", "git_branch_name",
-    "feature_name", "msbuild_exe", "python_exe", "preview_label",
-    "home", "userprofile", "nuget_packages", "build_arch",
-    "android_sdk_root", "android_ndk_root", "llvm_home",
-    "android_home", "android_ndk_home", "tizen_studio_home"
-};
-var envVars = EnvironmentVariables ();
-var max = envVars.Max (v => v.Key.Length) + 2;
-foreach (var envVar in envVars.OrderBy (e => e.Key.ToLower ())) {
-    if (!PRINT_ALL_ENV_VARS && !envVarsWhitelist.Contains (envVar.Key.ToLower ()))
-        continue;
-    var spaces = string.Concat (Enumerable.Repeat (" ", max - envVar.Key.Length));
-    var toSplit = new [] { "path", "psmodulepath" };
-    if (toSplit.Contains (envVar.Key.ToLower ())) {
-        var paths = new string [0];
-        if (IsRunningOnWindows ()) {
-            paths = envVar.Value.Split (';');
-        } else {
-            paths = envVar.Value.Split (':');
-        }
-        Information ($"  {envVar.Key}:{spaces}{{0}}", paths.FirstOrDefault ());
-        var keySpaces = string.Concat (Enumerable.Repeat (" ", envVar.Key.Length));
-        foreach (var path in paths.Skip (1)) {
-            Information ($"  {keySpaces} {spaces}{{0}}", path);
-        }
-    } else {
-        Information ($"  {envVar.Key}:{spaces}{{0}}", envVar.Value);
-    }
-}
-Information ("");
 
 RunTarget (TARGET);
