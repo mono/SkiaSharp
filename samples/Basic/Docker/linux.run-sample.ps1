@@ -1,1 +1,0 @@
-. .\sample-base.ps1 -Platform "linux"

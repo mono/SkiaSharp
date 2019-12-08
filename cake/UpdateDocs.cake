@@ -36,7 +36,7 @@ void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
 }
 
 Task ("docs-download-build-artifact")
-    .IsDependentOn ("download-last-successful-build")
+    .IsDependentOn ("determine-last-successful-build")
     .Does (() =>
 {
     var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, "nuget");
@@ -51,13 +51,13 @@ Task ("docs-expand-build-artifact")
     .Does (() =>
 {
     Unzip ("./output/nuget.zip", "./output");
-    MoveDirectory ("./output/nuget", "./output/nugets");
+    MoveDirectory ("./output/nuget", OUTPUT_NUGETS_PATH);
 
     foreach (var id in TRACKED_NUGETS.Keys) {
         var version = GetVersion (id);
         var name = $"{id}.{version}.nupkg";
         CleanDirectories ($"./output/{id}");
-        Unzip ($"./output/nugets/{name}", $"./output/{id}/nuget");
+        Unzip ($"{OUTPUT_NUGETS_PATH}/{name}", $"./output/{id}/nuget");
     }
 });
 
@@ -68,7 +68,7 @@ Task ("docs-download-output")
 Task ("docs-api-diff")
     .Does (async () =>
 {
-    var baseDir = "./output/nugets/api-diff";
+    var baseDir = "{OUTPUT_NUGETS_PATH}/api-diff";
     CleanDirectories (baseDir);
 
     var comparer = await CreateNuGetDiffAsync ();
@@ -91,7 +91,7 @@ Task ("docs-api-diff")
         // generate the diff and copy to the changelogs
         Debug ($"Running a diff on '{latestVersion}' vs '{version}' of '{id}'...");
         var diffRoot = $"{baseDir}/{id}";
-        using (var reader = new PackageArchiveReader ($"./output/nugets/{id.ToLower ()}.{version}.nupkg")) {
+        using (var reader = new PackageArchiveReader ($"{OUTPUT_NUGETS_PATH}/{id.ToLower ()}.{version}.nupkg")) {
             // run the diff with just the breaking changes
             comparer.MarkdownDiffFileExtension = ".breaking.md";
             comparer.IgnoreNonBreakingChanges = true;

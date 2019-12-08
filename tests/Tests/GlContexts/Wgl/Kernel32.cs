@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp.Tests
 {
-	internal class Kernel32
+	public class Kernel32
 	{
 		private const string kernel32 = "kernel32.dll";
 

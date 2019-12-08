@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("SkiaSharp.WindowsDesktop.Tests")]
+[assembly: AssemblyTitle("SkiaSharp.Desktop.Tests")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("SkiaSharp.WindowsDesktop.Tests")]
+[assembly: AssemblyProduct("SkiaSharp.Desktop.Tests")]
 [assembly: AssemblyCopyright("Copyright © Xamarin 2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
