@@ -76,6 +76,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void StreamIsCollectedEvenWhenNotProperlyDisposed()
 		{
+			VerifyImmediateFinalizers();
+
 			var handle = DoWork();
 
 			CollectGarbage();

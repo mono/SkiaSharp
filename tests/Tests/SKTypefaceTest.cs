@@ -321,6 +321,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void StreamIsAccessableFromNativeType()
 		{
+			VerifyImmediateFinalizers();
+
 			var paint = CreatePaint(out var typefaceHandle);
 
 			CollectGarbage();
