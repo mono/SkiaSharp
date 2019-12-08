@@ -252,6 +252,7 @@ Task ("samples")
         }
     }
 
+    // build the newly migrated samples
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
 
