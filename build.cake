@@ -1,9 +1,9 @@
 #addin nuget:?package=Cake.Xamarin&version=3.0.2
 #addin nuget:?package=Cake.XCode&version=4.2.0
 #addin nuget:?package=Cake.FileHelpers&version=3.2.1
-#addin nuget:?package=Cake.Json&version=4.0.0&loaddependencies=true
+#addin nuget:?package=Cake.Json&version=4.0.0
 #addin nuget:?package=SharpCompress&version=0.24.0
-#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.1.0-preview.1&prerelease&loaddependencies=true
+#addin nuget:?package=Mono.ApiTools.NuGetDiff&version=1.3.0&loaddependencies=true
 #addin nuget:?package=Xamarin.Nuget.Validator&version=1.1.1
 
 #tool nuget:?package=mdoc&version=5.7.4.10
@@ -137,10 +137,17 @@ Task ("tests")
     .IsDependentOn ("externals")
     .Does (() =>
 {
-    var RunDesktopTest = new Action<string> (arch => {
+    var failedTests = 0;
+
+    void RunDesktopTest (string arch)
+    {
         RunMSBuild ("./tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln", platform: arch == "AnyCPU" ? "Any CPU" : arch);
-        RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Tests.dll", arch == "x86");
-    });
+        try {
+            RunTests ($"./tests/SkiaSharp.Desktop.Tests/bin/{arch}/{CONFIGURATION}/SkiaSharp.Tests.dll", arch == "x86");
+        } catch {
+            failedTests++;
+        }
+    }
 
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/skiasharp*");
     CleanDirectories ($"{PACKAGE_CACHE_PATH}/harfbuzzsharp*");
@@ -157,7 +164,14 @@ Task ("tests")
 
     // .NET Core
     RunMSBuild ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.sln");
-    RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
+    try {
+        RunNetCoreTests ("./tests/SkiaSharp.NetCore.Tests/SkiaSharp.NetCore.Tests.csproj");
+    } catch {
+        failedTests++;
+    }
+
+    if (failedTests > 0)
+        throw new Exception ($"There were {failedTests} failed tests.");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -315,7 +329,8 @@ Task ("nuget")
         }
     }
 
-    var removePlatforms = new Action<XDocument> ((xdoc) => {
+    void RemovePlatforms (XDocument xdoc)
+    {
         var files = xdoc.Root
             .Elements ("files")
             .Elements ("file");
@@ -336,9 +351,10 @@ Task ("nuget")
                 file.Add (new XAttribute ("target", file.Attribute ("src").Value));
             }
         }
-    });
+    }
 
-    var setVersion = new Action<XDocument, string> ((xdoc, suffix) => {
+    void SetVersion (XDocument xdoc, string suffix)
+    {
         var metadata = xdoc.Root.Element ("metadata");
         var id = metadata.Element ("id");
         var version = metadata.Element ("version");
@@ -370,7 +386,7 @@ Task ("nuget")
                 }
             }
         }
-    });
+    }
 
     DeleteFiles ("./output/*/nuget/*.nuspec");
     foreach (var nuspec in GetFiles ("./nuget/*.nuspec")) {
@@ -392,15 +408,15 @@ Task ("nuget")
             preview += $".{BUILD_NUMBER}";
         }
 
-        removePlatforms (xdoc);
+        RemovePlatforms (xdoc);
 
         var outDir = $"./output/{dir}/nuget";
         EnsureDirectoryExists (outDir);
 
-        setVersion (xdoc, "");
+        SetVersion (xdoc, "");
         xdoc.Save ($"{outDir}/{id}.nuspec");
 
-        setVersion (xdoc, $"{preview}");
+        SetVersion (xdoc, $"{preview}");
         xdoc.Save ($"{outDir}/{id}.prerelease.nuspec");
 
         // the placeholders
@@ -427,12 +443,12 @@ Task ("nuget")
         ValidPackageNamespace = new [] { "SkiaSharp", "HarfBuzzSharp" },
     };
 
-    var nupkgFiles = GetFiles ("./output/**/*.nupkg");
+    var nupkgFiles = GetFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg");
 
     Information ("Found ({0}) Nuget's to validate", nupkgFiles.Count ());
 
     foreach (var nupkgFile in nupkgFiles) {
-        Information ("Verifiying Metadata of {0}", nupkgFile.GetFilename ());
+        Verbose ("Verifiying Metadata of {0}", nupkgFile.GetFilename ());
 
         var result = Xamarin.Nuget.Validator.NugetValidator.Validate(MakeAbsolute(nupkgFile).FullPath, options);
         if (!result.Success) {
