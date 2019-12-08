@@ -84,6 +84,9 @@ namespace SkiaSharp.Tests
 
 			GC.Collect();
 			GC.WaitForPendingFinalizers();
+
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
 		}
 
 		private static class MacPlatformDetector
