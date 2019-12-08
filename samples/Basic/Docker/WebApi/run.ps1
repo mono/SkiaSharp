@@ -1,21 +1,36 @@
 param(
-    [ValidateSet("linux", "windows")]
-    [string]$Platform = "linux"
+    [ValidateSet("linux", "windows", "")]
+    [string]$Platform = ""
 )
 
-$name = "skiasharp-basic-$Platform-sample"
+if ($Platform -eq "") {
+    $Platform = if ($IsLinux -or $IsMacOS) { "linux" } else { "windows" }
+}
+
+$name = "skiasharp_webapi"
+
+# we can only do --platform with Experimental=true
+$buildPlatform = ""
+$isExperimental = docker info -f "{{ json .ExperimentalBuild }}"
+if ($isExperimental -eq "true") {
+    $buildPlatform = "--platform=$Platform"
+}
 
 # build the container
 docker stop $name
 docker rm $name
-New-Item "packages" -ItemType Directory -Force | Out-Null
-docker build --platform $Platform --tag $name --file "$Platform.Dockerfile" .
+docker build $buildPlatform --tag $name --file "$Platform.Dockerfile" .
 
 # run
 docker stop $name
 docker rm $name
 docker run --detach --name $name --publish "80:80" $name
+
+# get the IP so we can talk
 $ip = docker inspect -f "{{ .NetworkSettings.Networks.nat.IPAddress }}" $name
+if (-not $ip) {
+    $ip = docker inspect -f "{{ .NetworkSettings.IPAddress }}" $name
+}
 
 # get a response (retry on 404 as the server may take a second to start up)
 try {
@@ -26,6 +41,7 @@ try {
         # we were successful on 200 and > 0 content
         if ($imageResponse.StatusCode -eq 200) {
             if ($imageResponse.Content.Length -gt 0) {
+                Write-Host "Success!"
                 break
             } else {
                 throw "Empty response."
