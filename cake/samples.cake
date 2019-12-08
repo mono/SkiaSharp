@@ -165,5 +165,5 @@ FilePath GetFullPath(FilePath root, FilePath path)
 {
     path = path.FullPath.Replace("*", "_");
     path = root.GetDirectory().CombineWithFilePath(path);
-    return(FilePath) System.IO.Path.GetFullPath(path.FullPath);
+    return (FilePath) System.IO.Path.GetFullPath(path.FullPath);
 }

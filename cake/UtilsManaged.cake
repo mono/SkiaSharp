@@ -60,7 +60,7 @@ IEnumerable<(string Name, string Value)> CreateTraitsDictionary(string args)
             var kv = trait.Split('=');
             if (kv.Length != 2)
                 continue;
-            yield return(kv[0], kv[1]);
+            yield return (kv[0], kv[1]);
         }
     }
 }
@@ -89,7 +89,7 @@ IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(Direct
         var d = dir.GetDirectoryName().ToLower();
         if (d.StartsWith("netstandard") || d.StartsWith("portable")) {
             // we just want this single platform
-            yield return(dir, null);
+            yield return (dir, null);
             yield break;
         }
     }
@@ -98,21 +98,21 @@ IEnumerable<(DirectoryPath path, string platform)> GetPlatformDirectories(Direct
     foreach (var dir in platformDirs) {
         var d = dir.GetDirectoryName().ToLower();
         if (d.StartsWith("monoandroid"))
-            yield return(dir, "android");
+            yield return (dir, "android");
         else if (d.StartsWith("net4"))
-            yield return(dir, "net");
+            yield return (dir, "net");
         else if (d.StartsWith("uap"))
-            yield return(dir, "uwp");
+            yield return (dir, "uwp");
         else if (d.StartsWith("xamarinios") || d.StartsWith("xamarin.ios"))
-            yield return(dir, "ios");
+            yield return (dir, "ios");
         else if (d.StartsWith("xamarinmac") || d.StartsWith("xamarin.mac"))
-            yield return(dir, "macos");
+            yield return (dir, "macos");
         else if (d.StartsWith("xamarintvos") || d.StartsWith("xamarin.tvos"))
-            yield return(dir, "tvos");
+            yield return (dir, "tvos");
         else if (d.StartsWith("xamarinwatchos") || d.StartsWith("xamarin.watchos"))
-            yield return(dir, "watchos");
+            yield return (dir, "watchos");
         else if (d.StartsWith("tizen"))
-            yield return(dir, "tizen");
+            yield return (dir, "tizen");
         else
             throw new Exception($"Unknown platform '{d}' found at '{dir}'.");
     }
