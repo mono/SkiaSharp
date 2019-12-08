@@ -1,7 +1,7 @@
 ################################################################################
 # Build Environment
 ################################################################################
-FROM mcr.microsoft.com/dotnet/core/sdk:2.2 AS build-env
+FROM mcr.microsoft.com/dotnet/core/sdk:2.1 AS build-env
 WORKDIR /app
 
 # set up the contents
@@ -15,7 +15,7 @@ RUN dotnet publish -c Release -o /app/out
 ################################################################################
 # Run Environment
 ################################################################################
-FROM microsoft/dotnet:2.2-aspnetcore-runtime AS runtime
+FROM microsoft/dotnet:2.1-aspnetcore-runtime AS runtime
 
 # install Fontconfig
 RUN apt-get update \

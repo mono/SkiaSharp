@@ -1,7 +1,7 @@
 ################################################################################
 # Build Environment
 ################################################################################
-FROM mcr.microsoft.com/dotnet/core/sdk:2.2 AS build-env
+FROM mcr.microsoft.com/dotnet/core/sdk:2.1 AS build-env
 WORKDIR /app
 
 # set up the contents
@@ -15,7 +15,7 @@ RUN dotnet publish -c Release -o /app/out
 ################################################################################
 # Run Environment
 ################################################################################
-FROM mcr.microsoft.com/dotnet/core/runtime:2.2
+FROM mcr.microsoft.com/dotnet/core/runtime:2.1
 WORKDIR /app
 
 # copy from the build environment
