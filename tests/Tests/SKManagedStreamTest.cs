@@ -265,6 +265,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public unsafe void StreamLosesOwnershipAndCanBeGarbageCollected()
 		{
+			VerifyImmediateFinalizers();
+
 			var bytes = File.ReadAllBytes(Path.Combine(PathToImages, "color-wheel.png"));
 
 			DoWork(out var codecH, out var streamH);
