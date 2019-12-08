@@ -81,8 +81,6 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void GarbageCollectionCollectsStreams()
 		{
-			VerifyImmediateFinalizers();
-
 			var path = Path.Combine(PathToImages, "baboon.jpg");
 
 			var weak = DoWork();
