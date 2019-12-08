@@ -18,6 +18,7 @@ variables:
   XCODE_VERSION: 11
   DOTNET_VERSION: 3.0.x
   CONFIGURATION: 'Release'
+  VM_IMAGE_WINDOWS_NATIVE: Hosted VS2017
   VM_IMAGE_WINDOWS: Hosted Windows 2019 with VS2019
   VM_IMAGE_MAC: Hosted macOS
   VM_IMAGE_LINUX: Hosted Ubuntu 1604
@@ -56,35 +57,35 @@ stages:
         parameters:
           name: native_android_x86_windows
           displayName: Build Native Android|x86 (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-android
           additionalArgs: --buildarch=x86
       - template: azure-templates-bootstrapper.yml # Build Native Android|x64 (Windows)
         parameters:
           name: native_android_x64_windows
           displayName: Build Native Android|x64 (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-android
           additionalArgs: --buildarch=x64
       - template: azure-templates-bootstrapper.yml # Build Native Android|arm (Windows)
         parameters:
           name: native_android_arm_windows
           displayName: Build Native Android|arm (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-android
           additionalArgs: --buildarch=arm
       - template: azure-templates-bootstrapper.yml # Build Native Android|arm64 (Windows)
         parameters:
           name: native_android_arm64_windows
           displayName: Build Native Android|arm64 (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-android
           additionalArgs: --buildarch=arm64
       - template: azure-templates-bootstrapper.yml # Build Native Tizen (Windows)
         parameters:
           name: native_tizen_windows
           displayName: Build Native Tizen (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-tizen
           condition: false # TODO: TIZEN INSTALL BUGS
       - template: azure-templates-bootstrapper.yml # Build Native UWP|x86 (Windows)
@@ -98,42 +99,42 @@ stages:
         parameters:
           name: native_uwp_x64_windows
           displayName: Build Native UWP|x64 (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-uwp
           additionalArgs: --buildarch=x64
       - template: azure-templates-bootstrapper.yml # Build Native UWP|arm (Windows)
         parameters:
           name: native_uwp_arm_windows
           displayName: Build Native UWP|arm (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-uwp
           additionalArgs: --buildarch=arm
       - template: azure-templates-bootstrapper.yml # Build Native UWP|arm64 (Windows)
         parameters:
           name: native_uwp_arm64_windows
           displayName: Build Native UWP|arm64 (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-uwp
           additionalArgs: --buildarch=arm64
       - template: azure-templates-bootstrapper.yml # Build Native Win32|x86 (Windows)
         parameters:
           name: native_win32_x86_windows
           displayName: Build Native Win32|x86 (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-windows
           additionalArgs: --buildarch=x86
       - template: azure-templates-bootstrapper.yml # Build Native Win32|x64 (Windows)
         parameters:
           name: native_win32_x64_windows
           displayName: Build Native Win32|x64 (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-windows
           additionalArgs: --buildarch=x64
       - template: azure-templates-bootstrapper.yml # Build Native NanoServer|x64 (Windows)
         parameters:
           name: native_win32_x64_nanoserver_windows
           displayName: Build Native NanoServer|x64 (Windows)
-          vmImage: $(VM_IMAGE_WINDOWS)
+          vmImage: $(VM_IMAGE_WINDOWS_NATIVE)
           target: externals-nanoserver
           additionalArgs: --buildarch=x64
           preBuildSteps:
