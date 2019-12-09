@@ -218,7 +218,7 @@ namespace SkiaSharp
 				if (codec == null)
 					return null;
 
-				var bitmap = SKBitmap.Decode (codec, codec.Info);
+				var bitmap = SKBitmap.Decode (codec);
 				if (bitmap == null)
 					return null;
 
@@ -239,7 +239,7 @@ namespace SkiaSharp
 				if (codec == null)
 					return null;
 
-				var bitmap = SKBitmap.Decode (codec, codec.Info);
+				var bitmap = SKBitmap.Decode (codec);
 				if (bitmap == null)
 					return null;
 
@@ -260,7 +260,7 @@ namespace SkiaSharp
 				if (codec == null)
 					return null;
 
-				var bitmap = SKBitmap.Decode (codec, codec.Info);
+				var bitmap = SKBitmap.Decode (codec);
 				if (bitmap == null)
 					return null;
 
