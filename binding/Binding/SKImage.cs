@@ -218,7 +218,12 @@ namespace SkiaSharp
 				if (codec == null)
 					return null;
 
-				var bitmap = SKBitmap.Decode (codec);
+				var info = codec.Info;
+				if (info.AlphaType == SKAlphaType.Unpremul) {
+					info.AlphaType = SKAlphaType.Premul;
+				}
+
+				var bitmap = SKBitmap.Decode (codec, info);
 				if (bitmap == null)
 					return null;
 
@@ -239,7 +244,12 @@ namespace SkiaSharp
 				if (codec == null)
 					return null;
 
-				var bitmap = SKBitmap.Decode (codec);
+				var info = codec.Info;
+				if (info.AlphaType == SKAlphaType.Unpremul) {
+					info.AlphaType = SKAlphaType.Premul;
+				}
+
+				var bitmap = SKBitmap.Decode (codec, info);
 				if (bitmap == null)
 					return null;
 
@@ -260,7 +270,12 @@ namespace SkiaSharp
 				if (codec == null)
 					return null;
 
-				var bitmap = SKBitmap.Decode (codec);
+				var info = codec.Info;
+				if (info.AlphaType == SKAlphaType.Unpremul) {
+					info.AlphaType = SKAlphaType.Premul;
+				}
+
+				var bitmap = SKBitmap.Decode (codec, info);
 				if (bitmap == null)
 					return null;
 
