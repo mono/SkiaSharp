@@ -21,7 +21,7 @@ namespace SkiaSharpSample.Samples
 		protected override async Task OnInit()
 		{
 			// create the base and step 3D rotation matrices (around the y-axis)
-			rotationMatrix = SKMatrix44.CreateRotationDegrees(0, 1, 0, 30);
+			rotationMatrix = SKMatrix44.CreateIdentity();
 			rotationStep = SKMatrix44.CreateRotationDegrees(0, 1, 0, 5);
 
 			await base.OnInit();
