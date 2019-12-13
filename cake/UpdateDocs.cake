@@ -51,13 +51,13 @@ Task ("docs-expand-build-artifact")
     .Does (() =>
 {
     Unzip ("./output/nuget.zip", "./output");
-    MoveDirectory ("./output/nuget", "./output/nugets");
+    MoveDirectory ("./output/nuget", OUTPUT_NUGETS_PATH);
 
     foreach (var id in TRACKED_NUGETS.Keys) {
         var version = GetVersion (id);
         var name = $"{id}.{version}.nupkg";
         CleanDirectories ($"./output/{id}");
-        Unzip ($"./output/nugets/{name}", $"./output/{id}/nuget");
+        Unzip ($"{OUTPUT_NUGETS_PATH}/{name}", $"./output/{id}/nuget");
     }
 });
 
@@ -68,9 +68,10 @@ Task ("docs-download-output")
 Task ("docs-api-diff")
     .Does (async () =>
 {
-    var baseDir = "./output/nugets/api-diff";
+    var baseDir = $"{OUTPUT_NUGETS_PATH}/api-diff";
     CleanDirectories (baseDir);
 
+    Information ($"Creating comparer...");
     var comparer = await CreateNuGetDiffAsync ();
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
@@ -91,7 +92,7 @@ Task ("docs-api-diff")
         // generate the diff and copy to the changelogs
         Debug ($"Running a diff on '{latestVersion}' vs '{version}' of '{id}'...");
         var diffRoot = $"{baseDir}/{id}";
-        using (var reader = new PackageArchiveReader ($"./output/nugets/{id.ToLower ()}.{version}.nupkg")) {
+        using (var reader = new PackageArchiveReader ($"{OUTPUT_NUGETS_PATH}/{id.ToLower ()}.{version}.nupkg")) {
             // run the diff with just the breaking changes
             comparer.MarkdownDiffFileExtension = ".breaking.md";
             comparer.IgnoreNonBreakingChanges = true;
@@ -113,6 +114,7 @@ Task ("docs-api-diff-past")
     var baseDir = "./output/api-diffs-past";
     CleanDirectories (baseDir);
 
+    Information ($"Creating comparer...");
     var comparer = await CreateNuGetDiffAsync ();
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
@@ -166,6 +168,7 @@ Task ("docs-update-frameworks")
     CleanDirectories (docsTempPath);
 
     // get a comparer that will download the nugets
+    Information ($"Creating comparer...");
     var comparer = await CreateNuGetDiffAsync ();
 
     // generate the temp frameworks.xml
@@ -181,12 +184,18 @@ Task ("docs-update-frameworks")
         var dev = new NuGetVersion (GetVersion (id));
         allVersions = allVersions.Union (new [] { dev }).ToArray ();
 
+        // "merge" the patches
+        var merged = new Dictionary<string, NuGetVersion> ();
         foreach (var version in allVersions) {
+            merged [$"{version.Major}.{version.Minor}.{version.Patch}"] = version;
+        }
+
+        foreach (var version in merged) {
             Information ($"Downloading '{id}' version '{version}'...");
             // get the path to the nuget contents
-            var packagePath = version == dev
+            var packagePath = version.Value == dev
                 ? $"./output/{id}/nuget"
-                : await comparer.ExtractCachedPackageAsync (id, version);
+                : await comparer.ExtractCachedPackageAsync (id, version.Value);
 
             var dirs =
                 GetPlatformDirectories ($"{packagePath}/lib").Union(
@@ -197,13 +206,13 @@ Task ("docs-update-frameworks")
                     if (id != "SkiaSharp.Views.Forms")
                         continue;
                     else
-                        moniker = $"skiasharp-views-forms-{version}";
+                        moniker = $"skiasharp-views-forms-{version.Key}";
                 else if (id.StartsWith ("SkiaSharp.Views"))
-                    moniker = $"skiasharp-views-{version}";
+                    moniker = $"skiasharp-views-{version.Key}";
                 else if (platform == null)
-                    moniker = $"{id.ToLower ().Replace (".", "-")}-{version}";
+                    moniker = $"{id.ToLower ().Replace (".", "-")}-{version.Key}";
                 else
-                    moniker = $"{id.ToLower ().Replace (".", "-")}-{platform}-{version}";
+                    moniker = $"{id.ToLower ().Replace (".", "-")}-{platform}-{version.Key}";
 
                 // add the node to the frameworks.xml
                 if (xFrameworks.Elements ("Framework")?.Any (e => e.Attribute ("Name").Value == moniker) != true) {
