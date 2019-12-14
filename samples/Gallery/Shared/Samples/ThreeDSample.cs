@@ -27,7 +27,8 @@ namespace SkiaSharpSample.Samples
 			await base.OnInit();
 		}
 
-		protected override async Task OnUpdate(CancellationToken token) {
+		protected override async Task OnUpdate(CancellationToken token)
+		{
 			await Task.Delay(25, token);
 
 			// step the rotation matrix
