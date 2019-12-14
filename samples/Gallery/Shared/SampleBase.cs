@@ -163,7 +163,7 @@ namespace SkiaSharpSample
 			{
 				while (!cts.IsCancellationRequested)
 				{
-					await OnUpdate(cts.Token, scheduler);
+					await OnUpdate(cts.Token);
 
 					new Task(Refresh).Start(scheduler);
 				}
@@ -177,7 +177,7 @@ namespace SkiaSharpSample
 			cts.Cancel();
 		}
 
-		protected abstract Task OnUpdate(CancellationToken token, TaskScheduler mainScheduler);
+		protected abstract Task OnUpdate(CancellationToken token);
 	}
 
 	public enum GestureState
