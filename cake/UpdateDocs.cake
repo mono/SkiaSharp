@@ -68,9 +68,10 @@ Task ("docs-download-output")
 Task ("docs-api-diff")
     .Does (async () =>
 {
-    var baseDir = "{OUTPUT_NUGETS_PATH}/api-diff";
+    var baseDir = $"{OUTPUT_NUGETS_PATH}/api-diff";
     CleanDirectories (baseDir);
 
+    Information ($"Creating comparer...");
     var comparer = await CreateNuGetDiffAsync ();
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
@@ -113,6 +114,7 @@ Task ("docs-api-diff-past")
     var baseDir = "./output/api-diffs-past";
     CleanDirectories (baseDir);
 
+    Information ($"Creating comparer...");
     var comparer = await CreateNuGetDiffAsync ();
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
@@ -166,6 +168,7 @@ Task ("docs-update-frameworks")
     CleanDirectories (docsTempPath);
 
     // get a comparer that will download the nugets
+    Information ($"Creating comparer...");
     var comparer = await CreateNuGetDiffAsync ();
 
     // generate the temp frameworks.xml
@@ -181,12 +184,18 @@ Task ("docs-update-frameworks")
         var dev = new NuGetVersion (GetVersion (id));
         allVersions = allVersions.Union (new [] { dev }).ToArray ();
 
+        // "merge" the patches
+        var merged = new Dictionary<string, NuGetVersion> ();
         foreach (var version in allVersions) {
+            merged [$"{version.Major}.{version.Minor}.{version.Patch}"] = version;
+        }
+
+        foreach (var version in merged) {
             Information ($"Downloading '{id}' version '{version}'...");
             // get the path to the nuget contents
-            var packagePath = version == dev
+            var packagePath = version.Value == dev
                 ? $"./output/{id}/nuget"
-                : await comparer.ExtractCachedPackageAsync (id, version);
+                : await comparer.ExtractCachedPackageAsync (id, version.Value);
 
             var dirs =
                 GetPlatformDirectories ($"{packagePath}/lib").Union(
@@ -197,13 +206,13 @@ Task ("docs-update-frameworks")
                     if (id != "SkiaSharp.Views.Forms")
                         continue;
                     else
-                        moniker = $"skiasharp-views-forms-{version}";
+                        moniker = $"skiasharp-views-forms-{version.Key}";
                 else if (id.StartsWith ("SkiaSharp.Views"))
-                    moniker = $"skiasharp-views-{version}";
+                    moniker = $"skiasharp-views-{version.Key}";
                 else if (platform == null)
-                    moniker = $"{id.ToLower ().Replace (".", "-")}-{version}";
+                    moniker = $"{id.ToLower ().Replace (".", "-")}-{version.Key}";
                 else
-                    moniker = $"{id.ToLower ().Replace (".", "-")}-{platform}-{version}";
+                    moniker = $"{id.ToLower ().Replace (".", "-")}-{platform}-{version.Key}";
 
                 // add the node to the frameworks.xml
                 if (xFrameworks.Elements ("Framework")?.Any (e => e.Attribute ("Name").Value == moniker) != true) {
