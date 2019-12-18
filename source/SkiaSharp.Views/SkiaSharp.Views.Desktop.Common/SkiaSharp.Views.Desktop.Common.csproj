@@ -1,9 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net45</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net45;netcoreapp3.0</TargetFrameworks>
     <RootNamespace>SkiaSharp.Views.Desktop</RootNamespace>
     <AssemblyName>SkiaSharp.Views.Desktop.Common</AssemblyName>
     <PackagingGroup>SkiaSharp.Views.Desktop.Common</PackagingGroup>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <DefineConstants>$(DefineConstants);__DESKTOP__;NET_STANDARD</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
     <DefineConstants>$(DefineConstants);__DESKTOP__</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
@@ -11,5 +16,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.0'">
+    <PackageReference Include="System.Drawing.Common" Version="4.5.1" />
   </ItemGroup>
 </Project>
