@@ -1,18 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\SkiaSharp.Build.props" />
+﻿<Project Sdk="MSBuild.Sdk.Extras/2.0.54">
   <PropertyGroup>
     <TargetFramework>uap10.0.10240</TargetFramework>
-    <OutputTypeEx>library</OutputTypeEx>
     <RootNamespace>SkiaSharp.Views.UWP</RootNamespace>
     <AssemblyName>SkiaSharp.Views.UWP</AssemblyName>
     <PackagingGroup>SkiaSharp.Views</PackagingGroup>
     <PackagingPlatform>uap10.0</PackagingPlatform>
-    <DefineConstants>$(DefineConstants);</DefineConstants>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.65" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.2.8" />
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp.UWP\SkiaSharp.UWP.csproj" />
   </ItemGroup>
@@ -24,6 +17,4 @@
   <ItemGroup>
     <Compile Include="..\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
-  <Import Project="..\..\SkiaSharp.Build.targets" />
-  <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />
 </Project>

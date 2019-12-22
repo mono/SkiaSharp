@@ -1,23 +1,15 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\SkiaSharp.Build.props" />
+﻿<Project Sdk="MSBuild.Sdk.Extras/2.0.54">
   <PropertyGroup>
     <TargetFramework>monoandroid9.0</TargetFramework>
-    <OutputTypeEx>library</OutputTypeEx>
     <RootNamespace>SkiaSharp.Views.Android</RootNamespace>
     <AssemblyName>SkiaSharp.Views.Android</AssemblyName>
     <PackagingGroup>SkiaSharp.Views</PackagingGroup>
-    <PackagingPlatform>MonoAndroid</PackagingPlatform>
-    <DefineConstants>$(DefineConstants);</DefineConstants>
+    <PackagingPlatform>monoandroid1.0</PackagingPlatform>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.65" PrivateAssets="All" />
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp.Android\SkiaSharp.Android.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
-  <Import Project="..\..\SkiaSharp.Build.targets" />
-  <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />
 </Project>
