@@ -16,7 +16,6 @@ void RunMSBuild(
         c.Configuration = CONFIGURATION;
         c.Verbosity = VERBOSITY;
         c.MaxCpuCount = 0;
-        c.ToolVersion = MSBuildToolVersion.VS2017;
 
         c.NoLogo = VERBOSITY == Verbosity.Minimal;
 

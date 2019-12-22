@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard1.3;netstandard2.0;net45</TargetFrameworks>
+    <RootNamespace>SkiaSharp</RootNamespace>
+    <AssemblyName>SkiaSharp</AssemblyName>
+    <PackagingGroup>SkiaSharp</PackagingGroup>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('netstandard'))">
+    <DefineConstants>$(DefineConstants);NET_STANDARD</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <DefineConstants>$(DefineConstants);__DESKTOP__</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
+    <PackageReference Include="System.IO.UnmanagedMemoryStream" Version="4.3.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\output\native\windows\x64\libSkiaSharp.dll" Link="nuget\runtimes\win-x64\native\libSkiaSharp.dll"
+          Condition=" Exists('..\..\output\native\windows\x64\libSkiaSharp.dll') or '$(IsWindows)' == 'true' " />
+    <None Include="..\..\output\native\windows\x86\libSkiaSharp.dll" Link="nuget\runtimes\win-x86\native\libSkiaSharp.dll"
+          Condition=" Exists('..\..\output\native\windows\x86\libSkiaSharp.dll') or '$(IsWindows)' == 'true' " />
+    <None Include="..\..\output\native\osx\libSkiaSharp.dylib" Link="nuget\runtimes\osx\native\libSkiaSharp.dylib"
+          Condition=" Exists('..\..\output\native\osx\libSkiaSharp.dylib') or '$(IsMacOS)' == 'true' " />
+    <None Include="..\..\output\native\linux\x64\libSkiaSharp.so" Link="nuget\runtimes\linux-x64\native\libSkiaSharp.so"
+          Condition=" Exists('..\..\output\native\linux\x64\libSkiaSharp.so') or '$(IsLinux)' == 'true' " />
+    <None Include="..\..\output\native\nanoserver\x64\libSkiaSharp.dll" Link="nuget\runtimes\nanoserver-x64\native\libSkiaSharp.dll"
+          Condition=" Exists('..\..\output\native\nanoserver\x64\libSkiaSharp.dll') or '$(IsWindows)' == 'true' " />
+    <None Include="..\..\output\native\linuxnodeps\x64\libSkiaSharp.so" Link="nuget\runtimes\linuxnodeps-x64\native\libSkiaSharp.so"
+          Condition=" Exists('..\..\output\native\linuxnodeps\x64\libSkiaSharp.so') or '$(IsLinux)' == 'true' " />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <None Include="nuget\build\net45\SkiaSharp.targets" Link="nuget\build\$(TargetFramework)\SkiaSharp.targets" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\Binding\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

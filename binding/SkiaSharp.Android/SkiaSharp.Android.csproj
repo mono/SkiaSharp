@@ -1,25 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\source\SkiaSharp.Build.props" />
+﻿<Project Sdk="MSBuild.Sdk.Extras/2.0.54">
   <PropertyGroup>
     <TargetFramework>monoandroid9.0</TargetFramework>
-    <OutputTypeEx>library</OutputTypeEx>
     <RootNamespace>SkiaSharp</RootNamespace>
     <AssemblyName>SkiaSharp</AssemblyName>
     <PackagingGroup>SkiaSharp</PackagingGroup>
-    <PackagingPlatform>MonoAndroid</PackagingPlatform>
-    <DefineConstants>$(DefineConstants);</DefineConstants>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <PackagingPlatform>monoandroid1.0</PackagingPlatform>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DebugType>full</DebugType>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DebugType>pdbonly</DebugType>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.65" PrivateAssets="All" />
-    <PackageReference Include="System.Memory" Version="4.5.3" />
-  </ItemGroup>
   <ItemGroup>
     <EmbeddedNativeLibrary Include="..\..\output\native\android\arm64-v8a\libSkiaSharp.so" Link="libs\arm64-v8a\libSkiaSharp.so" />
     <EmbeddedNativeLibrary Include="..\..\output\native\android\armeabi-v7a\libSkiaSharp.so" Link="libs\armeabi-v7a\libSkiaSharp.so" />
@@ -30,6 +16,4 @@
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\Binding\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
-  <Import Project="..\..\source\SkiaSharp.Build.targets" />
-  <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />
 </Project>
