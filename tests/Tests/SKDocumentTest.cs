@@ -171,8 +171,6 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void StreamIsNotCollectedPrematurely()
 		{
-			VerifyImmediateFinalizers();
-
 			DoWork(out var handle);
 
 			CollectGarbage();

@@ -1,21 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\SkiaSharp.Build.props" />
   <PropertyGroup>
-    <TargetFramework>netstandard1.3</TargetFramework>
-    <OutputTypeEx>library</OutputTypeEx>
+    <TargetFrameworks>netstandard1.3;netstandard2.0;net45</TargetFrameworks>
     <RootNamespace>SkiaSharp.HarfBuzz</RootNamespace>
     <AssemblyName>SkiaSharp.HarfBuzz</AssemblyName>
     <PackagingGroup>SkiaSharp.HarfBuzz</PackagingGroup>
-    <PackagingPlatform>netstandard1.3</PackagingPlatform>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('netstandard'))">
     <DefineConstants>$(DefineConstants);NET_STANDARD</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <DefineConstants>$(DefineConstants);__DESKTOP__</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\binding\SkiaSharp.NetStandard\SkiaSharp.NetStandard.csproj" />
-    <ProjectReference Include="..\..\..\binding\HarfBuzzSharp.NetStandard\HarfBuzzSharp.NetStandard.csproj" />
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\SkiaSharp.HarfBuzz.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
-  <Import Project="..\..\SkiaSharp.Build.targets" />
 </Project>

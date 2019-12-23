@@ -1,37 +1,23 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\source\SkiaSharp.Build.props" />
+﻿<Project Sdk="Tizen.NET.Sdk/1.0.8">
   <PropertyGroup>
     <TargetFramework>tizen40</TargetFramework>
-    <OutputTypeEx>library</OutputTypeEx>
     <RootNamespace>HarfBuzzSharp</RootNamespace>
     <AssemblyName>HarfBuzzSharp</AssemblyName>
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
     <TizenCreateTpkOnBuild>false</TizenCreateTpkOnBuild>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
-    <PackagingPlatform>tizen40</PackagingPlatform>
     <DefineConstants>$(DefineConstants);HARFBUZZ;__TIZEN__;</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DebugType>full</DebugType>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DebugType>pdbonly</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.65" PrivateAssets="All" />
     <PackageReference Include="System.Memory" Version="4.5.3" />
-    <PackageReference Include="Tizen.NET" Version="4.0.0" />
-    <PackageReference Include="Tizen.NET.Sdk" Version="1.0.1" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\output\native\tizen\armel\libHarfBuzzSharp.so" Link="nuget\runtimes\tizen-armel\native\libHarfBuzzSharp.so" />
     <None Include="..\..\output\native\tizen\i386\libHarfBuzzSharp.so" Link="nuget\runtimes\tizen-x86\native\libHarfBuzzSharp.so" />
+    <None Include="nuget\build\tizen40\HarfBuzzSharp.targets" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\HarfBuzzSharp.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
-  <Import Project="..\..\source\SkiaSharp.Build.targets" />
-  <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />
 </Project>
