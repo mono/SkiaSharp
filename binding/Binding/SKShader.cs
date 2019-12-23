@@ -211,6 +211,11 @@ namespace SkiaSharp
 		{
 			return GetObject<SKShader>(SkiaApi.sk_shader_new_perlin_noise_fractal_noise(baseFrequencyX, baseFrequencyY, numOctaves, seed, null));
 		}
+		
+		public static SKShader CreatePerlinNoiseImprovedNoise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float z)
+		{
+			return GetObject<SKShader>(SkiaApi.sk_shader_new_perlin_noise_improved_noise(baseFrequencyX, baseFrequencyY, numOctaves, z));
+		}
 
 		public static SKShader CreatePerlinNoiseFractalNoise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, SKPointI tileSize)
 		{
