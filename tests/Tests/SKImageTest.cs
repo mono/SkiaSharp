@@ -506,6 +506,8 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void DataCreatedByImageExpiresAfterFinalizers()
 		{
+			VerifyImmediateFinalizers();
+
 			var bitmap = CreateTestBitmap();
 			var image = SKImage.FromBitmap(bitmap);
 
@@ -522,6 +524,181 @@ namespace SkiaSharp.Tests
 				Assert.Equal(1, result.GetReferenceCount());
 
 				return result.Handle;
+			}
+		}
+
+		[Trait(CategoryKey, GpuCategory)]
+		[SkippableFact]
+		public void DecodingWithDataAndDrawingOnGPUCreatesCorrectImage()
+		{
+			var info = new SKImageInfo(120, 120);
+			var path = Path.Combine(PathToImages, "vimeo_icon_dark.png");
+
+			using (var ctx = CreateGlContext())
+			{
+				ctx.MakeCurrent();
+
+				using (var grContext = GRContext.CreateGl())
+				using (var surface = SKSurface.Create(grContext, true, info))
+				{
+					var canvas = surface.Canvas;
+
+					canvas.Clear(SKColors.Crimson);
+
+					using (var data = SKData.Create(path))
+					using (var image = SKImage.FromEncodedData(data))
+					{
+						canvas.DrawImage(image, 0, 0);
+					}
+
+					using (var bmp = new SKBitmap(info))
+					{
+						surface.ReadPixels(info, bmp.GetPixels(), info.RowBytes, 0, 0);
+
+						Assert.Equal(SKColors.Crimson, bmp.GetPixel(3, 3));
+						Assert.Equal(SKColors.Crimson, bmp.GetPixel(70, 50));
+						Assert.Equal(new SKColor(23, 35, 34), bmp.GetPixel(40, 40));
+					}
+				}
+			}
+		}
+
+		[Trait(CategoryKey, GpuCategory)]
+		[SkippableFact]
+		public void DecodingWithBitmapAndDrawingOnGPUCreatesCorrectImage()
+		{
+			var info = new SKImageInfo(120, 120);
+			var path = Path.Combine(PathToImages, "vimeo_icon_dark.png");
+
+			using (var ctx = CreateGlContext())
+			{
+				ctx.MakeCurrent();
+
+				using (var grContext = GRContext.CreateGl())
+				using (var surface = SKSurface.Create(grContext, true, info))
+				{
+					var canvas = surface.Canvas;
+
+					canvas.Clear(SKColors.Crimson);
+
+					using (var bitmap = SKBitmap.Decode(path))
+					using (var image = SKImage.FromBitmap(bitmap))
+					{
+						canvas.DrawImage(image, 0, 0);
+					}
+
+					using (var bmp = new SKBitmap(info))
+					{
+						surface.ReadPixels(info, bmp.GetPixels(), info.RowBytes, 0, 0);
+
+						Assert.Equal(SKColors.Crimson, bmp.GetPixel(3, 3));
+						Assert.Equal(SKColors.Crimson, bmp.GetPixel(70, 50));
+						Assert.Equal(new SKColor(23, 35, 34), bmp.GetPixel(40, 40));
+					}
+				}
+			}
+		}
+
+		[Trait(CategoryKey, GpuCategory)]
+		[SkippableFact]
+		public void DecodingWithPathAndDrawingOnGPUCreatesCorrectImage()
+		{
+			var info = new SKImageInfo(120, 120);
+			var path = Path.Combine(PathToImages, "vimeo_icon_dark.png");
+
+			using (var ctx = CreateGlContext())
+			{
+				ctx.MakeCurrent();
+
+				using (var grContext = GRContext.CreateGl())
+				using (var surface = SKSurface.Create(grContext, true, info))
+				{
+					var canvas = surface.Canvas;
+
+					canvas.Clear(SKColors.Crimson);
+
+					using (var image = SKImage.FromEncodedData(path))
+					{
+						canvas.DrawImage(image, 0, 0);
+					}
+
+					using (var bmp = new SKBitmap(info))
+					{
+						surface.ReadPixels(info, bmp.GetPixels(), info.RowBytes, 0, 0);
+
+						Assert.Equal(SKColors.Crimson, bmp.GetPixel(3, 3));
+						Assert.Equal(SKColors.Crimson, bmp.GetPixel(70, 50));
+						Assert.Equal(new SKColor(23, 35, 34), bmp.GetPixel(40, 40));
+					}
+				}
+			}
+		}
+
+		[SkippableFact]
+		public void DecodingWithDataCreatesCorrectImage()
+		{
+			var info = new SKImageInfo(120, 120);
+			var path = Path.Combine(PathToImages, "vimeo_icon_dark.png");
+
+			using (var bmp = new SKBitmap(info))
+			using (var canvas = new SKCanvas(bmp))
+			{
+				canvas.Clear(SKColors.Crimson);
+
+				using (var data = SKData.Create(path))
+				using (var image = SKImage.FromEncodedData(data))
+				{
+					canvas.DrawImage(image, 0, 0);
+				}
+
+				Assert.Equal(SKColors.Crimson, bmp.GetPixel(3, 3));
+				Assert.Equal(SKColors.Crimson, bmp.GetPixel(70, 50));
+				Assert.Equal(new SKColor(23, 35, 34), bmp.GetPixel(40, 40));
+			}
+		}
+
+		[SkippableFact]
+		public void DecodingWithBitmapCreatesCorrectImage()
+		{
+			var info = new SKImageInfo(120, 120);
+			var path = Path.Combine(PathToImages, "vimeo_icon_dark.png");
+
+			using (var bmp = new SKBitmap(info))
+			using (var canvas = new SKCanvas(bmp))
+			{
+				canvas.Clear(SKColors.Crimson);
+
+				using (var bitmap = SKBitmap.Decode(path))
+				using (var image = SKImage.FromBitmap(bitmap))
+				{
+					canvas.DrawImage(image, 0, 0);
+				}
+
+				Assert.Equal(SKColors.Crimson, bmp.GetPixel(3, 3));
+				Assert.Equal(SKColors.Crimson, bmp.GetPixel(70, 50));
+				Assert.Equal(new SKColor(23, 35, 34), bmp.GetPixel(40, 40));
+			}
+		}
+
+		[SkippableFact]
+		public void DecodingWithPathCreatesCorrectImage()
+		{
+			var info = new SKImageInfo(120, 120);
+			var path = Path.Combine(PathToImages, "vimeo_icon_dark.png");
+
+			using (var bmp = new SKBitmap(info))
+			using (var canvas = new SKCanvas(bmp))
+			{
+				canvas.Clear(SKColors.Crimson);
+
+				using (var image = SKImage.FromEncodedData(path))
+				{
+					canvas.DrawImage(image, 0, 0);
+				}
+
+				Assert.Equal(SKColors.Crimson, bmp.GetPixel(3, 3));
+				Assert.Equal(SKColors.Crimson, bmp.GetPixel(70, 50));
+				Assert.Equal(new SKColor(23, 35, 34), bmp.GetPixel(40, 40));
 			}
 		}
 

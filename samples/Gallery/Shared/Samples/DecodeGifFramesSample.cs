@@ -37,7 +37,7 @@ namespace SkiaSharpSample.Samples
 			await base.OnInit();
 		}
 
-		protected override async Task OnUpdate(CancellationToken token, TaskScheduler mainScheduler)
+		protected override async Task OnUpdate(CancellationToken token)
 		{
 			var duration = frames[currentFrame].Duration;
 			if (duration <= 0)

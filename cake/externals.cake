@@ -38,7 +38,6 @@ Task("externals-download")
 
     DownloadFile(url, $"{outputPath}/{artifactFilename}");
     Unzip($"{outputPath}/{artifactFilename}", outputPath);
-    MoveDirectory($"{outputPath}/{artifactName}", $"{outputPath}/native");
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
