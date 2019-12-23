@@ -157,7 +157,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal (SKImageInfo.PlatformColorType, codec.Info.ColorType);
 			}
 		}
-		
+
 		[SkippableFact]
 		public void GetGifFrames ()
 		{
@@ -375,7 +375,7 @@ namespace SkiaSharp.Tests
 
 			Assert.Equal (codecPixels, bitmapPixels);
 		}
-	
+
 		[SkippableFact (Skip = "This keeps breaking CI for some reason.")]
 		public async Task DownloadedStream ()
 		{
@@ -384,7 +384,7 @@ namespace SkiaSharp.Tests
 			using (var bitmap = SKBitmap.Decode (stream))
 				Assert.NotNull (bitmap);
 		}
-	
+
 		[SkippableFact]
 		public void ReadOnlyStream ()
 		{

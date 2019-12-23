@@ -84,8 +84,12 @@ namespace SkiaSharp.Views.Desktop
 				renderTarget?.Dispose();
 				GL.GetInteger(GetPName.FramebufferBinding, out var framebuffer);
 				GL.GetInteger(GetPName.StencilBits, out var stencil);
+				GL.GetInteger(GetPName.Samples, out var samples);
+				var maxSamples = grContext.GetMaxSurfaceSampleCount(colorType);
+				if (samples > maxSamples)
+					samples = maxSamples;
 				var glInfo = new GRGlFramebufferInfo((uint)framebuffer, colorType.ToGlSizedFormat());
-				renderTarget = new GRBackendRenderTarget(Width, Height, grContext.GetMaxSurfaceSampleCount(colorType), stencil, glInfo);
+				renderTarget = new GRBackendRenderTarget(Width, Height, samples, stencil, glInfo);
 
 				// create the surface
 				surface?.Dispose();
