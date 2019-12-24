@@ -37,7 +37,7 @@ _Because there are multiple distros of Linux, and we cannot possibly support the
 There is also a early access feed that you can use to get the latest and greatest, before it goes out to the public:
 
 ```
-https://nugetized.blob.core.windows.net/skiasharp-eap/index.json
+https://aka.ms/skiasharp-eap/index.json
 ```
 
 ## Building SkiaSharp

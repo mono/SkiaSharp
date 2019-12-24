@@ -1,38 +1,23 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\source\SkiaSharp.Build.props" />
+﻿<Project Sdk="Tizen.NET.Sdk/1.0.8">
   <PropertyGroup>
     <TargetFramework>tizen40</TargetFramework>
-    <OutputTypeEx>library</OutputTypeEx>
     <RootNamespace>SkiaSharp</RootNamespace>
     <AssemblyName>SkiaSharp</AssemblyName>
     <AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
     <TizenCreateTpkOnBuild>false</TizenCreateTpkOnBuild>
     <PackagingGroup>SkiaSharp</PackagingGroup>
-    <PackagingPlatform>tizen40</PackagingPlatform>
     <DefineConstants>$(DefineConstants);__TIZEN__;</DefineConstants>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DebugType>full</DebugType>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DebugType>pdbonly</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.65" PrivateAssets="All" />
-    <PackageReference Include="Tizen.NET" Version="4.0.0" />
-    <PackageReference Include="Tizen.NET.Sdk" Version="1.0.1" />
-    <PackageReference Include="System.IO.UnmanagedMemoryStream" Version="4.3.0" />
     <PackageReference Include="System.Memory" Version="4.5.3" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\output\native\tizen\armel\libSkiaSharp.so" Link="nuget\runtimes\tizen-armel\native\libSkiaSharp.so" />
     <None Include="..\..\output\native\tizen\i386\libSkiaSharp.so" Link="nuget\runtimes\tizen-x86\native\libSkiaSharp.so" />
+    <None Include="nuget\build\tizen40\SkiaSharp.targets" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\Binding\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
-  <Import Project="..\..\source\SkiaSharp.Build.targets" />
-  <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />
 </Project>

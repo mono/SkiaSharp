@@ -136,12 +136,12 @@ namespace SkiaSharp
 
 		public void Erase (SKColor color)
 		{
-			SkiaApi.sk_bitmap_erase (Handle, color);
+			SkiaApi.sk_bitmap_erase (Handle, (uint)color);
 		}
 
 		public void Erase (SKColor color, SKRectI rect)
 		{
-			SkiaApi.sk_bitmap_erase_rect (Handle, color, &rect);
+			SkiaApi.sk_bitmap_erase_rect (Handle, (uint)color, &rect);
 		}
 
 		public byte GetAddr8(int x, int y) => SkiaApi.sk_bitmap_get_addr_8 (Handle, x, y);
@@ -162,7 +162,7 @@ namespace SkiaSharp
 
 		public void SetPixel (int x, int y, SKColor color)
 		{
-			SkiaApi.sk_bitmap_set_pixel_color (Handle, x, y, color);
+			SkiaApi.sk_bitmap_set_pixel_color (Handle, x, y, (uint)color);
 		}
 
 		public bool CanCopyTo (SKColorType colorType)
@@ -413,13 +413,13 @@ namespace SkiaSharp
 				var info = Info;
 				var pixels = new SKColor [info.Width * info.Height];
 				fixed (SKColor* p = pixels) {
-					SkiaApi.sk_bitmap_get_pixel_colors (Handle, p);
+					SkiaApi.sk_bitmap_get_pixel_colors (Handle, (uint*)p);
 				}
 				return pixels;
 			}
 			set {
 				fixed (SKColor* v = value) {
-					SkiaApi.sk_bitmap_set_pixel_colors (Handle, v);
+					SkiaApi.sk_bitmap_set_pixel_colors (Handle, (uint*)v);
 				}
 			}
 		}

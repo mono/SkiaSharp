@@ -20,7 +20,7 @@ namespace SkiaSharp
 
 		public static SKShader CreateColor (SKColor color)
 		{
-			return GetObject<SKShader> (SkiaApi.sk_shader_new_color (color));
+			return GetObject<SKShader> (SkiaApi.sk_shader_new_color ((uint)color));
 		}
 
 		public static SKShader CreateBitmap (SKBitmap src, SKShaderTileMode tmx, SKShaderTileMode tmy)
@@ -35,6 +35,20 @@ namespace SkiaSharp
 			if (src == null)
 				throw new ArgumentNullException (nameof (src));
 			return GetObject<SKShader> (SkiaApi.sk_shader_new_bitmap (src.Handle, tmx, tmy, &localMatrix));
+		}
+
+		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy)
+		{
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
+			return GetObject<SKShader> (SkiaApi.sk_shader_new_picture (src.Handle, tmx, tmy, null, null));
+		}
+
+		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKRect tile)
+		{
+			if (src == null)
+				throw new ArgumentNullException (nameof (src));
+			return GetObject<SKShader> (SkiaApi.sk_shader_new_picture (src.Handle, tmx, tmy, null, &tile));
 		}
 
 		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix, SKRect tile)
@@ -74,7 +88,7 @@ namespace SkiaSharp
 			fixed (SKPoint* p = points)
 			fixed (SKColor* c = colors)
 			fixed (float* cp = colorPos) {
-				return GetObject<SKShader> (SkiaApi.sk_shader_new_linear_gradient (p, c, cp, colors.Length, mode, null));
+				return GetObject<SKShader> (SkiaApi.sk_shader_new_linear_gradient (p, (uint*)c, cp, colors.Length, mode, null));
 			}
 		}
 
@@ -89,7 +103,7 @@ namespace SkiaSharp
 			fixed (SKPoint* p = points)
 			fixed (SKColor* c = colors)
 			fixed (float* cp = colorPos) {
-				return GetObject<SKShader> (SkiaApi.sk_shader_new_linear_gradient (p, c, cp, colors.Length, mode, &localMatrix));
+				return GetObject<SKShader> (SkiaApi.sk_shader_new_linear_gradient (p, (uint*)c, cp, colors.Length, mode, &localMatrix));
 			}
 		}
 
@@ -105,7 +119,7 @@ namespace SkiaSharp
 
 			fixed (SKColor* c = colors)
 			fixed (float* cp = colorPos) {
-				return GetObject<SKShader> (SkiaApi.sk_shader_new_radial_gradient (&center, radius, c, cp, colors.Length, mode, null));
+				return GetObject<SKShader> (SkiaApi.sk_shader_new_radial_gradient (&center, radius, (uint*)c, cp, colors.Length, mode, null));
 			}
 		}
 		
@@ -118,7 +132,7 @@ namespace SkiaSharp
 
 			fixed (SKColor* c = colors)
 			fixed (float* cp = colorPos) {
-				return GetObject<SKShader> (SkiaApi.sk_shader_new_radial_gradient (&center, radius, c, cp, colors.Length, mode, &localMatrix));
+				return GetObject<SKShader> (SkiaApi.sk_shader_new_radial_gradient (&center, radius, (uint*)c, cp, colors.Length, mode, &localMatrix));
 			}
 		}
 
@@ -147,7 +161,7 @@ namespace SkiaSharp
 
 			fixed (SKColor* c = colors)
 			fixed (float* cp = colorPos) {
-				return GetObject<SKShader> (SkiaApi.sk_shader_new_sweep_gradient (&center, c, cp, colors.Length, tileMode, startAngle, endAngle, null));
+				return GetObject<SKShader> (SkiaApi.sk_shader_new_sweep_gradient (&center, (uint*)c, cp, colors.Length, tileMode, startAngle, endAngle, null));
 			}
 		}
 		
@@ -160,7 +174,7 @@ namespace SkiaSharp
 
 			fixed (SKColor* c = colors)
 			fixed (float* cp = colorPos) {
-				return GetObject<SKShader> (SkiaApi.sk_shader_new_sweep_gradient (&center, c, cp, colors.Length, tileMode, startAngle, endAngle, &localMatrix));
+				return GetObject<SKShader> (SkiaApi.sk_shader_new_sweep_gradient (&center, (uint*)c, cp, colors.Length, tileMode, startAngle, endAngle, &localMatrix));
 			}
 		}
 
@@ -176,7 +190,7 @@ namespace SkiaSharp
 
 			fixed (SKColor* c = colors)
 			fixed (float* cp = colorPos) {
-				return GetObject<SKShader> (SkiaApi.sk_shader_new_two_point_conical_gradient (&start, startRadius, &end, endRadius, c, cp, colors.Length, mode, null));
+				return GetObject<SKShader> (SkiaApi.sk_shader_new_two_point_conical_gradient (&start, startRadius, &end, endRadius, (uint*)c, cp, colors.Length, mode, null));
 			}
 		}
 		
@@ -189,13 +203,18 @@ namespace SkiaSharp
 
 			fixed (SKColor* c = colors)
 			fixed (float* cp = colorPos) {
-				return GetObject<SKShader> (SkiaApi.sk_shader_new_two_point_conical_gradient (&start, startRadius, &end, endRadius, c, cp, colors.Length, mode, &localMatrix));
+				return GetObject<SKShader> (SkiaApi.sk_shader_new_two_point_conical_gradient (&start, startRadius, &end, endRadius, (uint*)c, cp, colors.Length, mode, &localMatrix));
 			}
 		}
 		
 		public static SKShader CreatePerlinNoiseFractalNoise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed)
 		{
 			return GetObject<SKShader>(SkiaApi.sk_shader_new_perlin_noise_fractal_noise(baseFrequencyX, baseFrequencyY, numOctaves, seed, null));
+		}
+		
+		public static SKShader CreatePerlinNoiseImprovedNoise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float z)
+		{
+			return GetObject<SKShader>(SkiaApi.sk_shader_new_perlin_noise_improved_noise(baseFrequencyX, baseFrequencyY, numOctaves, z));
 		}
 
 		public static SKShader CreatePerlinNoiseFractalNoise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, SKPointI tileSize)

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace SkiaSharp.Tests
 {
-	internal class User32
+	public class User32
 	{
 		private const string user32 = "user32.dll";
 

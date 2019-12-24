@@ -38,6 +38,24 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void TestIsNotFixedPitch()
+		{
+			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf")))
+			{
+				Assert.False(typeface.IsFixedPitch);
+			}
+		}
+
+		[SkippableFact]
+		public void TestIsFixedPitch()
+		{
+			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "CourierNew.ttf")))
+			{
+				Assert.True(typeface.IsFixedPitch);
+			}
+		}
+
+		[SkippableFact]
 		public void CanReadNonASCIIFile()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "上田雅美.ttf")))

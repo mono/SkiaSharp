@@ -1,14 +1,9 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\source\SkiaSharp.Build.props" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
     <DefineConstants>$(DefineConstants);NET_STANDARD</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DebugType>portable</DebugType>
     <RootNamespace>SkiaSharp.Tests</RootNamespace>
     <AssemblyName>SkiaSharp.Tests</AssemblyName>
-    <PackageId>SkiaSharp.NetCore.Tests</PackageId>
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
     <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
     <SkipCopyToOutputDirectory>true</SkipCopyToOutputDirectory>
@@ -21,8 +16,8 @@
     <PackageReference Include="xunit.skippablefact" Version="1.3.12" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\binding\HarfBuzzSharp.NetStandard\HarfBuzzSharp.NetStandard.csproj" />
-    <ProjectReference Include="..\..\binding\SkiaSharp.NetStandard\SkiaSharp.NetStandard.csproj" />
+    <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
+    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
   </ItemGroup>
   <ItemGroup>
@@ -36,12 +31,21 @@
     <Content Include="..\Content\**\*" Link="%(RecursiveDir)%(FileName)%(Extension)" CopyToOutputDirectory="Always" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\..\output\native\windows\x64\libSkiaSharp.dll" CopyToOutputDirectory="Always" Condition=" '$(IsWindows)' == 'true' " />
-    <Content Include="..\..\output\native\windows\x64\libHarfBuzzSharp.dll" CopyToOutputDirectory="Always" Condition=" '$(IsWindows)' == 'true' " />
-    <Content Include="..\..\output\native\osx\libSkiaSharp.dylib" CopyToOutputDirectory="Always" Condition=" '$(IsMacOS)' == 'true' " />
-    <Content Include="..\..\output\native\osx\libHarfBuzzSharp.dylib" CopyToOutputDirectory="Always" Condition=" '$(IsMacOS)' == 'true' " />
-    <Content Include="..\..\output\native\linux\x64\libSkiaSharp.so" CopyToOutputDirectory="Always" Condition=" '$(IsLinux)' == 'true' " />
-    <Content Include="..\..\output\native\linux\x64\libHarfBuzzSharp.so" CopyToOutputDirectory="Always" Condition=" '$(IsLinux)' == 'true' " />
+    <Content Include="..\..\output\native\windows\x64\libSkiaSharp.dll" CopyToOutputDirectory="Always"
+             Condition=" Exists('..\..\output\native\windows\x64\libSkiaSharp.dll') or '$(IsWindows)' == 'true' " />
+    <Content Include="..\..\output\native\windows\x64\libSkiaSharp.pdb" CopyToOutputDirectory="Always"
+             Condition=" Exists('..\..\output\native\windows\x64\libSkiaSharp.pdb') or '$(IsWindows)' == 'true' " />
+    <Content Include="..\..\output\native\windows\x64\libHarfBuzzSharp.dll" CopyToOutputDirectory="Always"
+             Condition=" Exists('..\..\output\native\windows\x64\libHarfBuzzSharp.dll') or '$(IsWindows)' == 'true' " />
+    <Content Include="..\..\output\native\windows\x64\libHarfBuzzSharp.pdb" CopyToOutputDirectory="Always"
+             Condition=" Exists('..\..\output\native\windows\x64\libHarfBuzzSharp.pdb') or '$(IsWindows)' == 'true' " />
+    <Content Include="..\..\output\native\osx\libSkiaSharp.dylib" CopyToOutputDirectory="Always"
+             Condition=" Exists('..\..\output\native\osx\libSkiaSharp.dylib') or '$(IsMacOS)' == 'true' " />
+    <Content Include="..\..\output\native\osx\libHarfBuzzSharp.dylib" CopyToOutputDirectory="Always"
+             Condition=" Exists('..\..\output\native\osx\libHarfBuzzSharp.dylib') or '$(IsMacOS)' == 'true' " />
+    <Content Include="..\..\output\native\linux\x64\libSkiaSharp.so" CopyToOutputDirectory="Always"
+             Condition=" Exists('..\..\output\native\linux\x64\libSkiaSharp.so') or '$(IsLinux)' == 'true' " />
+    <Content Include="..\..\output\native\linux\x64\libHarfBuzzSharp.so" CopyToOutputDirectory="Always"
+             Condition=" Exists('..\..\output\native\linux\x64\libHarfBuzzSharp.so') or '$(IsLinux)' == 'true' " />
   </ItemGroup>
-  <Import Project="..\..\source\SkiaSharp.Build.targets" />
 </Project>

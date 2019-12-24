@@ -1,17 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\SkiaSharp.Build.props" />
+﻿<Project Sdk="MSBuild.Sdk.Extras/2.0.54">
   <PropertyGroup>
     <TargetFramework>xamarintvos1.0</TargetFramework>
-    <OutputTypeEx>library</OutputTypeEx>
     <RootNamespace>SkiaSharp.Views.tvOS</RootNamespace>
     <AssemblyName>SkiaSharp.Views.tvOS</AssemblyName>
     <PackagingGroup>SkiaSharp.Views</PackagingGroup>
-    <PackagingPlatform>Xamarin.TVOS</PackagingPlatform>
-    <DefineConstants>$(DefineConstants);</DefineConstants>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="MSBuild.Sdk.Extras" Version="1.6.65" PrivateAssets="All" />
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp.tvOS\SkiaSharp.tvOS.csproj" />
   </ItemGroup>
@@ -20,6 +13,4 @@
     <Compile Include="..\SkiaSharp.Views.Apple\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
-  <Import Project="..\..\SkiaSharp.Build.targets" />
-  <Import Project="$(MSBuildSdkExtrasTargets)" Condition="Exists('$(MSBuildSdkExtrasTargets)')" />
 </Project>

@@ -71,7 +71,7 @@ namespace SkiaSharpSample
 			var apiAssembly = typeof(T).Assembly;
 			var attributes = apiAssembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute));
 			var attribute = (AssemblyInformationalVersionAttribute)attributes.FirstOrDefault();
-			return attribute.InformationalVersion;
+			return attribute?.InformationalVersion ?? "<unavailable>";
 		}
 	}
 }

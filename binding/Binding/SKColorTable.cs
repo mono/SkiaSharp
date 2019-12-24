@@ -50,7 +50,7 @@ namespace SkiaSharp
 		private static IntPtr CreateNew (SKPMColor[] colors, int count)
 		{
 			fixed (SKPMColor* c = colors) {
-				return SkiaApi.sk_colortable_new (c, count);
+				return SkiaApi.sk_colortable_new ((uint*)c, count);
 			}
 		}
 
@@ -95,7 +95,7 @@ namespace SkiaSharp
 
 		public IntPtr ReadColors ()
 		{
-			SKPMColor* colors;
+			uint* colors;
 			SkiaApi.sk_colortable_read_colors (Handle, &colors);
 			return (IntPtr)colors;
 		}

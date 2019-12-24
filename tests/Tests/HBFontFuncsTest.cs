@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using Xunit;
 
 namespace HarfBuzzSharp.Tests
@@ -117,6 +118,35 @@ namespace HarfBuzzSharp.Tests
 		[SkippableFact]
 		public void ShouldSetGlyphNameDelegate()
 		{
+			using (var font = new Font(Font))
+			using (var fontFuncs = new FontFunctions())
+			{
+				fontFuncs.SetGlyphNameDelegate((Font f, object fd, uint g, out string n) =>
+				{
+					n = ((char)g).ToString();
+					return true;
+				});
+
+				fontFuncs.MakeImmutable();
+
+				font.SetFontFunctions(fontFuncs, "FontData");
+
+				var result = font.TryGetGlyphName('H', out var name);
+
+				Assert.True(result);
+				Assert.Equal("H", name);
+			}
+		}
+
+		[SkippableFact]
+		public void TryGetGlyphNameIsCorrectWithDelegate()
+		{
+			// get an array and fill it with things
+			var buffer = ArrayPool<byte>.Shared.Rent(Font.NameBufferLength);
+			for (int i = 0; i < buffer.Length; i++)
+				buffer[i] = (byte)i;
+			ArrayPool<byte>.Shared.Return(buffer);
+
 			using (var font = new Font(Font))
 			using (var fontFuncs = new FontFunctions())
 			{
