@@ -13,17 +13,26 @@ Task("libSkiaSharp")
     Build("Win32", "x86", "x86");
     Build("x64", "x64", "x64");
     Build("ARM", "arm", "ARM");
-    // Build("ARM64", "arm64", "ARM64");
+    Build("ARM64", "arm64", "ARM64");
 
     void Build(string arch, string skiaArch, string dir)
     {
         if (Skip(arch)) return;
 
         GnNinja($"uwp/{arch}", "SkiaSharp",
-            $"is_official_build=true skia_enable_tools=false " +
-            $"target_os='winrt' target_cpu='{skiaArch}' " +
-            $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true " +
-            $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
+            $"target_os='winrt' " +
+            $"target_cpu='{skiaArch}' " +
+            $"is_official_build=true " +
+            $"skia_enable_fontmgr_win_gdi=false " +
+            $"skia_enable_tools=false " +
+            $"skia_use_icu=false " +
+            $"skia_use_piex=true " +
+            $"skia_use_sfntly=false " +
+            $"skia_use_system_expat=false " +
+            $"skia_use_system_libjpeg_turbo=false " +
+            $"skia_use_system_libpng=false " +
+            $"skia_use_system_libwebp=false " +
+            $"skia_use_system_zlib=false " +
             $"extra_cflags=[  " +
             $"  '-DSKIA_C_DLL', '/MD', '/EHsc', '/Z7', " +
             $"  '-DWINAPI_FAMILY=WINAPI_FAMILY_APP', '-DSK_BUILD_FOR_WINRT', '-DSK_HAS_DWRITE_1_H', '-DSK_HAS_DWRITE_2_H', '-DNO_GETENV' ] " +
@@ -65,7 +74,7 @@ Task("SkiaSharp.Views.Interop.UWP")
     Build("Win32", "x86");
     Build("x64", "x64");
     Build("ARM", "arm");
-    // Build("ARM64", "arm64");
+    Build("ARM64", "arm64");
 
     void Build(string arch, string dir)
     {

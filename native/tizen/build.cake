@@ -20,12 +20,14 @@ Task("libSkiaSharp")
         if (Skip(arch)) return;
 
         GnNinja($"tizen/{arch}", "skia",
-            $"is_official_build=true skia_enable_tools=false " +
-            $"target_os='tizen' target_cpu='{skiaArch}' " +
+            $"target_os='tizen' " +
+            $"target_cpu='{skiaArch}' " +
+            $"is_official_build=true " +
             $"skia_enable_gpu=true " +
+            $"skia_enable_tools=false " +
             $"skia_use_icu=false " +
-            $"skia_use_sfntly=false " +
             $"skia_use_piex=true " +
+            $"skia_use_sfntly=false " +
             $"skia_use_system_expat=false " +
             $"skia_use_system_freetype2=true " +
             $"skia_use_system_libjpeg_turbo=false " +

@@ -23,11 +23,21 @@ Task("libSkiaSharp")
         var clang = string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "" : $"clang_win='{LLVM_HOME}' ";
 
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
-            $"is_official_build=true skia_enable_tools=false " +
-            $"target_os='win' target_cpu='{skiaArch}' " +
+            $"target_os='win'" +
+            $"target_cpu='{skiaArch}' " +
+            $"is_official_build=true " +
+            $"skia_enable_fontmgr_win_gdi=false " +
+            $"skia_enable_tools=false " +
+            $"skia_use_dng_sdk=true " +
+            $"skia_use_icu=false" +
+            $"skia_use_piex=true" +
+            $"skia_use_sfntly=false" +
+            $"skia_use_system_expat=false" +
+            $"skia_use_system_libjpeg_turbo=false" +
+            $"skia_use_system_libpng=false" +
+            $"skia_use_system_libwebp=false" +
+            $"skia_use_system_zlib=false " +
             clang +
-            $"skia_use_icu=false skia_use_sfntly=false skia_use_piex=true skia_use_dng_sdk=true " +
-            $"skia_use_system_expat=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '/MT', '/EHsc', '/Z7' ] " +
             $"extra_ldflags=[ '/DEBUG:FULL' ] " +
             ADDITIONAL_GN_ARGS);
