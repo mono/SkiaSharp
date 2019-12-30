@@ -31,6 +31,10 @@ using System.Windows;
 using Xamarin.Forms.Platform.WPF;
 using SKNativeView = SkiaSharp.Views.Forms.SKHostedGLControl;
 using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.Desktop.SKPaintGLSurfaceEventArgs;
+#elif __GTK__
+using Xamarin.Forms.Platform.GTK;
+using SKNativeView = SkiaSharp.Views.Forms.SKGLWidget;
+using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.Desktop.SKPaintGLSurfaceEventArgs;
 #endif
 
 namespace SkiaSharp.Views.Forms
@@ -196,6 +200,8 @@ namespace SkiaSharp.Views.Forms
 			y = y * Control.ContentsScale;
 #elif __WPF__
 			// WPF does not scale for GL as it is using Windows.Forms
+#elif __GTK__
+			// GTK does not yet support IgnorePixelScaling
 #else
 #error Missing platform logic
 #endif
