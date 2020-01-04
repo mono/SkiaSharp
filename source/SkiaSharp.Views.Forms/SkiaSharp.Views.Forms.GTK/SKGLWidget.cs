@@ -58,8 +58,9 @@ namespace SkiaSharp.Views.Forms
 
 			// manage the drawing surface
 			var alloc = Allocation;
-			var w = Math.Max(0, alloc.Width);
-			var h = Math.Max(0, alloc.Height);
+			var res = (int)Math.Max(1.0, Screen.Resolution / 96.0);
+			var w = Math.Max(0, alloc.Width * res);
+			var h = Math.Max(0, alloc.Height * res);
 			if (renderTarget == null || surface == null || renderTarget.Width != w || renderTarget.Height != h)
 			{
 				// create or update the dimensions

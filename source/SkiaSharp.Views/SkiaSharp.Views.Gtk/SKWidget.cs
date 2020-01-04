@@ -22,7 +22,6 @@ namespace SkiaSharp.Views.Gtk
 		protected override bool OnExposeEvent(Gdk.EventExpose evnt)
 		{
 			var window = evnt.Window;
-			var area = evnt.Area;
 
 			// get the pixbuf
 			var imgInfo = CreateDrawingObjects();
@@ -49,7 +48,7 @@ namespace SkiaSharp.Views.Gtk
 
 			// write the pixbuf to the graphics
 			window.Clear();
-			window.DrawPixbuf(null, pix, 0, 0, 0, 0, -1, -1, Gdk.RgbDither.None, 0, 0);
+			window.DrawPixbuf(null, pix, 0, 0, 0, 0, imgInfo.Width, imgInfo.Height, Gdk.RgbDither.None, 0, 0);
 
 			return true;
 		}
@@ -92,7 +91,10 @@ namespace SkiaSharp.Views.Gtk
 		private SKImageInfo CreateDrawingObjects()
 		{
 			var alloc = Allocation;
-			var imgInfo = new SKImageInfo(alloc.Width, alloc.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
+			var res = 1; //(int)Math.Max(1.0, Screen.Resolution / 96.0);
+			var w = alloc.Width * res;
+			var h = alloc.Height * res;
+			var imgInfo = new SKImageInfo(w, h, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
 
 			if (pix == null || pix.Width != imgInfo.Width || pix.Height != imgInfo.Height)
 			{

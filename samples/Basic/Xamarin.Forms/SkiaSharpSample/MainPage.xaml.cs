@@ -1,9 +1,7 @@
-﻿using Xamarin.Forms;
-
+﻿using System;
 using SkiaSharp;
 using SkiaSharp.Views.Forms;
-using System;
-using OpenTK.Graphics.OpenGL;
+using Xamarin.Forms;
 
 namespace SkiaSharpSample
 {
@@ -15,9 +13,6 @@ namespace SkiaSharpSample
 		public MainPage()
 		{
 			InitializeComponent();
-
-		//	glView.OnDisplay = OnDisplay;
-		//	glView.HasRenderLoop = true;
 		}
 
 		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
@@ -60,67 +55,10 @@ namespace SkiaSharpSample
 			Console.WriteLine(e);
 
 			skiaView.InvalidateSurface();
-			//skiaGLView.InvalidateSurface();
+			skiaGLView.InvalidateSurface();
 
 			//e.Handled = true;
 		}
-
-
-		//private const SKColorType colorType = SKColorType.Rgba8888;
-		//private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
-
-		//private bool designMode;
-
-		//private GRContext grContext;
-		//private GRBackendRenderTarget renderTarget;
-		//private SKSurface surface;
-
-
-		//private void OnDisplay(Rectangle rect)
-		//{
-		//	//GL.ClearColor(1, 0, 0, 1);
-		//	//GL.Clear(ClearBufferMask.ColorBufferBit);
-
-		//	// create the contexts if not done already
-		//	if (grContext == null)
-		//	{
-		//		var glInterface = GRGlInterface.CreateNativeGlInterface();
-		//		grContext = GRContext.CreateGl(glInterface);
-		//	}
-
-		//	// manage the drawing surface
-		//	if (renderTarget == null || surface == null || renderTarget.Width != (int)glView.Width || renderTarget.Height != (int)glView.Height)
-		//	{
-		//		// create or update the dimensions
-		//		renderTarget?.Dispose();
-		//		GL.GetInteger(GetPName.FramebufferBinding, out var framebuffer);
-		//		GL.GetInteger(GetPName.StencilBits, out var stencil);
-		//		GL.GetInteger(GetPName.Samples, out var samples);
-		//		//var framebuffer = 1;
-		//		//var stencil = 0;
-		//		//var samples = 0;
-		//		var maxSamples = grContext.GetMaxSurfaceSampleCount(colorType);
-		//		if (samples > maxSamples)
-		//			samples = maxSamples;
-		//		var glInfo = new GRGlFramebufferInfo((uint)framebuffer, colorType.ToGlSizedFormat());
-		//		renderTarget = new GRBackendRenderTarget((int)glView.Width, (int)glView.Height, samples, stencil, glInfo);
-
-		//		// create the surface
-		//		surface?.Dispose();
-		//		surface = SKSurface.Create(grContext, renderTarget, surfaceOrigin, colorType);
-		//	}
-
-		//	using (new SKAutoCanvasRestore(surface.Canvas, true))
-		//	{
-		//		surface.Canvas.Clear(SKColors.Red);
-
-		//		// start drawing
-		//		//OnPaintSurface(new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType));
-		//	}
-
-		//	// update the control
-		//	surface.Canvas.Flush();
-		//}
 
 		private void OnPaintGLSurface(object sender, SKPaintGLSurfaceEventArgs e)
 		{
@@ -129,7 +67,6 @@ namespace SkiaSharpSample
 
 			// get the screen density for scaling
 			var scale = (float)(e.BackendRenderTarget.Width / skiaGLView.Width);
-			scale = 1;
 
 			// handle the device screen density
 			canvas.Scale(scale);
@@ -149,14 +86,22 @@ namespace SkiaSharpSample
 			var coord = new SKPoint((float)skiaGLView.Width / 2, ((float)skiaGLView.Height + paint.TextSize) / 2);
 			canvas.DrawText($"SkiaSharp {Pos} ({Down})", coord, paint);
 
+			var x = 0;
+			var y = 0;
 			var w = e.BackendRenderTarget.Width;
 			var h = e.BackendRenderTarget.Height;
-			var p = new SKPaint {
+			var p = new SKPaint
+			{
 				Color = SKColors.Green,
-				Style = SKPaintStyle.Fill,
-				Shader = SKShader.CreateLinearGradient(SKPoint.Empty, new SKPoint(0, w), new[] { SKColors.Blue, SKColors.Green }, SKShaderTileMode.Repeat)
+				Style = SKPaintStyle.Stroke,
+				StrokeWidth = 6,
+				//Shader = SKShader.CreateLinearGradient(
+				//	new SKPoint(0, 0),
+				//	new SKPoint(w, 0),
+				//	new[] { SKColors.Blue, SKColors.Green },
+				//	SKShaderTileMode.Repeat)
 			};
-			canvas.DrawRect(0, 0, w, h, p);
+			canvas.DrawRect(x, y, w, h, p);
 		}
 	}
 }
