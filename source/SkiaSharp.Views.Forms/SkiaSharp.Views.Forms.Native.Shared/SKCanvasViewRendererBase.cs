@@ -200,6 +200,7 @@ namespace SkiaSharp.Views.Forms
 #elif __IOS__ || __MACOS__ || WINDOWS_UWP || __WPF__
 				// Tizen and Android are the reverse of the other platforms
 #elif __GTK__
+				// TODO: implement this if it is actually supported
 				// GTK does not yet support IgnorePixelScaling
 #else
 #error Missing platform logic
@@ -210,6 +211,7 @@ namespace SkiaSharp.Views.Forms
 #if __ANDROID__ || __TIZEN__
 				// Tizen and Android are the reverse of the other platforms
 #elif __GTK__
+				// TODO: implement this if it is actually supported
 				// GTK does not yet support IgnorePixelScaling
 #elif __IOS__
 				x = x * Control.ContentScaleFactor;
