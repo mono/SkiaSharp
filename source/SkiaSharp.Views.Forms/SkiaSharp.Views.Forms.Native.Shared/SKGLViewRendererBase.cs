@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !__GTK__
+using System;
 using System.ComponentModel;
 using Xamarin.Forms;
 
@@ -241,3 +242,4 @@ namespace SkiaSharp.Views.Forms
 		}
 	}
 }
+#endif

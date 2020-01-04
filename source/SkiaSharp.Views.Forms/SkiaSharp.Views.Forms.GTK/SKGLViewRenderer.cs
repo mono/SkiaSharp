@@ -1,4 +1,16 @@
-﻿using Xamarin.Forms;
+﻿namespace SkiaSharp.Views.Forms
+{
+	public class SKGLViewRenderer
+	{
+		public SKGLViewRenderer()
+		{
+			throw new System.PlatformNotSupportedException("SKGLView is not yet supported on GTK.");
+		}
+	}
+}
+
+/*
+using Xamarin.Forms;
 
 using SKFormsView = SkiaSharp.Views.Forms.SKGLView;
 using SKNativeView = SkiaSharp.Views.Forms.SKGLWidget;
@@ -62,3 +74,4 @@ namespace SkiaSharp.Views.Forms
 		}
 	}
 }
+*/
