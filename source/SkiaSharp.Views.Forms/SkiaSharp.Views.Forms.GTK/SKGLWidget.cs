@@ -57,7 +57,10 @@ namespace SkiaSharp.Views.Forms
 			}
 
 			// manage the drawing surface
-			if (renderTarget == null || surface == null || renderTarget.Width != WidthRequest || renderTarget.Height != HeightRequest)
+			var alloc = Allocation;
+			var w = Math.Max(0, alloc.Width);
+			var h = Math.Max(0, alloc.Height);
+			if (renderTarget == null || surface == null || renderTarget.Width != w || renderTarget.Height != h)
 			{
 				// create or update the dimensions
 				renderTarget?.Dispose();
@@ -68,7 +71,7 @@ namespace SkiaSharp.Views.Forms
 				if (samples > maxSamples)
 					samples = maxSamples;
 				var glInfo = new GRGlFramebufferInfo((uint)framebuffer, colorType.ToGlSizedFormat());
-				renderTarget = new GRBackendRenderTarget(WidthRequest, HeightRequest, samples, stencil, glInfo);
+				renderTarget = new GRBackendRenderTarget(w, h, samples, stencil, glInfo);
 
 				// create the surface
 				surface?.Dispose();
