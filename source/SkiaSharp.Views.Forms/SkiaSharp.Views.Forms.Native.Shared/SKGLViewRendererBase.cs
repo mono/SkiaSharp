@@ -200,8 +200,10 @@ namespace SkiaSharp.Views.Forms
 			x = x * Control.ContentsScale;
 			y = y * Control.ContentsScale;
 #elif __WPF__
+			// TODO: implement this if it is actually supported
 			// WPF does not scale for GL as it is using Windows.Forms
 #elif __GTK__
+			// TODO: implement this if it is actually supported
 			// GTK does not yet support IgnorePixelScaling
 #else
 #error Missing platform logic

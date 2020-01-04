@@ -101,6 +101,7 @@ namespace SkiaSharp.Views.Forms
 				// set the initial values
 				touchHandler.SetEnabled(Control, e.NewElement.EnableTouchEvents);
 #if !__GTK__
+				// TODO: implement this if it is actually supported
 				Control.IgnorePixelScaling = e.NewElement.IgnorePixelScaling;
 #endif
 
@@ -145,6 +146,7 @@ namespace SkiaSharp.Views.Forms
 			if (e.PropertyName == SKFormsView.IgnorePixelScalingProperty.PropertyName)
 			{
 #if !__GTK__
+				// TODO: implement this if it is actually supported
 				Control.IgnorePixelScaling = Element.IgnorePixelScaling;
 #endif
 			}
