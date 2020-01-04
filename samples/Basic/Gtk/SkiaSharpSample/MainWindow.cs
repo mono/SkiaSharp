@@ -1,7 +1,7 @@
-﻿using System;
-using Gtk;
+﻿using Gtk;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
+using SkiaSharp.Views.Gtk;
 
 public partial class MainWindow : Gtk.Window
 {
@@ -9,6 +9,28 @@ public partial class MainWindow : Gtk.Window
 		: base(Gtk.WindowType.Toplevel)
 	{
 		Build();
+		this.Remove(skiaView);
+
+		var surf = SKSurface.Create(new SKImageInfo(200, 200));
+		var cnv = surf.Canvas;
+		cnv.Clear(SKColors.Azure);
+		cnv.DrawText("Text", 50, 25, new SKPaint { Typeface = SKTypeface.FromFamilyName("Arial"), TextSize = 30, IsAntialias = true, Color = SKColors.OliveDrab });
+		cnv.DrawText("Text", 50, 60, new SKPaint { Typeface = SKTypeface.FromFamilyName("Arial"), TextSize = 30, IsAntialias = true, Color = SKColors.BlueViolet });
+
+		var i = surf.Snapshot();
+
+		var pix = i.ToPixbuf().ToSKImage().ToPixbuf();
+
+		var img = new Image();
+		img.WidthRequest = 200;
+		img.HeightRequest = 200;
+		img.SetAlignment(0f, 0f);
+
+		img.Pixbuf = pix;
+
+		this.Add(img);
+
+		this.Child.ShowAll();
 
 		skiaView.PaintSurface += OnPaintSurface;
 	}

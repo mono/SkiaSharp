@@ -10,6 +10,8 @@ namespace SkiaSharpSample.GTK
 		[STAThread]
 		public static void Main(string[] args)
 		{
+			GtkOpenGL.Init();
+
 			Gtk.Application.Init();
 			Forms.Init();
 

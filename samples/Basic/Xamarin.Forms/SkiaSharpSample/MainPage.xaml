@@ -4,7 +4,20 @@
              xmlns:local="clr-namespace:SkiaSharpSample"
              xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
              x:Class="SkiaSharpSample.MainPage">
+    <StackLayout Padding="40">
 
-    <skia:SKCanvasView x:Name="skiaView" PaintSurface="OnPaintSurface" />
+        <skia:SKCanvasView x:Name="skiaView" PaintSurface="OnPaintSurface"
+                           Touch="OnTouched" EnableTouchEvents="True"
+                           VerticalOptions="FillAndExpand" HorizontalOptions="Fill" />
 
+        <!--<OpenGLView x:Name="glView"
+                    VerticalOptions="FillAndExpand" HorizontalOptions="Fill" />-->
+        
+        <skia:SKGLView x:Name="skiaGLView" PaintSurface="OnPaintGLSurface"
+                       Touch="OnTouched" EnableTouchEvents="True"
+                       VerticalOptions="FillAndExpand" HorizontalOptions="Fill" />
+
+        <Button Text="Click!" WidthRequest="100" HeightRequest="33" Clicked="OnCLick" />
+
+    </StackLayout>
 </ContentPage>
