@@ -5,6 +5,8 @@ namespace SkiaSharp
 {
 	public unsafe partial struct SKMatrix
 	{
+		internal const float DegreesToRadians = (float)System.Math.PI / 180.0f;
+
 		private class Indices {
 			public const int ScaleX = 0;
 			public const int SkewX = 1;
@@ -122,7 +124,7 @@ namespace SkiaSharp
 #if OPTIMIZED_SKMATRIX
 					, typeMask = Mask.Identity | Mask.RectStaysRect
 #endif
-                        };
+			};
 		}
 
 		public void SetScaleTranslate (float sx, float sy, float tx, float ty)
@@ -219,19 +221,17 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 			return matrix;
 		}
 
-		const float degToRad = (float)System.Math.PI / 180.0f;
-		
 		public static SKMatrix MakeRotationDegrees (float degrees)
 		{
-			return MakeRotation (degrees * degToRad);
+			return MakeRotation (degrees * DegreesToRadians);
 		}
 
 		public static SKMatrix MakeRotationDegrees (float degrees, float pivotx, float pivoty)
 		{
-			return MakeRotation (degrees * degToRad, pivotx, pivoty);
+			return MakeRotation (degrees * DegreesToRadians, pivotx, pivoty);
 		}
 
-		static void SetSinCos (ref SKMatrix matrix, float sin, float cos)
+		private static void SetSinCos (ref SKMatrix matrix, float sin, float cos)
 		{
 			matrix.scaleX = cos;
 			matrix.skewX = -sin;
@@ -247,7 +247,7 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 #endif
 		}
 
-		static void SetSinCos (ref SKMatrix matrix, float sin, float cos, float pivotx, float pivoty)
+		private static void SetSinCos (ref SKMatrix matrix, float sin, float cos, float pivotx, float pivoty)
 		{
 			float oneMinusCos = 1-cos;
 			
@@ -274,8 +274,8 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 
 		public static void RotateDegrees (ref SKMatrix matrix, float degrees, float pivotx, float pivoty)
 		{
-			var sin = (float) Math.Sin (degrees * degToRad);
-			var cos = (float) Math.Cos (degrees * degToRad);
+			var sin = (float) Math.Sin (degrees * DegreesToRadians);
+			var cos = (float) Math.Cos (degrees * DegreesToRadians);
 			SetSinCos (ref matrix, sin, cos, pivotx, pivoty);
 		}
 
@@ -288,8 +288,8 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 
 		public static void RotateDegrees (ref SKMatrix matrix, float degrees)
 		{
-			var sin = (float) Math.Sin (degrees * degToRad);
-			var cos = (float) Math.Cos (degrees * degToRad);
+			var sin = (float) Math.Sin (degrees * DegreesToRadians);
+			var cos = (float) Math.Cos (degrees * DegreesToRadians);
 			SetSinCos (ref matrix, sin, cos);
 		}
 
@@ -1005,5 +1005,49 @@ typeMask = Mask.Scale | Mask.RectStaysRect
 		{
 			return SkiaApi.sk_matrix44_determinant (Handle);
 		}
+	}
+
+	public unsafe partial struct SKRotationScaleMatrix
+	{
+		public static readonly SKRotationScaleMatrix Empty;
+
+		public SKRotationScaleMatrix (float scos, float ssin, float tx, float ty)
+		{
+			fSCos = scos;
+			fSSin = ssin;
+			fTX = tx;
+			fTY = ty;
+		}
+
+		public SKMatrix ToMatrix () =>
+			new SKMatrix (fSCos, -fSSin, fTX, fSSin, fSCos, fTY, 0, 0, 1);
+
+		public static SKRotationScaleMatrix FromDegrees (float scale, float degrees, float tx, float ty, float anchorX, float anchorY) =>
+			FromRadians (scale, degrees * SKMatrix.DegreesToRadians, tx, ty, anchorX, anchorY);
+
+		public static SKRotationScaleMatrix FromRadians (float scale, float radians, float tx, float ty, float anchorX, float anchorY)
+		{
+			var s = (float)Math.Sin (radians) * scale;
+			var c = (float)Math.Cos (radians) * scale;
+			var x = tx + -c * anchorX + s * anchorY;
+			var y = ty + -s * anchorX - c * anchorY;
+
+			return new SKRotationScaleMatrix (c, s, x, y);
+		}
+
+		public static SKRotationScaleMatrix CreateIdentity () =>
+			new SKRotationScaleMatrix (1, 0, 0, 0);
+
+		public static SKRotationScaleMatrix CreateTranslate (float x, float y) =>
+			new SKRotationScaleMatrix (1, 0, x, y);
+
+		public static SKRotationScaleMatrix CreateScale (float s) =>
+			new SKRotationScaleMatrix (s, 0, 0, 0);
+
+		public static SKRotationScaleMatrix CreateRotation (float radians, float anchorX, float anchorY) =>
+			FromRadians (1, radians, 0, 0, anchorX, anchorY);
+
+		public static SKRotationScaleMatrix CreateRotationDegrees (float degrees, float anchorX, float anchorY) =>
+			FromDegrees (1, degrees, 0, 0, anchorX, anchorY);
 	}
 }
