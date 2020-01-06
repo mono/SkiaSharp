@@ -421,7 +421,7 @@ namespace SkiaSharp.Tests
 
 				var rect = svg.Element(ns + "rect");
 				Assert.Equal(ns + "rect", rect.Name);
-				Assert.Equal("rgb(255, 0, 0)", rect.Attribute("fill")?.Value);
+				Assert.Equal("rgb(255,0,0)", rect.Attribute("fill")?.Value);
 				Assert.Equal("none", rect.Attribute("stroke")?.Value);
 				Assert.Equal("10", rect.Attribute("x")?.Value);
 				Assert.Equal("10", rect.Attribute("y")?.Value);
