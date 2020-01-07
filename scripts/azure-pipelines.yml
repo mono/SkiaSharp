@@ -280,6 +280,7 @@ stages:
           displayName: Build Managed (Linux)
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
+          retryCount: 2
           target: libs
           additionalArgs: --exclusive
           requiredArtifacts:
@@ -296,7 +297,6 @@ stages:
           name: package_windows
           displayName: Package NuGets
           vmImage: $(VM_IMAGE_WINDOWS)
-          retryCount: 2
           target: nuget
           additionalArgs: --packall=true --exclusive
           shouldPublish: false
