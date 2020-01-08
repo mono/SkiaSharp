@@ -245,11 +245,11 @@ namespace SkiaSharp.Views.Forms
 					else
 					{
 						if (mouseEvent.LeftButton == MouseButtonState.Pressed)
-							mouse |= SKMouseButton.Left;
-						if (mouseEvent.RightButton == MouseButtonState.Pressed)
-							mouse |= SKMouseButton.Right;
-						if (mouseEvent.MiddleButton == MouseButtonState.Pressed)
-							mouse |= SKMouseButton.Middle;
+							mouse = SKMouseButton.Left;
+						else if (mouseEvent.RightButton == MouseButtonState.Pressed)
+							mouse = SKMouseButton.Right;
+						else if (mouseEvent.MiddleButton == MouseButtonState.Pressed)
+							mouse = SKMouseButton.Middle;
 					}
 					break;
 
