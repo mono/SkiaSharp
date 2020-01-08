@@ -905,7 +905,7 @@ namespace SkiaSharp
 		public void DrawPatch (SKPoint[] cubics, SKColor[] colors, SKPoint[] texCoords, SKPaint paint)
 			=> DrawPatch (cubics, colors, texCoords, SKBlendMode.Modulate, paint);
 
-		public void DrawPatch(SKPoint[] cubics, SKColor[] colors, SKPoint[] texCoords, SKBlendMode mode, SKPaint paint)
+		public void DrawPatch (SKPoint[] cubics, SKColor[] colors, SKPoint[] texCoords, SKBlendMode mode, SKPaint paint)
 		{
 			if (cubics == null)
 				throw new ArgumentNullException (nameof (cubics));
