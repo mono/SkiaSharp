@@ -653,6 +653,14 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_annotation (sk_canvas_t t, SKRect* rect, /* char */ void* key, sk_data_t value);
 
+		// void sk_canvas_draw_arc(sk_canvas_t* ccanvas, const sk_rect_t* oval, float startAngle, float sweepAngle, bool useCenter, const sk_paint_t* paint)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_canvas_draw_arc (sk_canvas_t ccanvas, SKRect* oval, Single startAngle, Single sweepAngle, [MarshalAs (UnmanagedType.I1)] bool useCenter, sk_paint_t paint);
+
+		// void sk_canvas_draw_atlas(sk_canvas_t* ccanvas, const sk_image_t* atlas, const sk_rsxform_t* xform, const sk_rect_t* tex, const sk_color_t* colors, int count, sk_blendmode_t mode, const sk_rect_t* cullRect, const sk_paint_t* paint)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_canvas_draw_atlas (sk_canvas_t ccanvas, sk_image_t atlas, SKRotationScaleMatrix* xform, SKRect* tex, UInt32* colors, Int32 count, SKBlendMode mode, SKRect* cullRect, sk_paint_t paint);
+
 		// void sk_canvas_draw_bitmap(sk_canvas_t* ccanvas, const sk_bitmap_t* bitmap, float left, float top, const sk_paint_t* paint)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_bitmap (sk_canvas_t ccanvas, sk_bitmap_t bitmap, Single left, Single top, sk_paint_t paint);
@@ -680,6 +688,10 @@ namespace SkiaSharp
 		// void sk_canvas_draw_drawable(sk_canvas_t*, sk_drawable_t*, const sk_matrix_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_drawable (sk_canvas_t param0, sk_drawable_t param1, SKMatrix* param2);
+
+		// void sk_canvas_draw_drrect(sk_canvas_t* ccanvas, const sk_rrect_t* outer, const sk_rrect_t* inner, const sk_paint_t* paint)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_canvas_draw_drrect (sk_canvas_t ccanvas, sk_rrect_t outer, sk_rrect_t inner, sk_paint_t paint);
 
 		// void sk_canvas_draw_image(sk_canvas_t*, const sk_image_t*, float x, float y, const sk_paint_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -716,6 +728,10 @@ namespace SkiaSharp
 		// void sk_canvas_draw_paint(sk_canvas_t*, const sk_paint_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_paint (sk_canvas_t param0, sk_paint_t param1);
+
+		// void sk_canvas_draw_patch(sk_canvas_t* ccanvas, const sk_point_t* cubics, const sk_color_t* colors, const sk_point_t* texCoords, sk_blendmode_t mode, const sk_paint_t* paint)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_canvas_draw_patch (sk_canvas_t ccanvas, SKPoint* cubics, UInt32* colors, SKPoint* texCoords, SKBlendMode mode, sk_paint_t paint);
 
 		// void sk_canvas_draw_path(sk_canvas_t*, const sk_path_t*, const sk_paint_t*)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -769,7 +785,7 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_url_annotation (sk_canvas_t t, SKRect* rect, sk_data_t value);
 
-		// void sk_canvas_draw_vertices(sk_canvas_t* ccanvas, sk_vertices_t* vertices, sk_blendmode_t mode, const sk_paint_t* paint)
+		// void sk_canvas_draw_vertices(sk_canvas_t* ccanvas, const sk_vertices_t* vertices, sk_blendmode_t mode, const sk_paint_t* paint)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_draw_vertices (sk_canvas_t ccanvas, sk_vertices_t vertices, SKBlendMode mode, sk_paint_t paint);
 
@@ -794,6 +810,16 @@ namespace SkiaSharp
 		// void sk_canvas_get_total_matrix(sk_canvas_t* ccanvas, sk_matrix_t* matrix)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_canvas_get_total_matrix (sk_canvas_t ccanvas, SKMatrix* matrix);
+
+		// bool sk_canvas_is_clip_empty(sk_canvas_t* ccanvas)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_canvas_is_clip_empty (sk_canvas_t ccanvas);
+
+		// bool sk_canvas_is_clip_rect(sk_canvas_t* ccanvas)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_canvas_is_clip_rect (sk_canvas_t ccanvas);
 
 		// sk_canvas_t* sk_canvas_new_from_bitmap(const sk_bitmap_t* bitmap)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -4210,6 +4236,39 @@ namespace SkiaSharp
 		public Single Bottom {
 			get => bottom;
 			set => bottom = value;
+		}
+
+	}
+
+	// sk_rsxform_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct SKRotationScaleMatrix {
+		// public float fSCos
+		private Single fSCos;
+		public Single SCos {
+			get => fSCos;
+			set => fSCos = value;
+		}
+
+		// public float fSSin
+		private Single fSSin;
+		public Single SSin {
+			get => fSSin;
+			set => fSSin = value;
+		}
+
+		// public float fTX
+		private Single fTX;
+		public Single TX {
+			get => fTX;
+			set => fTX = value;
+		}
+
+		// public float fTY
+		private Single fTY;
+		public Single TY {
+			get => fTY;
+			set => fTY = value;
 		}
 
 	}
