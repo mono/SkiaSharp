@@ -280,6 +280,7 @@ stages:
           displayName: Build Managed (Linux)
           vmImage: $(VM_IMAGE_LINUX)
           packages: $(MANAGED_LINUX_PACKAGES)
+          retryCount: 2
           target: libs
           additionalArgs: --exclusive
           requiredArtifacts:
