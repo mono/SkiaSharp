@@ -28,6 +28,12 @@ namespace SkiaSharp.Views.Forms
 
 		public bool Handled { get; set; }
 
+		/// <summary>
+        /// Disallow Touch intercept hook for Andriod systems
+        /// 
+        /// </summary>
+		public bool RequestDisallowIntercept { get; set; }
+
 		public long Id { get; private set; }
 
 		public SKTouchAction ActionType { get; private set; }
@@ -44,7 +50,7 @@ namespace SkiaSharp.Views.Forms
 
 		public override string ToString()
 		{
-			return $"{{ActionType={ActionType}, DeviceType={DeviceType}, Handled={Handled}, Id={Id}, InContact={InContact}, Location={Location}, MouseButton={MouseButton}, WheelDelta={WheelDelta}}}";
+			return $"{{ActionType={ActionType}, DeviceType={DeviceType}, Handled={Handled},RequestDisallowIntercept={RequestDisallowIntercept}, Id={Id}, InContact={InContact}, Location={Location}, MouseButton={MouseButton}, WheelDelta={WheelDelta}}}";
 		}
 	}
 

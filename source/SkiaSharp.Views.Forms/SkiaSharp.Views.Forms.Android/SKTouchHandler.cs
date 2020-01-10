@@ -55,6 +55,10 @@ namespace SkiaSharp.Views.Forms
 						var args = new SKTouchEventArgs(id, SKTouchAction.Pressed, coords, true);
 						onTouchAction(args);
 						e.Handled = args.Handled;
+
+						if (args.RequestDisallowIntercept && (sender is View view))
+							view.Parent?.RequestDisallowInterceptTouchEvent(true);
+
 						break;
 					}
 
@@ -69,6 +73,10 @@ namespace SkiaSharp.Views.Forms
 							var args = new SKTouchEventArgs(id, SKTouchAction.Moved, coords, true);
 							onTouchAction(args);
 							e.Handled = e.Handled || args.Handled;
+
+							if (args.RequestDisallowIntercept && (sender is View view))
+								view.Parent?.RequestDisallowInterceptTouchEvent(true);
+
 						}
 						break;
 					}
@@ -79,6 +87,10 @@ namespace SkiaSharp.Views.Forms
 						var args = new SKTouchEventArgs(id, SKTouchAction.Released, coords, false);
 						onTouchAction(args);
 						e.Handled = args.Handled;
+
+						if (sender is View view)
+							view.Parent?.RequestDisallowInterceptTouchEvent(false);
+
 						break;
 					}
 
@@ -87,6 +99,10 @@ namespace SkiaSharp.Views.Forms
 						var args = new SKTouchEventArgs(id, SKTouchAction.Cancelled, coords, false);
 						onTouchAction(args);
 						e.Handled = args.Handled;
+
+						if (sender is View view)
+							view.Parent?.RequestDisallowInterceptTouchEvent(false);
+
 						break;
 					}
 			}
