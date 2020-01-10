@@ -71,7 +71,9 @@ namespace SkiaSharp.Views.Gtk
 		private SKImageInfo CreateDrawingObjects()
 		{
 			var alloc = Allocation;
-			var imgInfo = new SKImageInfo(alloc.Width, alloc.Height, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
+			var w = alloc.Width;
+			var h = alloc.Height;
+			var imgInfo = new SKImageInfo(w, h, SKImageInfo.PlatformColorType, SKAlphaType.Premul);
 
 			if (pix == null || pix.Width != imgInfo.Width || pix.Height != imgInfo.Height)
 			{

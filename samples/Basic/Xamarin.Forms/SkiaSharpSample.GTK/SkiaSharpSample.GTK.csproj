@@ -1,10 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\..\..\output\SkiaSharp.Views.Forms.GTK\nuget\build\net45\SkiaSharp.Views.Forms.GTK.props" Condition="Exists('..\..\..\..\output\SkiaSharp.Views.Forms.GTK\nuget\build\net45\SkiaSharp.Views.Forms.GTK.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{17521786-7B50-46C5-BBCE-999FDEBB45A3}</ProjectGuid>
     <OutputType>WinExe</OutputType>
+    <RootNamespace>SkiaSharpSample.GTK</RootNamespace>
+    <AssemblyName>SkiaSharpSample.GTK</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <RootNamespace>SkiaSharpSample</RootNamespace>
     <TargetFrameworkProfile />
@@ -32,39 +35,40 @@
     <Reference Include="glade-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
     <Reference Include="pango-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
     <Reference Include="atk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
-    <Reference Include="System.Drawing" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Xamarin.Forms.Platform.GTK" Version="4.0.0.540366" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\binding\SkiaSharp\SkiaSharp.csproj">
-      <Project>{EB1BBDCC-FB07-40D5-8B9E-0079E2C2F2DF}</Project>
+      <Project>{eb1bbdcc-fb07-40d5-8b9e-0079e2c2f2df}</Project>
       <Name>SkiaSharp</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.Desktop.Common\SkiaSharp.Views.Desktop.Common.csproj">
-      <Project>{72b681c2-9ade-4b5e-a58c-c1c4b891cf32}</Project>
+      <Project>{e5a90865-c185-45ad-88d1-6da7d6004b03}</Project>
       <Name>SkiaSharp.Views.Desktop.Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.Gtk\SkiaSharp.Views.Gtk.csproj">
-      <Project>{67A502A4-E8B2-419A-811E-5A634B29C8D7}</Project>
+      <Project>{743cf830-d458-41a9-865a-f85126562015}</Project>
       <Name>SkiaSharp.Views.Gtk</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\source\SkiaSharp.Views.Forms\SkiaSharp.Views.Forms.GTK\SkiaSharp.Views.Forms.GTK.csproj">
+      <Project>{27059729-96a9-4313-b2a4-b10798450519}</Project>
+      <Name>SkiaSharp.Views.Forms.GTK</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SkiaSharpSample\SkiaSharpSample.csproj">
+      <Project>{b178e8e3-a5ad-4c98-b365-86e05ee53643}</Project>
+      <Name>SkiaSharpSample</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="gtk-gui\gui.stetic">
-      <LogicalName>gui.stetic</LogicalName>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="gtk-gui\generated.cs" />
-    <Compile Include="MainWindow.cs" />
-    <Compile Include="gtk-gui\MainWindow.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config">
-      <SubType>Designer</SubType>
-    </None>
+    <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\..\..\output\SkiaSharp\nuget\build\net45\SkiaSharp.targets" Condition="Exists('..\..\..\..\output\SkiaSharp\nuget\build\net45\SkiaSharp.targets')" />
+  <Import Project="..\..\..\..\output\SkiaSharp.Views.Forms\nuget\build\net45\SkiaSharp.Views.Forms.targets" Condition="Exists('..\..\..\..\output\SkiaSharp.Views.Forms\nuget\build\net45\SkiaSharp.Views.Forms.targets')" />
 </Project>

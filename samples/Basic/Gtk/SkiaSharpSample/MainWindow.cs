@@ -1,7 +1,6 @@
-﻿using System;
-using Gtk;
-using SkiaSharp;
+﻿using SkiaSharp;
 using SkiaSharp.Views.Desktop;
+using SkiaSharp.Views.Gtk;
 
 public partial class MainWindow : Gtk.Window
 {
@@ -13,9 +12,10 @@ public partial class MainWindow : Gtk.Window
 		skiaView.PaintSurface += OnPaintSurface;
 	}
 
-	protected void OnDeleteEvent(object sender, DeleteEventArgs a)
+	protected void OnDeleteEvent(object sender, Gtk.DeleteEventArgs a)
 	{
-		Application.Quit();
+		Gtk.Application.Quit();
+
 		a.RetVal = true;
 	}
 

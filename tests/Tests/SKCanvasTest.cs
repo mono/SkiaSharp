@@ -81,6 +81,90 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void CanDrawRoundRectDifference()
+		{
+			using var outer = new SKRoundRect(SKRect.Create(50, 50, 200, 200), 20);
+			using var inner = new SKRoundRect(SKRect.Create(100, 100, 100, 100), 20);
+
+			using var paint = new SKPaint();
+
+			SKColor[] diff;
+			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
+			using (var canvas = new SKCanvas(bmp))
+			{
+				canvas.Clear(SKColors.Transparent);
+				canvas.DrawRoundRectDifference(outer, inner, paint);
+
+				diff = bmp.Pixels;
+			}
+
+			SKColor[] paths;
+			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
+			using (var canvas = new SKCanvas(bmp))
+			using (var path = new SKPath())
+			{
+				canvas.Clear(SKColors.Transparent);
+
+				path.AddRoundRect(outer);
+				path.AddRoundRect(inner);
+				path.FillType = SKPathFillType.EvenOdd;
+
+				canvas.DrawPath(path, paint);
+
+				paths = bmp.Pixels;
+			}
+
+			Assert.Equal(paths, diff);
+		}
+
+		[SkippableFact]
+		public void DrawAtlasThrowsOnMismatchingArgs()
+		{
+			using var bmp = new SKBitmap(new SKImageInfo(300, 300));
+			using var img = SKImage.FromBitmap(bmp);
+			using var canvas = new SKCanvas(bmp);
+
+			using var paint = new SKPaint();
+			var sprites = new[] { SKRect.Empty, SKRect.Empty };
+			var transforms = new[] { SKRotationScaleMatrix.Empty };
+
+			Assert.Throws<ArgumentException>("transforms", () => canvas.DrawAtlas(img, sprites, transforms, SKBlendMode.Src, paint));
+		}
+
+		[SkippableFact]
+		public void CanDrawPatch()
+		{
+			var cubics = new SKPoint[12] {
+				// top points
+				new SKPoint(100, 100), new SKPoint(150, 50), new SKPoint(250, 150), new SKPoint(300, 100),
+				// right points
+				new SKPoint(250, 150), new SKPoint(350, 250),
+				// bottom points
+				new SKPoint(300, 300), new SKPoint(250, 250), new SKPoint(150, 350), new SKPoint(100, 300),
+				// left points
+				new SKPoint(50, 250), new SKPoint(150, 150)
+			};
+
+			var baboon = SKImage.FromEncodedData(Path.Combine(PathToImages, "baboon.jpg"));
+			var tex = new SKPoint[4] {
+				new SKPoint(0, 0),
+				new SKPoint(baboon.Width, 0),
+				new SKPoint(baboon.Width, baboon.Height),
+				new SKPoint(0, baboon.Height),
+			};
+
+			using var bmp = new SKBitmap(new SKImageInfo(400, 400));
+			using var canvas = new SKCanvas(bmp);
+			using var paint = new SKPaint
+			{
+				IsAntialias = true,
+				Shader = baboon.ToShader(),
+			};
+
+			canvas.DrawPatch(cubics, tex, paint);
+		}
+
+		[SkippableFact]
 		public void CanDrawText()
 		{
 			using (var bmp = new SKBitmap(new SKImageInfo(300, 300)))
@@ -197,6 +281,96 @@ namespace SkiaSharp.Tests
 				Assert.Equal(1, bitmap.GetPixel(15, 15).Alpha);
 				Assert.Equal(2, bitmap.GetPixel(25, 25).Alpha);
 				Assert.Equal(1, bitmap.GetPixel(45, 45).Alpha);
+			}
+		}
+
+		[SkippableFact]
+		public void DrawAtlasSupportsTransforms()
+		{
+			var target = new SKRect(50, 50, 80, 90);
+			var rec = new[]
+			{
+				(Scale: 1, Degrees:   0, TX:  10, TY: 10), // just translate
+				(Scale: 2, Degrees:   0, TX: 110, TY: 10), // scale + translate
+				(Scale: 1, Degrees:  30, TX: 210, TY: 10), // rotate + translate
+				(Scale: 2, Degrees: -30, TX: 310, TY: 30), // scale + rotate + translate
+			};
+
+			var N = rec.Length;
+			var xform = new SKRotationScaleMatrix[N];
+			var tex = new SKRect[N];
+			var colors = new SKColor[N];
+
+			for (var i = 0; i < N; ++i)
+			{
+				xform[i] = Apply(rec[i]);
+				tex[i] = target;
+				colors[i] = 0x80FF0000 + (uint)(i * 40 * 256);
+			}
+
+			using var atlas = CreateAtlas(target);
+
+			using var bitmap = new SKBitmap(new SKImageInfo(640, 480));
+			using var canvas = new SKCanvas(bitmap);
+
+			using var paint = new SKPaint
+			{
+				FilterQuality = SKFilterQuality.Low,
+				IsAntialias = true
+			};
+
+			canvas.Clear(SKColors.White);
+			canvas.DrawAtlas(atlas, tex, xform, paint);
+			canvas.Translate(0, 100);
+			canvas.DrawAtlas(atlas, tex, xform, colors, SKBlendMode.SrcIn, paint);
+
+			Assert.Equal(SKColors.Blue, bitmap.GetPixel(32, 41));
+			Assert.Equal(SKColors.Blue, bitmap.GetPixel(156, 77));
+			Assert.Equal(SKColors.Blue, bitmap.GetPixel(201, 45));
+			Assert.Equal(SKColors.Blue, bitmap.GetPixel(374, 80));
+
+			Assert.Equal(0xFF7F7FFF, bitmap.GetPixel(32, 141));
+			Assert.Equal(0xFF7F7FFF, bitmap.GetPixel(156, 177));
+			Assert.Equal(0xFF7F7FFF, bitmap.GetPixel(201, 145));
+			Assert.Equal(0xFF7F7FFF, bitmap.GetPixel(374, 180));
+
+			static SKRotationScaleMatrix Apply((float Scale, float Degrees, float TX, float TY) rec)
+			{
+				var rad = SKMatrix.DegreesToRadians * rec.Degrees;
+				return new SKRotationScaleMatrix(
+					rec.Scale * (float)Math.Cos(rad),
+					rec.Scale * (float)Math.Sin(rad),
+					rec.TX,
+					rec.TY);
+			}
+
+			static SKImage CreateAtlas(SKRect target)
+			{
+				var info = new SKImageInfo(100, 100);
+
+				using var surface = SKSurface.Create(info);
+				using var canvas = surface.Canvas;
+
+				// draw red everywhere, but we don't expect to see it in the draw, testing the notion
+				// that drawAtlas draws a subset-region of the atlas.
+				canvas.Clear(SKColors.Red);
+
+				using var paint = new SKPaint
+				{
+					BlendMode = SKBlendMode.Clear
+				};
+
+				// zero out a place (with a 1-pixel border) to land our drawing.
+				var r = target;
+				r.Inflate(1, 1);
+				canvas.DrawRect(r, paint);
+
+				paint.BlendMode = SKBlendMode.SrcOver;
+				paint.Color = SKColors.Blue;
+				paint.IsAntialias = true;
+				canvas.DrawOval(target, paint);
+
+				return surface.Snapshot();
 			}
 		}
 
