@@ -170,6 +170,8 @@ namespace SkiaSharp.Views.Forms
 			if (controller != null)
 			{
 				controller.SurfaceInvalidated -= OnSurfaceInvalidated;
+				controller.GetCanvasSize -= OnGetCanvasSize;
+				controller.GetGRContext -= OnGetGRContext;
 			}
 
 			var control = Control;
