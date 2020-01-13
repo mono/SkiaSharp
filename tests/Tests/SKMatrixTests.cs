@@ -188,6 +188,33 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void SKRotationScaleMatrixTranslationToMatrixIsCorrect()
+		{
+			var m = SKMatrix.MakeTranslation(5, 7);
+			var rsm = SKRotationScaleMatrix.CreateTranslate(5, 7).ToMatrix();
+
+			Assert.Equal(m.Values, rsm.Values);
+		}
+
+		[SkippableFact]
+		public void SKRotationScaleMatrixRotationToMatrixIsCorrect()
+		{
+			var m = SKMatrix.MakeRotationDegrees(45);
+			var rsm = SKRotationScaleMatrix.CreateRotationDegrees(45, 0, 0).ToMatrix();
+
+			Assert.Equal(m.Values, rsm.Values);
+		}
+
+		[SkippableFact]
+		public void SKRotationScaleMatrixScaleToMatrixIsCorrect()
+		{
+			var m = SKMatrix.MakeScale(3.5f, 3.5f);
+			var rsm = SKRotationScaleMatrix.CreateScale(3.5f).ToMatrix();
+
+			Assert.Equal(m.Values, rsm.Values);
+		}
+
+		[SkippableFact]
 		public void MatrixMapsPoints()
 		{
 			var source = new[] {

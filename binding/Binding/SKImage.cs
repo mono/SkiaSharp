@@ -486,6 +486,8 @@ namespace SkiaSharp
 		public bool IsAlphaOnly => SkiaApi.sk_image_is_alpha_only (Handle);
 		public SKData EncodedData => GetObject<SKData> (SkiaApi.sk_image_ref_encoded (Handle));
 
+		public SKShader ToShader () => ToShader (SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
+
 		public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY)
 		{
 			return GetObject<SKShader> (SkiaApi.sk_image_make_shader (Handle, tileX, tileY, null));

@@ -3,18 +3,12 @@
 namespace SkiaSharp
 {
 	// TODO: carefully consider the `PeekPixels`, `ReadPixels`
-	// TODO: `ClipRRect` may be useful
-	// TODO: `DrawRRect` may be useful
-	// TODO: `DrawDRRect` may be useful
-	// TODO: add the `DrawArc` variants
-	// TODO: add `DrawTextBlob` variants if/when we bind `SKTextBlob`
-	// TODO: add `DrawPatch` variants
-	// TODO: add `DrawAtlas` variants
-	// TODO: add `DrawDrawable` variants if/when we bind `SKDrawable`
-	// TODO: add `IsClipEmpty` and `IsClipRect`
 
 	public unsafe class SKCanvas : SKObject
 	{
+		private const int PatchCornerCount = 4;
+		private const int PatchCubicsCount = 12;
+
 		[Preserve]
 		internal SKCanvas (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -219,6 +213,10 @@ namespace SkiaSharp
 				return bounds;
 			}
 		}
+
+		public bool IsClipEmpty => SkiaApi.sk_canvas_is_clip_empty (Handle);
+
+		public bool IsClipRect => SkiaApi.sk_canvas_is_clip_rect (Handle);
 
 		public bool GetLocalClipBounds (out SKRect bounds)
 		{
@@ -832,6 +830,102 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_vertices (Handle, vertices.Handle, mode, paint.Handle);
+		}
+
+		public void DrawArc (SKRect oval, float startAngle, float sweepAngle, bool useCenter, SKPaint paint)
+		{
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
+			SkiaApi.sk_canvas_draw_arc (Handle, &oval, startAngle, sweepAngle, useCenter, paint.Handle);
+		}
+
+		public void DrawRoundRectDifference (SKRoundRect outer, SKRoundRect inner, SKPaint paint)
+		{
+			if (outer == null)
+				throw new ArgumentNullException (nameof (outer));
+			if (inner == null)
+				throw new ArgumentNullException (nameof (inner));
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
+
+			SkiaApi.sk_canvas_draw_drrect (Handle, outer.Handle, inner.Handle, paint.Handle);
+		}
+
+		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKPaint paint)
+			=> DrawAtlas (atlas, sprites, transforms, null, SKBlendMode.Dst, null, paint);
+
+		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKRect cullRect, SKPaint paint)
+			=> DrawAtlas (atlas, sprites, transforms, null, SKBlendMode.Dst, &cullRect, paint);
+
+		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKBlendMode mode, SKPaint paint)
+			=> DrawAtlas (atlas, sprites, transforms, null, mode, null, paint);
+
+		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKBlendMode mode, SKRect cullRect, SKPaint paint)
+			=> DrawAtlas (atlas, sprites, transforms, null, mode, &cullRect, paint);
+
+		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKPaint paint)
+			=> DrawAtlas (atlas, sprites, transforms, colors, mode, null, paint);
+
+		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKRect cullRect, SKPaint paint)
+			=> DrawAtlas (atlas, sprites, transforms, colors, mode, &cullRect, paint);
+
+		private void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKRect* cullRect, SKPaint paint)
+		{
+			if (atlas == null)
+				throw new ArgumentNullException (nameof (atlas));
+			if (sprites == null)
+				throw new ArgumentNullException (nameof (sprites));
+			if (transforms == null)
+				throw new ArgumentNullException (nameof (transforms));
+
+			if (transforms.Length != sprites.Length)
+				throw new ArgumentException ("The number of transforms must match the number of sprites.", nameof (transforms));
+			if (colors != null && colors.Length != sprites.Length)
+				throw new ArgumentException ("The number of colors must match the number of sprites.", nameof (colors));
+
+			fixed (SKRect* s = sprites)
+			fixed (SKRotationScaleMatrix* t = transforms)
+			fixed (SKColor* c = colors) {
+				SkiaApi.sk_canvas_draw_atlas (Handle, atlas.Handle, t, s, (uint*)c, transforms.Length, mode, cullRect, paint.Handle);
+			}
+		}
+
+		public void DrawPatch (SKPoint[] cubics, SKColor[] colors, SKPaint paint)
+			=> DrawPatch (cubics, colors, null, SKBlendMode.Modulate, paint);
+
+		public void DrawPatch (SKPoint[] cubics, SKColor[] colors, SKBlendMode mode, SKPaint paint)
+			=> DrawPatch (cubics, colors, null, mode, paint);
+
+		public void DrawPatch (SKPoint[] cubics, SKPoint[] texCoords, SKPaint paint)
+			=> DrawPatch (cubics, null, texCoords, SKBlendMode.Modulate, paint);
+
+		public void DrawPatch (SKPoint[] cubics, SKPoint[] texCoords, SKBlendMode mode, SKPaint paint)
+			=> DrawPatch (cubics, null, texCoords, mode, paint);
+
+		public void DrawPatch (SKPoint[] cubics, SKColor[] colors, SKPoint[] texCoords, SKPaint paint)
+			=> DrawPatch (cubics, colors, texCoords, SKBlendMode.Modulate, paint);
+
+		public void DrawPatch (SKPoint[] cubics, SKColor[] colors, SKPoint[] texCoords, SKBlendMode mode, SKPaint paint)
+		{
+			if (cubics == null)
+				throw new ArgumentNullException (nameof (cubics));
+			if (cubics.Length != PatchCubicsCount)
+				throw new ArgumentException ($"Cubics must have a length of {PatchCubicsCount}.", nameof (cubics));
+
+			if (colors != null && colors.Length != PatchCornerCount)
+				throw new ArgumentException ($"Colors must have a length of {PatchCornerCount}.", nameof (colors));
+
+			if (texCoords != null && texCoords.Length != PatchCornerCount)
+				throw new ArgumentException ($"Texture coordinates must have a length of {PatchCornerCount}.", nameof (texCoords));
+
+			if (paint == null)
+				throw new ArgumentNullException (nameof (paint));
+
+			fixed (SKPoint* cubes = cubics)
+			fixed (SKColor* cols = colors)
+			fixed (SKPoint* coords = texCoords) {
+				SkiaApi.sk_canvas_draw_patch (Handle, cubes, (uint*)cols, coords, mode, paint.Handle);
+			}
 		}
 	}
 

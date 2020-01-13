@@ -4,6 +4,7 @@
     <!-- HACK: temporary until the Tizen/.NET Core tooling can understand the tizen-x86 RID as opposed to linux-x86 -->
     <ItemGroup Condition="'$(RuntimeIdentifier)' == ''">
         <TizenTpkFiles Include="$(MSBuildThisFileDirectory)..\..\runtimes\tizen-x86\native\libSkiaSharp.so">
+            <Visible>false</Visible>
             <TizenTpkSubDir>bin\runtimes\linux-x86\native\</TizenTpkSubDir>
             <TizenTpkFileName>libSkiaSharp.so</TizenTpkFileName>
         </TizenTpkFiles>

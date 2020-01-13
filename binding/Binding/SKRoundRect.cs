@@ -28,6 +28,11 @@ namespace SkiaSharp
 			SetRect (rect);
 		}
 
+		public SKRoundRect (SKRect rect, float radius)
+			: this (rect, radius, radius)
+		{
+		}
+
 		public SKRoundRect (SKRect rect, float xRadius, float yRadius)
 			: this (SkiaApi.sk_rrect_new (), true)
 		{
