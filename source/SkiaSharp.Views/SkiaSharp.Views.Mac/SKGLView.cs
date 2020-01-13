@@ -92,8 +92,12 @@ namespace SkiaSharp.Views.Mac
 				renderTarget?.Dispose();
 				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, out var framebuffer);
 				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out var stencil);
+				Gles.glGetIntegerv(Gles.GL_SAMPLES, out var samples);
+				var maxSamples = context.GetMaxSurfaceSampleCount(colorType);
+				if (samples > maxSamples)
+					samples = maxSamples;
 				var glInfo = new GRGlFramebufferInfo((uint)framebuffer, colorType.ToGlSizedFormat());
-				renderTarget = new GRBackendRenderTarget((int)size.Width, (int)size.Height, context.GetMaxSurfaceSampleCount(colorType), stencil, glInfo);
+				renderTarget = new GRBackendRenderTarget((int)size.Width, (int)size.Height, samples, stencil, glInfo);
 
 				// create the surface
 				surface?.Dispose();

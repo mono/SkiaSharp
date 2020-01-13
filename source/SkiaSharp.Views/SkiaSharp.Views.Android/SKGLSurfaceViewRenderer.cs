@@ -46,11 +46,16 @@ namespace SkiaSharp.Views.Android
 			{
 				// create or update the dimensions
 				renderTarget?.Dispose();
-				var buffer = new int[2];
+				var buffer = new int[3];
 				GLES20.GlGetIntegerv(GLES20.GlFramebufferBinding, buffer, 0);
 				GLES20.GlGetIntegerv(GLES20.GlStencilBits, buffer, 1);
+				GLES20.GlGetIntegerv(GLES20.GlSamples, buffer, 2);
+				var samples = buffer[2];
+				var maxSamples = context.GetMaxSurfaceSampleCount(colorType);
+				if (samples > maxSamples)
+					samples = maxSamples;
 				var glInfo = new GRGlFramebufferInfo((uint)buffer[0], colorType.ToGlSizedFormat());
-				renderTarget = new GRBackendRenderTarget(surfaceWidth, surfaceHeight, context.GetMaxSurfaceSampleCount(colorType), buffer[1], glInfo);
+				renderTarget = new GRBackendRenderTarget(surfaceWidth, surfaceHeight, samples, buffer[1], glInfo);
 
 				// create the surface
 				surface?.Dispose();
