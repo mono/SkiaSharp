@@ -1664,6 +1664,19 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Single sk_font_get_metrics (sk_font_t font, SKFontMetrics* metrics);
 
+		// bool sk_font_get_path(const sk_font_t* font, uint16_t glyph, sk_path_t* path)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_font_get_path (sk_font_t font, UInt16 glyph, sk_path_t path);
+
+		// void sk_font_get_paths(const sk_font_t* font, uint16_t[-1] glyphs, int count, const sk_glyph_path_proc glyphPathProc, void* context)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_get_paths (sk_font_t font, UInt16* glyphs, Int32 count, SKGlyphPathProxyDelegate glyphPathProc, void* context);
+
+		// void sk_font_get_pos(const sk_font_t* font, const uint16_t[-1] glyphs, int count, sk_point_t[-1] pos, sk_point_t* origin)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_get_pos (sk_font_t font, UInt16* glyphs, Int32 count, SKPoint* pos, SKPoint* origin);
+
 		// float sk_font_get_scale_x(const sk_font_t* font)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Single sk_font_get_scale_x (sk_font_t font);
@@ -1683,6 +1696,10 @@ namespace SkiaSharp
 		// void sk_font_get_widths_bounds(const sk_font_t* font, const uint16_t[-1] glyphs, int count, float[-1] widths, sk_rect_t[-1] bounds, const sk_paint_t* paint)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_get_widths_bounds (sk_font_t font, UInt16* glyphs, Int32 count, Single* widths, SKRect* bounds, sk_paint_t paint);
+
+		// void sk_font_get_xpos(const sk_font_t* font, const uint16_t[-1] glyphs, int count, float[-1] xpos, float origin)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_get_xpos (sk_font_t font, UInt16* glyphs, Int32 count, Single* xpos, Single origin);
 
 		// bool sk_font_is_baseline_snap(const sk_font_t* font)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -2643,6 +2660,10 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_path_transform (sk_path_t cpath, SKMatrix* cmatrix);
 
+		// void sk_path_transform_to_dest(const sk_path_t* cpath, const sk_matrix_t* cmatrix, sk_path_t* dst)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_path_transform_to_dest (sk_path_t cpath, SKMatrix* cmatrix, sk_path_t dst);
+
 		// void sk_pathmeasure_destroy(sk_pathmeasure_t* pathMeasure)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_pathmeasure_destroy (sk_pathmeasure_t pathMeasure);
@@ -3304,6 +3325,10 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_textblob_get_bounds (sk_textblob_t blob, SKRect* bounds);
 
+		// int sk_textblob_get_intercepts(const sk_textblob_t* blob, const float[2] bounds = 2, float[-1] intervals, const sk_paint_t* paint)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_textblob_get_intercepts (sk_textblob_t blob, Single* bounds, Single* intervals, sk_paint_t paint);
+
 		// uint32_t sk_textblob_get_unique_id(const sk_textblob_t* blob)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern UInt32 sk_textblob_get_unique_id (sk_textblob_t blob);
@@ -3353,6 +3378,10 @@ namespace SkiaSharp
 	// typedef void (*)(const void* ptr, void* context)* sk_data_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKDataReleaseProxyDelegate(void* ptr, void* context);
+
+	// typedef void (*)(const sk_path_t* pathOrNull, const sk_matrix_t* matrix, void* context)* sk_glyph_path_proc
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal unsafe delegate void SKGlyphPathProxyDelegate(sk_path_t pathOrNull, SKMatrix* matrix, void* context);
 
 	// typedef void (*)(const void* addr, void* context)* sk_image_raster_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]

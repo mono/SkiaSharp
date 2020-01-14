@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 
 namespace SkiaSharp
 {
@@ -26,6 +27,47 @@ namespace SkiaSharp
 		}
 
 		public uint UniqueId => SkiaApi.sk_textblob_get_unique_id (Handle);
+
+		// GetIntercepts
+
+		public float[] GetIntercepts (float upperBounds, float lowerBounds, SKPaint paint = null)
+		{
+			var n = CountIntercepts (upperBounds, lowerBounds, paint);
+			var intervals = new float[n];
+			GetIntercepts (upperBounds, lowerBounds, intervals, paint);
+			return intervals;
+		}
+
+		public void GetIntercepts (float upperBounds, float lowerBounds, Span<float> intervals, SKPaint paint = null)
+		{
+			var bounds = ArrayPool<float>.Shared.Rent (2);
+			bounds[0] = upperBounds;
+			bounds[1] = lowerBounds;
+			try {
+				fixed (float* b = bounds)
+				fixed (float* i = intervals) {
+					SkiaApi.sk_textblob_get_intercepts (Handle, b, i, paint?.Handle ?? IntPtr.Zero);
+				}
+			} finally {
+				ArrayPool<float>.Shared.Return (bounds);
+			}
+		}
+
+		// CountIntercepts
+
+		public int CountIntercepts (float upperBounds, float lowerBounds, SKPaint paint = null)
+		{
+			var bounds = ArrayPool<float>.Shared.Rent (2);
+			bounds[0] = upperBounds;
+			bounds[1] = lowerBounds;
+			try {
+				fixed (float* b = bounds) {
+					return SkiaApi.sk_textblob_get_intercepts (Handle, b, null, paint?.Handle ?? IntPtr.Zero);
+				}
+			} finally {
+				ArrayPool<float>.Shared.Return (bounds);
+			}
+		}
 	}
 
 	public unsafe class SKTextBlobBuilder : SKObject

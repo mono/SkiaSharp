@@ -217,501 +217,99 @@ namespace SkiaSharp
 
 		// MeasureText
 
-		public float MeasureText (string text) =>
-			MeasureText (text, null);
+		public float MeasureText (string text, SKPaint paint = null) =>
+			MeasureText (text.AsSpan (), paint);
 
-		public float MeasureText (ReadOnlySpan<char> text) =>
-			MeasureText (text, null);
-
-		public float MeasureText (byte[] text, SKTextEncoding encoding) =>
-			MeasureText (text, encoding, null);
-
-		public float MeasureText (ReadOnlySpan<byte> text, SKTextEncoding encoding) =>
-			MeasureText (text, encoding, null);
-
-		public float MeasureText (IntPtr text, int length, SKTextEncoding encoding) =>
-			MeasureText (text, length, encoding, null);
-
-		public float MeasureText (IntPtr text, IntPtr length, SKTextEncoding encoding) =>
-			MeasureText (text, length, encoding, null);
-
-		public float MeasureText (string text, SKPaint paint)
+		public float MeasureText (ReadOnlySpan<char> text, SKPaint paint = null)
 		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			fixed (char* p = text) {
-				return MeasureText ((IntPtr)p, (IntPtr)text.Length, SKTextEncoding.Utf16, paint);
+			fixed (void* t = text) {
+				return SkiaApi.sk_font_measure_text (Handle, t, (IntPtr)text.Length, SKTextEncoding.Utf16, null, paint?.Handle ?? IntPtr.Zero);
 			}
 		}
 
-		public float MeasureText (ReadOnlySpan<char> text, SKPaint paint)
+		public float MeasureText (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKPaint paint = null)
 		{
-			fixed (char* t = text) {
-				return MeasureText ((IntPtr)t, (IntPtr)text.Length, SKTextEncoding.Utf16, paint);
+			fixed (void* t = text) {
+				return SkiaApi.sk_font_measure_text (Handle, t, (IntPtr)text.Length, encoding, null, paint?.Handle ?? IntPtr.Zero);
 			}
 		}
 
-		public float MeasureText (byte[] text, SKTextEncoding encoding, SKPaint paint) =>
-			MeasureText ((ReadOnlySpan<byte>)text, encoding, paint);
+		public float MeasureText (string text, out SKRect bounds, SKPaint paint = null) =>
+			MeasureText (text.AsSpan (), out bounds, paint);
 
-		public float MeasureText (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKPaint paint)
+		public float MeasureText (ReadOnlySpan<char> text, out SKRect bounds, SKPaint paint = null)
 		{
-			fixed (byte* t = text) {
-				return MeasureText ((IntPtr)t, (IntPtr)text.Length, encoding, paint);
+			fixed (SKRect* b = &bounds)
+			fixed (void* t = text) {
+				return SkiaApi.sk_font_measure_text (Handle, t, (IntPtr)text.Length, SKTextEncoding.Utf16, b, paint?.Handle ?? IntPtr.Zero);
 			}
 		}
 
-		public float MeasureText (IntPtr text, int length, SKTextEncoding encoding, SKPaint paint) =>
-			MeasureText (text, (IntPtr)length, encoding, paint);
-
-		public float MeasureText (IntPtr text, IntPtr length, SKTextEncoding encoding, SKPaint paint)
+		public float MeasureText (ReadOnlySpan<byte> text, SKTextEncoding encoding, out SKRect bounds, SKPaint paint = null)
 		{
-			if (text == IntPtr.Zero && length != IntPtr.Zero)
-				throw new ArgumentNullException (nameof (text));
-
-			return SkiaApi.sk_font_measure_text (Handle, (void*)text, length, encoding, null, paint?.Handle ?? IntPtr.Zero);
-		}
-
-		public float MeasureText (string text, out SKRect bounds) =>
-			MeasureText (text, out bounds, null);
-
-		public float MeasureText (ReadOnlySpan<char> text, out SKRect bounds) =>
-			MeasureText (text, out bounds, null);
-
-		public float MeasureText (byte[] text, SKTextEncoding encoding, out SKRect bounds) =>
-			MeasureText (text, encoding, out bounds, null);
-
-		public float MeasureText (ReadOnlySpan<byte> text, SKTextEncoding encoding, out SKRect bounds) =>
-			MeasureText (text, encoding, out bounds, null);
-
-		public float MeasureText (IntPtr text, int length, SKTextEncoding encoding, out SKRect bounds) =>
-			MeasureText (text, length, encoding, out bounds, null);
-
-		public float MeasureText (IntPtr text, IntPtr length, SKTextEncoding encoding, out SKRect bounds) =>
-			MeasureText (text, length, encoding, out bounds, null);
-
-		public float MeasureText (string text, out SKRect bounds, SKPaint paint)
-		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			fixed (char* p = text) {
-				return MeasureText ((IntPtr)p, (IntPtr)text.Length, SKTextEncoding.Utf16, out bounds, paint);
-			}
-		}
-
-		public float MeasureText (ReadOnlySpan<char> text, out SKRect bounds, SKPaint paint)
-		{
-			fixed (char* t = text) {
-				return MeasureText ((IntPtr)t, (IntPtr)text.Length, SKTextEncoding.Utf16, out bounds, paint);
-			}
-		}
-
-		public float MeasureText (byte[] text, SKTextEncoding encoding, out SKRect bounds, SKPaint paint) =>
-			MeasureText ((ReadOnlySpan<byte>)text, encoding, out bounds, paint);
-
-		public float MeasureText (ReadOnlySpan<byte> text, SKTextEncoding encoding, out SKRect bounds, SKPaint paint)
-		{
-			fixed (byte* t = text) {
-				return MeasureText ((IntPtr)t, (IntPtr)text.Length, encoding, out bounds, paint);
-			}
-		}
-
-		public float MeasureText (IntPtr text, int length, SKTextEncoding encoding, out SKRect bounds, SKPaint paint) =>
-			MeasureText (text, (IntPtr)length, encoding, out bounds, paint);
-
-		public float MeasureText (IntPtr text, IntPtr length, SKTextEncoding encoding, out SKRect bounds, SKPaint paint)
-		{
-			if (text == IntPtr.Zero && length != IntPtr.Zero)
-				throw new ArgumentNullException (nameof (text));
-
-			fixed (SKRect* b = &bounds) {
-				return SkiaApi.sk_font_measure_text (Handle, (void*)text, length, encoding, b, paint?.Handle ?? IntPtr.Zero);
+			fixed (SKRect* b = &bounds)
+			fixed (void* t = text) {
+				return SkiaApi.sk_font_measure_text (Handle, t, (IntPtr)text.Length, SKTextEncoding.Utf16, b, paint?.Handle ?? IntPtr.Zero);
 			}
 		}
 
 		// GetGlyphWidths
 
-		public float[] GetGlyphWidths (string text)
+		public float[] GetGlyphWidths (ReadOnlySpan<ushort> glyphs, SKPaint paint = null)
 		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			var bytes = StringUtilities.GetEncodedText (text, TextEncoding);
-			return GetGlyphWidths (bytes);
-		}
-
-		public float[] GetGlyphWidths (byte[] text)
-		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			fixed (byte* p = text) {
-				return GetGlyphWidths ((IntPtr)p, (IntPtr)text.Length);
-			}
-		}
-
-		public float[] GetGlyphWidths (IntPtr text, int length) =>
-			GetGlyphWidths (text, (IntPtr)length);
-
-		public float[] GetGlyphWidths (IntPtr text, IntPtr length)
-		{
-			if (text == IntPtr.Zero && length != IntPtr.Zero)
-				throw new ArgumentNullException (nameof (text));
-
-			var n = SkiaApi.sk_font_get_text_widths (Handle, (void*)text, length, null, null);
-
-			if (n <= 0) {
-				return new float[0];
-			}
-
-			var widths = new float[n];
-			fixed (float* wp = widths) {
-				SkiaApi.sk_font_get_text_widths (Handle, (void*)text, length, wp, null);
-			}
+			var widths = new float[glyphs.Length];
+			GetGlyphWidths (glyphs, widths, paint);
 			return widths;
 		}
 
-		public float[] GetGlyphWidths (string text, out SKRect[] bounds, SKPaint paint)
-		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			var glyphs = GetGlyphs (text);
-			return GetGlyphWidths (glyphs, out bounds, paint);
-		}
-
-		public float[] GetGlyphWidths (ushort[] glyphs, out SKRect[] bounds, SKPaint paint) =>
-			GetGlyphWidths ((ReadOnlySpan<ushort>)glyphs, out bounds, paint);
-
-		public float[] GetGlyphWidths (ReadOnlySpan<ushort> glyphs, out SKRect[] bounds, SKPaint paint)
+		public float[] GetGlyphWidths (ReadOnlySpan<ushort> glyphs, out SKRect[] bounds, SKPaint paint = null)
 		{
 			var widths = new float[glyphs.Length];
 			bounds = new SKRect[glyphs.Length];
-			fixed (ushort* gp = glyphs)
-			fixed (float* wp = widths)
-			fixed (SKRect* bp = bounds) {
-				SkiaApi.sk_font_get_widths_bounds (Handle, gp, glyphs.Length, wp, bp, paint?.Handle ?? IntPtr.Zero);
-			}
+			GetGlyphWidths (glyphs, widths, bounds, paint);
 			return widths;
 		}
 
-		// GetTextPath
+		public void GetGlyphWidths (ReadOnlySpan<ushort> glyphs, Span<SKRect> bounds, SKPaint paint = null) =>
+			GetGlyphWidths (glyphs, Span<float>.Empty, bounds, paint);
 
-		public SKPath GetTextPath (string text, float x, float y)
+		public void GetGlyphWidths (ReadOnlySpan<ushort> glyphs, Span<float> widths, SKPaint paint = null) =>
+			GetGlyphWidths (glyphs, widths, Span<SKRect>.Empty, paint);
+
+		public void GetGlyphWidths (ReadOnlySpan<ushort> glyphs, Span<float> widths, Span<SKRect> bounds, SKPaint paint = null)
 		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			var bytes = StringUtilities.GetEncodedText (text, TextEncoding);
-			return GetTextPath (bytes, x, y);
-		}
-
-		public SKPath GetTextPath (byte[] text, float x, float y)
-		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			fixed (byte* t = text) {
-				return GetTextPath ((IntPtr)t, (IntPtr)text.Length, x, y);
+			fixed (ushort* gp = glyphs)
+			fixed (float* wp = widths)
+			fixed (SKRect* bp = bounds) {
+				var w = widths.Length > 0 ? wp : null;
+				var b = bounds.Length > 0 ? bp : null;
+				SkiaApi.sk_font_get_widths_bounds (Handle, gp, glyphs.Length, w, b, paint?.Handle ?? IntPtr.Zero);
 			}
 		}
 
-		public SKPath GetTextPath (IntPtr buffer, int length, float x, float y) =>
-			GetTextPath (buffer, (IntPtr)length, x, y);
+		// GetPath
 
-		public SKPath GetTextPath (IntPtr buffer, IntPtr length, float x, float y)
+		public SKPath GetPath (ushort glyph)
 		{
-			if (buffer == IntPtr.Zero && length != IntPtr.Zero)
-				throw new ArgumentNullException (nameof (buffer));
-
-			return GetObject<SKPath> (SkiaApi.sk_font_get_text_path (Handle, (void*)buffer, length, x, y));
-		}
-
-		public SKPath GetTextPath (string text, SKPoint[] points)
-		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			var bytes = StringUtilities.GetEncodedText (text, TextEncoding);
-			return GetTextPath (bytes, points);
-		}
-
-		public SKPath GetTextPath (byte[] text, SKPoint[] points)
-		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			fixed (byte* t = text) {
-				return GetTextPath ((IntPtr)t, (IntPtr)text.Length, points);
+			var path = new SKPath ();
+			if (!SkiaApi.sk_font_get_path (Handle, glyph, path.Handle)) {
+				path.Dispose ();
+				path = null;
 			}
+			return path;
 		}
 
-		public SKPath GetTextPath (IntPtr buffer, int length, SKPoint[] points) =>
-			GetTextPath (buffer, (IntPtr)length, points);
+		// GetPaths
 
-		public SKPath GetTextPath (IntPtr buffer, IntPtr length, SKPoint[] points)
+		public void GetPaths (ReadOnlySpan<ushort> glyphs, SKGlyphPathDelegate glyphPathDelegate)
 		{
-			if (buffer == IntPtr.Zero && length != IntPtr.Zero)
-				throw new ArgumentNullException (nameof (buffer));
-
-			fixed (SKPoint* p = points) {
-				return GetObject<SKPath> (SkiaApi.sk_font_get_pos_text_path (Handle, (void*)buffer, length, p));
-			}
-		}
-
-		// GetFillPath
-
-		public SKPath GetFillPath (SKPath src)
-			=> GetFillPath (src, 1f);
-
-		public SKPath GetFillPath (SKPath src, float resScale)
-		{
-			var dst = new SKPath ();
-
-			if (GetFillPath (src, dst, resScale)) {
-				return dst;
-			} else {
-				dst.Dispose ();
-				return null;
-			}
-		}
-
-		public SKPath GetFillPath (SKPath src, SKRect cullRect)
-			=> GetFillPath (src, cullRect, 1f);
-
-		public SKPath GetFillPath (SKPath src, SKRect cullRect, float resScale)
-		{
-			var dst = new SKPath ();
-
-			if (GetFillPath (src, dst, cullRect, resScale)) {
-				return dst;
-			} else {
-				dst.Dispose ();
-				return null;
-			}
-		}
-
-		public bool GetFillPath (SKPath src, SKPath dst)
-			=> GetFillPath (src, dst, 1f);
-
-		public bool GetFillPath (SKPath src, SKPath dst, float resScale)
-		{
-			if (src == null)
-				throw new ArgumentNullException (nameof (src));
-			if (dst == null)
-				throw new ArgumentNullException (nameof (dst));
-
-			return SkiaApi.sk_font_get_fill_path (Handle, src.Handle, dst.Handle, null, resScale);
-		}
-
-		public bool GetFillPath (SKPath src, SKPath dst, SKRect cullRect)
-			=> GetFillPath (src, dst, cullRect, 1f);
-
-		public bool GetFillPath (SKPath src, SKPath dst, SKRect cullRect, float resScale)
-		{
-			if (src == null)
-				throw new ArgumentNullException (nameof (src));
-			if (dst == null)
-				throw new ArgumentNullException (nameof (dst));
-
-			return SkiaApi.sk_font_get_fill_path (Handle, src.Handle, dst.Handle, &cullRect, resScale);
-		}
-
-		// ContainsGlyphs
-
-		public bool ContainsGlyphs (string text)
-		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			var bytes = StringUtilities.GetEncodedText (text, TextEncoding);
-			return ContainsGlyphs (bytes);
-		}
-
-		public bool ContainsGlyphs (byte[] text)
-		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			fixed (byte* p = text) {
-				return ContainsGlyphs ((IntPtr)p, (IntPtr)text.Length);
-			}
-		}
-
-		public bool ContainsGlyphs (IntPtr text, int length) =>
-			ContainsGlyphs (text, (IntPtr)length);
-
-		public bool ContainsGlyphs (IntPtr text, IntPtr length)
-		{
-			if (text == IntPtr.Zero && length != IntPtr.Zero)
-				throw new ArgumentNullException (nameof (text));
-
-			return SkiaApi.sk_font_contains_text (Handle, (void*)text, length);
-		}
-
-		// GetTextIntercepts
-
-		public float[] GetTextIntercepts (string text, float x, float y, float upperBounds, float lowerBounds)
-		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			var bytes = StringUtilities.GetEncodedText (text, TextEncoding);
-			return GetTextIntercepts (bytes, x, y, upperBounds, lowerBounds);
-		}
-
-		public float[] GetTextIntercepts (byte[] text, float x, float y, float upperBounds, float lowerBounds)
-		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			fixed (byte* p = text) {
-				return GetTextIntercepts ((IntPtr)p, (IntPtr)text.Length, x, y, upperBounds, lowerBounds);
-			}
-		}
-
-		public float[] GetTextIntercepts (IntPtr text, int length, float x, float y, float upperBounds, float lowerBounds) =>
-			GetTextIntercepts (text, (IntPtr)length, x, y, upperBounds, lowerBounds);
-
-		public float[] GetTextIntercepts (IntPtr text, IntPtr length, float x, float y, float upperBounds, float lowerBounds)
-		{
-			if (text == IntPtr.Zero && length != IntPtr.Zero)
-				throw new ArgumentNullException (nameof (text));
-
-			var bounds = new[] { upperBounds, lowerBounds };
-
-			fixed (float* b = bounds) {
-				var n = SkiaApi.sk_font_get_text_intercepts (Handle, (void*)text, length, x, y, b, null);
-
-				if (n <= 0) {
-					return new float[0];
+			var proxy = DelegateProxies.Create (glyphPathDelegate, DelegateProxies.SKGlyphPathDelegateProxy, out var gch, out var ctx);
+			try {
+				fixed (ushort* g = glyphs) {
+					SkiaApi.sk_font_get_paths (Handle, g, glyphs.Length, proxy, (void*)ctx);
 				}
-
-				var intervals = new float[n];
-				fixed (float* ip = intervals) {
-					SkiaApi.sk_font_get_text_intercepts (Handle, (void*)text, length, x, y, b, ip);
-				}
-				return intervals;
-			}
-		}
-
-		// GetTextIntercepts (SKTextBlob)
-
-		public float[] GetTextIntercepts (SKTextBlob text, float upperBounds, float lowerBounds)
-		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			var bounds = new[] { upperBounds, lowerBounds };
-
-			fixed (float* b = bounds) {
-				var n = SkiaApi.sk_font_get_pos_text_blob_intercepts (Handle, text.Handle, b, null);
-
-				if (n <= 0) {
-					return new float[0];
-				}
-
-				var intervals = new float[n];
-				fixed (float* ip = intervals) {
-					SkiaApi.sk_font_get_pos_text_blob_intercepts (Handle, text.Handle, b, ip);
-				}
-				return intervals;
-			}
-		}
-
-		// GetPositionedTextIntercepts
-
-		public float[] GetPositionedTextIntercepts (string text, SKPoint[] positions, float upperBounds, float lowerBounds)
-		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			var bytes = StringUtilities.GetEncodedText (text, TextEncoding);
-			return GetPositionedTextIntercepts (bytes, positions, upperBounds, lowerBounds);
-		}
-
-		public float[] GetPositionedTextIntercepts (byte[] text, SKPoint[] positions, float upperBounds, float lowerBounds)
-		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			fixed (byte* p = text) {
-				return GetPositionedTextIntercepts ((IntPtr)p, (IntPtr)text.Length, positions, upperBounds, lowerBounds);
-			}
-		}
-
-		public float[] GetPositionedTextIntercepts (IntPtr text, int length, SKPoint[] positions, float upperBounds, float lowerBounds) =>
-			GetPositionedTextIntercepts (text, (IntPtr)length, positions, upperBounds, lowerBounds);
-
-		public float[] GetPositionedTextIntercepts (IntPtr text, IntPtr length, SKPoint[] positions, float upperBounds, float lowerBounds)
-		{
-			if (text == IntPtr.Zero && length != IntPtr.Zero)
-				throw new ArgumentNullException (nameof (text));
-
-			var bounds = new[] { upperBounds, lowerBounds };
-
-			fixed (float* b = bounds)
-			fixed (SKPoint* p = positions) {
-				var n = SkiaApi.sk_font_get_pos_text_intercepts (Handle, (void*)text, length, p, b, null);
-
-				if (n <= 0) {
-					return new float[0];
-				}
-
-				var intervals = new float[n];
-				fixed (float* ip = intervals) {
-					SkiaApi.sk_font_get_pos_text_intercepts (Handle, (void*)text, length, p, b, ip);
-				}
-				return intervals;
-			}
-		}
-
-		// GetHorizontalTextIntercepts
-
-		public float[] GetHorizontalTextIntercepts (string text, float[] xpositions, float y, float upperBounds, float lowerBounds)
-		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			var bytes = StringUtilities.GetEncodedText (text, TextEncoding);
-			return GetHorizontalTextIntercepts (bytes, xpositions, y, upperBounds, lowerBounds);
-		}
-
-		public float[] GetHorizontalTextIntercepts (byte[] text, float[] xpositions, float y, float upperBounds, float lowerBounds)
-		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			fixed (byte* p = text) {
-				return GetHorizontalTextIntercepts ((IntPtr)p, (IntPtr)text.Length, xpositions, y, upperBounds, lowerBounds);
-			}
-		}
-
-		public float[] GetHorizontalTextIntercepts (IntPtr text, int length, float[] xpositions, float y, float upperBounds, float lowerBounds) =>
-			GetHorizontalTextIntercepts (text, (IntPtr)length, xpositions, y, upperBounds, lowerBounds);
-
-		public float[] GetHorizontalTextIntercepts (IntPtr text, IntPtr length, float[] xpositions, float y, float upperBounds, float lowerBounds)
-		{
-			if (text == IntPtr.Zero && length != IntPtr.Zero)
-				throw new ArgumentNullException (nameof (text));
-
-			var bounds = new[] { upperBounds, lowerBounds };
-
-			fixed (float* x = xpositions)
-			fixed (float* b = bounds) {
-				var n = SkiaApi.sk_font_get_pos_text_h_intercepts (Handle, (void*)text, length, x, y, b, null);
-
-				if (n <= 0) {
-					return new float[0];
-				}
-
-				var intervals = new float[n];
-				fixed (float* ip = intervals) {
-					SkiaApi.sk_font_get_pos_text_h_intercepts (Handle, (void*)text, length, x, y, b, ip);
-				}
-				return intervals;
+			} finally {
+				gch.Free ();
 			}
 		}
 	}
