@@ -130,20 +130,20 @@ namespace SkiaSharp
 
 		// GetGlyph
 
-		public ushort GetGlyph (int utf32) =>
-			SkiaApi.sk_font_unichar_to_glyph (Handle, utf32);
+		public ushort GetGlyph (int codepoint) =>
+			SkiaApi.sk_font_unichar_to_glyph (Handle, codepoint);
 
 		// GetGlyphs
 
-		public ushort[] GetGlyphs (int[] utf32) =>
-			GetGlyphs ((ReadOnlySpan<int>)utf32);
+		public ushort[] GetGlyphs (int[] codepoints) =>
+			GetGlyphs ((ReadOnlySpan<int>)codepoints);
 
-		public ushort[] GetGlyphs (ReadOnlySpan<int> utf32)
+		public ushort[] GetGlyphs (ReadOnlySpan<int> codepoints)
 		{
-			var glyphs = new ushort[utf32.Length];
-			fixed (int* up = utf32)
+			var glyphs = new ushort[codepoints.Length];
+			fixed (int* up = codepoints)
 			fixed (ushort* gp = glyphs) {
-				SkiaApi.sk_font_unichars_to_glyphs (Handle, up, utf32.Length, gp);
+				SkiaApi.sk_font_unichars_to_glyphs (Handle, up, codepoints.Length, gp);
 			}
 			return glyphs;
 		}
