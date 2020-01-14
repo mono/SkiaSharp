@@ -1660,6 +1660,10 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKFontHinting sk_font_get_hinting (sk_font_t font);
 
+		// float sk_font_get_metrics(const sk_font_t* font, sk_fontmetrics_t* metrics)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Single sk_font_get_metrics (sk_font_t font, SKFontMetrics* metrics);
+
 		// float sk_font_get_scale_x(const sk_font_t* font)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Single sk_font_get_scale_x (sk_font_t font);
@@ -1675,6 +1679,10 @@ namespace SkiaSharp
 		// sk_typeface_t* sk_font_get_typeface(const sk_font_t* font)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_font_get_typeface (sk_font_t font);
+
+		// void sk_font_get_widths_bounds(const sk_font_t* font, const uint16_t[-1] glyphs, int count, float[-1] widths, sk_rect_t[-1] bounds, const sk_paint_t* paint)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_get_widths_bounds (sk_font_t font, UInt16* glyphs, Int32 count, Single* widths, SKRect* bounds, sk_paint_t paint);
 
 		// bool sk_font_is_baseline_snap(const sk_font_t* font)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1705,6 +1713,10 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_font_is_subpixel (sk_font_t font);
+
+		// float sk_font_measure_text(const sk_font_t* font, const void* text, size_t byteLength, sk_text_encoding_t encoding, sk_rect_t* bounds, const sk_paint_t* paint)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Single sk_font_measure_text (sk_font_t font, void* text, /* size_t */ IntPtr byteLength, SKTextEncoding encoding, SKRect* bounds, sk_paint_t paint);
 
 		// sk_font_t* sk_font_new()
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1761,6 +1773,18 @@ namespace SkiaSharp
 		// void sk_font_set_typeface(sk_font_t* font, sk_typeface_t* value)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_set_typeface (sk_font_t font, sk_typeface_t value);
+
+		// int sk_font_text_to_glyphs(const sk_font_t* font, const void* text, size_t byteLength, sk_text_encoding_t encoding, uint16_t[-1] glyphs, int maxGlyphCount)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_font_text_to_glyphs (sk_font_t font, void* text, /* size_t */ IntPtr byteLength, SKTextEncoding encoding, UInt16* glyphs, Int32 maxGlyphCount);
+
+		// uint16_t sk_font_unichar_to_glyph(const sk_font_t* font, int32_t uni)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern UInt16 sk_font_unichar_to_glyph (sk_font_t font, Int32 uni);
+
+		// void sk_font_unichars_to_glyphs(const sk_font_t* font, const int32_t[-1] uni, int count, uint16_t[-1] glyphs)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_font_unichars_to_glyphs (sk_font_t font, Int32* uni, Int32 count, UInt16* glyphs);
 
 		#endregion
 
