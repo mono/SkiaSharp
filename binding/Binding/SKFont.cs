@@ -135,105 +135,84 @@ namespace SkiaSharp
 
 		// GetGlyphs
 
-		public ushort[] GetGlyphs (int[] codepoints) =>
-			GetGlyphs ((ReadOnlySpan<int>)codepoints);
-
 		public ushort[] GetGlyphs (ReadOnlySpan<int> codepoints)
 		{
 			var glyphs = new ushort[codepoints.Length];
+			GetGlyphs (codepoints, glyphs);
+			return glyphs;
+		}
+
+		public void GetGlyphs (ReadOnlySpan<int> codepoints, Span<ushort> glyphs)
+		{
 			fixed (int* up = codepoints)
 			fixed (ushort* gp = glyphs) {
 				SkiaApi.sk_font_unichars_to_glyphs (Handle, up, codepoints.Length, gp);
 			}
-			return glyphs;
 		}
 
 		// GetGlyphs
 
-		public ushort[] GetGlyphs (string text)
-		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			fixed (char* p = text) {
-				return GetGlyphs ((IntPtr)p, (IntPtr)text.Length, SKTextEncoding.Utf16);
-			}
-		}
+		public ushort[] GetGlyphs (string text) =>
+			GetGlyphs (text.AsSpan ());
 
 		public ushort[] GetGlyphs (ReadOnlySpan<char> text)
 		{
-			fixed (char* p = text) {
-				return GetGlyphs ((IntPtr)p, (IntPtr)text.Length, SKTextEncoding.Utf16);
-			}
-		}
-
-		public ushort[] GetGlyphs (byte[] text, SKTextEncoding encoding) =>
-			GetGlyphs ((ReadOnlySpan<byte>)text, encoding);
-
-		public ushort[] GetGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding)
-		{
-			fixed (byte* p = text) {
-				return GetGlyphs ((IntPtr)p, (IntPtr)text.Length, encoding);
-			}
-		}
-
-		public ushort[] GetGlyphs (IntPtr text, int length, SKTextEncoding encoding) =>
-			GetGlyphs (text, (IntPtr)length, encoding);
-
-		public ushort[] GetGlyphs (IntPtr text, IntPtr length, SKTextEncoding encoding)
-		{
-			if (text == IntPtr.Zero && length != IntPtr.Zero)
-				throw new ArgumentNullException (nameof (text));
-
-			var n = SkiaApi.sk_font_text_to_glyphs (Handle, (void*)text, length, encoding, null, 0);
+			var n = CountGlyphs (text);
 			if (n <= 0)
 				return new ushort[0];
 
 			var glyphs = new ushort[n];
-			fixed (ushort* gp = glyphs) {
-				SkiaApi.sk_font_text_to_glyphs (Handle, (void*)text, length, encoding, gp, n);
-			}
+			GetGlyphs (text, glyphs);
 			return glyphs;
+		}
+
+		public ushort[] GetGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding)
+		{
+			var n = CountGlyphs (text, encoding);
+			if (n <= 0)
+				return new ushort[0];
+
+			var glyphs = new ushort[n];
+			GetGlyphs (text, encoding, glyphs);
+			return glyphs;
+		}
+
+		public void GetGlyphs (string text, Span<ushort> glyphs) =>
+			GetGlyphs (text.AsSpan (), glyphs);
+
+		public void GetGlyphs (ReadOnlySpan<char> text, Span<ushort> glyphs)
+		{
+			fixed (void* p = text)
+			fixed (ushort* gp = glyphs) {
+				SkiaApi.sk_font_text_to_glyphs (Handle, p, (IntPtr)text.Length, SKTextEncoding.Utf16, gp, glyphs.Length);
+			}
+		}
+
+		public void GetGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding, Span<ushort> glyphs)
+		{
+			fixed (void* p = text)
+			fixed (ushort* gp = glyphs) {
+				SkiaApi.sk_font_text_to_glyphs (Handle, p, (IntPtr)text.Length, encoding, gp, glyphs.Length);
+			}
 		}
 
 		// CountGlyphs
 
-		public int CountGlyphs (string text)
-		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
-			fixed (char* p = text) {
-				return CountGlyphs ((IntPtr)p, (IntPtr)text.Length, SKTextEncoding.Utf16);
-			}
-		}
+		public int CountGlyphs (string text) =>
+			CountGlyphs (text.AsSpan ());
 
 		public int CountGlyphs (ReadOnlySpan<char> text)
 		{
-			fixed (char* p = text) {
-				return CountGlyphs ((IntPtr)p, (IntPtr)text.Length, SKTextEncoding.Utf16);
+			fixed (void* p = text) {
+				return SkiaApi.sk_font_text_to_glyphs (Handle, p, (IntPtr)text.Length, SKTextEncoding.Utf16, null, 0);
 			}
 		}
-
-		public int CountGlyphs (byte[] text, SKTextEncoding encoding) =>
-			CountGlyphs ((ReadOnlySpan<byte>)text, encoding);
 
 		public int CountGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding)
 		{
-			fixed (byte* p = text) {
-				return CountGlyphs ((IntPtr)p, (IntPtr)text.Length, encoding);
+			fixed (void* p = text) {
+				return SkiaApi.sk_font_text_to_glyphs (Handle, p, (IntPtr)text.Length, encoding, null, 0);
 			}
-		}
-
-		public int CountGlyphs (IntPtr text, int length, SKTextEncoding encoding) =>
-			CountGlyphs (text, (IntPtr)length, encoding);
-
-		public int CountGlyphs (IntPtr text, IntPtr length, SKTextEncoding encoding)
-		{
-			if (text == IntPtr.Zero && length != IntPtr.Zero)
-				throw new ArgumentNullException (nameof (text));
-
-			return SkiaApi.sk_font_text_to_glyphs (Handle, (void*)text, length, encoding, null, 0);
 		}
 
 		// MeasureText
