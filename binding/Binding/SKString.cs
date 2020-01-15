@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
@@ -14,54 +13,34 @@ namespace SkiaSharp
 		public SKString ()
 			: base (SkiaApi.sk_string_new_empty (), true)
 		{
-			if (Handle == IntPtr.Zero) {
+			if (Handle == IntPtr.Zero)
 				throw new InvalidOperationException ("Unable to create a new SKString instance.");
-			}
-		}
-		
-		public SKString (byte [] src, long length)
-			: base (CreateCopy (src, length), true)
-		{
-			if (Handle == IntPtr.Zero) {
-				throw new InvalidOperationException ("Unable to copy the SKString instance.");
-			}
-		}
-		
-		private static IntPtr CreateCopy (byte [] src, long length)
-		{
-			fixed (byte* s = src) {
-				return SkiaApi.sk_string_new_with_copy (s, (IntPtr)length);
-			}
 		}
 
-		public SKString (byte [] src)
-			: this (src, src.Length)
-		{
-		}
-		
 		public SKString (string str)
 			: this (StringUtilities.GetEncodedText (str, SKTextEncoding.Utf8))
 		{
 		}
-		
-		public override string ToString ()
+
+		public SKString (ReadOnlySpan<byte> src)
+			: this (CreateCopy (src), true)
 		{
-			var cstr = SkiaApi.sk_string_get_c_str (Handle);
-			var clen = SkiaApi.sk_string_get_size (Handle);
-			return StringUtilities.GetString (cstr, (int)clen, SKTextEncoding.Utf8); 
+			if (Handle == IntPtr.Zero)
+				throw new InvalidOperationException ("Unable to create a new SKString instance.");
 		}
 
-		public static explicit operator string (SKString skString)
+		public SKString (ReadOnlySpan<byte> src, int length)
+			: this (CreateCopy (src.Slice (0, length)), true)
 		{
-			return skString.ToString ();
+			if (Handle == IntPtr.Zero)
+				throw new InvalidOperationException ("Unable to create a new SKString instance.");
 		}
-		
-		internal static SKString Create (string str)
+
+		private static IntPtr CreateCopy (ReadOnlySpan<byte> src)
 		{
-			if (str == null) {
-				return null;
+			fixed (byte* s = src) {
+				return SkiaApi.sk_string_new_with_copy (s, (IntPtr)src.Length);
 			}
-			return new SKString (str);
 		}
 
 		protected override void Dispose (bool disposing) =>
@@ -69,6 +48,21 @@ namespace SkiaSharp
 
 		protected override void DisposeNative () =>
 			SkiaApi.sk_string_destructor (Handle);
+
+		public int Length =>
+			(int)SkiaApi.sk_string_get_size (Handle);
+
+		public override string ToString ()
+		{
+			var ptr = SkiaApi.sk_string_get_c_str (Handle);
+			var span = new ReadOnlySpan<byte> (ptr, Length);
+			return StringUtilities.GetString (span, SKTextEncoding.Utf8);
+		}
+
+		public static explicit operator string (SKString str) =>
+			str.ToString ();
+
+		public static SKString Create (string str) =>
+			str == null ? null : new SKString (str);
 	}
 }
-

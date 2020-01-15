@@ -273,7 +273,7 @@ namespace SkiaSharp
 
 		private static IntPtr CreateNew (string path)
 		{
-			var bytes = StringUtilities.GetEncodedText (path, SKEncoding.Utf8);
+			var bytes = StringUtilities.GetEncodedText (path, SKTextEncoding.Utf8);
 			fixed (byte* p = bytes) {
 				return SkiaApi.sk_filestream_new (p);
 			}
@@ -488,7 +488,7 @@ namespace SkiaSharp
 
 		private static IntPtr CreateNew (string path)
 		{
-			var bytes = StringUtilities.GetEncodedText (path, SKEncoding.Utf8);
+			var bytes = StringUtilities.GetEncodedText (path, SKTextEncoding.Utf8);
 			fixed (byte* p = bytes) {
 				return SkiaApi.sk_filewstream_new (p);
 			}
