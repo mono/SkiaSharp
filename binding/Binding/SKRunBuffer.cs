@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
@@ -7,40 +6,25 @@ namespace SkiaSharp
 	{
 		internal readonly SKRunBufferInternal internalBuffer;
 
-		internal SKRunBuffer (SKRunBufferInternal buffer, int size, int textSize)
+		internal SKRunBuffer (SKRunBufferInternal buffer, int size)
 		{
 			internalBuffer = buffer;
 			Size = size;
-			TextSize = textSize;
 		}
 
 		public int Size { get; }
 
-		public int TextSize { get; }
-
 		public Span<ushort> GetGlyphSpan () =>
 			new Span<ushort> (internalBuffer.glyphs, Size);
 
-		public Span<byte> GetTextSpan () =>
-			new Span<byte> (internalBuffer.utf8text, TextSize);
-
-		public Span<uint> GetClusterSpan () =>
-			new Span<uint> (internalBuffer.clusters, Size);
-
 		public void SetGlyphs (ReadOnlySpan<ushort> glyphs) =>
 			glyphs.CopyTo (GetGlyphSpan ());
-
-		public void SetText (ReadOnlySpan<byte> text) =>
-			text.CopyTo (GetTextSpan ());
-
-		public void SetClusters (ReadOnlySpan<uint> clusters) =>
-			clusters.CopyTo (GetClusterSpan ());
 	}
 
 	public sealed unsafe class SKHorizontalRunBuffer : SKRunBuffer
 	{
-		internal SKHorizontalRunBuffer (SKRunBufferInternal buffer, int count, int textSize)
-			: base (buffer, count, textSize)
+		internal SKHorizontalRunBuffer (SKRunBufferInternal buffer, int count)
+			: base (buffer, count)
 		{
 		}
 
@@ -53,8 +37,8 @@ namespace SkiaSharp
 
 	public sealed unsafe class SKPositionedRunBuffer : SKRunBuffer
 	{
-		internal SKPositionedRunBuffer (SKRunBufferInternal buffer, int count, int textSize)
-			: base (buffer, count, textSize)
+		internal SKPositionedRunBuffer (SKRunBufferInternal buffer, int count)
+			: base (buffer, count)
 		{
 		}
 

@@ -64,11 +64,6 @@ namespace SkiaSharp
 			set => SkiaApi.sk_font_set_linear_metrics (Handle, value);
 		}
 
-		public SKFontHinting HintingLevel {
-			get => SkiaApi.sk_font_get_hinting (Handle);
-			set => SkiaApi.sk_font_set_hinting (Handle, value);
-		}
-
 		public bool Embolden {
 			get => SkiaApi.sk_font_is_embolden (Handle);
 			set => SkiaApi.sk_font_set_embolden (Handle, value);
@@ -249,7 +244,67 @@ namespace SkiaSharp
 		{
 			fixed (SKRect* b = &bounds)
 			fixed (void* t = text) {
-				return SkiaApi.sk_font_measure_text (Handle, t, (IntPtr)text.Length, SKTextEncoding.Utf16, b, paint?.Handle ?? IntPtr.Zero);
+				return SkiaApi.sk_font_measure_text (Handle, t, (IntPtr)text.Length, encoding, b, paint?.Handle ?? IntPtr.Zero);
+			}
+		}
+
+		// GetGlyphPositions
+
+		public SKPoint[] GetGlyphPositions (ReadOnlySpan<ushort> glyphs)
+		{
+			var positions = new SKPoint[glyphs.Length];
+			GetGlyphPositions (glyphs, positions);
+			return positions;
+		}
+
+		public SKPoint[] GetGlyphPositions (ReadOnlySpan<ushort> glyphs, SKPoint origin)
+		{
+			var positions = new SKPoint[glyphs.Length];
+			GetGlyphPositions (glyphs, positions, origin);
+			return positions;
+		}
+
+		public void GetGlyphPositions (ReadOnlySpan<ushort> glyphs, Span<SKPoint> positions) =>
+			GetGlyphPositions (glyphs, positions, SKPoint.Empty);
+
+		public void GetGlyphPositions (ReadOnlySpan<ushort> glyphs, Span<SKPoint> positions, SKPoint origin)
+		{
+			if (glyphs.Length != positions.Length)
+				throw new ArgumentException ("The length of glyphs must be the same as the length of positions.", nameof (positions));
+
+			fixed (ushort* gp = glyphs)
+			fixed (SKPoint* pp = positions) {
+				SkiaApi.sk_font_get_pos (Handle, gp, glyphs.Length, pp, &origin);
+			}
+		}
+
+		// GetGlyphOffsets
+
+		public float[] GetGlyphOffsets (ReadOnlySpan<ushort> glyphs)
+		{
+			var offsets = new float[glyphs.Length];
+			GetGlyphOffsets (glyphs, offsets);
+			return offsets;
+		}
+
+		public float[] GetGlyphOffsets (ReadOnlySpan<ushort> glyphs, float origin)
+		{
+			var offsets = new float[glyphs.Length];
+			GetGlyphOffsets (glyphs, offsets, origin);
+			return offsets;
+		}
+
+		public void GetGlyphOffsets (ReadOnlySpan<ushort> glyphs, Span<float> offsets) =>
+			GetGlyphOffsets (glyphs, offsets, 0);
+
+		public void GetGlyphOffsets (ReadOnlySpan<ushort> glyphs, Span<float> offsets, float origin)
+		{
+			if (glyphs.Length != offsets.Length)
+				throw new ArgumentException ("The length of glyphs must be the same as the length of offsets.", nameof (offsets));
+
+			fixed (ushort* gp = glyphs)
+			fixed (float* pp = offsets) {
+				SkiaApi.sk_font_get_xpos (Handle, gp, glyphs.Length, pp, origin);
 			}
 		}
 

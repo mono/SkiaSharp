@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers;
 
 namespace SkiaSharp
 {
@@ -14,9 +13,11 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		void ISKNonVirtualReferenceCounted.ReferenceNative () => SkiaApi.sk_textblob_ref (Handle);
+		void ISKNonVirtualReferenceCounted.ReferenceNative () =>
+			SkiaApi.sk_textblob_ref (Handle);
 
-		void ISKNonVirtualReferenceCounted.UnreferenceNative () => SkiaApi.sk_textblob_unref (Handle);
+		void ISKNonVirtualReferenceCounted.UnreferenceNative () =>
+			SkiaApi.sk_textblob_unref (Handle);
 
 		public SKRect Bounds {
 			get {
@@ -26,7 +27,8 @@ namespace SkiaSharp
 			}
 		}
 
-		public uint UniqueId => SkiaApi.sk_textblob_get_unique_id (Handle);
+		public uint UniqueId =>
+			SkiaApi.sk_textblob_get_unique_id (Handle);
 
 		// GetIntercepts
 
@@ -40,16 +42,11 @@ namespace SkiaSharp
 
 		public void GetIntercepts (float upperBounds, float lowerBounds, Span<float> intervals, SKPaint paint = null)
 		{
-			var bounds = ArrayPool<float>.Shared.Rent (2);
+			var bounds = stackalloc float[2];
 			bounds[0] = upperBounds;
 			bounds[1] = lowerBounds;
-			try {
-				fixed (float* b = bounds)
-				fixed (float* i = intervals) {
-					SkiaApi.sk_textblob_get_intercepts (Handle, b, i, paint?.Handle ?? IntPtr.Zero);
-				}
-			} finally {
-				ArrayPool<float>.Shared.Return (bounds);
+			fixed (float* i = intervals) {
+				SkiaApi.sk_textblob_get_intercepts (Handle, bounds, i, paint?.Handle ?? IntPtr.Zero);
 			}
 		}
 
@@ -57,16 +54,10 @@ namespace SkiaSharp
 
 		public int CountIntercepts (float upperBounds, float lowerBounds, SKPaint paint = null)
 		{
-			var bounds = ArrayPool<float>.Shared.Rent (2);
+			var bounds = stackalloc float[2];
 			bounds[0] = upperBounds;
 			bounds[1] = lowerBounds;
-			try {
-				fixed (float* b = bounds) {
-					return SkiaApi.sk_textblob_get_intercepts (Handle, b, null, paint?.Handle ?? IntPtr.Zero);
-				}
-			} finally {
-				ArrayPool<float>.Shared.Return (bounds);
-			}
+			return SkiaApi.sk_textblob_get_intercepts (Handle, bounds, null, paint?.Handle ?? IntPtr.Zero);
 		}
 	}
 
@@ -96,276 +87,149 @@ namespace SkiaSharp
 
 		// AddRun
 
-		public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, string text, uint[] clusters)
-		{
-			var utf8Text = StringUtilities.GetEncodedText (text, SKEncoding.Utf8);
-			AddRun (font, x, y, glyphs, utf8Text, clusters, null);
-		}
+		public void AddRun (string text, SKFont font) =>
+			AddRun (text.AsSpan (), font, 0, 0);
 
-		public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, string text, uint[] clusters, SKRect bounds)
-		{
-			var utf8Text = StringUtilities.GetEncodedText (text, SKEncoding.Utf8);
-			AddRun (font, x, y, glyphs, utf8Text, clusters, (SKRect?)bounds);
-		}
+		public void AddRun (string text, SKFont font, float x, float y) =>
+			AddRun (text.AsSpan (), font, x, y);
 
-		public void AddRun (SKPaint font, float x, float y, ushort[] glyphs) =>
-			AddRun (font, x, y, glyphs, ReadOnlySpan<byte>.Empty, ReadOnlySpan<uint>.Empty, null);
+		public void AddRun (ReadOnlySpan<char> text, SKFont font) =>
+			AddRun (text, font, 0, 0);
 
-		public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, SKRect bounds) =>
-			AddRun (font, x, y, glyphs, ReadOnlySpan<byte>.Empty, ReadOnlySpan<uint>.Empty, bounds);
-
-		public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, byte[] text, uint[] clusters) =>
-			AddRun (font, x, y, glyphs, text, clusters, null);
-
-		public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, byte[] text, uint[] clusters, SKRect bounds) =>
-			AddRun (font, x, y, glyphs, text, clusters, (SKRect?)bounds);
-
-		// AddRun (spans)
-
-		public void AddRun (SKPaint font, float x, float y, ReadOnlySpan<ushort> glyphs) =>
-			AddRun (font, x, y, glyphs, ReadOnlySpan<byte>.Empty, ReadOnlySpan<uint>.Empty, null);
-
-		public void AddRun (SKPaint font, float x, float y, ReadOnlySpan<ushort> glyphs, SKRect? bounds) =>
-			AddRun (font, x, y, glyphs, ReadOnlySpan<byte>.Empty, ReadOnlySpan<uint>.Empty, bounds);
-
-		public void AddRun (SKPaint font, float x, float y, ReadOnlySpan<ushort> glyphs, ReadOnlySpan<byte> text, ReadOnlySpan<uint> clusters) =>
-			AddRun (font, x, y, glyphs, text, clusters, null);
-
-		public void AddRun (SKPaint font, float x, float y, ReadOnlySpan<ushort> glyphs, ReadOnlySpan<byte> text, ReadOnlySpan<uint> clusters, SKRect? bounds)
+		public void AddRun (ReadOnlySpan<char> text, SKFont font, float x, float y)
 		{
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
-			if (glyphs.IsEmpty)
-				throw new ArgumentNullException (nameof (glyphs));
 
-			if (!text.IsEmpty) {
-				if (clusters.IsEmpty)
-					throw new ArgumentNullException (nameof (clusters));
-				if (glyphs.Length != clusters.Length)
-					throw new ArgumentException ("The number of glyphs and clusters must be the same.");
-			}
+			var count = font.CountGlyphs (text);
+			var buffer = AllocatePositionedRun (font, count);
+			font.GetGlyphs (text, buffer.GetGlyphSpan ());
+			font.GetGlyphPositions (buffer.GetGlyphSpan (), buffer.GetPositionSpan (), new SKPoint (x, y));
+		}
 
-			var run = AllocateRun (font, glyphs.Length, x, y, text.IsEmpty ? 0 : text.Length, bounds);
-			run.SetGlyphs (glyphs);
+		public void AddRun (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font) =>
+			AddRun (text, encoding, font, 0, 0);
 
-			if (!text.IsEmpty) {
-				run.SetText (text);
-				run.SetClusters (clusters);
-			}
+		public void AddRun (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, float x, float y)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			var count = font.CountGlyphs (text, encoding);
+			var buffer = AllocatePositionedRun (font, count);
+			font.GetGlyphs (text, encoding, buffer.GetGlyphSpan ());
+			font.GetGlyphPositions (buffer.GetGlyphSpan (), buffer.GetPositionSpan (), new SKPoint (x, y));
 		}
 
 		// AddHorizontalRun
 
-		public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, string text, uint[] clusters)
-		{
-			var utf8Text = StringUtilities.GetEncodedText (text, SKEncoding.Utf8);
-			AddHorizontalRun (font, y, glyphs, positions, utf8Text, clusters, null);
-		}
+		public void AddHorizontalRun (string text, ReadOnlySpan<float> positions, float y, SKFont font) =>
+			AddHorizontalRun (text.AsSpan (), positions, y, font);
 
-		public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, string text, uint[] clusters, SKRect bounds)
-		{
-			var utf8Text = StringUtilities.GetEncodedText (text, SKEncoding.Utf8);
-			AddHorizontalRun (font, y, glyphs, positions, utf8Text, clusters, (SKRect?)bounds);
-		}
-
-		public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions) =>
-			AddHorizontalRun (font, y, glyphs, positions, ReadOnlySpan<byte>.Empty, ReadOnlySpan<uint>.Empty, null);
-
-		public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, SKRect bounds) =>
-			AddHorizontalRun (font, y, glyphs, positions, ReadOnlySpan<byte>.Empty, ReadOnlySpan<uint>.Empty, bounds);
-
-		public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, byte[] text, uint[] clusters) =>
-			AddHorizontalRun (font, y, glyphs, positions, text, clusters, null);
-
-		public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, byte[] text, uint[] clusters, SKRect bounds) =>
-			AddHorizontalRun (font, y, glyphs, positions, text, clusters, (SKRect?)bounds);
-
-		// AddHorizontalRun (spans)
-
-		public void AddHorizontalRun (SKPaint font, float y, ReadOnlySpan<ushort> glyphs, ReadOnlySpan<float> positions) =>
-			AddHorizontalRun (font, y, glyphs, positions, ReadOnlySpan<byte>.Empty, ReadOnlySpan<uint>.Empty, null);
-
-		public void AddHorizontalRun (SKPaint font, float y, ReadOnlySpan<ushort> glyphs, ReadOnlySpan<float> positions, SKRect? bounds) =>
-			AddHorizontalRun (font, y, glyphs, positions, ReadOnlySpan<byte>.Empty, ReadOnlySpan<uint>.Empty, bounds);
-
-		public void AddHorizontalRun (SKPaint font, float y, ReadOnlySpan<ushort> glyphs, ReadOnlySpan<float> positions, ReadOnlySpan<byte> text, ReadOnlySpan<uint> clusters) =>
-			AddHorizontalRun (font, y, glyphs, positions, text, clusters, null);
-
-		public void AddHorizontalRun (SKPaint font, float y, ReadOnlySpan<ushort> glyphs, ReadOnlySpan<float> positions, ReadOnlySpan<byte> text, ReadOnlySpan<uint> clusters, SKRect? bounds)
+		public void AddHorizontalRun (ReadOnlySpan<char> text, ReadOnlySpan<float> positions, float y, SKFont font)
 		{
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
-			if (glyphs.IsEmpty)
-				throw new ArgumentNullException (nameof (glyphs));
-			if (positions.IsEmpty)
-				throw new ArgumentNullException (nameof (positions));
-			if (glyphs.Length != positions.Length)
-				throw new ArgumentException ("The number of glyphs and positions must be the same.");
 
-			if (!text.IsEmpty) {
-				if (clusters.IsEmpty)
-					throw new ArgumentNullException (nameof (clusters));
-				if (glyphs.Length != clusters.Length)
-					throw new ArgumentException ("The number of glyphs and clusters must be the same.");
-			}
+			var count = font.CountGlyphs (text);
+			var buffer = AllocateHorizontalRun (font, count, y);
+			font.GetGlyphs (text, buffer.GetGlyphSpan ());
+			positions.CopyTo (buffer.GetPositionSpan ());
+		}
 
-			var run = AllocateHorizontalRun (font, glyphs.Length, y, text.IsEmpty ? 0 : text.Length, bounds);
-			run.SetGlyphs (glyphs);
-			run.SetPositions (positions);
+		public void AddHorizontalRun (ReadOnlySpan<byte> text, SKTextEncoding encoding, ReadOnlySpan<float> positions, float y, SKFont font)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
 
-			if (!text.IsEmpty) {
-				run.SetText (text);
-				run.SetClusters (clusters);
-			}
+			var count = font.CountGlyphs (text, encoding);
+			var buffer = AllocateHorizontalRun (font, count, y);
+			font.GetGlyphs (text, encoding, buffer.GetGlyphSpan ());
+			positions.CopyTo (buffer.GetPositionSpan ());
 		}
 
 		// AddPositionedRun
 
-		public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, string text, uint[] clusters)
-		{
-			var utf8Text = StringUtilities.GetEncodedText (text, SKEncoding.Utf8);
-			AddPositionedRun (font, glyphs, positions, utf8Text, clusters, null);
-		}
+		public void AddPositionedRun (string text, ReadOnlySpan<SKPoint> positions, SKFont font) =>
+			AddPositionedRun (text.AsSpan (), positions, font);
 
-		public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, string text, uint[] clusters, SKRect bounds)
-		{
-			var utf8Text = StringUtilities.GetEncodedText (text, SKEncoding.Utf8);
-			AddPositionedRun (font, glyphs, positions, utf8Text, clusters, (SKRect?)bounds);
-		}
-
-		public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions) =>
-			AddPositionedRun (font, glyphs, positions, ReadOnlySpan<byte>.Empty, ReadOnlySpan<uint>.Empty, null);
-
-		public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, SKRect bounds) =>
-			AddPositionedRun (font, glyphs, positions, ReadOnlySpan<byte>.Empty, ReadOnlySpan<uint>.Empty, bounds);
-
-		public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, byte[] text, uint[] clusters) =>
-			AddPositionedRun (font, glyphs, positions, text, clusters, null);
-
-		public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, byte[] text, uint[] clusters, SKRect bounds) =>
-			AddPositionedRun (font, glyphs, positions, text, clusters, (SKRect?)bounds);
-
-		// AddPositionedRun (spans)
-
-		public void AddPositionedRun (SKPaint font, ReadOnlySpan<ushort> glyphs, ReadOnlySpan<SKPoint> positions) =>
-			AddPositionedRun (font, glyphs, positions, ReadOnlySpan<byte>.Empty, ReadOnlySpan<uint>.Empty, null);
-
-		public void AddPositionedRun (SKPaint font, ReadOnlySpan<ushort> glyphs, ReadOnlySpan<SKPoint> positions, SKRect? bounds) =>
-			AddPositionedRun (font, glyphs, positions, ReadOnlySpan<byte>.Empty, ReadOnlySpan<uint>.Empty, bounds);
-
-		public void AddPositionedRun (SKPaint font, ReadOnlySpan<ushort> glyphs, ReadOnlySpan<SKPoint> positions, ReadOnlySpan<byte> text, ReadOnlySpan<uint> clusters) =>
-			AddPositionedRun (font, glyphs, positions, text, clusters, null);
-
-		public void AddPositionedRun (SKPaint font, ReadOnlySpan<ushort> glyphs, ReadOnlySpan<SKPoint> positions, ReadOnlySpan<byte> text, ReadOnlySpan<uint> clusters, SKRect? bounds)
+		public void AddPositionedRun (ReadOnlySpan<char> text, ReadOnlySpan<SKPoint> positions, SKFont font)
 		{
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
-			if (glyphs.IsEmpty)
-				throw new ArgumentNullException (nameof (glyphs));
-			if (positions.IsEmpty)
-				throw new ArgumentNullException (nameof (positions));
-			if (glyphs.Length != positions.Length)
-				throw new ArgumentException ("The number of glyphs and positions must be the same.");
 
-			if (!text.IsEmpty) {
-				if (clusters.IsEmpty)
-					throw new ArgumentNullException (nameof (clusters));
-				if (glyphs.Length != clusters.Length)
-					throw new ArgumentException ("The number of glyphs and clusters must be the same.");
-			}
+			var count = font.CountGlyphs (text);
+			var buffer = AllocatePositionedRun (font, count);
+			font.GetGlyphs (text, buffer.GetGlyphSpan ());
+			positions.CopyTo (buffer.GetPositionSpan ());
+		}
 
-			var run = AllocatePositionedRun (font, glyphs.Length, text.IsEmpty ? 0 : text.Length, bounds);
-			run.SetGlyphs (glyphs);
-			run.SetPositions (positions);
+		public void AddPositionedRun (ReadOnlySpan<byte> text, SKTextEncoding encoding, ReadOnlySpan<SKPoint> positions, SKFont font)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
 
-			if (!text.IsEmpty) {
-				run.SetText (text);
-				run.SetClusters (clusters);
-			}
+			var count = font.CountGlyphs (text, encoding);
+			var buffer = AllocatePositionedRun (font, count);
+			font.GetGlyphs (text, encoding, buffer.GetGlyphSpan ());
+			positions.CopyTo (buffer.GetPositionSpan ());
 		}
 
 		// AllocateRun
 
-		public SKRunBuffer AllocateRun (SKPaint font, int count, float x, float y) =>
-			AllocateRun (font, count, x, y, 0, null);
+		public SKRunBuffer AllocateRun (SKFont font, int count, float x, float y) =>
+			AllocateRun (font, count, x, y, null);
 
-		public SKRunBuffer AllocateRun (SKPaint font, int count, float x, float y, SKRect? bounds) =>
-			AllocateRun (font, count, x, y, 0, bounds);
+		public SKRunBuffer AllocateRun (SKFont font, int count, float x, float y, SKRect bounds) =>
+			AllocateRun (font, count, x, y, &bounds);
 
-		public SKRunBuffer AllocateRun (SKPaint font, int count, float x, float y, int textByteCount) =>
-			AllocateRun (font, count, x, y, textByteCount, null);
-
-		public SKRunBuffer AllocateRun (SKPaint font, int count, float x, float y, int textByteCount, SKRect? bounds)
+		private SKRunBuffer AllocateRun (SKFont font, int count, float x, float y, SKRect* bounds)
 		{
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
 
-			using (var lang = new SKString ()) {
-				SKRunBufferInternal runbuffer;
-				if (bounds is SKRect b) {
-					SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.Handle, count, x, y, textByteCount, lang.Handle, &b, &runbuffer);
-				} else {
-					SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.Handle, count, x, y, textByteCount, lang.Handle, null, &runbuffer);
-				}
+			SKRunBufferInternal runbuffer;
+			SkiaApi.sk_textblob_builder_alloc_run (Handle, font.Handle, count, x, y, bounds, &runbuffer);
 
-				return new SKRunBuffer (runbuffer, count, textByteCount);
-			}
+			return new SKRunBuffer (runbuffer, count);
 		}
 
 		// AllocateHorizontalRun
 
-		public SKHorizontalRunBuffer AllocateHorizontalRun (SKPaint font, int count, float y) =>
-			AllocateHorizontalRun (font, count, y, 0, null);
+		public SKHorizontalRunBuffer AllocateHorizontalRun (SKFont font, int count, float y) =>
+			AllocateHorizontalRun (font, count, y, null);
 
-		public SKHorizontalRunBuffer AllocateHorizontalRun (SKPaint font, int count, float y, SKRect? bounds) =>
-			AllocateHorizontalRun (font, count, y, 0, bounds);
+		public SKHorizontalRunBuffer AllocateHorizontalRun (SKFont font, int count, float y, SKRect bounds) =>
+			AllocateHorizontalRun (font, count, y, &bounds);
 
-		public SKHorizontalRunBuffer AllocateHorizontalRun (SKPaint font, int count, float y, int textByteCount) =>
-			AllocateHorizontalRun (font, count, y, textByteCount, null);
-
-		public SKHorizontalRunBuffer AllocateHorizontalRun (SKPaint font, int count, float y, int textByteCount, SKRect? bounds)
+		private SKHorizontalRunBuffer AllocateHorizontalRun (SKFont font, int count, float y, SKRect* bounds)
 		{
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
 
-			using (var lang = new SKString ()) {
-				SKRunBufferInternal runbuffer;
-				if (bounds is SKRect b) {
-					SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.Handle, count, y, textByteCount, lang.Handle, &b, &runbuffer);
-				} else {
-					SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.Handle, count, y, textByteCount, lang.Handle, null, &runbuffer);
-				}
+			SKRunBufferInternal runbuffer;
+			SkiaApi.sk_textblob_builder_alloc_run_pos_h (Handle, font.Handle, count, y, bounds, &runbuffer);
 
-				return new SKHorizontalRunBuffer (runbuffer, count, textByteCount);
-			}
+			return new SKHorizontalRunBuffer (runbuffer, count);
 		}
 
 		// AllocatePositionedRun
 
-		public SKPositionedRunBuffer AllocatePositionedRun (SKPaint font, int count) =>
-			AllocatePositionedRun (font, count, 0, null);
+		public SKPositionedRunBuffer AllocatePositionedRun (SKFont font, int count) =>
+			AllocatePositionedRun (font, count, null);
 
-		public SKPositionedRunBuffer AllocatePositionedRun (SKPaint font, int count, SKRect? bounds) =>
-			AllocatePositionedRun (font, count, 0, bounds);
+		public SKPositionedRunBuffer AllocatePositionedRun (SKFont font, int count, SKRect bounds) =>
+			AllocatePositionedRun (font, count, &bounds);
 
-		public SKPositionedRunBuffer AllocatePositionedRun (SKPaint font, int count, int textByteCount) =>
-			AllocatePositionedRun (font, count, textByteCount, null);
-
-		public SKPositionedRunBuffer AllocatePositionedRun (SKPaint font, int count, int textByteCount, SKRect? bounds)
+		private SKPositionedRunBuffer AllocatePositionedRun (SKFont font, int count, SKRect* bounds)
 		{
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
 
-			using (var lang = new SKString ()) {
-				SKRunBufferInternal runbuffer;
-				if (bounds is SKRect b) {
-					SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.Handle, count, textByteCount, lang.Handle, &b, &runbuffer);
-				} else {
-					SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.Handle, count, textByteCount, lang.Handle, null, &runbuffer);
-				}
+			SKRunBufferInternal runbuffer;
+			SkiaApi.sk_textblob_builder_alloc_run_pos (Handle, font.Handle, count, bounds, &runbuffer);
 
-				return new SKPositionedRunBuffer (runbuffer, count, textByteCount);
-			}
+			return new SKPositionedRunBuffer (runbuffer, count);
 		}
 	}
 }
