@@ -1903,7 +1903,15 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_fontstyleset_unref (sk_fontstyleset_t fss);
 
-		// int sk_typeface_count_tables(sk_typeface_t* typeface)
+		// sk_data_t* sk_typeface_copy_table_data(const sk_typeface_t* typeface, sk_font_table_tag_t tag)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_data_t sk_typeface_copy_table_data (sk_typeface_t typeface, UInt32 tag);
+
+		// int sk_typeface_count_glyphs(const sk_typeface_t* typeface)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_typeface_count_glyphs (sk_typeface_t typeface);
+
+		// int sk_typeface_count_tables(const sk_typeface_t* typeface)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_typeface_count_tables (sk_typeface_t typeface);
 
@@ -1911,60 +1919,69 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_typeface_create_default ();
 
+		// sk_typeface_t* sk_typeface_create_from_data(sk_data_t* data, int index)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_typeface_t sk_typeface_create_from_data (sk_data_t data, Int32 index);
+
 		// sk_typeface_t* sk_typeface_create_from_file(const char* path, int index)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_typeface_create_from_file (/* char */ void* path, Int32 index);
 
-		// sk_typeface_t* sk_typeface_create_from_name_with_font_style(const char* familyName, sk_fontstyle_t* style)
+		// sk_typeface_t* sk_typeface_create_from_name(const char* familyName, const sk_fontstyle_t* style)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_typeface_t sk_typeface_create_from_name_with_font_style ([MarshalAs (UnmanagedType.LPStr)] String familyName, sk_fontstyle_t style);
+		internal static extern sk_typeface_t sk_typeface_create_from_name ([MarshalAs (UnmanagedType.LPStr)] String familyName, sk_fontstyle_t style);
 
 		// sk_typeface_t* sk_typeface_create_from_stream(sk_stream_asset_t* stream, int index)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_typeface_create_from_stream (sk_stream_asset_t stream, Int32 index);
 
-		// sk_string_t* sk_typeface_get_family_name(sk_typeface_t* typeface)
+		// sk_string_t* sk_typeface_get_family_name(const sk_typeface_t* typeface)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_string_t sk_typeface_get_family_name (sk_typeface_t typeface);
 
-		// sk_font_style_slant_t sk_typeface_get_font_slant(sk_typeface_t* typeface)
+		// sk_font_style_slant_t sk_typeface_get_font_slant(const sk_typeface_t* typeface)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SKFontStyleSlant sk_typeface_get_font_slant (sk_typeface_t typeface);
 
-		// int sk_typeface_get_font_weight(sk_typeface_t* typeface)
+		// int sk_typeface_get_font_weight(const sk_typeface_t* typeface)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_typeface_get_font_weight (sk_typeface_t typeface);
 
-		// int sk_typeface_get_font_width(sk_typeface_t* typeface)
+		// int sk_typeface_get_font_width(const sk_typeface_t* typeface)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_typeface_get_font_width (sk_typeface_t typeface);
 
-		// sk_fontstyle_t* sk_typeface_get_fontstyle(sk_typeface_t* typeface)
+		// sk_fontstyle_t* sk_typeface_get_fontstyle(const sk_typeface_t* typeface)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_fontstyle_t sk_typeface_get_fontstyle (sk_typeface_t typeface);
 
-		// size_t sk_typeface_get_table_data(sk_typeface_t* typeface, sk_font_table_tag_t tag, size_t offset, size_t length, void* data)
+		// bool sk_typeface_get_kerning_pair_adjustments(const sk_typeface_t* typeface, const uint16_t[-1] glyphs, int count, int32_t[-1] adjustments)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_typeface_get_kerning_pair_adjustments (sk_typeface_t typeface, UInt16* glyphs, Int32 count, Int32* adjustments);
+
+		// size_t sk_typeface_get_table_data(const sk_typeface_t* typeface, sk_font_table_tag_t tag, size_t offset, size_t length, void* data)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_typeface_get_table_data (sk_typeface_t typeface, UInt32 tag, /* size_t */ IntPtr offset, /* size_t */ IntPtr length, void* data);
 
-		// size_t sk_typeface_get_table_size(sk_typeface_t* typeface, sk_font_table_tag_t tag)
+		// size_t sk_typeface_get_table_size(const sk_typeface_t* typeface, sk_font_table_tag_t tag)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern /* size_t */ IntPtr sk_typeface_get_table_size (sk_typeface_t typeface, UInt32 tag);
 
-		// int sk_typeface_get_table_tags(sk_typeface_t* typeface, sk_font_table_tag_t[-1] tags)
+		// int sk_typeface_get_table_tags(const sk_typeface_t* typeface, sk_font_table_tag_t[-1] tags)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_typeface_get_table_tags (sk_typeface_t typeface, UInt32* tags);
 
-		// int sk_typeface_get_units_per_em(sk_typeface_t* typeface)
+		// int sk_typeface_get_units_per_em(const sk_typeface_t* typeface)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern Int32 sk_typeface_get_units_per_em (sk_typeface_t typeface);
 
-		// bool sk_typeface_is_fixed_pitch(sk_typeface_t* typeface)
+		// bool sk_typeface_is_fixed_pitch(const sk_typeface_t* typeface)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_typeface_is_fixed_pitch (sk_typeface_t typeface);
 
-		// sk_stream_asset_t* sk_typeface_open_stream(sk_typeface_t* typeface, int* ttcIndex)
+		// sk_stream_asset_t* sk_typeface_open_stream(const sk_typeface_t* typeface, int* ttcIndex)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_stream_asset_t sk_typeface_open_stream (sk_typeface_t typeface, Int32* ttcIndex);
 
@@ -1972,9 +1989,17 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_typeface_t sk_typeface_ref_default ();
 
-		// void sk_typeface_unref(sk_typeface_t*)
+		// uint16_t sk_typeface_unichar_to_glyph(const sk_typeface_t* typeface, const int32_t unichar)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_typeface_unref (sk_typeface_t param0);
+		internal static extern UInt16 sk_typeface_unichar_to_glyph (sk_typeface_t typeface, Int32 unichar);
+
+		// void sk_typeface_unichars_to_glyphs(const sk_typeface_t* typeface, const int32_t[-1] unichars, int count, uint16_t[-1] glyphs)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_typeface_unichars_to_glyphs (sk_typeface_t typeface, Int32* unichars, Int32 count, UInt16* glyphs);
+
+		// void sk_typeface_unref(sk_typeface_t* typeface)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_typeface_unref (sk_typeface_t typeface);
 
 		#endregion
 

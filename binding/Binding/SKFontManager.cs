@@ -9,7 +9,7 @@ namespace SkiaSharp
 	{
 		private static readonly Lazy<SKFontManager> defaultManager;
 
-		static SKFontManager()
+		static SKFontManager ()
 		{
 			defaultManager = new Lazy<SKFontManager> (() => new SKFontManagerStatic (SkiaApi.sk_fontmgr_ref_default ()));
 		}
@@ -31,36 +31,46 @@ namespace SkiaSharp
 
 		public static SKFontManager Default => defaultManager.Value;
 
+		// FontFamilies
+
 		public int FontFamilyCount => SkiaApi.sk_fontmgr_count_families (Handle);
 
 		public IEnumerable<string> FontFamilies {
 			get {
 				var count = FontFamilyCount;
+				if (count <= 0)
+					yield break;
+
+				using var str = new SKString ();
 				for (var i = 0; i < count; i++) {
-					yield return GetFamilyName (i);
+					SkiaApi.sk_fontmgr_get_family_name (Handle, i, str.Handle);
+					yield return (string)str;
 				}
 			}
 		}
 
 		public string GetFamilyName (int index)
 		{
-			using (var str = new SKString ()) {
-				SkiaApi.sk_fontmgr_get_family_name (Handle, index, str.Handle);
-				return (string)str;
-			}
+			using var str = new SKString ();
+			SkiaApi.sk_fontmgr_get_family_name (Handle, index, str.Handle);
+			return (string)str;
 		}
 
-		public string[] GetFontFamilies () => FontFamilies.ToArray ();
+		public string[] GetFontFamilies () =>
+			FontFamilies.ToArray ();
 
-		public SKFontStyleSet GetFontStyles (int index)
-		{
-			return GetObject<SKFontStyleSet> (SkiaApi.sk_fontmgr_create_styleset (Handle, index));
-		}
+		// GetFontStyles
 
-		public SKFontStyleSet GetFontStyles (string familyName)
-		{
-			return GetObject<SKFontStyleSet> (SkiaApi.sk_fontmgr_match_family (Handle, familyName));
-		}
+		public SKFontStyleSet GetFontStyles (int index) =>
+			GetObject<SKFontStyleSet> (SkiaApi.sk_fontmgr_create_styleset (Handle, index));
+
+		public SKFontStyleSet GetFontStyles (string familyName) =>
+			GetObject<SKFontStyleSet> (SkiaApi.sk_fontmgr_match_family (Handle, familyName));
+
+		// MatchFamily
+
+		public SKTypeface MatchFamily (string familyName) =>
+			MatchFamily (familyName, SKFontStyle.Normal);
 
 		public SKTypeface MatchFamily (string familyName, SKFontStyle style)
 		{
@@ -69,6 +79,8 @@ namespace SkiaSharp
 
 			return GetObject<SKTypeface> (SkiaApi.sk_fontmgr_match_family_style (Handle, familyName, style.Handle));
 		}
+
+		// MatchTypeface
 
 		public SKTypeface MatchTypeface (SKTypeface face, SKFontStyle style)
 		{
@@ -80,12 +92,14 @@ namespace SkiaSharp
 			return GetObject<SKTypeface> (SkiaApi.sk_fontmgr_match_face_style (Handle, face.Handle, style.Handle));
 		}
 
+		// CreateTypeface
+
 		public SKTypeface CreateTypeface (string path, int index = 0)
 		{
 			if (path == null)
 				throw new ArgumentNullException (nameof (path));
 
-			var utf8path = StringUtilities.GetEncodedText (path, SKEncoding.Utf8);
+			var utf8path = StringUtilities.GetEncodedText (path, SKTextEncoding.Utf8);
 			fixed (byte* u = utf8path) {
 				return GetObject<SKTypeface> (SkiaApi.sk_fontmgr_create_from_file (Handle, u, index));
 			}
@@ -122,67 +136,52 @@ namespace SkiaSharp
 			return GetObject<SKTypeface> (SkiaApi.sk_fontmgr_create_from_data (Handle, data.Handle, index));
 		}
 
-		public SKTypeface MatchCharacter (char character)
-		{
-			return MatchCharacter (null, SKFontStyle.Normal, null, character);
-		}
+		// MatchCharacter
 
-		public SKTypeface MatchCharacter (int character)
-		{
-			return MatchCharacter (null, SKFontStyle.Normal, null, character);
-		}
+		public SKTypeface MatchCharacter (char character) =>
+			MatchCharacter (null, SKFontStyle.Normal, null, character);
 
-		public SKTypeface MatchCharacter (string familyName, char character)
-		{
-			return MatchCharacter (familyName, SKFontStyle.Normal, null, character);
-		}
+		public SKTypeface MatchCharacter (int character) =>
+			MatchCharacter (null, SKFontStyle.Normal, null, character);
 
-		public SKTypeface MatchCharacter (string familyName, int character)
-		{
-			return MatchCharacter (familyName, SKFontStyle.Normal, null, character);
-		}
+		public SKTypeface MatchCharacter (string familyName, char character) =>
+			MatchCharacter (familyName, SKFontStyle.Normal, null, character);
 
-		public SKTypeface MatchCharacter (string familyName, string[] bcp47, char character)
-		{
-			return MatchCharacter (familyName, SKFontStyle.Normal, bcp47, character);
-		}
+		public SKTypeface MatchCharacter (string familyName, int character) =>
+			MatchCharacter (familyName, SKFontStyle.Normal, null, character);
 
-		public SKTypeface MatchCharacter (string familyName, string[] bcp47, int character)
-		{
-			return MatchCharacter (familyName, SKFontStyle.Normal, bcp47, character);
-		}
+		public SKTypeface MatchCharacter (string familyName, ReadOnlySpan<string> bcp47, char character) =>
+			MatchCharacter (familyName, SKFontStyle.Normal, bcp47, character);
 
-		public SKTypeface MatchCharacter (string familyName, SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant, string[] bcp47, char character)
-		{
-			return MatchCharacter (familyName, new SKFontStyle (weight, width, slant), bcp47, character);
-		}
+		public SKTypeface MatchCharacter (string familyName, ReadOnlySpan<string> bcp47, int character) =>
+			MatchCharacter (familyName, SKFontStyle.Normal, bcp47, character);
 
-		public SKTypeface MatchCharacter (string familyName, SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant, string[] bcp47, int character)
-		{
-			return MatchCharacter (familyName, new SKFontStyle (weight, width, slant), bcp47, character);
-		}
+		public SKTypeface MatchCharacter (string familyName, SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant, ReadOnlySpan<string> bcp47, char character) =>
+			MatchCharacter (familyName, new SKFontStyle (weight, width, slant), bcp47, character);
 
-		public SKTypeface MatchCharacter (string familyName, int weight, int width, SKFontStyleSlant slant, string[] bcp47, int character)
-		{
-			return MatchCharacter (familyName, new SKFontStyle (weight, width, slant), bcp47, character);
-		}
+		public SKTypeface MatchCharacter (string familyName, SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant, ReadOnlySpan<string> bcp47, int character) =>
+			MatchCharacter (familyName, new SKFontStyle (weight, width, slant), bcp47, character);
 
-		public SKTypeface MatchCharacter (string familyName, SKFontStyle style, string[] bcp47, int character)
+		public SKTypeface MatchCharacter (string familyName, int weight, int width, SKFontStyleSlant slant, ReadOnlySpan<string> bcp47, int character) =>
+			MatchCharacter (familyName, new SKFontStyle (weight, width, slant), bcp47, character);
+
+		public SKTypeface MatchCharacter (string familyName, SKFontStyle style, ReadOnlySpan<string> bcp47, int character)
 		{
 			if (style == null)
 				throw new ArgumentNullException (nameof (style));
 
 			// TODO: work around for https://bugs.chromium.org/p/skia/issues/detail?id=6196
-			if (familyName == null)
-				familyName = string.Empty;
+			familyName ??= string.Empty;
 
-			return GetObject<SKTypeface> (SkiaApi.sk_fontmgr_match_family_style_character (Handle, familyName, style.Handle, bcp47, bcp47?.Length ?? 0, character));
+			var b = bcp47.IsEmpty ? null : bcp47.ToArray ();
+
+			return GetObject<SKTypeface> (SkiaApi.sk_fontmgr_match_family_style_character (Handle, familyName, style.Handle, b, b?.Length ?? 0, character));
 		}
 
-		public static SKFontManager CreateDefault ()
-		{
-			return GetObject<SKFontManager> (SkiaApi.sk_fontmgr_create_default ());
-		}
+		// CreateDefault
+
+		public static SKFontManager CreateDefault () =>
+			GetObject<SKFontManager> (SkiaApi.sk_fontmgr_create_default ());
 
 		private sealed class SKFontManagerStatic : SKFontManager
 		{
