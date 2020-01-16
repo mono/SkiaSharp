@@ -41,7 +41,7 @@ namespace SkiaSharp
 			if (toXyzD50 == null)
 				throw new ArgumentNullException (nameof (toXyzD50));
 			fixed (SKColorSpacePrimaries* t = &this) {
-				return SkiaApi.sk_colorspaceprimaries_to_xyzd50 (t, toXyzD50.Handle);
+				return SkiaApi.sk_colorspace_primaries_to_xyzd50 (t, toXyzD50.Handle);
 			}
 		}
 
@@ -99,7 +99,7 @@ namespace SkiaSharp
 		public float Transform (float x)
 		{
 			fixed (SKColorSpaceTransferFn* t = &this) {
-				return SkiaApi.sk_colorspace_transfer_fn_transform (t, x);
+				return SkiaApi.sk_colorspace_transfer_fn_eval (t, x);
 			}
 		}
 	}
@@ -135,10 +135,6 @@ namespace SkiaSharp
 		public bool GammaIsLinear => SkiaApi.sk_colorspace_gamma_is_linear (Handle);
 
 		public bool IsSrgb => SkiaApi.sk_colorspace_is_srgb (Handle);
-
-		public SKColorSpaceType Type => SkiaApi.sk_colorspace_gamma_get_type (Handle);
-
-		public SKNamedGamma NamedGamma => SkiaApi.sk_colorspace_gamma_get_gamma_named (Handle);
 
 		public bool IsNumericalTransferFunction => GetNumericalTransferFunction (out _);
 
@@ -186,51 +182,15 @@ namespace SkiaSharp
 			}
 		}
 
-		[Obsolete ("Use CreateRgb (SKColorSpaceRenderTargetGamma, SKMatrix44) instead.")]
-		public static SKColorSpace CreateRgb (SKColorSpaceRenderTargetGamma gamma, SKMatrix44 toXyzD50, SKColorSpaceFlags flags) =>
-			CreateRgb (gamma, toXyzD50);
-
-		[Obsolete ("Use CreateRgb (SKColorSpaceRenderTargetGamma, SKColorSpaceGamut) instead.")]
-		public static SKColorSpace CreateRgb (SKColorSpaceRenderTargetGamma gamma, SKColorSpaceGamut gamut, SKColorSpaceFlags flags) =>
-			CreateRgb (gamma, gamut);
-
-		[Obsolete ("Use CreateRgb (SKColorSpaceTransferFn, SKMatrix44) instead.")]
-		public static SKColorSpace CreateRgb (SKColorSpaceTransferFn coeffs, SKMatrix44 toXyzD50, SKColorSpaceFlags flags) =>
-			CreateRgb (coeffs, toXyzD50);
-
-		[Obsolete ("Use CreateRgb (SKColorSpaceTransferFn, SKColorSpaceGamut) instead.")]
-		public static SKColorSpace CreateRgb (SKColorSpaceTransferFn coeffs, SKColorSpaceGamut gamut, SKColorSpaceFlags flags) =>
-			CreateRgb (coeffs, gamut);
-
-		public static SKColorSpace CreateRgb (SKColorSpaceRenderTargetGamma gamma, SKMatrix44 toXyzD50)
-		{
-			if (toXyzD50 == null)
-				throw new ArgumentNullException (nameof (toXyzD50));
-			return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_gamma (gamma, toXyzD50.Handle));
-		}
-
-		public static SKColorSpace CreateRgb (SKColorSpaceRenderTargetGamma gamma, SKColorSpaceGamut gamut) =>
-			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_gamma_and_gamut (gamma, gamut));
-
 		public static SKColorSpace CreateRgb (SKColorSpaceTransferFn coeffs, SKMatrix44 toXyzD50)
 		{
 			if (toXyzD50 == null)
 				throw new ArgumentNullException (nameof (toXyzD50));
-			return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_coeffs (&coeffs, toXyzD50.Handle));
+			return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_matrix44 (&coeffs, toXyzD50.Handle));
 		}
 
-		public static SKColorSpace CreateRgb (SKColorSpaceTransferFn coeffs, SKColorSpaceGamut gamut) =>
-			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_coeffs_and_gamut (&coeffs, gamut));
-
-		public static SKColorSpace CreateRgb (SKNamedGamma gamma, SKMatrix44 toXyzD50)
-		{
-			if (toXyzD50 == null)
-				throw new ArgumentNullException (nameof (toXyzD50));
-			return GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_gamma_named (gamma, toXyzD50.Handle));
-		}
-
-		public static SKColorSpace CreateRgb (SKNamedGamma gamma, SKColorSpaceGamut gamut) =>
-			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_with_gamma_named_and_gamut (gamma, gamut));
+		public static SKColorSpace CreateRgb (SKNamedTransferFn coeffs, SKNamedGamut toXYZD50) =>
+			GetObject<SKColorSpace> (SkiaApi.sk_colorspace_new_rgb_named (coeffs, toXYZD50));
 
 		public bool ToXyzD50 (SKMatrix44 toXyzD50)
 		{
@@ -245,12 +205,6 @@ namespace SkiaSharp
 				return SkiaApi.sk_colorspace_is_numerical_transfer_fn (Handle, f);
 			}
 		}
-
-		public SKMatrix44 ToXyzD50 () =>
-			GetObject<SKMatrix44> (SkiaApi.sk_colorspace_as_to_xyzd50 (Handle), false);
-
-		public SKMatrix44 FromXyzD50 () =>
-			GetObject<SKMatrix44> (SkiaApi.sk_colorspace_as_from_xyzd50 (Handle), false);
 
 		private sealed class SKColorSpaceStatic : SKColorSpace
 		{

@@ -1146,37 +1146,42 @@ namespace SkiaSharp
 
 		#region sk_colorspace.h
 
-		// const sk_matrix44_t* sk_colorspace_as_from_xyzd50(const sk_colorspace_t* cColorSpace)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_matrix44_t sk_colorspace_as_from_xyzd50 (sk_colorspace_t cColorSpace);
-
-		// const sk_matrix44_t* sk_colorspace_as_to_xyzd50(const sk_colorspace_t* cColorSpace)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_matrix44_t sk_colorspace_as_to_xyzd50 (sk_colorspace_t cColorSpace);
-
 		// bool sk_colorspace_equals(const sk_colorspace_t* src, const sk_colorspace_t* dst)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_colorspace_equals (sk_colorspace_t src, sk_colorspace_t dst);
 
-		// bool sk_colorspace_gamma_close_to_srgb(const sk_colorspace_t* cColorSpace)
+		// bool sk_colorspace_gamma_close_to_srgb(const sk_colorspace_t* colorspace)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_colorspace_gamma_close_to_srgb (sk_colorspace_t cColorSpace);
+		internal static extern bool sk_colorspace_gamma_close_to_srgb (sk_colorspace_t colorspace);
 
-		// bool sk_colorspace_gamma_is_linear(const sk_colorspace_t* cColorSpace)
+		// bool sk_colorspace_gamma_is_linear(const sk_colorspace_t* colorspace)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_colorspace_gamma_is_linear (sk_colorspace_t cColorSpace);
+		internal static extern bool sk_colorspace_gamma_is_linear (sk_colorspace_t colorspace);
 
-		// bool sk_colorspace_is_srgb(const sk_colorspace_t* cColorSpace)
+		// bool sk_colorspace_is_numerical_transfer_fn(const sk_colorspace_t* colorspace, sk_colorspace_transfer_fn_t* transferFn)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_colorspace_is_srgb (sk_colorspace_t cColorSpace);
+		internal static extern bool sk_colorspace_is_numerical_transfer_fn (sk_colorspace_t colorspace, SKColorSpaceTransferFn* transferFn);
+
+		// bool sk_colorspace_is_srgb(const sk_colorspace_t* colorspace)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_colorspace_is_srgb (sk_colorspace_t colorspace);
 
 		// sk_colorspace_t* sk_colorspace_new_icc(const void* input, size_t len)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern sk_colorspace_t sk_colorspace_new_icc (void* input, /* size_t */ IntPtr len);
+
+		// sk_colorspace_t* sk_colorspace_new_rgb_matrix44(const sk_colorspace_transfer_fn_t* transferFn, const sk_matrix44_t* toXYZD50)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorspace_t sk_colorspace_new_rgb_matrix44 (SKColorSpaceTransferFn* transferFn, sk_matrix44_t toXYZD50);
+
+		// sk_colorspace_t* sk_colorspace_new_rgb_named(sk_named_transfer_fn_t transferFn, sk_named_gamut_t toXYZD50)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorspace_t sk_colorspace_new_rgb_named (SKNamedTransferFn transferFn, SKNamedGamut toXYZD50);
 
 		// sk_colorspace_t* sk_colorspace_new_srgb()
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -1191,14 +1196,23 @@ namespace SkiaSharp
 		[return: MarshalAs (UnmanagedType.I1)]
 		internal static extern bool sk_colorspace_primaries_to_xyzd50 (SKColorSpacePrimaries* primaries, sk_matrix44_t toXYZD50);
 
-		// bool sk_colorspace_to_xyzd50(const sk_colorspace_t* cColorSpace, sk_matrix44_t* toXYZD50)
+		// bool sk_colorspace_to_xyzd50(const sk_colorspace_t* colorspace, sk_matrix44_t* toXYZD50)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_colorspace_to_xyzd50 (sk_colorspace_t cColorSpace, sk_matrix44_t toXYZD50);
+		internal static extern bool sk_colorspace_to_xyzd50 (sk_colorspace_t colorspace, sk_matrix44_t toXYZD50);
 
-		// void sk_colorspace_unref(sk_colorspace_t* cColorSpace)
+		// float sk_colorspace_transfer_fn_eval(const sk_colorspace_transfer_fn_t* transferFn, float x)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_colorspace_unref (sk_colorspace_t cColorSpace);
+		internal static extern Single sk_colorspace_transfer_fn_eval (SKColorSpaceTransferFn* transferFn, Single x);
+
+		// bool sk_colorspace_transfer_fn_invert(const sk_colorspace_transfer_fn_t* src, sk_colorspace_transfer_fn_t* dst)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_colorspace_transfer_fn_invert (SKColorSpaceTransferFn* src, SKColorSpaceTransferFn* dst);
+
+		// void sk_colorspace_unref(sk_colorspace_t* colorspace)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_colorspace_unref (sk_colorspace_t colorspace);
 
 		#endregion
 
@@ -3674,6 +3688,60 @@ namespace SkiaSharp
 
 	}
 
+	// sk_colorspace_transfer_fn_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct SKColorSpaceTransferFn {
+		// public float fG
+		private Single fG;
+		public Single G {
+			get => fG;
+			set => fG = value;
+		}
+
+		// public float fA
+		private Single fA;
+		public Single A {
+			get => fA;
+			set => fA = value;
+		}
+
+		// public float fB
+		private Single fB;
+		public Single B {
+			get => fB;
+			set => fB = value;
+		}
+
+		// public float fC
+		private Single fC;
+		public Single C {
+			get => fC;
+			set => fC = value;
+		}
+
+		// public float fD
+		private Single fD;
+		public Single D {
+			get => fD;
+			set => fD = value;
+		}
+
+		// public float fE
+		private Single fE;
+		public Single E {
+			get => fE;
+			set => fE = value;
+		}
+
+		// public float fF
+		private Single fF;
+		public Single F {
+			get => fF;
+			set => fF = value;
+		}
+
+	}
+
 	// sk_document_pdf_metadata_t
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKDocumentPdfMetadataInternal {
@@ -4718,6 +4786,8 @@ namespace SkiaSharp
 		Dcip3D65 = 2,
 		// REC2020_SK_NAMED_GAMUT = 3
 		Rec2020 = 3,
+		// XYZ_SK_NAMED_GAMUT = 4
+		Xyz = 4,
 	}
 
 	// sk_named_transfer_fn_t
@@ -4730,6 +4800,10 @@ namespace SkiaSharp
 		Linear = 2,
 		// REC2020_SK_NAMED_TRANSFER_FN = 3
 		Rec2020 = 3,
+		// PQ_SK_NAMED_TRANSFER_FN = 4
+		Pq = 4,
+		// HLG_SK_NAMED_TRANSFER_FN = 5
+		Hlg = 5,
 	}
 
 	// sk_paint_style_t
