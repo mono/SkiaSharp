@@ -130,30 +130,25 @@ namespace SkiaSharp
 			return SkiaApi.sk_pixmap_scale_pixels (Handle, destination.Handle, quality);
 		}
 
-		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY, SKTransferFunctionBehavior behavior)
-		{
-			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
-			return SkiaApi.sk_pixmap_read_pixels (Handle, &cinfo, (void*)dstPixels, (IntPtr)dstRowBytes, srcX, srcY, behavior);
-		}
-
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)
 		{
-			return ReadPixels (dstInfo, dstPixels, dstRowBytes, 0, 0, SKTransferFunctionBehavior.Respect);
+			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
+			return SkiaApi.sk_pixmap_read_pixels (Handle, &cinfo, (void*)dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
 		}
 
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes)
 		{
-			return ReadPixels (dstInfo, dstPixels, dstRowBytes, 0, 0, SKTransferFunctionBehavior.Respect);
+			return ReadPixels (dstInfo, dstPixels, dstRowBytes, 0, 0);
 		}
 
 		public bool ReadPixels (SKPixmap pixmap, int srcX, int srcY)
 		{
-			return ReadPixels (pixmap.Info, pixmap.GetPixels (), pixmap.RowBytes, srcX, srcY, SKTransferFunctionBehavior.Respect);
+			return ReadPixels (pixmap.Info, pixmap.GetPixels (), pixmap.RowBytes, srcX, srcY);
 		}
 
 		public bool ReadPixels (SKPixmap pixmap)
 		{
-			return ReadPixels (pixmap.Info, pixmap.GetPixels (), pixmap.RowBytes, 0, 0, SKTransferFunctionBehavior.Respect);
+			return ReadPixels (pixmap.Info, pixmap.GetPixels (), pixmap.RowBytes, 0, 0);
 		}
 
 		public SKData Encode (SKEncodedImageFormat encoder, int quality)

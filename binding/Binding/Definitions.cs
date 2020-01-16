@@ -76,42 +76,36 @@ namespace SkiaSharp
 			Subset = null;
 			FrameIndex = 0;
 			PriorFrame = -1;
-			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (SKZeroInitialized zeroInitialized, SKRectI subset) {
 			ZeroInitialized = zeroInitialized;
 			Subset = subset;
 			FrameIndex = 0;
 			PriorFrame = -1;
-			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (SKRectI subset) {
 			ZeroInitialized = SKZeroInitialized.No;
 			Subset = subset;
 			FrameIndex = 0;
 			PriorFrame = -1;
-			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (int frameIndex) {
 			ZeroInitialized = SKZeroInitialized.No;
 			Subset = null;
 			FrameIndex = frameIndex;
 			PriorFrame = -1;
-			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKCodecOptions (int frameIndex, int priorFrame) {
 			ZeroInitialized = SKZeroInitialized.No;
 			Subset = null;
 			FrameIndex = frameIndex;
 			PriorFrame = priorFrame;
-			PremulBehavior = SKTransferFunctionBehavior.Respect;
 		}
 		public SKZeroInitialized ZeroInitialized { get; set; }
 		public SKRectI? Subset { get; set; }
 		public bool HasSubset => Subset != null;
 		public int FrameIndex { get; set; }
 		public int PriorFrame { get; set; }
-		public SKTransferFunctionBehavior PremulBehavior { get; set; }
 	}
 
 	public partial struct SKFontMetrics
@@ -249,13 +243,6 @@ namespace SkiaSharp
 		public int EncodingQuality { get; set; }
 	}
 
-	[Obsolete]
-	[Flags]
-	public enum SKColorSpaceFlags {
-		None = 0,
-		NonLinearBlending = 0x1,
-	}
-
 	public partial struct SKHighContrastConfig {
 		public static readonly SKHighContrastConfig Default;
 
@@ -283,22 +270,13 @@ namespace SkiaSharp
 
 		static SKPngEncoderOptions ()
 		{
-			Default = new SKPngEncoderOptions (SKPngEncoderFilterFlags.AllFilters, 6, SKTransferFunctionBehavior.Respect);
+			Default = new SKPngEncoderOptions (SKPngEncoderFilterFlags.AllFilters, 6);
 		}
 
 		public SKPngEncoderOptions (SKPngEncoderFilterFlags filterFlags, int zLibLevel)
 		{
 			fFilterFlags = filterFlags;
 			fZLibLevel = zLibLevel;
-			fUnpremulBehavior = SKTransferFunctionBehavior.Respect;
-			fComments = null;
-		}
-
-		public SKPngEncoderOptions (SKPngEncoderFilterFlags filterFlags, int zLibLevel, SKTransferFunctionBehavior unpremulBehavior)
-		{
-			fFilterFlags = filterFlags;
-			fZLibLevel = zLibLevel;
-			fUnpremulBehavior = unpremulBehavior;
 			fComments = null;
 		}
 
@@ -310,10 +288,6 @@ namespace SkiaSharp
 			get => fZLibLevel;
 			set => fZLibLevel = value;
 		}
-		public SKTransferFunctionBehavior UnpremulBehavior {
-			get => fUnpremulBehavior;
-			set => fUnpremulBehavior = value;
-		}
 	}
 
 	public partial struct SKJpegEncoderOptions {
@@ -321,7 +295,7 @@ namespace SkiaSharp
 
 		static SKJpegEncoderOptions ()
 		{
-			Default = new SKJpegEncoderOptions (100, SKJpegEncoderDownsample.Downsample420, SKJpegEncoderAlphaOption.Ignore, SKTransferFunctionBehavior.Respect);
+			Default = new SKJpegEncoderOptions (100, SKJpegEncoderDownsample.Downsample420, SKJpegEncoderAlphaOption.Ignore);
 		}
 
 		public SKJpegEncoderOptions (int quality, SKJpegEncoderDownsample downsample, SKJpegEncoderAlphaOption alphaOption)
@@ -329,15 +303,6 @@ namespace SkiaSharp
 			fQuality = quality;
 			fDownsample = downsample;
 			fAlphaOption = alphaOption;
-			fBlendBehavior = SKTransferFunctionBehavior.Respect;
-		}
-
-		public SKJpegEncoderOptions (int quality, SKJpegEncoderDownsample downsample, SKJpegEncoderAlphaOption alphaOption, SKTransferFunctionBehavior blendBehavior)
-		{
-			fQuality = quality;
-			fDownsample = downsample;
-			fAlphaOption = alphaOption;
-			fBlendBehavior = blendBehavior;
 		}
 	}
 
@@ -346,21 +311,13 @@ namespace SkiaSharp
 
 		static SKWebpEncoderOptions ()
 		{
-			Default = new SKWebpEncoderOptions (SKWebpEncoderCompression.Lossy, 100, SKTransferFunctionBehavior.Respect);
+			Default = new SKWebpEncoderOptions (SKWebpEncoderCompression.Lossy, 100);
 		}
 
 		public SKWebpEncoderOptions (SKWebpEncoderCompression compression, float quality)
 		{
 			fCompression = compression;
 			fQuality = quality;
-			fUnpremulBehavior = SKTransferFunctionBehavior.Respect;
-		}
-
-		public SKWebpEncoderOptions (SKWebpEncoderCompression compression, float quality, SKTransferFunctionBehavior unpremulBehavior)
-		{
-			fCompression = compression;
-			fQuality = quality;
-			fUnpremulBehavior = unpremulBehavior;
 		}
 	}
 }

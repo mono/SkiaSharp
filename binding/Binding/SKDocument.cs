@@ -7,9 +7,6 @@ namespace SkiaSharp
 	{
 		public const float DefaultRasterDpi = 72.0f;
 
-		// keep the stream alive for as long as the document exists
-		private SKWStream underlyingStream;
-
 		[Preserve]
 		internal SKDocument (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -193,7 +190,7 @@ namespace SkiaSharp
 		private static SKDocument Referenced (SKDocument doc, SKWStream stream)
 		{
 			if (stream != null && doc != null)
-				doc.underlyingStream = stream;
+				doc.KeepAlive (stream);
 
 			return doc;
 		}

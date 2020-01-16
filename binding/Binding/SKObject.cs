@@ -18,6 +18,7 @@ namespace SkiaSharp
 		internal static readonly ConcurrentDictionary<IntPtr, WeakReference> instances;
 
 		internal readonly ConcurrentDictionary<IntPtr, SKObject> ownedObjects = new ConcurrentDictionary<IntPtr, SKObject> ();
+		internal readonly ConcurrentBag<SKObject> keepAliveObjects = new ConcurrentBag<SKObject> ();
 
 		static SKObject ()
 		{
@@ -219,6 +220,14 @@ namespace SkiaSharp
 				DisposeInternal ();
 			else
 				newOwner.SetDisposeChild (this);
+		}
+
+		// indicate that the child must not by GC-ed while this object lives
+		internal void KeepAlive(SKObject child)
+		{
+			if (child == null)
+				return;
+			keepAliveObjects.Add (child);
 		}
 
 		internal static int SizeOf<T> () =>

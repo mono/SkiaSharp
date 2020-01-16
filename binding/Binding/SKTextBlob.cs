@@ -121,12 +121,25 @@ namespace SkiaSharp
 			font.GetGlyphPositions (buffer.GetGlyphSpan (), buffer.GetPositionSpan (), new SKPoint (x, y));
 		}
 
+		public void AddRun (ReadOnlySpan<ushort> glyphs, SKFont font) =>
+			AddRun (glyphs, font, 0, 0);
+
+		public void AddRun (ReadOnlySpan<ushort> glyphs, SKFont font, float x, float y)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			var buffer = AllocatePositionedRun (font, glyphs.Length);
+			glyphs.CopyTo (buffer.GetGlyphSpan ());
+			font.GetGlyphPositions (buffer.GetGlyphSpan (), buffer.GetPositionSpan (), new SKPoint (x, y));
+		}
+
 		// AddHorizontalRun
 
-		public void AddHorizontalRun (string text, ReadOnlySpan<float> positions, float y, SKFont font) =>
-			AddHorizontalRun (text.AsSpan (), positions, y, font);
+		public void AddHorizontalRun (string text, SKFont font, ReadOnlySpan<float> positions, float y) =>
+			AddHorizontalRun (text.AsSpan (), font, positions, y);
 
-		public void AddHorizontalRun (ReadOnlySpan<char> text, ReadOnlySpan<float> positions, float y, SKFont font)
+		public void AddHorizontalRun (ReadOnlySpan<char> text, SKFont font, ReadOnlySpan<float> positions, float y)
 		{
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
@@ -137,7 +150,7 @@ namespace SkiaSharp
 			positions.CopyTo (buffer.GetPositionSpan ());
 		}
 
-		public void AddHorizontalRun (ReadOnlySpan<byte> text, SKTextEncoding encoding, ReadOnlySpan<float> positions, float y, SKFont font)
+		public void AddHorizontalRun (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, ReadOnlySpan<float> positions, float y)
 		{
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
@@ -148,12 +161,22 @@ namespace SkiaSharp
 			positions.CopyTo (buffer.GetPositionSpan ());
 		}
 
+		public void AddHorizontalRun (ReadOnlySpan<ushort> glyphs, SKFont font, ReadOnlySpan<float> positions, float y)
+		{
+			if (font == null)
+				throw new ArgumentNullException (nameof (font));
+
+			var buffer = AllocateHorizontalRun (font, glyphs.Length, y);
+			glyphs.CopyTo (buffer.GetGlyphSpan ());
+			positions.CopyTo (buffer.GetPositionSpan ());
+		}
+
 		// AddPositionedRun
 
-		public void AddPositionedRun (string text, ReadOnlySpan<SKPoint> positions, SKFont font) =>
-			AddPositionedRun (text.AsSpan (), positions, font);
+		public void AddPositionedRun (string text, SKFont font, ReadOnlySpan<SKPoint> positions) =>
+			AddPositionedRun (text.AsSpan (), font, positions);
 
-		public void AddPositionedRun (ReadOnlySpan<char> text, ReadOnlySpan<SKPoint> positions, SKFont font)
+		public void AddPositionedRun (ReadOnlySpan<char> text, SKFont font, ReadOnlySpan<SKPoint> positions)
 		{
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));
@@ -164,7 +187,7 @@ namespace SkiaSharp
 			positions.CopyTo (buffer.GetPositionSpan ());
 		}
 
-		public void AddPositionedRun (ReadOnlySpan<byte> text, SKTextEncoding encoding, ReadOnlySpan<SKPoint> positions, SKFont font)
+		public void AddPositionedRun (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKPoint> positions)
 		{
 			if (font == null)
 				throw new ArgumentNullException (nameof (font));

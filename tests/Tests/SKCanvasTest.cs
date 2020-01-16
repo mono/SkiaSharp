@@ -393,9 +393,7 @@ namespace SkiaSharp.Tests
 		{
 			var stream = new MemoryStream();
 
-			using (var wstream = new SKManagedWStream(stream))
-			using (var writer = new SKXmlStreamWriter(wstream))
-			using (var svg = SKSvgCanvas.Create(SKRect.Create(100, 100), writer))
+			using (var svg = SKSvgCanvas.Create(SKRect.Create(100, 100), stream))
 			{
 				var paint = new SKPaint
 				{
