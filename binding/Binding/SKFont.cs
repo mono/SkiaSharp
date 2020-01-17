@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 
 namespace SkiaSharp
 {
@@ -152,24 +153,16 @@ namespace SkiaSharp
 
 		public ushort[] GetGlyphs (ReadOnlySpan<char> text)
 		{
-			var n = CountGlyphs (text);
-			if (n <= 0)
-				return new ushort[0];
-
-			var glyphs = new ushort[n];
-			GetGlyphs (text, glyphs);
-			return glyphs;
+			fixed (void* t = text) {
+				return GetGlyphs (t, text.Length, SKTextEncoding.Utf16);
+			}
 		}
 
 		public ushort[] GetGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding)
 		{
-			var n = CountGlyphs (text, encoding);
-			if (n <= 0)
-				return new ushort[0];
-
-			var glyphs = new ushort[n];
-			GetGlyphs (text, encoding, glyphs);
-			return glyphs;
+			fixed (void* t = text) {
+				return GetGlyphs (t, text.Length, encoding);
+			}
 		}
 
 		public void GetGlyphs (string text, Span<ushort> glyphs) =>
@@ -177,17 +170,33 @@ namespace SkiaSharp
 
 		public void GetGlyphs (ReadOnlySpan<char> text, Span<ushort> glyphs)
 		{
-			fixed (void* p = text)
-			fixed (ushort* gp = glyphs) {
-				SkiaApi.sk_font_text_to_glyphs (Handle, p, (IntPtr)text.Length, SKTextEncoding.Utf16, gp, glyphs.Length);
+			fixed (void* t = text) {
+				GetGlyphs (t, text.Length, SKTextEncoding.Utf16, glyphs);
 			}
 		}
 
 		public void GetGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding, Span<ushort> glyphs)
 		{
-			fixed (void* p = text)
+			fixed (void* t = text) {
+				GetGlyphs (t, text.Length, encoding, glyphs);
+			}
+		}
+
+		internal ushort[] GetGlyphs (void* text, int length, SKTextEncoding encoding)
+		{
+			var n = CountGlyphs (text, length, encoding);
+			if (n <= 0)
+				return new ushort[0];
+
+			var glyphs = new ushort[n];
+			GetGlyphs (text, length, encoding, glyphs);
+			return glyphs;
+		}
+
+		internal void GetGlyphs (void* text, int length, SKTextEncoding encoding, Span<ushort> glyphs)
+		{
 			fixed (ushort* gp = glyphs) {
-				SkiaApi.sk_font_text_to_glyphs (Handle, p, (IntPtr)text.Length, encoding, gp, glyphs.Length);
+				SkiaApi.sk_font_text_to_glyphs (Handle, text, (IntPtr)length, encoding, gp, glyphs.Length);
 			}
 		}
 
@@ -198,17 +207,20 @@ namespace SkiaSharp
 
 		public int CountGlyphs (ReadOnlySpan<char> text)
 		{
-			fixed (void* p = text) {
-				return SkiaApi.sk_font_text_to_glyphs (Handle, p, (IntPtr)text.Length, SKTextEncoding.Utf16, null, 0);
+			fixed (void* t = text) {
+				return CountGlyphs (t, text.Length, SKTextEncoding.Utf16);
 			}
 		}
 
 		public int CountGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding)
 		{
-			fixed (void* p = text) {
-				return SkiaApi.sk_font_text_to_glyphs (Handle, p, (IntPtr)text.Length, encoding, null, 0);
+			fixed (void* t = text) {
+				return CountGlyphs (t, text.Length, encoding);
 			}
 		}
+
+		internal int CountGlyphs (void* text, int length, SKTextEncoding encoding) =>
+			SkiaApi.sk_font_text_to_glyphs (Handle, text, (IntPtr)length, encoding, null, 0);
 
 		// MeasureText
 
@@ -218,14 +230,14 @@ namespace SkiaSharp
 		public float MeasureText (ReadOnlySpan<char> text, SKPaint paint = null)
 		{
 			fixed (void* t = text) {
-				return SkiaApi.sk_font_measure_text (Handle, t, (IntPtr)text.Length, SKTextEncoding.Utf16, null, paint?.Handle ?? IntPtr.Zero);
+				return MeasureText (t, text.Length, SKTextEncoding.Utf16, null, paint);
 			}
 		}
 
 		public float MeasureText (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKPaint paint = null)
 		{
 			fixed (void* t = text) {
-				return SkiaApi.sk_font_measure_text (Handle, t, (IntPtr)text.Length, encoding, null, paint?.Handle ?? IntPtr.Zero);
+				return MeasureText (t, text.Length, encoding, null, paint);
 			}
 		}
 
@@ -234,40 +246,91 @@ namespace SkiaSharp
 
 		public float MeasureText (ReadOnlySpan<char> text, out SKRect bounds, SKPaint paint = null)
 		{
-			fixed (SKRect* b = &bounds)
-			fixed (void* t = text) {
-				return SkiaApi.sk_font_measure_text (Handle, t, (IntPtr)text.Length, SKTextEncoding.Utf16, b, paint?.Handle ?? IntPtr.Zero);
+			fixed (void* t = text)
+			fixed (SKRect* b = &bounds) {
+				return MeasureText (t, text.Length, SKTextEncoding.Utf16, b, paint);
 			}
 		}
 
 		public float MeasureText (ReadOnlySpan<byte> text, SKTextEncoding encoding, out SKRect bounds, SKPaint paint = null)
 		{
-			fixed (SKRect* b = &bounds)
-			fixed (void* t = text) {
-				return SkiaApi.sk_font_measure_text (Handle, t, (IntPtr)text.Length, encoding, b, paint?.Handle ?? IntPtr.Zero);
+			fixed (void* t = text)
+			fixed (SKRect* b = &bounds) {
+				return MeasureText (t, text.Length, encoding, b, paint);
 			}
 		}
 
-		// GetGlyphPositions
+		internal float MeasureText (void* text, int length, SKTextEncoding encoding, SKRect* bounds, SKPaint paint = null) =>
+			SkiaApi.sk_font_measure_text (Handle, text, (IntPtr)length, encoding, bounds, paint?.Handle ?? IntPtr.Zero);
 
-		public SKPoint[] GetGlyphPositions (ReadOnlySpan<ushort> glyphs)
+		// GetGlyphPositions (text)
+
+		public SKPoint[] GetGlyphPositions (string text, SKPoint origin = default) =>
+			GetGlyphPositions (text.AsSpan (), origin);
+
+		public SKPoint[] GetGlyphPositions (ReadOnlySpan<char> text, SKPoint origin = default)
 		{
-			var positions = new SKPoint[glyphs.Length];
-			GetGlyphPositions (glyphs, positions);
+			fixed (void* t = text) {
+				return GetGlyphPositions (t, text.Length, SKTextEncoding.Utf16, origin);
+			}
+		}
+
+		public SKPoint[] GetGlyphPositions (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKPoint origin = default)
+		{
+			fixed (void* t = text) {
+				return GetGlyphPositions (t, text.Length, encoding, origin);
+			}
+		}
+
+		public void GetGlyphPositions (string text, Span<SKPoint> offsets, SKPoint origin = default) =>
+			GetGlyphPositions (text.AsSpan (), offsets, origin);
+
+		public void GetGlyphPositions (ReadOnlySpan<char> text, Span<SKPoint> offsets, SKPoint origin = default)
+		{
+			fixed (void* t = text) {
+				GetGlyphPositions (t, text.Length, SKTextEncoding.Utf16, offsets, origin);
+			}
+		}
+
+		public void GetGlyphPositions (ReadOnlySpan<byte> text, SKTextEncoding encoding, Span<SKPoint> offsets, SKPoint origin = default)
+		{
+			fixed (void* t = text) {
+				GetGlyphPositions (t, text.Length, encoding, offsets, origin);
+			}
+		}
+
+		internal SKPoint[] GetGlyphPositions (void* text, int length, SKTextEncoding encoding, SKPoint origin = default)
+		{
+			var n = CountGlyphs (text, length, encoding);
+			var positions = new SKPoint[n];
+			GetGlyphPositions (text, length, encoding, positions, origin);
 			return positions;
 		}
 
-		public SKPoint[] GetGlyphPositions (ReadOnlySpan<ushort> glyphs, SKPoint origin)
+		internal void GetGlyphPositions (void* text, int length, SKTextEncoding encoding, Span<SKPoint> offsets, SKPoint origin = default)
+		{
+			if (offsets.Length <= 0)
+				return;
+
+			var glyphs = ArrayPool<ushort>.Shared.Rent (offsets.Length);
+			try {
+				GetGlyphs (text, length, encoding, glyphs);
+				GetGlyphPositions (glyphs, offsets, origin);
+			} finally {
+				ArrayPool<ushort>.Shared.Return (glyphs);
+			}
+		}
+
+		// GetGlyphPositions (glyphs)
+
+		public SKPoint[] GetGlyphPositions (ReadOnlySpan<ushort> glyphs, SKPoint origin = default)
 		{
 			var positions = new SKPoint[glyphs.Length];
 			GetGlyphPositions (glyphs, positions, origin);
 			return positions;
 		}
 
-		public void GetGlyphPositions (ReadOnlySpan<ushort> glyphs, Span<SKPoint> positions) =>
-			GetGlyphPositions (glyphs, positions, SKPoint.Empty);
-
-		public void GetGlyphPositions (ReadOnlySpan<ushort> glyphs, Span<SKPoint> positions, SKPoint origin)
+		public void GetGlyphPositions (ReadOnlySpan<ushort> glyphs, Span<SKPoint> positions, SKPoint origin = default)
 		{
 			if (glyphs.Length != positions.Length)
 				throw new ArgumentException ("The length of glyphs must be the same as the length of positions.", nameof (positions));
@@ -278,26 +341,74 @@ namespace SkiaSharp
 			}
 		}
 
-		// GetGlyphOffsets
+		// GetGlyphOffsets (text)
 
-		public float[] GetGlyphOffsets (ReadOnlySpan<ushort> glyphs)
+		public float[] GetGlyphOffsets (string text, float origin = 0f) =>
+			GetGlyphOffsets (text.AsSpan (), origin);
+
+		public float[] GetGlyphOffsets (ReadOnlySpan<char> text, float origin = 0f)
 		{
-			var offsets = new float[glyphs.Length];
-			GetGlyphOffsets (glyphs, offsets);
+			fixed (void* t = text) {
+				return GetGlyphOffsets (t, text.Length, SKTextEncoding.Utf16, origin);
+			}
+		}
+
+		public float[] GetGlyphOffsets (ReadOnlySpan<byte> text, SKTextEncoding encoding, float origin = 0f)
+		{
+			fixed (void* t = text) {
+				return GetGlyphOffsets (t, text.Length, encoding, origin);
+			}
+		}
+
+		public void GetGlyphOffsets (string text, Span<float> offsets, float origin = 0f) =>
+			GetGlyphOffsets (text.AsSpan (), offsets, origin);
+
+		public void GetGlyphOffsets (ReadOnlySpan<char> text, Span<float> offsets, float origin = 0f)
+		{
+			fixed (void* t = text) {
+				GetGlyphOffsets (t, text.Length, SKTextEncoding.Utf16, offsets, origin);
+			}
+		}
+
+		public void GetGlyphOffsets (ReadOnlySpan<byte> text, SKTextEncoding encoding, Span<float> offsets, float origin = 0f)
+		{
+			fixed (void* t = text) {
+				GetGlyphOffsets (t, text.Length, encoding, offsets, origin);
+			}
+		}
+
+		internal float[] GetGlyphOffsets (void* text, int length, SKTextEncoding encoding, float origin = 0f)
+		{
+			var n = CountGlyphs (text, length, encoding);
+			var offsets = new float[n];
+			GetGlyphOffsets (text, length, encoding, offsets, origin);
 			return offsets;
 		}
 
-		public float[] GetGlyphOffsets (ReadOnlySpan<ushort> glyphs, float origin)
+		internal void GetGlyphOffsets (void* text, int length, SKTextEncoding encoding, Span<float> offsets, float origin = 0f)
+		{
+			if (offsets.Length <= 0)
+				return;
+
+			var glyphs = ArrayPool<ushort>.Shared.Rent (offsets.Length);
+			try {
+				GetGlyphs (text, length, encoding, glyphs);
+				GetGlyphOffsets (glyphs, offsets, origin);
+			} finally {
+				ArrayPool<ushort>.Shared.Return (glyphs);
+			}
+		}
+
+		// GetGlyphOffsets (glyphs)
+
+		public float[] GetGlyphOffsets (ReadOnlySpan<ushort> glyphs, float origin = 0f)
 		{
 			var offsets = new float[glyphs.Length];
 			GetGlyphOffsets (glyphs, offsets, origin);
 			return offsets;
 		}
 
-		public void GetGlyphOffsets (ReadOnlySpan<ushort> glyphs, Span<float> offsets) =>
-			GetGlyphOffsets (glyphs, offsets, 0);
-
-		public void GetGlyphOffsets (ReadOnlySpan<ushort> glyphs, Span<float> offsets, float origin)
+		public void GetGlyphOffsets (ReadOnlySpan<ushort> glyphs, Span<float> offsets, float origin = 0f)
 		{
 			if (glyphs.Length != offsets.Length)
 				throw new ArgumentException ("The length of glyphs must be the same as the length of offsets.", nameof (offsets));
@@ -308,12 +419,103 @@ namespace SkiaSharp
 			}
 		}
 
-		// GetGlyphWidths
+		// GetGlyphWidths (text)
+
+		public float[] GetGlyphWidths (string text, SKPaint paint = null) =>
+			GetGlyphWidths (text.AsSpan (), paint);
+
+		public float[] GetGlyphWidths (ReadOnlySpan<char> text, SKPaint paint = null)
+		{
+			fixed (void* t = text) {
+				return GetGlyphWidths (t, text.Length, SKTextEncoding.Utf16, paint);
+			}
+		}
+
+		public float[] GetGlyphWidths (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKPaint paint = null)
+		{
+			fixed (void* t = text) {
+				return GetGlyphWidths (t, text.Length, encoding, paint);
+			}
+		}
+
+		public float[] GetGlyphWidths (string text, out SKRect[] bounds, SKPaint paint = null) =>
+			GetGlyphWidths (text.AsSpan (), out bounds, paint);
+
+		public float[] GetGlyphWidths (ReadOnlySpan<char> text, out SKRect[] bounds, SKPaint paint = null)
+		{
+			fixed (void* t = text) {
+				return GetGlyphWidths (t, text.Length, SKTextEncoding.Utf16, out bounds, paint);
+			}
+		}
+
+		public float[] GetGlyphWidths (ReadOnlySpan<byte> text, SKTextEncoding encoding, out SKRect[] bounds, SKPaint paint = null)
+		{
+			fixed (void* t = text) {
+				return GetGlyphWidths (t, text.Length, encoding, out bounds, paint);
+			}
+		}
+
+		public void GetGlyphWidths (string text, Span<float> widths, Span<SKRect> bounds, SKPaint paint = null) =>
+			GetGlyphWidths (text.AsSpan (), widths, bounds, paint);
+
+		public void GetGlyphWidths (ReadOnlySpan<char> text, Span<float> widths, Span<SKRect> bounds, SKPaint paint = null)
+		{
+			fixed (void* t = text) {
+				GetGlyphWidths (t, text.Length, SKTextEncoding.Utf16, widths, bounds, paint);
+			}
+		}
+
+		public void GetGlyphWidths (ReadOnlySpan<byte> text, SKTextEncoding encoding, Span<float> widths, Span<SKRect> bounds, SKPaint paint = null)
+		{
+			fixed (void* t = text) {
+				GetGlyphWidths (t, text.Length, encoding, widths, bounds, paint);
+			}
+		}
+
+		internal float[] GetGlyphWidths (void* text, int length, SKTextEncoding encoding, SKPaint paint = null)
+		{
+			var n = CountGlyphs (text, length, encoding);
+			var widths = new float[n];
+			GetGlyphWidths (text, length, encoding, widths, Span<SKRect>.Empty, paint);
+			return widths;
+		}
+
+		internal float[] GetGlyphWidths (void* text, int length, SKTextEncoding encoding, out SKRect[] bounds, SKPaint paint = null)
+		{
+			var n = CountGlyphs (text, length, encoding);
+			bounds = new SKRect[n];
+			var widths = new float[n];
+			GetGlyphWidths (text, length, encoding, widths, bounds, paint);
+			return widths;
+		}
+
+		internal void GetGlyphWidths (void* text, int length, SKTextEncoding encoding, Span<float> widths, Span<SKRect> bounds, SKPaint paint = null)
+		{
+			var n = Math.Max (widths.Length, bounds.Length);
+			if (n <= 0)
+				return;
+
+			// make sure that the destination spans are either empty/null or the same length
+			if (widths.Length != 0 && widths.Length != n)
+				throw new ArgumentException ("The length of widths must be equal to the length of bounds or empty.", nameof (widths));
+			if (bounds.Length != 0 && bounds.Length != n)
+				throw new ArgumentException ("The length of bounds must be equal to the length of widths or empty.", nameof (bounds));
+
+			var glyphs = ArrayPool<ushort>.Shared.Rent (n);
+			try {
+				GetGlyphs (text, length, encoding, glyphs);
+				GetGlyphWidths (glyphs, widths, bounds, paint);
+			} finally {
+				ArrayPool<ushort>.Shared.Return (glyphs);
+			}
+		}
+
+		// GetGlyphWidths (glyphs)
 
 		public float[] GetGlyphWidths (ReadOnlySpan<ushort> glyphs, SKPaint paint = null)
 		{
 			var widths = new float[glyphs.Length];
-			GetGlyphWidths (glyphs, widths, paint);
+			GetGlyphWidths (glyphs, widths, Span<SKRect>.Empty, paint);
 			return widths;
 		}
 
@@ -324,12 +526,6 @@ namespace SkiaSharp
 			GetGlyphWidths (glyphs, widths, bounds, paint);
 			return widths;
 		}
-
-		public void GetGlyphWidths (ReadOnlySpan<ushort> glyphs, Span<SKRect> bounds, SKPaint paint = null) =>
-			GetGlyphWidths (glyphs, Span<float>.Empty, bounds, paint);
-
-		public void GetGlyphWidths (ReadOnlySpan<ushort> glyphs, Span<float> widths, SKPaint paint = null) =>
-			GetGlyphWidths (glyphs, widths, Span<SKRect>.Empty, paint);
 
 		public void GetGlyphWidths (ReadOnlySpan<ushort> glyphs, Span<float> widths, Span<SKRect> bounds, SKPaint paint = null)
 		{
@@ -342,7 +538,7 @@ namespace SkiaSharp
 			}
 		}
 
-		// GetPath
+		// GetPath (gyphs)
 
 		public SKPath GetPath (ushort glyph)
 		{
@@ -351,6 +547,32 @@ namespace SkiaSharp
 				path.Dispose ();
 				path = null;
 			}
+			return path;
+		}
+
+		// GetPath (text)
+
+		public SKPath GetPath (string text, SKPoint origin = default) =>
+			GetPath (text.AsSpan (), origin);
+
+		public SKPath GetPath (ReadOnlySpan<char> text, SKPoint origin = default)
+		{
+			fixed (void* t = text) {
+				return GetPath (t, text.Length, SKTextEncoding.Utf16, origin);
+			}
+		}
+
+		public SKPath GetPath (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKPoint origin = default)
+		{
+			fixed (void* t = text) {
+				return GetPath (t, text.Length, encoding, origin);
+			}
+		}
+
+		internal SKPath GetPath (void* text, int length, SKTextEncoding encoding, SKPoint origin = default)
+		{
+			var path = new SKPath ();
+			SkiaApi.sk_text_utils_get_path (text, (IntPtr)length, encoding, origin.X, origin.Y, Handle, path.Handle);
 			return path;
 		}
 

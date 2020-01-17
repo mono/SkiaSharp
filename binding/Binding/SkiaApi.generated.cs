@@ -1817,6 +1817,10 @@ namespace SkiaSharp
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_font_unichars_to_glyphs (sk_font_t font, Int32* uni, Int32 count, UInt16* glyphs);
 
+		// void sk_text_utils_get_path(const void* text, size_t length, sk_text_encoding_t encoding, float x, float y, const sk_font_t* font, sk_path_t* path)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_text_utils_get_path (void* text, /* size_t */ IntPtr length, SKTextEncoding encoding, Single x, Single y, sk_font_t font, sk_path_t path);
+
 		#endregion
 
 		#region sk_typeface.h
@@ -3347,6 +3351,10 @@ namespace SkiaSharp
 		// void sk_textblob_builder_alloc_run_pos_h(sk_textblob_builder_t* builder, const sk_font_t* font, int count, float y, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_textblob_builder_alloc_run_pos_h (sk_textblob_builder_t builder, sk_font_t font, Int32 count, Single y, SKRect* bounds, SKRunBufferInternal* runbuffer);
+
+		// void sk_textblob_builder_alloc_run_rsxform(sk_textblob_builder_t* builder, const sk_font_t* font, int count, sk_textblob_builder_runbuffer_t* runbuffer)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_textblob_builder_alloc_run_rsxform (sk_textblob_builder_t builder, sk_font_t font, Int32 count, SKRunBufferInternal* runbuffer);
 
 		// void sk_textblob_builder_delete(sk_textblob_builder_t* builder)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
@@ -5062,16 +5070,6 @@ namespace SkiaSharp
 		None = 0,
 		// USE_DEVICE_INDEPENDENT_FONTS_SK_SURFACE_PROPS_FLAGS = 1 << 0
 		UseDeviceIndependentFonts = 1,
-	}
-
-	// sk_text_align_t
-	public enum SKTextAlign {
-		// LEFT_SK_TEXT_ALIGN = 0
-		Left = 0,
-		// CENTER_SK_TEXT_ALIGN = 1
-		Center = 1,
-		// RIGHT_SK_TEXT_ALIGN = 2
-		Right = 2,
 	}
 
 	// sk_text_encoding_t
