@@ -224,6 +224,56 @@ namespace SkiaSharp
 
 		#endregion
 
+		#region sk_general.h
+
+		// sk_colortype_t gr_pixelconfig_to_sk_colortype(gr_pixelconfig_t pixelConfig)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern SKColorType gr_pixelconfig_to_sk_colortype (GRPixelConfig pixelConfig);
+
+		// sk_colortype_t sk_colortype_get_default_8888()
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern SKColorType sk_colortype_get_default_8888 ();
+
+		// gr_pixelconfig_t sk_colortype_to_gr_pixelconfig(sk_colortype_t colorType)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern GRPixelConfig sk_colortype_to_gr_pixelconfig (SKColorType colorType);
+
+		// int sk_nvrefcnt_get_ref_count(const sk_nvrefcnt_t* refcnt)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_nvrefcnt_get_ref_count (sk_nvrefcnt_t refcnt);
+
+		// void sk_nvrefcnt_safe_ref(sk_nvrefcnt_t* refcnt)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_nvrefcnt_safe_ref (sk_nvrefcnt_t refcnt);
+
+		// void sk_nvrefcnt_safe_unref(sk_nvrefcnt_t* refcnt)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_nvrefcnt_safe_unref (sk_nvrefcnt_t refcnt);
+
+		// bool sk_nvrefcnt_unique(const sk_nvrefcnt_t* refcnt)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_nvrefcnt_unique (sk_nvrefcnt_t refcnt);
+
+		// int sk_refcnt_get_ref_count(const sk_refcnt_t* refcnt)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_refcnt_get_ref_count (sk_refcnt_t refcnt);
+
+		// void sk_refcnt_safe_ref(sk_refcnt_t* refcnt)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_refcnt_safe_ref (sk_refcnt_t refcnt);
+
+		// void sk_refcnt_safe_unref(sk_refcnt_t* refcnt)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_refcnt_safe_unref (sk_refcnt_t refcnt);
+
+		// bool sk_refcnt_unique(const sk_refcnt_t* refcnt)
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_refcnt_unique (sk_refcnt_t refcnt);
+
+		#endregion
+
 		#region sk_matrix.h
 
 		// void sk_3dview_apply_to_canvas(sk_3dview_t* cview, sk_canvas_t* ccanvas)
@@ -1233,48 +1283,6 @@ namespace SkiaSharp
 		// void sk_colortable_unref(sk_colortable_t* ctable)
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void sk_colortable_unref (sk_colortable_t ctable);
-
-		#endregion
-
-		#region sk_general.h
-
-		// sk_colortype_t sk_colortype_get_default_8888()
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern SKColorType sk_colortype_get_default_8888 ();
-
-		// int sk_nvrefcnt_get_ref_count(const sk_nvrefcnt_t* refcnt)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 sk_nvrefcnt_get_ref_count (sk_nvrefcnt_t refcnt);
-
-		// void sk_nvrefcnt_safe_ref(sk_nvrefcnt_t* refcnt)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_nvrefcnt_safe_ref (sk_nvrefcnt_t refcnt);
-
-		// void sk_nvrefcnt_safe_unref(sk_nvrefcnt_t* refcnt)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_nvrefcnt_safe_unref (sk_nvrefcnt_t refcnt);
-
-		// bool sk_nvrefcnt_unique(const sk_nvrefcnt_t* refcnt)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_nvrefcnt_unique (sk_nvrefcnt_t refcnt);
-
-		// int sk_refcnt_get_ref_count(const sk_refcnt_t* refcnt)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 sk_refcnt_get_ref_count (sk_refcnt_t refcnt);
-
-		// void sk_refcnt_safe_ref(sk_refcnt_t* refcnt)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_refcnt_safe_ref (sk_refcnt_t refcnt);
-
-		// void sk_refcnt_safe_unref(sk_refcnt_t* refcnt)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_refcnt_safe_unref (sk_refcnt_t refcnt);
-
-		// bool sk_refcnt_unique(const sk_refcnt_t* refcnt)
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_refcnt_unique (sk_refcnt_t refcnt);
 
 		#endregion
 
@@ -4558,12 +4566,24 @@ namespace SkiaSharp
 		Rgb101010x = 8,
 		// GRAY_8_SK_COLORTYPE = 9
 		Gray8 = 9,
-		// RGBA_F16_NORM_SK_COLORTYPE = 10
-		RgbaF16Norm = 10,
+		// RGBA_F16_NORMALIZED_SK_COLORTYPE = 10
+		RgbaF16Normalized = 10,
 		// RGBA_F16_SK_COLORTYPE = 11
 		RgbaF16 = 11,
 		// RGBA_F32_SK_COLORTYPE = 12
 		RgbaF32 = 12,
+		// R8G8_UNNORMALIZED_SK_COLORTYPE = 13
+		R8g8Unnormalized = 13,
+		// A16_FLOAT_SK_COLORTYPE = 14
+		A16Float = 14,
+		// R16G16_FLOAT_SK_COLORTYPE = 15
+		R16g16Float = 15,
+		// A16_UNNORMALIZED_SK_COLORTYPE = 16
+		A16Unnormalized = 16,
+		// R16G16_UNNORMALIZED_SK_COLORTYPE = 17
+		R16g16Unnormalized = 17,
+		// R16G16B16A16_UNNORMALIZED_SK_COLORTYPE = 18
+		R16g16b16a16Unnormalized = 18,
 	}
 
 	// sk_crop_rect_flags_t

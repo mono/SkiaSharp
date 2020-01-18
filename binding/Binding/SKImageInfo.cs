@@ -107,22 +107,31 @@ namespace SkiaSharp
 		public int BytesPerPixel {
 			get {
 				switch (ColorType) {
-				case SKColorType.Unknown:
-					return 0;
-				case SKColorType.Alpha8:
-				case SKColorType.Gray8:
-					return 1;
-				case SKColorType.Rgb565:
-				case SKColorType.Argb4444:
-					return 2;
-				case SKColorType.Bgra8888:
-				case SKColorType.Rgba8888:
-				case SKColorType.Rgb888x:
-				case SKColorType.Rgba1010102:
-				case SKColorType.Rgb101010x:
-					return 4;
-				case SKColorType.RgbaF16:
-					return 8;
+					case SKColorType.Unknown:
+						return 0;
+					case SKColorType.Alpha8:
+					case SKColorType.Gray8:
+						return 1;
+					case SKColorType.Rgb565:
+					case SKColorType.Argb4444:
+					case SKColorType.R8g8Unnormalized:
+					case SKColorType.A16Unnormalized:
+					case SKColorType.A16Float:
+						return 2;
+					case SKColorType.Bgra8888:
+					case SKColorType.Rgba8888:
+					case SKColorType.Rgb888x:
+					case SKColorType.Rgba1010102:
+					case SKColorType.Rgb101010x:
+					case SKColorType.R16g16Unnormalized:
+					case SKColorType.R16g16Float:
+						return 4;
+					case SKColorType.RgbaF16Normalized:
+					case SKColorType.RgbaF16:
+					case SKColorType.R16g16b16a16Unnormalized:
+						return 8;
+					case SKColorType.RgbaF32:
+						return 16;
 				}
 				throw new ArgumentOutOfRangeException (nameof (ColorType));
 			}
