@@ -14,7 +14,7 @@ namespace SkiaSharpSample
 		public static void Main(string[] args)
 		{
 			var app = new Program();
-			global::Xamarin.Forms.Platform.Tizen.Forms.Init(app, true);
+			global::Xamarin.Forms.Forms.Init(app, true);
 			app.Run(args);
 		}
 	}
