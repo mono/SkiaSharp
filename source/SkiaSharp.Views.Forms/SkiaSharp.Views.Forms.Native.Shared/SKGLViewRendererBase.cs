@@ -26,7 +26,7 @@ using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.Mac.SKPaintGLSurfaceEven
 using Xamarin.Forms.Platform.Tizen;
 using SKNativeView = SkiaSharp.Views.Tizen.SKGLSurfaceView;
 using SKNativePaintGLSurfaceEventArgs = SkiaSharp.Views.Tizen.SKPaintGLSurfaceEventArgs;
-using TForms = Xamarin.Forms.Platform.Tizen.Forms;
+using TForms = Xamarin.Forms.Forms;
 #elif __WPF__
 using System.Windows;
 using Xamarin.Forms.Platform.WPF;
