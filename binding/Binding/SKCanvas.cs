@@ -474,6 +474,12 @@ namespace SkiaSharp
 
 		// DrawTextBlob
 
+		public void DrawText (SKTextBlob text, SKPaint paint) =>
+			DrawText (text, 0, 0, paint);
+
+		public void DrawText (SKTextBlob text, SKPoint p, SKPaint paint) =>
+			DrawText (text, p.X, p.Y, paint);
+
 		public void DrawText (SKTextBlob text, float x, float y, SKPaint paint)
 		{
 			if (text == null)
