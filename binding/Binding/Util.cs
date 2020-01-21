@@ -3,12 +3,18 @@ using System.Text;
 
 namespace SkiaSharp
 {
-	internal static class Utils
+	internal unsafe static class Utils
 	{
 		internal const float NearlyZero = (1.0f / (1 << 12));
 
 		internal static bool NearlyEqual (float a, float b, float tolerance) =>
 			Math.Abs (a - b) <= tolerance;
+
+		internal static Span<byte> AsSpan (this IntPtr ptr, int size) =>
+			new Span<byte> ((void*)ptr, size);
+
+		internal static ReadOnlySpan<byte> AsReadOnlySpan (this IntPtr ptr, int size) =>
+			new ReadOnlySpan<byte> ((void*)ptr, size);
 	}
 
 	public unsafe static class StringUtilities

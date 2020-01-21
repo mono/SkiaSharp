@@ -167,7 +167,7 @@ namespace SkiaSharp
 		{
 			var length = GetTableSize (tag);
 			var buffer = new byte[length];
-			if (!TryGetTableData (tag, buffer)) {
+			if (!TryGetTableData (tag, 0, buffer)) {
 				tableData = null;
 				return false;
 			}
@@ -175,13 +175,13 @@ namespace SkiaSharp
 			return true;
 		}
 
-		public bool TryGetTableData (UInt32 tag, Span<byte> tableData) =>
-			TryGetTableData (tag, 0, tableData.Length, tableData);
+		public bool TryGetTableData (UInt32 tag, int start, int length, IntPtr tableData) =>
+			TryGetTableData (tag, start, tableData.AsSpan (length));
 
-		public bool TryGetTableData (UInt32 tag, int start, int length, Span<byte> tableData)
+		public bool TryGetTableData (UInt32 tag, int start, Span<byte> tableData)
 		{
 			fixed (byte* b = tableData) {
-				return SkiaApi.sk_typeface_get_table_data (Handle, tag, (IntPtr)start, (IntPtr)length, b) != IntPtr.Zero;
+				return SkiaApi.sk_typeface_get_table_data (Handle, tag, (IntPtr)start, (IntPtr)tableData.Length, b) != IntPtr.Zero;
 			}
 		}
 
