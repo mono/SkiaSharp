@@ -200,6 +200,25 @@ namespace SkiaSharp
 			}
 		}
 
+		// ContainsGlyph
+
+		public bool ContainsGlyph (int codepoint) =>
+			GetGlyph (codepoint) != 0;
+
+		// ContainsGlyphs
+
+		public bool ContainsGlyphs (ReadOnlySpan<int> codepoints) =>
+			Array.IndexOf (GetGlyphs (codepoints), 0) != -1;
+
+		public bool ContainsGlyphs (string text) =>
+			ContainsGlyphs (text.AsSpan ());
+
+		public bool ContainsGlyphs (ReadOnlySpan<char> text) =>
+			Array.IndexOf (GetGlyphs (text), 0) != -1;
+
+		public bool ContainsGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding) =>
+			Array.IndexOf (GetGlyphs (text, encoding), 0) != -1;
+
 		// CountGlyphs
 
 		public int CountGlyphs (string text) =>

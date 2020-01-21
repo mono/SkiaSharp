@@ -30,6 +30,82 @@ namespace SkiaSharp
 		public uint UniqueId =>
 			SkiaApi.sk_textblob_get_unique_id (Handle);
 
+		// Create
+
+		public static SKTextBlob Create (string text, SKFont font, SKPoint origin = default) =>
+			Create (text.AsSpan (), font, origin);
+
+		public static SKTextBlob Create (ReadOnlySpan<char> text, SKFont font, SKPoint origin = default)
+		{
+			using var builder = new SKTextBlobBuilder ();
+			builder.AddRun (text, font, origin);
+			return builder.Build ();
+		}
+
+		public static SKTextBlob Create (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, SKPoint origin = default)
+		{
+			using var builder = new SKTextBlobBuilder ();
+			builder.AddRun (text, encoding, font, origin);
+			return builder.Build ();
+		}
+
+		// CreateHorizontal
+
+		public static SKTextBlob CreateHorizontal (string text, SKFont font, ReadOnlySpan<float> positions, float y) =>
+			CreateHorizontal (text.AsSpan (), font, positions, y);
+
+		public static SKTextBlob CreateHorizontal (ReadOnlySpan<char> text, SKFont font, ReadOnlySpan<float> positions, float y)
+		{
+			using var builder = new SKTextBlobBuilder ();
+			builder.AddHorizontalRun (text, font, positions, y);
+			return builder.Build ();
+		}
+
+		public static SKTextBlob CreateHorizontal (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, ReadOnlySpan<float> positions, float y)
+		{
+			using var builder = new SKTextBlobBuilder ();
+			builder.AddHorizontalRun (text, encoding, font, positions, y);
+			return builder.Build ();
+		}
+
+		// CreatePositioned
+
+		public static SKTextBlob CreatePositioned (string text, SKFont font, ReadOnlySpan<SKPoint> positions) =>
+			CreatePositioned (text.AsSpan (), font, positions);
+
+		public static SKTextBlob CreatePositioned (ReadOnlySpan<char> text, SKFont font, ReadOnlySpan<SKPoint> positions)
+		{
+			using var builder = new SKTextBlobBuilder ();
+			builder.AddPositionedRun (text, font, positions);
+			return builder.Build ();
+		}
+
+		public static SKTextBlob CreatePositioned (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKPoint> positions)
+		{
+			using var builder = new SKTextBlobBuilder ();
+			builder.AddPositionedRun (text, encoding, font, positions);
+			return builder.Build ();
+		}
+
+		// CreateRotationScale
+
+		public static SKTextBlob CreateRotationScale (string text, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions) =>
+			CreateRotationScale (text.AsSpan (), font, positions);
+
+		public static SKTextBlob CreateRotationScale (ReadOnlySpan<char> text, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions)
+		{
+			using var builder = new SKTextBlobBuilder ();
+			builder.AddRotationScaleRun (text, font, positions);
+			return builder.Build ();
+		}
+
+		public static SKTextBlob CreateRotationScale (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions)
+		{
+			using var builder = new SKTextBlobBuilder ();
+			builder.AddRotationScaleRun (text, encoding, font, positions);
+			return builder.Build ();
+		}
+
 		// GetIntercepts
 
 		public float[] GetIntercepts (float upperBounds, float lowerBounds, SKPaint paint = null)
